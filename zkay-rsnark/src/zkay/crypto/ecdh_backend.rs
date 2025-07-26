@@ -1,4 +1,4 @@
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use zkay::typed_wire;
 use zkay::zkay_cbc_symmetric_enc_gadget;
@@ -11,7 +11,7 @@ impl ECDHBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
     pub fn new(keyBits: i32, cipherType: CipherType) -> Self {
-        super(keyBits);
+        //super(keyBits);
         self.cipherType = cipherType;
     }
 

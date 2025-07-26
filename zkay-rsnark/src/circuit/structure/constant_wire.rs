@@ -51,7 +51,7 @@ pub fn new_constant(
     // {
     //     println!("==new_constant======{wireId}==");
     // }
-    // super(wireId);
+    // //super(wireId);
     // Wire::<ConstantWire> {
     //     wireId,
     //     generator,
@@ -73,7 +73,7 @@ impl setBitsConfig for ConstantWire {}
 impl setBitsConfig for Wire<ConstantWire> {}
 impl Wire<ConstantWire> {
     // pub fn new(wireId: i32, value: BigInteger) -> Self {
-    //     // super(wireId);
+    //     // //super(wireId);
     //     Self {
     //         constant: value.rem(&Configs.field_prime),
     //     }

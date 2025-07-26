@@ -12,8 +12,8 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::math::mod_constant_gadget;
-use examples::gadgets::math::mod_gadget;
+use crate::examples::gadgets::math::mod_constant_gadget;
+use crate::examples::gadgets::math::mod_gadget;
 #[cfg(test)]
 mod test {
     use super::*;
@@ -42,7 +42,7 @@ mod test {
                 makeOutput(r);
             }
 
-            pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+            fn generateSampleInput(e: &mut CircuitEvaluator) {
                 e.setWireValue(inputWires[0], a);
                 e.setWireValue(inputWires[1], b);
             }
@@ -76,7 +76,7 @@ mod test {
                 makeOutput(r);
             }
 
-            pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+            fn generateSampleInput(e: &mut CircuitEvaluator) {
                 e.setWireValue(inputWires[0], a);
             }
         };

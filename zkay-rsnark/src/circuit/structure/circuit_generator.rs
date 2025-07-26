@@ -288,7 +288,7 @@ pub fn addToEvaluationQueue(
     //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
     //     start.elapsed()
     // );
-    None // returning null means we have not seen this instruction before
+    None // returning None means we have not seen this instruction before
     // have seen this instruction before, but can't de-duplicate
 
     // if existingInstruction.unwrap().instance_of("BasicOp") {
@@ -866,7 +866,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     //     if e.instance_of("BasicOp") {
     //         *self.cg().borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
     //     }
-    //     None // returning null means we have not seen this instruction before
+    //     None // returning None means we have not seen this instruction before
     //     // have seen this instruction before, but can't de-duplicate
 
     //     // if existingInstruction.unwrap().instance_of("BasicOp") {

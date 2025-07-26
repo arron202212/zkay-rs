@@ -5,7 +5,7 @@ use  zkay::zkay_type::zk_uint;
 
 pub struct SampleEncCircuit extends ZkayCircuitBase {
     pub  SampleEncCircuit() {
-        super("zk__Verify_Test_foo", 6, 8, 1, true);
+        //super("zk__Verify_Test_foo", 6, 8, 1, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
@@ -32,7 +32,7 @@ pub struct SampleEncCircuit extends ZkayCircuitBase {
     }
 
     
-      fn buildCircuit() {
+      fn buildCircuit(&mut self) {
         super.buildCircuit();
         addK("elgamal", "glob_key_Elgamal__owner", 2);
 

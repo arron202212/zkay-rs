@@ -1,4 +1,4 @@
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 
 /**
@@ -18,26 +18,30 @@ pub struct ZkayDummyHomEncryptionGadget {
 }
 impl ZkayDummyHomEncryptionGadget {
     pub fn new(plain: WireType, pk: WireType, rnd: Vec<Option<WireType>>, keyBits: i32, desc: &Option<String>) -> Self {
-        super(desc);
+        //super(desc);
 
         Objects.requireNonNull(plain, "plain");
         Objects.requireNonNull(pk, "pk");
         Objects.requireNonNull(rnd, "rnd");
         assert!(rnd.len() <= 1, "Randomness wire array too long");
 
-        self.plain = plain;
-        self.pk = pk;
-        self.cipher = vec![None; 1];
-        buildCircuit();
+        let mut _self = Self{plain,
+         pk,
+        cipher : vec![None; 1]};
+       _self.buildCircuit();
+        _self
+    }
+
+    fn buildCircuit(&mut self) {
+
+        cipher[0] = plain.mul(pk, "plain * pk").add(1);
     }
 }
 
-impl Gadget for ZkayDummyHomEncryptionGadget {
-    fn buildCircuit() {
-        cipher[0] = plain.mul(pk, "plain * pk").add(1);
-    }
+impl GadgetConfig for Gadget<ZkayDummyHomEncryptionGadget> {
+   
 
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         cipher
     }
 }

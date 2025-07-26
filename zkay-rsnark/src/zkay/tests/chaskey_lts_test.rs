@@ -39,7 +39,7 @@ pub struct ChaskeyLtsTest {
         o = ZkayUtil.unsignedBigintToBytes(b, cipher.len());
         Assert.assertArrayEquals("Array bigint conversion does not preserve values", o, cipher);
 
-        let zero_arr = vec![byte::default();16];
+        let zero_arr = vec![0;16];
         b = ZkayUtil.unsignedBytesToBigInt(zero_arr);
         o = ZkayUtil.unsignedBigintToBytes(b, zero_arr.len());
         Assert.assertArrayEquals("Array bigint conversion does not preserve values", o, zero_arr);
@@ -51,7 +51,7 @@ pub struct ChaskeyLtsTest {
 
         // Test encrypt
         crypto.init(true, KeyParameter::new(key));
-        let out = vec![byte::default();16];
+        let out = vec![0;16];
         crypto.processBlock(plain, 0, out, 0);
         Assert.assertArrayEquals("Wrong encryption output", cipher, out);
 
@@ -73,7 +73,7 @@ pub struct ChaskeyLtsTest {
         // Compute encryption via jsnark gadget
         CircuitGenerator cgen = CircuitGenerator::new("cbcchaskey") {
             
-              fn buildCircuit() {
+              fn buildCircuit(&mut self) {
                 let plainwire = TypedWire::new(createConstantWire(plain), ZkayType.ZkUint(256), "plaintext");
                 let ivwire = createConstantWire(iv);
                 let keywire = createConstantWire(key);
@@ -105,19 +105,19 @@ pub struct ChaskeyLtsTest {
 
 
         // Convert output to format produced by gadget (iv included, packed 248bit values in reverse order)
-        let iv_cipher = vec![byte::default();16 + result.len()];
-        System.arraycopy(iv_bytes, 0, iv_cipher, 0, iv_bytes.len());
-        System.arraycopy(result, 0, iv_cipher, iv_bytes.len(), result.len());
+        let iv_cipher = vec![0;16 + result.len()];
+        iv_cipher[0..iv_bytes.len()].clone_from_slice(&iv_bytes[0..]);
+        iv_cipher[iv_bytes.len()..result.len()].clone_from_slice(&result[0..]);
 
         let chunk_size = CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE / 8;
         let first_chunk_size = iv_cipher.len() % chunk_size;
         let bigints = new ArrayList<>();
         if first_chunk_size != 0 {
-            let chunk = Arrays.copyOfRange(iv_cipher, 0, first_chunk_size);
+            let chunk = iv_cipher[ 0.. first_chunk_size].to_vec();
             bigints.add(ZkayUtil.unsignedBytesToBigInt(chunk));
         }
         for i in first_chunk_size..iv_cipher.len() - first_chunk_size{
-            let chunk = Arrays.copyOfRange(iv_cipher, i, i + chunk_size);
+            let chunk = iv_cipher[ i.. i + chunk_size].to_vec();
             bigints.add(ZkayUtil.unsignedBytesToBigInt(chunk));
         }
         Collections.reverse(bigints);

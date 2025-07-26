@@ -1,5 +1,5 @@
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
@@ -72,7 +72,7 @@ impl ZkayCircuitBase {
         privSize: i32,
         useInputHashing: bool,
     ) {
-        super("circuit");
+        //super("circuit");
         self.realCircuitName = name;
 
         self.pubInCount = pubInSize;
@@ -92,7 +92,7 @@ impl ZkayCircuitBase {
 
             "prove" => {
                 compileCircuit();
-                parseInputs(Arrays.asList(args).subList(1, args.len()));
+                parseInputs(args[1..].to_vec());
                 //println!("Evaluating circuit '" + realCircuitName + "'");
                 evalCircuit();
             }
@@ -119,7 +119,7 @@ impl ZkayCircuitBase {
         }
     }
 }
-impl CircuitGenerator for ZkayCircuitBase {
+impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
     fn compileCircuit() {
         //println!("Compiling circuit '{realCircuitName}'");
         generateCircuit();
@@ -140,7 +140,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         //println!("Done with generateCircuit, preparing dummy files...");
     }
 
-    fn buildCircuit() {
+    fn buildCircuit(&mut self) {
         // Create IO wires
         let pubOutCount = allPubIOWires.len() - pubInCount;
         let (mut inArray, mut outArray, mut privInArray);
@@ -161,9 +161,9 @@ impl CircuitGenerator for ZkayCircuitBase {
             setKeyPair(LEGACY_CRYPTO_BACKEND, myPk, mySk);
         }
 
-        System.arraycopy(inArray, 0, allPubIOWires, 0, pubInCount);
-        System.arraycopy(outArray, 0, allPubIOWires, pubInCount, pubOutCount);
-        System.arraycopy(privInArray, 0, allPrivInWires, 0, allPrivInWires.len());
+        allPubIOWires[0..pubInCount].clone_from_slice(&inArray[0..]);
+        allPubIOWires[pubInCount..pubOutCount].clone_from_slice(&outArray[0..]);
+        allPrivInWires[0..allPrivInWires.len()].clone_from_slice(&privInArray[0..]);
     }
 
     fn addIO(
@@ -618,7 +618,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         let resVal = vec![TypedWire::default(); val.len()];
         let guard = currentGuardCondition.peek(); // Null if empty
         for i in 0..val.len() {
-            if guard == null {
+            if guard == None {
                 resVal[i] = TypedWire::new(val[i].wire, val[i].zkay_type, lhs); // No guard, just rename
             } else {
                 resVal[i] = TypedWire::new(
@@ -1078,7 +1078,7 @@ impl CircuitGenerator for ZkayCircuitBase {
 
     fn set(name: String, val: Vec<TypedWire>) {
         name = getQualifiedName(name);
-        assert!(val.is_some(), "Tried to set value " + name + " to null");
+        assert!(val.is_some(), "Tried to set value " + name + " to None");
         let oldVal = vars.get(name);
         assert!(
             oldVal.is_none(),
@@ -1087,7 +1087,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         vars.put(name, val);
     }
 
-    pub fn generateSampleInput(evaluator: CircuitEvaluator) {
+    fn generateSampleInput(&self,evaluator: &mut CircuitEvaluator) {
         assert!(
             serializedArguments.is_some(),
             "No inputs specified, this should not have been called"
@@ -1101,7 +1101,7 @@ impl CircuitGenerator for ZkayCircuitBase {
         );
 
         let idx = 0;
-        for ioNameList in Arrays.asList(pubInNames, pubOutNames, privInNames) {
+        for ioNameList in [pubInNames, pubOutNames, privInNames] {
             for name in ioNameList {
                 let wires = vars.get(name);
                 let sb = StringBuilder::new("Setting '" + name + "' to [");
@@ -1114,7 +1114,7 @@ impl CircuitGenerator for ZkayCircuitBase {
                         .append(val)
                         .append(", ");
                 }
-                sb.setLength(sb.len()() - 2);
+                sb.setLength(sb.len() - 2);
                 sb.append("]");
                 //println!(sb);
             }

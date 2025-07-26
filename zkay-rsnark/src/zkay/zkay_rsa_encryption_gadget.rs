@@ -1,9 +1,9 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
-use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
-use examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
+use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget;
+use crate::examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
 
 use zkay::ZkayUtil::*;
 use zkay::crypto::RSABackend::*;
@@ -30,7 +30,7 @@ impl ZkayRSAEncryptionGadget {
         paddingType: PaddingType,
         desc: &Option<String>,
     ) -> Self {
-        super(desc);
+        //super(desc);
 
         Objects.requireNonNull(plain, "plain");
         Objects.requireNonNull(pk, "pk");
@@ -43,11 +43,11 @@ impl ZkayRSAEncryptionGadget {
         self.rnd = rnd;
         self.keyBits = keyBits;
 
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
-}
-impl Gadget for ZkayRSAEncryptionGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         let plainBytes = reverseBytes(plain.getBitWires(256), 8);
 
         let mut enc;
@@ -75,8 +75,9 @@ impl Gadget for ZkayRSAEncryptionGadget {
         cipher =
             WireArray::new(enc.getOutputWires()).packWordsIntoLargerWords(8, CIPHER_CHUNK_SIZE / 8);
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl GadgetConfig for Gadget<ZkayRSAEncryptionGadget> {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         cipher
     }
 }

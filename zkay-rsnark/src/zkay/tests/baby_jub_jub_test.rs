@@ -9,11 +9,12 @@ use zkay::zkay_baby_jub_jub_gadget;
 pub struct BabyJubJubTest {
      class TestGadget extends ZkayBabyJubJubGadget {
 
-        pub  TestGadget() {
-            buildCircuit();
-        }
+        pub fn  TestGadget() {
+            _self.buildCircuit();
+        _self
+    }
 
-          fn buildCircuit() {
+    fn buildCircuit(&mut self) {
             // check native inverse
             let a = generator.createConstantWire(BigInteger::new("11985782033876175911769025829561891428638139496693105005957757653258"));
             let ainv_expected = generator.createConstantWire(BigInteger::new("20950552912096304742729232452120498732043875737213521271262032500972060322340"));
@@ -63,7 +64,7 @@ pub struct BabyJubJubTest {
     pub   testBabyJubJubGadget() {
         CircuitGenerator cgen = CircuitGenerator::new("test") {
             
-              fn buildCircuit() {
+              fn buildCircuit(&mut self) {
                 let gadget = TestGadget::new();
                 makeOutput(gadget.getOutputWires()[0]);
             }

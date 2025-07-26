@@ -1,4 +1,4 @@
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use zkay::typed_wire;
 use zkay::zkay_dummy_encryption_gadget;
@@ -9,7 +9,7 @@ impl DummyBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
     // pub  DummyBackend(i32 keyBits) {
-    // 	super(keyBits);
+    // 	//super(keyBits);
     // }
 
     pub fn getKeyChunkSize() -> i32 {

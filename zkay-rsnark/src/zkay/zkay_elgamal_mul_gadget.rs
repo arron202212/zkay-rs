@@ -21,14 +21,14 @@ impl ZkayElgamalMulGadget {
         self.scalarBits = scalarBits;
         buildCircuit();
     }
-}
-impl ZkayBabyJubJubGadget for ZkayElgamalMulGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         e1 = mulScalar(c1, scalarBits);
         e2 = mulScalar(c2, scalarBits);
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalMulGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         vec![e1.x, e1.y, e2.x, e2.y]
     }
 }

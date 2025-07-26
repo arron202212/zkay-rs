@@ -25,7 +25,7 @@ impl ChaskeyLtsCbc {
             cipher.getOutputSize(input.len()) == input.len(),
             "Wrong size"
         );
-        let outbuf = vec![byte::default(); cipher.getOutputSize(input.len())];
+        let outbuf = vec![0; cipher.getOutputSize(input.len())];
         let out_size = cipher.processBytes(input, 0, input.len(), outbuf, 0);
         assert!(
             cipher.doFinal(outbuf, out_size) == 0,

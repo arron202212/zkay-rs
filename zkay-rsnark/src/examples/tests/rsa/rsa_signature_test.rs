@@ -13,8 +13,8 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::hash::sha256_gadget;
-use examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
+use crate::examples::gadgets::hash::sha256_gadget;
+use crate::examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget;
 
 //Tests RSA PKCS #1, V1.5 Signature
 
@@ -57,7 +57,7 @@ mod test {
             crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
             impl CGConfig for CircuitGeneratorExtend<CGTest> {
                 fn buildCircuit(&mut self) {
-                    inputMessage = createInputWireArray(inputStr.len()());
+                    inputMessage = createInputWireArray(inputStr.len());
                     sha2Gadget =
                         SHA256Gadget::new(inputMessage, 8, inputMessage.len(), false, true);
                     let digest = sha2Gadget.getOutputWires();
@@ -72,7 +72,7 @@ mod test {
                     makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     for i in 0..inputMessage.len() {
                         evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
                     }
@@ -90,14 +90,14 @@ mod test {
 
                     // pad an extra zero byte to avoid having a negative big
                     // integer
-                    let signaturePadded = vec![byte::default(); sigBytes.len() + 1];
-                    System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.len());
+                    let signaturePadded = vec![0; sigBytes.len() + 1];
+                    signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
                     signaturePadded[0] = 0;
                     let modulus = (keyPair.getPublic()).getModulus();
                     let sig = BigInteger::new(signaturePadded);
 
-                    evaluator.setWireValue(self.rsaModulus, modulus, LongElement.CHUNK_BITWIDTH);
-                    evaluator.setWireValue(self.signature, sig, LongElement.CHUNK_BITWIDTH);
+                    evaluator.setWireValue(self.rsaModulus, modulus, LongElement::CHUNK_BITWIDTH);
+                    evaluator.setWireValue(self.signature, sig, LongElement::CHUNK_BITWIDTH);
 
                     // } catch (Exception e) {
                     // 	System.err
@@ -143,7 +143,7 @@ mod test {
             crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
             impl CGConfig for CircuitGeneratorExtend<CGTest> {
                 fn buildCircuit(&mut self) {
-                    inputMessage = createInputWireArray(inputStr.len()());
+                    inputMessage = createInputWireArray(inputStr.len());
                     sha2Gadget =
                         SHA256Gadget::new(inputMessage, 8, inputMessage.len(), false, true);
                     let digest = sha2Gadget.getOutputWires();
@@ -158,7 +158,7 @@ mod test {
                     makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     for i in 0..inputMessage.len() {
                         evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
                     }
@@ -176,19 +176,19 @@ mod test {
 
                     // pad an extra zero byte to avoid having a negative big
                     // integer
-                    let signaturePadded = vec![byte::default(); sigBytes.len() + 1];
-                    System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.len());
+                    let signaturePadded = vec![0; sigBytes.len() + 1];
+                    signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
                     signaturePadded[0] = 0;
                     let modulus = (keyPair.getPublic()).getModulus();
                     let sig = BigInteger::new(signaturePadded);
 
-                    evaluator.setWireValue(self.rsaModulus, modulus, LongElement.CHUNK_BITWIDTH);
+                    evaluator.setWireValue(self.rsaModulus, modulus, LongElement::CHUNK_BITWIDTH);
 
                     // input the modulus itself instead of the signature
                     evaluator.setWireValue(
                         self.signature,
                         sig.sub(Util::one()),
-                        LongElement.CHUNK_BITWIDTH,
+                        LongElement::CHUNK_BITWIDTH,
                     );
 
                     // } catch (Exception e) {
@@ -216,11 +216,11 @@ mod test {
         let inputStr = "abc";
 
         let keySize = 1024;
-        let defaultBitwidth = LongElement.CHUNK_BITWIDTH;
+        let defaultBitwidth = LongElement::CHUNK_BITWIDTH;
 
         let chunkBiwidthArray = vec![i32::default(); 106];
         for b in 16..chunkBiwidthArray.len() {
-            LongElement.CHUNK_BITWIDTH = b;
+            LongElement::CHUNK_BITWIDTH = b;
             let generator = CircuitGenerator::new("RSA" + keySize + "_SIG_TestValid_ChunkB_" + b);
 
             let rsaKeyLength = keySize;
@@ -237,7 +237,7 @@ mod test {
             crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
             impl CGConfig for CircuitGeneratorExtend<CGTest> {
                 fn buildCircuit(&mut self) {
-                    inputMessage = createInputWireArray(inputStr.len()());
+                    inputMessage = createInputWireArray(inputStr.len());
                     sha2Gadget =
                         SHA256Gadget::new(inputMessage, 8, inputMessage.len(), false, true);
                     let digest = sha2Gadget.getOutputWires();
@@ -252,7 +252,7 @@ mod test {
                     makeOutput(rsaSigVerificationV1_5_Gadget.getOutputWires()[0]);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     for i in 0..inputMessage.len() {
                         evaluator.setWireValue(inputMessage[i], inputStr.charAt(i));
                     }
@@ -270,14 +270,14 @@ mod test {
 
                     // pad an extra zero byte to avoid having a negative big
                     // integer
-                    let signaturePadded = vec![byte::default(); sigBytes.len() + 1];
-                    System.arraycopy(sigBytes, 0, signaturePadded, 1, sigBytes.len());
+                    let signaturePadded = vec![0; sigBytes.len() + 1];
+                    signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
                     signaturePadded[0] = 0;
                     let modulus = (keyPair.getPublic()).getModulus();
                     let sig = BigInteger::new(signaturePadded);
 
-                    evaluator.setWireValue(self.rsaModulus, modulus, LongElement.CHUNK_BITWIDTH);
-                    evaluator.setWireValue(self.signature, sig, LongElement.CHUNK_BITWIDTH);
+                    evaluator.setWireValue(self.rsaModulus, modulus, LongElement::CHUNK_BITWIDTH);
+                    evaluator.setWireValue(self.signature, sig, LongElement::CHUNK_BITWIDTH);
 
                     // } catch (Exception e) {
                     // 	System.err
@@ -295,7 +295,7 @@ mod test {
                 evaluator.getWireValue(generator.get_out_wires().get(0)),
             );
 
-            LongElement.CHUNK_BITWIDTH = defaultBitwidth; // needed for running all tests together
+            LongElement::CHUNK_BITWIDTH = defaultBitwidth; // needed for running all tests together
         }
     }
 }

@@ -95,7 +95,7 @@ pub struct PaillierTests {
 
 		 PaillierEncCircuitGenerator(String name, BigInteger plain, BigInteger random,
 		                                    BigInteger n, BigInteger generator) {
-			super(name);
+			//super(name);
 			self.plain = plain;
 			self.random = random;
 			self.n = n;
@@ -103,7 +103,7 @@ pub struct PaillierTests {
 		}
 
 		
-		  fn buildCircuit() {
+		  fn buildCircuit(&mut self) {
 			plainWire = createLongElementInput(max(plain.bits(), 1), "plain");
 			randomWire = createLongElementInput(max(random.bits(), 1), "random");
 			let nBits = max(n.bits(), 1);
@@ -115,10 +115,10 @@ pub struct PaillierTests {
 
 		
 		pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {
-			evaluator.setWireValue(plainWire, plain, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(randomWire, random, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(generatorWire, generator, LongElement.CHUNK_BITWIDTH);
+			evaluator.setWireValue(plainWire, plain, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(randomWire, random, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(nWire, n, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(generatorWire, generator, LongElement::CHUNK_BITWIDTH);
 		}
 
 		pub  BigInteger computeResult() {
@@ -131,7 +131,7 @@ pub struct PaillierTests {
 
 			let evaluator = getCircuitEvaluator();
 			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
-			Util::group(outValues, LongElement.CHUNK_BITWIDTH)
+			Util::group(outValues, LongElement::CHUNK_BITWIDTH)
 		}
 	}
 
@@ -149,7 +149,7 @@ pub struct PaillierTests {
 
 		 PaillierDecCircuitGenerator(String name, BigInteger cipher, BigInteger n,
 		                                    BigInteger lambda, BigInteger mu) {
-			super(name);
+			//super(name);
 			self.cipher = cipher;
 			self.n = n;
 			self.lambda = lambda;
@@ -157,7 +157,7 @@ pub struct PaillierTests {
 		}
 
 		
-		  fn buildCircuit() {
+		  fn buildCircuit(&mut self) {
 			cipherWire = createLongElementInput(max(cipher.bits(), 1), "cipher");
 			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
@@ -169,10 +169,10 @@ pub struct PaillierTests {
 
 		
 		pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {
-			evaluator.setWireValue(cipherWire, cipher, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(lambdaWire, lambda, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(muWire, mu, LongElement.CHUNK_BITWIDTH);
+			evaluator.setWireValue(cipherWire, cipher, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(nWire, n, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(lambdaWire, lambda, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(muWire, mu, LongElement::CHUNK_BITWIDTH);
 		}
 
 		pub  BigInteger computeResult() {
@@ -185,7 +185,7 @@ pub struct PaillierTests {
 
 			let evaluator = getCircuitEvaluator();
 			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
-			Util::group(outValues, LongElement.CHUNK_BITWIDTH)
+			Util::group(outValues, LongElement::CHUNK_BITWIDTH)
 		}
 	}
 
@@ -200,14 +200,14 @@ pub struct PaillierTests {
 		 LongElement randomWire;
 
 		 PaillierFastEncCircuitGenerator(String name, BigInteger n, BigInteger plain, BigInteger random) {
-			super(name);
+			//super(name);
 			self.n = n;
 			self.plain = plain;
 			self.random = random;
 		}
 
 		
-		  fn buildCircuit() {
+		  fn buildCircuit(&mut self) {
 			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
 			plainWire = createLongElementInput(max(plain.bits(), 1), "plain");
@@ -218,9 +218,9 @@ pub struct PaillierTests {
 
 		
 		pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {
-			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(plainWire, plain, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(randomWire, random, LongElement.CHUNK_BITWIDTH);
+			evaluator.setWireValue(nWire, n, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(plainWire, plain, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(randomWire, random, LongElement::CHUNK_BITWIDTH);
 		}
 
 		pub  BigInteger computeResult() {
@@ -233,7 +233,7 @@ pub struct PaillierTests {
 
 			let evaluator = getCircuitEvaluator();
 			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
-			Util::group(outValues, LongElement.CHUNK_BITWIDTH)
+			Util::group(outValues, LongElement::CHUNK_BITWIDTH)
 		}
 	}
 
@@ -248,14 +248,14 @@ pub struct PaillierTests {
 		 LongElement cipherWire;
 
 		 PaillierFastDecCircuitGenerator(String name, BigInteger n, BigInteger lambda, BigInteger cipher) {
-			super(name);
+			//super(name);
 			self.n = n;
 			self.lambda = lambda;
 			self.cipher = cipher;
 		}
 
 		
-		  fn buildCircuit() {
+		  fn buildCircuit(&mut self) {
 			let nBits = max(n.bits(), 1);
 			nWire = createLongElementInput(nBits, "n");
 			lambdaWire = createLongElementInput(max(lambda.bits(), 1), "lambda");
@@ -266,9 +266,9 @@ pub struct PaillierTests {
 
 		
 		pub  fn generateSampleInput( evaluator:&mut CircuitEvaluator) {
-			evaluator.setWireValue(nWire, n, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(lambdaWire, lambda, LongElement.CHUNK_BITWIDTH);
-			evaluator.setWireValue(cipherWire, cipher, LongElement.CHUNK_BITWIDTH);
+			evaluator.setWireValue(nWire, n, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(lambdaWire, lambda, LongElement::CHUNK_BITWIDTH);
+			evaluator.setWireValue(cipherWire, cipher, LongElement::CHUNK_BITWIDTH);
 		}
 
 		pub  BigInteger computeResult() {
@@ -281,7 +281,7 @@ pub struct PaillierTests {
 
 			let evaluator = getCircuitEvaluator();
 			let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None;0]));
-			Util::group(outValues, LongElement.CHUNK_BITWIDTH)
+			Util::group(outValues, LongElement::CHUNK_BITWIDTH)
 		}
 	}
 }

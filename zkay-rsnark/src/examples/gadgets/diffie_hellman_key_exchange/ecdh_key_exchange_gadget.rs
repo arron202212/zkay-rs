@@ -6,15 +6,54 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            gadget::{Gadget,GadgetConfig},
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
+};
+// use crate::circuit::config::config::Configs;
+// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget;
-use crate::circuit::structure::constant_wire;
-use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::math::field_division_gadget;
-
+// use crate::circuit::eval::instruction::Instruction;
+// use crate::circuit::operations::gadget::GadgetConfig;
+// use crate::circuit::structure::constant_wire;
+// use crate::circuit::structure::wire_type::WireType;
+use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
+// import org.bouncycastle.pqc.math.linearalgebra.IntegerFunctions;
+use rccell::RcCell;
+use std::fmt::Debug;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use zkay_derive::ImplStructNameConfig;
+use std::ops::{Add, Mul, Neg, Rem, Sub};
 /**
  * This gadget implements cryptographic key exchange using a customized elliptic
  * curve that is efficient to represent as a SNARK circuit. It follows the
@@ -38,24 +77,22 @@ use examples::gadgets::math::field_division_gadget;
  *
  *
  */
-
+#[derive(Debug, Clone,Hash, ImplStructNameConfig)]
 pub struct AffinePoint {
-    x: WireType,
-    y: WireType,
-    // AffinePoint(x:WireType) {
-    // 	self.x = x;
-    // }
-
-    // AffinePoint(x:WireType, y:WireType) {
-    // 	self.x = x;
-    // 	self.y = y;
-    // }
-
-    // AffinePoint(p:AffinePoint) {
-    // 	self.x = p.x;
-    // 	self.y = p.y;
-    // }
+    x: Option<WireType>,
+    y: Option<WireType>,
 }
+impl AffinePoint{
+    pub fn newx(x:WireType)->Self {
+    	Self{x : Some(x),y:None}
+    }
+
+    pub fn new(x:WireType, y:WireType)->Self {
+    	Self{x : Some(x),y:Some(y)}
+    }
+}
+
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ECDHKeyExchangeGadget {
     // The Affine point representation is used as it saves one gate per bit
     basePoint: AffinePoint, // The Base point both parties agree to
@@ -66,42 +103,17 @@ pub struct ECDHKeyExchangeGadget {
     // (follows little-endian order)
 
     // gadget outputs
-    outputPublicValue: WireType, // the x-coordinate of the key exchange
+    outputPublicValue: Option<WireType>, // the x-coordinate of the key exchange
     // material to be sent to the other party
     // outputPublicValue = ((this party's
     // secret)*Base).x
-    sharedSecret: WireType, // the x-coordinate of the derived key ((this
+    sharedSecret: Option<WireType>, // the x-coordinate of the derived key ((this
     // party's secret)*H).x
     baseTable: Vec<AffinePoint>,
     hTable: Vec<AffinePoint>,
+    output: Vec<Option<WireType>>,
 }
 impl ECDHKeyExchangeGadget {
-    // Note: this parameterization assumes that the underlying field has
-    // Configs.field_prime =
-    // 21888242871839275222246405745257275088548364400416034343698204186575808495617
-
-    pub const SECRET_BITWIDTH: i32 = 253; // number of bits in the
-    // exponent. Note that the
-    // most significant bit
-    // should
-    // be set to 1, and the
-    // three least significant
-    // bits should be be zero.
-    // See
-    // the constructor
-
-    pub const COEFF_A: BigInteger = BigInteger::new("126932"); // parameterization
-    // in
-    // https://eprint.iacr.org/2015/1093.pdf
-
-    pub const CURVE_ORDER: BigInteger = BigInteger::new(
-        "21888242871839275222246405745257275088597270486034011716802747351550446453784",
-    );
-
-    // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
-    pub const SUBGROUP_ORDER: BigInteger = BigInteger::new(
-        "2736030358979909402780800718157159386074658810754251464600343418943805806723",
-    );
     /**
      * This gadget receives two points: Base = (baseX) and H = (hX), and the
      * secret key Bits and outputs the scalar EC multiplications: secret*Base,
@@ -119,91 +131,167 @@ impl ECDHKeyExchangeGadget {
      */
 
     pub fn new(
-        baseX: WireType,
-        hX: WireType,
+        baseX: Option<WireType>,
+        baseY: Option<WireType>,
+        hX: Option<WireType>,
+        hY: Option<WireType>,
         secretBits: Vec<Option<WireType>>,
         desc: &Option<String>,
-    ) {
-        super(desc);
-        self.secretBits = secretBits;
-        self.basePoint = AffinePoint::new(baseX);
-        self.hPoint = AffinePoint::new(hX);
-        checkSecretBits();
-        computeYCoordinates(); // For efficiency reasons, we rely on affine
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        let y_is_none = hY.is_none();
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                outputPublicValue: None,
+                sharedSecret: None,
+                baseTable: vec![],
+                hTable: vec![],
+                secretBits,
+                basePoint: AffinePoint { x: baseX, y: baseY },
+                hPoint: AffinePoint { x: hX, y: hY },output: vec![],
+            },
+        };
+
+        _self.checkSecretBits();
+        if y_is_none {
+            _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
+        }
         // coordinates
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
 }
-impl Gadget for ECDHKeyExchangeGadget {
-    // same constructor as before, but accepts also baseY, and hY as inputs
-    pub fn new(
-        baseX: WireType,
-        baseY: WireType,
-        hX: WireType,
-        hY: WireType,
-        secretBits: Vec<Option<WireType>>,
-        desc: &Option<String>,
-    ) -> Self {
-        super(desc);
 
-        self.secretBits = secretBits;
-        self.basePoint = AffinePoint::new(baseX, baseY);
-        self.hPoint = AffinePoint::new(hX, hY);
-        checkSecretBits();
-        buildCircuit();
+// impl  ECDHKeyExchangeGadget {
+//     // same constructor as before, but accepts also baseY, and hY as inputs
+//     pub fn news(
+//         baseX: WireType,
+//         baseY: WireType,
+//         hX: WireType,
+//         hY: WireType,
+//         secretBits: Vec<Option<WireType>>,
+//         desc: &Option<String>,
+//     ) -> Self {
+//         //super(desc);
+
+//         let mut _self = Self{secretBits,
+//         basePoint: AffinePoint::new(baseX, baseY),
+//         hPoint: AffinePoint::new(hX, hY)};
+//         _self.checkSecretBits();
+//         _self.buildCircuit();
+//         _self
+//     }
+//   }
+impl Gadget<ECDHKeyExchangeGadget> {
+    // Note: this parameterization assumes that the underlying field has
+    // Configs.field_prime =
+    // 21888242871839275222246405745257275088548364400416034343698204186575808495617
+
+    pub const SECRET_BITWIDTH: usize = 253; // number of bits in the
+    // exponent. Note that the
+    // most significant bit
+    // should
+    // be set to 1, and the
+    // three least significant
+    // bits should be be zero.
+    // See
+    // the constructor
+
+    pub const COEFF_A: &str = "126932"; // parameterization
+    // in
+    // https://eprint.iacr.org/2015/1093.pdf
+
+    pub const CURVE_ORDER:  &str =
+        "21888242871839275222246405745257275088597270486034011716802747351550446453784"
+    ;
+
+    // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
+    pub const SUBGROUP_ORDER:  &str = 
+        "2736030358979909402780800718157159386074658810754251464600343418943805806723"
+    ;
+    fn buildCircuit(&mut self) {
+        // /**
+        //  * The reason this operates on affine coordinates is that in our
+        //  * setting, this's slightly cheaper than the formulas in
+        //  * https://cr.yp.to/ecdh/curve25519-20060209.pdf. Concretely, the
+        //  * following equations save 1 multiplication gate per bit. (we consider
+        //  * multiplications by constants cheaper in our setting, so they are not
+        //  * counted)
+        //  */
+        self.t.baseTable = self.preprocess(&self.t.basePoint);
+        self.t.hTable = self.preprocess(&self.t.hPoint);
+        self.t.outputPublicValue = self
+            .mul(&self.t.basePoint, &self.t.secretBits, &self.t.baseTable)
+            .x
+            .clone();
+        self.t.sharedSecret = self
+            .mul(&self.t.hPoint, &self.t.secretBits, &self.t.hTable)
+            .x
+            .clone();
+        self.t.output = vec![
+            self.t.outputPublicValue.clone(),
+            self.t.sharedSecret.clone(),
+        ];
     }
 
-    fn buildCircuit() {
-        /**
-         * The reason this operates on affine coordinates is that in our
-         * setting, this's slightly cheaper than the formulas in
-         * https://cr.yp.to/ecdh/curve25519-20060209.pdf. Concretely, the
-         * following equations save 1 multiplication gate per bit. (we consider
-         * multiplications by constants cheaper in our setting, so they are not
-         * counted)
-         */
-        baseTable = preprocess(basePoint);
-        hTable = preprocess(hPoint);
-        outputPublicValue = mul(basePoint, secretBits, baseTable).x;
-        sharedSecret = mul(hPoint, secretBits, hTable).x;
-    }
-
-    fn checkSecretBits() {
+    fn checkSecretBits(&self) {
+        
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
          * should be 1, and the three least significant bits should be zero.
          */
-        assert!(secretBits.len() == SECRET_BITWIDTH);
-        generator.addZeroAssertion(secretBits[0], "Asserting secret bit conditions");
-        generator.addZeroAssertion(secretBits[1], "Asserting secret bit conditions");
-        generator.addZeroAssertion(secretBits[2], "Asserting secret bit conditions");
-        generator.addOneAssertion(
-            secretBits[SECRET_BITWIDTH - 1],
-            "Asserting secret bit conditions",
+        assert!(self.t.secretBits.len() == Self::SECRET_BITWIDTH );
+        self.generator
+            .addZeroAssertion(self.t.secretBits[0].as_ref().unwrap(), &Some("Asserting secret bit conditions".to_owned()));
+        self.generator
+            .addZeroAssertion(self.t.secretBits[1].as_ref().unwrap(), &Some("Asserting secret bit conditions".to_owned()));
+        self.generator
+            .addZeroAssertion(self.t.secretBits[2].as_ref().unwrap(), &Some("Asserting secret bit conditions".to_owned()));
+        self.generator.addOneAssertion(
+            self.t.secretBits[Self::SECRET_BITWIDTH - 1].as_ref().unwrap(),
+            &Some("Asserting secret bit conditions".to_owned()),
         );
 
-        for i in 3..SECRET_BITWIDTH - 1 {
+        for i in 3..Self::SECRET_BITWIDTH - 1 {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            generator.addBinaryAssertion(secretBits[i]);
+            self.generator.addBinaryAssertion(self.t.secretBits[i].as_ref().unwrap(),&None);
         }
     }
 
-    fn computeYCoordinates() {
+    fn computeYCoordinates(&mut self) {
         // Easy to handle if baseX is constant, otherwise, let the prover input
         // a witness and verify some properties
 
-        if basePoint.x.instance_of(ConstantWire) {
-            let x = (basePoint.x).getConstant();
-            basePoint.y = generator.createConstantWire(computeYCoordinate(x));
+        if self.t.basePoint.x.as_ref().unwrap().instance_of("ConstantWire") {
+            let x = self.t.basePoint.x.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
+            self.t.basePoint.y = Some(self
+                .generator
+                .createConstantWire(&Self::computeYCoordinate(x),&None));
         } else {
-            basePoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-                let x = evaluator.getWireValue(basePoint.x);
-                evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
-            });
+            self.t.basePoint.y = Some(self.generator.createProverWitnessWire(&None));
+            // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            //     let x = evaluator.getWireValue(basePoint.x);
+            //     evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
+            // });
+            let basePoint = &self.t.basePoint;
+            let prover = crate::impl_prover!(
+                            eval(  basePoint: AffinePoint)  {
+            impl Instruction for Prover{
+             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                       let x = evaluator.getWireValue(self.basePoint.x.as_ref().unwrap());
+            evaluator.setWireValue(self.basePoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
+
+
+            }
+            }
+                        }
+                    );
+            self.generator.specifyProverWitnessComputation(prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
@@ -214,18 +302,35 @@ impl Gadget for ECDHKeyExchangeGadget {
             //     }
             //     Prover
             // });
-            assertValidPointOnEC(basePoint.x, basePoint.y);
+            self.assertValidPointOnEC(self.t.basePoint.x.as_ref().unwrap(), self.t.basePoint.y.as_ref().unwrap());
         }
 
-        if hPoint.x.instance_of(ConstantWire) {
-            let x = (hPoint.x).getConstant();
-            hPoint.y = generator.createConstantWire(computeYCoordinate(x));
+        if self.t.hPoint.x.as_ref().unwrap().instance_of("ConstantWire") {
+            let x = self.t.hPoint.x.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
+            self.t.hPoint.y = Some(self
+                .generator
+                .createConstantWire(&Self::computeYCoordinate(x),&None));
         } else {
-            hPoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-                let x = evaluator.getWireValue(hPoint.x);
-                evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
-            });
+            self.t.hPoint.y =Some( self.generator.createProverWitnessWire(&None));
+            // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            //     let x = evaluator.getWireValue(hPoint.x);
+            //     evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
+            // });
+            let hPoint = &self.t.hPoint;
+            let prover = crate::impl_prover!(
+                            eval(  hPoint: AffinePoint
+                    )  {
+            impl Instruction for Prover{
+             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                       let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
+            evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
+
+
+            }
+            }
+                        }
+                    );
+            self.generator.specifyProverWitnessComputation(prover);
             // {
             //         struct Prover;
             //         impl Instruction for Prover {
@@ -236,25 +341,23 @@ impl Gadget for ECDHKeyExchangeGadget {
             //         }
             //         Prover
             //     });
-            assertValidPointOnEC(hPoint.x, hPoint.y);
+            self.assertValidPointOnEC(self.t.hPoint.x.as_ref().unwrap(), self.t.hPoint.y.as_ref().unwrap());
         }
     }
 
     // this is only called, when WireType y is provided as witness by the prover
     // (not as input to the gadget)
-    fn assertValidPointOnEC(x: WireType, y: WireType) {
-        let ySqr = y.mul(y);
-        let xSqr = x.mul(x);
-        let xCube = xSqr.mul(x);
-        generator.addEqualityAssertion(ySqr, xCube.add(xSqr.mul(COEFF_A)).add(x));
+    fn assertValidPointOnEC(&self, x: &WireType, y: &WireType) {
+        let ySqr = y.clone().mul(y);
+        let xSqr = x.clone().mul(x);
+        let xCube = xSqr.clone().mul(x);
+        self.generator
+            .addEqualityAssertion(&ySqr, &xCube.add(xSqr.mulb(&BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap(),&None)).add(x),&None);
     }
 
-    fn preprocess(p: AffinePoint) -> Vec<AffinePoint> {
-        let precomputedTable = vec![AffinePoint::default(); secretBits.len()];
-        precomputedTable[0] = p;
-        for j in 1..secretBits.len() {
-            precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
-        }
+    fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
+        let mut precomputedTable:Vec<_> = (1..self.t.secretBits.len()).scan(p.clone(),|s,_j|Some(self.doubleAffinePoint(&s))).collect();
+        precomputedTable.insert(0, p.clone());
         precomputedTable
     }
 
@@ -263,82 +366,92 @@ impl Gadget for ECDHKeyExchangeGadget {
      * conditions above)
      */
     fn mul(
-        p: AffinePoint,
-        secretBits: Vec<Option<WireType>>,
-        precomputedTable: Vec<AffinePoint>,
+        &self,
+        p: &AffinePoint,
+        secretBits: &Vec<Option<WireType>>,
+        precomputedTable: &Vec<AffinePoint>,
     ) -> AffinePoint {
-        let result = AffinePoint::new(precomputedTable[secretBits.len() - 1]);
+        let mut result = precomputedTable[secretBits.len() - 1].clone();
         for j in (0..=secretBits.len() - 2).rev() {
-            let tmp = addAffinePoints(result, precomputedTable[j]);
-            let isOne = secretBits[j];
-            result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
-            result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
+            let tmp = self.addAffinePoints(&result, &precomputedTable[j]);
+            let isOne = &secretBits[j];
+            result.x = Some(result.x.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap()))));
+            result.y = Some(result.y.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap()))));
         }
         result
     }
 
-    fn doubleAffinePoint(p: AffinePoint) -> AffinePoint {
-        let x_2 = p.x.mul(p.x);
-        let l1 =
-            FieldDivisionGadget::new(x_2.mul(3).add(p.x.mul(COEFF_A).mul(2)).add(1), p.y.mul(2))
-                .getOutputWires()[0];
-        let l2 = l1.mul(l1);
-        let newX = l2.sub(COEFF_A).sub(p.x).sub(p.x);
-        let newY = p.x.mul(3).add(COEFF_A).sub(l2).mul(l1).sub(p.y);
+    fn doubleAffinePoint(&self,p: &AffinePoint) -> AffinePoint {
+        let coeff_a=BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap();
+        let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
+        let l1 = FieldDivisionGadget::new(
+            x_2.muli(3,&None).add(p.x.as_ref().unwrap().mulb(&coeff_a,&None).muli(2,&None)).add(1),
+            p.y.as_ref().unwrap().muli(2,&None),&None,self.generator.clone()
+        )
+        .getOutputWires()[0].clone();
+        let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
+        let newX = l2.clone().sub(&coeff_a).sub(p.x.clone().unwrap()).sub(p.x.as_ref().unwrap());
+        let newY = p.x.as_ref().unwrap().muli(3,&None).add(&coeff_a).sub(&l2).mul(l1.as_ref().unwrap()).sub(p.y.as_ref().unwrap());
         AffinePoint::new(newX, newY)
     }
 
-    fn addAffinePoints(p1: AffinePoint, p2: AffinePoint) -> AffinePoint {
-        let diffY = p1.y.sub(p2.y);
-        let diffX = p1.x.sub(p2.x);
-        let q = FieldDivisionGadget::new(diffY, diffX).getOutputWires()[0];
-        let q2 = q.mul(q);
-        let q3 = q2.mul(q);
-        let newX = q2.sub(COEFF_A).sub(p1.x).sub(p2.x);
-        let newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
+    fn addAffinePoints(&self,p1: &AffinePoint, p2: &AffinePoint) -> AffinePoint {
+        let coeff_a=BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap();
+        let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
+        let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
+        let q = FieldDivisionGadget::new(diffY, diffX,&None,self.generator.clone()).getOutputWires()[0].clone();
+        let q2 = q.clone().unwrap().mul(q.as_ref().unwrap());
+        let q3 = q2.clone().mul(q.as_ref().unwrap());
+        let newX = q2.clone().sub(&coeff_a).sub(p1.x.as_ref().unwrap()).sub(p2.x.as_ref().unwrap());
+        let newY =
+            p1.x.as_ref().unwrap().muli(2,&None)
+                .add(p2.x.as_ref().unwrap())
+                .add(&coeff_a)
+                .mul(q.as_ref().unwrap())
+                .sub(q3)
+                .sub(p1.y.as_ref().unwrap());
         AffinePoint::new(newX, newY)
-    }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        vec![outputPublicValue, sharedSecret]
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.mul(x).rem(&Configs.field_prime);
-        let xCubed = xSqred.mul(x).rem(&Configs.field_prime);
+        let xSqred = x.clone().mul(&x).rem(&Configs.field_prime);
+        let xCubed = xSqred.clone().mul(&x).rem(&Configs.field_prime);
         let ySqred = xCubed
-            .add(COEFF_A.mul(xSqred))
-            .add(x)
+            .add(BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap().mul(xSqred))
+            .add(&x)
             .rem(&Configs.field_prime);
-        let y = IntegerFunctions.ressol(ySqred, Configs.field_prime);
+        let y = x; //IntegerFunctions.ressol(ySqred, &Configs.field_prime); //TODO 
         y
     }
 
-    pub fn validateInputs() {
-        generator.addOneAssertion(basePoint.x.checkNonZero());
-        assertValidPointOnEC(basePoint.x, basePoint.y);
-        assertPointOrder(basePoint, baseTable);
-        generator.addOneAssertion(hPoint.x.checkNonZero());
-        assertValidPointOnEC(hPoint.x, hPoint.y);
-        assertPointOrder(basePoint, baseTable);
-        assertPointOrder(hPoint, hTable);
+    pub fn validateInputs(&self) {
+        self.generator
+            .addOneAssertion(&self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),&None);
+        self.assertValidPointOnEC(self.t.basePoint.x.as_ref().unwrap(), self.t.basePoint.y.as_ref().unwrap());
+        self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
+        self.generator
+            .addOneAssertion(&self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),&None);
+        self.assertValidPointOnEC(self.t.hPoint.x.as_ref().unwrap(), self.t.hPoint.y.as_ref().unwrap());
+        self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
+        self.assertPointOrder(&self.t.hPoint, &self.t.hTable);
     }
 
-    fn assertPointOrder(p: AffinePoint, table: Vec<AffinePoint>) {
-        let o = generator.createConstantWire(SUBGROUP_ORDER);
-        let bits = o.getBitWires(SUBGROUP_ORDER.bits()).asArray();
+    fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
+        let subgroup_order=BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(),10).unwrap();
+        let o = self.generator.createConstantWire(&subgroup_order,&None);
+        let bits = o.getBitWiresi(subgroup_order.bits(),&None).asArray().clone();
 
-        let result = AffinePoint::new(table[bits.len() - 1]);
+        let mut result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
-            let tmp = addAffinePoints(result, table[j]);
-            let isOne = bits[j];
-            result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
-            result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
+            let tmp = self.addAffinePoints(&result, &table[j]);
+            let isOne = &bits[j];
+            result.x = Some(result.x.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap()))));
+            result.y = Some(result.y.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap()))));
         }
 
         // verify that: result = -p
-        generator.addEqualityAssertion(result.x, p.x);
-        generator.addEqualityAssertion(result.y, p.y.mul(-1));
+        self.generator.addEqualityAssertion(result.x.as_ref().unwrap(), p.x.as_ref().unwrap(),&None);
+        self.generator.addEqualityAssertion(result.y.as_ref().unwrap(), &p.y.as_ref().unwrap().muli(-1,&None),&None);
 
         // the reason the last iteration is handled separately is that the
         // addition of
@@ -349,11 +462,16 @@ impl Gadget for ECDHKeyExchangeGadget {
         // TODO: add more tests to check this method
     }
 
-    pub fn getOutputPublicValue() -> WireType {
-        outputPublicValue
+    pub fn getOutputPublicValue(&self) -> &Option<WireType> {
+        &self.t.outputPublicValue
     }
 
-    pub fn getSharedSecret() -> WireType {
-        sharedSecret
+    pub fn getSharedSecret(&self) -> &Option<WireType> {
+        &self.t.sharedSecret
+    }
+}
+impl GadgetConfig for Gadget<ECDHKeyExchangeGadget> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.output
     }
 }

@@ -21,29 +21,32 @@ pub struct ZkayEcPkDerivationGadget {
 
 impl ZkayEcPkDerivationGadget {
     pub fn new(secretKey: WireType, validateSecret: bool, desc: &Option<String>) -> Self {
-        super(desc);
-        self.secretBits = secretKey.getBitWires(SECRET_BITWIDTH).asArray();
-        self.basePoint = AffinePoint::new(generator.createConstantWire(4)); // Hardcode base point
+        //super(desc);
+        let mut _self=Self{secretBits : secretKey.getBitWires(SECRET_BITWIDTH).asArray(),
+        basePoint : AffinePoint::new(generator.createConstantWire(4))}; // Hardcode base point
         if validateSecret {
-            checkSecretBits(generator, secretBits);
+            _self.checkSecretBits(generator, secretBits);
         }
-        computeYCoordinates(); // For efficiency reasons, we rely on affine
+        _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
-        buildCircuit();
+         _self.buildCircuit();
+        _self
     }
-}
-impl ZkayEcGadget for ZkayEcPkDerivationGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         let baseTable = preprocess(basePoint);
         outputPublicValue = mul(basePoint, secretBits, baseTable).x;
     }
+
+   
 
     fn computeYCoordinates() {
         let x = (basePoint.x).getConstant();
         basePoint.y = generator.createConstantWire(computeYCoordinate(x));
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayEcGadget for ZkayEcPkDerivationGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         vec![outputPublicValue]
     }
 }

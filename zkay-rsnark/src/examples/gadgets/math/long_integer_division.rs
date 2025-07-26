@@ -7,27 +7,70 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{Util,BigInteger};
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            gadget::Gadget,
+            gadget::GadgetConfig,
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
+};
+// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+// use crate::circuit::eval::instruction::Instruction;
+// use crate::circuit::operations::gadget::GadgetConfig;
+// use crate::circuit::structure::wire_type::WireType;
+// use crate::util::util::{Util,BigInteger};
 
+use rccell::RcCell;
+use std::fmt::Debug;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::marker::PhantomData;
+use std::ops::{Mul,Add,Sub,Rem,Div};
 /**
  * This gadget computes q and r such that a = q * b + r, when both operands are represented
  * as long elements. You can check the RSA gadgets/circuit generators for an example.
  * Most of the optimizations that reduce the cost of this step are more visible
  * in the LongElement class methods called by this gadget.
  */
-pub struct LongIntegerDivision {
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, ImplStructNameConfig)]
+pub struct LongIntegerDivision<T: Debug + Clone> {
     a: LongElement,
     b: LongElement,
-    r: LongElement,
-    q: LongElement,
-    restrictRange: bool,
+    pub r: LongElement,
+    pub q: LongElement,
     bMinBitwidth: i32,
+    restrictRange: bool,
+    t: PhantomData<T>,
 }
-impl LongIntegerDivision {
+impl<T: Debug + Clone> LongIntegerDivision<T> {
     /**
      * @param a
      * @param b
@@ -79,80 +122,117 @@ impl LongIntegerDivision {
         bMinBitwidth: i32,
         restrictRange: bool,
         desc: &Option<String>,
-    ) -> Self {
-        super(desc);
-        buildCircuit();
-        Self {
-            a,
-            b,
-            bMinBitwidth,
-            restrictRange,
-        }
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                r: a.clone(),
+                q: b.clone(),
+                a,
+                b,
+                bMinBitwidth,
+                restrictRange,
+                t: PhantomData,
+            },
+        };
+        _self.buildCircuit();
+        _self
     }
 }
-impl Gadget for LongIntegerDivision {
-    fn buildCircuit() {
-        let aBitwidth = std::cmp::max(1, a.getMaxVal(LongElement.CHUNK_BITWIDTH).bits());
-        let bBitwidth = std::cmp::max(1, b.getMaxVal(LongElement.CHUNK_BITWIDTH).bits());
 
-        let rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
-        let qBitwidth = aBitwidth;
+impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
+    fn buildCircuit(&mut self) {
+        let aBitwidth = std::cmp::max(1, self.t.a.getMaxVal(LongElement::CHUNK_BITWIDTH).bits());
+        let bBitwidth = std::cmp::max(1, self.t.b.getMaxVal(LongElement::CHUNK_BITWIDTH).bits());
 
-        if bMinBitwidth > 0 {
-            qBitwidth = std::cmp::max(1, qBitwidth - bMinBitwidth + 1);
+        let mut rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
+        let mut qBitwidth = aBitwidth;
+
+        if self.t.bMinBitwidth > 0 {
+            qBitwidth = std::cmp::max(1, qBitwidth - self.t.bMinBitwidth as u64 + 1);
         }
 
         // length in what follows means the number of chunks
-        let rLength = (rBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH).ceil() as i32;
-        let qLength = (qBitwidth * 1.0 / LongElement.CHUNK_BITWIDTH).ceil() as i32;
+        let rLength = (rBitwidth as f64/ LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
+        let qLength = (qBitwidth as f64 / LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
 
-        let rWires = generator.createProverWitnessWireArray(rLength);
-        let qWires = generator.createProverWitnessWireArray(qLength);
+        let rWires = self.generator.createProverWitnessWireArray(rLength as usize,&None);
+        let qWires = self.generator.createProverWitnessWireArray(qLength as usize,&None);
 
-        let rChunkBitwidths = vec![LongElement.CHUNK_BITWIDTH; rLength];
-        let qChunkBitwidths = vec![LongElement.CHUNK_BITWIDTH; qLength];
+        let mut rChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; rLength as usize];
+        let mut qChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; qLength  as usize];
 
-        if rBitwidth % LongElement.CHUNK_BITWIDTH != 0 {
-            rChunkBitwidths[rLength - 1] = rBitwidth % LongElement.CHUNK_BITWIDTH;
+        if rBitwidth % LongElement::CHUNK_BITWIDTH as u64!= 0 {
+            rChunkBitwidths[rLength as usize- 1] = rBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
-        if qBitwidth % LongElement.CHUNK_BITWIDTH != 0 {
-            qChunkBitwidths[qLength - 1] = qBitwidth % LongElement.CHUNK_BITWIDTH;
+        if qBitwidth % LongElement::CHUNK_BITWIDTH as u64!= 0 {
+            qChunkBitwidths[qLength as usize- 1] = qBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
+        let a = &self.t.a;
+        let b = &self.t.b;
+        let mut r = LongElement::new(rWires, rChunkBitwidths,self.generator.clone().downgrade());
+        let mut q = LongElement::new(qWires, qChunkBitwidths,self.generator.clone().downgrade());
 
-        r = LongElement::new(rWires, rChunkBitwidths);
-        q = LongElement::new(qWires, qChunkBitwidths);
-
-        generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
-                    let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
-                    let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
-                    let rValue = aValue.rem(bValue);
-                    let qValue = aValue.div(bValue);
-
-                    evaluator.setWireValue(
-                        r.getArray(),
-                        &Util::split(rValue, LongElement.CHUNK_BITWIDTH),
-                    );
-                    evaluator.setWireValue(
-                        q.getArray(),
-                        &Util::split(qValue, LongElement.CHUNK_BITWIDTH),
-                    );
-                });
-        // {
-        //     struct Prover;
-        //     impl Instruction for Prover {
-        //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a, LongElement.CHUNK_BITWIDTH);
-        //             let bValue = evaluator.getWireValue(b, LongElement.CHUNK_BITWIDTH);
+        // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
+        //             let bValue = evaluator.getWireValue(b, LongElement::CHUNK_BITWIDTH);
         //             let rValue = aValue.rem(bValue);
         //             let qValue = aValue.div(bValue);
 
         //             evaluator.setWireValue(
         //                 r.getArray(),
-        //                 Util::split(rValue, LongElement.CHUNK_BITWIDTH),
+        //                 &Util::split(rValue, LongElement::CHUNK_BITWIDTH),
         //             );
         //             evaluator.setWireValue(
         //                 q.getArray(),
-        //                 Util::split(qValue, LongElement.CHUNK_BITWIDTH),
+        //                 &Util::split(qValue, LongElement::CHUNK_BITWIDTH),
+        //             );
+        //         });
+        let prover = crate::impl_prover!(
+                        eval(  a: LongElement,
+                    b: LongElement,r: LongElement,
+                    q: LongElement
+                )  {
+        impl Instruction for Prover{
+         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                   let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
+            let bValue = evaluator.getWireValuei(&self.b, LongElement::CHUNK_BITWIDTH);
+            let rValue = aValue.clone().rem(&bValue);
+            let qValue = aValue.clone().div(&bValue);
+
+            evaluator.setWireValuea(
+                self.r.getArray(),
+                &Util::split(&rValue, LongElement::CHUNK_BITWIDTH),
+            );
+            evaluator.setWireValuea(
+                self.q.getArray(),
+                &Util::split(&qValue, LongElement::CHUNK_BITWIDTH),
+            );
+
+
+        }
+        }
+                    }
+                );
+        self.generator.specifyProverWitnessComputation(prover);
+        // {
+        //     struct Prover;
+        //     impl Instruction for Prover {
+        //         &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
+        //             let bValue = evaluator.getWireValue(b, LongElement::CHUNK_BITWIDTH);
+        //             let rValue = aValue.rem(bValue);
+        //             let qValue = aValue.div(bValue);
+
+        //             evaluator.setWireValue(
+        //                 r.getArray(),
+        //                 Util::split(rValue, LongElement::CHUNK_BITWIDTH),
+        //             );
+        //             evaluator.setWireValue(
+        //                 q.getArray(),
+        //                 Util::split(qValue, LongElement::CHUNK_BITWIDTH),
         //             );
         //         }
         //     }
@@ -162,21 +242,33 @@ impl Gadget for LongIntegerDivision {
         r.restrictBitwidth();
         q.restrictBitwidth();
 
-        let res = q.mul(b).add(r);
+        let res = q.clone().mul(b).add(&r);
 
         // implements the improved long integer equality assertion from xjsnark
         res.assertEquality(a);
 
-        if restrictRange {
+        if self.t.restrictRange {
             r.assertLessThan(b);
         }
+        self.t.r = r;
+        self.t.q = q;
     }
+}
+pub trait LongIntegerDivisionConfig: GadgetConfig {
+    fn getQuotient(&self) -> &LongElement;
+    fn getRemainder(&self) -> &LongElement;
+}
 
-    pub fn getQuotient() -> LongElement {
-        q
-    }
-
-    pub fn getRemainder() -> LongElement {
-        r
-    }
+#[macro_export]
+macro_rules! impl_long_integer_division_config_for {
+    ($impl_type:ident) => {
+        impl LongIntegerDivisionConfig for Gadget<LongIntegerDivision<$impl_type>> {
+            fn getQuotient(&self) -> &LongElement {
+                &self.t.q
+            }
+            fn getRemainder(&self) -> &LongElement {
+                &self.t.r
+            }
+        }
+    };
 }

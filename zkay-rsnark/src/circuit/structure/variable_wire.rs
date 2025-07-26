@@ -43,7 +43,7 @@ pub fn new_variable(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<
     //     {
     //         println!("==new_variable======{wireId}==");
     //     }
-    // super(wireId);
+    // //super(wireId);
     // Wire::<VariableWire> {
     //     wireId,
     //     generator,
@@ -63,7 +63,7 @@ impl WireConfig for Wire<VariableWire> {
 }
 impl Wire<VariableWire> {
     // pub fn new(wireId: i32) -> Self {
-    //     // super(wireId);
+    //     // //super(wireId);
     //     Self {
     //         bitWires: RcCell::new(None),
     //     }

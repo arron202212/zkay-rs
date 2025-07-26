@@ -150,7 +150,7 @@ impl LongElement {
     /**
      * A long element representing a constant.
      */
-    pub fn newc(chunks: Vec<BigInteger>, generator: WeakCell<CircuitGenerator>) -> Self {
+    pub fn newb(chunks: Vec<BigInteger>, generator: WeakCell<CircuitGenerator>) -> Self {
         let mut currentBitwidth = vec![0; chunks.len()];
         for i in 0..chunks.len() {
             currentBitwidth[i] = chunks[i].bits();
@@ -170,7 +170,7 @@ impl LongElement {
         }
     }
 
-    pub fn newb(
+    pub fn neww(
         w: Vec<Option<WireType>>,
         currentMaxValues: Vec<BigInteger>,
         generator: WeakCell<CircuitGenerator>,
@@ -269,7 +269,7 @@ impl LongElement {
                 newMaxValues[i] = maxAlignedChunkValue.clone();
             }
         }
-        LongElement::newb(newArray, newMaxValues, self.generator.clone())
+        LongElement::neww(newArray, newMaxValues, self.generator.clone())
     }
 
     // This method extracts (some of) the bit wires corresponding to a long
@@ -393,7 +393,7 @@ impl LongElement {
         solution
     }
 
-    pub fn muxBit(&self, other: Self, w: WireType) -> Self {
+    pub fn muxBit(&self, other: &Self, w: &WireType) -> Self {
         let length = std::cmp::max(self.array.len(), other.array.len());
         let mut newArray = vec![None; length];
         let mut newMaxValues = vec![BigInteger::ZERO; length];
@@ -431,7 +431,7 @@ impl LongElement {
                     .getConstant();
             }
         }
-        LongElement::newb(newArray, newMaxValues, self.generator.clone())
+        LongElement::neww(newArray, newMaxValues, self.generator.clone())
     }
 
     pub fn checkNonZero(&self) -> WireType {
@@ -485,7 +485,7 @@ impl LongElement {
     // the equals java method to compare objects (this is NOT for circuit
     // equality check)
     // pub fn equals(&self, v:Self) -> bool {
-    //     // if o == null || !(o instance_of LongElement) {
+    //     // if o == None || !(o instance_of LongElement) {
     //     // 	return false;
     //     // }
     //     // LongElement v = (LongElement) o;
@@ -876,7 +876,7 @@ impl LongElement {
     }
 
     // applies an improved technique to assert comparison
-    pub fn assertLessThan(&self, other: Self) {
+    pub fn assertLessThan(&self, other: &Self) {
         // first verify that both elements are aligned
         assert!(
             self.isAligned() && other.isAligned(),
@@ -1055,19 +1055,19 @@ impl Add<BigInteger> for LongElement {
             return self.sub(rhs.neg());
         }
         let generator = self.generator.clone();
-        self.add(LongElement::newc(
+        self.add(&LongElement::newb(
             Util::split(&rhs, Self::CHUNK_BITWIDTH),
             generator,
         ))
     }
 }
 
-impl Add for LongElement {
+impl Add<&Self> for LongElement {
     type Output = Self;
 
-    fn add(self, rhs: Self) -> Self::Output {
+    fn add(self, rhs: &Self) -> Self::Output {
         let generator = self.generator();
-        if self.addOverflowCheck(&rhs) {
+        if self.addOverflowCheck(rhs) {
             //println!("Warning: Addition overflow could happen");
         }
 
@@ -1095,7 +1095,7 @@ impl Add for LongElement {
 
             newMaxValues[i] = max1.add(max2);
         }
-        LongElement::newb(result, newMaxValues, self.generator.clone())
+        LongElement::neww(result, newMaxValues, self.generator.clone())
     }
 }
 impl Sub<u64> for LongElement {
@@ -1116,16 +1116,16 @@ impl Sub<BigInteger> for LongElement {
             return self.add(rhs.neg());
         }
         let generator = self.generator.clone();
-        self.sub(LongElement::newc(
+        self.sub(&LongElement::newb(
             Util::split(&rhs, Self::CHUNK_BITWIDTH),
             generator,
         ))
     }
 }
-impl Sub for LongElement {
+impl Sub<&Self> for LongElement {
     type Output = Self;
 
-    fn sub(self, rhs: Self) -> Self::Output {
+    fn sub(self, rhs: &Self) -> Self::Output {
         assert!(
             self.isAligned() && rhs.isAligned(),
             "Subtraction arguments must be properly aligned"
@@ -1136,7 +1136,7 @@ impl Sub for LongElement {
             self.getMaxVal(Self::CHUNK_BITWIDTH).bits() as i32,
             &None,
         );
-        let other = &rhs;
+        let other = rhs;
         let long_element = &self;
         let prover = crate::impl_prover!(
                         eval( long_element:LongElement,
@@ -1216,13 +1216,13 @@ impl Sub for LongElement {
     }
 }
 
-impl Mul for LongElement {
+impl Mul<&Self> for LongElement {
     type Output = Self;
 
-    fn mul(self, rhs: Self) -> Self::Output {
+    fn mul(self, rhs: &Self) -> Self::Output {
         // Implements the improved long integer multiplication from xjsnark
 
-        if self.mulOverflowCheck(&rhs) {
+        if self.mulOverflowCheck(rhs) {
             //println!("Warning: Mul overflow could happen");
         }
         let length = self.array.len() + rhs.array.len() - 1;
@@ -1339,14 +1339,14 @@ impl Mul for LongElement {
                 );
             }
         }
-        LongElement::newb(result, newMaxValues, self.generator.clone())
+        LongElement::neww(result, newMaxValues, self.generator.clone())
     }
 }
 
 impl Eq for LongElement {}
 impl PartialEq for LongElement {
     fn eq(&self, other: &Self) -> bool {
-        // if o == null || !(o instance_of LongElement) {
+        // if o == None || !(o instance_of LongElement) {
         // 	return false;
         // }
         // LongElement v = (LongElement) o;

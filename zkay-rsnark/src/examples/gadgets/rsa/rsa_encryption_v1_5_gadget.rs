@@ -7,12 +7,51 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
-use examples::gadgets::math::field_division_gadget;
-use examples::gadgets::math::long_integer_mod_gadget;
-
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            gadget::Gadget,
+            gadget::GadgetConfig,
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
+};
+// use crate::circuit::operations::gadget::GadgetConfig;
+// use crate::circuit::structure::wire_type::WireType;
+// use crate::util::util::{BigInteger, Util};
+use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
+use crate::examples::gadgets::math::long_integer_division::{LongIntegerDivision,LongIntegerDivisionConfig};
+use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
+use rccell::RcCell;
+use std::fmt::Debug;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Mul,Add,Sub,Div,Rem,Shl};
 /**
  * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will
  * have the RSA-OAEP method according to PKCS#1 v2.x. The gadget assumes a
@@ -25,7 +64,8 @@ use examples::gadgets::math::long_integer_mod_gadget;
  * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
  *
  */
-
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSAEncryptionV1_5_Gadget {
     modulus: LongElement,
 
@@ -44,49 +84,46 @@ impl RSAEncryptionV1_5_Gadget {
         randomness: Vec<Option<WireType>>,
         rsaKeyBitLength: i32,
         desc: &Option<String>,
-    ) {
-        super(desc);
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        
+            assert!(rsaKeyBitLength % 8 == 0,"RSA Key bit length is assumed to be a multiple of 8");
+       
 
-        if rsaKeyBitLength % 8 != 0 {
-            assert!("RSA Key bit length is assumed to be a multiple of 8");
-        }
-
-        if (plainText.len() > rsaKeyBitLength / 8 - 11
-            || plainText.len() + randomness.len() != rsaKeyBitLength / 8 - 3)
-        {
+  
             //println!("Check Message & Padding length");
-            assert!("Invalid Argument Dimensions for RSA Encryption");
-        }
-
-        self.randomness = randomness;
-        self.plainText = plainText;
-        self.modulus = modulus;
-        self.rsaKeyBitLength = rsaKeyBitLength;
-        buildCircuit();
+            assert!(plainText.len() <= rsaKeyBitLength  as usize/ 8 - 11
+            && plainText.len() + randomness.len() == rsaKeyBitLength as usize / 8 - 3,"Invalid Argument Dimensions for RSA Encryption");
+        
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                randomness,
+                plainText,
+                modulus,
+                ciphertext: vec![],
+                rsaKeyBitLength,
+            },
+        };
+        _self.buildCircuit();
+        _self
     }
 }
-impl Gadget for RSAEncryptionV1_5_Gadget {
-    pub fn getExpectedRandomnessLength(rsaKeyBitLength: i32, plainTextLength: i32) -> i32 {
-        assert!(
-            rsaKeyBitLength % 8 == 0,
-            "RSA Key bit length is assumed to be a multiple of 8"
-        );
-
-        rsaKeyBitLength / 8 - 3 - plainTextLength
-    }
-
-    fn buildCircuit() {
-        let lengthInBytes = rsaKeyBitLength / 8;
-        let paddedPlainText = vec![None; lengthInBytes];
-        for i in 0..plainText.len() {
-            paddedPlainText[plainText.len() - i - 1] = plainText[i];
+impl Gadget<RSAEncryptionV1_5_Gadget> {
+    fn buildCircuit(&mut self) {
+        let lengthInBytes = self.t.rsaKeyBitLength as usize / 8;
+        let mut paddedPlainText = vec![None; lengthInBytes];
+        for i in 0..self.t.plainText.len() {
+            paddedPlainText[self.t.plainText.len() - i - 1] = self.t.plainText[i].clone();
         }
-        paddedPlainText[plainText.len()] = generator.get_zero_wire();
-        for i in 0..randomness.len() {
-            paddedPlainText[plainText.len() + 1 + (randomness.len() - 1) - i] = randomness[i];
+        paddedPlainText[self.t.plainText.len()] = self.generator.get_zero_wire();
+        for i in 0..self.t.randomness.len() {
+            paddedPlainText[self.t.plainText.len() + 1 + (self.t.randomness.len() - 1) - i] =
+                self.t.randomness[i].clone();
         }
-        paddedPlainText[lengthInBytes - 2] = generator.createConstantWire(2);
-        paddedPlainText[lengthInBytes - 1] = generator.get_zero_wire();
+        paddedPlainText[lengthInBytes - 2] = Some(self.generator.createConstantWirei(2,&None));
+        paddedPlainText[lengthInBytes - 1] = self.generator.get_zero_wire();
 
         /*
          * To proceed with the RSA operations, we need to convert the
@@ -98,38 +135,59 @@ impl Gadget for RSAEncryptionV1_5_Gadget {
 
         // 2. Make multiple long integer constant multiplications (need to be
         // done carefully)
-        let paddedMsg = LongElement::new(vec![BigInteger::ZERO]);
+        let mut paddedMsg = LongElement::newb(vec![BigInteger::ZERO],self.generator.clone().downgrade());
         for i in 0..paddedPlainText.len() {
-            let e = LongElement::new(paddedPlainText[i], 8);
-            let c = LongElement::new(Util::split(
-                Util::one().shl(8 * i),
-                LongElement.CHUNK_BITWIDTH,
-            ));
-            paddedMsg = paddedMsg.add(e.mul(c));
+            let e = LongElement::new(vec![paddedPlainText[i].clone()], vec![8],self.generator.clone().downgrade());
+            let c = LongElement::newb(Util::split(
+                &Util::one().shl(8 * i),
+                LongElement::CHUNK_BITWIDTH,
+            ),self.generator.clone().downgrade());
+            paddedMsg = paddedMsg.add(&e.mul(&c));
         }
 
-        let s = paddedMsg;
+        let mut s = paddedMsg.clone();
         for i in 0..16 {
-            s = s.mul(s);
-            s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, false).getRemainder();
+            s = s.clone().mul(&s);
+            s = LongIntegerDivision::<LongIntegerModGadget>::new(
+                s,
+                self.t.modulus.clone(),
+                self.t.rsaKeyBitLength,
+                false,&None,self.generator.clone()
+            )
+            .getRemainder().clone();
         }
-        s = s.mul(paddedMsg);
-        s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, true).getRemainder();
+        s = s.mul(&paddedMsg);
+        s = LongIntegerDivision::<LongIntegerModGadget>::new(
+            s,
+            self.t.modulus.clone(),
+            self.t.rsaKeyBitLength,
+            true,&None,self.generator.clone()
+        )
+        .getRemainder().clone();
 
         // return the cipher text as byte array
-        ciphertext = s.getBits(rsaKeyBitLength).packBitsIntoWords(8);
+        self.t.ciphertext = s.getBitsi(self.t.rsaKeyBitLength).packBitsIntoWords(8,&None);
+    }
+    pub fn getExpectedRandomnessLength(rsaKeyBitLength: i32, plainTextLength: i32) -> i32 {
+        assert!(
+            rsaKeyBitLength % 8 == 0,
+            "RSA Key bit length is assumed to be a multiple of 8"
+        );
+
+        rsaKeyBitLength / 8 - 3 - plainTextLength
     }
 
-    pub fn checkRandomnessCompliance() {
+    pub fn checkRandomnessCompliance(&self) {
         // assert the randomness vector has non-zero bytes
-        for i in 0..randomness.len() {
-            randomness[i].restrictBitLength(8);
+        for i in 0..self.t.randomness.len() {
+            self.t.randomness[i].as_ref().unwrap().restrictBitLength(8, &None);
             // verify that each element has a multiplicative inverse
-            FieldDivisionGadget::new(generator.get_one_wire(), randomness[i]);
+            FieldDivisionGadget::new(self.generator.get_one_wire().unwrap(), self.t.randomness[i].clone().unwrap(),&None,self.generator.clone());
         }
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        ciphertext
+}
+impl GadgetConfig for Gadget<RSAEncryptionV1_5_Gadget> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.ciphertext
     }
 }

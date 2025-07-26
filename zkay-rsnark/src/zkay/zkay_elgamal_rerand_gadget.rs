@@ -27,11 +27,11 @@ impl ZkayElgamalRerandGadget {
         self.c2 = c2;
         self.randomnessBits = randomnessBits;
         self.pk = pk;
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
-}
-impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         // create encryption of zero (z1, z2)
         let sharedSecret = mulScalar(pk, randomnessBits);
         let z1 = mulScalar(getGenerator(), randomnessBits);
@@ -41,8 +41,9 @@ impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget {
         o1 = addPoints(c1, z1);
         o2 = addPoints(c2, z2);
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalRerandGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         vec![o1.x, o1.y, o2.x, o2.y]
     }
 }

@@ -1,5 +1,5 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
@@ -78,7 +78,7 @@ pub struct Symmetric {
 }
 impl Symmetric {
     pub fn new(keyBits: i32) -> Self {
-        // super(keyBits);
+        // //super(keyBits);
         Self {
             Keys: HashMap::new(),
             sharedKeys: HashMap::new(),
@@ -120,7 +120,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
 
     fn getKey(&self, keyName: String) -> WireType {
         let key = sharedKeys.get(keyName);
-        if key == null {
+        if key == None {
             key = computeKey(keyName);
             sharedKeys.put(keyName, key);
         }
@@ -188,7 +188,7 @@ pub struct Asymmetric {
 }
 impl Asymmetric {
     pub fn new(&self, keyBits: i32) -> Self {
-        super(keyBits);
+        //super(keyBits);
         keys = HashMap::new();
     }
 }

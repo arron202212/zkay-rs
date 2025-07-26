@@ -1,7 +1,7 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 
 pub struct JubJubPoint {
@@ -24,7 +24,7 @@ impl JubJubPoint {
 pub struct ZkayBabyJubJubGadget;
 impl ZkayBabyJubJubGadget {
     pub fn new(desc: &Option<String>) -> Self {
-        super(desc);
+        //super(desc);
 
         // We assume the underlying field matches the base field of BabyJubJub (so that we can avoid alignment/modulus)
         assert!(Configs.field_prime.toString().equals(
@@ -118,18 +118,33 @@ impl ZkayBabyJubJubGadget {
 
         result
     }
-}
-impl Gadget for ZkayBabyJubJubGadget {
+
     /**
      * Returns a wire holding the inverse of a in the native base field.
      */
     fn nativeInverse(a: WireType) -> WireType {
-        let ainv = generator.createProverWitnessWire();
-        generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
-                    let aValue = evaluator.getWireValue(a);
+        let ainv = generator.createProverWitnessWire(&None);
+        // generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.getWireValue(a);
+        //             let inverseValue = aValue.modInverse(BASE_ORDER);
+        //             evaluator.setWireValue(ainv, inverseValue);
+        //         });
+let prover = crate::impl_prover!(
+                                eval(  input: WireType,
+                            inverse: WireType
+                        )  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                           
+ let aValue = evaluator.getWireValue(a);
                     let inverseValue = aValue.modInverse(BASE_ORDER);
                     evaluator.setWireValue(ainv, inverseValue);
-                });
+
+                }
+                }
+                            }
+                        );
+        self.generator.specifyProverWitnessComputation(prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
@@ -148,4 +163,6 @@ impl Gadget for ZkayBabyJubJubGadget {
 
         ainv
     }
+}
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget> {
 }

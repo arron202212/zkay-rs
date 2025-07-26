@@ -1,10 +1,10 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
-use examples::gadgets::math::long_integer_mod_gadget;
-use examples::gadgets::math::long_integer_mod_pow_gadget;
-use examples::gadgets::math::longIntegerModInverseGadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget;
+use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::examples::gadgets::math::longIntegerModInverseGadget;
 use zkay::HomomorphicInput;
 use zkay::typed_wire;
 use zkay::zkay_paillier_fast_enc_gadget;
@@ -15,18 +15,18 @@ pub struct PaillierBackend {
     maxNumCipherChunks: i32,
 }
 impl PaillierBackend {
-    const CHUNK_SIZE: i32 = LongElement.CHUNK_BITWIDTH; //120;
+    const CHUNK_SIZE: i32 = LongElement::CHUNK_BITWIDTH; //120;
     pub fn new(keyBits: i32) {
         // Same chunk size for key, randomness, and ciphertext
 
         //  {
-        // 	if CHUNK_SIZE != LongElement.CHUNK_BITWIDTH {
-        // 		assert!("Paillier chunk size must match LongElement.CHUNK_BITWIDTH.\n" +
-        // 				"If LongElement.CHUNK_BITWIDTH needs to be changed, change this _and_ meta.py in jsnark!");
+        // 	if CHUNK_SIZE != LongElement::CHUNK_BITWIDTH {
+        // 		assert!("Paillier chunk size must match LongElement::CHUNK_BITWIDTH.\n" +
+        // 				"If LongElement::CHUNK_BITWIDTH needs to be changed, change this _and_ meta.py in jsnark!");
         // 	}
         // }
 
-        // super(keyBits); // keyBits = bits of n
+        // //super(keyBits); // keyBits = bits of n
         assert!(
             keyBits > CHUNK_SIZE,
             "Key size too small ( {keyBits}  <  {CHUNK_SIZE}  bits)"
@@ -111,8 +111,8 @@ impl Asymmetric for HomomorphicBackend {
                 let mut cipherVal;
                 let mut plainWire;
 
-                assert!(lhs.is_some(), "lhs is null");
-                assert!(rhs.is_some(), "rhs is null");
+                assert!(lhs.is_some(), "lhs is None");
+                assert!(rhs.is_some(), "rhs is None");
                 if lhs.isPlain() && rhs.isCipher() {
                     plainWire = lhs.getPlain();
                     cipherVal = toLongElement(rhs);
@@ -159,7 +159,7 @@ impl Asymmetric for HomomorphicBackend {
         let n = getKey(keyName);
         let nSquareMaxBits = 2 * keyBits; // Maximum bit length of n^2
         let maxNumChunks =
-            (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
+            (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         n.mul(n).align(maxNumChunks)
     }
 
@@ -199,7 +199,7 @@ impl Asymmetric for HomomorphicBackend {
     fn toLongElement(input: HomomorphicInput) -> LongElement {
         assert!(
             input.is_some() && !input.isPlain(),
-            "Input null or not ciphertext"
+            "Input None or not ciphertext"
         );
         let cipher = input.getCipher();
         assert!(

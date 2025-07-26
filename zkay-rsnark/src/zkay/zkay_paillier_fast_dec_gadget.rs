@@ -1,10 +1,10 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::math::long_integer_floor_div_gadget;
-use examples::gadgets::math::long_integer_mod_gadget;
-use examples::gadgets::math::long_integer_mod_inverse_gadget;
-use examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::examples::gadgets::math::long_integer_floor_div_gadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget;
+use crate::examples::gadgets::math::long_integer_mod_inverse_gadget;
+use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
 
 pub struct ZkayPaillierFastDecGadget {
     n: LongElement,
@@ -22,20 +22,20 @@ impl ZkayPaillierFastDecGadget {
         cipher: LongElement,
         desc: &Option<String>,
     ) {
-        super(desc);
+        //super(desc);
         self.n = n;
         self.nBits = nBits;
         let nSquareMaxBits = 2 * nBits;
         let maxNumChunks =
-            (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
+            (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         self.nSquare = n.mul(n).align(maxNumChunks);
         self.lambda = lambda;
         self.cipher = cipher;
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
-}
-impl Gadget for ZkayPaillierFastDecGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
         let lambdaInverse =
             LongIntegerModInverseGadget::new(lambda, n, false, "lambda^(-1)").getResult();
@@ -54,8 +54,9 @@ impl Gadget for ZkayPaillierFastDecGadget {
     pub fn getPlaintext() -> LongElement {
         plain
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl GadgetConfig for Gadget<ZkayPaillierFastDecGadget> {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         plain.getArray()
     }
 }

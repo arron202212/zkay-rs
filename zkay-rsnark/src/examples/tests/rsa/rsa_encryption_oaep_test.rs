@@ -14,8 +14,8 @@ use crate::circuit::structure::circuit_generator::{
 };
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::rsa::rsa_encryption_oaep_gadget;
-use examples::generators::rsa::rsa_util;
+use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget;
+use crate::examples::generators::rsa::rsa_util;
 
 #[cfg(test)]
 mod test {
@@ -31,7 +31,7 @@ mod test {
         let keySizeArray = vec![1024, 2048, 3072];
 
         for keySize in keySizeArray {
-            let cipherTextBytes = vec![byte::default(); keySize / 8];
+            let cipherTextBytes = vec![0; keySize / 8];
 
             let random = SecureRandom::new();
             let keyGen = KeyPairGenerator.getInstance("RSA");
@@ -43,7 +43,7 @@ mod test {
             let generator = CircuitGenerator::new("RSA" + keySize + "_OAEP_Enc_TestEncryption");
 
             let rsaKeyLength = keySize;
-            let plainTextLength = plainText.len()();
+            let plainTextLength = plainText.len();
             #[derive(Debug, Clone, ImplStructNameConfig)]
             struct CGTest {
                 inputMessage: Vec<Option<WireType>>,
@@ -59,7 +59,7 @@ mod test {
                 fn buildCircuit(&mut self) {
                     inputMessage = createProverWitnessWireArray(plainTextLength); // in bytes
                     for i in 0..plainTextLength {
-                        inputMessage[i].restrictBitLength(8);
+                        inputMessage[i].restrictBitLength(8, &None);
                     }
 
                     rsaModulus = createLongElementInput(rsaKeyLength);
@@ -78,7 +78,7 @@ mod test {
                     makeOutputArray(cipherText, "Output cipher text");
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     for i in 0..inputMessage.len() {
                         evaluator.setWireValue(inputMessage[i], plainText.charAt(i));
                     }
@@ -90,28 +90,23 @@ mod test {
                     evaluator.setWireValue(
                         self.rsaModulus,
                         rsaModulusValue,
-                        LongElement.CHUNK_BITWIDTH,
+                        LongElement::CHUNK_BITWIDTH,
                     );
 
                     let privKey = keyPair.getPrivate();
 
                     cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
                     let tmp = cipher.doFinal(plainText.getBytes());
-                    System.arraycopy(tmp, 0, cipherTextBytes, 0, keySize / 8);
+                    cipherTextBytes[0..keySize / 8].clone_from_slice(&tmp[0..]);
 
-                    let cipherTextPadded = vec![byte::default(); cipherTextBytes.len() + 1];
-                    System.arraycopy(
-                        cipherTextBytes,
-                        0,
-                        cipherTextPadded,
-                        1,
-                        cipherTextBytes.len(),
-                    );
+                    let cipherTextPadded = vec![0; cipherTextBytes.len() + 1];
+                    cipherTextPadded[1..].clone_from_slice(&cipherTextBytes);
+
                     cipherTextPadded[0] = 0;
 
                     let result = RSAUtil.extractRSAOAEPSeed(cipherTextBytes, privKey);
 
-                    let check = Arrays.equals(result[0], plainText.getBytes());
+                    let check = result[0] == plainText.getBytes();
                     if !check {
                         panic!("Randomness Extraction did not decrypt right");
                     }
@@ -150,11 +145,7 @@ mod test {
 
             // ignore the sign byte if any was added
             if t.bitLength() == keySize && cipherTextBytesFromCircuit.len() == keySize / 8 + 1 {
-                cipherTextBytesFromCircuit = Arrays.copyOfRange(
-                    cipherTextBytesFromCircuit,
-                    1,
-                    cipherTextBytesFromCircuit.len(),
-                );
+                cipherTextBytesFromCircuit = cipherTextBytesFromCircuit[1..].to_vec();
             }
 
             for k in 0..cipherTextBytesFromCircuit.len() {

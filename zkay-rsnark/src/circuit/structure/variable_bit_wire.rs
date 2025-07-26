@@ -32,7 +32,7 @@ pub fn new_variable_bit(
     //     {
     //         println!("==new_variable_bit======{wireId}==");
     //     }
-    // super(wireId);
+    // //super(wireId);
     // Wire::<VariableBitWire> {
     //     wireId,
     //     generator,
@@ -57,7 +57,7 @@ impl WireConfig for Wire<VariableBitWire> {
 impl BitWireConfig for Wire<VariableBitWire> {}
 impl Wire<VariableBitWire> {
     // pub fn new(wireId: i32) -> Self {
-    //     // super(wireId);
+    //     // //super(wireId);
     //     Self
     // }
 }

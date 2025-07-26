@@ -54,7 +54,7 @@ pub fn new_bit(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<BitWi
     // {
     //     println!("=new_bit======={wireId}==");
     // }
-    // super(wireId);
+    // //super(wireId);
     // Wire::<BitWire> {
     //     wireId,
     //     generator,

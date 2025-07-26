@@ -7,13 +7,53 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
-use crate::circuit::structure::wire_array;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
-use examples::gadgets::hash::sha256_gadget;
-use examples::gadgets::math::long_integer_mod_gadget;
-
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            gadget::Gadget,
+            gadget::GadgetConfig,
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
+};
+// use crate::circuit::operations::gadget::GadgetConfig;
+// use crate::circuit::structure::wire_array;
+// use crate::circuit::structure::wire_type::WireType;
+// use crate::util::util::{BigInteger, Util};
+use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::math::long_integer_division::LongIntegerDivision;
+ use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
+use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
+use rccell::RcCell;
+use std::fmt::Debug;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Mul,Add,Sub,Div,Rem,Shl};
 /**
  * A gadget for RSA encryption according to PKCS#1 v2.2. The gadget assumes a
  * hardcoded pub  exponent of 0x10001, and uses SHA256 as the hash function
@@ -28,7 +68,8 @@ use examples::gadgets::math::long_integer_mod_gadget;
  * https://www.emc.com/collateral/white-
  * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
  */
-
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSAEncryptionOAEPGadget {
     modulus: LongElement,
 
@@ -42,144 +83,162 @@ pub struct RSAEncryptionOAEPGadget {
 }
 impl RSAEncryptionOAEPGadget {
     pub const SHA256_DIGEST_LENGTH: i32 = 32; // in bytes
-
-    pub const lSHA256_HASH: Vec<byte> = vec![ (byte) 0xe3,
-			(byte) 0xb0, (byte) 0xc4, 0x42, (byte) 0x98, (byte) 0xfc, 0x1c,
-			0x14, (byte) 0x9a, (byte) 0xfb, (byte) 0xf4, (byte) 0xc8,
-			(byte) 0x99, 0x6f, (byte) 0xb9, 0x24, 0x27, (byte) 0xae, 0x41,
-			(byte) 0xe4, 0x64, (byte) 0x9b, (byte) 0x93, 0x4c, (byte) 0xa4,
-			(byte) 0x95, (byte) 0x99, 0x1b, 0x78, 0x52, (byte) 0xb8, 0x55 ];
     pub fn new(
         modulus: LongElement,
         plainText: Vec<Option<WireType>>,
         seed: Vec<Option<WireType>>,
         rsaKeyBitLength: i32,
         desc: &Option<String>,
-    ) -> Self {
-        super(desc);
-
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         assert!(
             rsaKeyBitLength % 8 == 0,
             "RSA Key bit length is assumed to be a multiple of 8"
         );
 
         assert!(
-            plainText.len() <= rsaKeyBitLength / 8 - 2 * SHA256_DIGEST_LENGTH - 2,
+            plainText.len() as i32 <= rsaKeyBitLength / 8 - 2 * Self::SHA256_DIGEST_LENGTH - 2,
             "Message too long,Invalid message length for RSA Encryption"
         );
 
         assert!(
-            seed.len() == SHA256_DIGEST_LENGTH,
+            seed.len() as i32 == Self::SHA256_DIGEST_LENGTH,
             "Seed must have the same length as the hash function output,Invalid seed dimension for RSA Encryption"
         );
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                seed,
+                plainText,
+                modulus,
+                ciphertext: vec![],
+                rsaKeyBitLength,
+            },
+        };
 
-        self.seed = seed;
-        self.plainText = plainText;
-        self.modulus = modulus;
-        self.rsaKeyBitLength = rsaKeyBitLength;
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
 }
-impl Gadget for RSAEncryptionOAEPGadget {
-    fn buildCircuit() {
-        let mLen = plainText.len();
-        let hLen = SHA256_DIGEST_LENGTH;
-        let keyLen = rsaKeyBitLength / 8; // in bytes
-        let mut paddingString = vec![generator.get_zero_wire(); keyLen - mLen - 2 * hLen - 2];
+impl Gadget<RSAEncryptionOAEPGadget> {
+    pub const lSHA256_HASH: [u8;32] = [
+        0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9,
+        0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52,
+        0xb8, 0x55,
+    ];
+    fn buildCircuit(&mut self) {
+        let mLen = self.t.plainText.len();
+        let hLen = RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize;
+        let keyLen = self.t.rsaKeyBitLength as usize / 8; // in bytes
+        let mut paddingString = vec![self.generator.get_zero_wire(); keyLen - mLen - 2 * hLen - 2];
 
         let mut db = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
-                db[i] = generator.createConstantWire((lSHA256_HASH[i] + 256) % 256);
+                db[i] = Some(self
+                    .generator
+                    .createConstantWirei((Self::lSHA256_HASH[i] as i64 + 256) % 256,&None));
             } else if i < hLen + paddingString.len() {
-                db[i] = paddingString[i - hLen];
+                db[i] = paddingString[i - hLen].clone();
             } else if i < hLen + paddingString.len() + 1 {
-                db[i] = generator.get_one_wire();
+                db[i] = self.generator.get_one_wire();
             } else {
-                db[i] = plainText[i - (hLen + paddingString.len() + 1)];
+                db[i] = self.t.plainText[i - (hLen + paddingString.len() + 1)].clone();
             }
         }
 
-        let dbMask = mgf1(seed, keyLen - hLen - 1);
-        let maskedDb = vec![None; keyLen - hLen - 1];
+        let dbMask = self.mgf1(&self.t.seed, (keyLen - hLen - 1) as i32);
+        let mut maskedDb = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
-            maskedDb[i] = dbMask[i].xorBitwise(db[i], 8);
+            maskedDb[i] = Some(dbMask[i].as_ref().unwrap().xorBitwise(db[i].as_ref().unwrap(), 8,&None));
         }
 
-        let seededMask = mgf1(maskedDb, hLen);
-        let maskedSeed = vec![None; hLen];
+        let seededMask = self.mgf1(&maskedDb, hLen as i32);
+        let mut maskedSeed = vec![None; hLen];
         for i in 0..hLen {
-            maskedSeed[i] = seededMask[i].xorBitwise(seed[i], 8);
+            maskedSeed[i] = Some(seededMask[i].as_ref().unwrap().xorBitwise(self.t.seed[i].as_ref().unwrap(), 8,&None));
         }
 
-        let paddedByteArray = Util::concat(maskedSeed, maskedDb); // Big-Endian
+        let paddedByteArray = Util::concat(&maskedSeed, &maskedDb); // Big-Endian
 
         // The LongElement implementation is LittleEndian, so we will process the array in reverse order
 
-        let paddedMsg = LongElement::new(vec![BigInteger::ZERO]);
+        let mut paddedMsg = LongElement::newb(vec![BigInteger::ZERO],self.generator.clone().downgrade());
         for i in 0..paddedByteArray.len() {
-            let e = LongElement::new(paddedByteArray[paddedByteArray.len() - i - 1], 8);
-            let c = LongElement::new(Util::split(
-                Util::one().shl(8 * i),
-                LongElement.CHUNK_BITWIDTH,
-            ));
-            paddedMsg = paddedMsg.add(e.mul(c));
+            let e = LongElement::new(vec![paddedByteArray[paddedByteArray.len() - i - 1].clone()], vec![8],self.generator.clone().downgrade());
+            let c = LongElement::newb(Util::split(
+                &Util::one().shl(8 * i),
+                LongElement::CHUNK_BITWIDTH,
+            ),self.generator.clone().downgrade());
+            paddedMsg = paddedMsg.add(&e.mul(&c));
         }
 
         // do modular exponentiation
-        let s = paddedMsg;
+        let mut s = paddedMsg.clone();
         for i in 0..16 {
-            s = s.mul(s);
-            s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, false).getRemainder();
+            s = s.clone().mul(&s);
+            s = LongIntegerDivision::<LongIntegerModGadget>::new(
+                s,
+                self.t.modulus.clone(),
+                self.t.rsaKeyBitLength,
+                false,&None,self.generator.clone()
+            )
+            .getRemainder().clone();
         }
-        s = s.mul(paddedMsg);
-        s = LongIntegerModGadget::new(s, modulus, rsaKeyBitLength, true).getRemainder();
+        s = s.mul(&paddedMsg);
+        s = LongIntegerDivision::<LongIntegerModGadget>::new(
+            s,
+            self.t.modulus.clone(),
+            self.t.rsaKeyBitLength,
+            true,&None,self.generator.clone()
+        )
+        .getRemainder().clone();
 
         // return the cipher text as byte array
-        ciphertext = s.getBits(rsaKeyBitLength).packBitsIntoWords(8);
+        self.t.ciphertext = s.getBitsi(self.t.rsaKeyBitLength).packBitsIntoWords(8,&None);
     }
 
-    pub fn checkSeedCompliance() {
-        for i in 0..seed.len() {
+    pub fn checkSeedCompliance(&self) {
+        for i in 0..self.t.seed.len() {
             // Verify that the seed wires are bytes
             // This is also checked already by the sha256 gadget in the mgf1 calls, but added here for clarity
-            seed[i].restrictBitLength(8);
+            self.t.seed[i].as_ref().unwrap().restrictBitLength(8, &None);
         }
     }
 
-    fn mgf1(ins: Vec<Option<WireType>>, length: i32) -> Vec<Option<WireType>> {
+    fn mgf1(&self, ins: &Vec<Option<WireType>>, length: i32) -> Vec<Option<WireType>> {
         let mut mgfOutputList = vec![];
-        for i in 0..=(length * 1.0 / SHA256_DIGEST_LENGTH).ceil() as i32 - 1 {
+        for i in
+            0..=(length as f64 / RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as f64).ceil() as i64 - 1
+        {
             // the standard follows a Big Endian format
-            let counter = generator.createConstantWireArray(vec![
-					(byte) (i >>> 24), (byte) (i >>> 16), (byte) (i >>> 8),
-					(byte) i ]);
+            let counter =
+                self.generator
+                    .createConstantWireArrayi(&vec![(i >> 24), (i >> 16), (i >> 8), i],&None);
 
-            let inputToHash = Util::concat(ins, counter);
-            let shaGadget = SHA256Gadget::new(inputToHash, 8, inputToHash.len(), false, true);
+            let inputToHash = Util::concat(&ins, &counter);
+            let shaGadget = SHA256Gadget::new(inputToHash.clone(), 8, inputToHash.len(), false, true,&None,self.generator.clone());
             let digest = shaGadget.getOutputWires();
 
-            let msgHashBytes = WireArray::new(digest).getBits(32).packBitsIntoWords(8);
+            let mut msgHashBytes = WireArray::new(digest.clone(),self.generator.clone().downgrade()).getBits(32,&None).packBitsIntoWords(8,&None);
             // reverse the byte array representation of each word of the digest
             // to
             // be compatible with the endianess
             for j in 0..8 {
-                let tmp = msgHashBytes[4 * j];
-                msgHashBytes[4 * j] = msgHashBytes[(4 * j + 3)];
-                msgHashBytes[4 * j + 3] = tmp;
-                tmp = msgHashBytes[4 * j + 1];
-                msgHashBytes[4 * j + 1] = msgHashBytes[4 * j + 2];
-                msgHashBytes[4 * j + 2] = tmp;
+                msgHashBytes.swap(4 * j,4 * j+3);
+                 msgHashBytes.swap(4 * j+1,4 * j+2);
             }
             for j in 0..msgHashBytes.len() {
-                mgfOutputList.add(msgHashBytes[j]);
+                mgfOutputList.push(msgHashBytes[j].clone());
             }
         }
-        let out = mgfOutputList.toArray(&None);
-        out[..length].to_vec()
+        let out = mgfOutputList;//.toArray(&None);
+        out[..length as usize].to_vec()
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        ciphertext
+}
+impl GadgetConfig for Gadget<RSAEncryptionOAEPGadget> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.ciphertext
     }
 }

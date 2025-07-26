@@ -12,7 +12,7 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget;
 
 // test case from:  https://www.cryptolux.org/index.php/FELICS
 
@@ -37,7 +37,7 @@ mod test {
                 makeOutputArray(ciphertext);
             }
 
-            pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+            fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                 let keyV = [
                     BigInteger::from(0x68e90956L),
                     BigInteger::from(0x29e3585fL),

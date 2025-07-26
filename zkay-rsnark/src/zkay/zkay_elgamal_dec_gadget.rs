@@ -33,9 +33,8 @@ impl ZkayElgamalDecGadget {
         self.expectedMsg = expectedMsg;
         buildCircuit();
     }
-}
-impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         // ensure pk and skBits form a key pair
         let pkExpected = mulScalar(getGenerator(), skBits);
         let keyOk = pkExpected
@@ -56,8 +55,9 @@ impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
             .and(expectedMsgEmbedded.y.isEqualTo(msgEmbedded.y))
             .and(keyOk);
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         vec![self.msgOk]
     }
 }

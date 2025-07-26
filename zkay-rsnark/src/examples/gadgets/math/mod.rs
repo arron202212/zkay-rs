@@ -1,9 +1,9 @@
-// pub mod dot_product_gadget;
+pub mod dot_product_gadget;
 pub mod field_division_gadget;
-// pub mod long_integer_division;
-// pub mod long_integer_floor_div_gadget;
-// pub mod long_integer_mod_gadget;
-// pub mod long_integer_mod_inverse_gadget;
-// pub mod long_integer_mod_pow_gadget;
-// pub mod mod_constant_gadget;
-// pub mod mod_gadget;
+pub mod long_integer_division;
+pub mod long_integer_floor_div_gadget;
+pub mod long_integer_mod_gadget;
+pub mod long_integer_mod_inverse_gadget;
+pub mod long_integer_mod_pow_gadget;
+pub mod mod_constant_gadget;
+pub mod mod_gadget;

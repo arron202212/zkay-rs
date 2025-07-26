@@ -24,14 +24,14 @@ impl ZkayElgamalAddGadget {
         self.d2 = d2;
         buildCircuit();
     }
-}
-impl ZkayBabyJubJubGadget for ZkayElgamalAddGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         e1 = addPoints(c1, d1);
         e2 = addPoints(c2, d2);
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalAddGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         vec![e1.x, e1.y, e2.x, e2.y]
     }
 }

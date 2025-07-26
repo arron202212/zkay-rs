@@ -5,7 +5,7 @@ use  zkay::zkay_type::zk_uint;
 
 pub struct SampleRehomCircuit extends ZkayCircuitBase {
     pub  SampleRehomCircuit() {
-        super("zk__Verify_Test_foo", 16, 4, 5, true);
+        //super("zk__Verify_Test_foo", 16, 4, 5, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
@@ -30,7 +30,7 @@ pub struct SampleRehomCircuit extends ZkayCircuitBase {
     }
 
     
-      fn buildCircuit() {
+      fn buildCircuit(&mut self) {
         super.buildCircuit();
         addS("x1", 1, ZkUint(32));
         addS("x1_R", 1, ZkUint(256));

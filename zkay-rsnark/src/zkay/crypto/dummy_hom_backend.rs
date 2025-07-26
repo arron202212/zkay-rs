@@ -1,5 +1,5 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use zkay::homomorphic_input;
@@ -12,7 +12,7 @@ impl Asymmetric for DummyHomBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
     // fn DummyHomBackend( keyBits:i32 )->   {
-    // 	super(keyBits);
+    // 	//super(keyBits);
     // }
 
     pub fn getKeyChunkSize() -> i32 {
@@ -47,7 +47,7 @@ impl Asymmetric for DummyHomBackend {
     }
 
     fn getCipherWire(input: HomomorphicInput, name: String) -> WireType {
-        assert!(input.is_some(), "{name} is null");
+        assert!(input.is_some(), "{name} is None");
         assert!(!input.isPlain(), "{name} is not a ciphertext");
         assert!(input.getLength() == 1, "{name} has invalid length");
 
@@ -114,8 +114,8 @@ impl HomomorphicBackend for DummyHomBackend {
                 // Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
                 let plain;
                 let cipher;
-                assert!(lhs.is_some(), "lhs is null");
-                assert!(rhs.is_some(), "rhs is null");
+                assert!(lhs.is_some(), "lhs is None");
+                assert!(rhs.is_some(), "rhs is None");
                 if lhs.isPlain() && rhs.isCipher() {
                     plain = encodePlaintextIfSigned(lhs.getPlain());
                     cipher = getCipherWire(rhs, "rhs");

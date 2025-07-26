@@ -23,6 +23,7 @@ use std::{
 };
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Gadget<T> {
+    pub generator: RcCell<CircuitGenerator>,
     pub description: String,
     pub t: T,
 }
@@ -35,7 +36,7 @@ pub struct Gadget<T> {
 // }
 
 pub trait GadgetConfig: Debug {
-    fn getOutputWires(&self) -> Vec<Option<WireType>>;
+    fn getOutputWires(&self) -> &Vec<Option<WireType>>;
 
     // fn toString(&self) -> String {
     //     "getClass().getSimpleName()".to_owned() + " " + &self.description()
@@ -53,7 +54,7 @@ macro_rules! impl_display_of_gadget_for {
     ($impl_type:ty) => {
         impl std::fmt::Display for $impl_type {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(f, "{} {}", self.getSimpleName(), self.description(),)
+                write!(f, "{} {}", self.name(), self.description(),)
             }
         }
     };

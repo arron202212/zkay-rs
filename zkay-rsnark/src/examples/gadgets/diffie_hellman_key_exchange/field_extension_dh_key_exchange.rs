@@ -6,10 +6,48 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
-
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            gadget::Gadget,
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
+};
+// use crate::circuit::structure::wire_type::WireType;
+// use crate::util::util::{BigInteger, Util};
+use rccell::RcCell;
+use std::fmt::Debug;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+use zkay_derive::ImplStructNameConfig;
 /**
  * Performs Key Exchange using a field extension F_p[x]/(x^\mu - \omega), where
  * the polynomial (x^\mu - \omega) is irreducible. The inputs to this gadget:
@@ -23,6 +61,7 @@ use crate::util::util::{BigInteger, Util};
  *
  *
  */
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct FieldExtensionDHKeyExchange {
     g: Vec<Option<WireType>>, // base
     h: Vec<Option<WireType>>, // other party's pub  input (supposedly, h = g^(the
@@ -38,6 +77,7 @@ pub struct FieldExtensionDHKeyExchange {
     sharedSecret: Vec<Option<WireType>>,      // the derived secret key h^s
     gPowersTable: Vec<Vec<Option<WireType>>>,
     hPowersTable: Vec<Vec<Option<WireType>>>,
+    output: Vec<Option<WireType>>,
 }
 impl FieldExtensionDHKeyExchange {
     /**
@@ -56,135 +96,148 @@ impl FieldExtensionDHKeyExchange {
         h: Vec<Option<WireType>>,
         secretExponentBits: Vec<Option<WireType>>,
         omega: i64,
-        desc: String,
-    ) -> Self {
-        super(desc);
-        self.g = g;
-        self.h = h;
-        self.secretExponentBits = secretExponentBits;
-        self.omega = omega;
-        mu = g.len();
+        desc:  &Option<String>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         assert!(h.len() == g.len(), "g and h must have the same dimension");
 
         // since this is typically a  input by the prover,
         // the check is also done here for safety. No need to remove this if
         // done also outside the gadget. The back end takes care of caching
-        for w in secretExponentBits {
-            generator.addBinaryAssertion(w);
+        let generators = generator.borrow().clone();
+        for w in &secretExponentBits {
+            generators.addBinaryAssertion(w.as_ref().unwrap(),&None);
         }
-
-        buildCircuit();
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                mu: g.len() as i32,
+                g,
+                h,
+                secretExponentBits,
+                omega,
+                outputPublicValue: vec![],
+sharedSecret: vec![],
+gPowersTable: vec![],
+hPowersTable: vec![],
+output: vec![],
+            },
+        };
+        _self.buildCircuit();
+        _self
     }
 }
-impl Gadget for FieldExtensionDHKeyExchange {
-    fn buildCircuit() {
-        gPowersTable = preparePowersTable(g);
-        hPowersTable = preparePowersTable(h);
-        outputPublicValue = exp(g, secretExponentBits, gPowersTable);
-        sharedSecret = exp(h, secretExponentBits, hPowersTable);
+impl Gadget<FieldExtensionDHKeyExchange> {
+    fn buildCircuit(&mut self) {
+        self.t.gPowersTable = self.preparePowersTable(&self.t.g);
+        self.t.hPowersTable = self.preparePowersTable(&self.t.h);
+        self.t.outputPublicValue =
+            self.exp(&self.t.g, &self.t.secretExponentBits, &self.t.gPowersTable);
+        self.t.sharedSecret = self.exp(&self.t.h, &self.t.secretExponentBits, &self.t.hPowersTable);
+        self.t.output = Util::concat(&self.t.outputPublicValue, &self.t.sharedSecret);
     }
 
-    fn mul(a: Vec<Option<WireType>>, b: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let c = vec![None; mu];
+    fn mul(&self, a: &Vec<Option<WireType>>, b: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+        let mu=self.t.mu as usize;
+        let zero_wire=self.generator.get_zero_wire().unwrap();
+        let mut c = vec![zero_wire; mu];
 
         for i in 0..mu {
-            c[i] = generator.get_zero_wire();
-        }
-        for i in 0..mu {
             for j in 0..mu {
-                let k = i + j;
+                let mut k = i + j;
                 if k < mu {
-                    c[k] = c[k].add(a[i].mul(b[j]));
+                    c[k] = c[k].clone().add(&a[i].clone().unwrap().mul(b[j].as_ref().unwrap()));
                 }
                 k = i + j - mu;
                 if k >= 0 {
-                    c[k] = c[k].add(a[i].mul(b[j]).mul(omega));
+                    c[k] = c[k].clone().add(&a[i].clone().unwrap().mul(b[j].as_ref().unwrap()).muli(self.t.omega,&None));
                 }
             }
         }
-        c
+        c.into_iter().map(|x|Some(x)).collect()
     }
 
-    fn preparePowersTable(base: Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
-        let powersTable = vec![vec![None; mu]; secretExponentBits.len() + 1];
+    fn preparePowersTable(&self, base: &Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
+        let mu=self.t.mu as usize;
+        let mut powersTable = vec![vec![None; mu]; self.t.secretExponentBits.len() + 1];
         powersTable[0] = base[..mu].to_vec();
-        for j in 1..secretExponentBits.len() + 1 {
-            powersTable[j] = mul(powersTable[j - 1], powersTable[j - 1]);
+        for j in 1..self.t.secretExponentBits.len() + 1 {
+            powersTable[j] = self.mul(&powersTable[j - 1], &powersTable[j - 1]);
         }
         powersTable
     }
 
     fn exp(
-        base: Vec<Option<WireType>>,
-        expBits: Vec<Option<WireType>>,
-        powersTable: Vec<Vec<Option<WireType>>>,
+        &self,
+        base: &Vec<Option<WireType>>,
+        expBits: &Vec<Option<WireType>>,
+        powersTable: &Vec<Vec<Option<WireType>>>,
     ) -> Vec<Option<WireType>> {
-        let c = vec![generator.get_zero_wire(); mu];
-        c[0] = generator.get_one_wire();
+        let mut c = vec![self.generator.get_zero_wire(); self.t.mu as usize];
+        c[0] = self.generator.get_one_wire();
         for j in 0..expBits.len() {
-            let tmp = mul(c, powersTable[j]);
-            for i in 0..mu {
-                c[i] = c[i].add(expBits[j].mul(tmp[i].sub(c[i])));
+            let tmp = self.mul(&c, &powersTable[j]);
+            for i in 0..self.t.mu  as usize{
+                c[i] = Some(c[i].clone().unwrap().add(expBits[j].clone().unwrap().mul(tmp[i].clone().unwrap().sub(c[i].as_ref().unwrap()))));
             }
         }
         c
     }
 
     // TODO: Test more scenarios
-    pub fn validateInputs(subGroupOrder: BigInteger) {
+    pub fn validateInputs(&self, subGroupOrder: BigInteger) {
         // g and h are not zero and not one
 
         // checking the first chunk
-        let zeroOrOne1 = g[0].mul(g[0].sub(1));
-        let zeroOrOne2 = h[0].mul(h[0].sub(1));
+        let zeroOrOne1 = self.t.g[0].clone().unwrap().mul(self.t.g[0].clone().unwrap().sub(1));
+        let zeroOrOne2 = self.t.h[0].clone().unwrap().mul(self.t.h[0].clone().unwrap().sub(1));
 
         // checking the rest
-        let allZero1 = generator.get_one_wire();
-        let allZero2 = generator.get_one_wire();
+        let mut allZero1 = self.generator.get_one_wire().unwrap();
+        let mut allZero2 = self.generator.get_one_wire().unwrap();
 
-        for i in 1..mu {
-            allZero1 = allZero1.mul(g[i].checkNonZero().invAsBit());
-            allZero2 = allZero2.mul(h[i].checkNonZero().invAsBit());
+        for i in 1..self.t.mu as usize {
+            allZero1 = allZero1.mul(self.t.g[i].as_ref().unwrap().checkNonZero(&None).invAsBit(&None).as_ref().unwrap());
+            allZero2 = allZero2.mul(self.t.h[i].as_ref().unwrap().checkNonZero(&None).invAsBit(&None).as_ref().unwrap());
         }
 
         // assertion
-        generator.addZeroAssertion(zeroOrOne1.mul(allZero1));
-        generator.addZeroAssertion(zeroOrOne2.mul(allZero2));
+        self.generator.addZeroAssertion(&zeroOrOne1.mul(allZero1),&None);
+        self.generator.addZeroAssertion(&zeroOrOne2.mul(allZero2),&None);
 
         // verify order of points
 
         let bitLength = subGroupOrder.bits();
-        let bits = vec![None; bitLength];
-        for i in 0..bitLength {
-            if subGroupOrder.bit(i) {
-                bits[i] = generator.get_one_wire();
+        let bits:Vec<_> = (0..bitLength).map(|i|if subGroupOrder.bit(i) {
+                 self.generator.get_one_wire()
             } else {
-                bits[i] = generator.get_zero_wire();
-            }
-        }
+               self.generator.get_zero_wire()
+            }).collect();
 
-        let result1 = exp(g, bits, gPowersTable);
-        let result2 = exp(h, bits, hPowersTable);
+
+        let result1 = self.exp(&self.t.g, &bits, &self.t.gPowersTable);
+        let result2 = self.exp(&self.t.h, &bits, &self.t.hPowersTable);
 
         // both should be one
 
-        generator.addOneAssertion(result1[0]);
-        generator.addOneAssertion(result2[0]);
-        for i in 1..mu {
-            generator.addZeroAssertion(result1[i]);
-            generator.addZeroAssertion(result1[i]);
+        self.generator.addOneAssertion(result1[0].as_ref().unwrap(),&None);
+        self.generator.addOneAssertion(result2[0].as_ref().unwrap(),&None);
+        for i in 1..self.t.mu as usize{
+            self.generator.addZeroAssertion(result1[i].as_ref().unwrap(),&None);
+            self.generator.addZeroAssertion(result1[i].as_ref().unwrap(),&None);
         }
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        Util::concat(outputPublicValue, sharedSecret)
+    pub fn getOutputPublicValue(&self) -> &Vec<Option<WireType>> {
+        &self.t.outputPublicValue
     }
 
-    pub fn getOutputPublicValue() -> Vec<Option<WireType>> {
-        outputPublicValue
+    pub fn getSharedSecret(&self) -> &Vec<Option<WireType>> {
+        &self.t.sharedSecret
     }
-
-    pub fn getSharedSecret() -> Vec<Option<WireType>> {
-        sharedSecret
+}
+impl GadgetConfig for Gadget<FieldExtensionDHKeyExchange> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.output
     }
 }

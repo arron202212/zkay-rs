@@ -63,8 +63,8 @@ impl<T> Op<T> {
 
         for w in &inputs {
             if w.is_none() {
-                //println!("One of the input wires is null: {inputs:?}");
-                eyre::bail!("A null wire");
+                //println!("One of the input wires is None: {inputs:?}");
+                eyre::bail!("A None wire");
             } else if w.as_ref().unwrap().getWireId() == -1 {
                 //println!("One of the input wires is not packed: {inputs:?}");
                 eyre::bail!("A wire with a negative id");
@@ -72,8 +72,8 @@ impl<T> Op<T> {
         }
         for w in &outputs {
             if w.is_none() {
-                //println!("One of the output wires is null {outputs:?}");
-                eyre::bail!("A null wire");
+                //println!("One of the output wires is None {outputs:?}");
+                eyre::bail!("A None wire");
             }
         }
         Ok(Self {

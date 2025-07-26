@@ -23,16 +23,16 @@ impl ZkayElgamalEncGadget {
         self.pk = pk;
         buildCircuit();
     }
-}
-impl ZkayBabyJubJubGadget for ZkayElgamalEncGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         let msgEmbedded = mulScalar(getGenerator(), msgBits);
         let sharedSecret = mulScalar(pk, randomnessBits);
         c1 = mulScalar(getGenerator(), randomnessBits);
         c2 = addPoints(msgEmbedded, sharedSecret);
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayBabyJubJubGadget for ZkayElgamalEncGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         vec![c1.x, c1.y, c2.x, c2.y]
     }
 }

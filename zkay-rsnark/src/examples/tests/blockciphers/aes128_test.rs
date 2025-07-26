@@ -12,8 +12,8 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::blockciphers::aes128_cipher_gadget;
-use examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2;
+use crate::examples::gadgets::blockciphers::aes128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2;
 
 #[cfg(test)]
 mod test {
@@ -44,14 +44,14 @@ mod test {
                     makeOutputArray(ciphertext);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     let keyV = BigInteger::new("2b7e151628aed2a6abf7158809cf4f3c", 16);
                     let msgV = BigInteger::new("ae2d8a571e03ac9c9eb76fac45af8e51", 16);
 
                     let keyArray = keyV.toByteArray();
                     let msgArray = msgV.toByteArray();
-                    msgArray = Arrays.copyOfRange(msgArray, msgArray.len() - 16, msgArray.len());
-                    keyArray = Arrays.copyOfRange(keyArray, keyArray.len() - 16, keyArray.len());
+                    msgArray = msgArray[msgArray.len() - 16..msgArray.len()].to_vec();
+                    keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                     for i in 0..plaintext.len() {
                         evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
@@ -70,8 +70,7 @@ mod test {
             let result = BigInteger::new("f5d3d58503b9699de785895a96fdbaaf", 16);
 
             let resultArray = result.toByteArray();
-            resultArray =
-                Arrays.copyOfRange(resultArray, resultArray.len() - 16, resultArray.len());
+            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
 
             for i in 0..16 {
                 assertEquals(
@@ -108,14 +107,14 @@ mod test {
                     makeOutputArray(ciphertext);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     let keyV = BigInteger::new("2b7e151628aed2a6abf7158809cf4f3c", 16);
                     let msgV = BigInteger::new("6bc1bee22e409f96e93d7e117393172a", 16);
 
                     let keyArray = keyV.toByteArray();
                     let msgArray = msgV.toByteArray();
-                    msgArray = Arrays.copyOfRange(msgArray, msgArray.len() - 16, msgArray.len());
-                    keyArray = Arrays.copyOfRange(keyArray, keyArray.len() - 16, keyArray.len());
+                    msgArray = msgArray[msgArray.len() - 16..msgArray.len()].to_vec();
+                    keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                     for i in 0..plaintext.len() {
                         evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
@@ -136,8 +135,7 @@ mod test {
             // expected output:0xf5d3d58503b9699de785895a96fdbaaf
 
             let resultArray = result.toByteArray();
-            resultArray =
-                Arrays.copyOfRange(resultArray, resultArray.len() - 16, resultArray.len());
+            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
 
             for i in 0..16 {
                 assertEquals(
@@ -174,14 +172,14 @@ mod test {
                     makeOutputArray(ciphertext);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     let keyV = BigInteger::new("2b7e151628aed2a6abf7158809cf4f3c", 16);
                     let msgV = BigInteger::new("30c81c46a35ce411e5fbc1191a0a52ef", 16);
 
                     let keyArray = keyV.toByteArray();
                     let msgArray = msgV.toByteArray();
-                    msgArray = Arrays.copyOfRange(msgArray, msgArray.len() - 16, msgArray.len());
-                    keyArray = Arrays.copyOfRange(keyArray, keyArray.len() - 16, keyArray.len());
+                    msgArray = msgArray[msgArray.len() - 16..msgArray.len()].to_vec();
+                    keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                     for i in 0..plaintext.len() {
                         evaluator.setWireValue(plaintext[i], msgArray[i] & 0xff);
@@ -200,8 +198,7 @@ mod test {
             let result = BigInteger::new("43b1cd7f598ece23881b00e3ed030688", 16);
 
             let resultArray = result.toByteArray();
-            resultArray =
-                Arrays.copyOfRange(resultArray, resultArray.len() - 16, resultArray.len());
+            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
 
             for i in 0..16 {
                 assertEquals(
@@ -238,14 +235,14 @@ mod test {
                     makeOutputArray(ciphertext);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     let keyV = BigInteger::new("2b7e151628aed2a6abf7158809cf4f3c", 16);
                     let msgV = BigInteger::new("f69f2445df4f9b17ad2b417be66c3710", 16);
 
                     let keyArray = keyV.toByteArray();
                     let msgArray = msgV.toByteArray();
-                    msgArray = Arrays.copyOfRange(msgArray, msgArray.len() - 16, msgArray.len());
-                    keyArray = Arrays.copyOfRange(keyArray, keyArray.len() - 16, keyArray.len());
+                    msgArray = msgArray[msgArray.len() - 16..msgArray.len()].to_vec();
+                    keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                     for i in 0..plaintext.len() {
                         evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
@@ -264,8 +261,7 @@ mod test {
             let result = BigInteger::new("7b0c785e27e8ad3f8223207104725dd4", 16);
 
             let resultArray = result.toByteArray();
-            resultArray =
-                Arrays.copyOfRange(resultArray, resultArray.len() - 16, resultArray.len());
+            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
 
             for i in 0..16 {
                 assertEquals(
@@ -299,14 +295,14 @@ mod test {
                     makeOutputArray(ciphertext);
                 }
 
-                pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+                fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                     let keyV = BigInteger::new("2b7e151628aed2a6abf7158809cf4f3c", 16);
                     let msgV = BigInteger::new("f69f2445df4f9b17ad2b417be66c3710", 16);
 
                     let keyArray = keyV.toByteArray();
                     let msgArray = msgV.toByteArray();
-                    msgArray = Arrays.copyOfRange(msgArray, msgArray.len() - 16, msgArray.len());
-                    keyArray = Arrays.copyOfRange(keyArray, keyArray.len() - 16, keyArray.len());
+                    msgArray = msgArray[msgArray.len() - 16..msgArray.len()].to_vec();
+                    keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                     for i in 0..plaintext.len() {
                         evaluator.setWireValue(plaintext[i], (msgArray[i] & 0xff));
@@ -325,8 +321,7 @@ mod test {
             let result = BigInteger::new("7b0c785e27e8ad3f8223207104725dd4", 16);
 
             let resultArray = result.toByteArray();
-            resultArray =
-                Arrays.copyOfRange(resultArray, resultArray.len() - 16, resultArray.len());
+            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
 
             for i in 0..16 {
                 assertEquals(

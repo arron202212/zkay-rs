@@ -13,7 +13,7 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
 
 use crate::util::util::{BigInteger, Util};
 
@@ -23,7 +23,7 @@ mod test {
 
     //   class ModPowCircuitGenerator extends CircuitGenerator {
     // 	 ModPowCircuitGenerator(String name, let b, BigInteger e, BigInteger m) {
-    // 		super(name);
+    // 		//super(name);
     // 		self.b = b;
     // 		self.e = e;
     // 		self.m = m;
@@ -48,10 +48,10 @@ mod test {
             makeOutputArray(modPow.getOutputWires(), "c");
         }
 
-        pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
-            evaluator.setWireValue(bWire, b, LongElement.CHUNK_BITWIDTH);
-            evaluator.setWireValue(eWire, e, LongElement.CHUNK_BITWIDTH);
-            evaluator.setWireValue(mWire, m, LongElement.CHUNK_BITWIDTH);
+        fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+            evaluator.setWireValue(bWire, b, LongElement::CHUNK_BITWIDTH);
+            evaluator.setWireValue(eWire, e, LongElement::CHUNK_BITWIDTH);
+            evaluator.setWireValue(mWire, m, LongElement::CHUNK_BITWIDTH);
         }
     }
     impl CircuitGeneratorExtend<CGTest> {
@@ -65,7 +65,7 @@ mod test {
 
             let evaluator = getCircuitEvaluator();
             let outValues = evaluator.getWiresValues(get_out_wires().toArray(vec![None; 0]));
-            Util::group(outValues, LongElement.CHUNK_BITWIDTH)
+            Util::group(outValues, LongElement::CHUNK_BITWIDTH)
         }
     }
 
@@ -82,7 +82,7 @@ mod test {
             eWire: None,
             mWire: None,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("ModPow testZeroBase", t);
+        let mut generator = CGTest::new("ModPow testZeroBase", t);
         let c = generator.computeResult();
         assertEquals(BigInteger::ZERO, c);
     }
@@ -100,7 +100,7 @@ mod test {
             eWire: None,
             mWire: None,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("ModPow testZeroExponent", t);
+        let mut generator = CGTest::new("ModPow testZeroExponent", t);
         // let mut generator = ModPowCircuitGenerator::new("ModPow testZeroExponent", b, e, m);
         let c = generator.computeResult();
         assertEquals(Util::one(), c);
@@ -119,7 +119,7 @@ mod test {
             eWire: None,
             mWire: None,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("ModPow testSmallNumbers", t);
+        let mut generator = CGTest::new("ModPow testSmallNumbers", t);
         // let mut generator = ModPowCircuitGenerator::new("ModPow testSmallNumbers", b, e, m);
         let c = generator.computeResult();
         assertEquals(BigInteger::new("34"), c);
@@ -138,7 +138,7 @@ mod test {
             eWire: None,
             mWire: None,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("ModPow testMediumNumbers", t);
+        let mut generator = CGTest::new("ModPow testMediumNumbers", t);
         // let mut generator = ModPowCircuitGenerator::new("ModPow testMediumNumbers", b, e, m);
         let c = generator.computeResult();
         assertEquals(BigInteger::new("1150783129"), c);
@@ -163,7 +163,7 @@ mod test {
             eWire: None,
             mWire: None,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("ModPow testBigNumbers", t);
+        let mut generator = CGTest::new("ModPow testBigNumbers", t);
         // let mut generator = ModPowCircuitGenerator::new("ModPow testBigNumbers", b, e, m);
         let c = generator.computeResult();
         assertEquals(
@@ -193,7 +193,7 @@ mod test {
             eWire: None,
             mWire: None,
         };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("ModPow testRealisticNumbers", t);
+        let mut generator = CGTest::new("ModPow testRealisticNumbers", t);
         // let mut generator = ModPowCircuitGenerator::new("ModPow testRealisticNumbers", b, e, m);
         let c = generator.computeResult();
         assertEquals(

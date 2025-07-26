@@ -2,8 +2,8 @@ use crate::circuit::auxiliary::long_element;
 use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
-use examples::gadgets::math::long_integer_floor_div_gadget;
-use examples::gadgets::math::long_integer_mod_gadget;
+use crate::examples::gadgets::math::long_integer_floor_div_gadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget;
 
 use zkay::zkay_circuit_base::negate;
 use zkay::zkay_type::*;
@@ -17,11 +17,11 @@ impl TypedWire {
     pub fn new(wire: WireType, zkay_type: ZkayType, name: String, restrict: Vec<bool>) -> Self {
         assert!(
             wire.is_some() && zkay_type.is_some(),
-            "Arguments cannot be null"
+            "Arguments cannot be None"
         );
 
         if (restrict.len() > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
-            wire.restrictBitLength(zkay_type.bitwidth);
+            wire.restrictBitLength(zkay_type.bitwidth,&None);
         }
         self.wire = wire;
         self.zkay_type = zkay_type;

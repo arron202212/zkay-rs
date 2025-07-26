@@ -8,7 +8,7 @@ use  zkay::zkay_type::zk_bool;
 
 pub struct SampleMulCircuit extends ZkayCircuitBase {
     pub  SampleMulCircuit() {
-        super("zk__Verify_Test_foo", 6, 4, 0, true);
+        //super("zk__Verify_Test_foo", 6, 4, 0, true);
         addCryptoBackend("elgamal", "elgamal", 508);
     }
 
@@ -27,7 +27,7 @@ pub struct SampleMulCircuit extends ZkayCircuitBase {
     }
 
     
-      fn buildCircuit() {
+      fn buildCircuit(&mut self) {
         super.buildCircuit();
         addK("elgamal", "glob_key_Elgamal__owner", 2);
 

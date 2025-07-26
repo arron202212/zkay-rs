@@ -1,4 +1,4 @@
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
 use zkay::*;
@@ -13,7 +13,7 @@ impl ElgamalBackend {
     const RND_CHUNK_SIZE: i32 = 256;
 
     fn ElgamalBackend(keyBits: i32) {
-        super(keyBits);
+        //super(keyBits);
 
         // pub  key must be a BabyJubJub point (two coordinates)
         assert!(keyBits == 2 * EC_COORD_BITS, "pub  key size mismatch");

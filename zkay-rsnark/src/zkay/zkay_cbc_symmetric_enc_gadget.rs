@@ -1,9 +1,9 @@
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
-use examples::gadgets::blockciphers::aes128_cipher_gadget;
-use examples::gadgets::blockciphers::chaskeylts128_cipher_gadget;
-use examples::gadgets::blockciphers::speck128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::aes128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::chaskeylts128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::speck128_cipher_gadget;
 use crate::util::util::{Util,BigInteger};
 use zkay::crypto::crypto_backend;
 
@@ -36,7 +36,7 @@ impl ZkayCBCSymmetricEncGadget {
         cipherType: CipherType,
         desc: &Option<String>,
     ) -> Self {
-        // super(desc);
+        // //super(desc);
         let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWires(256).asArray());
         //println!("Plain length [bits]: {}", plaintextBits.len());
         Self {
@@ -107,8 +107,8 @@ impl ZkayCBCSymmetricEncGadget {
         preparedKey
     }
 }
-impl Gadget for ZkayCBCSymmetricEncGadget {
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+impl GadgetConfig for Gadget<ZkayCBCSymmetricEncGadget> {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         //println!("Cipher length [bits]: {}", cipherBits.len());
         return WireArray::new(Util::reverseBytes(Util::concat(ivBits, cipherBits)))
             .packBitsIntoWords(CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE);

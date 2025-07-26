@@ -13,8 +13,8 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
+use crate::examples::gadgets::hash::sha256_gadget;
 use crate::util::util::{BigInteger, Util};
-use examples::gadgets::hash::sha256_gadget;
 
 /**
  * Tests SHA256 standard cases.
@@ -44,7 +44,7 @@ mod test {
                 makeOutputArray(digest);
             }
 
-            pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+            fn generateSampleInput(e: &mut CircuitEvaluator) {
                 // no input needed
             }
         };
@@ -80,7 +80,7 @@ mod test {
                 makeOutputArray(digest);
             }
 
-            pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+            fn generateSampleInput(e: &mut CircuitEvaluator) {
                 for i in 0..inputStr.len() {
                     e.setWireValue(inputWires[i], inputStr.charAt(i));
                 }
@@ -118,7 +118,7 @@ mod test {
                 makeOutputArray(digest);
             }
 
-            pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+            fn generateSampleInput(e: &mut CircuitEvaluator) {
                 for i in 0..inputStr.len() {
                     e.setWireValue(inputWires[i], inputStr.charAt(i));
                 }
@@ -156,7 +156,7 @@ mod test {
                 makeOutputArray(digest);
             }
 
-            pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+            fn generateSampleInput(e: &mut CircuitEvaluator) {
                 for i in 0..inputStr.len() {
                     e.setWireValue(inputWires[i], inputStr.charAt(i));
                 }
@@ -214,7 +214,7 @@ mod test {
                     makeOutputArray(digest);
                 }
 
-                pub fn generateSampleInput(e: &mut CircuitEvaluator) {
+                fn generateSampleInput(e: &mut CircuitEvaluator) {
                     for i in 0..inputWires.len() {
                         let sum = BigInteger::ZERO;
                         for j in i * numBytesPerInputWire

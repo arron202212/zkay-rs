@@ -6,19 +6,25 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
-
+use rccell::RcCell;
+use std::fmt::Debug;
+use std::fs::File;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Add, Mul, Neg, Rem, Sub};
+use zkay_derive::ImplStructNameConfig;
 /**
  * Implements the Speck lightweight block cipher
  * https://eprint.iacr.org/2015/585.pdf
  *
  */
-
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct Speck128CipherGadget {
     plaintext: Vec<Option<WireType>>,
     expandedKey: Vec<Option<WireType>>,
@@ -37,30 +43,41 @@ impl Speck128CipherGadget {
         plaintext: Vec<Option<WireType>>,
         expandedKey: Vec<Option<WireType>>,
         desc: &Option<String>,
-    ) {
-        super(desc);
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         assert!(
             plaintext.len() == 2 && expandedKey.len() == 32,
             "Invalid Input"
         );
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                plaintext,
+                expandedKey,
+                ciphertext: vec![],
+            },
+        };
 
-        self.plaintext = plaintext;
-        self.expandedKey = expandedKey;
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
 }
-impl Gadget for Speck128CipherGadget {
-    fn buildCircuit() {
-        let (mut x, mut y) = (plaintext[1], plaintext[0]);
-        let mut ciphertext = vec![None; 2];
+impl Gadget<Speck128CipherGadget> {
+    fn buildCircuit(&mut self) {
+        let (mut x, mut y) = (
+            self.t.plaintext[1].clone().unwrap(),
+            self.t.plaintext[0].clone().unwrap(),
+        );
+
         for i in 0..=31 {
-            x = x.rotateRight(64, 8).add(y);
-            x = x.trimBits(65, 64);
-            x = x.xorBitwise(expandedKey[i], 64);
-            y = y.rotateLeft(64, 3).xorBitwise(x, 64);
+            x = x.rotateRight(64, 8, &None).add(&y);
+            x = x.trimBits(65, 64, &None);
+            x = x.xorBitwise(self.t.expandedKey[i].as_ref().unwrap(), 64, &None);
+            y = y.rotateLeft(64, 3, &None).xorBitwise(&x, 64, &None);
         }
-        ciphertext[1] = x;
-        ciphertext[0] = y;
+        self.t.ciphertext[1] = Some(x);
+        self.t.ciphertext[0] = Some(y);
     }
 
     /**
@@ -69,22 +86,38 @@ impl Gadget for Speck128CipherGadget {
      *            : 2 64-bit words
      * @return
      */
-    pub fn expandKey(key: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
-        let k = vec![None; 32];
-        let l = vec![None; 32];
-        k[0] = key[0];
-        l[0] = key[1];
+    pub fn expandKey(
+        key: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Vec<Option<WireType>> {
+        // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut k = vec![None; 32];
+        let mut l = vec![None; 32];
+        k[0] = key[0].clone();
+        l[0] = key[1].clone();
         for i in 0..=32 - 2 {
-            l[i + 1] = k[i].add(l[i].rotateLeft(64, 56));
-            l[i + 1] = l[i + 1].trimBits(65, 64);
-            l[i + 1] = l[i + 1].xorBitwise(generator.createConstantWire(i), 64);
-            k[i + 1] = k[i].rotateLeft(64, 3).xorBitwise(l[i + 1], 64);
+            l[i + 1] = Some(
+                k[i].clone()
+                    .unwrap()
+                    .add(l[i].as_ref().unwrap().rotateLeft(64, 56, &None)),
+            );
+            l[i + 1] = Some(l[i + 1].as_ref().unwrap().trimBits(65, 64, &None));
+            l[i + 1] = Some(l[i + 1].as_ref().unwrap().xorBitwise(
+                &generator.createConstantWirei(i as i64, &None),
+                64,
+                &None,
+            ));
+            k[i + 1] = Some(k[i].as_ref().unwrap().rotateLeft(64, 3, &None).xorBitwise(
+                l[i + 1].as_ref().unwrap(),
+                64,
+                &None,
+            ));
         }
         k
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
-        ciphertext
+}
+impl GadgetConfig for Gadget<Speck128CipherGadget> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.ciphertext
     }
 }

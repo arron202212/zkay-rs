@@ -1,9 +1,9 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::math::long_integer_floor_div_gadget;
-use examples::gadgets::math::long_integer_mod_gadget;
-use examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::examples::gadgets::math::long_integer_floor_div_gadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget;
+use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
 
 pub struct ZkayPaillierDecGadget {
     n: LongElement,
@@ -24,21 +24,21 @@ impl ZkayPaillierDecGadget {
         cipher: LongElement,
         desc: &Option<String>,
     ) -> Self {
-        super(desc);
+        //super(desc);
         self.n = n;
         self.nBits = nBits;
         let nSquareMaxBits = 2 * nBits;
         let maxNumChunks =
-            (nSquareMaxBits + (LongElement.CHUNK_BITWIDTH - 1)) / LongElement.CHUNK_BITWIDTH;
+            (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         self.nSquare = n.mul(n).align(maxNumChunks);
         self.lambda = lambda;
         self.mu = mu;
         self.cipher = cipher;
-        buildCircuit();
+        _self.buildCircuit();
+        _self
     }
-}
-impl Gadget for ZkayPaillierDecGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
 
         // plain = L(cipher^lambda mod n^2) * mu mod n
@@ -55,8 +55,9 @@ impl Gadget for ZkayPaillierDecGadget {
     pub fn getPlaintext() -> LongElement {
         plain
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl GadgetConfig for Gadget<ZkayPaillierDecGadget> {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         plain.getArray()
     }
 }

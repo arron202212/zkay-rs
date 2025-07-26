@@ -6,94 +6,163 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    arc_cell_new,
+    circuit::{
+        InstanceOf, StructNameConfig,
+        auxiliary::long_element::LongElement,
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{
+            gadget::Gadget,
+            gadget::GadgetConfig,
+            primitive::{
+                assert_basic_op::{AssertBasicOp, new_assert},
+                basic_op::BasicOp,
+                mul_basic_op::{MulBasicOp, new_mul},
+            },
+            wire_label_instruction::LabelType,
+            wire_label_instruction::WireLabelInstruction,
+        },
+        structure::{
+            circuit_generator::{CGConfig, CircuitGenerator,CGInstance,CGConfigFields, CircuitGeneratorExtend},
+            constant_wire::{ConstantWire, new_constant},
+            variable_bit_wire::VariableBitWire,
+            variable_wire::{VariableWire, new_variable},
+            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::{
+        run_command::run_command,
+        util::ARcCell,
+        util::{BigInteger, Util},
+    },
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
-use examples::gadgets::hash::merkle_tree_path_gadget;
-use examples::gadgets::hash::subset_sum_hash_gadget;
+// use crate::circuit::config::config::Configs;
+// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+// use crate::circuit::structure::circuit_generator::{
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+//     getActiveCircuitGenerator,
+// };
+// use crate::circuit::structure::wire_type::WireType;
+// use crate::util::util::{BigInteger, Util};
+use crate::examples::gadgets::hash::merkle_tree_path_gadget::MerkleTreePathGadget;
+use crate::examples::gadgets::hash::subset_sum_hash_gadget::SubsetSumHashGadget;
+use std::ops::{Mul,Add,Sub,Div,Rem};
+use zkay_derive::ImplStructNameConfig;
 
+crate::impl_struct_name_for!(CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator>);
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct MerkleTreeMembershipCircuitGenerator {
     publicRootWires: Vec<Option<WireType>>,
     intermediateHasheWires: Vec<Option<WireType>>,
-    directionSelector: WireType,
+    directionSelector: Option<WireType>,
     leafWires: Vec<Option<WireType>>,
 
     treeHeight: i32,
 
-    merkleTreeGadget: MerkleTreePathGadget,
+    merkleTreeGadget: Option<Gadget<MerkleTreePathGadget>>,
 }
 impl MerkleTreeMembershipCircuitGenerator {
-    const leafNumOfWords: i32 = 10;
+  const leafNumOfWords: i32 = 10;
     const leafWordBitWidth: i32 = 32;
-    const hashDigestDimension: i32 = SubsetSumHashGadget.DIMENSION;
-    pub fn new(circuitName: String, treeHeight: i32) -> Self {
-        super(circuitName);
-        self.treeHeight = treeHeight;
+    const hashDigestDimension: i32 = SubsetSumHashGadget::DIMENSION;
+    pub fn new(circuit_name: &str, treeHeight: i32) -> CircuitGeneratorExtend<Self> {
+        //super(circuitName);
+        CircuitGeneratorExtend::new(
+            circuit_name,
+            Self {
+                publicRootWires: vec![],
+                intermediateHasheWires: vec![],
+                directionSelector: None,
+                leafWires: vec![],
+                treeHeight,
+                merkleTreeGadget: None,
+            },
+        )
     }
 }
-impl CircuitGenerator for MerkleTreeMembershipCircuitGenerator {
-    fn buildCircuit() {
+impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
+  
+    fn buildCircuit(&mut self) {
+        let hashDigestDimension=MerkleTreeMembershipCircuitGenerator::hashDigestDimension;
         //  declare inputs
-        publicRootWires = createInputWireArray(hashDigestDimension, "Input Merkle Tree Root");
-        intermediateHasheWires =
-            createProverWitnessWireArray(hashDigestDimension * treeHeight, "Intermediate Hashes");
-        directionSelector = createProverWitnessWire("Direction selector");
-        leafWires = createProverWitnessWireArray(leafNumOfWords, "Secret Leaf");
+        let publicRootWires =
+            self.createInputWireArray(hashDigestDimension as usize, &Some("Input Merkle Tree Root".to_owned()));
+        let intermediateHasheWires = self.createProverWitnessWireArray(
+            (hashDigestDimension * self.t.treeHeight) as usize,
+            &Some("Intermediate Hashes".to_owned()),
+        );
+        let directionSelector = self.createProverWitnessWire(&Some("Direction selector".to_owned()));
+        let leafWires = self.createProverWitnessWireArray(MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize, &Some("Secret Leaf".to_owned()));
 
         // connect gadget
-        merkleTreeGadget = MerkleTreePathGadget::new(
-            directionSelector,
-            leafWires,
-            intermediateHasheWires,
-            leafWordBitWidth,
-            treeHeight,
+        let merkleTreeGadget = MerkleTreePathGadget::new(
+            directionSelector.clone(),
+            leafWires.clone(),
+            intermediateHasheWires.clone(),
+            MerkleTreeMembershipCircuitGenerator::leafWordBitWidth,
+            self.t.treeHeight,&None,self.cg()
         );
         let actualRoot = merkleTreeGadget.getOutputWires();
 
         /** Now compare the actual root with the pub  known root **/
-        let errorAccumulator = get_zero_wire();
-        for i in 0..hashDigestDimension {
-            let diff = actualRoot[i].sub(publicRootWires[i]);
-            let check = diff.checkNonZero();
+        let mut errorAccumulator = self.get_zero_wire().unwrap();
+        for i in 0..hashDigestDimension as usize{
+            let diff = actualRoot[i].clone().unwrap().sub(publicRootWires[i].as_ref().unwrap());
+            let check = diff.checkNonZero(&None);
             errorAccumulator = errorAccumulator.add(check);
         }
 
-        makeOutputArray(actualRoot, "Computed Root");
+        self.makeOutputArray(&actualRoot, &Some("Computed Root".to_owned()));
 
         /** Expected mismatch here if the sample input below is tried**/
-        makeOutput(errorAccumulator.checkNonZero(), "Error if NON-zero");
+        self.makeOutput(&errorAccumulator.checkNonZero(&None), &Some("Error if NON-zero".to_owned()));
+        (
+            self.t.publicRootWires,
+            self.t.intermediateHasheWires,
+            self.t.directionSelector,
+            self.t.leafWires,
+            self.t.merkleTreeGadget,
+        ) = (
+            publicRootWires,
+            intermediateHasheWires,
+            Some(directionSelector),
+            leafWires,
+            Some(merkleTreeGadget),
+        );
     }
 
-    pub fn generateSampleInput(circuitEvaluator: CircuitEvaluator) {
-        for i in 0..hashDigestDimension {
+    fn generateSampleInput(&self, circuitEvaluator: &mut CircuitEvaluator) {
+        for i in 0..MerkleTreeMembershipCircuitGenerator::hashDigestDimension as usize {
             circuitEvaluator.setWireValue(
-                publicRootWires[i],
-                Util::nextRandomBigInteger(Configs.field_prime),
+                self.t.publicRootWires[i].as_ref().unwrap(),
+                &Util::nextRandomBigInteger(&Configs.field_prime),
             );
         }
 
-        circuitEvaluator.setWireValue(directionSelector, Util::nextRandomBigInteger(treeHeight));
-        for i in 0..hashDigestDimension * treeHeight {
+        circuitEvaluator.setWireValue(
+            self.t.directionSelector.as_ref().unwrap(),
+            &Util::nextRandomBigIntegeri(self.t.treeHeight as u64),
+        );
+        for i in 0..(MerkleTreeMembershipCircuitGenerator::hashDigestDimension * self.t.treeHeight ) as usize{
             circuitEvaluator.setWireValue(
-                intermediateHasheWires[i],
-                Util::nextRandomBigInteger(Configs.field_prime),
+                self.t.intermediateHasheWires[i].as_ref().unwrap(),
+                &Util::nextRandomBigInteger(&Configs.field_prime),
             );
         }
 
-        for i in 0..leafNumOfWords {
-            circuitEvaluator.setWireValue(leafWires[i], Integer.MAX_VALUE);
+        for i in 0..MerkleTreeMembershipCircuitGenerator::leafNumOfWords  as usize {
+            circuitEvaluator.setWireValuei(self.t.leafWires[i].as_ref().unwrap(), i32::MAX as i64);
         }
     }
 }
 pub fn main(args: Vec<String>) {
     let mut generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
     generator.generateCircuit();
-    generator.evalCircuit();
-    generator.prepFiles();
+    let mut evaluator = generator.evalCircuit();
+    generator.prepFiles(Some(evaluator));
     generator.runLibsnark();
 }

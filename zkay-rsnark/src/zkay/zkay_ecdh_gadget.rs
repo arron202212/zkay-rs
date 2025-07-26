@@ -22,7 +22,7 @@ pub struct ZkayECDHGadget {
 }
 impl ZkayECDHGadget {
     pub fn new(hX: WireType, secretKey: WireType, validateSecret: bool, desc: &Option<String>) -> Self {
-        super(desc);
+        //super(desc);
         self.secretBits = secretKey.getBitWires(SECRET_BITWIDTH).asArray();
         self.hPoint = AffinePoint::new(hX);
         if validateSecret {
@@ -30,11 +30,11 @@ impl ZkayECDHGadget {
         }
         computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
-        buildCircuit();
+       _self.buildCircuit();
+        _self
     }
-}
-impl ZkayEcGadget for ZkayECDHGadget {
-    fn buildCircuit() {
+
+    fn buildCircuit(&mut self) {
         /**
          * The reason this operates on affine coordinates is that in our
          * setting, this's slightly cheaper than the formulas in
@@ -55,11 +55,26 @@ impl ZkayEcGadget for ZkayECDHGadget {
             let x = (hPoint.x).getConstant();
             hPoint.y = generator.createConstantWire(computeYCoordinate(x));
         } else {
-            hPoint.y = generator.createProverWitnessWire();
-            generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
-                        let x = evaluator.getWireValue(hPoint.x);
+            hPoint.y = generator.createProverWitnessWire(&None);
+            // generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
+            //             let x = evaluator.getWireValue(hPoint.x);
+            //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+            //         });
+let prover = crate::impl_prover!(
+                                eval(  input: WireType,
+                            inverse: WireType
+                        )  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                           
+    let x = evaluator.getWireValue(hPoint.x);
                         evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
-                    });
+
+                }
+                }
+                            }
+                        );
+        self.generator.specifyProverWitnessComputation(prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
@@ -73,8 +88,9 @@ impl ZkayEcGadget for ZkayECDHGadget {
             assertValidPointOnEC(hPoint.x, hPoint.y);
         }
     }
-
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+}
+impl ZkayEcGadget for ZkayECDHGadget {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         let sharedKey = ZkaySHA256Gadget::new(vec![sharedSecret], 128).getOutputWires()[0];
         vec![sharedKey]
     }

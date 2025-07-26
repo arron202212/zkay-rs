@@ -30,7 +30,7 @@ pub struct EcdhTests {
 
         CircuitGenerator cgen = CircuitGenerator::new("pkder") {
             
-              fn buildCircuit() {
+              fn buildCircuit(&mut self) {
                let s = createConstantWire(sec1);
                makeOutput(ZkayEcPkDerivationGadget::new(s, true).getOutputWires()[0]);
             }
@@ -46,7 +46,7 @@ pub struct EcdhTests {
 
         cgen = CircuitGenerator::new("pkder") {
             
-              fn buildCircuit() {
+              fn buildCircuit(&mut self) {
                 let s = createConstantWire(sec2);
                 makeOutput(ZkayEcPkDerivationGadget::new(s, true).getOutputWires()[0]);
             }
@@ -67,7 +67,7 @@ pub struct EcdhTests {
 
         cgen = CircuitGenerator::new("ecdh") {
             
-              fn buildCircuit() {
+              fn buildCircuit(&mut self) {
                 let p = createConstantWire(pk2);
                 let s = createConstantWire(sec1);
                 makeOutput(ZkayECDHGadget::new(p, s, false).getOutputWires()[0]);

@@ -15,21 +15,21 @@ pub struct ZkayECDHGenerator {
 }
 impl ZkayECDHGenerator {
     pub fn new(pk: BigInteger, secret: BigInteger, late_eval: bool) -> Self {
-        super("circuit");
+        //super("circuit");
         self.pk = pk;
         self.secret = secret;
         self.late_eval = late_eval;
     }
 }
-impl CircuitGenerator for ZkayECDHGenerator {
-    fn buildCircuit() {
+impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
+    fn buildCircuit(&mut self) {
         secret_wire = if late_eval {
-            createProverWitnessWire()
+            createProverWitnessWire(&None)
         } else {
             createConstantWire(secret)
         };
 
-        if pk == null {
+        if pk == None {
             // If no pub  key specified, compute own pub  key
             makeOutput(ZkayEcPkDerivationGadget::new(secret_wire, true).getOutputWires()[0]);
         } else {
@@ -45,10 +45,10 @@ impl CircuitGenerator for ZkayECDHGenerator {
         }
     }
 
-    pub fn generateSampleInput(evaluator: CircuitEvaluator) {
+    fn generateSampleInput(&self,evaluator: &mut CircuitEvaluator) {
         if late_eval {
             evaluator.setWireValue(secret_wire, self.secret);
-            if self.pk != null {
+            if self.pk != None {
                 evaluator.setWireValue(pk_wire, self.pk);
             }
         }
@@ -68,7 +68,7 @@ impl CircuitGenerator for ZkayECDHGenerator {
     }
 
     pub fn derivePk(secret: BigInteger) -> String {
-        computeECKey(null, secret).toString(16)
+        computeECKey(None, secret).toString(16)
     }
 
     pub fn getSharedSecret(public_key: BigInteger, secret: BigInteger) -> String {

@@ -12,7 +12,7 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::blockciphers::speck128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::speck128_cipher_gadget;
 
 /**
  * Tests SPECK block cipher @ keysize = 128, blocksize = 128.
@@ -40,7 +40,7 @@ mod test {
                 makeOutputArray(ciphertext);
             }
 
-            pub fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
+            fn generateSampleInput(evaluator: &mut CircuitEvaluator) {
                 evaluator.setWireValue(key[0], BigInteger::new("0706050403020100", 16));
                 evaluator.setWireValue(key[1], BigInteger::new("0f0e0d0c0b0a0908", 16));
                 evaluator.setWireValue(plaintext[0], BigInteger::new("7469206564616d20", 16));

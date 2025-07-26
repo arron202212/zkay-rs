@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
 
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
@@ -24,19 +24,55 @@ use std::ops::{Add, Mul, Neg, Rem, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SHA256Gadget {
     unpaddedInputs: Vec<Option<WireType>>,
-
     bitWidthPerInputElement: usize,
     totalLengthInBytes: usize,
-
     numBlocks: usize,
     binaryOutput: bool,
     paddingRequired: bool,
-
     preparedInputBits: Vec<Option<WireType>>,
     output: Vec<Option<WireType>>,
-    generator: RcCell<CircuitGenerator>,
 }
 impl SHA256Gadget {
+    pub fn new(
+        ins: Vec<Option<WireType>>,
+        bitWidthPerInputElement: usize,
+        totalLengthInBytes: usize,
+        binaryOutput: bool,
+        paddingRequired: bool,
+        desc: &Option<String>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        assert!(
+            totalLengthInBytes * 8 <= ins.len() * bitWidthPerInputElement
+                && totalLengthInBytes * 8 >= (ins.len() - 1) * bitWidthPerInputElement,
+            "Inconsistent Length Information"
+        );
+
+        assert!(
+            paddingRequired
+                || totalLengthInBytes % 64 == 0
+                || ins.len() * bitWidthPerInputElement == totalLengthInBytes,
+            "When padding is not forced, totalLengthInBytes % 64 must be zero."
+        );
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                unpaddedInputs: ins,
+                bitWidthPerInputElement,
+                totalLengthInBytes,
+                numBlocks: 0,
+                binaryOutput,
+                paddingRequired,
+                preparedInputBits: vec![],
+                output: vec![],
+            },
+        };
+        _self.buildCircuit();
+        _self
+    }
+}
+impl Gadget<SHA256Gadget> {
     const H: [i64; 8] = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,
@@ -54,44 +90,6 @@ impl SHA256Gadget {
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7,
         0xc67178f2,
     ];
-    pub fn new(
-        ins: Vec<Option<WireType>>,
-        bitWidthPerInputElement: usize,
-        totalLengthInBytes: usize,
-        binaryOutput: bool,
-        paddingRequired: bool,
-        desc: &Option<String>,
-        generator: RcCell<CircuitGenerator>,
-    ) -> Self {
-        // super(desc);
-        assert!(
-            totalLengthInBytes * 8 <= ins.len() * bitWidthPerInputElement
-                && totalLengthInBytes * 8 >= (ins.len() - 1) * bitWidthPerInputElement,
-            "Inconsistent Length Information"
-        );
-
-        assert!(
-            paddingRequired
-                || totalLengthInBytes % 64 == 0
-                || ins.len() * bitWidthPerInputElement == totalLengthInBytes,
-            "When padding is not forced, totalLengthInBytes % 64 must be zero."
-        );
-
-        let mut _self = Self {
-            unpaddedInputs: ins,
-            bitWidthPerInputElement,
-            totalLengthInBytes,
-            numBlocks: 0,
-            binaryOutput,
-            paddingRequired,
-            preparedInputBits: vec![],
-            output: vec![],
-            generator,
-        };
-        _self.buildCircuit();
-        _self
-    }
-
     fn buildCircuit(&mut self) {
         let mut generator = self.generator.clone();
 
@@ -104,14 +102,14 @@ impl SHA256Gadget {
             hWires[i] = Some(generator.create_constant_wire(Self::H[i], &None));
         }
 
-        for blockNum in 0..self.numBlocks {
+        for blockNum in 0..self.t.numBlocks {
             let mut wsSplitted = vec![vec![]; 64];
             let mut w = vec![None; 64];
 
             for i in 0..64 {
                 if i < 16 {
                     wsSplitted[i] = Util::reverseBytes(
-                        &self.preparedInputBits
+                        &self.t.preparedInputBits
                             [blockNum * 512 + i * 32..blockNum * 512 + (i + 1) * 32]
                             .to_vec(),
                     );
@@ -231,16 +229,16 @@ impl SHA256Gadget {
         outDigest[6] = hWires[6].clone();
         outDigest[7] = hWires[7].clone();
 
-        if !self.binaryOutput {
-            self.output = outDigest;
+        if !self.t.binaryOutput {
+            self.t.output = outDigest;
             return;
         }
-        self.output = vec![None; 8 * 32];
+        self.t.output = vec![None; 8 * 32];
         for i in 0..8 {
             let bits = outDigest[i].as_ref().unwrap().getBitWiresi(32, &None);
             let bits = bits.asArray();
             for j in 0..32 {
-                self.output[j + i * 32] = bits[j].clone();
+                self.t.output[j + i * 32] = bits[j].clone();
             }
         }
     }
@@ -287,27 +285,27 @@ impl SHA256Gadget {
     fn prepare(&mut self) {
         let mut generator = &self.generator;
 
-        self.numBlocks = (self.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
+        self.t.numBlocks = (self.t.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
         let bits = WireArray::new(
-            self.unpaddedInputs.clone(),
+            self.t.unpaddedInputs.clone(),
             self.generator.clone().downgrade(),
         )
-        .getBits(self.bitWidthPerInputElement, &None);
+        .getBits(self.t.bitWidthPerInputElement, &None);
         let bits = bits.asArray();
-        let tailLength = self.totalLengthInBytes % 64;
-        if self.paddingRequired {
+        let tailLength = self.t.totalLengthInBytes % 64;
+        if self.t.paddingRequired {
             let mut pad;
             if 64 - tailLength >= 9 {
                 pad = vec![None; 64 - tailLength];
             } else {
                 pad = vec![None; 128 - tailLength];
             }
-            self.numBlocks = (self.totalLengthInBytes + pad.len()) / 64;
+            self.t.numBlocks = (self.t.totalLengthInBytes + pad.len()) / 64;
             pad[0] = Some(generator.create_constant_wire(0x80, &None));
             for i in 1..pad.len() - 8 {
                 pad[i] = generator.get_zero_wire();
             }
-            let lengthInBits = self.totalLengthInBytes * 8;
+            let lengthInBits = self.t.totalLengthInBytes * 8;
             let mut lengthBits = vec![None; 64];
             let pn = pad.len();
             for i in 0..8 {
@@ -319,23 +317,23 @@ impl SHA256Gadget {
                 let tmp = tmp.asArray();
                 lengthBits[(7 - i) * 8..(7 - i + 1) * 8].clone_from_slice(&tmp);
             }
-            let totalNumberOfBits = self.numBlocks * 512;
-            self.preparedInputBits = vec![generator.get_zero_wire(); totalNumberOfBits];
-            self.preparedInputBits[..self.totalLengthInBytes * 8].clone_from_slice(&bits);
-            self.preparedInputBits[self.totalLengthInBytes * 8 + 7] = generator.get_one_wire();
-            let n = self.preparedInputBits.len();
-            self.preparedInputBits[n - 64..].clone_from_slice(&lengthBits);
+            let totalNumberOfBits = self.t.numBlocks * 512;
+            self.t.preparedInputBits = vec![generator.get_zero_wire(); totalNumberOfBits];
+            self.t.preparedInputBits[..self.t.totalLengthInBytes * 8].clone_from_slice(&bits);
+            self.t.preparedInputBits[self.t.totalLengthInBytes * 8 + 7] = generator.get_one_wire();
+            let n = self.t.preparedInputBits.len();
+            self.t.preparedInputBits[n - 64..].clone_from_slice(&lengthBits);
         } else {
-            self.preparedInputBits = bits.clone();
+            self.t.preparedInputBits = bits.clone();
         }
     }
 }
-impl GadgetConfig for SHA256Gadget {
+impl GadgetConfig for Gadget<SHA256Gadget> {
     /**
      * outputs digest as 32-bit words
      */
 
-    fn getOutputWires(&self) -> Vec<Option<WireType>> {
-        self.output.clone()
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.output
     }
 }

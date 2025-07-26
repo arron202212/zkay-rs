@@ -23,7 +23,7 @@ impl ZkaySHA256Gadget {
     }
 
     pub fn new(uint256_inputs: Vec<Option<WireType>>, truncated_bits: i32, desc: &Option<String>) -> self {
-        super(
+        //super(
             convert_inputs_to_bytes(uint256_inputs),
             8,
             uint256_inputs.len() * bytes_per_word,
@@ -39,20 +39,15 @@ impl ZkaySHA256Gadget {
 }
 impl SHA256Gadget for ZkaySHA256Gadget {
     fn assembleOutput(truncated_length: i32) {
-        let digest = super.getOutputWires();
+        let mut digest = super.getOutputWires();
         // Invert word order to get correct byte order when packed into one big word below
-        Collections.reverse(Arrays.asList(digest));
+        digest.reverse();
         if truncated_length < 256 {
             // Keep truncated_length left-most bits as suggested in FIPS 180-4 to shorten the digest
             if truncated_length % 32 == 0 {
                 let shortened_digest = vec![None; truncated_length / 32];
-                System.arraycopy(
-                    digest,
-                    digest.len() - shortened_digest.len(),
-                    shortened_digest,
-                    0,
-                    shortened_digest.len(),
-                );
+                shortened_digest.clone_from_slice(&digest[digest.len() - shortened_digest.len()]);
+                
                 digest = shortened_digest;
             } else {
                 _uint_output = vec![
@@ -68,7 +63,7 @@ impl SHA256Gadget for ZkaySHA256Gadget {
         assert!(_uint_output.len() == 1, "Wrong wire length");
     }
 
-    pub fn getOutputWires() -> Vec<Option<WireType>> {
+    fn getOutputWires() -> Vec<Option<WireType>> {
         _uint_output
     }
 }

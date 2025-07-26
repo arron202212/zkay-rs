@@ -34,14 +34,14 @@ pub struct ElgamalTest {
          AffinePoint pk;
 
          ElgamalEncCircuitGenerator(String name, BigInteger plain, BigInteger random, AffinePoint pk) {
-            super(name);
+            //super(name);
             self.plain = plain;
             self.random = random;
             self.pk = pk;
         }
 
         
-          fn buildCircuit() {
+          fn buildCircuit(&mut self) {
             let randomness = createConstantWire(random);
             let randomnessBits = randomness.getBitWires(random.bits());
             let message = createConstantWire(plain);
@@ -63,7 +63,7 @@ pub struct ElgamalTest {
          AffinePoint pk;
 
          ElgamalRerandCircuitGenerator(String name, AffinePoint c1, AffinePoint c2, AffinePoint pk, BigInteger random) {
-            super(name);
+            //super(name);
             self.c1 = c1;
             self.c2 = c2;
             self.random = random;
@@ -71,7 +71,7 @@ pub struct ElgamalTest {
         }
 
         
-          fn buildCircuit() {
+          fn buildCircuit(&mut self) {
             let randomness = createConstantWire(random);
             let randomnessBits = randomness.getBitWires(random.bits());
 
@@ -95,7 +95,7 @@ pub struct ElgamalTest {
          AffinePoint c2;
 
          ElgamalDecCircuitGenerator(String name, AffinePoint pk, BigInteger sk, AffinePoint c1, AffinePoint c2, BigInteger msg) {
-            super(name);
+            //super(name);
             self.msg = msg;
             self.pk = pk;
             self.sk = sk;
@@ -104,7 +104,7 @@ pub struct ElgamalTest {
         }
 
         
-          fn buildCircuit() {
+          fn buildCircuit(&mut self) {
             let secretKey = createConstantWire(sk);
             let skBits = secretKey.getBitWires(sk.bits());
             let msgWire = createConstantWire(msg);

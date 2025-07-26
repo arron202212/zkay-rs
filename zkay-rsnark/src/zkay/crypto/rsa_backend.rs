@@ -1,4 +1,4 @@
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
 use zkay::typed_wire;
 use zkay::zkay_rsa_encryption_gadget;
@@ -12,7 +12,7 @@ impl RSABackend {
     const PKCS15_RND_CHUNK_SIZE: i32 = 224;
     const OAEP_RND_CHUNK_SIZE: i32 = 128;
     pub fn new(keyBits: i32, padding: PaddingType) -> Self {
-        super(keyBits);
+        //super(keyBits);
         self.paddingType = padding;
     }
 }

@@ -49,7 +49,7 @@ pub fn new_linear_combination(
     //     {
     //         println!("===new_linear_combination====={wireId}==");
     //     }
-    // super(wireId);
+    // //super(wireId);
     // Wire::<LinearCombinationWire> {
     //     wireId,
     //     generator,
@@ -70,14 +70,14 @@ impl WireConfig for Wire<LinearCombinationWire> {
 }
 impl Wire<LinearCombinationWire> {
     // pub fn new(wireId: i32) -> Self {
-    //     // super(wireId);
+    //     // //super(wireId);
     //     Self {
     //         bitWires: RcCell::new(None),
     //     }
     // }
 
     // pub fn newa(bits: WireArray) -> Self {
-    //     // super(bits);
+    //     // //super(bits);
     //     Self {
     //         bitWires: RcCell::new(Some(bits)),
     //     }

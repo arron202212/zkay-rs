@@ -32,7 +32,7 @@ pub fn new_linear_combination_bit(
     //     {
     //         println!("==new_linear_combination_bit======{wireId}==");
     //     }
-    // super(wireId);
+    // //super(wireId);
     // Wire::<LinearCombinationBitWire> {
     //     wireId,
     //     generator,
@@ -51,7 +51,7 @@ impl WireConfig for Wire<LinearCombinationBitWire> {
 impl BitWireConfig for Wire<LinearCombinationBitWire> {}
 impl Wire<LinearCombinationBitWire> {
     // pub fn new(wireId: i32) -> Self {
-    //     // super(wireId);
+    //     // //super(wireId);
     //     Self
     // }
 

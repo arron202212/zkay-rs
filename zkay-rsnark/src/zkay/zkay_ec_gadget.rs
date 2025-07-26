@@ -1,8 +1,8 @@
 use crate::circuit::config::config::Configs;
-use crate::circuit::operations::gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
 use crate::circuit::structure::wire_type::WireType;
-use examples::gadgets::math::field_division_gadget;
+use crate::examples::gadgets::math::field_division_gadget;
 
 pub struct AffinePoint {
     x: WireType,
@@ -28,7 +28,7 @@ pub struct AffinePoint {
 pub struct ZkayEcGadget;
 impl ZkayEcGadget {
     pub fn new(desc: &Option<String>) {
-        super(desc);
+        //super(desc);
     }
 
     // Note: this parameterization assumes that the underlying field has
@@ -138,8 +138,7 @@ impl ZkayEcGadget {
         let newY = p1.x.mul(2).add(p2.x).add(COEFF_A).mul(q).sub(q3).sub(p1.y);
         AffinePoint::new(newX, newY)
     }
-}
-impl Gadget for ZkayEcGadget {
+
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
         let xSqred = x.mul(x).rem(&Configs.field_prime);
         let xCubed = xSqred.mul(x).rem(&Configs.field_prime);
@@ -175,4 +174,6 @@ impl Gadget for ZkayEcGadget {
 
         // TODO: add more tests to check this method
     }
+}
+impl GadgetConfig for Gadget<ZkayEcGadget> {
 }

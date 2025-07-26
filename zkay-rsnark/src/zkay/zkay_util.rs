@@ -21,7 +21,7 @@ impl ZkayUtil {
         let b = val.toByteArray();
         let mut ret;
         if b[0] == 0 && b.len() > 1 {
-            ret = vec![byte::default(); b.len() - 1];
+            ret = vec![0; b.len() - 1];
             ret[..b.len() - 1].clone_from_slice(&b[1..]);
         } else {
             ret = b;
@@ -35,7 +35,7 @@ impl ZkayUtil {
             t.len() <= byteCount,
             "Value too large to fit into {byteCount} bytes"
         );
-        let ret = vec![byte::default(); byteCount];
+        let ret = vec![0; byteCount];
         ret[byteCount - t.len()..byteCount].clone_from_slice(&t);
         ret
     }
