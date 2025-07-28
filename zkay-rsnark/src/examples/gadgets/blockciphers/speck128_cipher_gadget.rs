@@ -51,7 +51,9 @@ impl Speck128CipherGadget {
         );
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 plaintext,
                 expandedKey,
@@ -87,8 +89,8 @@ impl Gadget<Speck128CipherGadget> {
      * @return
      */
     pub fn expandKey(
-        key: Vec<Option<WireType>>,
-        generator: RcCell<CircuitGenerator>,
+        key: &Vec<Option<WireType>>,
+        generator: &RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         let mut k = vec![None; 32];

@@ -6,8 +6,8 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use std::ops::{Mul,Add,Sub,Div,Rem};
 use crate::util::util::{BigInteger, Util};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 /**
  * Utility methods to extract sample randomness used by standard implementations
  * for RSA Encryption. In absence of test vectors, the extracted randomness is
@@ -18,7 +18,7 @@ use crate::util::util::{BigInteger, Util};
 
 pub struct RSAUtil;
 impl RSAUtil {
-    pub fn extractRSARandomness1_5(cipherText: Vec<u8>, privateKey: Vec<u8>) -> Vec<Vec<u8>> {
+    pub fn extractRSARandomness1_5(cipherText: &Vec<u8>, privateKey: &Vec<u8>) -> Vec<Vec<u8>> {
         let modulus = BigInteger::from(7); //privateKey.getModulus();
         let keySize = modulus.bits();
         let d = BigInteger::from(1); //privateKey.getPrivateExponent();
@@ -44,7 +44,7 @@ impl RSAUtil {
         let paddedPlaintext = product.to_bytes_be().1.clone();
         if paddedPlaintext.len() != keySize as usize / 8 - 1 {
             println!("Error");
-           return  vec![]
+            return vec![];
         }
         let mut plaintext = vec![];
         let mut randomness = vec![];
@@ -52,7 +52,7 @@ impl RSAUtil {
         if paddedPlaintext[0] != 2 {
             println!("Error");
         } else {
-            for i in 1..keySize as usize/ 8 - 2 {
+            for i in 1..keySize as usize / 8 - 2 {
                 if paddedPlaintext[i] == 0 {
                     plaintext = vec![0; (keySize as usize / 8 - 2) - i];
                     randomness = vec![0; i - 1];
@@ -68,19 +68,24 @@ impl RSAUtil {
     }
 
     fn intToByteArray(value: i32) -> Vec<u8> {
-        vec![(value >> 24) as u8, (value >> 16) as u8, (value >> 8) as u8, value as u8]
+        vec![
+            (value >> 24) as u8,
+            (value >> 16) as u8,
+            (value >> 8) as u8,
+            value as u8,
+        ]
     }
 
-    fn mgf(array:&Vec<u8>, maskLen: i32, hlen: i32) -> Vec<u8> {
+    fn mgf(array: &Vec<u8>, maskLen: i32, hlen: i32) -> Vec<u8> {
         let mut v = vec![];
-        for i in 0..=(maskLen  as f64 / hlen as f64).ceil() as i32 - 1 {
+        for i in 0..=(maskLen as f64 / hlen as f64).ceil() as i32 - 1 {
             let c = Self::intToByteArray(i);
             // let hash = None;
 
             // hash = MessageDigest.getInstance("SHA-256");
 
             // hash.update(concat(array, c));
-            let digest = vec![];//hash.digest();
+            let digest = vec![]; //hash.digest();
             // hash.reset();
             v = Self::concat(v, digest);
         }
@@ -100,9 +105,9 @@ impl RSAUtil {
     }
 
     pub fn extractRSAOAEPSeed(cipherText: &Vec<u8>, privateKey: &Vec<u8>) -> Vec<Vec<u8>> {
-        let modulus = BigInteger::from_signed_bytes_be(&privateKey);//.getModulus();
+        let modulus = BigInteger::from_signed_bytes_be(&privateKey); //.getModulus();
         let keySize = modulus.bits() as usize;
-        let d = BigInteger::from(1);//privateKey.getPrivateExponent();
+        let d = BigInteger::from(1); //privateKey.getPrivateExponent();
 
         let mut cipherTextPadded = vec![0; cipherText.len() + 1];
         cipherTextPadded[1..1 + cipherText.len()].clone_from_slice(&cipherText);
@@ -142,7 +147,7 @@ impl RSAUtil {
             seed[i] ^= maskedSeed[i];
         }
 
-        let mut dbMask = Self::mgf(&seed, keySize as i32 / 8 - hlen as i32- 1, hlen  as i32);
+        let mut dbMask = Self::mgf(&seed, keySize as i32 / 8 - hlen as i32 - 1, hlen as i32);
         dbMask = dbMask[..keySize / 8 - hlen - 1].to_vec();
 
         let mut DB = vec![0; dbMask.len() + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger

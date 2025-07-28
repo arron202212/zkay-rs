@@ -25,7 +25,7 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator,CGInstance, CircuitGeneratorExtend},
+            circuit_generator::{CGConfig, CGInstance, CircuitGenerator, CircuitGeneratorExtend},
             constant_wire::{ConstantWire, new_constant},
             variable_bit_wire::VariableBitWire,
             variable_wire::{VariableWire, new_variable},
@@ -60,26 +60,29 @@ pub struct AES128CipherCircuitGenerator {
 }
 impl AES128CipherCircuitGenerator {
     pub fn new(circuit_name: &str) -> CircuitGeneratorExtend<Self> {
-        CircuitGeneratorExtend::<Self>::new(circuit_name,Self{
+        CircuitGeneratorExtend::<Self>::new(
+            circuit_name,
+            Self {
                 inputs: vec![],
                 key: vec![],
                 outputs: vec![],
                 gadget: None,
-        })
+            },
+        )
     }
 }
 impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
     fn buildCircuit(&mut self) {
-        self.t.inputs = self.createInputWireArray(16,&None); // in bytes
-        self.t.key = self.createInputWireArray(16,&None); // in bytes
+        self.t.inputs = self.createInputWireArray(16, &None); // in bytes
+        self.t.key = self.createInputWireArray(16, &None); // in bytes
 
-        let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&self.t.key,&self.cg);
-        let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expandedKey, &None,self.cg());
+        let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
+        let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expandedKey, &None, self.cg());
         self.t.outputs = gadget.getOutputWires().clone();
         for o in &self.t.outputs {
-            self.makeOutput(o.as_ref().unwrap(),&None);
+            self.makeOutput(o.as_ref().unwrap(), &None);
         }
-        self.t.gadget =Some(gadget);
+        self.t.gadget = Some(gadget);
     }
 
     fn generateSampleInput(&self, circuitEvaluator: &mut CircuitEvaluator) {
@@ -88,27 +91,30 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
 
         // expected output:0xf5d3d58503b9699de785895a96fdbaaf
 
-        let mut  keyArray = keyV.to_bytes_be().1.clone();
+        let mut keyArray = keyV.to_bytes_be().1.clone();
         let mut msgArray = msgV.to_bytes_be().1.clone();
         msgArray = msgArray[msgArray.len() - 16..].to_vec();
         keyArray = keyArray[keyArray.len() - 16..].to_vec();
 
         for i in 0..msgArray.len() {
-            circuitEvaluator.setWireValuei(self.t.inputs[i].as_ref().unwrap(), (msgArray[i] as i64 & 0xff));
+            circuitEvaluator.setWireValuei(
+                self.t.inputs[i].as_ref().unwrap(),
+                (msgArray[i] as i64 & 0xff),
+            );
         }
 
         for i in 0..keyArray.len() {
-            circuitEvaluator.setWireValuei(self.t.key[i].as_ref().unwrap(), (keyArray[i] as i64 & 0xff));
+            circuitEvaluator
+                .setWireValuei(self.t.key[i].as_ref().unwrap(), (keyArray[i] as i64 & 0xff));
         }
     }
 }
 
 pub fn main(args: Vec<String>) {
     //Configs.hex_output_enabled = true;
-    let mut generator =
-        AES128CipherCircuitGenerator::new("AES_Circuit");
+    let mut generator = AES128CipherCircuitGenerator::new("AES_Circuit");
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

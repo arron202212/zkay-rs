@@ -47,13 +47,13 @@ use crate::{
 // use crate::util::util::{BigInteger, Util};
 use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
 use crate::examples::gadgets::math::long_integer_division::LongIntegerDivision;
- use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
+use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub,Div,Rem,Shl};
+use std::ops::{Add, Div, Mul, Rem, Shl, Sub};
 /**
  * A gadget for RSA encryption according to PKCS#1 v2.2. The gadget assumes a
  * hardcoded pub  exponent of 0x10001, and uses SHA256 as the hash function
@@ -107,7 +107,9 @@ impl RSAEncryptionOAEPGadget {
         );
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 seed,
                 plainText,
@@ -122,7 +124,7 @@ impl RSAEncryptionOAEPGadget {
     }
 }
 impl Gadget<RSAEncryptionOAEPGadget> {
-    pub const lSHA256_HASH: [u8;32] = [
+    pub const lSHA256_HASH: [u8; 32] = [
         0xe3, 0xb0, 0xc4, 0x42, 0x98, 0xfc, 0x1c, 0x14, 0x9a, 0xfb, 0xf4, 0xc8, 0x99, 0x6f, 0xb9,
         0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52,
         0xb8, 0x55,
@@ -136,9 +138,10 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let mut db = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
-                db[i] = Some(self
-                    .generator
-                    .createConstantWirei((Self::lSHA256_HASH[i] as i64 + 256) % 256,&None));
+                db[i] = Some(
+                    self.generator
+                        .createConstantWirei((Self::lSHA256_HASH[i] as i64 + 256) % 256, &None),
+                );
             } else if i < hLen + paddingString.len() {
                 db[i] = paddingString[i - hLen].clone();
             } else if i < hLen + paddingString.len() + 1 {
@@ -151,26 +154,39 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let dbMask = self.mgf1(&self.t.seed, (keyLen - hLen - 1) as i32);
         let mut maskedDb = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
-            maskedDb[i] = Some(dbMask[i].as_ref().unwrap().xorBitwise(db[i].as_ref().unwrap(), 8,&None));
+            maskedDb[i] = Some(dbMask[i].as_ref().unwrap().xorBitwise(
+                db[i].as_ref().unwrap(),
+                8,
+                &None,
+            ));
         }
 
         let seededMask = self.mgf1(&maskedDb, hLen as i32);
         let mut maskedSeed = vec![None; hLen];
         for i in 0..hLen {
-            maskedSeed[i] = Some(seededMask[i].as_ref().unwrap().xorBitwise(self.t.seed[i].as_ref().unwrap(), 8,&None));
+            maskedSeed[i] = Some(seededMask[i].as_ref().unwrap().xorBitwise(
+                self.t.seed[i].as_ref().unwrap(),
+                8,
+                &None,
+            ));
         }
 
         let paddedByteArray = Util::concat(&maskedSeed, &maskedDb); // Big-Endian
 
         // The LongElement implementation is LittleEndian, so we will process the array in reverse order
 
-        let mut paddedMsg = LongElement::newb(vec![BigInteger::ZERO],self.generator.clone().downgrade());
+        let mut paddedMsg =
+            LongElement::newb(vec![BigInteger::ZERO], self.generator.clone().downgrade());
         for i in 0..paddedByteArray.len() {
-            let e = LongElement::new(vec![paddedByteArray[paddedByteArray.len() - i - 1].clone()], vec![8],self.generator.clone().downgrade());
-            let c = LongElement::newb(Util::split(
-                &Util::one().shl(8 * i),
-                LongElement::CHUNK_BITWIDTH,
-            ),self.generator.clone().downgrade());
+            let e = LongElement::new(
+                vec![paddedByteArray[paddedByteArray.len() - i - 1].clone()],
+                vec![8],
+                self.generator.clone().downgrade(),
+            );
+            let c = LongElement::newb(
+                Util::split(&Util::one().shl(8 * i), LongElement::CHUNK_BITWIDTH),
+                self.generator.clone().downgrade(),
+            );
             paddedMsg = paddedMsg.add(&e.mul(&c));
         }
 
@@ -182,21 +198,29 @@ impl Gadget<RSAEncryptionOAEPGadget> {
                 s,
                 self.t.modulus.clone(),
                 self.t.rsaKeyBitLength,
-                false,&None,self.generator.clone()
+                false,
+                &None,
+                self.generator.clone(),
             )
-            .getRemainder().clone();
+            .getRemainder()
+            .clone();
         }
         s = s.mul(&paddedMsg);
         s = LongIntegerDivision::<LongIntegerModGadget>::new(
             s,
             self.t.modulus.clone(),
             self.t.rsaKeyBitLength,
-            true,&None,self.generator.clone()
+            true,
+            &None,
+            self.generator.clone(),
         )
-        .getRemainder().clone();
+        .getRemainder()
+        .clone();
 
         // return the cipher text as byte array
-        self.t.ciphertext = s.getBitsi(self.t.rsaKeyBitLength).packBitsIntoWords(8,&None);
+        self.t.ciphertext = s
+            .getBitsi(self.t.rsaKeyBitLength)
+            .packBitsIntoWords(8, &None);
     }
 
     pub fn checkSeedCompliance(&self) {
@@ -209,31 +233,43 @@ impl Gadget<RSAEncryptionOAEPGadget> {
 
     fn mgf1(&self, ins: &Vec<Option<WireType>>, length: i32) -> Vec<Option<WireType>> {
         let mut mgfOutputList = vec![];
-        for i in
-            0..=(length as f64 / RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as f64).ceil() as i64 - 1
+        for i in 0..=(length as f64 / RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as f64).ceil()
+            as i64
+            - 1
         {
             // the standard follows a Big Endian format
-            let counter =
-                self.generator
-                    .createConstantWireArrayi(&vec![(i >> 24), (i >> 16), (i >> 8), i],&None);
+            let counter = self
+                .generator
+                .createConstantWireArrayi(&vec![(i >> 24), (i >> 16), (i >> 8), i], &None);
 
             let inputToHash = Util::concat(&ins, &counter);
-            let shaGadget = SHA256Gadget::new(inputToHash.clone(), 8, inputToHash.len(), false, true,&None,self.generator.clone());
+            let shaGadget = SHA256Gadget::new(
+                inputToHash.clone(),
+                8,
+                inputToHash.len(),
+                false,
+                true,
+                &None,
+                self.generator.clone(),
+            );
             let digest = shaGadget.getOutputWires();
 
-            let mut msgHashBytes = WireArray::new(digest.clone(),self.generator.clone().downgrade()).getBits(32,&None).packBitsIntoWords(8,&None);
+            let mut msgHashBytes =
+                WireArray::new(digest.clone(), self.generator.clone().downgrade())
+                    .getBits(32, &None)
+                    .packBitsIntoWords(8, &None);
             // reverse the byte array representation of each word of the digest
             // to
             // be compatible with the endianess
             for j in 0..8 {
-                msgHashBytes.swap(4 * j,4 * j+3);
-                 msgHashBytes.swap(4 * j+1,4 * j+2);
+                msgHashBytes.swap(4 * j, 4 * j + 3);
+                msgHashBytes.swap(4 * j + 1, 4 * j + 2);
             }
             for j in 0..msgHashBytes.len() {
                 mgfOutputList.push(msgHashBytes[j].clone());
             }
         }
-        let out = mgfOutputList;//.toArray(&None);
+        let out = mgfOutputList; //.toArray(&None);
         out[..length as usize].to_vec()
     }
 }

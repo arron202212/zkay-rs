@@ -45,6 +45,11 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
+// #[macro_use]
+// extern crate num_derive;
+use num_derive::{FromPrimitive, ToPrimitive};
+use strum::{Display, EnumIter, EnumString};
+#[derive(EnumIter, EnumString, Display, Debug, FromPrimitive, ToPrimitive)]
 pub enum SBoxOption {
     LINEAR_SCAN,
     COMPUTE,
@@ -90,7 +95,9 @@ impl AES128CipherGadget {
         );
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 plaintext: vec![],
                 ciphertext: vec![],
@@ -104,11 +111,11 @@ impl AES128CipherGadget {
 }
 impl Gadget<AES128CipherGadget> {
     pub const sBoxOption: SBoxOption = SBoxOption::OPTIMIZED2;
-    pub const RCon: [u8;11] = [
+    pub const RCon: [u8; 11] = [
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
     ];
 
-    pub const SBox: [u8;256] = [
+    pub const SBox: [u8; 256] = [
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab,
         0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4,
         0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71,
@@ -173,7 +180,10 @@ impl Gadget<AES128CipherGadget> {
     fn subBytes(&self, state: &mut Vec<Vec<Option<WireType>>>) {
         for i in 0..state.len() {
             for j in 0..state[i].len() {
-                state[i][j] = Some(Self::randomAccess(state[i][j].as_ref().unwrap(),&self.generator));
+                state[i][j] = Some(Self::randomAccess(
+                    state[i][j].as_ref().unwrap(),
+                    &self.generator,
+                ));
             }
         }
     }
@@ -235,7 +245,9 @@ impl Gadget<AES128CipherGadget> {
             hiBitSet = wire.getBitWiresi(8, &None).get(7).clone();
             wire = wire.shiftLeft(8, 1, &None);
             let tmp = wire.xorBitwise(&self.generator.createConstantWirei(0x1b, &None), 8, &None);
-            wire = wire.clone().add(hiBitSet.clone().unwrap().mul(tmp.sub(&wire)));
+            wire = wire
+                .clone()
+                .add(hiBitSet.clone().unwrap().mul(tmp.sub(&wire)));
         }
         p.getBitWiresi(8, &None)
     }
@@ -273,7 +285,10 @@ impl Gadget<AES128CipherGadget> {
     }
 
     // key is a 16-byte array. Each wire represents a byte.
-    pub fn expandKey(key: &Vec<Option<WireType>>,generator:&RcCell<CircuitGenerator>) -> Vec<Option<WireType>> {
+    pub fn expandKey(
+        key: &Vec<Option<WireType>>,
+        generator: &RcCell<CircuitGenerator>,
+    ) -> Vec<Option<WireType>> {
         let mut w = vec![vec![None; 4]; AES128CipherGadget::nb * (AES128CipherGadget::nr + 1)];
         let mut i = 0;
         while (i < AES128CipherGadget::nk) {
@@ -286,7 +301,7 @@ impl Gadget<AES128CipherGadget> {
         while i < AES128CipherGadget::nb * (AES128CipherGadget::nr + 1) {
             let mut temp = w[i - 1].clone();
             if i % AES128CipherGadget::nk == 0 {
-                temp = Self::subWord(Self::rotateWord(&temp),generator);
+                temp = Self::subWord(Self::rotateWord(&temp), generator);
                 temp[0] =
                     Some(temp[0].as_ref().unwrap().xorBitwise(
                         &generator.createConstantWirei(
@@ -297,7 +312,7 @@ impl Gadget<AES128CipherGadget> {
                         &None,
                     ));
             } else if AES128CipherGadget::nk > 6 && (i % AES128CipherGadget::nk) == 4 {
-                temp = Self::subWord(temp,generator);
+                temp = Self::subWord(temp, generator);
             }
 
             for v in 0..4 {
@@ -323,9 +338,12 @@ impl Gadget<AES128CipherGadget> {
         expanded
     }
 
-    fn subWord(mut w: Vec<Option<WireType>>,generator:&RcCell<CircuitGenerator>) -> Vec<Option<WireType>> {
+    fn subWord(
+        mut w: Vec<Option<WireType>>,
+        generator: &RcCell<CircuitGenerator>,
+    ) -> Vec<Option<WireType>> {
         for i in 0..w.len() {
-            w[i] = Some(Self::randomAccess(w[i].as_ref().unwrap(),generator));
+            w[i] = Some(Self::randomAccess(w[i].as_ref().unwrap(), generator));
         }
         w
     }
@@ -338,32 +356,27 @@ impl Gadget<AES128CipherGadget> {
         newW
     }
 
-    fn randomAccess(wire: &WireType,generator:&RcCell<CircuitGenerator>) -> WireType {
+    fn randomAccess(wire: &WireType, generator: &RcCell<CircuitGenerator>) -> WireType {
         let wire = wire.clone();
 
         match Self::sBoxOption {
             SBoxOption::LINEAR_SCAN => {
-                AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone()).getOutputWires()
-                    [0]
-                .clone()
-                .unwrap()
+                AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone()).getOutputWires()[0]
+                    .clone()
+                    .unwrap()
             }
             SBoxOption::COMPUTE => AESSBoxComputeGadget::new(wire, &None, generator.clone())
                 .getOutputWires()[0]
                 .clone()
                 .unwrap(),
-            SBoxOption::OPTIMIZED1 => {
-                AESSBoxGadgetOptimized1::new(wire, &None, generator.clone()).getOutputWires()
-                    [0]
+            SBoxOption::OPTIMIZED1 => AESSBoxGadgetOptimized1::new(wire, &None, generator.clone())
+                .getOutputWires()[0]
                 .clone()
-                .unwrap()
-            }
-            SBoxOption::OPTIMIZED2 => {
-                AESSBoxGadgetOptimized2::new(wire, &None, generator.clone()).getOutputWires()
-                    [0]
+                .unwrap(),
+            SBoxOption::OPTIMIZED2 => AESSBoxGadgetOptimized2::new(wire, &None, generator.clone())
+                .getOutputWires()[0]
                 .clone()
-                .unwrap()
-            }
+                .unwrap(),
         }
     }
 }

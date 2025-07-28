@@ -25,7 +25,9 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator,CGInstance,CGConfigFields, CircuitGeneratorExtend},
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            },
             constant_wire::{ConstantWire, new_constant},
             variable_bit_wire::VariableBitWire,
             variable_wire::{VariableWire, new_variable},
@@ -72,14 +74,17 @@ impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
         let a = self.createInputWireArray(self.t.dimension as usize, &Some("Input a".to_owned()));
         let b = self.createInputWireArray(self.t.dimension as usize, &Some("Input b".to_owned()));
 
-        let dotProductGadget = DotProductGadget::new(a.clone(), b.clone(),&None,self.cg());
+        let dotProductGadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());
         let result = dotProductGadget.getOutputWires();
-        self.makeOutput(result[0].as_ref().unwrap(), &Some("output of dot product a, b".to_owned()));
+        self.makeOutput(
+            result[0].as_ref().unwrap(),
+            &Some("output of dot product a, b".to_owned()),
+        );
         (self.t.a, self.t.b) = (a, b);
     }
 
     fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-        for i in 0..self.t.dimension as usize{
+        for i in 0..self.t.dimension as usize {
             evaluator.setWireValuei(self.t.a[i].as_ref().unwrap(), 10 + i as i64);
             evaluator.setWireValuei(self.t.b[i].as_ref().unwrap(), 20 + i as i64);
         }
@@ -88,7 +93,7 @@ impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
 pub fn main(args: Vec<String>) {
     let mut generator = DotProductCircuitGenerator::new("dot_product", 3);
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

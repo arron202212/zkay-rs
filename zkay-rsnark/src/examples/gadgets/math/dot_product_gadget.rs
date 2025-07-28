@@ -46,7 +46,7 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub};
+use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct DotProductGadget {
@@ -64,7 +64,9 @@ impl DotProductGadget {
         assert!(a.len() == b.len());
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 a,
                 b,
@@ -80,7 +82,10 @@ impl Gadget<DotProductGadget> {
     fn buildCircuit(&mut self) {
         let mut output = self.generator.get_zero_wire();
         for i in 0..self.t.a.len() {
-            let product = self.t.a[i].as_ref().unwrap().mulw(self.t.b[i].as_ref().unwrap(), &Some(format!("Multiply elements # {i}")));
+            let product = self.t.a[i].as_ref().unwrap().mulw(
+                self.t.b[i].as_ref().unwrap(),
+                &Some(format!("Multiply elements # {i}")),
+            );
             output = Some(output.clone().unwrap().add(&product));
         }
         self.t.output = vec![output];

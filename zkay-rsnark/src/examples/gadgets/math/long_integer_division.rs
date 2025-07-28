@@ -52,7 +52,7 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::marker::PhantomData;
-use std::ops::{Mul,Add,Sub,Rem,Div};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 /**
  * This gadget computes q and r such that a = q * b + r, when both operands are represented
  * as long elements. You can check the RSA gadgets/circuit generators for an example.
@@ -126,7 +126,9 @@ impl<T: Debug + Clone> LongIntegerDivision<T> {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 r: a.clone(),
                 q: b.clone(),
@@ -155,25 +157,29 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         }
 
         // length in what follows means the number of chunks
-        let rLength = (rBitwidth as f64/ LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
+        let rLength = (rBitwidth as f64 / LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
         let qLength = (qBitwidth as f64 / LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
 
-        let rWires = self.generator.createProverWitnessWireArray(rLength as usize,&None);
-        let qWires = self.generator.createProverWitnessWireArray(qLength as usize,&None);
+        let rWires = self
+            .generator
+            .createProverWitnessWireArray(rLength as usize, &None);
+        let qWires = self
+            .generator
+            .createProverWitnessWireArray(qLength as usize, &None);
 
         let mut rChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; rLength as usize];
-        let mut qChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; qLength  as usize];
+        let mut qChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; qLength as usize];
 
-        if rBitwidth % LongElement::CHUNK_BITWIDTH as u64!= 0 {
-            rChunkBitwidths[rLength as usize- 1] = rBitwidth % LongElement::CHUNK_BITWIDTH as u64;
+        if rBitwidth % LongElement::CHUNK_BITWIDTH as u64 != 0 {
+            rChunkBitwidths[rLength as usize - 1] = rBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
-        if qBitwidth % LongElement::CHUNK_BITWIDTH as u64!= 0 {
-            qChunkBitwidths[qLength as usize- 1] = qBitwidth % LongElement::CHUNK_BITWIDTH as u64;
+        if qBitwidth % LongElement::CHUNK_BITWIDTH as u64 != 0 {
+            qChunkBitwidths[qLength as usize - 1] = qBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
         let a = &self.t.a;
         let b = &self.t.b;
-        let mut r = LongElement::new(rWires, rChunkBitwidths,self.generator.clone().downgrade());
-        let mut q = LongElement::new(qWires, qChunkBitwidths,self.generator.clone().downgrade());
+        let mut r = LongElement::new(rWires, rChunkBitwidths, self.generator.clone().downgrade());
+        let mut q = LongElement::new(qWires, qChunkBitwidths, self.generator.clone().downgrade());
 
         // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
         //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);

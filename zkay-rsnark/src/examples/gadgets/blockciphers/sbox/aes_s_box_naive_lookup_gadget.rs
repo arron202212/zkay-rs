@@ -61,7 +61,9 @@ impl AESSBoxNaiveLookupGadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 output: vec![],
                 input,
@@ -73,7 +75,7 @@ impl AESSBoxNaiveLookupGadget {
     }
 }
 impl Gadget<AESSBoxNaiveLookupGadget> {
-    const SBox: [u8;256]  = Gadget::<AES128CipherGadget>::SBox;
+    const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
     fn buildCircuit(&mut self) {
         let mut output = self.generator.borrow().get_zero_wire().unwrap();
         for i in 0..256 {

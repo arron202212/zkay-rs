@@ -129,8 +129,8 @@ pub struct ElgamalTest {
                               AffinePoint r2Expected) {
         let cgen = ElgamalEncCircuitGenerator::new("test_enc", plain, random, pk);
         cgen.generateCircuit();
-        let evaluator = CircuitEvaluator::new(cgen);
-        evaluator.evaluate();
+        let mut evaluator = CircuitEvaluator::new(cgen);
+        evaluator.evaluate(generator.cg());
         let c1x = evaluator.getWireValue(cgen.get_out_wires().get(0));
         let c1y = evaluator.getWireValue(cgen.get_out_wires().get(1));
         let c2x = evaluator.getWireValue(cgen.get_out_wires().get(2));
@@ -143,14 +143,14 @@ pub struct ElgamalTest {
         cgen = ElgamalDecCircuitGenerator::new("test_dec", pk, sk, c1Expected, c2Expected, plain);
         cgen.generateCircuit();
         evaluator = CircuitEvaluator::new(cgen);
-        evaluator.evaluate();
+        evaluator.evaluate(generator.cg());
         let one = evaluator.getWireValue(cgen.get_out_wires().get(0));
         Assert.assertEquals(Util::one(), one);
 
         let rgen = ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
         rgen.generateCircuit();
         evaluator = CircuitEvaluator::new(rgen);
-        evaluator.evaluate();
+        evaluator.evaluate(generator.cg());
         let r1x = evaluator.getWireValue(rgen.get_out_wires().get(0));
         let r1y = evaluator.getWireValue(rgen.get_out_wires().get(1));
         let r2x = evaluator.getWireValue(rgen.get_out_wires().get(2));

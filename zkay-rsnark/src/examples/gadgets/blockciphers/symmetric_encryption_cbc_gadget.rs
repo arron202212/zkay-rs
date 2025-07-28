@@ -78,7 +78,9 @@ impl SymmetricEncryptionCBCGadget {
         );
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 plaintextBits,
                 ivBits,
@@ -103,7 +105,8 @@ impl Gadget<SymmetricEncryptionCBCGadget> {
             self.generator.clone().downgrade(),
         )
         .adjustLength(None, (numBlocks * Self::blocksize) as usize)
-        .asArray().clone();
+        .asArray()
+        .clone();
 
         let preparedKey = self.prepareKey();
         let mut prevCipher =
@@ -123,10 +126,11 @@ impl Gadget<SymmetricEncryptionCBCGadget> {
             );
             let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
                 .packBitsIntoWords(64, &None);
-            let gadget = Speck128CipherGadget::new(tmp, preparedKey.clone(), &None, self.generator.clone());
+            let gadget =
+                Speck128CipherGadget::new(tmp, preparedKey.clone(), &None, self.generator.clone());
             let outputs = gadget.getOutputWires();
-            prevCipher =
-                WireArray::new(outputs.clone(), self.generator.clone().downgrade()).getBits(64,&None);
+            prevCipher = WireArray::new(outputs.clone(), self.generator.clone().downgrade())
+                .getBits(64, &None);
 
             ciphertext = Util::concat(&ciphertext, &prevCipher.packBitsIntoWords(64, &None));
         }
@@ -140,7 +144,7 @@ impl Gadget<SymmetricEncryptionCBCGadget> {
 
         let packedKey = WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
             .packBitsIntoWords(64, &None);
-        let preparedKey = Gadget::<Speck128CipherGadget>::expandKey(packedKey,self.generator.clone());
+        let preparedKey = Gadget::<Speck128CipherGadget>::expandKey(&packedKey, &self.generator);
 
         preparedKey
     }

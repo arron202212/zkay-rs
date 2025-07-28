@@ -953,12 +953,12 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
     }
 
-    fn evalCircuit(&mut self) -> CircuitEvaluator {
+    fn evalCircuit(&mut self) -> eyre::Result<CircuitEvaluator> {
         let mut circuitEvaluator = CircuitEvaluator::new(&self.name(), &self.cg());
         self.generateSampleInput(&mut circuitEvaluator);
         circuitEvaluator.evaluate(&self.cg());
         // *self.circuit_evaluator() = Some(circuitEvaluator);
-        circuitEvaluator
+        Ok(circuitEvaluator)
     }
 
     fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
@@ -1369,7 +1369,7 @@ impl CGConfig for RcCell<CircuitGenerator> {
 
     crate::impl_fn_of_trait!(fn addEqualityAssertionb(&self, w1: &WireType, b: &BigInteger, desc: &Option<String>) );
 
-    crate::impl_fn_of_trait!(fn evalCircuit(&mut self) -> CircuitEvaluator );
+    crate::impl_fn_of_trait!(fn evalCircuit(&mut self) -> eyre::Result<CircuitEvaluator> );
 
     crate::impl_fn_of_trait!(fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) );
 

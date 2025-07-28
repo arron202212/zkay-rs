@@ -45,14 +45,14 @@ impl ZkayPaillierEncGadget {
         generator.addOneAssertion(randInv.checkNonZero());
         // let c = g^m * r^n mod n^2
         let gPowPlain =
-            LongIntegerModPowGadget::new(g, plain, nBits, nSquare, nSquareMinBits, "g^m")
+            LongIntegerModPowGadget::new(g, plain, nBits, nSquare, nSquareMinBits,  -1,&Some("g^m".to_owned()),self.cg())
                 .getResult();
         let randPowN =
-            LongIntegerModPowGadget::new(random, n, nBits, nSquare, nSquareMinBits, "r^n")
+            LongIntegerModPowGadget::new(random, n, nBits, nSquare, nSquareMinBits, -1,&Some("r^m".to_owned()),self.cg())
                 .getResult();
         let product = gPowPlain.mul(randPowN);
         cipher =
-            LongIntegerModGadget::new(product, nSquare, nSquareMinBits, true, "g^m * r^n mod n^2")
+            LongIntegerModGadget::new(product, nSquare, nSquareMinBits, true,&Some ("g^m * r^n mod n^2").to_owned(),self,cg())
                 .getRemainder();
     }
 

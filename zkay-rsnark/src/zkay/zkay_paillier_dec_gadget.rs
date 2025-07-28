@@ -43,7 +43,7 @@ impl ZkayPaillierDecGadget {
 
         // plain = L(cipher^lambda mod n^2) * mu mod n
         let cPowLambda =
-            LongIntegerModPowGadget::new(cipher, lambda, nSquare, nSquareMinBits, "c^lambda")
+            LongIntegerModPowGadget::new(cipher, lambda, nSquare, nSquareMinBits, -1,&Some("c^lambda".to_owned()),self.cg())
                 .getResult();
         let lOutput =
             LongIntegerFloorDivGadget::new(cPowLambda.sub(1), n, "(c^lambda - 1) / n")

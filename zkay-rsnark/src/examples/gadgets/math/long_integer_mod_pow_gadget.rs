@@ -44,14 +44,14 @@ use crate::{
 // use crate::circuit::operations::gadget::GadgetConfig;
 // use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::long_integer_division::LongIntegerDivision;
- use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
+use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
 
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub};
+use std::ops::{Add, Mul, Sub};
 /**
  * This gadget computes the result of the modular exponentiation c = b^e mod m,
  * where c, b, e, and m are LongElements.
@@ -81,16 +81,19 @@ impl LongIntegerModPowGadget {
     pub fn new(
         b: LongElement,
         e: LongElement,
-        eMaxBits: i32,
         m: LongElement,
         mMinBits: i32,
+        eMaxBits: i32,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
-            t: Self {c:b.clone(),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                c: b.clone(),
                 b,
                 e,
                 eMaxBits,
@@ -104,7 +107,7 @@ impl LongIntegerModPowGadget {
 }
 impl Gadget<LongIntegerModPowGadget> {
     fn buildCircuit(&mut self) {
-        let one = LongElement::newb(vec![Util::one()],self.generator.clone().downgrade());
+        let one = LongElement::newb(vec![Util::one()], self.generator.clone().downgrade());
         let eBits = self.t.e.getBitsi(self.t.eMaxBits).asArray().clone();
 
         // Start with product = 1
@@ -122,8 +125,11 @@ impl Gadget<LongIntegerModPowGadget> {
                 &Some("modPow: prod^2 mod m".to_owned()),
                 self.generator.clone(),
             )
-            .getRemainder().clone();
-            let squareTimesBase = squareModM.clone().mul(&one.muxBit(&self.t.b, eBits[i].as_ref().unwrap()));
+            .getRemainder()
+            .clone();
+            let squareTimesBase = squareModM
+                .clone()
+                .mul(&one.muxBit(&self.t.b, eBits[i].as_ref().unwrap()));
             product = LongIntegerModGadget::new(
                 squareTimesBase,
                 self.t.m.clone(),
@@ -132,11 +138,20 @@ impl Gadget<LongIntegerModPowGadget> {
                 &Some("modPow: prod * base mod m".to_owned()),
                 self.generator.clone(),
             )
-            .getRemainder().clone();
+            .getRemainder()
+            .clone();
         }
 
-        self.t.c = LongIntegerModGadget::new(product, self.t.m.clone(),0, true, &Some("modPow: prod mod m".to_owned()),self.generator.clone())
-            .getRemainder().clone();
+        self.t.c = LongIntegerModGadget::new(
+            product,
+            self.t.m.clone(),
+            0,
+            true,
+            &Some("modPow: prod mod m".to_owned()),
+            self.generator.clone(),
+        )
+        .getRemainder()
+        .clone();
     }
 
     pub fn getResult(&self) -> &LongElement {

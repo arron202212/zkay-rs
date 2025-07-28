@@ -50,7 +50,7 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub,Div};
+use std::ops::{Add, Div, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
 /**
  * This gadget computes the modular multiplicative inverse a^(-1) mod m,
@@ -78,7 +78,9 @@ impl LongIntegerModInverseGadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 inverse: a.clone(),
                 a,
@@ -95,12 +97,20 @@ impl Gadget<LongIntegerModInverseGadget> {
     fn buildCircuit(&mut self) {
         let inverseWires = self
             .generator
-            .createProverWitnessWireArray(self.t.m.getSize(),&None);
-        let inverse = LongElement::new(inverseWires.clone(), self.t.m.getCurrentBitwidth(),self.generator.clone().downgrade());
+            .createProverWitnessWireArray(self.t.m.getSize(), &None);
+        let inverse = LongElement::new(
+            inverseWires.clone(),
+            self.t.m.getCurrentBitwidth(),
+            self.generator.clone().downgrade(),
+        );
         let quotientWires = self
             .generator
-            .createProverWitnessWireArray(self.t.m.getSize(),&None);
-        let quotient = LongElement::new(quotientWires.clone(), self.t.m.getCurrentBitwidth(),self.generator.clone().downgrade());
+            .createProverWitnessWireArray(self.t.m.getSize(), &None);
+        let quotient = LongElement::new(
+            quotientWires.clone(),
+            self.t.m.getCurrentBitwidth(),
+            self.generator.clone().downgrade(),
+        );
         let a = &self.t.a;
         let m = &self.t.m;
         // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {

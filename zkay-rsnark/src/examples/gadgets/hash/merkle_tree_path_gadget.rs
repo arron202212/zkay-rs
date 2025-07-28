@@ -49,8 +49,8 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
-use std::ops::{Sub,Add,Mul};
 /**
  * A Merkle tree authentication gadget using the subsetsum hash function
  *
@@ -78,15 +78,17 @@ impl MerkleTreePathGadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 directionSelectorWire,
                 treeHeight,
                 leafWires,
                 intermediateHashWires,
                 leafWordBitWidth,
-                directionSelectorBits:vec![],
-                outRoot:vec![],
+                directionSelectorBits: vec![],
+                outRoot: vec![],
             },
         };
 
@@ -97,40 +99,59 @@ impl MerkleTreePathGadget {
 impl Gadget<MerkleTreePathGadget> {
     const digestWidth: i32 = SubsetSumHashGadget::DIMENSION;
     fn buildCircuit(&mut self) {
-        let digestWidth=Self::digestWidth as usize;
+        let digestWidth = Self::digestWidth as usize;
         let mut directionSelectorBits = self
             .t
             .directionSelectorWire
-            .getBitWiresi(self.t.treeHeight as u64,&None)
-            .asArray().clone();
+            .getBitWiresi(self.t.treeHeight as u64, &None)
+            .asArray()
+            .clone();
 
         // Apply CRH to leaf data
-        let leafBits = WireArray::new(self.t.leafWires.clone(),self.generator.clone().downgrade())
-            .getBits(self.t.leafWordBitWidth as usize,&None)
-            .asArray().clone();
-        let mut subsetSumGadget = SubsetSumHashGadget::new(leafBits.clone(), false,&None,self.generator.clone());
+        let leafBits = WireArray::new(self.t.leafWires.clone(), self.generator.clone().downgrade())
+            .getBits(self.t.leafWordBitWidth as usize, &None)
+            .asArray()
+            .clone();
+        let mut subsetSumGadget =
+            SubsetSumHashGadget::new(leafBits.clone(), false, &None, self.generator.clone());
         let mut currentHash = subsetSumGadget.getOutputWires();
 
         // Apply CRH across tree path guided by the direction bits
-        for i in 0..self.t.treeHeight  as usize{
+        for i in 0..self.t.treeHeight as usize {
             let mut inHash = vec![None; 2 * digestWidth as usize];
             for j in 0..digestWidth {
-                let temp =
-                    currentHash[j].clone().unwrap().sub(self.t.intermediateHashWires[i * digestWidth + j].as_ref().unwrap());
+                let temp = currentHash[j].clone().unwrap().sub(
+                    self.t.intermediateHashWires[i * digestWidth + j]
+                        .as_ref()
+                        .unwrap(),
+                );
                 let temp2 = directionSelectorBits[i].clone().unwrap().mul(temp);
-                inHash[j] = Some(self.t.intermediateHashWires[i * digestWidth + j].clone().unwrap().add(temp2));
+                inHash[j] = Some(
+                    self.t.intermediateHashWires[i * digestWidth + j]
+                        .clone()
+                        .unwrap()
+                        .add(temp2),
+                );
             }
             for j in digestWidth..2 * digestWidth {
                 let temp = currentHash[j - digestWidth].clone().unwrap().add(
-                    self.t.intermediateHashWires[i * digestWidth + j - digestWidth].as_ref().unwrap(),
+                    self.t.intermediateHashWires[i * digestWidth + j - digestWidth]
+                        .as_ref()
+                        .unwrap(),
                 );
                 inHash[j] = Some(temp.sub(inHash[j - digestWidth].as_ref().unwrap()));
             }
 
-            let nextInputBits = WireArray::new(inHash,self.generator.clone().downgrade())
-                .getBits(Configs.log2_field_prime as usize,&None)
-                .asArray().clone();
-            subsetSumGadget = SubsetSumHashGadget::new(nextInputBits.clone(), false,&None,self.generator.clone());
+            let nextInputBits = WireArray::new(inHash, self.generator.clone().downgrade())
+                .getBits(Configs.log2_field_prime as usize, &None)
+                .asArray()
+                .clone();
+            subsetSumGadget = SubsetSumHashGadget::new(
+                nextInputBits.clone(),
+                false,
+                &None,
+                self.generator.clone(),
+            );
             currentHash = subsetSumGadget.getOutputWires();
         }
         self.t.outRoot = currentHash.clone();

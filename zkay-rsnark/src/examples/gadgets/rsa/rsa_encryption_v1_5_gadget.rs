@@ -45,13 +45,15 @@ use crate::{
 // use crate::circuit::structure::wire_type::WireType;
 // use crate::util::util::{BigInteger, Util};
 use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
-use crate::examples::gadgets::math::long_integer_division::{LongIntegerDivision,LongIntegerDivisionConfig};
+use crate::examples::gadgets::math::long_integer_division::{
+    LongIntegerDivision, LongIntegerDivisionConfig,
+};
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub,Div,Rem,Shl};
+use std::ops::{Add, Div, Mul, Rem, Shl, Sub};
 /**
  * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will
  * have the RSA-OAEP method according to PKCS#1 v2.x. The gadget assumes a
@@ -86,18 +88,23 @@ impl RSAEncryptionV1_5_Gadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        
-            assert!(rsaKeyBitLength % 8 == 0,"RSA Key bit length is assumed to be a multiple of 8");
-       
+        assert!(
+            rsaKeyBitLength % 8 == 0,
+            "RSA Key bit length is assumed to be a multiple of 8"
+        );
 
-  
-            //println!("Check Message & Padding length");
-            assert!(plainText.len() <= rsaKeyBitLength  as usize/ 8 - 11
-            && plainText.len() + randomness.len() == rsaKeyBitLength as usize / 8 - 3,"Invalid Argument Dimensions for RSA Encryption");
-        
+        //println!("Check Message & Padding length");
+        assert!(
+            plainText.len() <= rsaKeyBitLength as usize / 8 - 11
+                && plainText.len() + randomness.len() == rsaKeyBitLength as usize / 8 - 3,
+            "Invalid Argument Dimensions for RSA Encryption"
+        );
+
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 randomness,
                 plainText,
@@ -122,7 +129,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             paddedPlainText[self.t.plainText.len() + 1 + (self.t.randomness.len() - 1) - i] =
                 self.t.randomness[i].clone();
         }
-        paddedPlainText[lengthInBytes - 2] = Some(self.generator.createConstantWirei(2,&None));
+        paddedPlainText[lengthInBytes - 2] = Some(self.generator.createConstantWirei(2, &None));
         paddedPlainText[lengthInBytes - 1] = self.generator.get_zero_wire();
 
         /*
@@ -135,13 +142,18 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
 
         // 2. Make multiple long integer constant multiplications (need to be
         // done carefully)
-        let mut paddedMsg = LongElement::newb(vec![BigInteger::ZERO],self.generator.clone().downgrade());
+        let mut paddedMsg =
+            LongElement::newb(vec![BigInteger::ZERO], self.generator.clone().downgrade());
         for i in 0..paddedPlainText.len() {
-            let e = LongElement::new(vec![paddedPlainText[i].clone()], vec![8],self.generator.clone().downgrade());
-            let c = LongElement::newb(Util::split(
-                &Util::one().shl(8 * i),
-                LongElement::CHUNK_BITWIDTH,
-            ),self.generator.clone().downgrade());
+            let e = LongElement::new(
+                vec![paddedPlainText[i].clone()],
+                vec![8],
+                self.generator.clone().downgrade(),
+            );
+            let c = LongElement::newb(
+                Util::split(&Util::one().shl(8 * i), LongElement::CHUNK_BITWIDTH),
+                self.generator.clone().downgrade(),
+            );
             paddedMsg = paddedMsg.add(&e.mul(&c));
         }
 
@@ -152,21 +164,29 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
                 s,
                 self.t.modulus.clone(),
                 self.t.rsaKeyBitLength,
-                false,&None,self.generator.clone()
+                false,
+                &None,
+                self.generator.clone(),
             )
-            .getRemainder().clone();
+            .getRemainder()
+            .clone();
         }
         s = s.mul(&paddedMsg);
         s = LongIntegerDivision::<LongIntegerModGadget>::new(
             s,
             self.t.modulus.clone(),
             self.t.rsaKeyBitLength,
-            true,&None,self.generator.clone()
+            true,
+            &None,
+            self.generator.clone(),
         )
-        .getRemainder().clone();
+        .getRemainder()
+        .clone();
 
         // return the cipher text as byte array
-        self.t.ciphertext = s.getBitsi(self.t.rsaKeyBitLength).packBitsIntoWords(8,&None);
+        self.t.ciphertext = s
+            .getBitsi(self.t.rsaKeyBitLength)
+            .packBitsIntoWords(8, &None);
     }
     pub fn getExpectedRandomnessLength(rsaKeyBitLength: i32, plainTextLength: i32) -> i32 {
         assert!(
@@ -180,9 +200,17 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
     pub fn checkRandomnessCompliance(&self) {
         // assert the randomness vector has non-zero bytes
         for i in 0..self.t.randomness.len() {
-            self.t.randomness[i].as_ref().unwrap().restrictBitLength(8, &None);
+            self.t.randomness[i]
+                .as_ref()
+                .unwrap()
+                .restrictBitLength(8, &None);
             // verify that each element has a multiplicative inverse
-            FieldDivisionGadget::new(self.generator.get_one_wire().unwrap(), self.t.randomness[i].clone().unwrap(),&None,self.generator.clone());
+            FieldDivisionGadget::new(
+                self.generator.get_one_wire().unwrap(),
+                self.t.randomness[i].clone().unwrap(),
+                &None,
+                self.generator.clone(),
+            );
         }
     }
 }

@@ -74,20 +74,23 @@ impl FieldDivisionGadget {
         desc: &Option<String>,
         mut generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-       let mut generators = generator.borrow().clone();
+        let mut generators = generator.borrow().clone();
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self { a, b, c: vec![] },
         };
-        
+
         // let mut generator = self.me.clone().unwrap().upgrade().unwrap();
 
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.t.a.instance_of("ConstantWire") && _self.t.b.instance_of("ConstantWire") {
             let aConst = _self.t.a.try_as_constant_ref().unwrap().getConstant();
-            let bInverseConst = _self.t
+            let bInverseConst = _self
+                .t
                 .b
                 .try_as_constant_ref()
                 .unwrap()

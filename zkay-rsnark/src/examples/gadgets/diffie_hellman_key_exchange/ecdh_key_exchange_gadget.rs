@@ -14,7 +14,7 @@ use crate::{
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
-            gadget::{Gadget,GadgetConfig},
+            gadget::{Gadget, GadgetConfig},
             primitive::{
                 assert_basic_op::{AssertBasicOp, new_assert},
                 basic_op::BasicOp,
@@ -52,8 +52,8 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use zkay_derive::ImplStructNameConfig;
 use std::ops::{Add, Mul, Neg, Rem, Sub};
+use zkay_derive::ImplStructNameConfig;
 /**
  * This gadget implements cryptographic key exchange using a customized elliptic
  * curve that is efficient to represent as a SNARK circuit. It follows the
@@ -77,18 +77,24 @@ use std::ops::{Add, Mul, Neg, Rem, Sub};
  *
  *
  */
-#[derive(Debug, Clone,Hash, ImplStructNameConfig)]
+#[derive(Debug, Clone, Hash, ImplStructNameConfig)]
 pub struct AffinePoint {
     x: Option<WireType>,
     y: Option<WireType>,
 }
-impl AffinePoint{
-    pub fn newx(x:WireType)->Self {
-    	Self{x : Some(x),y:None}
+impl AffinePoint {
+    pub fn newx(x: WireType) -> Self {
+        Self {
+            x: Some(x),
+            y: None,
+        }
     }
 
-    pub fn new(x:WireType, y:WireType)->Self {
-    	Self{x : Some(x),y:Some(y)}
+    pub fn new(x: WireType, y: WireType) -> Self {
+        Self {
+            x: Some(x),
+            y: Some(y),
+        }
     }
 }
 
@@ -142,7 +148,9 @@ impl ECDHKeyExchangeGadget {
         let y_is_none = hY.is_none();
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 outputPublicValue: None,
                 sharedSecret: None,
@@ -150,7 +158,8 @@ impl ECDHKeyExchangeGadget {
                 hTable: vec![],
                 secretBits,
                 basePoint: AffinePoint { x: baseX, y: baseY },
-                hPoint: AffinePoint { x: hX, y: hY },output: vec![],
+                hPoint: AffinePoint { x: hX, y: hY },
+                output: vec![],
             },
         };
 
@@ -203,14 +212,12 @@ impl Gadget<ECDHKeyExchangeGadget> {
     // in
     // https://eprint.iacr.org/2015/1093.pdf
 
-    pub const CURVE_ORDER:  &str =
-        "21888242871839275222246405745257275088597270486034011716802747351550446453784"
-    ;
+    pub const CURVE_ORDER: &str =
+        "21888242871839275222246405745257275088597270486034011716802747351550446453784";
 
     // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
-    pub const SUBGROUP_ORDER:  &str = 
-        "2736030358979909402780800718157159386074658810754251464600343418943805806723"
-    ;
+    pub const SUBGROUP_ORDER: &str =
+        "2736030358979909402780800718157159386074658810754251464600343418943805806723";
     fn buildCircuit(&mut self) {
         // /**
         //  * The reason this operates on affine coordinates is that in our
@@ -237,21 +244,28 @@ impl Gadget<ECDHKeyExchangeGadget> {
     }
 
     fn checkSecretBits(&self) {
-        
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
          * should be 1, and the three least significant bits should be zero.
          */
-        assert!(self.t.secretBits.len() == Self::SECRET_BITWIDTH );
-        self.generator
-            .addZeroAssertion(self.t.secretBits[0].as_ref().unwrap(), &Some("Asserting secret bit conditions".to_owned()));
-        self.generator
-            .addZeroAssertion(self.t.secretBits[1].as_ref().unwrap(), &Some("Asserting secret bit conditions".to_owned()));
-        self.generator
-            .addZeroAssertion(self.t.secretBits[2].as_ref().unwrap(), &Some("Asserting secret bit conditions".to_owned()));
+        assert!(self.t.secretBits.len() == Self::SECRET_BITWIDTH);
+        self.generator.addZeroAssertion(
+            self.t.secretBits[0].as_ref().unwrap(),
+            &Some("Asserting secret bit conditions".to_owned()),
+        );
+        self.generator.addZeroAssertion(
+            self.t.secretBits[1].as_ref().unwrap(),
+            &Some("Asserting secret bit conditions".to_owned()),
+        );
+        self.generator.addZeroAssertion(
+            self.t.secretBits[2].as_ref().unwrap(),
+            &Some("Asserting secret bit conditions".to_owned()),
+        );
         self.generator.addOneAssertion(
-            self.t.secretBits[Self::SECRET_BITWIDTH - 1].as_ref().unwrap(),
+            self.t.secretBits[Self::SECRET_BITWIDTH - 1]
+                .as_ref()
+                .unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
 
@@ -259,7 +273,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            self.generator.addBinaryAssertion(self.t.secretBits[i].as_ref().unwrap(),&None);
+            self.generator
+                .addBinaryAssertion(self.t.secretBits[i].as_ref().unwrap(), &None);
         }
     }
 
@@ -267,11 +282,27 @@ impl Gadget<ECDHKeyExchangeGadget> {
         // Easy to handle if baseX is constant, otherwise, let the prover input
         // a witness and verify some properties
 
-        if self.t.basePoint.x.as_ref().unwrap().instance_of("ConstantWire") {
-            let x = self.t.basePoint.x.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
-            self.t.basePoint.y = Some(self
-                .generator
-                .createConstantWire(&Self::computeYCoordinate(x),&None));
+        if self
+            .t
+            .basePoint
+            .x
+            .as_ref()
+            .unwrap()
+            .instance_of("ConstantWire")
+        {
+            let x = self
+                .t
+                .basePoint
+                .x
+                .as_ref()
+                .unwrap()
+                .try_as_constant_ref()
+                .unwrap()
+                .getConstant();
+            self.t.basePoint.y = Some(
+                self.generator
+                    .createConstantWire(&Self::computeYCoordinate(x), &None),
+            );
         } else {
             self.t.basePoint.y = Some(self.generator.createProverWitnessWire(&None));
             // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
@@ -302,16 +333,35 @@ impl Gadget<ECDHKeyExchangeGadget> {
             //     }
             //     Prover
             // });
-            self.assertValidPointOnEC(self.t.basePoint.x.as_ref().unwrap(), self.t.basePoint.y.as_ref().unwrap());
+            self.assertValidPointOnEC(
+                self.t.basePoint.x.as_ref().unwrap(),
+                self.t.basePoint.y.as_ref().unwrap(),
+            );
         }
 
-        if self.t.hPoint.x.as_ref().unwrap().instance_of("ConstantWire") {
-            let x = self.t.hPoint.x.as_ref().unwrap().try_as_constant_ref().unwrap().getConstant();
-            self.t.hPoint.y = Some(self
-                .generator
-                .createConstantWire(&Self::computeYCoordinate(x),&None));
+        if self
+            .t
+            .hPoint
+            .x
+            .as_ref()
+            .unwrap()
+            .instance_of("ConstantWire")
+        {
+            let x = self
+                .t
+                .hPoint
+                .x
+                .as_ref()
+                .unwrap()
+                .try_as_constant_ref()
+                .unwrap()
+                .getConstant();
+            self.t.hPoint.y = Some(
+                self.generator
+                    .createConstantWire(&Self::computeYCoordinate(x), &None),
+            );
         } else {
-            self.t.hPoint.y =Some( self.generator.createProverWitnessWire(&None));
+            self.t.hPoint.y = Some(self.generator.createProverWitnessWire(&None));
             // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
             //     let x = evaluator.getWireValue(hPoint.x);
             //     evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
@@ -341,7 +391,10 @@ impl Gadget<ECDHKeyExchangeGadget> {
             //         }
             //         Prover
             //     });
-            self.assertValidPointOnEC(self.t.hPoint.x.as_ref().unwrap(), self.t.hPoint.y.as_ref().unwrap());
+            self.assertValidPointOnEC(
+                self.t.hPoint.x.as_ref().unwrap(),
+                self.t.hPoint.y.as_ref().unwrap(),
+            );
         }
     }
 
@@ -351,12 +404,22 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let ySqr = y.clone().mul(y);
         let xSqr = x.clone().mul(x);
         let xCube = xSqr.clone().mul(x);
-        self.generator
-            .addEqualityAssertion(&ySqr, &xCube.add(xSqr.mulb(&BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap(),&None)).add(x),&None);
+        self.generator.addEqualityAssertion(
+            &ySqr,
+            &xCube
+                .add(xSqr.mulb(
+                    &BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap(),
+                    &None,
+                ))
+                .add(x),
+            &None,
+        );
     }
 
     fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
-        let mut precomputedTable:Vec<_> = (1..self.t.secretBits.len()).scan(p.clone(),|s,_j|Some(self.doubleAffinePoint(&s))).collect();
+        let mut precomputedTable: Vec<_> = (1..self.t.secretBits.len())
+            .scan(p.clone(), |s, _j| Some(self.doubleAffinePoint(&s)))
+            .collect();
         precomputedTable.insert(0, p.clone());
         precomputedTable
     }
@@ -375,36 +438,74 @@ impl Gadget<ECDHKeyExchangeGadget> {
         for j in (0..=secretBits.len() - 2).rev() {
             let tmp = self.addAffinePoints(&result, &precomputedTable[j]);
             let isOne = &secretBits[j];
-            result.x = Some(result.x.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap()))));
-            result.y = Some(result.y.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap()))));
+            result.x = Some(
+                result.x.clone().unwrap().add(
+                    isOne
+                        .clone()
+                        .unwrap()
+                        .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
+                ),
+            );
+            result.y = Some(
+                result.y.clone().unwrap().add(
+                    isOne
+                        .clone()
+                        .unwrap()
+                        .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
+                ),
+            );
         }
         result
     }
 
-    fn doubleAffinePoint(&self,p: &AffinePoint) -> AffinePoint {
-        let coeff_a=BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap();
+    fn doubleAffinePoint(&self, p: &AffinePoint) -> AffinePoint {
+        let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
         let l1 = FieldDivisionGadget::new(
-            x_2.muli(3,&None).add(p.x.as_ref().unwrap().mulb(&coeff_a,&None).muli(2,&None)).add(1),
-            p.y.as_ref().unwrap().muli(2,&None),&None,self.generator.clone()
+            x_2.muli(3, &None)
+                .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
+                .add(1),
+            p.y.as_ref().unwrap().muli(2, &None),
+            &None,
+            self.generator.clone(),
         )
-        .getOutputWires()[0].clone();
+        .getOutputWires()[0]
+            .clone();
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
-        let newX = l2.clone().sub(&coeff_a).sub(p.x.clone().unwrap()).sub(p.x.as_ref().unwrap());
-        let newY = p.x.as_ref().unwrap().muli(3,&None).add(&coeff_a).sub(&l2).mul(l1.as_ref().unwrap()).sub(p.y.as_ref().unwrap());
+        let newX = l2
+            .clone()
+            .sub(&coeff_a)
+            .sub(p.x.clone().unwrap())
+            .sub(p.x.as_ref().unwrap());
+        let newY =
+            p.x.as_ref()
+                .unwrap()
+                .muli(3, &None)
+                .add(&coeff_a)
+                .sub(&l2)
+                .mul(l1.as_ref().unwrap())
+                .sub(p.y.as_ref().unwrap());
         AffinePoint::new(newX, newY)
     }
 
-    fn addAffinePoints(&self,p1: &AffinePoint, p2: &AffinePoint) -> AffinePoint {
-        let coeff_a=BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap();
+    fn addAffinePoints(&self, p1: &AffinePoint, p2: &AffinePoint) -> AffinePoint {
+        let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
         let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-        let q = FieldDivisionGadget::new(diffY, diffX,&None,self.generator.clone()).getOutputWires()[0].clone();
+        let q = FieldDivisionGadget::new(diffY, diffX, &None, self.generator.clone())
+            .getOutputWires()[0]
+            .clone();
         let q2 = q.clone().unwrap().mul(q.as_ref().unwrap());
         let q3 = q2.clone().mul(q.as_ref().unwrap());
-        let newX = q2.clone().sub(&coeff_a).sub(p1.x.as_ref().unwrap()).sub(p2.x.as_ref().unwrap());
+        let newX = q2
+            .clone()
+            .sub(&coeff_a)
+            .sub(p1.x.as_ref().unwrap())
+            .sub(p2.x.as_ref().unwrap());
         let newY =
-            p1.x.as_ref().unwrap().muli(2,&None)
+            p1.x.as_ref()
+                .unwrap()
+                .muli(2, &None)
                 .add(p2.x.as_ref().unwrap())
                 .add(&coeff_a)
                 .mul(q.as_ref().unwrap())
@@ -417,7 +518,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let xSqred = x.clone().mul(&x).rem(&Configs.field_prime);
         let xCubed = xSqred.clone().mul(&x).rem(&Configs.field_prime);
         let ySqred = xCubed
-            .add(BigInteger::parse_bytes(Self::COEFF_A.as_bytes(),10).unwrap().mul(xSqred))
+            .add(
+                BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10)
+                    .unwrap()
+                    .mul(xSqred),
+            )
             .add(&x)
             .rem(&Configs.field_prime);
         let y = x; //IntegerFunctions.ressol(ySqred, &Configs.field_prime); //TODO 
@@ -425,33 +530,68 @@ impl Gadget<ECDHKeyExchangeGadget> {
     }
 
     pub fn validateInputs(&self) {
-        self.generator
-            .addOneAssertion(&self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),&None);
-        self.assertValidPointOnEC(self.t.basePoint.x.as_ref().unwrap(), self.t.basePoint.y.as_ref().unwrap());
+        self.generator.addOneAssertion(
+            &self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),
+            &None,
+        );
+        self.assertValidPointOnEC(
+            self.t.basePoint.x.as_ref().unwrap(),
+            self.t.basePoint.y.as_ref().unwrap(),
+        );
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
-        self.generator
-            .addOneAssertion(&self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),&None);
-        self.assertValidPointOnEC(self.t.hPoint.x.as_ref().unwrap(), self.t.hPoint.y.as_ref().unwrap());
+        self.generator.addOneAssertion(
+            &self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
+            &None,
+        );
+        self.assertValidPointOnEC(
+            self.t.hPoint.x.as_ref().unwrap(),
+            self.t.hPoint.y.as_ref().unwrap(),
+        );
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
         self.assertPointOrder(&self.t.hPoint, &self.t.hTable);
     }
 
     fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
-        let subgroup_order=BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(),10).unwrap();
-        let o = self.generator.createConstantWire(&subgroup_order,&None);
-        let bits = o.getBitWiresi(subgroup_order.bits(),&None).asArray().clone();
+        let subgroup_order = BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap();
+        let o = self.generator.createConstantWire(&subgroup_order, &None);
+        let bits = o
+            .getBitWiresi(subgroup_order.bits(), &None)
+            .asArray()
+            .clone();
 
         let mut result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
             let tmp = self.addAffinePoints(&result, &table[j]);
             let isOne = &bits[j];
-            result.x = Some(result.x.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap()))));
-            result.y = Some(result.y.clone().unwrap().add(isOne.clone().unwrap().mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap()))));
+            result.x = Some(
+                result.x.clone().unwrap().add(
+                    isOne
+                        .clone()
+                        .unwrap()
+                        .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
+                ),
+            );
+            result.y = Some(
+                result.y.clone().unwrap().add(
+                    isOne
+                        .clone()
+                        .unwrap()
+                        .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
+                ),
+            );
         }
 
         // verify that: result = -p
-        self.generator.addEqualityAssertion(result.x.as_ref().unwrap(), p.x.as_ref().unwrap(),&None);
-        self.generator.addEqualityAssertion(result.y.as_ref().unwrap(), &p.y.as_ref().unwrap().muli(-1,&None),&None);
+        self.generator.addEqualityAssertion(
+            result.x.as_ref().unwrap(),
+            p.x.as_ref().unwrap(),
+            &None,
+        );
+        self.generator.addEqualityAssertion(
+            result.y.as_ref().unwrap(),
+            &p.y.as_ref().unwrap().muli(-1, &None),
+            &None,
+        );
 
         // the reason the last iteration is handled separately is that the
         // addition of

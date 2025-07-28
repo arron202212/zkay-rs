@@ -629,9 +629,9 @@ mod test {
                 assert_eq!(generator.get_num_of_constraints(), 4); // we don't detect
                 // similarity here yet
 
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, generator.cg_weak());
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, self.cg());
                 assert_eq!(generator.get_num_of_constraints(), 5);
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, generator.cg_weak());
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, self.cg());
                 // since this operation is implemented externally, it's not easy
                 // to filter it, because everytime a witness wire is introduced
                 // by the gadget. To eliminate such similar operations, the
@@ -692,7 +692,8 @@ mod test {
                     &None,
                     generator.cg(),
                 )
-                .getOutputWires();
+                .getOutputWires()
+                .clone();
                 let mut numOfConstraintsBefore = generator.get_num_of_constraints();
                 digest = SHA256Gadget::new(
                     inputWires.clone(),
@@ -703,7 +704,8 @@ mod test {
                     &None,
                     generator.cg(),
                 )
-                .getOutputWires();
+                .getOutputWires()
+                .clone();
                 digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -713,7 +715,8 @@ mod test {
                     &None,
                     generator.cg(),
                 )
-                .getOutputWires();
+                .getOutputWires()
+                .clone();
                 digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -723,7 +726,8 @@ mod test {
                     &None,
                     generator.cg(),
                 )
-                .getOutputWires();
+                .getOutputWires()
+                .clone();
                 digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -733,7 +737,8 @@ mod test {
                     &None,
                     generator.cg(),
                 )
-                .getOutputWires();
+                .getOutputWires()
+                .clone();
                 digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -743,7 +748,8 @@ mod test {
                     &None,
                     generator.cg(),
                 )
-                .getOutputWires();
+                .getOutputWires()
+                .clone();
 
                 // verify that the number of constraints match
                 assert_eq!(numOfConstraintsBefore, generator.get_num_of_constraints());
@@ -759,9 +765,9 @@ mod test {
                 self.t.inputWires = inputWires;
             }
 
-            fn generateSampleInput(&self, e: &mut CircuitEvaluator) {
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
                 for (i, c) in self.t.inputStr.bytes().enumerate() {
-                    e.setWireValuei(self.t.inputWires[i].as_ref().unwrap(), c as i64);
+                    evaluator.setWireValuei(self.t.inputWires[i].as_ref().unwrap(), c as i64);
                 }
             }
         }
@@ -772,7 +778,7 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test4", t);
         generator.generateCircuit();
 
-        let mut evaluator = generator.evalCircuit();
+        let mut evaluator = generator.evalCircuit().unwrap();
 
         let mut outDigest = String::new();
         for w in generator.get_out_wires() {

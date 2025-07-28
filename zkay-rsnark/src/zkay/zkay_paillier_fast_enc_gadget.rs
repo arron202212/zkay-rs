@@ -43,7 +43,7 @@ impl ZkayPaillierFastEncGadget {
         // Compute c = g^m * r^n mod n^2
         let gPowPlain = n.mul(plain).add(1).align(nSquare.getSize());
         let randPowN =
-            LongIntegerModPowGadget::new(random, n, nBits, nSquare, nSquareMinBits, "r^n")
+            LongIntegerModPowGadget::new(random, n, nBits, nSquare, nSquareMinBits,-1,&Some("r^n".to_owned()),self.cg())
                 .getResult();
         let product = gPowPlain.mul(randPowN);
         cipher =

@@ -66,7 +66,9 @@ impl AESSBoxGadgetOptimized1 {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 input,
                 output: vec![],
@@ -79,7 +81,7 @@ impl AESSBoxGadgetOptimized1 {
     }
 }
 impl Gadget<AESSBoxGadgetOptimized1> {
-    const SBox: [u8;256] = Gadget::<AES128CipherGadget>::SBox;
+    const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
     //static
     fn preprocessing() {
         // preprocessing
@@ -87,7 +89,9 @@ impl Gadget<AESSBoxGadgetOptimized1> {
     }
     pub fn solveLinearSystems() {
         let mut allCoeffSet = Vec::new();
-        let list: Vec<_> = (0..=255).map(|i| 256 * i as i32 + Self::SBox[i] as i32).collect();
+        let list: Vec<_> = (0..=255)
+            .map(|i| 256 * i as i32 + Self::SBox[i] as i32)
+            .collect();
 
         for i in 0..=15 {
             let mut memberValueSet = HashSet::new();
@@ -135,9 +139,8 @@ impl Gadget<AESSBoxGadgetOptimized1> {
             let mut coeffs = vec![BigInteger::default(); 16];
             for ii in 0..16 {
                 coeffs[ii] = mat[ii][16].clone();
-              
-                    assert!(&coeffs[ii] == &polyCoeffs[ii],"Inconsistency found.");
 
+                assert!(&coeffs[ii] == &polyCoeffs[ii], "Inconsistency found.");
             }
             allCoeffSet.push(coeffs);
         }
@@ -149,7 +152,10 @@ impl Gadget<AESSBoxGadgetOptimized1> {
 
         for i in 0..a1.len() {
             for j in 0..a2.len() {
-                out[i + j] = out[i + j].clone().add(a1[i].clone().mul(&a2[j])).rem(&Configs.field_prime);
+                out[i + j] = out[i + j]
+                    .clone()
+                    .add(a1[i].clone().mul(&a2[j]))
+                    .rem(&Configs.field_prime);
             }
         }
         out

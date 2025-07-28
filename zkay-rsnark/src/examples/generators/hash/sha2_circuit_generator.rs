@@ -25,7 +25,7 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator,CGInstance, CircuitGeneratorExtend},
+            circuit_generator::{CGConfig, CGInstance, CircuitGenerator, CircuitGeneratorExtend},
             constant_wire::{ConstantWire, new_constant},
             variable_bit_wire::VariableBitWire,
             variable_wire::{VariableWire, new_variable},
@@ -69,9 +69,10 @@ impl SHA2CircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
     fn buildCircuit(&mut self) {
         // assuming the circuit input will be 64 bytes
-        let inputWires = self.createInputWireArray(64,&None);
+        let inputWires = self.createInputWireArray(64, &None);
         // this gadget is not applying any padding.
-        let sha2Gadget = SHA256Gadget::new(inputWires.clone(), 8, 64, false, false,&None,self.cg());
+        let sha2Gadget =
+            SHA256Gadget::new(inputWires.clone(), 8, 64, false, false, &None, self.cg());
         let digest = sha2Gadget.getOutputWires();
         self.makeOutputArray(digest, &Some("digest".to_owned()));
 
@@ -97,7 +98,7 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
 pub fn main(args: Vec<String>) {
     let mut generator = SHA2CircuitGenerator::new("sha_256");
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

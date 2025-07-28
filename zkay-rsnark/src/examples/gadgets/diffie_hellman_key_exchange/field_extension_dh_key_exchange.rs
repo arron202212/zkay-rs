@@ -96,7 +96,7 @@ impl FieldExtensionDHKeyExchange {
         h: Vec<Option<WireType>>,
         secretExponentBits: Vec<Option<WireType>>,
         omega: i64,
-        desc:  &Option<String>,
+        desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         assert!(h.len() == g.len(), "g and h must have the same dimension");
@@ -106,11 +106,13 @@ impl FieldExtensionDHKeyExchange {
         // done also outside the gadget. The back end takes care of caching
         let generators = generator.borrow().clone();
         for w in &secretExponentBits {
-            generators.addBinaryAssertion(w.as_ref().unwrap(),&None);
+            generators.addBinaryAssertion(w.as_ref().unwrap(), &None);
         }
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 mu: g.len() as i32,
                 g,
@@ -118,10 +120,10 @@ impl FieldExtensionDHKeyExchange {
                 secretExponentBits,
                 omega,
                 outputPublicValue: vec![],
-sharedSecret: vec![],
-gPowersTable: vec![],
-hPowersTable: vec![],
-output: vec![],
+                sharedSecret: vec![],
+                gPowersTable: vec![],
+                hPowersTable: vec![],
+                output: vec![],
             },
         };
         _self.buildCircuit();
@@ -139,27 +141,35 @@ impl Gadget<FieldExtensionDHKeyExchange> {
     }
 
     fn mul(&self, a: &Vec<Option<WireType>>, b: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mu=self.t.mu as usize;
-        let zero_wire=self.generator.get_zero_wire().unwrap();
+        let mu = self.t.mu as usize;
+        let zero_wire = self.generator.get_zero_wire().unwrap();
         let mut c = vec![zero_wire; mu];
 
         for i in 0..mu {
             for j in 0..mu {
                 let mut k = i + j;
                 if k < mu {
-                    c[k] = c[k].clone().add(&a[i].clone().unwrap().mul(b[j].as_ref().unwrap()));
+                    c[k] = c[k]
+                        .clone()
+                        .add(&a[i].clone().unwrap().mul(b[j].as_ref().unwrap()));
                 }
                 k = i + j - mu;
                 if k >= 0 {
-                    c[k] = c[k].clone().add(&a[i].clone().unwrap().mul(b[j].as_ref().unwrap()).muli(self.t.omega,&None));
+                    c[k] = c[k].clone().add(
+                        &a[i]
+                            .clone()
+                            .unwrap()
+                            .mul(b[j].as_ref().unwrap())
+                            .muli(self.t.omega, &None),
+                    );
                 }
             }
         }
-        c.into_iter().map(|x|Some(x)).collect()
+        c.into_iter().map(|x| Some(x)).collect()
     }
 
     fn preparePowersTable(&self, base: &Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
-        let mu=self.t.mu as usize;
+        let mu = self.t.mu as usize;
         let mut powersTable = vec![vec![None; mu]; self.t.secretExponentBits.len() + 1];
         powersTable[0] = base[..mu].to_vec();
         for j in 1..self.t.secretExponentBits.len() + 1 {
@@ -178,8 +188,15 @@ impl Gadget<FieldExtensionDHKeyExchange> {
         c[0] = self.generator.get_one_wire();
         for j in 0..expBits.len() {
             let tmp = self.mul(&c, &powersTable[j]);
-            for i in 0..self.t.mu  as usize{
-                c[i] = Some(c[i].clone().unwrap().add(expBits[j].clone().unwrap().mul(tmp[i].clone().unwrap().sub(c[i].as_ref().unwrap()))));
+            for i in 0..self.t.mu as usize {
+                c[i] = Some(
+                    c[i].clone().unwrap().add(
+                        expBits[j]
+                            .clone()
+                            .unwrap()
+                            .mul(tmp[i].clone().unwrap().sub(c[i].as_ref().unwrap())),
+                    ),
+                );
             }
         }
         c
@@ -190,42 +207,73 @@ impl Gadget<FieldExtensionDHKeyExchange> {
         // g and h are not zero and not one
 
         // checking the first chunk
-        let zeroOrOne1 = self.t.g[0].clone().unwrap().mul(self.t.g[0].clone().unwrap().sub(1));
-        let zeroOrOne2 = self.t.h[0].clone().unwrap().mul(self.t.h[0].clone().unwrap().sub(1));
+        let zeroOrOne1 = self.t.g[0]
+            .clone()
+            .unwrap()
+            .mul(self.t.g[0].clone().unwrap().sub(1));
+        let zeroOrOne2 = self.t.h[0]
+            .clone()
+            .unwrap()
+            .mul(self.t.h[0].clone().unwrap().sub(1));
 
         // checking the rest
         let mut allZero1 = self.generator.get_one_wire().unwrap();
         let mut allZero2 = self.generator.get_one_wire().unwrap();
 
         for i in 1..self.t.mu as usize {
-            allZero1 = allZero1.mul(self.t.g[i].as_ref().unwrap().checkNonZero(&None).invAsBit(&None).as_ref().unwrap());
-            allZero2 = allZero2.mul(self.t.h[i].as_ref().unwrap().checkNonZero(&None).invAsBit(&None).as_ref().unwrap());
+            allZero1 = allZero1.mul(
+                self.t.g[i]
+                    .as_ref()
+                    .unwrap()
+                    .checkNonZero(&None)
+                    .invAsBit(&None)
+                    .as_ref()
+                    .unwrap(),
+            );
+            allZero2 = allZero2.mul(
+                self.t.h[i]
+                    .as_ref()
+                    .unwrap()
+                    .checkNonZero(&None)
+                    .invAsBit(&None)
+                    .as_ref()
+                    .unwrap(),
+            );
         }
 
         // assertion
-        self.generator.addZeroAssertion(&zeroOrOne1.mul(allZero1),&None);
-        self.generator.addZeroAssertion(&zeroOrOne2.mul(allZero2),&None);
+        self.generator
+            .addZeroAssertion(&zeroOrOne1.mul(allZero1), &None);
+        self.generator
+            .addZeroAssertion(&zeroOrOne2.mul(allZero2), &None);
 
         // verify order of points
 
         let bitLength = subGroupOrder.bits();
-        let bits:Vec<_> = (0..bitLength).map(|i|if subGroupOrder.bit(i) {
-                 self.generator.get_one_wire()
-            } else {
-               self.generator.get_zero_wire()
-            }).collect();
-
+        let bits: Vec<_> = (0..bitLength)
+            .map(|i| {
+                if subGroupOrder.bit(i) {
+                    self.generator.get_one_wire()
+                } else {
+                    self.generator.get_zero_wire()
+                }
+            })
+            .collect();
 
         let result1 = self.exp(&self.t.g, &bits, &self.t.gPowersTable);
         let result2 = self.exp(&self.t.h, &bits, &self.t.hPowersTable);
 
         // both should be one
 
-        self.generator.addOneAssertion(result1[0].as_ref().unwrap(),&None);
-        self.generator.addOneAssertion(result2[0].as_ref().unwrap(),&None);
-        for i in 1..self.t.mu as usize{
-            self.generator.addZeroAssertion(result1[i].as_ref().unwrap(),&None);
-            self.generator.addZeroAssertion(result1[i].as_ref().unwrap(),&None);
+        self.generator
+            .addOneAssertion(result1[0].as_ref().unwrap(), &None);
+        self.generator
+            .addOneAssertion(result2[0].as_ref().unwrap(), &None);
+        for i in 1..self.t.mu as usize {
+            self.generator
+                .addZeroAssertion(result1[i].as_ref().unwrap(), &None);
+            self.generator
+                .addZeroAssertion(result1[i].as_ref().unwrap(), &None);
         }
     }
     pub fn getOutputPublicValue(&self) -> &Vec<Option<WireType>> {

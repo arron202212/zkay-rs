@@ -49,7 +49,7 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub,Div,Rem};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 /**
  * This gadget provides the remainder of a % b.
  *
@@ -75,7 +75,9 @@ impl ModGadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 q: a.clone(),
                 a,
@@ -92,8 +94,12 @@ impl ModGadget {
 }
 impl Gadget<ModGadget> {
     fn buildCircuit(&mut self) {
-        let r = self.generator.createProverWitnessWire(&Some("mod result".to_owned()));
-        let q = self.generator.createProverWitnessWire(&Some("division result".to_owned()));
+        let r = self
+            .generator
+            .createProverWitnessWire(&Some("mod result".to_owned()));
+        let q = self
+            .generator
+            .createProverWitnessWire(&Some("division result".to_owned()));
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
         // generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
@@ -141,10 +147,11 @@ impl Gadget<ModGadget> {
         // });
 
         r.restrictBitLength(self.t.bitwidth as u64, &None);
-        q.restrictBitLength(self.t.bitwidth  as u64, &None);
+        q.restrictBitLength(self.t.bitwidth as u64, &None);
         self.generator
-            .addOneAssertion(&r.isLessThan(&b, self.t.bitwidth,&None),&None);
-        self.generator.addEqualityAssertion(&q.clone().mul(b).add(&r), &a,&None);
+            .addOneAssertion(&r.isLessThan(&b, self.t.bitwidth, &None), &None);
+        self.generator
+            .addEqualityAssertion(&q.clone().mul(b).add(&r), &a, &None);
         (self.t.r, self.t.q) = (vec![Some(r)], q);
     }
 }

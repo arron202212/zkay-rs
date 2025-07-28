@@ -50,7 +50,7 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub,Div,Rem};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 /**
  * This gadget provides the remainder of a % b, where b is a circuit constant.
  *
@@ -73,7 +73,7 @@ impl ModConstantGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-assert!(
+        assert!(
             b.sign() == Sign::Plus,
             "b must be a positive constant. Signed operations not supported yet."
         );
@@ -84,7 +84,9 @@ assert!(
         );
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 q: a.clone(),
                 a,
@@ -93,7 +95,6 @@ assert!(
                 bitwidth,
             },
         };
-        
 
         // TODO: add further checks.
         _self.buildCircuit();
@@ -102,8 +103,12 @@ assert!(
 }
 impl Gadget<ModConstantGadget> {
     fn buildCircuit(&mut self) {
-        let r = self.generator.createProverWitnessWire(&Some("mod result".to_owned()));
-        let q = self.generator.createProverWitnessWire(&Some("division result".to_owned()));
+        let r = self
+            .generator
+            .createProverWitnessWire(&Some("mod result".to_owned()));
+        let q = self
+            .generator
+            .createProverWitnessWire(&Some("division result".to_owned()));
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
         // generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
@@ -151,8 +156,10 @@ impl Gadget<ModConstantGadget> {
         let bBitwidth = b.bits();
         r.restrictBitLength(bBitwidth, &None);
         q.restrictBitLength(self.t.bitwidth as u64 - bBitwidth + 1, &None);
-        self.generator.addOneAssertion(&r.isLessThanb(&b, bBitwidth as i32,&None),&None);
-        self.generator.addEqualityAssertion(&q.mulb(&b,&None).add(&r), &a,&None);
+        self.generator
+            .addOneAssertion(&r.isLessThanb(&b, bBitwidth as i32, &None), &None);
+        self.generator
+            .addEqualityAssertion(&q.mulb(&b, &None).add(&r), &a, &None);
         (self.t.r, self.t.q) = (vec![Some(r)], q);
     }
 }

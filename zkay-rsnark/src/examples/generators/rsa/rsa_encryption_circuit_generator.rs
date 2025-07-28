@@ -26,7 +26,9 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator,CGInstance,CGConfigFields, CircuitGeneratorExtend},
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            },
             constant_wire::{ConstantWire, new_constant},
             variable_bit_wire::VariableBitWire,
             variable_wire::{VariableWire, new_variable},
@@ -87,14 +89,22 @@ impl RSAEncryptionCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
     fn buildCircuit(&mut self) {
-        let (rsaKeyLength, plainTextLength) = (self.t.rsaKeyLength, self.t.plainTextLength as usize);
-        let mut inputMessage = self.createProverWitnessWireArray(plainTextLength,&None); // in bytes
+        let (rsaKeyLength, plainTextLength) =
+            (self.t.rsaKeyLength, self.t.plainTextLength as usize);
+        let mut inputMessage = self.createProverWitnessWireArray(plainTextLength, &None); // in bytes
         for i in 0..plainTextLength {
-            inputMessage[i].as_ref().unwrap().restrictBitLength(8, &None);
+            inputMessage[i]
+                .as_ref()
+                .unwrap()
+                .restrictBitLength(8, &None);
         }
 
         let randomness = self.createProverWitnessWireArray(
-            Gadget::<RSAEncryptionV1_5_Gadget>::getExpectedRandomnessLength(rsaKeyLength, plainTextLength as i32) as usize,&None
+            Gadget::<RSAEncryptionV1_5_Gadget>::getExpectedRandomnessLength(
+                rsaKeyLength,
+                plainTextLength as i32,
+            ) as usize,
+            &None,
         );
         // constraints on the randomness vector are checked later.
 
@@ -110,7 +120,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         //  * This way of doing this increases the number of gates a bit, but
         //  * reduces the VK size when crucial.
 
-        let rsaModulus = self.createLongElementInput(rsaKeyLength,&None);
+        let rsaModulus = self.createLongElementInput(rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -120,8 +130,14 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
 
         // In case of hardcoding the modulus, comment the line that sets the modulus value in generateSampleInput() to avoid an exception
 
-        let rsaEncryptionV1_5_Gadget =
-            RSAEncryptionV1_5_Gadget::new(rsaModulus.clone(), inputMessage.clone(), randomness.clone(), rsaKeyLength,&None,self.cg());
+        let rsaEncryptionV1_5_Gadget = RSAEncryptionV1_5_Gadget::new(
+            rsaModulus.clone(),
+            inputMessage.clone(),
+            randomness.clone(),
+            rsaKeyLength,
+            &None,
+            self.cg(),
+        );
 
         // since the randomness vector is a witness in this example, verify any needed constraints
         rsaEncryptionV1_5_Gadget.checkRandomnessCompliance();
@@ -129,7 +145,8 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
 
         // do some grouping to reduce VK Size
-        let cipherText = WireArray::new(cipherTextInBytes.clone(),self.cg().downgrade()).packWordsIntoLargerWords(8, 30,&None);
+        let cipherText = WireArray::new(cipherTextInBytes.clone(), self.cg().downgrade())
+            .packWordsIntoLargerWords(8, 30, &None);
         self.makeOutputArray(&cipherText, &Some("Output cipher text".to_owned()));
         (
             self.t.inputMessage,
@@ -149,7 +166,10 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
     fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
         let mut msg = String::new();
         for i in 0..self.t.inputMessage.len() {
-            evaluator.setWireValuei(self.t.inputMessage[i].as_ref().unwrap(), (b'a' + i as u8) as i64);
+            evaluator.setWireValuei(
+                self.t.inputMessage[i].as_ref().unwrap(),
+                (b'a' + i as u8) as i64,
+            );
             msg.push((b'a' + i as u8) as char);
         }
         //println!("PlainText: {msg}");
@@ -168,7 +188,11 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         let modulus = 1i32; //(pubKey).getModulus();
 
         // let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        evaluator.setWireValuebi(self.t.rsaModulus.as_ref().unwrap(), &BigInteger::from(modulus), LongElement::CHUNK_BITWIDTH);
+        evaluator.setWireValuebi(
+            self.t.rsaModulus.as_ref().unwrap(),
+            &BigInteger::from(modulus),
+            LongElement::CHUNK_BITWIDTH,
+        );
 
         let privKey = vec![0; 10]; //pair.getPrivate();
 
@@ -179,7 +203,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         cipherTextPadded[1..cipherText.len()].clone_from_slice(&cipherText);
         cipherTextPadded[0] = 0;
 
-        let result = RSAUtil::extractRSARandomness1_5(cipherText, privKey);
+        let result = RSAUtil::extractRSARandomness1_5(&cipherText, &privKey);
         // result[0] contains the plaintext (after decryption)
         // result[1] contains the randomness
 
@@ -191,7 +215,10 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
 
         let sampleRandomness = result[1].clone();
         for i in 0..sampleRandomness.len() {
-            evaluator.setWireValuei(self.t.randomness[i].as_ref().unwrap(), (sampleRandomness[i] as i64 + 256) % 256);
+            evaluator.setWireValuei(
+                self.t.randomness[i].as_ref().unwrap(),
+                (sampleRandomness[i] as i64 + 256) % 256,
+            );
         }
 
         // //println!("Error while generating sample input for circuit");
@@ -201,10 +228,13 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
 pub fn main(args: Vec<String>) {
     let keyLength = 2048;
     let msgLength = 3;
-    let mut generator =
-        RSAEncryptionCircuitGenerator::new(&format!("rsa{keyLength}_encryption"), keyLength, msgLength);
+    let mut generator = RSAEncryptionCircuitGenerator::new(
+        &format!("rsa{keyLength}_encryption"),
+        keyLength,
+        msgLength,
+    );
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

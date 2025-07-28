@@ -89,8 +89,8 @@ pub struct ChaskeyLtsTest {
         };
         cgen.generateCircuit();
         cgen.evalCircuit();
-        let evaluator = CircuitEvaluator::new(cgen);
-        evaluator.evaluate();
+        let mut evaluator = CircuitEvaluator::new(cgen);
+        evaluator.evaluate(generator.cg());
         let outwires = cgen.get_out_wires();
         let outs = vec![BigInteger::default();outwires.size()];
         for i in 0..outs.len() {

@@ -25,7 +25,9 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator,CGInstance,CGConfigFields, CircuitGeneratorExtend},
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            },
             constant_wire::{ConstantWire, new_constant},
             variable_bit_wire::VariableBitWire,
             variable_wire::{VariableWire, new_variable},
@@ -50,7 +52,7 @@ use crate::{
 // use crate::util::util::{BigInteger, Util};
 use crate::examples::gadgets::hash::merkle_tree_path_gadget::MerkleTreePathGadget;
 use crate::examples::gadgets::hash::subset_sum_hash_gadget::SubsetSumHashGadget;
-use std::ops::{Mul,Add,Sub,Div,Rem};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
 
 crate::impl_struct_name_for!(CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator>);
@@ -66,7 +68,7 @@ pub struct MerkleTreeMembershipCircuitGenerator {
     merkleTreeGadget: Option<Gadget<MerkleTreePathGadget>>,
 }
 impl MerkleTreeMembershipCircuitGenerator {
-  const leafNumOfWords: i32 = 10;
+    const leafNumOfWords: i32 = 10;
     const leafWordBitWidth: i32 = 32;
     const hashDigestDimension: i32 = SubsetSumHashGadget::DIMENSION;
     pub fn new(circuit_name: &str, treeHeight: i32) -> CircuitGeneratorExtend<Self> {
@@ -85,18 +87,23 @@ impl MerkleTreeMembershipCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
-  
     fn buildCircuit(&mut self) {
-        let hashDigestDimension=MerkleTreeMembershipCircuitGenerator::hashDigestDimension;
+        let hashDigestDimension = MerkleTreeMembershipCircuitGenerator::hashDigestDimension;
         //  declare inputs
-        let publicRootWires =
-            self.createInputWireArray(hashDigestDimension as usize, &Some("Input Merkle Tree Root".to_owned()));
+        let publicRootWires = self.createInputWireArray(
+            hashDigestDimension as usize,
+            &Some("Input Merkle Tree Root".to_owned()),
+        );
         let intermediateHasheWires = self.createProverWitnessWireArray(
             (hashDigestDimension * self.t.treeHeight) as usize,
             &Some("Intermediate Hashes".to_owned()),
         );
-        let directionSelector = self.createProverWitnessWire(&Some("Direction selector".to_owned()));
-        let leafWires = self.createProverWitnessWireArray(MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize, &Some("Secret Leaf".to_owned()));
+        let directionSelector =
+            self.createProverWitnessWire(&Some("Direction selector".to_owned()));
+        let leafWires = self.createProverWitnessWireArray(
+            MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize,
+            &Some("Secret Leaf".to_owned()),
+        );
 
         // connect gadget
         let merkleTreeGadget = MerkleTreePathGadget::new(
@@ -104,14 +111,19 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             leafWires.clone(),
             intermediateHasheWires.clone(),
             MerkleTreeMembershipCircuitGenerator::leafWordBitWidth,
-            self.t.treeHeight,&None,self.cg()
+            self.t.treeHeight,
+            &None,
+            self.cg(),
         );
         let actualRoot = merkleTreeGadget.getOutputWires();
 
         /** Now compare the actual root with the pub  known root **/
         let mut errorAccumulator = self.get_zero_wire().unwrap();
-        for i in 0..hashDigestDimension as usize{
-            let diff = actualRoot[i].clone().unwrap().sub(publicRootWires[i].as_ref().unwrap());
+        for i in 0..hashDigestDimension as usize {
+            let diff = actualRoot[i]
+                .clone()
+                .unwrap()
+                .sub(publicRootWires[i].as_ref().unwrap());
             let check = diff.checkNonZero(&None);
             errorAccumulator = errorAccumulator.add(check);
         }
@@ -119,7 +131,10 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
         self.makeOutputArray(&actualRoot, &Some("Computed Root".to_owned()));
 
         /** Expected mismatch here if the sample input below is tried**/
-        self.makeOutput(&errorAccumulator.checkNonZero(&None), &Some("Error if NON-zero".to_owned()));
+        self.makeOutput(
+            &errorAccumulator.checkNonZero(&None),
+            &Some("Error if NON-zero".to_owned()),
+        );
         (
             self.t.publicRootWires,
             self.t.intermediateHasheWires,
@@ -147,14 +162,16 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             self.t.directionSelector.as_ref().unwrap(),
             &Util::nextRandomBigIntegeri(self.t.treeHeight as u64),
         );
-        for i in 0..(MerkleTreeMembershipCircuitGenerator::hashDigestDimension * self.t.treeHeight ) as usize{
+        for i in 0..(MerkleTreeMembershipCircuitGenerator::hashDigestDimension * self.t.treeHeight)
+            as usize
+        {
             circuitEvaluator.setWireValue(
                 self.t.intermediateHasheWires[i].as_ref().unwrap(),
                 &Util::nextRandomBigInteger(&Configs.field_prime),
             );
         }
 
-        for i in 0..MerkleTreeMembershipCircuitGenerator::leafNumOfWords  as usize {
+        for i in 0..MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize {
             circuitEvaluator.setWireValuei(self.t.leafWires[i].as_ref().unwrap(), i32::MAX as i64);
         }
     }
@@ -162,7 +179,7 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
 pub fn main(args: Vec<String>) {
     let mut generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

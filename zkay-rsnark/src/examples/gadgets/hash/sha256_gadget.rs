@@ -56,7 +56,9 @@ impl SHA256Gadget {
         );
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 unpaddedInputs: ins,
                 bitWidthPerInputElement,

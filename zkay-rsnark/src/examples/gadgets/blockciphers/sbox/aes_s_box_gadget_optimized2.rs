@@ -90,7 +90,9 @@ impl AESSBoxGadgetOptimized2 {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 output: vec![],
                 input,
@@ -109,7 +111,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         // preprocessing
         self.solveLinearSystems();
     }
-    const SBox: [u8;256] = Gadget::<AES128CipherGadget>::SBox;
+    const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
     pub fn setBitCount(&mut self, x: i32) {
         assert!(x >= 0 && x <= 16);
         self.t.bitCount = x;

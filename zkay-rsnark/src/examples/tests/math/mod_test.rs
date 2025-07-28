@@ -7,13 +7,16 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+    addToEvaluationQueue, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::mod_constant_gadget;
-use crate::examples::gadgets::math::mod_gadget;
+use crate::examples::gadgets::math::mod_constant_gadget::ModConstantGadget;
+use crate::examples::gadgets::math::mod_gadget::ModGadget;
+use crate::util::util::BigInteger;
+use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
 mod test {
     use super::*;
@@ -22,70 +25,93 @@ mod test {
 
     #[test]
     pub fn testCase1() {
-        let a = 1262178522;
-        let b = 257; // b will be an input to the circuit
-
-        let generator = CircuitGenerator::new("Mod_Test1");
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputWires: Vec<Option<WireType>>,
         }
-
+        impl CGTest {
+            const a: i64 = 1262178522;
+            const b: i64 = 257; // b will be an input to the circuit
+        }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                inputWires = createInputWireArray(2);
+                let inputWires = self.createInputWireArray(2, &None);
                 //				WireType r = ModGadget::new(inputWires[0], (i32) Math.ceil(Math.log10(a) / Math.log10(2)), inputWires[1],
                 //						(i32) Math.ceil(Math.log10(b) / Math.log10(2))).getOutputWires()[0];
 
-                let r = ModGadget::new(inputWires[0], inputWires[1], 32).getOutputWires()[0];
-                makeOutput(r);
+                let r = ModGadget::new(
+                    inputWires[0].clone().unwrap(),
+                    inputWires[1].clone().unwrap(),
+                    32,
+                    &None,
+                    self.cg(),
+                )
+                .getOutputWires()[0]
+                    .clone();
+                self.makeOutput(r.as_ref().unwrap(), &None);
+                self.t.inputWires = inputWires;
             }
 
-            fn generateSampleInput(e: &mut CircuitEvaluator) {
-                e.setWireValue(inputWires[0], a);
-                e.setWireValue(inputWires[1], b);
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuei(self.t.inputWires[0].as_ref().unwrap(), CGTest::a);
+                evaluator.setWireValuei(self.t.inputWires[1].as_ref().unwrap(), CGTest::b);
             }
         };
-
+        let t = CGTest { inputWires: vec![] };
+        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Mod_Test1", t);
         generator.generateCircuit();
-        let evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator);
-        evaluator.evaluate();
-        let rWire = generator.get_out_wires().get(0);
-        assertEquals(evaluator.getWireValue(rWire), BigInteger::from(a % b));
+        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
+        generator.generateSampleInput(&mut evaluator);
+        evaluator.evaluate(&generator.cg);
+        let rWire = generator.get_out_wires()[0].clone();
+        assert_eq!(
+            evaluator.getWireValue(rWire.as_ref().unwrap()),
+            BigInteger::from(CGTest::a % CGTest::b)
+        );
     }
 
     #[test]
     pub fn testCase2() {
-        let a = 1262178522;
-        let b = 257; // b will be a constant
-
-        let generator = CircuitGenerator::new("Mod_Test2");
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputWires: Vec<Option<WireType>>,
         }
-
+        impl CGTest {
+            const a: i64 = 1262178522;
+            const b: i64 = 257; //  b will be a constant
+        }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                inputWires = createInputWireArray(1);
-                let r = ModConstantGadget::new(inputWires[0], 32, BigInteger::from(b))
-                    .getOutputWires()[0];
-                makeOutput(r);
+                let inputWires = self.createInputWireArray(1, &None);
+                let r = ModConstantGadget::new(
+                    inputWires[0].clone().unwrap(),
+                    32,
+                    BigInteger::from(CGTest::b),
+                    &None,
+                    self.cg(),
+                )
+                .getOutputWires()[0]
+                    .clone();
+                self.makeOutput(r.as_ref().unwrap(), &None);
+                self.t.inputWires = inputWires;
             }
 
-            fn generateSampleInput(e: &mut CircuitEvaluator) {
-                e.setWireValue(inputWires[0], a);
+            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                evaluator.setWireValuei(self.t.inputWires[0].as_ref().unwrap(), CGTest::a);
             }
         };
-
+        let t = CGTest { inputWires: vec![] };
+        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Mod_Test2", t);
         generator.generateCircuit();
-        let evaluator = CircuitEvaluator::new("CGTest");
-        generator.generateSampleInput(evaluator);
-        evaluator.evaluate();
-        let rWire = generator.get_out_wires().get(0);
-        assertEquals(evaluator.getWireValue(rWire), BigInteger::from(a % b));
+        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
+        generator.generateSampleInput(&mut evaluator);
+        evaluator.evaluate(&generator.cg);
+        let rWire = generator.get_out_wires()[0].clone();
+        assert_eq!(
+            evaluator.getWireValue(rWire.as_ref().unwrap()),
+            BigInteger::from(CGTest::a % CGTest::b)
+        );
     }
 }

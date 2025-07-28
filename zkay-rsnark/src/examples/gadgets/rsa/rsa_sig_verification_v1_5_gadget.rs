@@ -44,13 +44,15 @@ use crate::{
 // use crate::circuit::operations::gadget::GadgetConfig;
 // use crate::circuit::structure::wire_array;
 // use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_division::{LongIntegerDivision,LongIntegerDivisionConfig};
+use crate::examples::gadgets::math::long_integer_division::{
+    LongIntegerDivision, LongIntegerDivisionConfig,
+};
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Mul,Add,Sub,Div,Rem};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 /**
  * A gadget to check if an RSA signature is valid according to PKCS 1 v1.5 (A
@@ -84,13 +86,15 @@ impl RSASigVerificationV1_5_Gadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 modulus,
                 msgHash,
                 signature,
                 rsaKeyBitLength,
-                isValidSignature:vec![],
+                isValidSignature: vec![],
             },
         };
 
@@ -99,7 +103,7 @@ impl RSASigVerificationV1_5_Gadget {
     }
 }
 impl Gadget<RSASigVerificationV1_5_Gadget> {
-    pub const SHA256_IDENTIFIER: [u8;19] = [
+    pub const SHA256_IDENTIFIER: [u8; 19] = [
         0x30, 0x31, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
         0x05, 0x00, 0x04, 0x20,
     ];
@@ -114,60 +118,92 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
                 s,
                 self.t.modulus.clone(),
                 self.t.rsaKeyBitLength,
-                false,&None,self.generator.clone()
+                false,
+                &None,
+                self.generator.clone(),
             )
-            .getRemainder().clone();
+            .getRemainder()
+            .clone();
         }
         s = s.mul(&self.t.signature);
         s = LongIntegerModGadget::new(
             s,
             self.t.modulus.clone(),
             self.t.rsaKeyBitLength,
-            true,&None,self.generator.clone()
+            true,
+            &None,
+            self.generator.clone(),
         )
-        .getRemainder().clone();
+        .getRemainder()
+        .clone();
         let sChunks = s.getArray();
 
         // note that the following can be improved, but for simplicity we
         // are going to compare byte by byte
 
         // get byte arrays
-        let mut sBytes = WireArray::new(sChunks.clone(),self.generator.clone().downgrade())
-            .getBits(LongElement::CHUNK_BITWIDTH as usize,&None)
-            .packBitsIntoWords(8,&None);
-        let mut msgHashBytes = WireArray::new(self.t.msgHash.clone(),self.generator.clone().downgrade())
-            .getBits(32,&None)
-            .packBitsIntoWords(8,&None);
+        let mut sBytes = WireArray::new(sChunks.clone(), self.generator.clone().downgrade())
+            .getBits(LongElement::CHUNK_BITWIDTH as usize, &None)
+            .packBitsIntoWords(8, &None);
+        let mut msgHashBytes =
+            WireArray::new(self.t.msgHash.clone(), self.generator.clone().downgrade())
+                .getBits(32, &None)
+                .packBitsIntoWords(8, &None);
 
         // reverse the byte array representation of each word of the digest to
         // be compatiable with the endianess
         for i in 0..8 {
-            msgHashBytes.swap(4 * i,4 * i + 3);
-            msgHashBytes.swap(4 * i+1,4 * i + 2);
+            msgHashBytes.swap(4 * i, 4 * i + 3);
+            msgHashBytes.swap(4 * i + 1, 4 * i + 2);
         }
 
-        let lengthInBytes = (self.t.rsaKeyBitLength  as f64 / 8.0).ceil() as usize;
+        let lengthInBytes = (self.t.rsaKeyBitLength as f64 / 8.0).ceil() as usize;
         let mut sumChecks = self.generator.get_zero_wire().unwrap();
-        sumChecks = sumChecks.add(sBytes[lengthInBytes - 1].as_ref().unwrap().isEqualToi(0,&None));
-        sumChecks = sumChecks.add(sBytes[lengthInBytes - 2].as_ref().unwrap().isEqualToi(1,&None));
+        sumChecks = sumChecks.add(
+            sBytes[lengthInBytes - 1]
+                .as_ref()
+                .unwrap()
+                .isEqualToi(0, &None),
+        );
+        sumChecks = sumChecks.add(
+            sBytes[lengthInBytes - 2]
+                .as_ref()
+                .unwrap()
+                .isEqualToi(1, &None),
+        );
         for i in 3..lengthInBytes - Self::SHA256_DIGEST_LENGTH - Self::SHA256_IDENTIFIER.len() {
-            sumChecks = sumChecks.add(sBytes[lengthInBytes - i].as_ref().unwrap().isEqualToi(0xff,&None));
+            sumChecks = sumChecks.add(
+                sBytes[lengthInBytes - i]
+                    .as_ref()
+                    .unwrap()
+                    .isEqualToi(0xff, &None),
+            );
         }
-        sumChecks = sumChecks
-            .add(sBytes[Self::SHA256_DIGEST_LENGTH + Self::SHA256_IDENTIFIER.len()].as_ref().unwrap().isEqualToi(0,&None));
+        sumChecks = sumChecks.add(
+            sBytes[Self::SHA256_DIGEST_LENGTH + Self::SHA256_IDENTIFIER.len()]
+                .as_ref()
+                .unwrap()
+                .isEqualToi(0, &None),
+        );
 
         for i in 0..Self::SHA256_IDENTIFIER.len() {
             sumChecks = sumChecks.add(
-                sBytes[Self::SHA256_IDENTIFIER.len() + Self::SHA256_DIGEST_LENGTH - 1 - i].as_ref().unwrap()
-                    .isEqualToi((Self::SHA256_IDENTIFIER[i] as i64 + 256) % 256,&None),
+                sBytes[Self::SHA256_IDENTIFIER.len() + Self::SHA256_DIGEST_LENGTH - 1 - i]
+                    .as_ref()
+                    .unwrap()
+                    .isEqualToi((Self::SHA256_IDENTIFIER[i] as i64 + 256) % 256, &None),
             );
         }
         for i in (0..=Self::SHA256_DIGEST_LENGTH - 1).rev() {
-            sumChecks = sumChecks
-                .add(sBytes[Self::SHA256_DIGEST_LENGTH - 1 - i].as_ref().unwrap().isEqualTo(msgHashBytes[i].as_ref().unwrap(),&None));
+            sumChecks = sumChecks.add(
+                sBytes[Self::SHA256_DIGEST_LENGTH - 1 - i]
+                    .as_ref()
+                    .unwrap()
+                    .isEqualTo(msgHashBytes[i].as_ref().unwrap(), &None),
+            );
         }
 
-        self.t.isValidSignature = vec![Some(sumChecks.isEqualToi(lengthInBytes as i64,&None))];
+        self.t.isValidSignature = vec![Some(sumChecks.isEqualToi(lengthInBytes as i64, &None))];
     }
 }
 impl GadgetConfig for Gadget<RSASigVerificationV1_5_Gadget> {

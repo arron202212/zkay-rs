@@ -46,7 +46,7 @@ use crate::{
 //     getActiveCircuitGenerator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
-use std::ops::{Mul,Add,Sub,Div,Rem};
+use std::ops::{Add, Div, Mul, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<SimpleCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -62,7 +62,7 @@ impl SimpleCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
     fn buildCircuit(&mut self) {
         // declare input array of length 4.
-        let inputs = self.createInputWireArray(4,&None);
+        let inputs = self.createInputWireArray(4, &None);
 
         // r1 = in0 * in1
         let r1 = inputs[0].clone().unwrap().mul(inputs[1].as_ref().unwrap());
@@ -71,16 +71,16 @@ impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
         let r2 = inputs[2].clone().unwrap().add(inputs[3].as_ref().unwrap());
 
         // result = (r1+5)*(6*r2)
-        let result = r1.add(5).mul(&r2.muli(6,&None));
+        let result = r1.add(5).mul(&r2.muli(6, &None));
 
         // mark the wire as output
-        self.makeOutput(&result,&None);
+        self.makeOutput(&result, &None);
         self.t.inputs = inputs;
     }
 
     fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
         for i in 0..4 {
-            evaluator.setWireValuei(self.t.inputs[i].as_ref().unwrap(), i  as i64+ 1);
+            evaluator.setWireValuei(self.t.inputs[i].as_ref().unwrap(), i as i64 + 1);
         }
     }
 }
@@ -88,7 +88,7 @@ impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
 pub fn main(args: Vec<String>) {
     let mut generator = SimpleCircuitGenerator::new("simple_example");
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

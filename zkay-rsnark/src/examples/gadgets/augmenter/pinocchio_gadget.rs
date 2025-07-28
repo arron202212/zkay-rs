@@ -52,7 +52,9 @@ impl PinocchioGadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 inputWires,
                 proverWitnessWires: vec![],
@@ -165,7 +167,8 @@ impl Gadget<PinocchioGadget> {
                         .clone()
                         .unwrap()
                         .getBitWiresi(outs.len() as u64, &None)
-                        .asArray().clone();
+                        .asArray()
+                        .clone();
                     for i in 0..outs.len() {
                         wireMapping[*outs[i].as_ref().unwrap()] = bits[i].clone();
                     }

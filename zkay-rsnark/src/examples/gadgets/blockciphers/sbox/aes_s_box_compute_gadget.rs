@@ -72,7 +72,9 @@ impl AESSBoxComputeGadget {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc.as_ref().map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 output: vec![],
                 inverse: input.clone(),
@@ -160,7 +162,7 @@ impl Gadget<AESSBoxComputeGadget> {
     }
 
     fn gmul(&self, mut a: &WireType, mut b: &WireType) -> WireType {
-        let (mut a,mut b)=(a.clone(),b.clone());
+        let (mut a, mut b) = (a.clone(), b.clone());
         let generator = self.generator.borrow().clone();
         let mut p = generator.get_zero_wire().unwrap();
         let ccw = generator.createConstantWirei(0x1b, &None);

@@ -26,7 +26,9 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator, CGInstance,CGConfigFields,CircuitGeneratorExtend},
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            },
             constant_wire::{ConstantWire, new_constant},
             variable_bit_wire::VariableBitWire,
             variable_wire::{VariableWire, new_variable},
@@ -79,8 +81,16 @@ impl RSASigVerCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
     fn buildCircuit(&mut self) {
         // a sample input message of 3 byte
-        let inputMessage = self.createInputWireArray(3,&None);
-        let sha2Gadget = SHA256Gadget::new(inputMessage.clone(), 8, inputMessage.len(), false, true,&None,self.cg());
+        let inputMessage = self.createInputWireArray(3, &None);
+        let sha2Gadget = SHA256Gadget::new(
+            inputMessage.clone(),
+            8,
+            inputMessage.len(),
+            false,
+            true,
+            &None,
+            self.cg(),
+        );
         let digest = sha2Gadget.getOutputWires();
 
         //  * Since an RSA modulus take many wires to present, it could increase
@@ -95,7 +105,7 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         //  * statement. This way of doing this increases the number of gates a
         //  * bit, but reduces the VK size when needed.
 
-        let rsaModulus = self.createLongElementInput(self.t.rsaKeyLength,&None);
+        let rsaModulus = self.createLongElementInput(self.t.rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -105,7 +115,7 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
 
         // In case of hardcoding the modulus, comment the line that sets the modulus value in generateSampleInput() to avoid an exception
 
-        let signature = self.createLongElementProverWitness(self.t.rsaKeyLength,&None);
+        let signature = self.createLongElementProverWitness(self.t.rsaKeyLength, &None);
 
         // since the signature is provided as a witness, verify some properties
         // about it
@@ -113,10 +123,18 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         signature.assertLessThan(&rsaModulus); // might not be really necessary in that
         // case
 
-        let rsaSigVerificationV1_5_Gadget =
-            RSASigVerificationV1_5_Gadget::new(rsaModulus.clone(), digest.clone(), signature.clone(), self.t.rsaKeyLength,&None,self.cg());
+        let rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
+            rsaModulus.clone(),
+            digest.clone(),
+            signature.clone(),
+            self.t.rsaKeyLength,
+            &None,
+            self.cg(),
+        );
         self.makeOutput(
-            rsaSigVerificationV1_5_Gadget.getOutputWires()[0].as_ref().unwrap(),
+            rsaSigVerificationV1_5_Gadget.getOutputWires()[0]
+                .as_ref()
+                .unwrap(),
             &Some("Is Signature valid?".to_owned()),
         );
         (
@@ -150,7 +168,7 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         let message = inputStr;
         // signature.update(message);
 
-        let sigBytes = vec![0u8;32]; //signature.sign();
+        let sigBytes = vec![0u8; 32]; //signature.sign();
         let mut signaturePadded = vec![0; sigBytes.len() + 1];
         signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
         signaturePadded[0] = 0;
@@ -159,8 +177,16 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         let sig = BigInteger::from_signed_bytes_be(&signaturePadded);
 
         // if !minimizeVerificationKey {
-        evaluator.setWireValuebi(self.t.rsaModulus.as_ref().unwrap(), &modulus, LongElement::CHUNK_BITWIDTH);
-        evaluator.setWireValuebi(self.t.signature.as_ref().unwrap(), &sig, LongElement::CHUNK_BITWIDTH);
+        evaluator.setWireValuebi(
+            self.t.rsaModulus.as_ref().unwrap(),
+            &modulus,
+            LongElement::CHUNK_BITWIDTH,
+        );
+        evaluator.setWireValuebi(
+            self.t.signature.as_ref().unwrap(),
+            &sig,
+            LongElement::CHUNK_BITWIDTH,
+        );
         // } else {
         // evaluator.setWireValue(self.rsaModulusWires,
         // Util::split(modulus, Configs.log2_field_prime - 1));
@@ -177,7 +203,7 @@ pub fn main(args: Vec<String>) {
     let mut generator =
         RSASigVerCircuitGenerator::new(&format! {"rsa{keyLength}_sha256_sig_verify"}, keyLength);
     generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit();
-    generator.prepFiles(Some(evaluator));
+    let mut evaluator = generator.evalCircuit().ok();
+    generator.prepFiles(evaluator);
     generator.runLibsnark();
 }

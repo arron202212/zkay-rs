@@ -82,14 +82,18 @@ impl LinearSystemSolver {
             // dividing by pivot
             let invF = Self::inverse(&self.mat[pivotRowIdx][colIdx]);
             for j in 0..numCols {
-                self.mat[pivotRowIdx][j] =
-                    self.mat[pivotRowIdx][j].clone().mul(&invF).rem(&Configs.field_prime);
+                self.mat[pivotRowIdx][j] = self.mat[pivotRowIdx][j]
+                    .clone()
+                    .mul(&invF)
+                    .rem(&Configs.field_prime);
             }
 
             for k in pivotRowIdx..numRows {
                 let f = Self::negate(&self.mat[k][colIdx]);
                 for j in 0..numCols {
-                    self.mat[k][j] = self.mat[k][j].clone().add(&self.mat[pivotRowIdx][j].clone().mul(&f));
+                    self.mat[k][j] = self.mat[k][j]
+                        .clone()
+                        .add(&self.mat[pivotRowIdx][j].clone().mul(&f));
                     self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
                 }
             }
