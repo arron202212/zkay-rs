@@ -12,6 +12,8 @@ use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::atomic::{self, AtomicBool, Ordering};
+pub static atomic_hex_output_enabled: AtomicBool = AtomicBool::new(false);
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Config {
     pub field_prime: BigInt,
@@ -52,6 +54,7 @@ impl Config {
         let running_multi_generators =
             m.get("RUNNING_GENERATORS_IN_PARALLEL").map_or("0", |v| v) == "0";
         let hex_output_enabled = m.get("PRINT_HEX").map_or("0", |v| v) == "1";
+        atomic_hex_output_enabled.store(hex_output_enabled, Ordering::Relaxed);
         let output_verbose = m.get("OUTPUT_VERBOSE").map_or("0", |v| v) == "1";
         let debug_verbose = m.get("DEBUG_VERBOSE").map_or("0", |v| v) == "1";
         let print_stack_trace_at_warnings = false;

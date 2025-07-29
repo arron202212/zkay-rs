@@ -94,21 +94,23 @@ impl Instruction for WireLabelInstruction {
         if self.label_type == LabelType::output && Configs.output_verbose
             || self.label_type == LabelType::debug && Configs.debug_verbose
         {
-            // println!(
-            //     "\t[ {} ] Value of WireType# {} {} :: {}",
-            //     self.label_type,
-            //     self.w,
-            //     if self.desc.is_empty() {
-            //         self.desc.clone()
-            //     } else {
-            //         format!(" ({}) ", self.desc)
-            //     },
-            //     if Configs.hex_output_enabled {
-            //         format!("{:x}", evaluator.getWireValue(&self.w))
-            //     } else {
-            //         format!("{}", evaluator.getWireValue(&self.w))
-            //     }
-            // );
+            use std::sync::atomic::{self, AtomicBool, Ordering};
+            println!(
+                "\t[ {} ] Value of WireType# {} {} :: {}",
+                self.label_type,
+                self.w,
+                if self.desc.is_empty() {
+                    self.desc.clone()
+                } else {
+                    format!(" ({}) ", self.desc)
+                },
+                if crate::circuit::config::config::atomic_hex_output_enabled.load(Ordering::Relaxed)
+                {
+                    format!("{:x}", evaluator.getWireValue(&self.w))
+                } else {
+                    format!("{}", evaluator.getWireValue(&self.w))
+                }
+            );
         }
     }
 

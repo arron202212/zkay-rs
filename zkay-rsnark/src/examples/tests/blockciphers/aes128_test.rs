@@ -15,10 +15,11 @@ use crate::circuit::structure::circuit_generator::{
 };
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::{
-    AES128CipherGadget, SBoxOption,
+    AES128CipherGadget, SBoxOption, sBoxOption,
 };
 use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2;
 use crate::util::util::BigInteger;
+use std::sync::atomic::{self, AtomicU8, Ordering};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use zkay_derive::ImplStructNameConfig;
@@ -78,7 +79,7 @@ mod test {
 
         // testing all available sBox implementations
         for sboxOption in SBoxOption::iter() {
-            // AES128CipherGadget.sBoxOption = sboxOption;
+            sBoxOption.store(sboxOption.clone().into(), Ordering::Relaxed);
             let t = CGTest {
                 plaintext: vec![],  // 16 bytes
                 key: vec![],        // 16 bytes

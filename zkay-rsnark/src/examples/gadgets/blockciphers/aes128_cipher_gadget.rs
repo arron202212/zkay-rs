@@ -38,25 +38,28 @@ use crate::examples::gadgets::blockciphers::sbox::aes_s_box_compute_gadget::AESS
 use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized1::AESSBoxGadgetOptimized1;
 use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2;
 use crate::examples::gadgets::blockciphers::sbox::aes_s_box_naive_lookup_gadget::AESSBoxNaiveLookupGadget;
-use zkay_derive::ImplStructNameConfig;
-
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
+use std::sync::atomic::{self, AtomicU8, Ordering};
+use zkay_derive::ImplStructNameConfig;
 // #[macro_use]
 // extern crate num_derive;
-use num_derive::{FromPrimitive, ToPrimitive};
+use num_enum::{FromPrimitive, IntoPrimitive};
+// use num_derive::{FromPrimitive, ToPrimitive};
 use strum::{Display, EnumIter, EnumString};
-#[derive(EnumIter, EnumString, Display, Debug, FromPrimitive, ToPrimitive)]
+#[derive(EnumIter, Clone, EnumString, Display, Debug, FromPrimitive, IntoPrimitive)]
+#[repr(u8)]
 pub enum SBoxOption {
     LINEAR_SCAN,
     COMPUTE,
     OPTIMIZED1,
+    #[num_enum(default)]
     OPTIMIZED2,
 }
-
+pub static sBoxOption: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 as u8);
 /**
  * Implements an AES 128-bit block cipher. The gadget applies an improved
  * read-only memory lookup from xjsnark (to appear) to reduce the cost of the
@@ -110,7 +113,6 @@ impl AES128CipherGadget {
     }
 }
 impl Gadget<AES128CipherGadget> {
-    pub const sBoxOption: SBoxOption = SBoxOption::OPTIMIZED2;
     pub const RCon: [u8; 11] = [
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
     ];
@@ -359,7 +361,7 @@ impl Gadget<AES128CipherGadget> {
     fn randomAccess(wire: &WireType, generator: &RcCell<CircuitGenerator>) -> WireType {
         let wire = wire.clone();
 
-        match Self::sBoxOption {
+        match SBoxOption::from(sBoxOption.load(Ordering::Relaxed)) {
             SBoxOption::LINEAR_SCAN => {
                 AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone()).getOutputWires()[0]
                     .clone()

@@ -111,7 +111,9 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
 }
 
 pub fn main(args: Vec<String>) {
+    use std::sync::atomic::{self, AtomicBool, Ordering};
     //Configs.hex_output_enabled = true;
+    crate::circuit::config::config::atomic_hex_output_enabled.store(true, Ordering::Relaxed);
     let mut generator = AES128CipherCircuitGenerator::new("AES_Circuit");
     generator.generateCircuit();
     let mut evaluator = generator.evalCircuit().ok();

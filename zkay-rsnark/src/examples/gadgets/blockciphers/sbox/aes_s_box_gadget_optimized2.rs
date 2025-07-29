@@ -49,6 +49,23 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Rem, Sub};
+use std::sync::{
+    OnceLock,
+    atomic::{self, AtomicU8, Ordering},
+};
+pub static s_all_coeff_set: OnceLock<Vec<Vec<Vec<BigInteger>>>> = OnceLock::new();
+/*
+ * bitCount represents how many bits are going to be used to construct the
+ * linear systems. Setting bitCount to 0 will yield almost the same circuit
+ * size as in AESBoxGadgetOptimized1.java. Setting bitcount to 16 will
+ * almost make it very hard to find a solution. Setting bitCount to x, where
+ * 16 > x > 0, means that x columns from the linear system will be based on
+ * the bits of the element (input*256+output), and the rest are based on
+ * products (as in AESSBoxGadgetOptimized1). As x increases, the more
+ * savings. x cannot increase beyond 16.
+ */
+
+pub static atomic_bit_count: AtomicU8 = AtomicU8::new(0);
 /**
  * This gadget implements the efficient read-only memory access from xjsnark,
  * while making use of some properties of the AES circuit to gain more savings.
@@ -65,20 +82,6 @@ use std::ops::{Add, Mul, Rem, Sub};
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxGadgetOptimized2 {
-    allCoeffSet: Vec<Vec<BigInteger>>,
-
-    /*
-     * bitCount represents how many bits are going to be used to construct the
-     * linear systems. Setting bitCount to 0 will yield almost the same circuit
-     * size as in AESBoxGadgetOptimized1.java. Setting bitcount to 16 will
-     * almost make it very hard to find a solution. Setting bitCount to x, where
-     * 16 > x > 0, means that x columns from the linear system will be based on
-     * the bits of the element (input*256+output), and the rest are based on
-     * products (as in AESSBoxGadgetOptimized1). As x increases, the more
-     * savings. x cannot increase beyond 16.
-     */
-    bitCount: i32,
-
     input: WireType,
     output: Vec<Option<WireType>>,
 }
@@ -96,8 +99,6 @@ impl AESSBoxGadgetOptimized2 {
             t: Self {
                 output: vec![],
                 input,
-                bitCount: 0,
-                allCoeffSet: vec![],
             },
         };
 
@@ -106,18 +107,21 @@ impl AESSBoxGadgetOptimized2 {
     }
 }
 impl Gadget<AESSBoxGadgetOptimized2> {
-    //static
-    fn preprocessing(&self) {
-        // preprocessing
-        self.solveLinearSystems();
-    }
     const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
-    pub fn setBitCount(&mut self, x: i32) {
-        assert!(x >= 0 && x <= 16);
-        self.t.bitCount = x;
+    //static
+    fn preprocessing(bit_count: u8) -> Vec<Vec<BigInteger>> {
+        // preprocessing
+        let all_coeff_set = s_all_coeff_set
+            .get_or_init(|| (0..=16).map(|b| Self::solve_linear_systems(b)).collect());
+        all_coeff_set[bit_count as usize].clone()
     }
 
-    pub fn solveLinearSystems(&self) {
+    pub fn set_bit_count(x: i32) {
+        assert!(x >= 0 && x <= 16);
+        atomic_bit_count.store(x as u8, Ordering::Relaxed);
+    }
+
+    pub fn solve_linear_systems(bit_count: u8) -> Vec<Vec<BigInteger>> {
         let mut seed = 1;
         let mut allCoeffSet = Vec::new();
         let mut list = Vec::new();
@@ -155,7 +159,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                     // now extract the values that correspond to memberValue
                     // the method getVariableValues takes the bitCount settings
                     // into account
-                    let variableValues = self.getVariableValues(memberValue);
+                    let variableValues = Self::getVariableValues(memberValue, bit_count);
                     for j in 0..=15 {
                         mat[k][j] = variableValues[j].clone();
                     }
@@ -163,7 +167,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
 
                 LinearSystemSolver::new(mat.clone()).solveInPlace();
 
-                if self.checkIfProverCanCheat(&mat, &memberValueSet) {
+                if Self::checkIfProverCanCheat(&mat, &memberValueSet, bit_count) {
                     //println!("Invalid solution");
                     for ii in 0..16 {
                         if mat[ii][16] == BigInteger::ZERO {
@@ -185,6 +189,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             // AESSBoxGadgetOptimized2.allCoeffSet = allCoeffSet;
             //println!("Solution found!");
         }
+        allCoeffSet
     }
 
     fn buildCircuit(&mut self) {
@@ -236,11 +241,12 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         let mut vars = vec![None; 16];
         let mut p = input.muli(256, &None).add(&output).add(1);
         let mut currentProduct = p.clone();
-        if self.t.bitCount != 0 && self.t.bitCount != 16 {
+        let bit_count = atomic_bit_count.load(Ordering::Relaxed);
+        if bit_count != 0 && bit_count != 16 {
             currentProduct = currentProduct.clone().mul(&currentProduct);
         }
         for i in 0..16 {
-            if i < self.t.bitCount as usize {
+            if i < bit_count as usize {
                 if i < 8 {
                     vars[i] = bitsOut[i].clone();
                 } else {
@@ -253,9 +259,9 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                 }
             }
         }
-
+        let all_coeff_set = Self::preprocessing(bit_count);
         let mut product = generator.get_one_wire().unwrap();
-        for coeffs in &self.t.allCoeffSet {
+        for coeffs in &all_coeff_set {
             let mut accum = generator.get_zero_wire().unwrap();
             for j in 0..vars.len() {
                 accum = accum.add(vars[j].as_ref().unwrap().mulb(&coeffs[j], &None));
@@ -267,15 +273,15 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         generator.addZeroAssertion(&product, &None);
     }
 
-    fn getVariableValues(&self, k: i32) -> Vec<BigInteger> {
+    fn getVariableValues(k: i32, bit_count: u8) -> Vec<BigInteger> {
         let mut vars = vec![BigInteger::default(); 16];
         let mut v = BigInteger::from(k).add(Util::one());
         let mut product = v.clone();
-        if self.t.bitCount != 0 {
+        if bit_count != 0 {
             product = product.mul(&v).rem(&Configs.field_prime);
         }
         for j in 0..16 {
-            if j < self.t.bitCount as usize {
+            if j < bit_count as usize {
                 vars[j] = if ((k >> j) & 0x01) == 1 {
                     Util::one()
                 } else {
@@ -289,7 +295,11 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         vars
     }
 
-    fn checkIfProverCanCheat(&self, mat: &Vec<Vec<BigInteger>>, valueSet: &HashSet<i32>) -> bool {
+    fn checkIfProverCanCheat(
+        mat: &Vec<Vec<BigInteger>>,
+        valueSet: &HashSet<i32>,
+        bit_count: u8,
+    ) -> bool {
         let mut coeffs = vec![BigInteger::default(); 16];
         for i in 0..16 {
             coeffs[i] = mat[i][16].clone();
@@ -302,7 +312,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         // are bounded)
 
         for k in 0..256 * 256 {
-            let mut variableValues = self.getVariableValues(k);
+            let mut variableValues = Self::getVariableValues(k, bit_count);
             let mut result = BigInteger::ZERO;
             for i in 0..16 {
                 result = result.add(variableValues[i].clone().mul(&coeffs[i]));

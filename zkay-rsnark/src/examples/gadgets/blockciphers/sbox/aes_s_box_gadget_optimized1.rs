@@ -40,7 +40,12 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Rem, Sub};
-use zkay_derive::ImplStructNameConfig;
+use std::sync::{
+    OnceLock,
+    atomic::{self, AtomicU8, Ordering},
+};
+pub static s_all_coeff_set: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
+
 /**
  * This gadget implements the efficient read-only memory access from xjsnark
  * (the generic way). A more efficient variant is implemented in
@@ -52,9 +57,9 @@ use zkay_derive::ImplStructNameConfig;
  * inspired the other optimization in AESSBoxGadgetOptimized2.java, which saves
  * half of the cost of a single access.
  */
+use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxGadgetOptimized1 {
-    allCoeffSet: Vec<Vec<BigInteger>>,
     input: WireType,
     output: Vec<Option<WireType>>,
 }
@@ -72,7 +77,6 @@ impl AESSBoxGadgetOptimized1 {
             t: Self {
                 input,
                 output: vec![],
-                allCoeffSet: vec![],
             },
         };
 
@@ -83,11 +87,10 @@ impl AESSBoxGadgetOptimized1 {
 impl Gadget<AESSBoxGadgetOptimized1> {
     const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
     //static
-    fn preprocessing() {
-        // preprocessing
-        Self::solveLinearSystems();
+    fn preprocessing() -> &'static Vec<Vec<BigInteger>> {
+        s_all_coeff_set.get_or_init(|| Self::solve_linear_systems())
     }
-    pub fn solveLinearSystems() {
+    pub fn solve_linear_systems() -> Vec<Vec<BigInteger>> {
         let mut allCoeffSet = Vec::new();
         let list: Vec<_> = (0..=255)
             .map(|i| 256 * i as i32 + Self::SBox[i] as i32)
@@ -144,6 +147,7 @@ impl Gadget<AESSBoxGadgetOptimized1> {
             }
             allCoeffSet.push(coeffs);
         }
+        allCoeffSet
     }
 
     // method for sanity checks during preprocessing
@@ -242,9 +246,9 @@ impl Gadget<AESSBoxGadgetOptimized1> {
         for i in 1..16 {
             vars[i] = Some(vars[i - 1].clone().unwrap().mul(&p));
         }
-
+        let all_coeff_set = Self::preprocessing();
         let mut product = generator.get_one_wire().unwrap();
-        for coeffs in &self.t.allCoeffSet {
+        for coeffs in all_coeff_set {
             let mut accum = generator.get_zero_wire().unwrap();
             for j in 0..vars.len() {
                 accum = accum.add(vars[j].as_ref().unwrap().mulb(&coeffs[j], &None));
