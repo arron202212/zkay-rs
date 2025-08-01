@@ -95,11 +95,11 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
         //  println!("End const mulw Time: == {} s", start.elapsed().as_secs());
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             generator.create_constant_wire(
                 &self
                     .t
@@ -149,7 +149,7 @@ impl WireConfig for Wire<ConstantWire> {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
         );
         //println!"End Name Time: ccccccc {} s", line!());
-        let g = generator.borrow().clone();
+        // let g = generator.borrow().clone();
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
@@ -192,11 +192,11 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             let cw = w;
             assert!(
                 self.isBinary() && cw.try_as_constant_ref().unwrap().isBinary(),
@@ -221,11 +221,11 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             let cw = w;
             assert!(
                 self.isBinary() && cw.try_as_constant_ref().unwrap().isBinary(),

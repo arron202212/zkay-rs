@@ -39,11 +39,12 @@ use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGa
 use crate::examples::gadgets::blockciphers::sbox::util::linear_system_solver::LinearSystemSolver;
 use std::collections::HashSet;
 use zkay_derive::ImplStructNameConfig;
-extern crate rand;
+// extern crate rand;
 
+use rand::prelude::*;
+use rand::rngs::SmallRng;
 use rand::seq::SliceRandom;
 use rand::{Rng, thread_rng};
-
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
@@ -53,7 +54,11 @@ use std::sync::{
     OnceLock,
     atomic::{self, AtomicU8, Ordering},
 };
-pub static s_all_coeff_set: OnceLock<Vec<Vec<Vec<BigInteger>>>> = OnceLock::new();
+// use rand_core::SeedableRng;
+use rand_chacha::ChaCha8Rng;
+use rand_pcg::Pcg64Mcg;
+use rip_shuffle::RipShuffleParallel;
+pub static s_all_coeff_set: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 /*
  * bitCount represents how many bits are going to be used to construct the
  * linear systems. Setting bitCount to 0 will yield almost the same circuit
@@ -65,7 +70,7 @@ pub static s_all_coeff_set: OnceLock<Vec<Vec<Vec<BigInteger>>>> = OnceLock::new(
  * savings. x cannot increase beyond 16.
  */
 
-pub static atomic_bit_count: AtomicU8 = AtomicU8::new(0);
+pub static atomic_bit_count: AtomicU8 = AtomicU8::new(15);
 /**
  * This gadget implements the efficient read-only memory access from xjsnark,
  * while making use of some properties of the AES circuit to gain more savings.
@@ -109,11 +114,10 @@ impl AESSBoxGadgetOptimized2 {
 impl Gadget<AESSBoxGadgetOptimized2> {
     const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
     //static
-    fn preprocessing(bit_count: u8) -> Vec<Vec<BigInteger>> {
+    fn preprocessing() -> &'static Vec<Vec<BigInteger>> {
         // preprocessing
-        let all_coeff_set = s_all_coeff_set
-            .get_or_init(|| (0..=16).map(|b| Self::solve_linear_systems(b)).collect());
-        all_coeff_set[bit_count as usize].clone()
+        let all_coeff_set = s_all_coeff_set.get_or_init(|| Self::solve_linear_systems(15));
+        all_coeff_set
     }
 
     pub fn set_bit_count(x: i32) {
@@ -122,6 +126,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
     }
 
     pub fn solve_linear_systems(bit_count: u8) -> Vec<Vec<BigInteger>> {
+        println!("======bit_count========={bit_count}");
         let mut seed = 1;
         let mut allCoeffSet = Vec::new();
         let mut list = Vec::new();
@@ -138,12 +143,14 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             );
 
             println!(
-                "Attempting to solve linear systems for efficient S-Box Access: Attempt#{trialCounter}"
+                "Attempting to solve linear systems for efficient S-Box Access: Attempt#{trialCounter},{seed}"
             );
             seed += 1;
             // let slice: &mut [u32] = &mut list;
-
-            list.shuffle(&mut thread_rng());
+            let mut rng = SmallRng::seed_from_u64(seed);
+            // let mut rng=Pcg64Mcg::from_rng(&mut rng);
+            // list.par_shuffle_seed_with(&mut rng);
+            list.shuffle(&mut rng);
             // Collections.shuffle(list, Random::new(seed));
             allCoeffSet.clear();
 
@@ -165,13 +172,16 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                     }
                 }
 
-                LinearSystemSolver::new(mat.clone()).solveInPlace();
+                mat = LinearSystemSolver::new(mat).solveInPlace();
 
                 if Self::checkIfProverCanCheat(&mat, &memberValueSet, bit_count) {
-                    //println!("Invalid solution");
+                    println!("Invalid solution {bit_count} {i} {}", allCoeffSet.len());
                     for ii in 0..16 {
                         if mat[ii][16] == BigInteger::ZERO {
-                            //println!("Possibly invalid due to having zero coefficient(s)");
+                            println!(
+                                "Possibly invalid due to having zero coefficient(s) {i} {}",
+                                allCoeffSet.len()
+                            );
                             break;
                         }
                     }
@@ -259,9 +269,9 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                 }
             }
         }
-        let all_coeff_set = Self::preprocessing(bit_count);
+        let all_coeff_set = Self::preprocessing();
         let mut product = generator.get_one_wire().unwrap();
-        for coeffs in &all_coeff_set {
+        for coeffs in all_coeff_set {
             let mut accum = generator.get_zero_wire().unwrap();
             for j in 0..vars.len() {
                 accum = accum.add(vars[j].as_ref().unwrap().mulb(&coeffs[j], &None));

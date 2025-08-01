@@ -15,7 +15,7 @@ use crate::circuit::structure::circuit_generator::{
 };
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::{
-    AES128CipherGadget, SBoxOption, sBoxOption,
+    AES128CipherGadget, SBoxOption, atomic_sbox_option,
 };
 use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2;
 use crate::util::util::BigInteger;
@@ -27,7 +27,17 @@ use zkay_derive::ImplStructNameConfig;
 mod test {
     use super::*;
     #[test]
-    pub fn testCase1() {
+    pub fn aes128_test1_case1() {
+        let a= BigInteger::parse_bytes(b"89228104670908091290687385480691397980782275631420279887247541550499959534759064731866521016916693902170178842167218244796073443825711414268411402820183",10).unwrap();
+        let b = BigInteger::parse_bytes(
+            b"21888242871839275222246405745257275088548364400416034343698204186575808495617",
+            10,
+        )
+        .unwrap();
+        assert!(a % b == BigInteger::ZERO);
+    }
+    #[test]
+    pub fn aes128_test_case1() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             plaintext: Vec<Option<WireType>>,  // 16 bytes
@@ -37,18 +47,25 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
+                let start = std::time::Instant::now();
+                println!("=======CGTEST======buildCircuit==========");
                 let plaintext = self.createInputWireArray(16, &None);
                 let key = self.createInputWireArray(16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
+                // assert!(!plaintext.is_empty(),"plaintext.is_empty()");
+                // println!("=====plaintext.len()======{}",plaintext.len());
                 let ciphertext =
                     AES128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
                         .getOutputWires()
                         .clone();
                 self.makeOutputArray(&ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
+                println!("==buildCircuit====start==elapsed== {:?} ", start.elapsed());
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                let start = std::time::Instant::now();
+                println!("=======CGTEST======generateSampleInput==========");
                 let keyV =
                     BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
                 let msgV =
@@ -71,6 +88,10 @@ mod test {
                         (keyArray[i] as i64 & 0xff),
                     );
                 }
+                println!(
+                    "===generateSampleInput===start==elapsed== {:?} ",
+                    start.elapsed()
+                );
             }
         }
         // key: "2b7e151628aed2a6abf7158809cf4f3c"
@@ -78,8 +99,9 @@ mod test {
         // ciphertext: "f5d3d58503b9699de785895a96fdbaaf"
 
         // testing all available sBox implementations
+        let start = std::time::Instant::now();
         for sboxOption in SBoxOption::iter() {
-            sBoxOption.store(sboxOption.clone().into(), Ordering::Relaxed);
+            atomic_sbox_option.store(sboxOption.clone().into(), Ordering::Relaxed);
             let t = CGTest {
                 plaintext: vec![],  // 16 bytes
                 key: vec![],        // 16 bytes
@@ -104,11 +126,12 @@ mod test {
                     BigInteger::from((resultArray[i] as i32 + 256) % 256),
                 );
             }
+            println!("==={sboxOption}===start==elapsed== {:?} ", start.elapsed());
         }
     }
 
     #[test]
-    pub fn testCase2() {
+    pub fn aes128_test_case2() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             plaintext: Vec<Option<WireType>>,  // 16 bytes
@@ -161,7 +184,7 @@ mod test {
 
         // testing all available sBox implementations
         for sboxOption in SBoxOption::iter() {
-            // AES128CipherGadget.sBoxOption = sboxOption;
+            atomic_sbox_option.store(sboxOption.clone().into(), Ordering::Relaxed);
             let t = CGTest {
                 plaintext: vec![],  // 16 bytes
                 key: vec![],        // 16 bytes
@@ -192,7 +215,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase3() {
+    pub fn aes128_test_case3() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             plaintext: Vec<Option<WireType>>,  // 16 bytes
@@ -242,7 +265,7 @@ mod test {
 
         // testing all available sBox implementations
         for sboxOption in SBoxOption::iter() {
-            // AES128CipherGadget.sBoxOption = sboxOption;
+            atomic_sbox_option.store(sboxOption.clone().into(), Ordering::Relaxed);
 
             let t = CGTest {
                 plaintext: vec![],  // 16 bytes
@@ -271,7 +294,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase4() {
+    pub fn aes128_test_case4() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             plaintext: Vec<Option<WireType>>,  // 16 bytes
@@ -323,7 +346,7 @@ mod test {
 
         // testing all available sBox implementations
         for sboxOption in SBoxOption::iter() {
-            // AES128CipherGadget.sBoxOption = sboxOption;
+            atomic_sbox_option.store(sboxOption.clone().into(), Ordering::Relaxed);
 
             let t = CGTest {
                 plaintext: vec![],  // 16 bytes
@@ -400,9 +423,9 @@ mod test {
                 }
             }
         };
-        // AES128CipherGadget::sBoxOption = SBoxOption::OPTIMIZED2;
+        atomic_sbox_option.store(SBoxOption::OPTIMIZED2.into(), Ordering::Relaxed);
         for b in 0..=15 {
-            // AESSBoxGadgetOptimized2::setBitCount(b);
+            Gadget::<AESSBoxGadgetOptimized2>::set_bit_count(b);
             // AESSBoxGadgetOptimized2::solveLinearSystems();
             let t = CGTest {
                 plaintext: vec![],  // 16 bytes

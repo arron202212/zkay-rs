@@ -10,6 +10,7 @@ use crate::circuit::operations::gadget::GadgetConfig;
 use crate::{
     arc_cell_new,
     circuit::{
+        StructNameConfig,
         auxiliary::long_element::LongElement,
         config::config::Configs,
         eval::instruction::Instruction,
@@ -59,7 +60,7 @@ pub enum SBoxOption {
     #[num_enum(default)]
     OPTIMIZED2,
 }
-pub static sBoxOption: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 as u8);
+pub static atomic_sbox_option: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 as u8);
 /**
  * Implements an AES 128-bit block cipher. The gadget applies an improved
  * read-only memory lookup from xjsnark (to appear) to reduce the cost of the
@@ -102,7 +103,7 @@ impl AES128CipherGadget {
                 .as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
-                plaintext: vec![],
+                plaintext: inputs,
                 ciphertext: vec![],
                 expandedKey,
             },
@@ -177,6 +178,7 @@ impl Gadget<AES128CipherGadget> {
                 i += 1;
             }
         }
+        self.t.ciphertext = ciphertext;
     }
 
     fn subBytes(&self, state: &mut Vec<Vec<Option<WireType>>>) {
@@ -235,7 +237,7 @@ impl Gadget<AES128CipherGadget> {
     }
 
     fn galoisMulConst(&self, wire: &WireType, mut i: i32) -> WireArray {
-        let mut p = self.generator.get_zero_wire().as_ref().unwrap().clone();
+        let mut p = self.generator.get_zero_wire().unwrap();
         let mut hiBitSet;
         let mut wire = wire.clone();
         for counter in 0..8 {
@@ -297,7 +299,7 @@ impl Gadget<AES128CipherGadget> {
             w[i] = key[4 * i..=4 * i + 3].to_vec();
             i += 1;
         }
-
+        let generators = generator.borrow().clone();
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         i = AES128CipherGadget::nk;
         while i < AES128CipherGadget::nb * (AES128CipherGadget::nr + 1) {
@@ -306,7 +308,7 @@ impl Gadget<AES128CipherGadget> {
                 temp = Self::subWord(Self::rotateWord(&temp), generator);
                 temp[0] =
                     Some(temp[0].as_ref().unwrap().xorBitwise(
-                        &generator.createConstantWirei(
+                        &generators.createConstantWirei(
                             Self::RCon[i / AES128CipherGadget::nk] as i64,
                             &None,
                         ),
@@ -359,9 +361,10 @@ impl Gadget<AES128CipherGadget> {
     }
 
     fn randomAccess(wire: &WireType, generator: &RcCell<CircuitGenerator>) -> WireType {
+        // assert!(wire.getWireId()!=-1,"========-1===randomAccess={}==",wire.name());
         let wire = wire.clone();
 
-        match SBoxOption::from(sBoxOption.load(Ordering::Relaxed)) {
+        match SBoxOption::from(atomic_sbox_option.load(Ordering::Relaxed)) {
             SBoxOption::LINEAR_SCAN => {
                 AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone()).getOutputWires()[0]
                     .clone()

@@ -191,11 +191,11 @@ pub trait BitWireConfig: WireConfig {
 
     fn or(&self, w: &WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             return w.orw(self.self_clone().as_ref().unwrap(), desc);
         }
         let mut generator = self.generator();
@@ -229,11 +229,11 @@ pub trait BitWireConfig: WireConfig {
 
     fn xor(&self, w: &WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             return w.xorw(self.self_clone().as_ref().unwrap(), desc);
         }
         let mut generator = self.generator();

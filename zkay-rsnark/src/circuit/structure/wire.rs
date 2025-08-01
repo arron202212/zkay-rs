@@ -79,7 +79,7 @@ impl<T: setBitsConfig + Clone + Debug + PartialEq> PartialEq for Wire<T> {
 impl<T: setBitsConfig + Clone + Debug + PartialEq> Clone for Wire<T> {
     fn clone(&self) -> Self {
         Self {
-            wire_id: RcCell::new(*self.wire_id.borrow()),
+            wire_id: self.wire_id.clone(), //RcCell::new(*self.wire_id.borrow()),
             generator: self.generator.clone(),
             t: self.t.clone(),
         }
@@ -213,11 +213,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut generator = self.generator();
         //  println!("End adjustLength  Time: == {} s", start.elapsed().as_secs());
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             let v = self.mulb(&w.try_as_constant_ref().unwrap().getConstant(), desc);
             //  println!("End mulb  Time: == {} s", start.elapsed().as_micros());
             return v;
@@ -383,11 +383,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             return w.orw(self.self_clone().as_ref().unwrap(), desc);
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
@@ -438,11 +438,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            println!(
-                "===w.instance_of(ConstantWire)================={}===={}=======",
-                line!(),
-                file!()
-            );
+            // println!(
+            //     "===w.instance_of(ConstantWire)================={}===={}=======",
+            //     line!(),
+            //     file!()
+            // );
             return w.xorw(&self.self_clone().unwrap(), desc);
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really

@@ -562,6 +562,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType {
+        // println!("===========makeOutput=============");
         let mut outputWire = wire.clone();
         let some_wire = Some(wire.clone());
         let cg = self.cg();
@@ -592,7 +593,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
             wire.clone()
         };
-
+        // println!("----------------------------------------");
         cg.borrow_mut().out_wires.push(Some(outputWire.clone()));
         addToEvaluationQueue(
             self.cg(),
@@ -632,6 +633,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         wires: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
+        // println!("================makeOutputArray========");
         wires
             .iter()
             .enumerate()

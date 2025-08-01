@@ -35,3 +35,7 @@ nohash-hasher={workspace = true}
 rustc-hash ={workspace = true}
 ahash={workspace = true}
 linked-hash-map={workspace = true}
+rand_chacha={workspace = true}
+rand_pcg={workspace = true}
+rand_core={workspace = true}
+rip_shuffle={workspace = true}

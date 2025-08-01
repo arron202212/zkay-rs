@@ -54,11 +54,12 @@ impl LinearSystemSolver {
         Self { mat }
     }
 
-    pub fn solveInPlace(&mut self) {
+    pub fn solveInPlace(&mut self) -> Vec<Vec<BigInteger>> {
         // https://www.csun.edu/~panferov/math262/262_rref.pdf
         // https://www.math.purdue.edu/~shao92/documents/Algorithm%20REF.pdf
         self.guassJordan();
         self.rref();
+        self.mat.clone()
     }
 
     fn guassJordan(&mut self) {
@@ -86,15 +87,30 @@ impl LinearSystemSolver {
                     .clone()
                     .mul(&invF)
                     .rem(&Configs.field_prime);
+                // if self.mat[pivotRowIdx][j]==BigInteger::ZERO{
+                //     println!("=zero=mat=lss=={pivotRowIdx}=={j}============");
+                // }
             }
 
-            for k in pivotRowIdx..numRows {
+            for k in pivotRowIdx + 1..numRows {
                 let f = Self::negate(&self.mat[k][colIdx]);
+                // println!("=zero=mat==k={k}=colIdx={colIdx}=f==={f}===={}=",self.mat[k][colIdx]);
+
                 for j in 0..numCols {
+                    // if self.mat[k][j]==BigInteger::ZERO||j==16{
+                    //     println!("=zero=mat==1={k}=={j}======{}=",self.mat[k][j]);
+                    // }
                     self.mat[k][j] = self.mat[k][j]
                         .clone()
                         .add(&self.mat[pivotRowIdx][j].clone().mul(&f));
+                    // if self.mat[k][j]==BigInteger::ZERO||j==16{
+                    //     println!("=zero=mat==2={k}=={j}====={}=={}=",self.mat[pivotRowIdx][j].clone().mul(&f),self.mat[k][j]);
+                    // }
+                    let old = self.mat[k][j].clone();
                     self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
+                    // if self.mat[k][j]==BigInteger::ZERO && j==16{
+                    //      println!("=zero=mat==lss103={k}=={j}====={old}==={}=={}==",self.mat[k][j],Configs.field_prime);
+                    // }
                 }
             }
             rowIdx += 1;
@@ -103,7 +119,7 @@ impl LinearSystemSolver {
 
     fn rref(&mut self) {
         let (numRows, numCols) = (self.mat.len(), self.mat[0].len());
-        for rowIdx in (0..=numRows - 1).rev() {
+        for rowIdx in (0..numRows).rev() {
             let mut pivotColIdx = 0;
             while (pivotColIdx < numCols && self.mat[rowIdx][pivotColIdx] == BigInteger::ZERO) {
                 pivotColIdx += 1;
@@ -112,13 +128,17 @@ impl LinearSystemSolver {
                 continue;
             }
 
-            for k in (0..=rowIdx - 1).rev() {
+            for k in (0..rowIdx).rev() {
                 let f = self.mat[k][pivotColIdx].clone();
                 for j in 0..numCols {
                     self.mat[k][j] = self.mat[k][j]
                         .clone()
-                        .add(&self.mat[rowIdx][j].clone().mul(&f).neg());
+                        .add(Self::negate(&self.mat[rowIdx][j].clone().mul(&f)));
+                    // let old=self.mat[k][j].clone();
                     self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
+                    //  if self.mat[k][j]==BigInteger::ZERO||j==16{
+                    // println!("=zero=mat==lss133={k}=={j}==={old}====={}====",self.mat[k][j]);
+                    // }
                 }
             }
         }

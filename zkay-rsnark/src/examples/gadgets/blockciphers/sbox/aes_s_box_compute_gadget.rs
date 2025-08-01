@@ -61,7 +61,7 @@ use std::ops::{Add, Mul, Sub};
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxComputeGadget {
     input: WireType,
-    inverse: WireType,
+    inverse: Option<WireType>,
     output: Vec<Option<WireType>>,
 }
 impl AESSBoxComputeGadget {
@@ -77,7 +77,7 @@ impl AESSBoxComputeGadget {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 output: vec![],
-                inverse: input.clone(),
+                inverse: None,
                 input,
             },
         };
@@ -88,16 +88,15 @@ impl AESSBoxComputeGadget {
 impl Gadget<AESSBoxComputeGadget> {
     fn buildCircuit(&mut self) {
         let generator = self.generator.borrow().clone();
-        self.t.inverse = generator.createProverWitnessWire(&None);
-        let input = self.t.input.clone();
-        let inverse = self.t.inverse.clone();
+        let inverse = generator.createProverWitnessWire(&None);
+        let input = &self.t.input;
         let prover = crate::impl_prover!(
                                         eval(  input: WireType,
                                     inverse: WireType
                                 )  {
                         impl Instruction for Prover{
                          fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-        fn gmuli(mut a: i32,mut  b: i32) -> i32 {
+        fn gmuli( mut a: i32, mut  b:  i32) -> i32 {
                 let mut p = 0;
                 for j in 0..8 {
                     if (b & 1) != 0 {
@@ -112,12 +111,12 @@ impl Gadget<AESSBoxComputeGadget> {
                 p
             }
 
-            fn findInv(a: i32) -> i32 {
+            fn findInv(mut a: i32) -> i32 {
                 if a == 0 {
                     return 0;
                 }
                 for i in 0..256 {
-                    if gmuli(i, a) == 1 {
+                    if gmuli(i,  a) == 1 {
                         return i;
                     }
                 }
@@ -144,26 +143,25 @@ impl Gadget<AESSBoxComputeGadget> {
         //     Prover
         // });
 
-        self.t.inverse.restrictBitLength(8, &None);
-        let v = self.gmul(&self.t.input, &self.t.inverse);
+        inverse.restrictBitLength(8, &None);
+
+        let v = Self::gmul(self.t.input.clone(), inverse.clone(), &generator);
         generator.addAssertion(
             &v.sub(generator.get_one_wire().as_ref().unwrap()),
-            &self.t.input.clone().add(&self.t.inverse),
+            &self.t.input.clone().add(&inverse),
             generator.get_zero_wire().as_ref().unwrap(),
             &None,
         );
         let constant = generator.createConstantWirei(0x63, &None);
-        let mut output = constant.xorBitwise(&self.t.inverse, 8, &None);
-        output = output.xorBitwise(&self.t.inverse.rotateLeft(8, 1, &None), 8, &None);
-        output = output.xorBitwise(&self.t.inverse.rotateLeft(8, 2, &None), 8, &None);
-        output = output.xorBitwise(&self.t.inverse.rotateLeft(8, 3, &None), 8, &None);
-        output = output.xorBitwise(&self.t.inverse.rotateLeft(8, 4, &None), 8, &None);
-        self.t.output = vec![Some(output)];
+        let mut output = constant.xorBitwise(&inverse, 8, &None);
+        output = output.xorBitwise(&inverse.rotateLeft(8, 1, &None), 8, &None);
+        output = output.xorBitwise(&inverse.rotateLeft(8, 2, &None), 8, &None);
+        output = output.xorBitwise(&inverse.rotateLeft(8, 3, &None), 8, &None);
+        output = output.xorBitwise(&inverse.rotateLeft(8, 4, &None), 8, &None);
+        (self.t.output, self.t.inverse) = (vec![Some(output)], Some(inverse));
     }
 
-    fn gmul(&self, mut a: &WireType, mut b: &WireType) -> WireType {
-        let (mut a, mut b) = (a.clone(), b.clone());
-        let generator = self.generator.borrow().clone();
+    fn gmul(mut a: WireType, mut b: WireType, generator: &CircuitGenerator) -> WireType {
         let mut p = generator.get_zero_wire().unwrap();
         let ccw = generator.createConstantWirei(0x1b, &None);
         for counter in 0..8 {

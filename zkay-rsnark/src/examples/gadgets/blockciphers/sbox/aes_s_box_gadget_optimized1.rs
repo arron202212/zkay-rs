@@ -105,16 +105,21 @@ impl Gadget<AESSBoxGadgetOptimized1> {
 
             for k in 0..mat.len() {
                 let value = list[k + i * 16];
+                // println!("==value=={value}====");
                 memberValueSet.insert(value);
                 let p = BigInteger::from(value);
                 mat[k][0] = Util::one();
                 for j in 1..=16 {
                     mat[k][j] = p.clone().mul(&mat[k][j - 1]).rem(&Configs.field_prime);
+                    // if mat[k][j]==BigInteger::ZERO||j==16{
+                    // println!("=zero=mat==={k}=={j}==p=={p}=v=={value}======{}======{}==",p.clone().mul(&mat[k][j - 1]),mat[k][j]);
+                    // }
                 }
+                // let old=mat[k][16].clone();
                 // negate the last element, just to make things consistent with
                 // the paper notations
                 mat[k][16] = Configs.field_prime.clone().sub(&mat[k][16]);
-
+                // println!("=={old}=={i}==mat[k][16]=={k}======={}",mat[k][16]);
                 // used for a sanity check (verifying that the output solution
                 // is equivalent to coefficients of polynomial that has roots at
                 // memberValueSet. see note above)
@@ -124,8 +129,10 @@ impl Gadget<AESSBoxGadgetOptimized1> {
                 );
             }
 
-            LinearSystemSolver::new(mat.clone()).solveInPlace();
-
+            mat = LinearSystemSolver::new(mat).solveInPlace();
+            // for ii in 0..16 {
+            //     println!( "=mat).solveInPlace==mat[{ii}][16]===={}",mat[ii][16]);
+            // }
             // Note that this is just a sanity check here. It should be always
             // the case that the prover cannot cheat using this method,
             // because this method is equivalent to finding a polynomial with
@@ -169,6 +176,9 @@ impl Gadget<AESSBoxGadgetOptimized1> {
         let mut coeffs = vec![BigInteger::default(); 16];
         for i in 0..16 {
             coeffs[i] = mat[i][16].clone();
+            // if mat[i][16]==BigInteger::ZERO{
+            //         println!("=zero=mat==checkIfProverCanCheat={i}==16============");
+            // }
         }
 
         let mut validResults = 0;
@@ -179,19 +189,25 @@ impl Gadget<AESSBoxGadgetOptimized1> {
         for k in 0..256 * 256 {
             let mut result = coeffs[0].clone();
             let mut p = BigInteger::from(k);
+            let kb = BigInteger::from(k);
             for i in 1..16 {
+                // println!("======result===={result}=========p========{p}======{i}=={}==",coeffs[i]);
                 result = result.add(p.clone().mul(&coeffs[i]));
-                p = p.clone().mul(BigInteger::from(k)).rem(&Configs.field_prime);
+                p = p.clone().mul(&kb).rem(&Configs.field_prime);
             }
             result = result.rem(&Configs.field_prime);
-
+            // println!("======result===={result}=====");
             if result == Configs.field_prime.clone().sub(&p) {
                 validResults += 1;
                 if !valueSet.contains(&k) {
                     outsidePermissibleSet += 1;
                 }
             }
+            // else if k==99{
+            //     println!("===result===={result}=========p========{p}=====");
+            // }
         }
+        // println!("validResults={validResults},outsidePermissibleSet={outsidePermissibleSet}");
         if validResults != 16 || outsidePermissibleSet != 0 {
             //println!("Prover can cheat with linear system solution");
             //println!("Num of valid values that the prover can use = " + validResults);
