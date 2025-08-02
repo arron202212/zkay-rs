@@ -64,7 +64,7 @@ impl ChaskeyLTS128CipherGadget {
                 .as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
-                plaintext: vec![],
+                plaintext: inputs,
                 ciphertext: vec![],
                 key,
             },

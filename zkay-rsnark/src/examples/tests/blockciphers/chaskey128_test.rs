@@ -22,7 +22,7 @@ use zkay_derive::ImplStructNameConfig;
 mod test {
     use super::*;
     #[test]
-    pub fn testCase1() {
+    pub fn chaskey128_test_case1() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             plaintext: Vec<Option<WireType>>,  // 4 32-bit words

@@ -31,7 +31,7 @@ mod test {
     // The sage script to compute the sample case is commented in the end of the file.
 
     #[test]
-    pub fn testHardcodedKeys() {
+    pub fn test_hardcoded_keys() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             exponentBits: Vec<Option<WireType>>,
@@ -189,7 +189,7 @@ mod test {
     }
 
     #[test]
-    pub fn testVariableKeys() {
+    pub fn test_variable_keys() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             exponentBits: Vec<Option<WireType>>,
@@ -329,7 +329,7 @@ mod test {
     }
 
     #[test]
-    pub fn testInputValidation() {
+    pub fn test_input_validation() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             exponentBits: Vec<Option<WireType>>,

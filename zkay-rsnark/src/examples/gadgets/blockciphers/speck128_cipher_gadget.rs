@@ -78,9 +78,8 @@ impl Gadget<Speck128CipherGadget> {
             x = x.xorBitwise(self.t.expandedKey[i].as_ref().unwrap(), 64, &None);
             y = y.rotateLeft(64, 3, &None).xorBitwise(&x, 64, &None);
         }
-        self.t.ciphertext[1] = Some(x);
-        self.t.ciphertext[0] = Some(y);
-    }
+        self.t.ciphertext = vec![Some(y),Some(x)];
+   }
 
     /**
      *
@@ -92,7 +91,7 @@ impl Gadget<Speck128CipherGadget> {
         key: &Vec<Option<WireType>>,
         generator: &RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
-        // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = generator.borrow().clone();
         let mut k = vec![None; 32];
         let mut l = vec![None; 32];
         k[0] = key[0].clone();

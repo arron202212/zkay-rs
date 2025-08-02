@@ -58,7 +58,7 @@ use std::sync::{
 use rand_chacha::ChaCha8Rng;
 use rand_pcg::Pcg64Mcg;
 use rip_shuffle::RipShuffleParallel;
-pub static s_all_coeff_set: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
+pub static s_all_coeff_set: OnceLock<Vec<Vec<Vec<BigInteger>>>> = OnceLock::new();
 /*
  * bitCount represents how many bits are going to be used to construct the
  * linear systems. Setting bitCount to 0 will yield almost the same circuit
@@ -114,10 +114,10 @@ impl AESSBoxGadgetOptimized2 {
 impl Gadget<AESSBoxGadgetOptimized2> {
     const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
     //static
-    fn preprocessing() -> &'static Vec<Vec<BigInteger>> {
+    fn preprocessing(bit_count: u8) -> &'static Vec<Vec<BigInteger>> {
         // preprocessing
-        let all_coeff_set = s_all_coeff_set.get_or_init(|| Self::solve_linear_systems(15));
-        all_coeff_set
+        let all_coeff_set = s_all_coeff_set.get_or_init(|| (0..16).map(|b|Self::solve_linear_systems(b)).collect());
+        &all_coeff_set[bit_count as usize]
     }
 
     pub fn set_bit_count(x: i32) {
@@ -269,7 +269,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                 }
             }
         }
-        let all_coeff_set = Self::preprocessing();
+        let all_coeff_set = Self::preprocessing(bit_count);
         let mut product = generator.get_one_wire().unwrap();
         for coeffs in all_coeff_set {
             let mut accum = generator.get_zero_wire().unwrap();

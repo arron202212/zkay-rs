@@ -96,7 +96,7 @@ mod test {
     }
 
     #[test]
-    pub fn testZeroBase() {
+    pub fn test_zero_base() {
         let b = BigInteger::ZERO;
         let e = BigInteger::from(123);
         let m = BigInteger::from(456);
@@ -114,7 +114,7 @@ mod test {
     }
 
     #[test]
-    pub fn testZeroExponent() {
+    pub fn test_zero_exponent() {
         let b = BigInteger::from(123);
         let e = BigInteger::ZERO;
         let m = BigInteger::from(456);
@@ -133,7 +133,7 @@ mod test {
     }
 
     #[test]
-    pub fn testSmallNumbers() {
+    pub fn test_small_numbers() {
         let b = BigInteger::from(12);
         let e = BigInteger::from(123);
         let m = BigInteger::from(49);
@@ -152,7 +152,7 @@ mod test {
     }
 
     #[test]
-    pub fn testMediumNumbers() {
+    pub fn test_medium_numbers() {
         let b = BigInteger::from(1298864277);
         let e = BigInteger::from(1924438110);
         let m = BigInteger::from(1244548309);
@@ -171,7 +171,7 @@ mod test {
     }
 
     #[test]
-    pub fn testBigNumbers() {
+    pub fn test_big_numbers() {
         let b =BigInteger::parse_bytes(
             b"11110211273156662410517784086101070676798174233629875592006523851542199589511484624357222380466920698623369709791166395920135403033716226486271823558051887",10
         ).unwrap();
@@ -201,7 +201,7 @@ mod test {
     }
 
     #[test]
-    pub fn testRealisticNumbers() {
+    pub fn test_realistic_numbers() {
         let b =BigInteger::parse_bytes(
             b"15956650897249075294287890909548588691016535757631844000721692781080978790771793003304333326456155339628147547863756759361111941048057919329605678045006387003118845424812414781109119032452838160536965218085832187645818402991051726686365424896376376138463019275030629862387452131124112828449849605774352184624296356040397392067591535898344029401557344157851423331349947726662846801394996336760192765313129692236663369309308131261194136050961594523067920319852599719071121178999921936044923537833234900637857502871107022346800344192648396680047852304207480588611262209580858243709487273995532029254571984523113086051346",10
         ).unwrap();

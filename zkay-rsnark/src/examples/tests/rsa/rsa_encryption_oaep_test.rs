@@ -25,7 +25,7 @@ use zkay_derive::ImplStructNameConfig;
 mod test {
     use super::*;
     #[test]
-    pub fn testEncryptionDifferentKeyLengths() {
+    pub fn oaep_test_encryption_different_key_lengths() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputMessage: Vec<Option<WireType>>,

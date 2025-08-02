@@ -27,7 +27,7 @@ use zkay_derive::ImplStructNameConfig;
 mod test {
     use super::*;
     #[test]
-    pub fn testCase1() {
+    pub fn sha256_test_case1() {
         let expectedDigest =
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_owned();
 
@@ -78,7 +78,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase2() {
+    pub fn sha256_test_case2() {
         let expectedDigest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -133,7 +133,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase3() {
+    pub fn sha256_test_case3() {
         let expectedDigest =
             "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1".to_owned();
 
@@ -189,7 +189,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase4() {
+    pub fn sha256_test_case4() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputWires: Vec<Option<WireType>>,
@@ -245,7 +245,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase5() {
+    pub fn sha256_test_case5() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputWires: Vec<Option<WireType>>,

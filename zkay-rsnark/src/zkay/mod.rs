@@ -14,7 +14,7 @@ pub mod zkay_paillier_fast_dec_gadget;
 pub mod zkay_ecdh_gadget;
 pub mod zkay_paillier_fast_enc_gadget;
 
-// pub mod tests;
+pub mod tests;
 pub mod zkay_ecdh_generator;
 pub mod zkay_rsa_encryption_gadget;
 

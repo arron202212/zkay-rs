@@ -29,7 +29,7 @@ mod test {
     // TODO: Add more test cases
 
     #[test]
-    pub fn testVariableInputCase() {
+    pub fn test_variable_input_case() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             secretBits: Vec<Option<WireType>>,
@@ -40,11 +40,15 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
+                let start = std::time::Instant::now();
                 let secretBits =
                     self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
                 let mut baseX = self.createInputWire(&None);
                 let mut hX = self.createInputWire(&None);
-
+ println!(
+                    "={}===start==elapsed== {:?} ",line!(),
+                    start.elapsed()
+                );
                 let keyExchangeGadget = ECDHKeyExchangeGadget::new(
                     Some(baseX.clone()),
                     None,
@@ -54,21 +58,35 @@ mod test {
                     &None,
                     self.cg(),
                 );
-
+ println!(
+                    "={}===start==elapsed== {:?} ",line!(),
+                    start.elapsed()
+                );
                 self.makeOutput(
                     keyExchangeGadget.getOutputPublicValue().as_ref().unwrap(),
                     &None,
                 );
-
+ println!(
+                    "={}===start==elapsed== {:?} ",line!(),
+                    start.elapsed()
+                );
                 // Just for testing. In real scenarios, this should not be made pub
                 self.makeOutput(keyExchangeGadget.getSharedSecret().as_ref().unwrap(), &None);
+ println!(
+                    "={}===start==elapsed== {:?} ",line!(),
+                    start.elapsed()
+                );
                 (self.t.baseX, self.t.hX, self.t.secretBits) = (Some(baseX), Some(hX), secretBits);
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                 let start = std::time::Instant::now();
                 evaluator.setWireValue(self.t.baseX.as_ref().unwrap(), &BigInteger::from(4u8));
                 evaluator.setWireValue(self.t.hX.as_ref().unwrap(), BigInteger::parse_bytes(b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10).as_ref().unwrap());
-
+ println!(
+                    "={}===start==elapsed== {:?} ",line!(),
+                    start.elapsed()
+                );
                 let exponent = BigInteger::parse_bytes(
                     b"13867691842196510828352345865165018381161315605899394650350519162543016860992",10
                 ).unwrap();
@@ -78,6 +96,10 @@ mod test {
                         if exponent.bit(i as u64) { 1 } else { 0 },
                     );
                 }
+                 println!(
+                    "={}===start==elapsed== {:?} ",line!(),
+                    start.elapsed()
+                );
             }
         };
         let t = CGTest {
@@ -110,7 +132,7 @@ mod test {
     }
 
     #[test]
-    pub fn testHardcodedInputCase() {
+    pub fn test_hardcoded_input_case() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             secretBits: Vec<Option<WireType>>,
@@ -190,7 +212,7 @@ mod test {
     }
 
     #[test]
-    pub fn testInputValidation1() {
+    pub fn test_input_validation1() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             secretBits: Vec<Option<WireType>>,
@@ -248,7 +270,7 @@ mod test {
     }
 
     #[test]
-    pub fn testInputValidation2() {
+    pub fn test_input_validation2() {
         // try invalid input
 
         #[derive(Debug, Clone, ImplStructNameConfig)]

@@ -387,6 +387,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
+                let start = std::time::Instant::now();
                 let plaintext = self.createInputWireArray(16, &None);
                 let key = self.createInputWireArray(16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
@@ -396,9 +397,14 @@ mod test {
                         .clone();
                 self.makeOutputArray(&ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
+                  println!(
+                    "===buildCircuit===start==elapsed== {:?} ",
+                    start.elapsed()
+                );
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+                let start = std::time::Instant::now();
                 let keyV =
                     BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
                 let msgV =
@@ -421,8 +427,13 @@ mod test {
                         (keyArray[i] as i64 & 0xff),
                     );
                 }
+                  println!(
+                    "===generateSampleInput===start==elapsed== {:?} ",
+                    start.elapsed()
+                );
             }
         };
+        let start = std::time::Instant::now();
         atomic_sbox_option.store(SBoxOption::OPTIMIZED2.into(), Ordering::Relaxed);
         for b in 0..=15 {
             Gadget::<AESSBoxGadgetOptimized2>::set_bit_count(b);
@@ -452,6 +463,10 @@ mod test {
                     BigInteger::from((resultArray[i] as i32 + 256) % 256),
                 );
             }
+            println!(
+                    "==={b}===start==elapsed== {:?} ",
+                    start.elapsed()
+                );
         }
     }
 }

@@ -156,7 +156,7 @@ impl MulWire<&WireType> for WireType {
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            println!("===============================");
+            // println!("===============================");
             return self.mulb(&w.try_as_constant_ref().unwrap().getConstant(), desc);
         }
         self.packIfNeeded(desc);

@@ -34,7 +34,7 @@ mod test {
      */
 
     #[test]
-    pub fn testValidSignatureDifferentKeyLengths() {
+    pub fn test_valid_signature_different_key_lengths() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputMessage: Vec<Option<WireType>>,
@@ -170,7 +170,7 @@ mod test {
     }
 
     #[test]
-    pub fn testInvalidSignatureDifferentKeyLengths() {
+    pub fn test_invalid_signature_different_key_lengths() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputMessage: Vec<Option<WireType>>,
@@ -307,7 +307,7 @@ mod test {
     // This test checks the robustness of the code when the chunk bitwidth changes
 
     #[test]
-    pub fn testValidSignatureDifferentChunkBitwidth() {
+    pub fn test_valid_signature_different_chunk_bitwidth() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputMessage: Vec<Option<WireType>>,

@@ -44,8 +44,8 @@ impl SHA256Gadget {
     ) -> Gadget<Self> {
         assert!(
             totalLengthInBytes * 8 <= ins.len() * bitWidthPerInputElement
-                && totalLengthInBytes * 8 >= (ins.len() - 1) * bitWidthPerInputElement,
-            "Inconsistent Length Information"
+                && totalLengthInBytes * 8 >= (ins.len().saturating_sub(1)) * bitWidthPerInputElement,
+            "Inconsistent Length Information {},{},{}",totalLengthInBytes,ins.len(),bitWidthPerInputElement
         );
 
         assert!(

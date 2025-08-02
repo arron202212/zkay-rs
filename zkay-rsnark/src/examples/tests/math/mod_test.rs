@@ -24,7 +24,7 @@ mod test {
     // TODO; add more tests
 
     #[test]
-    pub fn testCase1() {
+    pub fn mod_test_case1() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputWires: Vec<Option<WireType>>,
@@ -72,7 +72,7 @@ mod test {
     }
 
     #[test]
-    pub fn testCase2() {
+    pub fn mod_test_case2() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             inputWires: Vec<Option<WireType>>,
