@@ -52,7 +52,7 @@ use crate::{
 // use crate::util::util::{BigInteger, Util};
 use crate::examples::gadgets::blockciphers::symmetric_encryption_cbc_gadget::SymmetricEncryptionCBCGadget;
 use crate::examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange::FieldExtensionDHKeyExchange;
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use zkay_derive::ImplStructNameConfig;
 // This gadget shows a simple example of hybrid encryption for illustration purposes
 // It currently uses the field extension key exchange gadget with the speck cipher
@@ -182,7 +182,16 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Use h^s to generate a symmetric secret key and an initialization
         // vector. Apply a Hash-based KDF.
         let h_to_s = exchange.getSharedSecret();
-        let hashGadget = SHA256Gadget::new(h_to_s.clone(), 256, 128, true, false, &None, self.cg());
+        let hashGadget = SHA256Gadget::new(
+            h_to_s.clone(),
+            256,
+            128,
+            true,
+            false,
+            &None,
+            self.cg(),
+            Base,
+        );
         let secret = hashGadget.getOutputWires();
         let key = secret[0..128].to_vec();
         let iv = secret[128..256].to_vec();

@@ -17,7 +17,7 @@ pub trait HomomorphicBackend {
      * @throws UnsupportedOperationException
      * 		if the backend does not support operation 'op'
      */
-    fn doHomomorphicOp(op: char, arg: HomomorphicInput, keyName: String) {
+    fn doHomomorphicOp(&self, op: char, arg: &HomomorphicInput, keyName: &String) {
         panic!("Unary operation {op} not supported");
     }
 
@@ -39,10 +39,11 @@ pub trait HomomorphicBackend {
      * 		if the backend does not support operation 'op'
      */
     fn doHomomorphicOp(
-        lhs: HomomorphicInput,
+        &self,
+        lhs: &HomomorphicInput,
         op: char,
-        rhs: HomomorphicInput,
-        keyName: String,
+        rhs: &HomomorphicInput,
+        keyName: &String,
     ) -> Vec<TypedWire> {
         panic!("Binary operation {op} not supported");
     }
@@ -65,10 +66,11 @@ pub trait HomomorphicBackend {
      * 		if the backend does not support operation 'op'
      */
     fn doHomomorphicOp(
-        lhs: HomomorphicInput,
-        op: String,
-        rhs: HomomorphicInput,
-        keyName: String,
+        &self,
+        lhs: &HomomorphicInput,
+        op: &String,
+        rhs: &HomomorphicInput,
+        keyName: &String,
     ) -> Vec<TypedWire> {
         panic!("Boolean / comparison operation {op} not supported");
     }
@@ -91,10 +93,11 @@ pub trait HomomorphicBackend {
      * 		if the backend does not support operation 'op'
      */
     fn doHomomorphicCond(
-        cond: HomomorphicInput,
-        trueVal: HomomorphicInput,
-        falseVal: HomomorphicInput,
-        keyName: String,
+        &self,
+        cond: &HomomorphicInput,
+        trueVal: &HomomorphicInput,
+        falseVal: &HomomorphicInput,
+        keyName: &String,
     ) -> Vec<TypedWire> {
         panic!("Ternary conditional not supported");
     }
@@ -112,9 +115,10 @@ pub trait HomomorphicBackend {
      * @return the re-randomized ciphertext
      */
     fn doHomomorphicRerand(
-        arg: Vec<TypedWire>,
-        keyName: String,
-        randomness: TypedWire,
+        &self,
+        arg: &Vec<TypedWire>,
+        keyName: &String,
+        randomness: &TypedWire,
     ) -> Vec<TypedWire> {
         panic!("Homomorphic re-randomization not supported");
     }

@@ -1,13 +1,39 @@
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 
 pub struct ZkaySHA256Gadget {
     _uint_output: Vec<Option<WireType>>,
 }
 
 impl ZkaySHA256Gadget {
-    const bytes_per_word: i32 = 32;
-    fn convert_inputs_to_bytes(uint256_inputs: Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+    const bytes_per_word: usize = 32;
+    pub fn new(
+        uint256_inputs: Vec<Option<WireType>>,
+        truncated_bits: i32,
+        desc: &Option<String>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<SHA256Gadget<Self>> {
+        let _self = SHA256Gadget::<Self>::new(
+            Self::convert_inputs_to_bytes(uint256_inputs),
+            8,
+            uint256_inputs.len() * bytes_per_word,
+            false,
+            true,
+            desc,
+            generator,
+            Self {
+                _uint_output: vec![],
+            },
+        );
+
+        assert!(
+            truncated_bits <= 253 && truncated_bits >= 0,
+            "Unsupported output length {truncated_bits} bits"
+        );
+        _self.assembleOutput(truncated_bits);
+    }
+
+    fn convert_inputs_to_bytes(uint256_inputs: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
         let input_bytes = WireArray::new(uint256_inputs)
             .getBits(bytes_per_word * 8)
             .packBitsIntoWords(8);
@@ -21,25 +47,11 @@ impl ZkaySHA256Gadget {
         }
         input_bytes
     }
-
-    pub fn new(uint256_inputs: Vec<Option<WireType>>, truncated_bits: i32, desc: &Option<String>) -> self {
-        //super(
-            convert_inputs_to_bytes(uint256_inputs),
-            8,
-            uint256_inputs.len() * bytes_per_word,
-            false,
-            true,
-            desc,
-        );
-        if truncated_bits > 253 || truncated_bits < 0 {
-            panic!("Unsupported output length " + truncated_bits + " bits");
-        }
-        assembleOutput(truncated_bits);
-    }
 }
-impl SHA256Gadget for ZkaySHA256Gadget {
-    fn assembleOutput(truncated_length: i32) {
-        let mut digest = super.getOutputWires();
+
+impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
+    fn assembleOutput(&self, truncated_length: i32) {
+        let mut digest = self.getOutputWires();
         // Invert word order to get correct byte order when packed into one big word below
         digest.reverse();
         if truncated_length < 256 {
@@ -47,14 +59,14 @@ impl SHA256Gadget for ZkaySHA256Gadget {
             if truncated_length % 32 == 0 {
                 let shortened_digest = vec![None; truncated_length / 32];
                 shortened_digest.clone_from_slice(&digest[digest.len() - shortened_digest.len()]);
-                
+
                 digest = shortened_digest;
             } else {
                 _uint_output = vec![
                     WireArray::new(digest)
                         .getBits(32)
                         .shiftRight(256, 256 - truncated_length)
-                        .packAsBits(None,None,truncated_length),
+                        .packAsBits(None, None, truncated_length),
                 ];
                 return;
             }
@@ -62,8 +74,10 @@ impl SHA256Gadget for ZkaySHA256Gadget {
         _uint_output = WireArray::new(digest).packWordsIntoLargerWords(32, 8);
         assert!(_uint_output.len() == 1, "Wrong wire length");
     }
+}
 
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        _uint_output
+impl GadgetConfig for Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
+    fn getOutputWires() -> &Vec<Option<WireType>> {
+        &self.t.t._uint_output
     }
 }

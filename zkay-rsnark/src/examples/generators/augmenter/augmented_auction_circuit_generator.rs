@@ -50,7 +50,7 @@ use crate::{
 // use crate::circuit::structure::wire_type::WireType;
 // use crate::util::util::{BigInteger, Util};
 use crate::examples::gadgets::augmenter::pinocchio_gadget::PinocchioGadget;
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use zkay_derive::ImplStructNameConfig;
 /**
  * This circuit generator augments a second-price auction circuit (produced by Pinocchio's compiler)
@@ -127,6 +127,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 false,
                 &None,
                 self.cg(),
+                Base,
             );
             self.makeOutputArray(
                 g.getOutputWires(),
@@ -154,6 +155,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 false,
                 &None,
                 self.cg(),
+                Base,
             );
             self.makeOutputArray(
                 g.getOutputWires(),

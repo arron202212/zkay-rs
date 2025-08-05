@@ -45,10 +45,7 @@ mod test {
                     self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
                 let mut baseX = self.createInputWire(&None);
                 let mut hX = self.createInputWire(&None);
- println!(
-                    "={}===start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+                println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 let keyExchangeGadget = ECDHKeyExchangeGadget::new(
                     Some(baseX.clone()),
                     None,
@@ -58,35 +55,23 @@ mod test {
                     &None,
                     self.cg(),
                 );
- println!(
-                    "={}===start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+                println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 self.makeOutput(
                     keyExchangeGadget.getOutputPublicValue().as_ref().unwrap(),
                     &None,
                 );
- println!(
-                    "={}===start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+                println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 // Just for testing. In real scenarios, this should not be made pub
                 self.makeOutput(keyExchangeGadget.getSharedSecret().as_ref().unwrap(), &None);
- println!(
-                    "={}===start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+                println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 (self.t.baseX, self.t.hX, self.t.secretBits) = (Some(baseX), Some(hX), secretBits);
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                 let start = std::time::Instant::now();
+                let start = std::time::Instant::now();
                 evaluator.setWireValue(self.t.baseX.as_ref().unwrap(), &BigInteger::from(4u8));
                 evaluator.setWireValue(self.t.hX.as_ref().unwrap(), BigInteger::parse_bytes(b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10).as_ref().unwrap());
- println!(
-                    "={}===start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+                println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 let exponent = BigInteger::parse_bytes(
                     b"13867691842196510828352345865165018381161315605899394650350519162543016860992",10
                 ).unwrap();
@@ -96,10 +81,7 @@ mod test {
                         if exponent.bit(i as u64) { 1 } else { 0 },
                     );
                 }
-                 println!(
-                    "={}===start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+                println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
             }
         };
         let t = CGTest {

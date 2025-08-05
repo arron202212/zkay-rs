@@ -24,7 +24,10 @@ use crate::{
         },
     },
     examples::gadgets::{
-        hash::{sha256_gadget, sha256_gadget::SHA256Gadget},
+        hash::{
+            sha256_gadget,
+            sha256_gadget::{Base, SHA256Gadget},
+        },
         math::{field_division_gadget, field_division_gadget::FieldDivisionGadget},
     },
     util::util::{ARcCell, BigInteger, Util},
@@ -116,7 +119,8 @@ impl Gadget<AESSBoxGadgetOptimized2> {
     //static
     fn preprocessing(bit_count: u8) -> &'static Vec<Vec<BigInteger>> {
         // preprocessing
-        let all_coeff_set = s_all_coeff_set.get_or_init(|| (0..16).map(|b|Self::solve_linear_systems(b)).collect());
+        let all_coeff_set = s_all_coeff_set
+            .get_or_init(|| (0..16).map(|b| Self::solve_linear_systems(b)).collect());
         &all_coeff_set[bit_count as usize]
     }
 

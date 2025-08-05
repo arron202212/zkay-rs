@@ -24,7 +24,10 @@ use crate::{
         },
     },
     examples::gadgets::{
-        hash::{sha256_gadget, sha256_gadget::SHA256Gadget},
+        hash::{
+            sha256_gadget,
+            sha256_gadget::{Base, SHA256Gadget},
+        },
         math::{field_division_gadget, field_division_gadget::FieldDivisionGadget},
     },
     util::util::{ARcCell, BigInteger, Util},
@@ -691,6 +694,7 @@ mod test {
                     true,
                     &None,
                     generator.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -703,6 +707,7 @@ mod test {
                     true,
                     &None,
                     generator.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -714,6 +719,7 @@ mod test {
                     true,
                     &None,
                     generator.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -725,6 +731,7 @@ mod test {
                     true,
                     &None,
                     generator.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -736,6 +743,7 @@ mod test {
                     true,
                     &None,
                     generator.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -747,6 +755,7 @@ mod test {
                     true,
                     &None,
                     generator.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -757,8 +766,17 @@ mod test {
                 // do a small change and verify that number changes
                 let mut in2 = inputWires.clone();
                 in2[0] = in2[1].clone();
-                SHA256Gadget::new(in2, 8, inputStr.len(), false, true, &None, generator.cg())
-                    .getOutputWires();
+                SHA256Gadget::new(
+                    in2,
+                    8,
+                    inputStr.len(),
+                    false,
+                    true,
+                    &None,
+                    generator.cg(),
+                    Base,
+                )
+                .getOutputWires();
                 assert!(numOfConstraintsBefore < generator.get_num_of_constraints());
 
                 generator.makeOutputArray(&digest, &None);

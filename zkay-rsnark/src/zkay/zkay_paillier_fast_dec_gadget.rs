@@ -12,51 +12,73 @@ pub struct ZkayPaillierFastDecGadget {
     nBits: i32,
     lambda: LongElement,
     cipher: LongElement,
-    plain: LongElement,
+    plain: Option<LongElement>,
 }
 impl ZkayPaillierFastDecGadget {
-    pub fn ZkayPaillierFastDecGadget(
+    pub fn new(
         n: LongElement,
         nBits: i32,
         lambda: LongElement,
         cipher: LongElement,
         desc: &Option<String>,
-    ) {
-        //super(desc);
-        self.n = n;
-        self.nBits = nBits;
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         let nSquareMaxBits = 2 * nBits;
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        self.nSquare = n.mul(n).align(maxNumChunks);
-        self.lambda = lambda;
-        self.cipher = cipher;
+        let nSquare = n.mul(n).align(maxNumChunks);
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                n,
+                nSquare,
+                nBits,
+                nSquareMaxBits,
+                lambda,
+                cipher,
+                plain: None,
+            },
+        };
         _self.buildCircuit();
         _self
     }
-
+}
+impl Gadget<ZkayPaillierFastDecGadget> {
     fn buildCircuit(&mut self) {
         let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
         let lambdaInverse =
             LongIntegerModInverseGadget::new(lambda, n, false, "lambda^(-1)").getResult();
 
         // plain = L(cipher^lambda mod n^2) / lambda mod n
-        let cPowLambda =
-            LongIntegerModPowGadget::new(cipher, lambda, nSquare, nSquareMinBits, -1,&Some("c^lambda".to_owned()),self.cg())
-                .getResult();
-        let lOutput =
-            LongIntegerFloorDivGadget::new(cPowLambda.sub(1), n, "(c^lambda - 1) / n")
-                .getQuotient();
+        let cPowLambda = LongIntegerModPowGadget::new(
+            cipher,
+            lambda,
+            nSquare,
+            nSquareMinBits,
+            -1,
+            &Some("c^lambda".to_owned()),
+            self.cg(),
+        )
+        .getResult();
+        let lOutput = LongIntegerFloorDivGadget::new(cPowLambda.sub(1), n, "(c^lambda - 1) / n")
+            .getQuotient();
         let timesLambdaInverse = lOutput.mul(lambdaInverse);
-        plain = LongIntegerModGadget::new(timesLambdaInverse, n, nBits, true).getRemainder();
+        self.t.plain = Some(
+            LongIntegerModGadget::new(timesLambdaInverse, n, nBits, true)
+                .getRemainder()
+                .clone(),
+        );
     }
 
-    pub fn getPlaintext() -> LongElement {
-        plain
+    pub fn getPlaintext(&self) -> &Option<LongElement> {
+        &self.t.plain
     }
 }
 impl GadgetConfig for Gadget<ZkayPaillierFastDecGadget> {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        plain.getArray()
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        self.t.plain.getArray()
     }
 }

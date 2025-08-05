@@ -1,25 +1,27 @@
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use zkay::crypto::crypto_backend;
 use zkay::crypto::homomorphic_backend;
 
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use zkay::zkay_type::check_type;
 use zkay::zkay_type::zk_bool;
 use zkay::zkay_type::zk_uint;
-
-pub struct ZkayCircuitBase {
+const ADD_OP_LABELS: bool = true;
+const LEGACY_CRYPTO_BACKEND: &str = "LEGACY_CRYPTO_BACKEND";
+pub struct ZkayCircuitBase<T> {
     /**
      * Whether to include comments for the more complex operations in the circuit.arith file
      */
-    ADD_OP_LABELS: bool,
-    LEGACY_CRYPTO_BACKEND: Object,
+    realCircuitName: &String,
 
-    realCircuitName: String,
-
-    cryptoBackends: Map<Object, CryptoBackend>,
+    cryptoBackends: HashMap<String, CryptoBackend>,
 
     currentPubInIdx: i32,
     currentPubOutIdx: i32,
@@ -28,14 +30,14 @@ pub struct ZkayCircuitBase {
     currentPrivInIdx: i32,
     allPrivInWires: Vec<Option<WireType>>,
 
-    pubInNames: List<String>,
-    pubOutNames: List<String>,
-    privInNames: List<String>,
+    pubInNames: Vec<String>,
+    pubOutNames: Vec<String>,
+    privInNames: Vec<String>,
 
     pubInCount: i32,
     useInputHashing: bool,
 
-    vars: Map<String, Vec<TypedWire>>,
+    vars: HashMap<String, Vec<TypedWire>>,
 
     currentGuardCondition: VecDeque<TypedWire>,
     serializedArguments: Vec<BigInteger>,
@@ -45,172 +47,254 @@ pub struct ZkayCircuitBase {
 
     guardPrefixes: VecDeque<VecDeque<String>>,
     guardPrefixIndices: VecDeque<HashMap<String, Integer>>,
+    t: T,
 }
-impl ZkayCircuitBase {
+impl<T> ZkayCircuitBase<T> {
     pub fn new(
-        name: String,
-        cryptoBackend: String,
+        name: &self,
+        cryptoBackend: &String,
         keyBits: i32,
         pubInSize: i32,
         pubOutSize: i32,
         privSize: i32,
         useInputHashing: bool,
-    ) {
-        this(name, pubInSize, pubOutSize, privSize, useInputHashing);
-
+        t: T,
+    ) -> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
+        let mut _self = Self {
+            realCircuitName: name,
+            cryptoBackends: HashMap::new(),
+            currentPubInIdx: 0,
+            currentPubOutIdx: pubInSize,
+            allPubIOWires: vec![None, (pubInSize + pubOutSize) as usize],
+            currentPrivInIdx: 0,
+            allPrivInWires: vec![None, privSize as usize],
+            pubInNames: vec![],
+            pubOutNames: vec![],
+            privInNames: vec![],
+            pubInCount: pubInSize,
+            useInputHashing,
+            vars: HashMap::new(),
+            currentGuardCondition: VecDeque::new(),
+            serializedArguments: vec![],
+            namePrefixIndices: HashMap::new(),
+            namePrefix: VecDeque::new(),
+            guardPrefixes: VecDeque::new(),
+            guardPrefixIndices: VecDeque::new(),
+            t,
+        };
+        _self.clearPrefix(_self.namePrefix, _self.namePrefixIndices);
+        _self.pushGuardPrefix(_self.guardPrefixes, _self.guardPrefixIndices);
         // Legacy handling: add default "main" crypto backend
-        self.cryptoBackends.put(
+        _self.cryptoBackends.insert(
             LEGACY_CRYPTO_BACKEND,
-            CryptoBackend.create(cryptoBackend, keyBits),
+            CryptoBackend::create(cryptoBackend, keyBits),
+        );
+
+        CircuitGeneratorExtend::<Self>::new("circuit", _self)
+    }
+}
+impl<T: ZkayCircuitBaseConfig> CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<T>> {
+    fn buildCircuit(&mut self) {
+        let (pubInCount, pubOutCount) = (self.t.pubInCount, self.t.pubOutCount);
+        // Create IO wires
+        let pubOutCount = allPubIOWires.len() - pubInCount;
+        let (inArray, outArray) = if useInputHashing {
+            (
+                self.createProverWitnessWireArray(pubInCount, "in_"),
+                self.createProverWitnessWireArray(pubOutCount, "out_"),
+            );
+        } else {
+            (
+                self.createInputWireArray(pubInCount, "in_"),
+                self.createInputWireArray(pubOutCount, "out_"),
+            )
+        };
+        let privInArray = self.createProverWitnessWireArray(self.t.allPrivInWires.len(), "priv_");
+
+        // Legacy handling
+        let legacyCryptoBackend = self.t.cryptoBackends.get(LEGACY_CRYPTO_BACKEND);
+        if legacyCryptoBackend.is_some_and(|v| v.isSymmetric()) {
+            let myPk = inArray[0];
+            let mySk = privInArray[0];
+            self.setKeyPair(LEGACY_CRYPTO_BACKEND, myPk, mySk);
+        }
+
+        self.t.allPubIOWires[0..pubInCount].clone_from_slice(&inArray[0..]);
+        self.t.allPubIOWires[pubInCount..pubOutCount].clone_from_slice(&outArray[0..]);
+        self.t.allPrivInWires[0..self.t.allPrivInWires.len()].clone_from_slice(&privInArray[0..]);
+        (self.t.pubOutCount) = (pubOutCount);
+        self.t.t.buildCircuit();
+    }
+
+    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+        assert!(
+            self.serializedArguments.is_some(),
+            "No inputs specified, this should not have been called"
+        );
+
+        assert!(
+            self.serializedArguments.len() == self.allPubIOWires.len() + self.allPrivInWires.len(),
+            "Invalid serialized argument count, expected {} was {}",
+            self.allPubIOWires.len(),
+            self.serializedArguments.len()
+        );
+
+        let mut idx = 0;
+        for ioNameList in [&self.pubInNames, &self.pubOutNames, &self.privInNames] {
+            for name in ioNameList {
+                let wires = self.vars.get(name).unwrap();
+                let mut sb = format!("Setting '{name}' to [");
+                for w in wires {
+                    let val = self.serializedArguments[idx];
+                    idx += 1;
+                    evaluator.setWireValue(w.wire, val);
+                    sb.push_str(&format!("wid {}={}, ", w.wire.getWireId()));
+                }
+                sb.pop();
+                sb.pop();
+                sb.push(']');
+                println!(sb);
+            }
+        }
+
+        assert!(
+            idx == self.allPubIOWires.len() + self.allPrivInWires.len(),
+            "Not all inputs consumed"
         );
     }
-
-    pub fn new(
-        name: String,
-        pubInSize: i32,
-        pubOutSize: i32,
-        privSize: i32,
-        useInputHashing: bool,
-    ) {
-        //super("circuit");
-        self.realCircuitName = name;
-
-        self.pubInCount = pubInSize;
-        self.currentPubOutIdx = pubInSize;
-        self.allPubIOWires = vec![None; pubInSize + pubOutSize];
-        self.allPrivInWires = vec![None; privSize];
-
-        self.useInputHashing = useInputHashing;
-
-        clearPrefix(self.namePrefix, self.namePrefixIndices);
-        pushGuardPrefix(self.guardPrefixes, self.guardPrefixIndices);
+    pub fn prepFiles(&self) {
+        if self.serializedArguments != None {
+            CGConfig::prepFiles(self);
+        } else {
+            self.writeCircuitFile();
+            self.writeDummyInputFile();
+        }
     }
 
-    pub fn run(args: Vec<String>) {
-        match args[0] {
-            "compile" => compileCircuit(),
+    fn writeDummyInputFile(&self) {
+        let printWriter = File::create(self.get_name() + ".in");
+        write!(printWriter, "0 1");
+        let allIOWires = vec![
+            0;
+            self.get_in_wires().len()
+                + self.get_out_wires().len()
+                + self.get_prover_witness_wires().len()
+        ];
+        allIOWires.addAll(&self.get_in_wires()[1..]);
+        allIOWires.addAll(self.get_out_wires());
+        allIOWires.addAll(self.get_prover_witness_wires());
+        for w in allIOWires {
+            write!(printWriter, w.getWireId() + " " + "0");
+        }
+    }
+}
+pub trait ZkayCircuitBaseConfig {
+    pub fn run(&self, args: &Vec<String>) {
+        match &args[0] {
+            "compile" => self.compileCircuit(),
 
             "prove" => {
-                compileCircuit();
-                parseInputs(args[1..].to_vec());
+                self.compileCircuit();
+                self.parseInputs(args[1..].to_vec());
                 //println!("Evaluating circuit '" + realCircuitName + "'");
-                evalCircuit();
+                self.evalCircuit();
             }
 
             _ => panic!("invalid command"),
         }
-        prepFiles();
+        self.prepFiles();
     }
 
-    fn parseInputs(args: Vec<String>) {
-        let totCount = allPubIOWires.len() + allPrivInWires.len();
+    fn parseInputs(&self, args: &Vec<String>) {
+        let totCount = self.allPubIOWires.len() + self.allPrivInWires.len();
         assert!(
-            args.size() == totCount,
-            "Input count mismatch, expected " + totCount + ", was " + args.size()
+            args.len() == totCount,
+            "Input count mismatch, expected {}, was {}",
+            totCount,
+            args.len()
         );
         let mut serializedArguments = vec![BigInteger::default(); totCount];
         for i in 0..totCount {
-            let v = BigInteger::new(args.get(i), 16);
+            let v = BigInteger::parse_bytes(args[i].as_bytes(), 16).unwrap();
             assert!(
                 v.sign() != Sign::Minus,
                 "No signed inputs (signed must be converted to unsigned beforehand)"
             );
             serializedArguments[i] = v;
         }
+        self.serializedArguments = serializedArguments;
     }
-}
-impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
-    fn compileCircuit() {
-        //println!("Compiling circuit '{realCircuitName}'");
-        generateCircuit();
+    fn compileCircuit(&self) {
+        println!("Compiling circuit '{}'", self.realCircuitName);
+        self.generateCircuit();
         assert!(
-            currentPubInIdx == pubInCount && currentPubOutIdx == allPubIOWires.len(),
+            self.currentPubInIdx == self.pubInCount
+                && self.currentPubOutIdx == self.allPubIOWires.len(),
             "Not all pub  inputs assigned"
         );
         assert!(
-            currentPrivInIdx == allPrivInWires.len(),
+            self.currentPrivInIdx == self.allPrivInWires.len(),
             "Not all  inputs assigned"
         );
-        if useInputHashing {
-            makeOutputArray(
-                ZkaySHA256Gadget::new(allPubIOWires, 253).getOutputWires(),
+        if self.useInputHashing {
+            self.makeOutputArray(
+                ZkaySHA256Gadget::new(self.allPubIOWires.clone(), 253).getOutputWires(),
                 "digest",
             );
         }
         //println!("Done with generateCircuit, preparing dummy files...");
     }
 
-    fn buildCircuit(&mut self) {
-        // Create IO wires
-        let pubOutCount = allPubIOWires.len() - pubInCount;
-        let (mut inArray, mut outArray, mut privInArray);
-        if useInputHashing {
-            inArray = createProverWitnessWireArray(pubInCount, "in_");
-            outArray = createProverWitnessWireArray(pubOutCount, "out_");
-        } else {
-            inArray = createInputWireArray(pubInCount, "in_");
-            outArray = createInputWireArray(pubOutCount, "out_");
-        }
-        privInArray = createProverWitnessWireArray(allPrivInWires.len(), "priv_");
-
-        // Legacy handling
-        let legacyCryptoBackend = cryptoBackends.get(LEGACY_CRYPTO_BACKEND);
-        if legacyCryptoBackend != None && legacyCryptoBackend.isSymmetric() {
-            let myPk = inArray[0];
-            let mySk = privInArray[0];
-            setKeyPair(LEGACY_CRYPTO_BACKEND, myPk, mySk);
-        }
-
-        allPubIOWires[0..pubInCount].clone_from_slice(&inArray[0..]);
-        allPubIOWires[pubInCount..pubOutCount].clone_from_slice(&outArray[0..]);
-        allPrivInWires[0..allPrivInWires.len()].clone_from_slice(&privInArray[0..]);
-    }
-
     fn addIO(
-        typeName: String,
-        name: String,
-        nameList: List<String>,
-        src: Vec<Option<WireType>>,
+        &self,
+        typeName: &String,
+        mut name: &String,
+        nameList: &mut Vec<String>,
+        src: &Vec<Option<WireType>>,
         startIdx: i32,
         size: i32,
-        t: ZkayType,
+        t: &ZkayType,
         restrict: bool,
     ) -> Vec<Option<WireType>> {
-        name = getQualifiedName(name);
-        //println!(
+        name = self.getQualifiedName(&name);
+        println!(
             "Adding '{name}' = {typeName}[{startIdx}:{}]",
             startIdx + size
         );
         let input = src[startIdx..startIdx + size].to_vec();
-        let tInput = vec![TypedWire::default(); input.len()];
+        let mut tInput = vec![TypedWire::default(); input.len()];
         for i in 0..input.len() {
             // Enforce size and associate wire with type (technically restrict is only required for  inputs)
             tInput[i] = TypedWire::new(input[i], t, name, restrict);
         }
-        vars.put(name, tInput);
-        nameList.add(name);
+        self.vars.insert(name, tInput);
+        nameList.push(name);
         input
     }
 
-    /* CRYPTO BACKENDS */
-    fn addCryptoBackend(cryptoBackendId: Object, cryptoBackendName: String, keyBits: i32) {
+    // CRYPTO BACKENDS
+    fn addCryptoBackend(&self, cryptoBackendId: &String, cryptoBackendName: &String, keyBits: i32) {
         assert!(
-            !self.cryptoBackends.containsKey(cryptoBackendId),
-            "Crypto backend " + cryptoBackendId + " already registered"
+            !self.cryptoBackends.contains_key(cryptoBackendId),
+            "Crypto backend {cryptoBackendId} already registered"
         );
 
-        self.cryptoBackends.put(
+        self.cryptoBackends.insert(
             cryptoBackendId,
-            CryptoBackend.create(cryptoBackendName, keyBits),
+            CryptoBackend::create(cryptoBackendName, keyBits),
         );
     }
 
-    fn setKeyPair(cryptoBackendId: Object, pkName: String, skName: String) {
-        setKeyPair(cryptoBackendId, get(pkName).wire, get(skName).wire);
+    fn setKeyPair(&self, cryptoBackendId: &String, pkName: &String, skName: &String) {
+        self.setKeyPair(
+            cryptoBackendId,
+            self.get(pkName).wire,
+            self.get(skName).wire,
+        );
     }
 
-    fn setKeyPair(cryptoBackendId: Object, myPk: WireType, mySk: WireType) {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
+    fn setKeyPair(&self, cryptoBackendId: &String, myPk: &WireType, mySk: &WireType) {
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
         assert!(
             cryptoBackend.isSymmetric(),
             "Crypto backend is not symmetric"
@@ -220,33 +304,34 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
         symmetricCrypto.setKeyPair(myPk, mySk);
     }
 
-    fn getCryptoBackend(cryptoBackendId: Object) -> CryptoBackend {
-        let backend = cryptoBackends.get(cryptoBackendId);
+    fn getCryptoBackend(&self, cryptoBackendId: &String) -> CryptoBackend {
+        let backend = self.cryptoBackends.get(cryptoBackendId);
         assert!(
             backend.is_some(),
-            "Unknown crypto backend: " + cryptoBackendId
+            "Unknown crypto backend: {cryptoBackendId}"
         );
         backend
     }
 
-    fn getHomomorphicCryptoBackend(cryptoBackendId: Object) -> HomomorphicBackend {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
-        if cryptoBackend.instance_of(HomomorphicBackend) {
-            cryptoBackend
-        } else {
-            panic!("Crypto backend {cryptoBackendId} is not homomorphic");
-        }
+    fn getHomomorphicCryptoBackend(&self, cryptoBackendId: &String) -> HomomorphicBackend {
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
+        assert!(
+            cryptoBackend.instance_of("HomomorphicBackend"),
+            "Crypto backend {cryptoBackendId} is not homomorphic"
+        );
+
+        cryptoBackend
     }
 
-    /* CIRCUIT IO */
+    // CIRCUIT IO
 
-    fn addIn(name: String, size: i32, t: ZkayType) {
-        addIO(
+    fn addIn(&self, name: &String, size: i32, t: &ZkayType) {
+        self.addIO(
             "in",
             name,
-            pubInNames,
-            allPubIOWires,
-            currentPubInIdx,
+            &self.pubInNames,
+            &self.allPubIOWires,
+            self.currentPubInIdx,
             size,
             t,
             false,
@@ -254,157 +339,169 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
         currentPubInIdx += size;
     }
 
-    fn addK(cryptoBackendId: Object, name: String, size: i32) {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
+    fn addK(&self, cryptoBackendId: &String, name: &String, size: i32) {
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
         let chunkSize = cryptoBackend.getKeyChunkSize();
-        let input = addIO(
+        let input = self.addIO(
             "in",
             name,
-            pubInNames,
-            allPubIOWires,
-            currentPubInIdx,
+            self.pubInNames,
+            self.allPubIOWires,
+            self.currentPubInIdx,
             size,
             ZkUint(chunkSize),
             false,
         );
-        currentPubInIdx += size;
-        cryptoBackend.addKey(getQualifiedName(name), input);
+        self.currentPubInIdx += size;
+        self.cryptoBackend
+            .insert(self.getQualifiedName(name), input);
     }
 
-    fn addK(name: String, size: i32) {
-        addK(LEGACY_CRYPTO_BACKEND, name, size);
+    fn addK(&self, name: &String, size: i32) {
+        self.addK(LEGACY_CRYPTO_BACKEND, name, size);
     }
 
-    fn addOut(name: String, size: i32, t: ZkayType) {
-        addIO(
+    fn addOut(&self, name: &String, size: i32, t: &ZkayType) {
+        self.addIO(
             "out",
             name,
-            pubOutNames,
-            allPubIOWires,
-            currentPubOutIdx,
+            self.pubOutNames,
+            self.allPubIOWires,
+            self.currentPubOutIdx,
             size,
             t,
             false,
         );
-        currentPubOutIdx += size;
+        self.currentPubOutIdx += size;
     }
 
-    fn addS(name: String, size: i32, t: ZkayType) {
-        addIO(
+    fn addS(&self, name: &String, size: i32, t: &ZkayType) {
+        self.addIO(
             "priv",
             name,
-            privInNames,
-            allPrivInWires,
-            currentPrivInIdx,
+            self.privInNames,
+            self.allPrivInWires,
+            self.currentPrivInIdx,
             size,
             t,
             true,
         );
-        currentPrivInIdx += size;
+        self.currentPrivInIdx += size;
     }
 
-    /* CONTROL FLOW */
+    // CONTROL FLOW
 
-    fn stepIn(fct: String) {
-        pushPrefix(
-            namePrefix,
-            namePrefixIndices,
-            guardPrefixes.element().element() + fct,
+    fn stepIn(&self, fct: &String) {
+        self.pushPrefix(
+            self.namePrefix,
+            self.namePrefixIndices,
+            self.guardPrefixes.front().unwrap().front().unwrap() + fct,
         );
-        pushGuardPrefix(guardPrefixes, guardPrefixIndices);
+        self.pushGuardPrefix(self.guardPrefixes, self.guardPrefixIndices);
     }
 
-    fn stepOut() {
-        popPrefix(namePrefix);
-        guardPrefixes.pop();
-        guardPrefixIndices.pop();
+    fn stepOut(&self) {
+        self.popPrefix(namePrefix);
+        self.guardPrefixes.pop_front();
+        self.guardPrefixIndices.pop_front();
     }
 
-    fn addGuard(name: String, isTrue: bool) {
-        let newWire = get(name).wire;
+    fn addGuard(&self, name: &String, isTrue: bool) {
+        let mut newWire = self.get(name).wire.clone();
 
-        pushPrefix(
-            guardPrefixes.element(),
-            guardPrefixIndices.element(),
-            name + "_" + isTrue,
+        self.pushPrefix(
+            self.guardPrefixes.front().unwrap(),
+            self.guardPrefixIndices.front().unwrap(),
+            format!("{name}_{isTrue}"),
         );
 
         if !isTrue {
             newWire = newWire.invAsBit();
         }
 
-        if !currentGuardCondition.isEmpty() {
-            newWire = currentGuardCondition.element().wire.and(newWire);
+        if !self.currentGuardCondition.isEmpty() {
+            newWire = self
+                .currentGuardCondition
+                .front()
+                .unwrap()
+                .wire
+                .and(newWire);
         }
-        currentGuardCondition.push(TypedWire::new(
+        self.currentGuardCondition.push(TypedWire::new(
             newWire,
             ZkBool,
-            "guard_cond_top_" + name + "_" + isTrue,
+            format!("guard_cond_top_{name}_{isTrue}"),
         ));
     }
 
-    fn popGuard() {
-        currentGuardCondition.pop();
-        popPrefix(guardPrefixes.element());
+    fn popGuard(&self) {
+        self.currentGuardCondition.pop_front();
+        self.popPrefix(self.guardPrefixes.front().unwrap());
     }
 
-    fn ite(condition: TypedWire, trueVal: TypedWire, falseVal: TypedWire) -> TypedWire {
-        checkType(ZkBool, condition.zkay_type);
-        checkType(trueVal.zkay_type, falseVal.zkay_type);
-        return TypedWire::new(
-            condExpr(condition.wire, trueVal.wire, falseVal.wire),
+    fn ite(&self, condition: &TypedWire, trueVal: &TypedWire, falseVal: &TypedWire) -> TypedWire {
+        self.checkType(ZkBool, condition.zkay_type);
+        self.checkType(trueVal.zkay_type, falseVal.zkay_type);
+        TypedWire::new(
+            self.condExpr(condition.wire, trueVal.wire, falseVal.wire),
             trueVal.zkay_type,
             format!(
-                "if %s  {%s}  {%s}",
+                "if {}  {{{}}}  {{{}}}",
                 condition.name, trueVal.name, falseVal.name
             ),
-        );
+        )
     }
 
-    /* UNARY OPS */
+    // UNARY OPS
 
-    pub fn negate(val: TypedWire) -> TypedWire {
+    pub fn negate(&self, val: &TypedWire) -> TypedWire {
         let bits = val.zkay_type.bitwidth;
         if bits < 256 {
             // Take two's complement
             let invBits = TypedWire::new(
                 val.wire.invBits(val.zkay_type.bitwidth),
                 val.zkay_type,
-                "~" + val.name,
+                format!("~{}", val.name),
             );
             invBits.plus((getActiveCircuitGenerator()).val(1, val.zkay_type))
         } else {
-            return TypedWire::new(
-                val.wire.mul(-1, "-" + val.name),
+            TypedWire::new(
+                val.wire.mul(-1, format!("-{}", val.name)),
                 val.zkay_type,
-                "-" + val.name,
-            );
+                format!("-{}", val.name),
+            )
         }
     }
 
-    pub fn bitInv(val: TypedWire) -> TypedWire {
+    pub fn bitInv(&self, val: &TypedWire) -> TypedWire {
         let resultType = checkType(val.zkay_type, val.zkay_type, false);
-        let res = val.wire.invBits(resultType.bitwidth, "~" + val.name);
-        TypedWire::new(res, resultType, "~" + val.name)
+        let res = val
+            .wire
+            .invBits(resultType.bitwidth, format!("~{}", val.name));
+        TypedWire::new(res, resultType, format!("~{}", val.name))
     }
 
-    pub fn not(val: TypedWire) -> TypedWire {
+    pub fn not(&self, val: &TypedWire) -> TypedWire {
         checkType(ZkBool, val.zkay_type);
-        TypedWire::new(val.wire.invAsBit("!" + val.name), ZkBool, "!" + val.name)
+        TypedWire::new(
+            val.wire.invAsBit(format!("!{}", val.name)),
+            ZkBool,
+            format!("!{}", val.name),
+        )
     }
 
-    /* String op interface */
+    // String op interface
 
-    pub fn o_(op: char, wire: TypedWire) -> TypedWire {
+    pub fn o_(&self, op: char, wire: &TypedWire) -> TypedWire {
         match op {
-            '-' => negate(wire),
-            '~' => bitInv(wire),
-            '!' => not(wire),
+            '-' => self.negate(wire),
+            '~' => self.bitInv(wire),
+            '!' => self.not(wire),
             _ => panic!(),
         }
     }
 
-    pub fn o_(lhs: TypedWire, op: char, rhs: TypedWire) -> TypedWire {
+    pub fn o_tct(&self, lhs: &TypedWire, op: char, rhs: &TypedWire) -> TypedWire {
         match op {
             '+' => lhs.plus(rhs),
             '-' => lhs.minus(rhs),
@@ -415,23 +512,24 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
             '&' => lhs.bitAnd(rhs),
             '^' => lhs.bitXor(rhs),
             '<' => lhs.isLessThan(rhs),
-            '>' => lhs.isGreaterThan(rhs),
+            '>'/*'*/=> lhs.isGreaterThan(rhs),
             _ => panic!(),
         }
     }
 
-    pub fn o_(
-        cond: TypedWire,
+    pub fn o_tctct(
+        &self,
+        cond: &TypedWire,
         condChar: char,
-        trueVal: TypedWire,
+        trueVal: &TypedWire,
         altChar: char,
-        falseVal: TypedWire,
+        falseVal: &TypedWire,
     ) -> TypedWire {
         assert!(condChar == '?' && altChar == ':');
-        ite(cond, trueVal, falseVal)
+        self.ite(cond, trueVal, falseVal)
     }
 
-    pub fn o_(lhs: TypedWire, op: String, rhs: i32) -> TypedWire {
+    pub fn o_tsi(&self, lhs: &TypedWire, op: &String, rhs: i32) -> TypedWire {
         match op {
             "<<" => lhs.shiftLeftBy(rhs),
             ">>" => lhs.shiftRightBy(rhs),
@@ -439,7 +537,7 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
         }
     }
 
-    pub fn o_(lhs: TypedWire, op: String, rhs: TypedWire) -> TypedWire {
+    pub fn o_tst(&self, lhs: &TypedWire, op: &String, rhs: &TypedWire) -> TypedWire {
         match op {
             "==" => lhs.isEqualTo(rhs),
             "!=" => lhs.isNotEqualTo(rhs),
@@ -451,139 +549,143 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
         }
     }
 
-    /* Homomorphic operations */
+    // Homomorphic operations
 
     pub fn o_hom(
-        cryptoBackendId: String,
-        key: String,
+        &self,
+        cryptoBackendId: &String,
+        key: &String,
         op: char,
-        arg: HomomorphicInput,
+        arg: &HomomorphicInput,
     ) -> Vec<TypedWire> {
-        let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        backend.doHomomorphicOp(op, arg, getQualifiedName(key))
+        let backend = self.getHomomorphicCryptoBackend(cryptoBackendId);
+        backend.doHomomorphicOp(op, arg, self.getQualifiedName(key))
     }
 
-    pub fn o_hom(
-        cryptoBackendId: String,
-        key: String,
-        lhs: HomomorphicInput,
+    pub fn o_hom_sshch(
+        &self,
+        cryptoBackendId: &String,
+        key: &String,
+        lhs: &HomomorphicInput,
         op: char,
-        rhs: HomomorphicInput,
+        rhs: &HomomorphicInput,
     ) -> Vec<TypedWire> {
-        let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        backend.doHomomorphicOp(lhs, op, rhs, getQualifiedName(key))
+        let backend = self.getHomomorphicCryptoBackend(cryptoBackendId);
+        backend.doHomomorphicOp(lhs, op, rhs, self.getQualifiedName(key))
     }
 
-    pub fn o_hom(
-        cryptoBackendId: String,
-        key: String,
-        cond: HomomorphicInput,
+    pub fn o_hom_sshchch(
+        &self,
+        cryptoBackendId: &String,
+        key: &String,
+        cond: &HomomorphicInput,
         condChar: char,
-        trueVal: HomomorphicInput,
+        trueVal: &HomomorphicInput,
         altChar: char,
-        falseVal: HomomorphicInput,
+        falseVal: &HomomorphicInput,
     ) -> Vec<TypedWire> {
         assert!(condChar == '?' && altChar == ':');
-        let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        backend.doHomomorphicCond(cond, trueVal, falseVal, getQualifiedName(key))
+        let backend = self.getHomomorphicCryptoBackend(cryptoBackendId);
+        backend.doHomomorphicCond(cond, trueVal, falseVal, self.getQualifiedName(key))
     }
 
-    pub fn o_hom(
-        cryptoBackendId: String,
-        key: String,
-        lhs: HomomorphicInput,
-        op: String,
-        rhs: HomomorphicInput,
+    pub fn o_hom_sshsh(
+        &self,
+        cryptoBackendId: &String,
+        key: &String,
+        lhs: &HomomorphicInput,
+        op: &String,
+        rhs: &HomomorphicInput,
     ) -> Vec<TypedWire> {
-        let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        backend.doHomomorphicOp(lhs, op, rhs, getQualifiedName(key))
+        let backend = self.getHomomorphicCryptoBackend(cryptoBackendId);
+        backend.doHomomorphicOp(lhs, op, rhs, self.getQualifiedName(key))
     }
 
     pub fn o_rerand(
-        arg: Vec<TypedWire>,
-        cryptoBackendId: String,
-        key: String,
-        randomness: TypedWire,
+        &self,
+        arg: &Vec<TypedWire>,
+        cryptoBackendId: &String,
+        key: &String,
+        randomness: &TypedWire,
     ) -> Vec<TypedWire> {
-        let backend = getHomomorphicCryptoBackend(cryptoBackendId);
-        backend.doHomomorphicRerand(arg, getQualifiedName(key), randomness)
+        let backend = self.getHomomorphicCryptoBackend(cryptoBackendId);
+        backend.doHomomorphicRerand(arg, self.getQualifiedName(key), randomness)
     }
 
-    /* TYPE CASTING */
-
-    fn cast(w: TypedWire, targetType: ZkayType) -> TypedWire {
-        convertTo(w, targetType)
+    // TYPE CASTING
+    fn cast(&self, w: &TypedWire, targetType: &ZkayType) -> TypedWire {
+        self.convertTo(w, targetType)
     }
 
-    /* SOURCE */
+    // SOURCE
 
-    fn get(name: String) -> TypedWire {
-        let w = getTypedArr(name);
+    fn get(&self, name: &String) -> TypedWire {
+        let w = self.getTypedArr(name);
         assert!(w.len() == 1, "Tried to treat array as a single wire");
         w[0]
     }
 
-    fn getCipher(name: String) -> Vec<TypedWire> {
-        getTypedArr(name)
+    fn getCipher(&self, name: &String) -> Vec<TypedWire> {
+        self.getTypedArr(name)
     }
 
-    pub fn val(val: bool) -> TypedWire {
-        return TypedWire::new(
+    pub fn val(&self, val: bool) -> TypedWire {
+        TypedWire::new(
             if val { get_one_wire() } else { get_zero_wire() },
             ZkBool,
-            "const_" + val,
-        );
+            format!("const_{val}"),
+        )
     }
 
-    pub fn val(val: i32, t: ZkayType) -> TypedWire {
-        let mut w;
+    pub fn val_iz(&self, val: i32, t: &ZkayType) -> TypedWire {
         if val == 0 {
-            w = get_zero_wire();
+            TypedWire::new(self.get_zero_wire(), t, format!("const_{val}"))
         } else if val == 1 {
-            w = get_one_wire();
+            TypedWire::new(self.get_one_wire(), t, format!("const_{val}"))
         } else {
-            val(String.valueOf(val), t)
+            self.val_sz(val.to_string(), t)
         }
-        TypedWire::new(w, t, "const_" + val)
     }
 
-    pub fn val(val: String, t: ZkayType) -> TypedWire {
-        let v = BigInteger::new(val, 10);
-        let w;
-        if v.sign() == Sign::Minus {
+    pub fn val_sz(&self, val: &String, t: &ZkayType) -> TypedWire {
+        let v = BigInteger::parse_bytes(val.as_bytes(), 10).unwrap();
+        let w = if v.sign() == Sign::Minus {
             assert!(!t.signed, "Cannot store negative constant in unsigned wire");
-
-            let vNeg = ZkayType.GetNegativeConstant(v.neg(), t.bitwidth);
+            let vNeg = ZkayType::GetNegativeConstant(v.neg(), t.bitwidth);
             assert!(vNeg.sign() != Sign::Minus, "Constant is still negative");
-            w = createConstantWire(vNeg, "const_" + v.toString(10));
+            self.createConstantWire(vNeg, format!("const_{v}"))
         } else {
-            w = createConstantWire(v, "const_" + v.toString(10));
-        }
-        TypedWire::new(w, t, "const_" + v.toString(10))
+            self.createConstantWire(v, format!("const_{v}"))
+        };
+        TypedWire::new(w, t, format!("const_{v}"))
     }
 
-    /* SINK */
+    // SINK
 
-    fn decl(lhs: String, val: TypedWire) {
+    fn decl(&self, lhs: &String, val: &TypedWire) {
         assert!(val.zkay_type.is_some(), "Tried to use untyped wires");
 
         // Get old value and check type
         let mut oldVal;
-        if vars.containsKey(lhs) {
-            oldVal = get(lhs);
+        if self.vars.contains_key(lhs) {
+            oldVal = self.get(lhs);
             checkType(oldVal.zkay_type, val.zkay_type);
         } else {
             oldVal = val(0, val.zkay_type);
         }
 
         // Only assign value if guard condition is met
-        if currentGuardCondition.isEmpty() {
-            set(lhs, TypedWire::new(val.wire, val.zkay_type, lhs));
+        if self.currentGuardCondition.isEmpty() {
+            self.set(lhs, TypedWire::new(val.wire, val.zkay_type, lhs));
         } else {
-            set(
+            self.set(
                 lhs,
                 TypedWire::new(
-                    condExpr(currentGuardCondition.element().wire, val.wire, oldVal.wire),
+                    self.condExpr(
+                        self.currentGuardCondition.front().unwrap().wire,
+                        val.wire,
+                        oldVal.wire,
+                    ),
                     val.zkay_type,
                     lhs,
                 ),
@@ -591,7 +693,7 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
         }
     }
 
-    fn decl(lhs: String, val: Vec<TypedWire>) {
+    fn decl_svt(&self, lhs: &String, val: &Vec<TypedWire>) {
         assert!(val.is_some() && !val.empty(), "val");
         assert!(val[0].zkay_type.is_some(), "Tried to use untyped wires");
         // Check that all types match; else this gets really strange
@@ -601,8 +703,8 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
 
         // Get old value and check type and length
         let mut oldVal;
-        if vars.containsKey(lhs) {
-            oldVal = getTypedArr(lhs);
+        if self.vars.contains_key(lhs) {
+            oldVal = self.getTypedArr(lhs);
             checkType(oldVal[0].zkay_type, val[0].zkay_type);
             assert!(
                 val.len() == oldVal.len(),
@@ -611,36 +713,36 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
                 val.len()
             );
         } else {
-            oldVal = vec![val(0, val[0].zkay_type); val.len()];
+            oldVal = vec![self.val(0, val[0].zkay_type); val.len()];
         }
 
         // Only assign value if guard condition is met
         let resVal = vec![TypedWire::default(); val.len()];
-        let guard = currentGuardCondition.peek(); // Null if empty
+        let guard = self.currentGuardCondition.front(); // Null if empty
         for i in 0..val.len() {
             if guard == None {
                 resVal[i] = TypedWire::new(val[i].wire, val[i].zkay_type, lhs); // No guard, just rename
             } else {
                 resVal[i] = TypedWire::new(
-                    condExpr(guard.wire, val[i].wire, oldVal[i].wire),
+                    self.condExpr(guard.wire, val[i].wire, oldVal[i].wire),
                     val[i].zkay_type,
                     lhs,
                 );
             }
         }
-        set(lhs, resVal);
+        self.set(lhs, resVal);
     }
 
-    fn condExpr(cond: WireType, trueVal: WireType, falseVal: WireType) -> WireType {
-        if ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
-            addBinaryAssertion(cond);
+    fn condExpr(&self, cond: &WireType, trueVal: &WireType, falseVal: &WireType) -> WireType {
+        if ZkayUtil::ZKAY_RESTRICT_EVERYTHING {
+            self.addBinaryAssertion(cond);
         }
         return cond
             .mul(trueVal, "ite_true")
             .add(cond.invAsBit().mul(falseVal, "ite_false"), "ite_res");
     }
 
-    fn convertTo(w: TypedWire, targetType: ZkayType) -> TypedWire {
+    fn convertTo(&self, w: &TypedWire, targetType: &ZkayType) -> TypedWire {
         let fromType = w.zkay_type;
 
         let fromBitWidth = fromType.bitwidth;
@@ -653,7 +755,7 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
             if !wasSigned && w.wire.getBitWiresIfExistAlready() == None {
                 // If this wire was not yet split we can return it without splitting as an optimization
                 // -> upcasts from an unsigned type (most common ) are for free this way
-                newWire = w.wire;
+                newWire = w.wire.clone();
             } else {
                 let bitWires = w.wire.getBitWires(fromBitWidth);
                 if wasSigned && toBitWidth == 256 {
@@ -665,34 +767,33 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
                     let extendBit = if wasSigned {
                         bitWires.get(fromBitWidth - 1)
                     } else {
-                        get_zero_wire()
+                        self.get_zero_wire()
                     };
-                    let newWs = vec![None; toBitWidth];
+                    let mut newWs = vec![None; toBitWidth];
                     newWs[..fromBitWidth].clone_from_slice(&bitWires.asArray());
-                    for i in fromBitWidth..toBitWidth {
-                        newWs[i] = extendBit;
-                    }
-                    newWire = WireArray::new(newWs).packAsBits(None,toBitWidth);
+                    newWs[fromBitWidth..toBitWidth].fill(extendBit);
+                    newWire = WireArray::new(newWs).packAsBits(None, toBitWidth);
                 }
             }
         } else if fromBitWidth > toBitWidth {
             // Downcast -> only keep lower bits
             newWire = w
                 .wire
-                .getBitWires(fromBitWidth, "downcast1 " + w.name)
-                .packAsBits(None,None,toBitWidth, "downcast2 " + w.name);
+                .getBitWires(fromBitWidth, format!("downcast1 {} ", w.name))
+                .packAsBits(None, None, toBitWidth, format!("downcast2 {}", w.name));
         } else {
             // Type stays the same -> no expensive bitwise operations necessary
-            newWire = w.wire;
+            newWire = w.wire.clone();
         }
-        TypedWire::new(newWire, targetType, format!("(%s) %s", targetType, w.name))
+        TypedWire::new(newWire, targetType, format!("({}) {}", targetType, w.name))
     }
 
     fn cryptoEnc(
-        cryptoBackend: CryptoBackend,
-        plain: String,
-        key: String,
-        rnd: String,
+        &self,
+        cryptoBackend: &CryptoBackend,
+        plain: &String,
+        key: &String,
+        rnd: &String,
         isDec: bool,
     ) -> Vec<Option<WireType>> {
         assert!(
@@ -702,56 +803,64 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
 
         let desc = if ADD_OP_LABELS {
             format!(
-                "enc%s(%s, %s, %s)",
+                "enc{}({}, {}, {})",
                 if isDec { "[dec]" } else { "" },
+                self,
                 getQualifiedName(plain),
+                self,
                 getQualifiedName(key),
+                self,
                 getQualifiedName(rnd)
             )
         } else {
-            ""
+            String::new()
         };
         let enc = cryptoBackend.createEncryptionGadget(
+            self,
             get(plain),
+            self,
             getQualifiedName(key),
+            self,
             getArr(rnd),
             desc,
         );
-        enc.getOutputWires()
+        enc.getOutputWires().clone()
     }
 
     fn cryptoDec(
-        cryptoBackend: CryptoBackend,
-        cipher: String,
-        pkey: String,
-        skey: String,
-        expPlain: String,
+        &self,
+        cryptoBackend: &CryptoBackend,
+        cipher: &String,
+        pkey: &String,
+        skey: &String,
+        expPlain: &String,
     ) -> WireType {
         let desc = if ADD_OP_LABELS {
             format!(
-                "dec(%s, %s, %s)",
-                getQualifiedName(cipher),
-                getQualifiedName(pkey),
-                getQualifiedName(skey)
+                "dec({}, {}, {})",
+                self.getQualifiedName(cipher),
+                self.getQualifiedName(pkey),
+                self.getQualifiedName(skey)
             )
         } else {
-            ""
+            "".to_owned()
         };
         let dec = cryptoBackend.createDecryptionGadget(
-            get(expPlain),
-            getArr(cipher),
-            getQualifiedName(pkey),
-            getArr(skey),
+            self.get(expPlain),
+            self.getArr(cipher),
+            self.getQualifiedName(pkey),
+            self.getArr(skey),
             desc,
         );
-        dec.getOutputWires()[0]
+        dec.getOutputWires()[0].clone().unwrap()
     }
 
     fn cryptoSymmEnc(
-        cryptoBackend: CryptoBackend,
-        plain: String,
-        otherPk: String,
-        ivCipher: String,
+        &self,
+        cryptoBackend: &CryptoBackend,
+        plain: &String,
+        otherPk: &String,
+        ivCipher: &String,
         isDec: bool,
     ) -> Vec<Option<WireType>> {
         assert!(
@@ -760,36 +869,40 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
         );
 
         let desc = if ADD_OP_LABELS {
-            format!("enc%s(%s, k, iv)", if isDec { "[dec]" } else { "" }, plain)
+            format!("enc{}({}, k, iv)", if isDec { "[dec]" } else { "" }, plain)
         } else {
-            ""
+            "".to_owned()
         };
         let enc = cryptoBackend.createEncryptionGadget(
-            get(plain),
-            getQualifiedName(otherPk),
-            getArr(ivCipher),
+            self.get(plain),
+            self.getQualifiedName(otherPk),
+            self.getArr(ivCipher),
             desc,
         );
-        enc.getOutputWires()
+        enc.getOutputWires().clone()
     }
 
-    fn addGuardedEncryptionAssertion(expectedCipher: String, computedCipher: Vec<Option<WireType>>) {
-        let expCipher = getArr(expectedCipher);
+    fn addGuardedEncryptionAssertion(
+        &self,
+        expectedCipher: &String,
+        computedCipher: &Vec<Option<WireType>>,
+    ) {
+        let expCipher = self.getArr(expectedCipher);
         let compStr = if ADD_OP_LABELS {
-            format!("%s == cipher", getQualifiedName(expectedCipher))
+            format!("{} == cipher", self.getQualifiedName(expectedCipher))
         } else {
-            ""
+            "".to_owned()
         };
-        addGuardedOneAssertion(
-            isEqual(expCipher, expectedCipher, computedCipher, "cipher"),
+        self.addGuardedOneAssertion(
+            self.isEqual(expCipher, expectedCipher, computedCipher, "cipher"),
             compStr,
         );
     }
 
-    fn addGuardedNonZeroAssertion(value: Vec<Option<WireType>>, name: String) {
-        addGuardedOneAssertion(
-            isNonZero(value, name),
-            format!("assert %s != 0", getQualifiedName(name)),
+    fn addGuardedNonZeroAssertion(&self, value: &Vec<Option<WireType>>, name: &String) {
+        self.addGuardedOneAssertion(
+            self.isNonZero(value, name),
+            format!("assert {} != 0", self.getQualifiedName(name)),
         );
     }
 
@@ -797,75 +910,89 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
      * Asymmetric Encryption
      */
     fn checkEnc(
-        cryptoBackendId: Object,
-        plain: String,
-        key: String,
-        rnd: String,
-        expectedCipher: String,
+        &self,
+        cryptoBackendId: &String,
+        plain: &String,
+        key: &String,
+        rnd: &String,
+        expectedCipher: &String,
     ) {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
         // 1. Check that expected cipher != 0 (since 0 is reserved for default initialization)
-        addGuardedNonZeroAssertion(getArr(expectedCipher), expectedCipher);
+        self.addGuardedNonZeroAssertion(getArr(expectedCipher), expectedCipher);
 
         // 2. Encrypt
-        let computedCipher = cryptoEnc(cryptoBackend, plain, key, rnd, false);
+        let computedCipher = self.cryptoEnc(cryptoBackend, plain, key, rnd, false);
 
         // 3. Check encryption == expected cipher
-        addGuardedEncryptionAssertion(expectedCipher, computedCipher);
+        self.addGuardedEncryptionAssertion(expectedCipher, computedCipher);
     }
 
     /**
      * Symmetric Encryption
      */
-    fn checkSymmEnc(cryptoBackendId: Object, plain: String, otherPk: String, ivCipher: String) {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
+    fn checkSymmEnc(
+        &self,
+        cryptoBackendId: &String,
+        plain: &String,
+        otherPk: &String,
+        ivCipher: &String,
+    ) {
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
         // 1. Check that expected cipher != 0 (since 0 is reserved for default initialization)
-        addGuardedNonZeroAssertion(getArr(ivCipher), ivCipher);
+        self.addGuardedNonZeroAssertion(getArr(ivCipher), ivCipher);
 
         // 2. Encrypt
-        let computedCipher = cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, false);
+        let computedCipher = self.cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, false);
 
         // 3. Check encryption == expected cipher
-        addGuardedEncryptionAssertion(ivCipher, computedCipher);
+        self.addGuardedEncryptionAssertion(ivCipher, computedCipher);
     }
 
-    /**
-     * Asymmetric Decryption
-     */
-    fn checkDec(cryptoBackendId: Object, plain: String, key: String, rnd: String, cipher: String) {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
+    // /**
+    //  * Asymmetric Decryption
+    //  */
+    fn checkDec(
+        &self,
+        cryptoBackendId: &String,
+        plain: &String,
+        key: &String,
+        rnd: &String,
+        cipher: &String,
+    ) {
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
         if cryptoBackend.usesDecryptionGadget() {
-            // TODO we're misusing the randomness wire for the secret key, which is extremely ugly...
-            let msgOk = cryptoDec(cryptoBackend, cipher, key, rnd, plain);
+            // TODO we are misusing the randomness wire for the secret key, which is extremely ugly...
+            let msgOk = self.cryptoDec(cryptoBackend, cipher, key, rnd, plain);
 
-            let expCipher = getArr(cipher);
-            let expCipherIsNonZero = isNonZero(expCipher, cipher); // "!= 0"
+            let expCipher = self.getArr(cipher);
+            let expCipherIsNonZero = self.isNonZero(expCipher, cipher); // "!= 0"
             let expCipherIsZero = expCipherIsNonZero.invAsBit(cipher + " == 0");
-            let plainZero = isZero(getArr(plain), plain);
+            let plainZero = self.isZero(getArr(plain), plain);
 
             // handle uninitialized ciphertext: cipher == 0 => plain == 0
-            addGuardedOneAssertion(expCipherIsNonZero.or(plainZero));
+            self.addGuardedOneAssertion(expCipherIsNonZero.or(plainZero));
 
             // else: cipher != 0 ==> msgOk == 1
-            addGuardedOneAssertion(expCipherIsZero.or(msgOk));
+            self.addGuardedOneAssertion(expCipherIsZero.or(msgOk));
         } else {
             // 1. Decrypt [dec(cipher, rnd, sk) -> enc(plain, rnd, pk)] (compute inverse op)
-            let computedCipher = cryptoEnc(cryptoBackend, plain, key, rnd, true);
+            let computedCipher = self.cryptoEnc(cryptoBackend, plain, key, rnd, true);
 
-            let expCipher = getArr(cipher);
-            let expCipherIsNonZero = isNonZero(expCipher, cipher); // "!= 0"
+            let expCipher = self.getArr(cipher);
+            let expCipherIsNonZero = self.isNonZero(expCipher, cipher); // "!= 0"
             let expCipherIsZero = expCipherIsNonZero.invAsBit(cipher + " == 0");
-            let plainZero = isZero(getArr(plain), plain);
-            let rndZero = isZero(getArr(rnd), rnd);
+            let plainZero = self.isZero(getArr(plain), plain);
+            let rndZero = self.isZero(getArr(rnd), rnd);
 
             // 2. Check that: expectedCipher == 0 => plain == 0 && rnd == 0
-            addGuardedOneAssertion(expCipherIsNonZero.or(plainZero.and(rndZero)));
+            self.addGuardedOneAssertion(expCipherIsNonZero.or(plainZero.and(rndZero)));
 
             // 3. Check that expectedCipher != 0 => expectedCipher == computedCipher
-            addGuardedOneAssertion(expCipherIsZero.or(isEqual(
+            self.addGuardedOneAssertion(expCipherIsZero.or(self.isEqual(
                 expCipher,
                 cipher,
                 computedCipher,
@@ -877,274 +1004,235 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase> {
     /**
      * Symmetric Decryption
      */
-    fn checkSymmDec(cryptoBackendId: Object, plain: String, otherPk: String, ivCipher: String) {
-        let cryptoBackend = getCryptoBackend(cryptoBackendId);
+    fn checkSymmDec(
+        &self,
+        cryptoBackendId: &String,
+        plain: &String,
+        otherPk: &String,
+        ivCipher: &String,
+    ) {
+        let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
         // 1. Decrypt [dec(cipher, rnd, sk) -> encSymm(plain, ecdh(mySk, otherPk), iv)] (compute inverse op)
-        let computedCipher = cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, true);
+        let computedCipher = self.cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, true);
 
-        let expIvCipher = getArr(ivCipher);
-        let expCipherNonZero = isNonZero(expIvCipher, ivCipher);
+        let expIvCipher = self.getArr(ivCipher);
+        let expCipherNonZero = self.isNonZero(expIvCipher, ivCipher);
         let expCipherZero = expCipherNonZero.invAsBit(ivCipher + " == 0");
-        let otherPkNonZero = get(otherPk).wire.checkNonZero(otherPk + "!= 0");
+        let otherPkNonZero = self.get(otherPk).wire.checkNonZero(otherPk + "!= 0");
         let otherPkZero = otherPkNonZero.invAsBit(otherPk + " == 0");
-        let plainZero = isZero(getArr(plain), plain);
+        let plainZero = self.isZero(self.getArr(plain), plain);
 
         // Some of these checks are probably not necessary, as zkay should already enforce that
         // otherPk == 0 <=> expCipher == 0
 
         // 2. Check that: ivCipher == 0 => plain == 0 && otherPk == 0
-        addGuardedOneAssertion(
+        self.addGuardedOneAssertion(
             expCipherNonZero.or(plainZero.and(otherPkZero)),
             if ADD_OP_LABELS {
-                format!("%s == 0 => %s == 0 && %s == 0", ivCipher, plain, otherPk)
+                format!("{} == 0 => {} == 0 && {} == 0", ivCipher, plain, otherPk)
             } else {
-                ""
+                "".to_owned()
             },
         );
 
         // 3. Check that: otherPk == 0 => plain == 0 && ivCipher == 0
-        addGuardedOneAssertion(
+        self.addGuardedOneAssertion(
             otherPkNonZero.or(plainZero.and(expCipherZero)),
             if ADD_OP_LABELS {
-                format!("%s == 0 => %s == 0 && %s == 0", otherPk, plain, ivCipher)
+                format!("{} == 0 => {} == 0 && {} == 0", otherPk, plain, ivCipher)
             } else {
-                ""
+                "".to_owned()
             },
         );
 
         // 4. Check that: (ivCipher != 0 && otherPk != 0) => ivCipher == computedCipher
         let cipherZeroOrPkZero = expCipherZero.or(otherPkZero);
-        addGuardedOneAssertion(
+        self.addGuardedOneAssertion(
             cipherZeroOrPkZero.or(isEqual(expIvCipher, ivCipher, computedCipher, "cipher")),
             if ADD_OP_LABELS {
                 format!(
-                    "(%s != 0 && %s != 0) => %s == %s",
+                    "({} != 0 && {} != 0) => {} == {}",
                     ivCipher, otherPk, ivCipher, "cipher"
                 )
             } else {
-                ""
+                "".to_owned()
             },
         );
     }
 
     // Legacy handling
 
-    fn checkEnc(plain: String, key: String, rnd: String, expectedCipher: String) {
-        checkEnc(LEGACY_CRYPTO_BACKEND, plain, key, rnd, expectedCipher);
+    fn checkEnc(&self, plain: &String, key: &String, rnd: &String, expectedCipher: &String) {
+        self.checkEnc(LEGACY_CRYPTO_BACKEND, plain, key, rnd, expectedCipher);
     }
 
-    fn checkEnc(plain: String, otherPk: String, ivCipher: String) {
-        checkSymmEnc(LEGACY_CRYPTO_BACKEND, plain, otherPk, ivCipher);
+    fn checkEnc(&self, plain: &String, otherPk: &String, ivCipher: &String) {
+        self.checkSymmEnc(LEGACY_CRYPTO_BACKEND, plain, otherPk, ivCipher);
     }
 
-    fn checkDec(plain: String, key: String, rnd: String, expectedCipher: String) {
-        checkDec(LEGACY_CRYPTO_BACKEND, plain, key, rnd, expectedCipher);
+    fn checkDec(&self, plain: &String, key: &String, rnd: &String, expectedCipher: &String) {
+        self.checkDec(LEGACY_CRYPTO_BACKEND, plain, key, rnd, expectedCipher);
     }
 
-    fn checkDec(plain: String, otherPk: String, ivCipher: String) {
-        checkSymmDec(LEGACY_CRYPTO_BACKEND, plain, otherPk, ivCipher);
+    fn checkDec(&self, plain: &String, otherPk: &String, ivCipher: &String) {
+        self.checkSymmDec(LEGACY_CRYPTO_BACKEND, plain, otherPk, ivCipher);
     }
 
-    fn checkEq(lhs: String, rhs: String) {
-        let (l, r) = (getArr(lhs), getArr(rhs));
+    fn checkEq(&self, lhs: &String, rhs: &String) {
+        let (l, r) = (self.getArr(lhs), self.getArr(rhs));
         let len = l.len();
         assert!(r.len() == len, "Size mismatch for equality check");
 
         for i in 0..len {
             let compStr = if ADD_OP_LABELS {
                 format!(
-                    "%s[%d] == %s[%d]",
-                    getQualifiedName(lhs),
+                    "{}[%d] == {}[%d]",
+                    self.getQualifiedName(lhs),
                     i,
-                    getQualifiedName(rhs),
+                    self.getQualifiedName(rhs),
                     i
                 )
             } else {
                 ""
             };
-            addGuardedEqualityAssertion(l[i], r[i], compStr);
+            self.addGuardedEqualityAssertion(l[i], r[i], compStr);
         }
     }
 
-    fn isNonZero(value: Vec<Option<WireType>>, name: String) -> WireType {
+    fn isNonZero(&self, value: &Vec<Option<WireType>>, name: &String) -> WireType {
         let res = value[0].checkNonZero(name + "[0] != 0");
         for i in 1..value.len() {
             res = res.add(
-                value[i].checkNonZero(format!("%s[%d] != 0", name, i)),
-                format!("or %s[%d] != 0", name, i),
+                value[i].checkNonZero(format!("{}[%d] != 0", name, i)),
+                format!("or {}[%d] != 0", name, i),
             );
         }
         res.checkNonZero(name + " != 0")
     }
 
-    fn isZero(value: Vec<Option<WireType>>, name: String) -> WireType {
-        isNonZero(value, name).invAsBit(name + " == 0")
+    fn isZero(&self, value: &Vec<Option<WireType>>, name: &String) -> WireType {
+        self.isNonZero(value, name).invAsBit(name + " == 0")
     }
 
-    fn isEqual(wires1: Vec<Option<WireType>>, name1: String, wires2: Vec<Option<WireType>>, name2: String) -> WireType {
-        assert!(wires1.length == wires2.length, "WireType array size mismatch");
-        let res = get_one_wire();
+    fn isEqual(
+        &self,
+        wires1: &Vec<Option<WireType>>,
+        name1: &String,
+        wires2: &Vec<Option<WireType>>,
+        name2: &String,
+    ) -> WireType {
+        assert!(
+            wires1.length == wires2.length,
+            "WireType array size mismatch"
+        );
+        let res = self.get_one_wire();
         for i in 0..wires1.length {
             res = res.and(
-                wires1[i].isEqualTo(wires2[i], format!("%s[%d] == %s[%d]", name1, i, name2, i)),
+                wires1[i].isEqualTo(wires2[i], format!("{}[%d] == {}[%d]", name1, i, name2, i)),
             );
         }
         res
     }
 
-    fn clearPrefix(prefix: VecDeque<String>, indices: HashMap<String, Integer>) {
+    fn clearPrefix(prefix: &mut VecDeque<String>, &mut indices: HashMap<String, Integer>) {
         prefix.clear();
-        prefix.push("");
+        prefix.push("".to_owned());
         indices.clear();
     }
 
     fn pushPrefix(
-        prefix: VecDeque<String>,
-        prefixIndices: HashMap<String, Integer>,
-        newStr: String,
+        prefix: &mut VecDeque<String>,
+        prefixIndices: &mut HashMap<String, Integer>,
+        newStr: &String,
     ) {
-        let newPrefix = prefix.peek() + newStr + ".";
-        let count = prefixIndices.getOrDefault(newPrefix, 0);
-        prefixIndices.put(newPrefix, count + 1);
-        prefix.push(newPrefix + count + ".");
+        let newPrefix = format!("{}{}.", prefix.front().unwrap(), newStr);
+        let count = *prefixIndices.get(newPrefix).unwrap_or(&0);
+        prefixIndices.insert(newPrefix, count + 1);
+        prefix.push_front(format!("{}{}.", newPrefix, count));
     }
 
     fn pushGuardPrefix(
-        guardPrefixes: VecDeque<VecDeque<String>>,
-        guardPrefixIndices: VecDeque<HashMap<String, Integer>>,
+        guardPrefixes: &mut VecDeque<VecDeque<String>>,
+        guardPrefixIndices: &mut VecDeque<HashMap<String, Integer>>,
     ) {
         let newPrefix = VecDeque::new();
         let newPrefixIndices = HashMap::new();
-        clearPrefix(newPrefix, newPrefixIndices);
+        Self::clearPrefix(&mut newPrefix, &mut newPrefixIndices);
         guardPrefixes.push(newPrefix);
         guardPrefixIndices.push(newPrefixIndices);
     }
 
-    fn popPrefix(prefix: VecDeque<String>) {
-        prefix.pop();
+    fn popPrefix(prefix: &mut VecDeque<String>) {
+        prefix.pop_front();
     }
 
-    fn getQualifiedName(name: String) -> String {
-        if name.startsWith("glob_") {
+    fn getQualifiedName(&self, name: &String) -> String {
+        if name.starts_with("glob_") {
             name
         } else {
-            namePrefix.element() + name
+            self.namePrefix.front().unwrap().clone() + &name
         }
     }
 
-    fn addGuardedEqualityAssertion(lhs: WireType, rhs: WireType, desc: &Option<String>) {
-        if currentGuardCondition.isEmpty() {
-            addEqualityAssertion(lhs, rhs, desc);
+    fn addGuardedEqualityAssertion(&self, lhs: &WireType, rhs: &WireType, desc: &Option<String>) {
+        if self.currentGuardCondition.isEmpty() {
+            self.addEqualityAssertion(lhs, rhs, desc);
         } else {
             let eq = lhs.isEqualTo(rhs);
-            addOneAssertion(currentGuardCondition.element().wire.invAsBit().or(eq), desc); // guard => lhs == rhs
+            self.addOneAssertion(
+                self.currentGuardCondition
+                    .front()
+                    .unwrap()
+                    .wire
+                    .invAsBit()
+                    .or(eq),
+                desc,
+            ); // guard => lhs == rhs
         }
     }
 
-    fn addGuardedOneAssertion(val: WireType, desc: &Option<String>) {
-        if currentGuardCondition.isEmpty() {
-            addOneAssertion(val, desc);
+    fn addGuardedOneAssertion(&self, val: &WireType, desc: &Option<String>) {
+        if self.currentGuardCondition.isEmpty() {
+            self.addOneAssertion(val, desc);
         } else {
-            addOneAssertion(
-                currentGuardCondition.element().wire.invAsBit().or(val),
+            self.addOneAssertion(
+                self.currentGuardCondition
+                    .front()
+                    .unwrap()
+                    .wire
+                    .invAsBit()
+                    .or(val),
                 desc,
             ); // guard => val
         }
     }
 
-    fn getTypedArr(name: String) -> Vec<TypedWire> {
-        name = getQualifiedName(name);
-        let w = vars.get(name);
-        assert!(
-            w.is_some(),
-            "Variable " + name + " is not associated with a wire"
-        );
+    fn getTypedArr(&self, name: &String) -> &Vec<TypedWire> {
+        let name = self.getQualifiedName(name);
+        let w = self.vars.get(name).unwrap();
+        assert!(w.is_some(), "Variable {name} is not associated with a wire");
         w
     }
 
-    fn getArr(name: String) -> Vec<Option<WireType>> {
-        let w = getTypedArr(name);
-        let wa = vec![None; w.len()];
-        for i in 0..w.len() {
-            wa[i] = w[i].wire;
-        }
-        wa
+    fn getArr(&self, name: &String) -> Vec<Option<WireType>> {
+        self.getTypedArr(name)
+            .iter()
+            .map(|v| v.wire.clone())
+            .collect()
     }
 
-    fn set(name: String, val: TypedWire) {
-        set(name, vec![val]);
+    fn set(&self, name: &String, val: &TypedWire) {
+        self.set(name, vec![val.clone()]);
     }
 
-    fn set(name: String, val: Vec<TypedWire>) {
-        name = getQualifiedName(name);
-        assert!(val.is_some(), "Tried to set value " + name + " to None");
-        let oldVal = vars.get(name);
+    fn set_svt(&self, name: &String, val: &Vec<TypedWire>) {
+        let name = self.getQualifiedName(name);
+        assert!(!val.is_empty(), "Tried to set value {name} to None");
         assert!(
-            oldVal.is_none(),
+            !self.vars.contains_key(name),
             "SSA violation when trying to write to {name}"
         );
-        vars.put(name, val);
-    }
-
-    fn generateSampleInput(&self,evaluator: &mut CircuitEvaluator) {
-        assert!(
-            serializedArguments.is_some(),
-            "No inputs specified, this should not have been called"
-        );
-
-        assert!(
-            serializedArguments.len() == allPubIOWires.len() + allPrivInWires.len(),
-            "Invalid serialized argument count, expected {} was {}",
-            allPubIOWires.len(),
-            serializedArguments.len()
-        );
-
-        let idx = 0;
-        for ioNameList in [pubInNames, pubOutNames, privInNames] {
-            for name in ioNameList {
-                let wires = vars.get(name);
-                let sb = StringBuilder::new("Setting '" + name + "' to [");
-                for w in wires {
-                    let val = serializedArguments[idx += 1];
-                    evaluator.setWireValue(w.wire, val);
-                    sb.append("wid ")
-                        .append(w.wire.getWireId())
-                        .append("=")
-                        .append(val)
-                        .append(", ");
-                }
-                sb.setLength(sb.len() - 2);
-                sb.append("]");
-                //println!(sb);
-            }
-        }
-
-        assert!(
-            idx == allPubIOWires.len() + allPrivInWires.len(),
-            "Not all inputs consumed"
-        );
-    }
-
-    pub fn prepFiles() {
-        if serializedArguments != None {
-            super.prepFiles();
-        } else {
-            writeCircuitFile();
-            writeDummyInputFile();
-        }
-    }
-
-    fn writeDummyInputFile() {
-        let printWriter = File::create(get_name() + ".in");
-        write!(printWriter, "0 1");
-        let allIOWires =
-            vec![0; get_in_wires().size() + get_out_wires().size() + get_prover_witness_wires().size()];
-        allIOWires.addAll(get_in_wires().subList(1, get_in_wires().size()));
-        allIOWires.addAll(get_out_wires());
-        allIOWires.addAll(get_prover_witness_wires());
-        for w in allIOWires {
-            write!(printWriter, w.getWireId() + " " + "0");
-        }
+        self.vars.insert(name, val);
     }
 }

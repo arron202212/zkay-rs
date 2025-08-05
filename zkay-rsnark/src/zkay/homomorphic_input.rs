@@ -7,45 +7,45 @@
  * and TypedWire or having to tell apart plaintext and ciphertext inputs from the length of the Vec<TypedWire> input.
  */
 pub struct HomomorphicInput {
-    array: Vec<TypedWire>,
+    array: &Vec<TypedWire>,
     isCipher: bool,
 }
 impl HomomorphicInput {
-    pub fn new(array: Vec<TypedWire>, isCipher: bool) -> Self {
+    pub fn new(array: &Vec<TypedWire>, isCipher: bool) -> Self {
         Self { array, isCipher }
     }
 
-    pub fn of(cipher: Vec<TypedWire>) -> HomomorphicInput {
+    pub fn of(cipher: Vec<TypedWire>) -> Self {
         HomomorphicInput::new(cipher, true)
     }
 
-    pub fn of(plain: TypedWire) -> HomomorphicInput {
+    pub fn of(plain: TypedWire) -> Self {
         HomomorphicInput::new(vec![plain], false)
     }
 
-    pub fn isCipher() -> bool {
-        isCipher
+    pub fn isCipher(&self) -> bool {
+        self.isCipher
     }
 
-    pub fn isPlain() -> bool {
-        !isCipher
+    pub fn isPlain(&self) -> bool {
+        !self.isCipher
     }
 
-    pub fn getCipher() -> Vec<TypedWire> {
+    pub fn getCipher(&self) -> &Vec<TypedWire> {
         assert!(self.isCipher(), "Homomorphic input was not a ciphertext");
-        array
+        &self.array
     }
 
-    pub fn getPlain() -> TypedWire {
+    pub fn getPlain(&self) -> TypedWire {
         assert!(!self.isCipher(), "Homomorphic input was not a plaintext");
-        array[0]
+        self.array[0].clone()
     }
 
-    pub fn getLength() -> i32 {
-        array.len()
+    pub fn getLength(&self) -> i32 {
+        self.array.len()
     }
 
-    pub fn getName() -> String {
-        array[0].name
+    pub fn getName(&self) -> &String {
+        &self.array[0].name
     }
 }

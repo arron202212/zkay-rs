@@ -13,40 +13,55 @@ pub struct ZkayEcPkDerivationGadget {
     // (follows little-endian order)
 
     // gadget output
-    outputPublicValue: WireType, // the x-coordinate of the key exchange
-                             // material to be sent to the other party
-                             // outputPublicValue = ((this party's
-                             // secret)*Base).x
+    outputPublicValue: &Option<WireType>, // the x-coordinate of the key exchange
+                                          // material to be sent to the other party
+                                          // outputPublicValue = ((this party's
+                                          // secret)*Base).x
 }
 
 impl ZkayEcPkDerivationGadget {
-    pub fn new(secretKey: WireType, validateSecret: bool, desc: &Option<String>) -> Self {
-        //super(desc);
-        let mut _self=Self{secretBits : secretKey.getBitWires(SECRET_BITWIDTH).asArray(),
-        basePoint : AffinePoint::new(generator.createConstantWire(4))}; // Hardcode base point
+    pub fn new(
+        secretKey: &WireType,
+        validateSecret: bool,
+        desc: &Option<String>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<ZkayEcGadget<Self>> {
+        let mut _self = ZkayEcGadget::<Self>::new(
+            desc,
+            Self {
+                secretBits: secretKey.getBitWires(SECRET_BITWIDTH).asArray(),
+                basePoint: AffinePoint::new(generator.createConstantWire(4)),
+                outputPublicValue: None,
+            },
+            generator,
+        );
+        // Hardcode base point
         if validateSecret {
             _self.checkSecretBits(generator, secretBits);
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
-         _self.buildCircuit();
+        _self.buildCircuit();
         _self
     }
-
+}
+impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
     fn buildCircuit(&mut self) {
-        let baseTable = preprocess(basePoint);
-        outputPublicValue = mul(basePoint, secretBits, baseTable).x;
+        let baseTable = self.preprocess(&self.t.t.basePoint);
+        let outputPublicValue = self
+            .mul(&self.t.t.basePoint, &self.t.t.secretBits, baseTable)
+            .x;
+        self.t.t.outputs = vec![outputPublicValue.clone()];
+        self.t.t.outputPublicValue = Some(outputPublicValue);
     }
 
-   
-
-    fn computeYCoordinates() {
+    fn computeYCoordinates(&self) {
         let x = (basePoint.x).getConstant();
         basePoint.y = generator.createConstantWire(computeYCoordinate(x));
     }
 }
-impl ZkayEcGadget for ZkayEcPkDerivationGadget {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        vec![outputPublicValue]
+impl GadgetConfig for Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.t.outputs
     }
 }

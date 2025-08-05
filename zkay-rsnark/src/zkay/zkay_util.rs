@@ -1,19 +1,18 @@
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
-use crate::util::util::{Util,BigInteger};
+use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::{BigInteger, Util};
 
 pub struct ZkayUtil;
 impl ZkayUtil {
     pub const ZKAY_RESTRICT_EVERYTHING: bool = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just  inputs)
 
     pub fn reverseBytes(bitArray: WireArray, targetWordBits: i32) -> Vec<Option<WireType>> {
-         WireArray::new(Util::reverseBytes(bitArray.asArray()))
-            .packBitsIntoWords(targetWordBits)
+        WireArray::new(Util::reverseBytes(bitArray.asArray())).packBitsIntoWords(targetWordBits)
     }
 
     pub fn unsignedBytesToBigInt(bytes: Vec<byte>) -> BigInteger {
-        let signum = bytes.iter().any(|&b|b!=0) as i32;
-        
+        let signum = bytes.iter().any(|&b| b != 0) as i32;
+
         BigInteger::new(signum, bytes)
     }
 
@@ -48,7 +47,7 @@ impl ZkayUtil {
             ".",
             "1",
         ]);
-        //println!(
+        println!(
             "\n-----------------------------------RUNNING LIBSNARK KEYGEN -----------------------------------------"
         );
         let input = BufReader::new(p.getInputStream());
@@ -68,7 +67,7 @@ impl ZkayUtil {
             "1",
             "1",
         ]);
-        //println!(
+        println!(
             "\n-----------------------------------RUNNING LIBSNARK PROOFGEN -----------------------------------------"
         );
         let input = BufferedReader::new(InputStreamReader::new(p.getInputStream()));

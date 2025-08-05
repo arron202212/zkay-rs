@@ -1,6 +1,6 @@
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use zkay::*;
 
 pub struct ElgamalBackend;
@@ -12,32 +12,32 @@ impl ElgamalBackend {
 
     const RND_CHUNK_SIZE: i32 = 256;
 
-    fn ElgamalBackend(keyBits: i32) {
-        //super(keyBits);
-
+    pub fn new(keyBits: i32) -> CryptoBackend<Asymmetric<Self>> {
         // pub  key must be a BabyJubJub point (two coordinates)
-        assert!(keyBits == 2 * EC_COORD_BITS, "pub  key size mismatch");
+        assert!(keyBits == 2 * Self::EC_COORD_BITS, "pub  key size mismatch");
+        Asymmetric::<Self>::new(keyBits, Self)
     }
 }
-impl Asymmetric for ElgamalBackend {
-    fn getKeyChunkSize() -> i32 {
-        KEY_CHUNK_SIZE
+impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
+    fn getKeyChunkSize(&self) -> i32 {
+        ElgamalBackend::KEY_CHUNK_SIZE
     }
 
-    fn usesDecryptionGadget() -> bool {
+    fn usesDecryptionGadget(&self) -> bool {
         // randomness is not extractable from an ElGamal ciphertext, so need a separate
         // gadget for decryption
         true
     }
 
-    fn addKey(keyName: String, keyWires: Vec<Option<WireType>>) {
+    fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>) {
         // elgamal does not require a bit-representation of the pub  key, so store it directly
         keys.put(keyName, WireArray::new(keyWires));
     }
 
     fn createEncryptionGadget(
-        plain: TypedWire,
-        keyName: String,
+        &self,
+        plain: &TypedWire,
+        keyName: &String,
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
@@ -56,9 +56,10 @@ impl Asymmetric for ElgamalBackend {
     }
 
     fn createDecryptionGadget(
-        plain: TypedWire,
+        &self,
+        plain: &TypedWire,
         cipher: Vec<Option<WireType>>,
-        pkName: String,
+        pkName: &String,
         sk: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
@@ -70,7 +71,7 @@ impl Asymmetric for ElgamalBackend {
         ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire)
     }
 
-    fn toTypedWireArray(wires: Vec<Option<WireType>>, name: String) -> Vec<TypedWire> {
+    fn toTypedWireArray(&self, wires: Vec<Option<WireType>>, name: &String) -> Vec<TypedWire> {
         let typedWires = vec![TypedWire::default(); wires.len()];
         let uint256 = ZkayType.ZkUint(256);
         for i in 0..wires.len() {
@@ -79,7 +80,7 @@ impl Asymmetric for ElgamalBackend {
         typedWires
     }
 
-    fn fromTypedWireArray(typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
+    fn fromTypedWireArray(&self, typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
         let wires = vec![None; typedWires.len()];
         let uint256 = ZkayType.ZkUint(256);
         for i in 0..typedWires.len() {
@@ -89,23 +90,24 @@ impl Asymmetric for ElgamalBackend {
         wires
     }
 
-    fn parseJubJubPoint(wire: Vec<Option<WireType>>, offset: i32) -> JubJubPoint {
+    fn parseJubJubPoint(&self, wire: Vec<Option<WireType>>, offset: i32) -> JubJubPoint {
         ZkayBabyJubJubGadget::new().JubJubPoint(wire[offset], wire[offset + 1])
     }
 
-    fn uninitZeroToIdentity(p: JubJubPoint) -> JubJubPoint {
+    fn uninitZeroToIdentity(&self, p: JubJubPoint) -> JubJubPoint {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
         let oneIfBothZero = p.x.checkNonZero().or(p.y.checkNonZero()).invAsBit();
         ZkayBabyJubJubGadget::new().JubJubPoint(p.x, p.y.add(oneIfBothZero))
     }
 }
-impl HomomorphicBackend for ElgamalBackend {
+impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn doHomomorphicOp(
-        lhs: HomomorphicInput,
+        &self,
+        lhs: &HomomorphicInput,
         op: char,
-        rhs: HomomorphicInput,
-        keyName: String,
+        rhs: &HomomorphicInput,
+        keyName: &String,
     ) -> Vec<TypedWire> {
         if (op == '+') || (op == '-') {
             // for (c1, c2) = Enc(m1, r1)
@@ -172,9 +174,10 @@ impl HomomorphicBackend for ElgamalBackend {
     }
 
     fn doHomomorphicRerand(
-        arg: Vec<TypedWire>,
-        keyName: String,
-        randomness: TypedWire,
+        &self,
+        arg: &Vec<TypedWire>,
+        keyName: &String,
+        randomness: &TypedWire,
     ) -> Vec<TypedWire> {
         let outputName = "rerand(" + arg[0].name + ")";
 

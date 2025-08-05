@@ -46,13 +46,13 @@ use crate::{
 //     getActiveCircuitGenerator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<SHA2CircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SHA2CircuitGenerator {
     inputWires: Vec<Option<WireType>>,
-    sha2Gadget: Option<Gadget<SHA256Gadget>>,
+    sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
 }
 impl SHA2CircuitGenerator {
     pub fn new(circuit_name: &str) -> CircuitGeneratorExtend<Self> {
@@ -71,8 +71,16 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
         // assuming the circuit input will be 64 bytes
         let inputWires = self.createInputWireArray(64, &None);
         // this gadget is not applying any padding.
-        let sha2Gadget =
-            SHA256Gadget::new(inputWires.clone(), 8, 64, false, false, &None, self.cg());
+        let sha2Gadget = SHA256Gadget::new(
+            inputWires.clone(),
+            8,
+            64,
+            false,
+            false,
+            &None,
+            self.cg(),
+            Base,
+        );
         let digest = sha2Gadget.getOutputWires();
         self.makeOutputArray(digest, &Some("digest".to_owned()));
 

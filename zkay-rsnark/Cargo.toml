@@ -39,3 +39,4 @@ rand_chacha={workspace = true}
 rand_pcg={workspace = true}
 rand_core={workspace = true}
 rip_shuffle={workspace = true}
+bytebuffer={workspace=true}

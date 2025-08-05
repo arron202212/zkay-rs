@@ -397,10 +397,7 @@ mod test {
                         .clone();
                 self.makeOutputArray(&ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
-                  println!(
-                    "===buildCircuit===start==elapsed== {:?} ",
-                    start.elapsed()
-                );
+                println!("===buildCircuit===start==elapsed== {:?} ", start.elapsed());
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
@@ -427,7 +424,7 @@ mod test {
                         (keyArray[i] as i64 & 0xff),
                     );
                 }
-                  println!(
+                println!(
                     "===generateSampleInput===start==elapsed== {:?} ",
                     start.elapsed()
                 );
@@ -463,10 +460,7 @@ mod test {
                     BigInteger::from((resultArray[i] as i32 + 256) % 256),
                 );
             }
-            println!(
-                    "==={b}===start==elapsed== {:?} ",
-                    start.elapsed()
-                );
+            println!("==={b}===start==elapsed== {:?} ", start.elapsed());
         }
     }
 }

@@ -49,7 +49,7 @@ use crate::{
 //     getActiveCircuitGenerator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use crate::examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget::RSASigVerificationV1_5_Gadget;
 use zkay_derive::ImplStructNameConfig;
 //a demo for RSA Signatures PKCS #1, V1.5
@@ -60,7 +60,7 @@ pub struct RSASigVerCircuitGenerator {
     inputMessage: Vec<Option<WireType>>,
     signature: Option<LongElement>,
     rsaModulus: Option<LongElement>,
-    sha2Gadget: Option<Gadget<SHA256Gadget>>,
+    sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
     rsaSigVerificationV1_5_Gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
 }
 impl RSASigVerCircuitGenerator {
@@ -90,6 +90,7 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
             true,
             &None,
             self.cg(),
+            Base,
         );
         let digest = sha2Gadget.getOutputWires();
 

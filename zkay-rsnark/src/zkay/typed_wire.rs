@@ -1,7 +1,10 @@
 use crate::circuit::auxiliary::long_element;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::long_integer_floor_div_gadget;
 use crate::examples::gadgets::math::long_integer_mod_gadget;
 
@@ -9,23 +12,25 @@ use zkay::zkay_circuit_base::negate;
 use zkay::zkay_type::*;
 
 pub struct TypedWire {
-    pub wire: WireType,
+    pub wire: &WireType,
     pub zkay_type: ZkayType,
-    pub name: String,
+    pub name: &String,
 }
 impl TypedWire {
-    pub fn new(wire: WireType, zkay_type: ZkayType, name: String, restrict: Vec<bool>) -> Self {
-        assert!(
-            wire.is_some() && zkay_type.is_some(),
-            "Arguments cannot be None"
-        );
+    pub fn new(wire: &WireType, zkay_type: ZkayType, name: &String, restrict: Vec<bool>) -> Self {
+        // assert!(
+        //     wire.is_some() && zkay_type.is_some(),
+        //     "Arguments cannot be None"
+        // );
 
-        if (restrict.len() > 0 && restrict[0]) || ZkayUtil.ZKAY_RESTRICT_EVERYTHING {
-            wire.restrictBitLength(zkay_type.bitwidth,&None);
+        if restrict.get(0).is_some_and(|&v| v) || ZkayUtil::ZKAY_RESTRICT_EVERYTHING {
+            wire.restrictBitLength(zkay_type.bitwidth, &None);
         }
-        self.wire = wire;
-        self.zkay_type = zkay_type;
-        self.name = name;
+        Self {
+            wire,
+            zkay_type,
+            name,
+        }
     }
 
     /** ARITH OPS **/
@@ -81,28 +86,32 @@ impl TypedWire {
             true,
             op.clone() + "[hi*lo]",
         )
-        .wire;
+        .wire
+        .clone();
         let loHiMul = handle_overflow(
             LhsLoHi[0].mul(RhsLoHi[1], op.clone() + "[lo*hi]"),
             Zk124,
             true,
             op.clone() + "[lo*hi]",
         )
-        .wire;
+        .wire
+        .clone();
         let hiLoPlusloHi = handle_overflow(
             hiLoMul.add(loHiMul, op.clone() + "[hi*lo + lo*hi]"),
             Zk124,
             false,
             op.clone() + "[hi*lo + lo*hi]",
         )
-        .wire;
+        .wire
+        .clone();
         ansLoHi[1] = handle_overflow(
             ansLoHi[1].add(hiLoPlusloHi, op.clone() + "[anshi + hi*lo + lo*hi]"),
             Zk124,
             false,
             op.clone() + "[anshi + hi*lo + lo*hi]",
         )
-        .wire;
+        .wire
+        .clone();
 
         let ans = WireArray::new(ansLoHi)
             .getBits(124)
@@ -119,8 +128,8 @@ impl TypedWire {
 
         // Sign handling...
         let resultSign = generator.get_zero_wire();
-        let lhsWire = self.wire;
-        let rhsWire = rhs.wire;
+        let lhsWire = self.wire.clone();
+        let rhsWire = rhs.wire.clone();
 
         if self.zkay_type.signed {
             let lhsSign = lhsWire
@@ -158,8 +167,8 @@ impl TypedWire {
 
         // Sign handling...
         let resultSign = generator.get_zero_wire();
-        let lhsWire = self.wire;
-        let rhsWire = rhs.wire;
+        let lhsWire = self.wire.clone();
+        let rhsWire = rhs.wire.clone();
 
         if self.zkay_type.signed {
             let lhsSign = lhsWire
@@ -272,12 +281,12 @@ impl TypedWire {
             TypedWire::new(isLt, ZkBool, op)
         } else {
             // Note: breaks if value > 253 bit
-            return TypedWire::new(
+            TypedWire::new(
                 self.wire
                     .isLessThan(rhs.wire, std::cmp::min(253, commonType.bitwidth), op),
                 ZkBool,
                 op,
-            );
+            )
         }
     }
 
@@ -301,12 +310,12 @@ impl TypedWire {
             TypedWire::new(isLt, ZkBool, op)
         } else {
             // Note: breaks if value > 253 bit
-            return TypedWire::new(
+            TypedWire::new(
                 self.wire
                     .isLessThanOrEqual(rhs.wire, std::cmp::min(253, commonType.bitwidth), op),
                 ZkBool,
                 op,
-            );
+            )
         }
     }
 
@@ -334,7 +343,12 @@ impl TypedWire {
         TypedWire::new(self.wire.or(rhs.wire, op), ZkBool, op)
     }
 
-    fn handle_overflow(w: WireType, targetType: ZkayType, was_mul: bool, name: String) -> TypedWire {
+    fn handle_overflow(
+        w: &WireType,
+        targetType: ZkayType,
+        was_mul: bool,
+        name: &String,
+    ) -> TypedWire {
         if targetType.bitwidth < 256 {
             // Downcast or result with overflow modulo < field prime -> modulo/mask lower bits
             let from_bits = std::cmp::min(

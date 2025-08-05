@@ -5,30 +5,43 @@ use crate::circuit::structure::wire_type::WireType;
  */
 pub struct ZkayElgamalMulGadget {
     c1: JubJubPoint,
-
     c2: JubJubPoint,
-
     scalarBits: Vec<Option<WireType>>,
-
-    e1: JubJubPoint,
-
-    e2: JubJubPoint,
+    e1: Option<JubJubPoint>,
+    e2: Option<JubJubPoint>,
 }
 impl ZkayElgamalMulGadget {
-    pub fn new(c1: JubJubPoint, c2: JubJubPoint, scalarBits: Vec<Option<WireType>>) -> Self {
-        self.c1 = c1;
-        self.c2 = c2;
-        self.scalarBits = scalarBits;
-        buildCircuit();
-    }
-
-    fn buildCircuit(&mut self) {
-        e1 = mulScalar(c1, scalarBits);
-        e2 = mulScalar(c2, scalarBits);
+    pub fn new(
+        c1: JubJubPoint,
+        c2: JubJubPoint,
+        scalarBits: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
+        let mut _self = ZkayBabyJubJubGadget::<Self>::new(
+            &None,
+            Self {
+                scalarBits,
+                c1,
+                c2,
+                e1: None,
+                e2: None,
+            },
+            generator,
+        );
+        _self.buildCircuit();
+        _self
     }
 }
-impl ZkayBabyJubJubGadget for ZkayElgamalMulGadget {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        vec![e1.x, e1.y, e2.x, e2.y]
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
+    fn buildCircuit(&mut self) {
+        let e1 = self.mulScalar(c1, self.t.t.scalarBits);
+        let e2 = self.mulScalar(c2, self.t.t.scalarBits);
+        self.t.t.outputs = vec![e1.x.clone(), e1.y.clone(), e2.x.clone(), e2.y.clone()];
+        (self.t.t.e1, self.t.t.e2) = (Some(e1), Some(e2));
+    }
+}
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.t.outputs
     }
 }

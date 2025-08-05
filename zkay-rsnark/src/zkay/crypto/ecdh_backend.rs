@@ -10,28 +10,22 @@ pub struct ECDHBackend {
 impl ECDHBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
-    pub fn new(keyBits: i32, cipherType: CipherType) -> Self {
-        //super(keyBits);
-        self.cipherType = cipherType;
+    pub fn new(keyBits: i32, cipherType: CipherType) -> CryptoBackend<Symmetric<Self>> {
+        Symmetric::<Self>::new(keyBits, Self { cipherType })
     }
 
     pub fn getKeyChunkSize() -> i32 {
         KEY_CHUNK_SIZE
     }
 }
-impl Symmetric for ECDHBackend {
+impl SymmetricConfig for CryptoBackend<Symmetric<ECDHBackend>> {
     pub fn createEncryptionGadget(
-        plain: TypedWire,
-        key: String,
+        &self,
+        plain: &TypedWire,
+        key: &String,
         ivArr: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        return ZkayCBCSymmetricEncGadget::new(
-            plain,
-            getKey(key),
-            extractIV(ivArr),
-            cipherType,
-            desc,
-        );
+        ZkayCBCSymmetricEncGadget::new(plain, getKey(key), extractIV(ivArr), cipherType, desc)
     }
 }

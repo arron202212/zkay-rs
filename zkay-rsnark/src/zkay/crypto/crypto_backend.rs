@@ -1,40 +1,44 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use zkay::*;
 enum Backend {
-    Dummy,
-    DummyHom,
-    EcdhAes,
-    EcdhChaskey,
-    Paillier,
-    Elgamal,
-    RsaOaep,
-    RsaPkcs15,
+    Dummy(CryptoBackend<Asymmetric<DummyBackend>>),
+    DummyHom(CryptoBackend<Asymmetric<DummyHomBackend>>),
+    EcdhAes(CryptoBackend<Symmetric<ECDHBackend>>),
+    EcdhChaskey(CryptoBackend<Symmetric<ECDHBackend>>),
+    Paillier(CryptoBackend<Asymmetric<PaillierBackend>>),
+    Elgamal(CryptoBackend<Asymmetric<ElgamalBackend>>),
+    RsaOaep(CryptoBackend<Asymmetric<RSABackend>>),
+    RsaPkcs15(CryptoBackend<Asymmetric<RSABackend>>),
 }
 impl Backend {
-    fn create(name: Self, keyBits: i32) -> CryptoBackend {
+    fn create(name: &str, keyBits: i32) -> Backend {
         match name {
-            Dummy => DummyBackend::new(keyBits),
-            DummyHom => DummyHomBackend::new(keyBits),
-            EcdhAes => ECDHBackend::new(keyBits, ZkayCBCSymmetricEncGadget.CipherType.AES_128),
-            EcdhChaskey => ECDHBackend::new(keyBits, ZkayCBCSymmetricEncGadget.CipherType.CHASKEY),
-            Paillier => PaillierBackend::new(keyBits),
-            Elgamal => ElgamalBackend::new(keyBits),
-            RsaOaep => RSABackend::new(keyBits, ZkayRSAEncryptionGadget.PaddingType.OAEP),
-            RsaPkcs15 => RSABackend::new(keyBits, ZkayRSAEncryptionGadget.PaddingType.PKCS_1_5),
+            "Dummy" => Backend::Dummy(DummyBackend::new(keyBits)),
+            "DummyHom" => Backend::DummyHom(DummyHomBackend::new(keyBits)),
+            "EcdhAes" => Backend::EcdhAes(ECDHBackend::new(keyBits, CipherType::AES_128)),
+            "EcdhChaskey" => Backend::EcdhChaskey(ECDHBackend::new(keyBits, CipherType::CHASKEY)),
+            "Paillier" => Backend::Paillier(PaillierBackend::new(keyBits)),
+            "Elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits)),
+            "RsaOaep" => Backend::RsaOaep(RSABackend::new(keyBits, PaddingType::OAEP)),
+            "RsaPkcs15" => Backend::RsaPkcs15(RSABackend::new(keyBits, PaddingType::PKCS_1_5)),
         }
     }
 }
 
-pub struct CryptoBackend {
+pub struct CryptoBackend<T> {
     keyBits: i32,
+    t: T,
 }
-impl CryptoBackend {
-    pub fn new(keyBits: i32) -> Self {
-        Self { keyBits }
+impl<T> CryptoBackend<T> {
+    pub fn new(keyBits: i32, t: T) -> Self {
+        Self { keyBits, t }
     }
 }
 
@@ -48,41 +52,47 @@ pub trait CryptoBackendConfig {
      */
     fn usesDecryptionGadget(&self) -> bool;
 
-    fn addKey(&self, keyName: String, keyWires: Vec<Option<WireType>>);
+    fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>);
 
     fn getKeyChunkSize(&self) -> i32;
 
     fn createEncryptionGadget(
         &self,
-        plain: TypedWire,
-        key: String,
-        random: Vec<Option<WireType>>,
+        plain: &TypedWire,
+        key: &String,
+        random: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget;
 
     fn createDecryptionGadget(
         &self,
-        plain: TypedWire,
-        cipher: Vec<Option<WireType>>,
-        pkName: String,
-        sk: Vec<Option<WireType>>,
+        plain: &TypedWire,
+        cipher: &Vec<Option<WireType>>,
+        pkName: &String,
+        sk: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget;
 }
 
-pub struct Symmetric {
-    pub Keys: HashMap<String, WireType>,
+pub struct Symmetric<T> {
+    pub publicKeys: HashMap<String, WireType>,
     sharedKeys: HashMap<String, WireType>,
-    myPk: String,
-    mySk: String,
+    myPk: &Option<WireType>,
+    mySk: &Option<WireType>,
+    t: T,
 }
-impl Symmetric {
-    pub fn new(keyBits: i32) -> Self {
-        // //super(keyBits);
-        Self {
-            Keys: HashMap::new(),
-            sharedKeys: HashMap::new(),
-        }
+impl<T> Symmetric<T> {
+    pub fn new(keyBits: i32, t: T) -> CryptoBackend<Self> {
+        CryptoBackend::new(
+            keyBits,
+            Self {
+                publicKeys: HashMap::new(),
+                sharedKeys: HashMap::new(),
+                myPk: None,
+                mySk: None,
+                t,
+            },
+        )
     }
 }
 pub trait SymmetricConfig: CryptoBackendConfig {
@@ -101,16 +111,16 @@ pub trait SymmetricConfig: CryptoBackendConfig {
 
     pub fn createDecryptionGadget(
         &self,
-        plain: TypedWire,
-        cipher: Vec<Option<WireType>>,
-        pkey: String,
-        skey: Vec<Option<WireType>>,
+        plain: &TypedWire,
+        cipher: &Vec<Option<WireType>>,
+        pkey: &String,
+        skey: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
 
-    pub fn addKey(&self, keyName: String, keyWires: Vec<Option<WireType>>) {
+    pub fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>) {
         assert!(
             keyWires.len() == 1,
             "Expected key size 1uint for symmetric keys"
@@ -118,7 +128,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         Keys.put(keyName, keyWires[0]);
     }
 
-    fn getKey(&self, keyName: String) -> WireType {
+    fn getKey(&self, keyName: &String) -> WireType {
         let key = sharedKeys.get(keyName);
         if key == None {
             key = computeKey(keyName);
@@ -127,7 +137,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         key
     }
 
-    fn computeKey(&self, keyName: String) -> WireType {
+    fn computeKey(&self, keyName: &String) -> WireType {
         assert!(
             self.myPk.is_some(),
             "setKeyPair not called on symmetric crypto backend"
@@ -154,7 +164,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         sharedKeyGadget.getOutputWires()[0]
     }
 
-    pub fn setKeyPair(&self, myPk: WireType, mySk: WireType) {
+    pub fn setKeyPair(&self, myPk: &WireType, mySk: &WireType) {
         Objects.requireNonNull(myPk);
         Objects.requireNonNull(mySk);
         assert!(self.myPk.is_none(), "Key pair already set");
@@ -168,7 +178,7 @@ pub trait SymmetricConfig: CryptoBackendConfig {
         self.mySk = mySk;
     }
 
-    fn extractIV(&self, ivCipher: Option<Vec<Option<WireType>>>) -> WireType {
+    fn extractIV(&self, ivCipher: &Option<Vec<Option<WireType>>>) -> WireType {
         assert!(
             ivCipher.some() && !ivCipher.as_ref().unwrap().is_empty(),
             "IV cipher must not be empty"
@@ -183,15 +193,22 @@ pub trait SymmetricConfig: CryptoBackendConfig {
     }
 }
 
-pub struct Asymmetric {
+pub struct Asymmetric<T> {
     keys: HashMap<String, WireArray>,
+    t: T,
 }
-impl Asymmetric {
-    pub fn new(&self, keyBits: i32) -> Self {
-        //super(keyBits);
-        keys = HashMap::new();
+impl<T> Asymmetric<T> {
+    pub fn new(&self, keyBits: i32, t: T) -> CryptoBackend<Self> {
+        CryptoBackend::new(
+            keyBits,
+            Self {
+                keys: HashMap::new(),
+                t,
+            },
+        )
     }
 }
+
 pub trait AsymmetricConfig: CryptoBackendConfig {
     pub fn isSymmetric(&self) -> bool {
         false
@@ -203,16 +220,16 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
 
     pub fn createDecryptionGadget(
         &self,
-        plain: TypedWire,
-        cipher: Vec<Option<WireType>>,
-        pkey: String,
-        skey: Vec<Option<WireType>>,
+        plain: &TypedWire,
+        cipher: &Vec<Option<WireType>>,
+        pkey: &String,
+        skey: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
         panic!("No separate decryption gadget for backend");
     }
 
-    pub fn addKey(&self, keyName: String, keyWires: Vec<Option<WireType>>) {
+    pub fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>) {
         let chunkBits = getKeyChunkSize();
         let keyArray = WireArray::new(keyWires)
             .getBits(chunkBits, keyName + "_bits")
@@ -220,12 +237,12 @@ pub trait AsymmetricConfig: CryptoBackendConfig {
         keys.put(keyName, keyArray);
     }
 
-    fn getKey(&self, keyName: String) -> LongElement {
+    fn getKey(&self, keyName: &String) -> LongElement {
         let keyArr = getKeyArray(keyName);
         LongElement::new(keyArr)
     }
 
-    fn getKeyArray(&self, keyName: String) -> WireArray {
+    fn getKeyArray(&self, keyName: &String) -> WireArray {
         let keyArr = keys.get(keyName);
         assert!(
             keyArr.is_some(),

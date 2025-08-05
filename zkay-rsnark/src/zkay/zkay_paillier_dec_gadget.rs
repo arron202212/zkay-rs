@@ -12,7 +12,7 @@ pub struct ZkayPaillierDecGadget {
     lambda: LongElement,
     mu: LongElement,
     cipher: LongElement,
-    plain: LongElement,
+    plain: Option<LongElement>,
 }
 
 impl ZkayPaillierDecGadget {
@@ -23,17 +23,28 @@ impl ZkayPaillierDecGadget {
         mu: LongElement,
         cipher: LongElement,
         desc: &Option<String>,
-    ) -> Self {
-        //super(desc);
-        self.n = n;
-        self.nBits = nBits;
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         let nSquareMaxBits = 2 * nBits;
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        self.nSquare = n.mul(n).align(maxNumChunks);
-        self.lambda = lambda;
-        self.mu = mu;
-        self.cipher = cipher;
+        let nSquare = n.mul(n).align(maxNumChunks);
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                n,
+                nSquare,
+                nBits,
+                nSquareMaxBits,
+                lambda,
+                mu,
+                cipher,
+                plain: None,
+            },
+        };
         _self.buildCircuit();
         _self
     }
@@ -42,12 +53,18 @@ impl ZkayPaillierDecGadget {
         let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
 
         // plain = L(cipher^lambda mod n^2) * mu mod n
-        let cPowLambda =
-            LongIntegerModPowGadget::new(cipher, lambda, nSquare, nSquareMinBits, -1,&Some("c^lambda".to_owned()),self.cg())
-                .getResult();
-        let lOutput =
-            LongIntegerFloorDivGadget::new(cPowLambda.sub(1), n, "(c^lambda - 1) / n")
-                .getQuotient();
+        let cPowLambda = LongIntegerModPowGadget::new(
+            cipher,
+            lambda,
+            nSquare,
+            nSquareMinBits,
+            -1,
+            &Some("c^lambda".to_owned()),
+            self.cg(),
+        )
+        .getResult();
+        let lOutput = LongIntegerFloorDivGadget::new(cPowLambda.sub(1), n, "(c^lambda - 1) / n")
+            .getQuotient();
         let timesMu = lOutput.mul(mu);
         plain = LongIntegerModGadget::new(timesMu, n, nBits, true).getRemainder();
     }

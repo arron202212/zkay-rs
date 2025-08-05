@@ -1,7 +1,7 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::wire_type::WireType;
 use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget;
 use crate::examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
 
@@ -15,38 +15,45 @@ pub enum PaddingType {
 pub struct ZkayRSAEncryptionGadget {
     paddingType: PaddingType,
     pk: LongElement,
-    plain: WireType,
+    plain: &WireType,
     rnd: Vec<Option<WireType>>,
     keyBits: i32,
-
     cipher: Vec<Option<WireType>>,
 }
 impl ZkayRSAEncryptionGadget {
     pub fn new(
-        plain: TypedWire,
+        plain: &TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
         keyBits: i32,
         paddingType: PaddingType,
         desc: &Option<String>,
-    ) -> Self {
-        //super(desc);
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        // assert!(plain, "plain");
+        // assert!(pk, "pk");
+        assert!(!rnd.is_empty(), "rnd");
+        // assert!(paddingType, "paddingType");
 
-        Objects.requireNonNull(plain, "plain");
-        Objects.requireNonNull(pk, "pk");
-        Objects.requireNonNull(rnd, "rnd");
-        Objects.requireNonNull(paddingType, "paddingType");
-
-        self.paddingType = paddingType;
-        self.plain = plain.wire;
-        self.pk = pk;
-        self.rnd = rnd;
-        self.keyBits = keyBits;
-
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                paddingType,
+                plain: plain.wire.clone(),
+                pk,
+                rnd,
+                keyBits,
+                cipher: vec![],
+            },
+        };
         _self.buildCircuit();
         _self
     }
-
+}
+impl Gadget<ZkayRSAEncryptionGadget> {
     fn buildCircuit(&mut self) {
         let plainBytes = reverseBytes(plain.getBitWires(256), 8);
 
@@ -77,7 +84,7 @@ impl ZkayRSAEncryptionGadget {
     }
 }
 impl GadgetConfig for Gadget<ZkayRSAEncryptionGadget> {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        cipher
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.cipher
     }
 }

@@ -39,6 +39,15 @@ impl Default for Util {
     }
 }
 impl Util {
+    #[inline]
+    pub fn parse_big_int(s: &str) -> BigInteger {
+        BigInteger::parse_bytes(s.as_bytes(), 10).unwrap()
+    }
+    #[inline]
+    pub fn parse_big_int_x(s: &str) -> BigInteger {
+        BigInteger::parse_bytes(s.as_bytes(), 16).unwrap()
+    }
+    #[inline]
     pub fn one() -> BigInteger {
         BigInteger::one()
     }

@@ -11,29 +11,28 @@ impl RSABackend {
     const KEY_CHUNK_SIZE: i32 = 232;
     const PKCS15_RND_CHUNK_SIZE: i32 = 224;
     const OAEP_RND_CHUNK_SIZE: i32 = 128;
-    pub fn new(keyBits: i32, padding: PaddingType) -> Self {
-        //super(keyBits);
-        self.paddingType = padding;
+    pub fn new(keyBits: i32, padding: PaddingType) -> CryptoBackend<Asymmetric<Self>> {
+        Asymmetric::<Self>::new(
+            keyBits,
+            Self {
+                paddingType: padding,
+            },
+        )
     }
 }
-impl Asymmetric for RSABackend {
-    pub fn getKeyChunkSize() -> i32 {
-        KEY_CHUNK_SIZE
+
+impl AsymmetricConfig for CryptoBackend<Asymmetric<RSABackend>> {
+    pub fn getKeyChunkSize(&self) -> i32 {
+        RSABackend::KEY_CHUNK_SIZE
     }
 
     pub fn createEncryptionGadget(
-        plain: TypedWire,
-        key: String,
+        &self,
+        plain: &TypedWire,
+        key: &String,
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        return ZkayRSAEncryptionGadget::new(
-            plain,
-            getKey(key),
-            random,
-            keyBits,
-            paddingType,
-            desc,
-        );
+        ZkayRSAEncryptionGadget::new(plain, getKey(key), random, keyBits, paddingType, desc)
     }
 }

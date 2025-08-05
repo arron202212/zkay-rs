@@ -153,7 +153,7 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                         .clone()
                         .add(&a[i].clone().unwrap().mul(b[j].as_ref().unwrap()));
                 }
-                
+
                 if i + j >= mu {
                     k = i + j - mu;
                     c[k] = c[k].clone().add(

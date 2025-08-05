@@ -69,7 +69,18 @@ impl ZkayType {
         expected
     }
 
-    pub fn toString() -> String {
-        (if signed { "s" } else { "u" }) + bitwidth
+    pub fn toString(&self) -> String {
+        format!("{}{}",)
+    }
+}
+
+impl std::fmt::Display for ZkayType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}",
+            if self.signed { "s" } else { "u" },
+            self.bitwidth
+        )
     }
 }

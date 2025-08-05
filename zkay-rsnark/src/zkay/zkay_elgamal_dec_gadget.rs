@@ -6,16 +6,12 @@ use crate::circuit::structure::wire_type::WireType;
  */
 pub struct ZkayElgamalDecGadget {
     skBits: Vec<Option<WireType>>, // little-endian randomness bits
-
     pk: JubJubPoint,
-
     c1: JubJubPoint,
-
     c2: JubJubPoint,
-
-    expectedMsg: WireType,
-
-    msgOk: WireType,
+    expectedMsg: &WireType,
+    msgOk: &Option<WireType>,
+    outputs: Vec<Option<WireType>>,
 }
 
 impl ZkayElgamalDecGadget {
@@ -24,16 +20,27 @@ impl ZkayElgamalDecGadget {
         skBits: Vec<Option<WireType>>,
         c1: JubJubPoint,
         c2: JubJubPoint,
-        expectedMsg: WireType,
-    ) -> Self {
-        self.pk = pk;
-        self.skBits = skBits;
-        self.c1 = c1;
-        self.c2 = c2;
-        self.expectedMsg = expectedMsg;
-        buildCircuit();
+        expectedMsg: &WireType,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
+        let mut _self = ZkayBabyJubJubGadget::<Self>::new(
+            &None,
+            Self {
+                skBits,
+                pk,
+                c1,
+                c2,
+                expectedMsg,
+                msgOk: None,
+                outputs: vec![],
+            },
+            generator,
+        );
+        _self.buildCircuit();
+        _self
     }
-
+}
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
     fn buildCircuit(&mut self) {
         // ensure pk and skBits form a key pair
         let pkExpected = mulScalar(getGenerator(), skBits);
@@ -49,15 +56,16 @@ impl ZkayElgamalDecGadget {
         // embed expected message and assert equality
         let expectedMsgBits = expectedMsg.getBitWires(32).asArray();
         let expectedMsgEmbedded = mulScalar(getGenerator(), expectedMsgBits);
-        self.msgOk = expectedMsgEmbedded
+        self.t.t.msgOk = expectedMsgEmbedded
             .x
             .isEqualTo(msgEmbedded.x)
             .and(expectedMsgEmbedded.y.isEqualTo(msgEmbedded.y))
             .and(keyOk);
+        self.t.t.outputs = vec![self.msgOk.clone()];
     }
 }
-impl ZkayBabyJubJubGadget for ZkayElgamalDecGadget {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        vec![self.msgOk]
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.t.outputs
     }
 }

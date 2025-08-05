@@ -146,7 +146,7 @@ impl ECDHKeyExchangeGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let generators= generator.borrow().clone();
+        let generators = generator.borrow().clone();
         let y_is_none = hY.is_none();
         let mut _self = Gadget::<Self> {
             generator,
@@ -162,7 +162,7 @@ impl ECDHKeyExchangeGadget {
                 basePoint: AffinePoint { x: baseX, y: baseY },
                 hPoint: AffinePoint { x: hX, y: hY },
                 output: vec![],
-                generators
+                generators,
             },
         };
 
@@ -222,25 +222,19 @@ impl Gadget<ECDHKeyExchangeGadget> {
     pub const SUBGROUP_ORDER: &str =
         "2736030358979909402780800718157159386074658810754251464600343418943805806723";
     fn buildCircuit(&mut self) {
-        // 
+        //
         // The reason this operates on affine coordinates is that in our
         // setting, this's slightly cheaper than the formulas in
         // https://cr.yp.to/ecdh/curve25519-20060209.pdf. Concretely, the
         // following equations save 1 multiplication gate per bit. (we consider
         // multiplications by constants cheaper in our setting, so they are not
         // counted)
-        // 
-let start = std::time::Instant::now();
+        //
+        let start = std::time::Instant::now();
         self.t.baseTable = self.preprocess(&self.t.basePoint);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.hTable = self.preprocess(&self.t.hPoint);
-    println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.outputPublicValue = self
             .mul(&self.t.basePoint, &self.t.secretBits, &self.t.baseTable)
             .x
@@ -249,19 +243,12 @@ let start = std::time::Instant::now();
             .mul(&self.t.hPoint, &self.t.secretBits, &self.t.hTable)
             .x
             .clone();
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.output = vec![
             self.t.outputPublicValue.clone(),
             self.t.sharedSecret.clone(),
         ];
-        println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
-
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
     }
 
     fn checkSecretBits(&self) {
@@ -276,54 +263,39 @@ let start = std::time::Instant::now();
             self.t.secretBits[0].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.generators.addZeroAssertion(
             self.t.secretBits[1].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.generators.addZeroAssertion(
             self.t.secretBits[2].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.generators.addOneAssertion(
             self.t.secretBits[Self::SECRET_BITWIDTH - 1]
                 .as_ref()
                 .unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         for i in 3..Self::SECRET_BITWIDTH - 1 {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            self.t.generators
+            self.t
+                .generators
                 .addBinaryAssertion(self.t.secretBits[i].as_ref().unwrap(), &None);
-               println!(
-                    "=={}={i}=start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}={i}=start==elapsed== {:?} ", line!(), start.elapsed());
         }
-
     }
 
     fn computeYCoordinates(&mut self) {
         // Easy to handle if baseX is constant, otherwise, let the prover input
         // a witness and verify some properties
-       let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         if self
             .t
             .basePoint
@@ -342,13 +314,11 @@ let start = std::time::Instant::now();
                 .unwrap()
                 .getConstant();
             self.t.basePoint.y = Some(
-                self.t.generators
+                self.t
+                    .generators
                     .createConstantWire(&Self::computeYCoordinate(x), &None),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         } else {
             self.t.basePoint.y = Some(self.t.generators.createProverWitnessWire(&None));
             // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
@@ -379,18 +349,12 @@ let start = std::time::Instant::now();
             //     }
             //     Prover
             // });
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             self.assertValidPointOnEC(
                 self.t.basePoint.x.as_ref().unwrap(),
                 self.t.basePoint.y.as_ref().unwrap(),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         }
 
         if self
@@ -411,23 +375,18 @@ let start = std::time::Instant::now();
                 .unwrap()
                 .getConstant();
             self.t.hPoint.y = Some(
-                self.t.generators
+                self.t
+                    .generators
                     .createConstantWire(&Self::computeYCoordinate(x), &None),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         } else {
             self.t.hPoint.y = Some(self.t.generators.createProverWitnessWire(&None));
             // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
             //     let x = evaluator.getWireValue(hPoint.x);
             //     evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
             // });
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             let hPoint = &self.t.hPoint;
             let prover = crate::impl_prover!(
                             eval(  hPoint: AffinePoint
@@ -453,10 +412,7 @@ let start = std::time::Instant::now();
             //         }
             //         Prover
             //     });
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             self.assertValidPointOnEC(
                 self.t.hPoint.x.as_ref().unwrap(),
                 self.t.hPoint.y.as_ref().unwrap(),
@@ -467,22 +423,13 @@ let start = std::time::Instant::now();
     // this is only called, when WireType y is provided as witness by the prover
     // (not as input to the gadget)
     fn assertValidPointOnEC(&self, x: &WireType, y: &WireType) {
-let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         let ySqr = y.clone().mul(y);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let xSqr = x.clone().mul(x);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let xCube = xSqr.clone().mul(x);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.generators.addEqualityAssertion(
             &ySqr,
             &xCube
@@ -493,10 +440,7 @@ let start = std::time::Instant::now();
                 .add(x),
             &None,
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
     }
 
     fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
@@ -504,10 +448,7 @@ let start = std::time::Instant::now();
         let mut precomputedTable: Vec<_> = (1..self.t.secretBits.len())
             .scan(p.clone(), |s, _j| Some(self.doubleAffinePoint(&s)))
             .collect();
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         precomputedTable.insert(0, p.clone());
         precomputedTable
     }
@@ -526,10 +467,7 @@ let start = std::time::Instant::now();
         let mut result = precomputedTable[secretBits.len() - 1].clone();
         for j in (0..=secretBits.len() - 2).rev() {
             let tmp = self.addAffinePoints(&result, &precomputedTable[j]);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             let isOne = &secretBits[j];
             result.x = Some(
                 result.x.clone().unwrap().add(
@@ -539,10 +477,7 @@ let start = std::time::Instant::now();
                         .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
                 ),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             result.y = Some(
                 result.y.clone().unwrap().add(
                     isOne
@@ -551,22 +486,16 @@ let start = std::time::Instant::now();
                         .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
                 ),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         }
         result
     }
 
     fn doubleAffinePoint(&self, p: &AffinePoint) -> AffinePoint {
-let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let l1 = FieldDivisionGadget::new(
             x_2.muli(3, &None)
                 .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
@@ -577,24 +506,15 @@ let start = std::time::Instant::now();
         )
         .getOutputWires()[0]
             .clone();
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let newX = l2
             .clone()
             .sub(&coeff_a)
             .sub(p.x.clone().unwrap())
             .sub(p.x.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let newY =
             p.x.as_ref()
                 .unwrap()
@@ -603,52 +523,31 @@ let start = std::time::Instant::now();
                 .sub(&l2)
                 .mul(l1.as_ref().unwrap())
                 .sub(p.y.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         AffinePoint::new(newX, newY)
     }
 
     fn addAffinePoints(&self, p1: &AffinePoint, p2: &AffinePoint) -> AffinePoint {
-let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let q = FieldDivisionGadget::new(diffY, diffX, &None, self.generator.clone())
             .getOutputWires()[0]
             .clone();
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let q2 = q.clone().unwrap().mul(q.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let q3 = q2.clone().mul(q.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let newX = q2
             .clone()
             .sub(&coeff_a)
             .sub(p1.x.as_ref().unwrap())
             .sub(p2.x.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let newY =
             p1.x.as_ref()
                 .unwrap()
@@ -658,25 +557,16 @@ let start = std::time::Instant::now();
                 .mul(q.as_ref().unwrap())
                 .sub(q3)
                 .sub(p1.y.as_ref().unwrap());
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         AffinePoint::new(newX, newY)
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         let xSqred = x.clone().mul(&x).rem(&Configs.field_prime);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let xCubed = xSqred.clone().mul(&x).rem(&Configs.field_prime);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let ySqred = xCubed
             .add(
                 BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10)
@@ -685,80 +575,53 @@ let start = std::time::Instant::now();
             )
             .add(&x)
             .rem(&Configs.field_prime);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let y = x; //IntegerFunctions.ressol(ySqred, &Configs.field_prime); //TODO 
         y
     }
 
     pub fn validateInputs(&self) {
-let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         self.t.generators.addOneAssertion(
             &self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.assertValidPointOnEC(
             self.t.basePoint.x.as_ref().unwrap(),
             self.t.basePoint.y.as_ref().unwrap(),
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
         self.t.generators.addOneAssertion(
             &self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.assertValidPointOnEC(
             self.t.hPoint.x.as_ref().unwrap(),
             self.t.hPoint.y.as_ref().unwrap(),
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.assertPointOrder(&self.t.hPoint, &self.t.hTable);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
     }
 
     fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
-let start = std::time::Instant::now();
+        let start = std::time::Instant::now();
         let subgroup_order = BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap();
         let o = self.t.generators.createConstantWire(&subgroup_order, &None);
         let bits = o
             .getBitWiresi(subgroup_order.bits(), &None)
             .asArray()
             .clone();
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let mut result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
             let tmp = self.addAffinePoints(&result, &table[j]);
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             let isOne = &bits[j];
             result.x = Some(
                 result.x.clone().unwrap().add(
@@ -768,10 +631,7 @@ let start = std::time::Instant::now();
                         .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
                 ),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
             result.y = Some(
                 result.y.clone().unwrap().add(
                     isOne
@@ -780,10 +640,7 @@ let start = std::time::Instant::now();
                         .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
                 ),
             );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         }
 
         // verify that: result = -p
@@ -792,19 +649,13 @@ let start = std::time::Instant::now();
             p.x.as_ref().unwrap(),
             &None,
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.t.generators.addEqualityAssertion(
             result.y.as_ref().unwrap(),
             &p.y.as_ref().unwrap().muli(-1, &None),
             &None,
         );
-   println!(
-                    "=={}==start==elapsed== {:?} ",line!(),
-                    start.elapsed()
-                );
+        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         // the reason the last iteration is handled separately is that the
         // addition of
         // affine points will throw an error due to not finding inverse for zero

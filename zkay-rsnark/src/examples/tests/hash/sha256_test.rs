@@ -14,7 +14,7 @@ use crate::circuit::structure::circuit_generator::{
     addToEvaluationQueue, getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use crate::util::util::{BigInteger, Util};
 use std::ops::{Add, Mul, Shl, Sub};
 use zkay_derive::ImplStructNameConfig;
@@ -50,6 +50,7 @@ mod test {
                     true,
                     &None,
                     self.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -100,6 +101,7 @@ mod test {
                     true,
                     &None,
                     self.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -156,6 +158,7 @@ mod test {
                     true,
                     &None,
                     self.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -209,6 +212,7 @@ mod test {
                     true,
                     &None,
                     self.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();
@@ -274,6 +278,7 @@ mod test {
                     true,
                     &None,
                     self.cg(),
+                    Base,
                 )
                 .getOutputWires()
                 .clone();

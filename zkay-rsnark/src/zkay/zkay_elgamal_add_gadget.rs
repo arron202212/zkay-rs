@@ -5,33 +5,48 @@ use crate::circuit::structure::wire_type::WireType;
  */
 pub struct ZkayElgamalAddGadget {
     c1: JubJubPoint,
-
     c2: JubJubPoint,
-
     d1: JubJubPoint,
-
     d2: JubJubPoint,
-
-    e1: JubJubPoint,
-
-    e2: JubJubPoint,
+    e1: Option<JubJubPoint>,
+    e2: Option<JubJubPoint>,
+    outputs: Vec<Option<WireType>>,
 }
 impl ZkayElgamalAddGadget {
-    pub fn new(c1: JubJubPoint, c2: JubJubPoint, d1: JubJubPoint, d2: JubJubPoint) -> Self {
-        self.c1 = c1;
-        self.c2 = c2;
-        self.d1 = d1;
-        self.d2 = d2;
-        buildCircuit();
-    }
-
-    fn buildCircuit(&mut self) {
-        e1 = addPoints(c1, d1);
-        e2 = addPoints(c2, d2);
+    pub fn new(
+        c1: JubJubPoint,
+        c2: JubJubPoint,
+        d1: JubJubPoint,
+        d2: JubJubPoint,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
+        let mut _self = ZkayBabyJubJubGadget::<Self>::new(
+            &None,
+            Self {
+                c1,
+                c2,
+                d1,
+                d2,
+                o1: None,
+                o2: None,
+                outputs: vec![],
+            },
+            generator,
+        );
+        _self.buildCircuit();
+        _self
     }
 }
-impl ZkayBabyJubJubGadget for ZkayElgamalAddGadget {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        vec![e1.x, e1.y, e2.x, e2.y]
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalAddGadget>> {
+    fn buildCircuit(&mut self) {
+        let e1 = self.addPoints(&self.t.t.c1, &self.t.t.d1);
+        let e2 = self.addPoints(&self.t.t.c2, &self.t.t.d2);
+        self.t.t.outputs = vec![e1.x.clone(), e1.y.clone(), e2.x.clone(), e2.y.clone()];
+        (self.t.t.e1, self.t.t.e2) = (Some(e1), Some(e2));
+    }
+}
+impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalAddGadget>> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.t.outputs
     }
 }

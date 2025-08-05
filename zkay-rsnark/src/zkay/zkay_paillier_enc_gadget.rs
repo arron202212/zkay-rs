@@ -19,21 +19,33 @@ impl ZkayPaillierEncGadget {
     pub fn new(
         n: LongElement,
         nBits: i32,
-        generator: LongElement,
+        g: LongElement,
         plain: LongElement,
         random: LongElement,
         desc: &Option<String>,
-    ) -> Self {
-        //super(desc);
-        self.n = n;
-        self.nBits = nBits;
-        self.nSquareMaxBits = 2 * nBits; // Maximum bit length of n^2
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        let nSquareMaxBits = 2 * nBits; // Maximum bit length of n^2
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        self.nSquare = n.mul(n).align(maxNumChunks);
-        self.g = generator;
-        self.plain = plain;
-        self.random = random;
+        let nSquare = n.mul(n).align(maxNumChunks);
+
+        let mut _self = Gadget::<Self> {
+            generator,
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
+            t: Self {
+                n,
+                nSquare,
+                nBits,
+                nSquareMaxBits,
+                g,
+                plain,
+                random,
+                cipher: vec![],
+            },
+        };
         _self.buildCircuit();
         _self
     }
@@ -44,16 +56,39 @@ impl ZkayPaillierEncGadget {
         let randInv = LongIntegerModInverseGadget::new(random, n, false).getResult();
         generator.addOneAssertion(randInv.checkNonZero());
         // let c = g^m * r^n mod n^2
-        let gPowPlain =
-            LongIntegerModPowGadget::new(g, plain, nBits, nSquare, nSquareMinBits,  -1,&Some("g^m".to_owned()),self.cg())
-                .getResult();
-        let randPowN =
-            LongIntegerModPowGadget::new(random, n, nBits, nSquare, nSquareMinBits, -1,&Some("r^m".to_owned()),self.cg())
-                .getResult();
+        let gPowPlain = LongIntegerModPowGadget::new(
+            g,
+            plain,
+            nBits,
+            nSquare,
+            nSquareMinBits,
+            -1,
+            &Some("g^m".to_owned()),
+            self.cg(),
+        )
+        .getResult();
+        let randPowN = LongIntegerModPowGadget::new(
+            random,
+            n,
+            nBits,
+            nSquare,
+            nSquareMinBits,
+            -1,
+            &Some("r^m".to_owned()),
+            self.cg(),
+        )
+        .getResult();
         let product = gPowPlain.mul(randPowN);
-        cipher =
-            LongIntegerModGadget::new(product, nSquare, nSquareMinBits, true,&Some ("g^m * r^n mod n^2").to_owned(),self,cg())
-                .getRemainder();
+        cipher = LongIntegerModGadget::new(
+            product,
+            nSquare,
+            nSquareMinBits,
+            true,
+            &Some("g^m * r^n mod n^2").to_owned(),
+            self,
+            cg(),
+        )
+        .getRemainder();
     }
 
     pub fn getCiphertext() -> LongElement {

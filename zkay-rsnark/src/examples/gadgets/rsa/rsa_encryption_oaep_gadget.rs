@@ -45,7 +45,7 @@ use crate::{
 // use crate::circuit::structure::wire_array;
 // use crate::circuit::structure::wire_type::WireType;
 // use crate::util::util::{BigInteger, Util};
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use crate::examples::gadgets::math::long_integer_division::LongIntegerDivision;
 use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
@@ -251,6 +251,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
                 true,
                 &None,
                 self.generator.clone(),
+                Base,
             );
             let digest = shaGadget.getOutputWires();
 

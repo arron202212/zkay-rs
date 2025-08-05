@@ -3,7 +3,7 @@ use zkay::zkay_util::unsigned_bytes_to_bigint;
 
 pub struct ChaskeyLtsCbc;
 impl ChaskeyLtsCbc {
-    fn parse(val: String, len: i32) -> Vec<byte> {
+    fn parse(val: &String, len: i32) -> Vec<u8> {
         unsignedBigintToBytes(BigInteger::new(val, 16), len)
     }
 
@@ -12,7 +12,7 @@ impl ChaskeyLtsCbc {
     const keylen: i32 = blocksize;
     const msglen: i32 = 2 * blocksize; // Must be multiple of blocksize
 
-    pub fn crypt(encrypt: bool, key: Vec<byte>, iv: Vec<byte>, input: Vec<byte>) -> Vec<byte> {
+    pub fn crypt(encrypt: bool, key: Vec<u8>, iv: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
         // Initialize chaskey cipher in cbc mode
         let chaskeyEngine = ChaskeyLTSEngine::new();
         let cbc = CBCBlockCipher::new(chaskeyEngine);

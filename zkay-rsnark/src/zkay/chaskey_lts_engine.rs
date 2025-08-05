@@ -1,3 +1,7 @@
+use bytebuffer::ByteBuffer;
+pub struct CipherParameters {
+    pub key: Vec<u8>,
+}
 pub struct ChaskeyLTSEngine {
     enc: bool,
     key: Vec<i32>,
@@ -5,11 +9,11 @@ pub struct ChaskeyLTSEngine {
 impl BlockCipher for ChaskeyLTSEngine {
     pub fn init(encrypt: bool, cipherParameters: CipherParameters) {
         assert!(
-            (cipherParameters.instance_of(KeyParameter)) && (cipherParameters).getKey().length == 16
+            cipherParameters.instance_of("KeyParameter") && cipherParameters.getKey().len() == 16
         );
 
         enc = encrypt;
-        key = vec![i32::default(); 4];
+        key = vec![0; 4];
         ByteBuffer
             .wrap((cipherParameters).getKey())
             .order(ByteOrder.LITTLE_ENDIAN)
@@ -17,7 +21,7 @@ impl BlockCipher for ChaskeyLTSEngine {
             .get(key);
     }
 
-    pub fn getAlgorithmName() -> String {
+    pub fn getAlgorithmName() -> &str {
         "chaskey_lts_128"
     }
 
@@ -25,13 +29,13 @@ impl BlockCipher for ChaskeyLTSEngine {
         16
     }
 
-    pub fn processBlock(ins: Vec<byte>, inOff: i32, out: Vec<byte>, outOff: i32) -> i32 {
-        let v = vec![i32::default(); 4];
-        ByteBuffer
-            .wrap(ins, inOff, 16)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .asIntBuffer()
-            .get(v);
+    pub fn processBlock(ins: Vec<u8>, inOff: i32, out: Vec<u8>, outOff: i32) -> i32 {
+        let mut v = vec![0; 4];
+        // ByteBuffer
+        //     .wrap(ins, inOff, 16)
+        //     .order(ByteOrder.LITTLE_ENDIAN)
+        //     .asIntBuffer()
+        //     .get(v);
 
         v[0] ^= key[0];
         v[1] ^= key[1];
@@ -41,37 +45,37 @@ impl BlockCipher for ChaskeyLTSEngine {
         if enc {
             for round in 0..16 {
                 v[0] += v[1];
-                v[1] = Integer.rotateLeft(v[1], 5) ^ v[0];
-                v[0] = Integer.rotateLeft(v[0], 16);
+                v[1] = v[1].rotate_left(5) ^ v[0];
+                v[0] = v[0].rotate_left(16);
 
                 v[2] += v[3];
-                v[3] = Integer.rotateLeft(v[3], 8);
+                v[3] = v[3].rotate_left(8);
                 v[3] ^= v[2];
 
                 v[0] += v[3];
-                v[3] = Integer.rotateLeft(v[3], 13);
+                v[3] = v[3].rotate_left(13);
                 v[3] ^= v[0];
 
                 v[2] += v[1];
-                v[1] = Integer.rotateLeft(v[1], 7) ^ v[2];
-                v[2] = Integer.rotateLeft(v[2], 16);
+                v[1] = v[1].rotate_left(7) ^ v[2];
+                v[2] = v[2].rotate_left(16);
             }
         } else {
             for round in 0..16 {
-                v[2] = Integer.rotateRight(v[2], 16);
-                v[1] = Integer.rotateRight(v[1] ^ v[2], 7);
+                v[2] = v[2].rotate_right(16);
+                v[1] = v[1] ^ v[2].rotate_right(7);
                 v[2] -= v[1];
 
                 v[3] ^= v[0];
-                v[3] = Integer.rotateRight(v[3], 13);
+                v[3] = v[3].rotate_right(13);
                 v[0] -= v[3];
 
                 v[3] ^= v[2];
-                v[3] = Integer.rotateRight(v[3], 8);
+                v[3] = v[3].rotate_right(8);
                 v[2] -= v[3];
 
-                v[0] = Integer.rotateRight(v[0], 16);
-                v[1] = Integer.rotateRight(v[1] ^ v[0], 5);
+                v[0] = v[0].rotate_right(16);
+                v[1] = v[1] ^ v[0].rotate_right(5);
                 v[0] -= v[1];
             }
         }
@@ -81,11 +85,11 @@ impl BlockCipher for ChaskeyLTSEngine {
         v[2] ^= key[2];
         v[3] ^= key[3];
 
-        ByteBuffer
-            .wrap(out, outOff, 16)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .asIntBuffer()
-            .put(v);
+        // ByteBuffer
+        //     .wrap(out, outOff, 16)
+        //     .order(ByteOrder.LITTLE_ENDIAN)
+        //     .asIntBuffer()
+        //     .put(v);
         16
     }
 

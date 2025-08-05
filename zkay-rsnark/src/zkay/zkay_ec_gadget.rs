@@ -1,12 +1,15 @@
 use crate::circuit::config::config::Configs;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::field_division_gadget;
 
 pub struct AffinePoint {
-    x: WireType,
-    y: WireType,
+    x: &WireType,
+    y: &WireType,
 }
 // impl AffinePoint {
 //     // AffinePoint(x:WireType ) {
@@ -25,10 +28,21 @@ pub struct AffinePoint {
 // }
 
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
-pub struct ZkayEcGadget;
-impl ZkayEcGadget {
-    pub fn new(desc: &Option<String>) {
-        //super(desc);
+pub struct ZkayEcGadget<T> {
+    generators: CircuitGenerator,
+    t: T,
+}
+
+impl<T> ZkayEcGadget<T> {
+    pub fn new(desc: &Option<String>, t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+        let generators = generator.borrow().clone();
+        Gadget::<Self> {
+            generator,
+            description: desc
+                .as_ref()
+                .map_or_else(|| String::new(), |d| d.to_owned()),
+            t: ZkayBabyJubJubGadget::<T> { generators, t },
+        }
     }
 
     // Note: this parameterization assumes that the underlying field has
@@ -45,7 +59,7 @@ impl ZkayEcGadget {
     // See
     // the constructor
 
-    pub const COEFF_A: BigInteger = BigInteger::new("126932"); // parameterization
+    pub const COEFF_A: BigInteger = BigInteger.parse_bytes(b"126932", 10).unwrap(); // parameterization
     // in
     // https://eprint.iacr.org/2015/1093.pdf
 
@@ -58,17 +72,17 @@ impl ZkayEcGadget {
         "2736030358979909402780800718157159386074658810754251464600343418943805806723",
     );
 
-    pub fn checkSecretBits(generator:Box<dyn CGConfig+Send+Sync>, secretBits: Vec<Option<WireType>>) {
+    pub fn checkSecretBits(generator: &CircuitGenerator, secretBits: &Vec<Option<WireType>>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
          * should be 1, and the three least significant bits should be zero.
          */
-        generator.addZeroAssertion(secretBits[0], "Asserting secret bit conditions");
-        generator.addZeroAssertion(secretBits[1], "Asserting secret bit conditions");
-        generator.addZeroAssertion(secretBits[2], "Asserting secret bit conditions");
+        generator.addZeroAssertion(&secretBits[0], "Asserting secret bit conditions");
+        generator.addZeroAssertion(&secretBits[1], "Asserting secret bit conditions");
+        generator.addZeroAssertion(&secretBits[2], "Asserting secret bit conditions");
         generator.addOneAssertion(
-            secretBits[SECRET_BITWIDTH - 1],
+            &secretBits[SECRET_BITWIDTH - 1],
             "Asserting secret bit conditions",
         );
 
@@ -76,13 +90,13 @@ impl ZkayEcGadget {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            generator.addBinaryAssertion(secretBits[i]);
+            generator.addBinaryAssertion(&secretBits[i]);
         }
     }
 
     // this is only called, when WireType y is provided as witness by the prover
     // (not as input to the gadget)
-    fn assertValidPointOnEC(x: WireType, y: WireType) {
+    fn assertValidPointOnEC(x: &WireType, y: &WireType) {
         let ySqr = y.mul(y);
         let xSqr = x.mul(x);
         let xCube = xSqr.mul(x);
@@ -175,5 +189,5 @@ impl ZkayEcGadget {
         // TODO: add more tests to check this method
     }
 }
-impl GadgetConfig for Gadget<ZkayEcGadget> {
-}
+// impl GadgetConfig for Gadget<ZkayEcGadget> {
+// }

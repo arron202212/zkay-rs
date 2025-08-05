@@ -78,8 +78,8 @@ impl Gadget<Speck128CipherGadget> {
             x = x.xorBitwise(self.t.expandedKey[i].as_ref().unwrap(), 64, &None);
             y = y.rotateLeft(64, 3, &None).xorBitwise(&x, 64, &None);
         }
-        self.t.ciphertext = vec![Some(y),Some(x)];
-   }
+        self.t.ciphertext = vec![Some(y), Some(x)];
+    }
 
     /**
      *

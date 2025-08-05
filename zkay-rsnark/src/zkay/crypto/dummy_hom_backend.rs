@@ -1,6 +1,9 @@
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{addToEvaluationQueue,CGConfig,CircuitGenerator,CircuitGeneratorExtend,getActiveCircuitGenerator};
+use crate::circuit::structure::circuit_generator::{
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+    getActiveCircuitGenerator,
+};
 use crate::circuit::structure::wire_type::WireType;
 use zkay::homomorphic_input;
 use zkay::typed_wire;
@@ -8,20 +11,24 @@ use zkay::zkay_dummy_hom_encryption_gadget;
 use zkay::zkay_type;
 
 pub struct DummyHomBackend;
-impl Asymmetric for DummyHomBackend {
+
+impl DummyHomBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
-    // fn DummyHomBackend( keyBits:i32 )->   {
-    // 	//super(keyBits);
-    // }
-
-    pub fn getKeyChunkSize() -> i32 {
-        KEY_CHUNK_SIZE
+    pub fn new(keyBits: i32) -> CryptoBackend<Asymmetric<Self>> {
+        Asymmetric::<Self>::new(keyBits, Self)
     }
 
+    pub fn getKeyChunkSize() -> i32 {
+        Self::KEY_CHUNK_SIZE
+    }
+}
+
+impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
     pub fn createEncryptionGadget(
-        plain: TypedWire,
-        key: String,
+        &self,
+        plain: &TypedWire,
+        key: &String,
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
@@ -35,7 +42,7 @@ impl Asymmetric for DummyHomBackend {
         );
     }
 
-    fn getKeyWire(keyName: String) -> WireType {
+    fn getKeyWire(&self, keyName: &String) -> WireType {
         let key = getKey(keyName);
         let mut generator = CircuitGenerator.getActiveCircuitGenerator();
 
@@ -46,7 +53,7 @@ impl Asymmetric for DummyHomBackend {
         keyArr[0]
     }
 
-    fn getCipherWire(input: HomomorphicInput, name: String) -> WireType {
+    fn getCipherWire(&self, input: &HomomorphicInput, name: &String) -> WireType {
         assert!(input.is_some(), "{name} is None");
         assert!(!input.isPlain(), "{name} is not a ciphertext");
         assert!(input.getLength() == 1, "{name} has invalid length");
@@ -57,7 +64,7 @@ impl Asymmetric for DummyHomBackend {
         cipherWire.sub(isNonZero)
     }
 
-    fn encodePlaintextIfSigned(plain: TypedWire) -> WireType {
+    fn encodePlaintextIfSigned(&self, plain: TypedWire) -> WireType {
         if plain.zkay_type.signed {
             // Signed: wrap negative values around the field prime instead of around 2^n
             let bits = plain.zkay_type.bitwidth;
@@ -70,14 +77,19 @@ impl Asymmetric for DummyHomBackend {
         }
     }
 
-    fn typedAsUint(wire: WireType, name: String) -> Vec<TypedWire> {
+    fn typedAsUint(&self, wire: &WireType, name: &String) -> Vec<TypedWire> {
         // Always zkay_type cipher wires as ZkUint(256)
         vec![TypedWire::new(wire.add(1), ZkayType.ZkUint(256), name)]
     }
 }
 
-impl HomomorphicBackend for DummyHomBackend {
-    pub fn doHomomorphicOp(op: char, arg: HomomorphicInput, keyName: String) -> Vec<TypedWire> {
+impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
+    pub fn doHomomorphicOp(
+        &self,
+        op: char,
+        arg: &HomomorphicInput,
+        keyName: &String,
+    ) -> Vec<TypedWire> {
         let cipher = getCipherWire(arg, "arg");
 
         if op == '-' {
@@ -90,10 +102,11 @@ impl HomomorphicBackend for DummyHomBackend {
     }
 
     pub fn doHomomorphicOp(
-        lhs: HomomorphicInput,
+        &self,
+        lhs: &HomomorphicInput,
         op: char,
-        rhs: HomomorphicInput,
-        keyName: String,
+        rhs: &HomomorphicInput,
+        keyName: &String,
     ) -> Vec<TypedWire> {
         match op {
             '+' => {
@@ -135,9 +148,10 @@ impl HomomorphicBackend for DummyHomBackend {
     }
 
     pub fn doHomomorphicRerand(
-        arg: Vec<TypedWire>,
-        keyName: String,
-        randomness: TypedWire,
+        &self,
+        arg: &Vec<TypedWire>,
+        keyName: &String,
+        randomness: &TypedWire,
     ) -> Vec<TypedWire> {
         arg
     }

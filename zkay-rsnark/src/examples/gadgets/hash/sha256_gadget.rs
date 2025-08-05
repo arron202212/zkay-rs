@@ -21,8 +21,9 @@ use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
+pub struct Base;
 #[derive(Debug, Clone, Hash, PartialEq)]
-pub struct SHA256Gadget {
+pub struct SHA256Gadget<T> {
     unpaddedInputs: Vec<Option<WireType>>,
     bitWidthPerInputElement: usize,
     totalLengthInBytes: usize,
@@ -31,8 +32,9 @@ pub struct SHA256Gadget {
     paddingRequired: bool,
     preparedInputBits: Vec<Option<WireType>>,
     output: Vec<Option<WireType>>,
+    t: T,
 }
-impl SHA256Gadget {
+impl<T> SHA256Gadget<T> {
     pub fn new(
         ins: Vec<Option<WireType>>,
         bitWidthPerInputElement: usize,
@@ -41,11 +43,16 @@ impl SHA256Gadget {
         paddingRequired: bool,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
+        t: T,
     ) -> Gadget<Self> {
         assert!(
             totalLengthInBytes * 8 <= ins.len() * bitWidthPerInputElement
-                && totalLengthInBytes * 8 >= (ins.len().saturating_sub(1)) * bitWidthPerInputElement,
-            "Inconsistent Length Information {},{},{}",totalLengthInBytes,ins.len(),bitWidthPerInputElement
+                && totalLengthInBytes * 8
+                    >= (ins.len().saturating_sub(1)) * bitWidthPerInputElement,
+            "Inconsistent Length Information {},{},{}",
+            totalLengthInBytes,
+            ins.len(),
+            bitWidthPerInputElement
         );
 
         assert!(
@@ -68,13 +75,14 @@ impl SHA256Gadget {
                 paddingRequired,
                 preparedInputBits: vec![],
                 output: vec![],
+                t,
             },
         };
         _self.buildCircuit();
         _self
     }
 }
-impl Gadget<SHA256Gadget> {
+impl<T> Gadget<SHA256Gadget<T>> {
     const H: [i64; 8] = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,
@@ -330,7 +338,7 @@ impl Gadget<SHA256Gadget> {
         }
     }
 }
-impl GadgetConfig for Gadget<SHA256Gadget> {
+impl GadgetConfig for Gadget<SHA256Gadget<Base>> {
     /**
      * outputs digest as 32-bit words
      */
