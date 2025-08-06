@@ -1,5 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 /**
  * Gadget homomorphically re-randomizing an ElGamal encrypted ciphertext.
  */
@@ -40,13 +54,13 @@ impl ZkayElgamalRerandGadget {
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalRerandGadget>> {
     fn buildCircuit(&mut self) {
         // create encryption of zero (z1, z2)
-        let sharedSecret = self.mulScalar(pk, self.t.t.randomnessBits);
+        let sharedSecret = self.mulScalar(self.t.t.pk, self.t.t.randomnessBits);
         let z1 = self.mulScalar(self.getGenerator(), self.t.t.randomnessBits);
         let z2 = sharedSecret;
 
         // add encryption of zero to re-randomize
-        let o1 = addPoints(c1, z1);
-        let o2 = addPoints(c2, z2);
+        let o1 = self.addPoints(&self.t.t.c1, &z1);
+        let o2 = self.addPoints(&self.t.t.c2, &z2);
         self.t.t.outputs = vec![o1.x.clone(), o1.y.clone(), o2.x.clone(), o2.y.clone()];
         (self.t.t.o1, self.t.t.o2) = (o1, o2);
     }

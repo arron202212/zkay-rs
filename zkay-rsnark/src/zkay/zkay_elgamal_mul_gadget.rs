@@ -1,5 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 /**
  * Gadget for homomorphically multiplying an ElGamal ciphertext (c1, c2) by a plaintext scalar
  */
@@ -32,7 +46,7 @@ impl ZkayElgamalMulGadget {
         _self
     }
 }
-impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
+impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
     fn buildCircuit(&mut self) {
         let e1 = self.mulScalar(c1, self.t.t.scalarBits);
         let e2 = self.mulScalar(c2, self.t.t.scalarBits);

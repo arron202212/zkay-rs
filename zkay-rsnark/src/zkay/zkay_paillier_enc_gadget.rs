@@ -1,9 +1,26 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::long_integer_mod_gadget;
 use crate::examples::gadgets::math::long_integer_mod_inverse_gadget;
 use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use crate::zkay::zkay_paillier_dec_gadget::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
+use crate::zkay::zkay_paillier_enc_gadget::long_integer_mod_gadget::LongIntegerModGadget;
+use crate::zkay::zkay_paillier_enc_gadget::long_integer_mod_inverse_gadget::LongIntegerModInverseGadget;
+use rccell::RcCell;
 
 pub struct ZkayPaillierEncGadget {
     n: LongElement,
@@ -13,7 +30,7 @@ pub struct ZkayPaillierEncGadget {
     g: LongElement,
     plain: LongElement,
     random: LongElement,
-    cipher: LongElement,
+    cipher: Option<LongElement>,
 }
 impl ZkayPaillierEncGadget {
     pub fn new(
@@ -43,60 +60,63 @@ impl ZkayPaillierEncGadget {
                 g,
                 plain,
                 random,
-                cipher: vec![],
+                cipher: None,
             },
         };
         _self.buildCircuit();
         _self
     }
-
+}
+impl Gadget<ZkayPaillierEncGadget> {
     fn buildCircuit(&mut self) {
-        let nSquareMinBits = 2 * nBits - 1; // Minimum bit length of n^2
+        let nSquareMinBits = 2 * self.nBits - 1; // Minimum bit length of n^2
         // Prove that random is in Z_n* by checking that random has an inverse mod n
-        let randInv = LongIntegerModInverseGadget::new(random, n, false).getResult();
-        generator.addOneAssertion(randInv.checkNonZero());
+        let randInv = LongIntegerModInverseGadget::new(self.random, self.n, false).getResult();
+        self.generator.addOneAssertion(randInv.checkNonZero());
         // let c = g^m * r^n mod n^2
         let gPowPlain = LongIntegerModPowGadget::new(
-            g,
-            plain,
-            nBits,
-            nSquare,
-            nSquareMinBits,
+            self.t.g,
+            self.t.plain,
+            self.t.nBits,
+            self.t.nSquare,
+            self.t.nSquareMinBits,
             -1,
             &Some("g^m".to_owned()),
             self.cg(),
         )
         .getResult();
         let randPowN = LongIntegerModPowGadget::new(
-            random,
-            n,
-            nBits,
-            nSquare,
-            nSquareMinBits,
+            self.t.random,
+            self.t.n,
+            self.t.nBits,
+            self.t.nSquare,
+            self.t.nSquareMinBits,
             -1,
             &Some("r^m".to_owned()),
             self.cg(),
         )
         .getResult();
         let product = gPowPlain.mul(randPowN);
-        cipher = LongIntegerModGadget::new(
-            product,
-            nSquare,
-            nSquareMinBits,
-            true,
-            &Some("g^m * r^n mod n^2").to_owned(),
-            self,
-            cg(),
-        )
-        .getRemainder();
+        self.t.cipher = Some(
+            LongIntegerModGadget::new(
+                product,
+                self.t.nSquare,
+                self.t.nSquareMinBits,
+                true,
+                &Some("g^m * r^n mod n^2").to_owned(),
+                self.cg(),
+            )
+            .getRemainder()
+            .clone(),
+        );
     }
 
-    pub fn getCiphertext() -> LongElement {
-        cipher
+    pub fn getCiphertext(&self) -> &LongElement {
+        &self.t.cipher
     }
 }
 impl GadgetConfig for Gadget<ZkayPaillierEncGadget> {
-    fn getOutputWires() -> Vec<Option<WireType>> {
-        cipher.getArray()
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        self.t.cipher.getArray()
     }
 }

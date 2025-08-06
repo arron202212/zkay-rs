@@ -1,5 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 
 /**
  * Dummy encryption gadget whose ciphertext is additively homomorphic.
@@ -12,17 +26,18 @@ use crate::circuit::structure::wire_type::WireType;
  *                        = Enc(m1 + m2, p)
  */
 pub struct ZkayDummyHomEncryptionGadget {
-    pk: &WireType,
-    plain: &WireType,
+    pk: WireType,
+    plain: WireType,
     cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyHomEncryptionGadget {
     pub fn new(
-        plain: &WireType,
-        pk: &WireType,
+        plain: WireType,
+        pk: WireType,
         rnd: Vec<Option<WireType>>,
         keyBits: i32,
         desc: &Option<String>,
+        generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         // assert!(plain, "plain");
         // assert!(pk, "pk");
@@ -47,7 +62,10 @@ impl ZkayDummyHomEncryptionGadget {
 
 impl Gadget<ZkayDummyHomEncryptionGadget> {
     fn buildCircuit(&mut self) {
-        self.t.cipher[0] = plain.mul(pk, "plain * pk").add(1);
+        self.t.cipher[0] = self
+            .plain
+            .mul(&self.pk, &Some("plain * pk".to_owned()))
+            .add(1);
     }
 }
 

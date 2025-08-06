@@ -1,18 +1,26 @@
-use zkay::zkay_util::unsigned_bigint_to_bytes;
-use zkay::zkay_util::unsigned_bytes_to_bigint;
-
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::util::util::BigInteger;
+use crate::zkay::chaskey_lts_engine::ChaskeyLTSEngine;
+use crate::zkay::zkay_util::ZkayUtil;
 pub struct ChaskeyLtsCbc;
 impl ChaskeyLtsCbc {
     fn parse(val: &String, len: i32) -> Vec<u8> {
-        unsignedBigintToBytes(BigInteger::new(val, 16), len)
+        ZkayUtil::unsignedBigintToBytes(BigInteger::parse_bytes(val.as_bytes(), 16).unwrap(), len)
     }
 
     const blocksize: i32 = 16;
-    const ivlen: i32 = blocksize;
-    const keylen: i32 = blocksize;
-    const msglen: i32 = 2 * blocksize; // Must be multiple of blocksize
+    const ivlen: i32 = Self::blocksize;
+    const keylen: i32 = Self::blocksize;
+    const msglen: i32 = 2 * Self::blocksize; // Must be multiple of blocksize
 
-    pub fn crypt(encrypt: bool, key: Vec<u8>, iv: Vec<u8>, input: Vec<u8>) -> Vec<u8> {
+    pub fn crypt(encrypt: bool, key: &Vec<u8>, iv: &Vec<u8>, input: &Vec<u8>) -> Vec<u8> {
         // Initialize chaskey cipher in cbc mode
         let chaskeyEngine = ChaskeyLTSEngine::new();
         let cbc = CBCBlockCipher::new(chaskeyEngine);
@@ -47,12 +55,12 @@ pub fn main(args: Vec<String>) {
     );
     let enc = args[0] == "enc";
 
-    let key = parse(args[1], keylen);
-    let iv = parse(args[2], ivlen);
-    let input = parse(args[3], msglen);
+    let key = ChaskeyLtsCbc::parse(&args[1], ChaskeyLtsCbc::keylen);
+    let iv = ChaskeyLtsCbc::parse(&args[2], ChaskeyLtsCbc::ivlen);
+    let input = ChaskeyLtsCbc::parse(&args[3], ChaskeyLtsCbc::msglen);
 
     // Perform encryption/decryption
-    let output = crypt(enc, key, iv, input);
+    let output = ChaskeyLtsCbc::crypt(enc, &key, &iv, &input);
 
     // Output result
     //println!(unsignedBytesToBigInt(output).toString(16));

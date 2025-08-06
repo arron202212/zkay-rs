@@ -1,6 +1,20 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_ec_gadget::AffinePoint;
+use crate::zkay::zkay_ec_gadget::ZkayEcGadget;
+use rccell::RcCell;
 /**
  * Pk derivation part of jsnark's ECDHKeyExchangeGadget
  */
@@ -13,10 +27,10 @@ pub struct ZkayEcPkDerivationGadget {
     // (follows little-endian order)
 
     // gadget output
-    outputPublicValue: &Option<WireType>, // the x-coordinate of the key exchange
-                                          // material to be sent to the other party
-                                          // outputPublicValue = ((this party's
-                                          // secret)*Base).x
+    outputPublicValue: Option<WireType>, // the x-coordinate of the key exchange
+                                         // material to be sent to the other party
+                                         // outputPublicValue = ((this party's
+                                         // secret)*Base).x
 }
 
 impl ZkayEcPkDerivationGadget {
@@ -29,7 +43,9 @@ impl ZkayEcPkDerivationGadget {
         let mut _self = ZkayEcGadget::<Self>::new(
             desc,
             Self {
-                secretBits: secretKey.getBitWires(SECRET_BITWIDTH).asArray(),
+                secretBits: secretKey
+                    .getBitWires(ZkayEcGadget::<Self>::SECRET_BITWIDTH)
+                    .asArray(),
                 basePoint: AffinePoint::new(generator.createConstantWire(4)),
                 outputPublicValue: None,
             },
@@ -37,7 +53,7 @@ impl ZkayEcPkDerivationGadget {
         );
         // Hardcode base point
         if validateSecret {
-            _self.checkSecretBits(generator, secretBits);
+            _self.checkSecretBits(generator, &_self.secretBits);
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
@@ -55,9 +71,11 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
         self.t.t.outputPublicValue = Some(outputPublicValue);
     }
 
-    fn computeYCoordinates(&self) {
-        let x = (basePoint.x).getConstant();
-        basePoint.y = generator.createConstantWire(computeYCoordinate(x));
+    fn computeYCoordinates(&mut self) {
+        let x = self.t.t.basePoint.x.getConstant();
+        self.t.t.basePoint.y = self
+            .generator
+            .createConstantWire(ZkayEcGadget::<ZkayEcPkDerivationGadget>::computeYCoordinate(x));
     }
 }
 impl GadgetConfig for Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {

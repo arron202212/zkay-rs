@@ -1,14 +1,37 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::long_integer_mod_gadget;
 use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
-use crate::examples::gadgets::math::longIntegerModInverseGadget;
-use zkay::HomomorphicInput;
-use zkay::typed_wire;
-use zkay::zkay_paillier_fast_enc_gadget;
-use zkay::zkay_type;
+// use crate::examples::gadgets::math::long_integer_mod_inverse_gadget::longIntegerModInverseGadget;
+use crate::circuit::operations::gadget::Gadget;
+use crate::examples::gadgets::math::long_integer_mod_inverse_gadget::LongIntegerModInverseGadget;
+use crate::zkay::crypto::crypto_backend::Asymmetric;
+use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+use crate::zkay::crypto::crypto_backend::CryptoBackend;
+use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::elgamal_backend::wire_array::WireArray;
+use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
+use crate::zkay::crypto::paillier_backend::long_element::LongElement;
+use crate::zkay::crypto::paillier_backend::long_integer_mod_gadget::LongIntegerModGadget;
+use crate::zkay::crypto::paillier_backend::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::typed_wire;
+use crate::zkay::typed_wire::TypedWire;
+use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
+use crate::zkay::zkay_paillier_fast_enc_gadget;
+use crate::zkay::zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget;
+use crate::zkay::zkay_type;
+use crate::zkay::zkay_type::ZkayType;
 
 pub struct PaillierBackend {
     minNumCipherChunks: i32,
@@ -28,8 +51,9 @@ impl PaillierBackend {
 
         // //super(keyBits); // keyBits = bits of n
         assert!(
-            keyBits > CHUNK_SIZE,
-            "Key size too small ( {keyBits}  <  {CHUNK_SIZE}  bits)"
+            keyBits > Self::CHUNK_SIZE,
+            "Key size too small ( {keyBits}  <  {}  bits)",
+            Self::CHUNK_SIZE
         );
 
         // n^2 has either length (2 * keyBits - 1) or (2 * keyBits) bits
@@ -39,19 +63,19 @@ impl PaillierBackend {
         Asymmetric::<Self>::new(
             keyBits,
             Self {
-                minNumCipherChunks: (minNSquareBits + CHUNK_SIZE - 1) / CHUNK_SIZE,
-                maxNumCipherChunks: (minNSquareBits + CHUNK_SIZE) / CHUNK_SIZE,
+                minNumCipherChunks: (minNSquareBits + Self::CHUNK_SIZE - 1) / Self::CHUNK_SIZE,
+                maxNumCipherChunks: (minNSquareBits + Self::CHUNK_SIZE) / Self::CHUNK_SIZE,
             },
         )
     }
 }
 
-impl AsymmetricConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
-    pub fn getKeyChunkSize(&self) -> i32 {
+impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
+    fn getKeyChunkSize(&self) -> i32 {
         PaillierBackend::CHUNK_SIZE
     }
 
-    pub fn createEncryptionGadget(
+    fn createEncryptionGadget(
         &self,
         plain: &TypedWire,
         keyName: &String,
@@ -62,15 +86,15 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
         let encodedPlain = encodeSignedToModN(plain, key);
         let randArr = LongElement::new(
             WireArray::new(randomWires)
-                .getBits(CHUNK_SIZE)
-                .adjustLength(keyBits),
+                .getBits(PaillierBackend::CHUNK_SIZE)
+                .adjustLength(self.keyBits),
         );
         let random = uninitZeroToOne(randArr); // Also replace randomness 0 with 1 (for uninit ciphers)
-        ZkayPaillierFastEncGadget::new(key, keyBits, encodedPlain, random, desc)
+        ZkayPaillierFastEncGadget::new(key, self.keyBits, encodedPlain, random, desc)
     }
 }
 impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
-    pub fn doHomomorphicOp(
+    fn doHomomorphicOpu(
         &self,
         op: char,
         arg: &HomomorphicInput,
@@ -90,7 +114,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
         }
     }
 
-    pub fn doHomomorphicOp(
+    fn doHomomorphicOp(
         &self,
         lhs: &HomomorphicInput,
         op: char,
@@ -164,10 +188,11 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
             _ => panic!("Binary operation  {op} not supported"),
         }
     }
-
+}
+impl CryptoBackend<Asymmetric<PaillierBackend>> {
     fn getNSquare(&self, keyName: &String) -> LongElement {
         let n = getKey(keyName);
-        let nSquareMaxBits = 2 * keyBits; // Maximum bit length of n^2
+        let nSquareMaxBits = 2 * self.keyBits; // Maximum bit length of n^2
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         n.mul(n).align(maxNumChunks)
@@ -182,7 +207,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
         return LongIntegerModGadget::new(
             lhs.mul(rhs),
             nSquare,
-            2 * keyBits,
+            2 * self.keyBits,
             true,
             "Paillier addition",
         )
@@ -201,7 +226,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
             rhs,
             rhsBits,
             nSquare,
-            2 * keyBits,
+            2 * self.keyBits,
             "Paillier multiplication",
         )
         .getResult();
@@ -214,15 +239,16 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
         );
         let cipher = input.getCipher();
         assert!(
-            cipher.len() >= minNumCipherChunks && cipher.len() <= maxNumCipherChunks,
+            cipher.len() >= self.t.t.minNumCipherChunks
+                && cipher.len() <= self.t.t.maxNumCipherChunks,
             "Ciphertext has invalid length {}",
             cipher.len()
         );
 
         // Ciphertext inputs seem to be passed as ZkUint(256); sanity check to make sure we got that.
-        let uint256 = ZkayType.ZkUint(256);
+        let uint256 = ZkayType::ZkUint(256);
         for cipherWire in cipher {
-            ZkayType.checkType(uint256, cipherWire.zkay_type);
+            ZkayType::checkType(uint256, cipherWire.zkay_type);
         }
 
         // Input is a Paillier ciphertext - front-end must already check that this is the
@@ -230,8 +256,9 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
         for i in 0..cipher.len() {
             wires[i] = cipher[i].wire;
         }
-        let mut bitWidths = vec![CHUNK_SIZE; wires.len()];
-        bitWidths[bitWidths.len() - 1] = 2 * keyBits - (bitWidths.len() - 1) * CHUNK_SIZE;
+        let mut bitWidths = vec![PaillierBackend::CHUNK_SIZE; wires.len()];
+        bitWidths[bitWidths.len() - 1] =
+            2 * self.keyBits - (bitWidths.len() - 1) * PaillierBackend::CHUNK_SIZE;
 
         // Cipher could still be uninitialized-zero, which we need to fix
         uninitZeroToOne(LongElement::new(wires, bitWidths))
@@ -240,21 +267,21 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
     fn toWireArray(&self, value: LongElement, name: &String) -> Vec<TypedWire> {
         // First, sanity check that the result has at most maxNumCipherChunks wires of at most CHUNK_SIZE bits each
         assert!(
-            value.getSize() <= maxNumCipherChunks,
+            value.getSize() <= self.t.t.maxNumCipherChunks,
             "Paillier output contains too many wires"
         );
         assert!(
             value
                 .getCurrentBitwidth()
                 .iter()
-                .all(|bitWidth| bitWidth <= CHUNK_SIZE),
+                .all(|bitWidth| bitWidth <= PaillierBackend::CHUNK_SIZE),
             "Paillier output cipher bit width too large"
         );
 
         // If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as ZkUint(256).
         let wires = value.getArray();
         let typedWires = vec![TypedWire::default(); wires.len()];
-        let uint256 = ZkayType.ZkUint(256);
+        let uint256 = ZkayType::ZkUint(256);
         for i in 0..wires.len() {
             typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }

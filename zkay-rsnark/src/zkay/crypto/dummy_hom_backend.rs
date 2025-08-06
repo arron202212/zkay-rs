@@ -1,14 +1,33 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use zkay::homomorphic_input;
-use zkay::typed_wire;
-use zkay::zkay_dummy_hom_encryption_gadget;
-use zkay::zkay_type;
+use crate::zkay::crypto::crypto_backend::Asymmetric;
+use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+use crate::zkay::crypto::crypto_backend::CryptoBackend;
+use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
+use crate::zkay::homomorphic_input;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::typed_wire;
+use crate::zkay::typed_wire::TypedWire;
+use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
+use crate::zkay::zkay_dummy_hom_encryption_gadget;
+use crate::zkay::zkay_dummy_hom_encryption_gadget::ZkayDummyHomEncryptionGadget;
+use crate::zkay::zkay_type;
+use crate::zkay::zkay_type::ZkayType;
 
 pub struct DummyHomBackend;
 
@@ -24,27 +43,28 @@ impl DummyHomBackend {
     }
 }
 
-impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
-    pub fn createEncryptionGadget(
+impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
+    fn createEncryptionGadget(
         &self,
         plain: &TypedWire,
         key: &String,
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        let encodedPlain = encodePlaintextIfSigned(plain);
+        let encodedPlain = self.encodePlaintextIfSigned(plain);
         return ZkayDummyHomEncryptionGadget::new(
             encodedPlain,
-            getKeyWire(key),
+            self.getKeyWire(key),
             random,
-            keyBits,
+            self.keyBits.clone(),
             desc,
         );
     }
-
+}
+impl CryptoBackend<Asymmetric<DummyHomBackend>> {
     fn getKeyWire(&self, keyName: &String) -> WireType {
         let key = getKey(keyName);
-        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
+        let mut generator = self.generators();
 
         let keyArr = key.getBits().packBitsIntoWords(256);
         for i in 1..keyArr.len() {
@@ -79,29 +99,26 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
 
     fn typedAsUint(&self, wire: &WireType, name: &String) -> Vec<TypedWire> {
         // Always zkay_type cipher wires as ZkUint(256)
-        vec![TypedWire::new(wire.add(1), ZkayType.ZkUint(256), name)]
+        vec![TypedWire::new(wire.add(1), ZkayType::ZkUint(256), name)]
     }
 }
 
 impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
-    pub fn doHomomorphicOp(
+    fn doHomomorphicOpu(
         &self,
         op: char,
         arg: &HomomorphicInput,
         keyName: &String,
     ) -> Vec<TypedWire> {
-        let cipher = getCipherWire(arg, "arg");
+        let cipher = self.getCipherWire(arg, "arg");
+        assert!(op == '-', "Unary operation {op} not supported");
 
-        if op == '-' {
-            let p = Enc(-msg, p);
-            let minus = cipher.neg();
-            typedAsUint(minus, "-(" + arg.getName() + ")")
-        } else {
-            panic!("Unary operation " + op + " not supported");
-        }
+        // -Enc(msg, p) = -(msg * p) = (-msg) * p = Enc(-msg, p)
+        let minus = cipher.neg();
+        self.typedAsUint(minus, &format!("-({})", arg.getName()))
     }
 
-    pub fn doHomomorphicOp(
+    fn doHomomorphicOp(
         &self,
         lhs: &HomomorphicInput,
         op: char,
@@ -111,43 +128,43 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
         match op {
             '+' => {
                 // Enc(m1, p) + Enc(m2, p) = (m1 * p) + (m2 * p) = (m1 + m2) * p = Enc(m1 + m2, p)
-                let l = getCipherWire(lhs, "lhs");
-                let r = getCipherWire(rhs, "rhs");
+                let l = self.getCipherWire(lhs, &"lhs".to_owned());
+                let r = self.getCipherWire(rhs, &"rhs".to_owned());
                 let sum = l.add(r);
-                typedAsUint(sum, "(" + lhs.getName() + ") + (" + rhs.getName() + ")")
+                self.typedAsUint(sum, &format!("({}) + ({})", lhs.getName(), rhs.getName()))
             }
             '-' => {
                 // Enc(m1, p) - Enc(m2, p) = (m1 * p) - (m2 * p) = (m1 - m2) * p = Enc(m1 - m2, p)
-                let l = getCipherWire(lhs, "lhs");
-                let r = getCipherWire(rhs, "rhs");
+                let l = self.getCipherWire(lhs, &"lhs".to_owned());
+                let r = self.getCipherWire(rhs, &"rhs".to_owned());
                 let diff = l.sub(r);
-                typedAsUint(diff, "(" + lhs.getName() + ") - (" + rhs.getName() + ")")
+                self.typedAsUint(diff, &format!("({}) - ({})", lhs.getName(), rhs.getName()))
             }
             '*' => {
                 // Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
-                let plain;
-                let cipher;
+                let mut plain;
+                let mut cipher;
                 assert!(lhs.is_some(), "lhs is None");
                 assert!(rhs.is_some(), "rhs is None");
                 if lhs.isPlain() && rhs.isCipher() {
-                    plain = encodePlaintextIfSigned(lhs.getPlain());
-                    cipher = getCipherWire(rhs, "rhs");
+                    plain = self.encodePlaintextIfSigned(lhs.getPlain());
+                    cipher = self.getCipherWire(rhs, &"rhs".to_owned());
                 } else if lhs.isCipher() && rhs.isPlain() {
-                    cipher = getCipherWire(lhs, "lhs");
-                    plain = encodePlaintextIfSigned(rhs.getPlain());
+                    cipher = self.getCipherWire(lhs, &"lhs".to_owned());
+                    plain = self.encodePlaintextIfSigned(rhs.getPlain());
                 } else {
                     panic!("DummyHom multiplication requires exactly 1 plaintext argument");
                 }
 
                 // Enc(m1, p) * m2 = (m1 * p) * m2 = (m1 * m2) * p = Enc(m1 * m2, p)
                 let prod = cipher.mul(plain);
-                typedAsUint(prod, "(" + lhs.getName() + ") - (" + rhs.getName() + ")")
+                self.typedAsUint(prod, &format!("({}) - ({})", lhs.getName(), rhs.getName()))
             }
             _ => panic!("Binary operation {op} not supported"),
         }
     }
 
-    pub fn doHomomorphicRerand(
+    fn doHomomorphicRerand(
         &self,
         arg: &Vec<TypedWire>,
         keyName: &String,

@@ -1,8 +1,26 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_type::WireType;
-use zkay::typed_wire;
-use zkay::zkay_rsa_encryption_gadget;
-
+use crate::zkay::crypto::crypto_backend::Asymmetric;
+use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+use crate::zkay::crypto::crypto_backend::CryptoBackend;
+use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::elgamal_backend::wire_array::WireArray;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::typed_wire;
+use crate::zkay::typed_wire::TypedWire;
+use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
+use crate::zkay::zkay_rsa_encryption_gadget;
+use crate::zkay::zkay_rsa_encryption_gadget::PaddingType;
+use crate::zkay::zkay_rsa_encryption_gadget::ZkayRSAEncryptionGadget;
 pub struct RSABackend {
     paddingType: PaddingType,
 }
@@ -21,18 +39,25 @@ impl RSABackend {
     }
 }
 
-impl AsymmetricConfig for CryptoBackend<Asymmetric<RSABackend>> {
-    pub fn getKeyChunkSize(&self) -> i32 {
+impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
+    fn getKeyChunkSize(&self) -> i32 {
         RSABackend::KEY_CHUNK_SIZE
     }
 
-    pub fn createEncryptionGadget(
+    fn createEncryptionGadget(
         &self,
         plain: &TypedWire,
         key: &String,
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        ZkayRSAEncryptionGadget::new(plain, getKey(key), random, keyBits, paddingType, desc)
+        ZkayRSAEncryptionGadget::new(
+            plain,
+            self.getKey(key),
+            random,
+            self.keyBits,
+            self.paddingType,
+            desc,
+        )
     }
 }

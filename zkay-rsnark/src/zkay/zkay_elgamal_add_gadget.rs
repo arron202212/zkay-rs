@@ -1,5 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 /**
  * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
  */
@@ -37,7 +51,7 @@ impl ZkayElgamalAddGadget {
         _self
     }
 }
-impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalAddGadget>> {
+impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalAddGadget>> {
     fn buildCircuit(&mut self) {
         let e1 = self.addPoints(&self.t.t.c1, &self.t.t.d1);
         let e2 = self.addPoints(&self.t.t.c2, &self.t.t.d2);

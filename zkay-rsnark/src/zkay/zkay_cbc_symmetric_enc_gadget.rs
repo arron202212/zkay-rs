@@ -1,11 +1,29 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::blockciphers::aes128_cipher_gadget;
-use crate::examples::gadgets::blockciphers::chaskeylts128_cipher_gadget;
+use crate::examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget;
 use crate::examples::gadgets::blockciphers::speck128_cipher_gadget;
 use crate::util::util::{BigInteger, Util};
-use zkay::crypto::crypto_backend;
+use crate::zkay::crypto::crypto_backend;
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_cbc_symmetric_enc_gadget::aes128_cipher_gadget::AES128CipherGadget;
+use crate::zkay::zkay_cbc_symmetric_enc_gadget::chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget;
+use crate::zkay::zkay_cbc_symmetric_enc_gadget::speck128_cipher_gadget::Speck128CipherGadget;
+use crate::zkay::zkay_cbc_symmetric_enc_gadget::wire_array::WireArray;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 
 pub enum CipherType {
     SPECK_128,
@@ -35,6 +53,7 @@ impl ZkayCBCSymmetricEncGadget {
         iv: &WireType,
         cipherType: CipherType,
         desc: &Option<String>,
+        generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWires(256).asArray());
         println!("Plain length [bits]: {}", plaintextBits.len());

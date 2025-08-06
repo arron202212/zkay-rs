@@ -1,12 +1,26 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
+use crate::util::util::BigInteger;
+use crate::util::util::Util;
+use rccell::RcCell;
+use zkay_derive::ImplStructNameConfig;
 
 pub struct JubJubPoint {
-    pub x: &WireType,
-    pub y: &WireType,
+    pub x: WireType,
+    pub y: WireType,
 }
 impl JubJubPoint {
     pub fn new(x: &WireType, y: &WireType) -> Self {
@@ -44,26 +58,26 @@ impl<T> ZkayBabyJubJubGadget<T> {
 }
 
 pub trait ZkayBabyJubJubGadgetConfig {
-    pub const BASE_ORDER: &str =
+    const BASE_ORDER: &str =
         "21888242871839275222246405745257275088548364400416034343698204186575808495617";
 
-    pub const CURVE_ORDER: &str =
+    const CURVE_ORDER: &str =
         "2736030358979909402780800718157159386076813972158567259200215660948447373041";
 
-    pub const COFACTOR: u8 = 8;
+    const COFACTOR: u8 = 8;
 
-    pub const COEFF_A: u8 = 1;
+    const COEFF_A: u8 = 1;
 
-    pub const COEFF_D: &str =
+    const COEFF_D: &str =
         "9706598848417545097372247223557719406784115219466060233080913168975159366771";
 
     // arbitrary generator
-    pub const GENERATOR_X: &str =
+    const GENERATOR_X: &str =
         "11904062828411472290643689191857696496057424932476499415469791423656658550213";
 
-    pub const GENERATOR_Y: &str =
+    const GENERATOR_Y: &str =
         "9356450144216313082194365820021861619676443907964402770398322487858544118183";
-    fn generators() -> &CircuitGenerator;
+    fn generators(&self) -> &CircuitGenerator;
     // {
     //     &self.generators
     // }
@@ -153,13 +167,13 @@ pub trait ZkayBabyJubJubGadgetConfig {
         //             evaluator.setWireValue(ainv, inverseValue);
         //         });
         let prover = crate::impl_prover!(
-                        eval(  a: &WireType,
-                            ainv:WireType,
+                        eval(  a: WireType,
+                            ainv:WireType
                 )  {
         impl Instruction for Prover{
          fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
             let aValue = evaluator.getWireValue(&self.a);
-            let inverseValue = aValue.modinv(Util::parse_big_int(ZkayBabyJubJubGadgetConfig:BASE_ORDER));
+            let inverseValue = aValue.modinv(Util::parse_big_int(ZkayBabyJubJubGadgetConfig::BASE_ORDER));
             evaluator.setWireValue(&self.ainv, inverseValue);
 
         }
@@ -189,7 +203,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
 }
 
 impl<T> ZkayBabyJubJubGadgetConfig for Gadget<ZkayBabyJubJubGadget<T>> {
-    fn generators() -> &CircuitGenerator {
+    fn generators(&self) -> &CircuitGenerator {
         &self.t.generators
     }
 }

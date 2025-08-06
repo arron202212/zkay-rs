@@ -1,8 +1,25 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::eval::instruction::Instruction;
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire_type::WireType;
+use crate::zkay::zkay_ec_gadget::AffinePoint;
+use crate::zkay::zkay_ec_gadget::ZkayEcGadget;
+use crate::zkay::zkay_sha256_gadget::ZkaySHA256Gadget;
 
+use rccell::RcCell;
+
+use zkay_derive::ImplStructNameConfig;
 /**
  * Shared key computation part of jsnark's ECDHKeyExchangeGadget
  */
@@ -16,10 +33,11 @@ pub struct ZkayECDHGadget {
     // (follows little-endian order)
 
     // gadget output
-    sharedSecret: &Option<WireType>, // the x-coordinate of the derived key ((this
+    sharedSecret: Option<WireType>, // the x-coordinate of the derived key ((this
     // party's secret)*H).x
     hTable: Vec<AffinePoint>,
     outputs: Vec<Option<WireType>>,
+    generators: CircuitGenerator,
 }
 impl ZkayECDHGadget {
     pub fn new(
@@ -29,20 +47,24 @@ impl ZkayECDHGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayEcGadget<Self>> {
+        let generators = generator.borrow().clone();
         let mut _self = ZkayEcGadget::<Self>::new(
             desc,
             Self {
-                secretBits: secretKey.getBitWires(SECRET_BITWIDTH).asArray(),
+                secretBits: secretKey
+                    .getBitWires(ZkayEcGadget::<Self>::SECRET_BITWIDTH)
+                    .asArray(),
                 hPoint: AffinePoint::new(hX),
                 sharedSecret: None,
                 hTable: vec![],
                 outputs: vec![],
+                generators,
             },
             generator,
         );
 
         if validateSecret {
-            _self.checkSecretBits(generator, secretBits);
+            _self.checkSecretBits(&generator, &_self.secretBits);
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
@@ -51,7 +73,7 @@ impl ZkayECDHGadget {
     }
 }
 
-impl GadgetConfig for Gadget<ZkayEcGadget<ZkayECDHGadget>> {
+impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     fn buildCircuit(&mut self) {
         /**
          * The reason this operates on affine coordinates is that in our
@@ -71,11 +93,12 @@ impl GadgetConfig for Gadget<ZkayEcGadget<ZkayECDHGadget>> {
         (self.t.t.hTable, self.t.t.sharedSecret) = (hTable, sharedSecret);
     }
 
-    fn computeYCoordinates() {
+    fn computeYCoordinates(&self) {
         // Easy to handle if hPoint is constant, otherwise, let the prover input
         // a witness and verify some properties
+        let generator = &self.t.generators;
         let hPoint = &self.t.t.hPoint;
-        if hPoint.x.instance_of(ConstantWire) {
+        if hPoint.x.instance_of("ConstantWire") {
             let x = (hPoint.x).getConstant();
             hPoint.y = generator.createConstantWire(computeYCoordinate(x));
         } else {
@@ -89,14 +112,14 @@ impl GadgetConfig for Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                     )  {
             impl Instruction for Prover{
              fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                    let x = evaluator.getWireValue(hPoint.x);
-                    evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+                    let x = evaluator.getWireValue(&self.hPoint.x);
+                    evaluator.setWireValue(&self.hPoint.y, ZkayEcGadget::<ZkayECDHGadget>::computeYCoordinate(x));
 
             }
             }
                         }
                     );
-            self.generator.specifyProverWitnessComputation(prover);
+            generator.specifyProverWitnessComputation(prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
@@ -110,10 +133,12 @@ impl GadgetConfig for Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             self.assertValidPointOnEC(hPoint.x, hPoint.y);
         }
     }
-    pub fn validateInputs(&self) {
-        generator.addOneAssertion(hPoint.x.checkNonZero());
-        self.assertValidPointOnEC(hPoint.x, hPoint.y);
-        self.assertPointOrder(hPoint, hTable);
+    fn validateInputs(&self) {
+        self.t
+            .generators
+            .addOneAssertion(&self.t.hPoint.x.checkNonZero());
+        self.assertValidPointOnEC(&self.t.hPoint.x, &self.t.hPoint.y);
+        self.assertPointOrder(&self.t.hPoint, &self.t.hTable);
     }
 }
 

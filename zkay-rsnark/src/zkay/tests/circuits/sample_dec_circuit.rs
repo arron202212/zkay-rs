@@ -1,5 +1,16 @@
-use zkay::zkay_circuit_base;
-use zkay::zkay_type::zk_uint;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::zkay::zkay_circuit_base;
+// use crate::zkay::zkay_type::zk_uint;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
 
 pub struct SampleDecCircuit;
 impl SampleDecCircuit {
@@ -11,34 +22,34 @@ impl SampleDecCircuit {
 }
 
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
-    fn __zk__bar() {
-        stepIn("_zk__bar");
-        addS("secret0_plain_val", 1, ZkUint(32));
-        addS("zk__in0_cipher_val_R", 1, ZkUint(256));
-        addIn("zk__in0_cipher_val", 4, ZkUint(256));
-        addOut("zk__out0_plain_val", 1, ZkUint(32));
+    fn __zk__bar(&self) {
+        self.stepIn("_zk__bar");
+        self.addS("secret0_plain_val", 1, ZkUint(32));
+        self.addS("zk__in0_cipher_val_R", 1, ZkUint(256));
+        self.addIn("zk__in0_cipher_val", 4, ZkUint(256));
+        self.addOut("zk__out0_plain_val", 1, ZkUint(32));
 
         //[ --- val ---
         // secret0_plain_val = dec(val) [zk__in0_cipher_val]
-        checkDec(
+        self.checkDec(
             "elgamal",
             "secret0_plain_val",
             "glob_key_Elgamal__me",
             "zk__in0_cipher_val_R",
             "zk__in0_cipher_val",
         );
-        decl("tmp0_plain", get("secret0_plain_val"));
-        checkEq("tmp0_plain", "zk__out0_plain_val");
+        self.decl("tmp0_plain", self.get("secret0_plain_val"));
+        self.checkEq("tmp0_plain", "zk__out0_plain_val");
         //] --- val ---
 
-        stepOut();
+        self.stepOut();
     }
 
     fn buildCircuit(&mut self) {
         // super.buildCircuit();
-        addK("elgamal", "glob_key_Elgamal__me", 2);
+        self.addK("elgamal", "glob_key_Elgamal__me", 2);
 
-        __zk__bar();
+        self.__zk__bar();
     }
 }
 

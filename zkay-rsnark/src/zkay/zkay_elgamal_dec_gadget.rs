@@ -1,5 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 /**
  * Gadget for checking correct exponential ElGamal decryption.
  * The expected message is provided as an input.
@@ -9,8 +23,8 @@ pub struct ZkayElgamalDecGadget {
     pk: JubJubPoint,
     c1: JubJubPoint,
     c2: JubJubPoint,
-    expectedMsg: &WireType,
-    msgOk: &Option<WireType>,
+    expectedMsg: WireType,
+    msgOk: Option<WireType>,
     outputs: Vec<Option<WireType>>,
 }
 
@@ -40,7 +54,7 @@ impl ZkayElgamalDecGadget {
         _self
     }
 }
-impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
+impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
     fn buildCircuit(&mut self) {
         // ensure pk and skBits form a key pair
         let pkExpected = mulScalar(getGenerator(), skBits);

@@ -1,5 +1,19 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+use rccell::RcCell;
 /**
  * Gadget for exponential ElGamal encryption, which is additively homomorphic.
  * Because the message is in the exponent it is simply a bit string and
@@ -36,7 +50,7 @@ impl ZkayElgamalEncGadget {
         _self
     }
 }
-impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
+impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
     fn buildCircuit(&mut self) {
         let msgEmbedded = self.mulScalar(self.getGenerator(), self.t.t.msgBits);
         let sharedSecret = self.mulScalar(pk, self.t.t.randomnessBits);

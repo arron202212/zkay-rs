@@ -1,7 +1,32 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
-use zkay::*;
+use crate::zkay::crypto::crypto_backend::Asymmetric;
+use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+use crate::zkay::crypto::crypto_backend::CryptoBackend;
+use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::elgamal_backend::wire_array::WireArray;
+use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::typed_wire::TypedWire;
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
+use crate::zkay::zkay_elgamal_add_gadget::ZkayElgamalAddGadget;
+use crate::zkay::zkay_elgamal_dec_gadget::ZkayElgamalDecGadget;
+use crate::zkay::zkay_elgamal_enc_gadget::ZkayElgamalEncGadget;
+use crate::zkay::zkay_elgamal_mul_gadget::ZkayElgamalMulGadget;
+use crate::zkay::zkay_elgamal_rerand_gadget::ZkayElgamalRerandGadget;
+use crate::zkay::zkay_type::ZkayType;
 
 pub struct ElgamalBackend;
 
@@ -18,7 +43,7 @@ impl ElgamalBackend {
         Asymmetric::<Self>::new(keyBits, Self)
     }
 }
-impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
+impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn getKeyChunkSize(&self) -> i32 {
         ElgamalBackend::KEY_CHUNK_SIZE
     }
@@ -31,9 +56,12 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
 
     fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>) {
         // elgamal does not require a bit-representation of the pub  key, so store it directly
-        keys.put(keyName, WireArray::new(keyWires));
+        self.t
+            .keys
+            .insert(keyName.clone(), WireArray::new(keyWires.clone()));
     }
-
+}
+impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn createEncryptionGadget(
         &self,
         plain: &TypedWire,
@@ -41,15 +69,21 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         random: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        let pkArray = getKeyArray(keyName);
-        let pk = ZkayBabyJubJubGadget::new().JubJubPoint(pkArray.get(0), pkArray.get(1));
-        let randomArray = WireArray::new(random).getBits(RND_CHUNK_SIZE).asArray();
+        let pkArray = self.getKeyArray(keyName);
+        let pk = JubJubPoint::new(pkArray[0], pkArray[1]);
+        let randomArray = WireArray::new(random)
+            .getBits(Self::RND_CHUNK_SIZE)
+            .asArray();
         assert!(
             plain.zkay_type.bitwidth <= 32,
             "plaintext must be at most 32 bits for elgamal backend"
         );
         return ZkayElgamalEncGadget::new(
-            plain.wire.getBitWires(plain.zkay_type.bitwidth).asArray(),
+            plain
+                .wire
+                .getBitWires(plain.zkay_type.bitwidth)
+                .asArray()
+                .clone(),
             pk,
             randomArray,
         );
@@ -63,17 +97,21 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         sk: Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Gadget {
-        let pkArray = getKeyArray(pkName);
-        let pk = ZkayBabyJubJubGadget::new().JubJubPoint(pkArray.get(0), pkArray.get(1));
-        let c1 = ZkayBabyJubJubGadget::new().JubJubPoint(cipher[0], cipher[1]);
-        let c2 = ZkayBabyJubJubGadget::new().JubJubPoint(cipher[2], cipher[3]);
-        let skBits = WireArray::new(sk).getBits(RND_CHUNK_SIZE).asArray();
+        let pkArray = self.getKeyArray(pkName);
+        let pk = JubJubPoint::new(pkArray.get(0), pkArray.get(1));
+        let c1 = JubJubPoint::new(cipher[0], cipher[1]);
+        let c2 = JubJubPoint::new(cipher[2], cipher[3]);
+        let skBits = WireArray::new(sk)
+            .getBits(Self::RND_CHUNK_SIZE)
+            .asArray()
+            .clone();
         ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire)
     }
-
+}
+impl CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn toTypedWireArray(&self, wires: Vec<Option<WireType>>, name: &String) -> Vec<TypedWire> {
         let typedWires = vec![TypedWire::default(); wires.len()];
-        let uint256 = ZkayType.ZkUint(256);
+        let uint256 = ZkayType::ZkUint(256);
         for i in 0..wires.len() {
             typedWires[i] = TypedWire::new(wires[i], uint256, name);
         }
@@ -82,23 +120,23 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
 
     fn fromTypedWireArray(&self, typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
         let wires = vec![None; typedWires.len()];
-        let uint256 = ZkayType.ZkUint(256);
+        let uint256 = ZkayType::ZkUint(256);
         for i in 0..typedWires.len() {
-            ZkayType.checkType(uint256, typedWires[i].zkay_type);
+            ZkayType::checkType(uint256, typedWires[i].zkay_type);
             wires[i] = typedWires[i].wire;
         }
         wires
     }
 
     fn parseJubJubPoint(&self, wire: Vec<Option<WireType>>, offset: i32) -> JubJubPoint {
-        ZkayBabyJubJubGadget::new().JubJubPoint(wire[offset], wire[offset + 1])
+        JubJubPoint::new(wire[offset], wire[offset + 1])
     }
 
     fn uninitZeroToIdentity(&self, p: JubJubPoint) -> JubJubPoint {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
         let oneIfBothZero = p.x.checkNonZero().or(p.y.checkNonZero()).invAsBit();
-        ZkayBabyJubJubGadget::new().JubJubPoint(p.x, p.y.add(oneIfBothZero))
+        JubJubPoint::new(p.x, p.y.add(oneIfBothZero))
     }
 }
 impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
@@ -190,8 +228,11 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
 
         // parse key and randomness
         let pkArray = getKeyArray(keyName);
-        let pk = ZkayBabyJubJubGadget::new().JubJubPoint(pkArray.get(0), pkArray.get(1));
-        let randomArray = randomness.wire.getBitWires(RND_CHUNK_SIZE).asArray();
+        let pk = JubJubPoint::new(pkArray.get(0), pkArray.get(1));
+        let randomArray = randomness
+            .wire
+            .getBitWires(ElgamalBackend::RND_CHUNK_SIZE)
+            .asArray();
 
         // create gadget
         let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray);

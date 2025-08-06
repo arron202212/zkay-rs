@@ -1,6 +1,16 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::{BigInteger, Util};
+use crate::zkay::zkay_util::wire_array::WireArray;
+use std::io::BufReader;
 
 pub struct ZkayUtil;
 impl ZkayUtil {
@@ -10,13 +20,13 @@ impl ZkayUtil {
         WireArray::new(Util::reverseBytes(bitArray.asArray())).packBitsIntoWords(targetWordBits)
     }
 
-    pub fn unsignedBytesToBigInt(bytes: Vec<byte>) -> BigInteger {
+    pub fn unsignedBytesToBigInt(bytes: Vec<u8>) -> BigInteger {
         let signum = bytes.iter().any(|&b| b != 0) as i32;
 
         BigInteger::new(signum, bytes)
     }
 
-    pub fn unsignedBigintToBytes(val: BigInteger) -> Vec<byte> {
+    pub fn unsignedBigintToBytes(val: BigInteger) -> Vec<u8> {
         let b = val.toByteArray();
         let mut ret;
         if b[0] == 0 && b.len() > 1 {
@@ -28,7 +38,7 @@ impl ZkayUtil {
         ret
     }
 
-    pub fn unsignedBigintToBytes(val: BigInteger, byteCount: i32) -> Vec<byte> {
+    pub fn unsignedBigintToBytes(val: BigInteger, byteCount: i32) -> Vec<u8> {
         let t = unsignedBigintToBytes(val);
         assert!(
             t.len() <= byteCount,

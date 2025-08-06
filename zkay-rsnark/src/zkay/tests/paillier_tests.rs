@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::structure::circuit_generator::{
@@ -7,10 +15,10 @@ use crate::circuit::structure::circuit_generator::{
 use crate::circuit::structure::wire_type::WireType;
 
 use crate::util::util::{BigInteger, Util};
-use zkay::zkay_paillier_dec_gadget;
-use zkay::zkay_paillier_enc_gadget;
-use zkay::zkay_paillier_fast_dec_gadget;
-use zkay::zkay_paillier_fast_enc_gadget;
+use crate::zkay::zkay_paillier_dec_gadget;
+use crate::zkay::zkay_paillier_enc_gadget;
+use crate::zkay::zkay_paillier_fast_dec_gadget;
+use crate::zkay::zkay_paillier_fast_enc_gadget;
 
 #[cfg(test)]
 mod test {

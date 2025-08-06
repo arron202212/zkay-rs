@@ -1,6 +1,15 @@
-use zkay::homomorphic_input;
-use zkay::typed_wire;
-
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::zkay::homomorphic_input;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::typed_wire;
+use crate::zkay::typed_wire::TypedWire;
 pub trait HomomorphicBackend {
     /**
      * Perform the unary homomorphic operation 'op' on the ciphertext 'cipher'.
@@ -17,7 +26,7 @@ pub trait HomomorphicBackend {
      * @throws UnsupportedOperationException
      * 		if the backend does not support operation 'op'
      */
-    fn doHomomorphicOp(&self, op: char, arg: &HomomorphicInput, keyName: &String) {
+    fn doHomomorphicOpu(&self, op: char, arg: &HomomorphicInput, keyName: &String) {
         panic!("Unary operation {op} not supported");
     }
 
@@ -65,7 +74,7 @@ pub trait HomomorphicBackend {
      * @throws UnsupportedOperationException
      * 		if the backend does not support operation 'op'
      */
-    fn doHomomorphicOp(
+    fn doHomomorphicOps(
         &self,
         lhs: &HomomorphicInput,
         op: &String,

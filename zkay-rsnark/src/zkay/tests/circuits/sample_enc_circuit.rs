@@ -1,6 +1,17 @@
-use zkay::homomorphic_input;
-use zkay::zkay_circuit_base;
-use zkay::zkay_type::zk_uint;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::zkay::homomorphic_input;
+use crate::zkay::zkay_circuit_base;
+// use crate::zkay::zkay_type::zk_uint;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
 
 pub struct SampleEncCircuit;
 impl SampleEncCircuit {
@@ -11,19 +22,19 @@ impl SampleEncCircuit {
     }
 }
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
-    fn __zk__foo() {
-        stepIn("_zk__foo");
-        addS("zk__out0_cipher_R", 1, ZkUint(256));
-        addIn("zk__in0_cipher_val", 4, ZkUint(256));
-        addOut("zk__out0_cipher", 4, ZkUint(256));
-        addOut("zk__out1_cipher", 4, ZkUint(256));
+    fn __zk__foo(&self) {
+        self.stepIn("_zk__foo");
+        self.addS("zk__out0_cipher_R", 1, ZkUint(256));
+        self.addIn("zk__in0_cipher_val", 4, ZkUint(256));
+        self.addOut("zk__out0_cipher", 4, ZkUint(256));
+        self.addOut("zk__out1_cipher", 4, ZkUint(256));
 
         //[ --- val + reveal<+>(3, owner) ---
         // zk__in0_cipher_val = val
         //[ --- 3 ---
-        decl("tmp0_plain", cast(val(3, ZkUint(8)), ZkUint(32)));
+        self.decl("tmp0_plain", self.cast(val(3, ZkUint(8)), ZkUint(32)));
         // zk__out0_cipher = enc(tmp0_plain, glob_key_Elgamal__owner)
-        checkEnc(
+        self.checkEnc(
             "elgamal",
             "tmp0_plain",
             "glob_key_Elgamal__owner",
@@ -32,27 +43,27 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
         );
         //] --- 3 ---
 
-        decl(
+        self.decl(
             "tmp1_cipher",
-            o_hom(
+            self.o_hom(
                 "elgamal",
                 "glob_key_Elgamal__owner",
-                HomomorphicInput.of(getCipher("zk__in0_cipher_val")),
+                HomomorphicInput::of(self.getCipher("zk__in0_cipher_val")),
                 '+',
-                HomomorphicInput.of(getCipher("zk__out0_cipher")),
+                HomomorphicInput::of(self.getCipher("zk__out0_cipher")),
             ),
         );
-        checkEq("tmp1_cipher", "zk__out1_cipher");
+        self.checkEq("tmp1_cipher", "zk__out1_cipher");
         //] --- val + reveal<+>(3, owner) ---
 
-        stepOut();
+        self.stepOut();
     }
 
     fn buildCircuit(&mut self) {
         // super.buildCircuit();
-        addK("elgamal", "glob_key_Elgamal__owner", 2);
+        self.addK("elgamal", "glob_key_Elgamal__owner", 2);
 
-        __zk__foo();
+        self.__zk__foo();
     }
 }
 pub fn main(args: Vec<String>) {

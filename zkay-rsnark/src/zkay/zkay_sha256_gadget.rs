@@ -1,5 +1,18 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
+use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::zkay::zkay_sha256_gadget::wire_array::WireArray;
 
 pub struct ZkaySHA256Gadget {
     _uint_output: Vec<Option<WireType>>,
@@ -71,13 +84,15 @@ impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
                 return;
             }
         }
-        _uint_output = WireArray::new(digest).packWordsIntoLargerWords(32, 8);
+        _uint_output = WireArray::new(digest)
+            .packWordsIntoLargerWords(32, 8)
+            .clone();
         assert!(_uint_output.len() == 1, "Wrong wire length");
     }
 }
 
 impl GadgetConfig for Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
-    fn getOutputWires() -> &Vec<Option<WireType>> {
+    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
         &self.t.t._uint_output
     }
 }

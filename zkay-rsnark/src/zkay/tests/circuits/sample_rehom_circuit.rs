@@ -1,6 +1,17 @@
-use zkay::homomorphic_input;
-use zkay::zkay_circuit_base;
-use zkay::zkay_type::zk_uint;
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
+use crate::zkay::homomorphic_input;
+use crate::zkay::zkay_circuit_base;
+// use crate::zkay::zkay_type::zk_uint;
+use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
+use crate::zkay::homomorphic_input::HomomorphicInput;
+use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
 
 pub struct SampleRehomCircuit;
 impl SampleRehomCircuit {
@@ -11,63 +22,63 @@ impl SampleRehomCircuit {
     }
 }
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
-    fn __zk__foo() {
-        stepIn("_zk__foo");
-        addS("secret0_rnd", 1, ZkUint(256));
-        addS("secret1_plain_x1", 1, ZkUint(32));
-        addS("zk__in1_cipher_x1_R", 1, ZkUint(256));
-        addIn("zk__in0_cipher_b1", 4, ZkUint(256));
-        addIn("zk__in1_cipher_x1", 4, ZkUint(256));
-        addOut("zk__out0_cipher", 4, ZkUint(256));
+    fn __zk__foo(&self) {
+        self.stepIn("_zk__foo");
+        self.addS("secret0_rnd", 1, ZkUint(256));
+        self.addS("secret1_plain_x1", 1, ZkUint(32));
+        self.addS("zk__in1_cipher_x1_R", 1, ZkUint(256));
+        self.addIn("zk__in0_cipher_b1", 4, ZkUint(256));
+        self.addIn("zk__in1_cipher_x1", 4, ZkUint(256));
+        self.addOut("zk__out0_cipher", 4, ZkUint(256));
 
         //[ --- b1 * reveal(x1, receiver) ---
         // zk__in0_cipher_b1 = b1
         // secret1_plain_x1 = dec(x1) [zk__in1_cipher_x1]
-        checkDec(
+        self.checkDec(
             "elgamal",
             "secret1_plain_x1",
             "glob_key_Elgamal__me",
             "zk__in1_cipher_x1_R",
             "zk__in1_cipher_x1",
         );
-        decl(
+        self.decl(
             "tmp0_cipher",
-            o_rerand(
-                o_hom(
+            self.o_rerand(
+                self.o_hom(
                     "elgamal",
                     "glob_key_Elgamal__receiver",
-                    HomomorphicInput.of(getCipher("zk__in0_cipher_b1")),
+                    HomomorphicInput::of(self.getCipher("zk__in0_cipher_b1")),
                     '*',
-                    HomomorphicInput.of(get("secret1_plain_x1")),
+                    HomomorphicInput::of(self.get("secret1_plain_x1")),
                 ),
                 "elgamal",
                 "glob_key_Elgamal__receiver",
-                get("secret0_rnd"),
+                self.get("secret0_rnd"),
             ),
         );
-        checkEq("tmp0_cipher", "zk__out0_cipher");
+        self.checkEq("tmp0_cipher", "zk__out0_cipher");
         //] --- b1 * reveal(x1, receiver) ---
 
-        stepOut();
+        self.stepOut();
     }
 
     fn buildCircuit(&mut self) {
         // super.buildCircuit();
-        addS("x1", 1, ZkUint(32));
-        addS("x1_R", 1, ZkUint(256));
-        addK("elgamal", "glob_key_Elgamal__receiver", 2);
-        addK("elgamal", "glob_key_Elgamal__me", 2);
-        addIn("zk__in2_cipher_x1", 4, ZkUint(256));
+        self.addS("x1", 1, ZkUint(32));
+        self.addS("x1_R", 1, ZkUint(256));
+        self.addK("elgamal", "glob_key_Elgamal__receiver", 2);
+        self.addK("elgamal", "glob_key_Elgamal__me", 2);
+        self.addIn("zk__in2_cipher_x1", 4, ZkUint(256));
 
         // zk__in2_cipher_x1 = enc(x1, glob_key_Elgamal__me)
-        checkEnc(
+        self.checkEnc(
             "elgamal",
             "x1",
             "glob_key_Elgamal__me",
             "x1_R",
             "zk__in2_cipher_x1",
         );
-        __zk__foo();
+        self.__zk__foo();
     }
 }
 
