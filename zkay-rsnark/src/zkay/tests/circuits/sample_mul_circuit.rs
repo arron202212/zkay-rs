@@ -6,15 +6,12 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::zkay::homomorphic_input;
-use crate::zkay::zkay_circuit_base;
-// use crate::zkay::zkay_type::zk_bool;
-// use crate::zkay::zkay_type::zk_int;
-// use crate::zkay::zkay_type::zk_uint;
+
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
-
+use crate::zkay::zkay_type::ZkayType;
+#[derive(Debug, Clone)]
 pub struct SampleMulCircuit;
 impl SampleMulCircuit {
     pub fn new() -> CircuitGeneratorExtend<ZkayCircuitBase<Self>> {
@@ -26,8 +23,8 @@ impl SampleMulCircuit {
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
     fn __zk__foo(&self) {
         self.stepIn("_zk__foo");
-        self.addIn("zk__in0_cipher_val", 4, ZkUint(256));
-        self.addOut("zk__out0_cipher", 4, ZkUint(256));
+        self.addIn("zk__in0_cipher_val", 4, ZkayType::ZkUint(256));
+        self.addOut("zk__out0_cipher", 4, ZkayType::ZkUint(256));
 
         //[ --- val * 3 ---
         // zk__in0_cipher_val = val
@@ -38,7 +35,7 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
                 "glob_key_Elgamal__owner",
                 HomomorphicInput::of(self.getCipher("zk__in0_cipher_val")),
                 '*',
-                HomomorphicInput::of(self.cast(val(3, ZkUint(8)), ZkUint(32))),
+                HomomorphicInput::of(self.cast(val(3, ZkayType::ZkUint(8)), ZkayType::ZkUint(32))),
             ),
         );
         self.checkEq("tmp0_cipher", "zk__out0_cipher");

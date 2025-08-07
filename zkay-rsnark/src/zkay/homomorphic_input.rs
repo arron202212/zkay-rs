@@ -16,16 +16,18 @@ use crate::zkay::typed_wire::TypedWire;
  * arguments of this type is preferable to having dozens of overloads with different combinations of Vec<TypedWire>
  * and TypedWire or having to tell apart plaintext and ciphertext inputs from the length of the Vec<TypedWire> input.
  */
+
+#[derive(Debug, Clone)]
 pub struct HomomorphicInput {
-    array: Vec<TypedWire>,
-    isCipher: bool,
+    pub array: Vec<TypedWire>,
+    pub isCipher: bool,
 }
 impl HomomorphicInput {
     pub fn new(array: Vec<TypedWire>, isCipher: bool) -> Self {
         Self { array, isCipher }
     }
 
-    pub fn of(cipher: Vec<TypedWire>) -> Self {
+    pub fn ofv(cipher: Vec<TypedWire>) -> Self {
         HomomorphicInput::new(cipher, true)
     }
 

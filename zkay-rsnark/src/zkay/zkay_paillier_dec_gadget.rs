@@ -6,30 +6,28 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_floor_div_gadget;
-use crate::examples::gadgets::math::long_integer_mod_gadget;
-use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::examples::gadgets::math::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
+use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
-use crate::zkay::zkay_paillier_dec_gadget::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_integer_mod_gadget::LongIntegerModGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
+
 use rccell::RcCell;
 
+#[derive(Debug, Clone)]
 pub struct ZkayPaillierDecGadget {
-    n: LongElement,
-    nSquare: LongElement,
-    nBits: i32,
-    lambda: LongElement,
-    mu: LongElement,
-    cipher: LongElement,
-    plain: Option<LongElement>,
+    pub n: LongElement,
+    pub nSquare: LongElement,
+    pub nBits: i32,
+    pub lambda: LongElement,
+    pub mu: LongElement,
+    pub cipher: LongElement,
+    pub plain: Option<LongElement>,
 }
 
 impl ZkayPaillierDecGadget {

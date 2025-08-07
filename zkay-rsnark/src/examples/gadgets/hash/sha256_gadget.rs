@@ -21,6 +21,8 @@ use rccell::{RcCell, WeakCell};
 use std::fmt::Debug;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
+
+#[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Base;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SHA256Gadget<T> {

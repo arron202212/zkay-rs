@@ -6,41 +6,39 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget;
-use crate::examples::gadgets::rsa::rsa_encryption_v1_5_gadget;
+use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget;
+use crate::examples::gadgets::rsa::rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget;
 
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::zkay::crypto::rsa_backend::RSABackend;
 use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_rsa_encryption_gadget::long_element::LongElement;
-use crate::zkay::zkay_rsa_encryption_gadget::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget;
-use crate::zkay::zkay_rsa_encryption_gadget::rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget;
-use crate::zkay::zkay_rsa_encryption_gadget::wire_array::WireArray;
 use crate::zkay::zkay_util::ZkayUtil;
 
 use rccell::RcCell;
 
+#[derive(Debug, Clone)]
 pub enum PaddingType {
     PKCS_1_5,
     OAEP,
 }
 
+#[derive(Debug, Clone)]
 pub struct ZkayRSAEncryptionGadget {
-    paddingType: PaddingType,
-    pk: LongElement,
-    plain: WireType,
-    rnd: Vec<Option<WireType>>,
-    keyBits: i32,
-    cipher: Vec<Option<WireType>>,
+    pub paddingType: PaddingType,
+    pub pk: LongElement,
+    pub plain: WireType,
+    pub rnd: Vec<Option<WireType>>,
+    pub keyBits: i32,
+    pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayRSAEncryptionGadget {
     pub fn new(
-        plain: &TypedWire,
+        plain: TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
         keyBits: i32,
@@ -73,12 +71,12 @@ impl ZkayRSAEncryptionGadget {
 }
 impl Gadget<ZkayRSAEncryptionGadget> {
     fn buildCircuit(&mut self) {
-        let plainBytes = reverseBytes(self.t.plain.getBitWires(256), 8);
+        let plainBytes = self.reverseBytes(self.t.plain.getBitWires(256), 8);
 
         let mut enc;
         match self.t.paddingType {
             PaddingType::OAEP => {
-                let rndBytes = reverseBytes(
+                let rndBytes = self.reverseBytes(
                     WireArray::new(self.t.rnd).getBits(RSABackend::OAEP_RND_CHUNK_SIZE),
                     8,
                 );
@@ -94,7 +92,7 @@ impl Gadget<ZkayRSAEncryptionGadget> {
             }
             PaddingType::PKCS_1_5 => {
                 let rndLen = self.t.keyBits / 8 - 3 - plainBytes.len();
-                let rndBytes = reverseBytes(
+                let rndBytes = self.reverseBytes(
                     WireArray::new(self.t.rnd)
                         .getBits(RSABackend::PKCS15_RND_CHUNK_SIZE)
                         .adjustLength(rndLen * 8),

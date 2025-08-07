@@ -18,14 +18,14 @@ use crate::util::util::Util;
 use rccell::RcCell;
 use zkay_derive::ImplStructNameConfig;
 
+#[derive(Debug, Clone)]
 pub struct JubJubPoint {
     pub x: WireType,
     pub y: WireType,
 }
 impl JubJubPoint {
-    pub fn new(x: &WireType, y: &WireType) -> Self {
-        self.x = x;
-        self.y = y;
+    pub fn new(x: WireType, y: WireType) -> Self {
+        Self { x, y }
     }
 }
 
@@ -34,10 +34,10 @@ impl JubJubPoint {
  * Parameters are from:
  * https://iden3-docs.readthedocs.io/en/latest/iden3_repos/research/publications/zkproof-standards-workshop-2/baby-jubjub/baby-jubjub.html
  */
-
+#[derive(Debug, Clone)]
 pub struct ZkayBabyJubJubGadget<T> {
-    generators: CircuitGenerator,
-    t: T,
+    pub generators: CircuitGenerator,
+    pub t: T,
 }
 
 impl<T> ZkayBabyJubJubGadget<T> {

@@ -8,7 +8,12 @@
 #![allow(warnings, unused)]
 use crate::circuit::structure::wire_array;
 use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
+
+use crate::util::{
+    run_command::run_command,
+    util::{BigInteger, Util},
+};
+use crate::zkay::zkay_type::ZkayType;
 use crate::zkay::zkay_util::wire_array::WireArray;
 use std::io::BufReader;
 
@@ -38,8 +43,8 @@ impl ZkayUtil {
         ret
     }
 
-    pub fn unsignedBigintToBytes(val: BigInteger, byteCount: i32) -> Vec<u8> {
-        let t = unsignedBigintToBytes(val);
+    pub fn unsignedBigintToBytesi(val: BigInteger, byteCount: i32) -> Vec<u8> {
+        let t = Self::unsignedBigintToBytes(val);
         assert!(
             t.len() <= byteCount,
             "Value too large to fit into {byteCount} bytes"
@@ -50,7 +55,7 @@ impl ZkayUtil {
     }
 
     pub fn runZkayJsnarkInterface() {
-        let p = runcomand(vec![
+        let p = run_command(vec![
             "../libsnark/build/libsnark/zkay_interface/run_snark",
             "keygen",
             ".",
@@ -68,7 +73,7 @@ impl ZkayUtil {
 
         //println!(buf.toString());
 
-        let p = runcomand(vec![
+        let p = run_command(vec![
             "../libsnark/build/libsnark/zkay_interface/run_snark",
             "proofgen",
             ".",

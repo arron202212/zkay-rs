@@ -8,13 +8,14 @@
 #![allow(warnings, unused)]
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::wire_array;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire::WireConfig;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::crypto::crypto_backend::Asymmetric;
 use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
 use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
-use crate::zkay::crypto::elgamal_backend::wire_array::WireArray;
 use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
@@ -27,7 +28,10 @@ use crate::zkay::zkay_elgamal_enc_gadget::ZkayElgamalEncGadget;
 use crate::zkay::zkay_elgamal_mul_gadget::ZkayElgamalMulGadget;
 use crate::zkay::zkay_elgamal_rerand_gadget::ZkayElgamalRerandGadget;
 use crate::zkay::zkay_type::ZkayType;
+use rccell::{RcCell, WeakCell};
+use std::ops::Add;
 
+#[derive(Debug, Clone)]
 pub struct ElgamalBackend;
 
 impl ElgamalBackend {
@@ -43,100 +47,121 @@ impl ElgamalBackend {
         Asymmetric::<Self>::new(keyBits, Self)
     }
 }
-impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
-    fn getKeyChunkSize(&self) -> i32 {
-        ElgamalBackend::KEY_CHUNK_SIZE
-    }
 
+impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn usesDecryptionGadget(&self) -> bool {
         // randomness is not extractable from an ElGamal ciphertext, so need a separate
         // gadget for decryption
         true
     }
 
-    fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>) {
+    fn addKey(
+        &self,
+        keyName: &String,
+        keyWires: &Vec<Option<WireType>>,
+        generator: WeakCell<CircuitGenerator>,
+    ) {
         // elgamal does not require a bit-representation of the pub  key, so store it directly
         self.t
             .keys
-            .insert(keyName.clone(), WireArray::new(keyWires.clone()));
+            .insert(keyName.clone(), WireArray::new(keyWires.clone(), generator));
+    }
+    fn createDecryptionGadget(
+        &self,
+        plain: &TypedWire,
+        cipher: &Vec<Option<WireType>>,
+        pkName: &String,
+        sk: &Vec<Option<WireType>>,
+        desc: &Option<String>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Box<dyn GadgetConfig> {
+        let pkArray = self.getKeyArray(pkName);
+        let pk = JubJubPoint::new(pkArray[0].clone().unwrap(), pkArray[1].clone().unwrap());
+        let c1 = JubJubPoint::new(cipher[0].clone().unwrap(), cipher[1].clone().unwrap());
+        let c2 = JubJubPoint::new(cipher[2].clone().unwrap(), cipher[3].clone().unwrap());
+        let skBits = WireArray::new(sk.clone(), generator.clone().downgrade())
+            .getBits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
+            .asArray()
+            .clone();
+        Box::new(ZkayElgamalDecGadget::new(
+            pk,
+            skBits,
+            c1,
+            c2,
+            plain.wire.clone(),
+            generator,
+        ))
     }
 }
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
+    fn getKeyChunkSize() -> i32 {
+        ElgamalBackend::KEY_CHUNK_SIZE
+    }
     fn createEncryptionGadget(
         &self,
         plain: &TypedWire,
         keyName: &String,
-        random: Vec<Option<WireType>>,
+        random: &Vec<Option<WireType>>,
         desc: &Option<String>,
-    ) -> Gadget {
+        generator: RcCell<CircuitGenerator>,
+    ) -> Box<dyn GadgetConfig> {
         let pkArray = self.getKeyArray(keyName);
-        let pk = JubJubPoint::new(pkArray[0], pkArray[1]);
-        let randomArray = WireArray::new(random)
-            .getBits(Self::RND_CHUNK_SIZE)
+        let pk = JubJubPoint::new(pkArray[0].clone().unwrap(), pkArray[1].clone().unwrap());
+        let randomArray = WireArray::new(random.clone(), generator.clone().downgrade())
+            .getBits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
             .asArray();
         assert!(
             plain.zkay_type.bitwidth <= 32,
             "plaintext must be at most 32 bits for elgamal backend"
         );
-        return ZkayElgamalEncGadget::new(
+        Box::new(ZkayElgamalEncGadget::new(
             plain
                 .wire
-                .getBitWires(plain.zkay_type.bitwidth)
+                .getBitWiresi(plain.zkay_type.bitwidth as u64, &None)
                 .asArray()
                 .clone(),
             pk,
-            randomArray,
-        );
-    }
-
-    fn createDecryptionGadget(
-        &self,
-        plain: &TypedWire,
-        cipher: Vec<Option<WireType>>,
-        pkName: &String,
-        sk: Vec<Option<WireType>>,
-        desc: &Option<String>,
-    ) -> Gadget {
-        let pkArray = self.getKeyArray(pkName);
-        let pk = JubJubPoint::new(pkArray.get(0), pkArray.get(1));
-        let c1 = JubJubPoint::new(cipher[0], cipher[1]);
-        let c2 = JubJubPoint::new(cipher[2], cipher[3]);
-        let skBits = WireArray::new(sk)
-            .getBits(Self::RND_CHUNK_SIZE)
-            .asArray()
-            .clone();
-        ZkayElgamalDecGadget::new(pk, skBits, c1, c2, plain.wire)
+            randomArray.clone(),
+            generator,
+        ))
     }
 }
 impl CryptoBackend<Asymmetric<ElgamalBackend>> {
-    fn toTypedWireArray(&self, wires: Vec<Option<WireType>>, name: &String) -> Vec<TypedWire> {
-        let typedWires = vec![TypedWire::default(); wires.len()];
+    fn toTypedWireArray(&self, wires: &Vec<Option<WireType>>, name: &String) -> Vec<TypedWire> {
         let uint256 = ZkayType::ZkUint(256);
-        for i in 0..wires.len() {
-            typedWires[i] = TypedWire::new(wires[i], uint256, name);
-        }
-        typedWires
-    }
-
-    fn fromTypedWireArray(&self, typedWires: Vec<TypedWire>) -> Vec<Option<WireType>> {
-        let wires = vec![None; typedWires.len()];
-        let uint256 = ZkayType::ZkUint(256);
-        for i in 0..typedWires.len() {
-            ZkayType::checkType(uint256, typedWires[i].zkay_type);
-            wires[i] = typedWires[i].wire;
-        }
         wires
+            .iter()
+            .map(|w| TypedWire::new(w.clone().unwrap(), uint256.clone(), name.clone(), &vec![]))
+            .collect()
     }
 
-    fn parseJubJubPoint(&self, wire: Vec<Option<WireType>>, offset: i32) -> JubJubPoint {
-        JubJubPoint::new(wire[offset], wire[offset + 1])
+    fn fromTypedWireArray(&self, typedWires: &Vec<TypedWire>) -> Vec<Option<WireType>> {
+        let uint256 = ZkayType::ZkUint(256);
+        typedWires
+            .iter()
+            .map(|w| {
+                ZkayType::checkType(&uint256, &w.zkay_type);
+                Some(w.wire.clone())
+            })
+            .collect()
     }
 
-    fn uninitZeroToIdentity(&self, p: JubJubPoint) -> JubJubPoint {
+    fn parseJubJubPoint(&self, wire: &Vec<Option<WireType>>, offset: usize) -> JubJubPoint {
+        JubJubPoint::new(
+            wire[offset].clone().unwrap(),
+            wire[offset + 1].clone().unwrap(),
+        )
+    }
+
+    fn uninitZeroToIdentity(&self, p: &JubJubPoint) -> JubJubPoint {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
-        let oneIfBothZero = p.x.checkNonZero().or(p.y.checkNonZero()).invAsBit();
-        JubJubPoint::new(p.x, p.y.add(oneIfBothZero))
+        let oneIfBothZero =
+            p.x.checkNonZero(&None)
+                .orw(&p.y.checkNonZero(&None), &None)
+                .invAsBit(&None)
+                .unwrap();
+        JubJubPoint::new(p.x.clone(), p.y.add(&oneIfBothZero))
     }
 }
 impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
@@ -146,6 +171,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
         op: char,
         rhs: &HomomorphicInput,
         keyName: &String,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         if (op == '+') || (op == '-') {
             // for (c1, c2) = Enc(m1, r1)
@@ -153,7 +179,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
             //     e1 = c1 + d1
             //     e2 = c2 + d2
             // it is (e1, e2) = Enc(m1 + m2, r1 + r2)
-            let outputName = "(" + lhs.getName() + ") + (" + rhs.getName() + ")";
+            let outputName = format!("({}) + ({})", lhs.getName(), rhs.getName());
 
             let lhs_twires = lhs.getCipher();
             let rhs_twires = rhs.getCipher();
@@ -161,28 +187,28 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
             // sanity checks
             assert!(lhs_twires.len() == 4); // 4 BabyJubJub coordinates
             assert!(rhs_twires.len() == 4); // 4 BabyJubJub coordinates
-            let lhs_wires = fromTypedWireArray(lhs_twires);
-            let rhs_wires = fromTypedWireArray(rhs_twires);
+            let lhs_wires = self.fromTypedWireArray(&lhs_twires);
+            let rhs_wires = self.fromTypedWireArray(&rhs_twires);
 
-            let c1 = parseJubJubPoint(lhs_wires, 0);
-            let c2 = parseJubJubPoint(lhs_wires, 2);
-            let d1 = parseJubJubPoint(rhs_wires, 0);
-            let d2 = parseJubJubPoint(rhs_wires, 2);
+            let c1 = self.parseJubJubPoint(&lhs_wires, 0);
+            let c2 = self.parseJubJubPoint(&lhs_wires, 2);
+            let d1 = self.parseJubJubPoint(&rhs_wires, 0);
+            let d2 = self.parseJubJubPoint(&rhs_wires, 2);
 
-            c1 = uninitZeroToIdentity(c1);
-            c2 = uninitZeroToIdentity(c2);
-            d1 = uninitZeroToIdentity(d1);
-            d2 = uninitZeroToIdentity(d2);
+            c1 = self.uninitZeroToIdentity(&c1);
+            c2 = self.uninitZeroToIdentity(&c2);
+            d1 = self.uninitZeroToIdentity(&d1);
+            d2 = self.uninitZeroToIdentity(&d2);
 
             if op == '-' {
-                d1.x = d1.x.neg();
-                d2.x = d2.x.neg();
+                d1.x = d1.x.negate(&None);
+                d2.x = d2.x.negate(&None);
             }
 
-            let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2);
-            toTypedWireArray(gadget.getOutputWires(), outputName)
+            let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2, generator);
+            self.toTypedWireArray(gadget.getOutputWires(), &outputName)
         } else if op == '*' {
-            let outputName = "(" + lhs.getName() + ") * (" + rhs.getName() + ")";
+            let outputName = format!("({}) * ({})", lhs.getName(), rhs.getName());
 
             let mut plain_wire;
             let mut cipher_twires;
@@ -196,16 +222,20 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
                 panic!("Elgamal multiplication requires exactly 1 plaintext argument");
             }
 
-            let cipher_wires = fromTypedWireArray(cipher_twires);
-            let c1 = parseJubJubPoint(cipher_wires, 0);
-            let c2 = parseJubJubPoint(cipher_wires, 2);
+            let cipher_wires = self.fromTypedWireArray(&cipher_twires);
+            let c1 = self.parseJubJubPoint(&cipher_wires, 0);
+            let c2 = self.parseJubJubPoint(&cipher_wires, 2);
 
-            c1 = uninitZeroToIdentity(c1);
-            c2 = uninitZeroToIdentity(c2);
+            c1 = self.uninitZeroToIdentity(&c1);
+            c2 = self.uninitZeroToIdentity(&c2);
 
-            let gadget =
-                ZkayElgamalMulGadget::new(c1, c2, plain_wire.wire.getBitWires(32).asArray());
-            toTypedWireArray(gadget.getOutputWires(), outputName)
+            let gadget = ZkayElgamalMulGadget::new(
+                c1,
+                c2,
+                plain_wire.wire.getBitWiresi(32, &None).asArray(),
+                generator,
+            );
+            self.toTypedWireArray(gadget.getOutputWires(), &outputName)
         } else {
             panic!("Binary operation {op} not supported");
         }
@@ -216,26 +246,27 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
         arg: &Vec<TypedWire>,
         keyName: &String,
         randomness: &TypedWire,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
-        let outputName = "rerand(" + arg[0].name + ")";
+        let outputName = format!("rerand({})", arg[0].name);
 
         // parse argument
-        let arg_wires = fromTypedWireArray(arg);
-        let c1 = parseJubJubPoint(arg_wires, 0);
-        let c2 = parseJubJubPoint(arg_wires, 2);
-        c1 = uninitZeroToIdentity(c1);
-        c2 = uninitZeroToIdentity(c2);
+        let arg_wires = self.fromTypedWireArray(&arg);
+        let c1 = self.parseJubJubPoint(&arg_wires, 0);
+        let c2 = self.parseJubJubPoint(&arg_wires, 2);
+        c1 = self.uninitZeroToIdentity(&c1);
+        c2 = self.uninitZeroToIdentity(&c2);
 
         // parse key and randomness
-        let pkArray = getKeyArray(keyName);
-        let pk = JubJubPoint::new(pkArray.get(0), pkArray.get(1));
+        let pkArray = self.getKeyArray(keyName);
+        let pk = JubJubPoint::new(pkArray[0].clone().unwrap(), pkArray[1].clone().unwrap());
         let randomArray = randomness
             .wire
-            .getBitWires(ElgamalBackend::RND_CHUNK_SIZE)
+            .getBitWiresi(ElgamalBackend::RND_CHUNK_SIZE as u64, &None)
             .asArray();
 
         // create gadget
-        let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray);
-        toTypedWireArray(gadget.getOutputWires(), outputName)
+        let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray, generator);
+        self.toTypedWireArray(gadget.getOutputWires(), &outputName)
     }
 }

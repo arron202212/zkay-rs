@@ -8,21 +8,25 @@
 #![allow(warnings, unused)]
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::crypto::crypto_backend::Asymmetric;
 use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
 use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
-use crate::zkay::crypto::elgamal_backend::wire_array::WireArray;
 use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::typed_wire;
 use crate::zkay::typed_wire::TypedWire;
 use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
-use crate::zkay::zkay_rsa_encryption_gadget;
+
 use crate::zkay::zkay_rsa_encryption_gadget::PaddingType;
 use crate::zkay::zkay_rsa_encryption_gadget::ZkayRSAEncryptionGadget;
+
+use rccell::RcCell;
+
+#[derive(Debug, Clone)]
 pub struct RSABackend {
-    paddingType: PaddingType,
+    pub paddingType: PaddingType,
 }
 impl RSABackend {
     const CIPHER_CHUNK_SIZE: i32 = 232;
@@ -40,7 +44,7 @@ impl RSABackend {
 }
 
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
-    fn getKeyChunkSize(&self) -> i32 {
+    fn getKeyChunkSize() -> i32 {
         RSABackend::KEY_CHUNK_SIZE
     }
 
@@ -48,9 +52,10 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
         &self,
         plain: &TypedWire,
         key: &String,
-        random: Vec<Option<WireType>>,
+        random: &Vec<Option<WireType>>,
         desc: &Option<String>,
-    ) -> Gadget {
+        generator: RcCell<CircuitGenerator>,
+    ) -> Box<dyn GadgetConfig> {
         ZkayRSAEncryptionGadget::new(
             plain,
             self.getKey(key),
@@ -58,6 +63,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
             self.keyBits,
             self.paddingType,
             desc,
+            generator,
         )
     }
 }

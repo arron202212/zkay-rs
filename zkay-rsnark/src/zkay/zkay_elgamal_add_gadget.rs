@@ -6,25 +6,26 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
 use rccell::RcCell;
 /**
  * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
  */
+#[derive(Debug, Clone)]
 pub struct ZkayElgamalAddGadget {
-    c1: JubJubPoint,
-    c2: JubJubPoint,
-    d1: JubJubPoint,
-    d2: JubJubPoint,
-    e1: Option<JubJubPoint>,
-    e2: Option<JubJubPoint>,
-    outputs: Vec<Option<WireType>>,
+    pub c1: JubJubPoint,
+    pub c2: JubJubPoint,
+    pub d1: JubJubPoint,
+    pub d2: JubJubPoint,
+    pub e1: Option<JubJubPoint>,
+    pub e2: Option<JubJubPoint>,
+    pub outputs: Vec<Option<WireType>>,
 }
 impl ZkayElgamalAddGadget {
     pub fn new(

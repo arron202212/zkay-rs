@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+
 use crate::examples::gadgets::math::long_integer_division::{
     LongIntegerDivision, LongIntegerDivisionConfig,
 };

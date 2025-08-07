@@ -6,13 +6,11 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::zkay::homomorphic_input;
-use crate::zkay::zkay_circuit_base;
-// use crate::zkay::zkay_type::zk_uint;
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
-
+use crate::zkay::zkay_type::ZkayType;
+#[derive(Debug, Clone)]
 pub struct SampleRehomCircuit;
 impl SampleRehomCircuit {
     pub fn new() -> CircuitGeneratorExtend<ZkayCircuitBase<Self>> {
@@ -24,12 +22,12 @@ impl SampleRehomCircuit {
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
     fn __zk__foo(&self) {
         self.stepIn("_zk__foo");
-        self.addS("secret0_rnd", 1, ZkUint(256));
-        self.addS("secret1_plain_x1", 1, ZkUint(32));
-        self.addS("zk__in1_cipher_x1_R", 1, ZkUint(256));
-        self.addIn("zk__in0_cipher_b1", 4, ZkUint(256));
-        self.addIn("zk__in1_cipher_x1", 4, ZkUint(256));
-        self.addOut("zk__out0_cipher", 4, ZkUint(256));
+        self.addS("secret0_rnd", 1, ZkayType::ZkUint(256));
+        self.addS("secret1_plain_x1", 1, ZkayType::ZkUint(32));
+        self.addS("zk__in1_cipher_x1_R", 1, ZkayType::ZkUint(256));
+        self.addIn("zk__in0_cipher_b1", 4, ZkayType::ZkUint(256));
+        self.addIn("zk__in1_cipher_x1", 4, ZkayType::ZkUint(256));
+        self.addOut("zk__out0_cipher", 4, ZkayType::ZkUint(256));
 
         //[ --- b1 * reveal(x1, receiver) ---
         // zk__in0_cipher_b1 = b1
@@ -64,11 +62,11 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
 
     fn buildCircuit(&mut self) {
         // super.buildCircuit();
-        self.addS("x1", 1, ZkUint(32));
-        self.addS("x1_R", 1, ZkUint(256));
+        self.addS("x1", 1, ZkayType::ZkUint(32));
+        self.addS("x1_R", 1, ZkayType::ZkUint(256));
         self.addK("elgamal", "glob_key_Elgamal__receiver", 2);
         self.addK("elgamal", "glob_key_Elgamal__me", 2);
-        self.addIn("zk__in2_cipher_x1", 4, ZkUint(256));
+        self.addIn("zk__in2_cipher_x1", 4, ZkayType::ZkUint(256));
 
         // zk__in2_cipher_x1 = enc(x1, glob_key_Elgamal__me)
         self.checkEnc(

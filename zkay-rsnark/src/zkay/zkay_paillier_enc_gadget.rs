@@ -6,31 +6,29 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_mod_gadget;
-use crate::examples::gadgets::math::long_integer_mod_inverse_gadget;
-use crate::examples::gadgets::math::long_integer_mod_pow_gadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
+use crate::examples::gadgets::math::long_integer_mod_inverse_gadget::LongIntegerModInverseGadget;
+use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
-use crate::zkay::zkay_paillier_dec_gadget::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
-use crate::zkay::zkay_paillier_enc_gadget::long_integer_mod_gadget::LongIntegerModGadget;
-use crate::zkay::zkay_paillier_enc_gadget::long_integer_mod_inverse_gadget::LongIntegerModInverseGadget;
+
 use rccell::RcCell;
 
+#[derive(Debug, Clone)]
 pub struct ZkayPaillierEncGadget {
-    n: LongElement,
-    nSquare: LongElement,
-    nBits: i32,
-    nSquareMaxBits: i32,
-    g: LongElement,
-    plain: LongElement,
-    random: LongElement,
-    cipher: Option<LongElement>,
+    pub n: LongElement,
+    pub nSquare: LongElement,
+    pub nBits: i32,
+    pub nSquareMaxBits: i32,
+    pub g: LongElement,
+    pub plain: LongElement,
+    pub random: LongElement,
+    pub cipher: Option<LongElement>,
 }
 impl ZkayPaillierEncGadget {
     pub fn new(

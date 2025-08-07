@@ -13,9 +13,9 @@ use crate::circuit::structure::circuit_generator::{
 };
 use crate::circuit::structure::wire_type::WireType;
 
-use crate::zkay::zkay_ec_pk_derivation_gadget;
-use crate::zkay::zkay_ecdh_gadget;
-use crate::zkay::zkay_ecdh_generator;
+use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
+use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
+use crate::zkay::zkay_ecdh_generator::ZkayECDHGenerator;
 
 #[cfg(test)]
 mod test {

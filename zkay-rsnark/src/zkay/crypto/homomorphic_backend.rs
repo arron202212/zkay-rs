@@ -6,9 +6,8 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::zkay::homomorphic_input;
+
 use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::typed_wire;
 use crate::zkay::typed_wire::TypedWire;
 pub trait HomomorphicBackend {
     /**
@@ -26,7 +25,12 @@ pub trait HomomorphicBackend {
      * @throws UnsupportedOperationException
      * 		if the backend does not support operation 'op'
      */
-    fn doHomomorphicOpu(&self, op: char, arg: &HomomorphicInput, keyName: &String) {
+    fn doHomomorphicOpu(
+        &self,
+        op: char,
+        arg: &HomomorphicInput,
+        keyName: &String,
+    ) -> Vec<TypedWire> {
         panic!("Unary operation {op} not supported");
     }
 
@@ -53,6 +57,7 @@ pub trait HomomorphicBackend {
         op: char,
         rhs: &HomomorphicInput,
         keyName: &String,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         panic!("Binary operation {op} not supported");
     }
@@ -128,6 +133,7 @@ pub trait HomomorphicBackend {
         arg: &Vec<TypedWire>,
         keyName: &String,
         randomness: &TypedWire,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         panic!("Homomorphic re-randomization not supported");
     }

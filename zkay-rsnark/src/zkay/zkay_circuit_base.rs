@@ -12,65 +12,67 @@ use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
-use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire::WireConfig;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
+use crate::zkay::crypto::crypto_backend::Backend;
+
 use crate::util::util::BigInteger;
-use crate::zkay::crypto::crypto_backend;
-use crate::zkay::crypto::homomorphic_backend;
+use crate::zkay::crypto::crypto_backend::CryptoBackend;
+use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_circuit_base::crypto_backend::CryptoBackend;
-use crate::zkay::zkay_circuit_base::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::zkay_sha256_gadget::ZkaySHA256Gadget;
 use crate::zkay::zkay_type::ZkayType;
+use crate::zkay::zkay_type::zkbool;
 use crate::zkay::zkay_util::ZkayUtil;
 use num_bigint::Sign;
+use rccell::RcCell;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fs::File;
 
-// use crate::zkay::zkay_type::check_type;
-// use crate::zkay::zkay_type::zk_bool;
-// use crate::zkay::zkay_type::zk_uint;
 const ADD_OP_LABELS: bool = true;
 const LEGACY_CRYPTO_BACKEND: &str = "LEGACY_CRYPTO_BACKEND";
+
+#[derive(Debug, Clone)]
 pub struct ZkayCircuitBase<T> {
     /**
      * Whether to include comments for the more complex operations in the circuit.arith file
      */
-    realCircuitName: String,
+    pub realCircuitName: String,
 
-    cryptoBackends: HashMap<String, CryptoBackend>,
+    pub cryptoBackends: HashMap<String, Backend>,
 
-    currentPubInIdx: i32,
-    currentPubOutIdx: i32,
-    allPubIOWires: Vec<Option<WireType>>,
+    pub currentPubInIdx: i32,
+    pub currentPubOutIdx: i32,
+    pub allPubIOWires: Vec<Option<WireType>>,
 
-    currentPrivInIdx: i32,
-    allPrivInWires: Vec<Option<WireType>>,
+    pub currentPrivInIdx: i32,
+    pub allPrivInWires: Vec<Option<WireType>>,
 
-    pubInNames: Vec<String>,
-    pubOutNames: Vec<String>,
-    privInNames: Vec<String>,
+    pub pubInNames: Vec<String>,
+    pub pubOutNames: Vec<String>,
+    pub privInNames: Vec<String>,
 
-    pubInCount: i32,
-    useInputHashing: bool,
+    pub pubInCount: i32,
+    pub useInputHashing: bool,
 
-    vars: HashMap<String, Vec<TypedWire>>,
+    pub vars: HashMap<String, Vec<TypedWire>>,
 
-    currentGuardCondition: VecDeque<TypedWire>,
-    serializedArguments: Vec<BigInteger>,
+    pub currentGuardCondition: VecDeque<TypedWire>,
+    pub serializedArguments: Vec<BigInteger>,
 
-    namePrefixIndices: HashMap<String, i32>,
-    namePrefix: VecDeque<String>,
+    pub namePrefixIndices: HashMap<String, i32>,
+    pub namePrefix: VecDeque<String>,
 
-    guardPrefixes: VecDeque<VecDeque<String>>,
-    guardPrefixIndices: VecDeque<HashMap<String, i32>>,
-    t: T,
+    pub guardPrefixes: VecDeque<VecDeque<String>>,
+    pub guardPrefixIndices: VecDeque<HashMap<String, i32>>,
+    pub t: T,
 }
-impl<T> ZkayCircuitBase<T> {
+impl<T: std::fmt::Debug + std::clone::Clone> ZkayCircuitBase<T> {
     fn new(
-        name: &self,
-        cryptoBackend: &String,
+        name: String,
+        cryptoBackend: String,
         keyBits: i32,
         pubInSize: i32,
         pubOutSize: i32,
@@ -111,12 +113,24 @@ impl<T> ZkayCircuitBase<T> {
         CircuitGeneratorExtend::<Self>::new("circuit", _self)
     }
 }
-impl<T: ZkayCircuitBaseConfig> CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<T>> {
+
+impl<T: crate::circuit::StructNameConfig + std::fmt::Debug> crate::circuit::StructNameConfig
+    for CircuitGeneratorExtend<ZkayCircuitBase<T>>
+{
+    fn name(&self) -> String {
+        self.t.name()
+    }
+}
+
+impl<
+    T: ZkayCircuitBaseConfig + crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone,
+> CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<T>>
+{
     fn buildCircuit(&mut self) {
         let (pubInCount, pubOutCount) = (self.t.pubInCount, self.t.pubOutCount);
         // Create IO wires
-        let pubOutCount = allPubIOWires.len() - pubInCount;
-        let (inArray, outArray) = if useInputHashing {
+        let pubOutCount = self.t.t.allPubIOWires.len() - pubInCount;
+        let (inArray, outArray) = if self.t.useInputHashing {
             (
                 self.createProverWitnessWireArray(pubInCount, "in_"),
                 self.createProverWitnessWireArray(pubOutCount, "out_"),
@@ -180,16 +194,16 @@ impl<T: ZkayCircuitBaseConfig> CGConfig for CircuitGeneratorExtend<ZkayCircuitBa
             "Not all inputs consumed"
         );
     }
-    fn prepFiles(&self) {
+    fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
         if self.serializedArguments != None {
-            CGConfig::prepFiles(self);
+            CGConfig::prepFiles(self, circuit_evaluator);
         } else {
             self.writeCircuitFile();
             self.writeDummyInputFile();
         }
     }
 }
-impl<T: ZkayCircuitBaseConfig> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
+impl<T: ZkayCircuitBaseConfig + std::fmt::Debug> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
     fn writeDummyInputFile(&self) {
         let printWriter = File::create(self.get_name() + ".in");
         write!(printWriter, "0 1");
@@ -323,7 +337,7 @@ pub trait ZkayCircuitBaseConfig {
         symmetricCrypto.setKeyPair(myPk, mySk);
     }
 
-    fn getCryptoBackend(&self, cryptoBackendId: &String) -> CryptoBackend {
+    fn getCryptoBackend(&self, cryptoBackendId: &String) -> Backend {
         let backend = self.cryptoBackends.get(cryptoBackendId);
         assert!(
             backend.is_some(),
@@ -332,7 +346,7 @@ pub trait ZkayCircuitBaseConfig {
         backend
     }
 
-    fn getHomomorphicCryptoBackend(&self, cryptoBackendId: &String) -> HomomorphicBackend {
+    fn getHomomorphicCryptoBackend(&self, cryptoBackendId: &String) -> Box<dyn HomomorphicBackend> {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
         assert!(
             cryptoBackend.instance_of("HomomorphicBackend"),
@@ -355,7 +369,7 @@ pub trait ZkayCircuitBaseConfig {
             t,
             false,
         );
-        currentPubInIdx += size;
+        self.t.currentPubInIdx += size;
     }
 
     fn addKi(&self, cryptoBackendId: &String, name: &String, size: i32) {
@@ -420,7 +434,7 @@ pub trait ZkayCircuitBaseConfig {
     }
 
     fn stepOut(&self) {
-        self.popPrefix(namePrefix);
+        self.popPrefix(self.namePrefix);
         self.guardPrefixes.pop_front();
         self.guardPrefixIndices.pop_front();
     }
@@ -448,7 +462,7 @@ pub trait ZkayCircuitBaseConfig {
         }
         self.currentGuardCondition.push(TypedWire::new(
             newWire,
-            ZkBool,
+            zkbool(),
             format!("guard_cond_top_{name}_{isTrue}"),
         ));
     }
@@ -459,7 +473,7 @@ pub trait ZkayCircuitBaseConfig {
     }
 
     fn ite(&self, condition: &TypedWire, trueVal: &TypedWire, falseVal: &TypedWire) -> TypedWire {
-        self.checkType(ZkBool, condition.zkay_type);
+        self.checkType(zkbool(), condition.zkay_type);
         self.checkType(trueVal.zkay_type, falseVal.zkay_type);
         TypedWire::new(
             self.condExpr(condition.wire, trueVal.wire, falseVal.wire),
@@ -501,10 +515,10 @@ pub trait ZkayCircuitBaseConfig {
     }
 
     fn not(&self, val: &TypedWire) -> TypedWire {
-        checkType(ZkBool, val.zkay_type);
+        checkType(zkbool(), val.zkay_type);
         TypedWire::new(
             val.wire.invAsBit(format!("!{}", val.name)),
-            ZkBool,
+            zkbool(),
             format!("!{}", val.name),
         )
     }
@@ -651,7 +665,7 @@ pub trait ZkayCircuitBaseConfig {
     fn val(&self, val: bool) -> TypedWire {
         TypedWire::new(
             if val { get_one_wire() } else { get_zero_wire() },
-            ZkBool,
+            zkbool(),
             format!("const_{val}"),
         )
     }
@@ -809,11 +823,12 @@ pub trait ZkayCircuitBaseConfig {
 
     fn cryptoEnc(
         &self,
-        cryptoBackend: &CryptoBackend,
+        cryptoBackend: &Backend,
         plain: &String,
         key: &String,
         rnd: &String,
         isDec: bool,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         assert!(
             !cryptoBackend.isSymmetric(),
@@ -836,13 +851,14 @@ pub trait ZkayCircuitBaseConfig {
             self.getQualifiedName(key),
             self.getArr(rnd),
             desc,
+            generator,
         );
         enc.getOutputWires().clone()
     }
 
     fn cryptoDec(
         &self,
-        cryptoBackend: &CryptoBackend,
+        cryptoBackend: &Backend,
         cipher: &String,
         pkey: &String,
         skey: &String,
@@ -870,11 +886,12 @@ pub trait ZkayCircuitBaseConfig {
 
     fn cryptoSymmEnc(
         &self,
-        cryptoBackend: &CryptoBackend,
+        cryptoBackend: &Backend,
         plain: &String,
         otherPk: &String,
         ivCipher: &String,
         isDec: bool,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         assert!(
             cryptoBackend.isSymmetric(),
@@ -891,6 +908,7 @@ pub trait ZkayCircuitBaseConfig {
             self.getQualifiedName(otherPk),
             self.getArr(ivCipher),
             desc,
+            generator,
         );
         enc.getOutputWires().clone()
     }
@@ -951,6 +969,7 @@ pub trait ZkayCircuitBaseConfig {
         plain: &String,
         otherPk: &String,
         ivCipher: &String,
+        generator: RcCell<CircuitGenerator>,
     ) {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
@@ -958,7 +977,8 @@ pub trait ZkayCircuitBaseConfig {
         self.addGuardedNonZeroAssertion(getArr(ivCipher), ivCipher);
 
         // 2. Encrypt
-        let computedCipher = self.cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, false);
+        let computedCipher =
+            self.cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, false, generator);
 
         // 3. Check encryption == expected cipher
         self.addGuardedEncryptionAssertion(ivCipher, computedCipher);
@@ -1023,11 +1043,13 @@ pub trait ZkayCircuitBaseConfig {
         plain: &String,
         otherPk: &String,
         ivCipher: &String,
+        generator: RcCell<CircuitGenerator>,
     ) {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
         // 1. Decrypt [dec(cipher, rnd, sk) -> encSymm(plain, ecdh(mySk, otherPk), iv)] (compute inverse op)
-        let computedCipher = self.cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, true);
+        let computedCipher =
+            self.cryptoSymmEnc(cryptoBackend, plain, otherPk, ivCipher, true, generator);
 
         let expIvCipher = self.getArr(ivCipher);
         let expCipherNonZero = self.isNonZero(expIvCipher, ivCipher);

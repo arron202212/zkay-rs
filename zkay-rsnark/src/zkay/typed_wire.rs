@@ -6,22 +6,22 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
-use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_floor_div_gadget;
-use crate::examples::gadgets::math::long_integer_mod_gadget;
+use crate::examples::gadgets::math::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
+use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
+use crate::zkay::zkay_type::zkbool;
 use crate::zkay::zkay_util::ZkayUtil;
 // use crate::zkay::zkay_circuit_base::negate;
-use crate::zkay::typed_wire::long_element::LongElement;
-use crate::zkay::typed_wire::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
-use crate::zkay::typed_wire::long_integer_mod_gadget::LongIntegerModGadget;
-use crate::zkay::typed_wire::wire_array::WireArray;
-use crate::zkay::zkay_type::ZkayType;
+
+use crate::zkay::zkay_type::{ZkayType, zk124};
+
+#[derive(Debug, Clone)]
 pub struct TypedWire {
     pub wire: WireType,
     pub zkay_type: ZkayType,
@@ -49,13 +49,13 @@ impl TypedWire {
     pub fn plus(&self, rhs: &TypedWire) -> TypedWire {
         let resultType = ZkayType::checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " + " + &rhs.name;
-        handle_overflow(self.wire.add(rhs.wire, op), resultType, false, op)
+        self.handle_overflow(self.wire.add(rhs.wire, op), resultType, false, op)
     }
 
     pub fn minus(&self, rhs: &TypedWire) -> TypedWire {
         let resultType = ZkayType::checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " - " + &rhs.name;
-        let ret = self.wire.add(negate(rhs).wire, op);
+        let ret = self.wire.add(self.negate(rhs).wire, op);
         handle_overflow(ret, resultType, false, op)
     }
 
@@ -68,7 +68,7 @@ impl TypedWire {
         }
         if resultType.bitwidth <= 120 {
             // Result always fits into 240 < 253 bits
-            return handle_overflow(
+            return self.handle_overflow(
                 self.wire.mul(rhs.wire, op.clone()),
                 resultType,
                 true,
@@ -91,38 +91,42 @@ impl TypedWire {
             .mul(RhsLoHi[0], op.clone() + "[lo*lo]")
             .getBitWires(resultType.bitwidth)
             .packBitsIntoWords(124);
-        let hiLoMul = handle_overflow(
-            LhsLoHi[1].mul(RhsLoHi[0], op.clone() + "[hi*lo]"),
-            zk124(),
-            true,
-            op.clone() + "[hi*lo]",
-        )
-        .wire
-        .clone();
-        let loHiMul = handle_overflow(
-            LhsLoHi[0].mul(RhsLoHi[1], op.clone() + "[lo*hi]"),
-            zk124(),
-            true,
-            op.clone() + "[lo*hi]",
-        )
-        .wire
-        .clone();
-        let hiLoPlusloHi = handle_overflow(
-            hiLoMul.add(loHiMul, op.clone() + "[hi*lo + lo*hi]"),
-            zk124(),
-            false,
-            op.clone() + "[hi*lo + lo*hi]",
-        )
-        .wire
-        .clone();
-        ansLoHi[1] = handle_overflow(
-            ansLoHi[1].add(hiLoPlusloHi, op.clone() + "[anshi + hi*lo + lo*hi]"),
-            zk124(),
-            false,
-            op.clone() + "[anshi + hi*lo + lo*hi]",
-        )
-        .wire
-        .clone();
+        let hiLoMul = self
+            .handle_overflow(
+                LhsLoHi[1].mul(RhsLoHi[0], op.clone() + "[hi*lo]"),
+                zk124(),
+                true,
+                op.clone() + "[hi*lo]",
+            )
+            .wire
+            .clone();
+        let loHiMul = self
+            .handle_overflow(
+                LhsLoHi[0].mul(RhsLoHi[1], op.clone() + "[lo*hi]"),
+                zk124(),
+                true,
+                op.clone() + "[lo*hi]",
+            )
+            .wire
+            .clone();
+        let hiLoPlusloHi = self
+            .handle_overflow(
+                hiLoMul.add(loHiMul, op.clone() + "[hi*lo + lo*hi]"),
+                zk124(),
+                false,
+                op.clone() + "[hi*lo + lo*hi]",
+            )
+            .wire
+            .clone();
+        ansLoHi[1] = self
+            .handle_overflow(
+                ansLoHi[1].add(hiLoPlusloHi, op.clone() + "[anshi + hi*lo + lo*hi]"),
+                zk124(),
+                false,
+                op.clone() + "[anshi + hi*lo + lo*hi]",
+            )
+            .wire
+            .clone();
 
         let ans = WireArray::new(ansLoHi)
             .getBits(124)
@@ -131,10 +135,10 @@ impl TypedWire {
         TypedWire::new(ans[0], resultType, op)
     }
 
-    pub fn divideBy(&self, rhs: &TypedWire) -> TypedWire {
+    pub fn divideBy(&self, rhs: &TypedWire, generator: &CircuitGenerator) -> TypedWire {
         let resultType = ZkayType::checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " / " + &rhs.name;
-        let mut generator = CircuitGenerator.getActiveCircuitGenerator();
+        // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         generator.addOneAssertion(rhs.wire.checkNonZero(), "no div by 0");
 
         // Sign handling...
@@ -153,7 +157,7 @@ impl TypedWire {
             let rhsSign = rhsWire
                 .getBitWires(rhs.zkay_type.bitwidth)
                 .get(rhs.zkay_type.bitwidth - 1);
-            rhsWire = rhsSign.mux(negate(rhs).wire, rhsWire);
+            rhsWire = rhsSign.mux(self.negate(rhs).wire, rhsWire);
             resultSign = resultSign.xorBitwise(rhsSign, 1);
         }
 
@@ -166,7 +170,7 @@ impl TypedWire {
             .packBitsIntoWords(resultType.bitwidth)[0];
 
         let resPos = TypedWire::new(resAbs, resultType, op);
-        let resNeg = negate(resPos);
+        let resNeg = self.negate(resPos);
         TypedWire::new(resultSign.mux(resNeg.wire, resPos.wire), resultType, op)
     }
 
@@ -204,7 +208,7 @@ impl TypedWire {
             .packBitsIntoWords(resultType.bitwidth)[0];
 
         let resPos = TypedWire::new(resAbs, resultType, op);
-        let resNeg = negate(resPos);
+        let resNeg = self.negate(resPos);
         TypedWire::new(resultSign.mux(resNeg.wire, resPos.wire), resultType, op)
     }
 
@@ -261,13 +265,13 @@ impl TypedWire {
     pub fn isEqualTo(&self, rhs: &TypedWire) -> TypedWire {
         ZkayType::checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " == " + &rhs.name;
-        TypedWire::new(self.wire.isEqualTo(rhs.wire, op), ZkBool, op)
+        TypedWire::new(self.wire.isEqualTo(rhs.wire, op), zkbool(), op)
     }
 
     pub fn isNotEqualTo(&self, rhs: &TypedWire) -> TypedWire {
         ZkayType::checkType(self.zkay_type, rhs.zkay_type);
         let op = self.name.clone() + " != " + &rhs.name;
-        TypedWire::new(self.wire.sub(rhs.wire, op).checkNonZero(op), ZkBool, op)
+        TypedWire::new(self.wire.sub(rhs.wire, op).checkNonZero(op), zkbool(), op)
     }
 
     /** INEQ OPS **/
@@ -289,13 +293,13 @@ impl TypedWire {
             let sameSign = lhsSign.isEqualTo(rhsSign);
             let lhsLess = self.wire.isLessThan(rhs.wire, commonType.bitwidth);
             let isLt = alwaysLt.or(sameSign.and(lhsLess), op);
-            TypedWire::new(isLt, ZkBool, op)
+            TypedWire::new(isLt, zkbool(), op)
         } else {
             // Note: breaks if value > 253 bit
             TypedWire::new(
                 self.wire
                     .isLessThan(rhs.wire, std::cmp::min(253, commonType.bitwidth), op),
-                ZkBool,
+                zkbool(),
                 op,
             )
         }
@@ -318,13 +322,13 @@ impl TypedWire {
             let sameSign = lhsSign.isEqualTo(rhsSign);
             let lhsLessEq = self.wire.isLessThanOrEqual(rhs.wire, commonType.bitwidth);
             let isLt = alwaysLt.or(sameSign.and(lhsLessEq), op);
-            TypedWire::new(isLt, ZkBool, op)
+            TypedWire::new(isLt, zkbool(), op)
         } else {
             // Note: breaks if value > 253 bit
             TypedWire::new(
                 self.wire
                     .isLessThanOrEqual(rhs.wire, std::cmp::min(253, commonType.bitwidth), op),
-                ZkBool,
+                zkbool(),
                 op,
             )
         }
@@ -341,17 +345,17 @@ impl TypedWire {
     /** BOOL OPS */
 
     pub fn and(&self, rhs: &TypedWire) -> TypedWire {
-        ZkayType::checkType(ZkBool, self.zkay_type);
-        ZkayType::checkType(ZkBool, rhs.zkay_type);
+        ZkayType::checkType(zkbool(), self.zkay_type);
+        ZkayType::checkType(zkbool(), rhs.zkay_type);
         let op = self.name.clone() + " && " + &rhs.name;
-        TypedWire::new(self.wire.and(rhs.wire, op), ZkBool, op)
+        TypedWire::new(self.wire.and(rhs.wire, op), zkbool(), op)
     }
 
     pub fn or(&self, rhs: &TypedWire) -> TypedWire {
-        ZkayType::checkType(ZkBool, self.zkay_type);
-        ZkayType::checkType(ZkBool, rhs.zkay_type);
+        ZkayType::checkType(zkbool(), self.zkay_type);
+        ZkayType::checkType(zkbool(), rhs.zkay_type);
         let op = self.name.clone() + " || " + &rhs.name;
-        TypedWire::new(self.wire.or(rhs.wire, op), ZkBool, op)
+        TypedWire::new(self.wire.or(rhs.wire, op), zkbool(), op)
     }
 
     fn handle_overflow(

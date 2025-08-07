@@ -12,17 +12,20 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
+
 use crate::util::util::BigInteger;
 use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
 use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
 use crate::zkay::zkay_util::ZkayUtil;
-pub struct ZkayECDHGenerator {
-    secret: BigInteger,
-    pk: Option<BigInteger>,
-    late_eval: bool,
 
-    secret_wire: Option<WireType>,
-    pk_wire: Option<WireType>,
+#[derive(Debug, Clone)]
+pub struct ZkayECDHGenerator {
+    pub secret: BigInteger,
+    pub pk: Option<BigInteger>,
+    pub late_eval: bool,
+
+    pub secret_wire: Option<WireType>,
+    pub pk_wire: Option<WireType>,
 }
 impl ZkayECDHGenerator {
     pub fn new(
@@ -42,6 +45,7 @@ impl ZkayECDHGenerator {
         )
     }
 }
+crate::impl_struct_name_for!(CircuitGeneratorExtend<ZkayECDHGenerator>);
 impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
     fn buildCircuit(&mut self) {
         let secret_wire = if self.t.late_eval {

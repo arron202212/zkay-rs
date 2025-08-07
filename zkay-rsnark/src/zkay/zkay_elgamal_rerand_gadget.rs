@@ -6,25 +6,27 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
 use rccell::RcCell;
 /**
  * Gadget homomorphically re-randomizing an ElGamal encrypted ciphertext.
  */
+
+#[derive(Debug, Clone)]
 pub struct ZkayElgamalRerandGadget {
-    randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
-    pk: JubJubPoint,                       // pub  key
-    c1: JubJubPoint,                       // input ciphertext first point
-    c2: JubJubPoint,                       // input ciphertext second point
-    o1: Option<JubJubPoint>,
-    o2: Option<JubJubPoint>,
-    outputs: Vec<Option<WireType>>,
+    pub randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
+    pub pk: JubJubPoint,                       // pub  key
+    pub c1: JubJubPoint,                       // input ciphertext first point
+    pub c2: JubJubPoint,                       // input ciphertext second point
+    pub o1: Option<JubJubPoint>,
+    pub o2: Option<JubJubPoint>,
+    pub outputs: Vec<Option<WireType>>,
 }
 impl ZkayElgamalRerandGadget {
     pub fn new(

@@ -6,12 +6,12 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::zkay::zkay_circuit_base;
-// use crate::zkay::zkay_type::zk_uint;
+
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
-
+use crate::zkay::zkay_type::ZkayType;
+#[derive(Debug, Clone)]
 pub struct SampleDecCircuit;
 impl SampleDecCircuit {
     pub fn new() -> CircuitGeneratorExtend<ZkayCircuitBase<Self>> {
@@ -24,10 +24,10 @@ impl SampleDecCircuit {
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
     fn __zk__bar(&self) {
         self.stepIn("_zk__bar");
-        self.addS("secret0_plain_val", 1, ZkUint(32));
-        self.addS("zk__in0_cipher_val_R", 1, ZkUint(256));
-        self.addIn("zk__in0_cipher_val", 4, ZkUint(256));
-        self.addOut("zk__out0_plain_val", 1, ZkUint(32));
+        self.addS("secret0_plain_val", 1, ZkayType::ZkUint(32));
+        self.addS("zk__in0_cipher_val_R", 1, ZkayType::ZkUint(256));
+        self.addIn("zk__in0_cipher_val", 4, ZkayType::ZkUint(256));
+        self.addOut("zk__out0_plain_val", 1, ZkayType::ZkUint(32));
 
         //[ --- val ---
         // secret0_plain_val = dec(val) [zk__in0_cipher_val]

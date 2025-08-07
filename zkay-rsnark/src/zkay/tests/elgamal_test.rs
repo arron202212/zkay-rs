@@ -11,13 +11,13 @@ use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
-use crate::circuit::structure::wire_array;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 
-use crate::zkay::zkay_baby_jub_jub_gadget;
-use crate::zkay::zkay_elgamal_dec_gadget;
-use crate::zkay::zkay_elgamal_enc_gadget;
-use crate::zkay::zkay_elgamal_rerand_gadget;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_elgamal_dec_gadget::ZkayElgamalDecGadget;
+use crate::zkay::zkay_elgamal_enc_gadget::ZkayElgamalEncGadget;
+use crate::zkay::zkay_elgamal_rerand_gadget::ZkayElgamalRerandGadget;
 
 #[cfg(test)]
 mod test {

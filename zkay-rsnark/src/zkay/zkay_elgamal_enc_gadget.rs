@@ -6,26 +6,28 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
 use rccell::RcCell;
 /**
  * Gadget for exponential ElGamal encryption, which is additively homomorphic.
  * Because the message is in the exponent it is simply a bit string and
  * does not have to be embedded into the curve.
  */
+
+#[derive(Debug, Clone)]
 pub struct ZkayElgamalEncGadget {
-    randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
-    msgBits: Vec<Option<WireType>>,        // little-endian message bits
-    pk: JubJubPoint,                       // pub  key
-    c1: Option<JubJubPoint>,
-    c2: Option<JubJubPoint>,
-    outputs: Vec<Option<WireType>>,
+    pub randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
+    pub msgBits: Vec<Option<WireType>>,        // little-endian message bits
+    pub pk: JubJubPoint,                       // pub  key
+    pub c1: Option<JubJubPoint>,
+    pub c2: Option<JubJubPoint>,
+    pub outputs: Vec<Option<WireType>>,
 }
 impl ZkayElgamalEncGadget {
     pub fn new(
@@ -53,7 +55,7 @@ impl ZkayElgamalEncGadget {
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
     fn buildCircuit(&mut self) {
         let msgEmbedded = self.mulScalar(self.getGenerator(), self.t.t.msgBits);
-        let sharedSecret = self.mulScalar(pk, self.t.t.randomnessBits);
+        let sharedSecret = self.mulScalar(&self.t.t.pk, self.t.t.randomnessBits);
         let c1 = self.mulScalar(self.getGenerator(), self.t.t.randomnessBits);
         let c2 = self.addPoints(msgEmbedded, sharedSecret);
         self.t.t.outputs = vec![c1.x.clone(), c1.y.clone(), c2.x.clone(), c2.y.clone()];

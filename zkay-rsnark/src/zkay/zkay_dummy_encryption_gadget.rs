@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
@@ -15,17 +15,18 @@ use crate::zkay::crypto::dummy_backend::DummyBackend; //::CIPHER_CHUNK_SIZE;
 use crate::zkay::typed_wire::TypedWire;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_dummy_encryption_gadget::long_element::LongElement;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
+
 use rccell::RcCell;
+
+#[derive(Debug, Clone)]
 pub struct ZkayDummyEncryptionGadget {
-    pk: WireType,
-    plain: WireType,
-    cipher: Vec<Option<WireType>>,
+    pub pk: WireType,
+    pub plain: WireType,
+    pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyEncryptionGadget {
     pub fn new(
-        plain: &TypedWire,
+        plain: TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
         keyBits: i32,

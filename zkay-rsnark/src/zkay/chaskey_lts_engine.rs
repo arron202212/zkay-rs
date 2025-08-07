@@ -7,16 +7,28 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use bytebuffer::ByteBuffer;
+
+#[derive(Debug, Clone)]
 pub struct CipherParameters {
     pub key: Vec<u8>,
 }
+impl CipherParameters {
+    pub fn instance_of(&self, s: &str) -> bool {
+        false
+    }
+    pub fn getKey(&self) -> &Vec<u8> {
+        &self.key
+    }
+}
+
+#[derive(Debug, Clone)]
 pub struct ChaskeyLTSEngine {
-    enc: bool,
-    key: Vec<i32>,
+    pub enc: bool,
+    pub key: Vec<i32>,
 }
 //BlockCipher for
 impl ChaskeyLTSEngine {
-    pub fn init(encrypt: bool, cipherParameters: CipherParameters) -> Self {
+    pub fn new(encrypt: bool, cipherParameters: CipherParameters) -> Self {
         assert!(
             cipherParameters.instance_of("KeyParameter") && cipherParameters.getKey().len() == 16
         );

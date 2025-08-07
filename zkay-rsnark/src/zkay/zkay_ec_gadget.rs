@@ -14,12 +14,14 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::field_division_gadget;
+use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_ec_gadget::field_division_gadget::FieldDivisionGadget;
+
 // use crate::zkay::zkay_ec_gadget::AffinePoint;
 use crate::util::util::BigInteger;
 use rccell::RcCell;
+
+#[derive(Debug, Clone)]
 pub struct AffinePoint {
     x: WireType,
     y: WireType,
@@ -41,9 +43,10 @@ pub struct AffinePoint {
 // }
 
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
+#[derive(Debug, Clone)]
 pub struct ZkayEcGadget<T> {
-    generators: CircuitGenerator,
-    t: T,
+    pub generators: CircuitGenerator,
+    pub t: T,
 }
 
 impl<T> ZkayEcGadget<T> {

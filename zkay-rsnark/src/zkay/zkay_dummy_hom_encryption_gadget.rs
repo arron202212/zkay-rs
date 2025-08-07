@@ -6,13 +6,13 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_paillier_dec_gadget::long_element::LongElement;
 use rccell::RcCell;
 
 /**
@@ -25,10 +25,12 @@ use rccell::RcCell;
  *                        = (m1 + m2) * p
  *                        = Enc(m1 + m2, p)
  */
+
+#[derive(Debug, Clone)]
 pub struct ZkayDummyHomEncryptionGadget {
-    pk: WireType,
-    plain: WireType,
-    cipher: Vec<Option<WireType>>,
+    pub pk: WireType,
+    pub plain: WireType,
+    pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyHomEncryptionGadget {
     pub fn new(

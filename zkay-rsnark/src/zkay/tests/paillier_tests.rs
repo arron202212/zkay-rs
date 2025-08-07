@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
+use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
@@ -15,10 +15,10 @@ use crate::circuit::structure::circuit_generator::{
 use crate::circuit::structure::wire_type::WireType;
 
 use crate::util::util::{BigInteger, Util};
-use crate::zkay::zkay_paillier_dec_gadget;
-use crate::zkay::zkay_paillier_enc_gadget;
-use crate::zkay::zkay_paillier_fast_dec_gadget;
-use crate::zkay::zkay_paillier_fast_enc_gadget;
+use crate::zkay::zkay_paillier_dec_gadget::ZkayPaillierDecGadget;
+use crate::zkay::zkay_paillier_enc_gadget::ZkayPaillierEncGadget;
+use crate::zkay::zkay_paillier_fast_dec_gadget::ZkayPaillierFastDecGadget;
+use crate::zkay::zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget;
 
 #[cfg(test)]
 mod test {
