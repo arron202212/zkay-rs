@@ -79,7 +79,7 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("Speck128_Test", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
+
         let cipherText = generator.get_out_wires();
         assert_eq!(
             evaluator.getWireValue(cipherText[0].as_ref().unwrap()),

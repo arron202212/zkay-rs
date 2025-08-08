@@ -66,9 +66,10 @@ impl ZkayUtil {
             "\n-----------------------------------RUNNING LIBSNARK KEYGEN -----------------------------------------"
         );
         let input = BufReader::new(p.getInputStream());
-        let buf = StringBuilder::new();
+        let mut buf = String::new();
         for line in input.lines() {
-            buf.append(line).append("\n");
+            buf.push_str(line);
+            buf.push_str("\n");
         }
 
         //println!(buf.toString());
@@ -85,10 +86,11 @@ impl ZkayUtil {
         println!(
             "\n-----------------------------------RUNNING LIBSNARK PROOFGEN -----------------------------------------"
         );
-        let input = BufferedReader::new(InputStreamReader::new(p.getInputStream()));
-        let buf = StringBuilder::new();
+        let input = BufReader::new(p);
+        let buf = String::new();
         for line in input.lines() {
-            buf.append(line).append("\n");
+            buf.push_str(line);
+            buf.push_str("\n");
         }
 
         //println!(buf.toString());

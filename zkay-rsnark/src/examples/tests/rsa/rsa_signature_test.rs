@@ -162,7 +162,7 @@ mod test {
                 CircuitGeneratorExtend::<CGTest>::new(&format!("RSA{keySize}_SIG_TestValid"), t);
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             assert_eq!(
                 Util::one(),
                 evaluator.getWireValue(generator.get_out_wires()[0].as_ref().unwrap()),
@@ -298,7 +298,7 @@ mod test {
                 CircuitGeneratorExtend::<CGTest>::new(&format!("RSA{keySize}_SIG_TestInvalid"), t);
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             assert_eq!(
                 BigInteger::ZERO,
                 evaluator.getWireValue(generator.get_out_wires()[0].as_ref().unwrap()),
@@ -435,7 +435,7 @@ mod test {
             );
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             assert_eq!(
                 Util::one(),
                 evaluator.getWireValue(generator.get_out_wires()[0].as_ref().unwrap()),

@@ -33,8 +33,11 @@ pub struct DummyHomBackend;
 impl DummyHomBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
-    pub fn new(keyBits: i32) -> CryptoBackend<Asymmetric<Self>> {
-        Asymmetric::<Self>::new(keyBits, Self)
+    pub fn new(
+        keyBits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> CryptoBackend<Asymmetric<Self>> {
+        Asymmetric::<Self>::new(keyBits, Self, generator)
     }
 }
 impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {}
@@ -64,7 +67,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
 }
 impl CryptoBackend<Asymmetric<DummyHomBackend>> {
     fn getKeyWire(&self, keyName: &String, generator: RcCell<CircuitGenerator>) -> WireType {
-        let key = self.getKey(keyName, generator.clone().downgrade());
+        let key = self.getKey(keyName, generator.clone());
         // let mut generator = self.generators();
 
         let keyArr = key.getBits().unwrap().packBitsIntoWords(256, &None);
@@ -110,6 +113,7 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
             ZkayType::ZkUint(256),
             name.clone(),
             &vec![],
+            self.generator.clone(),
         )]
     }
 }
@@ -120,6 +124,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
         op: char,
         arg: &HomomorphicInput,
         keyName: &String,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         let cipher = self.getCipherWire(arg, &"arg".to_owned());
         assert!(op == '-', "Unary operation {op} not supported");
@@ -135,6 +140,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
         op: char,
         rhs: &HomomorphicInput,
         keyName: &String,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         match op {
             '+' => {
@@ -180,6 +186,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
         arg: &Vec<TypedWire>,
         keyName: &String,
         randomness: &TypedWire,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         arg.clone()
     }

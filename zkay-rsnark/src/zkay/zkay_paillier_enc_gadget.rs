@@ -9,15 +9,17 @@
 use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
+use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
 use crate::examples::gadgets::math::long_integer_mod_inverse_gadget::LongIntegerModInverseGadget;
 use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-
 use rccell::RcCell;
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Debug, Clone)]
 pub struct ZkayPaillierEncGadget {
@@ -43,7 +45,7 @@ impl ZkayPaillierEncGadget {
         let nSquareMaxBits = 2 * nBits; // Maximum bit length of n^2
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        let nSquare = n.mul(n).align(maxNumChunks);
+        let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
 
         let mut _self = Gadget::<Self> {
             generator,
@@ -67,54 +69,60 @@ impl ZkayPaillierEncGadget {
 }
 impl Gadget<ZkayPaillierEncGadget> {
     fn buildCircuit(&mut self) {
-        let nSquareMinBits = 2 * self.nBits - 1; // Minimum bit length of n^2
+        let nSquareMinBits = 2 * self.t.nBits - 1; // Minimum bit length of n^2
         // Prove that random is in Z_n* by checking that random has an inverse mod n
-        let randInv = LongIntegerModInverseGadget::new(self.random, self.n, false).getResult();
-        self.generator.addOneAssertion(randInv.checkNonZero());
+        let randInv = LongIntegerModInverseGadget::new(
+            self.t.random.clone(),
+            self.t.n.clone(),
+            false,
+            &None,
+            self.generator.clone(),
+        )
+        .getResult();
+        self.generator
+            .addOneAssertion(&randInv.checkNonZero(), &None);
         // let c = g^m * r^n mod n^2
         let gPowPlain = LongIntegerModPowGadget::new(
-            self.t.g,
-            self.t.plain,
+            self.t.g.clone(),
+            self.t.plain.clone(),
+            self.t.nSquare.clone(),
+            nSquareMinBits,
             self.t.nBits,
-            self.t.nSquare,
-            self.t.nSquareMinBits,
-            -1,
             &Some("g^m".to_owned()),
-            self.cg(),
+            self.generator.clone(),
         )
         .getResult();
         let randPowN = LongIntegerModPowGadget::new(
-            self.t.random,
-            self.t.n,
+            self.t.random.clone(),
+            self.t.n.clone(),
+            self.t.nSquare.clone(),
+            nSquareMinBits,
             self.t.nBits,
-            self.t.nSquare,
-            self.t.nSquareMinBits,
-            -1,
             &Some("r^m".to_owned()),
-            self.cg(),
+            self.generator.clone(),
         )
         .getResult();
-        let product = gPowPlain.mul(randPowN);
+        let product = gPowPlain.mul(&randPowN);
         self.t.cipher = Some(
             LongIntegerModGadget::new(
                 product,
-                self.t.nSquare,
-                self.t.nSquareMinBits,
+                self.t.nSquare.clone(),
+                nSquareMinBits,
                 true,
-                &Some("g^m * r^n mod n^2").to_owned(),
-                self.cg(),
+                &Some("g^m * r^n mod n^2".to_owned()),
+                self.generator.clone(),
             )
             .getRemainder()
             .clone(),
         );
     }
 
-    pub fn getCiphertext(&self) -> &LongElement {
+    pub fn getCiphertext(&self) -> &Option<LongElement> {
         &self.t.cipher
     }
 }
 impl GadgetConfig for Gadget<ZkayPaillierEncGadget> {
     fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.t.cipher.getArray()
+        self.t.cipher.as_ref().unwrap().getArray()
     }
 }

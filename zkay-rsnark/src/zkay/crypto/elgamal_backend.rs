@@ -41,10 +41,13 @@ impl ElgamalBackend {
 
     const RND_CHUNK_SIZE: i32 = 256;
 
-    pub fn new(keyBits: i32) -> CryptoBackend<Asymmetric<Self>> {
+    pub fn new(
+        keyBits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> CryptoBackend<Asymmetric<Self>> {
         // pub  key must be a BabyJubJub point (two coordinates)
         assert!(keyBits == 2 * Self::EC_COORD_BITS, "pub  key size mismatch");
-        Asymmetric::<Self>::new(keyBits, Self)
+        Asymmetric::<Self>::new(keyBits, Self, generator)
     }
 }
 
@@ -131,7 +134,15 @@ impl CryptoBackend<Asymmetric<ElgamalBackend>> {
         let uint256 = ZkayType::ZkUint(256);
         wires
             .iter()
-            .map(|w| TypedWire::new(w.clone().unwrap(), uint256.clone(), name.clone(), &vec![]))
+            .map(|w| {
+                TypedWire::new(
+                    w.clone().unwrap(),
+                    uint256.clone(),
+                    name.clone(),
+                    &vec![],
+                    self.generator.clone(),
+                )
+            })
             .collect()
     }
 
@@ -232,7 +243,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
             let gadget = ZkayElgamalMulGadget::new(
                 c1,
                 c2,
-                plain_wire.wire.getBitWiresi(32, &None).asArray(),
+                plain_wire.wire.getBitWiresi(32, &None).asArray().clone(),
                 generator,
             );
             self.toTypedWireArray(gadget.getOutputWires(), &outputName)
@@ -266,7 +277,7 @@ impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
             .asArray();
 
         // create gadget
-        let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray, generator);
+        let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray.clone(), generator);
         self.toTypedWireArray(gadget.getOutputWires(), &outputName)
     }
 }

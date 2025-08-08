@@ -29,8 +29,12 @@ pub struct ECDHBackend {
 impl ECDHBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
-    pub fn new(keyBits: i32, cipherType: CipherType) -> CryptoBackend<Symmetric<Self>> {
-        Symmetric::<Self>::new(keyBits, Self { cipherType })
+    pub fn new(
+        keyBits: i32,
+        cipherType: CipherType,
+        generator: RcCell<CircuitGenerator>,
+    ) -> CryptoBackend<Symmetric<Self>> {
+        Symmetric::<Self>::new(keyBits, Self { cipherType }, generator)
     }
 }
 impl SymmetricConfig for CryptoBackend<Symmetric<ECDHBackend>> {}

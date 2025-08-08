@@ -7,18 +7,20 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfigFields;
+use crate::circuit::structure::circuit_generator::CGInstance;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire_type::WireType;
-
 use crate::util::util::BigInteger;
 use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
 use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
 use crate::zkay::zkay_util::ZkayUtil;
-
-#[derive(Debug, Clone)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ZkayECDHGenerator {
     pub secret: BigInteger,
     pub pk: Option<BigInteger>,
@@ -51,49 +53,59 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
         let secret_wire = if self.t.late_eval {
             self.createProverWitnessWire(&None)
         } else {
-            self.createConstantWire(&self.t.secret)
+            self.createConstantWire(&self.t.secret, &None)
         };
 
         if self.t.pk.is_none() {
             // If no pub  key specified, compute own pub  key
             self.makeOutput(
-                ZkayEcPkDerivationGadget::new(secret_wire.clone(), true).getOutputWires()[0],
+                ZkayEcPkDerivationGadget::new(secret_wire.clone(), true, &None, self.cg())
+                    .getOutputWires()[0]
+                    .as_ref()
+                    .unwrap(),
+                &None,
             );
         } else {
             // Derive shared secret
             self.t.pk_wire = if self.t.late_eval {
-                self.createInputWire()
+                Some(self.createInputWire(&None))
             } else {
-                self.createConstantWire(self.t.pk.as_ref().unwrap())
+                Some(self.createConstantWire(self.t.pk.as_ref().unwrap(), &None))
             };
-            let mut gadget = ZkayECDHGadget::new(self.t.pk_wire.clone(), secret_wire.clone(), true);
+            let mut gadget = ZkayECDHGadget::new(
+                self.t.pk_wire.clone().unwrap(),
+                secret_wire.clone(),
+                true,
+                &None,
+                self.cg(),
+            );
             gadget.validateInputs();
-            self.makeOutput(gadget.getOutputWires()[0]);
+            self.makeOutput(gadget.getOutputWires()[0].as_ref().unwrap(), &None);
         }
-        self.t.secret_wire = secret_wire;
+        self.t.secret_wire = Some(secret_wire);
     }
 
     fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
         if self.t.late_eval {
             evaluator.setWireValue(self.t.secret_wire.as_ref().unwrap(), &self.t.secret);
-            if let Some(pk) = self.pk.as_ref() {
-                evaluator.setWireValue(self.pk_wire.as_ref().unwrap(), pk);
+            if let Some(pk) = self.t.pk.as_ref() {
+                evaluator.setWireValue(self.t.pk_wire.as_ref().unwrap(), pk);
             }
         }
     }
 }
+
 impl CircuitGeneratorExtend<ZkayECDHGenerator> {
     fn runLibsnark(&self) {
         panic!("This circuit is only for evaluation");
     }
 
-    fn computeECKey(pk: &BigInteger, sk: &BigInteger) -> BigInteger {
+    fn computeECKey(pk: Option<BigInteger>, sk: BigInteger) -> BigInteger {
         let mut ecdh_generator = ZkayECDHGenerator::new(pk, sk, false);
         ecdh_generator.generateCircuit();
         ecdh_generator.evalCircuit();
-        ecdh_generator
-            .getCircuitEvaluator()
-            .getWireValue(ecdh_generator.get_out_wires()[0])
+        let evaluator = ecdh_generator.evalCircuit().unwrap();
+        evaluator.getWireValue(ecdh_generator.get_out_wires()[0].as_ref().unwrap())
     }
 
     fn derivePk(secret: BigInteger) -> String {
@@ -101,12 +113,12 @@ impl CircuitGeneratorExtend<ZkayECDHGenerator> {
     }
 
     fn getSharedSecret(public_key: BigInteger, secret: BigInteger) -> String {
-        Self::computeECKey(public_key, secret).to_str_radix(16)
+        Self::computeECKey(Some(public_key), secret).to_str_radix(16)
     }
 
     fn rnd_to_secret(rnd_32: &String) -> BigInteger {
-        let val = BigInteger::new(rnd_32, 16);
-        let mut arr = ZkayUtil::unsignedBigintToBytes(val, 32);
+        let val = BigInteger::parse_bytes(rnd_32.as_bytes(), 16).unwrap();
+        let mut arr = ZkayUtil::unsignedBigintToBytesi(val, 32);
         arr[0] &= 0x0f;
         arr[0] |= 0x10;
         arr[31] &= 0xf8;
@@ -121,15 +133,15 @@ pub fn main(args: Vec<String>) {
         //println!(derivePk(secret));
         //println!(secret.toString(16));
     } else if args.len() == 2 {
-        let secret = BigInteger::new(args[0], 16);
-        let pk = BigInteger::new(args[1], 16);
+        let secret = BigInteger::parse_bytes(args[0].as_bytes(), 16).unwrap();
+        let pk = BigInteger::parse_bytes(args[1].as_bytes(), 16).unwrap();
         println!(
             "Deriving shared key from pub  key 0x{:x} and secret 0x{:x}",
             pk, secret
         );
         println!(
             "{}",
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk, &secret)
+            CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(pk, secret)
         );
     } else {
         panic!();

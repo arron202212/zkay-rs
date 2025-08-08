@@ -446,7 +446,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
     fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
         let start = std::time::Instant::now();
         let mut precomputedTable: Vec<_> = (1..self.t.secretBits.len())
-            .scan(p.clone(), |s, _j| Some(self.doubleAffinePoint(&s)))
+            .scan(p.clone(), |s, _j| {
+                Some(Self::doubleAffinePoint(&s, self.generator.clone()))
+            })
             .collect();
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         precomputedTable.insert(0, p.clone());
@@ -491,7 +493,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         result
     }
 
-    fn doubleAffinePoint(&self, p: &AffinePoint) -> AffinePoint {
+    fn doubleAffinePoint(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> AffinePoint {
         let start = std::time::Instant::now();
         let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
@@ -502,7 +504,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .add(1),
             p.y.as_ref().unwrap().muli(2, &None),
             &None,
-            self.generator.clone(),
+            generator,
         )
         .getOutputWires()[0]
             .clone();

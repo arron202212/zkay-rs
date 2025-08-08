@@ -10,16 +10,28 @@
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
+use crate::zkay::zkay_circuit_base::ZkayCircuitBaseConfig;
 use crate::zkay::zkay_type::ZkayType;
 #[derive(Debug, Clone)]
 pub struct SampleDecCircuit;
 impl SampleDecCircuit {
     pub fn new() -> CircuitGeneratorExtend<ZkayCircuitBase<Self>> {
-        let mut _self = ZkayCircuitBase::<Self>::new("zk__Verify_Test_bar", 6, 1, 2, true);
-        _self.addCryptoBackend("elgamal", "elgamal", 508);
+        let mut _self = ZkayCircuitBase::<Self>::new(
+            "zk__Verify_Test_bar".to_owned(),
+            Some("elgamal".to_owned()),
+            Some("elgamal".to_owned()),
+            508,
+            6,
+            1,
+            2,
+            true,
+            Self,
+        );
+        // _self.addCryptoBackend("elgamal", "elgamal", 508);
         _self
     }
 }
+impl ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {}
 
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
     fn __zk__bar(&self) {
@@ -47,7 +59,7 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
 
     fn buildCircuit(&mut self) {
         // super.buildCircuit();
-        self.addK("elgamal", "glob_key_Elgamal__me", 2);
+        self.addKi("elgamal", "glob_key_Elgamal__me", 2);
 
         self.__zk__bar();
     }
@@ -55,5 +67,5 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
 
 pub fn main(args: Vec<String>) {
     let circuit = SampleDecCircuit::new();
-    circuit.run(args);
+    circuit.run(&args);
 }

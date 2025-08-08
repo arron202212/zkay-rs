@@ -11,13 +11,14 @@ use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
+use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
 use crate::examples::gadgets::math::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
 use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
 use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-
 use rccell::RcCell;
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Debug, Clone)]
 pub struct ZkayPaillierDecGadget {
@@ -43,7 +44,7 @@ impl ZkayPaillierDecGadget {
         let nSquareMaxBits = 2 * nBits;
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        let nSquare = n.mul(n).align(maxNumChunks);
+        let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
         let mut _self = Gadget::<Self> {
             generator,
             description: desc
@@ -53,7 +54,6 @@ impl ZkayPaillierDecGadget {
                 n,
                 nSquare,
                 nBits,
-                nSquareMaxBits,
                 lambda,
                 mu,
                 cipher,
@@ -66,32 +66,49 @@ impl ZkayPaillierDecGadget {
 }
 impl Gadget<ZkayPaillierDecGadget> {
     fn buildCircuit(&mut self) {
-        let nSquareMinBits = 2 * self.nBits - 1; // Minimum bit length of n^2
+        let nSquareMinBits = 2 * self.t.nBits - 1; // Minimum bit length of n^2
 
         // plain = L(cipher^lambda mod n^2) * mu mod n
         let cPowLambda = LongIntegerModPowGadget::new(
-            self.cipher,
-            self.lambda,
-            self.nSquare,
-            self.nSquareMinBits,
+            self.t.cipher.clone(),
+            self.t.lambda.clone(),
+            self.t.nSquare.clone(),
+            nSquareMinBits,
             -1,
             &Some("c^lambda".to_owned()),
-            self.cg(),
+            self.generator.clone(),
         )
         .getResult();
-        let lOutput =
-            LongIntegerFloorDivGadget::new(cPowLambda.sub(1), self.n, "(c^lambda - 1) / n")
-                .getQuotient();
-        let timesMu = lOutput.mul(self.mu);
-        self.t.plain = LongIntegerModGadget::new(timesMu, self.n, self.nBits, true).getRemainder();
+        let lOutput = LongIntegerFloorDivGadget::new(
+            cPowLambda.sub(1),
+            self.t.n,
+            0,
+            &Some("(c^lambda - 1) / n".to_owned()),
+            self.generator.clone(),
+        )
+        .getQuotient()
+        .clone();
+        let timesMu = lOutput.mul(&self.t.mu);
+        self.t.plain = Some(
+            LongIntegerModGadget::new(
+                timesMu,
+                self.t.n,
+                self.t.nBits,
+                true,
+                &None,
+                self.generator.clone(),
+            )
+            .getRemainder()
+            .clone(),
+        );
     }
 
-    pub fn getPlaintext(&self) -> &LongElement {
+    pub fn getPlaintext(&self) -> &Option<LongElement> {
         &self.t.plain
     }
 }
 impl GadgetConfig for Gadget<ZkayPaillierDecGadget> {
     fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.plain.getArray()
+        self.t.plain.as_ref().unwrap().getArray()
     }
 }

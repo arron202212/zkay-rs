@@ -7,8 +7,11 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
+use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
+use rccell::RcCell;
+
 pub trait HomomorphicBackend {
     /**
      * Perform the unary homomorphic operation 'op' on the ciphertext 'cipher'.
@@ -30,6 +33,7 @@ pub trait HomomorphicBackend {
         op: char,
         arg: &HomomorphicInput,
         keyName: &String,
+        generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         panic!("Unary operation {op} not supported");
     }

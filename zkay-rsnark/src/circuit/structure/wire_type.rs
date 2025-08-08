@@ -541,6 +541,23 @@ impl Sub<&BigInteger> for WireType {
         self.sub_wire(rhs, &None)
     }
 }
+
+impl Mul<i64> for WireType {
+    type Output = Self;
+
+    fn mul(self, rhs: i64) -> Self::Output {
+        self.mul_wire(rhs, &None)
+    }
+}
+
+impl Mul<&BigInteger> for WireType {
+    type Output = Self;
+
+    fn mul(self, rhs: &BigInteger) -> Self::Output {
+        self.mul_wire(rhs, &None)
+    }
+}
+
 impl Mul<&WireType> for WireType {
     type Output = Self;
 

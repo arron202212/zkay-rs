@@ -10,16 +10,28 @@
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
+use crate::zkay::zkay_circuit_base::ZkayCircuitBaseConfig;
 use crate::zkay::zkay_type::ZkayType;
 #[derive(Debug, Clone)]
 pub struct SampleMulCircuit;
 impl SampleMulCircuit {
     pub fn new() -> CircuitGeneratorExtend<ZkayCircuitBase<Self>> {
-        let mut _self = ZkayCircuitBase::<Self>::new("zk__Verify_Test_foo", 6, 4, 0, true);
-        _self.addCryptoBackend("elgamal", "elgamal", 508);
+        let mut _self = ZkayCircuitBase::<Self>::new(
+            "zk__Verify_Test_foo".to_owned(),
+            Some("elgamal".to_owned()),
+            Some("elgamal".to_owned()),
+            508,
+            6,
+            4,
+            0,
+            true,
+            Self,
+        );
+        // _self.addCryptoBackend("elgamal", "elgamal", 508);
         _self
     }
 }
+impl ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {}
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
     fn __zk__foo(&self) {
         self.stepIn("_zk__foo");
@@ -28,14 +40,16 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
 
         //[ --- val * 3 ---
         // zk__in0_cipher_val = val
-        self.decl(
+        self.decl_svt(
             "tmp0_cipher",
-            self.o_hom(
+            &self.o_hom_sshch(
                 "elgamal",
                 "glob_key_Elgamal__owner",
-                HomomorphicInput::of(self.getCipher("zk__in0_cipher_val")),
+                &HomomorphicInput::ofv(self.getCipher("zk__in0_cipher_val")),
                 '*',
-                HomomorphicInput::of(self.cast(val(3, ZkayType::ZkUint(8)), ZkayType::ZkUint(32))),
+                &HomomorphicInput::of(
+                    self.cast(&self.val_iz(3, ZkayType::ZkUint(8)), ZkayType::ZkUint(32)),
+                ),
             ),
         );
         self.checkEq("tmp0_cipher", "zk__out0_cipher");
@@ -46,12 +60,12 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
 
     fn buildCircuit(&mut self) {
         // super.buildCircuit();
-        self.addK("elgamal", "glob_key_Elgamal__owner", 2);
+        self.addKi("elgamal", "glob_key_Elgamal__owner", 2);
 
         self.__zk__foo();
     }
 }
 pub fn main(args: Vec<String>) {
     let circuit = SampleMulCircuit::new();
-    circuit.run(args);
+    circuit.run(&args);
 }

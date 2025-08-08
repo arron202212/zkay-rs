@@ -8,8 +8,10 @@
 #![allow(warnings, unused)]
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::constant_wire::ConstantWire;
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_ec_gadget::AffinePoint;
@@ -28,9 +30,10 @@ pub struct ZkayEcPkDerivationGadget {
 
     // gadget output
     pub outputPublicValue: Option<WireType>, // the x-coordinate of the key exchange
-                                             // material to be sent to the other party
-                                             // outputPublicValue = ((this party's
-                                             // secret)*Base).x
+    // material to be sent to the other party
+    // outputPublicValue = ((this party's
+    // secret)*Base).x
+    pub outputs: Vec<Option<WireType>>,
 }
 
 impl ZkayEcPkDerivationGadget {
@@ -44,16 +47,21 @@ impl ZkayEcPkDerivationGadget {
             desc,
             Self {
                 secretBits: secretKey
-                    .getBitWires(ZkayEcGadget::<Self>::SECRET_BITWIDTH)
-                    .asArray(),
-                basePoint: AffinePoint::new(generator.createConstantWire(4)),
+                    .getBitWiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
+                    .asArray()
+                    .clone(),
+                basePoint: AffinePoint::new(Some(generator.createConstantWirei(4, &None)), None),
                 outputPublicValue: None,
+                outputs: vec![],
             },
             generator,
         );
         // Hardcode base point
         if validateSecret {
-            _self.checkSecretBits(generator, &_self.secretBits);
+            Gadget::<ZkayEcGadget<Self>>::checkSecretBits(
+                &generator.borrow(),
+                &_self.t.t.secretBits,
+            );
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
@@ -63,19 +71,37 @@ impl ZkayEcPkDerivationGadget {
 }
 impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
     fn buildCircuit(&mut self) {
-        let baseTable = self.preprocess(&self.t.t.basePoint);
-        let outputPublicValue = self
-            .mul(&self.t.t.basePoint, &self.t.t.secretBits, baseTable)
-            .x;
+        let baseTable = Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::preprocess(
+            &self.t.t.basePoint,
+            self.generator.clone(),
+        );
+        let outputPublicValue = Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::mul(
+            &self.t.t.basePoint,
+            &self.t.t.secretBits,
+            &baseTable,
+            self.generator.clone(),
+        )
+        .x
+        .clone();
         self.t.t.outputs = vec![outputPublicValue.clone()];
-        self.t.t.outputPublicValue = Some(outputPublicValue);
+        self.t.t.outputPublicValue = outputPublicValue;
     }
 
     fn computeYCoordinates(&mut self) {
-        let x = self.t.t.basePoint.x.getConstant();
-        self.t.t.basePoint.y = self
-            .generator
-            .createConstantWire(ZkayEcGadget::<ZkayEcPkDerivationGadget>::computeYCoordinate(x));
+        let x = self
+            .t
+            .t
+            .basePoint
+            .x
+            .as_ref()
+            .unwrap()
+            .try_as_constant_ref()
+            .unwrap()
+            .getConstant();
+        self.t.t.basePoint.y = Some(self.generator.createConstantWire(
+            &Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::computeYCoordinate(x),
+            &None,
+        ));
     }
 }
 impl GadgetConfig for Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {

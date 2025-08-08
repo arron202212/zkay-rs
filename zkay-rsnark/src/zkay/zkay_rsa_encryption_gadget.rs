@@ -8,6 +8,7 @@
 #![allow(warnings, unused)]
 use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget;
@@ -71,46 +72,52 @@ impl ZkayRSAEncryptionGadget {
 }
 impl Gadget<ZkayRSAEncryptionGadget> {
     fn buildCircuit(&mut self) {
-        let plainBytes = self.reverseBytes(self.t.plain.getBitWires(256), 8);
+        let plainBytes = ZkayUtil::reverseBytes(self.t.plain.getBitWiresi(256, &None), 8);
 
-        let mut enc;
+        let mut enc: Box<dyn GadgetConfig>;
         match self.t.paddingType {
             PaddingType::OAEP => {
-                let rndBytes = self.reverseBytes(
-                    WireArray::new(self.t.rnd).getBits(RSABackend::OAEP_RND_CHUNK_SIZE),
+                let rndBytes = ZkayUtil::reverseBytes(
+                    WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
+                        .getBits(RSABackend::OAEP_RND_CHUNK_SIZE as usize, &None),
                     8,
                 );
                 let e = RSAEncryptionOAEPGadget::new(
-                    self.t.pk,
+                    self.t.pk.clone(),
                     plainBytes,
                     rndBytes,
-                    self.t.keyBits,
-                    self.description,
+                    self.t.keyBits.clone(),
+                    &Some(self.description.clone()),
+                    self.generator.clone(),
                 );
                 e.checkSeedCompliance();
-                enc = e;
+                enc = Box::new(e);
             }
             PaddingType::PKCS_1_5 => {
-                let rndLen = self.t.keyBits / 8 - 3 - plainBytes.len();
-                let rndBytes = self.reverseBytes(
-                    WireArray::new(self.t.rnd)
-                        .getBits(RSABackend::PKCS15_RND_CHUNK_SIZE)
-                        .adjustLength(rndLen * 8),
+                let rndLen = self.t.keyBits as usize / 8 - 3 - plainBytes.len();
+                let rndBytes = ZkayUtil::reverseBytes(
+                    WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
+                        .getBits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize, &None)
+                        .adjustLength(None, rndLen * 8),
                     8,
                 );
-                enc = RSAEncryptionV1_5_Gadget::new(
-                    self.t.pk,
+                enc = Box::new(RSAEncryptionV1_5_Gadget::new(
+                    self.t.pk.clone(),
                     plainBytes,
                     rndBytes,
-                    self.t.keyBits,
-                    self.description,
-                );
+                    self.t.keyBits.clone(),
+                    &Some(self.description.clone()),
+                    self.generator.clone(),
+                ));
             }
-            _ => panic!("Unexpected padding type: {}", self.t.paddingType),
+            _ => panic!("Unexpected padding type: {:?}", self.t.paddingType),
         }
 
-        self.t.cipher = WireArray::new(enc.getOutputWires())
-            .packWordsIntoLargerWords(8, RSABackend::CIPHER_CHUNK_SIZE / 8);
+        self.t.cipher = WireArray::new(
+            enc.getOutputWires().clone(),
+            self.generator.clone().downgrade(),
+        )
+        .packWordsIntoLargerWords(8, RSABackend::CIPHER_CHUNK_SIZE / 8, &None);
     }
 }
 impl GadgetConfig for Gadget<ZkayRSAEncryptionGadget> {

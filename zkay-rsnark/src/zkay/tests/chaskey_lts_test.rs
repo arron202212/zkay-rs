@@ -133,7 +133,7 @@ mod test {
         iv_cipher[0..iv_bytes.len()].clone_from_slice(&iv_bytes[0..]);
         iv_cipher[iv_bytes.len()..result.len()].clone_from_slice(&result[0..]);
 
-        let chunk_size = CryptoBackend.Symmetric.CIPHER_CHUNK_SIZE / 8;
+        let chunk_size = CIPHER_CHUNK_SIZE / 8;
         let first_chunk_size = iv_cipher.len() % chunk_size;
         let bigints = vec![];
         if first_chunk_size != 0 {

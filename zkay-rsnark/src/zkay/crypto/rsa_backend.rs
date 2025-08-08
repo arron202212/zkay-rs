@@ -29,20 +29,25 @@ pub struct RSABackend {
     pub paddingType: PaddingType,
 }
 impl RSABackend {
-    const CIPHER_CHUNK_SIZE: i32 = 232;
-    const KEY_CHUNK_SIZE: i32 = 232;
-    const PKCS15_RND_CHUNK_SIZE: i32 = 224;
-    const OAEP_RND_CHUNK_SIZE: i32 = 128;
-    pub fn new(keyBits: i32, padding: PaddingType) -> CryptoBackend<Asymmetric<Self>> {
+    pub const CIPHER_CHUNK_SIZE: i32 = 232;
+    pub const KEY_CHUNK_SIZE: i32 = 232;
+    pub const PKCS15_RND_CHUNK_SIZE: i32 = 224;
+    pub const OAEP_RND_CHUNK_SIZE: i32 = 128;
+    pub fn new(
+        keyBits: i32,
+        padding: PaddingType,
+        generator: RcCell<CircuitGenerator>,
+    ) -> CryptoBackend<Asymmetric<Self>> {
         Asymmetric::<Self>::new(
             keyBits,
             Self {
                 paddingType: padding,
             },
+            generator,
         )
     }
 }
-
+impl AsymmetricConfig for CryptoBackend<Asymmetric<RSABackend>> {}
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
     fn getKeyChunkSize() -> i32 {
         RSABackend::KEY_CHUNK_SIZE
@@ -56,14 +61,14 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
-        ZkayRSAEncryptionGadget::new(
-            plain,
-            self.getKey(key),
-            random,
+        Box::new(ZkayRSAEncryptionGadget::new(
+            plain.clone(),
+            self.getKey(key, generator.clone()),
+            random.clone(),
             self.keyBits,
-            self.paddingType,
+            self.t.t.paddingType.clone(),
             desc,
             generator,
-        )
+        ))
     }
 }

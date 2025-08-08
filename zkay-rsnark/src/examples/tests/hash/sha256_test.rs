@@ -66,7 +66,6 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test1", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
 
         let mut outDigest = String::new();
         for w in generator.get_out_wires() {
@@ -122,7 +121,6 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test2", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
 
         let mut outDigest = String::new();
         for w in generator.get_out_wires() {
@@ -179,7 +177,6 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test3", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
 
         let mut outDigest = String::new();
         for w in generator.get_out_wires() {
@@ -236,7 +233,6 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test4", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
 
         let mut outDigest = String::new();
         for w in generator.get_out_wires() {
@@ -318,7 +314,6 @@ mod test {
 
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
 
             let mut outDigest = String::new();
             for w in generator.get_out_wires() {

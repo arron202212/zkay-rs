@@ -112,7 +112,7 @@ mod test {
 
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             let cipherText = generator.get_out_wires();
 
             let result = BigInteger::parse_bytes(b"f5d3d58503b9699de785895a96fdbaaf", 16).unwrap();
@@ -195,7 +195,7 @@ mod test {
 
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             let cipherText = generator.get_out_wires();
 
             let result = BigInteger::parse_bytes(b"3ad77bb40d7a3660a89ecaf32466ef97", 16).unwrap();
@@ -276,7 +276,7 @@ mod test {
                 CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test3_{sboxOption}"), t);
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             let cipherText = generator.get_out_wires();
 
             let result = BigInteger::parse_bytes(b"43b1cd7f598ece23881b00e3ed030688", 16).unwrap();
@@ -358,7 +358,7 @@ mod test {
 
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             let cipherText = generator.get_out_wires();
 
             let result = BigInteger::parse_bytes(b"7b0c785e27e8ad3f8223207104725dd4", 16).unwrap();
@@ -446,7 +446,7 @@ mod test {
             );
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
-            // let evaluator = generator.getCircuitEvaluator();
+
             let cipherText = generator.get_out_wires();
 
             let result = BigInteger::parse_bytes(b"7b0c785e27e8ad3f8223207104725dd4", 16).unwrap();

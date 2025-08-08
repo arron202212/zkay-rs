@@ -39,16 +39,22 @@ pub enum Backend {
     RsaPkcs15(CryptoBackend<Asymmetric<RSABackend>>),
 }
 impl Backend {
-    fn create(name: &str, keyBits: i32) -> Backend {
+    fn create(name: &str, keyBits: i32, generator: RcCell<CircuitGenerator>) -> Backend {
         match name {
-            "Dummy" => Backend::Dummy(DummyBackend::new(keyBits)),
-            "DummyHom" => Backend::DummyHom(DummyHomBackend::new(keyBits)),
-            "EcdhAes" => Backend::EcdhAes(ECDHBackend::new(keyBits, CipherType::AES_128)),
-            "EcdhChaskey" => Backend::EcdhChaskey(ECDHBackend::new(keyBits, CipherType::CHASKEY)),
-            "Paillier" => Backend::Paillier(PaillierBackend::new(keyBits)),
-            "Elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits)),
-            "RsaOaep" => Backend::RsaOaep(RSABackend::new(keyBits, PaddingType::OAEP)),
-            "RsaPkcs15" => Backend::RsaPkcs15(RSABackend::new(keyBits, PaddingType::PKCS_1_5)),
+            "Dummy" => Backend::Dummy(DummyBackend::new(keyBits, generator)),
+            "DummyHom" => Backend::DummyHom(DummyHomBackend::new(keyBits, generator)),
+            "EcdhAes" => {
+                Backend::EcdhAes(ECDHBackend::new(keyBits, CipherType::AES_128, generator))
+            }
+            "EcdhChaskey" => {
+                Backend::EcdhChaskey(ECDHBackend::new(keyBits, CipherType::CHASKEY, generator))
+            }
+            "Paillier" => Backend::Paillier(PaillierBackend::new(keyBits, generator)),
+            "Elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits, generator)),
+            "RsaOaep" => Backend::RsaOaep(RSABackend::new(keyBits, PaddingType::OAEP, generator)),
+            "RsaPkcs15" => {
+                Backend::RsaPkcs15(RSABackend::new(keyBits, PaddingType::PKCS_1_5, generator))
+            }
         }
     }
 }
@@ -60,10 +66,15 @@ pub trait CryptoBackendField {
 pub struct CryptoBackend<T> {
     pub keyBits: i32,
     pub t: T,
+    pub generator: RcCell<CircuitGenerator>,
 }
 impl<T> CryptoBackend<T> {
-    pub fn new(keyBits: i32, t: T) -> Self {
-        Self { keyBits, t }
+    pub fn new(keyBits: i32, t: T, generator: RcCell<CircuitGenerator>) -> Self {
+        Self {
+            keyBits,
+            t,
+            generator,
+        }
     }
 }
 impl<T> CryptoBackendField for CryptoBackend<T> {
@@ -151,7 +162,7 @@ pub struct Symmetric<T> {
     pub t: T,
 }
 impl<T> Symmetric<T> {
-    pub fn new(keyBits: i32, t: T) -> CryptoBackend<Self> {
+    pub fn new(keyBits: i32, t: T, generator: RcCell<CircuitGenerator>) -> CryptoBackend<Self> {
         CryptoBackend::new(
             keyBits,
             Self {
@@ -161,9 +172,11 @@ impl<T> Symmetric<T> {
                 mySk: None,
                 t,
             },
+            generator,
         )
     }
 }
+
 pub const CIPHER_CHUNK_SIZE: i32 = 192;
 pub trait SymmetricConfig: SymmetricField + CryptoBackendConfig {
     // These chunk sizes assume a plaintext <= 256 (253) bit.
@@ -311,13 +324,14 @@ pub struct Asymmetric<T> {
     pub t: T,
 }
 impl<T> Asymmetric<T> {
-    pub fn new(keyBits: i32, t: T) -> CryptoBackend<Self> {
+    pub fn new(keyBits: i32, t: T, generator: RcCell<CircuitGenerator>) -> CryptoBackend<Self> {
         CryptoBackend::new(
             keyBits,
             Self {
                 keys: HashMap::new(),
                 t,
             },
+            generator,
         )
     }
 }
@@ -338,7 +352,7 @@ pub trait AsymmetricConfig: CryptoBackendConfig + AsymmetricField {
         pkey: &String,
         skey: &Vec<Option<WireType>>,
         desc: &Option<String>,
-        generator: WeakCell<CircuitGenerator>,
+        generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
         panic!("No separate decryption gadget for backend");
     }
@@ -356,9 +370,9 @@ pub trait AsymmetricConfig: CryptoBackendConfig + AsymmetricField {
         self.keys_mut().insert(keyName.clone(), keyArray);
     }
 
-    fn getKey(&self, keyName: &String, generator: WeakCell<CircuitGenerator>) -> LongElement {
+    fn getKey(&self, keyName: &String, generator: RcCell<CircuitGenerator>) -> LongElement {
         let keyArr = self.getKeyArray(keyName);
-        LongElement::newa(keyArr, generator)
+        LongElement::newa(keyArr, generator.downgrade())
     }
 
     fn getKeyArray(&self, keyName: &String) -> WireArray {

@@ -10,10 +10,13 @@ use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+
 use rccell::RcCell;
+use std::ops::{Add, Mul, Sub};
 
 /**
  * Dummy encryption gadget whose ciphertext is additively homomorphic.
@@ -64,10 +67,12 @@ impl ZkayDummyHomEncryptionGadget {
 
 impl Gadget<ZkayDummyHomEncryptionGadget> {
     fn buildCircuit(&mut self) {
-        self.t.cipher[0] = self
-            .plain
-            .mul(&self.pk, &Some("plain * pk".to_owned()))
-            .add(1);
+        self.t.cipher[0] = Some(
+            self.t
+                .plain
+                .mulw(&self.t.pk, &Some("plain * pk".to_owned()))
+                .add(1),
+        );
     }
 }
 

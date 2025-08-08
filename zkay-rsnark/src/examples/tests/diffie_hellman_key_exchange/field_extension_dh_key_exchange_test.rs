@@ -118,7 +118,7 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test1", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
+
         let output = generator.get_out_wires();
 
         assert_eq!(
@@ -258,7 +258,7 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test2", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
+
         let output = generator.get_out_wires();
 
         assert_eq!(
@@ -399,7 +399,7 @@ mod test {
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test3", t);
         generator.generateCircuit();
         let evaluator = generator.evalCircuit().unwrap();
-        // let evaluator = generator.getCircuitEvaluator();
+
         let output = generator.get_out_wires();
 
         assert_eq!(

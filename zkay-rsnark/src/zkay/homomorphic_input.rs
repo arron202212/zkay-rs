@@ -54,7 +54,7 @@ impl HomomorphicInput {
     }
 
     pub fn getLength(&self) -> i32 {
-        self.array.len()
+        self.array.len() as _
     }
 
     pub fn getName(&self) -> &String {

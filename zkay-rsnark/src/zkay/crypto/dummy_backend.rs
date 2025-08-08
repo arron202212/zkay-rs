@@ -23,11 +23,14 @@ use rccell::RcCell;
 pub struct DummyBackend;
 
 impl DummyBackend {
-    const CIPHER_CHUNK_SIZE: i32 = 256;
-    const KEY_CHUNK_SIZE: i32 = 256;
+    pub const CIPHER_CHUNK_SIZE: i32 = 256;
+    pub const KEY_CHUNK_SIZE: i32 = 256;
 
-    pub fn new(keyBits: i32) -> CryptoBackend<Asymmetric<Self>> {
-        Asymmetric::<Self>::new(keyBits, Self)
+    pub fn new(
+        keyBits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> CryptoBackend<Asymmetric<Self>> {
+        Asymmetric::<Self>::new(keyBits, Self, generator)
     }
 }
 impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyBackend>> {}
@@ -46,7 +49,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyBackend>> {
     ) -> Box<dyn GadgetConfig> {
         Box::new(ZkayDummyEncryptionGadget::new(
             plain.clone(),
-            self.getKey(key, generator.clone().downgrade()),
+            self.getKey(key, generator.clone()),
             random.clone(),
             self.keyBits,
             desc,

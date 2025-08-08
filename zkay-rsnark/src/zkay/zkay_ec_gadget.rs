@@ -13,34 +13,28 @@ use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
 
 // use crate::zkay::zkay_ec_gadget::AffinePoint;
 use crate::util::util::BigInteger;
+
+use std::ops::{Add, Mul, Rem, Sub};
+
 use rccell::RcCell;
-
-#[derive(Debug, Clone)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, Hash, ImplStructNameConfig)]
 pub struct AffinePoint {
-    x: WireType,
-    y: WireType,
+    pub x: Option<WireType>,
+    pub y: Option<WireType>,
 }
-// impl AffinePoint {
-//     // AffinePoint(x:WireType ) {
-//     //     self.x = x;
-//     // }
-
-//     // AffinePoint(x:WireType , y:WireType ) {
-//     //     self.x = x;
-//     //     self.y = y;
-//     // }
-
-//     // AffinePoint(p:AffinePoint ) {
-//     //     self.x = p.x;
-//     //     self.y = p.y;
-//     // }
-// }
+impl AffinePoint {
+    pub fn new(x: Option<WireType>, y: Option<WireType>) -> Self {
+        Self { x, y }
+    }
+}
 
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
 #[derive(Debug, Clone)]
@@ -57,10 +51,12 @@ impl<T> ZkayEcGadget<T> {
             description: desc
                 .as_ref()
                 .map_or_else(|| String::new(), |d| d.to_owned()),
-            t: ZkayBabyJubJubGadget::<T> { generators, t },
+            t: ZkayEcGadget::<T> { generators, t },
         }
     }
+}
 
+impl<T> Gadget<ZkayEcGadget<T>> {
     // Note: this parameterization assumes that the underlying field has
     // Configs.field_prime =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
@@ -85,7 +81,6 @@ impl<T> ZkayEcGadget<T> {
     // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
     pub const SUBGROUP_ORDER: &str =
         "2736030358979909402780800718157159386074658810754251464600343418943805806723";
-
     pub fn checkSecretBits(generator: &CircuitGenerator, secretBits: &Vec<Option<WireType>>) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
@@ -93,37 +88,45 @@ impl<T> ZkayEcGadget<T> {
          * should be 1, and the three least significant bits should be zero.
          */
         let desc = Some("Asserting secret bit conditions".to_owned());
-        generator.addZeroAssertion(&secretBits[0], &desc);
-        generator.addZeroAssertion(&secretBits[1], &desc);
-        generator.addZeroAssertion(&secretBits[2], &desc);
-        generator.addOneAssertion(&secretBits[Self::SECRET_BITWIDTH - 1], &desc);
+        generator.addZeroAssertion(secretBits[0].as_ref().unwrap(), &desc);
+        generator.addZeroAssertion(secretBits[1].as_ref().unwrap(), &desc);
+        generator.addZeroAssertion(secretBits[2].as_ref().unwrap(), &desc);
+        generator.addOneAssertion(
+            secretBits[Self::SECRET_BITWIDTH as usize - 1]
+                .as_ref()
+                .unwrap(),
+            &desc,
+        );
 
         for i in 3..Self::SECRET_BITWIDTH - 1 {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            generator.addBinaryAssertion(&secretBits[i]);
+            generator.addBinaryAssertion(secretBits[i].as_ref().unwrap(), &None);
         }
     }
 
     // this is only called, when WireType y is provided as witness by the prover
     // (not as input to the gadget)
-    fn assertValidPointOnEC(&self, x: &WireType, y: &WireType) {
+    pub fn assertValidPointOnEC(&self, x: &WireType, y: &WireType) {
         let ySqr = y.mul(y);
         let xSqr = x.mul(x);
         let xCube = xSqr.mul(x);
-        self.generators.addEqualityAssertion(
-            ySqr,
-            xCube.add(xSqr.mul(BigInteger::from(Self::COEFF_A))).add(x),
+        self.generator.addEqualityAssertion(
+            &ySqr,
+            &xCube.add(xSqr.mul(&BigInteger::from(Self::COEFF_A))).add(x),
+            &None,
         );
     }
 
-    fn preprocess(p: AffinePoint) -> Vec<AffinePoint> {
-        let precomputedTable = vec![AffinePoint::default(); Self::SECRET_BITWIDTH];
-        precomputedTable[0] = p;
-        for j in 1..Self::SECRET_BITWIDTH {
-            precomputedTable[j] = doubleAffinePoint(precomputedTable[j - 1]);
-        }
+    pub fn preprocess(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> Vec<AffinePoint> {
+        let mut precomputedTable: Vec<AffinePoint> = (1..Self::SECRET_BITWIDTH)
+            .scan(p.clone(), |pre, _| {
+                *pre = Self::doubleAffinePoint(&pre, generator.clone());
+                Some(pre.clone())
+            })
+            .collect();
+        precomputedTable.insert(0, p.clone());
         precomputedTable
     }
 
@@ -131,93 +134,149 @@ impl<T> ZkayEcGadget<T> {
      * Performs scalar multiplication (secretBits must comply with the
      * conditions above)
      */
-    fn mul(
-        p: AffinePoint,
-        secretBits: Vec<Option<WireType>>,
-        precomputedTable: Vec<AffinePoint>,
+    pub fn mul(
+        p: &AffinePoint,
+        secretBits: &Vec<Option<WireType>>,
+        precomputedTable: &Vec<AffinePoint>,
+        generator: RcCell<CircuitGenerator>,
     ) -> AffinePoint {
-        let result = AffinePoint::new(precomputedTable[secretBits.len() - 1]);
+        let result = precomputedTable[secretBits.len() - 1].clone();
         for j in (0..=secretBits.len() - 2).rev() {
-            let tmp = addAffinePoints(result, precomputedTable[j]);
-            let isOne = secretBits[j];
-            result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
-            result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
+            let tmp = Self::addAffinePoints(&result, &precomputedTable[j], generator.clone());
+            let isOne = secretBits[j].clone().unwrap();
+            result.x = result.x.clone().map(|x| {
+                x.add(
+                    isOne
+                        .clone()
+                        .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
+                )
+            });
+            result.y = result.y.clone().map(|y| {
+                y.add(
+                    isOne
+                        .clone()
+                        .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
+                )
+            });
         }
         result
     }
 
-    fn doubleAffinePoint(p: AffinePoint) -> AffinePoint {
-        let x_2 = p.x.mul(p.x);
+    pub fn doubleAffinePoint(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> AffinePoint {
+        let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
         let l1 = FieldDivisionGadget::new(
             x_2.mul(3)
-                .add(p.x.mul(BigInteger::from(Self::COEFF_A)).mul(2))
+                .add(
+                    p.x.clone()
+                        .unwrap()
+                        .mul(&BigInteger::from(Self::COEFF_A))
+                        .mul(2),
+                )
                 .add(1),
-            p.y.mul(2),
+            p.y.clone().unwrap().mul(2),
+            &None,
+            generator,
         )
-        .getOutputWires()[0];
-        let l2 = l1.mul(l1);
-        let newX = l2.sub(BigInteger::from(Self::COEFF_A)).sub(p.x).sub(p.x);
+        .getOutputWires()[0]
+            .clone()
+            .unwrap();
+        let l2 = l1.clone().mul(&l1);
+        let newX = l2
+            .sub(&BigInteger::from(Self::COEFF_A))
+            .sub(p.x.as_ref().unwrap())
+            .sub(p.x.as_ref().unwrap());
         let newY =
-            p.x.mul(3)
-                .add(BigInteger::from(Self::COEFF_A))
+            p.x.clone()
+                .unwrap()
+                .mul(3)
+                .add(&BigInteger::from(Self::COEFF_A))
                 .sub(l2)
                 .mul(l1)
-                .sub(p.y);
-        AffinePoint::new(newX, newY)
+                .sub(p.y.as_ref().unwrap());
+        AffinePoint::new(Some(newX), Some(newY))
     }
 
-    fn addAffinePoints(p1: AffinePoint, p2: AffinePoint) -> AffinePoint {
-        let diffY = p1.y.sub(p2.y);
-        let diffX = p1.x.sub(p2.x);
-        let q = FieldDivisionGadget::new(diffY, diffX).getOutputWires()[0];
-        let q2 = q.mul(q);
-        let q3 = q2.mul(q);
-        let newX = q2.sub(BigInteger::from(Self::COEFF_A)).sub(p1.x).sub(p2.x);
+    pub fn addAffinePoints(
+        p1: &AffinePoint,
+        p2: &AffinePoint,
+        generator: RcCell<CircuitGenerator>,
+    ) -> AffinePoint {
+        let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
+        let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
+        let q = FieldDivisionGadget::new(diffY, diffX, &None, generator).getOutputWires()[0]
+            .clone()
+            .unwrap();
+        let q2 = q.clone().mul(&q);
+        let q3 = q2.mul(&q);
+        let newX = q2
+            .sub(&BigInteger::from(Self::COEFF_A))
+            .sub(p1.x.as_ref().unwrap())
+            .sub(p2.x.as_ref().unwrap());
         let newY =
-            p1.x.mul(2)
-                .add(p2.x)
-                .add(BigInteger::from(Self::COEFF_A))
-                .mul(q)
-                .sub(q3)
-                .sub(p1.y);
-        AffinePoint::new(newX, newY)
+            p1.x.clone()
+                .unwrap()
+                .mul(2)
+                .add(p2.x.as_ref().unwrap())
+                .add(&BigInteger::from(Self::COEFF_A))
+                .mul(&q)
+                .sub(&q3)
+                .sub(p1.y.as_ref().unwrap());
+        AffinePoint::new(Some(newX), Some(newY))
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
-        let xSqred = x.mul(x).rem(&Configs.field_prime);
+        let xSqred = x.clone().mul(&x).rem(&Configs.field_prime);
         let xCubed = xSqred.mul(x).rem(&Configs.field_prime);
         let ySqred = xCubed
-            .add(BigInteger::from(Self::COEFF_A).mul(xSqred))
-            .add(x)
+            .add(BigInteger::from(Self::COEFF_A).mul(&xSqred))
+            .add(&x)
             .rem(&Configs.field_prime);
         let y = x; //IntegerFunctions.ressol(ySqred, Configs.field_prime);
         y
     }
 
-    fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
-        let generator = &self.generators;
+    pub fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
+        let generator = &self.t.generators;
         let o = &generator.createConstantWire(
-            BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap(),
+            &BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap(),
+            &None,
         );
         let bits = o
-            .getBitWires(
+            .getBitWiresi(
                 BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10)
                     .unwrap()
                     .bits(),
+                &None,
             )
             .asArray();
 
-        let result = AffinePoint::new(table[bits.len() - 1]);
+        let result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
-            let tmp = addAffinePoints(result, table[j]);
-            let isOne = bits[j];
-            result.x = result.x.add(isOne.mul(tmp.x.sub(result.x)));
-            result.y = result.y.add(isOne.mul(tmp.y.sub(result.y)));
+            let tmp = Self::addAffinePoints(&result, &table[j], self.generator.clone());
+            let isOne = bits[j].clone().unwrap();
+            result.x = result.x.clone().map(|x| {
+                x.add(
+                    isOne
+                        .clone()
+                        .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
+                )
+            });
+            result.y = result.y.clone().map(|y| {
+                y.add(
+                    isOne
+                        .clone()
+                        .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
+                )
+            });
         }
 
         // verify that: result = -p
-        generator.addEqualityAssertion(result.x, p.x);
-        generator.addEqualityAssertion(result.y, p.y.mul(-1));
+        generator.addEqualityAssertion(result.x.as_ref().unwrap(), p.x.as_ref().unwrap(), &None);
+        generator.addEqualityAssertion(
+            result.y.as_ref().unwrap(),
+            &p.y.clone().unwrap().mul(-1),
+            &None,
+        );
 
         // the reason the last iteration is handled separately is that the
         // addition of
