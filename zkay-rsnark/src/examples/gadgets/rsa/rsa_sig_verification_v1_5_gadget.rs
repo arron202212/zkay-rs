@@ -69,11 +69,11 @@ use std::ops::{Add, Div, Mul, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSASigVerificationV1_5_Gadget {
-    modulus: LongElement,
-    signature: LongElement,
-    msgHash: Vec<Option<WireType>>, // 32-bit wires (the output of SHA256 gadget)
-    isValidSignature: Vec<Option<WireType>>,
-    rsaKeyBitLength: i32, // in bits
+    pub modulus: LongElement,
+    pub signature: LongElement,
+    pub msgHash: Vec<Option<WireType>>, // 32-bit wires (the output of SHA256 gadget)
+    pub isValidSignature: Vec<Option<WireType>>,
+    pub rsaKeyBitLength: i32, // in bits
 }
 impl RSASigVerificationV1_5_Gadget {
     pub fn new(

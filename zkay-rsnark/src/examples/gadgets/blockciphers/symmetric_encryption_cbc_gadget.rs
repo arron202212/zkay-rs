@@ -56,11 +56,11 @@ use zkay_derive::ImplStructNameConfig;
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SymmetricEncryptionCBCGadget {
-    ciphertext: Vec<Option<WireType>>,
-    cipherName: String,
-    keyBits: Vec<Option<WireType>>,
-    plaintextBits: Vec<Option<WireType>>,
-    ivBits: Vec<Option<WireType>>,
+    pub ciphertext: Vec<Option<WireType>>,
+    pub cipherName: String,
+    pub keyBits: Vec<Option<WireType>>,
+    pub plaintextBits: Vec<Option<WireType>>,
+    pub ivBits: Vec<Option<WireType>>,
 }
 impl SymmetricEncryptionCBCGadget {
     const keysize: i32 = 128;

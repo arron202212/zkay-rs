@@ -49,7 +49,7 @@ impl RSABackend {
 }
 impl AsymmetricConfig for CryptoBackend<Asymmetric<RSABackend>> {}
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
-    fn getKeyChunkSize() -> i32 {
+    fn getKeyChunkSize(&self) -> i32 {
         RSABackend::KEY_CHUNK_SIZE
     }
 

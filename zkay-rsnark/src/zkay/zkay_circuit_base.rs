@@ -81,42 +81,78 @@ impl<T: std::fmt::Debug + std::clone::Clone> ZkayCircuitBase<T> {
         useInputHashing: bool,
         t: T,
     ) -> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
-        let mut _self = Self {
-            realCircuitName: name,
-            cryptoBackends: HashMap::new(),
-            currentPubInIdx: 0,
-            currentPubOutIdx: pubInSize,
-            allPubIOWires: vec![None, (pubInSize + pubOutSize) as usize],
-            currentPrivInIdx: 0,
-            allPrivInWires: vec![None, privSize as usize],
-            pubInNames: vec![],
-            pubOutNames: vec![],
-            privInNames: vec![],
-            pubInCount: pubInSize,
-            useInputHashing,
-            vars: HashMap::new(),
-            currentGuardCondition: VecDeque::new(),
-            serializedArguments: vec![],
-            namePrefixIndices: HashMap::new(),
-            namePrefix: VecDeque::new(),
-            guardPrefixes: VecDeque::new(),
-            guardPrefixIndices: VecDeque::new(),
-            t,
-        };
-        _self.clearPrefix(_self.namePrefix, _self.namePrefixIndices);
-        _self.pushGuardPrefix(_self.guardPrefixes, _self.guardPrefixIndices);
+        let mut _self = CircuitGeneratorExtend::new(
+            "circuit",
+            Self {
+                realCircuitName: name,
+                cryptoBackends: HashMap::new(),
+                currentPubInIdx: 0,
+                currentPubOutIdx: pubInSize,
+                allPubIOWires: vec![None; (pubInSize + pubOutSize) as usize],
+                currentPrivInIdx: 0,
+                allPrivInWires: vec![None; privSize as usize],
+                pubInNames: vec![],
+                pubOutNames: vec![],
+                privInNames: vec![],
+                pubInCount: pubInSize,
+                useInputHashing,
+                vars: HashMap::new(),
+                currentGuardCondition: VecDeque::new(),
+                serializedArguments: vec![],
+                namePrefixIndices: HashMap::new(),
+                namePrefix: VecDeque::new(),
+                guardPrefixes: VecDeque::new(),
+                guardPrefixIndices: VecDeque::new(),
+                t,
+            },
+        );
+        Self::clearPrefix(&mut _self.t.namePrefix, &mut _self.t.namePrefixIndices);
+        Self::pushGuardPrefix(&mut _self.t.guardPrefixes, &mut _self.t.guardPrefixIndices);
+
         if let Some(crypto_backend) = cryptoBackend {
             // Legacy handling: add default "main" crypto backend
-            let id = cryptoBackendId.unwrap_or(LEGACY_CRYPTO_BACKEND);
+            let id = cryptoBackendId.unwrap_or(LEGACY_CRYPTO_BACKEND.to_owned());
             assert!(
                 _self
+                    .t
                     .cryptoBackends
-                    .insert(id, CryptoBackend::create(crypto_backend, keyBits),)
+                    .insert(
+                        id,
+                        Backend::create(&crypto_backend, keyBits, _self.cg.clone()),
+                    )
                     .is_none()
             );
         }
 
-        CircuitGeneratorExtend::<Self>::new("circuit", _self)
+        _self
+    }
+
+    fn clearPrefix(prefix: &mut VecDeque<String>, indices: &mut HashMap<String, i32>) {
+        prefix.clear();
+        prefix.push_front("".to_owned());
+        indices.clear();
+    }
+
+    fn pushPrefix(
+        prefix: &mut VecDeque<String>,
+        prefixIndices: &mut HashMap<String, i32>,
+        newStr: &str,
+    ) {
+        let newPrefix = format!("{}{}.", prefix.front().unwrap(), newStr);
+        let count = *prefixIndices.get(&newPrefix).unwrap_or(&0);
+        prefixIndices.insert(newPrefix, count + 1);
+        prefix.push_front(format!("{}{}.", newPrefix, count));
+    }
+
+    fn pushGuardPrefix(
+        guardPrefixes: &mut VecDeque<VecDeque<String>>,
+        guardPrefixIndices: &mut VecDeque<HashMap<String, i32>>,
+    ) {
+        let newPrefix = VecDeque::new();
+        let newPrefixIndices = HashMap::new();
+        Self::clearPrefix(&mut newPrefix, &mut newPrefixIndices);
+        guardPrefixes.push_front(newPrefix);
+        guardPrefixIndices.push_front(newPrefixIndices);
     }
 }
 
@@ -124,7 +160,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug> crate::circuit::Stru
     for CircuitGeneratorExtend<ZkayCircuitBase<T>>
 {
     fn name(&self) -> String {
-        self.t.name()
+        self.t.t.name()
     }
 }
 
@@ -133,21 +169,22 @@ impl<
 > CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<T>>
 {
     fn buildCircuit(&mut self) {
-        let (pubInCount, pubOutCount) = (self.t.pubInCount, self.t.pubOutCount);
+        let pubInCount = self.t.pubInCount as usize;
         // Create IO wires
-        let pubOutCount = self.t.t.allPubIOWires.len() - pubInCount;
+        let pubOutCount = self.t.allPubIOWires.len() - pubInCount;
         let (inArray, outArray) = if self.t.useInputHashing {
             (
-                self.createProverWitnessWireArray(pubInCount, "in_"),
-                self.createProverWitnessWireArray(pubOutCount, "out_"),
-            );
+                self.createProverWitnessWireArray(pubInCount, &Some("in_".to_owned())),
+                self.createProverWitnessWireArray(pubOutCount, &Some("out_".to_owned())),
+            )
         } else {
             (
-                self.createInputWireArray(pubInCount, "in_"),
-                self.createInputWireArray(pubOutCount, "out_"),
+                self.createInputWireArray(pubInCount, &Some("in_".to_owned())),
+                self.createInputWireArray(pubOutCount, &Some("out_".to_owned())),
             )
         };
-        let privInArray = self.createProverWitnessWireArray(self.t.allPrivInWires.len(), "priv_");
+        let privInArray = self
+            .createProverWitnessWireArray(self.t.allPrivInWires.len(), &Some("priv_".to_owned()));
 
         // Legacy handling
         let legacyCryptoBackend = self.t.cryptoBackends.get(LEGACY_CRYPTO_BACKEND);

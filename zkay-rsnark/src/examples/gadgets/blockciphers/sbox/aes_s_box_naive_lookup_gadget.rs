@@ -50,8 +50,8 @@ use zkay_derive::ImplStructNameConfig;
 
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxNaiveLookupGadget {
-    input: WireType,
-    output: Vec<Option<WireType>>,
+    pub input: WireType,
+    pub output: Vec<Option<WireType>>,
 }
 impl AESSBoxNaiveLookupGadget {
     pub fn new(

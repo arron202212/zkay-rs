@@ -9,8 +9,8 @@
 use std::time::{Duration, Instant};
 
 pub struct WithTimeMeasure {
-    key: String,
-    start: Instant,
+    pub key: String,
+    pub start: Instant,
 }
 impl WithTimeMeasure {
     pub fn new(key: String) -> Self {

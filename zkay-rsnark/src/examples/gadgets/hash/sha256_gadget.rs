@@ -26,15 +26,15 @@ use std::ops::{Add, Mul, Neg, Rem, Sub};
 pub struct Base;
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct SHA256Gadget<T> {
-    unpaddedInputs: Vec<Option<WireType>>,
-    bitWidthPerInputElement: usize,
-    totalLengthInBytes: usize,
-    numBlocks: usize,
-    binaryOutput: bool,
-    paddingRequired: bool,
-    preparedInputBits: Vec<Option<WireType>>,
-    output: Vec<Option<WireType>>,
-    t: T,
+    pub unpaddedInputs: Vec<Option<WireType>>,
+    pub bitWidthPerInputElement: usize,
+    pub totalLengthInBytes: usize,
+    pub numBlocks: usize,
+    pub binaryOutput: bool,
+    pub paddingRequired: bool,
+    pub preparedInputBits: Vec<Option<WireType>>,
+    pub output: Vec<Option<WireType>>,
+    pub t: T,
 }
 impl<T> SHA256Gadget<T> {
     pub fn new(

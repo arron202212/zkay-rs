@@ -59,11 +59,11 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<HybridEncryptionCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct HybridEncryptionCircuitGenerator {
-    plaintext: Vec<Option<WireType>>,  // as 64-bit words
-    plaintextSize: i32,                // number of 64-bit words
-    ciphertext: Vec<Option<WireType>>, // as 64-bit words
-    ciphername: String,
-    secExpBits: Vec<Option<WireType>>,
+    pub plaintext: Vec<Option<WireType>>,  // as 64-bit words
+    pub plaintextSize: i32,                // number of 64-bit words
+    pub ciphertext: Vec<Option<WireType>>, // as 64-bit words
+    pub ciphername: String,
+    pub secExpBits: Vec<Option<WireType>>,
 }
 impl HybridEncryptionCircuitGenerator {
     // Will assume the parameterization used in the test files ~ 80-bits

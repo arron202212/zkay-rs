@@ -57,14 +57,14 @@ use zkay_derive::ImplStructNameConfig;
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct MerkleTreePathGadget {
-    treeHeight: i32,
-    directionSelectorWire: WireType,
-    directionSelectorBits: Vec<Option<WireType>>,
-    leafWires: Vec<Option<WireType>>,
-    intermediateHashWires: Vec<Option<WireType>>,
-    outRoot: Vec<Option<WireType>>,
+    pub treeHeight: i32,
+    pub directionSelectorWire: WireType,
+    pub directionSelectorBits: Vec<Option<WireType>>,
+    pub leafWires: Vec<Option<WireType>>,
+    pub intermediateHashWires: Vec<Option<WireType>>,
+    pub outRoot: Vec<Option<WireType>>,
 
-    leafWordBitWidth: i32,
+    pub leafWordBitWidth: i32,
 }
 impl MerkleTreePathGadget {
     pub fn new(

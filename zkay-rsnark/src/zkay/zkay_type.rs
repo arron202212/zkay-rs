@@ -11,6 +11,7 @@ use crate::util::util::BigInteger;
 use crate::util::util::Util;
 use std::collections::HashMap;
 use std::fmt;
+use std::ops::{Add, BitAnd, Mul, Shl, Sub};
 use std::sync::OnceLock;
 
 static UTYPES: OnceLock<HashMap<i32, ZkayType>> = OnceLock::new();
@@ -18,7 +19,7 @@ static STYPES: OnceLock<HashMap<i32, ZkayType>> = OnceLock::new();
 static ZKBOOL: OnceLock<ZkayType> = OnceLock::new();
 static ZK124: OnceLock<ZkayType> = OnceLock::new();
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ZkayType {
     pub bitwidth: i32,
     pub signed: bool,
@@ -30,15 +31,16 @@ pub fn utypes() -> &'static HashMap<i32, ZkayType> {
 }
 #[inline]
 pub fn stypes() -> &'static HashMap<i32, ZkayType> {
-    STYPES.get_or_init(|| (8..256).map(|i| (i, ZkayType::new(i, true))).collect()); // There can be no int256 inside the circuit, since the sign bit is outside field prime range -> unclear how to defined negative numbers
+    // There can be no int256 inside the circuit, since the sign bit is outside field prime range -> unclear how to defined negative numbers
+    STYPES.get_or_init(|| (8..256).map(|i| (i, ZkayType::new(i, true))).collect())
 }
 #[inline]
 pub fn zkbool() -> &'static ZkayType {
-    ZKBOOL.get_or_init(|| ZkayType::new(1, false));
+    ZKBOOL.get_or_init(|| ZkayType::new(1, false))
 }
 #[inline]
 pub fn zk124() -> &'static ZkayType {
-    ZK124.get_or_init(|| ZkayType::new(124, false));
+    ZK124.get_or_init(|| ZkayType::new(124, false))
 }
 
 impl ZkayType {
@@ -51,33 +53,31 @@ impl ZkayType {
     }
 
     pub fn ZkUint(bitwidth: i32) -> ZkayType {
-        assert!(
-            utypes().containsKey(bitwidth),
-            "No uint type with bitwidth {bitwidth} exists."
-        );
-        utypes().get(bitwidth).unwrap().clone()
+        utypes()
+            .get(&bitwidth)
+            .expect(&format!("No uint type with bitwidth {bitwidth} exists."))
+            .clone()
     }
     pub fn ZkInt(bitwidth: i32) -> ZkayType {
-        assert!(
-            stypes().containsKey(bitwidth),
-            "No i32 type with bitwidth {bitwidth} exists."
-        );
-        stypes().get(bitwidth).unwrap().clone()
+        stypes()
+            .get(&bitwidth)
+            .expect(&format!("No i32 type with bitwidth {bitwidth} exists."))
+            .clone()
     }
 
     pub fn GetNegativeConstant(val: &BigInteger, bitwidth: i32) -> BigInteger {
         let m1 = Self::ZkInt(bitwidth).minusOne;
-        m1.mul(val).and(m1)
+        m1.mul(val).bitand(m1)
     }
 
     pub fn checkType(expected: &ZkayType, actual: &ZkayType) -> ZkayType {
         Self::checkTypeb(expected, actual, true)
     }
     pub fn checkTypeb(expected: &ZkayType, actual: &ZkayType, allow_field_type: bool) -> ZkayType {
-        assert!(
-            actual.is_some() && expected.is_some(),
-            "Tried to use untyped wires"
-        );
+        // assert!(
+        //     actual.is_some() && expected.is_some(),
+        //     "Tried to use untyped wires"
+        // );
 
         assert!(
             expected.bitwidth != 256 && allow_field_type,
@@ -91,7 +91,7 @@ impl ZkayType {
             expected
         );
 
-        expected
+        expected.clone()
     }
 }
 

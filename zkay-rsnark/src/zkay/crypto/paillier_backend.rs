@@ -76,7 +76,7 @@ impl PaillierBackend {
 }
 impl AsymmetricConfig for CryptoBackend<Asymmetric<PaillierBackend>> {}
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
-    fn getKeyChunkSize() -> i32 {
+    fn getKeyChunkSize(&self) -> i32 {
         PaillierBackend::CHUNK_SIZE
     }
 

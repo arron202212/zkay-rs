@@ -90,8 +90,8 @@ pub static atomic_bit_count: AtomicU8 = AtomicU8::new(15);
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxGadgetOptimized2 {
-    input: WireType,
-    output: Vec<Option<WireType>>,
+    pub input: WireType,
+    pub output: Vec<Option<WireType>>,
 }
 impl AESSBoxGadgetOptimized2 {
     pub fn new(

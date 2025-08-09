@@ -69,9 +69,9 @@ pub static atomic_sbox_option: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 a
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AES128CipherGadget {
-    plaintext: Vec<Option<WireType>>,   // array of 16 bytes
-    expandedKey: Vec<Option<WireType>>, // array of 176 bytes (call expandKey(..))
-    ciphertext: Vec<Option<WireType>>,  // array of 16 bytes
+    pub plaintext: Vec<Option<WireType>>,   // array of 16 bytes
+    pub expandedKey: Vec<Option<WireType>>, // array of 176 bytes (call expandKey(..))
+    pub ciphertext: Vec<Option<WireType>>,  // array of 16 bytes
 }
 impl AES128CipherGadget {
     const nb: usize = 4;

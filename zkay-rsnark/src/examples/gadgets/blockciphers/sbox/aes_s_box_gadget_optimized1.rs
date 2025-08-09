@@ -60,8 +60,8 @@ pub static s_all_coeff_set: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxGadgetOptimized1 {
-    input: WireType,
-    output: Vec<Option<WireType>>,
+    pub input: WireType,
+    pub output: Vec<Option<WireType>>,
 }
 impl AESSBoxGadgetOptimized1 {
     pub fn new(

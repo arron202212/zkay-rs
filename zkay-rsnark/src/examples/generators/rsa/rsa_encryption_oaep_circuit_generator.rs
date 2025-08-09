@@ -56,13 +56,13 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSAEncryptionOAEPCircuitGenerator {
-    rsaKeyLength: i32,
-    plainTextLength: i32,
-    inputMessage: Vec<Option<WireType>>,
-    seed: Vec<Option<WireType>>,
-    cipherText: Vec<Option<WireType>>,
-    rsaModulus: Option<LongElement>,
-    rsaEncryptionOAEPGadget: Option<Gadget<RSAEncryptionOAEPGadget>>,
+    pub rsaKeyLength: i32,
+    pub plainTextLength: i32,
+    pub inputMessage: Vec<Option<WireType>>,
+    pub seed: Vec<Option<WireType>>,
+    pub cipherText: Vec<Option<WireType>>,
+    pub rsaModulus: Option<LongElement>,
+    pub rsaEncryptionOAEPGadget: Option<Gadget<RSAEncryptionOAEPGadget>>,
 }
 impl RSAEncryptionOAEPCircuitGenerator {
     pub fn new(

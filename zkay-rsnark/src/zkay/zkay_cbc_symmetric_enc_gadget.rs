@@ -10,6 +10,7 @@ use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget;
@@ -55,7 +56,7 @@ impl ZkayCBCSymmetricEncGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWires(256).asArray());
+        let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWiresi(256, &None).asArray());
         println!("Plain length [bits]: {}", plaintextBits.len());
 
         let mut _self = Gadget::<Self> {
@@ -65,8 +66,12 @@ impl ZkayCBCSymmetricEncGadget {
                 .map_or_else(|| String::new(), |d| d.to_owned()),
             t: Self {
                 plaintextBits,
-                keyBits: Util::reverseBytes(key.getBitWires(Self::KEY_SIZE).asArray()),
-                ivBits: Util::reverseBytes(iv.getBitWires(Self::BLOCK_SIZE).asArray()),
+                keyBits: Util::reverseBytes(
+                    key.getBitWiresi(Self::KEY_SIZE as u64, &None).asArray(),
+                ),
+                ivBits: Util::reverseBytes(
+                    iv.getBitWiresi(Self::BLOCK_SIZE as u64, &None).asArray(),
+                ),
                 cipherType,
                 cipherBits: vec![],
                 outputs: vec![],
@@ -78,69 +83,90 @@ impl ZkayCBCSymmetricEncGadget {
 }
 impl Gadget<ZkayCBCSymmetricEncGadget> {
     fn buildCircuit(&mut self) {
-        let numBlocks = (self.t.plaintextBits.len() as f64 / Self::BLOCK_SIZE as f64).ceil() as i32;
-        let plaintextArray = WireArray::new(self.t.plaintextBits.clone())
-            .adjustLength(numBlocks * Self::BLOCK_SIZE)
-            .asArray();
+        let block_size = ZkayCBCSymmetricEncGadget::BLOCK_SIZE as usize;
+        let numBlocks = (self.t.plaintextBits.len() as f64 / block_size as f64).ceil() as i32;
+        let plaintextArray = WireArray::new(
+            self.t.plaintextBits.clone(),
+            self.generator.clone().downgrade(),
+        )
+        .adjustLength(None, (numBlocks * block_size as i32) as usize)
+        .asArray();
 
         let preparedKey = self.prepareKey();
-        let prevCipher = WireArray::new(self.t.ivBits.clone());
+        let prevCipher = WireArray::new(self.t.ivBits.clone(), self.generator.clone().downgrade());
 
         let mut cipherBits = vec![];
-        for i in 0..numBlocks {
+        for i in 0..numBlocks as usize {
             let msgBlock = WireArray::new(
-                plaintextArray[i * Self::BLOCK_SIZE..(i + 1) * Self::BLOCK_SIZE].to_vec(),
+                plaintextArray[i * block_size..(i + 1) * block_size].to_vec(),
+                self.generator.clone().downgrade(),
             );
-            let xored = msgBlock.xorWireArray(prevCipher).asArray();
-            match self.t.t.cipherType {
+            let xored = msgBlock.xorWireArrayi(&prevCipher, &None).asArray();
+            match self.t.cipherType {
                 SPECK_128 => {
-                    let tmp = WireArray::new(xored).packBitsIntoWords(64);
-                    let gadget = Speck128CipherGadget::new(tmp, preparedKey, &self.description);
-                    let outputs = gadget.getOutputWires();
-                    prevCipher = WireArray::new(outputs).getBits(64);
+                    let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
+                        .packBitsIntoWords(64, &None);
+                    let gadget = Speck128CipherGadget::new(
+                        tmp,
+                        preparedKey,
+                        &Some(self.description.clone()),
+                        self.generator.clone(),
+                    );
+                    let outputs = gadget.getOutputWires().clone();
+                    prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
+                        .getBits(64, &None);
                 }
                 AES_128 => {
-                    let tmp = WireArray::new(xored).packBitsIntoWords(8);
+                    let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
+                        .packBitsIntoWords(8, &None);
                     let gadget = AES128CipherGadget::new(
                         tmp,
                         preparedKey,
-                        &Some("aes: ".to_ownded() + &self.description),
+                        &Some("aes: ".to_owned() + &self.description),
+                        self.generator.clone(),
                     );
-                    let outputs = gadget.getOutputWires();
-                    prevCipher = WireArray::new(outputs).getBits(8);
+                    let outputs = gadget.getOutputWires().clone();
+                    prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
+                        .getBits(8, &None);
                 }
                 CHASKEY => {
-                    let tmp = WireArray::new(xored).packBitsIntoWords(32);
+                    let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
+                        .packBitsIntoWords(32, &None);
                     let gadget = ChaskeyLTS128CipherGadget::new(
                         tmp,
                         preparedKey,
-                        &Some("chaskey: ".to_ownded() + &self.description),
+                        &Some("chaskey: ".to_owned() + &self.description),
+                        self.generator.clone(),
                     );
-                    let outputs = gadget.getOutputWires();
-                    prevCipher = WireArray::new(outputs).getBits(32);
+                    let outputs = gadget.getOutputWires().clone();
+                    prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
+                        .getBits(3, &None);
                 }
-                _ => panic!("Unknown cipher value:{} ", self.t.cipherType),
+                _ => panic!("Unknown cipher value:{:?} ", self.t.cipherType),
             }
-            cipherBits = Util::concat(cipherBits, prevCipher.asArray());
+            cipherBits = Util::concat(&cipherBits, prevCipher.asArray());
         }
-        self.t.outputs = WireArray::new(Util::reverseBytes(Util::concat(
-            &self.t.ivBits,
-            &cipherBits,
-        )))
-        .packBitsIntoWords(CIPHER_CHUNK_SIZE);
+        self.t.outputs = WireArray::new(
+            Util::reverseBytes(&Util::concat(&self.t.ivBits, &cipherBits)),
+            self.generator.clone().downgrade(),
+        )
+        .packBitsIntoWords(CIPHER_CHUNK_SIZE as usize, &None);
     }
 
     fn prepareKey(&self) -> Vec<Option<WireType>> {
-        match self.cipherType {
+        match self.t.cipherType {
             SPECK_128 => {
-                let packedKey = WireArray::new(self.keyBits).packBitsIntoWords(64);
-                Speck128CipherGadget::expandKey(packedKey)
+                let packedKey = WireArray::new(self.t.keyBits, self.generator.clone().downgrade())
+                    .packBitsIntoWords(64, &None);
+                Gadget::<Speck128CipherGadget>::expandKey(&packedKey, &self.generator)
             }
             AES_128 => {
-                let packedKey = WireArray::new(self.keyBits).packBitsIntoWords(8);
-                AES128CipherGadget::expandKey(packedKey)
+                let packedKey = WireArray::new(self.t.keyBits, self.generator.clone().downgrade())
+                    .packBitsIntoWords(8, &None);
+                Gadget::<AES128CipherGadget>::expandKey(&packedKey, &self.generator)
             }
-            CHASKEY => WireArray::new(self.keyBits).packBitsIntoWords(32),
+            CHASKEY => WireArray::new(self.t.keyBits, self.generator.clone().downgrade())
+                .packBitsIntoWords(32, &None),
             _ => panic!("Other Ciphers not supported in this version!"),
         }
     }

@@ -60,9 +60,9 @@ use std::ops::{Add, Mul, Sub};
 // crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxComputeGadget {
-    input: WireType,
-    inverse: Option<WireType>,
-    output: Vec<Option<WireType>>,
+    pub input: WireType,
+    pub inverse: Option<WireType>,
+    pub output: Vec<Option<WireType>>,
 }
 impl AESSBoxComputeGadget {
     pub fn new(

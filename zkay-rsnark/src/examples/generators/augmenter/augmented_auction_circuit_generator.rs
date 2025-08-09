@@ -61,15 +61,15 @@ crate::impl_struct_name_for!(CircuitGeneratorExtend<AugmentedAuctionCircuitGener
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AugmentedAuctionCircuitGenerator {
     // each value is assumed to be a 64-bit value
-    secretInputValues: Vec<Option<WireType>>,
-    secretOutputValues: Vec<Option<WireType>>,
+    pub secretInputValues: Vec<Option<WireType>>,
+    pub secretOutputValues: Vec<Option<WireType>>,
 
     // randomness vectors for each participant (each random vector is 7 64-bit words)
-    secretInputRandomness: Vec<Vec<Option<WireType>>>,
-    secretOutputRandomness: Vec<Vec<Option<WireType>>>,
+    pub secretInputRandomness: Vec<Vec<Option<WireType>>>,
+    pub secretOutputRandomness: Vec<Vec<Option<WireType>>>,
 
-    pathToCompiledCircuit: String,
-    numParties: i32, // includes the auction manager + the participants
+    pub pathToCompiledCircuit: String,
+    pub numParties: i32, // includes the auction manager + the participants
 }
 impl AugmentedAuctionCircuitGenerator {
     pub fn new(

@@ -53,9 +53,9 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<DotProductCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct DotProductCircuitGenerator {
-    a: Vec<Option<WireType>>,
-    b: Vec<Option<WireType>>,
-    dimension: i32,
+    pub a: Vec<Option<WireType>>,
+    pub b: Vec<Option<WireType>>,
+    pub dimension: i32,
 }
 impl DotProductCircuitGenerator {
     pub fn new(circuit_name: &str, dimension: i32) -> CircuitGeneratorExtend<Self> {

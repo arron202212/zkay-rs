@@ -51,8 +51,8 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<SHA2CircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SHA2CircuitGenerator {
-    inputWires: Vec<Option<WireType>>,
-    sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
+    pub inputWires: Vec<Option<WireType>>,
+    pub sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
 }
 impl SHA2CircuitGenerator {
     pub fn new(circuit_name: &str) -> CircuitGeneratorExtend<Self> {

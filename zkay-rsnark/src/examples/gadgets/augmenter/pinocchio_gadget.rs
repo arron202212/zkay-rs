@@ -39,9 +39,9 @@ use std::io::{BufRead, BufReader};
 use std::ops::{Add, Mul, Neg, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct PinocchioGadget {
-    inputWires: Vec<Option<WireType>>,
-    proverWitnessWires: Vec<Option<WireType>>,
-    outputWires: Vec<Option<WireType>>,
+    pub inputWires: Vec<Option<WireType>>,
+    pub proverWitnessWires: Vec<Option<WireType>>,
+    pub outputWires: Vec<Option<WireType>>,
 }
 impl PinocchioGadget {
     pub fn new(

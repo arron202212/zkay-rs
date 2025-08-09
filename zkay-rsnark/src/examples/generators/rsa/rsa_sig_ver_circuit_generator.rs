@@ -56,12 +56,12 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<RSASigVerCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSASigVerCircuitGenerator {
-    rsaKeyLength: i32,
-    inputMessage: Vec<Option<WireType>>,
-    signature: Option<LongElement>,
-    rsaModulus: Option<LongElement>,
-    sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
-    rsaSigVerificationV1_5_Gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
+    pub rsaKeyLength: i32,
+    pub inputMessage: Vec<Option<WireType>>,
+    pub signature: Option<LongElement>,
+    pub rsaModulus: Option<LongElement>,
+    pub sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
+    pub rsaSigVerificationV1_5_Gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
 }
 impl RSASigVerCircuitGenerator {
     pub fn new(circuit_name: &str, rsaKeyLength: i32) -> CircuitGeneratorExtend<Self> {

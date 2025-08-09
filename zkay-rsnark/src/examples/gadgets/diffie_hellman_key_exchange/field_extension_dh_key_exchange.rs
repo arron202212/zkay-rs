@@ -63,21 +63,21 @@ use zkay_derive::ImplStructNameConfig;
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct FieldExtensionDHKeyExchange {
-    g: Vec<Option<WireType>>, // base
-    h: Vec<Option<WireType>>, // other party's pub  input (supposedly, h = g^(the
+    pub g: Vec<Option<WireType>>, // base
+    pub h: Vec<Option<WireType>>, // other party's pub  input (supposedly, h = g^(the
     // other party's secret))
-    secretExponentBits: Vec<Option<WireType>>, // the bits of the secret exponent of the
+    pub secretExponentBits: Vec<Option<WireType>>, // the bits of the secret exponent of the
     // party
     // executing this gadget
-    omega: i64,
-    mu: i32,
+    pub omega: i64,
+    pub mu: i32,
 
     // gadget outputs
-    outputPublicValue: Vec<Option<WireType>>, // g^s (to be sent to the other party)
-    sharedSecret: Vec<Option<WireType>>,      // the derived secret key h^s
-    gPowersTable: Vec<Vec<Option<WireType>>>,
-    hPowersTable: Vec<Vec<Option<WireType>>>,
-    output: Vec<Option<WireType>>,
+    pub outputPublicValue: Vec<Option<WireType>>, // g^s (to be sent to the other party)
+    pub sharedSecret: Vec<Option<WireType>>,      // the derived secret key h^s
+    pub gPowersTable: Vec<Vec<Option<WireType>>>,
+    pub hPowersTable: Vec<Vec<Option<WireType>>>,
+    pub output: Vec<Option<WireType>>,
 }
 impl FieldExtensionDHKeyExchange {
     /**

@@ -36,7 +36,7 @@ impl DummyBackend {
 impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyBackend>> {}
 
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyBackend>> {
-    fn getKeyChunkSize() -> i32 {
+    fn getKeyChunkSize(&self) -> i32 {
         DummyBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(

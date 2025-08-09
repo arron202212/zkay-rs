@@ -51,9 +51,9 @@ use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SubsetSumHashGadget {
-    inputWires: Vec<Option<WireType>>,
-    outWires: Vec<Option<WireType>>,
-    binaryOutput: bool,
+    pub inputWires: Vec<Option<WireType>>,
+    pub outWires: Vec<Option<WireType>>,
+    pub binaryOutput: bool,
 }
 use std::sync::OnceLock;
 static COEFFS: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();

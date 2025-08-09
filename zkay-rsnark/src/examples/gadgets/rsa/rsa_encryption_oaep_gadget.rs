@@ -71,15 +71,15 @@ use std::ops::{Add, Div, Mul, Rem, Shl, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSAEncryptionOAEPGadget {
-    modulus: LongElement,
+    pub modulus: LongElement,
 
     // every wire represents a byte in the following three arrays
-    plainText: Vec<Option<WireType>>,
-    seed: Vec<Option<WireType>>,
+    pub plainText: Vec<Option<WireType>>,
+    pub seed: Vec<Option<WireType>>,
 
-    ciphertext: Vec<Option<WireType>>,
+    pub ciphertext: Vec<Option<WireType>>,
 
-    rsaKeyBitLength: i32, // in bits (assumed to be divisible by 8)
+    pub rsaKeyBitLength: i32, // in bits (assumed to be divisible by 8)
 }
 impl RSAEncryptionOAEPGadget {
     pub const SHA256_DIGEST_LENGTH: i32 = 32; // in bytes

@@ -39,7 +39,7 @@ impl ECDHBackend {
 }
 impl SymmetricConfig for CryptoBackend<Symmetric<ECDHBackend>> {}
 impl CryptoBackendConfig for CryptoBackend<Symmetric<ECDHBackend>> {
-    fn getKeyChunkSize() -> i32 {
+    fn getKeyChunkSize(&self) -> i32 {
         ECDHBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(

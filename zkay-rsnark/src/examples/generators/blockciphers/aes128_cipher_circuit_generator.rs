@@ -53,10 +53,10 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<AES128CipherCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AES128CipherCircuitGenerator {
-    inputs: Vec<Option<WireType>>,
-    key: Vec<Option<WireType>>,
-    outputs: Vec<Option<WireType>>,
-    gadget: Option<Gadget<AES128CipherGadget>>,
+    pub inputs: Vec<Option<WireType>>,
+    pub key: Vec<Option<WireType>>,
+    pub outputs: Vec<Option<WireType>>,
+    pub gadget: Option<Gadget<AES128CipherGadget>>,
 }
 impl AES128CipherCircuitGenerator {
     pub fn new(circuit_name: &str) -> CircuitGeneratorExtend<Self> {

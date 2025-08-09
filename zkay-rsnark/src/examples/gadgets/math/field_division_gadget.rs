@@ -63,9 +63,9 @@ use std::fs::File;
 
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct FieldDivisionGadget {
-    a: WireType,
-    b: WireType,
-    c: Vec<Option<WireType>>,
+    pub a: WireType,
+    pub b: WireType,
+    pub c: Vec<Option<WireType>>,
 }
 impl FieldDivisionGadget {
     pub fn new(

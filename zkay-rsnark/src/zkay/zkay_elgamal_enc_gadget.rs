@@ -13,6 +13,7 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadgetConfig;
 use rccell::RcCell;
 /**
  * Gadget for exponential ElGamal encryption, which is additively homomorphic.
@@ -54,11 +55,14 @@ impl ZkayElgamalEncGadget {
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
     fn buildCircuit(&mut self) {
-        let msgEmbedded = self.mulScalar(self.getGenerator(), self.t.t.msgBits);
-        let sharedSecret = self.mulScalar(&self.t.t.pk, self.t.t.randomnessBits);
-        let c1 = self.mulScalar(self.getGenerator(), self.t.t.randomnessBits);
-        let c2 = self.addPoints(msgEmbedded, sharedSecret);
-        self.t.t.outputs = vec![c1.x.clone(), c1.y.clone(), c2.x.clone(), c2.y.clone()];
+        let msgEmbedded = self.mulScalar(&self.getGenerator(), &self.t.t.msgBits);
+        let sharedSecret = self.mulScalar(&self.t.t.pk, &self.t.t.randomnessBits);
+        let c1 = self.mulScalar(&self.getGenerator(), &self.t.t.randomnessBits);
+        let c2 = self.addPoints(&msgEmbedded, &sharedSecret);
+        self.t.t.outputs = [&c1.x, &c1.y, &c2.x, &c2.y]
+            .iter()
+            .map(|&v| Some(v.clone()))
+            .collect();
         (self.t.t.c1, self.t.t.c1) = (Some(c1), Some(c2));
     }
 }

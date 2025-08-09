@@ -50,9 +50,9 @@ use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct DotProductGadget {
-    a: Vec<Option<WireType>>,
-    b: Vec<Option<WireType>>,
-    output: Vec<Option<WireType>>,
+    pub a: Vec<Option<WireType>>,
+    pub b: Vec<Option<WireType>>,
+    pub output: Vec<Option<WireType>>,
 }
 impl DotProductGadget {
     pub fn new(

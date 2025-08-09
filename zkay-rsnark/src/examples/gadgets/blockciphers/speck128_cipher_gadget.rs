@@ -26,9 +26,9 @@ use zkay_derive::ImplStructNameConfig;
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct Speck128CipherGadget {
-    plaintext: Vec<Option<WireType>>,
-    expandedKey: Vec<Option<WireType>>,
-    ciphertext: Vec<Option<WireType>>,
+    pub plaintext: Vec<Option<WireType>>,
+    pub expandedKey: Vec<Option<WireType>>,
+    pub ciphertext: Vec<Option<WireType>>,
 }
 impl Speck128CipherGadget {
     /**

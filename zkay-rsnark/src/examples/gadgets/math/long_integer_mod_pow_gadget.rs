@@ -59,13 +59,13 @@ use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerModPowGadget {
-    b: LongElement, // base
-    e: LongElement, // exponent
-    eMaxBits: i32,  // maximum bit length of e
-    m: LongElement, // modulus
-    mMinBits: i32,  // minimum bit length of m
+    pub b: LongElement, // base
+    pub e: LongElement, // exponent
+    pub eMaxBits: i32,  // maximum bit length of e
+    pub m: LongElement, // modulus
+    pub mMinBits: i32,  // minimum bit length of m
 
-    c: LongElement, // c = m^e mod m
+    pub c: LongElement, // c = m^e mod m
 }
 impl LongIntegerModPowGadget {
     // pub fn new(

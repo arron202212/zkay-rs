@@ -58,14 +58,14 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct MerkleTreeMembershipCircuitGenerator {
-    publicRootWires: Vec<Option<WireType>>,
-    intermediateHasheWires: Vec<Option<WireType>>,
-    directionSelector: Option<WireType>,
-    leafWires: Vec<Option<WireType>>,
+    pub publicRootWires: Vec<Option<WireType>>,
+    pub intermediateHasheWires: Vec<Option<WireType>>,
+    pub directionSelector: Option<WireType>,
+    pub leafWires: Vec<Option<WireType>>,
 
-    treeHeight: i32,
+    pub treeHeight: i32,
 
-    merkleTreeGadget: Option<Gadget<MerkleTreePathGadget>>,
+    pub merkleTreeGadget: Option<Gadget<MerkleTreePathGadget>>,
 }
 impl MerkleTreeMembershipCircuitGenerator {
     const leafNumOfWords: i32 = 10;

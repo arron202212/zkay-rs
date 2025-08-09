@@ -58,12 +58,12 @@ use std::ops::{Add, Div, Mul, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ModGadget {
-    a: WireType,
-    b: WireType,
-    r: Vec<Option<WireType>>,
-    q: WireType,
+    pub a: WireType,
+    pub b: WireType,
+    pub r: Vec<Option<WireType>>,
+    pub q: WireType,
 
-    bitwidth: i32, // bitwidth for both a, b
+    pub bitwidth: i32, // bitwidth for both a, b
 }
 impl ModGadget {
     pub fn new(

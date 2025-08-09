@@ -10,9 +10,12 @@ use crate::circuit::auxiliary::long_element::LongElement;
 use crate::circuit::operations::gadget::Gadget;
 use crate::circuit::operations::gadget::GadgetConfig;
 use crate::circuit::structure::circuit_generator::CircuitGenerator;
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadgetConfig;
+
 use rccell::RcCell;
 /**
  * Gadget for checking correct exponential ElGamal decryption.
@@ -56,28 +59,35 @@ impl ZkayElgamalDecGadget {
         _self
     }
 }
+// impl ZkayBabyJubJubGadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>>{
+// }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
     fn buildCircuit(&mut self) {
         // ensure pk and skBits form a key pair
-        let pkExpected = self.mulScalar(self.getGenerator(), self.t.t.skBits);
+        let pkExpected = self.mulScalar(&self.getGenerator(), &self.t.t.skBits);
         let keyOk = pkExpected
             .x
-            .isEqualTo(&self.t.t.pk.x)
-            .and(pkExpected.y.isEqualTo(&self.t.t.pk.y));
+            .isEqualTo(&self.t.t.pk.x, &None)
+            .and(&pkExpected.y.isEqualTo(&self.t.t.pk.y, &None), &None);
 
         // decrypt ciphertext (without de-embedding)
-        let sharedSecret = self.mulScalar(self.t.t.c1, self.t.t.skBits);
-        let msgEmbedded = self.addPoints(self.t.t.c2, self.negatePoint(sharedSecret));
+        let sharedSecret = self.mulScalar(&self.t.t.c1, &self.t.t.skBits);
+        let msgEmbedded = self.addPoints(&self.t.t.c2, &Self::negatePoint(&sharedSecret));
 
         // embed expected message and assert equality
-        let expectedMsgBits = self.t.t.expectedMsg.getBitWires(32).asArray();
-        let expectedMsgEmbedded = self.mulScalar(self.getGenerator(), expectedMsgBits);
-        self.t.t.msgOk = expectedMsgEmbedded
-            .x
-            .isEqualTo(msgEmbedded.x)
-            .and(expectedMsgEmbedded.y.isEqualTo(&msgEmbedded.y))
-            .and(keyOk);
-        self.t.t.outputs = vec![self.msgOk.clone()];
+        let expectedMsgBits = self.t.t.expectedMsg.getBitWiresi(32, &None).asArray();
+        let expectedMsgEmbedded = self.mulScalar(&self.getGenerator(), expectedMsgBits);
+        self.t.t.msgOk = Some(
+            expectedMsgEmbedded
+                .x
+                .isEqualTo(&msgEmbedded.x, &None)
+                .and(
+                    &expectedMsgEmbedded.y.isEqualTo(&msgEmbedded.y, &None),
+                    &None,
+                )
+                .and(&keyOk, &None),
+        );
+        self.t.t.outputs = vec![self.t.t.msgOk.clone()];
     }
 }
 impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {

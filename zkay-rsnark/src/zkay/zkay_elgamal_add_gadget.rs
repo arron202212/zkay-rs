@@ -13,6 +13,7 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadgetConfig;
 use rccell::RcCell;
 /**
  * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
@@ -42,8 +43,8 @@ impl ZkayElgamalAddGadget {
                 c2,
                 d1,
                 d2,
-                o1: None,
-                o2: None,
+                e1: None,
+                e2: None,
                 outputs: vec![],
             },
             generator,
@@ -56,7 +57,12 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalAddGadget>> {
     fn buildCircuit(&mut self) {
         let e1 = self.addPoints(&self.t.t.c1, &self.t.t.d1);
         let e2 = self.addPoints(&self.t.t.c2, &self.t.t.d2);
-        self.t.t.outputs = vec![e1.x.clone(), e1.y.clone(), e2.x.clone(), e2.y.clone()];
+        self.t.t.outputs = vec![
+            Some(e1.x.clone()),
+            Some(e1.y.clone()),
+            Some(e2.x.clone()),
+            Some(e2.y.clone()),
+        ];
         (self.t.t.e1, self.t.t.e2) = (Some(e1), Some(e2));
     }
 }

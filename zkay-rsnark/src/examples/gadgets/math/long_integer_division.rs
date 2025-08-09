@@ -62,13 +62,13 @@ use std::ops::{Add, Div, Mul, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerDivision<T: Debug + Clone> {
-    a: LongElement,
-    b: LongElement,
+    pub a: LongElement,
+    pub b: LongElement,
     pub r: LongElement,
     pub q: LongElement,
-    bMinBitwidth: i32,
-    restrictRange: bool,
-    t: PhantomData<T>,
+    pub bMinBitwidth: i32,
+    pub restrictRange: bool,
+    pub t: PhantomData<T>,
 }
 impl<T: Debug + Clone> LongIntegerDivision<T> {
     /**

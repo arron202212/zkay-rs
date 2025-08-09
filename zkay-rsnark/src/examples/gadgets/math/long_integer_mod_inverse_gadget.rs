@@ -63,10 +63,10 @@ use zkay_derive::ImplStructNameConfig;
  */
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerModInverseGadget {
-    a: LongElement,      // the value to be inverted
-    m: LongElement,      // the modulus
-    restrictRange: bool, // whether to enforce that a^(-1) < m
-    inverse: LongElement,
+    pub a: LongElement,      // the value to be inverted
+    pub m: LongElement,      // the modulus
+    pub restrictRange: bool, // whether to enforce that a^(-1) < m
+    pub inverse: LongElement,
 }
 impl LongIntegerModInverseGadget {
     pub fn new(

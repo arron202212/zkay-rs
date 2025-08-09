@@ -51,7 +51,7 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<SimpleCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SimpleCircuitGenerator {
-    inputs: Vec<Option<WireType>>,
+    pub inputs: Vec<Option<WireType>>,
 }
 impl SimpleCircuitGenerator {
     pub fn new(circuit_name: &str) -> CircuitGeneratorExtend<Self> {

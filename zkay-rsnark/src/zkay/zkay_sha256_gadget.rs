@@ -29,7 +29,7 @@ impl ZkaySHA256Gadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<SHA256Gadget<Self>> {
         let _self = SHA256Gadget::<Self>::new(
-            Self::convert_inputs_to_bytes(uint256_inputs),
+            Self::convert_inputs_to_bytes(&uint256_inputs, generator.clone()),
             8,
             uint256_inputs.len() * Self::bytes_per_word,
             false,
@@ -46,12 +46,16 @@ impl ZkaySHA256Gadget {
             "Unsupported output length {truncated_bits} bits"
         );
         _self.assembleOutput(truncated_bits);
+        _self
     }
 
-    fn convert_inputs_to_bytes(uint256_inputs: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut input_bytes = WireArray::new(uint256_inputs)
-            .getBits(Self::bytes_per_word * 8)
-            .packBitsIntoWords(8);
+    fn convert_inputs_to_bytes(
+        uint256_inputs: &Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Vec<Option<WireType>> {
+        let mut input_bytes = WireArray::new(uint256_inputs.clone(), generator.downgrade())
+            .getBits(Self::bytes_per_word * 8, &None)
+            .packBitsIntoWords(8, &None);
         // Reverse byte order of each input because jsnark reverses internally when packing
         for j in 0..uint256_inputs.len() {
             input_bytes[j * Self::bytes_per_word..(j + 1) * Self::bytes_per_word].reverse();
@@ -62,28 +66,29 @@ impl ZkaySHA256Gadget {
 
 impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
     fn assembleOutput(&mut self, truncated_length: i32) {
-        let mut digest = self.getOutputWires();
+        let mut digest = self.getOutputWires().clone();
         // Invert word order to get correct byte order when packed into one big word below
         digest.reverse();
         if truncated_length < 256 {
             // Keep truncated_length left-most bits as suggested in FIPS 180-4 to shorten the digest
             if truncated_length % 32 == 0 {
-                let shortened_digest = vec![None; truncated_length / 32];
-                shortened_digest.clone_from_slice(&digest[digest.len() - shortened_digest.len()]);
+                let shortened_digest = vec![None; truncated_length as usize / 32];
+                shortened_digest.clone_from_slice(&digest[digest.len() - shortened_digest.len()..]);
 
                 digest = shortened_digest;
             } else {
-                self.t.t._uint_output = vec![
-                    WireArray::new(digest)
-                        .getBits(32)
-                        .shiftRight(256, 256 - truncated_length)
-                        .packAsBits(None, None, truncated_length),
-                ];
+                self.t.t._uint_output = vec![Some(
+                    WireArray::new(digest, self.generator.clone().downgrade())
+                        .getBits(32, &None)
+                        .shiftRight(256, 256 - truncated_length as usize, &None)
+                        .packAsBits(None, None, &Some(truncated_length.to_string())),
+                )];
                 return;
             }
         }
-        self.t.t._uint_output = WireArray::new(digest).packWordsIntoLargerWords(32, 8);
-        assert!(self.t.t.__uint_output.len() == 1, "Wrong wire length");
+        self.t.t._uint_output = WireArray::new(digest, self.generator.clone().downgrade())
+            .packWordsIntoLargerWords(32, 8, &None);
+        assert!(self.t.t._uint_output.len() == 1, "Wrong wire length");
     }
 }
 

@@ -46,7 +46,7 @@ use std::ops::{Add, Mul, Neg, Rem, Sub};
  */
 
 pub struct LinearSystemSolver {
-    mat: Vec<Vec<BigInteger>>,
+    pub mat: Vec<Vec<BigInteger>>,
 }
 impl LinearSystemSolver {
     // const prime: BigInteger = Configs.field_prime.clone();

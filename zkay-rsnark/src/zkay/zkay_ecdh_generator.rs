@@ -122,7 +122,7 @@ impl CircuitGeneratorExtend<ZkayECDHGenerator> {
         arr[0] &= 0x0f;
         arr[0] |= 0x10;
         arr[31] &= 0xf8;
-        ZkayUtil::unsignedBytesToBigInt(arr)
+        ZkayUtil::unsignedBytesToBigInt(&arr)
     }
 }
 

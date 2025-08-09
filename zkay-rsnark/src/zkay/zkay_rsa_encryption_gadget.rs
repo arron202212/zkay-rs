@@ -72,7 +72,11 @@ impl ZkayRSAEncryptionGadget {
 }
 impl Gadget<ZkayRSAEncryptionGadget> {
     fn buildCircuit(&mut self) {
-        let plainBytes = ZkayUtil::reverseBytes(self.t.plain.getBitWiresi(256, &None), 8);
+        let plainBytes = ZkayUtil::reverseBytes(
+            self.t.plain.getBitWiresi(256, &None),
+            8,
+            self.generator.clone(),
+        );
 
         let mut enc: Box<dyn GadgetConfig>;
         match self.t.paddingType {
@@ -81,6 +85,7 @@ impl Gadget<ZkayRSAEncryptionGadget> {
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
                         .getBits(RSABackend::OAEP_RND_CHUNK_SIZE as usize, &None),
                     8,
+                    self.generator.clone(),
                 );
                 let e = RSAEncryptionOAEPGadget::new(
                     self.t.pk.clone(),
@@ -100,6 +105,7 @@ impl Gadget<ZkayRSAEncryptionGadget> {
                         .getBits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize, &None)
                         .adjustLength(None, rndLen * 8),
                     8,
+                    self.generator.clone(),
                 );
                 enc = Box::new(RSAEncryptionV1_5_Gadget::new(
                     self.t.pk.clone(),

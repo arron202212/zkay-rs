@@ -18,7 +18,7 @@ pub fn init() {
  *
  */
 pub struct BigIntStorage {
-    bigIntegerSet: HashMap<BigInteger, BigInteger>,
+    pub bigIntegerSet: HashMap<BigInteger, BigInteger>,
 }
 impl BigIntStorage {
     pub fn new() -> Self {

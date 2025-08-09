@@ -29,7 +29,7 @@ macro_rules! arc_cell_new {
 // let mut rng = rand::thread_rng();
 pub struct Util {
     // seeded by 1 for testing purposes
-    rand: RandomBits,
+    pub rand: RandomBits,
 }
 impl Default for Util {
     fn default() -> Self {

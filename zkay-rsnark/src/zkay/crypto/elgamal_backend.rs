@@ -97,7 +97,7 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
     }
 }
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
-    fn getKeyChunkSize() -> i32 {
+    fn getKeyChunkSize(&self) -> i32 {
         ElgamalBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(

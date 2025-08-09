@@ -46,9 +46,9 @@ use zkay_derive::ImplStructNameConfig;
 // crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ChaskeyLTS128CipherGadget {
-    plaintext: Vec<Option<WireType>>,  // 4 32-bit words
-    key: Vec<Option<WireType>>,        // 4 32-bit words
-    ciphertext: Vec<Option<WireType>>, // 4 32-bit words
+    pub plaintext: Vec<Option<WireType>>,  // 4 32-bit words
+    pub key: Vec<Option<WireType>>,        // 4 32-bit words
+    pub ciphertext: Vec<Option<WireType>>, // 4 32-bit words
 }
 impl ChaskeyLTS128CipherGadget {
     pub fn new(

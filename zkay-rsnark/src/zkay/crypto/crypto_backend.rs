@@ -25,39 +25,47 @@ use crate::zkay::zkay_cbc_symmetric_enc_gadget::CipherType;
 use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
 use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
 use crate::zkay::zkay_rsa_encryption_gadget::PaddingType;
+use enum_dispatch::enum_dispatch;
 use rccell::{RcCell, WeakCell};
 use std::collections::HashMap;
+
+#[enum_dispatch(
+    AsymmetricConfig,
+    SymmetricConfig,
+    CryptoBackendConfig,
+    CryptoBackendField,
+    SymmetricField,
+    AsymmetricField
+)]
 #[derive(Debug, Clone)]
 pub enum Backend {
     Dummy(CryptoBackend<Asymmetric<DummyBackend>>),
     DummyHom(CryptoBackend<Asymmetric<DummyHomBackend>>),
-    EcdhAes(CryptoBackend<Symmetric<ECDHBackend>>),
-    EcdhChaskey(CryptoBackend<Symmetric<ECDHBackend>>),
+    Ecdh(CryptoBackend<Symmetric<ECDHBackend>>),
+    // EcdhChaskey(CryptoBackend<Symmetric<ECDHBackend>>),
     Paillier(CryptoBackend<Asymmetric<PaillierBackend>>),
     Elgamal(CryptoBackend<Asymmetric<ElgamalBackend>>),
-    RsaOaep(CryptoBackend<Asymmetric<RSABackend>>),
-    RsaPkcs15(CryptoBackend<Asymmetric<RSABackend>>),
+    Rsa(CryptoBackend<Asymmetric<RSABackend>>),
+    // RsaPkcs15(CryptoBackend<Asymmetric<RSABackend>>),
 }
 impl Backend {
-    fn create(name: &str, keyBits: i32, generator: RcCell<CircuitGenerator>) -> Backend {
+    pub fn create(name: &str, keyBits: i32, generator: RcCell<CircuitGenerator>) -> Backend {
         match name {
             "Dummy" => Backend::Dummy(DummyBackend::new(keyBits, generator)),
             "DummyHom" => Backend::DummyHom(DummyHomBackend::new(keyBits, generator)),
-            "EcdhAes" => {
-                Backend::EcdhAes(ECDHBackend::new(keyBits, CipherType::AES_128, generator))
-            }
+            "EcdhAes" => Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::AES_128, generator)),
             "EcdhChaskey" => {
-                Backend::EcdhChaskey(ECDHBackend::new(keyBits, CipherType::CHASKEY, generator))
+                Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::CHASKEY, generator))
             }
             "Paillier" => Backend::Paillier(PaillierBackend::new(keyBits, generator)),
             "Elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits, generator)),
-            "RsaOaep" => Backend::RsaOaep(RSABackend::new(keyBits, PaddingType::OAEP, generator)),
-            "RsaPkcs15" => {
-                Backend::RsaPkcs15(RSABackend::new(keyBits, PaddingType::PKCS_1_5, generator))
-            }
+            "RsaOaep" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::OAEP, generator)),
+            "RsaPkcs15" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::PKCS_1_5, generator)),
         }
     }
 }
+
+#[enum_dispatch]
 pub trait CryptoBackendField {
     fn key_bits(&self) -> i32;
 }
@@ -82,6 +90,8 @@ impl<T> CryptoBackendField for CryptoBackend<T> {
         self.keyBits
     }
 }
+
+#[enum_dispatch]
 pub trait CryptoBackendConfig: CryptoBackendField {
     // fn isSymmetric(&self) -> bool;
 
@@ -94,7 +104,7 @@ pub trait CryptoBackendConfig: CryptoBackendField {
 
     // fn addKey(&self, keyName: &String, keyWires: &Vec<Option<WireType>>);
 
-    fn getKeyChunkSize() -> i32;
+    fn getKeyChunkSize(&self) -> i32;
 
     fn createEncryptionGadget(
         &self,
@@ -143,6 +153,7 @@ impl<T> SymmetricField for CryptoBackend<Symmetric<T>> {
         &mut self.t.mySk
     }
 }
+#[enum_dispatch]
 pub trait SymmetricField {
     fn public_keys(&self) -> &HashMap<String, WireType>;
     fn shared_keys(&self) -> &HashMap<String, WireType>;
@@ -178,11 +189,12 @@ impl<T> Symmetric<T> {
 }
 
 pub const CIPHER_CHUNK_SIZE: i32 = 192;
+
+#[enum_dispatch]
 pub trait SymmetricConfig: SymmetricField + CryptoBackendConfig {
     // These chunk sizes assume a plaintext <= 256 (253) bit.
     // If self should change in the future, the optimal chunk size should be computed on demand based on the plaintext size
     // (optimal: pick such that data has 1. least amount of chunks, 2. for that chunk amount least possible bit amount)
-    const CIPHER_CHUNK_SIZE: i32 = 192;
 
     fn isSymmetric(&self) -> bool {
         true
@@ -305,6 +317,7 @@ pub trait SymmetricConfig: SymmetricField + CryptoBackendConfig {
     }
 }
 
+#[enum_dispatch]
 pub trait AsymmetricField {
     fn keys(&self) -> &HashMap<String, WireArray>;
     fn keys_mut(&mut self) -> &mut HashMap<String, WireArray>;
@@ -336,6 +349,7 @@ impl<T> Asymmetric<T> {
     }
 }
 
+#[enum_dispatch]
 pub trait AsymmetricConfig: CryptoBackendConfig + AsymmetricField {
     fn isSymmetric(&self) -> bool {
         false
@@ -363,7 +377,7 @@ pub trait AsymmetricConfig: CryptoBackendConfig + AsymmetricField {
         keyWires: &Vec<Option<WireType>>,
         generator: WeakCell<CircuitGenerator>,
     ) {
-        let chunkBits = Self::getKeyChunkSize();
+        let chunkBits = self.getKeyChunkSize();
         let keyArray = WireArray::new(keyWires.clone(), generator)
             .getBits(chunkBits as usize, &Some(keyName.to_owned() + "_bits"))
             .adjustLength(None, self.key_bits() as usize);
