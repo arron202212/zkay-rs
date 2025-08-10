@@ -12,9 +12,8 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
 use crate::zkay::crypto::crypto_backend::Symmetric;
-use crate::zkay::crypto::crypto_backend::SymmetricConfig;
+use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
 use crate::zkay::zkay_cbc_symmetric_enc_gadget::CipherType;
@@ -37,7 +36,7 @@ impl ECDHBackend {
         Symmetric::<Self>::new(keyBits, Self { cipherType }, generator)
     }
 }
-impl SymmetricConfig for CryptoBackend<Symmetric<ECDHBackend>> {}
+// impl SymmetricConfig for CryptoBackend<Symmetric<ECDHBackend>> {}
 impl CryptoBackendConfig for CryptoBackend<Symmetric<ECDHBackend>> {
     fn getKeyChunkSize(&self) -> i32 {
         ECDHBackend::KEY_CHUNK_SIZE
@@ -53,7 +52,7 @@ impl CryptoBackendConfig for CryptoBackend<Symmetric<ECDHBackend>> {
         Box::new(ZkayCBCSymmetricEncGadget::new(
             plain.clone(),
             self.getKey(key, generator.clone()),
-            self.extractIV(&Some(ivArr.clone())),
+            Self::extractIV(&Some(ivArr.clone())),
             self.t.t.cipherType.clone(),
             desc,
             generator,

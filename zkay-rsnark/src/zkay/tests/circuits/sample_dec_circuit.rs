@@ -7,12 +7,14 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
+use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
-use crate::zkay::zkay_circuit_base::ZkayCircuitBaseConfig;
 use crate::zkay::zkay_type::ZkayType;
-#[derive(Debug, Clone)]
+use zkay_derive::ImplStructNameConfig;
+#[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SampleDecCircuit;
 impl SampleDecCircuit {
     pub fn new() -> CircuitGeneratorExtend<ZkayCircuitBase<Self>> {
@@ -31,7 +33,6 @@ impl SampleDecCircuit {
         _self
     }
 }
-impl ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {}
 
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
     fn __zk__bar(&self) {
@@ -56,12 +57,20 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
 
         self.stepOut();
     }
-
+}
+impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
     fn buildCircuit(&mut self) {
-        // super.buildCircuit();
+        self.super_buildCircuit();
         self.addKi("elgamal", "glob_key_Elgamal__me", 2);
 
         self.__zk__bar();
+    }
+
+    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+        self.super_generateSampleInput(evaluator);
+    }
+    fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
+        self.super_prepFiles(circuit_evaluator);
     }
 }
 

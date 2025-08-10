@@ -13,9 +13,9 @@ use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::crypto::crypto_backend::Asymmetric;
-use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
 use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
@@ -51,7 +51,10 @@ impl ElgamalBackend {
     }
 }
 
-impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
+impl CryptoBackendConfigs for CryptoBackend<Asymmetric<ElgamalBackend>> {
+    fn isSymmetric(&self) -> bool {
+        false
+    }
     fn usesDecryptionGadget(&self) -> bool {
         // randomness is not extractable from an ElGamal ciphertext, so need a separate
         // gadget for decryption
@@ -62,12 +65,13 @@ impl AsymmetricConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         &self,
         keyName: &String,
         keyWires: &Vec<Option<WireType>>,
-        generator: WeakCell<CircuitGenerator>,
+        generator: RcCell<CircuitGenerator>,
     ) {
         // elgamal does not require a bit-representation of the pub  key, so store it directly
-        self.t
-            .keys
-            .insert(keyName.clone(), WireArray::new(keyWires.clone(), generator));
+        self.t.keys.insert(
+            keyName.clone(),
+            WireArray::new(keyWires.clone(), generator.downgrade()),
+        );
     }
     fn createDecryptionGadget(
         &self,
@@ -175,7 +179,7 @@ impl CryptoBackend<Asymmetric<ElgamalBackend>> {
         JubJubPoint::new(p.x.clone(), p.y.add(&oneIfBothZero))
     }
 }
-impl HomomorphicBackend for CryptoBackend<Asymmetric<ElgamalBackend>> {
+impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn doHomomorphicOp(
         &self,
         lhs: &HomomorphicInput,

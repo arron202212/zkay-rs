@@ -12,9 +12,9 @@ use crate::circuit::structure::circuit_generator::CircuitGenerator;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::crypto::crypto_backend::Asymmetric;
-use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
 use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
@@ -47,7 +47,8 @@ impl RSABackend {
         )
     }
 }
-impl AsymmetricConfig for CryptoBackend<Asymmetric<RSABackend>> {}
+//impl AsymmetricConfig for CryptoBackend<Asymmetric<RSABackend>> {}
+crate::impl_crypto_backend_configs_for!(RSABackend);
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
     fn getKeyChunkSize(&self) -> i32 {
         RSABackend::KEY_CHUNK_SIZE

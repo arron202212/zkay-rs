@@ -19,9 +19,9 @@ use crate::examples::gadgets::math::long_integer_mod_inverse_gadget::LongInteger
 use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
 
 use crate::zkay::crypto::crypto_backend::Asymmetric;
-use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
 use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 
@@ -74,7 +74,8 @@ impl PaillierBackend {
         )
     }
 }
-impl AsymmetricConfig for CryptoBackend<Asymmetric<PaillierBackend>> {}
+//impl AsymmetricConfig for CryptoBackend<Asymmetric<PaillierBackend>> {}
+crate::impl_crypto_backend_configs_for!(PaillierBackend);
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
     fn getKeyChunkSize(&self) -> i32 {
         PaillierBackend::CHUNK_SIZE
@@ -107,7 +108,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
         ))
     }
 }
-impl HomomorphicBackend for CryptoBackend<Asymmetric<PaillierBackend>> {
+impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
     fn doHomomorphicOpu(
         &self,
         op: char,

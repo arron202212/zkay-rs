@@ -14,11 +14,12 @@ use crate::circuit::structure::circuit_generator::{
     getActiveCircuitGenerator,
 };
 use crate::circuit::structure::wire::WireConfig;
+use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::crypto::crypto_backend::Asymmetric;
-use crate::zkay::crypto::crypto_backend::AsymmetricConfig;
+
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
+use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
 use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
@@ -40,8 +41,8 @@ impl DummyHomBackend {
         Asymmetric::<Self>::new(keyBits, Self, generator)
     }
 }
-impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {}
-
+//impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {}
+crate::impl_crypto_backend_configs_for!(DummyHomBackend);
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
     fn getKeyChunkSize(&self) -> i32 {
         DummyHomBackend::KEY_CHUNK_SIZE
@@ -118,7 +119,7 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
     }
 }
 
-impl HomomorphicBackend for CryptoBackend<Asymmetric<DummyHomBackend>> {
+impl HomomorphicBackend for &CryptoBackend<Asymmetric<DummyHomBackend>> {
     fn doHomomorphicOpu(
         &self,
         op: char,

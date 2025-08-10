@@ -8,17 +8,20 @@
 #![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfigFields;
+use crate::circuit::structure::circuit_generator::CGInstance;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
+use crate::circuit::structure::wire::GetWireId;
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::crypto::crypto_backend::Backend;
-
 use crate::util::util::BigInteger;
+use crate::zkay::crypto::crypto_backend::Backend;
 use crate::zkay::crypto::crypto_backend::CryptoBackend;
+use crate::zkay::crypto::crypto_backend::CryptoBackendConfigs;
 use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
 use crate::zkay::typed_wire::TypedWire;
@@ -30,7 +33,7 @@ use num_bigint::Sign;
 use rccell::RcCell;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fs::File;
-
+use std::io::Write;
 const ADD_OP_LABELS: bool = true;
 const LEGACY_CRYPTO_BACKEND: &str = "LEGACY_CRYPTO_BACKEND";
 
@@ -163,66 +166,72 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug> crate::circuit::Stru
         self.t.t.name()
     }
 }
-
-impl<
-    T: ZkayCircuitBaseConfig + crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone,
-> CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<T>>
+// pub trait BuildCircuitConfig{
+// fn buildCircuit(&mut self);
+// }
+impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
+    CircuitGeneratorExtend<ZkayCircuitBase<T>>
 {
-    fn buildCircuit(&mut self) {
+    pub fn super_buildCircuit(&mut self) {
         let pubInCount = self.t.pubInCount as usize;
         // Create IO wires
         let pubOutCount = self.t.allPubIOWires.len() - pubInCount;
         let (inArray, outArray) = if self.t.useInputHashing {
             (
-                self.createProverWitnessWireArray(pubInCount, &Some("in_".to_owned())),
-                self.createProverWitnessWireArray(pubOutCount, &Some("out_".to_owned())),
+                self.cg
+                    .createProverWitnessWireArray(pubInCount, &Some("in_".to_owned())),
+                self.cg
+                    .createProverWitnessWireArray(pubOutCount, &Some("out_".to_owned())),
             )
         } else {
             (
-                self.createInputWireArray(pubInCount, &Some("in_".to_owned())),
-                self.createInputWireArray(pubOutCount, &Some("out_".to_owned())),
+                self.cg
+                    .createInputWireArray(pubInCount, &Some("in_".to_owned())),
+                self.cg
+                    .createInputWireArray(pubOutCount, &Some("out_".to_owned())),
             )
         };
         let privInArray = self
+            .cg
             .createProverWitnessWireArray(self.t.allPrivInWires.len(), &Some("priv_".to_owned()));
 
         // Legacy handling
         let legacyCryptoBackend = self.t.cryptoBackends.get(LEGACY_CRYPTO_BACKEND);
         if legacyCryptoBackend.is_some_and(|v| v.isSymmetric()) {
-            let myPk = inArray[0];
-            let mySk = privInArray[0];
+            let myPk = inArray[0].as_ref().unwrap();
+            let mySk = privInArray[0].as_ref().unwrap();
             self.setKeyPair(LEGACY_CRYPTO_BACKEND, myPk, mySk);
         }
 
         self.t.allPubIOWires[0..pubInCount].clone_from_slice(&inArray[0..]);
         self.t.allPubIOWires[pubInCount..pubOutCount].clone_from_slice(&outArray[0..]);
         self.t.allPrivInWires[0..self.t.allPrivInWires.len()].clone_from_slice(&privInArray[0..]);
-        (self.t.pubOutCount) = (pubOutCount);
-        self.t.t.buildCircuit();
+        // self.t.t.buildCircuit();
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    pub fn super_generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
         assert!(
-            self.serializedArguments.is_some(),
+            !self.t.serializedArguments.is_empty(),
             "No inputs specified, this should not have been called"
         );
 
         assert!(
-            self.serializedArguments.len() == self.allPubIOWires.len() + self.allPrivInWires.len(),
+            self.t.serializedArguments.len()
+                == self.t.allPubIOWires.len() + self.t.allPrivInWires.len(),
             "Invalid serialized argument count, expected {} was {}",
-            self.allPubIOWires.len(),
-            self.serializedArguments.len()
+            self.t.allPubIOWires.len(),
+            self.t.serializedArguments.len()
         );
 
         let mut idx = 0;
-        for ioNameList in [&self.pubInNames, &self.pubOutNames, &self.privInNames] {
+        for ioNameList in [&self.t.pubInNames, &self.t.pubOutNames, &self.t.privInNames] {
             for name in ioNameList {
-                let wires = self.vars.get(name).unwrap();
+                let wires = self.t.vars.get(name).unwrap();
                 let mut sb = format!("Setting '{name}' to [");
                 for w in wires {
-                    let val = self.serializedArguments[idx];
+                    let val = self.t.serializedArguments[idx];
                     idx += 1;
-                    evaluator.setWireValue(w.wire, val);
+                    evaluator.setWireValue(&w.wire, &val);
                     sb.push_str(&format!("wid {}={}, ", w.wire.getWireId(), val));
                 }
                 sb.pop();
@@ -233,60 +242,58 @@ impl<
         }
 
         assert!(
-            idx == self.allPubIOWires.len() + self.allPrivInWires.len(),
+            idx == self.t.allPubIOWires.len() + self.t.allPrivInWires.len(),
             "Not all inputs consumed"
         );
     }
-    fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
-        if self.serializedArguments != None {
-            CGConfig::prepFiles(self, circuit_evaluator);
+    pub fn super_prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
+        if !self.t.serializedArguments.is_empty() {
+            // CGConfig::prepFiles(self, circuit_evaluator);
         } else {
-            self.writeCircuitFile();
+            self.cg.writeCircuitFile();
             self.writeDummyInputFile();
         }
     }
 }
 
-impl<T: ZkayCircuitBaseConfig + std::fmt::Debug> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
+impl<T: std::fmt::Debug> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
     fn writeDummyInputFile(&self) {
-        let printWriter = File::create(self.get_name() + ".in");
+        let printWriter = File::create(self.get_name() + ".in").unwrap();
         write!(printWriter, "0 1");
-        let allIOWires = vec![
-            0;
+        let mut allIOWires = Vec::with_capacity(
             self.get_in_wires().len()
                 + self.get_out_wires().len()
-                + self.get_prover_witness_wires().len()
-        ];
-        allIOWires.addAll(&self.get_in_wires()[1..]);
-        allIOWires.addAll(self.get_out_wires());
-        allIOWires.addAll(self.get_prover_witness_wires());
+                + self.get_prover_witness_wires().len(),
+        );
+        allIOWires.append(&mut self.get_in_wires()[1..].to_vec());
+        allIOWires.append(&mut self.get_out_wires());
+        allIOWires.append(&mut self.get_prover_witness_wires());
         for w in allIOWires {
-            write!(printWriter, "{} 0", w.getWireId());
+            write!(printWriter, "{} 0", w.as_ref().unwrap().getWireId());
         }
     }
 }
-// impl<T: ZkayCircuitBaseConfig + std::fmt::Debug> ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<T>> {
-// }
 
-pub trait ZkayCircuitBaseConfig {
-    fn run(&self, args: &Vec<String>) {
-        match &args[0] {
+impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
+    CircuitGeneratorExtend<ZkayCircuitBase<T>>
+{
+    pub fn run(&self, args: &Vec<String>) {
+        match args[0].as_str() {
             "compile" => self.compileCircuit(),
-
             "prove" => {
                 self.compileCircuit();
-                self.parseInputs(args[1..].to_vec());
+                self.parseInputs(&args[1..].to_vec());
                 //println!("Evaluating circuit '" + realCircuitName + "'");
-                self.evalCircuit();
+                self.cg.evalCircuit();
             }
 
             _ => panic!("invalid command"),
         }
-        self.prepFiles();
+        self.cg.prepFiles(None);
     }
 
-    fn parseInputs(&self, args: &Vec<String>) {
-        let totCount = self.allPubIOWires.len() + self.allPrivInWires.len();
+    pub fn parseInputs(&self, args: &Vec<String>) {
+        let totCount = self.t.allPubIOWires.len() + self.t.allPrivInWires.len();
         assert!(
             args.len() == totCount,
             "Input count mismatch, expected {}, was {}",
@@ -302,78 +309,89 @@ pub trait ZkayCircuitBaseConfig {
             );
             serializedArguments[i] = v;
         }
-        self.serializedArguments = serializedArguments;
+        self.t.serializedArguments = serializedArguments;
     }
-    fn compileCircuit(&self) {
-        println!("Compiling circuit '{}'", self.realCircuitName);
-        self.generateCircuit();
+    pub fn compileCircuit(&self) {
+        println!("Compiling circuit '{}'", self.t.realCircuitName);
+        self.cg.generateCircuit();
         assert!(
-            self.currentPubInIdx == self.pubInCount
-                && self.currentPubOutIdx == self.allPubIOWires.len(),
+            self.t.currentPubInIdx == self.t.pubInCount
+                && self.t.currentPubOutIdx == self.t.allPubIOWires.len() as i32,
             "Not all pub  inputs assigned"
         );
         assert!(
-            self.currentPrivInIdx == self.allPrivInWires.len(),
+            self.t.currentPrivInIdx == self.t.allPrivInWires.len() as i32,
             "Not all  inputs assigned"
         );
-        if self.useInputHashing {
-            self.makeOutputArray(
-                ZkaySHA256Gadget::new(self.allPubIOWires.clone(), 253).getOutputWires(),
-                "digest",
+        if self.t.useInputHashing {
+            self.cg.makeOutputArray(
+                ZkaySHA256Gadget::new(self.t.allPubIOWires.clone(), 253, &None, self.cg.clone())
+                    .getOutputWires(),
+                &Some("digest".to_owned()),
             );
         }
         //println!("Done with generateCircuit, preparing dummy files...");
     }
 
-    fn addIO(
+    pub fn addIO(
         &self,
         typeName: &str,
         mut name: &str,
-        nameList: &mut Vec<String>,
+        nameList: &Vec<String>,
         src: &Vec<Option<WireType>>,
         startIdx: i32,
         size: i32,
         t: ZkayType,
         restrict: bool,
     ) -> Vec<Option<WireType>> {
-        name = self.getQualifiedName(&name);
+        let name = self.getQualifiedName(&name);
         println!(
             "Adding '{name}' = {typeName}[{startIdx}:{}]",
             startIdx + size
         );
-        let input = src[startIdx..startIdx + size].to_vec();
-        let mut tInput = vec![TypedWire::default(); input.len()];
-        for i in 0..input.len() {
-            // Enforce size and associate wire with type (technically restrict is only required for  inputs)
-            tInput[i] = TypedWire::new(input[i], t, name, restrict);
-        }
-        self.vars.insert(name, tInput);
-        nameList.push(name);
+        let input = src[startIdx as usize..(startIdx + size) as usize].to_vec();
+        // Enforce size and associate wire with type (technically restrict is only required for  inputs)
+
+        let mut tInput: Vec<_> = input
+            .iter()
+            .map(|i| {
+                TypedWire::new(
+                    i.clone().unwrap(),
+                    t,
+                    name.clone(),
+                    &vec![restrict],
+                    self.cg(),
+                )
+            })
+            .collect();
+
+        self.t.vars.insert(name.to_owned(), tInput);
+        nameList.push(name.to_owned());
         input
     }
 
     // CRYPTO BACKENDS
-    fn addCryptoBackend(&self, cryptoBackendId: &str, cryptoBackendName: &str, keyBits: i32) {
+    pub fn addCryptoBackend(&self, cryptoBackendId: &str, cryptoBackendName: &str, keyBits: i32) {
         assert!(
-            !self.cryptoBackends.contains_key(cryptoBackendId),
+            !self.t.cryptoBackends.contains_key(cryptoBackendId),
             "Crypto backend {cryptoBackendId} already registered"
         );
 
-        self.cryptoBackends.insert(
-            cryptoBackendId,
-            CryptoBackend::create(cryptoBackendName, keyBits),
+        self.t.cryptoBackends.insert(
+            cryptoBackendId.to_owned(),
+            Backend::create(cryptoBackendName, keyBits, self.cg()),
         );
     }
 
-    fn setKeyPairn(&self, cryptoBackendId: &str, pkName: &str, skName: &str) {
+    pub fn setKeyPairn(&self, cryptoBackendId: &str, pkName: &str, skName: &str) {
         self.setKeyPair(
             cryptoBackendId,
-            self.get(pkName).wire,
-            self.get(skName).wire,
+            &self.get(pkName).wire,
+            &self.get(skName).wire,
         );
     }
 
-    fn setKeyPair(&self, cryptoBackendId: &str, myPk: &WireType, mySk: &WireType) {
+    pub fn setKeyPair(&self, cryptoBackendId: &str, myPk: &WireType, mySk: &WireType) {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
         assert!(
             cryptoBackend.isSymmetric(),
@@ -384,34 +402,34 @@ pub trait ZkayCircuitBaseConfig {
         symmetricCrypto.setKeyPair(myPk, mySk);
     }
 
-    fn getCryptoBackend(&self, cryptoBackendId: &str) -> Backend {
-        let backend = self.cryptoBackends.get(cryptoBackendId);
+    pub fn getCryptoBackend(&self, cryptoBackendId: &str) -> &Backend {
+        let backend = self.t.cryptoBackends.get(cryptoBackendId);
         assert!(
             backend.is_some(),
             "Unknown crypto backend: {cryptoBackendId}"
         );
-        backend
+        backend.unwrap()
     }
 
-    fn getHomomorphicCryptoBackend(&self, cryptoBackendId: &str) -> Box<dyn HomomorphicBackend> {
+    pub fn getHomomorphicCryptoBackend(
+        &self,
+        cryptoBackendId: &str,
+    ) -> Box<dyn HomomorphicBackend> {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
-        assert!(
-            cryptoBackend.instance_of("HomomorphicBackend"),
+        cryptoBackend.homomorphic_backend().expect(&format!(
             "Crypto backend {cryptoBackendId} is not homomorphic"
-        );
-
-        cryptoBackend
+        ))
     }
 
     // CIRCUIT IO
 
-    fn addIn(&self, name: &str, size: i32, t: ZkayType) {
+    pub fn addIn(&self, name: &str, size: i32, t: ZkayType) {
         self.addIO(
             "in",
             name,
-            &self.pubInNames,
-            &self.allPubIOWires,
-            self.currentPubInIdx,
+            &self.t.pubInNames,
+            &self.t.allPubIOWires,
+            self.t.currentPubInIdx,
             size,
             t,
             false,
@@ -419,79 +437,79 @@ pub trait ZkayCircuitBaseConfig {
         self.t.currentPubInIdx += size;
     }
 
-    fn addKi(&self, cryptoBackendId: &str, name: &str, size: i32) {
+    pub fn addKi(&self, cryptoBackendId: &str, name: &str, size: i32) {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
         let chunkSize = cryptoBackend.getKeyChunkSize();
         let input = self.addIO(
             "in",
             name,
-            self.pubInNames,
-            self.allPubIOWires,
-            self.currentPubInIdx,
+            self.t.pubInNames,
+            self.t.allPubIOWires,
+            self.t.currentPubInIdx,
             size,
             ZkayType::ZkUint(chunkSize),
             false,
         );
-        self.currentPubInIdx += size;
+        self.t.currentPubInIdx += size;
         self.cryptoBackend
             .insert(self.getQualifiedName(name), input);
     }
 
-    fn addK(&self, name: &str, size: i32) {
+    pub fn addK(&self, name: &str, size: i32) {
         self.addK(LEGACY_CRYPTO_BACKEND, name, size);
     }
 
-    fn addOut(&self, name: &str, size: i32, t: ZkayType) {
+    pub fn addOut(&self, name: &str, size: i32, t: ZkayType) {
         self.addIO(
             "out",
             name,
-            self.pubOutNames,
-            self.allPubIOWires,
-            self.currentPubOutIdx,
+            self.t.pubOutNames,
+            self.t.allPubIOWires,
+            self.t.currentPubOutIdx,
             size,
             t,
             false,
         );
-        self.currentPubOutIdx += size;
+        self.t.currentPubOutIdx += size;
     }
 
-    fn addS(&self, name: &str, size: i32, t: ZkayType) {
+    pub fn addS(&self, name: &str, size: i32, t: ZkayType) {
         self.addIO(
             "priv",
             name,
-            self.privInNames,
-            self.allPrivInWires,
-            self.currentPrivInIdx,
+            self.t.privInNames,
+            self.t.allPrivInWires,
+            self.t.currentPrivInIdx,
             size,
             t,
             true,
         );
-        self.currentPrivInIdx += size;
+        self.t.currentPrivInIdx += size;
     }
 
     // CONTROL FLOW
 
-    fn stepIn(&self, fct: &str) {
+    pub fn stepIn(&self, fct: &str) {
         self.pushPrefix(
-            self.namePrefix,
-            self.namePrefixIndices,
-            self.guardPrefixes.front().unwrap().front().unwrap() + fct,
+            self.t.namePrefix,
+            self.t.namePrefixIndices,
+            self.t.guardPrefixes.front().unwrap().front().unwrap() + fct,
         );
-        self.pushGuardPrefix(self.guardPrefixes, self.guardPrefixIndices);
+        self.pushGuardPrefix(self.t.guardPrefixes, self.t.guardPrefixIndices);
     }
 
-    fn stepOut(&self) {
-        self.popPrefix(self.namePrefix);
-        self.guardPrefixes.pop_front();
-        self.guardPrefixIndices.pop_front();
+    pub fn stepOut(&self) {
+        self.popPrefix(self.t.namePrefix);
+        self.t.guardPrefixes.pop_front();
+        self.t.guardPrefixIndices.pop_front();
     }
 
-    fn addGuard(&self, name: &str, isTrue: bool) {
+    pub fn addGuard(&self, name: &str, isTrue: bool) {
         let mut newWire = self.get(name).wire.clone();
 
         self.pushPrefix(
-            self.guardPrefixes.front().unwrap(),
-            self.guardPrefixIndices.front().unwrap(),
+            self.t.guardPrefixes.front().unwrap(),
+            self.t.guardPrefixIndices.front().unwrap(),
             format!("{name}_{isTrue}"),
         );
 
@@ -499,7 +517,7 @@ pub trait ZkayCircuitBaseConfig {
             newWire = newWire.invAsBit();
         }
 
-        if !self.currentGuardCondition.isEmpty() {
+        if !self.t.currentGuardCondition.isEmpty() {
             newWire = self
                 .currentGuardCondition
                 .front()
@@ -507,19 +525,24 @@ pub trait ZkayCircuitBaseConfig {
                 .wire
                 .and(newWire);
         }
-        self.currentGuardCondition.push(TypedWire::new(
+        self.t.currentGuardCondition.push(TypedWire::new(
             newWire,
             zkbool(),
             format!("guard_cond_top_{name}_{isTrue}"),
         ));
     }
 
-    fn popGuard(&self) {
-        self.currentGuardCondition.pop_front();
-        self.popPrefix(self.guardPrefixes.front().unwrap());
+    pub fn popGuard(&self) {
+        self.t.currentGuardCondition.pop_front();
+        self.popPrefix(self.t.guardPrefixes.front().unwrap());
     }
 
-    fn ite(&self, condition: &TypedWire, trueVal: &TypedWire, falseVal: &TypedWire) -> TypedWire {
+    pub fn ite(
+        &self,
+        condition: &TypedWire,
+        trueVal: &TypedWire,
+        falseVal: &TypedWire,
+    ) -> TypedWire {
         ZkayType::checkType(zkbool(), condition.zkay_type);
         ZkayType::checkType(trueVal.zkay_type, falseVal.zkay_type);
         TypedWire::new(
@@ -534,7 +557,7 @@ pub trait ZkayCircuitBaseConfig {
 
     // UNARY OPS
 
-    fn negate(&self, val: &TypedWire) -> TypedWire {
+    pub fn negate(&self, val: &TypedWire) -> TypedWire {
         let bits = val.zkay_type.bitwidth;
         if bits < 256 {
             // Take two's complement
@@ -553,7 +576,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn bitInv(&self, val: &TypedWire) -> TypedWire {
+    pub fn bitInv(&self, val: &TypedWire) -> TypedWire {
         let resultType = ZkayType::checkType(val.zkay_type, val.zkay_type, false);
         let res = val
             .wire
@@ -561,7 +584,7 @@ pub trait ZkayCircuitBaseConfig {
         TypedWire::new(res, resultType, format!("~{}", val.name))
     }
 
-    fn not(&self, val: &TypedWire) -> TypedWire {
+    pub fn not(&self, val: &TypedWire) -> TypedWire {
         ZkayType::checkType(zkbool(), val.zkay_type);
         TypedWire::new(
             val.wire.invAsBit(format!("!{}", val.name)),
@@ -572,7 +595,7 @@ pub trait ZkayCircuitBaseConfig {
 
     // String op interface
 
-    fn o_(&self, op: char, wire: &TypedWire) -> TypedWire {
+    pub fn o_(&self, op: char, wire: &TypedWire) -> TypedWire {
         match op {
             '-' => self.negate(wire),
             '~' => self.bitInv(wire),
@@ -581,7 +604,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn o_tct(&self, lhs: &TypedWire, op: char, rhs: &TypedWire) -> TypedWire {
+    pub fn o_tct(&self, lhs: &TypedWire, op: char, rhs: &TypedWire) -> TypedWire {
         match op {
             '+' => lhs.plus(rhs),
             '-' => lhs.minus(rhs),
@@ -597,7 +620,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn o_tctct(
+    pub fn o_tctct(
         &self,
         cond: &TypedWire,
         condChar: char,
@@ -609,7 +632,7 @@ pub trait ZkayCircuitBaseConfig {
         self.ite(cond, trueVal, falseVal)
     }
 
-    fn o_tsi(&self, lhs: &TypedWire, op: &str, rhs: i32) -> TypedWire {
+    pub fn o_tsi(&self, lhs: &TypedWire, op: &str, rhs: i32) -> TypedWire {
         match op {
             "<<" => lhs.shiftLeftBy(rhs),
             ">>" => lhs.shiftRightBy(rhs),
@@ -617,7 +640,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn o_tst(&self, lhs: &TypedWire, op: &str, rhs: &TypedWire) -> TypedWire {
+    pub fn o_tst(&self, lhs: &TypedWire, op: &str, rhs: &TypedWire) -> TypedWire {
         match op {
             "==" => lhs.isEqualTo(rhs),
             "!=" => lhs.isNotEqualTo(rhs),
@@ -631,7 +654,7 @@ pub trait ZkayCircuitBaseConfig {
 
     // Homomorphic operations
 
-    fn o_hom(
+    pub fn o_hom(
         &self,
         cryptoBackendId: &str,
         key: &str,
@@ -642,7 +665,7 @@ pub trait ZkayCircuitBaseConfig {
         backend.doHomomorphicOp(op, arg, self.getQualifiedName(key))
     }
 
-    fn o_hom_sshch(
+    pub fn o_hom_sshch(
         &self,
         cryptoBackendId: &str,
         key: &str,
@@ -654,7 +677,7 @@ pub trait ZkayCircuitBaseConfig {
         backend.doHomomorphicOp(lhs, op, rhs, self.getQualifiedName(key))
     }
 
-    fn o_hom_sshchch(
+    pub fn o_hom_sshchch(
         &self,
         cryptoBackendId: &str,
         key: &str,
@@ -669,7 +692,7 @@ pub trait ZkayCircuitBaseConfig {
         backend.doHomomorphicCond(cond, trueVal, falseVal, self.getQualifiedName(key))
     }
 
-    fn o_hom_sshsh(
+    pub fn o_hom_sshsh(
         &self,
         cryptoBackendId: &str,
         key: &str,
@@ -681,7 +704,7 @@ pub trait ZkayCircuitBaseConfig {
         backend.doHomomorphicOp(lhs, op, rhs, self.getQualifiedName(key))
     }
 
-    fn o_rerand(
+    pub fn o_rerand(
         &self,
         arg: &Vec<TypedWire>,
         cryptoBackendId: &str,
@@ -693,23 +716,23 @@ pub trait ZkayCircuitBaseConfig {
     }
 
     // TYPE CASTING
-    fn cast(&self, w: &TypedWire, targetType: ZkayType) -> TypedWire {
+    pub fn cast(&self, w: &TypedWire, targetType: ZkayType) -> TypedWire {
         self.convertTo(w, targetType)
     }
 
     // SOURCE
 
-    fn get(&self, name: &str) -> TypedWire {
+    pub fn get(&self, name: &str) -> TypedWire {
         let w = self.getTypedArr(name);
         assert!(w.len() == 1, "Tried to treat array as a single wire");
         w[0]
     }
 
-    fn getCipher(&self, name: &str) -> Vec<TypedWire> {
+    pub fn getCipher(&self, name: &str) -> Vec<TypedWire> {
         self.getTypedArr(name)
     }
 
-    fn val(&self, val: bool) -> TypedWire {
+    pub fn val(&self, val: bool) -> TypedWire {
         TypedWire::new(
             if val {
                 self.cg.get_one_wire()
@@ -721,7 +744,7 @@ pub trait ZkayCircuitBaseConfig {
         )
     }
 
-    fn val_iz(&self, val: i32, t: ZkayType) -> TypedWire {
+    pub fn val_iz(&self, val: i32, t: ZkayType) -> TypedWire {
         if val == 0 {
             TypedWire::new(self.get_zero_wire(), t, format!("const_{val}"))
         } else if val == 1 {
@@ -731,7 +754,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn val_sz(&self, val: &str, t: ZkayType) -> TypedWire {
+    pub fn val_sz(&self, val: &str, t: ZkayType) -> TypedWire {
         let v = BigInteger::parse_bytes(val.as_bytes(), 10).unwrap();
         let w = if v.sign() == Sign::Minus {
             assert!(!t.signed, "Cannot store negative constant in unsigned wire");
@@ -746,12 +769,12 @@ pub trait ZkayCircuitBaseConfig {
 
     // SINK
 
-    fn decl(&self, lhs: &str, val: TypedWire) {
+    pub fn decl(&self, lhs: &str, val: TypedWire) {
         assert!(val.zkay_type.is_some(), "Tried to use untyped wires");
 
         // Get old value and check type
         let mut oldVal;
-        if self.vars.contains_key(lhs) {
+        if self.t.vars.contains_key(lhs) {
             oldVal = self.get(lhs);
             ZkayType::checkType(oldVal.zkay_type, val.zkay_type);
         } else {
@@ -759,14 +782,14 @@ pub trait ZkayCircuitBaseConfig {
         }
 
         // Only assign value if guard condition is met
-        if self.currentGuardCondition.isEmpty() {
+        if self.t.currentGuardCondition.isEmpty() {
             self.set(lhs, TypedWire::new(val.wire, val.zkay_type, lhs));
         } else {
             self.set(
                 lhs,
                 TypedWire::new(
                     self.condExpr(
-                        self.currentGuardCondition.front().unwrap().wire,
+                        self.t.currentGuardCondition.front().unwrap().wire,
                         val.wire,
                         oldVal.wire,
                     ),
@@ -777,7 +800,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn decl_svt(&self, lhs: &str, val: &Vec<TypedWire>) {
+    pub fn decl_svt(&self, lhs: &str, val: &Vec<TypedWire>) {
         assert!(val.is_some() && !val.empty(), "val");
         assert!(val[0].zkay_type.is_some(), "Tried to use untyped wires");
         // Check that all types match; else this gets really strange
@@ -787,7 +810,7 @@ pub trait ZkayCircuitBaseConfig {
 
         // Get old value and check type and length
         let mut oldVal;
-        if self.vars.contains_key(lhs) {
+        if self.t.vars.contains_key(lhs) {
             oldVal = self.getTypedArr(lhs);
             ZkayType::checkType(oldVal[0].zkay_type, val[0].zkay_type);
             assert!(
@@ -802,7 +825,7 @@ pub trait ZkayCircuitBaseConfig {
 
         // Only assign value if guard condition is met
         let resVal = vec![TypedWire::default(); val.len()];
-        let guard = self.currentGuardCondition.front(); // Null if empty
+        let guard = self.t.currentGuardCondition.front(); // Null if empty
         for i in 0..val.len() {
             if guard == None {
                 resVal[i] = TypedWire::new(val[i].wire, val[i].zkay_type, lhs); // No guard, just rename
@@ -817,7 +840,7 @@ pub trait ZkayCircuitBaseConfig {
         self.set(lhs, resVal);
     }
 
-    fn condExpr(&self, cond: &WireType, trueVal: &WireType, falseVal: &WireType) -> WireType {
+    pub fn condExpr(&self, cond: &WireType, trueVal: &WireType, falseVal: &WireType) -> WireType {
         if ZkayUtil::ZKAY_RESTRICT_EVERYTHING {
             self.addBinaryAssertion(cond);
         }
@@ -826,7 +849,7 @@ pub trait ZkayCircuitBaseConfig {
             .add(cond.invAsBit().mul(falseVal, "ite_false"), "ite_res");
     }
 
-    fn convertTo(&self, w: &TypedWire, targetType: ZkayType) -> TypedWire {
+    pub fn convertTo(&self, w: &TypedWire, targetType: ZkayType) -> TypedWire {
         let fromType = w.zkay_type;
 
         let fromBitWidth = fromType.bitwidth;
@@ -872,7 +895,7 @@ pub trait ZkayCircuitBaseConfig {
         TypedWire::new(newWire, targetType, format!("({}) {}", targetType, w.name))
     }
 
-    fn cryptoEnc(
+    pub fn cryptoEnc(
         &self,
         cryptoBackend: &Backend,
         plain: &str,
@@ -907,7 +930,7 @@ pub trait ZkayCircuitBaseConfig {
         enc.getOutputWires().clone()
     }
 
-    fn cryptoDec(
+    pub fn cryptoDec(
         &self,
         cryptoBackend: &Backend,
         cipher: &str,
@@ -935,7 +958,7 @@ pub trait ZkayCircuitBaseConfig {
         dec.getOutputWires()[0].clone().unwrap()
     }
 
-    fn cryptoSymmEnc(
+    pub fn cryptoSymmEnc(
         &self,
         cryptoBackend: &Backend,
         plain: &str,
@@ -964,7 +987,7 @@ pub trait ZkayCircuitBaseConfig {
         enc.getOutputWires().clone()
     }
 
-    fn addGuardedEncryptionAssertion(
+    pub fn addGuardedEncryptionAssertion(
         &self,
         expectedCipher: &str,
         computedCipher: &Vec<Option<WireType>>,
@@ -981,7 +1004,7 @@ pub trait ZkayCircuitBaseConfig {
         );
     }
 
-    fn addGuardedNonZeroAssertion(&self, value: &Vec<Option<WireType>>, name: &str) {
+    pub fn addGuardedNonZeroAssertion(&self, value: &Vec<Option<WireType>>, name: &str) {
         self.addGuardedOneAssertion(
             self.isNonZero(value, name),
             format!("assert {} != 0", self.getQualifiedName(name)),
@@ -991,7 +1014,7 @@ pub trait ZkayCircuitBaseConfig {
     /**
      * Asymmetric Encryption
      */
-    fn checkEnc(
+    pub fn checkEnc(
         &self,
         cryptoBackendId: &str,
         plain: &str,
@@ -1014,7 +1037,7 @@ pub trait ZkayCircuitBaseConfig {
     /**
      * Symmetric Encryption
      */
-    fn checkSymmEnc(
+    pub fn checkSymmEnc(
         &self,
         cryptoBackendId: &str,
         plain: &str,
@@ -1038,7 +1061,7 @@ pub trait ZkayCircuitBaseConfig {
     // /**
     //  * Asymmetric Decryption
     //  */
-    fn checkDec(&self, cryptoBackendId: &str, plain: &str, key: &str, rnd: &str, cipher: &str) {
+    pub fn checkDec(&self, cryptoBackendId: &str, plain: &str, key: &str, rnd: &str, cipher: &str) {
         let cryptoBackend = self.getCryptoBackend(cryptoBackendId);
 
         if cryptoBackend.usesDecryptionGadget() {
@@ -1081,7 +1104,7 @@ pub trait ZkayCircuitBaseConfig {
     /**
      * Symmetric Decryption
      */
-    fn checkSymmDec(
+    pub fn checkSymmDec(
         &self,
         cryptoBackendId: &str,
         plain: &str,
@@ -1142,23 +1165,23 @@ pub trait ZkayCircuitBaseConfig {
 
     // Legacy handling
 
-    fn checkEncs(&self, plain: &str, key: &str, rnd: &str, expectedCipher: &str) {
+    pub fn checkEncs(&self, plain: &str, key: &str, rnd: &str, expectedCipher: &str) {
         self.checkEnc(LEGACY_CRYPTO_BACKEND, plain, key, rnd, expectedCipher);
     }
 
-    fn checkEncss(&self, plain: &str, otherPk: &str, ivCipher: &str) {
+    pub fn checkEncss(&self, plain: &str, otherPk: &str, ivCipher: &str) {
         self.checkSymmEnc(LEGACY_CRYPTO_BACKEND, plain, otherPk, ivCipher);
     }
 
-    fn checkDecs(&self, plain: &str, key: &str, rnd: &str, expectedCipher: &str) {
+    pub fn checkDecs(&self, plain: &str, key: &str, rnd: &str, expectedCipher: &str) {
         self.checkDec(LEGACY_CRYPTO_BACKEND, plain, key, rnd, expectedCipher);
     }
 
-    fn checkDecsss(&self, plain: &str, otherPk: &str, ivCipher: &str) {
+    pub fn checkDecsss(&self, plain: &str, otherPk: &str, ivCipher: &str) {
         self.checkSymmDec(LEGACY_CRYPTO_BACKEND, plain, otherPk, ivCipher);
     }
 
-    fn checkEq(&self, lhs: &str, rhs: &str) {
+    pub fn checkEq(&self, lhs: &str, rhs: &str) {
         let (l, r) = (self.getArr(lhs), self.getArr(rhs));
         let len = l.len();
         assert!(r.len() == len, "Size mismatch for equality check");
@@ -1179,7 +1202,7 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn isNonZero(&self, value: &Vec<Option<WireType>>, name: &str) -> WireType {
+    pub fn isNonZero(&self, value: &Vec<Option<WireType>>, name: &str) -> WireType {
         let res = value[0].checkNonZero(name + "[0] != 0");
         for i in 1..value.len() {
             res = res.add(
@@ -1190,11 +1213,11 @@ pub trait ZkayCircuitBaseConfig {
         res.checkNonZero(name + " != 0")
     }
 
-    fn isZero(&self, value: &Vec<Option<WireType>>, name: &str) -> WireType {
+    pub fn isZero(&self, value: &Vec<Option<WireType>>, name: &str) -> WireType {
         self.isNonZero(value, name).invAsBit(name + " == 0")
     }
 
-    fn isEqual(
+    pub fn isEqual(
         &self,
         wires1: &Vec<Option<WireType>>,
         name1: &str,
@@ -1214,13 +1237,13 @@ pub trait ZkayCircuitBaseConfig {
         res
     }
 
-    fn clearPrefix(prefix: &mut VecDeque<String>, &mut indices: HashMap<String, i32>) {
+    pub fn clearPrefix(prefix: &mut VecDeque<String>, &mut indices: HashMap<String, i32>) {
         prefix.clear();
         prefix.push("".to_owned());
         indices.clear();
     }
 
-    fn pushPrefix(
+    pub fn pushPrefix(
         prefix: &mut VecDeque<String>,
         prefixIndices: &mut HashMap<String, i32>,
         newStr: &str,
@@ -1231,7 +1254,7 @@ pub trait ZkayCircuitBaseConfig {
         prefix.push_front(format!("{}{}.", newPrefix, count));
     }
 
-    fn pushGuardPrefix(
+    pub fn pushGuardPrefix(
         guardPrefixes: &mut VecDeque<VecDeque<String>>,
         guardPrefixIndices: &mut VecDeque<HashMap<String, i32>>,
     ) {
@@ -1242,25 +1265,31 @@ pub trait ZkayCircuitBaseConfig {
         guardPrefixIndices.push(newPrefixIndices);
     }
 
-    fn popPrefix(prefix: &mut VecDeque<String>) {
+    pub fn popPrefix(prefix: &mut VecDeque<String>) {
         prefix.pop_front();
     }
 
-    fn getQualifiedName(&self, name: &str) -> String {
+    pub fn getQualifiedName(&self, name: &str) -> String {
         if name.starts_with("glob_") {
             name.to_owned()
         } else {
-            self.namePrefix.front().unwrap().clone() + &name
+            self.t.namePrefix.front().unwrap().clone() + &name
         }
     }
 
-    fn addGuardedEqualityAssertion(&self, lhs: &WireType, rhs: &WireType, desc: &Option<String>) {
-        if self.currentGuardCondition.isEmpty() {
+    pub fn addGuardedEqualityAssertion(
+        &self,
+        lhs: &WireType,
+        rhs: &WireType,
+        desc: &Option<String>,
+    ) {
+        if self.t.currentGuardCondition.isEmpty() {
             self.addEqualityAssertion(lhs, rhs, desc);
         } else {
             let eq = lhs.isEqualTo(rhs);
             self.addOneAssertion(
-                self.currentGuardCondition
+                self.t
+                    .currentGuardCondition
                     .front()
                     .unwrap()
                     .wire
@@ -1271,12 +1300,13 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn addGuardedOneAssertion(&self, val: &WireType, desc: &Option<String>) {
-        if self.currentGuardCondition.isEmpty() {
+    pub fn addGuardedOneAssertion(&self, val: &WireType, desc: &Option<String>) {
+        if self.t.currentGuardCondition.isEmpty() {
             self.addOneAssertion(val, desc);
         } else {
             self.addOneAssertion(
-                self.currentGuardCondition
+                self.t
+                    .currentGuardCondition
                     .front()
                     .unwrap()
                     .wire
@@ -1287,32 +1317,32 @@ pub trait ZkayCircuitBaseConfig {
         }
     }
 
-    fn getTypedArr(&self, name: &str) -> &Vec<TypedWire> {
+    pub fn getTypedArr(&self, name: &str) -> &Vec<TypedWire> {
         let name = self.getQualifiedName(name);
-        let w = self.vars.get(name).unwrap();
+        let w = self.t.vars.get(name).unwrap();
         assert!(w.is_some(), "Variable {name} is not associated with a wire");
         w
     }
 
-    fn getArr(&self, name: &str) -> Vec<Option<WireType>> {
+    pub fn getArr(&self, name: &str) -> Vec<Option<WireType>> {
         self.getTypedArr(name)
             .iter()
             .map(|v| v.wire.clone())
             .collect()
     }
 
-    fn set(&self, name: &str, val: &TypedWire) {
+    pub fn set(&self, name: &str, val: &TypedWire) {
         self.set(name, vec![val.clone()]);
     }
 
-    fn set_svt(&self, name: &str, val: &Vec<TypedWire>) {
+    pub fn set_svt(&self, name: &str, val: &Vec<TypedWire>) {
         let name = self.getQualifiedName(name);
         assert!(!val.is_empty(), "Tried to set value {name} to None");
         assert!(
-            !self.vars.contains_key(name),
+            !self.t.vars.contains_key(name),
             "SSA violation when trying to write to {name}"
         );
-        self.vars.insert(name, val);
+        self.t.vars.insert(name, val);
     }
 }
 

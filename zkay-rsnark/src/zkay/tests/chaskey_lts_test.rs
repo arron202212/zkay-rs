@@ -13,9 +13,7 @@ use crate::circuit::structure::circuit_generator::{
 };
 use crate::circuit::structure::wire_type::WireType;
 
-use crate::zkay::crypto::crypto_backend::{
-    Asymmetric, AsymmetricConfig, CryptoBackend, Symmetric, SymmetricConfig,
-};
+use crate::zkay::crypto::crypto_backend::{Asymmetric, CryptoBackend, Symmetric};
 use crate::zkay::*;
 #[cfg(test)]
 mod test {
