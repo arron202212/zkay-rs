@@ -81,7 +81,10 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
     pub const SUBGROUP_ORDER: &str =
         "2736030358979909402780800718157159386074658810754251464600343418943805806723";
-    pub fn checkSecretBits(generator: &CircuitGenerator, secretBits: &Vec<Option<WireType>>) {
+    pub fn checkSecretBits(
+        generator: &RcCell<CircuitGenerator>,
+        secretBits: &Vec<Option<WireType>>,
+    ) {
         /**
          * The secret key bits must be of length SECRET_BITWIDTH and are
          * expected to follow a little endian order. The most significant bit
@@ -109,9 +112,9 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     // this is only called, when WireType y is provided as witness by the prover
     // (not as input to the gadget)
     pub fn assertValidPointOnEC(&self, x: &WireType, y: &WireType) {
-        let ySqr = y.mul(y);
-        let xSqr = x.mul(x);
-        let xCube = xSqr.mul(x);
+        let ySqr = y.clone().mul(y);
+        let xSqr = x.clone().mul(x);
+        let xCube = xSqr.clone().mul(x);
         self.generator.addEqualityAssertion(
             &ySqr,
             &xCube.add(xSqr.mul(&BigInteger::from(Self::COEFF_A))).add(x),
@@ -140,7 +143,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         precomputedTable: &Vec<AffinePoint>,
         generator: RcCell<CircuitGenerator>,
     ) -> AffinePoint {
-        let result = precomputedTable[secretBits.len() - 1].clone();
+        let mut result = precomputedTable[secretBits.len() - 1].clone();
         for j in (0..=secretBits.len() - 2).rev() {
             let tmp = Self::addAffinePoints(&result, &precomputedTable[j], generator.clone());
             let isOne = secretBits[j].clone().unwrap();
@@ -182,6 +185,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             .unwrap();
         let l2 = l1.clone().mul(&l1);
         let newX = l2
+            .clone()
             .sub(&BigInteger::from(Self::COEFF_A))
             .sub(p.x.as_ref().unwrap())
             .sub(p.x.as_ref().unwrap());
@@ -207,8 +211,9 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             .clone()
             .unwrap();
         let q2 = q.clone().mul(&q);
-        let q3 = q2.mul(&q);
+        let q3 = q2.clone().mul(&q);
         let newX = q2
+            .clone()
             .sub(&BigInteger::from(Self::COEFF_A))
             .sub(p1.x.as_ref().unwrap())
             .sub(p2.x.as_ref().unwrap());
@@ -226,7 +231,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
         let xSqred = x.clone().mul(&x).rem(&Configs.field_prime);
-        let xCubed = xSqred.mul(x).rem(&Configs.field_prime);
+        let xCubed = xSqred.clone().mul(&x).rem(&Configs.field_prime);
         let ySqred = xCubed
             .add(BigInteger::from(Self::COEFF_A).mul(&xSqred))
             .add(&x)
@@ -248,9 +253,10 @@ impl<T> Gadget<ZkayEcGadget<T>> {
                     .bits(),
                 &None,
             )
-            .asArray();
+            .asArray()
+            .clone();
 
-        let result = table[bits.len() - 1].clone();
+        let mut result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
             let tmp = Self::addAffinePoints(&result, &table[j], self.generator.clone());
             let isOne = bits[j].clone().unwrap();

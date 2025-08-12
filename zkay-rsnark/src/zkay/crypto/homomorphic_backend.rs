@@ -86,7 +86,7 @@ pub trait HomomorphicBackend {
     fn doHomomorphicOps(
         &self,
         lhs: &HomomorphicInput,
-        op: &String,
+        op: &str,
         rhs: &HomomorphicInput,
         keyName: &String,
     ) -> Vec<TypedWire> {

@@ -48,7 +48,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
         DummyHomBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(
-        &self,
+        &mut self,
         plain: &TypedWire,
         key: &String,
         random: &Vec<Option<WireType>>,
@@ -87,7 +87,7 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
         assert!(input.getLength() == 1, "{name} has invalid length");
 
         // Transform input 0 to ciphertext 0 (= encryption of 0); serialized inputs x+1 to ciphertext x
-        let cipherWire = input.getCipher()[0].wire;
+        let cipherWire = input.getCipher()[0].wire.clone();
         let isNonZero = cipherWire.checkNonZero(&None);
         cipherWire.sub(isNonZero)
     }
@@ -103,14 +103,14 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
             signBit.mux(&negValue, &plain.wire)
         } else {
             // Unsigned values get encoded as-is
-            plain.wire
+            plain.wire.clone()
         }
     }
 
     fn typedAsUint(&self, wire: &WireType, name: &String) -> Vec<TypedWire> {
         // Always zkay_type cipher wires as ZkUint(256)
         vec![TypedWire::new(
-            wire.add(1),
+            wire.clone().add(1),
             ZkayType::ZkUint(256),
             name.clone(),
             &vec![],

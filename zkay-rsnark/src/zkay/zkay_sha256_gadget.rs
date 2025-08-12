@@ -28,7 +28,7 @@ impl ZkaySHA256Gadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<SHA256Gadget<Self>> {
-        let _self = SHA256Gadget::<Self>::new(
+        let mut _self = SHA256Gadget::<Self>::new(
             Self::convert_inputs_to_bytes(&uint256_inputs, generator.clone()),
             8,
             uint256_inputs.len() * Self::bytes_per_word,
@@ -72,8 +72,9 @@ impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
         if truncated_length < 256 {
             // Keep truncated_length left-most bits as suggested in FIPS 180-4 to shorten the digest
             if truncated_length % 32 == 0 {
-                let shortened_digest = vec![None; truncated_length as usize / 32];
-                shortened_digest.clone_from_slice(&digest[digest.len() - shortened_digest.len()..]);
+                let mut shortened_digest = vec![None; truncated_length as usize / 32];
+                let n = shortened_digest.len();
+                shortened_digest.clone_from_slice(&digest[digest.len() - n..]);
 
                 digest = shortened_digest;
             } else {

@@ -90,10 +90,12 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
             self.generator.clone().downgrade(),
         )
         .adjustLength(None, (numBlocks * block_size as i32) as usize)
-        .asArray();
+        .asArray()
+        .clone();
 
         let preparedKey = self.prepareKey();
-        let prevCipher = WireArray::new(self.t.ivBits.clone(), self.generator.clone().downgrade());
+        let mut prevCipher =
+            WireArray::new(self.t.ivBits.clone(), self.generator.clone().downgrade());
 
         let mut cipherBits = vec![];
         for i in 0..numBlocks as usize {
@@ -101,14 +103,14 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
                 plaintextArray[i * block_size..(i + 1) * block_size].to_vec(),
                 self.generator.clone().downgrade(),
             );
-            let xored = msgBlock.xorWireArrayi(&prevCipher, &None).asArray();
-            match self.t.cipherType {
-                SPECK_128 => {
+            let xored = msgBlock.xorWireArrayi(&prevCipher, &None).asArray().clone();
+            match &self.t.cipherType {
+                CipherType::SPECK_128 => {
                     let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
                         .packBitsIntoWords(64, &None);
                     let gadget = Speck128CipherGadget::new(
                         tmp,
-                        preparedKey,
+                        preparedKey.clone(),
                         &Some(self.description.clone()),
                         self.generator.clone(),
                     );
@@ -116,12 +118,12 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
                     prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
                         .getBits(64, &None);
                 }
-                AES_128 => {
+                CipherType::AES_128 => {
                     let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
                         .packBitsIntoWords(8, &None);
                     let gadget = AES128CipherGadget::new(
                         tmp,
-                        preparedKey,
+                        preparedKey.clone(),
                         &Some("aes: ".to_owned() + &self.description),
                         self.generator.clone(),
                     );
@@ -129,12 +131,12 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
                     prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
                         .getBits(8, &None);
                 }
-                CHASKEY => {
+                CipherType::CHASKEY => {
                     let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
                         .packBitsIntoWords(32, &None);
                     let gadget = ChaskeyLTS128CipherGadget::new(
                         tmp,
-                        preparedKey,
+                        preparedKey.clone(),
                         &Some("chaskey: ".to_owned() + &self.description),
                         self.generator.clone(),
                     );
@@ -154,19 +156,23 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
     }
 
     fn prepareKey(&self) -> Vec<Option<WireType>> {
-        match self.t.cipherType {
-            SPECK_128 => {
-                let packedKey = WireArray::new(self.t.keyBits, self.generator.clone().downgrade())
-                    .packBitsIntoWords(64, &None);
+        match &self.t.cipherType {
+            CipherType::SPECK_128 => {
+                let packedKey =
+                    WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
+                        .packBitsIntoWords(64, &None);
                 Gadget::<Speck128CipherGadget>::expandKey(&packedKey, &self.generator)
             }
-            AES_128 => {
-                let packedKey = WireArray::new(self.t.keyBits, self.generator.clone().downgrade())
-                    .packBitsIntoWords(8, &None);
+            CipherType::AES_128 => {
+                let packedKey =
+                    WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
+                        .packBitsIntoWords(8, &None);
                 Gadget::<AES128CipherGadget>::expandKey(&packedKey, &self.generator)
             }
-            CHASKEY => WireArray::new(self.t.keyBits, self.generator.clone().downgrade())
-                .packBitsIntoWords(32, &None),
+            CipherType::CHASKEY => {
+                WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
+                    .packBitsIntoWords(32, &None)
+            }
             _ => panic!("Other Ciphers not supported in this version!"),
         }
     }

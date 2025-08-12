@@ -58,10 +58,7 @@ impl ZkayEcPkDerivationGadget {
         );
         // Hardcode base point
         if validateSecret {
-            Gadget::<ZkayEcGadget<Self>>::checkSecretBits(
-                &generator.borrow(),
-                &_self.t.t.secretBits,
-            );
+            Gadget::<ZkayEcGadget<Self>>::checkSecretBits(&_self.generator, &_self.t.t.secretBits);
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates

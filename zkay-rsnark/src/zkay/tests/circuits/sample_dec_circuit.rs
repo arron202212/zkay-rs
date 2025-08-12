@@ -35,7 +35,7 @@ impl SampleDecCircuit {
 }
 
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
-    fn __zk__bar(&self) {
+    fn __zk__bar(&mut self) {
         self.stepIn("_zk__bar");
         self.addS("secret0_plain_val", 1, ZkayType::ZkUint(32));
         self.addS("zk__in0_cipher_val_R", 1, ZkayType::ZkUint(256));
@@ -75,6 +75,6 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleDecCircuit>> {
 }
 
 pub fn main(args: Vec<String>) {
-    let circuit = SampleDecCircuit::new();
+    let mut circuit = SampleDecCircuit::new();
     circuit.run(&args);
 }

@@ -62,7 +62,7 @@ impl CryptoBackendConfigs for CryptoBackend<Asymmetric<ElgamalBackend>> {
     }
 
     fn addKey(
-        &self,
+        &mut self,
         keyName: &String,
         keyWires: &Vec<Option<WireType>>,
         generator: RcCell<CircuitGenerator>,
@@ -99,13 +99,21 @@ impl CryptoBackendConfigs for CryptoBackend<Asymmetric<ElgamalBackend>> {
             generator,
         ))
     }
+    fn setKeyPair(
+        &mut self,
+        myPk: &WireType,
+        mySk: &WireType,
+        generator: RcCell<CircuitGenerator>,
+    ) {
+        panic!("setKeyPair no in Asymmetric");
+    }
 }
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
     fn getKeyChunkSize(&self) -> i32 {
         ElgamalBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(
-        &self,
+        &mut self,
         plain: &TypedWire,
         keyName: &String,
         random: &Vec<Option<WireType>>,
@@ -116,7 +124,8 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         let pk = JubJubPoint::new(pkArray[0].clone().unwrap(), pkArray[1].clone().unwrap());
         let randomArray = WireArray::new(random.clone(), generator.clone().downgrade())
             .getBits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
-            .asArray();
+            .asArray()
+            .clone();
         assert!(
             plain.zkay_type.bitwidth <= 32,
             "plaintext must be at most 32 bits for elgamal backend"
@@ -176,7 +185,7 @@ impl CryptoBackend<Asymmetric<ElgamalBackend>> {
                 .orw(&p.y.checkNonZero(&None), &None)
                 .invAsBit(&None)
                 .unwrap();
-        JubJubPoint::new(p.x.clone(), p.y.add(&oneIfBothZero))
+        JubJubPoint::new(p.x.clone(), p.y.clone().add(&oneIfBothZero))
     }
 }
 impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
@@ -205,10 +214,10 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
             let lhs_wires = self.fromTypedWireArray(&lhs_twires);
             let rhs_wires = self.fromTypedWireArray(&rhs_twires);
 
-            let c1 = self.parseJubJubPoint(&lhs_wires, 0);
-            let c2 = self.parseJubJubPoint(&lhs_wires, 2);
-            let d1 = self.parseJubJubPoint(&rhs_wires, 0);
-            let d2 = self.parseJubJubPoint(&rhs_wires, 2);
+            let mut c1 = self.parseJubJubPoint(&lhs_wires, 0);
+            let mut c2 = self.parseJubJubPoint(&lhs_wires, 2);
+            let mut d1 = self.parseJubJubPoint(&rhs_wires, 0);
+            let mut d2 = self.parseJubJubPoint(&rhs_wires, 2);
 
             c1 = self.uninitZeroToIdentity(&c1);
             c2 = self.uninitZeroToIdentity(&c2);
@@ -238,8 +247,8 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
             }
 
             let cipher_wires = self.fromTypedWireArray(&cipher_twires);
-            let c1 = self.parseJubJubPoint(&cipher_wires, 0);
-            let c2 = self.parseJubJubPoint(&cipher_wires, 2);
+            let mut c1 = self.parseJubJubPoint(&cipher_wires, 0);
+            let mut c2 = self.parseJubJubPoint(&cipher_wires, 2);
 
             c1 = self.uninitZeroToIdentity(&c1);
             c2 = self.uninitZeroToIdentity(&c2);
@@ -267,8 +276,8 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
 
         // parse argument
         let arg_wires = self.fromTypedWireArray(&arg);
-        let c1 = self.parseJubJubPoint(&arg_wires, 0);
-        let c2 = self.parseJubJubPoint(&arg_wires, 2);
+        let mut c1 = self.parseJubJubPoint(&arg_wires, 0);
+        let mut c2 = self.parseJubJubPoint(&arg_wires, 2);
         c1 = self.uninitZeroToIdentity(&c1);
         c2 = self.uninitZeroToIdentity(&c2);
 
@@ -278,7 +287,8 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
         let randomArray = randomness
             .wire
             .getBitWiresi(ElgamalBackend::RND_CHUNK_SIZE as u64, &None)
-            .asArray();
+            .asArray()
+            .clone();
 
         // create gadget
         let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray.clone(), generator);

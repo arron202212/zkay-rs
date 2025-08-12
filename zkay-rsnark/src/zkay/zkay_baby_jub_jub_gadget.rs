@@ -141,7 +141,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
 
     fn negatePoint(p: &JubJubPoint) -> JubJubPoint {
         let new_x = p.x.negate(&None);
-        JubJubPoint::new(new_x, p.y)
+        JubJubPoint::new(new_x, p.y.clone())
     }
 
     /**
@@ -201,7 +201,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
         // });
 
         // check if a * ainv = 1 (natively)
-        let test = a.mul(&ainv);
+        let test = a.clone().mul(&ainv);
         self.generators().addEqualityAssertion(
             &test,
             self.generators().get_one_wire().as_ref().unwrap(),

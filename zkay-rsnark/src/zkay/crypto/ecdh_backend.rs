@@ -42,7 +42,7 @@ impl CryptoBackendConfig for CryptoBackend<Symmetric<ECDHBackend>> {
         ECDHBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(
-        &self,
+        &mut self,
         plain: &TypedWire,
         key: &String,
         ivArr: &Vec<Option<WireType>>,

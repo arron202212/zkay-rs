@@ -67,7 +67,7 @@ impl ZkayType {
 
     pub fn GetNegativeConstant(val: &BigInteger, bitwidth: i32) -> BigInteger {
         let m1 = Self::ZkInt(bitwidth).minusOne;
-        m1.mul(val).bitand(m1)
+        m1.clone().mul(val).bitand(&m1)
     }
 
     pub fn checkType(expected: &ZkayType, actual: &ZkayType) -> ZkayType {

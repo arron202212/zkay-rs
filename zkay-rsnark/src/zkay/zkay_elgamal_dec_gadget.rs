@@ -75,8 +75,14 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
         let msgEmbedded = self.addPoints(&self.t.t.c2, &Self::negatePoint(&sharedSecret));
 
         // embed expected message and assert equality
-        let expectedMsgBits = self.t.t.expectedMsg.getBitWiresi(32, &None).asArray();
-        let expectedMsgEmbedded = self.mulScalar(&self.getGenerator(), expectedMsgBits);
+        let expectedMsgBits = self
+            .t
+            .t
+            .expectedMsg
+            .getBitWiresi(32, &None)
+            .asArray()
+            .clone();
+        let expectedMsgEmbedded = self.mulScalar(&self.getGenerator(), &expectedMsgBits);
         self.t.t.msgOk = Some(
             expectedMsgEmbedded
                 .x

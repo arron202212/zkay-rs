@@ -111,7 +111,7 @@ impl TypedWire {
             .packBitsIntoWords(124, &None);
 
         // https://www.codeproject.com/Tips/618570/UInt-Multiplication-Squaring, BSD license
-        let ansLoHi = LhsLoHi[0]
+        let mut ansLoHi = LhsLoHi[0]
             .as_ref()
             .unwrap()
             .mulw(RhsLoHi[0].as_ref().unwrap(), &Some(op.clone() + "[lo*lo]"))
@@ -180,7 +180,7 @@ impl TypedWire {
         )
     }
 
-    pub fn divideBy(&self, rhs: &TypedWire, generator: &CircuitGenerator) -> TypedWire {
+    pub fn divideBy(&self, rhs: &TypedWire, generator: RcCell<CircuitGenerator>) -> TypedWire {
         let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " / " + &rhs.name;
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
@@ -190,9 +190,9 @@ impl TypedWire {
         );
 
         // Sign handling...
-        let resultSign = generator.get_zero_wire().unwrap();
-        let lhsWire = self.wire.clone();
-        let rhsWire = rhs.wire.clone();
+        let mut resultSign = generator.get_zero_wire().unwrap();
+        let mut lhsWire = self.wire.clone();
+        let mut rhsWire = rhs.wire.clone();
 
         if self.zkay_type.signed {
             let lhsSign = lhsWire.getBitWiresi(self.zkay_type.bitwidth as u64, &None)
@@ -220,16 +220,28 @@ impl TypedWire {
             rhsWire.getBitWiresi(rhs.zkay_type.bitwidth as u64, &None),
             self.generator.clone().downgrade(),
         );
-        let q =
-            LongIntegerFloorDivGadget::new(lhsLong, rhsLong, 0, &Some(op), self.generator.clone())
-                .getQuotient();
+        let mut q = LongIntegerFloorDivGadget::new(
+            lhsLong,
+            rhsLong,
+            0,
+            &Some(op.clone()),
+            self.generator.clone(),
+        )
+        .getQuotient()
+        .clone();
         let resAbs = q
             .getBitsi(resultType.bitwidth)
             .packBitsIntoWords(resultType.bitwidth as usize, &None)[0]
             .clone()
             .unwrap();
 
-        let resPos = TypedWire::new(resAbs, resultType, op, &vec![], self.generator.clone());
+        let resPos = TypedWire::new(
+            resAbs,
+            resultType.clone(),
+            op.clone(),
+            &vec![],
+            self.generator.clone(),
+        );
         let resNeg = s_negate(&resPos, &self.generator);
         TypedWire::new(
             resultSign.mux(&resNeg.wire, &resPos.wire),
@@ -240,7 +252,7 @@ impl TypedWire {
         )
     }
 
-    pub fn modulo(&self, rhs: &TypedWire, generator: &CircuitGenerator) -> TypedWire {
+    pub fn modulo(&self, rhs: &TypedWire, generator: RcCell<CircuitGenerator>) -> TypedWire {
         let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " % " + &rhs.name;
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
@@ -250,9 +262,9 @@ impl TypedWire {
         );
 
         // Sign handling...
-        let resultSign = generator.get_zero_wire().unwrap();
-        let lhsWire = self.wire.clone();
-        let rhsWire = rhs.wire.clone();
+        let mut resultSign = generator.get_zero_wire().unwrap();
+        let mut lhsWire = self.wire.clone();
+        let mut rhsWire = rhs.wire.clone();
 
         if self.zkay_type.signed {
             let lhsSign = lhsWire.getBitWiresi(self.zkay_type.bitwidth as u64, &None)
@@ -279,17 +291,25 @@ impl TypedWire {
             rhsWire.getBitWiresi(rhs.zkay_type.bitwidth as u64, &None),
             self.generator.clone().downgrade(),
         );
-        let r =
-            LongIntegerModGadget::new(lhsLong, rhsLong, 0, true, &Some(op), self.generator.clone())
-                .getRemainder();
+        let mut r = LongIntegerModGadget::new(
+            lhsLong,
+            rhsLong,
+            0,
+            true,
+            &Some(op.clone()),
+            self.generator.clone(),
+        )
+        .getRemainder()
+        .clone();
         let resAbs = r
             .getBitsi(resultType.bitwidth)
-            .packBitsIntoWords(resultType.bitwidth as usize, &None)[0];
+            .packBitsIntoWords(resultType.bitwidth as usize, &None)[0]
+            .clone();
 
         let resPos = TypedWire::new(
             resAbs.unwrap(),
             resultType.clone(),
-            op,
+            op.clone(),
             &vec![],
             self.generator.clone(),
         );

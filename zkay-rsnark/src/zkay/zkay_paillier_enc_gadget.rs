@@ -78,7 +78,8 @@ impl Gadget<ZkayPaillierEncGadget> {
             &None,
             self.generator.clone(),
         )
-        .getResult();
+        .getResult()
+        .clone();
         self.generator
             .addOneAssertion(&randInv.checkNonZero(), &None);
         // let c = g^m * r^n mod n^2
@@ -91,7 +92,8 @@ impl Gadget<ZkayPaillierEncGadget> {
             &Some("g^m".to_owned()),
             self.generator.clone(),
         )
-        .getResult();
+        .getResult()
+        .clone();
         let randPowN = LongIntegerModPowGadget::new(
             self.t.random.clone(),
             self.t.n.clone(),
@@ -101,8 +103,9 @@ impl Gadget<ZkayPaillierEncGadget> {
             &Some("r^m".to_owned()),
             self.generator.clone(),
         )
-        .getResult();
-        let product = gPowPlain.mul(&randPowN);
+        .getResult()
+        .clone();
+        let product = gPowPlain.clone().mul(&randPowN);
         self.t.cipher = Some(
             LongIntegerModGadget::new(
                 product,

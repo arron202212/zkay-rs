@@ -71,7 +71,8 @@ impl Gadget<ZkayPaillierFastDecGadget> {
             &Some("lambda^(-1)".to_owned()),
             self.generator.clone(),
         )
-        .getResult();
+        .getResult()
+        .clone();
 
         // plain = L(cipher^lambda mod n^2) / lambda mod n
         let cPowLambda = LongIntegerModPowGadget::new(

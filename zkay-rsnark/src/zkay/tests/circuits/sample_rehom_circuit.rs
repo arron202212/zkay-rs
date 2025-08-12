@@ -34,7 +34,7 @@ impl SampleRehomCircuit {
 }
 
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
-    fn __zk__foo(&self) {
+    fn __zk__foo(&mut self) {
         self.stepIn("_zk__foo");
         self.addS("secret0_rnd", 1, ZkayType::ZkUint(256));
         self.addS("secret1_plain_x1", 1, ZkayType::ZkUint(32));
@@ -53,21 +53,20 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
             "zk__in1_cipher_x1_R",
             "zk__in1_cipher_x1",
         );
-        self.decl_svt(
-            "tmp0_cipher",
-            &self.o_rerand(
-                &self.o_hom_sshch(
-                    "elgamal",
-                    "glob_key_Elgamal__receiver",
-                    &HomomorphicInput::ofv(self.getCipher("zk__in0_cipher_b1")),
-                    '*',
-                    &HomomorphicInput::of(self.get("secret1_plain_x1")),
-                ),
-                "elgamal",
-                "glob_key_Elgamal__receiver",
-                &self.get("secret0_rnd"),
-            ),
+        let o_hom_sshch = self.o_hom_sshch(
+            "elgamal",
+            "glob_key_Elgamal__receiver",
+            &HomomorphicInput::ofv(self.getCipher("zk__in0_cipher_b1").clone()),
+            '*',
+            &HomomorphicInput::of(self.get("secret1_plain_x1")),
         );
+        let o_rerand = self.o_rerand(
+            &o_hom_sshch,
+            "elgamal",
+            "glob_key_Elgamal__receiver",
+            &self.get("secret0_rnd"),
+        );
+        self.decl_svt("tmp0_cipher", &o_rerand);
         self.checkEq("tmp0_cipher", "zk__out0_cipher");
         //] --- b1 * reveal(x1, receiver) ---
 
@@ -102,6 +101,6 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
 }
 
 pub fn main(args: Vec<String>) {
-    let circuit = SampleRehomCircuit::new();
+    let mut circuit = SampleRehomCircuit::new();
     circuit.run(&args);
 }

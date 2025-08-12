@@ -78,10 +78,11 @@ impl Gadget<ZkayPaillierDecGadget> {
             &Some("c^lambda".to_owned()),
             self.generator.clone(),
         )
-        .getResult();
+        .getResult()
+        .clone();
         let lOutput = LongIntegerFloorDivGadget::new(
-            cPowLambda.sub(1),
-            self.t.n,
+            cPowLambda.clone().sub(1),
+            self.t.n.clone(),
             0,
             &Some("(c^lambda - 1) / n".to_owned()),
             self.generator.clone(),
@@ -92,7 +93,7 @@ impl Gadget<ZkayPaillierDecGadget> {
         self.t.plain = Some(
             LongIntegerModGadget::new(
                 timesMu,
-                self.t.n,
+                self.t.n.clone(),
                 self.t.nBits,
                 true,
                 &None,

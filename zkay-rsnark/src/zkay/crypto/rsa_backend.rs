@@ -55,7 +55,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
     }
 
     fn createEncryptionGadget(
-        &self,
+        &mut self,
         plain: &TypedWire,
         key: &String,
         random: &Vec<Option<WireType>>,

@@ -41,7 +41,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyBackend>> {
         DummyBackend::KEY_CHUNK_SIZE
     }
     fn createEncryptionGadget(
-        &self,
+        &mut self,
         plain: &TypedWire,
         key: &String,
         random: &Vec<Option<WireType>>,

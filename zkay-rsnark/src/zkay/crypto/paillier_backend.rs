@@ -82,7 +82,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
     }
 
     fn createEncryptionGadget(
-        &self,
+        &mut self,
         plain: &TypedWire,
         keyName: &String,
         randomWires: &Vec<Option<WireType>>,
@@ -184,11 +184,13 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                 let mut absPlainVal;
                 if !plainWire.zkay_type.signed {
                     // Unsigned, easy , just do the multiplication.
-                    absPlainVal = LongElement::newa(plainBitWires, generator.clone().downgrade());
+                    absPlainVal =
+                        LongElement::newa(plainBitWires.clone(), generator.clone().downgrade());
                 } else {
                     // Signed. Multiply by the absolute value, later negate result if sign bit was set.
                     let twosComplement = plainWire.wire.invBits(plainBits as u64, &None).add(1);
-                    let posValue = LongElement::newa(plainBitWires, generator.clone().downgrade());
+                    let posValue =
+                        LongElement::newa(plainBitWires.clone(), generator.clone().downgrade());
                     let negValue = LongElement::newa(
                         twosComplement.getBitWiresi(plainBits as u64, &None),
                         generator.clone().downgrade(),
@@ -199,13 +201,13 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                 let outputName = format!("({}) * ({})", lhs.getName(), rhs.getName());
 
                 // Enc(m1, r1) ^ m2 = (g^m1 * r1^n) ^ m2 = (g^m1)^m2 * (r1^n)^m2 = g^(m1*m2) * (r1^m2)^n = Enc(m1 * m2, r1 ^ m2)
-                let result = self.modPow(&cipherVal, &absPlainVal, plainBits, &nSquare);
+                let mut result = self.modPow(&cipherVal, &absPlainVal, plainBits, &nSquare);
 
                 if plainWire.zkay_type.signed {
                     // Correct for sign
-                    let signBit = plainBitWires[plainBits as usize - 1].as_ref().unwrap();
+                    let signBit = plainBitWires[plainBits as usize - 1].clone().unwrap();
                     let negResult = self.invert(&result, &nSquare, generator);
-                    result = result.muxBit(&negResult, signBit);
+                    result = result.muxBit(&negResult, &signBit);
                 }
 
                 self.toWireArray(&result, &outputName)
@@ -248,7 +250,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         generator: RcCell<CircuitGenerator>,
     ) -> LongElement {
         LongIntegerModGadget::new(
-            lhs.mul(rhs),
+            lhs.clone().mul(rhs),
             nSquare.clone(),
             2 * self.keyBits,
             true,
@@ -303,7 +305,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         let wires: Vec<_> = cipher.iter().map(|c| Some(c.wire.clone())).collect();
 
         let mut bitWidths = vec![PaillierBackend::CHUNK_SIZE as u64; wires.len()];
-        bitWidths[bitWidths.len() - 1] =
+        *bitWidths.last_mut().unwrap() =
             (2 * self.keyBits - (bitWidths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE) as u64;
 
         // Cipher could still be uninitialized-zero, which we need to fix
@@ -350,7 +352,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
             vec![1], /* bit */
             self.generator.clone().downgrade(),
         );
-        val.add(&oneIfAllZero)
+        val.clone().add(&oneIfAllZero)
     }
 
     fn encodeSignedToModN(
@@ -363,9 +365,9 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
             // Signed. Encode positive values as-is, negative values (-v) as (key - v)
             let bits = input.zkay_type.bitwidth;
             let inputBits = input.wire.getBitWiresi(bits as u64, &None);
-            let signBit = inputBits[bits as usize - 1].as_ref().unwrap();
+            let signBit = inputBits[bits as usize - 1].clone().unwrap();
 
-            let posValue = LongElement::newa(inputBits, generator.downgrade());
+            let posValue = LongElement::newa(inputBits.clone(), generator.downgrade());
             let rawNegValue = LongElement::newa(
                 input
                     .wire
@@ -374,9 +376,9 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
                     .getBitWiresi(bits as u64 + 1, &None),
                 generator.downgrade(),
             );
-            let negValue = key.sub(&rawNegValue);
+            let negValue = key.clone().sub(&rawNegValue);
 
-            posValue.muxBit(&negValue, signBit)
+            posValue.muxBit(&negValue, &signBit)
         } else {
             // Unsigned, encode as-is, just convert the input wire to a LongElement
             LongElement::newa(

@@ -75,7 +75,8 @@ impl Gadget<ZkayPaillierFastEncGadget> {
             &None,
             self.generator.clone(),
         )
-        .getResult();
+        .getResult()
+        .clone();
         self.generator
             .addOneAssertion(&randInv.checkNonZero(), &None);
         // Compute c = g^m * r^n mod n^2
@@ -95,8 +96,9 @@ impl Gadget<ZkayPaillierFastEncGadget> {
             &Some("r^n".to_owned()),
             self.generator.clone(),
         )
-        .getResult();
-        let product = gPowPlain.mul(randPowN);
+        .getResult()
+        .clone();
+        let product = gPowPlain.mul(&randPowN);
         self.t.cipher = Some(
             LongIntegerModGadget::new(
                 product,

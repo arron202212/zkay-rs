@@ -64,11 +64,11 @@ impl ZkayECDHGadget {
                 outputs: vec![],
                 generators,
             },
-            generator,
+            generator.clone(),
         );
 
         if validateSecret {
-            Gadget::<ZkayEcGadget<Self>>::checkSecretBits(&generators, &_self.t.t.secretBits);
+            Gadget::<ZkayEcGadget<Self>>::checkSecretBits(&generator, &_self.t.t.secretBits);
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
@@ -99,37 +99,53 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
         )
         .x
         .clone();
-        let sharedKey =
-            ZkaySHA256Gadget::new(vec![sharedSecret], 128, &None, self.generator.clone())
-                .getOutputWires()[0]
-                .clone();
+        let sharedKey = ZkaySHA256Gadget::new(
+            vec![sharedSecret.clone()],
+            128,
+            &None,
+            self.generator.clone(),
+        )
+        .getOutputWires()[0]
+            .clone();
         self.t.t.outputs = vec![sharedKey];
         (self.t.t.hTable, self.t.t.sharedSecret) = (hTable, sharedSecret);
     }
 
-    pub fn computeYCoordinates(&self) {
+    pub fn computeYCoordinates(&mut self) {
         // Easy to handle if hPoint is constant, otherwise, let the prover input
         // a witness and verify some properties
         let generator = &self.t.generators;
-        let hPoint = &self.t.t.hPoint;
-        if hPoint.x.as_ref().unwrap().instance_of("ConstantWire") {
-            let x = hPoint
+        // let mut hPoint = self.t.t.hPoint;
+        if self
+            .t
+            .t
+            .hPoint
+            .x
+            .as_ref()
+            .unwrap()
+            .instance_of("ConstantWire")
+        {
+            let x = self
+                .t
+                .t
+                .hPoint
                 .x
                 .as_ref()
                 .unwrap()
                 .try_as_constant_ref()
                 .unwrap()
                 .getConstant();
-            hPoint.y = Some(generator.createConstantWire(
+            self.t.t.hPoint.y = Some(generator.createConstantWire(
                 &Gadget::<ZkayEcGadget<ZkayECDHGadget>>::computeYCoordinate(x),
                 &None,
             ));
         } else {
-            hPoint.y = Some(generator.createProverWitnessWire(&None));
+            self.t.t.hPoint.y = Some(generator.createProverWitnessWire(&None));
             // generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
             //             let x = evaluator.getWireValue(hPoint.x);
             //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
             //         });
+            let hPoint = &self.t.t.hPoint;
             let prover = crate::impl_prover!(
                             eval( hPoint: AffinePoint
                     )  {
@@ -153,7 +169,10 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             //     }
             //     Prover
             // });
-            self.assertValidPointOnEC(hPoint.x.as_ref().unwrap(), hPoint.y.as_ref().unwrap());
+            self.assertValidPointOnEC(
+                self.t.t.hPoint.x.as_ref().unwrap(),
+                self.t.t.hPoint.y.as_ref().unwrap(),
+            );
         }
     }
     pub fn validateInputs(&self) {

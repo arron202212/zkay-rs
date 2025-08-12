@@ -64,7 +64,7 @@ impl ZkayUtil {
             t.len() <= byte_count,
             "Value too large to fit into {byte_count} bytes"
         );
-        let ret = vec![0; byte_count];
+        let mut ret = vec![0; byte_count];
         ret[byte_count - t.len()..byte_count].clone_from_slice(&t);
         ret
     }
@@ -114,7 +114,7 @@ impl ZkayUtil {
             "\n-----------------------------------RUNNING LIBSNARK PROOFGEN -----------------------------------------"
         );
         let input = p.split("\n");
-        let buf = String::new();
+        let mut buf = String::new();
         for line in input {
             buf.push_str(line);
             buf.push_str("\n");
