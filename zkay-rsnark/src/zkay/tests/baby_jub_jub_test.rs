@@ -7,27 +7,44 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::gadget::Gadget;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfigFields;
+use crate::circuit::structure::circuit_generator::CGInstance;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::util::util::BigInteger;
+use crate::util::util::Util;
+use crate::zkay::zkay_baby_jub_jub_gadget::{
+    GENERATOR_X, GENERATOR_Y, ZkayBabyJubJubGadget, ZkayBabyJubJubGadgetConfig,
+};
+use rccell::RcCell;
+use zkay_derive::ImplStructNameConfig;
 
 #[cfg(test)]
 mod test {
+
     use super::*;
     //extends ZkayBabyJubJubGadget
+    #[inline]
+    fn pbi(bs: &str) -> BigInteger {
+        Util::parse_big_int(bs)
+    }
+    #[derive(Debug, Clone, ImplStructNameConfig)]
     struct TestGadget {
         dummy: Vec<Option<WireType>>,
     }
     impl TestGadget {
         fn new(generator: RcCell<CircuitGenerator>) -> Gadget<ZkayBabyJubJubGadget<Self>> {
-            let _self = ZkayBabyJubJubGadget::<Self>::new(
+            let mut _self = ZkayBabyJubJubGadget::<Self>::new(
                 &None,
                 TestGadget {
-                    dummy: generator.get_one_wire(),
+                    dummy: vec![generator.get_one_wire()],
                 },
                 generator,
             );
@@ -41,47 +58,59 @@ mod test {
             let generator = self.generator.borrow().clone();
             // check native inverse
             let a = generator.createConstantWire(
-                &BigInteger
-                    .parse_bytes(
-                        b"11985782033876175911769025829561891428638139496693105005957757653258",
-                        10,
-                    )
-                    .unwrap(),
+                &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
+                &None,
             );
-            let ainv_expected = generator.createConstantWire(&BigInteger.parse_bytes(b"20950552912096304742729232452120498732043875737213521271262032500972060322340",10).unwrap());
-            let ainv = self.t.nativeInverse(a);
-            generator.addEqualityAssertion(ainv, ainv_expected);
+            let ainv_expected = generator.createConstantWire(
+                &pbi(
+                    "20950552912096304742729232452120498732043875737213521271262032500972060322340",
+                ),
+                &None,
+            );
+            let ainv = self.nativeInverse(&a);
+            generator.addEqualityAssertion(&ainv, &ainv_expected, &None);
 
             // check generator on curve
-            let g_x = generator.createConstantWire(GENERATOR_X);
-            let g_y = generator.createConstantWire(GENERATOR_Y);
-            assertOnCurve(g_x, g_y);
+            let g_x = generator.createConstantWire(&pbi(GENERATOR_X), &None);
+            let g_y = generator.createConstantWire(&pbi(GENERATOR_Y), &None);
+            self.assertOnCurve(&g_x, &g_y);
 
             // check generator + generator on curve
-            let g = self.t.getGenerator();
-            let g2 = self.t.addPoints(g, g);
-            assertOnCurve(g2.x, g2.y);
+            let g = self.getGenerator();
+            let g2 = self.addPoints(&g, &g);
+            self.assertOnCurve(&g2.x, &g2.y);
 
             // check generator - generator = INFINITY
-            let gneg = negatePoint(g);
-            assertOnCurve(gneg.x, gneg.y);
-            let inf = addPoints(g, gneg);
-            generator.addEqualityAssertion(inf.x, generator.get_zero_wire());
-            generator.addEqualityAssertion(inf.y, generator.get_one_wire());
+            let gneg = Gadget::<ZkayBabyJubJubGadget<TestGadget>>::negatePoint(&g);
+            self.assertOnCurve(&gneg.x, &gneg.y);
+            let inf = self.addPoints(&g, &gneg);
+            generator.addEqualityAssertion(
+                &inf.x,
+                generator.get_zero_wire().as_ref().unwrap(),
+                &None,
+            );
+            generator.addEqualityAssertion(
+                &inf.y,
+                generator.get_one_wire().as_ref().unwrap(),
+                &None,
+            );
 
             // check generator + INFINITY = generator
-            let g_expected = addPoints(g, getInfinity());
-            generator.addEqualityAssertion(g_expected.x, g.x);
-            generator.addEqualityAssertion(g_expected.y, g.y);
+            let g_expected = self.addPoints(&g, &self.getInfinity());
+            generator.addEqualityAssertion(&g_expected.x, &g.x, &None);
+            generator.addEqualityAssertion(&g_expected.y, &g.y, &None);
 
             // check scalar multiplication
-            let scalar = generator.createConstantWire(5);
-            let scalarBits = scalar.getBitWires(4);
-            let g5 = mulScalar(g, scalarBits.asArray());
-            let g5_expected = addPoints(addPoints(addPoints(addPoints(g, g), g), g), g);
-            assertOnCurve(g5.x, g5.y);
-            generator.addEqualityAssertion(g5.x, g5_expected.x);
-            generator.addEqualityAssertion(g5.y, g5_expected.y);
+            let scalar = generator.createConstantWirei(5, &None);
+            let scalarBits = scalar.getBitWiresi(4, &None);
+            let g5 = self.mulScalar(&g, scalarBits.asArray());
+            let g5_expected = self.addPoints(
+                &self.addPoints(&self.addPoints(&self.addPoints(&g, &g), &g), &g),
+                &g,
+            );
+            self.assertOnCurve(&g5.x, &g5.y);
+            generator.addEqualityAssertion(&g5.x, &g5_expected.x, &None);
+            generator.addEqualityAssertion(&g5.y, &g5_expected.y, &None);
         }
     }
 
@@ -95,22 +124,22 @@ mod test {
     #[test]
     pub fn testBabyJubJubGadget() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {}
+        struct CGTest;
 
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let gadget = TestGadget::new();
-                self.makeOutput(gadget.getOutputWires()[0]);
+                let gadget = TestGadget::new(self.cg());
+                self.makeOutput(gadget.getOutputWires()[0].as_ref().unwrap(), &None);
             }
 
             fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
         }
-        let t = CGTest {};
-        let cgen = CircuitGeneratorExtend::<CGTest>::new("test", t);
+        let t = CGTest;
+        let mut cgen = CircuitGeneratorExtend::<CGTest>::new("test", t);
         cgen.generateCircuit();
         cgen.evalCircuit();
-        let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
-        evaluator.evaluate(&generator.cg);
+        let mut evaluator = CircuitEvaluator::new("CGTest", &cgen.cg);
+        evaluator.evaluate(&cgen.cg);
     }
 }

@@ -13,6 +13,9 @@ pub struct CipherParameters {
     pub key: Vec<u8>,
 }
 impl CipherParameters {
+    pub fn new(key: Vec<u8>) -> Self {
+        Self { key }
+    }
     pub fn instance_of(&self, s: &str) -> bool {
         false
     }
@@ -50,7 +53,7 @@ impl ChaskeyLTSEngine {
         16
     }
 
-    pub fn processBlock(&self, ins: Vec<u8>, inOff: i32, out: Vec<u8>, outOff: i32) -> i32 {
+    pub fn processBlock(&self, ins: &Vec<u8>, inOff: i32, out: &Vec<u8>, outOff: i32) -> i32 {
         let mut v = vec![0; 4];
         // ByteBuffer
         //     .wrap(ins, inOff, 16)

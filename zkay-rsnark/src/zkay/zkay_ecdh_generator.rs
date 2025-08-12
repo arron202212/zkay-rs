@@ -96,27 +96,27 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
 }
 
 impl CircuitGeneratorExtend<ZkayECDHGenerator> {
-    fn runLibsnark(&self) {
+    pub fn runLibsnark(&self) {
         panic!("This circuit is only for evaluation");
     }
 
-    fn computeECKey(pk: Option<BigInteger>, sk: BigInteger) -> BigInteger {
-        let mut ecdh_generator = ZkayECDHGenerator::new(pk, sk, false);
+    pub fn computeECKey(pk: Option<&BigInteger>, sk: &BigInteger) -> BigInteger {
+        let mut ecdh_generator = ZkayECDHGenerator::new(pk.cloned(), sk.clone(), false);
         ecdh_generator.generateCircuit();
         ecdh_generator.evalCircuit();
         let evaluator = ecdh_generator.evalCircuit().unwrap();
         evaluator.getWireValue(ecdh_generator.get_out_wires()[0].as_ref().unwrap())
     }
 
-    fn derivePk(secret: BigInteger) -> String {
+    pub fn derivePk(secret: &BigInteger) -> String {
         Self::computeECKey(None, secret).to_str_radix(16)
     }
 
-    fn getSharedSecret(public_key: BigInteger, secret: BigInteger) -> String {
+    pub fn getSharedSecret(public_key: &BigInteger, secret: &BigInteger) -> String {
         Self::computeECKey(Some(public_key), secret).to_str_radix(16)
     }
 
-    fn rnd_to_secret(rnd_32: &String) -> BigInteger {
+    pub fn rnd_to_secret(rnd_32: &String) -> BigInteger {
         let val = BigInteger::parse_bytes(rnd_32.as_bytes(), 16).unwrap();
         let mut arr = ZkayUtil::unsignedBigintToBytesi(val, 32);
         arr[0] &= 0x0f;
@@ -141,7 +141,7 @@ pub fn main(args: Vec<String>) {
         );
         println!(
             "{}",
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(pk, secret)
+            CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk, &secret)
         );
     } else {
         panic!();

@@ -7,21 +7,34 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
+use crate::circuit::operations::gadget::GadgetConfig;
+use crate::circuit::structure::circuit_generator::CGConfigFields;
+use crate::circuit::structure::circuit_generator::CGInstance;
 use crate::circuit::structure::circuit_generator::{
     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
     getActiveCircuitGenerator,
 };
+use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
-
+use crate::util::util::BigInteger;
+use crate::util::util::Util;
+use crate::zkay::typed_wire::TypedWire;
+use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
 use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
 use crate::zkay::zkay_elgamal_dec_gadget::ZkayElgamalDecGadget;
 use crate::zkay::zkay_elgamal_enc_gadget::ZkayElgamalEncGadget;
 use crate::zkay::zkay_elgamal_rerand_gadget::ZkayElgamalRerandGadget;
-
+use rccell::RcCell;
+use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
 mod test {
+    #[inline]
+    fn pbi(bs: &str) -> BigInteger {
+        Util::parse_big_int(bs)
+    }
     use super::*;
+    #[derive(Debug, Clone, ImplStructNameConfig)]
     struct AffinePoint {
         pub x: BigInteger,
         pub y: BigInteger,
@@ -31,13 +44,13 @@ mod test {
             Self { x, y }
         }
 
-        pub fn asConstJubJub(&self, generators: &CircuitGenerator) -> JubJubPoint {
-            let wx = generators.createConstantWire(&self.x);
-            let wy = generators.createConstantWire(&self.y);
+        pub fn asConstJubJub(&self, generators: &RcCell<CircuitGenerator>) -> JubJubPoint {
+            let wx = generators.createConstantWire(&self.x, &None);
+            let wy = generators.createConstantWire(&self.y, &None);
             JubJubPoint::new(wx, wy)
         }
     }
-
+    #[derive(Debug, Clone, ImplStructNameConfig)]
     struct ElgamalEncCircuitGenerator {
         plain: BigInteger,
         random: BigInteger,
@@ -57,22 +70,23 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalEncCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let randomness = self.createConstantWire(random);
-            let randomnessBits = randomness.getBitWires(random.bits());
-            let message = self.createConstantWire(plain);
-            let messageBits = message.getBitWires(32);
+            let randomness = self.createConstantWire(&self.t.random, &None);
+            let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
+            let message = self.createConstantWire(&self.t.plain, &None);
+            let messageBits = message.getBitWiresi(32, &None);
 
             let gadget = ZkayElgamalEncGadget::new(
-                messageBits.asArray(),
-                pk.asConstJubJub(this),
-                randomnessBits.asArray(),
+                messageBits.asArray().clone(),
+                self.t.pk.asConstJubJub(&self.cg),
+                randomnessBits.asArray().clone(),
+                self.cg(),
             );
-            self.makeOutputArray(gadget.getOutputWires(), "cipher");
+            self.makeOutputArray(gadget.getOutputWires(), &Some("cipher".to_owned()));
         }
 
-        pub fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+        fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
     }
-
+    #[derive(Debug, Clone, ImplStructNameConfig)]
     struct ElgamalRerandCircuitGenerator {
         c1: AffinePoint,
         c2: AffinePoint,
@@ -85,8 +99,8 @@ mod test {
             name: &str,
             c1: AffinePoint,
             c2: AffinePoint,
-            random: BigInteger,
             pk: AffinePoint,
+            random: BigInteger,
         ) -> CircuitGeneratorExtend<Self> {
             CircuitGeneratorExtend::<Self>::new(name, Self { c1, c2, random, pk })
         }
@@ -95,21 +109,22 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalRerandCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalRerandCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let randomness = self.createConstantWire(random);
-            let randomnessBits = randomness.getBitWires(random.bits());
+            let randomness = self.createConstantWire(&self.t.random, &None);
+            let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
 
             let gadget = ZkayElgamalRerandGadget::new(
-                c1.asConstJubJub(&self.cg),
-                c2.asConstJubJub(&self.cg),
-                pk.asConstJubJub(&self.cg),
-                randomnessBits.asArray(),
+                self.t.c1.asConstJubJub(&self.cg),
+                self.t.c2.asConstJubJub(&self.cg),
+                self.t.pk.asConstJubJub(&self.cg),
+                randomnessBits.asArray().clone(),
+                self.cg(),
             );
-            self.makeOutputArray(gadget.getOutputWires(), "rerand_cipher");
+            self.makeOutputArray(gadget.getOutputWires(), &Some("rerand_cipher".to_owned()));
         }
 
-        pub fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+        fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
     }
-
+    #[derive(Debug, Clone, ImplStructNameConfig)]
     struct ElgamalDecCircuitGenerator {
         msg: BigInteger,
         pk: AffinePoint,
@@ -143,21 +158,22 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalDecCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let secretKey = self.createConstantWire(sk);
-            let skBits = secretKey.getBitWires(sk.bits());
-            let msgWire = self.createConstantWire(msg);
+            let secretKey = self.createConstantWire(&self.t.sk, &None);
+            let skBits = secretKey.getBitWiresi(self.t.sk.bits(), &None);
+            let msgWire = self.createConstantWire(&self.t.msg, &None);
 
             let gadget = ZkayElgamalDecGadget::new(
-                pk.asConstJubJub(this),
-                skBits.asArray(),
-                c1.asConstJubJub(this),
-                c2.asConstJubJub(this),
+                self.t.pk.asConstJubJub(&self.cg),
+                skBits.asArray().clone(),
+                self.t.c1.asConstJubJub(&self.cg),
+                self.t.c2.asConstJubJub(&self.cg),
                 msgWire,
+                self.cg(),
             );
-            self.makeOutputArray(gadget.getOutputWires(), "dummy output");
+            self.makeOutputArray(gadget.getOutputWires(), &Some("dummy output".to_owned()));
         }
 
-        pub fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+        fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
     }
 
     fn oneInputTest(
@@ -171,35 +187,43 @@ mod test {
         r1Expected: AffinePoint,
         r2Expected: AffinePoint,
     ) {
-        let cgen = ElgamalEncCircuitGenerator::new("test_enc", plain, random, pk);
+        let mut cgen =
+            ElgamalEncCircuitGenerator::new("test_enc", plain.clone(), random, pk.clone());
         cgen.generateCircuit();
-        let mut evaluator = CircuitEvaluator::new(cgen);
-        evaluator.evaluate(generator.cg());
-        let c1x = evaluator.getWireValue(cgen.get_out_wires().get(0));
-        let c1y = evaluator.getWireValue(cgen.get_out_wires().get(1));
-        let c2x = evaluator.getWireValue(cgen.get_out_wires().get(2));
-        let c2y = evaluator.getWireValue(cgen.get_out_wires().get(3));
+        let mut evaluator = CircuitEvaluator::new("test_enc", &cgen.cg);
+        evaluator.evaluate(&cgen.cg);
+        let c1x = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
+        let c1y = evaluator.getWireValue(cgen.get_out_wires()[1].as_ref().unwrap());
+        let c2x = evaluator.getWireValue(cgen.get_out_wires()[2].as_ref().unwrap());
+        let c2y = evaluator.getWireValue(cgen.get_out_wires()[3].as_ref().unwrap());
         assert_eq!(c1Expected.x, c1x);
         assert_eq!(c1Expected.y, c1y);
         assert_eq!(c2Expected.x, c2x);
         assert_eq!(c2Expected.y, c2y);
 
-        cgen = ElgamalDecCircuitGenerator::new("test_dec", pk, sk, c1Expected, c2Expected, plain);
+        let mut cgen = ElgamalDecCircuitGenerator::new(
+            "test_dec",
+            pk.clone(),
+            sk.clone(),
+            c1Expected.clone(),
+            c2Expected.clone(),
+            plain,
+        );
         cgen.generateCircuit();
-        evaluator = CircuitEvaluator::new(cgen);
-        evaluator.evaluate(generator.cg());
-        let one = evaluator.getWireValue(cgen.get_out_wires().get(0));
+        let mut evaluator = CircuitEvaluator::new("test_dec", &cgen.cg);
+        evaluator.evaluate(&cgen.cg);
+        let one = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
         assert_eq!(Util::one(), one);
 
-        let rgen =
+        let mut rgen =
             ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
         rgen.generateCircuit();
-        evaluator = CircuitEvaluator::new(rgen);
-        evaluator.evaluate(generator.cg());
-        let r1x = evaluator.getWireValue(rgen.get_out_wires().get(0));
-        let r1y = evaluator.getWireValue(rgen.get_out_wires().get(1));
-        let r2x = evaluator.getWireValue(rgen.get_out_wires().get(2));
-        let r2y = evaluator.getWireValue(rgen.get_out_wires().get(3));
+        let mut evaluator = CircuitEvaluator::new("test_rerand", &rgen.cg);
+        evaluator.evaluate(&rgen.cg);
+        let r1x = evaluator.getWireValue(rgen.get_out_wires()[0].as_ref().unwrap());
+        let r1y = evaluator.getWireValue(rgen.get_out_wires()[1].as_ref().unwrap());
+        let r2x = evaluator.getWireValue(rgen.get_out_wires()[2].as_ref().unwrap());
+        let r2y = evaluator.getWireValue(rgen.get_out_wires()[3].as_ref().unwrap());
         assert_eq!(r1Expected.x, r1x);
         assert_eq!(r1Expected.y, r1y);
         assert_eq!(r2Expected.x, r2x);
@@ -289,70 +313,30 @@ mod test {
     */
 
     pub fn testElgamal1() {
-        let plain = BigInteger.parse_bytes(b"42", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"405309899802", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"498372940021", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"193884008695", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"16805734088130288896486560435301001274867494983860633470885993193318772284256",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"12162439373882959082081494184542429855888325538638041876957263568830191647503",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"11968954241083294479582021735246320153591640350554672643229194688283746268751",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"17725843468231767283529061723550512784133895105007547043315490343601022890819",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"14203017384855711456240284283576262759333751248327439118405672500504849522290",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"20209776676192040223587478743432669760403295009110800013515437438556993692901",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"13591348693066294607093547701467815955182961658265372222056978378224264955118",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"224496693684666279083264478158697965533005482392940254861497379468968617265",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"10099626854765102435685973265870013378646709910580992014866316035367552182675",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"14767943092180306325317567029873935159218010704312689008185444061546749553058",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(42);
+        let random = BigInteger::from(405309899802i64);
+        let random2 = BigInteger::from(498372940021i64);
+        let sk = BigInteger::from(193884008695i64);
+        let pkx =
+            pbi("16805734088130288896486560435301001274867494983860633470885993193318772284256");
+        let pky =
+            pbi("12162439373882959082081494184542429855888325538638041876957263568830191647503");
+        let c1x_exp =
+            pbi("11968954241083294479582021735246320153591640350554672643229194688283746268751");
+        let c1y_exp =
+            pbi("17725843468231767283529061723550512784133895105007547043315490343601022890819");
+        let c2x_exp =
+            pbi("14203017384855711456240284283576262759333751248327439118405672500504849522290");
+        let c2y_exp =
+            pbi("20209776676192040223587478743432669760403295009110800013515437438556993692901");
+        let r1x_exp =
+            pbi("13591348693066294607093547701467815955182961658265372222056978378224264955118");
+        let r1y_exp =
+            pbi("224496693684666279083264478158697965533005482392940254861497379468968617265");
+        let r2x_exp =
+            pbi("10099626854765102435685973265870013378646709910580992014866316035367552182675");
+        let r2y_exp =
+            pbi("14767943092180306325317567029873935159218010704312689008185444061546749553058");
 
         oneInputTest(
             plain,
@@ -368,70 +352,30 @@ mod test {
     }
 
     pub fn testElgamal2() {
-        let plain = BigInteger.parse_bytes(b"439864", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"450983970634", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"1293840028489", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"399850902903", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"10779867656770035784341593210643876194947544727395589637798068397910380874725",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"10710250165934448718080245412425852632776460303399969324127728070645358476210",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"21217098875190065545745711937037122650118596372225419155354220102137118082248",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"8596071183490377685362568529945549465632153223890855646524023565071032562107",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"12243154004977744181331269362343083310985310016493155403556248989647435379337",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"5519301039601602428047143906992557429812524647117609489079159221144713724256",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"12879341210277729652562065130333613991137793795439148105389860506010063832764",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"12028008901381051327638773292171283584285939209840487219206955741588933923683",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"21348363880076528954413108099703096613495992044195524899352374409593437815681",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"448225545923890529546465107524885423214165045321928302012946805889055497548",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(439864);
+        let random = BigInteger::from(450983970634i64);
+        let random2 = BigInteger::from(1293840028489i64);
+        let sk = BigInteger::from(399850902903i64);
+        let pkx =
+            pbi("10779867656770035784341593210643876194947544727395589637798068397910380874725");
+        let pky =
+            pbi("10710250165934448718080245412425852632776460303399969324127728070645358476210");
+        let c1x_exp =
+            pbi("21217098875190065545745711937037122650118596372225419155354220102137118082248");
+        let c1y_exp =
+            pbi("8596071183490377685362568529945549465632153223890855646524023565071032562107");
+        let c2x_exp =
+            pbi("12243154004977744181331269362343083310985310016493155403556248989647435379337");
+        let c2y_exp =
+            pbi("5519301039601602428047143906992557429812524647117609489079159221144713724256");
+        let r1x_exp =
+            pbi("12879341210277729652562065130333613991137793795439148105389860506010063832764");
+        let r1y_exp =
+            pbi("12028008901381051327638773292171283584285939209840487219206955741588933923683");
+        let r2x_exp =
+            pbi("21348363880076528954413108099703096613495992044195524899352374409593437815681");
+        let r2y_exp =
+            pbi("448225545923890529546465107524885423214165045321928302012946805889055497548");
 
         oneInputTest(
             plain,
@@ -447,70 +391,30 @@ mod test {
     }
 
     pub fn testElgamal3() {
-        let plain = BigInteger.parse_bytes(b"29479828", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"11053400909823", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"2818211", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"303897902911", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"6414992512248574902260727978938771599371076631007732970498629309935423025541",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"5588797317393153831727440400622613249402810496821055368006297877884731592188",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"8457880476600111688234391562428843907438067884739990468648711671328170249897",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"5513193275811000218852876613945594356630692965732869074432709923308086384141",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"18871471165123797022765192830051533784387329326555711754062027748705980592258",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"2960859843097508915587155523192075278657656986058747365068999681758189942574",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"5366029516069172231732392874784911967837619433091056142690918344258949461784",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"15522512818540701465276714745444492880212853838854710379826233848880406457659",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"20641775747486861600659362415793944030784330174792501848914914142661365683768",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"4050578578711337375872799728115034683479047059868613096904707326437389065410",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(29479828);
+        let random = BigInteger::from(11053400909823i64);
+        let random2 = BigInteger::from(2818211);
+        let sk = BigInteger::from(303897902911i64);
+        let pkx =
+            pbi("6414992512248574902260727978938771599371076631007732970498629309935423025541");
+        let pky =
+            pbi("5588797317393153831727440400622613249402810496821055368006297877884731592188");
+        let c1x_exp =
+            pbi("8457880476600111688234391562428843907438067884739990468648711671328170249897");
+        let c1y_exp =
+            pbi("5513193275811000218852876613945594356630692965732869074432709923308086384141");
+        let c2x_exp =
+            pbi("18871471165123797022765192830051533784387329326555711754062027748705980592258");
+        let c2y_exp =
+            pbi("2960859843097508915587155523192075278657656986058747365068999681758189942574");
+        let r1x_exp =
+            pbi("5366029516069172231732392874784911967837619433091056142690918344258949461784");
+        let r1y_exp =
+            pbi("15522512818540701465276714745444492880212853838854710379826233848880406457659");
+        let r2x_exp =
+            pbi("20641775747486861600659362415793944030784330174792501848914914142661365683768");
+        let r2y_exp =
+            pbi("4050578578711337375872799728115034683479047059868613096904707326437389065410");
 
         oneInputTest(
             plain,
@@ -526,70 +430,30 @@ mod test {
     }
 
     pub fn testElgamal4() {
-        let plain = BigInteger.parse_bytes(b"20503", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"40394702098873424340", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"1199860398278648324", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"879404942393", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"12387118419063114351013801589244952825991461324644293362309293502203205557028",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"12115395333617340639899571997042008699641933696177211723946595143553517655022",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"8470974253563601832011440733676763727170463193150013886940174894973160268113",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"11451437979815532596520424453163860534423134767934210095904011136004726209298",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"3755451285204548243386923793338922452126300087029724835994171785286681386647",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"5647640334301816276800781755737747998337525435601524546545647915251655431126",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"19189418561911229092629541870381728693454153202408672369439535900592352563832",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"6190221119147372470564485675966744098041498927494365664238329939235766355806",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"20606498248708222575429594795830500486712281647481596625185438753439188883374",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"16572497279801942880250856433861727900257767071582946132942024691743685883868",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(20503);
+        let random = BigInteger::from(40394702098873424340i128);
+        let random2 = BigInteger::from(1199860398278648324i128);
+        let sk = BigInteger::from(879404942393i64);
+        let pkx =
+            pbi("12387118419063114351013801589244952825991461324644293362309293502203205557028");
+        let pky =
+            pbi("12115395333617340639899571997042008699641933696177211723946595143553517655022");
+        let c1x_exp =
+            pbi("8470974253563601832011440733676763727170463193150013886940174894973160268113");
+        let c1y_exp =
+            pbi("11451437979815532596520424453163860534423134767934210095904011136004726209298");
+        let c2x_exp =
+            pbi("3755451285204548243386923793338922452126300087029724835994171785286681386647");
+        let c2y_exp =
+            pbi("5647640334301816276800781755737747998337525435601524546545647915251655431126");
+        let r1x_exp =
+            pbi("19189418561911229092629541870381728693454153202408672369439535900592352563832");
+        let r1y_exp =
+            pbi("6190221119147372470564485675966744098041498927494365664238329939235766355806");
+        let r2x_exp =
+            pbi("20606498248708222575429594795830500486712281647481596625185438753439188883374");
+        let r2y_exp =
+            pbi("16572497279801942880250856433861727900257767071582946132942024691743685883868");
 
         oneInputTest(
             plain,
@@ -605,70 +469,30 @@ mod test {
     }
 
     pub fn testElgamal5() {
-        let plain = BigInteger.parse_bytes(b"9973", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"400939876470980734", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"980387209578", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"409693890709893623", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"19038786034365121129737447326845215547071528710647939313908355725905191188995",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"2214248829964940682725033718946556328772607342640796638058055582396213081489",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"4049645432003817379994226545412987321416789229476686170128957164758871401279",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"16222213389691959124184899327364928149053913263183689276193684274178358008847",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"20622976335254791707752271712848997733998271931456734369112350069849260350570",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"18512314847286550940159097003907528453978422823733935044908448485364066867711",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"18012047336332553077224720034396440234969675366649853620277921699711776290087",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"4548928749379657739820459290800365447344909635123275019182600575083243815395",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"1463706360529125936803497998062819315280830785086437985047610791857684501217",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"19260145642157386527783785376105740564939772326492185963463823034939637900510",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(9973);
+        let random = BigInteger::from(400939876470980734i64);
+        let random2 = BigInteger::from(980387209578i64);
+        let sk = BigInteger::from(409693890709893623i64);
+        let pkx =
+            pbi("19038786034365121129737447326845215547071528710647939313908355725905191188995");
+        let pky =
+            pbi("2214248829964940682725033718946556328772607342640796638058055582396213081489");
+        let c1x_exp =
+            pbi("4049645432003817379994226545412987321416789229476686170128957164758871401279");
+        let c1y_exp =
+            pbi("16222213389691959124184899327364928149053913263183689276193684274178358008847");
+        let c2x_exp =
+            pbi("20622976335254791707752271712848997733998271931456734369112350069849260350570");
+        let c2y_exp =
+            pbi("18512314847286550940159097003907528453978422823733935044908448485364066867711");
+        let r1x_exp =
+            pbi("18012047336332553077224720034396440234969675366649853620277921699711776290087");
+        let r1y_exp =
+            pbi("4548928749379657739820459290800365447344909635123275019182600575083243815395");
+        let r2x_exp =
+            pbi("1463706360529125936803497998062819315280830785086437985047610791857684501217");
+        let r2y_exp =
+            pbi("19260145642157386527783785376105740564939772326492185963463823034939637900510");
 
         oneInputTest(
             plain,
@@ -684,72 +508,30 @@ mod test {
     }
 
     pub fn testElgamal6() {
-        let plain = BigInteger.parse_bytes(b"3092", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"304047020868704", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"29059219019893", 10).unwrap();
-        let sk = BigInteger
-            .parse_bytes(b"943434980730874900974038", 10)
-            .unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"11537936820602925819401558832551213707370271036894418664399992536929137441385",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"21341107817615984362450388042180099428636742794610654263474204384582578901535",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"5759977009078653474075225079238017700911800551924115686420736271126581950794",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"19803546030374265878743382701240403271716532910167764659132971083286486432920",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"13163571290961645931573447250398485715074921372484044328064084837570242392677",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"2561391748738501878805425385302883053224206298569352883147194368919207812616",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"3395078398739021110672219647886266968195610965478540927835578721265826113829",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"3226633820835478993953835109420755648719417700859759750351066585603811804967",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"9019585129196677535142255820209900579037484179808220251923228715078249551317",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"1217462091073599572419023941043993348899274045225302280909460520543019198569",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(3092);
+        let random = BigInteger::from(304047020868704i64);
+        let random2 = BigInteger::from(29059219019893i64);
+        let sk = pbi("943434980730874900974038");
+        let pkx =
+            pbi("11537936820602925819401558832551213707370271036894418664399992536929137441385");
+        let pky =
+            pbi("21341107817615984362450388042180099428636742794610654263474204384582578901535");
+        let c1x_exp =
+            pbi("5759977009078653474075225079238017700911800551924115686420736271126581950794");
+        let c1y_exp =
+            pbi("19803546030374265878743382701240403271716532910167764659132971083286486432920");
+        let c2x_exp =
+            pbi("13163571290961645931573447250398485715074921372484044328064084837570242392677");
+        let c2y_exp =
+            pbi("2561391748738501878805425385302883053224206298569352883147194368919207812616");
+        let r1x_exp =
+            pbi("3395078398739021110672219647886266968195610965478540927835578721265826113829");
+        let r1y_exp =
+            pbi("3226633820835478993953835109420755648719417700859759750351066585603811804967");
+        let r2x_exp =
+            pbi("9019585129196677535142255820209900579037484179808220251923228715078249551317");
+        let r2y_exp =
+            pbi("1217462091073599572419023941043993348899274045225302280909460520543019198569");
 
         oneInputTest(
             plain,
@@ -765,70 +547,30 @@ mod test {
     }
 
     pub fn testElgamal7() {
-        let plain = BigInteger.parse_bytes(b"11", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"9438929848", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"472788712", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"40909374909834", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"18963601429601260488925336533212077133253656490980222624829298073185383062394",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"10955396660032392970784549789530638666297323493863859953055999819584497853280",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"1585437441439177712931180855793556731169186271301451803103671783184926099707",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"17238669393035514721193643357894128432464531731096710478456257855369920548914",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"1905207801382404175680710222856135239447406509352907340030501059581465963296",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"20283410046728803419736841039385114962006738871621806761375631312392012049538",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"1172658417426784028905024343050664961751271991789496194901660929685910153502",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"17841298193398572201135170415806132380874126713992220099435734043652191436231",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"7665114463165580774659286388392015419508027373404639766757305403638822493955",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"20283399076363492534661102577978890614478101704954633485201009460012598302984",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(11);
+        let random = BigInteger::from(9438929848i64);
+        let random2 = BigInteger::from(472788712);
+        let sk = BigInteger::from(40909374909834i64);
+        let pkx =
+            pbi("18963601429601260488925336533212077133253656490980222624829298073185383062394");
+        let pky =
+            pbi("10955396660032392970784549789530638666297323493863859953055999819584497853280");
+        let c1x_exp =
+            pbi("1585437441439177712931180855793556731169186271301451803103671783184926099707");
+        let c1y_exp =
+            pbi("17238669393035514721193643357894128432464531731096710478456257855369920548914");
+        let c2x_exp =
+            pbi("1905207801382404175680710222856135239447406509352907340030501059581465963296");
+        let c2y_exp =
+            pbi("20283410046728803419736841039385114962006738871621806761375631312392012049538");
+        let r1x_exp =
+            pbi("1172658417426784028905024343050664961751271991789496194901660929685910153502");
+        let r1y_exp =
+            pbi("17841298193398572201135170415806132380874126713992220099435734043652191436231");
+        let r2x_exp =
+            pbi("7665114463165580774659286388392015419508027373404639766757305403638822493955");
+        let r2y_exp =
+            pbi("20283399076363492534661102577978890614478101704954633485201009460012598302984");
 
         oneInputTest(
             plain,
@@ -844,70 +586,30 @@ mod test {
     }
 
     pub fn testElgamal8() {
-        let plain = BigInteger.parse_bytes(b"309904", 10).unwrap();
-        let random = BigInteger.parse_bytes(b"2249", 10).unwrap();
-        let random2 = BigInteger.parse_bytes(b"187498091987891", 10).unwrap();
-        let sk = BigInteger.parse_bytes(b"1047249", 10).unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"18796243199533119758484912853892319178237479744292136482258313307214080406845",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"12562816211385016374219058391715927349499041836379377424804413924517388503535",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"1093180272049918847371658916991447949076205903414878489417833675168297761329",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"13652001713064310312737185590474813760724236299822572903882767064490757672145",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"10233072806856007905263356274253594443764592402456777832406280451546479173285",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"15828131619625847918230665900694350637473057051841970861137734958423235339878",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"6913306664985054426548553351911704413655199598352597631955117153023351855134",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"11053589110183477810314966941682935316922509679588844947720220513312942073284",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"11926108613321274783962330168347934941286508322677303443866831105482343220833",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"20884432215848566718856711647507988451300507966194327106115486784790475250127",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(309904);
+        let random = BigInteger::from(2249);
+        let random2 = BigInteger::from(187498091987891i64);
+        let sk = BigInteger::from(1047249);
+        let pkx =
+            pbi("18796243199533119758484912853892319178237479744292136482258313307214080406845");
+        let pky =
+            pbi("12562816211385016374219058391715927349499041836379377424804413924517388503535");
+        let c1x_exp =
+            pbi("1093180272049918847371658916991447949076205903414878489417833675168297761329");
+        let c1y_exp =
+            pbi("13652001713064310312737185590474813760724236299822572903882767064490757672145");
+        let c2x_exp =
+            pbi("10233072806856007905263356274253594443764592402456777832406280451546479173285");
+        let c2y_exp =
+            pbi("15828131619625847918230665900694350637473057051841970861137734958423235339878");
+        let r1x_exp =
+            pbi("6913306664985054426548553351911704413655199598352597631955117153023351855134");
+        let r1y_exp =
+            pbi("11053589110183477810314966941682935316922509679588844947720220513312942073284");
+        let r2x_exp =
+            pbi("11926108613321274783962330168347934941286508322677303443866831105482343220833");
+        let r2y_exp =
+            pbi("20884432215848566718856711647507988451300507966194327106115486784790475250127");
 
         oneInputTest(
             plain,
@@ -923,85 +625,31 @@ mod test {
     }
 
     pub fn testElgamal9() {
-        let plain = BigInteger.parse_bytes(b"42", 10).unwrap();
-        let random = BigInteger
-            .parse_bytes(
-                b"4992017890738015216991440853823451346783754228142718316135811893930821210517",
-                10,
-            )
-            .unwrap();
-        let random2 = BigInteger
-            .parse_bytes(
-                b"39278167679809198687982907130870918672986098198762678158021231",
-                10,
-            )
-            .unwrap();
-        let sk = BigInteger
-            .parse_bytes(
-                b"448344687855328518203304384067387474955750326758815542295083498526674852893",
-                10,
-            )
-            .unwrap();
-        let pkx = BigInteger
-            .parse_bytes(
-                b"2543111965495064707612623550577403881714453669184859408922451773306175031318",
-                10,
-            )
-            .unwrap();
-        let pky = BigInteger
-            .parse_bytes(
-                b"20927827475527585117296730644692999944545060105133073020125343132211068382185",
-                10,
-            )
-            .unwrap();
-        let c1x_exp = BigInteger
-            .parse_bytes(
-                b"17990166387038654353532224054392704246273066434684370089496246721960255371329",
-                10,
-            )
-            .unwrap();
-        let c1y_exp = BigInteger
-            .parse_bytes(
-                b"15866190370882469414665095798958204707796441173247149326160843221134574846694",
-                10,
-            )
-            .unwrap();
-        let c2x_exp = BigInteger
-            .parse_bytes(
-                b"13578016172019942326633412365679613147103709674318008979748420035774874659858",
-                10,
-            )
-            .unwrap();
-        let c2y_exp = BigInteger
-            .parse_bytes(
-                b"15995926508900361671313404296634773295236345482179714831868518062689263430374",
-                10,
-            )
-            .unwrap();
-        let r1x_exp = BigInteger
-            .parse_bytes(
-                b"18784552725438955691676194299236851361347814005105892890816896300567057713848",
-                10,
-            )
-            .unwrap();
-        let r1y_exp = BigInteger
-            .parse_bytes(
-                b"19693165835882985893423572117981608192865028744064689668605666703143190897862",
-                10,
-            )
-            .unwrap();
-        let r2x_exp = BigInteger
-            .parse_bytes(
-                b"2530344813076577056814169669700763620340945156800181207832024608219434629412",
-                10,
-            )
-            .unwrap();
-        let r2y_exp = BigInteger
-            .parse_bytes(
-                b"10093888871955407903732269877335284565715256278559408224374937460596986224178",
-                10,
-            )
-            .unwrap();
+        let plain = BigInteger::from(42);
+        let random =
+            pbi("4992017890738015216991440853823451346783754228142718316135811893930821210517");
+        let random2 = pbi("39278167679809198687982907130870918672986098198762678158021231");
+        let sk = pbi("448344687855328518203304384067387474955750326758815542295083498526674852893");
+        let pkx =
+            pbi("2543111965495064707612623550577403881714453669184859408922451773306175031318");
+        let pky =
+            pbi("20927827475527585117296730644692999944545060105133073020125343132211068382185");
+        let c1x_exp =
+            pbi("17990166387038654353532224054392704246273066434684370089496246721960255371329");
+        let c1y_exp =
+            pbi("15866190370882469414665095798958204707796441173247149326160843221134574846694");
+        let c2x_exp =
+            pbi("13578016172019942326633412365679613147103709674318008979748420035774874659858");
+        let c2y_exp =
+            pbi("15995926508900361671313404296634773295236345482179714831868518062689263430374");
+        let r1x_exp =
+            pbi("18784552725438955691676194299236851361347814005105892890816896300567057713848");
+        let r1y_exp =
+            pbi("19693165835882985893423572117981608192865028744064689668605666703143190897862");
+        let r2x_exp =
+            pbi("2530344813076577056814169669700763620340945156800181207832024608219434629412");
+        let r2y_exp =
+            pbi("10093888871955407903732269877335284565715256278559408224374937460596986224178");
 
         oneInputTest(
             plain,

@@ -10,13 +10,13 @@ use crate::util::util::BigInteger;
 use crate::zkay::chaskey_lts_engine::ChaskeyLTSEngine;
 use crate::zkay::zkay_util::ZkayUtil;
 
-struct CBCBlockCipher;
+pub struct CBCBlockCipher;
 impl CBCBlockCipher {
     pub fn new() -> Self {
         Self
     }
 }
-struct BufferedBlockCipher;
+pub struct BufferedBlockCipher;
 impl BufferedBlockCipher {
     pub fn new() -> Self {
         Self
@@ -38,15 +38,15 @@ impl BufferedBlockCipher {
         outOff
     }
 }
-struct ParametersWithIV;
+pub struct ParametersWithIV;
 impl ParametersWithIV {
     pub fn new() -> Self {
         Self
     }
 }
-struct KeyParameter;
+pub struct KeyParameter;
 impl KeyParameter {
-    pub fn new() -> Self {
+    pub fn new(key: [u8; 16]) -> Self {
         Self
     }
 }

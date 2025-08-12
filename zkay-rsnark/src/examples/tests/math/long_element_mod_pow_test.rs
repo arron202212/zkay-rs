@@ -82,7 +82,6 @@ mod test {
             // println!("Building took {} ms\n", ms);
             let evaluator = self.evalCircuit().unwrap();
 
-            // let evaluator = self.getCircuitEvaluator();
             let outValues = evaluator.getWiresValues(&self.get_out_wires());
             Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
         }
