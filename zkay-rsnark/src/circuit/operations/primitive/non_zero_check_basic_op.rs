@@ -24,17 +24,20 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct NonZeroCheckBasicOp;
-pub fn new_non_zero_check(
-    w: &WireType,
-    out1: &WireType,
-    out2: &WireType,
-    desc: String,
-) -> Op<NonZeroCheckBasicOp> {
-    Op::<NonZeroCheckBasicOp> {
-        inputs: vec![Some(w.clone())],
-        outputs: vec![Some(out1.clone()), Some(out2.clone())],
-        desc,
-        t: NonZeroCheckBasicOp,
+
+impl NonZeroCheckBasicOp {
+    pub fn new(
+        w: &WireType,
+        out1: &WireType,
+        out2: &WireType,
+        desc: String,
+    ) -> Op<NonZeroCheckBasicOp> {
+        Op::<NonZeroCheckBasicOp> {
+            inputs: vec![Some(w.clone())],
+            outputs: vec![Some(out1.clone()), Some(out2.clone())],
+            desc,
+            t: NonZeroCheckBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<NonZeroCheckBasicOp>);
@@ -45,7 +48,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
             println!(
                 "==compute=====outputs=========={}===={}====",
                 file!(),

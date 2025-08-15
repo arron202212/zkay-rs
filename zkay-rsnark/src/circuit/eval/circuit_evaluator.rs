@@ -8,6 +8,7 @@
 use crate::{
     arc_cell_new,
     circuit::{
+        StructNameConfig,
         auxiliary::long_element::LongElement,
         config::config::Configs,
         eval::instruction::Instruction,
@@ -63,7 +64,19 @@ impl CircuitEvaluator {
             w.getWireId(),
             v
         );
-        // println!("==wireid============={}============",w.getWireId());
+        if *v
+            == Util::parse_big_int(
+                "9303675466683978672157007539476735559417248663966088852490594351623194417995",
+            )
+            || w.getWireId() == 5
+        {
+            println!(
+                "==wireid============={}======{}======",
+                w.getWireId(),
+                w.name()
+            );
+        }
+
         self.valueAssignment[w.getWireId() as usize] = Some(v.clone());
     }
 

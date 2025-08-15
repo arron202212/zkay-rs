@@ -12,22 +12,18 @@ use crate::{
         config::config::Configs,
         eval::instruction::Instruction,
         operations::primitive::{
-            const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
-            mul_basic_op::{MulBasicOp, new_mul},
-            non_zero_check_basic_op::{NonZeroCheckBasicOp, new_non_zero_check},
-            or_basic_op::{OrBasicOp, new_or},
-            pack_basic_op::{PackBasicOp, new_pack},
-            split_basic_op::{SplitBasicOp, new_split},
-            xor_basic_op::{XorBasicOp, new_xor},
+            const_mul_basic_op::ConstMulBasicOp, mul_basic_op::MulBasicOp,
+            non_zero_check_basic_op::NonZeroCheckBasicOp, or_basic_op::OrBasicOp,
+            pack_basic_op::PackBasicOp, split_basic_op::SplitBasicOp, xor_basic_op::XorBasicOp,
         },
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
                 CreateConstantWire, addToEvaluationQueue, getActiveCircuitGenerator,
             },
-            linear_combination_wire::{LinearCombinationWire, new_linear_combination},
-            variable_bit_wire::{VariableBitWire, new_variable_bit},
-            variable_wire::{VariableWire, new_variable},
+            linear_combination_wire::LinearCombinationWire,
+            variable_bit_wire::VariableBitWire,
+            variable_wire::VariableWire,
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -157,7 +153,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
-        // println!("=======================mulb============{}=========== {} ",file!(), line!());
+        println!(
+            "=======================mulb============{}=========== {} ",
+            file!(),
+            line!()
+        );
         let mut generator = self.generator();
 
         self.packIfNeeded(desc);
@@ -169,18 +169,17 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             return generator.get_zero_wire().unwrap();
         }
         // println!("End Name Time: 444 {} s", line!());
-        let out = WireType::LinearCombination(new_linear_combination(
+        let out = WireType::LinearCombination(LinearCombinationWire::new(
             generator.get_current_wire_id(),
             None,
             self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_const_mul(
+        let op = ConstMulBasicOp::new(
             self.self_clone().as_ref().unwrap(),
             &out,
             b,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
         //		generator.addToEvaluationQueue(Box::new(op));
 
@@ -188,7 +187,12 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // println!("End Name Time: 444 {} s", line!());
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            println!(
+                "====generator.borrow_mut().current_wire_id======{}====={}{}",
+                generator.borrow_mut().current_wire_id,
+                file!(),
+                line!()
+            );
 
             cachedOutputs[0].clone().unwrap()
         } else {
@@ -233,23 +237,22 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //     "End packIfNeeded 2 Time: == {} s",
         //     start.elapsed().as_micros()
         // );
-        let output = WireType::Variable(new_variable(
+        let output = WireType::Variable(VariableWire::new(
             generator.get_current_wire_id(),
             self.generator_weak(),
         ));
         // println!(
-        //     "End new_variable  Time: == {} s",
+        //     "End VariableWire::new  Time: == {} s",
         //     start.elapsed().as_micros()
         // );
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_mul(
+        let op = MulBasicOp::new(
             &self.self_clone().unwrap(),
             w,
             &output,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
-        // println!(" ============new_mul==self.getWireId==={}========  w.getWireId: == {} ",self.self_clone().unwrap().getWireId(), w.getWireId());
+        // println!(" ============MulBasicOp::new==self.getWireId==={}========  w.getWireId: == {} ",self.self_clone().unwrap().getWireId(), w.getWireId());
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
         // println!(
@@ -342,17 +345,16 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             .unwrap(),
         );
         generator.borrow_mut().current_wire_id += 1;
-        let out2 = WireType::VariableBit(new_variable_bit(
+        let out2 = WireType::VariableBit(VariableBitWire::new(
             generator.get_current_wire_id(),
             self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_non_zero_check(
+        let op = NonZeroCheckBasicOp::new(
             &self.self_clone().unwrap(),
             &out1,
             &out2,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
@@ -396,20 +398,18 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //             start.elapsed()
         //         );
         // needed
-        let out = WireType::Variable(new_variable(
+        let out = WireType::Variable(VariableWire::new(
             generator.get_current_wire_id(),
             self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
         let sc = self.self_clone().unwrap();
-        let desc = desc
-            .as_ref()
-            .map_or_else(|| String::new(), |d| d.to_owned());
+        let desc = desc.clone().unwrap_or(String::new());
         //  println!(
         //             "End orw addToEvaluationQueue 014 Time: == {:?} ",
         //             start.elapsed()
         //         );
-        let op = new_or(&sc, w, &out, desc);
+        let op = OrBasicOp::new(&sc, w, &out, desc);
 
         //  println!(
         //             "End orw addToEvaluationQueue 0153333 Time: == {:?} ",
@@ -447,17 +447,16 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         }
         self.packIfNeeded(desc); // just a precaution .. should not be really
         // needed
-        let out = WireType::Variable(new_variable(
+        let out = WireType::Variable(VariableWire::new(
             generator.get_current_wire_id(),
             self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_xor(
+        let op = XorBasicOp::new(
             &self.self_clone().unwrap(),
             w,
             &out,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
@@ -520,7 +519,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         for i in 0..bitwidth as usize {
             //println!("======================{},{}",file!(),line!());
 
-            ws[i] = Some(WireType::VariableBit(new_variable_bit(
+            ws[i] = Some(WireType::VariableBit(VariableBitWire::new(
                 generator.get_current_wire_id(),
                 self.generator_weak(),
             )));
@@ -529,11 +528,10 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             generator.borrow_mut().current_wire_id += 1;
         }
         //println!("======================{},{}",file!(),line!());
-        let op = new_split(
+        let op = SplitBasicOp::new(
             &self.self_clone().unwrap(),
             ws.clone(),
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
         //println!("======================{},{}",file!(),line!());
 
@@ -569,7 +567,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -614,13 +612,13 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //     "End create_constant_wire  Time: == {} s",
         //     start.elapsed().as_secs()
         // );
-        let v = WireType::LinearCombination(new_linear_combination(
+        let v = WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
         ));
         // println!(
-        //     "End new_linear_combination  Time: == {} s",
+        //     "End LinearCombinationWire::new  Time: == {} s",
         //     start.elapsed().as_secs()
         // );
         v
@@ -670,7 +668,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //             "End orBitwise 0 Time: == {:?} ",
         //             start.elapsed()
         //         );
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -836,7 +834,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -860,7 +858,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -889,7 +887,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -923,7 +921,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             return generator.create_constant_wire(&v, &None);
         }
         //println!("======================{},{}",file!(),line!());
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -948,7 +946,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -962,7 +960,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         for i in 0..resultBits.len() {
             resultBits[i] = bits[i].as_ref().and_then(|x| x.clone().invAsBit(desc));
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(WireArray::new(resultBits, self.generator_weak())),
             self.generator_weak(),
@@ -983,7 +981,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(new_linear_combination(
+        WireType::LinearCombination(LinearCombinationWire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -1012,11 +1010,10 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //			Instruction op = PackBasicOp::new(bits.array, self, desc);
         //			generator.addToEvaluationQueue(Box::new(op));
 
-        let op = new_pack(
+        let op = PackBasicOp::new(
             bits.unwrap().array.clone(),
             &self.self_clone().unwrap(),
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));

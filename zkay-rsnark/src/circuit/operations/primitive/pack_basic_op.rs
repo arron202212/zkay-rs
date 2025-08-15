@@ -25,12 +25,15 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct PackBasicOp;
-pub fn new_pack(inBits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<PackBasicOp> {
-    Op::<PackBasicOp> {
-        inputs: inBits,
-        outputs: vec![Some(out.clone())],
-        desc,
-        t: PackBasicOp,
+
+impl PackBasicOp {
+    pub fn new(inBits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<PackBasicOp> {
+        Op::<PackBasicOp> {
+            inputs: inBits,
+            outputs: vec![Some(out.clone())],
+            desc,
+            t: PackBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<PackBasicOp>);
@@ -54,7 +57,7 @@ impl BasicOp for Op<PackBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
             println!(
                 "==compute=====outputs=========={}===={}====",
                 file!(),

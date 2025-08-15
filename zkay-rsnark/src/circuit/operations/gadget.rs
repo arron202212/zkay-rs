@@ -27,13 +27,6 @@ pub struct Gadget<T> {
     pub description: String,
     pub t: T,
 }
-// pub fn newGadget(desc: &Option<String>) -> (ARcCell<dyn CGConfig + Send + Sync>, String) {
-//     (
-//         getActiveCircuitGenerator().unwrap(),
-//         desc.as_ref()
-//             .map_or_else(|| String::new(), |d| d.to_owned()),
-//     )
-// }
 
 pub trait GadgetConfig: Debug {
     fn getOutputWires(&self) -> &Vec<Option<WireType>>;

@@ -10,17 +10,14 @@ use crate::{
     circuit::{
         InstanceOf,
         eval::instruction::Instruction,
-        operations::primitive::{
-            add_basic_op::{AddBasicOp, new_add},
-            pack_basic_op::{PackBasicOp, new_pack},
-        },
+        operations::primitive::{add_basic_op::AddBasicOp, pack_basic_op::PackBasicOp},
         structure::{
             circuit_generator::CreateConstantWire,
             circuit_generator::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
                 addToEvaluationQueue, getActiveCircuitGenerator,
             },
-            linear_combination_wire::{LinearCombinationWire, new_linear_combination},
+            linear_combination_wire::LinearCombinationWire,
             wire::GeneratorConfig,
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
             wire_type::WireType,
@@ -125,17 +122,16 @@ impl WireArray {
             }
         }
         if !allConstant {
-            let output = WireType::LinearCombination(new_linear_combination(
+            let output = WireType::LinearCombination(LinearCombinationWire::new(
                 generator.get_current_wire_id(),
                 None,
                 generator.clone().downgrade(),
             ));
             generator.borrow_mut().current_wire_id += 1;
-            let op = new_add(
+            let op = AddBasicOp::new(
                 self.array.clone(),
                 &output,
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
+                desc.clone().unwrap_or(String::new()),
             );
             //			generator.addToEvaluationQueue(Box::new(op));
 
@@ -358,7 +354,7 @@ impl WireArray {
             }
         }
         if !allConstant {
-            let out = WireType::LinearCombination(new_linear_combination(
+            let out = WireType::LinearCombination(LinearCombinationWire::new(
                 generator.get_current_wire_id(),
                 None,
                 generator.clone().downgrade(),
@@ -368,12 +364,7 @@ impl WireArray {
                 bits.clone(),
                 generator.clone().downgrade(),
             )));
-            let op = new_pack(
-                bits,
-                &out,
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
-            );
+            let op = PackBasicOp::new(bits, &out, desc.clone().unwrap_or(String::new()));
 
             let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
             if let Some(cachedOutputs) = cachedOutputs {

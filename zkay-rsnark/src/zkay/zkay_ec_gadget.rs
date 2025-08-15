@@ -48,9 +48,7 @@ impl<T> ZkayEcGadget<T> {
         let generators = generator.borrow().clone();
         Gadget::<Self> {
             generator,
-            description: desc
-                .as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc.clone().unwrap_or(String::new()),
             t: ZkayEcGadget::<T> { generators, t },
         }
     }

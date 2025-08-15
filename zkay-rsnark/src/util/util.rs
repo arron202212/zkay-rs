@@ -140,8 +140,7 @@ impl Util {
     }
 
     pub fn getDesc(desc: &Option<String>) -> String {
-        desc.as_ref()
-            .map_or_else(|| String::new(), |d| d.to_owned())
+        desc.clone().unwrap_or(String::new())
     }
 
     pub fn parseSequenceLists(s: String) -> Vec<i32> {

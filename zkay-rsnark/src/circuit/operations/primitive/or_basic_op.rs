@@ -24,23 +24,23 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct OrBasicOp;
-
-pub fn new_or(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<OrBasicOp> {
-    use std::time::Instant;
-    let _start = Instant::now();
-    let op = Op::<OrBasicOp> {
-        inputs: vec![Some(w1.clone()), Some(w2.clone())],
-        outputs: vec![Some(output.clone())],
-        desc,
-        t: OrBasicOp,
-    };
-    // println!(
-    //     "End new_or 0 Time: == {:?} ",
-    //     start.elapsed()
-    // );
-    op
+impl OrBasicOp {
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<OrBasicOp> {
+        use std::time::Instant;
+        let _start = Instant::now();
+        let op = Op::<OrBasicOp> {
+            inputs: vec![Some(w1.clone()), Some(w2.clone())],
+            outputs: vec![Some(output.clone())],
+            desc,
+            t: OrBasicOp,
+        };
+        // println!(
+        //     "EndOrBasicOp::new 0 Time: == {:?} ",
+        //     start.elapsed()
+        // );
+        op
+    }
 }
-
 crate::impl_instruction_for!(Op<OrBasicOp>);
 crate::impl_hash_code_for!(Op<OrBasicOp>);
 impl BasicOp for Op<OrBasicOp> {
@@ -67,7 +67,7 @@ impl BasicOp for Op<OrBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
             println!(
                 "==compute=====outputs=========={}===={}====",
                 file!(),

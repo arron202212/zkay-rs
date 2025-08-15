@@ -40,23 +40,30 @@ impl PartialEq for LinearCombinationWire {
 }
 //crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationWire>);
-pub fn new_linear_combination(
-    wireId: i32,
-    bits: Option<WireArray>,
-    generator: WeakCell<CircuitGenerator>,
-) -> Wire<LinearCombinationWire> {
-    //   if  wireId>0 && wireId<10000
-    //     {
-    //         println!("===new_linear_combination====={wireId}==");
-    //     }
-    // //super(wireId);
-    // Wire::<LinearCombinationWire> {
-    //     wireId,
-    //     generator,
-    //     t: LinearCombinationWire { bitWires: bits },
-    // }
-    Wire::<LinearCombinationWire>::new(LinearCombinationWire { bitWires: bits }, wireId, generator)
+
+impl LinearCombinationWire {
+    pub fn new(
+        wireId: i32,
+        bits: Option<WireArray>,
+        generator: WeakCell<CircuitGenerator>,
+    ) -> Wire<LinearCombinationWire> {
+        //   if  wireId>0 && wireId<10000
+        //     {
+        //         println!("===LinearCombinationWire::new====={wireId}==");
+        //     }
+        // //super(wireId);
+        // Wire::<LinearCombinationWire> {
+        //     wireId,
+        //     generator,
+        //     t: LinearCombinationWire { bitWires: bits },
+        // }
+        Wire::<LinearCombinationWire>::new(
+            LinearCombinationWire { bitWires: bits },
+            wireId,
+            generator,
+        )
         .unwrap()
+    }
 }
 impl setBitsConfig for LinearCombinationWire {}
 impl setBitsConfig for Wire<LinearCombinationWire> {}

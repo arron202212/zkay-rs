@@ -38,18 +38,20 @@ impl PartialEq for VariableWire {
 }
 //crate::impl_hash_code_of_wire_g_for!(Wire<VariableWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<VariableWire>);
-pub fn new_variable(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableWire> {
-    //   if wireId>0 && wireId<10000
-    //     {
-    //         println!("==new_variable======{wireId}==");
-    //     }
-    // //super(wireId);
-    // Wire::<VariableWire> {
-    //     wireId,
-    //     generator,
-    //     t: VariableWire { bitWires: None },
-    // }
-    Wire::<VariableWire>::new(VariableWire { bitWires: None }, wireId, generator).unwrap()
+impl VariableWire {
+    pub fn new(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableWire> {
+        //   if wireId>0 && wireId<10000
+        //     {
+        //         println!("==VariableWire::new======{wireId}==");
+        //     }
+        // //super(wireId);
+        // Wire::<VariableWire> {
+        //     wireId,
+        //     generator,
+        //     t: VariableWire { bitWires: None },
+        // }
+        Wire::<VariableWire>::new(VariableWire { bitWires: None }, wireId, generator).unwrap()
+    }
 }
 impl setBitsConfig for VariableWire {}
 impl setBitsConfig for Wire<VariableWire> {}

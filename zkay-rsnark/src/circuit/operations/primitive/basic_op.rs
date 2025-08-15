@@ -57,9 +57,7 @@ impl<T> Op<T> {
         desc: &Option<String>,
         t: T,
     ) -> eyre::Result<Self> {
-        let desc = desc
-            .as_ref()
-            .map_or_else(|| String::new(), |d| d.to_owned());
+        let desc = desc.clone().unwrap_or(String::new());
 
         for w in &inputs {
             if w.is_none() {

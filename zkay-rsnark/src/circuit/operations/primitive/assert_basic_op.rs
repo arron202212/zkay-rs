@@ -26,17 +26,17 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AssertBasicOp;
-pub fn new_assert(
-    w1: &WireType,
-    w2: &WireType,
-    output: &WireType,
-    desc: String,
-) -> Op<AssertBasicOp> {
-    Op::<AssertBasicOp> {
-        inputs: vec![Some(w1.clone()), Some(w2.clone())],
-        outputs: vec![Some(output.clone())],
-        desc,
-        t: AssertBasicOp,
+impl AssertBasicOp {
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<AssertBasicOp> {
+        // if w1.getWireId()==5 && w2.getWireId()==0 && output.getWireId()==0{
+        // panic!("{},{},{}",w1.name(),w2.name(),output.name());
+        // }
+        Op::<AssertBasicOp> {
+            inputs: vec![Some(w1.clone()), Some(w2.clone())],
+            outputs: vec![Some(output.clone())],
+            desc,
+            t: AssertBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<AssertBasicOp>);
@@ -48,13 +48,13 @@ crate::impl_hash_code_for!(Op<AssertBasicOp>);
 // }
 impl BasicOp for Op<AssertBasicOp> {
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
-            println!(
-                "==compute=====outputs=========={}===={}====",
-                file!(),
-                self.outputs[0].as_ref().unwrap().name()
-            );
-        }
+        // if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+        //     println!(
+        //         "==compute=====outputs=========={}===={}====",
+        //         file!(),
+        //         self.outputs[0].as_ref().unwrap().name()
+        //     );
+        // }
         let leftSide = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
@@ -71,16 +71,19 @@ impl BasicOp for Op<AssertBasicOp> {
         assert_eq!(
             leftSide,
             rightSide,
-            "Error During Evaluation    {} * {} != {}",
-            assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
+            "Error During Evaluation    {} * {} != {}  in {} * {} != {}",
+            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
                 .as_ref()
                 .unwrap(),
-            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+            assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
                 .as_ref()
                 .unwrap(),
             assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
                 .as_ref()
-                .unwrap()
+                .unwrap(),
+            self.inputs[0].as_ref().unwrap().getWireId(),
+            self.inputs[1].as_ref().unwrap().getWireId(),
+            self.outputs[0].as_ref().unwrap().getWireId()
         );
     }
 

@@ -25,12 +25,14 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct SplitBasicOp;
-pub fn new_split(w: &WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
-    Op::<SplitBasicOp> {
-        inputs: vec![Some(w.clone())],
-        outputs: outs,
-        desc,
-        t: SplitBasicOp,
+impl SplitBasicOp {
+    pub fn new(w: &WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
+        Op::<SplitBasicOp> {
+            inputs: vec![Some(w.clone())],
+            outputs: outs,
+            desc,
+            t: SplitBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<SplitBasicOp>);
@@ -64,19 +66,22 @@ impl BasicOp for Op<SplitBasicOp> {
             inVal = inVal.rem(&Configs.field_prime);
         }
         for i in 0..self.outputs.len() {
-            if self.outputs[i].as_ref().unwrap().getWireId() == 349251 {
-                println!(
-                    "==compute=====outputs=========={}===={}====",
-                    file!(),
-                    self.outputs[i].as_ref().unwrap().name()
-                );
-            }
             assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] =
                 Some(if inVal.bit(i as u64) {
                     Util::one()
                 } else {
                     BigInteger::ZERO
                 });
+            if self.outputs[i].as_ref().unwrap().getWireId() == 5 {
+                println!(
+                    "==compute=====outputs=========={}===={}==={}====))))===",
+                    file!(),
+                    self.outputs[i].as_ref().unwrap().name(),
+                    assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize]
+                        .as_ref()
+                        .unwrap()
+                );
+            }
         }
     }
 

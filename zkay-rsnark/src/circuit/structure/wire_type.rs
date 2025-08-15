@@ -15,14 +15,9 @@ use crate::{
         InstanceOf, StructNameConfig,
         eval::instruction::Instruction,
         operations::primitive::{
-            basic_op::Op,
-            const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
-            mul_basic_op::{MulBasicOp, new_mul},
-            non_zero_check_basic_op::{NonZeroCheckBasicOp, new_non_zero_check},
-            or_basic_op::{OrBasicOp, new_or},
-            pack_basic_op::{PackBasicOp, new_pack},
-            split_basic_op::{SplitBasicOp, new_split},
-            xor_basic_op::{XorBasicOp, new_xor},
+            basic_op::Op, const_mul_basic_op::ConstMulBasicOp, mul_basic_op::MulBasicOp,
+            non_zero_check_basic_op::NonZeroCheckBasicOp, or_basic_op::OrBasicOp,
+            pack_basic_op::PackBasicOp, split_basic_op::SplitBasicOp, xor_basic_op::XorBasicOp,
         },
         structure::{
             bit_wire::BitWire,
@@ -32,9 +27,9 @@ use crate::{
             },
             constant_wire::ConstantWire,
             linear_combination_bit_wire::LinearCombinationBitWire,
-            linear_combination_wire::{LinearCombinationWire, new_linear_combination},
+            linear_combination_wire::LinearCombinationWire,
             variable_bit_wire::VariableBitWire,
-            variable_wire::{VariableWire, new_variable},
+            variable_wire::VariableWire,
             wire::{Base, GeneratorConfig, GetWireId, Wire, WireConfig, setBitsConfig},
             wire_array::WireArray,
         },
@@ -114,18 +109,17 @@ impl MulWire<&BigInteger> for WireType {
         if b == &BigInteger::ZERO {
             return generator.get_zero_wire().unwrap();
         }
-        let out = WireType::LinearCombination(new_linear_combination(
+        let out = WireType::LinearCombination(LinearCombinationWire::new(
             generator.get_current_wire_id(),
             None,
             generator.clone().downgrade(),
         ));
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_const_mul(
+        let op = ConstMulBasicOp::new(
             &self.self_clone().unwrap(),
             &out,
             b,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
         //		generator.addToEvaluationQueue(Box::new(op));
 
@@ -161,17 +155,16 @@ impl MulWire<&WireType> for WireType {
         }
         self.packIfNeeded(desc);
         w.packIfNeeded(desc);
-        let output = WireType::Variable(new_variable(
+        let output = WireType::Variable(VariableWire::new(
             generator.get_current_wire_id(),
             generator.clone().downgrade(),
         ));
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_mul(
+        let op = MulBasicOp::new(
             &self.self_clone().unwrap(),
             w,
             &output,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
@@ -244,7 +237,7 @@ impl XorBitwise<&WireType> for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(&v, &None)
         } else {
-            WireType::LinearCombination(new_linear_combination(
+            WireType::LinearCombination(LinearCombinationWire::new(
                 -1,
                 Some(result),
                 generator.clone().downgrade(),
@@ -280,7 +273,7 @@ impl AndBitwise<&WireType> for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(&v, &None)
         } else {
-            WireType::LinearCombination(new_linear_combination(
+            WireType::LinearCombination(LinearCombinationWire::new(
                 -1,
                 Some(result),
                 generator.clone().downgrade(),
@@ -316,7 +309,7 @@ impl OrBitwise<&WireType> for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(&v, &None)
         } else {
-            WireType::LinearCombination(new_linear_combination(
+            WireType::LinearCombination(LinearCombinationWire::new(
                 -1,
                 Some(result),
                 generator.clone().downgrade(),

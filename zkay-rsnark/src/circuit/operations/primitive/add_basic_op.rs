@@ -25,13 +25,14 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AddBasicOp;
-
-pub fn new_add(ws: Vec<Option<WireType>>, output: &WireType, desc: String) -> Op<AddBasicOp> {
-    Op::<AddBasicOp> {
-        inputs: ws,
-        outputs: vec![Some(output.clone())],
-        desc,
-        t: AddBasicOp,
+impl AddBasicOp {
+    pub fn new(ws: Vec<Option<WireType>>, output: &WireType, desc: String) -> Op<AddBasicOp> {
+        Op::<AddBasicOp> {
+            inputs: ws,
+            outputs: vec![Some(output.clone())],
+            desc,
+            t: AddBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<AddBasicOp>);
@@ -42,7 +43,7 @@ impl BasicOp for Op<AddBasicOp> {
     // }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
             println!(
                 "==compute=====outputs=========={}===={}====",
                 file!(),

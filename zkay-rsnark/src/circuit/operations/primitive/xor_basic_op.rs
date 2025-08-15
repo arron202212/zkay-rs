@@ -24,17 +24,18 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct XorBasicOp;
-
-pub fn new_xor(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<XorBasicOp> {
-    // if w1.getWireId()==147444 ||  w2.getWireId()==147444
-    // {
-    //     panic!("===new_xor====w1.as_ref().unwrap().getWireId()========================{}",w1.getWireId());
-    // }
-    Op::<XorBasicOp> {
-        inputs: vec![Some(w1.clone()), Some(w2.clone())],
-        outputs: vec![Some(output.clone())],
-        desc,
-        t: XorBasicOp,
+impl XorBasicOp {
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<XorBasicOp> {
+        // if w1.getWireId()==147444 ||  w2.getWireId()==147444
+        // {
+        //     panic!("===XorBasicOp::new====w1.as_ref().unwrap().getWireId()========================{}",w1.getWireId());
+        // }
+        Op::<XorBasicOp> {
+            inputs: vec![Some(w1.clone()), Some(w2.clone())],
+            outputs: vec![Some(output.clone())],
+            desc,
+            t: XorBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<XorBasicOp>);
@@ -63,7 +64,7 @@ impl BasicOp for Op<XorBasicOp> {
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
             println!(
                 "==compute=====outputs=========={}===={}====",
                 file!(),

@@ -60,9 +60,7 @@ impl ChaskeyLTS128CipherGadget {
         assert!(inputs.len() == 4 && key.len() == 4, "Invalid Input");
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc
-                .as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc.clone().unwrap_or(String::new()),
             t: Self {
                 plaintext: inputs,
                 ciphertext: vec![],

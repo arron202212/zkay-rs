@@ -16,17 +16,17 @@
 //         operations::{
 //             gadget::GadgetConfig,
 //             primitive::{
-//                 assert_basic_op::{AssertBasicOp, new_assert},
+//                 assert_basic_op::{AssertBasicOp},
 //                 basic_op::BasicOp,
-//                 mul_basic_op::{MulBasicOp, new_mul},
+//                 mul_basic_op::{MulBasicOp},
 //             },
 //             wire_label_instruction::LabelType,
 //             wire_label_instruction::WireLabelInstruction,
 //         },
 //         structure::{circuit_generator::{CircuitGenerator,CGConfig,CGConfigFields},
-//             constant_wire::{ConstantWire, new_constant},
+//             constant_wire::{ConstantWire},
 //             variable_bit_wire::VariableBitWire,
-//             variable_wire::{VariableWire, new_variable},
+//             variable_wire::{VariableWire},
 //             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
 //             wire_type::WireType,
 //             wire_array::WireArray,
@@ -77,9 +77,7 @@ impl FieldDivisionGadget {
         let mut generators = generator.borrow().clone();
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc
-                .as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc.clone().unwrap_or(String::new()),
             t: Self { a, b, c: vec![] },
         };
 

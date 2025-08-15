@@ -24,22 +24,25 @@ use zkay_derive::ImplStructNameConfig;
 pub struct LinearCombinationBitWire;
 //crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationBitWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationBitWire>);
-pub fn new_linear_combination_bit(
-    wireId: i32,
-    generator: WeakCell<CircuitGenerator>,
-) -> Wire<LinearCombinationBitWire> {
-    //   if wireId>0 && wireId<10000
-    //     {
-    //         println!("==new_linear_combination_bit======{wireId}==");
-    //     }
-    // //super(wireId);
-    // Wire::<LinearCombinationBitWire> {
-    //     wireId,
-    //     generator,
-    //     t: LinearCombinationBitWire,
-    // }
-    // crate::new_wire!(LinearCombinationBitWire,wireId,generator)
-    Wire::<LinearCombinationBitWire>::new(LinearCombinationBitWire, wireId, generator).unwrap()
+
+impl LinearCombinationBitWire {
+    pub fn new(
+        wireId: i32,
+        generator: WeakCell<CircuitGenerator>,
+    ) -> Wire<LinearCombinationBitWire> {
+        //   if wireId>0 && wireId<10000
+        //     {
+        //         println!("==LinearCombinationBitWire::new======{wireId}==");
+        //     }
+        // //super(wireId);
+        // Wire::<LinearCombinationBitWire> {
+        //     wireId,
+        //     generator,
+        //     t: LinearCombinationBitWire,
+        // }
+        // crate::new_wire!(LinearCombinationBitWire,wireId,generator)
+        Wire::<LinearCombinationBitWire>::new(LinearCombinationBitWire, wireId, generator).unwrap()
+    }
 }
 impl setBitsConfig for LinearCombinationBitWire {}
 impl setBitsConfig for Wire<LinearCombinationBitWire> {}

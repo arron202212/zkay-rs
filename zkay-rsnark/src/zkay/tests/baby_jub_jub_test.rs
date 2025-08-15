@@ -20,9 +20,7 @@ use crate::circuit::structure::wire_array::WireArray;
 use crate::circuit::structure::wire_type::WireType;
 use crate::util::util::BigInteger;
 use crate::util::util::Util;
-use crate::zkay::zkay_baby_jub_jub_gadget::{
-    GENERATOR_X, GENERATOR_Y, ZkayBabyJubJubGadget, ZkayBabyJubJubGadgetConfig,
-};
+use crate::zkay::zkay_baby_jub_jub_gadget::{ZkayBabyJubJubGadget, ZkayBabyJubJubGadgetConfig};
 use rccell::RcCell;
 use zkay_derive::ImplStructNameConfig;
 
@@ -57,22 +55,62 @@ mod test {
         fn buildCircuit(&mut self) {
             let generator = self.generator.borrow().clone();
             // check native inverse
+            println!(
+                "===self.get_current_wire_id()======test=={}==={}",
+                generator.get_current_wire_id(),
+                self.generator.get_current_wire_id()
+            );
+
             let a = generator.createConstantWire(
                 &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
                 &None,
             );
+            println!(
+                "===self.get_current_wire_id()=====test==={}=={}",
+                generator.get_current_wire_id(),
+                self.generator.get_current_wire_id()
+            );
+
             let ainv_expected = generator.createConstantWire(
                 &pbi(
                     "20950552912096304742729232452120498732043875737213521271262032500972060322340",
                 ),
                 &None,
             );
+            println!(
+                "===self.get_current_wire_id()=====test=={}==={}",
+                generator.get_current_wire_id(),
+                self.generator.get_current_wire_id()
+            );
+
+            const BASE_ORDER: &str =
+                "21888242871839275222246405745257275088548364400416034343698204186575808495617";
+            let inverseValue =
+                pbi("11985782033876175911769025829561891428638139496693105005957757653258")
+                    .modinv(&Util::parse_big_int(BASE_ORDER))
+                    .unwrap();
+            assert_eq!(
+                inverseValue,
+                pbi(
+                    "20950552912096304742729232452120498732043875737213521271262032500972060322340",
+                )
+            );
+            println!(
+                "===self.get_current_wire_id()======nativeInverse==test====before=={}===={}",
+                generator.get_current_wire_id(),
+                self.generator.get_current_wire_id()
+            );
             let ainv = self.nativeInverse(&a);
+            println!(
+                "===self.get_current_wire_id()======nativeInverse===test===after=={}===={}",
+                generator.get_current_wire_id(),
+                self.generator.get_current_wire_id()
+            );
             generator.addEqualityAssertion(&ainv, &ainv_expected, &None);
 
             // check generator on curve
-            let g_x = generator.createConstantWire(&pbi(GENERATOR_X), &None);
-            let g_y = generator.createConstantWire(&pbi(GENERATOR_Y), &None);
+            let g_x = generator.createConstantWire(&pbi(Self::GENERATOR_X), &None);
+            let g_y = generator.createConstantWire(&pbi(Self::GENERATOR_Y), &None);
             self.assertOnCurve(&g_x, &g_y);
 
             // check generator + generator on curve

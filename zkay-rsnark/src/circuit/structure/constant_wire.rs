@@ -11,7 +11,7 @@ use crate::{
         InstanceOf,
         config::config::Configs,
         eval::instruction::Instruction,
-        operations::primitive::const_mul_basic_op::{ConstMulBasicOp, new_const_mul},
+        operations::primitive::const_mul_basic_op::ConstMulBasicOp,
         structure::{
             circuit_generator::CreateConstantWire,
             circuit_generator::{
@@ -42,33 +42,34 @@ pub struct ConstantWire {
 }
 //crate::impl_hash_code_of_wire_g_for!(Wire<ConstantWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<ConstantWire>);
-pub fn new_constant(
-    wireId: i32,
-    value: BigInteger,
-    generator: WeakCell<CircuitGenerator>,
-) -> Wire<ConstantWire> {
-    // if wireId>0 && wireId<10000
-    // {
-    //     println!("==new_constant======{wireId}==");
-    // }
-    // //super(wireId);
-    // Wire::<ConstantWire> {
-    //     wireId,
-    //     generator,
-    //     t: ConstantWire {
-    //         constant: value.rem(&Configs.field_prime),
-    //     },
-    // }
-    Wire::<ConstantWire>::new(
-        ConstantWire {
-            constant: value.rem(&Configs.field_prime),
-        },
-        wireId,
-        generator,
-    )
-    .unwrap()
+impl ConstantWire {
+    pub fn new(
+        wireId: i32,
+        value: BigInteger,
+        generator: WeakCell<CircuitGenerator>,
+    ) -> Wire<ConstantWire> {
+        // if wireId>0 && wireId<10000
+        // {
+        //     println!("==ConstantWire::new======{wireId}==");
+        // }
+        // //super(wireId);
+        // Wire::<ConstantWire> {
+        //     wireId,
+        //     generator,
+        //     t: ConstantWire {
+        //         constant: value.rem(&Configs.field_prime),
+        //     },
+        // }
+        Wire::<ConstantWire>::new(
+            ConstantWire {
+                constant: value.rem(&Configs.field_prime),
+            },
+            wireId,
+            generator,
+        )
+        .unwrap()
+    }
 }
-
 impl setBitsConfig for ConstantWire {}
 impl setBitsConfig for Wire<ConstantWire> {}
 impl Wire<ConstantWire> {
@@ -114,11 +115,18 @@ impl WireConfig for Wire<ConstantWire> {
     }
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
-        // println!("=======================mulb============{}=========== {} ",file!(), line!());
+        let mut generator = self.generator();
+        println!(
+            "========constant===============mulb======{}======{}===={}======= {} ",
+            file!(),
+            line!(),
+            generator.get_current_wire_id(),
+            generator.borrow_mut().current_wire_id
+        );
         let sign = b.sign() == Sign::Minus;
         let newConstant = self.t.constant.clone().mul(b).rem(&Configs.field_prime);
         //println!"End Name Time: ccccccc {} s", line!());
-        let mut generator = self.generator();
+
         //println!"End Name Time: ccccccc {} s", line!());
 
         //println!"End Name Time: ccccccc {} s", line!());
@@ -127,10 +135,15 @@ impl WireConfig for Wire<ConstantWire> {
             .get(&newConstant)
             .cloned();
         if let Some(out) = out {
+            println!(
+                "========constant======get_known_constant_wires=========mulb============{}=========== {} ",
+                file!(),
+                line!()
+            );
             return out.clone();
         }
         //println!"End Name Time: ccccccc {} s", line!());
-        out = Some(WireType::Constant(new_constant(
+        out = Some(WireType::Constant(ConstantWire::new(
             generator.get_current_wire_id(),
             if !sign {
                 newConstant.clone()
@@ -141,12 +154,11 @@ impl WireConfig for Wire<ConstantWire> {
         )));
         //println!"End Name Time: ccccccc {} s", line!());
         generator.borrow_mut().current_wire_id += 1;
-        let op = new_const_mul(
+        let op = ConstMulBasicOp::new(
             &WireType::Constant(self.clone()),
             out.as_ref().unwrap(),
             b,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
         //println!"End Name Time: ccccccc {} s", line!());
         // let g = generator.borrow().clone();
@@ -154,10 +166,20 @@ impl WireConfig for Wire<ConstantWire> {
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
             generator.borrow_mut().current_wire_id -= 1;
-            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            println!(
+                "====generator.borrow_mut().current_wire_id==constant===={}====={}{}",
+                generator.borrow_mut().current_wire_id,
+                file!(),
+                line!()
+            );
             cachedOutputs[0].clone().unwrap()
         } else {
-            //println!"End Name Time: ccccccc {} s", line!());
+            println!(
+                "====generator.borrow_mut().current_wire_id==constant==else=={}====={}{}",
+                generator.borrow_mut().current_wire_id,
+                file!(),
+                line!()
+            );
             generator
                 .borrow_mut()
                 .known_constant_wires

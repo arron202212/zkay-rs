@@ -26,12 +26,14 @@ use std::{
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct MulBasicOp;
-pub fn new_mul(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<MulBasicOp> {
-    Op::<MulBasicOp> {
-        inputs: vec![Some(w1.clone()), Some(w2.clone())],
-        outputs: vec![Some(output.clone())],
-        desc,
-        t: MulBasicOp,
+impl MulBasicOp {
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<MulBasicOp> {
+        Op::<MulBasicOp> {
+            inputs: vec![Some(w1.clone()), Some(w2.clone())],
+            outputs: vec![Some(output.clone())],
+            desc,
+            t: MulBasicOp,
+        }
     }
 }
 crate::impl_instruction_for!(Op<MulBasicOp>);
@@ -42,13 +44,6 @@ impl BasicOp for Op<MulBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
-            println!(
-                "==compute=====outputs=========={}===={}====",
-                file!(),
-                self.outputs[0].as_ref().unwrap().name()
-            );
-        }
         let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
             .clone()
             .unwrap()
@@ -58,12 +53,62 @@ impl BasicOp for Op<MulBasicOp> {
                     .unwrap(),
             );
         if result.sign() == Sign::Minus {
+            if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+                println!(
+                    "===result.sign() == Sign::Minus ========================{},{},{}",
+                    result,
+                    result.clone().add(&Configs.field_prime),
+                    result
+                        .clone()
+                        .add(&Configs.field_prime)
+                        .rem(&Configs.field_prime)
+                );
+            }
             result = result.add(&Configs.field_prime).rem(&Configs.field_prime);
         }
         if result > Configs.field_prime {
+            if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+                println!(
+                    "===result > Configs.field_prime ========================{},{}",
+                    result,
+                    result.clone().rem(&Configs.field_prime)
+                );
+            }
             result = result.rem(&Configs.field_prime);
         }
+        // if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+        println!(
+            "====result================={}======{},{}",
+            self.outputs[0].as_ref().unwrap().getWireId(),
+            result,
+            result.clone().rem(&Configs.field_prime)
+        );
+        // }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+            println!(
+                "==compute=====outputs==={}={}=={}===={}===={}=={}==",
+                file!(),
+                assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+                    .clone()
+                    .unwrap(),
+                assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
+                    .as_ref()
+                    .unwrap(),
+                assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+                    .clone()
+                    .unwrap()
+                    .mul(
+                        assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
+                            .as_ref()
+                            .unwrap(),
+                    ),
+                self.outputs[0].as_ref().unwrap().name(),
+                assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
+                    .as_ref()
+                    .unwrap()
+            );
+        }
     }
 
     fn getNumMulGates(&self) -> i32 {

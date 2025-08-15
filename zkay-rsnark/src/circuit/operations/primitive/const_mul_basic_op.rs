@@ -31,28 +31,30 @@ pub struct ConstMulBasicOp {
     pub inSign: bool,
 }
 
-pub fn new_const_mul(
-    w: &WireType,
-    out: &WireType,
-    constInteger: &BigInteger,
-    desc: String,
-) -> Op<ConstMulBasicOp> {
-    let inSign = constInteger.sign() == Sign::Minus;
-    let constInteger = if !inSign {
-        Util::modulo(constInteger, &Configs.field_prime)
-    } else {
-        let mut _constInteger = constInteger.neg();
-        _constInteger = Util::modulo(&_constInteger, &Configs.field_prime);
-        Configs.field_prime.clone().sub(_constInteger)
-    };
-    Op::<ConstMulBasicOp> {
-        inputs: vec![Some(w.clone())],
-        outputs: vec![Some(out.clone())],
-        desc,
-        t: ConstMulBasicOp {
-            constInteger,
-            inSign,
-        },
+impl ConstMulBasicOp {
+    pub fn new(
+        w: &WireType,
+        out: &WireType,
+        constInteger: &BigInteger,
+        desc: String,
+    ) -> Op<ConstMulBasicOp> {
+        let inSign = constInteger.sign() == Sign::Minus;
+        let constInteger = if !inSign {
+            Util::modulo(constInteger, &Configs.field_prime)
+        } else {
+            let mut _constInteger = constInteger.neg();
+            _constInteger = Util::modulo(&_constInteger, &Configs.field_prime);
+            Configs.field_prime.clone().sub(_constInteger)
+        };
+        Op::<ConstMulBasicOp> {
+            inputs: vec![Some(w.clone())],
+            outputs: vec![Some(out.clone())],
+            desc,
+            t: ConstMulBasicOp {
+                constInteger,
+                inSign,
+            },
+        }
     }
 }
 crate::impl_instruction_for!(Op<ConstMulBasicOp>);
@@ -70,7 +72,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 349251 {
+        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
             println!(
                 "==compute=====outputs=========={}===={}====",
                 file!(),

@@ -15,17 +15,15 @@ use crate::{
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             primitive::{
-                assert_basic_op::{AssertBasicOp, new_assert},
-                basic_op::BasicOp,
-                mul_basic_op::{MulBasicOp, new_mul},
+                assert_basic_op::AssertBasicOp, basic_op::BasicOp, mul_basic_op::MulBasicOp,
             },
             wire_label_instruction::LabelType,
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            constant_wire::{ConstantWire, new_constant},
+            constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
-            variable_wire::{VariableWire, new_variable},
+            variable_wire::VariableWire,
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
             wire_type::WireType,
         },
@@ -468,8 +466,10 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createInputWire(&self, desc: &Option<String>) -> WireType {
-        let newInputWire =
-            WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
+        let newInputWire = WireType::Variable(VariableWire::new(
+            self.cg().get_current_wire_id(),
+            self.cg_weak(),
+        ));
         // println!("==get_current_wire_id===={}==={}===",self.get_current_wire_id(),self.cg().borrow().current_wire_id );
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
@@ -477,8 +477,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             Box::new(WireLabelInstruction::new(
                 LabelType::input,
                 newInputWire.clone(),
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
+                desc.clone().unwrap_or(String::new()),
             )),
         );
         self.cg()
@@ -521,15 +520,22 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType {
-        let wire = WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
+        println!(
+            "===self.get_current_wire_id()======createProverWitnessWire=={}=========={}",
+            self.cg().borrow_mut().current_wire_id,
+            self.get_current_wire_id()
+        );
+        let wire = WireType::Variable(VariableWire::new(
+            self.cg().get_current_wire_id(),
+            self.cg_weak(),
+        ));
         self.cg().borrow_mut().current_wire_id += 1;
         addToEvaluationQueue(
             self.cg(),
             Box::new(WireLabelInstruction::new(
                 LabelType::nizkinput,
                 wire.clone(),
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
+                desc.clone().unwrap_or(String::new()),
             )),
         );
         self.cg()
@@ -600,24 +606,24 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             Box::new(WireLabelInstruction::new(
                 LabelType::output,
                 outputWire.clone(),
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
+                desc.clone().unwrap_or(String::new()),
             )),
         );
         outputWire
     }
 
     fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType {
-        let mut outputWire =
-            WireType::Variable(new_variable(self.get_current_wire_id(), self.cg_weak()));
+        let mut outputWire = WireType::Variable(VariableWire::new(
+            self.cg().get_current_wire_id(),
+            self.cg_weak(),
+        ));
 
         self.cg().borrow_mut().current_wire_id += 1;
-        let op = new_mul(
+        let op = MulBasicOp::new(
             wire,
             self.cg().get_one_wire().as_ref().unwrap(),
             &outputWire,
-            desc.as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            desc.clone().unwrap_or(String::new()),
         );
         let cachedOutputs = addToEvaluationQueue(self.cg(), Box::new(op));
         if let Some(cachedOutputs) = cachedOutputs {
@@ -656,8 +662,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             Box::new(WireLabelInstruction::new(
                 LabelType::debug,
                 w.clone(),
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
+                desc.clone().unwrap_or(String::new()),
             )),
         );
     }
@@ -670,8 +675,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
                 Box::new(WireLabelInstruction::new(
                     LabelType::debug,
                     wires[i].clone().unwrap(),
-                    desc.as_ref()
-                        .map_or_else(|| String::new(), |d| d.to_owned()),
+                    desc.clone().unwrap_or(String::new()),
                 )),
             );
         }
@@ -699,8 +703,8 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
     fn initCircuitConstruction(&self) {
         let s = crate::util::build_circuit_timer::time_measure(&format!("{}", line!()));
-        let one_wire = WireType::Constant(new_constant(
-            self.get_current_wire_id(),
+        let one_wire = WireType::Constant(ConstantWire::new(
+            self.cg().get_current_wire_id(),
             Util::one(),
             self.cg_weak(),
         ));
@@ -738,15 +742,17 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
     fn createConstantWire(&self, x: &BigInteger, desc: &Option<String>) -> WireType {
         println!(
-            "========before===============createConstantWire============{}=========== {} ",
+            "========before===============createConstantWire====={}======={}=========== {} ",
             file!(),
-            line!()
+            line!(),
+            self.cg().get_current_wire_id()
         );
         let v = self.cg().get_one_wire().unwrap().mulb(x, desc);
         println!(
-            "=========after==============createConstantWire============{}=========== {} ",
+            "=========after==============createConstantWire====={}======={}=========== {} ",
             file!(),
-            line!()
+            line!(),
+            self.cg().get_current_wire_id()
         );
         v
     }
@@ -906,13 +912,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             w1.packIfNeeded(&None);
             w2.packIfNeeded(&None);
             w3.packIfNeeded(&None);
-            let op = new_assert(
-                w1,
-                w2,
-                w3,
-                desc.as_ref()
-                    .map_or_else(|| String::new(), |d| d.to_owned()),
-            );
+            let op = AssertBasicOp::new(w1, w2, w3, desc.clone().unwrap_or(String::new()));
             addToEvaluationQueue(self.cg(), Box::new(op));
         }
     }

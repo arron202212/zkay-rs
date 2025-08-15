@@ -18,18 +18,16 @@ use crate::{
             gadget::Gadget,
             gadget::GadgetConfig,
             primitive::{
-                assert_basic_op::{AssertBasicOp, new_assert},
-                basic_op::BasicOp,
-                mul_basic_op::{MulBasicOp, new_mul},
+                assert_basic_op::AssertBasicOp, basic_op::BasicOp, mul_basic_op::MulBasicOp,
             },
             wire_label_instruction::LabelType,
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
             circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
-            constant_wire::{ConstantWire, new_constant},
+            constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
-            variable_wire::{VariableWire, new_variable},
+            variable_wire::VariableWire,
             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
             wire_array::WireArray,
             wire_type::WireType,
@@ -126,9 +124,7 @@ impl<T: Debug + Clone> LongIntegerDivision<T> {
     ) -> Gadget<Self> {
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc
-                .as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc.clone().unwrap_or(String::new()),
             t: Self {
                 r: a.clone(),
                 q: b.clone(),

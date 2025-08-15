@@ -47,9 +47,7 @@ impl ZkayPaillierDecGadget {
         let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
         let mut _self = Gadget::<Self> {
             generator,
-            description: desc
-                .as_ref()
-                .map_or_else(|| String::new(), |d| d.to_owned()),
+            description: desc.clone().unwrap_or(String::new()),
             t: Self {
                 n,
                 nSquare,
