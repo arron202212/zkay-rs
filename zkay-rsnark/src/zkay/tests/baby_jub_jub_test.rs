@@ -55,21 +55,21 @@ mod test {
         fn buildCircuit(&mut self) {
             let generator = self.generator.borrow().clone();
             // check native inverse
-            println!(
-                "===self.get_current_wire_id()======test=={}==={}",
-                generator.get_current_wire_id(),
-                self.generator.get_current_wire_id()
-            );
+            // println!(
+            //     "===self.get_current_wire_id()======test=={}==={}",
+            //     generator.get_current_wire_id(),
+            //     self.generator.get_current_wire_id()
+            // );
 
             let a = generator.createConstantWire(
                 &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
                 &None,
             );
-            println!(
-                "===self.get_current_wire_id()=====test==={}=={}",
-                generator.get_current_wire_id(),
-                self.generator.get_current_wire_id()
-            );
+            // println!(
+            //     "===self.get_current_wire_id()=====test==={}=={}",
+            //     generator.get_current_wire_id(),
+            //     self.generator.get_current_wire_id()
+            // );
 
             let ainv_expected = generator.createConstantWire(
                 &pbi(
@@ -77,11 +77,11 @@ mod test {
                 ),
                 &None,
             );
-            println!(
-                "===self.get_current_wire_id()=====test=={}==={}",
-                generator.get_current_wire_id(),
-                self.generator.get_current_wire_id()
-            );
+            // println!(
+            //     "===self.get_current_wire_id()=====test=={}==={}",
+            //     generator.get_current_wire_id(),
+            //     self.generator.get_current_wire_id()
+            // );
 
             const BASE_ORDER: &str =
                 "21888242871839275222246405745257275088548364400416034343698204186575808495617";
@@ -95,17 +95,17 @@ mod test {
                     "20950552912096304742729232452120498732043875737213521271262032500972060322340",
                 )
             );
-            println!(
-                "===self.get_current_wire_id()======nativeInverse==test====before=={}===={}",
-                generator.get_current_wire_id(),
-                self.generator.get_current_wire_id()
-            );
+            // println!(
+            //     "===self.get_current_wire_id()======nativeInverse==test====before=={}===={}",
+            //     generator.get_current_wire_id(),
+            //     self.generator.get_current_wire_id()
+            // );
             let ainv = self.nativeInverse(&a);
-            println!(
-                "===self.get_current_wire_id()======nativeInverse===test===after=={}===={}",
-                generator.get_current_wire_id(),
-                self.generator.get_current_wire_id()
-            );
+            // println!(
+            //     "===self.get_current_wire_id()======nativeInverse===test===after=={}===={}",
+            //     generator.get_current_wire_id(),
+            //     self.generator.get_current_wire_id()
+            // );
             generator.addEqualityAssertion(&ainv, &ainv_expected, &None);
 
             // check generator on curve

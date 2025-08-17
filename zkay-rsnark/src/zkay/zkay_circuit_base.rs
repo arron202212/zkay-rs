@@ -169,33 +169,178 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug> crate::circuit::Stru
         self.t.t.name()
     }
 }
-// pub trait BuildCircuitConfig{
-// fn buildCircuit(&mut self);
-// }
+pub trait ZkayCircuitBaseFields {
+    fn realCircuitName(&self) -> &String;
+    fn cryptoBackends(&self) -> &HashMap<String, Backend>;
+    fn currentPubInIdx(&self) -> i32;
+    fn currentPubOutIdx(&self) -> i32;
+    fn allPubIOWires(&self) -> &Vec<Option<WireType>>;
+    fn currentPrivInIdx(&self) -> i32;
+    fn allPrivInWires(&self) -> &Vec<Option<WireType>>;
+    fn pubInNames(&self) -> &Vec<String>;
+    fn pubOutNames(&self) -> &Vec<String>;
+    fn privInNames(&self) -> &Vec<String>;
+    fn pubInCount(&self) -> i32;
+    fn useInputHashing(&self) -> bool;
+    fn vars(&self) -> &HashMap<String, Vec<TypedWire>>;
+    fn currentGuardCondition(&self) -> &VecDeque<TypedWire>;
+    fn serializedArguments(&self) -> &Vec<BigInteger>;
+    fn namePrefixIndices(&self) -> &HashMap<String, i32>;
+    fn namePrefix(&self) -> &VecDeque<String>;
+    fn guardPrefixes(&self) -> &VecDeque<VecDeque<String>>;
+    fn guardPrefixIndices(&self) -> &VecDeque<HashMap<String, i32>>;
+    fn serializedArguments_mut(&mut self) -> &mut Vec<BigInteger>;
+}
+impl<T: crate::circuit::StructNameConfig + std::fmt::Debug> ZkayCircuitBaseFields
+    for CircuitGeneratorExtend<ZkayCircuitBase<T>>
+{
+    fn realCircuitName(&self) -> &String {
+        &self.t.realCircuitName
+    }
+    fn cryptoBackends(&self) -> &HashMap<String, Backend> {
+        &self.t.cryptoBackends
+    }
+    fn currentPubInIdx(&self) -> i32 {
+        self.t.currentPubInIdx
+    }
+    fn currentPubOutIdx(&self) -> i32 {
+        self.t.currentPubOutIdx
+    }
+    fn allPubIOWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.allPubIOWires
+    }
+    fn currentPrivInIdx(&self) -> i32 {
+        self.t.currentPrivInIdx
+    }
+    fn allPrivInWires(&self) -> &Vec<Option<WireType>> {
+        &self.t.allPrivInWires
+    }
+    fn pubInNames(&self) -> &Vec<String> {
+        &self.t.pubInNames
+    }
+    fn pubOutNames(&self) -> &Vec<String> {
+        &self.t.pubOutNames
+    }
+    fn privInNames(&self) -> &Vec<String> {
+        &self.t.privInNames
+    }
+    fn pubInCount(&self) -> i32 {
+        self.t.pubInCount
+    }
+    fn useInputHashing(&self) -> bool {
+        self.t.useInputHashing
+    }
+    fn vars(&self) -> &HashMap<String, Vec<TypedWire>> {
+        &self.t.vars
+    }
+    fn currentGuardCondition(&self) -> &VecDeque<TypedWire> {
+        &self.t.currentGuardCondition
+    }
+    fn serializedArguments(&self) -> &Vec<BigInteger> {
+        &self.t.serializedArguments
+    }
+    fn namePrefixIndices(&self) -> &HashMap<String, i32> {
+        &self.t.namePrefixIndices
+    }
+    fn namePrefix(&self) -> &VecDeque<String> {
+        &self.t.namePrefix
+    }
+    fn guardPrefixes(&self) -> &VecDeque<VecDeque<String>> {
+        &self.t.guardPrefixes
+    }
+    fn guardPrefixIndices(&self) -> &VecDeque<HashMap<String, i32>> {
+        &self.t.guardPrefixIndices
+    }
+
+    fn serializedArguments_mut(&mut self) -> &mut Vec<BigInteger> {
+        &mut self.t.serializedArguments
+    }
+}
+pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
+    fn run(&mut self, args: &Vec<String>) {
+        match args[0].as_str() {
+            "compile" => self.compileCircuit(),
+            "prove" => {
+                self.compileCircuit();
+                self.parseInputs(&args[1..].to_vec());
+                //println!("Evaluating circuit '" + realCircuitName + "'");
+                self.evalCircuit();
+            }
+
+            _ => panic!("invalid command"),
+        }
+        self.prepFiles(None);
+    }
+
+    fn parseInputs(&mut self, args: &Vec<String>) {
+        let totCount = self.allPubIOWires().len() + self.allPrivInWires().len();
+        assert!(
+            args.len() == totCount,
+            "Input count mismatch, expected {}, was {}",
+            totCount,
+            args.len()
+        );
+        let mut serializedArguments = vec![BigInteger::default(); totCount];
+        for i in 0..totCount {
+            let v = BigInteger::parse_bytes(args[i].as_bytes(), 16).unwrap();
+            assert!(
+                v.sign() != Sign::Minus,
+                "No signed inputs (signed must be converted to unsigned beforehand)"
+            );
+            serializedArguments[i] = v;
+        }
+        *self.serializedArguments_mut() = serializedArguments;
+    }
+    fn compileCircuit(&mut self) {
+        println!("Compiling circuit '{}'", self.realCircuitName());
+        // let mut generator=self.cg.borrow().clone();
+        self.generateCircuit();
+        assert!(
+            self.currentPubInIdx() == self.pubInCount()
+                && self.currentPubOutIdx() == self.allPubIOWires().len() as i32,
+            "Not all pub inputs assigned {},{},{},{}",
+            self.currentPubInIdx(),
+            self.pubInCount(),
+            self.currentPubOutIdx(),
+            self.allPubIOWires().len()
+        );
+        assert!(
+            self.currentPrivInIdx() == self.allPrivInWires().len() as i32,
+            "Not all  inputs assigned {},{}",
+            self.currentPrivInIdx(),
+            self.allPrivInWires().len()
+        );
+        if self.useInputHashing() {
+            self.makeOutputArray(
+                ZkaySHA256Gadget::new(self.allPubIOWires().clone(), 253, &None, self.cg())
+                    .getOutputWires(),
+                &Some("digest".to_owned()),
+            );
+        }
+        //println!("Done with generateCircuit, preparing dummy files...");
+    }
+}
+
 impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     CircuitGeneratorExtend<ZkayCircuitBase<T>>
 {
     pub fn super_buildCircuit(&mut self) {
+        let generator = &self.generator;
         let pubInCount = self.t.pubInCount as usize;
         // Create IO wires
         let pubOutCount = self.t.allPubIOWires.len() - pubInCount;
         let (inArray, outArray) = if self.t.useInputHashing {
             (
-                self.cg
-                    .createProverWitnessWireArray(pubInCount, &Some("in_".to_owned())),
-                self.cg
-                    .createProverWitnessWireArray(pubOutCount, &Some("out_".to_owned())),
+                generator.createProverWitnessWireArray(pubInCount, &Some("in_".to_owned())),
+                generator.createProverWitnessWireArray(pubOutCount, &Some("out_".to_owned())),
             )
         } else {
             (
-                self.cg
-                    .createInputWireArray(pubInCount, &Some("in_".to_owned())),
-                self.cg
-                    .createInputWireArray(pubOutCount, &Some("out_".to_owned())),
+                generator.createInputWireArray(pubInCount, &Some("in_".to_owned())),
+                generator.createInputWireArray(pubOutCount, &Some("out_".to_owned())),
             )
         };
-        let privInArray = self
-            .cg
+        let privInArray = generator
             .createProverWitnessWireArray(self.t.allPrivInWires.len(), &Some("priv_".to_owned()));
 
         // Legacy handling
@@ -206,11 +351,11 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             self.setKeyPair(LEGACY_CRYPTO_BACKEND, myPk, mySk);
         }
 
-        self.t.allPubIOWires[0..pubInCount].clone_from_slice(&inArray);
-        self.t.allPubIOWires[pubInCount..pubOutCount].clone_from_slice(&outArray);
-
-        self.t.allPrivInWires = privInArray.clone();
-        // self.t.t.buildCircuit();
+        self.t.allPubIOWires[..pubInCount].clone_from_slice(&inArray[..pubInCount]);
+        self.t.allPubIOWires[pubInCount..pubInCount + pubOutCount]
+            .clone_from_slice(&outArray[..pubOutCount]);
+        let len = self.t.allPrivInWires.len();
+        self.t.allPrivInWires[..len].clone_from_slice(&privInArray[..len]);
     }
 
     pub fn super_generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
@@ -281,62 +426,6 @@ impl<T: std::fmt::Debug> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
 impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     CircuitGeneratorExtend<ZkayCircuitBase<T>>
 {
-    pub fn run(&mut self, args: &Vec<String>) {
-        match args[0].as_str() {
-            "compile" => self.compileCircuit(),
-            "prove" => {
-                self.compileCircuit();
-                self.parseInputs(&args[1..].to_vec());
-                //println!("Evaluating circuit '" + realCircuitName + "'");
-                self.cg.evalCircuit();
-            }
-
-            _ => panic!("invalid command"),
-        }
-        self.cg.prepFiles(None);
-    }
-
-    pub fn parseInputs(&mut self, args: &Vec<String>) {
-        let totCount = self.t.allPubIOWires.len() + self.t.allPrivInWires.len();
-        assert!(
-            args.len() == totCount,
-            "Input count mismatch, expected {}, was {}",
-            totCount,
-            args.len()
-        );
-        let mut serializedArguments = vec![BigInteger::default(); totCount];
-        for i in 0..totCount {
-            let v = BigInteger::parse_bytes(args[i].as_bytes(), 16).unwrap();
-            assert!(
-                v.sign() != Sign::Minus,
-                "No signed inputs (signed must be converted to unsigned beforehand)"
-            );
-            serializedArguments[i] = v;
-        }
-        self.t.serializedArguments = serializedArguments;
-    }
-    pub fn compileCircuit(&mut self) {
-        println!("Compiling circuit '{}'", self.t.realCircuitName);
-        self.cg.generateCircuit();
-        assert!(
-            self.t.currentPubInIdx == self.t.pubInCount
-                && self.t.currentPubOutIdx == self.t.allPubIOWires.len() as i32,
-            "Not all pub  inputs assigned"
-        );
-        assert!(
-            self.t.currentPrivInIdx == self.t.allPrivInWires.len() as i32,
-            "Not all  inputs assigned"
-        );
-        if self.t.useInputHashing {
-            self.cg.makeOutputArray(
-                ZkaySHA256Gadget::new(self.t.allPubIOWires.clone(), 253, &None, self.cg.clone())
-                    .getOutputWires(),
-                &Some("digest".to_owned()),
-            );
-        }
-        //println!("Done with generateCircuit, preparing dummy files...");
-    }
-
     pub fn addIO(
         typeName: &str,
         name: String,
@@ -457,6 +546,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn addKi(&mut self, cryptoBackendId: &str, name: &str, size: i32) {
         let generator = self.cg();
+
         let (name, allPubIOWires, currentPubInIdx) = (
             self.getQualifiedName(name),
             &self.t.allPubIOWires,
@@ -829,15 +919,15 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     }
 
     pub fn val_sz(&self, val: &str, t: ZkayType) -> TypedWire {
+        let generator = &self.generator;
         let v = BigInteger::parse_bytes(val.as_bytes(), 10).unwrap();
         let w = if v.sign() == Sign::Minus {
             assert!(!t.signed, "Cannot store negative constant in unsigned wire");
             let vNeg = ZkayType::GetNegativeConstant(&v.clone().neg(), t.bitwidth);
             assert!(vNeg.sign() != Sign::Minus, "Constant is still negative");
-            self.cg
-                .createConstantWire(&vNeg, &Some(format!("const_{v}")))
+            generator.createConstantWire(&vNeg, &Some(format!("const_{v}")))
         } else {
-            self.cg.createConstantWire(&v, &Some(format!("const_{v}")))
+            generator.createConstantWire(&v, &Some(format!("const_{v}")))
         };
         TypedWire::new(w, t, format!("const_{v}"), &vec![], self.cg())
     }
@@ -934,7 +1024,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn condExpr(&self, cond: &WireType, trueVal: &WireType, falseVal: &WireType) -> WireType {
         if ZkayUtil::ZKAY_RESTRICT_EVERYTHING {
-            self.cg.addBinaryAssertion(cond, &None);
+            self.generator.addBinaryAssertion(cond, &None);
         }
         cond.mulw(trueVal, &Some("ite_true".to_owned())).addw(
             &cond
@@ -1415,10 +1505,10 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         desc: &Option<String>,
     ) {
         if self.t.currentGuardCondition.is_empty() {
-            self.cg.addEqualityAssertion(lhs, rhs, desc);
+            self.generator.addEqualityAssertion(lhs, rhs, desc);
         } else {
             let eq = lhs.isEqualTo(rhs, &None);
-            self.cg.addOneAssertion(
+            self.generator.addOneAssertion(
                 &self
                     .t
                     .currentGuardCondition
@@ -1435,9 +1525,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn addGuardedOneAssertion(&self, val: &WireType, desc: &Option<String>) {
         if self.t.currentGuardCondition.is_empty() {
-            self.cg.addOneAssertion(val, desc);
+            self.generator.addOneAssertion(val, desc);
         } else {
-            self.cg.addOneAssertion(
+            self.generator.addOneAssertion(
                 &self
                     .t
                     .currentGuardCondition

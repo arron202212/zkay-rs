@@ -18,7 +18,7 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
 use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
 
-use crate::util::util::BigInteger;
+use crate::util::util::{BigInteger, Util};
 use crate::zkay::zkay_ecdh_generator::ZkayECDHGenerator;
 use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
@@ -33,16 +33,12 @@ mod test {
             &"6c0f17e169532e67f0fa96999f652bca942bd97617295a025eaa6c5d1cd3fd5c".to_owned(),
         );
 
-        let pk1 = BigInteger::parse_bytes(
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(&sec1).as_bytes(),
-            16,
-        )
-        .unwrap();
-        let pk2 = BigInteger::parse_bytes(
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(&sec2).as_bytes(),
-            16,
-        )
-        .unwrap();
+        let pk1 = Util::parse_big_int_x(&CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(
+            &sec1,
+        ));
+        let pk2 = Util::parse_big_int_x(&CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(
+            &sec2,
+        ));
 
         let sk1 = CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk2, &sec1);
         let sk2 = CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk1, &sec2);
@@ -110,16 +106,12 @@ mod test {
         evaluator.evaluate(&cgen.cg);
         let pk2_circ = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
 
-        let pk1 = BigInteger::parse_bytes(
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(&sec1).as_bytes(),
-            16,
-        )
-        .unwrap();
-        let pk2 = BigInteger::parse_bytes(
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(&sec2).as_bytes(),
-            16,
-        )
-        .unwrap();
+        let pk1 = Util::parse_big_int_x(&CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(
+            &sec1,
+        ));
+        let pk2 = Util::parse_big_int_x(&CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(
+            &sec2,
+        ));
         assert_eq!(pk1, pk1_circ);
         assert_eq!(pk2, pk2_circ);
 
@@ -154,11 +146,9 @@ mod test {
         evaluator.evaluate(&cgen.cg);
         let sk_circ = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
 
-        let sk_exp = BigInteger::parse_bytes(
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk2, &sec1).as_bytes(),
-            16,
-        )
-        .unwrap();
+        let sk_exp = Util::parse_big_int_x(
+            &CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk2, &sec1),
+        );
         assert_eq!(sk_exp, sk_circ);
     }
 }

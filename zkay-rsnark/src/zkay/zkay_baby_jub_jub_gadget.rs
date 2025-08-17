@@ -167,15 +167,15 @@ pub trait ZkayBabyJubJubGadgetConfig {
      * Returns a wire holding the inverse of a in the native base field.
      */
     fn nativeInverse(&self, a: &WireType) -> WireType {
-        println!(
-            "===self.get_current_wire_id()======nativeInverse======before======{}",
-            self.generators().get_current_wire_id()
-        );
+        // println!(
+        //     "===self.get_current_wire_id()======nativeInverse======before======{}",
+        //     self.generators().get_current_wire_id()
+        // );
         let ainv = self.generators().createProverWitnessWire(&None);
-        println!(
-            "===self.get_current_wire_id()======nativeInverse====after========{}",
-            self.generators().get_current_wire_id()
-        );
+        // println!(
+        //     "===self.get_current_wire_id()======nativeInverse====after========{}",
+        //     self.generators().get_current_wire_id()
+        // );
         // self.generators.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
         //             let aValue = evaluator.getWireValue(a);
         //             let inverseValue = aValue.modInverse(Self::BASE_ORDER);
@@ -211,7 +211,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
 
         // check if a * ainv = 1 (natively)
         let test = a.clone().mul(&ainv);
-        println!("==test====={},{},{}", a, ainv, test);
+        // println!("==test====={},{},{}", a, ainv, test);
         self.generators().addEqualityAssertion(
             &test,
             self.generators().get_one_wire().as_ref().unwrap(),

@@ -116,13 +116,13 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
-        println!(
-            "========constant===============mulb======{}======{}===={}======= {} ",
-            file!(),
-            line!(),
-            generator.get_current_wire_id(),
-            generator.borrow_mut().current_wire_id
-        );
+        // println!(
+        //     "========constant===============mulb======{}======{}===={}======= {} ",
+        //     file!(),
+        //     line!(),
+        //     generator.get_current_wire_id(),
+        //     generator.borrow_mut().current_wire_id
+        // );
         let sign = b.sign() == Sign::Minus;
         let newConstant = self.t.constant.clone().mul(b).rem(&Configs.field_prime);
         //println!"End Name Time: ccccccc {} s", line!());
@@ -135,11 +135,11 @@ impl WireConfig for Wire<ConstantWire> {
             .get(&newConstant)
             .cloned();
         if let Some(out) = out {
-            println!(
-                "========constant======get_known_constant_wires=========mulb============{}=========== {} ",
-                file!(),
-                line!()
-            );
+            // println!(
+            //     "========constant======get_known_constant_wires=========mulb============{}=========== {} ",
+            //     file!(),
+            //     line!()
+            // );
             return out.clone();
         }
         //println!"End Name Time: ccccccc {} s", line!());
@@ -166,20 +166,20 @@ impl WireConfig for Wire<ConstantWire> {
         if let Some(cachedOutputs) = cachedOutputs {
             // self branch might not be needed
             generator.borrow_mut().current_wire_id -= 1;
-            println!(
-                "====generator.borrow_mut().current_wire_id==constant===={}====={}{}",
-                generator.borrow_mut().current_wire_id,
-                file!(),
-                line!()
-            );
+            // println!(
+            //     "====generator.borrow_mut().current_wire_id==constant===={}====={}{}",
+            //     generator.borrow_mut().current_wire_id,
+            //     file!(),
+            //     line!()
+            // );
             cachedOutputs[0].clone().unwrap()
         } else {
-            println!(
-                "====generator.borrow_mut().current_wire_id==constant==else=={}====={}{}",
-                generator.borrow_mut().current_wire_id,
-                file!(),
-                line!()
-            );
+            // println!(
+            //     "====generator.borrow_mut().current_wire_id==constant==else=={}====={}{}",
+            //     generator.borrow_mut().current_wire_id,
+            //     file!(),
+            //     line!()
+            // );
             generator
                 .borrow_mut()
                 .known_constant_wires

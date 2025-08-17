@@ -11,7 +11,7 @@ use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 use crate::circuit::structure::circuit_generator::CGConfig;
 use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
 use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::zkay_circuit_base::ZkayCircuitBase;
+use crate::zkay::zkay_circuit_base::{ZkayCircuitBase, ZkayCircuitBaseConfig};
 use crate::zkay::zkay_type::ZkayType;
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -74,6 +74,7 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
 }
 impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
     fn buildCircuit(&mut self) {
+        println!("======buildCircuit====={}", file!());
         self.super_buildCircuit();
         self.addKi("elgamal", "glob_key_Elgamal__owner", 2);
 
@@ -86,7 +87,9 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
         self.super_prepFiles(circuit_evaluator);
     }
 }
+impl ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {}
 pub fn main(args: Vec<String>) {
     let mut circuit = SampleEncCircuit::new();
+    println!("======SampleEncCircuit===run=========");
     circuit.run(&args);
 }

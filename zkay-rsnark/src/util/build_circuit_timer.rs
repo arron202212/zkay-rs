@@ -15,14 +15,14 @@ pub struct WithTimeMeasure {
 impl WithTimeMeasure {
     pub fn new(key: String) -> Self {
         let start = Instant::now();
-        println!("Begin Name {} ", key);
+        // println!("Begin Name {} ", key);
         Self { key, start }
     }
 }
 impl Drop for WithTimeMeasure {
     fn drop(&mut self) {
-        let elapsed = self.start.elapsed();
-        println!("End Name {} Time: Took {} s", self.key, elapsed.as_secs());
+        let _elapsed = self.start.elapsed();
+        // println!("End Name {} Time: Took {} s", self.key, elapsed.as_secs());
     }
 }
 pub fn time_measure(key: &str) -> WithTimeMeasure {

@@ -17,7 +17,7 @@ impl CipherParameters {
         Self { key }
     }
     pub fn instance_of(&self, s: &str) -> bool {
-        false
+        true
     }
     pub fn getKey(&self) -> &Vec<u8> {
         &self.key
@@ -33,7 +33,10 @@ pub struct ChaskeyLTSEngine {
 impl ChaskeyLTSEngine {
     pub fn new(encrypt: bool, cipherParameters: CipherParameters) -> Self {
         assert!(
-            cipherParameters.instance_of("KeyParameter") && cipherParameters.getKey().len() == 16
+            cipherParameters.instance_of("CipherParameters")
+                && cipherParameters.getKey().len() == 16,
+            "{},",
+            cipherParameters.getKey().len()
         );
 
         let mut key = vec![0; 4];

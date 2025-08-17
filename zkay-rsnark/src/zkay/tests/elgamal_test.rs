@@ -44,7 +44,7 @@ mod test {
             Self { x, y }
         }
 
-        pub fn asConstJubJub(&self, generators: &RcCell<CircuitGenerator>) -> JubJubPoint {
+        pub fn asConstJubJub(&self, generators: &CircuitGenerator) -> JubJubPoint {
             let wx = generators.createConstantWire(&self.x, &None);
             let wy = generators.createConstantWire(&self.y, &None);
             JubJubPoint::new(wx, wy)
@@ -74,10 +74,10 @@ mod test {
             let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
             let message = self.createConstantWire(&self.t.plain, &None);
             let messageBits = message.getBitWiresi(32, &None);
-
+            let generator = self.cg.borrow().clone();
             let gadget = ZkayElgamalEncGadget::new(
                 messageBits.asArray().clone(),
-                self.t.pk.asConstJubJub(&self.cg),
+                self.t.pk.asConstJubJub(&generator),
                 randomnessBits.asArray().clone(),
                 self.cg(),
             );
@@ -111,11 +111,11 @@ mod test {
         fn buildCircuit(&mut self) {
             let randomness = self.createConstantWire(&self.t.random, &None);
             let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
-
+            let generator = self.cg.borrow().clone();
             let gadget = ZkayElgamalRerandGadget::new(
-                self.t.c1.asConstJubJub(&self.cg),
-                self.t.c2.asConstJubJub(&self.cg),
-                self.t.pk.asConstJubJub(&self.cg),
+                self.t.c1.asConstJubJub(&generator),
+                self.t.c2.asConstJubJub(&generator),
+                self.t.pk.asConstJubJub(&generator),
                 randomnessBits.asArray().clone(),
                 self.cg(),
             );
@@ -161,12 +161,12 @@ mod test {
             let secretKey = self.createConstantWire(&self.t.sk, &None);
             let skBits = secretKey.getBitWiresi(self.t.sk.bits(), &None);
             let msgWire = self.createConstantWire(&self.t.msg, &None);
-
+            let generator = self.cg.borrow().clone();
             let gadget = ZkayElgamalDecGadget::new(
-                self.t.pk.asConstJubJub(&self.cg),
+                self.t.pk.asConstJubJub(&generator),
                 skBits.asArray().clone(),
-                self.t.c1.asConstJubJub(&self.cg),
-                self.t.c2.asConstJubJub(&self.cg),
+                self.t.c1.asConstJubJub(&generator),
+                self.t.c2.asConstJubJub(&generator),
                 msgWire,
                 self.cg(),
             );
@@ -311,7 +311,7 @@ mod test {
            Run(448344687855328518203304384067387474955750326758815542295083498526674852893, 42, 4992017890738015216991440853823451346783754228142718316135811893930821210517, 39278167679809198687982907130870918672986098198762678158021231)
 
     */
-
+    #[test]
     pub fn testElgamal1() {
         let plain = BigInteger::from(42);
         let random = BigInteger::from(405309899802i64);
@@ -350,7 +350,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal2() {
         let plain = BigInteger::from(439864);
         let random = BigInteger::from(450983970634i64);
@@ -389,7 +389,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal3() {
         let plain = BigInteger::from(29479828);
         let random = BigInteger::from(11053400909823i64);
@@ -428,7 +428,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal4() {
         let plain = BigInteger::from(20503);
         let random = BigInteger::from(40394702098873424340i128);
@@ -467,7 +467,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal5() {
         let plain = BigInteger::from(9973);
         let random = BigInteger::from(400939876470980734i64);
@@ -506,7 +506,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal6() {
         let plain = BigInteger::from(3092);
         let random = BigInteger::from(304047020868704i64);
@@ -545,7 +545,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal7() {
         let plain = BigInteger::from(11);
         let random = BigInteger::from(9438929848i64);
@@ -584,7 +584,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal8() {
         let plain = BigInteger::from(309904);
         let random = BigInteger::from(2249);
@@ -623,7 +623,7 @@ mod test {
             AffinePoint::new(r2x_exp, r2y_exp),
         );
     }
-
+    #[test]
     pub fn testElgamal9() {
         let plain = BigInteger::from(42);
         let random =

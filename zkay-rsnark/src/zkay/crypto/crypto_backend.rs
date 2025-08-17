@@ -46,18 +46,18 @@ pub enum Backend {
 impl Backend {
     pub fn create(name: &str, keyBits: i32, generator: RcCell<CircuitGenerator>) -> Backend {
         match name {
-            "Dummy" => Backend::Dummy(DummyBackend::new(keyBits, generator)),
-            "DummyHom" => Backend::DummyHom(DummyHomBackend::new(keyBits, generator)),
-            "EcdhAes" => Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::AES_128, generator)),
-            "EcdhChaskey" => {
+            "dummy" => Backend::Dummy(DummyBackend::new(keyBits, generator)),
+            "dummyhom" => Backend::DummyHom(DummyHomBackend::new(keyBits, generator)),
+            "ecdhaes" => Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::AES_128, generator)),
+            "ecdhchaskey" => {
                 Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::CHASKEY, generator))
             }
-            "Paillier" => Backend::Paillier(PaillierBackend::new(keyBits, generator)),
-            "Elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits, generator)),
-            "RsaOaep" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::OAEP, generator)),
-            "RsaPkcs15" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::PKCS_1_5, generator)),
+            "paillier" => Backend::Paillier(PaillierBackend::new(keyBits, generator)),
+            "elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits, generator)),
+            "rsaoaep" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::OAEP, generator)),
+            "rsapkcs15" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::PKCS_1_5, generator)),
             _ => {
-                panic!("")
+                panic!("{}", name)
             }
         }
     }

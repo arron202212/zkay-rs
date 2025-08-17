@@ -80,15 +80,16 @@ impl ZkayType {
         // );
 
         assert!(
-            expected.bitwidth != 256 && allow_field_type,
-            "256bit integers are not supported for this operation"
+            expected.bitwidth != 256 || allow_field_type,
+            "256bit integers are not supported for this operation {},{}",
+            expected.bitwidth,
+            allow_field_type
         );
 
-        assert!(
-            actual == expected,
+        assert_eq!(
+            actual, expected,
             "Type {} does not match expected type {}",
-            actual,
-            expected
+            actual, expected
         );
 
         expected.clone()

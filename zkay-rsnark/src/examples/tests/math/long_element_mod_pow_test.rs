@@ -17,7 +17,7 @@ use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
 
 use crate::util::util::{BigInteger, Util};
-use std::cmp::max;
+
 use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
 mod test {
@@ -36,17 +36,17 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ModPowCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ModPowCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let bWire =
-                self.createLongElementInput(max(self.t.b.bits() as i32, 1), &Some("b".to_owned()));
-            let eWire =
-                self.createLongElementInput(max(self.t.e.bits() as i32, 1), &Some("e".to_owned()));
-            let mWire =
-                self.createLongElementInput(max(self.t.m.bits() as i32, 1), &Some("m".to_owned()));
+            let bWire = self
+                .createLongElementInput(1i32.max(self.t.b.bits() as i32), &Some("b".to_owned()));
+            let eWire = self
+                .createLongElementInput(1i32.max(self.t.e.bits() as i32), &Some("e".to_owned()));
+            let mWire = self
+                .createLongElementInput(1i32.max(self.t.m.bits() as i32), &Some("m".to_owned()));
             let modPow = LongIntegerModPowGadget::new(
                 bWire.clone(),
                 eWire.clone(),
                 mWire.clone(),
-                std::cmp::max(self.t.m.bits() as i32, 1),
+                self.t.m.bits().max(1) as i32,
                 -1,
                 &None,
                 self.cg(),

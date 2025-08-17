@@ -153,11 +153,11 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
-        println!(
-            "=======================mulb============{}=========== {} ",
-            file!(),
-            line!()
-        );
+        // println!(
+        //     "=======================mulb============{}=========== {} ",
+        //     file!(),
+        //     line!()
+        // );
         let mut generator = self.generator();
 
         self.packIfNeeded(desc);
@@ -187,12 +187,12 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // println!("End Name Time: 444 {} s", line!());
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            println!(
-                "====generator.borrow_mut().current_wire_id======{}====={}{}",
-                generator.borrow_mut().current_wire_id,
-                file!(),
-                line!()
-            );
+            // println!(
+            //     "====generator.borrow_mut().current_wire_id======{}====={}{}",
+            //     generator.borrow_mut().current_wire_id,
+            //     file!(),
+            //     line!()
+            // );
 
             cachedOutputs[0].clone().unwrap()
         } else {
@@ -518,7 +518,6 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         let mut ws = vec![None; bitwidth as usize];
         for i in 0..bitwidth as usize {
             //println!("======================{},{}",file!(),line!());
-
             ws[i] = Some(WireType::VariableBit(VariableBitWire::new(
                 generator.get_current_wire_id(),
                 self.generator_weak(),

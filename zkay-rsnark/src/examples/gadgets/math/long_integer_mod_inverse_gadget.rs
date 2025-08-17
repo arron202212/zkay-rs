@@ -64,7 +64,7 @@ pub struct LongIntegerModInverseGadget {
     pub a: LongElement,      // the value to be inverted
     pub m: LongElement,      // the modulus
     pub restrictRange: bool, // whether to enforce that a^(-1) < m
-    pub inverse: LongElement,
+    pub inverse: Option<LongElement>,
 }
 impl LongIntegerModInverseGadget {
     pub fn new(
@@ -74,11 +74,12 @@ impl LongIntegerModInverseGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
+        // println!("======a.array========{:?}",a.array);
         let mut _self = Gadget::<Self> {
             generator,
             description: desc.clone().unwrap_or(String::new()),
             t: Self {
-                inverse: a.clone(),
+                inverse: None,
                 a,
                 m,
                 restrictRange,
@@ -91,22 +92,20 @@ impl LongIntegerModInverseGadget {
 }
 impl Gadget<LongIntegerModInverseGadget> {
     fn buildCircuit(&mut self) {
-        let inverseWires = self
-            .generator
-            .createProverWitnessWireArray(self.t.m.getSize(), &None);
+        let generators = self.generator.borrow().clone();
+        let inverseWires = generators.createProverWitnessWireArray(self.t.m.getSize(), &None);
         let inverse = LongElement::new(
             inverseWires.clone(),
             self.t.m.getCurrentBitwidth(),
             self.generator.clone().downgrade(),
         );
-        let quotientWires = self
-            .generator
-            .createProverWitnessWireArray(self.t.m.getSize(), &None);
+        let quotientWires = generators.createProverWitnessWireArray(self.t.m.getSize(), &None);
         let quotient = LongElement::new(
             quotientWires.clone(),
             self.t.m.getCurrentBitwidth(),
             self.generator.clone().downgrade(),
         );
+        // println!("=====self.t=a.array========{:?}",self.t.a.array);
         let a = &self.t.a;
         let m = &self.t.m;
         // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
@@ -150,7 +149,7 @@ impl Gadget<LongIntegerModInverseGadget> {
         }
                     }
                 );
-        self.generator.specifyProverWitnessComputation(prover);
+        generators.specifyProverWitnessComputation(prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
@@ -175,25 +174,26 @@ impl Gadget<LongIntegerModInverseGadget> {
 
         inverse.restrictBitwidth();
         quotient.restrictBitwidth();
-
+        // println!("==aaaa===a.array========{:?}",a.array);
         // a * a^(-1) = 1   (mod m)
         // <=> Exist q:  a * a^(-1) = q * m + 1
         let product = a.clone().mul(&inverse);
         let oneModM = quotient.mul(m).add(1);
+        // println!("===product.array,oneModM.array============{:?},{:?}",product.array,oneModM.array);
         product.assertEquality(&oneModM);
 
         if self.t.restrictRange {
             inverse.assertLessThan(m);
         }
-        self.t.inverse = inverse;
+        self.t.inverse = Some(inverse);
     }
 
     pub fn getResult(&self) -> &LongElement {
-        &self.t.inverse
+        self.t.inverse.as_ref().unwrap()
     }
 }
 impl GadgetConfig for Gadget<LongIntegerModInverseGadget> {
     fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.t.inverse.getArray()
+        self.t.inverse.as_ref().unwrap().getArray()
     }
 }

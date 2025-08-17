@@ -142,26 +142,33 @@ impl<T: Debug + Clone> LongIntegerDivision<T> {
 
 impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
     fn buildCircuit(&mut self) {
-        let aBitwidth = std::cmp::max(1, self.t.a.getMaxVal(LongElement::CHUNK_BITWIDTH).bits());
-        let bBitwidth = std::cmp::max(1, self.t.b.getMaxVal(LongElement::CHUNK_BITWIDTH).bits());
+        let aBitwidth = self
+            .t
+            .a
+            .getMaxVal(LongElement::CHUNK_BITWIDTH)
+            .bits()
+            .max(1);
+        // println!("=====aBitwidth================{aBitwidth}");
+        let bBitwidth = self
+            .t
+            .b
+            .getMaxVal(LongElement::CHUNK_BITWIDTH)
+            .bits()
+            .max(1);
 
         let mut rBitwidth = std::cmp::min(aBitwidth, bBitwidth);
         let mut qBitwidth = aBitwidth;
 
         if self.t.bMinBitwidth > 0 {
-            qBitwidth = std::cmp::max(1, qBitwidth - self.t.bMinBitwidth as u64 + 1);
+            qBitwidth = 1i32.max(qBitwidth as i32 - self.t.bMinBitwidth + 1) as u64;
         }
 
         // length in what follows means the number of chunks
         let rLength = (rBitwidth as f64 / LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
         let qLength = (qBitwidth as f64 / LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
-
-        let rWires = self
-            .generator
-            .createProverWitnessWireArray(rLength as usize, &None);
-        let qWires = self
-            .generator
-            .createProverWitnessWireArray(qLength as usize, &None);
+        let generators = self.generator.borrow().clone();
+        let rWires = generators.createProverWitnessWireArray(rLength as usize, &None);
+        let qWires = generators.createProverWitnessWireArray(qLength as usize, &None);
 
         let mut rChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; rLength as usize];
         let mut qChunkBitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; qLength as usize];
@@ -170,6 +177,10 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
             rChunkBitwidths[rLength as usize - 1] = rBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
         if qBitwidth % LongElement::CHUNK_BITWIDTH as u64 != 0 {
+            println!(
+                "===LongElement::CHUNK_BITWIDTH=============={qBitwidth} % {} ",
+                LongElement::CHUNK_BITWIDTH
+            );
             qChunkBitwidths[qLength as usize - 1] = qBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
         let a = &self.t.a;
@@ -218,7 +229,7 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         }
                     }
                 );
-        self.generator.specifyProverWitnessComputation(prover);
+        generators.specifyProverWitnessComputation(prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
@@ -242,7 +253,7 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         // });
 
         r.restrictBitwidth();
-        q.restrictBitwidth();
+        q.restrictBitwidth(); //bits  16
 
         let res = q.clone().mul(b).add(&r);
 

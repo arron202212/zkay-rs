@@ -52,8 +52,8 @@ impl Util {
         BigInteger::one()
     }
     pub fn split(x: &BigInteger, chunkSize: i32) -> Vec<BigInteger> {
-        let numChunks = std::cmp::max(1, (x.bits() + chunkSize as u64 - 1) / chunkSize as u64); // ceil(x.bits() / chunkSize)
-        Self::spliti(x, numChunks as i32, chunkSize)
+        let numChunks = 1i32.max((x.bits() as i32 + chunkSize - 1) / chunkSize); // ceil(x.bits() / chunkSize)
+        Self::spliti(x, numChunks, chunkSize)
     }
 
     pub fn spliti(x: &BigInteger, numChunks: i32, chunkSize: i32) -> Vec<BigInteger> {
@@ -201,10 +201,10 @@ impl Util {
 
     pub fn computeMaxValue(numBits: u64) -> BigInteger {
         let mut maxValueCache = HashMap::new();
-        return maxValueCache
+        maxValueCache
             .entry(numBits)
             .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()))
-            .clone();
+            .clone()
     }
 
     pub fn computeBound(numBits: i32) -> BigInteger {

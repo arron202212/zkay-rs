@@ -77,12 +77,12 @@ impl BasicOp for Op<MulBasicOp> {
             result = result.rem(&Configs.field_prime);
         }
         // if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
-        println!(
-            "====result================={}======{},{}",
-            self.outputs[0].as_ref().unwrap().getWireId(),
-            result,
-            result.clone().rem(&Configs.field_prime)
-        );
+        // println!(
+        //     "====result================={}======{},{}",
+        //     self.outputs[0].as_ref().unwrap().getWireId(),
+        //     result,
+        //     result.clone().rem(&Configs.field_prime)
+        // );
         // }
         assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
         if self.outputs[0].as_ref().unwrap().getWireId() == 5 {

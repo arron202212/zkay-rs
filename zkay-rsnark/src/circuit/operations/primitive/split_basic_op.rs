@@ -27,6 +27,7 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct SplitBasicOp;
 impl SplitBasicOp {
     pub fn new(w: &WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
+        // assert!(outs.len()!=16,"==SplitBasicOp====outs==len=={}==",outs.len());
         Op::<SplitBasicOp> {
             inputs: vec![Some(w.clone())],
             outputs: outs,
@@ -45,16 +46,18 @@ impl BasicOp for Op<SplitBasicOp> {
     fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
         //super.checkInputs(assignment);
         self.super_checkInputs(assignment);
+        let bits_len = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+            .clone()
+            .unwrap()
+            .bits() as usize;
         assert!(
-            self.outputs.len()
-                >= assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-                    .clone()
-                    .unwrap()
-                    .bits() as usize,
-            "Error in Split --- The number of bits does not fit -- Input: {:x},{self:?}\n\t",
+            self.outputs.len() >= bits_len,
+            "Error in Split --- The number of bits does not fit -- Input: {:x},{self:?}\n\t{},{}",
             assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
                 .clone()
-                .unwrap()
+                .unwrap(),
+            self.outputs.len(),
+            bits_len
         );
     }
 

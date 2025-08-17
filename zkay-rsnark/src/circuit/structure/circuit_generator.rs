@@ -36,7 +36,7 @@ use crate::{
 };
 use std::{
     cell::RefCell,
-    collections::HashMap,
+    collections::{BTreeMap, HashMap},
     fs::File,
     hash::{BuildHasher, BuildHasherDefault, DefaultHasher, Hash, Hasher},
     io::{BufReader, Write},
@@ -73,7 +73,7 @@ lazy_static! {
 #[derive(Debug, Clone)]
 pub struct CGBase;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct CircuitGenerator {
     pub current_wire_id: i32,
     pub evaluation_queue: LinkedHashMap<u64, Box<dyn Instruction>>,
@@ -82,7 +82,7 @@ pub struct CircuitGenerator {
     pub one_wire: Option<WireType>,
 
     pub num_of_constraints: i32,
-    pub known_constant_wires: HashMap<BigInteger, WireType>,
+    pub known_constant_wires: BTreeMap<BigInteger, WireType>,
     pub in_wires: Vec<Option<WireType>>,
     pub out_wires: Vec<Option<WireType>>,
     pub prover_witness_wires: Vec<Option<WireType>>,
@@ -100,12 +100,16 @@ impl CGInstance for CircuitGenerator {
     fn cg_weak(&self) -> WeakCell<CircuitGenerator> {
         self.me.clone().unwrap()
     }
+    // fn generator(&self) -> &CircuitGenerator{
+    // self
+    // }
 }
 
 #[derive(Debug, Clone)]
 pub struct CircuitGeneratorExtend<T: Debug> {
     // pub circuitEvaluator: Option<CircuitEvaluator>,
     pub cg: RcCell<CircuitGenerator>,
+    pub generator: CircuitGenerator,
     pub t: T,
     // pub me: Option<WeakCell<Self>>,
 }
@@ -135,7 +139,7 @@ impl CircuitGenerator {
                 one_wire: None,
                 // prover_witness_wires: vec![],
                 evaluation_queue: LinkedHashMap::default(),
-                known_constant_wires: HashMap::new(),
+                known_constant_wires: BTreeMap::new(),
                 current_wire_id: 0,
                 num_of_constraints: 0,
                 circuit_name: circuit_name.to_owned(),
@@ -156,16 +160,16 @@ impl CircuitGenerator {
 
 impl<T: Debug> CircuitGeneratorExtend<T> {
     pub fn newc(cg: RcCell<CircuitGenerator>, t: T) -> Self {
-        Self { cg, t }
+        let generator = cg.borrow().clone();
+        Self { cg, generator, t }
     }
     pub fn new(circuit_name: &str, t: T) -> Self {
         if Configs.running_multi_generators {
             // activeCircuitGenerators.put(Thread.currentThread().getId(), this);
         }
-        CircuitGeneratorExtend::<T> {
-            cg: CircuitGenerator::new(circuit_name),
-            t,
-        }
+        let cg = CircuitGenerator::new(circuit_name);
+        let generator = cg.borrow().clone();
+        CircuitGeneratorExtend::<T> { cg, generator, t }
         // let mut selfs = RcCell(Rc::new_cyclic(|_me| {
         //     RefCell::new(Self {
         //         circuit_name: circuit_name.to_owned(),
@@ -192,6 +196,9 @@ impl<T: Debug> CGInstance for CircuitGeneratorExtend<T> {
     fn cg_weak(&self) -> WeakCell<CircuitGenerator> {
         self.cg.clone().downgrade()
     }
+    // fn generator(&self) -> &CircuitGenerator {
+    //     &self.generator
+    // }
 }
 
 pub fn addToEvaluationQueue(
@@ -298,6 +305,7 @@ pub fn addToEvaluationQueue(
 pub trait CGInstance {
     fn cg(&self) -> RcCell<CircuitGenerator>;
     fn cg_weak(&self) -> WeakCell<CircuitGenerator>;
+    // fn generator(&self) -> &CircuitGenerator;
 }
 
 impl<T: CGInstance> CGInstance for RcCell<T> {
@@ -307,6 +315,9 @@ impl<T: CGInstance> CGInstance for RcCell<T> {
     fn cg_weak(&self) -> WeakCell<CircuitGenerator> {
         self.borrow().cg_weak()
     }
+    // fn generator(&self) -> &CircuitGenerator{
+    //     self.borrow().generator()
+    // }
 }
 
 impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
@@ -331,7 +342,7 @@ impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
     fn get_num_of_constraints(&self) -> i32 {
         self.cg.borrow().num_of_constraints
     }
-    fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> {
+    fn get_known_constant_wires(&self) -> BTreeMap<BigInteger, WireType> {
         self.cg.borrow().known_constant_wires.clone()
     }
     fn get_name(&self) -> String {
@@ -383,7 +394,7 @@ impl<T: Debug> CGConfigFields for CircuitGeneratorExtend<T> {
 // }
 
 pub trait CGConfigFields: CGInstance + Debug {
-    fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType>;
+    fn get_known_constant_wires(&self) -> BTreeMap<BigInteger, WireType>;
 
     fn get_zero_wire(&self) -> Option<WireType>;
     fn get_one_wire(&self) -> Option<WireType>;
@@ -454,7 +465,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         println!("Running Circuit Generator for <  {}  >", self.get_name());
 
         self.initCircuitConstruction();
-        println!("before buildCircuit  {},{}", file!(), line!());
+        // println!("before buildCircuit  {},{}", file!(), line!());
         self.buildCircuit();
 
         println!(
@@ -520,11 +531,11 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType {
-        println!(
-            "===self.get_current_wire_id()======createProverWitnessWire=={}=========={}",
-            self.cg().borrow_mut().current_wire_id,
-            self.get_current_wire_id()
-        );
+        // println!(
+        //     "===self.get_current_wire_id()======createProverWitnessWire=={}=========={}",
+        //     self.cg().borrow_mut().current_wire_id,
+        //     self.get_current_wire_id()
+        // );
         let wire = WireType::Variable(VariableWire::new(
             self.cg().get_current_wire_id(),
             self.cg_weak(),
@@ -741,19 +752,19 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     }
 
     fn createConstantWire(&self, x: &BigInteger, desc: &Option<String>) -> WireType {
-        println!(
-            "========before===============createConstantWire====={}======={}=========== {} ",
-            file!(),
-            line!(),
-            self.cg().get_current_wire_id()
-        );
+        // println!(
+        //     "========before===============createConstantWire====={}======={}=========== {} ",
+        //     file!(),
+        //     line!(),
+        //     self.cg().get_current_wire_id()
+        // );
         let v = self.cg().get_one_wire().unwrap().mulb(x, desc);
-        println!(
-            "=========after==============createConstantWire====={}======={}=========== {} ",
-            file!(),
-            line!(),
-            self.cg().get_current_wire_id()
-        );
+        // println!(
+        //     "=========after==============createConstantWire====={}======={}=========== {} ",
+        //     file!(),
+        //     line!(),
+        //     self.cg().get_current_wire_id()
+        // );
         v
     }
 
@@ -1031,7 +1042,7 @@ impl CGConfigFields for CircuitGenerator {
     // fn circuit_name(&mut self) -> &mut String {
     //     &mut self.circuit_name
     // }
-    fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> {
+    fn get_known_constant_wires(&self) -> BTreeMap<BigInteger, WireType> {
         self.known_constant_wires.clone()
     }
     // fn get_num_of_constraints(&self) -> i32 {
@@ -1264,7 +1275,7 @@ impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
     crate::impl_fn_of_trait!( fn get_out_wires(&self) -> Vec<Option<WireType>> );
 
     crate::impl_fn_of_trait!(fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> );
-    crate::impl_fn_of_trait!(fn get_known_constant_wires(&self) -> HashMap<BigInteger, WireType> );
+    crate::impl_fn_of_trait!(fn get_known_constant_wires(&self) -> BTreeMap<BigInteger, WireType> );
     // crate::impl_fn_of_trait!(fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
 }
 impl StructNameConfig for CircuitGenerator {

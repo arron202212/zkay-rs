@@ -103,7 +103,6 @@ impl CircuitGeneratorExtend<ZkayECDHGenerator> {
     pub fn computeECKey(pk: Option<&BigInteger>, sk: &BigInteger) -> BigInteger {
         let mut ecdh_generator = ZkayECDHGenerator::new(pk.cloned(), sk.clone(), false);
         ecdh_generator.generateCircuit();
-        ecdh_generator.evalCircuit();
         let evaluator = ecdh_generator.evalCircuit().unwrap();
         evaluator.getWireValue(ecdh_generator.get_out_wires()[0].as_ref().unwrap())
     }
