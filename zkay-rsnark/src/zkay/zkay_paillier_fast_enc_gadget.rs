@@ -45,10 +45,10 @@ impl ZkayPaillierFastEncGadget {
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
 
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 n,
                 nSquare,
                 nBits,
@@ -57,7 +57,7 @@ impl ZkayPaillierFastEncGadget {
                 random,
                 cipher: None,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }
@@ -75,7 +75,7 @@ impl Gadget<ZkayPaillierFastEncGadget> {
         )
         .getResult()
         .clone();
-        let generators = self.generator.borrow().clone();
+        let generators = self.generator.clone();
         generators.addOneAssertion(&randInv.checkNonZero(), &None);
         // Compute c = g^m * r^n mod n^2
         let gPowPlain = self

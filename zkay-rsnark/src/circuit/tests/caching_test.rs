@@ -165,9 +165,9 @@ mod test {
 
                 //println!("=====buildCircuit================={},{}",file!(),line!());
                 let numIns = self.t.numIns as usize;
-                let mut inputs1 = generator.createInputWireArray(numIns, &None);
-                let mut inputs2 = generator.createInputWireArray(numIns, &None);
-                let mut inputs3 = generator.createInputWireArray(numIns, &None);
+                let mut inputs1 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
+                let mut inputs2 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
+                let mut inputs3 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
                 //println!("=====buildCircuit================={},{}",file!(),line!());
                 let mut shiftedRight = vec![None; numIns];
                 let mut shiftedLeft = vec![None; numIns];
@@ -367,70 +367,70 @@ mod test {
                 //     file!(),
                 //     line!()
                 // );
-                generator.makeOutputArray(&shiftedRight, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &shiftedRight, &None);
                 println!(
                     "=====buildCircuit===shiftedRight======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&shiftedLeft, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &shiftedLeft, &None);
                 println!(
                     "=====buildCircuit==shiftedLeft==rotatedRight=before===*************======{},{},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&rotatedRight, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &rotatedRight, &None);
                 println!(
                     "=====buildCircuit===rotatedRight======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&rotatedLeft, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &rotatedLeft, &None);
                 println!(
                     "=====buildCircuit===rotatedLeft======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&xored, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &xored, &None);
                 println!(
                     "=====buildCircuit===xored======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&ored, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &ored, &None);
                 println!(
                     "=====buildCircuit===ored======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&anded, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &anded, &None);
                 println!(
                     "=====buildCircuit===anded======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&inverted, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &inverted, &None);
                 println!(
                     "=====buildCircuit===inverted======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&multiplied, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &multiplied, &None);
                 println!(
                     "=====buildCircuit===multiplied======*************===={}====={},{}",
                     self.get_num_wires(),
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&added, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &added, &None);
                 println!(
                     "=====buildCircuit===added======*************===={}====={},{}",
                     self.get_num_wires(),
@@ -441,21 +441,21 @@ mod test {
 
                 // repeat labeling as output (although not really meaningful)
                 // and make sure no more constraints are added
-                generator.makeOutputArray(&shiftedRight, &None);
-                generator.makeOutputArray(&shiftedLeft, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &shiftedRight, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &shiftedLeft, &None);
                 println!(
                     "=====buildCircuit===rotatedRight=====222222=*************========={},{}",
                     file!(),
                     line!()
                 );
-                generator.makeOutputArray(&rotatedRight, &None);
-                generator.makeOutputArray(&rotatedLeft, &None);
-                generator.makeOutputArray(&xored, &None);
-                generator.makeOutputArray(&ored, &None);
-                generator.makeOutputArray(&anded, &None);
-                generator.makeOutputArray(&inverted, &None);
-                generator.makeOutputArray(&multiplied, &None);
-                generator.makeOutputArray(&added, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &rotatedRight, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &rotatedLeft, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &xored, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &ored, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &anded, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &inverted, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &multiplied, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &added, &None);
 
                 assert_eq!(generator.get_num_of_constraints(), currentCost);
                 // println!(
@@ -607,10 +607,10 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let mut generator = &*self;
-                let mut in1 = generator.createInputWire(&None);
-                let mut in2 = generator.createInputWire(&None);
-                let mut witness1 = generator.createProverWitnessWire(&None);
-                let mut witness2 = generator.createProverWitnessWire(&None);
+                let mut in1 = CircuitGenerator::createInputWire(self.cg(), &None);
+                let mut in2 = CircuitGenerator::createInputWire(self.cg(), &None);
+                let mut witness1 = CircuitGenerator::createProverWitnessWire(self.cg(), &None);
+                let mut witness2 = CircuitGenerator::createProverWitnessWire(self.cg(), &None);
 
                 self.addAssertion(&in1, &in2, &witness1, &None);
                 assert_eq!(generator.get_num_of_constraints(), 1);
@@ -685,7 +685,8 @@ mod test {
             fn buildCircuit(&mut self) {
                 let mut generator = &*self;
                 let inputStr = &self.t.inputStr;
-                let mut inputWires = generator.createInputWireArray(inputStr.len(), &None);
+                let mut inputWires =
+                    CircuitGenerator::createInputWireArray(self.cg(), inputStr.len(), &None);
                 let mut digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -779,7 +780,7 @@ mod test {
                 .getOutputWires();
                 assert!(numOfConstraintsBefore < generator.get_num_of_constraints());
 
-                generator.makeOutputArray(&digest, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &digest, &None);
                 self.t.inputWires = inputWires;
             }
 

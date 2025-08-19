@@ -52,10 +52,10 @@ impl ZkayRSAEncryptionGadget {
         assert!(!rnd.is_empty(), "rnd");
         // assert!(paddingType, "paddingType");
 
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 paddingType,
                 plain: plain.wire.clone(),
                 pk,
@@ -63,7 +63,7 @@ impl ZkayRSAEncryptionGadget {
                 keyBits,
                 cipher: vec![],
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

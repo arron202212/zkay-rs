@@ -34,7 +34,6 @@ pub struct ZkayEcPkDerivationGadget {
     // outputPublicValue = ((this party's
     // secret)*Base).x
     pub outputs: Vec<Option<WireType>>,
-    pub generators: CircuitGenerator,
 }
 
 impl ZkayEcPkDerivationGadget {
@@ -44,7 +43,6 @@ impl ZkayEcPkDerivationGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayEcGadget<Self>> {
-        let generators = generator.borrow().clone();
         let mut _self = ZkayEcGadget::<Self>::new(
             desc,
             Self {
@@ -52,10 +50,9 @@ impl ZkayEcPkDerivationGadget {
                     .getBitWiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
                     .asArray()
                     .clone(),
-                basePoint: AffinePoint::new(Some(generators.createConstantWirei(4, &None)), None),
+                basePoint: AffinePoint::new(Some(generator.createConstantWirei(4, &None)), None),
                 outputPublicValue: None,
                 outputs: vec![],
-                generators,
             },
             generator,
         );
@@ -98,7 +95,7 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
             .try_as_constant_ref()
             .unwrap()
             .getConstant();
-        self.t.t.basePoint.y = Some(self.t.t.generators.createConstantWire(
+        self.t.t.basePoint.y = Some(self.generators.createConstantWire(
             &Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::computeYCoordinate(x),
             &None,
         ));

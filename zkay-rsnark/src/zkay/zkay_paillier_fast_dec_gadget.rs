@@ -43,10 +43,10 @@ impl ZkayPaillierFastDecGadget {
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 n,
                 nSquare,
                 nBits,
@@ -54,7 +54,7 @@ impl ZkayPaillierFastDecGadget {
                 cipher,
                 plain: None,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

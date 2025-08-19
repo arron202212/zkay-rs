@@ -49,15 +49,15 @@ impl ZkayDummyHomEncryptionGadget {
         // assert!(rnd, "rnd");
         assert!(rnd.len() <= 1, "Randomness wire array too long");
 
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 plain,
                 pk,
                 cipher: vec![None; 1],
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

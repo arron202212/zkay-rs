@@ -36,7 +36,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(2, &None);
+                let inputWires = CircuitGenerator::createInputWireArray(self.cg(), 2, &None);
                 //				WireType r = ModGadget::new(inputWires[0], (i32) Math.ceil(Math.log10(a) / Math.log10(2)), inputWires[1],
                 //						(i32) Math.ceil(Math.log10(b) / Math.log10(2))).getOutputWires()[0];
 
@@ -49,7 +49,7 @@ mod test {
                 )
                 .getOutputWires()[0]
                     .clone();
-                self.makeOutput(r.as_ref().unwrap(), &None);
+                CircuitGenerator::makeOutput(self.cg(), r.as_ref().unwrap(), &None);
                 self.t.inputWires = inputWires;
             }
 
@@ -84,7 +84,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(1, &None);
+                let inputWires = CircuitGenerator::createInputWireArray(self.cg(), 1, &None);
                 let r = ModConstantGadget::new(
                     inputWires[0].clone().unwrap(),
                     32,
@@ -94,7 +94,7 @@ mod test {
                 )
                 .getOutputWires()[0]
                     .clone();
-                self.makeOutput(r.as_ref().unwrap(), &None);
+                CircuitGenerator::makeOutput(self.cg(), r.as_ref().unwrap(), &None);
                 self.t.inputWires = inputWires;
             }
 

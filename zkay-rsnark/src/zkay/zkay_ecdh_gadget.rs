@@ -40,7 +40,6 @@ pub struct ZkayECDHGadget {
     // party's secret)*H).x
     pub hTable: Vec<AffinePoint>,
     pub outputs: Vec<Option<WireType>>,
-    pub generators: CircuitGenerator,
 }
 impl ZkayECDHGadget {
     pub fn new(
@@ -50,7 +49,6 @@ impl ZkayECDHGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayEcGadget<Self>> {
-        let generators = generator.borrow().clone();
         let mut _self = ZkayEcGadget::<Self>::new(
             desc,
             Self {
@@ -62,7 +60,6 @@ impl ZkayECDHGadget {
                 sharedSecret: None,
                 hTable: vec![],
                 outputs: vec![],
-                generators,
             },
             generator.clone(),
         );
@@ -114,7 +111,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     pub fn computeYCoordinates(&mut self) {
         // Easy to handle if hPoint is constant, otherwise, let the prover input
         // a witness and verify some properties
-        let generator = &self.t.generators;
+        let generator = &self.generators;
         // let mut hPoint = self.t.t.hPoint;
         if self
             .t
@@ -140,7 +137,10 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                 &None,
             ));
         } else {
-            self.t.t.hPoint.y = Some(generator.createProverWitnessWire(&None));
+            self.t.t.hPoint.y = Some(CircuitGenerator::createProverWitnessWire(
+                self.generator.clone(),
+                &None,
+            ));
             // generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
             //             let x = evaluator.getWireValue(hPoint.x);
             //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
@@ -176,7 +176,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
         }
     }
     pub fn validateInputs(&self) {
-        self.t.generators.addOneAssertion(
+        self.generators.addOneAssertion(
             &self.t.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );

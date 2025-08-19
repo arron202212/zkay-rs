@@ -40,7 +40,6 @@ impl JubJubPoint {
  */
 #[derive(Debug, Clone)]
 pub struct ZkayBabyJubJubGadget<T> {
-    pub generators: CircuitGenerator,
     pub t: T,
 }
 
@@ -51,12 +50,7 @@ impl<T> ZkayBabyJubJubGadget<T> {
             Configs.field_prime.to_str_radix(10),
             "21888242871839275222246405745257275088548364400416034343698204186575808495617"
         );
-        let generators = generator.borrow().clone();
-        Gadget::<Self> {
-            generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: ZkayBabyJubJubGadget::<T> { generators, t },
-        }
+        Gadget::<Self>::new(generator, desc, ZkayBabyJubJubGadget::<T> { t })
     }
 }
 
@@ -171,7 +165,10 @@ pub trait ZkayBabyJubJubGadgetConfig {
         //     "===self.get_current_wire_id()======nativeInverse======before======{}",
         //     self.generators().get_current_wire_id()
         // );
-        let ainv = self.generators().createProverWitnessWire(&None);
+        let ainv = CircuitGenerator::createProverWitnessWire(
+            self.generators().me.clone().unwrap().upgrade().unwrap(),
+            &None,
+        );
         // println!(
         //     "===self.get_current_wire_id()======nativeInverse====after========{}",
         //     self.generators().get_current_wire_id()
@@ -224,7 +221,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
 
 impl<T> ZkayBabyJubJubGadgetConfig for Gadget<ZkayBabyJubJubGadget<T>> {
     fn generators(&self) -> &CircuitGenerator {
-        &self.t.generators
+        &self.generators
     }
 }
 

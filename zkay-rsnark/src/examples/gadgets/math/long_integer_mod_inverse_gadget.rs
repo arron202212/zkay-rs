@@ -75,16 +75,16 @@ impl LongIntegerModInverseGadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         // println!("======a.array========{:?}",a.array);
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 inverse: None,
                 a,
                 m,
                 restrictRange,
             },
-        };
+        );
 
         _self.buildCircuit();
         _self
@@ -92,14 +92,21 @@ impl LongIntegerModInverseGadget {
 }
 impl Gadget<LongIntegerModInverseGadget> {
     fn buildCircuit(&mut self) {
-        let generators = self.generator.borrow().clone();
-        let inverseWires = generators.createProverWitnessWireArray(self.t.m.getSize(), &None);
+        let inverseWires = CircuitGenerator::createProverWitnessWireArray(
+            self.generator.clone(),
+            self.t.m.getSize(),
+            &None,
+        );
         let inverse = LongElement::new(
             inverseWires.clone(),
             self.t.m.getCurrentBitwidth(),
             self.generator.clone().downgrade(),
         );
-        let quotientWires = generators.createProverWitnessWireArray(self.t.m.getSize(), &None);
+        let quotientWires = CircuitGenerator::createProverWitnessWireArray(
+            self.generator.clone(),
+            self.t.m.getSize(),
+            &None,
+        );
         let quotient = LongElement::new(
             quotientWires.clone(),
             self.t.m.getCurrentBitwidth(),
@@ -149,7 +156,7 @@ impl Gadget<LongIntegerModInverseGadget> {
         }
                     }
                 );
-        generators.specifyProverWitnessComputation(prover);
+        self.generators.specifyProverWitnessComputation(prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {

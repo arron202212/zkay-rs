@@ -50,15 +50,15 @@ impl PinocchioGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 inputWires,
                 proverWitnessWires: vec![],
                 outputWires: vec![],
             },
-        };
+        );
         _self.buildCircuit(pathToArithFile);
         _self
     }
@@ -66,7 +66,6 @@ impl PinocchioGadget {
 
 impl Gadget<PinocchioGadget> {
     fn buildCircuit(&mut self, path: String) {
-        let generator = self.generator.borrow().clone();
         let mut proverWitnessWires = Vec::new();
         let mut outputWires = Vec::new();
 
@@ -106,7 +105,7 @@ impl Gadget<PinocchioGadget> {
                     wireMapping[wireIndex] = self.t.inputWires[inputCount].clone();
                 } else {
                     // the last input wire is assumed to be the one wire
-                    wireMapping[wireIndex] = generator.get_one_wire();
+                    wireMapping[wireIndex] = self.generator.get_one_wire();
                 }
                 inputCount += 1;
             } else if line.starts_with("output") {
@@ -127,7 +126,10 @@ impl Gadget<PinocchioGadget> {
                     "WireType assigned twice!{wireIndex} "
                 );
 
-                let w = Some(generator.createProverWitnessWire(&None));
+                let w = Some(CircuitGenerator::createProverWitnessWire(
+                    self.generator.clone(),
+                    &None,
+                ));
                 proverWitnessWires.push(w.clone());
                 wireMapping[wireIndex] = w;
             } else {

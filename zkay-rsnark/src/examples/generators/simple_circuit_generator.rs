@@ -23,7 +23,7 @@ use crate::{
             wire_label_instruction::WireLabelInstruction,
         },
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator, CircuitGeneratorExtend},
+            circuit_generator::{CGConfig, CGInstance, CircuitGenerator, CircuitGeneratorExtend},
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
@@ -60,7 +60,7 @@ impl SimpleCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
     fn buildCircuit(&mut self) {
         // declare input array of length 4.
-        let inputs = self.createInputWireArray(4, &None);
+        let inputs = CircuitGenerator::createInputWireArray(self.cg(), 4, &None);
 
         // r1 = in0 * in1
         let r1 = inputs[0].clone().unwrap().mul(inputs[1].as_ref().unwrap());
@@ -72,7 +72,7 @@ impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
         let result = r1.add(5).mul(&r2.muli(6, &None));
 
         // mark the wire as output
-        self.makeOutput(&result, &None);
+        CircuitGenerator::makeOutput(self.cg(), &result, &None);
         self.t.inputs = inputs;
     }
 

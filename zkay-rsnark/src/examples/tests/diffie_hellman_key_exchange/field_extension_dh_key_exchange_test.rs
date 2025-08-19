@@ -44,8 +44,11 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let exponentBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
+                let exponentBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
 
                 let mut g = vec![None; CGTest::mu];
                 let mut h = vec![None; CGTest::mu];
@@ -93,9 +96,17 @@ mod test {
                 );
 
                 let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
-                self.makeOutputArray(g_to_s, &Some("DH Key Exchange Output".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    g_to_s,
+                    &Some("DH Key Exchange Output".to_owned()),
+                );
                 let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
-                self.makeOutputArray(h_to_s, &Some("Derived Secret Key".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    h_to_s,
+                    &Some("Derived Secret Key".to_owned()),
+                );
                 self.t.exponentBits = exponentBits;
             }
 
@@ -200,11 +211,14 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let exponentBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
+                let exponentBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
 
-                let mut g = self.createInputWireArray(mu, &None);
-                let mut h = self.createInputWireArray(mu, &None);
+                let mut g = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
+                let mut h = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
 
                 let fieldExtensionDHKeyExchange = FieldExtensionDHKeyExchange::new(
                     g,
@@ -216,9 +230,17 @@ mod test {
                 );
 
                 let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
-                self.makeOutputArray(g_to_s, &Some("DH Key Exchange Output".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    g_to_s,
+                    &Some("DH Key Exchange Output".to_owned()),
+                );
                 let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
-                self.makeOutputArray(h_to_s, &Some("Derived Secret Key".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    h_to_s,
+                    &Some("Derived Secret Key".to_owned()),
+                );
                 self.t.exponentBits = exponentBits;
             }
 
@@ -344,11 +366,14 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let exponentBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
+                let exponentBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
 
-                let mut g = self.createInputWireArray(mu, &None);
-                let mut h = self.createInputWireArray(mu, &None);
+                let mut g = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
+                let mut h = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
 
                 let fieldExtensionDHKeyExchange = FieldExtensionDHKeyExchange::new(
                     g,
@@ -363,9 +388,17 @@ mod test {
                 fieldExtensionDHKeyExchange.validateInputs(BigInteger::parse_bytes(b"566003748421165623973140684210338877916630960782201693595769129706864925719318115473892932098619423042929922932476493069",10).unwrap());
 
                 let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
-                self.makeOutputArray(g_to_s, &Some("DH Key Exchange Output".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    g_to_s,
+                    &Some("DH Key Exchange Output".to_owned()),
+                );
                 let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
-                self.makeOutputArray(h_to_s, &Some("Derived Secret Key".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    h_to_s,
+                    &Some("Derived Secret Key".to_owned()),
+                );
                 self.t.exponentBits = exponentBits;
             }
 

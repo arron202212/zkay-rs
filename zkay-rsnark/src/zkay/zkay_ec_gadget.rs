@@ -39,18 +39,12 @@ impl AffinePoint {
 /** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
 #[derive(Debug, Clone)]
 pub struct ZkayEcGadget<T> {
-    pub generators: CircuitGenerator,
     pub t: T,
 }
 
 impl<T> ZkayEcGadget<T> {
     pub fn new(desc: &Option<String>, t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
-        let generators = generator.borrow().clone();
-        Gadget::<Self> {
-            generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: ZkayEcGadget::<T> { generators, t },
-        }
+        Gadget::<Self>::new(generator, desc, ZkayEcGadget::<T> { t })
     }
 }
 
@@ -239,7 +233,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     }
 
     pub fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
-        let generator = &self.t.generators;
+        let generator = &self.generators;
         let o = &generator.createConstantWire(
             &BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap(),
             &None,

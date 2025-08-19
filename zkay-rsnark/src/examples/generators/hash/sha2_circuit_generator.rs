@@ -67,7 +67,7 @@ impl SHA2CircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
     fn buildCircuit(&mut self) {
         // assuming the circuit input will be 64 bytes
-        let inputWires = self.createInputWireArray(64, &None);
+        let inputWires = CircuitGenerator::createInputWireArray(self.cg(), 64, &None);
         // this gadget is not applying any padding.
         let sha2Gadget = SHA256Gadget::new(
             inputWires.clone(),
@@ -80,7 +80,7 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
             Base,
         );
         let digest = sha2Gadget.getOutputWires();
-        self.makeOutputArray(digest, &Some("digest".to_owned()));
+        CircuitGenerator::makeOutputArray(self.cg(), digest, &Some("digest".to_owned()));
 
         // ======================================================================
         // To see how padding can be done, and see how the gadget library will save constraints automatically,

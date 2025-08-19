@@ -121,7 +121,8 @@ mod test {
                 let ivwire = self.createConstantWire(&self.t.iv, &None);
                 let keywire = self.createConstantWire(&self.t.key, &None);
 
-                self.makeOutputArray(
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
                     ZkayCBCSymmetricEncGadget::new(
                         plainwire,
                         keywire,

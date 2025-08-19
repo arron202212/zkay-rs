@@ -41,7 +41,11 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(CGTest::inputStr.len(), &None);
+                let inputWires = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    CGTest::inputStr.len(),
+                    &None,
+                );
                 let digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -54,7 +58,7 @@ mod test {
                 )
                 .getOutputWires()
                 .clone();
-                self.makeOutputArray(&digest, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &digest, &None);
                 self.t.inputWires = inputWires;
             }
 
@@ -91,7 +95,11 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(CGTest::inputStr.len(), &None);
+                let inputWires = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    CGTest::inputStr.len(),
+                    &None,
+                );
                 let digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -104,7 +112,7 @@ mod test {
                 )
                 .getOutputWires()
                 .clone();
-                self.makeOutputArray(&digest, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &digest, &None);
                 self.t.inputWires = inputWires;
             }
 
@@ -147,7 +155,11 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(CGTest::inputStr.len(), &None);
+                let inputWires = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    CGTest::inputStr.len(),
+                    &None,
+                );
                 let digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -160,7 +172,7 @@ mod test {
                 )
                 .getOutputWires()
                 .clone();
-                self.makeOutputArray(&digest, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &digest, &None);
                 self.t.inputWires = inputWires;
             }
 
@@ -200,7 +212,11 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(CGTest::inputStr.len(), &None);
+                let inputWires = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    CGTest::inputStr.len(),
+                    &None,
+                );
                 let digest = SHA256Gadget::new(
                     inputWires.clone(),
                     8,
@@ -213,7 +229,7 @@ mod test {
                 )
                 .getOutputWires()
                 .clone();
-                self.makeOutputArray(&digest, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &digest, &None);
                 self.t.inputWires = inputWires;
             }
 
@@ -257,7 +273,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let inputWires = self.createInputWireArray(
+                let inputWires = CircuitGenerator::createInputWireArray(
+                    self.cg(),
                     CGTest::inputStr.len() / self.t.numBytesPerInputWire
                         + if CGTest::inputStr.len() % self.t.numBytesPerInputWire != 0 {
                             1
@@ -278,7 +295,7 @@ mod test {
                 )
                 .getOutputWires()
                 .clone();
-                self.makeOutputArray(&digest, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &digest, &None);
                 self.t.inputWires = inputWires;
             }
 

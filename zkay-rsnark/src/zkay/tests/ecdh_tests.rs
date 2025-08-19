@@ -62,7 +62,8 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let s = self.createConstantWire(&self.t.sec1, &None);
-                self.makeOutput(
+                CircuitGenerator::makeOutput(
+                    self.cg(),
                     ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).getOutputWires()[0]
                         .as_ref()
                         .unwrap(),
@@ -88,7 +89,8 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTestpkder> {
             fn buildCircuit(&mut self) {
                 let s = self.createConstantWire(&self.t.sec2, &None);
-                self.makeOutput(
+                CircuitGenerator::makeOutput(
+                    self.cg(),
                     ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).getOutputWires()[0]
                         .as_ref()
                         .unwrap(),
@@ -125,7 +127,8 @@ mod test {
             fn buildCircuit(&mut self) {
                 let p = self.createConstantWire(&self.t.pk2, &None);
                 let s = self.createConstantWire(&self.t.sec1, &None);
-                self.makeOutput(
+                CircuitGenerator::makeOutput(
+                    self.cg(),
                     ZkayECDHGadget::new(p, s, false, &None, self.cg()).getOutputWires()[0]
                         .as_ref()
                         .unwrap(),

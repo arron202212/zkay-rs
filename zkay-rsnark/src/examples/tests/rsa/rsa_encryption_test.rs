@@ -44,7 +44,11 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let plainTextLength = CGTest::plainText.len();
-                let mut inputMessage = self.createProverWitnessWireArray(plainTextLength, &None); // in bytes
+                let mut inputMessage = CircuitGenerator::createProverWitnessWireArray(
+                    self.cg(),
+                    plainTextLength,
+                    &None,
+                ); // in bytes
                 for i in 0..plainTextLength {
                     inputMessage[i]
                         .as_ref()
@@ -52,8 +56,13 @@ mod test {
                         .restrictBitLength(8, &None);
                 }
 
-                let mut rsaModulus = self.createLongElementInput(self.t.rsaKeyLength as i32, &None);
-                let mut randomness = self.createProverWitnessWireArray(
+                let mut rsaModulus = CircuitGenerator::createLongElementInput(
+                    self.cg(),
+                    self.t.rsaKeyLength as i32,
+                    &None,
+                );
+                let mut randomness = CircuitGenerator::createProverWitnessWireArray(
+                    self.cg(),
                     Gadget::<RSAEncryptionV1_5_Gadget>::getExpectedRandomnessLength(
                         self.t.rsaKeyLength as i32,
                         plainTextLength as i32,
@@ -76,7 +85,11 @@ mod test {
                 // group every 8 bytes together
                 let mut cipherText = WireArray::new(cipherTextInBytes, self.cg().downgrade())
                     .packWordsIntoLargerWords(8, 8, &None);
-                self.makeOutputArray(&cipherText, &Some("Output cipher text".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    &cipherText,
+                    &Some("Output cipher text".to_owned()),
+                );
                 (
                     self.t.rsaModulus,
                     self.t.inputMessage,

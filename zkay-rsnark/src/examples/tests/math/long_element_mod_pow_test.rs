@@ -36,12 +36,21 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ModPowCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ModPowCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let bWire = self
-                .createLongElementInput(1i32.max(self.t.b.bits() as i32), &Some("b".to_owned()));
-            let eWire = self
-                .createLongElementInput(1i32.max(self.t.e.bits() as i32), &Some("e".to_owned()));
-            let mWire = self
-                .createLongElementInput(1i32.max(self.t.m.bits() as i32), &Some("m".to_owned()));
+            let bWire = CircuitGenerator::createLongElementInput(
+                self.cg.clone(),
+                1i32.max(self.t.b.bits() as i32),
+                &Some("b".to_owned()),
+            );
+            let eWire = CircuitGenerator::createLongElementInput(
+                self.cg.clone(),
+                1i32.max(self.t.e.bits() as i32),
+                &Some("e".to_owned()),
+            );
+            let mWire = CircuitGenerator::createLongElementInput(
+                self.cg.clone(),
+                1i32.max(self.t.m.bits() as i32),
+                &Some("m".to_owned()),
+            );
             let modPow = LongIntegerModPowGadget::new(
                 bWire.clone(),
                 eWire.clone(),
@@ -51,7 +60,11 @@ mod test {
                 &None,
                 self.cg(),
             );
-            self.makeOutputArray(modPow.getOutputWires(), &Some("c".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                modPow.getOutputWires(),
+                &Some("c".to_owned()),
+            );
             (self.t.bWire, self.t.eWire, self.t.mWire) = (Some(bWire), Some(eWire), Some(mWire));
         }
 

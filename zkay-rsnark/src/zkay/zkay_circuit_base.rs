@@ -311,7 +311,8 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
             self.allPrivInWires().len()
         );
         if self.useInputHashing() {
-            self.makeOutputArray(
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
                 ZkaySHA256Gadget::new(self.allPubIOWires().clone(), 253, &None, self.cg())
                     .getOutputWires(),
                 &Some("digest".to_owned()),
@@ -331,17 +332,36 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let pubOutCount = self.t.allPubIOWires.len() - pubInCount;
         let (inArray, outArray) = if self.t.useInputHashing {
             (
-                generator.createProverWitnessWireArray(pubInCount, &Some("in_".to_owned())),
-                generator.createProverWitnessWireArray(pubOutCount, &Some("out_".to_owned())),
+                CircuitGenerator::createProverWitnessWireArray(
+                    self.cg.clone(),
+                    pubInCount,
+                    &Some("in_".to_owned()),
+                ),
+                CircuitGenerator::createProverWitnessWireArray(
+                    self.cg.clone(),
+                    pubOutCount,
+                    &Some("out_".to_owned()),
+                ),
             )
         } else {
             (
-                generator.createInputWireArray(pubInCount, &Some("in_".to_owned())),
-                generator.createInputWireArray(pubOutCount, &Some("out_".to_owned())),
+                CircuitGenerator::createInputWireArray(
+                    self.cg.clone(),
+                    pubInCount,
+                    &Some("in_".to_owned()),
+                ),
+                CircuitGenerator::createInputWireArray(
+                    self.cg.clone(),
+                    pubOutCount,
+                    &Some("out_".to_owned()),
+                ),
             )
         };
-        let privInArray = generator
-            .createProverWitnessWireArray(self.t.allPrivInWires.len(), &Some("priv_".to_owned()));
+        let privInArray = CircuitGenerator::createProverWitnessWireArray(
+            self.cg.clone(),
+            self.t.allPrivInWires.len(),
+            &Some("priv_".to_owned()),
+        );
 
         // Legacy handling
         let legacyCryptoBackend = self.t.cryptoBackends.get(LEGACY_CRYPTO_BACKEND);
@@ -499,7 +519,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         );
 
         let symmetricCrypto = cryptoBackend;
-        symmetricCrypto.setKeyPair(myPk, mySk, generator); //TODO
+        symmetricCrypto.setKeyPair(myPk, mySk, generator);
     }
     #[inline]
     pub fn getCryptoBackend(&self, cryptoBackendId: &str) -> &Backend {
@@ -569,7 +589,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         );
 
         let mut cryptoBackend = self.get_crypto_backend_mut(cryptoBackendId);
-        cryptoBackend.addKey(&name, &input, generator); //TODO
+        cryptoBackend.addKey(&name, &input, generator);
     }
 
     pub fn addK(&mut self, name: &str, size: i32) {

@@ -60,15 +60,15 @@ impl DotProductGadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         assert!(a.len() == b.len());
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 a,
                 b,
                 output: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

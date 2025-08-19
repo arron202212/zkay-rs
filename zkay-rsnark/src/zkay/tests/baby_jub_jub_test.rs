@@ -53,7 +53,7 @@ mod test {
 
     impl Gadget<ZkayBabyJubJubGadget<TestGadget>> {
         fn buildCircuit(&mut self) {
-            let generator = self.generator.borrow().clone();
+            let generator = self.generator.clone();
             // check native inverse
             // println!(
             //     "===self.get_current_wire_id()======test=={}==={}",
@@ -168,7 +168,11 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let gadget = TestGadget::new(self.cg());
-                self.makeOutput(gadget.getOutputWires()[0].as_ref().unwrap(), &None);
+                CircuitGenerator::makeOutput(
+                    self.cg(),
+                    gadget.getOutputWires()[0].as_ref().unwrap(),
+                    &None,
+                );
             }
 
             fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}

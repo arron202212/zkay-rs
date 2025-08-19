@@ -88,17 +88,22 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
     fn buildCircuit(&mut self) {
         let hashDigestDimension = MerkleTreeMembershipCircuitGenerator::hashDigestDimension;
         //  declare inputs
-        let publicRootWires = self.createInputWireArray(
+        let publicRootWires = CircuitGenerator::createInputWireArray(
+            self.cg(),
             hashDigestDimension as usize,
             &Some("Input Merkle Tree Root".to_owned()),
         );
-        let intermediateHasheWires = self.createProverWitnessWireArray(
+        let intermediateHasheWires = CircuitGenerator::createProverWitnessWireArray(
+            self.cg(),
             (hashDigestDimension * self.t.treeHeight) as usize,
             &Some("Intermediate Hashes".to_owned()),
         );
-        let directionSelector =
-            self.createProverWitnessWire(&Some("Direction selector".to_owned()));
-        let leafWires = self.createProverWitnessWireArray(
+        let directionSelector = CircuitGenerator::createProverWitnessWire(
+            self.cg(),
+            &Some("Direction selector".to_owned()),
+        );
+        let leafWires = CircuitGenerator::createProverWitnessWireArray(
+            self.cg(),
             MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize,
             &Some("Secret Leaf".to_owned()),
         );
@@ -126,10 +131,15 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             errorAccumulator = errorAccumulator.add(check);
         }
 
-        self.makeOutputArray(&actualRoot, &Some("Computed Root".to_owned()));
+        CircuitGenerator::makeOutputArray(
+            self.cg(),
+            &actualRoot,
+            &Some("Computed Root".to_owned()),
+        );
 
         /** Expected mismatch here if the sample input below is tried**/
-        self.makeOutput(
+        CircuitGenerator::makeOutput(
+            self.cg(),
             &errorAccumulator.checkNonZero(&None),
             &Some("Error if NON-zero".to_owned()),
         );

@@ -46,11 +46,11 @@ impl ZkayPaillierEncGadget {
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
-        println!("=====random.array========={:?}", random.array);
-        let mut _self = Gadget::<Self> {
+        // println!("=====random.array========={:?}", random.array);
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 n,
                 nSquare,
                 nBits,
@@ -60,7 +60,7 @@ impl ZkayPaillierEncGadget {
                 random,
                 cipher: None,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }
@@ -69,10 +69,10 @@ impl Gadget<ZkayPaillierEncGadget> {
     fn buildCircuit(&mut self) {
         let nSquareMinBits = 2 * self.t.nBits - 1; // Minimum bit length of n^2
         // Prove that random is in Z_n* by checking that random has an inverse mod n
-        println!(
-            "===t==random.array===buildCircuit======{:?}",
-            self.t.random.array
-        );
+        // println!(
+        //     "===t==random.array===buildCircuit======{:?}",
+        //     self.t.random.array
+        // );
         let randInv = LongIntegerModInverseGadget::new(
             self.t.random.clone(),
             self.t.n.clone(),
@@ -82,8 +82,8 @@ impl Gadget<ZkayPaillierEncGadget> {
         )
         .getResult()
         .clone();
-        let generators = self.generator.borrow().clone();
-        generators.addOneAssertion(&randInv.checkNonZero(), &None);
+        self.generators
+            .addOneAssertion(&randInv.checkNonZero(), &None);
         // let c = g^m * r^n mod n^2
         let gPowPlain = LongIntegerModPowGadget::new(
             self.t.g.clone(),

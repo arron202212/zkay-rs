@@ -45,10 +45,10 @@ impl ZkayDummyEncryptionGadget {
             );
         }
 
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 plain: plain.wire.clone(),
                 pk: pkarr[0].clone().unwrap(),
                 cipher: vec![
@@ -57,7 +57,7 @@ impl ZkayDummyEncryptionGadget {
                         as usize
                 ],
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

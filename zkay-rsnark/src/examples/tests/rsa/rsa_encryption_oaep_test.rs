@@ -43,7 +43,11 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let plainTextLength = CGTest::plainText.len();
-                let inputMessage = self.createProverWitnessWireArray(plainTextLength, &None); // in bytes
+                let inputMessage = CircuitGenerator::createProverWitnessWireArray(
+                    self.cg(),
+                    plainTextLength,
+                    &None,
+                ); // in bytes
                 for i in 0..plainTextLength {
                     inputMessage[i]
                         .as_ref()
@@ -51,8 +55,13 @@ mod test {
                         .restrictBitLength(8, &None);
                 }
 
-                let rsaModulus = self.createLongElementInput(self.t.rsaKeyLength as i32, &None);
-                let seed = self.createProverWitnessWireArray(
+                let rsaModulus = CircuitGenerator::createLongElementInput(
+                    self.cg(),
+                    self.t.rsaKeyLength as i32,
+                    &None,
+                );
+                let seed = CircuitGenerator::createProverWitnessWireArray(
+                    self.cg(),
                     RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize,
                     &None,
                 );
@@ -73,7 +82,11 @@ mod test {
                 // group every 8 bytes together
                 let cipherText = WireArray::new(cipherTextInBytes, self.cg().downgrade())
                     .packWordsIntoLargerWords(8, 8, &None);
-                self.makeOutputArray(&cipherText, &Some("Output cipher text".to_owned()));
+                CircuitGenerator::makeOutputArray(
+                    self.cg(),
+                    &cipherText,
+                    &Some("Output cipher text".to_owned()),
+                );
                 (
                     self.t.rsaModulus,
                     self.t.inputMessage,

@@ -32,8 +32,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let plaintext = self.createInputWireArray(4, &None);
-                let key = self.createInputWireArray(4, &None);
+                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 4, &None);
+                let key = CircuitGenerator::createInputWireArray(self.cg(), 4, &None);
                 let ciphertext = ChaskeyLTS128CipherGadget::new(
                     plaintext.clone(),
                     key.clone(),
@@ -42,7 +42,7 @@ mod test {
                 )
                 .getOutputWires()
                 .clone();
-                self.makeOutputArray(&ciphertext, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 

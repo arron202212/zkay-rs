@@ -89,7 +89,8 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
     fn buildCircuit(&mut self) {
         let (rsaKeyLength, plainTextLength) =
             (self.t.rsaKeyLength, self.t.plainTextLength as usize);
-        let mut inputMessage = self.createProverWitnessWireArray(plainTextLength, &None); // in bytes
+        let mut inputMessage =
+            CircuitGenerator::createProverWitnessWireArray(self.cg(), plainTextLength, &None); // in bytes
         for i in 0..plainTextLength {
             inputMessage[i]
                 .as_ref()
@@ -97,7 +98,8 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
                 .restrictBitLength(8, &None);
         }
 
-        let randomness = self.createProverWitnessWireArray(
+        let randomness = CircuitGenerator::createProverWitnessWireArray(
+            self.cg(),
             Gadget::<RSAEncryptionV1_5_Gadget>::getExpectedRandomnessLength(
                 rsaKeyLength,
                 plainTextLength as i32,
@@ -118,7 +120,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         //  * This way of doing this increases the number of gates a bit, but
         //  * reduces the VK size when crucial.
 
-        let rsaModulus = self.createLongElementInput(rsaKeyLength, &None);
+        let rsaModulus = CircuitGenerator::createLongElementInput(self.cg(), rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -145,7 +147,11 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         // do some grouping to reduce VK Size
         let cipherText = WireArray::new(cipherTextInBytes.clone(), self.cg().downgrade())
             .packWordsIntoLargerWords(8, 30, &None);
-        self.makeOutputArray(&cipherText, &Some("Output cipher text".to_owned()));
+        CircuitGenerator::makeOutputArray(
+            self.cg(),
+            &cipherText,
+            &Some("Output cipher text".to_owned()),
+        );
         (
             self.t.inputMessage,
             self.t.randomness,

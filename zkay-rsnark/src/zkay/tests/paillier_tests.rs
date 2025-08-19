@@ -176,18 +176,25 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierEncCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let plainWire = self.createLongElementInput(
+            let plainWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.plain.bits().max(1) as i32,
                 &Some("plain".to_owned()),
             );
-            let randomWire = self.createLongElementInput(
+            let randomWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.random.bits().max(1) as i32,
                 &Some("random".to_owned()),
             );
             let nBits = self.t.n.bits().max(1);
-            let nWire = self.createLongElementInput(nBits as i32, &Some("n".to_owned()));
-            println!("======randomWire=========={:?}", randomWire.array);
-            let generatorWire = self.createLongElementInput(
+            let nWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
+                nBits as i32,
+                &Some("n".to_owned()),
+            );
+            // println!("======randomWire=========={:?}", randomWire.array);
+            let generatorWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.generator.bits().max(1) as i32,
                 &Some("generator".to_owned()),
             );
@@ -200,7 +207,11 @@ mod test {
                 &None,
                 self.cg(),
             );
-            self.makeOutputArray(enc.getOutputWires(), &Some("cipher".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                enc.getOutputWires(),
+                &Some("cipher".to_owned()),
+            );
             (
                 self.t.nWire,
                 self.t.generatorWire,
@@ -290,18 +301,27 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierDecCircuitGenerator> {
         fn buildCircuit(&mut self) {
-            let cipherWire = self.createLongElementInput(
+            let cipherWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.cipher.bits().max(1) as i32,
                 &Some("cipher".to_owned()),
             );
             let nBits = self.t.n.bits().max(1);
-            let nWire = self.createLongElementInput(nBits as i32, &Some("n".to_owned()));
-            let lambdaWire = self.createLongElementInput(
+            let nWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
+                nBits as i32,
+                &Some("n".to_owned()),
+            );
+            let lambdaWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.lambda.bits().max(1) as i32,
                 &Some("lambda".to_owned()),
             );
-            let muWire =
-                self.createLongElementInput(self.t.mu.bits().max(1) as i32, &Some("mu".to_owned()));
+            let muWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
+                self.t.mu.bits().max(1) as i32,
+                &Some("mu".to_owned()),
+            );
             let dec = ZkayPaillierDecGadget::new(
                 nWire.clone(),
                 nBits as i32,
@@ -311,7 +331,11 @@ mod test {
                 &None,
                 self.cg(),
             );
-            self.makeOutputArray(dec.getOutputWires(), &Some("plain".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                dec.getOutputWires(),
+                &Some("plain".to_owned()),
+            );
             (
                 self.t.cipherWire,
                 self.t.nWire,
@@ -398,12 +422,18 @@ mod test {
     impl CGConfig for CircuitGeneratorExtend<PaillierFastEncCircuitGenerator> {
         fn buildCircuit(&mut self) {
             let nBits = self.t.n.bits().max(1);
-            let nWire = self.createLongElementInput(nBits as i32, &Some("n".to_owned()));
-            let plainWire = self.createLongElementInput(
+            let nWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
+                nBits as i32,
+                &Some("n".to_owned()),
+            );
+            let plainWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.plain.bits().max(1) as i32,
                 &Some("plain".to_owned()),
             );
-            let randomWire = self.createLongElementInput(
+            let randomWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.random.bits().max(1) as i32,
                 &Some("random".to_owned()),
             );
@@ -415,7 +445,11 @@ mod test {
                 &None,
                 self.cg(),
             );
-            self.makeOutputArray(enc.getOutputWires(), &Some("cipher".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                enc.getOutputWires(),
+                &Some("cipher".to_owned()),
+            );
         }
 
         fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
@@ -485,12 +519,18 @@ mod test {
     impl CGConfig for CircuitGeneratorExtend<PaillierFastDecCircuitGenerator> {
         fn buildCircuit(&mut self) {
             let nBits = self.t.n.bits().max(1);
-            let nWire = self.createLongElementInput(nBits as i32, &Some("n".to_owned()));
-            let lambdaWire = self.createLongElementInput(
+            let nWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
+                nBits as i32,
+                &Some("n".to_owned()),
+            );
+            let lambdaWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.lambda.bits().max(1) as i32,
                 &Some("lambda".to_owned()),
             );
-            let cipherWire = self.createLongElementInput(
+            let cipherWire = CircuitGenerator::createLongElementInput(
+                self.cg(),
                 self.t.cipher.bits().max(1) as i32,
                 &Some("cipher".to_owned()),
             );
@@ -502,7 +542,11 @@ mod test {
                 &None,
                 self.cg(),
             );
-            self.makeOutputArray(dec.getOutputWires(), &Some("plain".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                dec.getOutputWires(),
+                &Some("plain".to_owned()),
+            );
         }
 
         fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {

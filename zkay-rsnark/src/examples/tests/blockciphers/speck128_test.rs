@@ -34,14 +34,14 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let plaintext = self.createInputWireArray(2, &None);
-                let key = self.createInputWireArray(2, &None);
+                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 2, &None);
+                let key = CircuitGenerator::createInputWireArray(self.cg(), 2, &None);
                 let expandedKey = Gadget::<Speck128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
                     Speck128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
                         .getOutputWires()
                         .clone();
-                self.makeOutputArray(&ciphertext, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key) = (plaintext, key);
             }
 

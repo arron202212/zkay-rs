@@ -103,17 +103,17 @@ impl RSAEncryptionOAEPGadget {
             seed.len() as i32 == Self::SHA256_DIGEST_LENGTH,
             "Seed must have the same length as the hash function output,Invalid seed dimension for RSA Encryption"
         );
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 seed,
                 plainText,
                 modulus,
                 ciphertext: vec![],
                 rsaKeyBitLength,
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

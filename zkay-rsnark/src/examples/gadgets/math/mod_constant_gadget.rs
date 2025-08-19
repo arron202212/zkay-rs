@@ -80,17 +80,17 @@ impl ModConstantGadget {
             bitwidth as u64 >= b.bits(),
             "a's bitwidth < b's bitwidth -- This gadget is not needed."
         );
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 q: a.clone(),
                 a,
                 b,
                 r: vec![],
                 bitwidth,
             },
-        };
+        );
 
         // TODO: add further checks.
         _self.buildCircuit();
@@ -99,12 +99,14 @@ impl ModConstantGadget {
 }
 impl Gadget<ModConstantGadget> {
     fn buildCircuit(&mut self) {
-        let r = self
-            .generator
-            .createProverWitnessWire(&Some("mod result".to_owned()));
-        let q = self
-            .generator
-            .createProverWitnessWire(&Some("division result".to_owned()));
+        let r = CircuitGenerator::createProverWitnessWire(
+            self.generator.clone(),
+            &Some("mod result".to_owned()),
+        );
+        let q = CircuitGenerator::createProverWitnessWire(
+            self.generator.clone(),
+            &Some("division result".to_owned()),
+        );
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
         // generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
@@ -134,7 +136,7 @@ impl Gadget<ModConstantGadget> {
                     }
                                 }
                             );
-        self.generator.specifyProverWitnessComputation(prover);
+        self.generators.specifyProverWitnessComputation(prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {

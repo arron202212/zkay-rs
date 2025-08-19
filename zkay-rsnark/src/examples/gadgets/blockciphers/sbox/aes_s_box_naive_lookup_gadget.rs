@@ -57,14 +57,14 @@ impl AESSBoxNaiveLookupGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 output: vec![],
                 input,
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

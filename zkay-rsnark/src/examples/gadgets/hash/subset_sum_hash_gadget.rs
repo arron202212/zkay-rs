@@ -82,15 +82,15 @@ impl SubsetSumHashGadget {
             pad[i] = generator.get_zero_wire(); // TODO: adjust padding
         }
         let inputWires = Util::concat(&ins, &pad);
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 binaryOutput,
                 inputWires,
                 outWires: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

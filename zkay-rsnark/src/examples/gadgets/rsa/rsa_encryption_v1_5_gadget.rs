@@ -98,17 +98,17 @@ impl RSAEncryptionV1_5_Gadget {
             "Invalid Argument Dimensions for RSA Encryption"
         );
 
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 randomness,
                 plainText,
                 modulus,
                 ciphertext: vec![],
                 rsaKeyBitLength,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

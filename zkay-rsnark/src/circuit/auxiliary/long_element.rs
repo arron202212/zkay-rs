@@ -147,9 +147,9 @@ impl LongElement {
     }
     pub fn makeOutput(&mut self, desc: &Option<String>) {
         let mut generator = self.generator();
-
+        let generators = self.generator.clone().upgrade().unwrap();
         for w in self.getArray() {
-            generator.makeOutput(w.as_ref().unwrap(), desc);
+            CircuitGenerator::makeOutput(generators.clone(), w.as_ref().unwrap(), desc);
         }
     }
 
@@ -661,7 +661,11 @@ impl LongElement {
         let mut auxConstant = BigInteger::ZERO;
         let mut auxConstantChunks = vec![BigInteger::ZERO; numOfGroupedChunks];
 
-        let mut carries = generator.createProverWitnessWireArray(numOfGroupedChunks - 1, &None);
+        let mut carries = CircuitGenerator::createProverWitnessWireArray(
+            self.generator.clone().upgrade().unwrap(),
+            numOfGroupedChunks - 1,
+            &None,
+        );
         let mut carriesBitwidthBounds = vec![0; carries.len()];
 
         // computing the auxConstantChunks, and the total auxConstant
@@ -904,7 +908,11 @@ impl LongElement {
          * other element that is more than the corresponding chunk in this
          * element.
          */
-        let helperBits = generator.createProverWitnessWireArray(length, &None);
+        let helperBits = CircuitGenerator::createProverWitnessWireArray(
+            self.generator.clone().upgrade().unwrap(),
+            length,
+            &None,
+        );
         // set the value of the helperBits outside the circuits
         let prover = crate::impl_prover!(
                 eval(
@@ -1139,7 +1147,8 @@ impl Sub<&Self> for LongElement {
         );
         let mut generator = self.generator();
 
-        let result = generator.createLongElementProverWitness(
+        let result = CircuitGenerator::createLongElementProverWitness(
+            self.generator.clone().upgrade().unwrap(),
             self.getMaxVal(Self::CHUNK_BITWIDTH).bits() as i32,
             &None,
         );
@@ -1261,7 +1270,11 @@ impl Mul<&Self> for LongElement {
         } else {
             // impl ement the optimization
 
-            result = generator.createProverWitnessWireArray(length, &None);
+            result = CircuitGenerator::createProverWitnessWireArray(
+                self.generator.clone().upgrade().unwrap(),
+                length,
+                &None,
+            );
             // println!("===result======2======={result:?}");
             // for safety
             let (array1, array2) = (&self.array, &rhs.array);

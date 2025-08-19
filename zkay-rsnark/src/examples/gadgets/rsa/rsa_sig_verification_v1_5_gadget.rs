@@ -82,17 +82,17 @@ impl RSASigVerificationV1_5_Gadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 modulus,
                 msgHash,
                 signature,
                 rsaKeyBitLength,
                 isValidSignature: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

@@ -86,11 +86,11 @@ mod test {
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
-                    generator.createInputWireArray(numIns, &None),
+                    CircuitGenerator::createInputWireArray(self.cg(), numIns, &None),
                     generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
-                    generator.createInputWireArray(numIns, &None),
+                    CircuitGenerator::createInputWireArray(self.cg(), numIns, &None),
                     generator.cg_weak(),
                 );
 
@@ -101,9 +101,9 @@ mod test {
                 let mut result2 = inputs1.sumAllElements(&None);
                 let mut resultArray = inputs1.addWireArray(&inputs2, inputs1.size(), &None);
 
-                generator.makeOutput(&result1, &None);
-                generator.makeOutput(&result2, &None);
-                generator.makeOutputArray(resultArray.asArray(), &None);
+                CircuitGenerator::makeOutput(self.cg(), &result1, &None);
+                CircuitGenerator::makeOutput(self.cg(), &result2, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), resultArray.asArray(), &None);
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
             }
@@ -178,11 +178,11 @@ mod test {
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
-                    generator.createInputWireArray(numIns, &None),
+                    CircuitGenerator::createInputWireArray(self.cg(), numIns, &None),
                     generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
-                    generator.createInputWireArray(numIns, &None),
+                    CircuitGenerator::createInputWireArray(self.cg(), numIns, &None),
                     generator.cg_weak(),
                 );
 
@@ -192,8 +192,8 @@ mod test {
                     .mul(inputs1[1].as_ref().unwrap());
                 let mut resultArray = inputs1.mulWireArray(&inputs2, numIns, &None);
 
-                generator.makeOutput(&result1, &None);
-                generator.makeOutputArray(resultArray.asArray(), &None);
+                CircuitGenerator::makeOutput(self.cg(), &result1, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), resultArray.asArray(), &None);
                 self.t.inputs1 = inputs1.asArray().clone();
                 self.t.inputs2 = inputs2.asArray().clone();
             }
@@ -274,8 +274,8 @@ mod test {
                 let mut result3 = vec![None; numIns];
                 let mut result4 = vec![None; numIns];
                 let mut result5 = vec![None; numIns];
-                let mut inputs1 = generator.createInputWireArray(numIns, &None);
-                let mut inputs2 = generator.createInputWireArray(numIns, &None);
+                let mut inputs1 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
+                let mut inputs2 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
 
                 for i in 0..numIns {
                     result1[i] = inputs1[i]
@@ -480,9 +480,9 @@ mod test {
                 let mut generator = &*self;
 
                 let numIns = self.t.numIns as usize;
-                let mut inputs1 = generator.createInputWireArray(numIns, &None);
-                let mut inputs2 = generator.createInputWireArray(numIns, &None);
-                let mut inputs3 = generator.createInputWireArray(numIns, &None);
+                let mut inputs1 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
+                let mut inputs2 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
+                let mut inputs3 = CircuitGenerator::createInputWireArray(self.cg(), numIns, &None);
 
                 let mut shiftedRight = vec![None; numIns];
                 let mut shiftedLeft = vec![None; numIns];
@@ -527,14 +527,14 @@ mod test {
                     inverted[i] = inputs3[i].clone().map(|x| x.invBits(32, &None));
                 }
 
-                generator.makeOutputArray(&shiftedRight, &None);
-                generator.makeOutputArray(&shiftedLeft, &None);
-                generator.makeOutputArray(&rotatedRight, &None);
-                generator.makeOutputArray(&rotatedLeft, &None);
-                generator.makeOutputArray(&xored, &None);
-                generator.makeOutputArray(&ored, &None);
-                generator.makeOutputArray(&anded, &None);
-                generator.makeOutputArray(&inverted, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &shiftedRight, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &shiftedLeft, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &rotatedRight, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &rotatedLeft, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &xored, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &ored, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &anded, &None);
+                CircuitGenerator::makeOutputArray(self.cg(), &inverted, &None);
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
                 self.t.inputs3 = inputs3;
@@ -670,15 +670,19 @@ mod test {
 
                 let numIns = self.t.numIns as usize;
                 let mut inputs1 = WireArray::new(
-                    generator.createInputWireArray(numIns, &None),
+                    CircuitGenerator::createInputWireArray(self.cg(), numIns, &None),
                     generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
-                    generator.createInputWireArray(numIns, &None),
+                    CircuitGenerator::createInputWireArray(self.cg(), numIns, &None),
                     generator.cg_weak(),
                 );
                 let mut solutions = WireArray::new(
-                    generator.createProverWitnessWireArray(numIns + 1, &None),
+                    CircuitGenerator::createProverWitnessWireArray(
+                        self.cg.clone(),
+                        numIns + 1,
+                        &None,
+                    ),
                     generator.cg_weak(),
                 );
                 let result = &self.t.result;

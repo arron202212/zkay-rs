@@ -59,10 +59,10 @@ impl ZkayCBCSymmetricEncGadget {
         let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWiresi(256, &None).asArray());
         println!("Plain length [bits]: {}", plaintextBits.len());
 
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 plaintextBits,
                 keyBits: Util::reverseBytes(
                     key.getBitWiresi(Self::KEY_SIZE as u64, &None).asArray(),
@@ -74,7 +74,7 @@ impl ZkayCBCSymmetricEncGadget {
                 cipherBits: vec![],
                 outputs: vec![],
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

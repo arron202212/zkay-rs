@@ -49,15 +49,15 @@ impl Speck128CipherGadget {
             plaintext.len() == 2 && expandedKey.len() == 32,
             "Invalid Input"
         );
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 plaintext,
                 expandedKey,
                 ciphertext: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self
@@ -89,7 +89,7 @@ impl Gadget<Speck128CipherGadget> {
         key: &Vec<Option<WireType>>,
         generator: &RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
-        let mut generator = generator.borrow().clone();
+        let mut generator = generator.clone();
         let mut k = vec![None; 32];
         let mut l = vec![None; 32];
         k[0] = key[0].clone();

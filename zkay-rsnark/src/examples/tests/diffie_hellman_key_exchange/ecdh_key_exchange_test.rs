@@ -41,10 +41,13 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let start = std::time::Instant::now();
-                let secretBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
-                let mut baseX = self.createInputWire(&None);
-                let mut hX = self.createInputWire(&None);
+                let secretBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
+                let mut baseX = CircuitGenerator::createInputWire(self.cg(), &None);
+                let mut hX = CircuitGenerator::createInputWire(self.cg(), &None);
                 println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 let keyExchangeGadget = ECDHKeyExchangeGadget::new(
                     Some(baseX.clone()),
@@ -56,13 +59,18 @@ mod test {
                     self.cg(),
                 );
                 println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
-                self.makeOutput(
+                CircuitGenerator::makeOutput(
+                    self.cg(),
                     keyExchangeGadget.getOutputPublicValue().as_ref().unwrap(),
                     &None,
                 );
                 println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 // Just for testing. In real scenarios, this should not be made pub
-                self.makeOutput(keyExchangeGadget.getSharedSecret().as_ref().unwrap(), &None);
+                CircuitGenerator::makeOutput(
+                    self.cg(),
+                    keyExchangeGadget.getSharedSecret().as_ref().unwrap(),
+                    &None,
+                );
                 println!("={}===start==elapsed== {:?} ", line!(), start.elapsed());
                 (self.t.baseX, self.t.hX, self.t.secretBits) = (Some(baseX), Some(hX), secretBits);
             }
@@ -125,8 +133,11 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let secretBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
+                let secretBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
                 let baseX = self.createConstantWire(&BigInteger::from(4), &None);
                 let hX =  self.createConstantWire(BigInteger::parse_bytes(
                     b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10
@@ -142,13 +153,18 @@ mod test {
                     self.cg(),
                 );
 
-                self.makeOutput(
+                CircuitGenerator::makeOutput(
+                    self.cg(),
                     keyExchangeGadget.getOutputPublicValue().as_ref().unwrap(),
                     &None,
                 );
 
                 // Just for testing. In real scenarios, this should not be made pub
-                self.makeOutput(keyExchangeGadget.getSharedSecret().as_ref().unwrap(), &None);
+                CircuitGenerator::makeOutput(
+                    self.cg(),
+                    keyExchangeGadget.getSharedSecret().as_ref().unwrap(),
+                    &None,
+                );
                 (self.t.baseX, self.t.hX, self.t.secretBits) = (Some(baseX), Some(hX), secretBits);
             }
 
@@ -205,10 +221,13 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let secretBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
-                let baseX = self.createInputWire(&None);
-                let hX = self.createInputWire(&None);
+                let secretBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
+                let baseX = CircuitGenerator::createInputWire(self.cg(), &None);
+                let hX = CircuitGenerator::createInputWire(self.cg(), &None);
 
                 let keyExchangeGadget = ECDHKeyExchangeGadget::new(
                     Some(baseX.clone()),
@@ -265,10 +284,13 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let secretBits =
-                    self.createInputWireArray(exponentBitlength, &Some("exponent".to_owned()));
-                let baseX = self.createInputWire(&None);
-                let hX = self.createInputWire(&None);
+                let secretBits = CircuitGenerator::createInputWireArray(
+                    self.cg(),
+                    exponentBitlength,
+                    &Some("exponent".to_owned()),
+                );
+                let baseX = CircuitGenerator::createInputWire(self.cg(), &None);
+                let hX = CircuitGenerator::createInputWire(self.cg(), &None);
 
                 let keyExchangeGadget = ECDHKeyExchangeGadget::new(
                     Some(baseX.clone()),

@@ -102,14 +102,14 @@ impl FieldExtensionDHKeyExchange {
         // since this is typically a  input by the prover,
         // the check is also done here for safety. No need to remove this if
         // done also outside the gadget. The back end takes care of caching
-        let generators = generator.borrow().clone();
+        let generators = generator.clone();
         for w in &secretExponentBits {
             generators.addBinaryAssertion(w.as_ref().unwrap(), &None);
         }
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 mu: g.len() as i32,
                 g,
                 h,
@@ -121,7 +121,7 @@ impl FieldExtensionDHKeyExchange {
                 hPowersTable: vec![],
                 output: vec![],
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

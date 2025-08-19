@@ -74,10 +74,10 @@ impl MerkleTreePathGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 directionSelectorWire,
                 treeHeight,
                 leafWires,
@@ -86,7 +86,7 @@ impl MerkleTreePathGadget {
                 directionSelectorBits: vec![],
                 outRoot: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

@@ -74,17 +74,17 @@ impl SymmetricEncryptionCBCGadget {
             keyBits.len() as i32 == Self::keysize && ivBits.len() as i32 == Self::keysize,
             "Key and IV bit vectors should be of length 128"
         );
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 plaintextBits,
                 ivBits,
                 keyBits,
                 cipherName,
                 ciphertext: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self

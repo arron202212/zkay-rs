@@ -85,10 +85,10 @@ impl LongIntegerModPowGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 c: b.clone(),
                 b,
                 e,
@@ -96,7 +96,7 @@ impl LongIntegerModPowGadget {
                 m,
                 mMinBits,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

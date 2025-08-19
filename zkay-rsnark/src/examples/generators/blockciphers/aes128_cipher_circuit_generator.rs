@@ -71,14 +71,14 @@ impl AES128CipherCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
     fn buildCircuit(&mut self) {
-        self.t.inputs = self.createInputWireArray(16, &None); // in bytes
-        self.t.key = self.createInputWireArray(16, &None); // in bytes
+        self.t.inputs = CircuitGenerator::createInputWireArray(self.cg(), 16, &None); // in bytes
+        self.t.key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None); // in bytes
 
         let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
         let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expandedKey, &None, self.cg());
         self.t.outputs = gadget.getOutputWires().clone();
         for o in &self.t.outputs {
-            self.makeOutput(o.as_ref().unwrap(), &None);
+            CircuitGenerator::makeOutput(self.cg(), o.as_ref().unwrap(), &None);
         }
         self.t.gadget = Some(gadget);
     }

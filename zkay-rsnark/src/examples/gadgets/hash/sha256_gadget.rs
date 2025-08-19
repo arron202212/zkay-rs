@@ -63,10 +63,10 @@ impl<T> SHA256Gadget<T> {
                 || ins.len() * bitWidthPerInputElement == totalLengthInBytes,
             "When padding is not forced, totalLengthInBytes % 64 must be zero."
         );
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 unpaddedInputs: ins,
                 bitWidthPerInputElement,
                 totalLengthInBytes,
@@ -77,7 +77,7 @@ impl<T> SHA256Gadget<T> {
                 output: vec![],
                 t,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }

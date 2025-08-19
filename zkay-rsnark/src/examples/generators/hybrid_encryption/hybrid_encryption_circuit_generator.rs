@@ -88,7 +88,8 @@ impl HybridEncryptionCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
     fn buildCircuit(&mut self) {
-        let plaintext = self.createInputWireArray(
+        let plaintext = CircuitGenerator::createInputWireArray(
+            self.cg(),
             self.t.plaintextSize as usize,
             &Some("plaint text".to_owned()),
         );
@@ -96,7 +97,8 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Part I: Exchange a key:
 
         // The secret exponent is a  input by the prover
-        let mut secExpBits = self.createProverWitnessWireArray(
+        let mut secExpBits = CircuitGenerator::createProverWitnessWireArray(
+            self.cg(),
             HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize,
             &Some("SecretExponent".to_owned()),
         );
@@ -159,8 +161,8 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // instead, and supply the above values using the generateSampleInput()
         // method instead.
         /*
-         * Vec<Option<WireType>> g = self.createInputWireArray(mu);
-         * Vec<Option<WireType>> h = self.createInputWireArray(mu);
+         * Vec<Option<WireType>> g = CircuitGenerator::createInputWireArray(self.cg(),mu);
+         * Vec<Option<WireType>> h = CircuitGenerator::createInputWireArray(self.cg(),mu);
          */
 
         // Exchange keys
@@ -175,7 +177,11 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
 
         // Output g^s
         let g_to_s = exchange.getOutputPublicValue();
-        self.makeOutputArray(g_to_s, &Some("DH Key Exchange Output".to_owned()));
+        CircuitGenerator::makeOutputArray(
+            self.cg(),
+            g_to_s,
+            &Some("DH Key Exchange Output".to_owned()),
+        );
 
         // Use h^s to generate a symmetric secret key and an initialization
         // vector. Apply a Hash-based KDF.
@@ -209,7 +215,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             self.cg(),
         );
         let ciphertext = symEncGagdet.getOutputWires();
-        self.makeOutputArray(&ciphertext, &Some("Cipher Text".to_owned()));
+        CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &Some("Cipher Text".to_owned()));
         (self.t.plaintext, self.t.secExpBits, self.t.ciphertext) =
             (plaintext, secExpBits, ciphertext.clone());
     }

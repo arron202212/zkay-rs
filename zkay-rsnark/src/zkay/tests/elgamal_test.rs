@@ -44,7 +44,7 @@ mod test {
             Self { x, y }
         }
 
-        pub fn asConstJubJub(&self, generators: &CircuitGenerator) -> JubJubPoint {
+        pub fn asConstJubJub(&self, generators: &RcCell<CircuitGenerator>) -> JubJubPoint {
             let wx = generators.createConstantWire(&self.x, &None);
             let wy = generators.createConstantWire(&self.y, &None);
             JubJubPoint::new(wx, wy)
@@ -74,14 +74,18 @@ mod test {
             let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
             let message = self.createConstantWire(&self.t.plain, &None);
             let messageBits = message.getBitWiresi(32, &None);
-            let generator = self.cg.borrow().clone();
+            let generator = self.cg.clone();
             let gadget = ZkayElgamalEncGadget::new(
                 messageBits.asArray().clone(),
                 self.t.pk.asConstJubJub(&generator),
                 randomnessBits.asArray().clone(),
                 self.cg(),
             );
-            self.makeOutputArray(gadget.getOutputWires(), &Some("cipher".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                gadget.getOutputWires(),
+                &Some("cipher".to_owned()),
+            );
         }
 
         fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
@@ -111,7 +115,7 @@ mod test {
         fn buildCircuit(&mut self) {
             let randomness = self.createConstantWire(&self.t.random, &None);
             let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
-            let generator = self.cg.borrow().clone();
+            let generator = self.cg.clone();
             let gadget = ZkayElgamalRerandGadget::new(
                 self.t.c1.asConstJubJub(&generator),
                 self.t.c2.asConstJubJub(&generator),
@@ -119,7 +123,11 @@ mod test {
                 randomnessBits.asArray().clone(),
                 self.cg(),
             );
-            self.makeOutputArray(gadget.getOutputWires(), &Some("rerand_cipher".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                gadget.getOutputWires(),
+                &Some("rerand_cipher".to_owned()),
+            );
         }
 
         fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
@@ -161,7 +169,7 @@ mod test {
             let secretKey = self.createConstantWire(&self.t.sk, &None);
             let skBits = secretKey.getBitWiresi(self.t.sk.bits(), &None);
             let msgWire = self.createConstantWire(&self.t.msg, &None);
-            let generator = self.cg.borrow().clone();
+            let generator = self.cg.clone();
             let gadget = ZkayElgamalDecGadget::new(
                 self.t.pk.asConstJubJub(&generator),
                 skBits.asArray().clone(),
@@ -170,7 +178,11 @@ mod test {
                 msgWire,
                 self.cg(),
             );
-            self.makeOutputArray(gadget.getOutputWires(), &Some("dummy output".to_owned()));
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
+                gadget.getOutputWires(),
+                &Some("dummy output".to_owned()),
+            );
         }
 
         fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}

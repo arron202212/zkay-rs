@@ -68,23 +68,22 @@ impl AESSBoxComputeGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 output: vec![],
                 inverse: None,
                 input,
             },
-        };
+        );
         _self.buildCircuit();
         _self
     }
 }
 impl Gadget<AESSBoxComputeGadget> {
     fn buildCircuit(&mut self) {
-        let generator = self.generator.borrow().clone();
-        let inverse = generator.createProverWitnessWire(&None);
+        let inverse = CircuitGenerator::createProverWitnessWire(self.generator.clone(), &None);
         let input = &self.t.input;
         let prover = crate::impl_prover!(
                                         eval(  input: WireType,
@@ -125,7 +124,7 @@ impl Gadget<AESSBoxComputeGadget> {
                         }
                                     }
                                 );
-        generator.specifyProverWitnessComputation(prover);
+        self.generators.specifyProverWitnessComputation(prover);
 
         // &{
         //     struct Prover;
@@ -141,14 +140,14 @@ impl Gadget<AESSBoxComputeGadget> {
 
         inverse.restrictBitLength(8, &None);
 
-        let v = Self::gmul(self.t.input.clone(), inverse.clone(), &generator);
-        generator.addAssertion(
-            &v.sub(generator.get_one_wire().as_ref().unwrap()),
+        let v = Self::gmul(self.t.input.clone(), inverse.clone(), &self.generators);
+        self.generators.addAssertion(
+            &v.sub(self.generator.get_one_wire().as_ref().unwrap()),
             &self.t.input.clone().add(&inverse),
-            generator.get_zero_wire().as_ref().unwrap(),
+            self.generator.get_zero_wire().as_ref().unwrap(),
             &None,
         );
-        let constant = generator.createConstantWirei(0x63, &None);
+        let constant = self.generators.createConstantWirei(0x63, &None);
         let mut output = constant.xorBitwise(&inverse, 8, &None);
         output = output.xorBitwise(&inverse.rotateLeft(8, 1, &None), 8, &None);
         output = output.xorBitwise(&inverse.rotateLeft(8, 2, &None), 8, &None);

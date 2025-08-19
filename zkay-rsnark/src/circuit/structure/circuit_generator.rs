@@ -227,7 +227,7 @@ pub fn addToEvaluationQueue(
     let mut s = DefaultHasher::new();
     e.hash(&mut s);
     let hash_code = s.finish();
-    assert!(3899388557723912248 != hash_code, "===e===e========{e:?}");
+    // assert!(3899388557723912248 != hash_code, "===e===e========{e:?}");
     ///TEST
     // let mut s:BuildHasherDefault<NoHashHasher<Box<dyn Instruction>>> = BuildNoHashHasher::new();//:
     // // let hash_code = <BuildHasherDefault<NoHashHasher<_>> as BuildHasher>::hash_one::<Box<dyn Instruction>>(&s, e);
@@ -456,7 +456,207 @@ pub fn put_active_circuit_generator(name: &str, cg: &str) { //ARcCell<dyn CGConf
     // *CG_NAME.lock() = name.to_owned();
     // active_circuit_generators.lock().insert(name.to_owned(), cg);
 }
+impl CircuitGenerator {
+    pub fn createInputWire(cg: RcCell<CircuitGenerator>, desc: &Option<String>) -> WireType {
+        let newInputWire = WireType::Variable(VariableWire::new(
+            cg.get_current_wire_id(),
+            cg.clone().downgrade(),
+        ));
+        // println!("==get_current_wire_id===={}==={}===",self.get_current_wire_id(),cg.borrow().current_wire_id );
+        cg.borrow_mut().current_wire_id += 1;
+        addToEvaluationQueue(
+            cg.clone(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::input,
+                newInputWire.clone(),
+                desc.clone().unwrap_or(String::new()),
+            )),
+        );
+        cg.borrow_mut().in_wires.push(Some(newInputWire.clone()));
+        newInputWire
+    }
+    pub fn createProverWitnessWire(
+        cg: RcCell<CircuitGenerator>,
+        desc: &Option<String>,
+    ) -> WireType {
+        // println!(
+        //     "===self.get_current_wire_id()======createProverWitnessWire=={}=========={}",
+        //     cg.borrow_mut().current_wire_id,
+        //     self.get_current_wire_id()
+        // );
+        let wire = WireType::Variable(VariableWire::new(
+            cg.get_current_wire_id(),
+            cg.clone().downgrade(),
+        ));
+        cg.borrow_mut().current_wire_id += 1;
+        addToEvaluationQueue(
+            cg.clone(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::nizkinput,
+                wire.clone(),
+                desc.clone().unwrap_or(String::new()),
+            )),
+        );
+        cg.borrow_mut()
+            .prover_witness_wires
+            .push(Some(wire.clone()));
+        wire
+    }
+    pub fn makeOutput(
+        cg: RcCell<CircuitGenerator>,
+        wire: &WireType,
+        desc: &Option<String>,
+    ) -> WireType {
+        // println!("===========makeOutput=============");
+        let mut outputWire = wire.clone();
+        let some_wire = Some(wire.clone());
 
+        let outputWire = if cg.borrow().prover_witness_wires.contains(&some_wire) {
+            // The first case is allowed for usability. In some cases, gadgets provide their witness wires as intermediate outputs, e.g., division gadgets,
+            // and the programmer could choose any of these intermediate outputs to be circuit outputs later.
+            // The drawback of this method is that this will add one constraint for every witness wire that is transformed to be a circuit output.
+            // As the statement size is usually small, this will not lead to issues in practice.
+            // The constraint is just added for separation. Note: prover witness wires are actually variable wires. The following method is used
+            // in order to introduce a different variable.
+            Self::makeVariable(cg.clone(), &wire, desc)
+            // If this causes overhead, the programmer can create the wires that are causing the bottleneck
+            // as input wires instead of prover witness wires and avoid calling makeOutput().
+        } else if cg.borrow().in_wires.contains(&some_wire) {
+            eprintln!(
+                "Warning: An input wire is redeclared as an output. This leads to an additional unnecessary constraint."
+            );
+            eprintln!(
+                "\t->This situation could happen by calling makeOutput() on input wires or in some cases involving multiplication of an input wire by 1 then declaring the result as an output wire."
+            );
+            Self::makeVariable(cg.clone(), &wire, desc)
+        } else if !(wire.instance_of("VariableWire") || wire.instance_of("VariableBitWire")) {
+            wire.packIfNeeded(&None);
+            Self::makeVariable(cg.clone(), &wire, desc)
+        } else {
+            wire.packIfNeeded(&None);
+
+            wire.clone()
+        };
+        // println!("----------------------------------------");
+        cg.borrow_mut().out_wires.push(Some(outputWire.clone()));
+        addToEvaluationQueue(
+            cg.clone(),
+            Box::new(WireLabelInstruction::new(
+                LabelType::output,
+                outputWire.clone(),
+                desc.clone().unwrap_or(String::new()),
+            )),
+        );
+        outputWire
+    }
+
+    pub fn makeVariable(
+        cg: RcCell<CircuitGenerator>,
+        wire: &WireType,
+        desc: &Option<String>,
+    ) -> WireType {
+        let mut outputWire = WireType::Variable(VariableWire::new(
+            cg.get_current_wire_id(),
+            cg.clone().downgrade(),
+        ));
+
+        cg.borrow_mut().current_wire_id += 1;
+        let op = MulBasicOp::new(
+            wire,
+            cg.get_one_wire().as_ref().unwrap(),
+            &outputWire,
+            desc.clone().unwrap_or(String::new()),
+        );
+        let cachedOutputs = addToEvaluationQueue(cg.clone(), Box::new(op));
+        if let Some(cachedOutputs) = cachedOutputs {
+            cg.borrow_mut().current_wire_id -= 1;
+            cachedOutputs[0].clone().unwrap()
+        } else {
+            outputWire
+        }
+    }
+
+    pub fn createInputWireArray(
+        cg: RcCell<CircuitGenerator>,
+        n: usize,
+        desc: &Option<String>,
+    ) -> Vec<Option<WireType>> {
+        (0..n)
+            .map(|i| {
+                Some(CircuitGenerator::createInputWire(
+                    cg.clone(),
+                    &desc.as_ref().map(|d| format!("{} {i}", d)),
+                ))
+            })
+            .collect()
+    }
+
+    pub fn createLongElementInput(
+        cg: RcCell<CircuitGenerator>,
+        totalBitwidth: i32,
+        desc: &Option<String>,
+    ) -> LongElement {
+        let numWires =
+            (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
+        let w = Self::createInputWireArray(cg.clone(), numWires, desc);
+        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
+        if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
+            bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
+        }
+        LongElement::new(w, bitwidths, cg.downgrade())
+    }
+
+    pub fn createLongElementProverWitness(
+        cg: RcCell<CircuitGenerator>,
+        totalBitwidth: i32,
+        desc: &Option<String>,
+    ) -> LongElement {
+        let numWires =
+            (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
+        let w = Self::createProverWitnessWireArray(cg.clone(), numWires, desc);
+        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
+        if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
+            bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
+        }
+        LongElement::new(w, bitwidths, cg.downgrade())
+    }
+
+    pub fn createProverWitnessWireArray(
+        cg: RcCell<CircuitGenerator>,
+        n: usize,
+        desc: &Option<String>,
+    ) -> Vec<Option<WireType>> {
+        (0..n)
+            .map(|k| {
+                Some(CircuitGenerator::createProverWitnessWire(
+                    cg.clone(),
+                    &desc.as_ref().map(|d| format!("{} {k}", d)),
+                ))
+            })
+            .collect()
+    }
+    pub fn makeOutputArray(
+        cg: RcCell<CircuitGenerator>,
+        wires: &Vec<Option<WireType>>,
+        desc: &Option<String>,
+    ) -> Vec<Option<WireType>> {
+        // println!("================makeOutputArray========");
+        wires
+            .iter()
+            .enumerate()
+            .map(|(i, w)| {
+                // println!("{i}=i==w={}",w.as_ref().unwrap().getWireId());
+                let out = CircuitGenerator::makeOutput(
+                    cg.clone(),
+                    w.as_ref().unwrap(),
+                    &desc.as_ref().map(|d| format!("{}[{i}]", d)),
+                );
+                // println!("{i}=i==out={}",out.getWireId());
+                Some(out)
+            })
+            .collect()
+    }
+}
 //+ CreateConstantWire + CreateConstantWireArray + CreateNegConstantWire
 pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn buildCircuit(&mut self) {}
@@ -476,98 +676,6 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
     }
 
-    fn createInputWire(&self, desc: &Option<String>) -> WireType {
-        let newInputWire = WireType::Variable(VariableWire::new(
-            self.cg().get_current_wire_id(),
-            self.cg_weak(),
-        ));
-        // println!("==get_current_wire_id===={}==={}===",self.get_current_wire_id(),self.cg().borrow().current_wire_id );
-        self.cg().borrow_mut().current_wire_id += 1;
-        addToEvaluationQueue(
-            self.cg(),
-            Box::new(WireLabelInstruction::new(
-                LabelType::input,
-                newInputWire.clone(),
-                desc.clone().unwrap_or(String::new()),
-            )),
-        );
-        self.cg()
-            .borrow_mut()
-            .in_wires
-            .push(Some(newInputWire.clone()));
-        newInputWire
-    }
-
-    fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>> {
-        (0..n)
-            .map(|i| Some(self.createInputWire(&desc.as_ref().map(|d| format!("{} {i}", d)))))
-            .collect()
-    }
-
-    fn createLongElementInput(&self, totalBitwidth: i32, desc: &Option<String>) -> LongElement {
-        let numWires =
-            (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
-        let w = self.createInputWireArray(numWires, desc);
-        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
-        if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
-            bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
-        }
-        LongElement::new(w, bitwidths, self.cg_weak())
-    }
-
-    fn createLongElementProverWitness(
-        &self,
-        totalBitwidth: i32,
-        desc: &Option<String>,
-    ) -> LongElement {
-        let numWires =
-            (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
-        let w = self.createProverWitnessWireArray(numWires, desc);
-        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
-        if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
-            bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
-        }
-        LongElement::new(w, bitwidths, self.cg_weak())
-    }
-
-    fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType {
-        // println!(
-        //     "===self.get_current_wire_id()======createProverWitnessWire=={}=========={}",
-        //     self.cg().borrow_mut().current_wire_id,
-        //     self.get_current_wire_id()
-        // );
-        let wire = WireType::Variable(VariableWire::new(
-            self.cg().get_current_wire_id(),
-            self.cg_weak(),
-        ));
-        self.cg().borrow_mut().current_wire_id += 1;
-        addToEvaluationQueue(
-            self.cg(),
-            Box::new(WireLabelInstruction::new(
-                LabelType::nizkinput,
-                wire.clone(),
-                desc.clone().unwrap_or(String::new()),
-            )),
-        );
-        self.cg()
-            .borrow_mut()
-            .prover_witness_wires
-            .push(Some(wire.clone()));
-        wire
-    }
-
-    fn createProverWitnessWireArray(
-        &self,
-        n: usize,
-        desc: &Option<String>,
-    ) -> Vec<Option<WireType>> {
-        (0..n)
-            .map(|k| {
-                Some(self.createProverWitnessWire(&desc.as_ref().map(|d| format!("{} {k}", d))))
-            })
-            .collect()
-    }
-
     fn generateZeroWireArray(&self, n: usize) -> Vec<Option<WireType>> {
         let zero_wire = self.cg().get_zero_wire();
         vec![zero_wire; n]
@@ -576,94 +684,6 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn generateOneWireArray(&self, n: usize) -> Vec<Option<WireType>> {
         let one_wire = self.cg().get_one_wire();
         vec![one_wire; n]
-    }
-
-    fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType {
-        // println!("===========makeOutput=============");
-        let mut outputWire = wire.clone();
-        let some_wire = Some(wire.clone());
-        let cg = self.cg();
-
-        let outputWire = if cg.borrow().prover_witness_wires.contains(&some_wire) {
-            // The first case is allowed for usability. In some cases, gadgets provide their witness wires as intermediate outputs, e.g., division gadgets,
-            // and the programmer could choose any of these intermediate outputs to be circuit outputs later.
-            // The drawback of this method is that this will add one constraint for every witness wire that is transformed to be a circuit output.
-            // As the statement size is usually small, this will not lead to issues in practice.
-            // The constraint is just added for separation. Note: prover witness wires are actually variable wires. The following method is used
-            // in order to introduce a different variable.
-            self.makeVariable(&wire, desc)
-            // If this causes overhead, the programmer can create the wires that are causing the bottleneck
-            // as input wires instead of prover witness wires and avoid calling makeOutput().
-        } else if cg.borrow().in_wires.contains(&some_wire) {
-            eprintln!(
-                "Warning: An input wire is redeclared as an output. This leads to an additional unnecessary constraint."
-            );
-            eprintln!(
-                "\t->This situation could happen by calling makeOutput() on input wires or in some cases involving multiplication of an input wire by 1 then declaring the result as an output wire."
-            );
-            self.makeVariable(&wire, desc)
-        } else if !(wire.instance_of("VariableWire") || wire.instance_of("VariableBitWire")) {
-            wire.packIfNeeded(&None);
-            self.makeVariable(&wire, desc)
-        } else {
-            wire.packIfNeeded(&None);
-
-            wire.clone()
-        };
-        // println!("----------------------------------------");
-        cg.borrow_mut().out_wires.push(Some(outputWire.clone()));
-        addToEvaluationQueue(
-            self.cg(),
-            Box::new(WireLabelInstruction::new(
-                LabelType::output,
-                outputWire.clone(),
-                desc.clone().unwrap_or(String::new()),
-            )),
-        );
-        outputWire
-    }
-
-    fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType {
-        let mut outputWire = WireType::Variable(VariableWire::new(
-            self.cg().get_current_wire_id(),
-            self.cg_weak(),
-        ));
-
-        self.cg().borrow_mut().current_wire_id += 1;
-        let op = MulBasicOp::new(
-            wire,
-            self.cg().get_one_wire().as_ref().unwrap(),
-            &outputWire,
-            desc.clone().unwrap_or(String::new()),
-        );
-        let cachedOutputs = addToEvaluationQueue(self.cg(), Box::new(op));
-        if let Some(cachedOutputs) = cachedOutputs {
-            self.cg().borrow_mut().current_wire_id -= 1;
-            cachedOutputs[0].clone().unwrap()
-        } else {
-            outputWire
-        }
-    }
-
-    fn makeOutputArray(
-        &self,
-        wires: &Vec<Option<WireType>>,
-        desc: &Option<String>,
-    ) -> Vec<Option<WireType>> {
-        // println!("================makeOutputArray========");
-        wires
-            .iter()
-            .enumerate()
-            .map(|(i, w)| {
-                // println!("{i}=i==w={}",w.as_ref().unwrap().getWireId());
-                let out = self.makeOutput(
-                    w.as_ref().unwrap(),
-                    &desc.as_ref().map(|d| format!("{}[{i}]", d)),
-                );
-                // println!("{i}=i==out={}",out.getWireId());
-                Some(out)
-            })
-            .collect()
     }
 
     fn addDebugInstruction(&self, w: &WireType, desc: &Option<String>) {
@@ -1291,39 +1311,39 @@ impl CGConfig for RcCell<CircuitGenerator> {
     crate::impl_fn_of_trait!( fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator));
     crate::impl_fn_of_trait!(fn generateCircuit(&mut self));
 
-    crate::impl_fn_of_trait!(fn createInputWire(&self, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn createInputWire(&self, desc: &Option<String>) -> WireType );
 
-    crate::impl_fn_of_trait!(fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
+    // crate::impl_fn_of_trait!(fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
 
-    crate::impl_fn_of_trait!(fn createLongElementInput(&self, totalBitwidth: i32, desc: &Option<String>) -> LongElement);
+    // crate::impl_fn_of_trait!(fn createLongElementInput(&self, totalBitwidth: i32, desc: &Option<String>) -> LongElement);
 
-    crate::impl_fn_of_trait! (fn createLongElementProverWitness(
-        &self,
-        totalBitwidth: i32,
-        desc: &Option<String>
-    ) -> LongElement );
+    // crate::impl_fn_of_trait! (fn createLongElementProverWitness(
+    //     &self,
+    //     totalBitwidth: i32,
+    //     desc: &Option<String>
+    // ) -> LongElement );
 
-    crate::impl_fn_of_trait!(fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType );
 
-    crate::impl_fn_of_trait!(fn createProverWitnessWireArray(
-        &self,
-        n: usize,
-        desc: &Option<String>
-    ) -> Vec<Option<WireType>> );
+    // crate::impl_fn_of_trait!(fn createProverWitnessWireArray(
+    //     &self,
+    //     n: usize,
+    //     desc: &Option<String>
+    // ) -> Vec<Option<WireType>> );
 
     crate::impl_fn_of_trait!(fn generateZeroWireArray(&self, n: usize) -> Vec<Option<WireType>> );
 
     crate::impl_fn_of_trait!(fn generateOneWireArray(&self, n: usize) -> Vec<Option<WireType>>);
 
-    crate::impl_fn_of_trait!(fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType );
 
-    crate::impl_fn_of_trait!(fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType );
 
-    crate::impl_fn_of_trait!(fn makeOutputArray(
-        &self,
-        wires: &Vec<Option<WireType>>,
-        desc: &Option<String>
-    ) -> Vec<Option<WireType>> );
+    // crate::impl_fn_of_trait!(fn makeOutputArray(
+    //     &self,
+    //     wires: &Vec<Option<WireType>>,
+    //     desc: &Option<String>
+    // ) -> Vec<Option<WireType>> );
 
     crate::impl_fn_of_trait!(fn addDebugInstruction(&self, w: &WireType, desc: &Option<String>));
 

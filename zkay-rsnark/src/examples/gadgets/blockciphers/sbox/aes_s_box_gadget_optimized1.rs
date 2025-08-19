@@ -69,14 +69,14 @@ impl AESSBoxGadgetOptimized1 {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 input,
                 output: vec![],
             },
-        };
+        );
 
         _self.buildCircuit();
         _self
@@ -217,8 +217,8 @@ impl Gadget<AESSBoxGadgetOptimized1> {
     }
 
     fn buildCircuit(&mut self) {
-        let generator = self.generator.borrow().clone();
-        let mut output = generator.createProverWitnessWire(&None);
+        let generator = self.generator.clone();
+        let mut output = CircuitGenerator::createProverWitnessWire(self.generator.clone(), &None);
         self.t.input.restrictBitLength(8, &None);
         let input = self.t.input.clone();
         let SBox = Self::SBox.clone();

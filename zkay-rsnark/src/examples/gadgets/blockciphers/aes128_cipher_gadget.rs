@@ -97,15 +97,15 @@ impl AES128CipherGadget {
                 && expandedKey.len() == 4 * AES128CipherGadget::nb * (AES128CipherGadget::nr + 1),
             "Invalid Input"
         );
-        let mut _self = Gadget::<Self> {
+        let mut _self = Gadget::<Self>::new(
             generator,
-            description: desc.clone().unwrap_or(String::new()),
-            t: Self {
+            desc,
+            Self {
                 plaintext: inputs,
                 ciphertext: vec![],
                 expandedKey,
             },
-        };
+        );
 
         _self.buildCircuit();
         _self
@@ -297,7 +297,7 @@ impl Gadget<AES128CipherGadget> {
             w[i] = key[4 * i..=4 * i + 3].to_vec();
             i += 1;
         }
-        let generators = generator.borrow().clone();
+        let generators = generator.clone();
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
         i = AES128CipherGadget::nk;
         while i < AES128CipherGadget::nb * (AES128CipherGadget::nr + 1) {

@@ -69,12 +69,21 @@ impl DotProductCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
     fn buildCircuit(&mut self) {
-        let a = self.createInputWireArray(self.t.dimension as usize, &Some("Input a".to_owned()));
-        let b = self.createInputWireArray(self.t.dimension as usize, &Some("Input b".to_owned()));
+        let a = CircuitGenerator::createInputWireArray(
+            self.cg(),
+            self.t.dimension as usize,
+            &Some("Input a".to_owned()),
+        );
+        let b = CircuitGenerator::createInputWireArray(
+            self.cg(),
+            self.t.dimension as usize,
+            &Some("Input b".to_owned()),
+        );
 
         let dotProductGadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());
         let result = dotProductGadget.getOutputWires();
-        self.makeOutput(
+        CircuitGenerator::makeOutput(
+            self.cg(),
             result[0].as_ref().unwrap(),
             &Some("output of dot product a, b".to_owned()),
         );

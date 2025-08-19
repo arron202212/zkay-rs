@@ -79,7 +79,7 @@ impl RSASigVerCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
     fn buildCircuit(&mut self) {
         // a sample input message of 3 byte
-        let inputMessage = self.createInputWireArray(3, &None);
+        let inputMessage = CircuitGenerator::createInputWireArray(self.cg(), 3, &None);
         let sha2Gadget = SHA256Gadget::new(
             inputMessage.clone(),
             8,
@@ -104,7 +104,8 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         //  * statement. This way of doing this increases the number of gates a
         //  * bit, but reduces the VK size when needed.
 
-        let rsaModulus = self.createLongElementInput(self.t.rsaKeyLength, &None);
+        let rsaModulus =
+            CircuitGenerator::createLongElementInput(self.cg(), self.t.rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -114,7 +115,8 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
 
         // In case of hardcoding the modulus, comment the line that sets the modulus value in generateSampleInput() to avoid an exception
 
-        let signature = self.createLongElementProverWitness(self.t.rsaKeyLength, &None);
+        let signature =
+            CircuitGenerator::createLongElementProverWitness(self.cg(), self.t.rsaKeyLength, &None);
 
         // since the signature is provided as a witness, verify some properties
         // about it
@@ -130,7 +132,8 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
             &None,
             self.cg(),
         );
-        self.makeOutput(
+        CircuitGenerator::makeOutput(
+            self.cg(),
             rsaSigVerificationV1_5_Gadget.getOutputWires()[0]
                 .as_ref()
                 .unwrap(),

@@ -85,8 +85,11 @@ impl RSAEncryptionOAEPCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
     fn buildCircuit(&mut self) {
-        let mut inputMessage =
-            self.createProverWitnessWireArray(self.t.plainTextLength as usize, &None); // in bytes
+        let mut inputMessage = CircuitGenerator::createProverWitnessWireArray(
+            self.cg(),
+            self.t.plainTextLength as usize,
+            &None,
+        ); // in bytes
         for i in 0..self.t.plainTextLength as usize {
             inputMessage[i]
                 .as_ref()
@@ -94,13 +97,15 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
                 .restrictBitLength(8, &None);
         }
 
-        let seed = self.createProverWitnessWireArray(
+        let seed = CircuitGenerator::createProverWitnessWireArray(
+            self.cg(),
             RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize,
             &None,
         );
         // constraints on the seed are checked later.
 
-        let rsaModulus = self.createLongElementInput(self.t.rsaKeyLength, &None);
+        let rsaModulus =
+            CircuitGenerator::createLongElementInput(self.cg(), self.t.rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -128,7 +133,11 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
         // do some grouping to reduce VK Size
         let cipherText = WireArray::new(cipherTextInBytes.clone(), self.cg().downgrade())
             .packWordsIntoLargerWords(8, 30, &None);
-        self.makeOutputArray(&cipherText, &Some("Output cipher text".to_owned()));
+        CircuitGenerator::makeOutputArray(
+            self.cg(),
+            &cipherText,
+            &Some("Output cipher text".to_owned()),
+        );
         (
             self.t.inputMessage,
             self.t.seed,

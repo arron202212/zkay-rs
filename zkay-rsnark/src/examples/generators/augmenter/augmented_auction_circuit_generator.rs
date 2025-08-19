@@ -91,14 +91,18 @@ impl AugmentedAuctionCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
     fn buildCircuit(&mut self) {
         let numParties = self.t.numParties as usize;
-        let mut secretInputValues = self.createProverWitnessWireArray(numParties - 1, &None); // the manager has a zero input (no need to commit to it)
+        let mut secretInputValues =
+            CircuitGenerator::createProverWitnessWireArray(self.cg(), numParties - 1, &None); // the manager has a zero input (no need to commit to it)
         let mut secretInputRandomness = vec![vec![]; numParties - 1];
         let mut secretOutputRandomness = vec![vec![]; numParties];
         for i in 0..numParties - 1 {
-            secretInputRandomness[i] = self.createProverWitnessWireArray(7, &None);
-            secretOutputRandomness[i] = self.createProverWitnessWireArray(7, &None);
+            secretInputRandomness[i] =
+                CircuitGenerator::createProverWitnessWireArray(self.cg(), 7, &None);
+            secretOutputRandomness[i] =
+                CircuitGenerator::createProverWitnessWireArray(self.cg(), 7, &None);
         }
-        secretOutputRandomness[numParties - 1] = self.createProverWitnessWireArray(7, &None);
+        secretOutputRandomness[numParties - 1] =
+            CircuitGenerator::createProverWitnessWireArray(self.cg(), 7, &None);
         let mut secretInputValuess = secretInputValues.clone();
         secretInputValuess.insert(0, self.get_zero_wire());
         // instantiate a Pinocchio gadget for the auction circuit
@@ -127,7 +131,8 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 self.cg(),
                 Base,
             );
-            self.makeOutputArray(
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
                 g.getOutputWires(),
                 &Some(format!("Commitment for party # {i}'s input balance.")),
             );
@@ -155,7 +160,8 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 self.cg(),
                 Base,
             );
-            self.makeOutputArray(
+            CircuitGenerator::makeOutputArray(
+                self.cg(),
                 g.getOutputWires(),
                 &Some(format!("Commitment for party # {i}'s output balance.")),
             );
