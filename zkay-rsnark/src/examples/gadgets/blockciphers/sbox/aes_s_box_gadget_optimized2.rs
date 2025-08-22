@@ -208,7 +208,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         let generator = self.generator.clone();
         let mut output = CircuitGenerator::createProverWitnessWire(self.generator.clone(), &None);
         let input = &self.t.input;
-        // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //     // TODO Auto-generated method stub
         //     let value = evaluator.getWireValue(input);
         //     evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
@@ -226,7 +226,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             }
                         }
                     );
-        generator.specifyProverWitnessComputation(prover);
+        CircuitGenerator::specifyProverWitnessComputation(generator.clone(), prover);
         // {
         //             struct Prover;
         //             impl Instruction for Prover {
@@ -282,7 +282,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             product = product.mul(accum);
         }
         self.t.output = vec![Some(output)];
-        generator.addZeroAssertion(&product, &None);
+        CircuitGenerator::addZeroAssertion(generator.clone(), &product, &None);
     }
 
     fn getVariableValues(k: i32, bit_count: u8) -> Vec<BigInteger> {

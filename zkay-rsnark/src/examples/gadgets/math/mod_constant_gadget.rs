@@ -109,7 +109,7 @@ impl Gadget<ModConstantGadget> {
         );
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
-        // generator.specifyProverWitnessComputation(  &|evaluator: &mut CircuitEvaluator| {
+        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),  &|evaluator: &mut CircuitEvaluator| {
         //             let aValue = evaluator.getWireValue(a);
         //             let rValue = aValue.rem(b);
         //             evaluator.setWireValue(r, &rValue);
@@ -136,7 +136,7 @@ impl Gadget<ModConstantGadget> {
                     }
                                 }
                             );
-        self.generators.specifyProverWitnessComputation(prover);
+        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
@@ -154,10 +154,19 @@ impl Gadget<ModConstantGadget> {
         let bBitwidth = b.bits();
         r.restrictBitLength(bBitwidth, &None);
         q.restrictBitLength(self.t.bitwidth as u64 - bBitwidth + 1, &None);
-        self.generator
-            .addOneAssertion(&r.isLessThanb(&b, bBitwidth as i32, &None), &None);
-        self.generator
-            .addEqualityAssertion(&q.mulb(&b, &None).add(&r), &a, &None);
+
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
+            &r.isLessThanb(&b, bBitwidth as i32, &None),
+            &None,
+        );
+
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
+            &q.mulb(&b, &None).add(&r),
+            &a,
+            &None,
+        );
         (self.t.r, self.t.q) = (vec![Some(r)], q);
     }
 }

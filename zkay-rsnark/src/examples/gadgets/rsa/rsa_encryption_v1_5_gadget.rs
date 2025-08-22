@@ -125,7 +125,11 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             paddedPlainText[self.t.plainText.len() + 1 + (self.t.randomness.len() - 1) - i] =
                 self.t.randomness[i].clone();
         }
-        paddedPlainText[lengthInBytes - 2] = Some(self.generator.createConstantWirei(2, &None));
+        paddedPlainText[lengthInBytes - 2] = Some(CircuitGenerator::createConstantWirei(
+            self.generator.clone(),
+            2,
+            &None,
+        ));
         paddedPlainText[lengthInBytes - 1] = self.generator.get_zero_wire();
 
         /*

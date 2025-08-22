@@ -612,23 +612,23 @@ mod test {
                 let mut witness1 = CircuitGenerator::createProverWitnessWire(self.cg(), &None);
                 let mut witness2 = CircuitGenerator::createProverWitnessWire(self.cg(), &None);
 
-                self.addAssertion(&in1, &in2, &witness1, &None);
+                CircuitGenerator::addAssertion(self.cg(), &in1, &in2, &witness1, &None);
                 assert_eq!(generator.get_num_of_constraints(), 1);
-                self.addAssertion(&in1, &in2, &witness1, &None);
+                CircuitGenerator::addAssertion(self.cg(), &in1, &in2, &witness1, &None);
                 assert_eq!(generator.get_num_of_constraints(), 1);
-                self.addAssertion(&in2, &in1, &witness1, &None);
+                CircuitGenerator::addAssertion(self.cg(), &in2, &in1, &witness1, &None);
                 assert_eq!(generator.get_num_of_constraints(), 1);
 
                 // since &witness2, is another wire, the constraint should go
                 // through
-                self.addAssertion(&in1, &in2, &witness2, &None);
+                CircuitGenerator::addAssertion(self.cg(), &in1, &in2, &witness2, &None);
                 assert_eq!(generator.get_num_of_constraints(), 2);
-                self.addAssertion(&in2, &in1, &witness2, &None);
+                CircuitGenerator::addAssertion(self.cg(), &in2, &in1, &witness2, &None);
                 assert_eq!(generator.get_num_of_constraints(), 2);
 
-                self.addEqualityAssertion(&witness1, &witness2, &None);
+                CircuitGenerator::addEqualityAssertion(self.cg(), &witness1, &witness2, &None);
                 assert_eq!(generator.get_num_of_constraints(), 3);
-                self.addEqualityAssertion(&witness2, &witness1, &None);
+                CircuitGenerator::addEqualityAssertion(self.cg(), &witness2, &witness1, &None);
                 assert_eq!(generator.get_num_of_constraints(), 4); // we don't detect
                 // similarity here yet
 

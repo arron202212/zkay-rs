@@ -61,7 +61,8 @@ mod test {
             //     self.generator.get_current_wire_id()
             // );
 
-            let a = generator.createConstantWire(
+            let a = CircuitGenerator::createConstantWire(
+                generator.clone(),
                 &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
                 &None,
             );
@@ -71,7 +72,8 @@ mod test {
             //     self.generator.get_current_wire_id()
             // );
 
-            let ainv_expected = generator.createConstantWire(
+            let ainv_expected = CircuitGenerator::createConstantWire(
+                generator.clone(),
                 &pbi(
                     "20950552912096304742729232452120498732043875737213521271262032500972060322340",
                 ),
@@ -106,11 +108,19 @@ mod test {
             //     generator.get_current_wire_id(),
             //     self.generator.get_current_wire_id()
             // );
-            generator.addEqualityAssertion(&ainv, &ainv_expected, &None);
+            CircuitGenerator::addEqualityAssertion(generator.clone(), &ainv, &ainv_expected, &None);
 
             // check generator on curve
-            let g_x = generator.createConstantWire(&pbi(Self::GENERATOR_X), &None);
-            let g_y = generator.createConstantWire(&pbi(Self::GENERATOR_Y), &None);
+            let g_x = CircuitGenerator::createConstantWire(
+                generator.clone(),
+                &pbi(Self::GENERATOR_X),
+                &None,
+            );
+            let g_y = CircuitGenerator::createConstantWire(
+                generator.clone(),
+                &pbi(Self::GENERATOR_Y),
+                &None,
+            );
             self.assertOnCurve(&g_x, &g_y);
 
             // check generator + generator on curve
@@ -122,12 +132,14 @@ mod test {
             let gneg = Gadget::<ZkayBabyJubJubGadget<TestGadget>>::negatePoint(&g);
             self.assertOnCurve(&gneg.x, &gneg.y);
             let inf = self.addPoints(&g, &gneg);
-            generator.addEqualityAssertion(
+            CircuitGenerator::addEqualityAssertion(
+                generator.clone(),
                 &inf.x,
                 generator.get_zero_wire().as_ref().unwrap(),
                 &None,
             );
-            generator.addEqualityAssertion(
+            CircuitGenerator::addEqualityAssertion(
+                generator.clone(),
                 &inf.y,
                 generator.get_one_wire().as_ref().unwrap(),
                 &None,
@@ -135,11 +147,11 @@ mod test {
 
             // check generator + INFINITY = generator
             let g_expected = self.addPoints(&g, &self.getInfinity());
-            generator.addEqualityAssertion(&g_expected.x, &g.x, &None);
-            generator.addEqualityAssertion(&g_expected.y, &g.y, &None);
+            CircuitGenerator::addEqualityAssertion(generator.clone(), &g_expected.x, &g.x, &None);
+            CircuitGenerator::addEqualityAssertion(generator.clone(), &g_expected.y, &g.y, &None);
 
             // check scalar multiplication
-            let scalar = generator.createConstantWirei(5, &None);
+            let scalar = CircuitGenerator::createConstantWirei(generator.clone(), 5, &None);
             let scalarBits = scalar.getBitWiresi(4, &None);
             let g5 = self.mulScalar(&g, scalarBits.asArray());
             let g5_expected = self.addPoints(
@@ -147,8 +159,8 @@ mod test {
                 &g,
             );
             self.assertOnCurve(&g5.x, &g5.y);
-            generator.addEqualityAssertion(&g5.x, &g5_expected.x, &None);
-            generator.addEqualityAssertion(&g5.y, &g5_expected.y, &None);
+            CircuitGenerator::addEqualityAssertion(generator.clone(), &g5.x, &g5_expected.x, &None);
+            CircuitGenerator::addEqualityAssertion(generator.clone(), &g5.y, &g5_expected.y, &None);
         }
     }
 

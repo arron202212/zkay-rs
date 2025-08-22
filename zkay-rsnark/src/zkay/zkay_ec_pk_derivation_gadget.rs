@@ -50,7 +50,14 @@ impl ZkayEcPkDerivationGadget {
                     .getBitWiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
                     .asArray()
                     .clone(),
-                basePoint: AffinePoint::new(Some(generator.createConstantWirei(4, &None)), None),
+                basePoint: AffinePoint::new(
+                    Some(CircuitGenerator::createConstantWirei(
+                        generator.clone(),
+                        4,
+                        &None,
+                    )),
+                    None,
+                ),
                 outputPublicValue: None,
                 outputs: vec![],
             },
@@ -95,7 +102,8 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
             .try_as_constant_ref()
             .unwrap()
             .getConstant();
-        self.t.t.basePoint.y = Some(self.generators.createConstantWire(
+        self.t.t.basePoint.y = Some(CircuitGenerator::createConstantWire(
+            self.generator.clone(),
             &Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::computeYCoordinate(x),
             &None,
         ));

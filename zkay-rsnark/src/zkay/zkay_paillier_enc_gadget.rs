@@ -82,8 +82,8 @@ impl Gadget<ZkayPaillierEncGadget> {
         )
         .getResult()
         .clone();
-        self.generators
-            .addOneAssertion(&randInv.checkNonZero(), &None);
+
+        CircuitGenerator::addOneAssertion(self.generator.clone(), &randInv.checkNonZero(), &None);
         // let c = g^m * r^n mod n^2
         let gPowPlain = LongIntegerModPowGadget::new(
             self.t.g.clone(),

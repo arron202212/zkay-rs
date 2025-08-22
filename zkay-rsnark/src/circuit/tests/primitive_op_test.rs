@@ -706,8 +706,8 @@ mod test {
                 }
                             }
                         );
-                generator.specifyProverWitnessComputation(prover);
-                // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+                CircuitGenerator::specifyProverWitnessComputation(self.cg(), prover);
+                // CircuitGenerator::specifyProverWitnessComputation(self.cg(),&|evaluator: &mut CircuitEvaluator| {
                 //     evaluator.setWireValue(solutions[0].as_ref().unwrap(), self.t.result[0].clone());
                 //     for i in 0..numIns {
                 //         evaluator.setWireValue(
@@ -745,14 +745,16 @@ mod test {
                 //     })
                 // });
 
-                self.addAssertion(
+                CircuitGenerator::addAssertion(
+                    self.cg(),
                     inputs1[0].as_ref().unwrap(),
                     inputs1[0].as_ref().unwrap(),
                     solutions[0].as_ref().unwrap(),
                     &None,
                 );
                 for i in 0..numIns {
-                    self.addAssertion(
+                    CircuitGenerator::addAssertion(
+                        self.cg(),
                         inputs1[i].as_ref().unwrap(),
                         inputs2[i].as_ref().unwrap(),
                         solutions[i + 1].as_ref().unwrap(),
@@ -762,22 +764,28 @@ mod test {
                 let (zero_wire, one_wire) =
                     (self.get_zero_wire().unwrap(), self.get_one_wire().unwrap());
                 // constant assertions will not add constraints
-                self.addZeroAssertion(&zero_wire, &None);
-                self.addOneAssertion(&one_wire, &None);
-                self.addAssertion(&zero_wire, &one_wire, &zero_wire, &None);
-                self.addAssertion(&one_wire, &one_wire, &one_wire, &None);
-                self.addBinaryAssertion(&zero_wire, &None);
-                self.addBinaryAssertion(&one_wire, &None);
+                CircuitGenerator::addZeroAssertion(self.cg(), &zero_wire, &None);
+                CircuitGenerator::addOneAssertion(self.cg(), &one_wire, &None);
+                CircuitGenerator::addAssertion(self.cg(), &zero_wire, &one_wire, &zero_wire, &None);
+                CircuitGenerator::addAssertion(self.cg(), &one_wire, &one_wire, &one_wire, &None);
+                CircuitGenerator::addBinaryAssertion(self.cg(), &zero_wire, &None);
+                CircuitGenerator::addBinaryAssertion(self.cg(), &one_wire, &None);
 
                 // won't add a constraint
-                self.addEqualityAssertion(
+                CircuitGenerator::addEqualityAssertion(
+                    self.cg(),
                     inputs1[0].as_ref().unwrap(),
                     inputs1[0].as_ref().unwrap(),
                     &None,
                 );
 
                 // will add a constraint
-                self.addEqualityAssertionb(inputs1[0].as_ref().unwrap(), &self.t.inVals1[0], &None);
+                CircuitGenerator::addEqualityAssertionb(
+                    self.cg(),
+                    inputs1[0].as_ref().unwrap(),
+                    &self.t.inVals1[0],
+                    &None,
+                );
                 self.t.inputs1 = inputs1.asArray().clone();
                 self.t.inputs2 = inputs2.asArray().clone();
                 // self.t.inputs2=inputs2;

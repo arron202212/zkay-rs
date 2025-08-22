@@ -252,22 +252,26 @@ impl Gadget<ECDHKeyExchangeGadget> {
          * should be 1, and the three least significant bits should be zero.
          */
         assert!(self.t.secretBits.len() == Self::SECRET_BITWIDTH);
-        self.generators.addZeroAssertion(
+        CircuitGenerator::addZeroAssertion(
+            self.generator.clone(),
             self.t.secretBits[0].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
-        self.generators.addZeroAssertion(
+        CircuitGenerator::addZeroAssertion(
+            self.generator.clone(),
             self.t.secretBits[1].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
-        self.generators.addZeroAssertion(
+        CircuitGenerator::addZeroAssertion(
+            self.generator.clone(),
             self.t.secretBits[2].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
-        self.generators.addOneAssertion(
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
             self.t.secretBits[Self::SECRET_BITWIDTH - 1]
                 .as_ref()
                 .unwrap(),
@@ -278,8 +282,12 @@ impl Gadget<ECDHKeyExchangeGadget> {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            self.generators
-                .addBinaryAssertion(self.t.secretBits[i].as_ref().unwrap(), &None);
+
+            CircuitGenerator::addBinaryAssertion(
+                self.generator.clone(),
+                self.t.secretBits[i].as_ref().unwrap(),
+                &None,
+            );
             println!("=={}={i}=start==elapsed== {:?} ", line!(), start.elapsed());
         }
     }
@@ -305,17 +313,18 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .try_as_constant_ref()
                 .unwrap()
                 .getConstant();
-            self.t.basePoint.y = Some(
-                self.generators
-                    .createConstantWire(&Self::computeYCoordinate(x), &None),
-            );
+            self.t.basePoint.y = Some(CircuitGenerator::createConstantWire(
+                self.generator.clone(),
+                &Self::computeYCoordinate(x),
+                &None,
+            ));
             println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         } else {
             self.t.basePoint.y = Some(CircuitGenerator::createProverWitnessWire(
                 self.generator.clone(),
                 &None,
             ));
-            // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
             //     let x = evaluator.getWireValue(basePoint.x);
             //     evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
             // });
@@ -332,7 +341,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             }
                         }
                     );
-            self.generators.specifyProverWitnessComputation(prover);
+            CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
@@ -368,17 +377,18 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .try_as_constant_ref()
                 .unwrap()
                 .getConstant();
-            self.t.hPoint.y = Some(
-                self.generators
-                    .createConstantWire(&Self::computeYCoordinate(x), &None),
-            );
+            self.t.hPoint.y = Some(CircuitGenerator::createConstantWire(
+                self.generator.clone(),
+                &Self::computeYCoordinate(x),
+                &None,
+            ));
             println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         } else {
             self.t.hPoint.y = Some(CircuitGenerator::createProverWitnessWire(
                 self.generator.clone(),
                 &None,
             ));
-            // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+            // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
             //     let x = evaluator.getWireValue(hPoint.x);
             //     evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
             // });
@@ -397,7 +407,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             }
                         }
                     );
-            self.generators.specifyProverWitnessComputation(prover);
+            CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
             // {
             //         struct Prover;
             //         impl Instruction for Prover {
@@ -426,7 +436,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         let xCube = xSqr.clone().mul(x);
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
-        self.generators.addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
             &ySqr,
             &xCube
                 .add(xSqr.mulb(
@@ -580,7 +591,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     pub fn validateInputs(&self) {
         let start = std::time::Instant::now();
-        self.generators.addOneAssertion(
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
             &self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
@@ -591,7 +603,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
         );
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
-        self.generators.addOneAssertion(
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
             &self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
@@ -610,7 +623,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
     fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
         let start = std::time::Instant::now();
         let subgroup_order = BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap();
-        let o = self.generators.createConstantWire(&subgroup_order, &None);
+        let o =
+            CircuitGenerator::createConstantWire(self.generator.clone(), &subgroup_order, &None);
         let bits = o
             .getBitWiresi(subgroup_order.bits(), &None)
             .asArray()
@@ -642,13 +656,15 @@ impl Gadget<ECDHKeyExchangeGadget> {
         }
 
         // verify that: result = -p
-        self.generators.addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
             result.x.as_ref().unwrap(),
             p.x.as_ref().unwrap(),
             &None,
         );
         println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
-        self.generators.addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
             result.y.as_ref().unwrap(),
             &p.y.as_ref().unwrap().muli(-1, &None),
             &None,

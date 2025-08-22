@@ -199,7 +199,7 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         let mut r = LongElement::new(rWires, rChunkBitwidths, self.generator.clone().downgrade());
         let mut q = LongElement::new(qWires, qChunkBitwidths, self.generator.clone().downgrade());
 
-        // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
         //             let bValue = evaluator.getWireValue(b, LongElement::CHUNK_BITWIDTH);
         //             let rValue = aValue.rem(bValue);
@@ -240,7 +240,7 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         }
                     }
                 );
-        self.generators.specifyProverWitnessComputation(prover);
+        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {

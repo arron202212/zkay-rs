@@ -115,7 +115,7 @@ impl Gadget<LongIntegerModInverseGadget> {
         // println!("=====self.t=a.array========{:?}",self.t.a.array);
         let a = &self.t.a;
         let m = &self.t.m;
-        // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
         //             let mValue = evaluator.getWireValue(m, LongElement::CHUNK_BITWIDTH);
         //             let inverseValue = aValue.modInverse(mValue);
@@ -156,7 +156,7 @@ impl Gadget<LongIntegerModInverseGadget> {
         }
                     }
                 );
-        self.generators.specifyProverWitnessComputation(prover);
+        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {

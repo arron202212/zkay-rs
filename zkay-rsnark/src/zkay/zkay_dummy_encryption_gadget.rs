@@ -39,7 +39,8 @@ impl ZkayDummyEncryptionGadget {
         // assert!(plain.is_some() && pk.is_some() && rnd.is_some());
         let pkarr = pk.getBits().as_ref().unwrap().packBitsIntoWords(256, &None);
         for i in 1..pkarr.len() {
-            generator.addZeroAssertion(
+            CircuitGenerator::addZeroAssertion(
+                generator.clone(),
                 pkarr[i].as_ref().unwrap(),
                 &Some("Dummy enc pk valid".to_owned()),
             );

@@ -24,16 +24,16 @@ use std::{
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Gadget<T> {
     pub generator: RcCell<CircuitGenerator>,
-    pub generators: CircuitGenerator,
+    // pub generators: CircuitGenerator,
     pub description: String,
     pub t: T,
 }
 impl<T> Gadget<T> {
     pub fn new(generator: RcCell<CircuitGenerator>, desc: &Option<String>, t: T) -> Self {
-        let generators = generator.borrow().clone();
+        // let generators = generator.borrow().clone();
         Self {
             generator,
-            generators,
+            // generators,
             description: desc.clone().unwrap_or(String::new()),
             t,
         }

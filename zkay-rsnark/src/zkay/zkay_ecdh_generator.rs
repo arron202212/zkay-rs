@@ -53,7 +53,7 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
         let secret_wire = if self.t.late_eval {
             CircuitGenerator::createProverWitnessWire(self.cg(), &None)
         } else {
-            self.createConstantWire(&self.t.secret, &None)
+            CircuitGenerator::createConstantWire(self.cg(), &self.t.secret, &None)
         };
 
         if self.t.pk.is_none() {
@@ -71,7 +71,11 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
             self.t.pk_wire = if self.t.late_eval {
                 Some(CircuitGenerator::createInputWire(self.cg(), &None))
             } else {
-                Some(self.createConstantWire(self.t.pk.as_ref().unwrap(), &None))
+                Some(CircuitGenerator::createConstantWire(
+                    self.cg(),
+                    self.t.pk.as_ref().unwrap(),
+                    &None,
+                ))
             };
             let mut gadget = ZkayECDHGadget::new(
                 self.t.pk_wire.clone().unwrap(),

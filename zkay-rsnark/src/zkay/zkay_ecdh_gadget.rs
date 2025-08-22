@@ -111,7 +111,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     pub fn computeYCoordinates(&mut self) {
         // Easy to handle if hPoint is constant, otherwise, let the prover input
         // a witness and verify some properties
-        let generator = &self.generators;
+        // let generator = &self.generators;
         // let mut hPoint = self.t.t.hPoint;
         if self
             .t
@@ -132,7 +132,8 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                 .try_as_constant_ref()
                 .unwrap()
                 .getConstant();
-            self.t.t.hPoint.y = Some(generator.createConstantWire(
+            self.t.t.hPoint.y = Some(CircuitGenerator::createConstantWire(
+                self.generator.clone(),
                 &Gadget::<ZkayEcGadget<ZkayECDHGadget>>::computeYCoordinate(x),
                 &None,
             ));
@@ -141,7 +142,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                 self.generator.clone(),
                 &None,
             ));
-            // generator.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
+            // CircuitGenerator::specifyProverWitnessComputation(generator.clone(), &|evaluator: &mut CircuitEvaluator| {
             //             let x = evaluator.getWireValue(hPoint.x);
             //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
             //         });
@@ -158,7 +159,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             }
                         }
                     );
-            generator.specifyProverWitnessComputation(prover);
+            CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
@@ -176,7 +177,8 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
         }
     }
     pub fn validateInputs(&self) {
-        self.generators.addOneAssertion(
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
             &self.t.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );

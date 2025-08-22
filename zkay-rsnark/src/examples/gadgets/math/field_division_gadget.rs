@@ -126,8 +126,8 @@ impl Gadget<FieldDivisionGadget> {
         }
                     }
                 );
-        self.generators.specifyProverWitnessComputation(prover);
-        // generator.specifyProverWitnessComputation(&|evaluator: &mut CircuitEvaluator| {
+        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //     let aValue = evaluator.getWireValue(self.t.a.clone());
         //     let bValue = evaluator.getWireValue(self.t.b.clone());
         //     let cValue = aValue
@@ -160,8 +160,13 @@ impl Gadget<FieldDivisionGadget> {
         // });
 
         // to handle the case where a or b can be both zero, see below
-        self.generators
-            .addAssertion(b, c, a, &self.debugStr("Assertion for division result"));
+        CircuitGenerator::addAssertion(
+            self.generator.clone(),
+            b,
+            c,
+            a,
+            &self.debugStr("Assertion for division result"),
+        );
 
         /*
          * Few notes: 1) The order of the above two statements matters (the

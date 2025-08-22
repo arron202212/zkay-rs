@@ -83,10 +83,23 @@ impl<T> Gadget<ZkayEcGadget<T>> {
          * should be 1, and the three least significant bits should be zero.
          */
         let desc = Some("Asserting secret bit conditions".to_owned());
-        generator.addZeroAssertion(secretBits[0].as_ref().unwrap(), &desc);
-        generator.addZeroAssertion(secretBits[1].as_ref().unwrap(), &desc);
-        generator.addZeroAssertion(secretBits[2].as_ref().unwrap(), &desc);
-        generator.addOneAssertion(
+        CircuitGenerator::addZeroAssertion(
+            generator.clone(),
+            secretBits[0].as_ref().unwrap(),
+            &desc,
+        );
+        CircuitGenerator::addZeroAssertion(
+            generator.clone(),
+            secretBits[1].as_ref().unwrap(),
+            &desc,
+        );
+        CircuitGenerator::addZeroAssertion(
+            generator.clone(),
+            secretBits[2].as_ref().unwrap(),
+            &desc,
+        );
+        CircuitGenerator::addOneAssertion(
+            generator.clone(),
             secretBits[Self::SECRET_BITWIDTH as usize - 1]
                 .as_ref()
                 .unwrap(),
@@ -97,7 +110,11 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            generator.addBinaryAssertion(secretBits[i].as_ref().unwrap(), &None);
+            CircuitGenerator::addBinaryAssertion(
+                generator.clone(),
+                secretBits[i].as_ref().unwrap(),
+                &None,
+            );
         }
     }
 
@@ -107,7 +124,8 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let ySqr = y.clone().mul(y);
         let xSqr = x.clone().mul(x);
         let xCube = xSqr.clone().mul(x);
-        self.generator.addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
             &ySqr,
             &xCube.add(xSqr.mul(&BigInteger::from(Self::COEFF_A))).add(x),
             &None,
@@ -233,8 +251,9 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     }
 
     pub fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
-        let generator = &self.generators;
-        let o = &generator.createConstantWire(
+        // let generator = &self.generators;
+        let o = &CircuitGenerator::createConstantWire(
+            self.generator.clone(),
             &BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap(),
             &None,
         );
@@ -269,8 +288,14 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         }
 
         // verify that: result = -p
-        generator.addEqualityAssertion(result.x.as_ref().unwrap(), p.x.as_ref().unwrap(), &None);
-        generator.addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
+            result.x.as_ref().unwrap(),
+            p.x.as_ref().unwrap(),
+            &None,
+        );
+        CircuitGenerator::addEqualityAssertion(
+            self.generator.clone(),
             result.y.as_ref().unwrap(),
             &p.y.clone().unwrap().mul(-1),
             &None,

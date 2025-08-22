@@ -54,7 +54,7 @@ mod test {
                 let mut h = vec![None; CGTest::mu];
 
                 let ccw = |s: &str| {
-                    Some(self.createConstantWire(BigInteger::parse_bytes(
+                    Some(CircuitGenerator::createConstantWire(self.cg(),BigInteger::parse_bytes(
                     b"16377448892084713529161739182205318095580119111576802375181616547062197291263",10
                 ).as_ref().unwrap(),&None))
                 };

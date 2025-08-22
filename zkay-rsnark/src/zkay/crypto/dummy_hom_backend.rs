@@ -73,7 +73,8 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
 
         let keyArr = key.getBits().unwrap().packBitsIntoWords(256, &None);
         for i in 1..keyArr.len() {
-            generator.addZeroAssertion(
+            CircuitGenerator::addZeroAssertion(
+                generator.clone(),
                 keyArr[i].as_ref().unwrap(),
                 &Some("Dummy-hom enc pk valid".to_owned()),
             );

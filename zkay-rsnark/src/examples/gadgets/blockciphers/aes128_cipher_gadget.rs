@@ -246,7 +246,11 @@ impl Gadget<AES128CipherGadget> {
             if i == 0 {}
             hiBitSet = wire.getBitWiresi(8, &None).get(7).clone();
             wire = wire.shiftLeft(8, 1, &None);
-            let tmp = wire.xorBitwise(&self.generator.createConstantWirei(0x1b, &None), 8, &None);
+            let tmp = wire.xorBitwise(
+                &CircuitGenerator::createConstantWirei(self.generator.clone(), 0x1b, &None),
+                8,
+                &None,
+            );
             wire = wire
                 .clone()
                 .add(hiBitSet.clone().unwrap().mul(tmp.sub(&wire)));
@@ -304,15 +308,15 @@ impl Gadget<AES128CipherGadget> {
             let mut temp = w[i - 1].clone();
             if i % AES128CipherGadget::nk == 0 {
                 temp = Self::subWord(Self::rotateWord(&temp), generator);
-                temp[0] =
-                    Some(temp[0].as_ref().unwrap().xorBitwise(
-                        &generators.createConstantWirei(
-                            Self::RCon[i / AES128CipherGadget::nk] as i64,
-                            &None,
-                        ),
-                        8,
+                temp[0] = Some(temp[0].as_ref().unwrap().xorBitwise(
+                    &CircuitGenerator::createConstantWirei(
+                        generator.clone(),
+                        Self::RCon[i / AES128CipherGadget::nk] as i64,
                         &None,
-                    ));
+                    ),
+                    8,
+                    &None,
+                ));
             } else if AES128CipherGadget::nk > 6 && (i % AES128CipherGadget::nk) == 4 {
                 temp = Self::subWord(temp, generator);
             }

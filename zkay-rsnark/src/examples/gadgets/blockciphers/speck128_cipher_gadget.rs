@@ -102,7 +102,7 @@ impl Gadget<Speck128CipherGadget> {
             );
             l[i + 1] = Some(l[i + 1].as_ref().unwrap().trimBits(65, 64, &None));
             l[i + 1] = Some(l[i + 1].as_ref().unwrap().xorBitwise(
-                &generator.createConstantWirei(i as i64, &None),
+                &CircuitGenerator::createConstantWirei(generator.clone(), i as i64, &None),
                 64,
                 &None,
             ));

@@ -61,7 +61,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
-                let s = self.createConstantWire(&self.t.sec1, &None);
+                let s = CircuitGenerator::createConstantWire(self.cg(), &self.t.sec1, &None);
                 CircuitGenerator::makeOutput(
                     self.cg(),
                     ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).getOutputWires()[0]
@@ -88,7 +88,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTestpkder>);
         impl CGConfig for CircuitGeneratorExtend<CGTestpkder> {
             fn buildCircuit(&mut self) {
-                let s = self.createConstantWire(&self.t.sec2, &None);
+                let s = CircuitGenerator::createConstantWire(self.cg(), &self.t.sec2, &None);
                 CircuitGenerator::makeOutput(
                     self.cg(),
                     ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).getOutputWires()[0]
@@ -125,8 +125,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTestecdh>);
         impl CGConfig for CircuitGeneratorExtend<CGTestecdh> {
             fn buildCircuit(&mut self) {
-                let p = self.createConstantWire(&self.t.pk2, &None);
-                let s = self.createConstantWire(&self.t.sec1, &None);
+                let p = CircuitGenerator::createConstantWire(self.cg(), &self.t.pk2, &None);
+                let s = CircuitGenerator::createConstantWire(self.cg(), &self.t.sec1, &None);
                 CircuitGenerator::makeOutput(
                     self.cg(),
                     ZkayECDHGadget::new(p, s, false, &None, self.cg()).getOutputWires()[0]

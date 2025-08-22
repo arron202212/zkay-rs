@@ -104,7 +104,7 @@ impl FieldExtensionDHKeyExchange {
         // done also outside the gadget. The back end takes care of caching
         let generators = generator.clone();
         for w in &secretExponentBits {
-            generators.addBinaryAssertion(w.as_ref().unwrap(), &None);
+            CircuitGenerator::addBinaryAssertion(generator.clone(), w.as_ref().unwrap(), &None);
         }
         let mut _self = Gadget::<Self>::new(
             generator,
@@ -239,10 +239,18 @@ impl Gadget<FieldExtensionDHKeyExchange> {
         }
 
         // assertion
-        self.generator
-            .addZeroAssertion(&zeroOrOne1.mul(allZero1), &None);
-        self.generator
-            .addZeroAssertion(&zeroOrOne2.mul(allZero2), &None);
+
+        CircuitGenerator::addZeroAssertion(
+            self.generator.clone(),
+            &zeroOrOne1.mul(allZero1),
+            &None,
+        );
+
+        CircuitGenerator::addZeroAssertion(
+            self.generator.clone(),
+            &zeroOrOne2.mul(allZero2),
+            &None,
+        );
 
         // verify order of points
 
@@ -262,15 +270,29 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
         // both should be one
 
-        self.generator
-            .addOneAssertion(result1[0].as_ref().unwrap(), &None);
-        self.generator
-            .addOneAssertion(result2[0].as_ref().unwrap(), &None);
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
+            result1[0].as_ref().unwrap(),
+            &None,
+        );
+
+        CircuitGenerator::addOneAssertion(
+            self.generator.clone(),
+            result2[0].as_ref().unwrap(),
+            &None,
+        );
         for i in 1..self.t.mu as usize {
-            self.generator
-                .addZeroAssertion(result1[i].as_ref().unwrap(), &None);
-            self.generator
-                .addZeroAssertion(result1[i].as_ref().unwrap(), &None);
+            CircuitGenerator::addZeroAssertion(
+                self.generator.clone(),
+                result1[i].as_ref().unwrap(),
+                &None,
+            );
+
+            CircuitGenerator::addZeroAssertion(
+                self.generator.clone(),
+                result1[i].as_ref().unwrap(),
+                &None,
+            );
         }
     }
     pub fn getOutputPublicValue(&self) -> &Vec<Option<WireType>> {

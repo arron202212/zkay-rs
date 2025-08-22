@@ -255,7 +255,8 @@ impl<T> CryptoBackendConfigs for CryptoBackend<Symmetric<T>> {
             &Some("getPk(mySk)".to_owned()),
             generator.clone(),
         );
-        generator.addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            generator.clone(),
             myPk,
             pkDerivationGadget.getOutputWires()[0].as_ref().unwrap(),
             &None,

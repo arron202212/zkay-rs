@@ -74,7 +74,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
     const GENERATOR_Y: &str =
         "9356450144216313082194365820021861619676443907964402770398322487858544118183";
 
-    fn generators(&self) -> &CircuitGenerator;
+    fn generators(&self) -> RcCell<CircuitGenerator>;
     // {
     //     &self.generators
     // }
@@ -86,12 +86,16 @@ pub trait ZkayBabyJubJubGadgetConfig {
     }
 
     fn getGenerator(&self) -> JubJubPoint {
-        let g_x = self
-            .generators()
-            .createConstantWire(&Util::parse_big_int(Self::GENERATOR_X), &None);
-        let g_y = self
-            .generators()
-            .createConstantWire(&Util::parse_big_int(Self::GENERATOR_Y), &None);
+        let g_x = CircuitGenerator::createConstantWire(
+            self.generators(),
+            &Util::parse_big_int(Self::GENERATOR_X),
+            &None,
+        );
+        let g_y = CircuitGenerator::createConstantWire(
+            self.generators(),
+            &Util::parse_big_int(Self::GENERATOR_Y),
+            &None,
+        );
         JubJubPoint::new(g_x, g_y)
     }
 
@@ -102,7 +106,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
         let prod = xSqr.clone().mul(&ySqr);
         let lhs = xSqr.mul(&BigInteger::from(Self::COEFF_A)).add(ySqr);
         let rhs = prod.mul(&Util::parse_big_int(Self::COEFF_D)).add(1);
-        self.generators().addEqualityAssertion(&lhs, &rhs, &None);
+        CircuitGenerator::addEqualityAssertion(self.generators(), &lhs, &rhs, &None);
     }
 
     fn addPoints(&self, p1: &JubJubPoint, p2: &JubJubPoint) -> JubJubPoint {
@@ -165,15 +169,12 @@ pub trait ZkayBabyJubJubGadgetConfig {
         //     "===self.get_current_wire_id()======nativeInverse======before======{}",
         //     self.generators().get_current_wire_id()
         // );
-        let ainv = CircuitGenerator::createProverWitnessWire(
-            self.generators().me.clone().unwrap().upgrade().unwrap(),
-            &None,
-        );
+        let ainv = CircuitGenerator::createProverWitnessWire(self.generators(), &None);
         // println!(
         //     "===self.get_current_wire_id()======nativeInverse====after========{}",
         //     self.generators().get_current_wire_id()
         // );
-        // self.generators.specifyProverWitnessComputation( &|evaluator: &mut CircuitEvaluator| {
+        // CircuitGenerator::specifyProverWitnessComputation(self.generators(), &|evaluator: &mut CircuitEvaluator| {
         //             let aValue = evaluator.getWireValue(a);
         //             let inverseValue = aValue.modInverse(Self::BASE_ORDER);
         //             evaluator.setWireValue(ainv, inverseValue);
@@ -193,7 +194,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
         }
                     }
                 );
-        self.generators().specifyProverWitnessComputation(prover);
+        CircuitGenerator::specifyProverWitnessComputation(self.generators(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
@@ -209,7 +210,8 @@ pub trait ZkayBabyJubJubGadgetConfig {
         // check if a * ainv = 1 (natively)
         let test = a.clone().mul(&ainv);
         // println!("==test====={},{},{}", a, ainv, test);
-        self.generators().addEqualityAssertion(
+        CircuitGenerator::addEqualityAssertion(
+            self.generators(),
             &test,
             self.generators().get_one_wire().as_ref().unwrap(),
             &None,
@@ -220,8 +222,8 @@ pub trait ZkayBabyJubJubGadgetConfig {
 }
 
 impl<T> ZkayBabyJubJubGadgetConfig for Gadget<ZkayBabyJubJubGadget<T>> {
-    fn generators(&self) -> &CircuitGenerator {
-        &self.generators
+    fn generators(&self) -> RcCell<CircuitGenerator> {
+        self.generator.clone()
     }
 }
 

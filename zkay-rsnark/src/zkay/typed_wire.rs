@@ -184,7 +184,8 @@ impl TypedWire {
         let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " / " + &rhs.name;
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
-        generator.addOneAssertion(
+        CircuitGenerator::addOneAssertion(
+            generator.clone(),
             &rhs.wire.checkNonZero(&None),
             &Some("no div by 0".to_owned()),
         );
@@ -256,7 +257,8 @@ impl TypedWire {
         let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " % " + &rhs.name;
         // let mut generator = CircuitGenerator.getActiveCircuitGenerator();
-        generator.addOneAssertion(
+        CircuitGenerator::addOneAssertion(
+            generator.clone(),
             &rhs.wire.checkNonZero(&None),
             &Some("no div by 0".to_owned()),
         );

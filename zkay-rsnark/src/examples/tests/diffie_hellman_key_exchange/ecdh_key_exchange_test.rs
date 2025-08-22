@@ -138,8 +138,9 @@ mod test {
                     exponentBitlength,
                     &Some("exponent".to_owned()),
                 );
-                let baseX = self.createConstantWire(&BigInteger::from(4), &None);
-                let hX =  self.createConstantWire(BigInteger::parse_bytes(
+                let baseX =
+                    CircuitGenerator::createConstantWire(self.cg(), &BigInteger::from(4), &None);
+                let hX =  CircuitGenerator::createConstantWire(self.cg(),BigInteger::parse_bytes(
                     b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10
                 ).as_ref().unwrap(),&None);
 

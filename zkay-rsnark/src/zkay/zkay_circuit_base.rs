@@ -326,7 +326,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     CircuitGeneratorExtend<ZkayCircuitBase<T>>
 {
     pub fn super_buildCircuit(&mut self) {
-        let generator = &self.generator;
+        // let generator = &self.generator;
         let pubInCount = self.t.pubInCount as usize;
         // Create IO wires
         let pubOutCount = self.t.allPubIOWires.len() - pubInCount;
@@ -939,15 +939,15 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     }
 
     pub fn val_sz(&self, val: &str, t: ZkayType) -> TypedWire {
-        let generator = &self.generator;
+        // let generator = &self.generator;
         let v = BigInteger::parse_bytes(val.as_bytes(), 10).unwrap();
         let w = if v.sign() == Sign::Minus {
             assert!(!t.signed, "Cannot store negative constant in unsigned wire");
             let vNeg = ZkayType::GetNegativeConstant(&v.clone().neg(), t.bitwidth);
             assert!(vNeg.sign() != Sign::Minus, "Constant is still negative");
-            generator.createConstantWire(&vNeg, &Some(format!("const_{v}")))
+            CircuitGenerator::createConstantWire(self.cg(), &vNeg, &Some(format!("const_{v}")))
         } else {
-            generator.createConstantWire(&v, &Some(format!("const_{v}")))
+            CircuitGenerator::createConstantWire(self.cg(), &v, &Some(format!("const_{v}")))
         };
         TypedWire::new(w, t, format!("const_{v}"), &vec![], self.cg())
     }
@@ -1044,7 +1044,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn condExpr(&self, cond: &WireType, trueVal: &WireType, falseVal: &WireType) -> WireType {
         if ZkayUtil::ZKAY_RESTRICT_EVERYTHING {
-            self.generator.addBinaryAssertion(cond, &None);
+            CircuitGenerator::addBinaryAssertion(self.cg(), cond, &None);
         }
         cond.mulw(trueVal, &Some("ite_true".to_owned())).addw(
             &cond
@@ -1525,10 +1525,11 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         desc: &Option<String>,
     ) {
         if self.t.currentGuardCondition.is_empty() {
-            self.generator.addEqualityAssertion(lhs, rhs, desc);
+            CircuitGenerator::addEqualityAssertion(self.cg(), lhs, rhs, desc);
         } else {
             let eq = lhs.isEqualTo(rhs, &None);
-            self.generator.addOneAssertion(
+            CircuitGenerator::addOneAssertion(
+                self.cg(),
                 &self
                     .t
                     .currentGuardCondition
@@ -1545,9 +1546,10 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn addGuardedOneAssertion(&self, val: &WireType, desc: &Option<String>) {
         if self.t.currentGuardCondition.is_empty() {
-            self.generator.addOneAssertion(val, desc);
+            CircuitGenerator::addOneAssertion(self.cg(), val, desc);
         } else {
-            self.generator.addOneAssertion(
+            CircuitGenerator::addOneAssertion(
+                self.cg(),
                 &self
                     .t
                     .currentGuardCondition
@@ -1642,9 +1644,9 @@ pub fn s_val_sz(val: &str, t: ZkayType, generator: &RcCell<CircuitGenerator>) ->
         assert!(!t.signed, "Cannot store negative constant in unsigned wire");
         let vNeg = ZkayType::GetNegativeConstant(&v.clone().neg(), t.bitwidth);
         assert!(vNeg.sign() != Sign::Minus, "Constant is still negative");
-        generator.createConstantWire(&vNeg, &Some(format!("const_{v}")))
+        CircuitGenerator::createConstantWire(generator.clone(), &vNeg, &Some(format!("const_{v}")))
     } else {
-        generator.createConstantWire(&v, &Some(format!("const_{v}")))
+        CircuitGenerator::createConstantWire(generator.clone(), &v, &Some(format!("const_{v}")))
     };
     TypedWire::new(w, t, format!("const_{v}"), &vec![], generator.clone())
 }

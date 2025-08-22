@@ -124,7 +124,7 @@ impl Gadget<AESSBoxComputeGadget> {
                         }
                                     }
                                 );
-        self.generators.specifyProverWitnessComputation(prover);
+        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
 
         // &{
         //     struct Prover;
@@ -140,14 +140,19 @@ impl Gadget<AESSBoxComputeGadget> {
 
         inverse.restrictBitLength(8, &None);
 
-        let v = Self::gmul(self.t.input.clone(), inverse.clone(), &self.generators);
-        self.generators.addAssertion(
+        let v = Self::gmul(
+            self.t.input.clone(),
+            inverse.clone(),
+            self.generator.clone(),
+        );
+        CircuitGenerator::addAssertion(
+            self.generator.clone(),
             &v.sub(self.generator.get_one_wire().as_ref().unwrap()),
             &self.t.input.clone().add(&inverse),
             self.generator.get_zero_wire().as_ref().unwrap(),
             &None,
         );
-        let constant = self.generators.createConstantWirei(0x63, &None);
+        let constant = CircuitGenerator::createConstantWirei(self.generator.clone(), 0x63, &None);
         let mut output = constant.xorBitwise(&inverse, 8, &None);
         output = output.xorBitwise(&inverse.rotateLeft(8, 1, &None), 8, &None);
         output = output.xorBitwise(&inverse.rotateLeft(8, 2, &None), 8, &None);
@@ -156,9 +161,9 @@ impl Gadget<AESSBoxComputeGadget> {
         (self.t.output, self.t.inverse) = (vec![Some(output)], Some(inverse));
     }
 
-    fn gmul(mut a: WireType, mut b: WireType, generator: &CircuitGenerator) -> WireType {
+    fn gmul(mut a: WireType, mut b: WireType, generator: RcCell<CircuitGenerator>) -> WireType {
         let mut p = generator.get_zero_wire().unwrap();
-        let ccw = generator.createConstantWirei(0x1b, &None);
+        let ccw = CircuitGenerator::createConstantWirei(generator.clone(), 0x1b, &None);
         for counter in 0..8 {
             let tmp = p.xorBitwise(&a, 8, &None);
             let bit = b.getBitWiresi(8, &None).get(0).clone().unwrap();

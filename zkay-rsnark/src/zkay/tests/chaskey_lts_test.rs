@@ -112,14 +112,14 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let plainwire = TypedWire::new(
-                    self.createConstantWire(&self.t.plain, &None),
+                    CircuitGenerator::createConstantWire(self.cg(), &self.t.plain, &None),
                     ZkayType::ZkUint(256),
                     "plaintext".to_owned(),
                     &vec![],
                     self.cg(),
                 );
-                let ivwire = self.createConstantWire(&self.t.iv, &None);
-                let keywire = self.createConstantWire(&self.t.key, &None);
+                let ivwire = CircuitGenerator::createConstantWire(self.cg(), &self.t.iv, &None);
+                let keywire = CircuitGenerator::createConstantWire(self.cg(), &self.t.key, &None);
 
                 CircuitGenerator::makeOutputArray(
                     self.cg(),

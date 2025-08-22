@@ -134,10 +134,11 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let mut db = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
-                db[i] = Some(
-                    self.generator
-                        .createConstantWirei((Self::lSHA256_HASH[i] as i64 + 256) % 256, &None),
-                );
+                db[i] = Some(CircuitGenerator::createConstantWirei(
+                    self.generator.clone(),
+                    (Self::lSHA256_HASH[i] as i64 + 256) % 256,
+                    &None,
+                ));
             } else if i < hLen + paddingString.len() {
                 db[i] = paddingString[i - hLen].clone();
             } else if i < hLen + paddingString.len() + 1 {
@@ -234,9 +235,11 @@ impl Gadget<RSAEncryptionOAEPGadget> {
             - 1
         {
             // the standard follows a Big Endian format
-            let counter = self
-                .generator
-                .createConstantWireArrayi(&vec![(i >> 24), (i >> 16), (i >> 8), i], &None);
+            let counter = CircuitGenerator::createConstantWireArrayi(
+                self.generator.clone(),
+                &vec![(i >> 24), (i >> 16), (i >> 8), i],
+                &None,
+            );
 
             let inputToHash = Util::concat(&ins, &counter);
             let shaGadget = SHA256Gadget::new(
