@@ -484,11 +484,14 @@ impl CircuitGenerator {
         //     cg.borrow_mut().current_wire_id,
         //     self.get_current_wire_id()
         // );
+        let start = std::time::Instant::now();
         let wire = WireType::Variable(VariableWire::new(
             cg.get_current_wire_id(),
             cg.clone().downgrade(),
         ));
+
         cg.borrow_mut().current_wire_id += 1;
+
         addToEvaluationQueue(
             cg.clone(),
             Box::new(WireLabelInstruction::new(
@@ -497,9 +500,11 @@ impl CircuitGenerator {
                 desc.clone().unwrap_or(String::new()),
             )),
         );
+
         cg.borrow_mut()
             .prover_witness_wires
             .push(Some(wire.clone()));
+
         wire
     }
     pub fn makeOutput(
@@ -668,6 +673,8 @@ impl CircuitGenerator {
         w3: &WireType,
         desc: &Option<String>,
     ) {
+        let start = std::time::Instant::now();
+
         if w1.instance_of("ConstantWire")
             && w2.instance_of("ConstantWire")
             && w3.instance_of("ConstantWire")
@@ -675,15 +682,22 @@ impl CircuitGenerator {
             let const1 = w1.try_as_constant_ref().unwrap().getConstant();
             let const2 = w2.try_as_constant_ref().unwrap().getConstant();
             let const3 = w3.try_as_constant_ref().unwrap().getConstant();
+
             assert!(
                 const3 == const1.mul(const2).rem(&Configs.field_prime),
                 "Assertion failed on the provided constant wires .. "
             );
         } else {
             w1.packIfNeeded(&None);
+
             w2.packIfNeeded(&None);
+
             w3.packIfNeeded(&None);
-            let op = AssertBasicOp::new(w1, w2, w3, desc.clone().unwrap_or(String::new()));
+
+            let desc = desc.clone().unwrap_or(String::new());
+
+            let op = AssertBasicOp::new(w1, w2, w3, desc);
+
             addToEvaluationQueue(cg, Box::new(op));
         }
     }
@@ -726,6 +740,7 @@ impl CircuitGenerator {
         desc: &Option<String>,
     ) {
         if w1 != w2 {
+            // println!("========addEqualityAssertion==============={w1},{w2}");
             Self::addAssertion(
                 cg.clone(),
                 w1,

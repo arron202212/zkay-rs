@@ -44,18 +44,19 @@ impl BasicOp for Op<MulBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        let mut result = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+        let (in0_id, in1_id, out0_id) = (
+            self.inputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[1].as_ref().unwrap().getWireId() as usize,
+            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+        );
+        let mut result = assignment[in0_id]
             .clone()
             .unwrap()
-            .mul(
-                assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                    .as_ref()
-                    .unwrap(),
-            );
+            .mul(assignment[in1_id].as_ref().unwrap());
         if result.sign() == Sign::Minus {
-            if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+            if out0_id == 48124 || out0_id == 4 {
                 println!(
-                    "===result.sign() == Sign::Minus ========================{},{},{}",
+                    "===result.sign() == Sign::Minus ========{out0_id}================{},{},{}",
                     result,
                     result.clone().add(&Configs.field_prime),
                     result
@@ -67,9 +68,9 @@ impl BasicOp for Op<MulBasicOp> {
             result = result.add(&Configs.field_prime).rem(&Configs.field_prime);
         }
         if result > Configs.field_prime {
-            if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+            if out0_id == 48124 || out0_id == 4 {
                 println!(
-                    "===result > Configs.field_prime ========================{},{}",
+                    "===result > Configs.field_prime ============{out0_id}============{},{}",
                     result,
                     result.clone().rem(&Configs.field_prime)
                 );
@@ -84,31 +85,31 @@ impl BasicOp for Op<MulBasicOp> {
         //     result.clone().rem(&Configs.field_prime)
         // );
         // }
-        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(result);
-        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
-            println!(
-                "==compute=====outputs==={}={}=={}===={}===={}=={}==",
-                file!(),
-                assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-                    .clone()
-                    .unwrap(),
-                assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                    .as_ref()
-                    .unwrap(),
-                assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-                    .clone()
-                    .unwrap()
-                    .mul(
-                        assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                            .as_ref()
-                            .unwrap(),
-                    ),
-                self.outputs[0].as_ref().unwrap().name(),
-                assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
-                    .as_ref()
-                    .unwrap()
-            );
-        }
+        assignment[out0_id] = Some(result);
+        // if out0_id == 4 {
+        //     println!(
+        //         "==compute=====outputs==={}={}=={}===={}===={}=={}==",
+        //         file!(),
+        //         assignment[in0_id]
+        //             .clone()
+        //             .unwrap(),
+        //         assignment[in1_id]
+        //             .as_ref()
+        //             .unwrap(),
+        //         assignment[in0_id]
+        //             .clone()
+        //             .unwrap()
+        //             .mul(
+        //                 assignment[in1_id]
+        //                     .as_ref()
+        //                     .unwrap(),
+        //             ),
+        //         self.outputs[0].as_ref().unwrap().name(),
+        //         assignment[out0_id]
+        //             .as_ref()
+        //             .unwrap()
+        //     );
+        // }
     }
 
     fn getNumMulGates(&self) -> i32 {

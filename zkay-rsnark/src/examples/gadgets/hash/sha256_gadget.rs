@@ -295,7 +295,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
     fn prepare(&mut self) {
         let mut generator = &self.generator;
 
-        self.t.numBlocks = (self.t.totalLengthInBytes as f64 * 1.0 / 64.0).ceil() as usize;
+        self.t.numBlocks = (self.t.totalLengthInBytes as f64 / 64.0).ceil() as usize;
         let bits = WireArray::new(
             self.t.unpaddedInputs.clone(),
             self.generator.clone().downgrade(),
@@ -328,21 +328,27 @@ impl<T> Gadget<SHA256Gadget<T>> {
                 lengthBits[(7 - i) * 8..(7 - i + 1) * 8].clone_from_slice(&tmp);
             }
             let totalNumberOfBits = self.t.numBlocks * 512;
-            self.t.preparedInputBits = vec![generator.get_zero_wire(); totalNumberOfBits];
-            self.t.preparedInputBits[..self.t.totalLengthInBytes * 8].clone_from_slice(&bits);
-            self.t.preparedInputBits[self.t.totalLengthInBytes * 8 + 7] = generator.get_one_wire();
-            let n = self.t.preparedInputBits.len();
-            self.t.preparedInputBits[n - 64..].clone_from_slice(&lengthBits);
+            let mut preparedInputBits = vec![generator.get_zero_wire(); totalNumberOfBits];
+            // println!("===totalLengthInBytes========={}======{},{}",self.t.totalLengthInBytes ,self.t.totalLengthInBytes * 8,bits.len());
+            let len = self.t.totalLengthInBytes * 8;
+            preparedInputBits[..len].clone_from_slice(&bits[..len]);
+            preparedInputBits[len + 7] = generator.get_one_wire();
+            let n = preparedInputBits.len();
+            preparedInputBits[n - 64..].clone_from_slice(&lengthBits[..64]);
+            self.t.preparedInputBits = preparedInputBits;
         } else {
             self.t.preparedInputBits = bits.clone();
         }
     }
+    pub fn super_get_output_wires(&self) -> &Vec<Option<WireType>> {
+        &self.t.output
+    }
 }
+
 impl GadgetConfig for Gadget<SHA256Gadget<Base>> {
     /**
      * outputs digest as 32-bit words
      */
-
     fn getOutputWires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }

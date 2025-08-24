@@ -48,25 +48,24 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
-            println!(
-                "==compute=====outputs=========={}===={}====",
-                file!(),
-                self.outputs[0].as_ref().unwrap().name()
-            );
-        }
-        if assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-            .as_ref()
-            .unwrap()
-            .sign()
-            == Sign::NoSign
-        {
-            assignment[self.outputs[1].as_ref().unwrap().getWireId() as usize] =
-                Some(BigInteger::ZERO);
+        let (in0_id, out0_id, out1_id) = (
+            self.inputs[0].as_ref().unwrap().getWireId() as usize,
+            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+            self.outputs[1].as_ref().unwrap().getWireId() as usize,
+        );
+        // if out0_id == 48124 || out0_id == 4{
+        //     println!(
+        //         "==compute=====outputs===={out0_id}======{}===={}====",
+        //         file!(),
+        //         self.outputs[0].as_ref().unwrap().name()
+        //     );
+        // }
+        if assignment[in0_id].as_ref().unwrap().sign() == Sign::NoSign {
+            assignment[out1_id] = Some(BigInteger::ZERO);
         } else {
-            assignment[self.outputs[1].as_ref().unwrap().getWireId() as usize] = Some(Util::one());
+            assignment[out1_id] = Some(Util::one());
         }
-        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = Some(BigInteger::ZERO); // a dummy value
+        assignment[out0_id] = Some(BigInteger::ZERO); // a dummy value
     }
 
     fn getNumMulGates(&self) -> i32 {

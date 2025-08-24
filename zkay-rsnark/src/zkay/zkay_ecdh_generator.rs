@@ -56,27 +56,13 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
             CircuitGenerator::createConstantWire(self.cg(), &self.t.secret, &None)
         };
 
-        if self.t.pk.is_none() {
-            // If no pub  key specified, compute own pub  key
-            CircuitGenerator::makeOutput(
-                self.cg(),
-                ZkayEcPkDerivationGadget::new(secret_wire.clone(), true, &None, self.cg())
-                    .getOutputWires()[0]
-                    .as_ref()
-                    .unwrap(),
-                &None,
-            );
-        } else {
+        if let Some(pk) = &self.t.pk {
             // Derive shared secret
-            self.t.pk_wire = if self.t.late_eval {
-                Some(CircuitGenerator::createInputWire(self.cg(), &None))
+            self.t.pk_wire = Some(if self.t.late_eval {
+                CircuitGenerator::createInputWire(self.cg(), &None)
             } else {
-                Some(CircuitGenerator::createConstantWire(
-                    self.cg(),
-                    self.t.pk.as_ref().unwrap(),
-                    &None,
-                ))
-            };
+                CircuitGenerator::createConstantWire(self.cg(), pk, &None)
+            });
             let mut gadget = ZkayECDHGadget::new(
                 self.t.pk_wire.clone().unwrap(),
                 secret_wire.clone(),
@@ -88,6 +74,16 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
             CircuitGenerator::makeOutput(
                 self.cg(),
                 gadget.getOutputWires()[0].as_ref().unwrap(),
+                &None,
+            );
+        } else {
+            // If no pub  key specified, compute own pub  key
+            CircuitGenerator::makeOutput(
+                self.cg(),
+                ZkayEcPkDerivationGadget::new(secret_wire.clone(), true, &None, self.cg())
+                    .getOutputWires()[0]
+                    .as_ref()
+                    .unwrap(),
                 &None,
             );
         }

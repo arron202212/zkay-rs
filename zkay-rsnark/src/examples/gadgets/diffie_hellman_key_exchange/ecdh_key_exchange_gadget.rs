@@ -225,9 +225,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
         //
         let start = std::time::Instant::now();
         self.t.baseTable = self.preprocess(&self.t.basePoint);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.t.hTable = self.preprocess(&self.t.hPoint);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.t.outputPublicValue = self
             .mul(&self.t.basePoint, &self.t.secretBits, &self.t.baseTable)
             .x
@@ -236,12 +236,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
             .mul(&self.t.hPoint, &self.t.secretBits, &self.t.hTable)
             .x
             .clone();
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.t.output = vec![
             self.t.outputPublicValue.clone(),
             self.t.sharedSecret.clone(),
         ];
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
     }
 
     fn checkSecretBits(&self) {
@@ -257,19 +256,19 @@ impl Gadget<ECDHKeyExchangeGadget> {
             self.t.secretBits[0].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         CircuitGenerator::addZeroAssertion(
             self.generator.clone(),
             self.t.secretBits[1].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         CircuitGenerator::addZeroAssertion(
             self.generator.clone(),
             self.t.secretBits[2].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         CircuitGenerator::addOneAssertion(
             self.generator.clone(),
             self.t.secretBits[Self::SECRET_BITWIDTH - 1]
@@ -277,7 +276,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         for i in 3..Self::SECRET_BITWIDTH - 1 {
             // verifying all other bit wires are binary (as this is typically a
             // secret
@@ -288,7 +287,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 self.t.secretBits[i].as_ref().unwrap(),
                 &None,
             );
-            println!("=={}={i}=start==elapsed== {:?} ", line!(), start.elapsed());
         }
     }
 
@@ -318,7 +316,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 &Self::computeYCoordinate(x),
                 &None,
             ));
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         } else {
             self.t.basePoint.y = Some(CircuitGenerator::createProverWitnessWire(
                 self.generator.clone(),
@@ -352,12 +349,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
             //     }
             //     Prover
             // });
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             self.assertValidPointOnEC(
                 self.t.basePoint.x.as_ref().unwrap(),
                 self.t.basePoint.y.as_ref().unwrap(),
             );
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         }
 
         if self
@@ -382,7 +378,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 &Self::computeYCoordinate(x),
                 &None,
             ));
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         } else {
             self.t.hPoint.y = Some(CircuitGenerator::createProverWitnessWire(
                 self.generator.clone(),
@@ -392,7 +387,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             //     let x = evaluator.getWireValue(hPoint.x);
             //     evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
             // });
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             let hPoint = &self.t.hPoint;
             let prover = crate::impl_prover!(
                             eval(  hPoint: AffinePoint
@@ -418,7 +413,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             //         }
             //         Prover
             //     });
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             self.assertValidPointOnEC(
                 self.t.hPoint.x.as_ref().unwrap(),
                 self.t.hPoint.y.as_ref().unwrap(),
@@ -431,11 +426,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
     fn assertValidPointOnEC(&self, x: &WireType, y: &WireType) {
         let start = std::time::Instant::now();
         let ySqr = y.clone().mul(y);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let xSqr = x.clone().mul(x);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let xCube = xSqr.clone().mul(x);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         CircuitGenerator::addEqualityAssertion(
             self.generator.clone(),
             &ySqr,
@@ -447,7 +442,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .add(x),
             &None,
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
     }
 
     fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
@@ -457,7 +451,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 Some(Self::doubleAffinePoint(&s, self.generator.clone()))
             })
             .collect();
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         precomputedTable.insert(0, p.clone());
         precomputedTable
     }
@@ -476,7 +470,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let mut result = precomputedTable[secretBits.len() - 1].clone();
         for j in (0..=secretBits.len() - 2).rev() {
             let tmp = self.addAffinePoints(&result, &precomputedTable[j]);
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             let isOne = &secretBits[j];
             result.x = Some(
                 result.x.clone().unwrap().add(
@@ -486,7 +480,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
                         .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
                 ),
             );
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             result.y = Some(
                 result.y.clone().unwrap().add(
                     isOne
@@ -495,7 +489,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                         .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
                 ),
             );
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         }
         result
     }
@@ -504,7 +497,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let l1 = FieldDivisionGadget::new(
             x_2.muli(3, &None)
                 .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
@@ -515,15 +508,15 @@ impl Gadget<ECDHKeyExchangeGadget> {
         )
         .getOutputWires()[0]
             .clone();
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let newX = l2
             .clone()
             .sub(&coeff_a)
             .sub(p.x.clone().unwrap())
             .sub(p.x.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let newY =
             p.x.as_ref()
                 .unwrap()
@@ -532,7 +525,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .sub(&l2)
                 .mul(l1.as_ref().unwrap())
                 .sub(p.y.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         AffinePoint::new(newX, newY)
     }
 
@@ -540,23 +533,23 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let q = FieldDivisionGadget::new(diffY, diffX, &None, self.generator.clone())
             .getOutputWires()[0]
             .clone();
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let q2 = q.clone().unwrap().mul(q.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let q3 = q2.clone().mul(q.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let newX = q2
             .clone()
             .sub(&coeff_a)
             .sub(p1.x.as_ref().unwrap())
             .sub(p2.x.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let newY =
             p1.x.as_ref()
                 .unwrap()
@@ -566,16 +559,16 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .mul(q.as_ref().unwrap())
                 .sub(q3)
                 .sub(p1.y.as_ref().unwrap());
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         AffinePoint::new(newX, newY)
     }
 
     pub fn computeYCoordinate(x: BigInteger) -> BigInteger {
         let start = std::time::Instant::now();
         let xSqred = x.clone().mul(&x).rem(&Configs.field_prime);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let xCubed = xSqred.clone().mul(&x).rem(&Configs.field_prime);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let ySqred = xCubed
             .add(
                 BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10)
@@ -584,8 +577,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
             )
             .add(&x)
             .rem(&Configs.field_prime);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
-        let y = x; //IntegerFunctions.ressol(ySqred, &Configs.field_prime); //TODO 
+
+        let y = x; //IntegerFunctions.ressol(ySqred, &Configs.field_prime); //MYTODO 
         y
     }
 
@@ -596,28 +589,27 @@ impl Gadget<ECDHKeyExchangeGadget> {
             &self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.assertValidPointOnEC(
             self.t.basePoint.x.as_ref().unwrap(),
             self.t.basePoint.y.as_ref().unwrap(),
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
         CircuitGenerator::addOneAssertion(
             self.generator.clone(),
             &self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.assertValidPointOnEC(
             self.t.hPoint.x.as_ref().unwrap(),
             self.t.hPoint.y.as_ref().unwrap(),
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         self.assertPointOrder(&self.t.hPoint, &self.t.hTable);
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
     }
 
     fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
@@ -629,11 +621,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
             .getBitWiresi(subgroup_order.bits(), &None)
             .asArray()
             .clone();
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         let mut result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
             let tmp = self.addAffinePoints(&result, &table[j]);
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             let isOne = &bits[j];
             result.x = Some(
                 result.x.clone().unwrap().add(
@@ -643,7 +635,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
                         .mul(tmp.x.clone().unwrap().sub(result.x.as_ref().unwrap())),
                 ),
             );
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
             result.y = Some(
                 result.y.clone().unwrap().add(
                     isOne
@@ -652,7 +644,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                         .mul(tmp.y.clone().unwrap().sub(result.y.as_ref().unwrap())),
                 ),
             );
-            println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
         }
 
         // verify that: result = -p
@@ -662,14 +653,14 @@ impl Gadget<ECDHKeyExchangeGadget> {
             p.x.as_ref().unwrap(),
             &None,
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         CircuitGenerator::addEqualityAssertion(
             self.generator.clone(),
             result.y.as_ref().unwrap(),
             &p.y.as_ref().unwrap().muli(-1, &None),
             &None,
         );
-        println!("=={}==start==elapsed== {:?} ", line!(), start.elapsed());
+
         // the reason the last iteration is handled separately is that the
         // addition of
         // affine points will throw an error due to not finding inverse for zero

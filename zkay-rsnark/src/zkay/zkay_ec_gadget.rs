@@ -124,15 +124,13 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let ySqr = y.clone().mul(y);
         let xSqr = x.clone().mul(x);
         let xCube = xSqr.clone().mul(x);
-        CircuitGenerator::addEqualityAssertion(
-            self.generator.clone(),
-            &ySqr,
-            &xCube.add(xSqr.mul(&BigInteger::from(Self::COEFF_A))).add(x),
-            &None,
-        );
+        let f = xCube.add(xSqr.mul(&BigInteger::from(Self::COEFF_A))).add(x);
+        println!("====assertValidPointOnEC============{ySqr},{f}");
+        CircuitGenerator::addEqualityAssertion(self.generator.clone(), &ySqr, &f, &None);
     }
 
     pub fn preprocess(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> Vec<AffinePoint> {
+        let start = std::time::Instant::now();
         let mut precomputedTable: Vec<AffinePoint> = (1..Self::SECRET_BITWIDTH)
             .scan(p.clone(), |pre, _| {
                 *pre = Self::doubleAffinePoint(&pre, generator.clone());
@@ -176,7 +174,9 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     }
 
     pub fn doubleAffinePoint(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> AffinePoint {
+        let start = std::time::Instant::now();
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
+
         let l1 = FieldDivisionGadget::new(
             x_2.mul(3)
                 .add(
@@ -193,12 +193,14 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         .getOutputWires()[0]
             .clone()
             .unwrap();
+
         let l2 = l1.clone().mul(&l1);
         let newX = l2
             .clone()
             .sub(&BigInteger::from(Self::COEFF_A))
             .sub(p.x.as_ref().unwrap())
             .sub(p.x.as_ref().unwrap());
+
         let newY =
             p.x.clone()
                 .unwrap()
@@ -207,6 +209,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
                 .sub(l2)
                 .mul(l1)
                 .sub(p.y.as_ref().unwrap());
+
         AffinePoint::new(Some(newX), Some(newY))
     }
 
@@ -246,7 +249,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             .add(BigInteger::from(Self::COEFF_A).mul(&xSqred))
             .add(&x)
             .rem(&Configs.field_prime);
-        let y = x; //IntegerFunctions.ressol(ySqred, Configs.field_prime);
+        let y = x; //IntegerFunctions.ressol(ySqred, Configs.field_prime);   //MYTODO
         y
     }
 

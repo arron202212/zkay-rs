@@ -186,7 +186,7 @@ impl LongElement {
             currentBitwidth[i] = currentMaxValues[i].bits();
         }
         // assert!(!currentBitwidth.get(0).is_some_and(|&v|v==16),"neww");
-        let generators = generator.clone().upgrade().unwrap().borrow().clone();
+        // let generators = generator.clone().upgrade().unwrap().borrow().clone();
         Self {
             array: w,
             currentMaxValues,
@@ -741,7 +741,7 @@ impl LongElement {
                                 alignedAuxConstantChunks: Vec<BigInteger>)  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-        println!("=============={}==========",evaluator.getAssignment().len());
+        // println!("=============={}==========",evaluator.getAssignment().len());
                                     let mut prevCarry = BigInteger::ZERO;
                                     for i in 0..self.carries.len() {
                                         let a = evaluator.getWireValue(self.group1[i].as_ref().unwrap());
@@ -936,7 +936,7 @@ impl LongElement {
                         impl Instruction for Prover{
                             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
 
-                                println!("===assertLessThan===getAssignment========{}==========",evaluator.getAssignment().len());
+                                // println!("===assertLessThan===getAssignment========{}==========",evaluator.getAssignment().len());
                                 let mut found = false;
                                 for i in (0..self.length).rev() {
                                     let v1 = evaluator.getWireValue(self.paddedA1[i].as_ref().unwrap());
@@ -1175,7 +1175,7 @@ impl Sub<&Self> for LongElement {
                                 result:LongElement)  {
                                 impl Instruction for Prover{
                                     fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-        println!("=====getAssignment====sub====={}==========",evaluator.getAssignment().len());
+        // println!("=====getAssignment====sub====={}==========",evaluator.getAssignment().len());
                                        let myValue = evaluator
                                         .getWireValuei(&self.long_element, LongElement::CHUNK_BITWIDTH);
                                     let otherValue =
@@ -1299,7 +1299,7 @@ impl Mul<&Self> for LongElement {
                         array2: Vec<Option<WireType>>)  {
                         impl Instruction for Prover{
                          fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-            println!("=====getAssignment===mul======{}==========",evaluator.getAssignment().len());
+            // println!("=====getAssignment===mul======{}==========",evaluator.getAssignment().len());
                                                    let a = evaluator.getWiresValues(&self.array1);
                                                 let b = evaluator.getWiresValues(&self.array2);
                                                 let resultVals = LongElement::multiplyPolys(a, b);

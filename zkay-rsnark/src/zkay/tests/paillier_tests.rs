@@ -192,7 +192,7 @@ mod test {
                 nBits as i32,
                 &Some("n".to_owned()),
             );
-            // println!("======randomWire=========={:?}", randomWire.array);
+
             let generatorWire = CircuitGenerator::createLongElementInput(
                 self.cg(),
                 self.t.generator.bits().max(1) as i32,
@@ -409,7 +409,6 @@ mod test {
                     n,
                     plain,
                     random,
-
                     nWire: None,
                     plainWire: None,
                     randomWire: None,
@@ -438,10 +437,10 @@ mod test {
                 &Some("random".to_owned()),
             );
             let enc = ZkayPaillierFastEncGadget::new(
-                nWire,
+                nWire.clone(),
                 nBits as i32,
-                plainWire,
-                randomWire,
+                plainWire.clone(),
+                randomWire.clone(),
                 &None,
                 self.cg(),
             );
@@ -450,6 +449,8 @@ mod test {
                 enc.getOutputWires(),
                 &Some("cipher".to_owned()),
             );
+            (self.t.nWire, self.t.plainWire, self.t.randomWire) =
+                (Some(nWire), Some(plainWire), Some(randomWire));
         }
 
         fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
@@ -535,10 +536,10 @@ mod test {
                 &Some("cipher".to_owned()),
             );
             let dec = ZkayPaillierFastDecGadget::new(
-                nWire,
+                nWire.clone(),
                 nBits as i32,
-                lambdaWire,
-                cipherWire,
+                lambdaWire.clone(),
+                cipherWire.clone(),
                 &None,
                 self.cg(),
             );
@@ -547,6 +548,8 @@ mod test {
                 dec.getOutputWires(),
                 &Some("plain".to_owned()),
             );
+            (self.t.nWire, self.t.lambdaWire, self.t.cipherWire) =
+                (Some(nWire), Some(lambdaWire), Some(cipherWire));
         }
 
         fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {

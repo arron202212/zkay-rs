@@ -74,6 +74,7 @@ impl FieldDivisionGadget {
         desc: &Option<String>,
         mut generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
+        let start = std::time::Instant::now();
         let mut _self = Gadget::<Self>::new(generator.clone(), desc, Self { a, b, c: vec![] });
 
         // let mut generator = self.me.clone().unwrap().upgrade().unwrap();
@@ -82,6 +83,7 @@ impl FieldDivisionGadget {
         // can save one constraint
         if _self.t.a.instance_of("ConstantWire") && _self.t.b.instance_of("ConstantWire") {
             let aConst = _self.t.a.try_as_constant_ref().unwrap().getConstant();
+
             let bInverseConst = _self
                 .t
                 .b
@@ -90,15 +92,18 @@ impl FieldDivisionGadget {
                 .getConstant()
                 .modinv(&Configs.field_prime)
                 .unwrap();
+
             _self.t.c = vec![Some(generator.create_constant_wire(
                 &aConst.mul(bInverseConst).rem(&Configs.field_prime),
                 &None,
             ))];
         } else {
-            _self.t.c = vec![Some(CircuitGenerator::createProverWitnessWire(
-                generator,
-                &_self.debugStr("division result"),
-            ))];
+            let debug_str = _self.debugStr("division result");
+
+            let pww = CircuitGenerator::createProverWitnessWire(generator, &debug_str);
+
+            _self.t.c = vec![Some(pww)];
+
             _self.buildCircuit();
         }
         _self
@@ -106,6 +111,7 @@ impl FieldDivisionGadget {
 }
 impl Gadget<FieldDivisionGadget> {
     fn buildCircuit(&mut self) {
+        let start = std::time::Instant::now();
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
 
@@ -126,7 +132,9 @@ impl Gadget<FieldDivisionGadget> {
         }
                     }
                 );
+
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+
         // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //     let aValue = evaluator.getWireValue(self.t.a.clone());
         //     let bValue = evaluator.getWireValue(self.t.b.clone());
@@ -159,14 +167,12 @@ impl Gadget<FieldDivisionGadget> {
         //     })
         // });
 
+        let generator = self.generator.clone();
+
+        let debug_str = self.debugStr("Assertion for division result");
+
         // to handle the case where a or b can be both zero, see below
-        CircuitGenerator::addAssertion(
-            self.generator.clone(),
-            b,
-            c,
-            a,
-            &self.debugStr("Assertion for division result"),
-        );
+        CircuitGenerator::addAssertion(generator, b, c, a, &debug_str);
 
         /*
          * Few notes: 1) The order of the above two statements matters (the

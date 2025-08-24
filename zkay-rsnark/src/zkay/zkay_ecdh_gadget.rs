@@ -137,6 +137,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                 &Gadget::<ZkayEcGadget<ZkayECDHGadget>>::computeYCoordinate(x),
                 &None,
             ));
+            println!("====self.t.t.hPoint=============={:?}", self.t.t.hPoint);
         } else {
             self.t.t.hPoint.y = Some(CircuitGenerator::createProverWitnessWire(
                 self.generator.clone(),
@@ -182,9 +183,19 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             &self.t.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
             &None,
         );
+        println!(
+            "====self.t.t.hPoint====validateInputs======={}==={}",
+            self.t.t.hPoint.x.as_ref().unwrap(),
+            self.t.t.hPoint.y.as_ref().unwrap()
+        );
         self.assertValidPointOnEC(
             self.t.t.hPoint.x.as_ref().unwrap(),
             self.t.t.hPoint.y.as_ref().unwrap(),
+        );
+        println!(
+            "====self.t.t.hPoint====validateInputs======={}==={}",
+            self.t.t.hPoint.x.as_ref().unwrap(),
+            self.t.t.hPoint.y.as_ref().unwrap()
         );
         self.assertPointOrder(&self.t.t.hPoint, &self.t.t.hTable);
     }

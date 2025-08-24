@@ -66,7 +66,7 @@ impl ZkaySHA256Gadget {
 
 impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
     fn assembleOutput(&mut self, truncated_length: i32) {
-        let mut digest = self.getOutputWires().clone();
+        let mut digest = self.super_get_output_wires().clone();
         // Invert word order to get correct byte order when packed into one big word below
         digest.reverse();
         if truncated_length < 256 {
@@ -74,7 +74,8 @@ impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
             if truncated_length % 32 == 0 {
                 let mut shortened_digest = vec![None; truncated_length as usize / 32];
                 let n = shortened_digest.len();
-                shortened_digest.clone_from_slice(&digest[digest.len() - n..]);
+                let m = digest.len().saturating_sub(n);
+                shortened_digest.clone_from_slice(&digest[m..]);
 
                 digest = shortened_digest;
             } else {

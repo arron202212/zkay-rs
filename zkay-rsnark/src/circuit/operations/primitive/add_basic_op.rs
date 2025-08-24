@@ -43,13 +43,14 @@ impl BasicOp for Op<AddBasicOp> {
     // }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
-            println!(
-                "==compute=====outputs=========={}===={}====",
-                file!(),
-                self.outputs[0].as_ref().unwrap().name()
-            );
-        }
+        let out0_id = self.outputs[0].as_ref().unwrap().getWireId() as usize;
+        // if out0_id == 48124 || out0_id == 4{
+        //     println!(
+        //         "==compute=====outputs==={out0_id}======={}===={}====",
+        //         file!(),
+        //         self.outputs[0].as_ref().unwrap().name()
+        //     );
+        // }
         let s = self.inputs.iter().fold(BigInteger::ZERO, |s, w| {
             s.add(
                 assignment[w.as_ref().unwrap().getWireId() as usize]
@@ -57,8 +58,13 @@ impl BasicOp for Op<AddBasicOp> {
                     .unwrap(),
             )
         });
-        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] =
-            Some(s.rem(&Configs.field_prime));
+        if out0_id == 48124 || out0_id == 4 {
+            println!(
+                "=={}={out0_id}==value=={s}",
+                s.clone().rem(&Configs.field_prime)
+            );
+        }
+        assignment[out0_id] = Some(s.rem(&Configs.field_prime));
     }
 
     fn getNumMulGates(&self) -> i32 {

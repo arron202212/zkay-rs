@@ -18,22 +18,48 @@ use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::{
     AES128CipherGadget, SBoxOption, atomic_sbox_option,
 };
 use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2;
-use crate::util::util::BigInteger;
+use crate::util::util::{BigInteger, Util};
 use std::sync::atomic::{self, AtomicU8, Ordering};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use zkay_derive::ImplStructNameConfig;
+#[macro_export]
+macro_rules! impl_cg_test {
+    () => {
+        #[derive(Debug, Clone, ImplStructNameConfig)]
+        struct CGTest {
+            plaintext: Vec<Option<WireType>>,  // 16 bytes
+            key: Vec<Option<WireType>>,        // 16 bytes
+            ciphertext: Vec<Option<WireType>>, // 16 bytes
+        }
+        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl CGTest {
+            pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
+                CircuitGeneratorExtend::<Self>::new(
+                    name,
+                    Self {
+                        plaintext: vec![],
+                        key: vec![],
+                        ciphertext: vec![],
+                    },
+                )
+            }
+        }
+    };
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
+
     #[test]
-    pub fn aes128_test1_case1() {
-        let a= BigInteger::parse_bytes(b"89228104670908091290687385480691397980782275631420279887247541550499959534759064731866521016916693902170178842167218244796073443825711414268411402820183",10).unwrap();
-        let b = BigInteger::parse_bytes(
-            b"21888242871839275222246405745257275088548364400416034343698204186575808495617",
-            10,
-        )
-        .unwrap();
+    pub fn aes128_test_case0() {
+        let a = Util::parse_big_int(
+            "89228104670908091290687385480691397980782275631420279887247541550499959534759064731866521016916693902170178842167218244796073443825711414268411402820183",
+        );
+        let b = Util::parse_big_int(
+            "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+        );
         assert!(a % b == BigInteger::ZERO);
     }
     #[test]
@@ -48,7 +74,7 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn buildCircuit(&mut self) {
                 let start = std::time::Instant::now();
-                println!("=======CGTEST======buildCircuit==========");
+
                 let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
                 let key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
@@ -60,16 +86,13 @@ mod test {
                         .clone();
                 CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
-                println!("==buildCircuit====start==elapsed== {:?} ", start.elapsed());
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
                 let start = std::time::Instant::now();
-                println!("=======CGTEST======generateSampleInput==========");
-                let keyV =
-                    BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-                let msgV =
-                    BigInteger::parse_bytes(b"ae2d8a571e03ac9c9eb76fac45af8e51", 16).unwrap();
+
+                let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
+                let msgV = Util::parse_big_int_x("ae2d8a571e03ac9c9eb76fac45af8e51");
 
                 let (_, mut keyArray) = keyV.to_bytes_be();
                 let (_, mut msgArray) = msgV.to_bytes_be();
@@ -115,7 +138,7 @@ mod test {
 
             let cipherText = generator.get_out_wires();
 
-            let result = BigInteger::parse_bytes(b"f5d3d58503b9699de785895a96fdbaaf", 16).unwrap();
+            let result = Util::parse_big_int_x("f5d3d58503b9699de785895a96fdbaaf");
 
             let mut resultArray = result.to_bytes_be().1.clone();
             resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
@@ -126,7 +149,6 @@ mod test {
                     BigInteger::from((resultArray[i] as i32 + 256) % 256),
                 );
             }
-            println!("==={sboxOption}===start==elapsed== {:?} ", start.elapsed());
         }
     }
 
@@ -153,10 +175,8 @@ mod test {
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                let keyV =
-                    BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-                let msgV =
-                    BigInteger::parse_bytes(b"6bc1bee22e409f96e93d7e117393172a", 16).unwrap();
+                let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
+                let msgV = Util::parse_big_int_x("6bc1bee22e409f96e93d7e117393172a");
 
                 let (_, mut keyArray) = keyV.to_bytes_be();
                 let (_, mut msgArray) = msgV.to_bytes_be();
@@ -198,7 +218,7 @@ mod test {
 
             let cipherText = generator.get_out_wires();
 
-            let result = BigInteger::parse_bytes(b"3ad77bb40d7a3660a89ecaf32466ef97", 16).unwrap();
+            let result = Util::parse_big_int_x("3ad77bb40d7a3660a89ecaf32466ef97");
 
             // expected output:0xf5d3d58503b9699de785895a96fdbaaf
 
@@ -237,10 +257,8 @@ mod test {
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                let keyV =
-                    BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-                let msgV =
-                    BigInteger::parse_bytes(b"30c81c46a35ce411e5fbc1191a0a52ef", 16).unwrap();
+                let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
+                let msgV = Util::parse_big_int_x("30c81c46a35ce411e5fbc1191a0a52ef");
 
                 let (_, mut keyArray) = keyV.to_bytes_be();
                 let (_, mut msgArray) = msgV.to_bytes_be();
@@ -279,7 +297,7 @@ mod test {
 
             let cipherText = generator.get_out_wires();
 
-            let result = BigInteger::parse_bytes(b"43b1cd7f598ece23881b00e3ed030688", 16).unwrap();
+            let result = Util::parse_big_int_x("43b1cd7f598ece23881b00e3ed030688");
 
             let (_, mut resultArray) = result.to_bytes_be();
             resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
@@ -316,10 +334,8 @@ mod test {
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-                let keyV =
-                    BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-                let msgV =
-                    BigInteger::parse_bytes(b"f69f2445df4f9b17ad2b417be66c3710", 16).unwrap();
+                let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
+                let msgV = Util::parse_big_int_x("f69f2445df4f9b17ad2b417be66c3710");
 
                 let (_, mut keyArray) = keyV.to_bytes_be();
                 let (_, mut msgArray) = msgV.to_bytes_be();
@@ -361,7 +377,7 @@ mod test {
 
             let cipherText = generator.get_out_wires();
 
-            let result = BigInteger::parse_bytes(b"7b0c785e27e8ad3f8223207104725dd4", 16).unwrap();
+            let result = Util::parse_big_int_x("7b0c785e27e8ad3f8223207104725dd4");
 
             let (_, mut resultArray) = result.to_bytes_be();
             resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
@@ -397,15 +413,12 @@ mod test {
                         .clone();
                 CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
-                println!("===buildCircuit===start==elapsed== {:?} ", start.elapsed());
             }
 
             fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
                 let start = std::time::Instant::now();
-                let keyV =
-                    BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-                let msgV =
-                    BigInteger::parse_bytes(b"f69f2445df4f9b17ad2b417be66c3710", 16).unwrap();
+                let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
+                let msgV = Util::parse_big_int_x("f69f2445df4f9b17ad2b417be66c3710");
 
                 let (_, mut keyArray) = keyV.to_bytes_be();
                 let (_, mut msgArray) = msgV.to_bytes_be();
@@ -449,7 +462,7 @@ mod test {
 
             let cipherText = generator.get_out_wires();
 
-            let result = BigInteger::parse_bytes(b"7b0c785e27e8ad3f8223207104725dd4", 16).unwrap();
+            let result = Util::parse_big_int_x("7b0c785e27e8ad3f8223207104725dd4");
 
             let (_, mut resultArray) = result.to_bytes_be();
             resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
@@ -460,7 +473,6 @@ mod test {
                     BigInteger::from((resultArray[i] as i32 + 256) % 256),
                 );
             }
-            println!("==={b}===start==elapsed== {:?} ", start.elapsed());
         }
     }
 }

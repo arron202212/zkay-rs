@@ -46,7 +46,7 @@ impl ZkayPaillierEncGadget {
         let maxNumChunks =
             (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
         let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
-        // println!("=====random.array========={:?}", random.array);
+
         let mut _self = Gadget::<Self>::new(
             generator,
             desc,

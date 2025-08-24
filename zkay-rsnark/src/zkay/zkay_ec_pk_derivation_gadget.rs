@@ -63,13 +63,17 @@ impl ZkayEcPkDerivationGadget {
             },
             generator,
         );
+
         // Hardcode base point
         if validateSecret {
             Gadget::<ZkayEcGadget<Self>>::checkSecretBits(&_self.generator, &_self.t.t.secretBits);
         }
+
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
+
         // coordinates
         _self.buildCircuit();
+
         _self
     }
 }
@@ -79,6 +83,7 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
             &self.t.t.basePoint,
             self.generator.clone(),
         );
+
         let outputPublicValue = Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::mul(
             &self.t.t.basePoint,
             &self.t.t.secretBits,
@@ -87,6 +92,7 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
         )
         .x
         .clone();
+
         self.t.t.outputs = vec![outputPublicValue.clone()];
         self.t.t.outputPublicValue = outputPublicValue;
     }

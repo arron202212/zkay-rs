@@ -186,12 +186,12 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
             rChunkBitwidths[rLength as usize - 1] = rBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
         if qBitwidth % LongElement::CHUNK_BITWIDTH as u64 != 0 {
-            println!(
-                "===LongElement::CHUNK_BITWIDTH====={}===={}====={qBitwidth} % {} ",
-                LongElement::CHUNK_BITWIDTH,
-                file!(),
-                line!()
-            );
+            // println!(
+            //     "===LongElement::CHUNK_BITWIDTH====={}===={}====={qBitwidth} % {} ",
+            //     LongElement::CHUNK_BITWIDTH,
+            //     file!(),
+            //     line!()
+            // );
             qChunkBitwidths[qLength as usize - 1] = qBitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
         let a = &self.t.a;

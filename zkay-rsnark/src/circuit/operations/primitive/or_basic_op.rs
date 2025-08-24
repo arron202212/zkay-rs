@@ -67,23 +67,21 @@ impl BasicOp for Op<OrBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
-            println!(
-                "==compute=====outputs=========={}===={}====",
-                file!(),
-                self.outputs[0].as_ref().unwrap().name()
-            );
-        }
-        assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize] = assignment
-            [self.inputs[0].as_ref().unwrap().getWireId() as usize]
+        let (in0_id, in1_id, out0_id) = (
+            self.inputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[1].as_ref().unwrap().getWireId() as usize,
+            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+        );
+        // if out0_id == 48124 || out0_id == 4{
+        //     println!(
+        //         "==compute=====outputs===={out0_id}======{}===={}====",
+        //         file!(),
+        //         self.outputs[0].as_ref().unwrap().name()
+        //     );
+        // }
+        assignment[out0_id] = assignment[in0_id]
             .as_ref()
-            .map(|x| {
-                x.clone().bitor(
-                    assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                        .as_ref()
-                        .unwrap(),
-                )
-            });
+            .map(|x| x.clone().bitor(assignment[in1_id].as_ref().unwrap()));
     }
 
     fn getNumMulGates(&self) -> i32 {

@@ -74,7 +74,6 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
 }
 impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
     fn buildCircuit(&mut self) {
-        println!("======buildCircuit====={}", file!());
         self.super_buildCircuit();
         self.addKi("elgamal", "glob_key_Elgamal__owner", 2);
 
@@ -90,6 +89,6 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
 impl ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {}
 pub fn main(args: Vec<String>) {
     let mut circuit = SampleEncCircuit::new();
-    println!("======SampleEncCircuit===run=========");
+
     circuit.run(&args);
 }

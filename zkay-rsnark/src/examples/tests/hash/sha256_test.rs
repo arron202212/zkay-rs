@@ -313,7 +313,7 @@ mod test {
                     evaluator.setWireValue(self.t.inputWires[i].as_ref().unwrap(), &sum);
                 }
             }
-        };
+        }
 
         let expectedDigest =
             "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1".to_owned();
@@ -321,7 +321,7 @@ mod test {
         // Testing different settings of the bitWidthPerInputElement parameter
         // wordSize = # of bytes per input wire
 
-        for wordSize in 1..=Configs.log2_field_prime / 8 - 1 {
+        for wordSize in 1..Configs.log2_field_prime / 8 {
             let numBytesPerInputWire = wordSize as usize;
             let t = CGTest {
                 inputWires: vec![],
@@ -332,13 +332,16 @@ mod test {
             generator.generateCircuit();
             let evaluator = generator.evalCircuit().unwrap();
 
-            let mut outDigest = String::new();
-            for w in generator.get_out_wires() {
-                outDigest += &Util::padZeros(
-                    &evaluator.getWireValue(w.as_ref().unwrap()).to_str_radix(16),
-                    8,
-                );
-            }
+            let mut outDigest = generator
+                .get_out_wires()
+                .into_iter()
+                .map(|w| {
+                    Util::padZeros(
+                        &evaluator.getWireValue(w.as_ref().unwrap()).to_str_radix(16),
+                        8,
+                    )
+                })
+                .collect::<String>();
             assert_eq!(outDigest, expectedDigest);
         }
     }

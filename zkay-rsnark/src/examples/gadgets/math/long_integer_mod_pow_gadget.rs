@@ -111,7 +111,11 @@ impl Gadget<LongIntegerModPowGadget> {
         // From the most significant to the least significant bit of the exponent, proceed as follow:
         // product = product^2 mod m
         // if eBit == 1) product = (product * base mod m
-        for i in (0..=eBits.len() - 1).rev() {
+
+        let start = std::time::Instant::now();
+        println!("========eBits.len()====={}", eBits.len());
+        for i in (0..eBits.len()).rev() {
+            println!("=={i}======eBits.len()====={:?}", start.elapsed());
             let square = product.clone().mul(&product);
             let squareModM = LongIntegerModGadget::new(
                 square,

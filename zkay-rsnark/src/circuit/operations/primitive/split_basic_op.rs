@@ -62,29 +62,29 @@ impl BasicOp for Op<SplitBasicOp> {
     }
 
     fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
-        let mut inVal = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-            .clone()
-            .unwrap();
+        let in0_id = self.inputs[0].as_ref().unwrap().getWireId() as usize;
+
+        let mut inVal = assignment[in0_id].clone().unwrap();
         if inVal > Configs.field_prime {
             inVal = inVal.rem(&Configs.field_prime);
         }
         for i in 0..self.outputs.len() {
-            assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize] =
-                Some(if inVal.bit(i as u64) {
-                    Util::one()
-                } else {
-                    BigInteger::ZERO
-                });
-            if self.outputs[i].as_ref().unwrap().getWireId() == 5 {
-                println!(
-                    "==compute=====outputs=========={}===={}==={}====))))===",
-                    file!(),
-                    self.outputs[i].as_ref().unwrap().name(),
-                    assignment[self.outputs[i].as_ref().unwrap().getWireId() as usize]
-                        .as_ref()
-                        .unwrap()
-                );
-            }
+            let outi_id = self.outputs[i].as_ref().unwrap().getWireId() as usize;
+            assignment[outi_id] = Some(if inVal.bit(i as u64) {
+                Util::one()
+            } else {
+                BigInteger::ZERO
+            });
+            // if outi_id == 48124 || outi_id == 4{
+            //         println!(
+            //             "==compute=====outputs====={outi_id}===={}===={}==={}====))))===",
+            //             file!(),
+            //             self.outputs[i].as_ref().unwrap().name(),
+            //             assignment[outi_id]
+            //                 .as_ref()
+            //                 .unwrap()
+            //         );
+            //     }
         }
     }
 

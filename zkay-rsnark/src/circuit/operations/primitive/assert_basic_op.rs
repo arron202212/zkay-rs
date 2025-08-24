@@ -28,14 +28,28 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct AssertBasicOp;
 impl AssertBasicOp {
     pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<AssertBasicOp> {
-        // if w1.getWireId()==5 && w2.getWireId()==0 && output.getWireId()==0{
-        // panic!("{},{},{}",w1.name(),w2.name(),output.name());
+        // if w1.getWireId()==4 && w2.getWireId()==0 && output.getWireId()==48124{
+        //     panic!("{},{},{}",w1.name(),w2.name(),output.name());
         // }
+        let start = std::time::Instant::now();
+
+        let w1 = Some(w1.clone());
+
+        let w2 = Some(w2.clone());
+
+        let output = Some(output.clone());
+
+        let t = AssertBasicOp;
+
+        let inputs = vec![w1, w2];
+
+        let outputs = vec![output];
+
         Op::<AssertBasicOp> {
-            inputs: vec![Some(w1.clone()), Some(w2.clone())],
-            outputs: vec![Some(output.clone())],
+            inputs,
+            outputs,
             desc,
-            t: AssertBasicOp,
+            t,
         }
     }
 }
@@ -48,42 +62,35 @@ crate::impl_hash_code_for!(Op<AssertBasicOp>);
 // }
 impl BasicOp for Op<AssertBasicOp> {
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
-        // if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+        let (in0_id, in1_id, out0_id) = (
+            self.inputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[1].as_ref().unwrap().getWireId() as usize,
+            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+        );
+        // if out0_id == 48124 || out0_id == 4{
         //     println!(
-        //         "==compute=====outputs=========={}===={}====",
+        //         "==compute=====outputs==={out0_id}======={}===={}====",
         //         file!(),
         //         self.outputs[0].as_ref().unwrap().name()
         //     );
         // }
-        let leftSide = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+        let leftSide = assignment[in0_id]
             .clone()
             .unwrap()
-            .mul(
-                assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                    .as_ref()
-                    .unwrap(),
-            )
+            .mul(assignment[in1_id].as_ref().unwrap())
             .rem(&Configs.field_prime);
-        let rightSide = assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
-            .clone()
-            .unwrap();
+        let rightSide = assignment[out0_id].clone().unwrap();
 
         assert_eq!(
             leftSide,
             rightSide,
             "Error During Evaluation    {} * {} != {}  in {} * {} != {}",
-            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
-                .as_ref()
-                .unwrap(),
-            assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
-                .as_ref()
-                .unwrap(),
-            assignment[self.outputs[0].as_ref().unwrap().getWireId() as usize]
-                .as_ref()
-                .unwrap(),
-            self.inputs[0].as_ref().unwrap().getWireId(),
-            self.inputs[1].as_ref().unwrap().getWireId(),
-            self.outputs[0].as_ref().unwrap().getWireId()
+            assignment[in0_id].as_ref().unwrap(),
+            assignment[in1_id].as_ref().unwrap(),
+            assignment[out0_id].as_ref().unwrap(),
+            in0_id,
+            in1_id,
+            out0_id
         );
     }
 

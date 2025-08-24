@@ -50,7 +50,8 @@ pub trait GadgetConfig: Debug {
         String::new()
     }
     fn debugStr(&self, s: &str) -> Option<String> {
-        Some(format!("{self:?}:{s}"))
+        //{self:?}  MYTODO
+        Some(format!(":{s}"))
     }
 }
 
