@@ -116,7 +116,7 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
             //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
             assert!(
                 assignment[w.as_ref().unwrap().getWireId() as usize].is_some(),
-                "Error During Evaluation in checkInputs wire id={},{:?},{}",
+                "Error During Evaluation in checkInputs wire id={},{},{}",
                 w.as_ref().unwrap().getWireId(),
                 assignment.len(),
                 n
@@ -131,7 +131,7 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
         );
     }
 
-    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>);
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()>;
 
     fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {
         for w in self.getOutputs() {
@@ -204,11 +204,12 @@ macro_rules! impl_instruction_for {
             fn evaluate(
                 &self,
                 evaluator: &mut $crate::circuit::eval::circuit_evaluator::CircuitEvaluator,
-            ) {
+            ) -> eyre::Result<()> {
                 let assignment = evaluator.getAssignment();
                 self.checkInputs(assignment);
                 self.checkOutputs(assignment);
-                self.compute(evaluator.get_assignment_mut());
+                self.compute(evaluator.get_assignment_mut())?;
+                Ok(())
             }
             fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
                 Some(Box::new(self.clone()))

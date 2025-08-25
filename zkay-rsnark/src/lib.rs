@@ -1,3 +1,4 @@
+pub mod bouncycastle_rs;
 pub mod circuit;
 pub mod examples;
 pub mod util;

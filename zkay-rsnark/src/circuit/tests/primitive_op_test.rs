@@ -687,25 +687,26 @@ mod test {
                 );
                 let result = &self.t.result;
                 let prover = crate::impl_prover!(
-                                eval( result: Vec<BigInteger>,
-                            solutions: WireArray,
-                            numIns: usize)  {
-                impl Instruction for Prover{
-                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                                          evaluator.setWireValue(
-                                    self.solutions[0].as_ref().unwrap(),
-                                    &self.result[0],
-                                );
-                                for i in 0..self.numIns {
-                                    evaluator.setWireValue(
-                                        self.solutions[i + 1].as_ref().unwrap(),
-                                        &self.result[i + 1],
-                                    );
+                                                eval( result: Vec<BigInteger>,
+                                            solutions: WireArray,
+                                            numIns: usize)  {
+                                impl Instruction for Prover{
+                                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                                          evaluator.setWireValue(
+                                                    self.solutions[0].as_ref().unwrap(),
+                                                    &self.result[0],
+                                                );
+                                                for i in 0..self.numIns {
+                                                    evaluator.setWireValue(
+                                                        self.solutions[i + 1].as_ref().unwrap(),
+                                                        &self.result[i + 1],
+                                                    );
+                                                }
+                Ok(())
                                 }
-                }
-                }
-                            }
-                        );
+                                }
+                                            }
+                                        );
                 CircuitGenerator::specifyProverWitnessComputation(self.cg(), prover);
                 // CircuitGenerator::specifyProverWitnessComputation(self.cg(),&|evaluator: &mut CircuitEvaluator| {
                 //     evaluator.setWireValue(solutions[0].as_ref().unwrap(), self.t.result[0].clone());
@@ -725,7 +726,7 @@ mod test {
                 //         numIns: usize,
                 //     }
                 //     impl Instruction for Prover {
-                //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+                //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                 //             evaluator.setWireValue(
                 //                 self.solutions[0].as_ref().unwrap(),
                 //                 self.result[0].clone(),

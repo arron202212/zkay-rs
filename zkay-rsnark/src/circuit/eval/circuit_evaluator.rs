@@ -141,7 +141,7 @@ impl CircuitEvaluator {
         }
     }
 
-    pub fn evaluate<T: CGConfig>(&mut self, generator: &RcCell<T>) {
+    pub fn evaluate<T: CGConfig>(&mut self, generator: &RcCell<T>) -> eyre::Result<()> {
         println!(
             "==evaluate===evaluator.getAssignment().len()============{}",
             self.getAssignment().len()
@@ -150,7 +150,7 @@ impl CircuitEvaluator {
         let evalSequence = generator.get_evaluation_queue();
 
         for e in evalSequence.values() {
-            e.evaluate(self);
+            e.evaluate(self)?;
             e.emit(self);
         }
         // check that each wire has been assigned a value
@@ -164,6 +164,7 @@ impl CircuitEvaluator {
             "Circuit Evaluation Done for < {} >\n\n",
             generator.get_name()
         );
+        Ok(())
     }
 
     pub fn writeInputFile<T: CGConfig>(&self, generator: RcCell<T>) {

@@ -75,7 +75,7 @@ impl<T: setBitsConfig + Clone + Debug + PartialEq> PartialEq for Wire<T> {
 impl<T: setBitsConfig + Clone + Debug + PartialEq> Clone for Wire<T> {
     fn clone(&self) -> Self {
         Self {
-            wire_id: self.wire_id.clone(), //RcCell::new(*self.wire_id.borrow()),
+            wire_id: self.wire_id.clone(), //RcCell::new(*self.wire_id.borrow()),//
             generator: self.generator.clone(),
             t: self.t.clone(),
         }
@@ -153,6 +153,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
+        // assert!( b!=&BigInteger::from(-1));
         // println!(
         //     "=======================mulb============{}=========== {} ",
         //     file!(),
@@ -168,13 +169,14 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         if b == &BigInteger::ZERO {
             return generator.get_zero_wire().unwrap();
         }
-        // println!("End Name Time: 444 {} s", line!());
+
         let out = WireType::LinearCombination(LinearCombinationWire::new(
             generator.get_current_wire_id(),
             None,
             self.generator_weak(),
         ));
         generator.borrow_mut().current_wire_id += 1;
+        // println!("===self======{} ==={}=={}==={}", line!(),self.getWireId(),self.name(),b);
         let op = ConstMulBasicOp::new(
             self.self_clone().as_ref().unwrap(),
             &out,
@@ -184,14 +186,14 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         //		generator.addToEvaluationQueue(Box::new(op));
 
         let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-        // println!("End Name Time: 444 {} s", line!());
+        // println!("===out====={}======={}====== {} ", line!(),out,out.name());
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
             // println!(
-            //     "====generator.borrow_mut().current_wire_id======{}====={}{}",
+            //     "====generator.borrow_mut().current_wire_id==={}==={}=={}==={}{}",
             //     generator.borrow_mut().current_wire_id,
             //     file!(),
-            //     line!()
+            //     line!(),out,out.name()
             // );
 
             cachedOutputs[0].clone().unwrap()
@@ -262,7 +264,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
         // assert!( output.getWireId()!=175548);
         if let Some(cachedOutputs) = cachedOutputs {
             generator.borrow_mut().current_wire_id -= 1;
-            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
+            // println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cachedOutputs[0].clone().unwrap()
         } else {
             output

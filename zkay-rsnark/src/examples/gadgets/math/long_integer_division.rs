@@ -215,31 +215,31 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         //             );
         //         });
         let prover = crate::impl_prover!(
-                        eval(  a: LongElement,
-                    b: LongElement,r: LongElement,
-                    q: LongElement
-                )  {
-        impl Instruction for Prover{
-         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                   let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
-            let bValue = evaluator.getWireValuei(&self.b, LongElement::CHUNK_BITWIDTH);
-            let rValue = aValue.clone().rem(&bValue);
-            let qValue = aValue.clone().div(&bValue);
+                                eval(  a: LongElement,
+                            b: LongElement,r: LongElement,
+                            q: LongElement
+                        )  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                           let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
+                    let bValue = evaluator.getWireValuei(&self.b, LongElement::CHUNK_BITWIDTH);
+                    let rValue = aValue.clone().rem(&bValue);
+                    let qValue = aValue.clone().div(&bValue);
 
-            evaluator.setWireValuea(
-                self.r.getArray(),
-                &Util::split(&rValue, LongElement::CHUNK_BITWIDTH),
-            );
-            evaluator.setWireValuea(
-                self.q.getArray(),
-                &Util::split(&qValue, LongElement::CHUNK_BITWIDTH),
-            );
+                    evaluator.setWireValuea(
+                        self.r.getArray(),
+                        &Util::split(&rValue, LongElement::CHUNK_BITWIDTH),
+                    );
+                    evaluator.setWireValuea(
+                        self.q.getArray(),
+                        &Util::split(&qValue, LongElement::CHUNK_BITWIDTH),
+                    );
+        Ok(())
 
-
-        }
-        }
-                    }
-                );
+                }
+                }
+                            }
+                        );
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         // {
         //     struct Prover;

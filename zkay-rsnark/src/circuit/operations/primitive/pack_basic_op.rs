@@ -56,7 +56,7 @@ impl BasicOp for Op<PackBasicOp> {
         );
     }
 
-    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let out0_id = self.outputs[0].as_ref().unwrap().getWireId() as usize;
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
@@ -79,6 +79,7 @@ impl BasicOp for Op<PackBasicOp> {
             });
 
         assignment[out0_id] = Some(sum.rem(&Configs.field_prime));
+        Ok(())
     }
 
     fn getNumMulGates(&self) -> i32 {

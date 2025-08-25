@@ -63,7 +63,7 @@ impl BasicOp for Op<XorBasicOp> {
         );
     }
 
-    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (
             self.inputs[0].as_ref().unwrap().getWireId() as usize,
             self.inputs[1].as_ref().unwrap().getWireId() as usize,
@@ -79,6 +79,7 @@ impl BasicOp for Op<XorBasicOp> {
         assignment[out0_id] = assignment[in0_id]
             .as_ref()
             .map(|x| x.bitxor(assignment[in1_id].as_ref().unwrap()));
+        Ok(())
     }
 
     fn getNumMulGates(&self) -> i32 {

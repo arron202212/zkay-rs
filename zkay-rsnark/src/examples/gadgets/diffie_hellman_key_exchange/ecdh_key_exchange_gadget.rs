@@ -44,8 +44,8 @@ use crate::{
 // use crate::circuit::operations::gadget::GadgetConfig;
 // use crate::circuit::structure::constant_wire;
 // use crate::circuit::structure::wire_type::WireType;
+use crate::bouncycastle_rs::pqc::math::linearalgebra::integer_functions::IntegerFunctions;
 use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
-// import org.bouncycastle.pqc.math.linearalgebra.IntegerFunctions;
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
@@ -329,11 +329,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
             let prover = crate::impl_prover!(
                             eval(  basePoint: AffinePoint)  {
             impl Instruction for Prover{
-             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+             fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                        let x = evaluator.getWireValue(self.basePoint.x.as_ref().unwrap());
             evaluator.setWireValue(self.basePoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
 
-
+                Ok(())
             }
             }
                         }
@@ -390,18 +390,18 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
             let hPoint = &self.t.hPoint;
             let prover = crate::impl_prover!(
-                            eval(  hPoint: AffinePoint
-                    )  {
-            impl Instruction for Prover{
-             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                       let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
-            evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
+                                        eval(  hPoint: AffinePoint
+                                )  {
+                        impl Instruction for Prover{
+                         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                   let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
+                        evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
+            Ok(())
 
-
-            }
-            }
                         }
-                    );
+                        }
+                                    }
+                                );
             CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
             // {
             //         struct Prover;
@@ -448,7 +448,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         let mut precomputedTable: Vec<_> = (1..self.t.secretBits.len())
             .scan(p.clone(), |s, _j| {
-                Some(Self::doubleAffinePoint(&s, self.generator.clone()))
+                *s = Self::doubleAffinePoint(&s, self.generator.clone());
+                Some((*s).clone())
             })
             .collect();
 
@@ -497,17 +498,14 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
-
-        let l1 = FieldDivisionGadget::new(
-            x_2.muli(3, &None)
-                .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
-                .add(1),
-            p.y.as_ref().unwrap().muli(2, &None),
-            &None,
-            generator,
-        )
-        .getOutputWires()[0]
-            .clone();
+        let a = x_2
+            .muli(3, &None)
+            .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
+            .add(1);
+        // println!("=====b====begin=====");
+        let b = p.y.as_ref().unwrap().muli(2, &None);
+        // println!("==a={}==b={}={a},{b}==end===={}===={}==",a.name(),b.name(),p.y.as_ref().unwrap(),p.y.as_ref().unwrap().name());
+        let l1 = FieldDivisionGadget::new(a, b, &None, generator).getOutputWires()[0].clone();
 
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
 
@@ -535,7 +533,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
 
         let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-
+        // println!("==diffX===diffY=={diffX},{diffY}");
         let q = FieldDivisionGadget::new(diffY, diffX, &None, self.generator.clone())
             .getOutputWires()[0]
             .clone();
@@ -577,8 +575,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
             )
             .add(&x)
             .rem(&Configs.field_prime);
-
-        let y = x; //IntegerFunctions.ressol(ySqred, &Configs.field_prime); //MYTODO 
+        // println!("==y=====Configs.field_prime========={ySqred},{}",Configs.field_prime);
+        let y = IntegerFunctions::ressol(ySqred, &Configs.field_prime); //MYTODO 
+        // println!("==y=**={y}========");
         y
     }
 

@@ -109,25 +109,25 @@ impl Gadget<ModGadget> {
         //             evaluator.setWireValue(q, &qValue);
         //         });
         let prover = crate::impl_prover!(
-                                    eval(  a: WireType,
-        b: WireType,
-        r: WireType,
-        q: WireType
-                            )  {
-                    impl Instruction for Prover{
-                     fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                                let aValue = evaluator.getWireValue(&self.a);
-                        let bValue = evaluator.getWireValue(&self.b);
-                        let rValue = aValue.clone().rem(&bValue);
-                        evaluator.setWireValue(&self.r, &rValue);
-                        let qValue = aValue.div(&bValue);
-                        evaluator.setWireValue(&self.q, &qValue);
+                                            eval(  a: WireType,
+                b: WireType,
+                r: WireType,
+                q: WireType
+                                    )  {
+                            impl Instruction for Prover{
+                             fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                        let aValue = evaluator.getWireValue(&self.a);
+                                let bValue = evaluator.getWireValue(&self.b);
+                                let rValue = aValue.clone().rem(&bValue);
+                                evaluator.setWireValue(&self.r, &rValue);
+                                let qValue = aValue.div(&bValue);
+                                evaluator.setWireValue(&self.q, &qValue);
+        Ok(())
 
-
-                    }
-                    }
-                                }
-                            );
+                            }
+                            }
+                                        }
+                                    );
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         //     {
         //     struct Prover;

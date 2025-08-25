@@ -1055,7 +1055,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     fn evalCircuit(&mut self) -> eyre::Result<CircuitEvaluator> {
         let mut circuitEvaluator = CircuitEvaluator::new(&self.name(), &self.cg());
         self.generateSampleInput(&mut circuitEvaluator);
-        circuitEvaluator.evaluate(&self.cg());
+        circuitEvaluator.evaluate(&self.cg())?;
         // *self.circuit_evaluator() = Some(circuitEvaluator);
         Ok(circuitEvaluator)
     }
@@ -1273,7 +1273,7 @@ macro_rules! to_closure_str {
 macro_rules! impl_instruction_for_prover {
     ( $body:block ) => {
                     impl Instruction for Prover{
-                        fn evaluate(&self, evaluator: &mut CircuitEvaluator)
+                        fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>
                             $body
 
                     }

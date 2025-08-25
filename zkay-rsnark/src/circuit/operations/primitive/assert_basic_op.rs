@@ -61,7 +61,7 @@ crate::impl_hash_code_for!(Op<AssertBasicOp>);
 //     }
 // }
 impl BasicOp for Op<AssertBasicOp> {
-    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (
             self.inputs[0].as_ref().unwrap().getWireId() as usize,
             self.inputs[1].as_ref().unwrap().getWireId() as usize,
@@ -81,9 +81,8 @@ impl BasicOp for Op<AssertBasicOp> {
             .rem(&Configs.field_prime);
         let rightSide = assignment[out0_id].clone().unwrap();
 
-        assert_eq!(
-            leftSide,
-            rightSide,
+        eyre::ensure!(
+            leftSide == rightSide,
             "Error During Evaluation    {} * {} != {}  in {} * {} != {}",
             assignment[in0_id].as_ref().unwrap(),
             assignment[in1_id].as_ref().unwrap(),
@@ -92,6 +91,7 @@ impl BasicOp for Op<AssertBasicOp> {
             in1_id,
             out0_id
         );
+        Ok(())
     }
 
     fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {

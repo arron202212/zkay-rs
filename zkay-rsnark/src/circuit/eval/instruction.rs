@@ -49,7 +49,7 @@ impl Hash for dyn DynHash + '_ {
 }
 #[enum_dispatch]
 pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
-    fn evaluate(&self, evaluator: &mut CircuitEvaluator);
+    fn evaluate(&self, evaluator: &mut CircuitEvaluator) -> eyre::Result<()>;
 
     fn emit(&self, evaluator: &CircuitEvaluator) {}
 

@@ -86,8 +86,9 @@ impl WireLabelInstruction {
 }
 
 impl Instruction for WireLabelInstruction {
-    fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+    fn evaluate(&self, evaluator: &mut CircuitEvaluator) -> eyre::Result<()> {
         // nothing to do.
+        Ok(())
     }
 
     fn emit(&self, evaluator: &CircuitEvaluator) {

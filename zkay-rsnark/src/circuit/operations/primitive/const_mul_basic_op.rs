@@ -46,6 +46,7 @@ impl ConstMulBasicOp {
             _constInteger = Util::modulo(&_constInteger, &Configs.field_prime);
             Configs.field_prime.clone().sub(_constInteger)
         };
+        // println!("======constInteger========================={constInteger}");
         Op::<ConstMulBasicOp> {
             inputs: vec![Some(w.clone())],
             outputs: vec![Some(out.clone())],
@@ -71,7 +72,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         }
     }
 
-    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, out0_id) = (
             self.inputs[0].as_ref().unwrap().getWireId() as usize,
             self.outputs[0].as_ref().unwrap().getWireId() as usize,
@@ -98,6 +99,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         //     );
         // }
         assignment[out0_id] = Some(result);
+        Ok(())
     }
 
     fn getNumMulGates(&self) -> i32 {
@@ -125,9 +127,9 @@ impl PartialEq for Op<ConstMulBasicOp> {
 impl Hash for Op<ConstMulBasicOp> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.t.constInteger.hash(state);
-        // let mut inputs=self.getInputs();
+        let mut inputs = self.getInputs();
         // inputs.sort_unstable_by_key(|x|x.as_ref().unwrap().getWireId());
-        for i in self.getInputs() {
+        for i in inputs {
             i.as_ref().unwrap().getWireId().hash(state);
         }
     }

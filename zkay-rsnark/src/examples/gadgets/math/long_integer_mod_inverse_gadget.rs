@@ -132,30 +132,30 @@ impl Gadget<LongIntegerModInverseGadget> {
         //         });
 
         let prover = crate::impl_prover!(
-                        eval( a: LongElement, m: LongElement,  quotientWires:  Vec<Option<WireType>>,
-                    inverseWires:  Vec<Option<WireType>>
-                )  {
-        impl Instruction for Prover{
-         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                   let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
-            let mValue = evaluator.getWireValuei(&self.m, LongElement::CHUNK_BITWIDTH);
-            let inverseValue = aValue.modinv(&mValue);
-            let quotientValue = aValue.mul(inverseValue.as_ref().unwrap()).div(&mValue);
+                                eval( a: LongElement, m: LongElement,  quotientWires:  Vec<Option<WireType>>,
+                            inverseWires:  Vec<Option<WireType>>
+                        )  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                           let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
+                    let mValue = evaluator.getWireValuei(&self.m, LongElement::CHUNK_BITWIDTH);
+                    let inverseValue = aValue.modinv(&mValue);
+                    let quotientValue = aValue.mul(inverseValue.as_ref().unwrap()).div(&mValue);
 
-            evaluator.setWireValuea(
-                &self.inverseWires,
-                &Util::split(inverseValue.as_ref().unwrap(), LongElement::CHUNK_BITWIDTH),
-            );
-            evaluator.setWireValuea(
-                &self.quotientWires,
-                &Util::split(&quotientValue, LongElement::CHUNK_BITWIDTH),
-            );
+                    evaluator.setWireValuea(
+                        &self.inverseWires,
+                        &Util::split(inverseValue.as_ref().unwrap(), LongElement::CHUNK_BITWIDTH),
+                    );
+                    evaluator.setWireValuea(
+                        &self.quotientWires,
+                        &Util::split(&quotientValue, LongElement::CHUNK_BITWIDTH),
+                    );
+        Ok(())
 
-
-        }
-        }
-                    }
-                );
+                }
+                }
+                            }
+                        );
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         // {
         //     struct Prover;

@@ -86,44 +86,45 @@ impl Gadget<AESSBoxComputeGadget> {
         let inverse = CircuitGenerator::createProverWitnessWire(self.generator.clone(), &None);
         let input = &self.t.input;
         let prover = crate::impl_prover!(
-                                        eval(  input: WireType,
-                                    inverse: WireType
-                                )  {
-                        impl Instruction for Prover{
-                         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-        fn gmuli( mut a: i32, mut  b:  i32) -> i32 {
-                let mut p = 0;
-                for j in 0..8 {
-                    if (b & 1) != 0 {
-                        p ^= a;
+                                                eval(  input: WireType,
+                                            inverse: WireType
+                                        )  {
+                                impl Instruction for Prover{
+                                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                fn gmuli( mut a: i32, mut  b:  i32) -> i32 {
+                        let mut p = 0;
+                        for j in 0..8 {
+                            if (b & 1) != 0 {
+                                p ^= a;
+                            }
+                            a <<= 1;
+                            if (a & 0x100) != 0 {
+                                a ^= 0x11b;
+                            }
+                            b >>= 1;
+                        }
+                        p
                     }
-                    a <<= 1;
-                    if (a & 0x100) != 0 {
-                        a ^= 0x11b;
-                    }
-                    b >>= 1;
-                }
-                p
-            }
 
-            fn findInv(mut a: i32) -> i32 {
-                if a == 0 {
-                    return 0;
-                }
-                for i in 0..256 {
-                    if gmuli(i,  a) == 1 {
-                        return i;
+                    fn findInv(mut a: i32) -> i32 {
+                        if a == 0 {
+                            return 0;
+                        }
+                        for i in 0..256 {
+                            if gmuli(i,  a) == 1 {
+                                return i;
+                            }
+                        }
+                        -1
                     }
-                }
-                -1
-            }
-                                    let p = evaluator.getWireValue(&self.input).to_str_radix(10).parse::<i32>().unwrap();
-                                    let q = findInv(p);
-                                    evaluator.setWireValuei(&self.inverse, q as i64);
-                        }
-                        }
-                                    }
-                                );
+                                            let p = evaluator.getWireValue(&self.input).to_str_radix(10).parse::<i32>().unwrap();
+                                            let q = findInv(p);
+                                            evaluator.setWireValuei(&self.inverse, q as i64);
+        Ok(())
+                                }
+                                }
+                                            }
+                                        );
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
 
         // &{

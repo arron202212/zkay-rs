@@ -118,24 +118,24 @@ impl Gadget<ModConstantGadget> {
         //         });
 
         let prover = crate::impl_prover!(
-                                    eval(  a: WireType,
-        b: BigInteger,
-        r: WireType,
-        q: WireType
-                            )  {
-                    impl Instruction for Prover{
-                     fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                                let aValue = evaluator.getWireValue(&self.a);
-                        let rValue = aValue.clone().rem(&self.b);
-                        evaluator.setWireValue(&self.r, &rValue);
-                        let qValue = aValue.div(&self.b);
-                        evaluator.setWireValue(&self.q, &qValue);
+                                            eval(  a: WireType,
+                b: BigInteger,
+                r: WireType,
+                q: WireType
+                                    )  {
+                            impl Instruction for Prover{
+                             fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                        let aValue = evaluator.getWireValue(&self.a);
+                                let rValue = aValue.clone().rem(&self.b);
+                                evaluator.setWireValue(&self.r, &rValue);
+                                let qValue = aValue.div(&self.b);
+                                evaluator.setWireValue(&self.q, &qValue);
+        Ok(())
 
-
-                    }
-                    }
-                                }
-                            );
+                            }
+                            }
+                                        }
+                                    );
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
         // {
         //     struct Prover;

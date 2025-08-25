@@ -61,7 +61,7 @@ impl BasicOp for Op<SplitBasicOp> {
         );
     }
 
-    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let in0_id = self.inputs[0].as_ref().unwrap().getWireId() as usize;
 
         let mut inVal = assignment[in0_id].clone().unwrap();
@@ -86,6 +86,7 @@ impl BasicOp for Op<SplitBasicOp> {
             //         );
             //     }
         }
+        Ok(())
     }
 
     fn getNumMulGates(&self) -> i32 {

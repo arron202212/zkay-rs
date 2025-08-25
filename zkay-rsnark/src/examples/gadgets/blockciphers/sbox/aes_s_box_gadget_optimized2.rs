@@ -214,18 +214,19 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         //     evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
         // });
         let prover = crate::impl_prover!(
-                            eval(  input: WireType,
-                        output: WireType
-                    )  {
-            impl Instruction for Prover{
-             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                        // TODO Auto-generated method stub
-        let value = evaluator.getWireValue(&self.input);
-        evaluator.setWireValue(&self.output, &BigInteger::from(Gadget::<AESSBoxGadgetOptimized2>::SBox[value.to_str_radix(10).parse::<usize>().unwrap()]));
-            }
-            }
-                        }
-                    );
+                                    eval(  input: WireType,
+                                output: WireType
+                            )  {
+                    impl Instruction for Prover{
+                     fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                // TODO Auto-generated method stub
+                let value = evaluator.getWireValue(&self.input);
+                evaluator.setWireValue(&self.output, &BigInteger::from(Gadget::<AESSBoxGadgetOptimized2>::SBox[value.to_str_radix(10).parse::<usize>().unwrap()]));
+        Ok(())
+                    }
+                    }
+                                }
+                            );
         CircuitGenerator::specifyProverWitnessComputation(generator.clone(), prover);
         // {
         //             struct Prover;

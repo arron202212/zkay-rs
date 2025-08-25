@@ -181,19 +181,20 @@ pub trait ZkayBabyJubJubGadgetConfig {
         //         });
         let base_order = Self::BASE_ORDER.to_owned();
         let prover = crate::impl_prover!(
-                        eval(  a: WireType,
-                            ainv:WireType,
-                            base_order:String
-                )  {
-        impl Instruction for Prover{
-         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-            let aValue = evaluator.getWireValue(&self.a);
-            let inverseValue = aValue.modinv(&Util::parse_big_int(&self.base_order));
-            evaluator.setWireValue(&self.ainv, inverseValue.as_ref().unwrap());
-        }
-        }
-                    }
-                );
+                                eval(  a: WireType,
+                                    ainv:WireType,
+                                    base_order:String
+                        )  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                    let aValue = evaluator.getWireValue(&self.a);
+                    let inverseValue = aValue.modinv(&Util::parse_big_int(&self.base_order));
+                    evaluator.setWireValue(&self.ainv, inverseValue.as_ref().unwrap());
+        Ok(())
+                }
+                }
+                            }
+                        );
         CircuitGenerator::specifyProverWitnessComputation(self.generators(), prover);
         // {
         //     struct Prover;

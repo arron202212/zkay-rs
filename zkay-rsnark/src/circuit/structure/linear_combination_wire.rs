@@ -24,7 +24,7 @@ use std::{
     hash::{DefaultHasher, Hash, Hasher},
 };
 use zkay_derive::ImplStructNameConfig;
-#[derive(Debug, Clone, ImplStructNameConfig)]
+#[derive(Debug, Clone, ImplStructNameConfig, PartialEq)]
 pub struct LinearCombinationWire {
     pub bitWires: Option<WireArray>,
 }
@@ -33,11 +33,11 @@ pub struct LinearCombinationWire {
 //         // self.bitWires.hash(state);
 //     }
 // }
-impl PartialEq for LinearCombinationWire {
-    fn eq(&self, other: &Self) -> bool {
-        self.bitWires == other.bitWires
-    }
-}
+// impl PartialEq for LinearCombinationWire {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.bitWires == other.bitWires
+//     }
+// }
 //crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationWire>);
 

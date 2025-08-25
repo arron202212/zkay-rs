@@ -47,7 +47,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
         "zerop".to_owned()
     }
 
-    fn compute(&self, mut assignment: &mut Vec<Option<BigInteger>>) {
+    fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, out0_id, out1_id) = (
             self.inputs[0].as_ref().unwrap().getWireId() as usize,
             self.outputs[0].as_ref().unwrap().getWireId() as usize,
@@ -66,6 +66,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
             assignment[out1_id] = Some(Util::one());
         }
         assignment[out0_id] = Some(BigInteger::ZERO); // a dummy value
+        Ok(())
     }
 
     fn getNumMulGates(&self) -> i32 {

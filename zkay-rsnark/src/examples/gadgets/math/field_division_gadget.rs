@@ -117,21 +117,23 @@ impl Gadget<FieldDivisionGadget> {
 
         let (a, b, c) = (&self.t.a, &self.t.b, self.t.c[0].as_ref().unwrap());
         let prover = crate::impl_prover!(
-                        eval(a: WireType,
-                        b: WireType,
-                        c: WireType)  {
-        impl Instruction for Prover{
-         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                               let aValue = evaluator.getWireValue(&self.a);
-                            let bValue = evaluator.getWireValue(&self.b);
-                            let cValue = aValue
-                                .mul(bValue.modinv(&Configs.field_prime).unwrap())
-                                .rem(&Configs.field_prime);
-                            evaluator.setWireValue(&self.c, &cValue);
-        }
-        }
-                    }
-                );
+                                eval(a: WireType,
+                                b: WireType,
+                                c: WireType)  {
+                impl Instruction for Prover{
+                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                       let aValue = evaluator.getWireValue(&self.a);
+                                    let bValue = evaluator.getWireValue(&self.b);
+                                    // println!("===bValue==={}====={bValue}====",self.b);
+                                    let cValue = aValue
+                                        .mul(bValue.modinv(&Configs.field_prime).unwrap())
+                                        .rem(&Configs.field_prime);
+                                    evaluator.setWireValue(&self.c, &cValue);
+        Ok(())
+                }
+                }
+                            }
+                        );
 
         CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
 
@@ -151,7 +153,7 @@ impl Gadget<FieldDivisionGadget> {
         //         c: WireType,
         //     }
         //     impl  Instruction for Prover {
-        //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
+        //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
         //             let aValue = evaluator.getWireValue(self.t.a.clone());
         //             let bValue = evaluator.getWireValue(self.t.b.clone());
         //             let cValue = aValue

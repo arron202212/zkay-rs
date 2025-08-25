@@ -149,17 +149,17 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             //         });
             let hPoint = &self.t.t.hPoint;
             let prover = crate::impl_prover!(
-                            eval( hPoint: AffinePoint
-                    )  {
-            impl Instruction for Prover{
-             fn evaluate(&self, evaluator: &mut CircuitEvaluator) {
-                    let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
-                    evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ZkayEcGadget::<ZkayECDHGadget>>::computeYCoordinate(x));
-
-            }
-            }
+                                        eval( hPoint: AffinePoint
+                                )  {
+                        impl Instruction for Prover{
+                         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+                                let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
+                                evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ZkayEcGadget::<ZkayECDHGadget>>::computeYCoordinate(x));
+            Ok(())
                         }
-                    );
+                        }
+                                    }
+                                );
             CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
             // {
             //     struct Prover;
