@@ -2,23 +2,25 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget;
-use crate::examples::gadgets::rsa::rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget;
-
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::zkay::crypto::rsa_backend::RSABackend;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_util::ZkayUtil;
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::CircuitGenerator, wire::WireConfig, wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::rsa::{
+        rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget,
+        rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget,
+    },
+    zkay::{crypto::rsa_backend::RSABackend, typed_wire::TypedWire, zkay_util::ZkayUtil},
+};
 
 use rccell::RcCell;
 

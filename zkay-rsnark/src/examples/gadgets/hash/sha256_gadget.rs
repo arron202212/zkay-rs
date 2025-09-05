@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -346,9 +346,8 @@ impl<T> Gadget<SHA256Gadget<T>> {
 }
 
 impl GadgetConfig for Gadget<SHA256Gadget<Base>> {
-    /**
-     * outputs digest as 32-bit words
-     */
+    //outputs digest as 32-bit words
+
     fn getOutputWires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }

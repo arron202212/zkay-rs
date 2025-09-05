@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -48,11 +48,9 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Rem, Sub};
-/**
- * This gadget provides the remainder of a % b.
- *
- *
- */
+
+//  * This gadget provides the remainder of a % b.
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ModGadget {

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -31,17 +31,15 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
 use std::ops::{Add, Mul, Neg, Rem, Sub};
-/**
- * Solves a linear system of equations over a finite field.
- *
- * Used for efficient representation of AES S-box gadget
- */
+
+//  * Solves a linear system of equations over a finite field.
+//  *
+//  * Used for efficient representation of AES S-box gadget
 
 pub struct LinearSystemSolver {
     pub mat: Vec<Vec<BigInteger>>,

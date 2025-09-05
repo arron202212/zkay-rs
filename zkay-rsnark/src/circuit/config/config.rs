@@ -2,17 +2,17 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use std::sync::LazyLock;
 pub static Configs: LazyLock<Config> = LazyLock::new(|| Config::new());
 use num_bigint::BigInt;
 use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::path::Path;
+use std::hash::Hash;
+
 use std::path::PathBuf;
-use std::sync::atomic::{self, AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 pub static atomic_hex_output_enabled: AtomicBool = AtomicBool::new(false);
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Config {

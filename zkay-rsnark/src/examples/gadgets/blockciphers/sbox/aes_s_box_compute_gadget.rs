@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -31,7 +31,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -48,13 +47,11 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
 
-/**
- * This gadget does not apply any lookups in the circuit. Instead, it verifies
- * the solution using the AES S-Box properties.
- * (Might need to be revisited in
- * the future to include other ways that have better circuit representation).
- *
- */
+//  * This gadget does not apply any lookups in the circuit. Instead, it verifies
+//  * the solution using the AES S-Box properties.
+//  * (Might need to be revisited in
+//  * the future to include other ways that have better circuit representation).
+
 // crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxComputeGadget {

@@ -2,22 +2,24 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
+use crate::{
+    circuit::{
+        config::config::Configs,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations:: gadget::{GadgetConfig,Gadget},
+        structure::{
+            circuit_generator::{CGConfig, CircuitGenerator, CGConfigFields},
+            wire::WireConfig,
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+};
+
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
@@ -33,11 +35,10 @@ impl JubJubPoint {
     }
 }
 
-/**
- * Gadget for operations on the BabyJubJub elliptic curve (Twisted Edwards curve over BN254).
- * Parameters are from:
- * https://iden3-docs.readthedocs.io/en/latest/iden3_repos/research/publications/zkproof-standards-workshop-2/baby-jubjub/baby-jubjub.html
- */
+//  * Gadget for operations on the BabyJubJub elliptic curve (Twisted Edwards curve over BN254).
+//  * Parameters are from:
+//  * https://iden3-docs.readthedocs.io/en/latest/iden3_repos/research/publications/zkproof-standards-workshop-2/baby-jubjub/baby-jubjub.html
+
 #[derive(Debug, Clone)]
 pub struct ZkayBabyJubJubGadget<T> {
     pub t: T,
@@ -142,9 +143,8 @@ pub trait ZkayBabyJubJubGadgetConfig {
         JubJubPoint::new(new_x, p.y.clone())
     }
 
-    /**
-     * @param scalarBits the scalar bit representation in little-endian order
-     */
+    //@param scalarBits the scalar bit representation in little-endian order
+
     fn mulScalar(&self, p: &JubJubPoint, scalarBits: &Vec<Option<WireType>>) -> JubJubPoint {
         // Scalar point multiplication using double-and-add algorithm
         let mut result = self.getInfinity();
@@ -161,9 +161,8 @@ pub trait ZkayBabyJubJubGadgetConfig {
         result
     }
 
-    /**
-     * Returns a wire holding the inverse of a in the native base field.
-     */
+    //Returns a wire holding the inverse of a in the native base field.
+
     fn nativeInverse(&self, a: &WireType) -> WireType {
         // println!(
         //     "===self.get_current_wire_id()======nativeInverse======before======{}",

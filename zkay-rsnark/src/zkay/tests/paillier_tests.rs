@@ -2,25 +2,32 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+    zkay::{
+        zkay_paillier_dec_gadget::ZkayPaillierDecGadget,
+        zkay_paillier_enc_gadget::ZkayPaillierEncGadget,
+        zkay_paillier_fast_dec_gadget::ZkayPaillierFastDecGadget,
+        zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget,
+    },
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::{BigInteger, Util};
-use crate::zkay::zkay_paillier_dec_gadget::ZkayPaillierDecGadget;
-use crate::zkay::zkay_paillier_enc_gadget::ZkayPaillierEncGadget;
-use crate::zkay::zkay_paillier_fast_dec_gadget::ZkayPaillierFastDecGadget;
-use crate::zkay::zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget;
+
 use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
 mod test {

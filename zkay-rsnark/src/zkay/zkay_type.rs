@@ -2,17 +2,18 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
-use std::collections::HashMap;
-use std::fmt;
-use std::ops::{Add, BitAnd, Mul, Shl, Sub};
-use std::sync::OnceLock;
+use crate::util::util::{BigInteger, Util};
+use std::{
+    collections::HashMap,
+    fmt,
+    ops::{Add, BitAnd, Mul, Shl, Sub},
+    sync::OnceLock,
+};
 
 static UTYPES: OnceLock<HashMap<i32, ZkayType>> = OnceLock::new();
 static STYPES: OnceLock<HashMap<i32, ZkayType>> = OnceLock::new();

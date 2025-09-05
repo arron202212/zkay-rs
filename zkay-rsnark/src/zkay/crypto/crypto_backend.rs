@@ -2,30 +2,39 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+                getActiveCircuitGenerator,
+            },
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    zkay::{
+        crypto::{
+            dummy_backend::DummyBackend, dummy_hom_backend::DummyHomBackend,
+            ecdh_backend::ECDHBackend, elgamal_backend::ElgamalBackend,
+            homomorphic_backend::HomomorphicBackend, paillier_backend::PaillierBackend,
+            rsa_backend::RSABackend,
+        },
+        typed_wire::TypedWire,
+        zkay_cbc_symmetric_enc_gadget::CipherType,
+        zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget,
+        zkay_ecdh_gadget::ZkayECDHGadget,
+        zkay_rsa_encryption_gadget::PaddingType,
+    },
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
-use crate::zkay::crypto::{
-    dummy_backend::DummyBackend, dummy_hom_backend::DummyHomBackend, ecdh_backend::ECDHBackend,
-    elgamal_backend::ElgamalBackend, paillier_backend::PaillierBackend, rsa_backend::RSABackend,
-};
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_cbc_symmetric_enc_gadget::CipherType;
-use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
-use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
-use crate::zkay::zkay_rsa_encryption_gadget::PaddingType;
+
 use enum_dispatch::enum_dispatch;
 use rccell::{RcCell, WeakCell};
 use std::collections::HashMap;
@@ -103,11 +112,10 @@ impl<T> CryptoBackendField for CryptoBackend<T> {
 pub trait CryptoBackendConfigs {
     fn isSymmetric(&self) -> bool;
 
-    /**
-     * Whether a separate decryption gadget is used for the backend. For efficiency reasons,
-     * decryption is checked via encryption gadgets in many backends. For backends where the randomness
-     * cannot be extracted, a separate decryption gadget is needed.
-     */
+    //Whether a separate decryption gadget is used for the backend. For efficiency reasons,
+    //decryption is checked via encryption gadgets in many backends. For backends where the randomness
+    //cannot be extracted, a separate decryption gadget is needed.
+
     fn usesDecryptionGadget(&self) -> bool;
 
     fn addKey(

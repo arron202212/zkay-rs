@@ -2,24 +2,20 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::config::config::Configs;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    bouncycastle_rs::pqc::math::linearalgebra::integer_functions::IntegerFunctions,
+    circuit::{
+        config::config::Configs,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{circuit_generator::CircuitGenerator, wire_type::WireType,wire::WireConfig},
+    },
+    examples::gadgets::math::field_division_gadget::FieldDivisionGadget,
+    util::util::BigInteger,
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::field_division_gadget::FieldDivisionGadget;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-
-// use crate::zkay::zkay_ec_gadget::AffinePoint;
-use crate::util::util::BigInteger;
 
 use std::ops::{Add, Mul, Rem, Sub};
 
@@ -36,7 +32,7 @@ impl AffinePoint {
     }
 }
 
-/** Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget */
+//  Constants and common functionality defined in jsnark's ECDHKeyExchangeGadget
 #[derive(Debug, Clone)]
 pub struct ZkayEcGadget<T> {
     pub t: T,
@@ -77,11 +73,10 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         generator: &RcCell<CircuitGenerator>,
         secretBits: &Vec<Option<WireType>>,
     ) {
-        /**
-         * The secret key bits must be of length SECRET_BITWIDTH and are
-         * expected to follow a little endian order. The most significant bit
-         * should be 1, and the three least significant bits should be zero.
-         */
+        //The secret key bits must be of length SECRET_BITWIDTH and are
+        //expected to follow a little endian order. The most significant bit
+        //should be 1, and the three least significant bits should be zero.
+
         let desc = Some("Asserting secret bit conditions".to_owned());
         CircuitGenerator::addZeroAssertion(
             generator.clone(),
@@ -133,7 +128,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let start = std::time::Instant::now();
         let mut precomputedTable: Vec<AffinePoint> = (1..Self::SECRET_BITWIDTH)
             .scan(p.clone(), |pre, _| {
-                *pre = Self::doubleAffinePoint(&pre, generator.clone());
+                //pre = Self::doubleAffinePoint(&pre, generator.clone());
                 Some(pre.clone())
             })
             .collect();
@@ -141,10 +136,9 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         precomputedTable
     }
 
-    /**
-     * Performs scalar multiplication (secretBits must comply with the
-     * conditions above)
-     */
+    //Performs scalar multiplication (secretBits must comply with the
+    //conditions above)
+
     pub fn mul(
         p: &AffinePoint,
         secretBits: &Vec<Option<WireType>>,
@@ -249,7 +243,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             .add(BigInteger::from(Self::COEFF_A).mul(&xSqred))
             .add(&x)
             .rem(&Configs.field_prime);
-        let y = x; //IntegerFunctions.ressol(ySqred, Configs.field_prime);   //MYTODO
+        let y = IntegerFunctions::ressol(ySqred, &Configs.field_prime); //MYTODO
         y
     }
 

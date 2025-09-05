@@ -2,26 +2,19 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        eval::circuit_evaluator::CircuitEvaluator,
         eval::instruction::Instruction,
-        structure::{
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
-            wire_type::WireType,
-        },
-        {InstanceOf, OpCodeConfig, StructNameConfig},
+        structure::{wire::GetWireId, wire_type::WireType},
+        {OpCodeConfig, StructNameConfig},
     },
-    util::util::{BigInteger, Util},
+    util::util::BigInteger,
 };
-use std::{
-    fmt::Debug,
-    hash::{DefaultHasher, Hash, Hasher},
-};
-use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
+use std::fmt::Debug;
+
 #[derive(Debug, Clone)]
 pub struct Op<T> {
     pub inputs: Vec<Option<WireType>>,

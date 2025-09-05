@@ -2,28 +2,38 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::math::{
+        long_integer_division::LongIntegerDivisionConfig,
+        long_integer_floor_div_gadget::LongIntegerFloorDivGadget,
+        long_integer_mod_gadget::LongIntegerModGadget,
+    },
+    zkay::{
+        zkay_circuit_base::s_negate,
+        zkay_type::{ZkayType, zk124, zkbool},
+        zkay_util::ZkayUtil,
+    },
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
-use crate::examples::gadgets::math::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
-use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
-use crate::zkay::zkay_circuit_base::s_negate;
-use crate::zkay::zkay_type::zkbool;
-use crate::zkay::zkay_type::{ZkayType, zk124};
-use crate::zkay::zkay_util::ZkayUtil;
+
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
+
 #[derive(Debug, Clone)]
 pub struct TypedWire {
     pub wire: WireType,
@@ -55,7 +65,7 @@ impl TypedWire {
         }
     }
 
-    /** ARITH OPS **/
+    //  ARITH OPS
 
     pub fn plus(&self, rhs: &TypedWire) -> TypedWire {
         let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
@@ -325,7 +335,7 @@ impl TypedWire {
         )
     }
 
-    /** BIT OPS */
+    //  BIT OPS
 
     pub fn bitOr(&self, rhs: &TypedWire) -> TypedWire {
         let resultType = ZkayType::checkTypeb(&self.zkay_type, &rhs.zkay_type, false);
@@ -354,7 +364,7 @@ impl TypedWire {
         TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
     }
 
-    /** SHIFT OPS */
+    //  SHIFT OPS
 
     pub fn shiftLeftBy(&self, amount: i32) -> TypedWire {
         let resultType = ZkayType::checkTypeb(&self.zkay_type, &self.zkay_type, false);
@@ -387,7 +397,7 @@ impl TypedWire {
         TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
     }
 
-    /** EQ OPS **/
+    //  EQ OPS
 
     pub fn isEqualTo(&self, rhs: &TypedWire) -> TypedWire {
         ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
@@ -415,7 +425,7 @@ impl TypedWire {
         )
     }
 
-    /** INEQ OPS **/
+    //  INEQ OPS
 
     pub fn isLessThan(&self, rhs: &TypedWire) -> TypedWire {
         let commonType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
@@ -492,7 +502,7 @@ impl TypedWire {
         rhs.isLessThanOrEqual(self)
     }
 
-    /** BOOL OPS */
+    //  BOOL OPS
 
     pub fn and(&self, rhs: &TypedWire) -> TypedWire {
         ZkayType::checkType(zkbool(), &self.zkay_type);

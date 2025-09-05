@@ -2,19 +2,18 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire_array;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::{
-    run_command::run_command,
-    util::{BigInteger, Util},
+use crate::{
+    circuit::structure::{circuit_generator::CircuitGenerator, wire_array, wire_type::WireType},
+    util::{
+        run_command::run_command,
+        util::{BigInteger, Util},
+    },
+    zkay::{zkay_type::ZkayType, zkay_util::wire_array::WireArray},
 };
-use crate::zkay::zkay_type::ZkayType;
-use crate::zkay::zkay_util::wire_array::WireArray;
 use num_bigint::Sign;
 use rccell::RcCell;
 use std::io::BufReader;

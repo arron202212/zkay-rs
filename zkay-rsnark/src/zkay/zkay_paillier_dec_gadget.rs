@@ -2,21 +2,29 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
-use crate::examples::gadgets::math::long_integer_floor_div_gadget::LongIntegerFloorDivGadget;
-use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
-use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{CGConfig, CircuitGenerator},
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::math::{
+        long_integer_division::LongIntegerDivisionConfig,
+        long_integer_floor_div_gadget::LongIntegerFloorDivGadget,
+        long_integer_mod_gadget::LongIntegerModGadget,
+        long_integer_mod_inverse_gadget::LongIntegerModInverseGadget,
+        long_integer_mod_pow_gadget::LongIntegerModPowGadget,
+    },
+    zkay::zkay_baby_jub_jub_gadget::{JubJubPoint, ZkayBabyJubJubGadget},
+};
+
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
 

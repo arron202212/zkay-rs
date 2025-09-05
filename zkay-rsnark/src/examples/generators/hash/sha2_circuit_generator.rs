@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -85,12 +85,12 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
         // ======================================================================
         // To see how padding can be done, and see how the gadget library will save constraints automatically,
         // try the snippet below instead.
-        /*
-            inputWires = createInputWireArray(3); 	// 3-byte input
-            sha2Gadget = SHA256Gadget::new(inputWires, 8, 3, false, true);
-            Vec<Option<WireType>> digest = sha2Gadget.getOutputWires();
-            makeOutputArray(digest, "digest");
-        */
+
+        // inputWires = createInputWireArray(3); 	// 3-byte input
+        // sha2Gadget = SHA256Gadget::new(inputWires, 8, 3, false, true);
+        // Vec<Option<WireType>> digest = sha2Gadget.getOutputWires();
+        // makeOutputArray(digest, "digest");
+
         (self.t.inputWires, self.t.sha2Gadget) = (inputWires, Some(sha2Gadget));
     }
 

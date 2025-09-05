@@ -2,24 +2,31 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::constant_wire::ConstantWire;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_ec_gadget::AffinePoint;
-use crate::zkay::zkay_ec_gadget::ZkayEcGadget;
+
+use crate::{
+    circuit::{
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{CGConfig, CircuitGenerator},
+            constant_wire::ConstantWire,
+            wire::WireConfig,
+            wire_type::WireType,
+        },
+    },
+    zkay::{
+        zkay_baby_jub_jub_gadget::JubJubPoint,
+        zkay_ec_gadget::{AffinePoint, ZkayEcGadget},
+    },
+};
+
 use rccell::RcCell;
-/**
- * Pk derivation part of jsnark's ECDHKeyExchangeGadget
- */
+
+//  * Pk derivation part of jsnark's ECDHKeyExchangeGadget
+
 #[derive(Debug, Clone)]
 pub struct ZkayEcPkDerivationGadget {
     // The Affine point representation is used as it saves one gate per bit

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -35,14 +35,14 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::Add;
 use zkay_derive::ImplStructNameConfig;
-/**
- * Implements the light weight cipher Chaskey128, the LTS version with 16 rounds
- * https://eprint.iacr.org/2014/386.pdf.
- *
- * The gadget follows the reference implementation from this project:
- * https://www.nist.gov/sites/default/files/documents/2016/10/18/perrin-paper-lwc2016.pdf
- * https://www.cryptolux.org/index.php/FELICS
- */
+
+//  * Implements the light weight cipher Chaskey128, the LTS version with 16 rounds
+//  * https://eprint.iacr.org/2014/386.pdf.
+//  *
+//  * The gadget follows the reference implementation from this project:
+//  * https://www.nist.gov/sites/default/files/documents/2016/10/18/perrin-paper-lwc2016.pdf
+//  * https://www.cryptolux.org/index.php/FELICS
+
 // crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ChaskeyLTS128CipherGadget {

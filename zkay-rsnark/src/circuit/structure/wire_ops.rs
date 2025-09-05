@@ -2,36 +2,10 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::{
-    circuit::{
-        config::config::Configs,
-        eval::instruction::Instruction,
-        operations::primitive::{
-            const_mul_basic_op::ConstMulBasicOp, mul_basic_op::MulBasicOp,
-            non_zero_check_basic_op::NonZeroCheckBasicOp, or_basic_op::OrBasicOp,
-            pack_basic_op::PackBasicOp, split_basic_op::SplitBasicOp, xor_basic_op::XorBasicOp,
-        },
-        structure::{
-            circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
-            },
-            linear_combination_wire::LinearCombinationWire,
-            variable_bit_wire::VariableBitWire,
-            variable_wire::VariableWire,
-            wire_array::WireArray,
-            wire_type::WireType,
-        },
-    },
-    util::util::{BigInteger, Util},
-};
-use std::{
-    fmt::Debug,
-    hash::{DefaultHasher, Hash, Hasher},
-};
+use crate::circuit::structure::wire_type::WireType;
 
 pub trait MulWire<T = Self> {
     fn mul_wire(&self, b: T, desc: &Option<String>) -> WireType;

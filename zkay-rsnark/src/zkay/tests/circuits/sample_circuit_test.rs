@@ -2,16 +2,18 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
-use crate::zkay::tests::circuits::{
-    sample_dec_circuit, sample_enc_circuit, sample_mul_circuit, sample_rehom_circuit,
+use crate::{
+    util::util::{BigInteger, Util},
+    zkay::tests::circuits::{
+        sample_dec_circuit, sample_enc_circuit, sample_mul_circuit, sample_rehom_circuit,
+    },
 };
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -26,17 +28,16 @@ mod test {
 
     #[test]
     pub fn testSampleEncCircuitProve() {
-        /*
-        zk__out0_cipher = Enc(3, glob_key_Elgamal__owner, zk__out0_cipher_R)
-        zk__in0_cipher_val = <42>
-        zk__out1_cipher = <42 + 3>
+        // zk__out0_cipher = Enc(3, glob_key_Elgamal__owner, zk__out0_cipher_R)
+        // zk__in0_cipher_val = <42>
+        // zk__out1_cipher = <42 + 3>
 
-        'glob_key_Elgamal__owner' = in[0:2]
-        '_zk__foo.0.zk__in0_cipher_val' = in[2:6]
-        '_zk__foo.0.zk__out0_cipher' = out[6:10]
-        '_zk__foo.0.zk__out1_cipher' = out[10:14]
-        '_zk__foo.0.zk__out0_cipher_R' = priv[0:1]
-         */
+        // 'glob_key_Elgamal__owner' = in[0:2]
+        // '_zk__foo.0.zk__in0_cipher_val' = in[2:6]
+        // '_zk__foo.0.zk__out0_cipher' = out[6:10]
+        // '_zk__foo.0.zk__out1_cipher' = out[10:14]
+        // '_zk__foo.0.zk__out0_cipher_R' = priv[0:1]
+
         let pkx =
             pbixs("2543111965495064707612623550577403881714453669184859408922451773306175031318");
         let pky =
@@ -97,18 +98,16 @@ mod test {
 
     #[test]
     pub fn testSampleDecCircuitProve() {
-        /*
-        zk__in0_cipher_val = Enc(42, glob_key_Elgamal__me, ...)
-        secret0_plain_val = 42
-        zk__out0_plain_val = 42
-        zk__in0_cipher_val_R = (secret key of me)
+        // zk__in0_cipher_val = Enc(42, glob_key_Elgamal__me, ...)
+        // secret0_plain_val = 42
+        // zk__out0_plain_val = 42
+        // zk__in0_cipher_val_R = (secret key of me)
 
-        'glob_key_Elgamal__me' = in[0:2]
-        '_zk__bar.0.zk__in0_cipher_val' = in[2:6]
-        '_zk__bar.0.zk__out0_plain_val' = out[6:7]
-        '_zk__bar.0.secret0_plain_val' = priv[0:1]
-        '_zk__bar.0.zk__in0_cipher_val_R' = priv[1:2]
-         */
+        // 'glob_key_Elgamal__me' = in[0:2]
+        // '_zk__bar.0.zk__in0_cipher_val' = in[2:6]
+        // '_zk__bar.0.zk__out0_plain_val' = out[6:7]
+        // '_zk__bar.0.secret0_plain_val' = priv[0:1]
+        // '_zk__bar.0.zk__in0_cipher_val_R' = priv[1:2]
 
         let pkx =
             pbixs("2543111965495064707612623550577403881714453669184859408922451773306175031318");

@@ -2,25 +2,26 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget;
-use crate::examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget;
-use crate::examples::gadgets::blockciphers::speck128_cipher_gadget::Speck128CipherGadget;
-use crate::util::util::{BigInteger, Util};
-use crate::zkay::crypto::crypto_backend::CIPHER_CHUNK_SIZE;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::{
+    circuit::{auxiliary::long_element::LongElement,
+    operations::gadget::{Gadget, GadgetConfig},
+    structure::{
+        circuit_generator::CircuitGenerator, wire::WireConfig, wire_array::WireArray,
+        wire_type::WireType,
+    }},
+    examples::gadgets::blockciphers::{
+        aes128_cipher_gadget::AES128CipherGadget,
+        chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget,
+        speck128_cipher_gadget::Speck128CipherGadget,
+    },
+    util::util::{BigInteger, Util},
+    zkay::{crypto::crypto_backend::CIPHER_CHUNK_SIZE, typed_wire::TypedWire},
+};
+
 use rccell::RcCell;
 
 #[derive(Debug, Clone)]
@@ -30,9 +31,7 @@ pub enum CipherType {
     CHASKEY,
 }
 
-/**
- * Performs symmetric encryption in the CBC mode.
- */
+//  * Performs symmetric encryption in the CBC mode.
 
 #[derive(Debug, Clone)]
 pub struct ZkayCBCSymmetricEncGadget {

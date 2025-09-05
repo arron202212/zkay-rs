@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -46,17 +46,16 @@ use std::sync::{
 };
 pub static s_all_coeff_set: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 
-/**
- * This gadget implements the efficient read-only memory access from xjsnark
- * (the generic way). A more efficient variant is implemented in
- * AESSBoxGadgetOptimized2.java
- *
- * Note that we can code the preprocessing of this method using a simpler way
- * (by finding 16 polynomials with specific root points) instead of computing
- * the coefficients using a linear system of equations, but this was kept as it
- * inspired the other optimization in AESSBoxGadgetOptimized2.java, which saves
- * half of the cost of a single access.
- */
+//  * This gadget implements the efficient read-only memory access from xjsnark
+//  * (the generic way). A more efficient variant is implemented in
+//  * AESSBoxGadgetOptimized2.java
+//  *
+//  * Note that we can code the preprocessing of this method using a simpler way
+//  * (by finding 16 polynomials with specific root points) instead of computing
+//  * the coefficients using a linear system of equations, but this was kept as it
+//  * inspired the other optimization in AESSBoxGadgetOptimized2.java, which saves
+//  * half of the cost of a single access.
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxGadgetOptimized1 {

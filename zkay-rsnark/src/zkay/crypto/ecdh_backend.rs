@@ -2,23 +2,28 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::Symmetric;
-use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
-use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_cbc_symmetric_enc_gadget::CipherType;
-use crate::zkay::zkay_cbc_symmetric_enc_gadget::ZkayCBCSymmetricEncGadget;
-use crate::zkay::zkay_type::zkbool;
+use crate::{
+    circuit::{
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::CircuitGenerator, wire_array::WireArray, wire_type::WireType,
+        },
+    },
+    zkay::{
+        crypto::crypto_backend::{
+            CryptoBackend, CryptoBackendConfig, CryptoBackendConfigs, Symmetric,
+        },
+        homomorphic_input::HomomorphicInput,
+        typed_wire::TypedWire,
+        zkay_cbc_symmetric_enc_gadget::{CipherType, ZkayCBCSymmetricEncGadget},
+        zkay_type::zkbool,
+    },
+};
+
 use rccell::RcCell;
 
 #[derive(Debug, Clone)]

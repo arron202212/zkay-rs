@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -52,18 +52,17 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Rem, Shl, Sub};
-/**
- * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will
- * have the RSA-OAEP method according to PKCS#1 v2.x. The gadget assumes a
- * hardcoded pub  exponent of 0x10001.
- * This gadget can accept a hardcoded or a variable RSA modulus. See the
- * corresponding generator example.
- *
- * Implemented according to the standard specs here:
- * https://www.emc.com/collateral/white-
- * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
- *
- */
+
+//  * A gadget for RSA encryption according to PKCS#1 v1.5. A future version will
+//  * have the RSA-OAEP method according to PKCS#1 v2.x. The gadget assumes a
+//  * hardcoded pub  exponent of 0x10001.
+//  * This gadget can accept a hardcoded or a variable RSA modulus. See the
+//  * corresponding generator example.
+//  *
+//  * Implemented according to the standard specs here:
+//  * https://www.emc.com/collateral/white-
+//  * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSAEncryptionV1_5_Gadget {
@@ -132,10 +131,9 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
         ));
         paddedPlainText[lengthInBytes - 1] = self.generator.get_zero_wire();
 
-        /*
-         * To proceed with the RSA operations, we need to convert the
-         * padddedPlainText array to a long element. Two ways to do that.
-         */
+        //To proceed with the RSA operations, we need to convert the
+        //padddedPlainText array to a long element. Two ways to do that.
+
         // 1. safest method:
         //		 WireArray allBits = WireArray::new(paddedPlainText).getBits(8);
         //		 LongElement paddedMsg = LongElement::new(allBits);

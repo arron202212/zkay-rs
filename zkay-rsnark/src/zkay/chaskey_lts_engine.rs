@@ -2,10 +2,15 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+// import org.bouncycastle.crypto.BlockCipher;
+// import org.bouncycastle.crypto.CipherParameters;
+// import org.bouncycastle.crypto.DataLengthException;
+// import org.bouncycastle.crypto.params.KeyParameter;
+
 use bytebuffer::ByteBuffer;
 
 #[derive(Debug, Clone)]

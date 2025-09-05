@@ -2,32 +2,33 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::typed_wire::TypedWire;
+use crate::{
+    circuit::structure::circuit_generator::CircuitGenerator,
+    zkay::{homomorphic_input::HomomorphicInput, typed_wire::TypedWire},
+};
+
 use rccell::RcCell;
 
 pub trait HomomorphicBackend {
-    /**
-     * Perform the unary homomorphic operation 'op' on the ciphertext 'cipher'.
-     *
-     * @param op
-     * 		a char identifying the operation; one of {'-', '~', '!'}
-     * @param arg
-     * 		the operand, either a ciphertext or a plain wire
-     * @param keyName
-     * 		the qualified name of the key to be used
-     *
-     * @return the resulting ciphertext
-     *
-     * @throws UnsupportedOperationException
-     * 		if the backend does not support operation 'op'
-     */
+    //Perform the unary homomorphic operation 'op' on the ciphertext 'cipher'.
+    //
+    //@param op
+    //		a char identifying the operation; one of {'-', '~', '!'}
+    //@param arg
+    //		the operand, either a ciphertext or a plain wire
+    //@param keyName
+    //		the qualified name of the key to be used
+    //
+    //@return the resulting ciphertext
+    //
+    //@throws UnsupportedOperationException
+    //		if the backend does not support operation 'op'
+
     fn doHomomorphicOpu(
         &self,
         op: char,
@@ -38,23 +39,22 @@ pub trait HomomorphicBackend {
         panic!("Unary operation {op} not supported");
     }
 
-    /**
-     * Perform the binary homomorphic operation 'op' on the ciphertexts 'lhs' and 'rhs'.
-     *
-     * @param lhs
-     * 		the left-hand side operand, either a ciphertext or a plain wire
-     * @param op
-     * 		a char identifying the operation; one of {'+', '-', '*', '/', '%', '|', '&', '^', '<', '>'}
-     * @param rhs
-     * 		the right-hand side operand, either a ciphertext or a plain wire
-     * @param keyName
-     * 		the qualified name of the key to be used
-     *
-     * @return the resulting ciphertext
-     *
-     * @throws UnsupportedOperationException
-     * 		if the backend does not support operation 'op'
-     */
+    //Perform the binary homomorphic operation 'op' on the ciphertexts 'lhs' and 'rhs'.
+    //
+    //@param lhs
+    //		the left-hand side operand, either a ciphertext or a plain wire
+    //@param op
+    //		a char identifying the operation; one of {'+', '-', '*', '/', '%', '|', '&', '^', '<', '>'}
+    //@param rhs
+    //		the right-hand side operand, either a ciphertext or a plain wire
+    //@param keyName
+    //		the qualified name of the key to be used
+    //
+    //@return the resulting ciphertext
+    //
+    //@throws UnsupportedOperationException
+    //		if the backend does not support operation 'op'
+
     fn doHomomorphicOp(
         &self,
         lhs: &HomomorphicInput,
@@ -66,23 +66,22 @@ pub trait HomomorphicBackend {
         panic!("Binary operation {op} not supported");
     }
 
-    /**
-     * Perform the bool / comparison homomorphic operation 'op' on the ciphertexts 'lhs' and 'rhs'.
-     *
-     * @param lhs
-     * 		the left-hand side operand, either a ciphertext or a plain wire
-     * @param op
-     * 		a char identifying the operation; one of {"==", "!=", "<=", ">=", "&&", "||"}
-     * @param rhs
-     * 		the right-hand side operand, either a ciphertext or a plain wire
-     * @param keyName
-     * 		the qualified name of the key to be used
-     *
-     * @return the resulting ciphertext
-     *
-     * @throws UnsupportedOperationException
-     * 		if the backend does not support operation 'op'
-     */
+    //Perform the bool / comparison homomorphic operation 'op' on the ciphertexts 'lhs' and 'rhs'.
+    //
+    //@param lhs
+    //		the left-hand side operand, either a ciphertext or a plain wire
+    //@param op
+    //		a char identifying the operation; one of {"==", "!=", "<=", ">=", "&&", "||"}
+    //@param rhs
+    //		the right-hand side operand, either a ciphertext or a plain wire
+    //@param keyName
+    //		the qualified name of the key to be used
+    //
+    //@return the resulting ciphertext
+    //
+    //@throws UnsupportedOperationException
+    //		if the backend does not support operation 'op'
+
     fn doHomomorphicOps(
         &self,
         lhs: &HomomorphicInput,
@@ -93,23 +92,22 @@ pub trait HomomorphicBackend {
         panic!("Boolean / comparison operation {op} not supported");
     }
 
-    /**
-     * Perform the ternary conditional operation on the ciphertexts 'cond', 'trueVal', 'falseVal'.
-     *
-     * @param cond
-     * 		the condition, either a ciphertext or a plain wire
-     * @param trueVal
-     * 		the value if cond is true, either a ciphertext or a plain wire
-     * @param falseVal
-     * 		the value if cond is false, either a ciphertext or a plain wire
-     * @param keyName
-     * 		the qualified name of the key to be used
-     *
-     * @return the resulting ciphertext
-     *
-     * @throws UnsupportedOperationException
-     * 		if the backend does not support operation 'op'
-     */
+    //Perform the ternary conditional operation on the ciphertexts 'cond', 'trueVal', 'falseVal'.
+    //
+    //@param cond
+    //		the condition, either a ciphertext or a plain wire
+    //@param trueVal
+    //		the value if cond is true, either a ciphertext or a plain wire
+    //@param falseVal
+    //		the value if cond is false, either a ciphertext or a plain wire
+    //@param keyName
+    //		the qualified name of the key to be used
+    //
+    //@return the resulting ciphertext
+    //
+    //@throws UnsupportedOperationException
+    //		if the backend does not support operation 'op'
+
     fn doHomomorphicCond(
         &self,
         cond: &HomomorphicInput,
@@ -120,18 +118,17 @@ pub trait HomomorphicBackend {
         panic!("Ternary conditional not supported");
     }
 
-    /**
-     * Re-randomizes the ciphertext in 'arg' by 'randomness'.
-     *
-     * @param arg
-     * 		the ciphertext to be re-randomized
-     * @param keyName
-     * 		the qualified name of the key under which arg is encrypted
-     * @param randomness
-     * 		the randomness to use for re-randomization
-     *
-     * @return the re-randomized ciphertext
-     */
+    //Re-randomizes the ciphertext in 'arg' by 'randomness'.
+    //
+    //@param arg
+    //		the ciphertext to be re-randomized
+    //@param keyName
+    //		the qualified name of the key under which arg is encrypted
+    //@param randomness
+    //		the randomness to use for re-randomization
+    //
+    //@return the re-randomized ciphertext
+
     fn doHomomorphicRerand(
         &self,
         arg: &Vec<TypedWire>,

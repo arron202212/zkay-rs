@@ -2,26 +2,29 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        config::config::Configs,
+        eval::circuit_evaluator::CircuitEvaluator,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget},
+    util::util::{BigInteger, Util},
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
-use crate::util::util::{BigInteger, Util};
 use std::ops::{Add, Mul, Shl, Sub};
 use zkay_derive::ImplStructNameConfig;
-/**
- * Tests SHA256 standard cases.
- *
- */
+
+//  * Tests SHA256 standard cases.
 
 #[cfg(test)]
 mod test {

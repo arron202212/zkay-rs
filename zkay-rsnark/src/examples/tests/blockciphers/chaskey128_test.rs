@@ -2,19 +2,24 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{circuit_generator::{
+            CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            addToEvaluationQueue, getActiveCircuitGenerator,
+        },
+        wire_type::WireType},
+    },
+    examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget,
+    util::util::BigInteger,
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget;
-use crate::util::util::BigInteger;
+
 use zkay_derive::ImplStructNameConfig;
 // test case from:  https://www.cryptolux.org/index.php/FELICS
 

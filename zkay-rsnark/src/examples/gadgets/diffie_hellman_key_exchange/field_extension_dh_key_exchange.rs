@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -33,7 +33,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -46,19 +45,17 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
-/**
- * Performs Key Exchange using a field extension F_p[x]/(x^\mu - \omega), where
- * the polynomial (x^\mu - \omega) is irreducible. The inputs to this gadget:
- * the base g, the other party's input h = g^a, the bits of the secret exponent
- * secExpBits and omega. The outputs of this gadget: the derived key h^s to be
- * used for symmetric key derivation, and g^s which is sent to the other party.
- *
- * A sample parameterization that gives low security (~80 bits of security) can
- * be found in the Junit tests. A sample usage is in:
- * examples/generators/EncryptionCircuitGenerator.java
- *
- *
- */
+
+//  * Performs Key Exchange using a field extension F_p[x]/(x^\mu - \omega), where
+//  * the polynomial (x^\mu - \omega) is irreducible. The inputs to this gadget:
+//  * the base g, the other party's input h = g^a, the bits of the secret exponent
+//  * secExpBits and omega. The outputs of this gadget: the derived key h^s to be
+//  * used for symmetric key derivation, and g^s which is sent to the other party.
+//  *
+//  * A sample parameterization that gives low security (~80 bits of security) can
+//  * be found in the Junit tests. A sample usage is in:
+//  * examples/generators/EncryptionCircuitGenerator.java
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct FieldExtensionDHKeyExchange {
     pub g: Vec<Option<WireType>>, // base
@@ -78,17 +75,16 @@ pub struct FieldExtensionDHKeyExchange {
     pub output: Vec<Option<WireType>>,
 }
 impl FieldExtensionDHKeyExchange {
-    /**
-     * Note: In the default mode, the gadget only validates the secret input
-     * provided by the prover, but it does not validate that the base and pub
-     * input of the other's party are proper elements. Since these values are
-     * pub , they could be checked outside the circuit.
-     *
-     * If the validation is needed inside, the method "validateInputs()" should
-     * be called explicitly. Example is provided in
-     * FieldExtensionDHKeyExchange_Test
-     *
-     */
+    //Note: In the default mode, the gadget only validates the secret input
+    //provided by the prover, but it does not validate that the base and pub
+    //input of the other's party are proper elements. Since these values are
+    //pub , they could be checked outside the circuit.
+    //
+    //If the validation is needed inside, the method "validateInputs()" should
+    //be called explicitly. Example is provided in
+    //FieldExtensionDHKeyExchange_Test
+    //
+
     pub fn new(
         g: Vec<Option<WireType>>,
         h: Vec<Option<WireType>>,

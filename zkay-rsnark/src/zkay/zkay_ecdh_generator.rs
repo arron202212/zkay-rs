@@ -2,24 +2,29 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::CGConfigFields,
+            circuit_generator::CGInstance,
+            circuit_generator::{CGConfig, CircuitGenerator, CircuitGeneratorExtend},
+            wire_type::WireType,
+        },
+    },
+    util::util::BigInteger,
+    zkay::{zkay_util::ZkayUtil,
+        zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget, zkay_ecdh_gadget::ZkayECDHGadget,
+    },
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::BigInteger;
-use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
-use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
-use crate::zkay::zkay_util::ZkayUtil;
+
 use zkay_derive::ImplStructNameConfig;
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ZkayECDHGenerator {
     pub secret: BigInteger,

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -35,7 +35,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -47,11 +46,10 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use zkay_derive::ImplStructNameConfig;
-/**
- * Performs symmetric encryption in the CBC mode.
- * Only supports one cipher (speck128) as an example at the moment. Other ciphers will be integrated soon.
- *
- */
+
+//  * Performs symmetric encryption in the CBC mode.
+//  * Only supports one cipher (speck128) as an example at the moment. Other ciphers will be integrated soon.
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SymmetricEncryptionCBCGadget {
     pub ciphertext: Vec<Option<WireType>>,

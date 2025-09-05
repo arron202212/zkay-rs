@@ -2,19 +2,20 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::circuit::structure::wire::{GetWireId, Wire, WireConfig, setBitsConfig};
-use crate::circuit::structure::wire_type::WireType;
+use crate::circuit::structure::{wire::GetWireId, wire_type::WireType};
 
-use rand::Rng;
-use std::collections::HashMap;
-use std::ops::{Add, BitAnd, Mul, Rem, Shl, Shr, Sub};
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    ops::{Add, BitAnd, Rem, Shl, Shr, Sub},
+    sync::Arc,
+};
+
 // use rand::distr::{Distribution, StandardUniform};
-use num_bigint::{BigInt, RandBigInt, RandomBits, Sign, ToBigInt};
-use num_traits::{One, sign::Signed};
+use num_bigint::{BigInt, RandomBits, Sign};
+use num_traits::One;
 use parking_lot::Mutex;
 use rand::distributions::Distribution;
 

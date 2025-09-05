@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -19,11 +19,10 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
-/**
- * Implements the Speck lightweight block cipher
- * https://eprint.iacr.org/2015/585.pdf
- *
- */
+
+//  * Implements the Speck lightweight block cipher
+//  * https://eprint.iacr.org/2015/585.pdf
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct Speck128CipherGadget {
     pub plaintext: Vec<Option<WireType>>,
@@ -31,14 +30,13 @@ pub struct Speck128CipherGadget {
     pub ciphertext: Vec<Option<WireType>>,
 }
 impl Speck128CipherGadget {
-    /**
-     *
-     * @param inputs
-     *            : Array of 2 64-bit elements.
-     * @param expandedKey
-     *            : Array of 32 64-bit elements. (Call expandKey(..))
-     * @param desc
-     */
+    //
+    //@param inputs
+    //           : Array of 2 64-bit elements.
+    //@param expandedKey
+    //           : Array of 32 64-bit elements. (Call expandKey(..))
+    //@param desc
+
     pub fn new(
         plaintext: Vec<Option<WireType>>,
         expandedKey: Vec<Option<WireType>>,
@@ -79,12 +77,11 @@ impl Gadget<Speck128CipherGadget> {
         self.t.ciphertext = vec![Some(y), Some(x)];
     }
 
-    /**
-     *
-     * @param key
-     *            : 2 64-bit words
-     * @return
-     */
+    //
+    //@param key
+    //           : 2 64-bit words
+    //@return
+
     pub fn expandKey(
         key: &Vec<Option<WireType>>,
         generator: &RcCell<CircuitGenerator>,

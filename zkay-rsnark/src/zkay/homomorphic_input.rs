@@ -2,20 +2,18 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::zkay::typed_wire::TypedWire;
 
-/**
- * The input to a homomorphic operation which can either be a ciphertext wire array or a plaintext wire.
- *
- * This class exists because some homomorphic operations require plaintext operands, such as when performing
- * multiplication on additively homomorphic ciphertexts encrypted with Paillier or Dummy-Hom, and having
- * arguments of this type is preferable to having dozens of overloads with different combinations of Vec<TypedWire>
- * and TypedWire or having to tell apart plaintext and ciphertext inputs from the length of the Vec<TypedWire> input.
- */
+//  * The input to a homomorphic operation which can either be a ciphertext wire array or a plaintext wire.
+//  *
+//  * This class exists because some homomorphic operations require plaintext operands, such as when performing
+//  * multiplication on additively homomorphic ciphertexts encrypted with Paillier or Dummy-Hom, and having
+//  * arguments of this type is preferable to having dozens of overloads with different combinations of Vec<TypedWire>
+//  * and TypedWire or having to tell apart plaintext and ciphertext inputs from the length of the Vec<TypedWire> input.
 
 #[derive(Debug, Clone)]
 pub struct HomomorphicInput {

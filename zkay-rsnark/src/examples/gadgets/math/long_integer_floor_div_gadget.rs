@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -37,7 +37,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -46,12 +45,12 @@ use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
-/**
- * This gadget provides floor(a / b), when both operands are represented as long
- * elements. You can check the RSA gadgets/circuit generators for an example.
- * Most of the optimizations that reduce the cost of this step are more visible
- * in the LongElement class methods called by this gadget.
- */
+
+//  * This gadget provides floor(a / b), when both operands are represented as long
+//  * elements. You can check the RSA gadgets/circuit generators for an example.
+//  * Most of the optimizations that reduce the cost of this step are more visible
+//  * in the LongElement class methods called by this gadget.
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerFloorDivGadget;

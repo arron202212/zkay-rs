@@ -2,16 +2,14 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
 // import os
 // import subprocess
-use crate::circuit::config::config::Configs;
 use std::process::{Command, Stdio};
 // from typing import List, Optional, Tuple
-use std::path::PathBuf;
 pub fn run_command(
     cmd: Vec<&str>,
     cwd: Option<&str>,

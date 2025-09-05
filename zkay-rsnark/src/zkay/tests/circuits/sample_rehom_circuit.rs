@@ -2,16 +2,23 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CircuitGeneratorExtend;
-use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::zkay_circuit_base::{ZkayCircuitBase, ZkayCircuitBaseConfig};
-use crate::zkay::zkay_type::ZkayType;
+
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        structure::{circuit_generator::CGConfig, circuit_generator::CircuitGeneratorExtend},
+    },
+    zkay::{
+        homomorphic_input::HomomorphicInput,
+        zkay_circuit_base::{ZkayCircuitBase, ZkayCircuitBaseConfig},
+        zkay_type::ZkayType,
+    },
+};
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SampleRehomCircuit;

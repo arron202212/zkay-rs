@@ -2,25 +2,21 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        StructNameConfig,
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
-        structure::{
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
-            wire_type::WireType,
-        },
+        structure::{wire::GetWireId, wire_type::WireType},
     },
     util::util::{BigInteger, Util},
 };
 use std::{
     fmt::Debug,
-    hash::{DefaultHasher, Hash, Hasher},
-    ops::{Add, Mul, Neg, Rem, Sub},
+    hash::{Hash, Hasher},
+    ops::{Mul, Neg, Rem, Sub},
 };
 
 use num_bigint::Sign;

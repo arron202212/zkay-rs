@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -50,11 +50,10 @@ use crate::{
 use crate::examples::gadgets::augmenter::pinocchio_gadget::PinocchioGadget;
 use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
 use zkay_derive::ImplStructNameConfig;
-/**
- * This circuit generator augments a second-price auction circuit (produced by Pinocchio's compiler)
- * with SHA-256 gadgets on each input and output value.
- *
- */
+
+//  * This circuit generator augments a second-price auction circuit (produced by Pinocchio's compiler)
+//  * with SHA-256 gadgets on each input and output value.
+
 crate::impl_struct_name_for!(CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AugmentedAuctionCircuitGenerator {

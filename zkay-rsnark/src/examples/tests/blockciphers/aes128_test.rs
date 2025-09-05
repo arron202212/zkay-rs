@@ -2,23 +2,27 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{eval::circuit_evaluator::CircuitEvaluator,
+    operations::gadget::{Gadget, GadgetConfig},
+    structure::{
+        circuit_generator::{
+            CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            addToEvaluationQueue, getActiveCircuitGenerator,
+        },
+        wire_type::WireType,
+    }},
+    examples::gadgets::blockciphers::{
+        aes128_cipher_gadget::{AES128CipherGadget, SBoxOption, atomic_sbox_option},
+        sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2,
+    },
+    util::util::{BigInteger, Util},
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::{
-    AES128CipherGadget, SBoxOption, atomic_sbox_option,
-};
-use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2;
-use crate::util::util::{BigInteger, Util};
+
 use std::sync::atomic::{self, AtomicU8, Ordering};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;

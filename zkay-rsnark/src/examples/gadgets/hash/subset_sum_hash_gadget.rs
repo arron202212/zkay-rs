@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -32,7 +32,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -58,13 +57,13 @@ static COEFFS: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 impl SubsetSumHashGadget {
     pub const DIMENSION: i32 = 3; // set to 4 for higher security
     pub const INPUT_LENGTH: i32 = 2 * Self::DIMENSION * 64; //Configs.log2_field_prime as i32; // length in bits
-    /**
-     * @param ins
-     *            The bitwires of the input.
-     * @param binaryOutput
-     *            Whether the output digest should be splitted into bits or not.
-     * @param desc
-     */
+
+    //@param ins
+    //           The bitwires of the input.
+    //@param binaryOutput
+    //           Whether the output digest should be splitted into bits or not.
+    //@param desc
+
     pub fn new(
         ins: Vec<Option<WireType>>,
         binaryOutput: bool,

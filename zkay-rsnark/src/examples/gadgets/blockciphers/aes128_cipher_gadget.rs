@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -61,12 +61,11 @@ pub enum SBoxOption {
     OPTIMIZED2,
 }
 pub static atomic_sbox_option: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 as u8);
-/**
- * Implements an AES 128-bit block cipher. The gadget applies an improved
- * read-only memory lookup from xjsnark (to appear) to reduce the cost of the
- * S-box access. (See the sbox package for the improved lookup implementation)
- *
- */
+
+//  * Implements an AES 128-bit block cipher. The gadget applies an improved
+//  * read-only memory lookup from xjsnark (to appear) to reduce the cost of the
+//  * S-box access. (See the sbox package for the improved lookup implementation)
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AES128CipherGadget {
     pub plaintext: Vec<Option<WireType>>,   // array of 16 bytes
@@ -77,14 +76,13 @@ impl AES128CipherGadget {
     const nb: usize = 4;
     const nk: usize = 4;
     const nr: usize = 6 + AES128CipherGadget::nk;
-    /**
-     *
-     * @param inputs
-     *            : array of 16 bytes (each wire represents a byte)
-     * @param expandedKey
-     *            : array of 176 bytes (each wire represents a byte) -- call
-     *            expandKey() to get it
-     */
+
+    //
+    //@param inputs
+    //           : array of 16 bytes (each wire represents a byte)
+    //@param expandedKey
+    //           : array of 176 bytes (each wire represents a byte) -- call
+    //           expandKey() to get it
 
     pub fn new(
         inputs: Vec<Option<WireType>>,

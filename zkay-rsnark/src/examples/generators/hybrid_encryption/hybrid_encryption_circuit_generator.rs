@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -187,10 +187,9 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // To make g and h variable inputs to the circuit, simply do the following
         // instead, and supply the above values using the generateSampleInput()
         // method instead.
-        /*
-         * Vec<Option<WireType>> g = CircuitGenerator::createInputWireArray(self.cg(),mu);
-         * Vec<Option<WireType>> h = CircuitGenerator::createInputWireArray(self.cg(),mu);
-         */
+
+        //Vec<Option<WireType>> g = CircuitGenerator::createInputWireArray(self.cg(),mu);
+        //Vec<Option<WireType>> h = CircuitGenerator::createInputWireArray(self.cg(),mu);
 
         // Exchange keys
         let exchange = FieldExtensionDHKeyExchange::new(

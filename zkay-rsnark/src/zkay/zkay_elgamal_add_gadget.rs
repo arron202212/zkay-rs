@@ -2,22 +2,25 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadgetConfig;
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{circuit_generator::CircuitGenerator, wire::WireConfig, wire_type::WireType},
+    },
+    zkay::zkay_baby_jub_jub_gadget::{
+        JubJubPoint, ZkayBabyJubJubGadget, ZkayBabyJubJubGadgetConfig,
+    },
+};
+
 use rccell::RcCell;
-/**
- * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
- */
+
+//  * Gadget for homomorphically adding two ElGamal ciphertexts (c1, c2) and (d1, d2).
+
 #[derive(Debug, Clone)]
 pub struct ZkayElgamalAddGadget {
     pub c1: JubJubPoint,

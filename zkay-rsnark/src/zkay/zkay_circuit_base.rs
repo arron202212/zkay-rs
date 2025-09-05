@@ -2,49 +2,57 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::CGConfigFields,
+            circuit_generator::CGInstance,
+            circuit_generator::{
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
+                getActiveCircuitGenerator,
+            },
+            wire::GetWireId,
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::BigInteger,
+    zkay::{
+        crypto::crypto_backend::{
+            Backend, CryptoBackendConfig, CryptoBackendConfigs,
+            CryptoBackend,
+        },
+        crypto::homomorphic_backend::HomomorphicBackend,
+        homomorphic_input::HomomorphicInput,
+        typed_wire::TypedWire,
+        zkay_sha256_gadget::ZkaySHA256Gadget,
+        zkay_type::{ZkayType, zkbool},
+        zkay_util::ZkayUtil,
+    },
 };
 
-use crate::circuit::structure::wire::GetWireId;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::BigInteger;
-use crate::zkay::crypto::crypto_backend::Backend;
-use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfig;
-use crate::zkay::crypto::crypto_backend::CryptoBackendConfigs;
-use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
-use crate::zkay::homomorphic_input::HomomorphicInput;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_sha256_gadget::ZkaySHA256Gadget;
-use crate::zkay::zkay_type::ZkayType;
-use crate::zkay::zkay_type::zkbool;
-use crate::zkay::zkay_util::ZkayUtil;
+use std::{
+io::Write,
+    collections::{BTreeMap, HashMap, VecDeque},
+    fs::File,
+    ops::{Add, Mul, Neg, Sub},
+};
+
 use num_bigint::Sign;
 use rccell::RcCell;
-use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::fs::File;
-use std::io::Write;
-use std::ops::{Add, Mul, Neg, Sub};
 const ADD_OP_LABELS: bool = true;
 const LEGACY_CRYPTO_BACKEND: &str = "LEGACY_CRYPTO_BACKEND";
 
 #[derive(Debug, Clone)]
 pub struct ZkayCircuitBase<T> {
-    /**
-     * Whether to include comments for the more complex operations in the circuit.arith file
-     */
+    //Whether to include comments for the more complex operations in the circuit.arith file
     pub realCircuitName: String,
 
     pub cryptoBackends: HashMap<String, Backend>,
@@ -289,7 +297,7 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
             );
             serializedArguments[i] = v;
         }
-        *self.serializedArguments_mut() = serializedArguments;
+        //self.serializedArguments_mut() = serializedArguments;
     }
     fn compileCircuit(&mut self) {
         println!("Compiling circuit '{}'", self.realCircuitName());
@@ -1226,9 +1234,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         );
     }
 
-    /**
-     * Asymmetric Encryption
-     */
+    //Asymmetric Encryption
+
     pub fn checkEnc(
         &mut self,
         cryptoBackendId: &str,
@@ -1249,9 +1256,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         self.addGuardedEncryptionAssertion(expectedCipher, &computedCipher);
     }
 
-    /**
-     * Symmetric Encryption
-     */
+    //Symmetric Encryption
+
     pub fn checkSymmEnc(
         &mut self,
         cryptoBackendId: &str,
@@ -1273,9 +1279,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         self.addGuardedEncryptionAssertion(ivCipher, &computedCipher);
     }
 
-    // /**
+    //
     //  * Asymmetric Decryption
-    //  */
+    //
     pub fn checkDec(
         &mut self,
         cryptoBackendId: &str,
@@ -1331,9 +1337,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         }
     }
 
-    /**
-     * Symmetric Decryption
-     */
+    //Symmetric Decryption
+
     pub fn checkSymmDec(
         &mut self,
         cryptoBackendId: &str,

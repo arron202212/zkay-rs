@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -39,14 +39,14 @@ use std::{
     sync::Arc,
 };
 use zkay_derive::ImplStructNameConfig;
-/**
- * An auxiliary class that handles the operations of long integers, such as the
- * ones used in RSA operations. It applies some of the long integer
- * optimizations from xjsnark (to appear). This is a preliminary version. More
- * Other features and detailed tests will be added in the future.
- *
- * Usage examples exist in the RSA examples gadgets.
- */
+
+//  * An auxiliary class that handles the operations of long integers, such as the
+//  * ones used in RSA operations. It applies some of the long integer
+//  * optimizations from xjsnark (to appear). This is a preliminary version. More
+//  * Other features and detailed tests will be added in the future.
+//  *
+//  * Usage examples exist in the RSA examples gadgets.
+
 // pub type BigInteger = String;
 
 #[derive(Debug, Clone, Hash)]
@@ -154,9 +154,8 @@ impl LongElement {
         }
     }
 
-    /**
-     * A long element representing a constant.
-     */
+    //A long element representing a constant.
+
     pub fn newb(chunks: Vec<BigInteger>, generator: WeakCell<CircuitGenerator>) -> Self {
         let mut currentBitwidth = vec![0; chunks.len()];
         for i in 0..chunks.len() {
@@ -686,7 +685,7 @@ impl LongElement {
 
         // since the two elements should be equal, we should not need any aux
         // chunk in the last step
-        *auxConstantChunks.last_mut().unwrap() = BigInteger::ZERO;
+        //auxConstantChunks.last_mut().unwrap() = BigInteger::ZERO;
 
         // Note: the previous auxConstantChunks are not aligned. We compute an
         // aligned version as follows.
@@ -916,12 +915,12 @@ impl LongElement {
         let zero_wire = generator.get_zero_wire().unwrap();
         let paddedA1 = Util::padWireArray(&a1, length, &zero_wire);
         let paddedA2 = Util::padWireArray(&a2, length, &zero_wire);
-        /*
-         * Instead of doing the comparison naively (which will involve all the
-         * bits) let the prover help us by pointing to the first chunk in the
-         * other element that is more than the corresponding chunk in this
-         * element.
-         */
+
+        //Instead of doing the comparison naively (which will involve all the
+        //bits) let the prover help us by pointing to the first chunk in the
+        //other element that is more than the corresponding chunk in this
+        //element.
+
         let helperBits = CircuitGenerator::createProverWitnessWireArray(
             self.generator.clone().upgrade().unwrap(),
             length,

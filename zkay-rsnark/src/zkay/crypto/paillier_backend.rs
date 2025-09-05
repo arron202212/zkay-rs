@@ -2,34 +2,36 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_division::LongIntegerDivisionConfig;
-use crate::examples::gadgets::math::long_integer_mod_gadget::LongIntegerModGadget;
-use crate::examples::gadgets::math::long_integer_mod_inverse_gadget::LongIntegerModInverseGadget;
-use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::CircuitGenerator, wire::WireConfig, wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    zkay::{crypto::{
+        crypto_backend::{Asymmetric, CryptoBackend, CryptoBackendConfig, CryptoBackendConfigs},
+        homomorphic_backend::HomomorphicBackend,
+    },
+    homomorphic_input::HomomorphicInput,
+    typed_wire::TypedWire,
+    zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget,
+    zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget,
+    zkay_type::ZkayType},
+    examples::gadgets::math::{
+        long_integer_division::LongIntegerDivisionConfig,
+        long_integer_mod_gadget::LongIntegerModGadget,
+        long_integer_mod_inverse_gadget::LongIntegerModInverseGadget,
+        long_integer_mod_pow_gadget::LongIntegerModPowGadget,
+    },
+};
 
-use crate::zkay::crypto::crypto_backend::Asymmetric;
-
-use crate::zkay::crypto::crypto_backend::CryptoBackend;
-use crate::zkay::crypto::crypto_backend::{CryptoBackendConfig, CryptoBackendConfigs};
-use crate::zkay::crypto::homomorphic_backend::HomomorphicBackend;
-use crate::zkay::homomorphic_input::HomomorphicInput;
-
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget;
-use crate::zkay::zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget;
-
-use crate::zkay::zkay_type::ZkayType;
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
 
@@ -305,8 +307,8 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         let wires: Vec<_> = cipher.iter().map(|c| Some(c.wire.clone())).collect();
 
         let mut bitWidths = vec![PaillierBackend::CHUNK_SIZE as u64; wires.len()];
-        *bitWidths.last_mut().unwrap() =
-            (2 * self.keyBits - (bitWidths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE) as u64;
+        //bitWidths.last_mut().unwrap() =
+        (2 * self.keyBits - (bitWidths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE) as u64;
 
         // Cipher could still be uninitialized-zero, which we need to fix
         self.uninitZeroToOne(&LongElement::new(wires, bitWidths, generator.downgrade()))
@@ -349,7 +351,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         let valIsZero = val.checkNonZero().invAsBit(&None);
         let oneIfAllZero = LongElement::new(
             vec![valIsZero],
-            vec![1], /* bit */
+            vec![1], // bit
             self.generator.clone().downgrade(),
         );
         val.clone().add(&oneIfAllZero)

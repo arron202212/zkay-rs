@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -662,10 +662,9 @@ impl CircuitGenerator {
             .collect()
     }
 
-    /**
-     * Asserts an r1cs constraint. w1*w2 = w3
-     *
-     */
+    //Asserts an r1cs constraint. w1*w2 = w3
+    //
+
     pub fn addAssertion(
         cg: RcCell<CircuitGenerator>,
         w1: &WireType,
@@ -860,12 +859,11 @@ impl CircuitGenerator {
         cg.get_one_wire().unwrap().muli(-x, desc)
     }
 
-    /**
-     * Use to support computation for prover witness values outside of the
-     * circuit. See Mod_Gadget and Field_Division gadgets for examples.
-     *
-     * @param instruction
-     */
+    //Use to support computation for prover witness values outside of the
+    //circuit. See Mod_Gadget and Field_Division gadgets for examples.
+    //
+    //@param instruction
+
     pub fn specifyProverWitnessComputation(cg: RcCell<CircuitGenerator>, e: Box<dyn Instruction>) {
         // serde_json::to_string(&f).unwrap()
         // let f: FnOnce( &mut CircuitEvaluator)
@@ -1032,7 +1030,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
 
     //     evaluation_queue.entry(e.clone()).or_insert(e.clone());
     //     if e.instance_of("BasicOp") {
-    //         *self.cg().borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
+    //    //self.cg().borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
     //     }
     //     None // returning None means we have not seen this instruction before
     //     // have seen this instruction before, but can't de-duplicate
@@ -1441,12 +1439,11 @@ impl CGConfig for RcCell<CircuitGenerator> {
 
     // crate::impl_fn_of_trait!(fn createNegConstantWirei(&self, x: i64, desc: &Option<String>) -> WireType );
 
-    /**
-     * Use to support computation for prover witness values outside of the
-     * circuit. See Mod_Gadget and Field_Division gadgets for examples.
-     *
-     * @param instruction
-     */
+    //Use to support computation for prover witness values outside of the
+    //circuit. See Mod_Gadget and Field_Division gadgets for examples.
+    //  *
+    //@param instruction
+
     // crate::impl_fn_of_trait!(fn specifyProverWitnessComputation(&self, e: Box<dyn Instruction>));
 
     // crate::impl_fn_of_trait!(fn addToEvaluationQueue(

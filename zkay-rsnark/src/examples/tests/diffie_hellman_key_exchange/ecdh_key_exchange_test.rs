@@ -2,24 +2,26 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
-};
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::diffie_hellman_key_exchange::ecdh_key_exchange_gadget::ECDHKeyExchangeGadget;
-use crate::util::util::BigInteger;
+use crate::{circuit::{
+    eval::circuit_evaluator::CircuitEvaluator,
+    operations::gadget::Gadget,
+    structure::{
+        circuit_generator::{
+            CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            addToEvaluationQueue, getActiveCircuitGenerator,
+        },
+        wire_type::WireType,
+    },
+   
+},     examples::gadgets::diffie_hellman_key_exchange::ecdh_key_exchange_gadget::ECDHKeyExchangeGadget,
+util::util::BigInteger,};
 use zkay_derive::ImplStructNameConfig;
-/**
-* Tests Key Exchange via Elliptic curve Gadget (ECDHKeyExchangeGadget.java)
 
-*/
+// * Tests Key Exchange via Elliptic curve Gadget (ECDHKeyExchangeGadget.java)
 
 #[cfg(test)]
 mod test {

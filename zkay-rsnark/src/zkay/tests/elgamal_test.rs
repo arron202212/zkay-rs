@@ -2,29 +2,34 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+    zkay::{
+        typed_wire::TypedWire, zkay_baby_jub_jub_gadget::JubJubPoint,
+        zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget,
+        zkay_elgamal_dec_gadget::ZkayElgamalDecGadget,
+        zkay_elgamal_enc_gadget::ZkayElgamalEncGadget,
+        zkay_elgamal_rerand_gadget::ZkayElgamalRerandGadget,
+    },
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
-use crate::zkay::zkay_elgamal_dec_gadget::ZkayElgamalDecGadget;
-use crate::zkay::zkay_elgamal_enc_gadget::ZkayElgamalEncGadget;
-use crate::zkay::zkay_elgamal_rerand_gadget::ZkayElgamalRerandGadget;
+
 use rccell::RcCell;
 use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
@@ -242,87 +247,84 @@ mod test {
         assert_eq!(r2Expected.y, r2y);
     }
 
-    /*
-    * SAGE SCRIPT TO GENERATE TEST CASES
+    // * SAGE SCRIPT TO GENERATE TEST CASES
 
-           p = 21888242871839275222246405745257275088548364400416034343698204186575808495617
-           Fp = GF(p)
+    //        p = 21888242871839275222246405745257275088548364400416034343698204186575808495617
+    //        Fp = GF(p)
 
-           MONT_A = 168698
-           MONT_B = 168700
+    //        MONT_A = 168698
+    //        MONT_B = 168700
 
-           WEIERSTRASS_A2 = Fp(MONT_A) / Fp(MONT_B)
-           WEIERSTRASS_A4 = Fp(1) / (Fp(MONT_B) * Fp(MONT_B))
+    //        WEIERSTRASS_A2 = Fp(MONT_A) / Fp(MONT_B)
+    //        WEIERSTRASS_A4 = Fp(1) / (Fp(MONT_B) * Fp(MONT_B))
 
-           E = EllipticCurve(Fp, [0, WEIERSTRASS_A2, 0, WEIERSTRASS_A4, 0])
+    //        E = EllipticCurve(Fp, [0, WEIERSTRASS_A2, 0, WEIERSTRASS_A4, 0])
 
-           as_edwards = lambda x, y: ((Fp(MONT_B)*x)/(Fp(MONT_B)*y), ((Fp(MONT_B)*x)-1)/((Fp(MONT_B)*x)+1))
-           as_weierstrass = lambda x, y: ((1+y)/((1-y) * Fp(MONT_B)), (1+y)/((1-y)*x*Fp(MONT_B)))
+    //        as_edwards = lambda x, y: ((Fp(MONT_B)*x)/(Fp(MONT_B)*y), ((Fp(MONT_B)*x)-1)/((Fp(MONT_B)*x)+1))
+    //        as_weierstrass = lambda x, y: ((1+y)/((1-y) * Fp(MONT_B)), (1+y)/((1-y)*x*Fp(MONT_B)))
 
-           # Generator in Edwards form
-           Gx = Fp(11904062828411472290643689191857696496057424932476499415469791423656658550213)
-           Gy = Fp(9356450144216313082194365820021861619676443907964402770398322487858544118183)
+    //        # Generator in Edwards form
+    //        Gx = Fp(11904062828411472290643689191857696496057424932476499415469791423656658550213)
+    //        Gy = Fp(9356450144216313082194365820021861619676443907964402770398322487858544118183)
 
-           # Generator in Weierstrass form
-           (Gu, Gv) = as_weierstrass(Gx, Gy)
-           G = E(Gu, Gv)
+    //        # Generator in Weierstrass form
+    //        (Gu, Gv) = as_weierstrass(Gx, Gy)
+    //        G = E(Gu, Gv)
 
-           def ElGamalPk(rand):
-               return G*rand
+    //        def ElGamalPk(rand):
+    //            return G*rand
 
-           def ElGamalEmbed(msg):
-               return G*msg
+    //        def ElGamalEmbed(msg):
+    //            return G*msg
 
-           def ElGamalEnc(pk, msg, rand):
-               s = pk*rand
-               c1 = G*rand
-               c2 = msg + s
-               return (c1, c2)
+    //        def ElGamalEnc(pk, msg, rand):
+    //            s = pk*rand
+    //            c1 = G*rand
+    //            c2 = msg + s
+    //            return (c1, c2)
 
-           def ElGamalRerand(c1, c2, pk, rand):
-               z = ElGamalEmbed(0)
-               (z1, z2) = ElGamalEnc(pk, z, rand)
-               return (z1 + c1, z2 + c2)
+    //        def ElGamalRerand(c1, c2, pk, rand):
+    //            z = ElGamalEmbed(0)
+    //            (z1, z2) = ElGamalEnc(pk, z, rand)
+    //            return (z1 + c1, z2 + c2)
 
-           def Run(sk, msg, rand, rand2):
-                   pk = ElGamalPk(sk)
-                   emb = ElGamalEmbed(msg)
-                   (c1, c2) = ElGamalEnc(pk, emb, rand)
-                   (d1, d2) = ElGamalRerand(c1, c2, pk, rand2)
+    //        def Run(sk, msg, rand, rand2):
+    //                pk = ElGamalPk(sk)
+    //                emb = ElGamalEmbed(msg)
+    //                (c1, c2) = ElGamalEnc(pk, emb, rand)
+    //                (d1, d2) = ElGamalRerand(c1, c2, pk, rand2)
 
+    //                (pkx, pky) = as_edwards(pk[0], pk[1])
+    //                (c1x, c1y) = as_edwards(c1[0], c1[1])
+    //                (c2x, c2y) = as_edwards(c2[0], c2[1])
+    //                (d1x, d1y) = as_edwards(d1[0], d1[1])
+    //                (d2x, d2y) = as_edwards(d2[0], d2[1])
+    //                print('BigInteger plain = BigInteger.parse_bytes(b"%s",10).unwrap();' % msg)
+    //                print('BigInteger random = BigInteger.parse_bytes(b"%s",10).unwrap();' % rand)
+    //                print('BigInteger random2 = BigInteger.parse_bytes(b"%s",10).unwrap();' % rand2)
+    //                print('BigInteger sk = BigInteger.parse_bytes(b"%s",10).unwrap();' % sk)
+    //                print('BigInteger pkx = BigInteger.parse_bytes(b"%s",10).unwrap();' % pkx)
+    //                print('BigInteger pky = BigInteger.parse_bytes(b"%s",10).unwrap();' % pky)
+    //                print('BigInteger c1x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c1x)
+    //                print('BigInteger c1y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c1y)
+    //                print('BigInteger c2x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c2x)
+    //                print('BigInteger c2y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c2y)
+    //                print('BigInteger r1x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d1x)
+    //                print('BigInteger r1y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d1y)
+    //                print('BigInteger r2x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d2x)
+    //                print('BigInteger r2y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d2y)
+    //                print('')
 
-                   (pkx, pky) = as_edwards(pk[0], pk[1])
-                   (c1x, c1y) = as_edwards(c1[0], c1[1])
-                   (c2x, c2y) = as_edwards(c2[0], c2[1])
-                   (d1x, d1y) = as_edwards(d1[0], d1[1])
-                   (d2x, d2y) = as_edwards(d2[0], d2[1])
-                   print('BigInteger plain = BigInteger.parse_bytes(b"%s",10).unwrap();' % msg)
-                   print('BigInteger random = BigInteger.parse_bytes(b"%s",10).unwrap();' % rand)
-                   print('BigInteger random2 = BigInteger.parse_bytes(b"%s",10).unwrap();' % rand2)
-                   print('BigInteger sk = BigInteger.parse_bytes(b"%s",10).unwrap();' % sk)
-                   print('BigInteger pkx = BigInteger.parse_bytes(b"%s",10).unwrap();' % pkx)
-                   print('BigInteger pky = BigInteger.parse_bytes(b"%s",10).unwrap();' % pky)
-                   print('BigInteger c1x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c1x)
-                   print('BigInteger c1y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c1y)
-                   print('BigInteger c2x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c2x)
-                   print('BigInteger c2y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % c2y)
-                   print('BigInteger r1x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d1x)
-                   print('BigInteger r1y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d1y)
-                   print('BigInteger r2x_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d2x)
-                   print('BigInteger r2y_exp = BigInteger.parse_bytes(b"%s",10).unwrap();' % d2y)
-                   print('')
+    //        Run(193884008695, 42, 405309899802, 498372940021)
+    //        Run(399850902903, 439864, 450983970634, 1293840028489)
+    //        Run(303897902911, 29479828, 11053400909823, 2818211)
+    //        Run(879404942393, 20503, 40394702098873424340, 1199860398278648324)
+    //        Run(409693890709893623, 9973, 400939876470980734, 980387209578)
+    //        Run(943434980730874900974038, 3092, 304047020868704, 29059219019893)
+    //        Run(40909374909834, 11, 9438929848, 472788712)
+    //        Run(1047249, 309904, 2249, 187498091987891)
+    //        Run(448344687855328518203304384067387474955750326758815542295083498526674852893, 42, 4992017890738015216991440853823451346783754228142718316135811893930821210517, 39278167679809198687982907130870918672986098198762678158021231)
 
-           Run(193884008695, 42, 405309899802, 498372940021)
-           Run(399850902903, 439864, 450983970634, 1293840028489)
-           Run(303897902911, 29479828, 11053400909823, 2818211)
-           Run(879404942393, 20503, 40394702098873424340, 1199860398278648324)
-           Run(409693890709893623, 9973, 400939876470980734, 980387209578)
-           Run(943434980730874900974038, 3092, 304047020868704, 29059219019893)
-           Run(40909374909834, 11, 9438929848, 472788712)
-           Run(1047249, 309904, 2249, 187498091987891)
-           Run(448344687855328518203304384067387474955750326758815542295083498526674852893, 42, 4992017890738015216991440853823451346783754228142718316135811893930821210517, 39278167679809198687982907130870918672986098198762678158021231)
-
-    */
     #[test]
     pub fn testElgamal1() {
         let plain = BigInteger::from(42);

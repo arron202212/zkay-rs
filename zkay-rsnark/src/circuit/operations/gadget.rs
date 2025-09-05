@@ -2,25 +2,12 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
-use crate::{
-    circuit::structure::{
-        circuit_generator::{
-            CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-            getActiveCircuitGenerator,
-        },
-        wire_type::WireType,
-    },
-    util::util::ARcCell,
-};
-use rccell::{RcCell, WeakCell};
-use std::{
-    fmt::Debug,
-    hash::{DefaultHasher, Hash, Hasher},
-    sync::Arc,
-};
+use crate::circuit::structure::{circuit_generator::CircuitGenerator, wire_type::WireType};
+use rccell::RcCell;
+use std::{fmt::Debug, hash::Hash};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Gadget<T> {
     pub generator: RcCell<CircuitGenerator>,

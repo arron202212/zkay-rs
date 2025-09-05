@@ -2,33 +2,38 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::CGConfigFields,
+            circuit_generator::{
+                CGConfig, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    util::util::BigInteger,
+    zkay::{
+        chaskey_lts_cbc::{ChaskeyLtsCbc, KeyParameter},
+        chaskey_lts_engine::{ChaskeyLTSEngine, CipherParameters},
+        crypto::crypto_backend::{Asymmetric, CIPHER_CHUNK_SIZE, CryptoBackend, Symmetric},
+        typed_wire::TypedWire,
+        zkay_cbc_symmetric_enc_gadget::CipherType,
+        zkay_cbc_symmetric_enc_gadget::ZkayCBCSymmetricEncGadget,
+        zkay_type::ZkayType,
+        zkay_util::ZkayUtil,
+    },
 };
-use crate::circuit::structure::wire_type::WireType;
 
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::zkay::crypto::crypto_backend::CIPHER_CHUNK_SIZE;
-use crate::zkay::crypto::crypto_backend::{Asymmetric, CryptoBackend, Symmetric};
-use crate::zkay::zkay_cbc_symmetric_enc_gadget::ZkayCBCSymmetricEncGadget;
-
-use crate::zkay::chaskey_lts_cbc::{ChaskeyLtsCbc, KeyParameter};
-use crate::zkay::chaskey_lts_engine::{ChaskeyLTSEngine, CipherParameters};
-
-use crate::util::util::BigInteger;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_cbc_symmetric_enc_gadget::CipherType;
-use crate::zkay::zkay_type::ZkayType;
-use crate::zkay::zkay_util::ZkayUtil;
 use zkay_derive::ImplStructNameConfig;
+
 #[cfg(test)]
 mod test {
     use super::*;

@@ -2,23 +2,30 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange::FieldExtensionDHKeyExchange,
+    util::util::{BigInteger, Util},
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange::FieldExtensionDHKeyExchange;
-use crate::util::util::{BigInteger, Util};
+
 use zkay_derive::ImplStructNameConfig;
-/**
- * Tests Key Exchange via Field Extension Gadget (DHKeyExchangeGadget.java)
- * Parameters used here assumes ~80-bit security
- */
+
+//  * Tests Key Exchange via Field Extension Gadget (DHKeyExchangeGadget.java)
+//  * Parameters used here assumes ~80-bit security
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -369,23 +376,22 @@ mod test {
         );
     }
 
-    /* Sage Script generating the above values:
-       F.<x> = GF(21888242871839275222246405745257275088548364400416034343698204186575808495617)[]
-       K.<a> = GF(21888242871839275222246405745257275088548364400416034343698204186575808495617**4, name='a', modulus=x^4-7)
+    //  Sage Script generating the above values:
+    //    F.<x> = GF(21888242871839275222246405745257275088548364400416034343698204186575808495617)[]
+    //    K.<a> = GF(21888242871839275222246405745257275088548364400416034343698204186575808495617**4, name='a', modulus=x^4-7)
 
-       base = 16377448892084713529161739182205318095580119111576802375181616547062197291263*a^0 + 13687683608888423916085091250849188813359145430644908352977567823030408967189*a^1 + 12629166084120705167185476169390021031074363183264910102253898080559854363106*a^2 + 19441276922979928804860196077335093208498949640381586557241379549605420212272*a^3
-       h = 1294177986177175279602421915789749270823809536595962994745244158374705688266*a^3 + 1540379511125324102377803754608881114249455137236500477169164628692514244862*a^2 + 20829599225781884356477513064431048695774529855095864514701692089787151865093*a + 8252578783913909531884765397785803733246236629821369091076513527284845891757
+    //    base = 16377448892084713529161739182205318095580119111576802375181616547062197291263*a^0 + 13687683608888423916085091250849188813359145430644908352977567823030408967189*a^1 + 12629166084120705167185476169390021031074363183264910102253898080559854363106*a^2 + 19441276922979928804860196077335093208498949640381586557241379549605420212272*a^3
+    //    h = 1294177986177175279602421915789749270823809536595962994745244158374705688266*a^3 + 1540379511125324102377803754608881114249455137236500477169164628692514244862*a^2 + 20829599225781884356477513064431048695774529855095864514701692089787151865093*a + 8252578783913909531884765397785803733246236629821369091076513527284845891757
 
-       baseOrder = base.multiplicative_order()
-       hOrder = h.multiplicative_order()
-       print(baseOrder)
-       print(hOrder)
-       print(is_prime(baseOrder))
+    //    baseOrder = base.multiplicative_order()
+    //    hOrder = h.multiplicative_order()
+    //    print(baseOrder)
+    //    print(hOrder)
+    //    print(is_prime(baseOrder))
 
-       secret = 15403795111253241023778037546088811142494551372365004771691646286925142448620047716
-       base_to_secret = base^secret
-       h_to_secret = h^secret
-       print(base_to_secret)
-       print(h_to_secret)
-    */
+    //    secret = 15403795111253241023778037546088811142494551372365004771691646286925142448620047716
+    //    base_to_secret = base^secret
+    //    h_to_secret = h^secret
+    //    print(base_to_secret)
+    //    print(h_to_secret)
 }

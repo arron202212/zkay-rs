@@ -2,22 +2,27 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{circuit_generator::{
+            CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+            addToEvaluationQueue, getActiveCircuitGenerator,
+        },
+        wire_type::WireType},
+    },
+    examples::gadgets::{
+        hash::sha256_gadget::{Base, SHA256Gadget},
+        rsa::rsa_sig_verification_v1_5_gadget::RSASigVerificationV1_5_Gadget,
+    },
+    util::util::{BigInteger, Util},
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
-use crate::examples::gadgets::rsa::rsa_sig_verification_v1_5_gadget::RSASigVerificationV1_5_Gadget;
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
 use std::ops::Sub;
 use zkay_derive::ImplStructNameConfig;
 //Tests RSA PKCS #1, V1.5 Signature
@@ -26,12 +31,10 @@ use zkay_derive::ImplStructNameConfig;
 mod test {
     use super::*;
 
-    /*
-     * Note that these tests are for ensuring the basic functionality. To verify
-     * that the gadget cannot allow *any* invalid signatures to pass, this requires more than testing few cases, e.g. a
-     * careful review of the code  to ensure that there are no
-     * missing/incorrect constraints that a cheating prover could make use of.
-     */
+    //Note that these tests are for ensuring the basic functionality. To verify
+    //that the gadget cannot allow *any* invalid signatures to pass, this requires more than testing few cases, e.g. a
+    //careful review of the code  to ensure that there are no
+    //missing/incorrect constraints that a cheating prover could make use of.
 
     #[test]
     pub fn test_valid_signature_different_key_lengths() {

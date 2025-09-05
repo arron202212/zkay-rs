@@ -2,25 +2,28 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+    zkay::zkay_baby_jub_jub_gadget::{ZkayBabyJubJubGadget, ZkayBabyJubJubGadgetConfig},
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::util::util::BigInteger;
-use crate::util::util::Util;
-use crate::zkay::zkay_baby_jub_jub_gadget::{ZkayBabyJubJubGadget, ZkayBabyJubJubGadgetConfig};
+
 use rccell::RcCell;
 use zkay_derive::ImplStructNameConfig;
 

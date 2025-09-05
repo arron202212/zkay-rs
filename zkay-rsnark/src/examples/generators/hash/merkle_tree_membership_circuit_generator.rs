@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -120,7 +120,7 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
         );
         let actualRoot = merkleTreeGadget.getOutputWires();
 
-        /** Now compare the actual root with the pub  known root **/
+        //  Now compare the actual root with the pub  known root **/
         let mut errorAccumulator = self.get_zero_wire().unwrap();
         for i in 0..hashDigestDimension as usize {
             let diff = actualRoot[i]
@@ -137,7 +137,7 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             &Some("Computed Root".to_owned()),
         );
 
-        /** Expected mismatch here if the sample input below is tried**/
+        //  Expected mismatch here if the sample input below is tried**/
         CircuitGenerator::makeOutput(
             self.cg(),
             &errorAccumulator.checkNonZero(&None),

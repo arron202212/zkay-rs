@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -52,18 +52,17 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
-/**
- * A gadget to check if an RSA signature is valid according to PKCS 1 v1.5 (A
- * gadget based on the latest standard (PSS) will be added in the future).
- * This gadget assumes SHA256 for the message hash, and a pub  exponent of
- * 0x10001.
- * This gadget can accept a hardcoded or a variable RSA modulus. See the
- * corresponding generator example.
- *
- * Implemented according to the standard specs here:
- * https://www.emc.com/collateral/white-
- * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
- */
+//  * A gadget to check if an RSA signature is valid according to PKCS 1 v1.5 (A
+//  * gadget based on the latest standard (PSS) will be added in the future).
+//  * This gadget assumes SHA256 for the message hash, and a pub  exponent of
+//  * 0x10001.
+//  * This gadget can accept a hardcoded or a variable RSA modulus. See the
+//  * corresponding generator example.
+//  *
+//  * Implemented according to the standard specs here:
+//  * https://www.emc.com/collateral/white-
+//  * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSASigVerificationV1_5_Gadget {

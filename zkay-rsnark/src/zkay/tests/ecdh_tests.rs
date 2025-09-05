@@ -2,25 +2,31 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfigFields;
-use crate::circuit::structure::circuit_generator::CGInstance;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    util::util::{BigInteger, Util},
+    zkay::{
+        zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget, zkay_ecdh_gadget::ZkayECDHGadget,
+        zkay_ecdh_generator::ZkayECDHGenerator,
+    },
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::zkay_ec_pk_derivation_gadget::ZkayEcPkDerivationGadget;
-use crate::zkay::zkay_ecdh_gadget::ZkayECDHGadget;
 
-use crate::util::util::{BigInteger, Util};
-use crate::zkay::zkay_ecdh_generator::ZkayECDHGenerator;
 use zkay_derive::ImplStructNameConfig;
+
 #[cfg(test)]
 mod test {
     use super::*;

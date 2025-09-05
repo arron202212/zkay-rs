@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -52,20 +52,20 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Rem, Shl, Sub};
-/**
- * A gadget for RSA encryption according to PKCS#1 v2.2. The gadget assumes a
- * hardcoded pub  exponent of 0x10001, and uses SHA256 as the hash function
- * for mask generation function (mgf).
- * This gadget can accept a hardcoded or a variable RSA modulus. See the
- * corresponding generator example.
- *
- * This gadget is costly in comparison with the PKCS v1.5 RSA encryption gadget
- * due to many SHA256 calls during mask generation.
- *
- * The implementation of this gadget follows the standard specs in:
- * https://www.emc.com/collateral/white-
- * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
- */
+
+//  * A gadget for RSA encryption according to PKCS#1 v2.2. The gadget assumes a
+//  * hardcoded pub  exponent of 0x10001, and uses SHA256 as the hash function
+//  * for mask generation function (mgf).
+//  * This gadget can accept a hardcoded or a variable RSA modulus. See the
+//  * corresponding generator example.
+//  *
+//  * This gadget is costly in comparison with the PKCS v1.5 RSA encryption gadget
+//  * due to many SHA256 calls during mask generation.
+//  *
+//  * The implementation of this gadget follows the standard specs in:
+//  * https://www.emc.com/collateral/white-
+//  * papers/h11300-pkcs-1v2-2-rsa-cryptography-standard-wp.pdf
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct RSAEncryptionOAEPGadget {

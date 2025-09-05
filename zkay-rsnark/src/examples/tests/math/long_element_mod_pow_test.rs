@@ -2,21 +2,26 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::GadgetConfig,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget,
+    util::util::{BigInteger, Util},
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::long_integer_mod_pow_gadget::LongIntegerModPowGadget;
-
-use crate::util::util::{BigInteger, Util};
 
 use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]

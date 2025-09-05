@@ -2,32 +2,31 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::{
+    
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{circuit_generator::CircuitGenerator, wire::WireConfig, wire_type::WireType},
+    },
+    zkay::zkay_baby_jub_jub_gadget::{JubJubPoint,ZkayBabyJubJubGadget},
+};
 
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
 
-/**
- * Dummy encryption gadget whose ciphertext is additively homomorphic.
- * Key: Some prime number p smaller than the field prime.
- * Encryption: Enc(msg, p) = msg * p mod field_prime.
- * Decryption: Dec(cipher) = cipher * p^-1 mod field_prime.
- * Additive homomorphism: Enc(m1, p) + Enc(m2, p)     (all mod field_prime)
- *                        = (m1 * p) + (m2 * p)
- *                        = (m1 + m2) * p
- *                        = Enc(m1 + m2, p)
- */
+//  * Dummy encryption gadget whose ciphertext is additively homomorphic.
+//  * Key: Some prime number p smaller than the field prime.
+//  * Encryption: Enc(msg, p) = msg * p mod field_prime.
+//  * Decryption: Dec(cipher) = cipher * p^-1 mod field_prime.
+//  * Additive homomorphism: Enc(m1, p) + Enc(m2, p)     (all mod field_prime)
+//  *                        = (m1 * p) + (m2 * p)
+//  *                        = (m1 + m2) * p
+//  *                        = Enc(m1 + m2, p)
 
 #[derive(Debug, Clone)]
 pub struct ZkayDummyHomEncryptionGadget {

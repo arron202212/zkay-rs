@@ -2,23 +2,31 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire::WireConfig,
+            wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
+  examples::{gadgets::rsa::{
+        rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget, 
+    },generators::rsa::rsa_util::RSAUtil},
+    util::util::BigInteger,
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::rsa::rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget;
-use crate::examples::generators::rsa::rsa_util::RSAUtil;
-use crate::util::util::BigInteger;
+
 use std::ops::{Add, Mul, Shl, Sub};
 use zkay_derive::ImplStructNameConfig;
 // Tests RSA PKCS #1, V1.5

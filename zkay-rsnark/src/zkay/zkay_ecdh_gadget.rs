@@ -2,30 +2,32 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::InstanceOf;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::constant_wire::ConstantWire;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::zkay_ec_gadget::AffinePoint;
-use crate::zkay::zkay_ec_gadget::ZkayEcGadget;
-use crate::zkay::zkay_sha256_gadget::ZkaySHA256Gadget;
+use crate::{
+    circuit::{
+        InstanceOf,
+        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+        operations::{gadget::Gadget, gadget::GadgetConfig},
+        structure::{
+            circuit_generator::CGConfig, circuit_generator::CircuitGenerator,
+            constant_wire::ConstantWire, wire::WireConfig, wire_type::WireType,
+        },
+    },
+    zkay::{
+        zkay_ec_gadget::AffinePoint, zkay_ec_gadget::ZkayEcGadget,
+        zkay_sha256_gadget::ZkaySHA256Gadget,
+    },
+};
 
 use rccell::RcCell;
 
 use zkay_derive::ImplStructNameConfig;
-/**
- * Shared key computation part of jsnark's ECDHKeyExchangeGadget
- */
+
+//  * Shared key computation part of jsnark's ECDHKeyExchangeGadget
+
 #[derive(Debug, Clone)]
 pub struct ZkayECDHGadget {
     // The Affine point representation is used as it saves one gate per bit
@@ -76,14 +78,13 @@ impl ZkayECDHGadget {
 
 impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     pub fn buildCircuit(&mut self) {
-        /**
-         * The reason this operates on affine coordinates is that in our
-         * setting, this's slightly cheaper than the formulas in
-         * https://cr.yp.to/ecdh/curve25519-20060209.pdf. Concretely, the
-         * following equations save 1 multiplication gate per bit. (we consider
-         * multiplications by constants cheaper in our setting, so they are not
-         * counted)
-         */
+        //The reason this operates on affine coordinates is that in our
+        //setting, this's slightly cheaper than the formulas in
+        //https://cr.yp.to/ecdh/curve25519-20060209.pdf. Concretely, the
+        //following equations save 1 multiplication gate per bit. (we consider
+        //multiplications by constants cheaper in our setting, so they are not
+        //counted)
+
         let hTable = Gadget::<ZkayEcGadget<ZkayECDHGadget>>::preprocess(
             &self.t.t.hPoint,
             self.generator.clone(),

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -32,7 +32,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -52,29 +51,26 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Neg, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
-/**
- * This gadget implements cryptographic key exchange using a customized elliptic
- * curve that is efficient to represent as a SNARK circuit. It follows the
- * high-level guidelines used for the design of Curve25519, while having the
- * cost model of QAP-based SNARKs in mind. Details in section 6:
- * https://eprint.iacr.org/2015/1093.pdf
- *
- * Detailed comments about the inputs and outputs of the circuit are below.
- *
- * Note: By default, this gadget validates only the secret values that are
- * provided by the prover, such as the secret key, and any intermediate
- * auxiliary witnesses that the prover uses in the circuit. In the default mode,
- * the gadget does not check the pub  input keys, e.g. it does not verify that
- * the base point or the other party's input have the appropriate order, as such
- * inputs could be typically pub  and can be checked outside the circuit if
- * needed. The Curve25519 paper as well claims that validation is not necessary
- * (although there is debate about some cases online). If any validation is
- * desired, there is a separate method called validateInputs() that do
- * validation, but is not called by default.
- *
- *
- *
- */
+
+//  * This gadget implements cryptographic key exchange using a customized elliptic
+//  * curve that is efficient to represent as a SNARK circuit. It follows the
+//  * high-level guidelines used for the design of Curve25519, while having the
+//  * cost model of QAP-based SNARKs in mind. Details in section 6:
+//  * https://eprint.iacr.org/2015/1093.pdf
+//  *
+//  * Detailed comments about the inputs and outputs of the circuit are below.
+//  *
+//  * Note: By default, this gadget validates only the secret values that are
+//  * provided by the prover, such as the secret key, and any intermediate
+//  * auxiliary witnesses that the prover uses in the circuit. In the default mode,
+//  * the gadget does not check the pub  input keys, e.g. it does not verify that
+//  * the base point or the other party's input have the appropriate order, as such
+//  * inputs could be typically pub  and can be checked outside the circuit if
+//  * needed. The Curve25519 paper as well claims that validation is not necessary
+//  * (although there is debate about some cases online). If any validation is
+//  * desired, there is a separate method called validateInputs() that do
+//  * validation, but is not called by default.
+
 #[derive(Debug, Clone, Hash, ImplStructNameConfig)]
 pub struct AffinePoint {
     pub x: Option<WireType>,
@@ -118,21 +114,19 @@ pub struct ECDHKeyExchangeGadget {
     pub output: Vec<Option<WireType>>,
 }
 impl ECDHKeyExchangeGadget {
-    /**
-     * This gadget receives two points: Base = (baseX) and H = (hX), and the
-     * secret key Bits and outputs the scalar EC multiplications: secret*Base,
-     * secret*H
-     *
-     * The secret key bits must be of length SECRET_BITWIDTH and are expected to
-     * follow a little endian order. The most significant bit should be 1, and
-     * the three least significant bits should be zero.
-     *
-     * This gadget can work with both  and dynamic inputs If pub  keys
-     * are , the wires of base and h should be made ConstantWires when
-     * creating them (before calling this gadget).
-     *
-     *
-     */
+    //This gadget receives two points: Base = (baseX) and H = (hX), and the
+    //secret key Bits and outputs the scalar EC multiplications: secret*Base,
+    //secret*H
+    //
+    //The secret key bits must be of length SECRET_BITWIDTH and are expected to
+    //follow a little endian order. The most significant bit should be 1, and
+    //the three least significant bits should be zero.
+    //
+    //This gadget can work with both  and dynamic inputs If pub  keys
+    //are , the wires of base and h should be made ConstantWires when
+    //creating them (before calling this gadget).
+    //
+    //
 
     pub fn new(
         baseX: Option<WireType>,
@@ -245,11 +239,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     fn checkSecretBits(&self) {
         let start = std::time::Instant::now();
-        /**
-         * The secret key bits must be of length SECRET_BITWIDTH and are
-         * expected to follow a little endian order. The most significant bit
-         * should be 1, and the three least significant bits should be zero.
-         */
+
+        //The secret key bits must be of length SECRET_BITWIDTH and are
+        //expected to follow a little endian order. The most significant bit
+        //should be 1, and the three least significant bits should be zero.
+
         assert!(self.t.secretBits.len() == Self::SECRET_BITWIDTH);
         CircuitGenerator::addZeroAssertion(
             self.generator.clone(),
@@ -448,7 +442,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         let mut precomputedTable: Vec<_> = (1..self.t.secretBits.len())
             .scan(p.clone(), |s, _j| {
-                *s = Self::doubleAffinePoint(&s, self.generator.clone());
+                //s = Self::doubleAffinePoint(&s, self.generator.clone());
                 Some((*s).clone())
             })
             .collect();
@@ -457,10 +451,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
         precomputedTable
     }
 
-    /**
-     * Performs scalar multiplication (secretBits must comply with the
-     * conditions above)
-     */
+    //Performs scalar multiplication (secretBits must comply with the
+    //conditions above)
+
     fn mul(
         &self,
         p: &AffinePoint,

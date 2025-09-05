@@ -2,43 +2,32 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
-    arc_cell_new,
     circuit::{
         StructNameConfig,
         auxiliary::long_element::LongElement,
         config::config::Configs,
-        eval::instruction::Instruction,
-        operations::{wire_label_instruction, wire_label_instruction::LabelType},
+        operations::wire_label_instruction::LabelType,
         structure::{
+            circuit_generator::CGConfig,
             circuit_generator::CGConfigFields,
-            circuit_generator::CGInstance,
-            circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
-            },
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
-            wire_array::WireArray,
+            wire::{GetWireId, WireConfig},
             wire_type::WireType,
         },
     },
-    util::util::{ARcCell, BigInteger, Util},
+    util::util::{BigInteger, Util},
 };
 use num_bigint::Sign;
-use rccell::{RcCell, WeakCell};
-// use crate::util::util::ARcCell;
+use rccell::RcCell;
 use std::{
     collections::HashSet,
     fmt::Debug,
     fs::File,
-    hash::{DefaultHasher, Hash, Hasher},
-    io::{BufRead, BufReader, Error, Write},
-    marker::PhantomData,
+    io::{BufRead, BufReader, Write},
     ops::{Add, Mul, Rem, Shl, Sub},
-    path::Path,
 };
 #[derive(Debug, Clone)]
 pub struct CircuitEvaluator {
@@ -187,13 +176,11 @@ impl CircuitEvaluator {
         }
     }
 
-    /**
-     * An independent old method for testing.
-     *
-     * @param circuitFilePath
-     * @param inFilePath
-     * @
-     */
+    //An independent old method for testing.
+    //  *
+    //@param circuitFilePath
+    //@param inFilePath
+    //@
 
     pub fn eval(&self, circuitFilePath: String, inFilePath: String) {
         let mut circuitScanner = BufReader::new(File::open(circuitFilePath).unwrap()).lines();

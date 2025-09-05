@@ -2,24 +2,29 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-    addToEvaluationQueue, getActiveCircuitGenerator,
+use crate::{
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                addToEvaluationQueue, getActiveCircuitGenerator,
+            },
+            wire_type::WireType,
+        },
+    },
+    examples::gadgets::blockciphers::speck128_cipher_gadget::Speck128CipherGadget,
+    util::util::BigInteger,
 };
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::speck128_cipher_gadget::Speck128CipherGadget;
-use crate::util::util::BigInteger;
 use zkay_derive::ImplStructNameConfig;
-/**
- * Tests SPECK block cipher @ keysize = 128, blocksize = 128.
- * Test vector obtained from:  https://github.com/inmcm/Simon_Speck_Ciphers/blob/master/Python/SimonSpeckCiphers/tests/test_simonspeck.py
- */
+
+//  * Tests SPECK block cipher @ keysize = 128, blocksize = 128.
+//  * Test vector obtained from:  https://github.com/inmcm/Simon_Speck_Ciphers/blob/master/Python/SimonSpeckCiphers/tests/test_simonspeck.py
 
 #[cfg(test)]
 mod test {

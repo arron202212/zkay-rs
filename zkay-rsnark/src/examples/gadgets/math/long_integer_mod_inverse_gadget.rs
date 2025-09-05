@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -34,7 +34,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -50,15 +49,15 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
-/**
- * This gadget computes the modular multiplicative inverse a^(-1) mod m,
- * where a and m are LongElements.
- * If restrictRange is set to true, the output will be the sole inverse a^(-1)
- * for which a < m holds. If restrictRange is false, the inverse may be any
- * value x for which ax = 1 mod m holds.
- * It is the responsibility of the caller to ensure that a and m are
- * relatively co-prime, i.e. the modular inverse actually exists.
- */
+
+//  * This gadget computes the modular multiplicative inverse a^(-1) mod m,
+//  * where a and m are LongElements.
+//  * If restrictRange is set to true, the output will be the sole inverse a^(-1)
+//  * for which a < m holds. If restrictRange is false, the inverse may be any
+//  * value x for which ax = 1 mod m holds.
+//  * It is the responsibility of the caller to ensure that a and m are
+//  * relatively co-prime, i.e. the modular inverse actually exists.
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerModInverseGadget {
     pub a: LongElement,      // the value to be inverted

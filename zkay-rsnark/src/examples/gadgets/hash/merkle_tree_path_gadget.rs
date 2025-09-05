@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -33,7 +33,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -49,10 +48,9 @@ use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
-/**
- * A Merkle tree authentication gadget using the subsetsum hash function
- *
- */
+
+//  * A Merkle tree authentication gadget using the subsetsum hash function
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct MerkleTreePathGadget {
     pub treeHeight: i32,

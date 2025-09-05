@@ -170,7 +170,7 @@ Library.
 
 */
 
-/**
+
  * @title Elliptic curve operations on twist points for alt_bn128
  * @author Mustafa Al-Bassam (mus@musalbas.com)
  * @dev Homepage: https://github.com/musalbas/solidity-BN256G2
@@ -187,7 +187,7 @@ library BN256G2 {
     uint internal constant PTZX = 4;
     uint internal constant PTZY = 5;
 
-    /**
+    
      * @notice Add two twist points
      * @param pt1xx Coefficient 1 of x on point 1
      * @param pt1xy Coefficient 2 of x on point 1

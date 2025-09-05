@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -34,7 +34,6 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
@@ -50,10 +49,10 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
-/**
- * This gadget computes the result of the modular exponentiation c = b^e mod m,
- * where c, b, e, and m are LongElements.
- */
+
+//  * This gadget computes the result of the modular exponentiation c = b^e mod m,
+//  * where c, b, e, and m are LongElements.
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerModPowGadget {

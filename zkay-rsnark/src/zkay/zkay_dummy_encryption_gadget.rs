@@ -2,21 +2,19 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element::LongElement;
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CGConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use crate::zkay::crypto::dummy_backend::DummyBackend; //::CIPHER_CHUNK_SIZE;
-use crate::zkay::typed_wire::TypedWire;
-use crate::zkay::zkay_baby_jub_jub_gadget::JubJubPoint;
-use crate::zkay::zkay_baby_jub_jub_gadget::ZkayBabyJubJubGadget;
+use crate::{
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{circuit_generator::CircuitGenerator, wire_type::WireType,wire::WireConfig},
+    },
+    zkay::{crypto::dummy_backend::DummyBackend, typed_wire::TypedWire},
+};
+
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
 

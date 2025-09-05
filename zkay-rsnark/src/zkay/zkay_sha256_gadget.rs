@@ -2,16 +2,19 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::Gadget;
-use crate::circuit::operations::gadget::GadgetConfig;
-use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::structure::wire_array::WireArray;
-use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::hash::sha256_gadget::SHA256Gadget;
+use crate::{
+    circuit::{
+        operations::{gadget::Gadget, gadget::GadgetConfig},
+        structure::{
+            circuit_generator::CircuitGenerator, wire_array::WireArray, wire_type::WireType,
+        },
+    },
+    examples::gadgets::hash::sha256_gadget::SHA256Gadget,
+};
 
 use rccell::RcCell;
 

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -1006,7 +1006,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
             bits.is_some(),
             "A Pack operation is tried on a wire that has no bits."
         );
-        *self.get_wire_id_mut().borrow_mut() = generator.borrow().current_wire_id;
+        //self.get_wire_id_mut().borrow_mut() = generator.borrow().current_wire_id;
         generator.borrow_mut().current_wire_id += 1;
         //			Instruction op = PackBasicOp::new(bits.array, self, desc);
         //			generator.addToEvaluationQueue(Box::new(op));
@@ -1030,7 +1030,7 @@ pub trait WireConfig: PartialEq + setBitsConfig + InstanceOf + GetWireId + Gener
                     line!()
                 );
             }
-            *self.get_wire_id_mut().borrow_mut() = cachedOutputs[0].as_ref().unwrap().getWireId();
+            //self.get_wire_id_mut().borrow_mut() = cachedOutputs[0].as_ref().unwrap().getWireId();
         }
         //  println!("=***********=pack=====getWireId=========={}",self.getWireId());
     }

@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 
@@ -17,10 +17,10 @@ use crate::util::util::{BigInteger, Util};
 use num_bigint::Sign;
 use num_traits::Signed;
 use std::ops::{Add, Div, Mul, Neg, Rem, Shl, Shr, Sub};
-/**
- * Class of number-theory related functions for use with integers represented as
- * <tt>int</tt>'s or <tt>BigInteger</tt> objects.
- */
+
+//   Class of number-theory related functions for use with integers represented as
+//   <tt>int</tt>'s or <tt>BigInteger</tt> objects.
+
 pub struct IntegerFunctions;
 impl IntegerFunctions {
     const ZERO: BigInteger = BigInteger::ZERO;
@@ -41,7 +41,7 @@ impl IntegerFunctions {
     //     29, 31, 37, 41};
 
     // private static final long SMALL_PRIME_PRODUCT = 3L * 5 * 7 * 11 * 13 * 17
-    //     * 19 * 23 * 29 * 31 * 37 * 41;
+    ////19 * 23 * 29 * 31 * 37 * 41;
 
     // private static SecureRandom sr = null;
 
@@ -53,24 +53,23 @@ impl IntegerFunctions {
     //     // empty
     // }
 
-    /**
-     * Computes the value of the Jacobi symbol (A|B). The following properties
-     * hold for the Jacobi symbol which makes it a very efficient way to
-     * evaluate the Legendre symbol
-     * <p>
-     * (A|B) = 0 IF gcd(A,B) &gt; 1<br>
-     * (-1|B) = 1 IF n = 1 (mod 1)<br>
-     * (-1|B) = -1 IF n = 3 (mod 4)<br>
-     * (A|B) (C|B) = (AC|B)<br>
-     * (A|B) (A|C) = (A|CB)<br>
-     * (A|B) = (C|B) IF A = C (mod B)<br>
-     * (2|B) = 1 IF N = 1 OR 7 (mod 8)<br>
-     * (2|B) = 1 IF N = 3 OR 5 (mod 8)
-     *
-     * @param A integer value
-     * @param B integer value
-     * @return value of the jacobi symbol (A|B)
-     */
+    //Computes the value of the Jacobi symbol (A|B). The following properties
+    //hold for the Jacobi symbol which makes it a very efficient way to
+    //evaluate the Legendre symbol
+    //<p>
+    //(A|B) = 0 IF gcd(A,B) &gt; 1<br>
+    //(-1|B) = 1 IF n = 1 (mod 1)<br>
+    //(-1|B) = -1 IF n = 3 (mod 4)<br>
+    //(A|B) (C|B) = (AC|B)<br>
+    //(A|B) (A|C) = (A|CB)<br>
+    //(A|B) = (C|B) IF A = C (mod B)<br>
+    //(2|B) = 1 IF N = 1 OR 7 (mod 8)<br>
+    //(2|B) = 1 IF N = 3 OR 5 (mod 8)
+    //  *
+    //@param A integer value
+    //@param B integer value
+    //@return value of the jacobi symbol (A|B)
+
     pub fn jacobi(aa: BigInteger, bb: BigInteger) -> i64 {
         // println!("==aa==begin==bb==={aa},{bb}");
         let (mut a, mut b, mut v);
@@ -150,16 +149,15 @@ impl IntegerFunctions {
         if b == Self::one() { k as i64 } else { 0 }
     }
 
-    /**
-     * Computes the square root of a BigInteger modulo a prime employing the
-     * Shanks-Tonelli algorithm.
-     *
-     * @param a value out of which we extract the square root
-     * @param p prime modulus that determines the underlying field
-     * @return a number <tt>b</tt> such that b<sup>2</sup> = a (mod p) if
-     *         <tt>a</tt> is a quadratic residue modulo <tt>p</tt>.
-     * @throws IllegalArgumentException if <tt>a</tt> is a quadratic non-residue modulo <tt>p</tt>
-     */
+    //Computes the square root of a BigInteger modulo a prime employing the
+    //Shanks-Tonelli algorithm.
+    //  *
+    //@param a value out of which we extract the square root
+    //@param p prime modulus that determines the underlying field
+    //@return a number <tt>b</tt> such that b<sup>2</sup> = a (mod p) if
+    //        <tt>a</tt> is a quadratic residue modulo <tt>p</tt>.
+    //@throws IllegalArgumentException if <tt>a</tt> is a quadratic non-residue modulo <tt>p</tt>
+
     pub fn ressol(mut a: BigInteger, p: &BigInteger) -> BigInteger {
         let mut v;
 
@@ -257,25 +255,25 @@ impl IntegerFunctions {
         r
     }
 
-    // /**
+    //
     //  * Computes the greatest common divisor of the two specified integers
     //  *
     //  * @param u - first integer
     //  * @param v - second integer
     //  * @return gcd(a, b)
-    //  */
+    //
     // public static int gcd(int u, int v)
     // {
     //     return BigInteger.valueOf(u).gcd(BigInteger.valueOf(v)).intValue();
     // }
 
-    // /**
+    //
     //  * Extended euclidian algorithm (computes gcd and representation).
     //  *
     //  * @param a the first integer
     //  * @param b the second integer
     //  * @return <tt>(g,u,v)</tt>, where <tt>g = gcd(abs(a),abs(b)) = ua + vb</tt>
-    //  */
+    //
     // public static int[] extGCD(int a, int b)
     // {
     //     BigInteger ba = BigInteger.valueOf(a);
@@ -311,13 +309,13 @@ impl IntegerFunctions {
     //     return out;
     // }
 
-    // /**
+    //
     //  * Compute the smallest integer that is greater than or equal to the
     //  * logarithm to the base 2 of the given BigInteger.
     //  *
     //  * @param a the integer
     //  * @return ceil[log(a)]
-    //  */
+    //
     // public static int ceilLog(BigInteger a)
     // {
     //     int result = 0;
@@ -330,13 +328,13 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Compute the smallest integer that is greater than or equal to the
     //  * logarithm to the base 2 of the given integer.
     //  *
     //  * @param a the integer
     //  * @return ceil[log(a)]
-    //  */
+    //
     // public static int ceilLog(int a)
     // {
     //     int log = 0;
@@ -349,13 +347,13 @@ impl IntegerFunctions {
     //     return log;
     // }
 
-    // /**
+    //
     //  * Compute <tt>ceil(log_256 n)</tt>, the number of bytes needed to encode
     //  * the integer <tt>n</tt>.
     //  *
     //  * @param n the integer
     //  * @return the number of bytes needed to encode <tt>n</tt>
-    //  */
+    //
     // public static int ceilLog256(int n)
     // {
     //     if (n == 0)
@@ -381,13 +379,13 @@ impl IntegerFunctions {
     //     return d;
     // }
 
-    // /**
+    //
     //  * Compute <tt>ceil(log_256 n)</tt>, the number of bytes needed to encode
     //  * the long integer <tt>n</tt>.
     //  *
     //  * @param n the long integer
     //  * @return the number of bytes needed to encode <tt>n</tt>
-    //  */
+    //
     // public static int ceilLog256(long n)
     // {
     //     if (n == 0)
@@ -413,13 +411,13 @@ impl IntegerFunctions {
     //     return d;
     // }
 
-    // /**
+    //
     //  * Compute the integer part of the logarithm to the base 2 of the given
     //  * integer.
     //  *
     //  * @param a the integer
     //  * @return floor[log(a)]
-    //  */
+    //
     // public static int floorLog(BigInteger a)
     // {
     //     int result = -1;
@@ -432,13 +430,13 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Compute the integer part of the logarithm to the base 2 of the given
     //  * integer.
     //  *
     //  * @param a the integer
     //  * @return floor[log(a)]
-    //  */
+    //
     // public static int floorLog(int a)
     // {
     //     int h = 0;
@@ -456,13 +454,13 @@ impl IntegerFunctions {
     //     return h;
     // }
 
-    // /**
+    //
     //  * Compute the largest <tt>h</tt> with <tt>2^h | a</tt> if <tt>a!=0</tt>.
     //  *
     //  * @param a an integer
     //  * @return the largest <tt>h</tt> with <tt>2^h | a</tt> if <tt>a!=0</tt>,
     //  *         <tt>0</tt> otherwise
-    //  */
+    //
     // public static int maxPower(int a)
     // {
     //     int h = 0;
@@ -479,11 +477,11 @@ impl IntegerFunctions {
     //     return h;
     // }
 
-    // /**
+    //
     //  * @param a an integer
     //  * @return the number of ones in the binary representation of an integer
     //  *         <tt>a</tt>
-    //  */
+    //
     // public static int bitCount(int a)
     // {
     //     int h = 0;
@@ -496,7 +494,7 @@ impl IntegerFunctions {
     //     return h;
     // }
 
-    // /**
+    //
     //  * determines the order of g modulo p, p prime and 1 &lt; g &lt; p. This algorithm
     //  * is only efficient for small p (see X9.62-1998, p. 68).
     //  *
@@ -504,7 +502,7 @@ impl IntegerFunctions {
     //  * @param p a prime
     //  * @return the order k of g (that is k is the smallest integer with
     //  *         g<sup>k</sup> = 1 mod p
-    //  */
+    //
     // public static int order(int g, int p)
     // {
     //     int b, j;
@@ -534,27 +532,27 @@ impl IntegerFunctions {
     //     return j;
     // }
 
-    // /**
+    //
     //  * Reduces an integer into a given interval
     //  *
     //  * @param n     - the integer
     //  * @param begin - left bound of the interval
     //  * @param end   - right bound of the interval
     //  * @return <tt>n</tt> reduced into <tt>[begin,end]</tt>
-    //  */
+    //
     // public static BigInteger reduceInto(BigInteger n, BigInteger begin,
     //                                     BigInteger end)
     // {
     //     return n.subtract(begin).mod(end.subtract(begin)).add(begin);
     // }
 
-    // /**
+    //
     //  * Compute <tt>a<sup>e</sup></tt>.
     //  *
     //  * @param a the base
     //  * @param e the exponent
     //  * @return <tt>a<sup>e</sup></tt>
-    //  */
+    //
     // public static int pow(int a, int e)
     // {
     //     int result = 1;
@@ -570,13 +568,13 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Compute <tt>a<sup>e</sup></tt>.
     //  *
     //  * @param a the base
     //  * @param e the exponent
     //  * @return <tt>a<sup>e</sup></tt>
-    //  */
+    //
     // public static long pow(long a, int e)
     // {
     //     long result = 1;
@@ -592,14 +590,14 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Compute <tt>a<sup>e</sup> mod n</tt>.
     //  *
     //  * @param a the base
     //  * @param e the exponent
     //  * @param n the modulus
     //  * @return <tt>a<sup>e</sup> mod n</tt>
-    //  */
+    //
     // public static int modpow(int a, int e, int n)
     // {
     //     if (n <= 0 || (n * n) > Integer.MAX_VALUE || e < 0)
@@ -620,13 +618,13 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Extended euclidian algorithm (computes gcd and representation).
     //  *
     //  * @param a - the first integer
     //  * @param b - the second integer
     //  * @return <tt>(d,u,v)</tt>, where <tt>d = gcd(a,b) = ua + vb</tt>
-    //  */
+    //
     // public static BigInteger[] extgcd(BigInteger a, BigInteger b)
     // {
     //     BigInteger u = Self::one();
@@ -652,12 +650,12 @@ impl IntegerFunctions {
     //     return new BigInteger[]{d, u, v};
     // }
 
-    // /**
+    //
     //  * Computation of the least common multiple of a set of BigIntegers.
     //  *
     //  * @param numbers - the set of numbers
     //  * @return the lcm(numbers)
-    //  */
+    //
     // public static BigInteger leastCommonMultiple(BigInteger[] numbers)
     // {
     //     int n = numbers.length;
@@ -670,7 +668,7 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Returns a long integer whose value is <tt>(a mod m</tt>). This method
     //  * differs from <tt>%</tt> in that it always returns a <i>non-negative</i>
     //  * integer.
@@ -678,7 +676,7 @@ impl IntegerFunctions {
     //  * @param a value on which the modulo operation has to be performed.
     //  * @param m the modulus.
     //  * @return <tt>a mod m</tt>
-    //  */
+    //
     // public static long mod(long a, long m)
     // {
     //     long result = a % m;
@@ -689,40 +687,40 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Computes the modular inverse of an integer a
     //  *
     //  * @param a   - the integer to invert
     //  * @param mod - the modulus
     //  * @return <tt>a<sup>-1</sup> mod n</tt>
-    //  */
+    //
     // public static int modInverse(int a, int mod)
     // {
     //     return BigInteger.valueOf(a).modInverse(BigInteger.valueOf(mod))
     //         .intValue();
     // }
 
-    // /**
+    //
     //  * Computes the modular inverse of an integer a
     //  *
     //  * @param a   - the integer to invert
     //  * @param mod - the modulus
     //  * @return <tt>a<sup>-1</sup> mod n</tt>
-    //  */
+    //
     // public static long modInverse(long a, long mod)
     // {
     //     return BigInteger.valueOf(a).modInverse(BigInteger.valueOf(mod))
     //         .longValue();
     // }
 
-    // /**
+    //
     //  * Tests whether an integer <tt>a</tt> is power of another integer
     //  * <tt>p</tt>.
     //  *
     //  * @param a - the first integer
     //  * @param p - the second integer
     //  * @return n if a = p^n or -1 otherwise
-    //  */
+    //
     // public static int isPower(int a, int p)
     // {
     //     if (a <= 0)
@@ -743,12 +741,12 @@ impl IntegerFunctions {
     //     return n;
     // }
 
-    // /**
+    //
     //  * Find and return the least non-trivial divisor of an integer <tt>a</tt>.
     //  *
     //  * @param a - the integer
     //  * @return divisor p &gt;1 or 1 if a = -1,0,1
-    //  */
+    //
     // public static int leastDiv(int a)
     // {
     //     if (a < 0)
@@ -776,7 +774,7 @@ impl IntegerFunctions {
     //     return a;
     // }
 
-    // /**
+    //
     //  * Miller-Rabin-Test, determines wether the given integer is probably prime
     //  * or composite. This method returns <tt>true</tt> if the given integer is
     //  * prime with probability <tt>1 - 2<sup>-20</sup></tt>.
@@ -784,7 +782,7 @@ impl IntegerFunctions {
     //  * @param n the integer to test for primality
     //  * @return <tt>true</tt> if the given integer is prime with probability
     //  *         2<sup>-100</sup>, <tt>false</tt> otherwise
-    //  */
+    //
     // public static boolean isPrime(int n)
     // {
     //     if (n < 2)
@@ -821,14 +819,14 @@ impl IntegerFunctions {
     //     return BigInteger.valueOf(n).isProbablePrime(20);
     // }
 
-    // /**
+    //
     //  * Short trial-division test to find out whether a number is not prime. This
     //  * test is usually used before a Miller-Rabin primality test.
     //  *
     //  * @param candidate the number to test
     //  * @return <tt>true</tt> if the number has no factor of the tested primes,
     //  *         <tt>false</tt> if the number is definitely composite
-    //  */
+    //
     // public static boolean passesSmallPrimeTest(BigInteger candidate)
     // {
     //     final int[] smallPrime = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37,
@@ -864,13 +862,13 @@ impl IntegerFunctions {
     //     return true;
     // }
 
-    // /**
+    //
     //  * Returns the largest prime smaller than the given integer
     //  *
     //  * @param n - upper bound
     //  * @return the largest prime smaller than <tt>n</tt>, or <tt>1</tt> if
     //  *         <tt>n &lt;= 2</tt>
-    //  */
+    //
     // public static int nextSmallerPrime(int n)
     // {
     //     if (n <= 2)
@@ -899,14 +897,14 @@ impl IntegerFunctions {
     //     return n;
     // }
 
-    // /**
+    //
     //  * Compute the next probable prime greater than <tt>n</tt> with the
     //  * specified certainty.
     //  *
     //  * @param n         a integer number
     //  * @param certainty the certainty that the generated number is prime
     //  * @return the next prime greater than <tt>n</tt>
-    //  */
+    //
     // public static BigInteger nextProbablePrime(BigInteger n, int certainty)
     // {
 
@@ -956,24 +954,24 @@ impl IntegerFunctions {
     //     }
     // }
 
-    // /**
+    //
     //  * Compute the next probable prime greater than <tt>n</tt> with the default
     //  * certainty (20).
     //  *
     //  * @param n a integer number
     //  * @return the next prime greater than <tt>n</tt>
-    //  */
+    //
     // public static BigInteger nextProbablePrime(BigInteger n)
     // {
     //     return nextProbablePrime(n, 20);
     // }
 
-    // /**
+    //
     //  * Computes the next prime greater than n.
     //  *
     //  * @param n a integer number
     //  * @return the next prime greater than n
-    //  */
+    //
     // public static BigInteger nextPrime(long n)
     // {
     //     long i;
@@ -1011,7 +1009,7 @@ impl IntegerFunctions {
     //     return BigInteger.valueOf(result);
     // }
 
-    // /**
+    //
     //  * Computes the binomial coefficient (n|t) ("n over t"). Formula:
     //  * <ul>
     //  * <li>if n !=0 and t != 0 then (n|t) = Mult(i=1, t): (n-(i-1))/i</li>
@@ -1022,7 +1020,7 @@ impl IntegerFunctions {
     //  * @param n - the "upper" integer
     //  * @param t - the "lower" integer
     //  * @return the binomialcoefficient "n over t" as BigInteger
-    //  */
+    //
     // public static BigInteger binomial(int n, int t)
     // {
 
@@ -1083,12 +1081,12 @@ impl IntegerFunctions {
     //     return randomNum.mod(upperBound);
     // }
 
-    // /**
+    //
     //  * Extract the truncated square root of a BigInteger.
     //  *
     //  * @param a - value out of which we extract the square root
     //  * @return the truncated square root of <tt>a</tt>
-    //  */
+    //
     // public static BigInteger squareRoot(BigInteger a)
     // {
     //     int bl;
@@ -1129,13 +1127,13 @@ impl IntegerFunctions {
     //     return result;
     // }
 
-    // /**
+    //
     //  * Takes an approximation of the root from an integer base, using newton's
     //  * algorithm
     //  *
     //  * @param base the base to take the root from
     //  * @param root the root, for example 2 for a square root
-    //  */
+    //
     // public static float intRoot(int base, int root)
     // {
     //     float gNew = base / root;
@@ -1156,13 +1154,13 @@ impl IntegerFunctions {
     //     return gNew;
     // }
 
-    // /**
+    //
     //  * int power of a base float, only use for small ints
     //  *
     //  * @param f base float
     //  * @param i power to be raised to.
     //  * @return int power i of f
-    //  */
+    //
     // public static float floatPow(float f, int i)
     // {
     //     float g = 1;
@@ -1173,13 +1171,13 @@ impl IntegerFunctions {
     //     return g;
     // }
 
-    // /**
+    //
     //  * calculate the logarithm to the base 2.
     //  *
     //  * @param x any double value
     //  * @return log_2(x)
     //  * @deprecated use MathFunctions.log(double) instead
-    //  */
+    //
     // public static double log(double x)
     // {
     //     if (x > 0 && x < 1)
@@ -1204,13 +1202,13 @@ impl IntegerFunctions {
     //     return tmp + rem;
     // }
 
-    // /**
+    //
     //  * calculate the logarithm to the base 2.
     //  *
     //  * @param x any long value &gt;=1
     //  * @return log_2(x)
     //  * @deprecated use MathFunctions.log(long) instead
-    //  */
+    //
     // public static double log(long x)
     // {
     //     int tmp = floorLog(BigInteger.valueOf(x));
@@ -1220,13 +1218,13 @@ impl IntegerFunctions {
     //     return tmp + rem;
     // }
 
-    // /**
+    //
     //  * BKM Algorithm to calculate logarithms to the base 2.
     //  *
     //  * @param arg a double value with 1<= arg<= 4.768462058
     //  * @return log_2(arg)
     //  * @deprecated use MathFunctions.logBKM(double) instead
-    //  */
+    //
     // private static double logBKM(double arg)
     // {
     //     double ae[] = // A_e[k] = log_2 (1 + 0.5^k)

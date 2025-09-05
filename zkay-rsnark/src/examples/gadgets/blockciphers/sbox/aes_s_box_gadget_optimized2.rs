@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -62,32 +62,30 @@ use rand_chacha::ChaCha8Rng;
 use rand_pcg::Pcg64Mcg;
 use rip_shuffle::RipShuffleParallel;
 pub static s_all_coeff_set: OnceLock<Vec<Vec<Vec<BigInteger>>>> = OnceLock::new();
-/*
- * bitCount represents how many bits are going to be used to construct the
- * linear systems. Setting bitCount to 0 will yield almost the same circuit
- * size as in AESBoxGadgetOptimized1.java. Setting bitcount to 16 will
- * almost make it very hard to find a solution. Setting bitCount to x, where
- * 16 > x > 0, means that x columns from the linear system will be based on
- * the bits of the element (input*256+output), and the rest are based on
- * products (as in AESSBoxGadgetOptimized1). As x increases, the more
- * savings. x cannot increase beyond 16.
- */
+
+//  * bitCount represents how many bits are going to be used to construct the
+//  * linear systems. Setting bitCount to 0 will yield almost the same circuit
+//  * size as in AESBoxGadgetOptimized1.java. Setting bitcount to 16 will
+//  * almost make it very hard to find a solution. Setting bitCount to x, where
+//  * 16 > x > 0, means that x columns from the linear system will be based on
+//  * the bits of the element (input*256+output), and the rest are based on
+//  * products (as in AESSBoxGadgetOptimized1). As x increases, the more
+//  * savings. x cannot increase beyond 16.
 
 pub static atomic_bit_count: AtomicU8 = AtomicU8::new(15);
-/**
- * This gadget implements the efficient read-only memory access from xjsnark,
- * while making use of some properties of the AES circuit to gain more savings.
- *
- * Instead of constructing the linear systems using vector of powers like the
- * AESSBoxGadgetOptimized1, this gadget relies on the observation that the bits
- * of the input and output (to the lookup operations) are already available or
- * will be needed later in the circuit. The gadget uses these bits partially to
- * construct the linear systems, but this has to be done carefully to make sure
- * that the prover cannot cheat. This might require shuffling and multiple
- * attempts, while checking all other possibilities that a prover could use to
- * cheat. See the bitCount parameter below.
- *
- */
+
+//  * This gadget implements the efficient read-only memory access from xjsnark,
+//  * while making use of some properties of the AES circuit to gain more savings.
+//  *
+//  * Instead of constructing the linear systems using vector of powers like the
+//  * AESSBoxGadgetOptimized1, this gadget relies on the observation that the bits
+//  * of the input and output (to the lookup operations) are already available or
+//  * will be needed later in the circuit. The gadget uses these bits partially to
+//  * construct the linear systems, but this has to be done carefully to make sure
+//  * that the prover cannot cheat. This might require shuffling and multiple
+//  * attempts, while checking all other possibilities that a prover could use to
+//  * cheat. See the bitCount parameter below.
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AESSBoxGadgetOptimized2 {
     pub input: WireType,

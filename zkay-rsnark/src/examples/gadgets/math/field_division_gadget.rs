@@ -2,42 +2,11 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-// use crate::{
-//     arc_cell_new,
-//     circuit::{
-//         InstanceOf, StructNameConfig,
-//         auxiliary::long_element::LongElement,
-//         config::config::Configs,
-//         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
-//         operations::{
-//             gadget::GadgetConfig,
-//             primitive::{
-//                 assert_basic_op::{AssertBasicOp},
-//                 basic_op::BasicOp,
-//                 mul_basic_op::{MulBasicOp},
-//             },
-//             wire_label_instruction::LabelType,
-//             wire_label_instruction::WireLabelInstruction,
-//         },
-//         structure::{circuit_generator::{CircuitGenerator,CGConfig,CGConfigFields},
-//             constant_wire::{ConstantWire},
-//             variable_bit_wire::VariableBitWire,
-//             variable_wire::{VariableWire},
-//             wire::{GetWireId, Wire, WireConfig, setBitsConfig},
-//             wire_type::WireType,
-//             wire_array::WireArray,
-//         },
-//     },
-//     util::{
-//         run_command::run_command,
-//         util::ARcCell,
-//         util::{BigInteger, Util},
-//     },
-// };
+
 use crate::circuit::InstanceOf;
 use crate::circuit::config::config::Configs;
 use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
@@ -176,26 +145,24 @@ impl Gadget<FieldDivisionGadget> {
         // to handle the case where a or b can be both zero, see below
         CircuitGenerator::addAssertion(generator, b, c, a, &debug_str);
 
-        /*
-         * Few notes: 1) The order of the above two statements matters (the
-         * specification and the assertion). In the current version, it's not
-         * possible to swap them, as in the evaluation sequence, the assertion
-         * must happen after the value is assigned.
-         *
-         * 2) The instruction defined above relies on the values of wires (a)
-         * and (b) during runtime. This means that if any point later in the
-         * program, the references a, and b referred to other wires, these wires
-         * are going to be used instead in this instruction. Therefore, it will
-         * be safer to use references in cases like that to reduce the
-         * possibility of errors.
-         *
-         * 3) The above constraint does not check if a and b are both zeros. In that
-         * case, the prover will be able to use any value to make the constraint work.
-         * When this case is problematic, enforce that b cannot have the value of zero.
-         *
-         * This can be done by proving that b has an inverse, that satisfies
-         * b*(invB) = 1;
-         */
+        //Few notes: 1) The order of the above two statements matters (the
+        //specification and the assertion). In the current version, it's not
+        //possible to swap them, as in the evaluation sequence, the assertion
+        //must happen after the value is assigned.
+        //
+        //2) The instruction defined above relies on the values of wires (a)
+        //and (b) during runtime. This means that if any point later in the
+        //program, the references a, and b referred to other wires, these wires
+        //are going to be used instead in this instruction. Therefore, it will
+        //be safer to use references in cases like that to reduce the
+        //possibility of errors.
+        //
+        //3) The above constraint does not check if a and b are both zeros. In that
+        //case, the prover will be able to use any value to make the constraint work.
+        //When this case is problematic, enforce that b cannot have the value of zero.
+        //
+        //This can be done by proving that b has an inverse, that satisfies
+        //b*(invB) = 1;
     }
 }
 impl GadgetConfig for Gadget<FieldDivisionGadget> {

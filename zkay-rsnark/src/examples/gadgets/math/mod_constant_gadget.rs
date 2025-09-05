@@ -2,7 +2,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 #![allow(nonstandard_style)]
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
@@ -33,15 +33,10 @@ use crate::{
         },
     },
     util::{
-        run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::eval::instruction::Instruction;
-// use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
 
 use num_bigint::Sign;
 use rccell::RcCell;
@@ -49,11 +44,9 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Div, Mul, Rem, Sub};
-/**
- * This gadget provides the remainder of a % b, where b is a circuit constant.
- *
- *
- */
+
+//  * This gadget provides the remainder of a % b, where b is a circuit constant.
+
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ModConstantGadget {
