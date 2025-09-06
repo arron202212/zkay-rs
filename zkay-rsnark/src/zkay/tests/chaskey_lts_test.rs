@@ -14,7 +14,7 @@ use crate::{
             circuit_generator::CGConfigFields,
             circuit_generator::{
                 CGConfig, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire_type::WireType,
         },
@@ -115,18 +115,18 @@ mod test {
 
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
+            fn build_circuit(&mut self) {
                 let plainwire = TypedWire::new(
-                    CircuitGenerator::createConstantWire(self.cg(), &self.t.plain, &None),
+                    CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain, &None),
                     ZkayType::ZkUint(256),
                     "plaintext".to_owned(),
                     &vec![],
                     self.cg(),
                 );
-                let ivwire = CircuitGenerator::createConstantWire(self.cg(), &self.t.iv, &None);
-                let keywire = CircuitGenerator::createConstantWire(self.cg(), &self.t.key, &None);
+                let ivwire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.iv, &None);
+                let keywire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.key, &None);
 
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     ZkayCBCSymmetricEncGadget::new(
                         plainwire,
@@ -136,12 +136,12 @@ mod test {
                         &None,
                         self.cg(),
                     )
-                    .getOutputWires(),
+                    .get_output_wires(),
                     &None,
                 );
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {}
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {}
         };
         let t = CGTest {
             key: key.clone(),
@@ -149,14 +149,14 @@ mod test {
             plain: plain.clone(),
         };
         let mut cgen = CircuitGeneratorExtend::<CGTest>::new("cbcchaskey", t);
-        cgen.generateCircuit();
-        cgen.evalCircuit();
+        cgen.generate_circuit();
+        cgen.eval_circuit();
         let mut evaluator = CircuitEvaluator::new("cbcchaskey", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
         let outwires = cgen.get_out_wires();
         let outs: Vec<_> = outwires
             .iter()
-            .map(|ow| evaluator.getWireValue(ow.as_ref().unwrap()))
+            .map(|ow| evaluator.get_wire_value(ow.as_ref().unwrap()))
             .collect();
 
         // Compute encryption via CbcChaskey implementation

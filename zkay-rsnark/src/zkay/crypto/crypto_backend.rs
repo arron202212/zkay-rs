@@ -12,8 +12,8 @@ use crate::{
         operations::gadget::{Gadget, GadgetConfig},
         structure::{
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+                get_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
@@ -263,10 +263,10 @@ impl<T> CryptoBackendConfigs for CryptoBackend<Symmetric<T>> {
             &Some("getPk(mySk)".to_owned()),
             generator.clone(),
         );
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             generator.clone(),
             myPk,
-            pkDerivationGadget.getOutputWires()[0].as_ref().unwrap(),
+            pkDerivationGadget.get_output_wires()[0].as_ref().unwrap(),
             &None,
         );
 
@@ -300,7 +300,7 @@ impl<T> CryptoBackend<Symmetric<T>> {
         assert!(actualOtherPk.is_some(), "Key variable {keyName}  is absent");
         let mut actualOtherPk = actualOtherPk.cloned().unwrap();
         actualOtherPk = actualOtherPk
-            .checkNonZero(&Some(keyName.to_owned() + " != 0"))
+            .check_non_zero(&Some(keyName.to_owned() + " != 0"))
             .mux(&actualOtherPk, self.my_pk().as_ref().unwrap());
 
         // Compute shared key with me
@@ -317,7 +317,7 @@ impl<T> CryptoBackend<Symmetric<T>> {
             generator,
         );
         sharedKeyGadget.validateInputs();
-        sharedKeyGadget.getOutputWires()[0].clone().unwrap()
+        sharedKeyGadget.get_output_wires()[0].clone().unwrap()
     }
 
     pub fn extractIV(ivCipher: &Option<Vec<Option<WireType>>>) -> WireType {
@@ -333,7 +333,7 @@ impl<T> CryptoBackend<Symmetric<T>> {
             .clone()
             .unwrap();
         if lastBlockCipherLen > 0 {
-            iv = iv.shiftRight(
+            iv = iv.shift_right(
                 CIPHER_CHUNK_SIZE as usize,
                 lastBlockCipherLen as usize,
                 &None,
@@ -395,10 +395,10 @@ macro_rules! impl_crypto_backend_configs_for {
                 keyWires: &Vec<Option<WireType>>,
                 generator: RcCell<CircuitGenerator>,
             ) {
-                let chunkBits = self.getKeyChunkSize();
+                let chunk_bits = self.getKeyChunkSize();
                 let keyArray = WireArray::new(keyWires.clone(), generator.downgrade())
-                    .getBits(chunkBits as usize, &Some(keyName.to_owned() + "_bits"))
-                    .adjustLength(None, self.keyBits as usize);
+                    .get_bits(chunk_bits as usize, &Some(keyName.to_owned() + "_bits"))
+                    .adjust_length(None, self.keyBits as usize);
                 self.t.keys.insert(keyName.clone(), keyArray);
             }
             fn setKeyPair(

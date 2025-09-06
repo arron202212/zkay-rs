@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -40,8 +40,8 @@ use crate::{
 };
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
@@ -49,7 +49,7 @@ use zkay_derive::ImplStructNameConfig;
 crate::impl_struct_name_for!(CircuitGeneratorExtend<SHA2CircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SHA2CircuitGenerator {
-    pub inputWires: Vec<Option<WireType>>,
+    pub input_wires: Vec<Option<WireType>>,
     pub sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
 }
 impl SHA2CircuitGenerator {
@@ -58,19 +58,19 @@ impl SHA2CircuitGenerator {
         CircuitGeneratorExtend::<Self>::new(
             circuit_name,
             Self {
-                inputWires: vec![],
+                input_wires: vec![],
                 sha2Gadget: None,
             },
         )
     }
 }
 impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         // assuming the circuit input will be 64 bytes
-        let inputWires = CircuitGenerator::createInputWireArray(self.cg(), 64, &None);
+        let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 64, &None);
         // this gadget is not applying any padding.
         let sha2Gadget = SHA256Gadget::new(
-            inputWires.clone(),
+            input_wires.clone(),
             8,
             64,
             false,
@@ -79,32 +79,32 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
             self.cg(),
             Base,
         );
-        let digest = sha2Gadget.getOutputWires();
-        CircuitGenerator::makeOutputArray(self.cg(), digest, &Some("digest".to_owned()));
+        let digest = sha2Gadget.get_output_wires();
+        CircuitGenerator::make_output_array(self.cg(), digest, &Some("digest".to_owned()));
 
         // ======================================================================
         // To see how padding can be done, and see how the gadget library will save constraints automatically,
         // try the snippet below instead.
 
-        // inputWires = createInputWireArray(3); 	// 3-byte input
-        // sha2Gadget = SHA256Gadget::new(inputWires, 8, 3, false, true);
-        // Vec<Option<WireType>> digest = sha2Gadget.getOutputWires();
-        // makeOutputArray(digest, "digest");
+        // input_wires = create_input_wire_array(3); 	// 3-byte input
+        // sha2Gadget = SHA256Gadget::new(input_wires, 8, 3, false, true);
+        // Vec<Option<WireType>> digest = sha2Gadget.get_output_wires();
+        // make_output_array(digest, "digest");
 
-        (self.t.inputWires, self.t.sha2Gadget) = (inputWires, Some(sha2Gadget));
+        (self.t.input_wires, self.t.sha2Gadget) = (input_wires, Some(sha2Gadget));
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-        let inputStr = b"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
-        for i in 0..self.t.inputWires.len() {
-            evaluator.setWireValuei(self.t.inputWires[i].as_ref().unwrap(), inputStr[i] as i64);
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
+        let input_str = b"abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl";
+        for i in 0..self.t.input_wires.len() {
+            evaluator.set_wire_valuei(self.t.input_wires[i].as_ref().unwrap(), input_str[i] as i64);
         }
     }
 }
 pub fn main(args: Vec<String>) {
     let mut generator = SHA2CircuitGenerator::new("sha_256");
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

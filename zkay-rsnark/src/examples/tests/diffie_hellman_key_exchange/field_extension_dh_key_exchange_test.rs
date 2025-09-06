@@ -12,7 +12,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire_type::WireType,
         },
@@ -58,15 +58,15 @@ mod test {
     #[test]
     pub fn test_hardcoded_keys() {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let exponentBits = CircuitGenerator::createInputWireArray(
+            fn build_circuit(&mut self) {
+                let exponentBits = CircuitGenerator::create_input_wire_array(
                     self.cg(),
                     exponentBitlength,
                     &Some("exponent".to_owned()),
                 );
 
                 let ccw = |s: &str| {
-                    Some(CircuitGenerator::createConstantWire(
+                    Some(CircuitGenerator::create_constant_wire(
                         self.cg(),
                         &Util::parse_big_int(s),
                         &None,
@@ -104,13 +104,13 @@ mod test {
                 );
 
                 let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     g_to_s,
                     &Some("DH Key Exchange Output".to_owned()),
                 );
                 let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     h_to_s,
                     &Some("Derived Secret Key".to_owned()),
@@ -118,12 +118,12 @@ mod test {
                 self.t.exponentBits = exponentBits;
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let exponent = Util::parse_big_int(
                     "151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515",
                 );
                 for i in 0..exponentBitlength {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.exponentBits[i].as_ref().unwrap(),
                         if exponent.bit(i as u64) { 1 } else { 0 },
                     );
@@ -132,8 +132,8 @@ mod test {
         };
 
         let mut generator = CGTest::new("FieldExtension_Test1");
-        generator.generateCircuit();
-        let evaluator = generator.evalCircuit().unwrap();
+        generator.generate_circuit();
+        let evaluator = generator.eval_circuit().unwrap();
 
         let output = generator.get_out_wires();
 
@@ -151,7 +151,7 @@ mod test {
             .into_iter()
             .enumerate()
             .all(|(i, s)| Util::parse_big_int(s)
-                == evaluator.getWireValue(output[i].as_ref().unwrap()))
+                == evaluator.get_wire_value(output[i].as_ref().unwrap()))
         );
     }
 
@@ -166,15 +166,15 @@ mod test {
 
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let exponentBits = CircuitGenerator::createInputWireArray(
+            fn build_circuit(&mut self) {
+                let exponentBits = CircuitGenerator::create_input_wire_array(
                     self.cg(),
                     exponentBitlength,
                     &Some("exponent".to_owned()),
                 );
 
-                let mut g = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
-                let mut h = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
+                let mut g = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
+                let mut h = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
 
                 let fieldExtensionDHKeyExchange = FieldExtensionDHKeyExchange::new(
                     g.clone(),
@@ -186,13 +186,13 @@ mod test {
                 );
 
                 let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     g_to_s,
                     &Some("DH Key Exchange Output".to_owned()),
                 );
                 let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     h_to_s,
                     &Some("Derived Secret Key".to_owned()),
@@ -200,7 +200,7 @@ mod test {
                 (self.t.exponentBits, self.t.g, self.t.h) = (exponentBits, g, h);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 [
                     "16377448892084713529161739182205318095580119111576802375181616547062197291263",
                     "13687683608888423916085091250849188813359145430644908352977567823030408967189",
@@ -210,7 +210,8 @@ mod test {
                 .into_iter()
                 .enumerate()
                 .for_each(|(i, s)| {
-                    evaluator.setWireValue(self.t.g[i].as_ref().unwrap(), &Util::parse_big_int(s));
+                    evaluator
+                        .set_wire_value(self.t.g[i].as_ref().unwrap(), &Util::parse_big_int(s));
                 });
 
                 [
@@ -222,13 +223,14 @@ mod test {
                 .into_iter()
                 .enumerate()
                 .for_each(|(i, s)| {
-                    evaluator.setWireValue(self.t.h[i].as_ref().unwrap(), &Util::parse_big_int(s));
+                    evaluator
+                        .set_wire_value(self.t.h[i].as_ref().unwrap(), &Util::parse_big_int(s));
                 });
                 let exponent = Util::parse_big_int(
                     "151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515",
                 );
                 for i in 0..exponentBitlength {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.exponentBits[i].as_ref().unwrap(),
                         if exponent.bit(i as u64) { 1 } else { 0 },
                     );
@@ -242,8 +244,8 @@ mod test {
             h: vec![],
         };
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test2", t);
-        generator.generateCircuit();
-        let evaluator = generator.evalCircuit().unwrap();
+        generator.generate_circuit();
+        let evaluator = generator.eval_circuit().unwrap();
 
         let output = generator.get_out_wires();
 
@@ -261,7 +263,7 @@ mod test {
             .into_iter()
             .enumerate()
             .all(|(i, s)| Util::parse_big_int(s)
-                == evaluator.getWireValue(output[i].as_ref().unwrap()))
+                == evaluator.get_wire_value(output[i].as_ref().unwrap()))
         );
     }
 
@@ -275,15 +277,15 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let exponentBits = CircuitGenerator::createInputWireArray(
+            fn build_circuit(&mut self) {
+                let exponentBits = CircuitGenerator::create_input_wire_array(
                     self.cg(),
                     exponentBitlength,
                     &Some("exponent".to_owned()),
                 );
 
-                let mut g = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
-                let mut h = CircuitGenerator::createInputWireArray(self.cg(), mu, &None);
+                let mut g = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
+                let mut h = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
 
                 let fieldExtensionDHKeyExchange = FieldExtensionDHKeyExchange::new(
                     g.clone(),
@@ -298,13 +300,13 @@ mod test {
                 fieldExtensionDHKeyExchange.validateInputs(Util::parse_big_int("566003748421165623973140684210338877916630960782201693595769129706864925719318115473892932098619423042929922932476493069"));
 
                 let g_to_s = fieldExtensionDHKeyExchange.getOutputPublicValue();
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     g_to_s,
                     &Some("DH Key Exchange Output".to_owned()),
                 );
                 let h_to_s = fieldExtensionDHKeyExchange.getSharedSecret();
-                CircuitGenerator::makeOutputArray(
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     h_to_s,
                     &Some("Derived Secret Key".to_owned()),
@@ -312,7 +314,7 @@ mod test {
                 (self.t.exponentBits, self.t.g, self.t.h) = (exponentBits, g, h);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 [
                     "16377448892084713529161739182205318095580119111576802375181616547062197291263",
                     "13687683608888423916085091250849188813359145430644908352977567823030408967189",
@@ -322,7 +324,8 @@ mod test {
                 .into_iter()
                 .enumerate()
                 .for_each(|(i, s)| {
-                    evaluator.setWireValue(self.t.g[i].as_ref().unwrap(), &Util::parse_big_int(s));
+                    evaluator
+                        .set_wire_value(self.t.g[i].as_ref().unwrap(), &Util::parse_big_int(s));
                 });
 
                 [
@@ -334,14 +337,15 @@ mod test {
                 .into_iter()
                 .enumerate()
                 .for_each(|(i, s)| {
-                    evaluator.setWireValue(self.t.h[i].as_ref().unwrap(), &Util::parse_big_int(s));
+                    evaluator
+                        .set_wire_value(self.t.h[i].as_ref().unwrap(), &Util::parse_big_int(s));
                 });
 
                 let exponent = Util::parse_big_int(
                     "151828783241023778037546088811142494551372361892819281986925142448620047716812787162715261182186261271525615616651551515",
                 );
                 for i in 0..exponentBitlength {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.exponentBits[i].as_ref().unwrap(),
                         if exponent.bit(i as u64) { 1 } else { 0 },
                     );
@@ -354,8 +358,8 @@ mod test {
             h: vec![],
         };
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test3", t);
-        generator.generateCircuit();
-        let evaluator = generator.evalCircuit().unwrap();
+        generator.generate_circuit();
+        let evaluator = generator.eval_circuit().unwrap();
 
         let output = generator.get_out_wires();
         assert!(
@@ -372,7 +376,7 @@ mod test {
             .into_iter()
             .enumerate()
             .all(|(i, s)| Util::parse_big_int(s)
-                == evaluator.getWireValue(output[i].as_ref().unwrap()))
+                == evaluator.get_wire_value(output[i].as_ref().unwrap()))
         );
     }
 

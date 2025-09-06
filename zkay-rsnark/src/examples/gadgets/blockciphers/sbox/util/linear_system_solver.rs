@@ -26,7 +26,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_type::WireType,
         },
     },
@@ -50,57 +50,58 @@ impl LinearSystemSolver {
         Self { mat }
     }
 
-    pub fn solveInPlace(&mut self) -> Vec<Vec<BigInteger>> {
+    pub fn solve_in_place(&mut self) -> Vec<Vec<BigInteger>> {
         // https://www.csun.edu/~panferov/math262/262_rref.pdf
         // https://www.math.purdue.edu/~shao92/documents/Algorithm%20REF.pdf
-        self.guassJordan();
+        self.guass_jordan();
         self.rref();
         self.mat.clone()
     }
 
-    fn guassJordan(&mut self) {
-        let (numRows, numCols) = (self.mat.len(), self.mat[0].len());
-        let mut rowIdx = 0;
-        for colIdx in 0..numCols {
-            let mut pivotRowIdx = rowIdx;
-            while (pivotRowIdx < numRows && self.mat[pivotRowIdx][colIdx] == BigInteger::ZERO) {
-                pivotRowIdx += 1;
+    fn guass_jordan(&mut self) {
+        let (num_rows, num_cols) = (self.mat.len(), self.mat[0].len());
+        let mut row_idx = 0;
+        for col_idx in 0..num_cols {
+            let mut pivot_row_idx = row_idx;
+            while (pivot_row_idx < num_rows && self.mat[pivot_row_idx][col_idx] == BigInteger::ZERO)
+            {
+                pivot_row_idx += 1;
             }
-            if pivotRowIdx == numRows {
-                rowIdx += 1;
+            if pivot_row_idx == num_rows {
+                row_idx += 1;
                 continue;
             }
 
             // swap
-            self.mat.swap(pivotRowIdx, rowIdx);
+            self.mat.swap(pivot_row_idx, row_idx);
 
-            pivotRowIdx = rowIdx;
+            pivot_row_idx = row_idx;
 
             // dividing by pivot
-            let invF = Self::inverse(&self.mat[pivotRowIdx][colIdx]);
-            for j in 0..numCols {
-                self.mat[pivotRowIdx][j] = self.mat[pivotRowIdx][j]
+            let inv_f = Self::inverse(&self.mat[pivot_row_idx][col_idx]);
+            for j in 0..num_cols {
+                self.mat[pivot_row_idx][j] = self.mat[pivot_row_idx][j]
                     .clone()
-                    .mul(&invF)
+                    .mul(&inv_f)
                     .rem(&Configs.field_prime);
-                // if self.mat[pivotRowIdx][j]==BigInteger::ZERO{
-                //     println!("=zero=mat=lss=={pivotRowIdx}=={j}============");
+                // if self.mat[pivot_row_idx][j]==BigInteger::ZERO{
+                //     println!("=zero=mat=lss=={pivot_row_idx}=={j}============");
                 // }
             }
 
-            for k in pivotRowIdx + 1..numRows {
-                let f = Self::negate(&self.mat[k][colIdx]);
-                // println!("=zero=mat==k={k}=colIdx={colIdx}=f==={f}===={}=",self.mat[k][colIdx]);
+            for k in pivot_row_idx + 1..num_rows {
+                let f = Self::negate(&self.mat[k][col_idx]);
+                // println!("=zero=mat==k={k}=col_idx={col_idx}=f==={f}===={}=",self.mat[k][col_idx]);
 
-                for j in 0..numCols {
+                for j in 0..num_cols {
                     // if self.mat[k][j]==BigInteger::ZERO||j==16{
                     //     println!("=zero=mat==1={k}=={j}======{}=",self.mat[k][j]);
                     // }
                     self.mat[k][j] = self.mat[k][j]
                         .clone()
-                        .add(&self.mat[pivotRowIdx][j].clone().mul(&f));
+                        .add(&self.mat[pivot_row_idx][j].clone().mul(&f));
                     // if self.mat[k][j]==BigInteger::ZERO||j==16{
-                    //     println!("=zero=mat==2={k}=={j}====={}=={}=",self.mat[pivotRowIdx][j].clone().mul(&f),self.mat[k][j]);
+                    //     println!("=zero=mat==2={k}=={j}====={}=={}=",self.mat[pivot_row_idx][j].clone().mul(&f),self.mat[k][j]);
                     // }
                     let old = self.mat[k][j].clone();
                     self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
@@ -109,27 +110,28 @@ impl LinearSystemSolver {
                     // }
                 }
             }
-            rowIdx += 1;
+            row_idx += 1;
         }
     }
 
     fn rref(&mut self) {
-        let (numRows, numCols) = (self.mat.len(), self.mat[0].len());
-        for rowIdx in (0..numRows).rev() {
-            let mut pivotColIdx = 0;
-            while (pivotColIdx < numCols && self.mat[rowIdx][pivotColIdx] == BigInteger::ZERO) {
-                pivotColIdx += 1;
+        let (num_rows, num_cols) = (self.mat.len(), self.mat[0].len());
+        for row_idx in (0..num_rows).rev() {
+            let mut pivot_col_idx = 0;
+            while (pivot_col_idx < num_cols && self.mat[row_idx][pivot_col_idx] == BigInteger::ZERO)
+            {
+                pivot_col_idx += 1;
             }
-            if pivotColIdx == numCols {
+            if pivot_col_idx == num_cols {
                 continue;
             }
 
-            for k in (0..rowIdx).rev() {
-                let f = self.mat[k][pivotColIdx].clone();
-                for j in 0..numCols {
+            for k in (0..row_idx).rev() {
+                let f = self.mat[k][pivot_col_idx].clone();
+                for j in 0..num_cols {
                     self.mat[k][j] = self.mat[k][j]
                         .clone()
-                        .add(Self::negate(&self.mat[rowIdx][j].clone().mul(&f)));
+                        .add(Self::negate(&self.mat[row_idx][j].clone().mul(&f)));
                     // let old=self.mat[k][j].clone();
                     self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
                     //  if self.mat[k][j]==BigInteger::ZERO||j==16{

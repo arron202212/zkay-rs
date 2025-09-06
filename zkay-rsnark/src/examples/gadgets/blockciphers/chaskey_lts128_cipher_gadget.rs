@@ -18,10 +18,10 @@ use crate::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+                get_active_circuit_generator,
             },
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -68,15 +68,15 @@ impl ChaskeyLTS128CipherGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ChaskeyLTS128CipherGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let mut v: Vec<_> = (0..4)
             .map(|i| {
-                self.t.plaintext[i].as_ref().unwrap().xorBitwise(
+                self.t.plaintext[i].as_ref().unwrap().xor_bitwise(
                     self.t.key[i].as_ref().unwrap(),
                     32,
                     &None,
@@ -86,29 +86,31 @@ impl Gadget<ChaskeyLTS128CipherGadget> {
 
         for i in 0..16 {
             v[0] = v[0].clone().add(&v[1]);
-            v[0] = v[0].trimBits(33, 32, &None);
-            v[1] = v[1].rotateLeft(32, 5, &None).xorBitwise(&v[0], 32, &None);
-            v[0] = v[0].rotateLeft(32, 16, &None);
+            v[0] = v[0].trim_bits(33, 32, &None);
+            v[1] = v[1].rotate_left(32, 5, &None).xor_bitwise(&v[0], 32, &None);
+            v[0] = v[0].rotate_left(32, 16, &None);
 
-            v[2] = v[2].clone().add(&v[3]).trimBits(33, 32, &None);
-            v[3] = v[3].rotateLeft(32, 8, &None).xorBitwise(&v[2], 32, &None);
+            v[2] = v[2].clone().add(&v[3]).trim_bits(33, 32, &None);
+            v[3] = v[3].rotate_left(32, 8, &None).xor_bitwise(&v[2], 32, &None);
 
-            v[0] = v[0].clone().add(&v[3]).trimBits(33, 32, &None);
-            v[3] = v[3].rotateLeft(32, 13, &None).xorBitwise(&v[0], 32, &None);
+            v[0] = v[0].clone().add(&v[3]).trim_bits(33, 32, &None);
+            v[3] = v[3]
+                .rotate_left(32, 13, &None)
+                .xor_bitwise(&v[0], 32, &None);
 
-            v[2] = v[2].clone().add(&v[1]).trimBits(33, 32, &None);
-            v[1] = v[1].rotateLeft(32, 7, &None).xorBitwise(&v[2], 32, &None);
-            v[2] = v[2].rotateLeft(32, 16, &None);
+            v[2] = v[2].clone().add(&v[1]).trim_bits(33, 32, &None);
+            v[1] = v[1].rotate_left(32, 7, &None).xor_bitwise(&v[2], 32, &None);
+            v[2] = v[2].rotate_left(32, 16, &None);
         }
 
         for i in 0..4 {
-            v[i] = v[i].xorBitwise(self.t.key[i].as_ref().unwrap(), 32, &None);
+            v[i] = v[i].xor_bitwise(self.t.key[i].as_ref().unwrap(), 32, &None);
         }
         self.t.ciphertext = v.into_iter().map(|x| Some(x)).collect();
     }
 }
 impl GadgetConfig for Gadget<ChaskeyLTS128CipherGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.ciphertext
     }
 }

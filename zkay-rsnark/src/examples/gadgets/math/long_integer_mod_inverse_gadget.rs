@@ -28,7 +28,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -85,46 +85,46 @@ impl LongIntegerModInverseGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<LongIntegerModInverseGadget> {
-    fn buildCircuit(&mut self) {
-        let inverseWires = CircuitGenerator::createProverWitnessWireArray(
+    fn build_circuit(&mut self) {
+        let inverseWires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
-            self.t.m.getSize(),
+            self.t.m.get_size(),
             &None,
         );
         let inverse = LongElement::new(
             inverseWires.clone(),
-            self.t.m.getCurrentBitwidth(),
+            self.t.m.get_current_bitwidth(),
             self.generator.clone().downgrade(),
         );
-        let quotientWires = CircuitGenerator::createProverWitnessWireArray(
+        let quotientWires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
-            self.t.m.getSize(),
+            self.t.m.get_size(),
             &None,
         );
         let quotient = LongElement::new(
             quotientWires.clone(),
-            self.t.m.getCurrentBitwidth(),
+            self.t.m.get_current_bitwidth(),
             self.generator.clone().downgrade(),
         );
         // println!("=====self.t=a.array========{:?}",self.t.a.array);
         let a = &self.t.a;
         let m = &self.t.m;
-        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
-        //             let mValue = evaluator.getWireValue(m, LongElement::CHUNK_BITWIDTH);
+        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.get_wire_value(a, LongElement::CHUNK_BITWIDTH);
+        //             let mValue = evaluator.get_wire_value(m, LongElement::CHUNK_BITWIDTH);
         //             let inverseValue = aValue.modInverse(mValue);
         //             let quotientValue = aValue.mul(inverseValue).divide(mValue);
 
-        //             evaluator.setWireValue(
+        //             evaluator.set_wire_value(
         //                 inverseWires,
         //                 &Util::split(inverseValue, LongElement::CHUNK_BITWIDTH),
         //             );
-        //             evaluator.setWireValue(
+        //             evaluator.set_wire_value(
         //                 quotientWires,
         //                 &Util::split(quotientValue, LongElement::CHUNK_BITWIDTH),
         //             );
@@ -136,16 +136,16 @@ impl Gadget<LongIntegerModInverseGadget> {
                         )  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                           let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
-                    let mValue = evaluator.getWireValuei(&self.m, LongElement::CHUNK_BITWIDTH);
+                           let aValue = evaluator.get_wire_valuei(&self.a, LongElement::CHUNK_BITWIDTH);
+                    let mValue = evaluator.get_wire_valuei(&self.m, LongElement::CHUNK_BITWIDTH);
                     let inverseValue = aValue.modinv(&mValue);
                     let quotientValue = aValue.mul(inverseValue.as_ref().unwrap()).div(&mValue);
 
-                    evaluator.setWireValuea(
+                    evaluator.set_wire_valuea(
                         &self.inverseWires,
                         &Util::split(inverseValue.as_ref().unwrap(), LongElement::CHUNK_BITWIDTH),
                     );
-                    evaluator.setWireValuea(
+                    evaluator.set_wire_valuea(
                         &self.quotientWires,
                         &Util::split(&quotientValue, LongElement::CHUNK_BITWIDTH),
                     );
@@ -155,21 +155,21 @@ impl Gadget<LongIntegerModInverseGadget> {
                 }
                             }
                         );
-        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+        CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
-        //             let mValue = evaluator.getWireValue(m, LongElement::CHUNK_BITWIDTH);
+        //             let aValue = evaluator.get_wire_value(a, LongElement::CHUNK_BITWIDTH);
+        //             let mValue = evaluator.get_wire_value(m, LongElement::CHUNK_BITWIDTH);
         //             let inverseValue = aValue.modInverse(mValue);
         //             let quotientValue = aValue.mul(inverseValue).divide(mValue);
 
-        //             evaluator.setWireValue(
+        //             evaluator.set_wire_value(
         //                 inverseWires,
         //                 Util::split(inverseValue, LongElement::CHUNK_BITWIDTH),
         //             );
-        //             evaluator.setWireValue(
+        //             evaluator.set_wire_value(
         //                 quotientWires,
         //                 Util::split(quotientValue, LongElement::CHUNK_BITWIDTH),
         //             );
@@ -178,18 +178,18 @@ impl Gadget<LongIntegerModInverseGadget> {
         //     Prover
         // });
 
-        inverse.restrictBitwidth();
-        quotient.restrictBitwidth();
+        inverse.restrict_bitwidth();
+        quotient.restrict_bitwidth();
         // println!("==aaaa===a.array========{:?}",a.array);
         // a * a^(-1) = 1   (mod m)
         // <=> Exist q:  a * a^(-1) = q * m + 1
         let product = a.clone().mul(&inverse);
         let oneModM = quotient.mul(m).add(1);
         // println!("===product.array,oneModM.array============{:?},{:?}",product.array,oneModM.array);
-        product.assertEquality(&oneModM);
+        product.assert_equality(&oneModM);
 
         if self.t.restrictRange {
-            inverse.assertLessThan(m);
+            inverse.assert_less_than(m);
         }
         self.t.inverse = Some(inverse);
     }
@@ -199,7 +199,7 @@ impl Gadget<LongIntegerModInverseGadget> {
     }
 }
 impl GadgetConfig for Gadget<LongIntegerModInverseGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.t.inverse.as_ref().unwrap().getArray()
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        self.t.inverse.as_ref().unwrap().get_array()
     }
 }

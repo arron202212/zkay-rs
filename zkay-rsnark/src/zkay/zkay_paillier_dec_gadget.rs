@@ -66,12 +66,12 @@ impl ZkayPaillierDecGadget {
                 plain: None,
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayPaillierDecGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let nSquareMinBits = 2 * self.t.nBits - 1; // Minimum bit length of n^2
 
         // plain = L(cipher^lambda mod n^2) * mu mod n
@@ -115,7 +115,7 @@ impl Gadget<ZkayPaillierDecGadget> {
     }
 }
 impl GadgetConfig for Gadget<ZkayPaillierDecGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.t.plain.as_ref().unwrap().getArray()
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        self.t.plain.as_ref().unwrap().get_array()
     }
 }

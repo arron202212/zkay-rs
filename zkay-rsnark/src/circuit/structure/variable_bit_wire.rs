@@ -9,7 +9,7 @@
 use crate::circuit::structure::{
     bit_wire::BitWireConfig,
     circuit_generator::CircuitGenerator,
-    wire::{GeneratorConfig, GetWireId, Wire, WireConfig, setBitsConfig},
+    wire::{GeneratorConfig, GetWireId, SetBitsConfig, Wire, WireConfig},
     wire_array::WireArray,
     wire_type::WireType,
 };
@@ -26,25 +26,25 @@ pub struct VariableBitWire;
 crate::impl_name_instance_of_wire_g_for!(Wire<VariableBitWire>);
 
 impl VariableBitWire {
-    pub fn new(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableBitWire> {
-        //   if wireId>0 && wireId<10000
+    pub fn new(wire_id: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableBitWire> {
+        //   if wire_id>0 && wire_id<10000
         //     {
-        //         println!("==VariableBitWire::new======{wireId}==");
+        //         println!("==VariableBitWire::new======{wire_id}==");
         //     }
-        // //super(wireId);
+        // //super(wire_id);
         // Wire::<VariableBitWire> {
-        //     wireId,
+        //     wire_id,
         //     generator,
         //     t: VariableBitWire,
         // }
-        // crate::new_wire!(VariableBitWire,wireId,generator)
-        Wire::<VariableBitWire>::new(VariableBitWire, wireId, generator).unwrap()
+        // crate::new_wire!(VariableBitWire,wire_id,generator)
+        Wire::<VariableBitWire>::new(VariableBitWire, wire_id, generator).unwrap()
     }
 }
-impl setBitsConfig for VariableBitWire {}
-impl setBitsConfig for Wire<VariableBitWire> {}
+impl SetBitsConfig for VariableBitWire {}
+impl SetBitsConfig for Wire<VariableBitWire> {}
 impl WireConfig for Wire<VariableBitWire> {
-    fn getBitWires(&self) -> Option<WireArray> {
+    fn get_bit_wires(&self) -> Option<WireArray> {
         Some(WireArray::new(
             vec![Some(WireType::VariableBit(self.clone()))],
             self.generator.clone(),
@@ -56,8 +56,8 @@ impl WireConfig for Wire<VariableBitWire> {
 }
 impl BitWireConfig for Wire<VariableBitWire> {}
 impl Wire<VariableBitWire> {
-    // pub fn new(wireId: i32) -> Self {
-    //     // //super(wireId);
+    // pub fn new(wire_id: i32) -> Self {
+    //     // //super(wire_id);
     //     Self
     // }
 }

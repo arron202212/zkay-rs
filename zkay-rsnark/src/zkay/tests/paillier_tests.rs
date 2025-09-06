@@ -14,7 +14,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire_type::WireType,
         },
@@ -182,25 +182,25 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierEncCircuitGenerator> {
-        fn buildCircuit(&mut self) {
-            let plainWire = CircuitGenerator::createLongElementInput(
+        fn build_circuit(&mut self) {
+            let plainWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.plain.bits().max(1) as i32,
                 &Some("plain".to_owned()),
             );
-            let randomWire = CircuitGenerator::createLongElementInput(
+            let randomWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.random.bits().max(1) as i32,
                 &Some("random".to_owned()),
             );
             let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::createLongElementInput(
+            let nWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 nBits as i32,
                 &Some("n".to_owned()),
             );
 
-            let generatorWire = CircuitGenerator::createLongElementInput(
+            let generatorWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.generator.bits().max(1) as i32,
                 &Some("generator".to_owned()),
@@ -214,9 +214,9 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                enc.getOutputWires(),
+                enc.get_output_wires(),
                 &Some("cipher".to_owned()),
             );
             (
@@ -232,23 +232,23 @@ mod test {
             );
         }
 
-        fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-            evaluator.setWireValuebi(
+        fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
+            evaluator.set_wire_valuebi(
                 self.t.plainWire.as_ref().unwrap(),
                 &self.t.plain,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.randomWire.as_ref().unwrap(),
                 &self.t.random,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.nWire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.generatorWire.as_ref().unwrap(),
                 &self.t.generator,
                 LongElement::CHUNK_BITWIDTH,
@@ -258,13 +258,13 @@ mod test {
     impl CircuitGeneratorExtend<PaillierEncCircuitGenerator> {
         pub fn computeResult(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
-            self.generateCircuit();
+            self.generate_circuit();
             // let t2 = System.nanoTime();
             // let ms = 1.e-6 * (t2 - t1);
             // System.out.format("Building took %.3f ms\n", ms);
-            let evaluator = self.evalCircuit().unwrap();
+            let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.getWiresValues(&self.get_out_wires());
+            let outValues = evaluator.get_wires_values(&self.get_out_wires());
             Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
         }
     }
@@ -307,24 +307,24 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierDecCircuitGenerator> {
-        fn buildCircuit(&mut self) {
-            let cipherWire = CircuitGenerator::createLongElementInput(
+        fn build_circuit(&mut self) {
+            let cipherWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.cipher.bits().max(1) as i32,
                 &Some("cipher".to_owned()),
             );
             let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::createLongElementInput(
+            let nWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 nBits as i32,
                 &Some("n".to_owned()),
             );
-            let lambdaWire = CircuitGenerator::createLongElementInput(
+            let lambdaWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.lambda.bits().max(1) as i32,
                 &Some("lambda".to_owned()),
             );
-            let muWire = CircuitGenerator::createLongElementInput(
+            let muWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.mu.bits().max(1) as i32,
                 &Some("mu".to_owned()),
@@ -338,9 +338,9 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                dec.getOutputWires(),
+                dec.get_output_wires(),
                 &Some("plain".to_owned()),
             );
             (
@@ -356,23 +356,23 @@ mod test {
             );
         }
 
-        fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-            evaluator.setWireValuebi(
+        fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
+            evaluator.set_wire_valuebi(
                 self.t.cipherWire.as_ref().unwrap(),
                 &self.t.cipher,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.nWire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.lambdaWire.as_ref().unwrap(),
                 &self.t.lambda,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.muWire.as_ref().unwrap(),
                 &self.t.mu,
                 LongElement::CHUNK_BITWIDTH,
@@ -382,13 +382,13 @@ mod test {
     impl CircuitGeneratorExtend<PaillierDecCircuitGenerator> {
         pub fn computeResult(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
-            self.generateCircuit();
+            self.generate_circuit();
             // let t2 = System.nanoTime();
             // let ms = 1.e-6 * (t2 - t1);
             // System.out.format("Building took %.3f ms\n", ms);
-            let evaluator = self.evalCircuit().unwrap();
+            let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.getWiresValues(&self.get_out_wires());
+            let outValues = evaluator.get_wires_values(&self.get_out_wires());
             Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
         }
     }
@@ -426,19 +426,19 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierFastEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierFastEncCircuitGenerator> {
-        fn buildCircuit(&mut self) {
+        fn build_circuit(&mut self) {
             let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::createLongElementInput(
+            let nWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 nBits as i32,
                 &Some("n".to_owned()),
             );
-            let plainWire = CircuitGenerator::createLongElementInput(
+            let plainWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.plain.bits().max(1) as i32,
                 &Some("plain".to_owned()),
             );
-            let randomWire = CircuitGenerator::createLongElementInput(
+            let randomWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.random.bits().max(1) as i32,
                 &Some("random".to_owned()),
@@ -451,27 +451,27 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                enc.getOutputWires(),
+                enc.get_output_wires(),
                 &Some("cipher".to_owned()),
             );
             (self.t.nWire, self.t.plainWire, self.t.randomWire) =
                 (Some(nWire), Some(plainWire), Some(randomWire));
         }
 
-        fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-            evaluator.setWireValuebi(
+        fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
+            evaluator.set_wire_valuebi(
                 self.t.nWire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.plainWire.as_ref().unwrap(),
                 &self.t.plain,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.randomWire.as_ref().unwrap(),
                 &self.t.random,
                 LongElement::CHUNK_BITWIDTH,
@@ -481,13 +481,13 @@ mod test {
     impl CircuitGeneratorExtend<PaillierFastEncCircuitGenerator> {
         pub fn computeResult(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
-            self.generateCircuit();
+            self.generate_circuit();
             // let t2 = System.nanoTime();
             // let ms = 1.e-6 * (t2 - t1);
             // System.out.format("Building took %.3f ms\n", ms);
-            let evaluator = self.evalCircuit().unwrap();
+            let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.getWiresValues(&self.get_out_wires());
+            let outValues = evaluator.get_wires_values(&self.get_out_wires());
             Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
         }
     }
@@ -525,19 +525,19 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierFastDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierFastDecCircuitGenerator> {
-        fn buildCircuit(&mut self) {
+        fn build_circuit(&mut self) {
             let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::createLongElementInput(
+            let nWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 nBits as i32,
                 &Some("n".to_owned()),
             );
-            let lambdaWire = CircuitGenerator::createLongElementInput(
+            let lambdaWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.lambda.bits().max(1) as i32,
                 &Some("lambda".to_owned()),
             );
-            let cipherWire = CircuitGenerator::createLongElementInput(
+            let cipherWire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.cipher.bits().max(1) as i32,
                 &Some("cipher".to_owned()),
@@ -550,27 +550,27 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                dec.getOutputWires(),
+                dec.get_output_wires(),
                 &Some("plain".to_owned()),
             );
             (self.t.nWire, self.t.lambdaWire, self.t.cipherWire) =
                 (Some(nWire), Some(lambdaWire), Some(cipherWire));
         }
 
-        fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-            evaluator.setWireValuebi(
+        fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
+            evaluator.set_wire_valuebi(
                 self.t.nWire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.lambdaWire.as_ref().unwrap(),
                 &self.t.lambda,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.cipherWire.as_ref().unwrap(),
                 &self.t.cipher,
                 LongElement::CHUNK_BITWIDTH,
@@ -580,13 +580,13 @@ mod test {
     impl CircuitGeneratorExtend<PaillierFastDecCircuitGenerator> {
         pub fn computeResult(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
-            self.generateCircuit();
+            self.generate_circuit();
             // let t2 = System.nanoTime();
             // let ms = 1.e-6 * (t2 - t1);
             // System.out.format("Building took %.3f ms\n", ms);
-            let evaluator = self.evalCircuit().unwrap();
+            let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.getWiresValues(&self.get_out_wires());
+            let outValues = evaluator.get_wires_values(&self.get_out_wires());
             Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
         }
     }

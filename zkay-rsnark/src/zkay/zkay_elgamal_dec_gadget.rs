@@ -55,20 +55,20 @@ impl ZkayElgamalDecGadget {
             },
             generator,
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 // impl ZkayBabyJubJubGadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>>{
 // }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         // ensure pk and skBits form a key pair
         let pkExpected = self.mulScalar(&self.getGenerator(), &self.t.t.skBits);
         let keyOk = pkExpected
             .x
-            .isEqualTo(&self.t.t.pk.x, &None)
-            .and(&pkExpected.y.isEqualTo(&self.t.t.pk.y, &None), &None);
+            .is_equal_tos(&self.t.t.pk.x, &None)
+            .and(&pkExpected.y.is_equal_tos(&self.t.t.pk.y, &None), &None);
 
         // decrypt ciphertext (without de-embedding)
         let sharedSecret = self.mulScalar(&self.t.t.c1, &self.t.t.skBits);
@@ -79,16 +79,16 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
             .t
             .t
             .expectedMsg
-            .getBitWiresi(32, &None)
-            .asArray()
+            .get_bit_wiresi(32, &None)
+            .as_array()
             .clone();
         let expectedMsgEmbedded = self.mulScalar(&self.getGenerator(), &expectedMsgBits);
         self.t.t.msgOk = Some(
             expectedMsgEmbedded
                 .x
-                .isEqualTo(&msgEmbedded.x, &None)
+                .is_equal_tos(&msgEmbedded.x, &None)
                 .and(
-                    &expectedMsgEmbedded.y.isEqualTo(&msgEmbedded.y, &None),
+                    &expectedMsgEmbedded.y.is_equal_tos(&msgEmbedded.y, &None),
                     &None,
                 )
                 .and(&keyOk, &None),
@@ -97,7 +97,7 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
     }
 }
 impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t.outputs
     }
 }

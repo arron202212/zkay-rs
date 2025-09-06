@@ -28,7 +28,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -126,24 +126,24 @@ impl<T: Debug + Clone> LongIntegerDivision<T> {
                 t: PhantomData,
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 
 impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let aBitwidth = self
             .t
             .a
-            .getMaxVal(LongElement::CHUNK_BITWIDTH)
+            .get_max_val(LongElement::CHUNK_BITWIDTH)
             .bits()
             .max(1);
         // println!("=====aBitwidth================{aBitwidth}");
         let bBitwidth = self
             .t
             .b
-            .getMaxVal(LongElement::CHUNK_BITWIDTH)
+            .get_max_val(LongElement::CHUNK_BITWIDTH)
             .bits()
             .max(1);
 
@@ -159,12 +159,12 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         let qLength = (qBitwidth as f64 / LongElement::CHUNK_BITWIDTH as f64).ceil() as i32;
         let start = std::time::Instant::now();
 
-        let rWires = CircuitGenerator::createProverWitnessWireArray(
+        let rWires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
             rLength as usize,
             &None,
         );
-        let qWires = CircuitGenerator::createProverWitnessWireArray(
+        let qWires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
             qLength as usize,
             &None,
@@ -190,18 +190,18 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         let mut r = LongElement::new(rWires, rChunkBitwidths, self.generator.clone().downgrade());
         let mut q = LongElement::new(qWires, qChunkBitwidths, self.generator.clone().downgrade());
 
-        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
-        //             let bValue = evaluator.getWireValue(b, LongElement::CHUNK_BITWIDTH);
+        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.get_wire_value(a, LongElement::CHUNK_BITWIDTH);
+        //             let bValue = evaluator.get_wire_value(b, LongElement::CHUNK_BITWIDTH);
         //             let rValue = aValue.rem(bValue);
         //             let qValue = aValue.div(bValue);
 
-        //             evaluator.setWireValue(
-        //                 r.getArray(),
+        //             evaluator.set_wire_value(
+        //                 r.get_array(),
         //                 &Util::split(rValue, LongElement::CHUNK_BITWIDTH),
         //             );
-        //             evaluator.setWireValue(
-        //                 q.getArray(),
+        //             evaluator.set_wire_value(
+        //                 q.get_array(),
         //                 &Util::split(qValue, LongElement::CHUNK_BITWIDTH),
         //             );
         //         });
@@ -212,17 +212,17 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
                         )  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                           let aValue = evaluator.getWireValuei(&self.a, LongElement::CHUNK_BITWIDTH);
-                    let bValue = evaluator.getWireValuei(&self.b, LongElement::CHUNK_BITWIDTH);
+                           let aValue = evaluator.get_wire_valuei(&self.a, LongElement::CHUNK_BITWIDTH);
+                    let bValue = evaluator.get_wire_valuei(&self.b, LongElement::CHUNK_BITWIDTH);
                     let rValue = aValue.clone().rem(&bValue);
                     let qValue = aValue.clone().div(&bValue);
 
-                    evaluator.setWireValuea(
-                        self.r.getArray(),
+                    evaluator.set_wire_valuea(
+                        self.r.get_array(),
                         &Util::split(&rValue, LongElement::CHUNK_BITWIDTH),
                     );
-                    evaluator.setWireValuea(
-                        self.q.getArray(),
+                    evaluator.set_wire_valuea(
+                        self.q.get_array(),
                         &Util::split(&qValue, LongElement::CHUNK_BITWIDTH),
                     );
         Ok(())
@@ -231,22 +231,22 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
                 }
                             }
                         );
-        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+        CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a, LongElement::CHUNK_BITWIDTH);
-        //             let bValue = evaluator.getWireValue(b, LongElement::CHUNK_BITWIDTH);
+        //             let aValue = evaluator.get_wire_value(a, LongElement::CHUNK_BITWIDTH);
+        //             let bValue = evaluator.get_wire_value(b, LongElement::CHUNK_BITWIDTH);
         //             let rValue = aValue.rem(bValue);
         //             let qValue = aValue.div(bValue);
 
-        //             evaluator.setWireValue(
-        //                 r.getArray(),
+        //             evaluator.set_wire_value(
+        //                 r.get_array(),
         //                 Util::split(rValue, LongElement::CHUNK_BITWIDTH),
         //             );
-        //             evaluator.setWireValue(
-        //                 q.getArray(),
+        //             evaluator.set_wire_value(
+        //                 q.get_array(),
         //                 Util::split(qValue, LongElement::CHUNK_BITWIDTH),
         //             );
         //         }
@@ -254,16 +254,16 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         //     Prover
         // });
 
-        r.restrictBitwidth();
-        q.restrictBitwidth(); //bits  16
+        r.restrict_bitwidth();
+        q.restrict_bitwidth(); //bits  16
 
         let res = q.clone().mul(b).add(&r);
 
         // implements the improved long integer equality assertion from xjsnark
-        res.assertEquality(a);
+        res.assert_equality(a);
 
         if self.t.restrictRange {
-            r.assertLessThan(b);
+            r.assert_less_than(b);
         }
         self.t.r = r;
         self.t.q = q;

@@ -8,8 +8,8 @@
 #![allow(warnings, unused)]
 use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
 use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+    get_active_circuit_generator,
 };
 use crate::circuit::structure::wire::WireConfig;
 use crate::circuit::structure::wire_type::WireType;
@@ -57,22 +57,22 @@ impl Speck128CipherGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<Speck128CipherGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let (mut x, mut y) = (
             self.t.plaintext[1].clone().unwrap(),
             self.t.plaintext[0].clone().unwrap(),
         );
 
         for i in 0..=31 {
-            x = x.rotateRight(64, 8, &None).add(&y);
-            x = x.trimBits(65, 64, &None);
-            x = x.xorBitwise(self.t.expandedKey[i].as_ref().unwrap(), 64, &None);
-            y = y.rotateLeft(64, 3, &None).xorBitwise(&x, 64, &None);
+            x = x.rotate_right(64, 8, &None).add(&y);
+            x = x.trim_bits(65, 64, &None);
+            x = x.xor_bitwise(self.t.expandedKey[i].as_ref().unwrap(), 64, &None);
+            y = y.rotate_left(64, 3, &None).xor_bitwise(&x, 64, &None);
         }
         self.t.ciphertext = vec![Some(y), Some(x)];
     }
@@ -95,25 +95,26 @@ impl Gadget<Speck128CipherGadget> {
             l[i + 1] = Some(
                 k[i].clone()
                     .unwrap()
-                    .add(l[i].as_ref().unwrap().rotateLeft(64, 56, &None)),
+                    .add(l[i].as_ref().unwrap().rotate_left(64, 56, &None)),
             );
-            l[i + 1] = Some(l[i + 1].as_ref().unwrap().trimBits(65, 64, &None));
-            l[i + 1] = Some(l[i + 1].as_ref().unwrap().xorBitwise(
-                &CircuitGenerator::createConstantWirei(generator.clone(), i as i64, &None),
+            l[i + 1] = Some(l[i + 1].as_ref().unwrap().trim_bits(65, 64, &None));
+            l[i + 1] = Some(l[i + 1].as_ref().unwrap().xor_bitwise(
+                &CircuitGenerator::create_constant_wirei(generator.clone(), i as i64, &None),
                 64,
                 &None,
             ));
-            k[i + 1] = Some(k[i].as_ref().unwrap().rotateLeft(64, 3, &None).xorBitwise(
-                l[i + 1].as_ref().unwrap(),
-                64,
-                &None,
-            ));
+            k[i + 1] = Some(
+                k[i].as_ref()
+                    .unwrap()
+                    .rotate_left(64, 3, &None)
+                    .xor_bitwise(l[i + 1].as_ref().unwrap(), 64, &None),
+            );
         }
         k
     }
 }
 impl GadgetConfig for Gadget<Speck128CipherGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.ciphertext
     }
 }

@@ -57,8 +57,8 @@ impl ZkaySHA256Gadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         let mut input_bytes = WireArray::new(uint256_inputs.clone(), generator.downgrade())
-            .getBits(Self::bytes_per_word * 8, &None)
-            .packBitsIntoWords(8, &None);
+            .get_bits(Self::bytes_per_word * 8, &None)
+            .pack_bits_into_words(8, &None);
         // Reverse byte order of each input because jsnark reverses internally when packing
         for j in 0..uint256_inputs.len() {
             input_bytes[j * Self::bytes_per_word..(j + 1) * Self::bytes_per_word].reverse();
@@ -84,21 +84,21 @@ impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
             } else {
                 self.t.t._uint_output = vec![Some(
                     WireArray::new(digest, self.generator.clone().downgrade())
-                        .getBits(32, &None)
-                        .shiftRight(256, 256 - truncated_length as usize, &None)
-                        .packAsBits(None, None, &Some(truncated_length.to_string())),
+                        .get_bits(32, &None)
+                        .shift_right(256, 256 - truncated_length as usize, &None)
+                        .pack_as_bits(None, None, &Some(truncated_length.to_string())),
                 )];
                 return;
             }
         }
         self.t.t._uint_output = WireArray::new(digest, self.generator.clone().downgrade())
-            .packWordsIntoLargerWords(32, 8, &None);
+            .pack_words_into_larger_words(32, 8, &None);
         assert!(self.t.t._uint_output.len() == 1, "Wrong wire length");
     }
 }
 
 impl GadgetConfig for Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t._uint_output
     }
 }

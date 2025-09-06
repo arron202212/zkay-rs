@@ -14,16 +14,17 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
             wire_type::WireType,
         },
     },
-    examples::{gadgets::rsa::{
-        rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget, 
-    },generators::rsa::rsa_util::RSAUtil},
+    examples::{
+        gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget,
+        generators::rsa::rsa_util::RSAUtil,
+    },
     util::util::BigInteger,
 };
 
@@ -49,9 +50,9 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
+            fn build_circuit(&mut self) {
                 let plainTextLength = CGTest::plainText.len();
-                let inputMessage = CircuitGenerator::createProverWitnessWireArray(
+                let inputMessage = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
                     plainTextLength,
                     &None,
@@ -60,15 +61,15 @@ mod test {
                     inputMessage[i]
                         .as_ref()
                         .unwrap()
-                        .restrictBitLength(8, &None);
+                        .restrict_bit_length(8, &None);
                 }
 
-                let rsaModulus = CircuitGenerator::createLongElementInput(
+                let rsaModulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsaKeyLength as i32,
                     &None,
                 );
-                let seed = CircuitGenerator::createProverWitnessWireArray(
+                let seed = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
                     RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize,
                     &None,
@@ -85,12 +86,12 @@ mod test {
                 // since seed is a witness
                 rsaEncryptionOAEPGadget.checkSeedCompliance();
 
-                let cipherTextInBytes = rsaEncryptionOAEPGadget.getOutputWires().clone(); // in bytes
+                let cipherTextInBytes = rsaEncryptionOAEPGadget.get_output_wires().clone(); // in bytes
 
                 // group every 8 bytes together
                 let cipherText = WireArray::new(cipherTextInBytes, self.cg().downgrade())
-                    .packWordsIntoLargerWords(8, 8, &None);
-                CircuitGenerator::makeOutputArray(
+                    .pack_words_into_larger_words(8, 8, &None);
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     &cipherText,
                     &Some("Output cipher text".to_owned()),
@@ -110,9 +111,9 @@ mod test {
                 );
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 for i in 0..self.t.inputMessage.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.inputMessage[i].as_ref().unwrap(),
                         CGTest::plainText[i] as i64,
                     );
@@ -122,7 +123,7 @@ mod test {
                 // Security.addProvider(BouncyCastleProvider::new());
                 let cipher = vec![0; 32]; //Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 
-                evaluator.setWireValuebi(
+                evaluator.set_wire_valuebi(
                     self.t.rsaModulus.as_ref().unwrap(),
                     &self.t.rsaModulusValue,
                     LongElement::CHUNK_BITWIDTH,
@@ -150,7 +151,7 @@ mod test {
 
                 let sampleRandomness = &result[1];
                 for i in 0..sampleRandomness.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.seed[i].as_ref().unwrap(),
                         (sampleRandomness[i] as i64 + 256) % 256,
                     );
@@ -196,8 +197,8 @@ mod test {
                 t,
             );
 
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             // retrieve the ciphertext from the circuit, and verify that it
             // matches the expected ciphertext and that it decrypts correctly
@@ -206,7 +207,7 @@ mod test {
             let mut t = BigInteger::ZERO;
             let mut i = 0;
             for w in cipherTextList {
-                let val = evaluator.getWireValue(w.as_ref().unwrap());
+                let val = evaluator.get_wire_value(w.as_ref().unwrap());
                 t = t.add(val.shl(i * 64));
                 i += 1;
             }

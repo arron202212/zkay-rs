@@ -9,7 +9,7 @@
 use crate::circuit::structure::{
     bit_wire::BitWireConfig,
     circuit_generator::CircuitGenerator,
-    wire::{GeneratorConfig, GetWireId, Wire, WireConfig, setBitsConfig},
+    wire::{GeneratorConfig, GetWireId, SetBitsConfig, Wire, WireConfig},
     wire_array::WireArray,
     wire_type::WireType,
 };
@@ -27,25 +27,25 @@ crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationBitWire>);
 
 impl LinearCombinationBitWire {
     pub fn new(
-        wireId: i32,
+        wire_id: i32,
         generator: WeakCell<CircuitGenerator>,
     ) -> Wire<LinearCombinationBitWire> {
-        //   if wireId>0 && wireId<10000
+        //   if wire_id>0 && wire_id<10000
         //     {
-        //         println!("==LinearCombinationBitWire::new======{wireId}==");
+        //         println!("==LinearCombinationBitWire::new======{wire_id}==");
         //     }
-        // //super(wireId);
+        // //super(wire_id);
         // Wire::<LinearCombinationBitWire> {
-        //     wireId,
+        //     wire_id,
         //     generator,
         //     t: LinearCombinationBitWire,
         // }
-        // crate::new_wire!(LinearCombinationBitWire,wireId,generator)
-        Wire::<LinearCombinationBitWire>::new(LinearCombinationBitWire, wireId, generator).unwrap()
+        // crate::new_wire!(LinearCombinationBitWire,wire_id,generator)
+        Wire::<LinearCombinationBitWire>::new(LinearCombinationBitWire, wire_id, generator).unwrap()
     }
 }
-impl setBitsConfig for LinearCombinationBitWire {}
-impl setBitsConfig for Wire<LinearCombinationBitWire> {}
+impl SetBitsConfig for LinearCombinationBitWire {}
+impl SetBitsConfig for Wire<LinearCombinationBitWire> {}
 impl WireConfig for Wire<LinearCombinationBitWire> {
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::LinearCombinationBit(self.clone()))
@@ -53,12 +53,12 @@ impl WireConfig for Wire<LinearCombinationBitWire> {
 }
 impl BitWireConfig for Wire<LinearCombinationBitWire> {}
 impl Wire<LinearCombinationBitWire> {
-    // pub fn new(wireId: i32) -> Self {
-    //     // //super(wireId);
+    // pub fn new(wire_id: i32) -> Self {
+    //     // //super(wire_id);
     //     Self
     // }
 
-    pub fn getBitWires(&self) -> WireArray {
+    pub fn get_bit_wires(&self) -> WireArray {
         WireArray::new(
             vec![Some(WireType::LinearCombinationBit(self.clone()))],
             self.generator.clone(),

@@ -34,12 +34,12 @@ impl AddBasicOp {
 crate::impl_instruction_for!(Op<AddBasicOp>);
 crate::impl_hash_code_for!(Op<AddBasicOp>);
 impl BasicOp for Op<AddBasicOp> {
-    // fn getOpcode(&self) -> String {
+    // fn get_op_code(&self) -> String {
     //     return "add".to_owned();
     // }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
-        let out0_id = self.outputs[0].as_ref().unwrap().getWireId() as usize;
+        let out0_id = self.outputs[0].as_ref().unwrap().get_wire_id() as usize;
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
         //         "==compute=====outputs==={out0_id}======={}===={}====",
@@ -49,7 +49,7 @@ impl BasicOp for Op<AddBasicOp> {
         // }
         let s = self.inputs.iter().fold(BigInteger::ZERO, |s, w| {
             s.add(
-                assignment[w.as_ref().unwrap().getWireId() as usize]
+                assignment[w.as_ref().unwrap().get_wire_id() as usize]
                     .as_ref()
                     .unwrap(),
             )
@@ -64,7 +64,7 @@ impl BasicOp for Op<AddBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         0
     }
 }

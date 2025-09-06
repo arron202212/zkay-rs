@@ -31,7 +31,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -119,15 +119,15 @@ impl LongIntegerModGadget {
 }
 
 // impl LongIntegerDivision for LongIntegerModGadget {
-//     fn getOutputWires() -> Vec<Option<WireType>> {
-//         getRemainder().getArray()
+//     fn get_output_wires() -> Vec<Option<WireType>> {
+//         getRemainder().get_array()
 //     }
 // }
 
 crate::impl_long_integer_division_config_for!(LongIntegerModGadget);
 
 impl GadgetConfig for Gadget<LongIntegerDivision<LongIntegerModGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.getRemainder().getArray()
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        self.getRemainder().get_array()
     }
 }

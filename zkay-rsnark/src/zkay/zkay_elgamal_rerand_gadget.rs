@@ -52,12 +52,12 @@ impl ZkayElgamalRerandGadget {
             },
             generator,
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalRerandGadget>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         // create encryption of zero (z1, z2)
         let sharedSecret = self.mulScalar(&self.t.t.pk, &self.t.t.randomnessBits);
         let z1 = self.mulScalar(&self.getGenerator(), &self.t.t.randomnessBits);
@@ -76,7 +76,7 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalRerandGadget>> {
     }
 }
 impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalRerandGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t.outputs
     }
 }

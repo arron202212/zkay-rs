@@ -10,9 +10,9 @@ use crate::{
     circuit::{
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
-        operations:: gadget::{GadgetConfig,Gadget},
+        operations::gadget::{Gadget, GadgetConfig},
         structure::{
-            circuit_generator::{CGConfig, CircuitGenerator, CGConfigFields},
+            circuit_generator::{CGConfig, CGConfigFields, CircuitGenerator},
             wire::WireConfig,
             wire_type::WireType,
         },
@@ -87,12 +87,12 @@ pub trait ZkayBabyJubJubGadgetConfig {
     }
 
     fn getGenerator(&self) -> JubJubPoint {
-        let g_x = CircuitGenerator::createConstantWire(
+        let g_x = CircuitGenerator::create_constant_wire(
             self.generators(),
             &Util::parse_big_int(Self::GENERATOR_X),
             &None,
         );
-        let g_y = CircuitGenerator::createConstantWire(
+        let g_y = CircuitGenerator::create_constant_wire(
             self.generators(),
             &Util::parse_big_int(Self::GENERATOR_Y),
             &None,
@@ -107,7 +107,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
         let prod = xSqr.clone().mul(&ySqr);
         let lhs = xSqr.mul(&BigInteger::from(Self::COEFF_A)).add(ySqr);
         let rhs = prod.mul(&Util::parse_big_int(Self::COEFF_D)).add(1);
-        CircuitGenerator::addEqualityAssertion(self.generators(), &lhs, &rhs, &None);
+        CircuitGenerator::add_equality_assertion(self.generators(), &lhs, &rhs, &None);
     }
 
     fn addPoints(&self, p1: &JubJubPoint, p2: &JubJubPoint) -> JubJubPoint {
@@ -168,15 +168,15 @@ pub trait ZkayBabyJubJubGadgetConfig {
         //     "===self.get_current_wire_id()======nativeInverse======before======{}",
         //     self.generators().get_current_wire_id()
         // );
-        let ainv = CircuitGenerator::createProverWitnessWire(self.generators(), &None);
+        let ainv = CircuitGenerator::create_prover_witness_wire(self.generators(), &None);
         // println!(
         //     "===self.get_current_wire_id()======nativeInverse====after========{}",
         //     self.generators().get_current_wire_id()
         // );
-        // CircuitGenerator::specifyProverWitnessComputation(self.generators(), &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a);
+        // CircuitGenerator::specify_prover_witness_computation(self.generators(), &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.get_wire_value(a);
         //             let inverseValue = aValue.modInverse(Self::BASE_ORDER);
-        //             evaluator.setWireValue(ainv, inverseValue);
+        //             evaluator.set_wire_value(ainv, inverseValue);
         //         });
         let base_order = Self::BASE_ORDER.to_owned();
         let prover = crate::impl_prover!(
@@ -186,22 +186,22 @@ pub trait ZkayBabyJubJubGadgetConfig {
                         )  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                    let aValue = evaluator.getWireValue(&self.a);
+                    let aValue = evaluator.get_wire_value(&self.a);
                     let inverseValue = aValue.modinv(&Util::parse_big_int(&self.base_order));
-                    evaluator.setWireValue(&self.ainv, inverseValue.as_ref().unwrap());
+                    evaluator.set_wire_value(&self.ainv, inverseValue.as_ref().unwrap());
         Ok(())
                 }
                 }
                             }
                         );
-        CircuitGenerator::specifyProverWitnessComputation(self.generators(), prover);
+        CircuitGenerator::specify_prover_witness_computation(self.generators(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a);
+        //             let aValue = evaluator.get_wire_value(a);
         //             let inverseValue = aValue.modInverse(Self::BASE_ORDER);
-        //             evaluator.setWireValue(ainv, inverseValue);
+        //             evaluator.set_wire_value(ainv, inverseValue);
         //         }
         //     }
         //     Prover
@@ -210,7 +210,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
         // check if a * ainv = 1 (natively)
         let test = a.clone().mul(&ainv);
         // println!("==test====={},{},{}", a, ainv, test);
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generators(),
             &test,
             self.generators().get_one_wire().as_ref().unwrap(),

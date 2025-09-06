@@ -31,7 +31,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -68,20 +68,20 @@ impl LongIntegerFloorDivGadget {
 }
 // LongIntegerDivision exteand  GadgetConfig
 // impl LongIntegerDivision for LongIntegerFloorDivGadget {
-//     fn getOutputWires(&self) -> Vec<Option<WireType>> {
-//         getQuotient().getArray()
+//     fn get_output_wires(&self) -> Vec<Option<WireType>> {
+//         getQuotient().get_array()
 //     }
 // }
 // impl GadgetConfig for Gadget<LongIntegerFloorDivGadget> {
-//     fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-//         self.getQuotient().getArray()
+//     fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+//         self.getQuotient().get_array()
 //     }
 // }
 
 crate::impl_long_integer_division_config_for!(LongIntegerFloorDivGadget);
 
 impl GadgetConfig for Gadget<LongIntegerDivision<LongIntegerFloorDivGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.getQuotient().getArray()
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        self.getQuotient().get_array()
     }
 }

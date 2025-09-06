@@ -72,11 +72,11 @@ impl Util {
         let mut sum = BigInteger::ZERO;
 
         for i in 0..blocks.len() {
-            if table[blocks[i].as_ref().unwrap().getWireId() as usize].is_none() {
+            if table[blocks[i].as_ref().unwrap().get_wire_id() as usize].is_none() {
                 continue;
             }
             sum = sum.add(
-                table[blocks[i].as_ref().unwrap().getWireId() as usize]
+                table[blocks[i].as_ref().unwrap().get_wire_id() as usize]
                     .as_ref()
                     .unwrap()
                     .shl(bitwidth as usize * i),
@@ -110,7 +110,7 @@ impl Util {
         arrays.iter().cloned().flatten().collect()
     }
 
-    pub fn randomBigIntegerArray(num: u64, n: &BigInteger) -> Vec<BigInteger> {
+    pub fn random_big_integer_array(num: u64, n: &BigInteger) -> Vec<BigInteger> {
         (0..num as usize)
             .map(|_| Self::nextRandomBigInteger(n))
             .collect()
@@ -125,14 +125,14 @@ impl Util {
         result
     }
 
-    pub fn randomBigIntegerArrayi(num: u64, numBits: i32) -> Vec<BigInteger> {
+    pub fn random_big_integer_arrayi(num: u64, num_bits: i32) -> Vec<BigInteger> {
         (0..num as usize)
-            .map(|_| Self::nextRandomBigIntegeri(numBits as u64))
+            .map(|_| Self::nextRandomBigIntegeri(num_bits as u64))
             .collect()
     }
 
-    pub fn nextRandomBigIntegeri(numBits: u64) -> BigInteger {
-        let rand = RandomBits::new(numBits);
+    pub fn nextRandomBigIntegeri(num_bits: u64) -> BigInteger {
+        let rand = RandomBits::new(num_bits);
         let mut result: BigInteger = rand.sample(&mut rand::thread_rng());
         while result.sign() == Sign::Minus {
             result = rand.sample(&mut rand::thread_rng());
@@ -180,7 +180,7 @@ impl Util {
         s
     }
 
-    pub fn arrayToString(a: &Vec<Option<WireType>>, separator: &String) -> String {
+    pub fn array_to_string(a: &Vec<Option<WireType>>, separator: &String) -> String {
         let mut s = String::new();
         for i in 0..a.len() - 1 {
             s.push_str(&a[i].as_ref().unwrap().to_string());
@@ -190,7 +190,7 @@ impl Util {
         s
     }
 
-    pub fn isBinary(v: &BigInteger) -> bool {
+    pub fn is_binary(v: &BigInteger) -> bool {
         v == &BigInteger::ZERO || v == &Util::one()
     }
 
@@ -200,23 +200,23 @@ impl Util {
 
     // Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
 
-    pub fn computeMaxValue(numBits: u64) -> BigInteger {
+    pub fn compute_max_value(num_bits: u64) -> BigInteger {
         let mut maxValueCache = HashMap::new();
         maxValueCache
-            .entry(numBits)
+            .entry(num_bits)
             .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()))
             .clone()
     }
 
-    pub fn computeBound(numBits: i32) -> BigInteger {
+    pub fn computeBound(num_bits: i32) -> BigInteger {
         let mut boundCache = HashMap::new();
         return boundCache
-            .entry(numBits)
-            .or_insert_with(|| Util::one().shl(numBits))
+            .entry(num_bits)
+            .or_insert_with(|| Util::one().shl(num_bits))
             .clone();
     }
 
-    pub fn padWireArray(
+    pub fn pad_wire_array(
         a: &Vec<Option<WireType>>,
         length: usize,
         p: &WireType,
@@ -227,10 +227,10 @@ impl Util {
             }
             a.clone()
         } else {
-            let mut newArray = vec![None; length];
-            newArray[..a.len()].clone_from_slice(a);
-            newArray[a.len()..length].fill(Some(p.clone()));
-            newArray
+            let mut new_array = vec![None; length];
+            new_array[..a.len()].clone_from_slice(a);
+            new_array[a.len()..length].fill(Some(p.clone()));
+            new_array
         }
     }
 

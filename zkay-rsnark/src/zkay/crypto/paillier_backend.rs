@@ -15,20 +15,24 @@ use crate::{
             wire_type::WireType,
         },
     },
-    zkay::{crypto::{
-        crypto_backend::{Asymmetric, CryptoBackend, CryptoBackendConfig, CryptoBackendConfigs},
-        homomorphic_backend::HomomorphicBackend,
-    },
-    homomorphic_input::HomomorphicInput,
-    typed_wire::TypedWire,
-    zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget,
-    zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget,
-    zkay_type::ZkayType},
     examples::gadgets::math::{
         long_integer_division::LongIntegerDivisionConfig,
         long_integer_mod_gadget::LongIntegerModGadget,
         long_integer_mod_inverse_gadget::LongIntegerModInverseGadget,
         long_integer_mod_pow_gadget::LongIntegerModPowGadget,
+    },
+    zkay::{
+        crypto::{
+            crypto_backend::{
+                Asymmetric, CryptoBackend, CryptoBackendConfig, CryptoBackendConfigs,
+            },
+            homomorphic_backend::HomomorphicBackend,
+        },
+        homomorphic_input::HomomorphicInput,
+        typed_wire::TypedWire,
+        zkay_dummy_encryption_gadget::ZkayDummyEncryptionGadget,
+        zkay_paillier_fast_enc_gadget::ZkayPaillierFastEncGadget,
+        zkay_type::ZkayType,
     },
 };
 
@@ -95,8 +99,8 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
         let encodedPlain = self.encodeSignedToModN(plain, &key, generator.clone());
         let randArr = LongElement::newa(
             WireArray::new(randomWires.clone(), generator.clone().downgrade())
-                .getBits(PaillierBackend::CHUNK_SIZE as usize, &None)
-                .adjustLength(None, self.keyBits as usize),
+                .get_bits(PaillierBackend::CHUNK_SIZE as usize, &None)
+                .adjust_length(None, self.keyBits as usize),
             generator.clone().downgrade(),
         );
         let random = self.uninitZeroToOne(&randArr); // Also replace randomness 0 with 1 (for uninit ciphers)
@@ -182,7 +186,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                 }
 
                 let plainBits = plainWire.zkay_type.bitwidth;
-                let plainBitWires = plainWire.wire.getBitWiresi(plainBits as u64, &None);
+                let plainBitWires = plainWire.wire.get_bit_wiresi(plainBits as u64, &None);
                 let mut absPlainVal;
                 if !plainWire.zkay_type.signed {
                     // Unsigned, easy , just do the multiplication.
@@ -190,15 +194,15 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                         LongElement::newa(plainBitWires.clone(), generator.clone().downgrade());
                 } else {
                     // Signed. Multiply by the absolute value, later negate result if sign bit was set.
-                    let twosComplement = plainWire.wire.invBits(plainBits as u64, &None).add(1);
+                    let twosComplement = plainWire.wire.inv_bits(plainBits as u64, &None).add(1);
                     let posValue =
                         LongElement::newa(plainBitWires.clone(), generator.clone().downgrade());
                     let negValue = LongElement::newa(
-                        twosComplement.getBitWiresi(plainBits as u64, &None),
+                        twosComplement.get_bit_wiresi(plainBits as u64, &None),
                         generator.clone().downgrade(),
                     );
                     let signBit = plainBitWires[plainBits as usize - 1].as_ref().unwrap();
-                    absPlainVal = posValue.muxBit(&negValue, signBit);
+                    absPlainVal = posValue.mux_bit(&negValue, signBit);
                 }
                 let outputName = format!("({}) * ({})", lhs.getName(), rhs.getName());
 
@@ -209,7 +213,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                     // Correct for sign
                     let signBit = plainBitWires[plainBits as usize - 1].clone().unwrap();
                     let negResult = self.invert(&result, &nSquare, generator);
-                    result = result.muxBit(&negResult, &signBit);
+                    result = result.mux_bit(&negResult, &signBit);
                 }
 
                 self.toWireArray(&result, &outputName)
@@ -317,19 +321,19 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
     fn toWireArray(&self, value: &LongElement, name: &String) -> Vec<TypedWire> {
         // First, sanity check that the result has at most maxNumCipherChunks wires of at most CHUNK_SIZE bits each
         assert!(
-            value.getSize() <= self.t.t.maxNumCipherChunks as usize,
+            value.get_size() <= self.t.t.maxNumCipherChunks as usize,
             "Paillier output contains too many wires"
         );
         assert!(
             value
-                .getCurrentBitwidth()
+                .get_current_bitwidth()
                 .iter()
-                .all(|&bitWidth| bitWidth <= PaillierBackend::CHUNK_SIZE as u64),
+                .all(|&bit_width| bit_width <= PaillierBackend::CHUNK_SIZE as u64),
             "Paillier output cipher bit width too large"
         );
 
         // If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as ZkUint(256).
-        let wires = value.getArray();
+        let wires = value.get_array();
         let uint256 = ZkayType::ZkUint(256);
         wires
             .iter()
@@ -348,7 +352,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
     fn uninitZeroToOne(&self, val: &LongElement) -> LongElement {
         // Uninitialized values have a ciphertext of all zeros, which is not a valid Paillier cipher.
         // Instead, replace those values with 1 == g^0 * 1^n = Enc(0, 1)
-        let valIsZero = val.checkNonZero().invAsBit(&None);
+        let valIsZero = val.check_non_zero().inv_as_bit(&None);
         let oneIfAllZero = LongElement::new(
             vec![valIsZero],
             vec![1], // bit
@@ -366,27 +370,27 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         if input.zkay_type.signed {
             // Signed. Encode positive values as-is, negative values (-v) as (key - v)
             let bits = input.zkay_type.bitwidth;
-            let inputBits = input.wire.getBitWiresi(bits as u64, &None);
+            let inputBits = input.wire.get_bit_wiresi(bits as u64, &None);
             let signBit = inputBits[bits as usize - 1].clone().unwrap();
 
             let posValue = LongElement::newa(inputBits.clone(), generator.downgrade());
             let rawNegValue = LongElement::newa(
                 input
                     .wire
-                    .invBits(bits as u64, &None)
+                    .inv_bits(bits as u64, &None)
                     .add(1)
-                    .getBitWiresi(bits as u64 + 1, &None),
+                    .get_bit_wiresi(bits as u64 + 1, &None),
                 generator.downgrade(),
             );
             let negValue = key.clone().sub(&rawNegValue);
 
-            posValue.muxBit(&negValue, &signBit)
+            posValue.mux_bit(&negValue, &signBit)
         } else {
             // Unsigned, encode as-is, just convert the input wire to a LongElement
             LongElement::newa(
                 input
                     .wire
-                    .getBitWiresi(input.zkay_type.bitwidth as u64, &None),
+                    .get_bit_wiresi(input.zkay_type.bitwidth as u64, &None),
                 generator.downgrade(),
             )
         }

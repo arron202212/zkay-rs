@@ -22,9 +22,9 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct XorBasicOp;
 impl XorBasicOp {
     pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<XorBasicOp> {
-        // if w1.getWireId()==147444 ||  w2.getWireId()==147444
+        // if w1.get_wire_id()==147444 ||  w2.get_wire_id()==147444
         // {
-        //     panic!("===XorBasicOp::new====w1.as_ref().unwrap().getWireId()========================{}",w1.getWireId());
+        //     panic!("===XorBasicOp::new====w1.as_ref().unwrap().get_wire_id()========================{}",w1.get_wire_id());
         // }
         Op::<XorBasicOp> {
             inputs: vec![Some(w1.clone()), Some(w2.clone())],
@@ -37,19 +37,19 @@ impl XorBasicOp {
 crate::impl_instruction_for!(Op<XorBasicOp>);
 crate::impl_hash_code_for!(Op<XorBasicOp>);
 impl BasicOp for Op<XorBasicOp> {
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "xor".to_owned()
     }
 
-    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        // //super.checkInputs(assignment);
-        self.super_checkInputs(assignment);
-        let check = Util::isBinary(
-            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+    fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
+        // //super.check_inputs(assignment);
+        self.super_check_inputs(assignment);
+        let check = Util::is_binary(
+            assignment[self.inputs[0].as_ref().unwrap().get_wire_id() as usize]
                 .as_ref()
                 .unwrap(),
-        ) && Util::isBinary(
-            assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
+        ) && Util::is_binary(
+            assignment[self.inputs[1].as_ref().unwrap().get_wire_id() as usize]
                 .as_ref()
                 .unwrap(),
         );
@@ -61,9 +61,9 @@ impl BasicOp for Op<XorBasicOp> {
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (
-            self.inputs[0].as_ref().unwrap().getWireId() as usize,
-            self.inputs[1].as_ref().unwrap().getWireId() as usize,
-            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.inputs[1].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
@@ -78,7 +78,7 @@ impl BasicOp for Op<XorBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         1
     }
 }

@@ -68,16 +68,16 @@ impl ZkayPaillierEncGadget {
                 cipher: None,
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayPaillierEncGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let nSquareMinBits = 2 * self.t.nBits - 1; // Minimum bit length of n^2
         // Prove that random is in Z_n* by checking that random has an inverse mod n
         // println!(
-        //     "===t==random.array===buildCircuit======{:?}",
+        //     "===t==random.array===build_circuit======{:?}",
         //     self.t.random.array
         // );
         let randInv = LongIntegerModInverseGadget::new(
@@ -90,7 +90,11 @@ impl Gadget<ZkayPaillierEncGadget> {
         .getResult()
         .clone();
 
-        CircuitGenerator::addOneAssertion(self.generator.clone(), &randInv.checkNonZero(), &None);
+        CircuitGenerator::add_one_assertion(
+            self.generator.clone(),
+            &randInv.check_non_zero(),
+            &None,
+        );
         // let c = g^m * r^n mod n^2
         let gPowPlain = LongIntegerModPowGadget::new(
             self.t.g.clone(),
@@ -134,7 +138,7 @@ impl Gadget<ZkayPaillierEncGadget> {
     }
 }
 impl GadgetConfig for Gadget<ZkayPaillierEncGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.t.cipher.as_ref().unwrap().getArray()
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        self.t.cipher.as_ref().unwrap().get_array()
     }
 }

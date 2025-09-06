@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -40,8 +40,8 @@ use crate::{
 };
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
 use std::ops::{Add, Div, Mul, Rem, Sub};
@@ -58,9 +58,9 @@ impl SimpleCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         // declare input array of length 4.
-        let inputs = CircuitGenerator::createInputWireArray(self.cg(), 4, &None);
+        let inputs = CircuitGenerator::create_input_wire_array(self.cg(), 4, &None);
 
         // r1 = in0 * in1
         let r1 = inputs[0].clone().unwrap().mul(inputs[1].as_ref().unwrap());
@@ -72,21 +72,21 @@ impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
         let result = r1.add(5).mul(&r2.muli(6, &None));
 
         // mark the wire as output
-        CircuitGenerator::makeOutput(self.cg(), &result, &None);
+        CircuitGenerator::make_output(self.cg(), &result, &None);
         self.t.inputs = inputs;
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         for i in 0..4 {
-            evaluator.setWireValuei(self.t.inputs[i].as_ref().unwrap(), i as i64 + 1);
+            evaluator.set_wire_valuei(self.t.inputs[i].as_ref().unwrap(), i as i64 + 1);
         }
     }
 }
 
 pub fn main(args: Vec<String>) {
     let mut generator = SimpleCircuitGenerator::new("simple_example");
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

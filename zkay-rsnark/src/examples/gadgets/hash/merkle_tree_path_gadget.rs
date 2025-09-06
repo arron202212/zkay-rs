@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -86,29 +86,29 @@ impl MerkleTreePathGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<MerkleTreePathGadget> {
     const digestWidth: i32 = SubsetSumHashGadget::DIMENSION;
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let digestWidth = Self::digestWidth as usize;
         let mut directionSelectorBits = self
             .t
             .directionSelectorWire
-            .getBitWiresi(self.t.treeHeight as u64, &None)
-            .asArray()
+            .get_bit_wiresi(self.t.treeHeight as u64, &None)
+            .as_array()
             .clone();
 
         // Apply CRH to leaf data
         let leafBits = WireArray::new(self.t.leafWires.clone(), self.generator.clone().downgrade())
-            .getBits(self.t.leafWordBitWidth as usize, &None)
-            .asArray()
+            .get_bits(self.t.leafWordBitWidth as usize, &None)
+            .as_array()
             .clone();
         let mut subsetSumGadget =
             SubsetSumHashGadget::new(leafBits.clone(), false, &None, self.generator.clone());
-        let mut currentHash = subsetSumGadget.getOutputWires();
+        let mut currentHash = subsetSumGadget.get_output_wires();
 
         // Apply CRH across tree path guided by the direction bits
         for i in 0..self.t.treeHeight as usize {
@@ -137,8 +137,8 @@ impl Gadget<MerkleTreePathGadget> {
             }
 
             let nextInputBits = WireArray::new(inHash, self.generator.clone().downgrade())
-                .getBits(Configs.log2_field_prime as usize, &None)
-                .asArray()
+                .get_bits(Configs.log2_field_prime as usize, &None)
+                .as_array()
                 .clone();
             subsetSumGadget = SubsetSumHashGadget::new(
                 nextInputBits.clone(),
@@ -146,13 +146,13 @@ impl Gadget<MerkleTreePathGadget> {
                 &None,
                 self.generator.clone(),
             );
-            currentHash = subsetSumGadget.getOutputWires();
+            currentHash = subsetSumGadget.get_output_wires();
         }
         self.t.outRoot = currentHash.clone();
     }
 }
 impl GadgetConfig for Gadget<MerkleTreePathGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.outRoot
     }
 }

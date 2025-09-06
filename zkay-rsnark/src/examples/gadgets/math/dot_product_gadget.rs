@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -69,12 +69,12 @@ impl DotProductGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<DotProductGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let mut output = self.generator.get_zero_wire();
         for i in 0..self.t.a.len() {
             let product = self.t.a[i].as_ref().unwrap().mulw(
@@ -87,7 +87,7 @@ impl Gadget<DotProductGadget> {
     }
 }
 impl GadgetConfig for Gadget<DotProductGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }
 }

@@ -35,15 +35,15 @@ impl MulBasicOp {
 crate::impl_instruction_for!(Op<MulBasicOp>);
 crate::impl_hash_code_for!(Op<MulBasicOp>);
 impl BasicOp for Op<MulBasicOp> {
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "mul".to_owned()
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (
-            self.inputs[0].as_ref().unwrap().getWireId() as usize,
-            self.inputs[1].as_ref().unwrap().getWireId() as usize,
-            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.inputs[1].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
         let mut result = assignment[in0_id]
             .clone()
@@ -73,10 +73,10 @@ impl BasicOp for Op<MulBasicOp> {
             }
             result = result.rem(&Configs.field_prime);
         }
-        // if self.outputs[0].as_ref().unwrap().getWireId() == 5 {
+        // if self.outputs[0].as_ref().unwrap().get_wire_id() == 5 {
         // println!(
         //     "====result================={}======{},{}",
-        //     self.outputs[0].as_ref().unwrap().getWireId(),
+        //     self.outputs[0].as_ref().unwrap().get_wire_id(),
         //     result,
         //     result.clone().rem(&Configs.field_prime)
         // );
@@ -109,7 +109,7 @@ impl BasicOp for Op<MulBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         1
     }
 }

@@ -24,7 +24,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_type::WireType,
         },
     },
@@ -107,7 +107,7 @@ impl CGInstance for CircuitGenerator {
 
 #[derive(Debug, Clone)]
 pub struct CircuitGeneratorExtend<T: Debug> {
-    // pub circuitEvaluator: Option<CircuitEvaluator>,
+    // pub circuit_evaluator: Option<CircuitEvaluator>,
     pub cg: RcCell<CircuitGenerator>,
     // pub generator: CircuitGenerator,
     pub t: T,
@@ -130,7 +130,7 @@ impl CircuitGenerator {
         //     known_constant_wires: HashMap::new(),
         //     current_wire_id: 0,
         //     num_of_constraints: 0,
-        //     // circuitEvaluator: None,
+        //     // circuit_evaluator: None,
         //     t,
         // }
         let mut selfs = RcCell(Rc::new_cyclic(|_me| {
@@ -201,7 +201,7 @@ impl<T: Debug> CGInstance for CircuitGeneratorExtend<T> {
     // }
 }
 
-pub fn addToEvaluationQueue(
+pub fn add_to_evaluation_queue(
     cg: RcCell<CircuitGenerator>,
     e: Box<dyn Instruction>,
 ) -> Option<Vec<Option<WireType>>> {
@@ -210,7 +210,7 @@ pub fn addToEvaluationQueue(
     // let mut m=std::collections::HashMap::new();
     // let evaluation_queue = self.get_evaluation_queue();
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
+    //     "End +++++++++++++add_to_evaluation_queue 0 Time: == {:?} ",
     //     start.elapsed()
     // );
     // let mut ss = DefaultHasher::new();
@@ -233,51 +233,51 @@ pub fn addToEvaluationQueue(
     // // let hash_code = <BuildHasherDefault<NoHashHasher<_>> as BuildHasher>::hash_one::<Box<dyn Instruction>>(&s, e);
     // let hash_code=FxBuildHasher.hash_one(&e);
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 4200 Time: == {:?} ",
+    //     "End +++++++++++++add_to_evaluation_queue 4200 Time: == {:?} ",
     //     start.elapsed()
     // );
     // let hash_builder = RandomState::with_seed(42);
     // let hash_code = hash_builder.hash_one(&e);
     //    println!(
-    //         "End +++++++++++++addToEvaluationQueue 42 Time: == {:?} ",
+    //         "End +++++++++++++add_to_evaluation_queue 42 Time: == {:?} ",
     //         start.elapsed()
     //     );
-    if let Some(existingInstruction) = cg.borrow().evaluation_queue.get(&hash_code) {
+    if let Some(existing_instruction) = cg.borrow().evaluation_queue.get(&hash_code) {
         // println!(
-        //     "End ++++++++++addToEvaluationQueue 01 Time: ===hash_code====={hash_code}======== {:?} ",
+        //     "End ++++++++++add_to_evaluation_queue 01 Time: ===hash_code====={hash_code}======== {:?} ",
         //     start.elapsed()
         // );
-        return existingInstruction.basic_op().map(|op| op.getOutputs());
+        return existing_instruction.basic_op().map(|op| op.get_outputs());
     }
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 33 Time: == {} s",
+    //     "End +++++++++++++add_to_evaluation_queue 33 Time: == {} s",
     //     start.elapsed().as_micros()
     // );
     //    let mut s = DefaultHasher::new();
     //     e.hash(&mut s);
     //    let h= s.finish();
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 333 Time: == {} s",
+    //     "End +++++++++++++add_to_evaluation_queue 333 Time: == {} s",
     //     start.elapsed().as_micros()
     // );
 
     // m.insert(hash_code,e.clone());
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 3333 Time: == {} s",
+    //     "End +++++++++++++add_to_evaluation_queue 3333 Time: == {} s",
     //     start.elapsed().as_micros()
     // );
 
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 1 Time: == {:?} s",
+    //     "End +++++++++++++add_to_evaluation_queue 1 Time: == {:?} s",
     //     start.elapsed()
     // );
     if e.name().ends_with("Op") {
         //BasicOp
         // print!("====e===={}===",e.name());
-        cg.borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
+        cg.borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().get_num_mul_gates();
     }
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 2 Time: == {:?} ",
+    //     "End +++++++++++++add_to_evaluation_queue 2 Time: == {:?} ",
     //     start.elapsed()
     // );
     // println!("==hash_code===={hash_code}====e======{e:?}=========");
@@ -285,19 +285,19 @@ pub fn addToEvaluationQueue(
     // .entry(e.clone())
     // .or_insert(e.clone());
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 3 Time: == {:?} ",
+    //     "End +++++++++++++add_to_evaluation_queue 3 Time: == {:?} ",
     //     start.elapsed()
     // );
 
     // println!(
-    //     "End +++++++++++++addToEvaluationQueue 0 Time: == {:?} ",
+    //     "End +++++++++++++add_to_evaluation_queue 0 Time: == {:?} ",
     //     start.elapsed()
     // );
     None // returning None means we have not seen this instruction before
     // have seen this instruction before, but can't de-duplicate
 
-    // if existingInstruction.unwrap().instance_of("BasicOp") {
-    //     return Some(existingInstruction.unwrap().basic_op().unwrap().getOutputs());
+    // if existing_instruction.unwrap().instance_of("BasicOp") {
+    //     return Some(existing_instruction.unwrap().basic_op().unwrap().get_outputs());
     // } else {
     //     return None;
     // }
@@ -429,7 +429,7 @@ pub trait CGConfigFields: CGInstance + Debug {
 //     }
 // }
 
-pub fn getActiveCircuitGenerator() { //-> eyre::Result<ARcCell<dyn CGConfig + Send + Sync>>
+pub fn get_active_circuit_generator() { //-> eyre::Result<ARcCell<dyn CGConfig + Send + Sync>>
     // if !Configs.runningMultiGenerators {
     //     return Ok(instance);
     // }
@@ -457,30 +457,30 @@ pub fn put_active_circuit_generator(name: &str, cg: &str) { //ARcCell<dyn CGConf
     // active_circuit_generators.lock().insert(name.to_owned(), cg);
 }
 impl CircuitGenerator {
-    pub fn createInputWire(cg: RcCell<CircuitGenerator>, desc: &Option<String>) -> WireType {
-        let newInputWire = WireType::Variable(VariableWire::new(
+    pub fn create_input_wire(cg: RcCell<CircuitGenerator>, desc: &Option<String>) -> WireType {
+        let new_input_wire = WireType::Variable(VariableWire::new(
             cg.get_current_wire_id(),
             cg.clone().downgrade(),
         ));
         // println!("==get_current_wire_id===={}==={}===",self.get_current_wire_id(),cg.borrow().current_wire_id );
         cg.borrow_mut().current_wire_id += 1;
-        addToEvaluationQueue(
+        add_to_evaluation_queue(
             cg.clone(),
             Box::new(WireLabelInstruction::new(
                 LabelType::input,
-                newInputWire.clone(),
+                new_input_wire.clone(),
                 desc.clone().unwrap_or(String::new()),
             )),
         );
-        cg.borrow_mut().in_wires.push(Some(newInputWire.clone()));
-        newInputWire
+        cg.borrow_mut().in_wires.push(Some(new_input_wire.clone()));
+        new_input_wire
     }
-    pub fn createProverWitnessWire(
+    pub fn create_prover_witness_wire(
         cg: RcCell<CircuitGenerator>,
         desc: &Option<String>,
     ) -> WireType {
         // println!(
-        //     "===self.get_current_wire_id()======createProverWitnessWire=={}=========={}",
+        //     "===self.get_current_wire_id()======create_prover_witness_wire=={}=========={}",
         //     cg.borrow_mut().current_wire_id,
         //     self.get_current_wire_id()
         // );
@@ -492,7 +492,7 @@ impl CircuitGenerator {
 
         cg.borrow_mut().current_wire_id += 1;
 
-        addToEvaluationQueue(
+        add_to_evaluation_queue(
             cg.clone(),
             Box::new(WireLabelInstruction::new(
                 LabelType::nizkinput,
@@ -507,60 +507,60 @@ impl CircuitGenerator {
 
         wire
     }
-    pub fn makeOutput(
+    pub fn make_output(
         cg: RcCell<CircuitGenerator>,
         wire: &WireType,
         desc: &Option<String>,
     ) -> WireType {
-        // println!("===========makeOutput=============");
-        let mut outputWire = wire.clone();
+        // println!("===========make_output=============");
+        let mut output_wire = wire.clone();
         let some_wire = Some(wire.clone());
 
-        let outputWire = if cg.borrow().prover_witness_wires.contains(&some_wire) {
+        let output_wire = if cg.borrow().prover_witness_wires.contains(&some_wire) {
             // The first case is allowed for usability. In some cases, gadgets provide their witness wires as intermediate outputs, e.g., division gadgets,
             // and the programmer could choose any of these intermediate outputs to be circuit outputs later.
             // The drawback of this method is that this will add one constraint for every witness wire that is transformed to be a circuit output.
             // As the statement size is usually small, this will not lead to issues in practice.
             // The constraint is just added for separation. Note: prover witness wires are actually variable wires. The following method is used
             // in order to introduce a different variable.
-            Self::makeVariable(cg.clone(), &wire, desc)
+            Self::make_variable(cg.clone(), &wire, desc)
             // If this causes overhead, the programmer can create the wires that are causing the bottleneck
-            // as input wires instead of prover witness wires and avoid calling makeOutput().
+            // as input wires instead of prover witness wires and avoid calling make_output().
         } else if cg.borrow().in_wires.contains(&some_wire) {
             eprintln!(
                 "Warning: An input wire is redeclared as an output. This leads to an additional unnecessary constraint."
             );
             eprintln!(
-                "\t->This situation could happen by calling makeOutput() on input wires or in some cases involving multiplication of an input wire by 1 then declaring the result as an output wire."
+                "\t->This situation could happen by calling make_output() on input wires or in some cases involving multiplication of an input wire by 1 then declaring the result as an output wire."
             );
-            Self::makeVariable(cg.clone(), &wire, desc)
+            Self::make_variable(cg.clone(), &wire, desc)
         } else if !(wire.instance_of("VariableWire") || wire.instance_of("VariableBitWire")) {
-            wire.packIfNeeded(&None);
-            Self::makeVariable(cg.clone(), &wire, desc)
+            wire.pack_if_needed(&None);
+            Self::make_variable(cg.clone(), &wire, desc)
         } else {
-            wire.packIfNeeded(&None);
+            wire.pack_if_needed(&None);
 
             wire.clone()
         };
         // println!("----------------------------------------");
-        cg.borrow_mut().out_wires.push(Some(outputWire.clone()));
-        addToEvaluationQueue(
+        cg.borrow_mut().out_wires.push(Some(output_wire.clone()));
+        add_to_evaluation_queue(
             cg.clone(),
             Box::new(WireLabelInstruction::new(
                 LabelType::output,
-                outputWire.clone(),
+                output_wire.clone(),
                 desc.clone().unwrap_or(String::new()),
             )),
         );
-        outputWire
+        output_wire
     }
 
-    pub fn makeVariable(
+    pub fn make_variable(
         cg: RcCell<CircuitGenerator>,
         wire: &WireType,
         desc: &Option<String>,
     ) -> WireType {
-        let mut outputWire = WireType::Variable(VariableWire::new(
+        let mut output_wire = WireType::Variable(VariableWire::new(
             cg.get_current_wire_id(),
             cg.clone().downgrade(),
         ));
@@ -569,26 +569,26 @@ impl CircuitGenerator {
         let op = MulBasicOp::new(
             wire,
             cg.get_one_wire().as_ref().unwrap(),
-            &outputWire,
+            &output_wire,
             desc.clone().unwrap_or(String::new()),
         );
-        let cachedOutputs = addToEvaluationQueue(cg.clone(), Box::new(op));
-        if let Some(cachedOutputs) = cachedOutputs {
+        let cached_outputs = add_to_evaluation_queue(cg.clone(), Box::new(op));
+        if let Some(cached_outputs) = cached_outputs {
             cg.borrow_mut().current_wire_id -= 1;
-            cachedOutputs[0].clone().unwrap()
+            cached_outputs[0].clone().unwrap()
         } else {
-            outputWire
+            output_wire
         }
     }
 
-    pub fn createInputWireArray(
+    pub fn create_input_wire_array(
         cg: RcCell<CircuitGenerator>,
         n: usize,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
         (0..n)
             .map(|i| {
-                Some(CircuitGenerator::createInputWire(
+                Some(CircuitGenerator::create_input_wire(
                     cg.clone(),
                     &desc.as_ref().map(|d| format!("{} {i}", d)),
                 ))
@@ -596,67 +596,67 @@ impl CircuitGenerator {
             .collect()
     }
 
-    pub fn createLongElementInput(
+    pub fn create_long_element_input(
         cg: RcCell<CircuitGenerator>,
-        totalBitwidth: i32,
+        total_bitwidth: i32,
         desc: &Option<String>,
     ) -> LongElement {
-        let numWires =
-            (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
-        let w = Self::createInputWireArray(cg.clone(), numWires, desc);
-        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
-        if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
-            bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
+        let num_wires =
+            (total_bitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
+        let w = Self::create_input_wire_array(cg.clone(), num_wires, desc);
+        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; num_wires];
+        if num_wires as i32 * LongElement::CHUNK_BITWIDTH != total_bitwidth {
+            bitwidths[num_wires - 1] = (total_bitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
         LongElement::new(w, bitwidths, cg.downgrade())
     }
 
-    pub fn createLongElementProverWitness(
+    pub fn create_long_element_prover_witness(
         cg: RcCell<CircuitGenerator>,
-        totalBitwidth: i32,
+        total_bitwidth: i32,
         desc: &Option<String>,
     ) -> LongElement {
-        let numWires =
-            (totalBitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
-        let w = Self::createProverWitnessWireArray(cg.clone(), numWires, desc);
-        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; numWires];
-        if numWires as i32 * LongElement::CHUNK_BITWIDTH != totalBitwidth {
-            bitwidths[numWires - 1] = (totalBitwidth % LongElement::CHUNK_BITWIDTH) as u64;
+        let num_wires =
+            (total_bitwidth as f64 * 1.0 / LongElement::CHUNK_BITWIDTH as f64).ceil() as usize;
+        let w = Self::create_prover_witness_wire_array(cg.clone(), num_wires, desc);
+        let mut bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; num_wires];
+        if num_wires as i32 * LongElement::CHUNK_BITWIDTH != total_bitwidth {
+            bitwidths[num_wires - 1] = (total_bitwidth % LongElement::CHUNK_BITWIDTH) as u64;
         }
         LongElement::new(w, bitwidths, cg.downgrade())
     }
 
-    pub fn createProverWitnessWireArray(
+    pub fn create_prover_witness_wire_array(
         cg: RcCell<CircuitGenerator>,
         n: usize,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
         (0..n)
             .map(|k| {
-                Some(CircuitGenerator::createProverWitnessWire(
+                Some(CircuitGenerator::create_prover_witness_wire(
                     cg.clone(),
                     &desc.as_ref().map(|d| format!("{} {k}", d)),
                 ))
             })
             .collect()
     }
-    pub fn makeOutputArray(
+    pub fn make_output_array(
         cg: RcCell<CircuitGenerator>,
         wires: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
-        // println!("================makeOutputArray========");
+        // println!("================make_output_array========");
         wires
             .iter()
             .enumerate()
             .map(|(i, w)| {
-                // println!("{i}=i==w={}",w.as_ref().unwrap().getWireId());
-                let out = CircuitGenerator::makeOutput(
+                // println!("{i}=i==w={}",w.as_ref().unwrap().get_wire_id());
+                let out = CircuitGenerator::make_output(
                     cg.clone(),
                     w.as_ref().unwrap(),
                     &desc.as_ref().map(|d| format!("{}[{i}]", d)),
                 );
-                // println!("{i}=i==out={}",out.getWireId());
+                // println!("{i}=i==out={}",out.get_wire_id());
                 Some(out)
             })
             .collect()
@@ -665,7 +665,7 @@ impl CircuitGenerator {
     //Asserts an r1cs constraint. w1*w2 = w3
     //
 
-    pub fn addAssertion(
+    pub fn add_assertion(
         cg: RcCell<CircuitGenerator>,
         w1: &WireType,
         w2: &WireType,
@@ -678,31 +678,31 @@ impl CircuitGenerator {
             && w2.instance_of("ConstantWire")
             && w3.instance_of("ConstantWire")
         {
-            let const1 = w1.try_as_constant_ref().unwrap().getConstant();
-            let const2 = w2.try_as_constant_ref().unwrap().getConstant();
-            let const3 = w3.try_as_constant_ref().unwrap().getConstant();
+            let const1 = w1.try_as_constant_ref().unwrap().get_constant();
+            let const2 = w2.try_as_constant_ref().unwrap().get_constant();
+            let const3 = w3.try_as_constant_ref().unwrap().get_constant();
 
             assert!(
                 const3 == const1.mul(const2).rem(&Configs.field_prime),
                 "Assertion failed on the provided constant wires .. "
             );
         } else {
-            w1.packIfNeeded(&None);
+            w1.pack_if_needed(&None);
 
-            w2.packIfNeeded(&None);
+            w2.pack_if_needed(&None);
 
-            w3.packIfNeeded(&None);
+            w3.pack_if_needed(&None);
 
             let desc = desc.clone().unwrap_or(String::new());
 
             let op = AssertBasicOp::new(w1, w2, w3, desc);
 
-            addToEvaluationQueue(cg, Box::new(op));
+            add_to_evaluation_queue(cg, Box::new(op));
         }
     }
 
-    pub fn addZeroAssertion(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
-        Self::addAssertion(
+    pub fn add_zero_assertion(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
+        Self::add_assertion(
             cg.clone(),
             w,
             cg.get_one_wire().as_ref().unwrap(),
@@ -711,8 +711,8 @@ impl CircuitGenerator {
         );
     }
 
-    pub fn addOneAssertion(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
-        Self::addAssertion(
+    pub fn add_one_assertion(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
+        Self::add_assertion(
             cg.clone(),
             w,
             cg.get_one_wire().as_ref().unwrap(),
@@ -721,9 +721,9 @@ impl CircuitGenerator {
         );
     }
 
-    pub fn addBinaryAssertion(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
-        let inv = w.invAsBit(desc).unwrap();
-        Self::addAssertion(
+    pub fn add_binary_assertion(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
+        let inv = w.inv_as_bit(desc).unwrap();
+        Self::add_assertion(
             cg.clone(),
             w,
             &inv,
@@ -732,15 +732,15 @@ impl CircuitGenerator {
         );
     }
 
-    pub fn addEqualityAssertion(
+    pub fn add_equality_assertion(
         cg: RcCell<CircuitGenerator>,
         w1: &WireType,
         w2: &WireType,
         desc: &Option<String>,
     ) {
         if w1 != w2 {
-            // println!("========addEqualityAssertion==============={w1},{w2}");
-            Self::addAssertion(
+            // println!("========add_equality_assertion==============={w1},{w2}");
+            Self::add_assertion(
                 cg.clone(),
                 w1,
                 cg.get_one_wire().as_ref().unwrap(),
@@ -750,23 +750,27 @@ impl CircuitGenerator {
         }
     }
 
-    pub fn addEqualityAssertionb(
+    pub fn add_equality_assertionb(
         cg: RcCell<CircuitGenerator>,
         w1: &WireType,
         b: &BigInteger,
         desc: &Option<String>,
     ) {
-        Self::addAssertion(
+        Self::add_assertion(
             cg.clone(),
             w1,
             cg.get_one_wire().as_ref().unwrap(),
-            &Self::createConstantWire(cg.clone(), b, desc),
+            &Self::create_constant_wire(cg.clone(), b, desc),
             desc,
         );
     }
-    pub fn addDebugInstruction(cg: RcCell<CircuitGenerator>, w: &WireType, desc: &Option<String>) {
-        w.packIfNeeded(&None);
-        addToEvaluationQueue(
+    pub fn add_debug_instruction(
+        cg: RcCell<CircuitGenerator>,
+        w: &WireType,
+        desc: &Option<String>,
+    ) {
+        w.pack_if_needed(&None);
+        add_to_evaluation_queue(
             cg,
             Box::new(WireLabelInstruction::new(
                 LabelType::debug,
@@ -776,14 +780,14 @@ impl CircuitGenerator {
         );
     }
 
-    pub fn addDebugInstructiona(
+    pub fn add_debug_instructiona(
         cg: RcCell<CircuitGenerator>,
         wires: &Vec<Option<WireType>>,
         desc: &Option<String>,
     ) {
         for i in 0..wires.len() {
-            wires[i].as_ref().unwrap().packIfNeeded(&None);
-            addToEvaluationQueue(
+            wires[i].as_ref().unwrap().pack_if_needed(&None);
+            add_to_evaluation_queue(
                 cg.clone(),
                 Box::new(WireLabelInstruction::new(
                     LabelType::debug,
@@ -794,20 +798,20 @@ impl CircuitGenerator {
         }
     }
 
-    pub fn createConstantWire(
+    pub fn create_constant_wire(
         cg: RcCell<CircuitGenerator>,
         x: &BigInteger,
         desc: &Option<String>,
     ) -> WireType {
         // println!(
-        //     "========before===============createConstantWire====={}======={}=========== {} ",
+        //     "========before===============create_constant_wire====={}======={}=========== {} ",
         //     file!(),
         //     line!(),
         //     cg.get_current_wire_id()
         // );
         let v = cg.get_one_wire().unwrap().mulb(x, desc);
         // println!(
-        //     "=========after==============createConstantWire====={}======={}=========== {} ",
+        //     "=========after==============create_constant_wire====={}======={}=========== {} ",
         //     file!(),
         //     line!(),
         //     cg.get_current_wire_id()
@@ -815,17 +819,17 @@ impl CircuitGenerator {
         v
     }
 
-    pub fn createConstantWireArray(
+    pub fn create_constant_wire_array(
         cg: RcCell<CircuitGenerator>,
         a: &Vec<BigInteger>,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
         a.iter()
-            .map(|v| Some(Self::createConstantWire(cg.clone(), v, desc)))
+            .map(|v| Some(Self::create_constant_wire(cg.clone(), v, desc)))
             .collect()
     }
 
-    pub fn createConstantWirei(
+    pub fn create_constant_wirei(
         cg: RcCell<CircuitGenerator>,
         x: i64,
         desc: &Option<String>,
@@ -833,17 +837,17 @@ impl CircuitGenerator {
         cg.get_one_wire().unwrap().muli(x, desc)
     }
 
-    pub fn createConstantWireArrayi(
+    pub fn create_constant_wire_arrayi(
         cg: RcCell<CircuitGenerator>,
         a: &Vec<i64>,
         desc: &Option<String>,
     ) -> Vec<Option<WireType>> {
         a.iter()
-            .map(|&i| Some(Self::createConstantWirei(cg.clone(), i, desc)))
+            .map(|&i| Some(Self::create_constant_wirei(cg.clone(), i, desc)))
             .collect()
     }
 
-    pub fn createNegConstantWire(
+    pub fn create_neg_constant_wire(
         cg: RcCell<CircuitGenerator>,
         x: &BigInteger,
         desc: &Option<String>,
@@ -851,7 +855,7 @@ impl CircuitGenerator {
         cg.get_one_wire().unwrap().mulb(&x.neg(), desc)
     }
 
-    pub fn createNegConstantWirei(
+    pub fn create_neg_constant_wirei(
         cg: RcCell<CircuitGenerator>,
         x: i64,
         desc: &Option<String>,
@@ -864,7 +868,10 @@ impl CircuitGenerator {
     //
     //@param instruction
 
-    pub fn specifyProverWitnessComputation(cg: RcCell<CircuitGenerator>, e: Box<dyn Instruction>) {
+    pub fn specify_prover_witness_computation(
+        cg: RcCell<CircuitGenerator>,
+        e: Box<dyn Instruction>,
+    ) {
         // serde_json::to_string(&f).unwrap()
         // let f: FnOnce( &mut CircuitEvaluator)
         // 			+ Serialize
@@ -921,19 +928,19 @@ impl CircuitGenerator {
         //                     String::new()
         //                 }
         //             }
-        addToEvaluationQueue(cg, e);
+        add_to_evaluation_queue(cg, e);
     }
 }
 //+ CreateConstantWire + CreateConstantWireArray + CreateNegConstantWire
 pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
-    fn buildCircuit(&mut self) {}
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {}
-    fn generateCircuit(&mut self) {
+    fn build_circuit(&mut self) {}
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {}
+    fn generate_circuit(&mut self) {
         println!("Running Circuit Generator for <  {}  >", self.get_name());
 
-        self.initCircuitConstruction();
-        // println!("before buildCircuit  {},{}", file!(), line!());
-        self.buildCircuit();
+        self.init_circuit_construction();
+        // println!("before build_circuit  {},{}", file!(), line!());
+        self.build_circuit();
 
         println!(
             "Circuit Generation Done for < {} > \n \t Total Number of Constraints : {} \n \t Total Number of Wires : {}",
@@ -943,37 +950,37 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
     }
 
-    fn generateZeroWireArray(&self, n: usize) -> Vec<Option<WireType>> {
+    fn generate_zero_wire_array(&self, n: usize) -> Vec<Option<WireType>> {
         let zero_wire = self.cg().get_zero_wire();
         vec![zero_wire; n]
     }
 
-    fn generateOneWireArray(&self, n: usize) -> Vec<Option<WireType>> {
+    fn generate_one_wire_array(&self, n: usize) -> Vec<Option<WireType>> {
         let one_wire = self.cg().get_one_wire();
         vec![one_wire; n]
     }
 
-    fn writeCircuitFile(&self) {
-        let mut printWriter = File::create(self.get_name() + ".arith").unwrap();
-        write!(printWriter, "total {}", self.cg().get_current_wire_id());
+    fn write_circuit_file(&self) {
+        let mut print_writer = File::create(self.get_name() + ".arith").unwrap();
+        write!(print_writer, "total {}", self.cg().get_current_wire_id());
         let evaluation_queue = self.cg().get_evaluation_queue();
         for e in evaluation_queue.values() {
-            if e.doneWithinCircuit() {
-                let _ = write!(printWriter, "{e:?} \n");
+            if e.done_within_circuit() {
+                let _ = write!(print_writer, "{e:?} \n");
             }
         }
     }
 
-    fn printCircuit(&self) {
+    fn print_circuit(&self) {
         let evaluation_queue = self.cg().get_evaluation_queue();
         for e in evaluation_queue.values() {
-            if e.doneWithinCircuit() {
+            if e.done_within_circuit() {
                 //println!("{e:?}");
             }
         }
     }
 
-    fn initCircuitConstruction(&self) {
+    fn init_circuit_construction(&self) {
         let s = crate::util::build_circuit_timer::time_measure(&format!("{}", line!()));
         let one_wire = WireType::Constant(ConstantWire::new(
             self.cg().get_current_wire_id(),
@@ -984,7 +991,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         self.cg().borrow_mut().one_wire = Some(one_wire.clone());
         let start = Instant::now();
         // println!(
-        //     "==**********initCircuitConstruction************=={:?}====*self.one_wire() ========{:?}",
+        //     "==**********init_circuit_construction************=={:?}====*self.one_wire() ========{:?}",
         //     self.name(),
         //     self.cg().get_one_wire()
         // );
@@ -995,7 +1002,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
             .insert(Util::one(), one_wire.clone());
         // println!("{},{}", file!(), line!());
         // println!("End Name  Time: 2222 {} s", start.elapsed().as_secs());
-        addToEvaluationQueue(
+        add_to_evaluation_queue(
             self.cg(),
             Box::new(WireLabelInstruction::new(
                 LabelType::input,
@@ -1012,37 +1019,37 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         // println!("End Name Time: 444 {} s", start.elapsed().as_secs());
     }
 
-    // fn addToEvaluationQueue(
+    // fn add_to_evaluation_queue(
     //     &self,
     //     e: Box<dyn Instruction>,
     // ) -> Option<Vec<Option<WireType>>> {
     //     // self.addToEvaluationQueues(Box<dyn Instruction>::Trait( e))
     //     None
     // }
-    // fn addToEvaluationQueue(
+    // fn add_to_evaluation_queue(
     //     &self,
     //     e: Box<dyn Instruction>,
     // ) -> Option<Vec<Option<WireType>>> {
     //     let evaluation_queue = self.cg().evaluation_queue();
-    //     if let Some(existingInstruction) = evaluation_queue.get(&e) {
-    //         return existingInstruction.basic_op().map(|op| op.getOutputs());
+    //     if let Some(existing_instruction) = evaluation_queue.get(&e) {
+    //         return existing_instruction.basic_op().map(|op| op.get_outputs());
     //     }
 
     //     evaluation_queue.entry(e.clone()).or_insert(e.clone());
     //     if e.instance_of("BasicOp") {
-    //    //self.cg().borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().getNumMulGates();
+    //    //self.cg().borrow_mut().num_of_constraints += e.basic_op().as_ref().unwrap().get_num_mul_gates();
     //     }
     //     None // returning None means we have not seen this instruction before
     //     // have seen this instruction before, but can't de-duplicate
 
-    //     // if existingInstruction.unwrap().instance_of("BasicOp") {
-    //     //     return Some(existingInstruction.unwrap().basic_op().unwrap().getOutputs());
+    //     // if existing_instruction.unwrap().instance_of("BasicOp") {
+    //     //     return Some(existing_instruction.unwrap().basic_op().unwrap().get_outputs());
     //     // } else {
     //     //     return None;
     //     // }
     // }
 
-    fn printState(&self, message: String) {
+    fn print_state(&self, message: String) {
         println!("\nGenerator State @ {message}");
         println!(
             "\tCurrent Number of Multiplication Gates  .  {}\n",
@@ -1050,27 +1057,27 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
         );
     }
 
-    fn evalCircuit(&mut self) -> eyre::Result<CircuitEvaluator> {
-        let mut circuitEvaluator = CircuitEvaluator::new(&self.name(), &self.cg());
-        self.generateSampleInput(&mut circuitEvaluator);
-        circuitEvaluator.evaluate(&self.cg())?;
-        // *self.circuit_evaluator() = Some(circuitEvaluator);
-        Ok(circuitEvaluator)
+    fn eval_circuit(&mut self) -> eyre::Result<CircuitEvaluator> {
+        let mut circuit_evaluator = CircuitEvaluator::new(&self.name(), &self.cg());
+        self.generate_sample_input(&mut circuit_evaluator);
+        circuit_evaluator.evaluate(&self.cg())?;
+        // *self.circuit_evaluator() = Some(circuit_evaluator);
+        Ok(circuit_evaluator)
     }
 
-    fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
-        self.writeCircuitFile();
+    fn prep_files(&self, circuit_evaluator: Option<CircuitEvaluator>) {
+        self.write_circuit_file();
         assert!(
             circuit_evaluator.is_some(),
-            "evalCircuit() must be called before prepFiles()"
+            "eval_circuit() must be called before prep_files()"
         );
         circuit_evaluator
             .as_ref()
             .unwrap()
-            .writeInputFile(self.cg().clone());
+            .write_input_file(self.cg().clone());
     }
 
-    fn runLibsnark(&self) {
+    fn run_libsnark(&self) {
         let p = run_command(
             vec![
                 &Configs.libsnark_exec.clone(),
@@ -1091,7 +1098,7 @@ pub trait CGConfig: DynClone + CGConfigFields + StructNameConfig {
     // fn getCircuitEvaluator(&self) -> CircuitEvaluator {
     //     assert!(
     //         self.circuit_evaluator().is_some(),
-    //         "evalCircuit() must be called before getCircuitEvaluator()"
+    //         "eval_circuit() must be called before getCircuitEvaluator()"
     //     );
 
     //     return self.circuit_evaluator().clone().unwrap();
@@ -1133,7 +1140,7 @@ impl CGConfigFields for CircuitGenerator {
     //     self.num_of_constraints
     // }
     // fn circuit_evaluator(&self) -> Option<CircuitEvaluator> {
-    //     self.circuitEvaluator.clone()
+    //     self.circuit_evaluator.clone()
     // }
     fn get_name(&self) -> String {
         self.circuit_name.clone()
@@ -1360,7 +1367,7 @@ impl<T: CGConfigFields> CGConfigFields for RcCell<T> {
 
     crate::impl_fn_of_trait!(fn get_prover_witness_wires(&self) -> Vec<Option<WireType>> );
     crate::impl_fn_of_trait!(fn get_known_constant_wires(&self) -> BTreeMap<BigInteger, WireType> );
-    // crate::impl_fn_of_trait!(fn addToEvaluationQueue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
+    // crate::impl_fn_of_trait!(fn add_to_evaluation_queue(&self, e: Box<dyn Instruction>) -> Option<Vec<Option<WireType>>> );
 }
 impl StructNameConfig for CircuitGenerator {
     fn name(&self) -> String {
@@ -1371,105 +1378,105 @@ impl StructNameConfig for CircuitGenerator {
 impl CGConfig for CircuitGenerator {}
 
 impl CGConfig for RcCell<CircuitGenerator> {
-    fn buildCircuit(&mut self) {}
-    crate::impl_fn_of_trait!( fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator));
-    crate::impl_fn_of_trait!(fn generateCircuit(&mut self));
+    fn build_circuit(&mut self) {}
+    crate::impl_fn_of_trait!( fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator));
+    crate::impl_fn_of_trait!(fn generate_circuit(&mut self));
 
-    // crate::impl_fn_of_trait!(fn createInputWire(&self, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn create_input_wire(&self, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn createInputWireArray(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
+    // crate::impl_fn_of_trait!(fn create_input_wire_array(&self, n: usize, desc: &Option<String>) -> Vec<Option<WireType>>);
 
-    // crate::impl_fn_of_trait!(fn createLongElementInput(&self, totalBitwidth: i32, desc: &Option<String>) -> LongElement);
+    // crate::impl_fn_of_trait!(fn create_long_element_input(&self, total_bitwidth: i32, desc: &Option<String>) -> LongElement);
 
-    // crate::impl_fn_of_trait! (fn createLongElementProverWitness(
+    // crate::impl_fn_of_trait! (fn create_long_element_prover_witness(
     //     &self,
-    //     totalBitwidth: i32,
+    //     total_bitwidth: i32,
     //     desc: &Option<String>
     // ) -> LongElement );
 
-    // crate::impl_fn_of_trait!(fn createProverWitnessWire(&self, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn create_prover_witness_wire(&self, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn createProverWitnessWireArray(
+    // crate::impl_fn_of_trait!(fn create_prover_witness_wire_array(
     //     &self,
     //     n: usize,
     //     desc: &Option<String>
     // ) -> Vec<Option<WireType>> );
 
-    crate::impl_fn_of_trait!(fn generateZeroWireArray(&self, n: usize) -> Vec<Option<WireType>> );
+    crate::impl_fn_of_trait!(fn generate_zero_wire_array(&self, n: usize) -> Vec<Option<WireType>> );
 
-    crate::impl_fn_of_trait!(fn generateOneWireArray(&self, n: usize) -> Vec<Option<WireType>>);
+    crate::impl_fn_of_trait!(fn generate_one_wire_array(&self, n: usize) -> Vec<Option<WireType>>);
 
-    // crate::impl_fn_of_trait!(fn makeOutput(&self, wire: &WireType, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn make_output(&self, wire: &WireType, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn makeVariable(&self, wire: &WireType, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn make_variable(&self, wire: &WireType, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn makeOutputArray(
+    // crate::impl_fn_of_trait!(fn make_output_array(
     //     &self,
     //     wires: &Vec<Option<WireType>>,
     //     desc: &Option<String>
     // ) -> Vec<Option<WireType>> );
 
-    // crate::impl_fn_of_trait!(fn addDebugInstruction(&self, w: &WireType, desc: &Option<String>));
+    // crate::impl_fn_of_trait!(fn add_debug_instruction(&self, w: &WireType, desc: &Option<String>));
 
-    // crate::impl_fn_of_trait!(fn addDebugInstructiona(&self, wires: &Vec<Option<WireType>>, desc: &Option<String>));
+    // crate::impl_fn_of_trait!(fn add_debug_instructiona(&self, wires: &Vec<Option<WireType>>, desc: &Option<String>));
 
-    crate::impl_fn_of_trait!(fn writeCircuitFile(&self));
+    crate::impl_fn_of_trait!(fn write_circuit_file(&self));
 
-    crate::impl_fn_of_trait!(fn printCircuit(&self) );
+    crate::impl_fn_of_trait!(fn print_circuit(&self) );
 
-    crate::impl_fn_of_trait!(fn initCircuitConstruction(&self));
+    crate::impl_fn_of_trait!(fn init_circuit_construction(&self));
 
-    // crate::impl_fn_of_trait!(fn createConstantWire(&self, x: &BigInteger, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn create_constant_wire(&self, x: &BigInteger, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn createConstantWireArray(
+    // crate::impl_fn_of_trait!(fn create_constant_wire_array(
     //     &self,
     //     a: &Vec<BigInteger>,
     //     desc: &Option<String>
     // ) -> Vec<Option<WireType>>);
 
-    // crate::impl_fn_of_trait!(fn createConstantWirei(&self, x: i64, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn create_constant_wirei(&self, x: i64, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn createConstantWireArrayi(
+    // crate::impl_fn_of_trait!(fn create_constant_wire_arrayi(
     //     &self,
     //     a: &Vec<i64>,
     //     desc: &Option<String>
     // ) -> Vec<Option<WireType>>);
 
-    // crate::impl_fn_of_trait!(fn createNegConstantWire(&self, x: &BigInteger, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn create_neg_constant_wire(&self, x: &BigInteger, desc: &Option<String>) -> WireType );
 
-    // crate::impl_fn_of_trait!(fn createNegConstantWirei(&self, x: i64, desc: &Option<String>) -> WireType );
+    // crate::impl_fn_of_trait!(fn create_neg_constant_wirei(&self, x: i64, desc: &Option<String>) -> WireType );
 
     //Use to support computation for prover witness values outside of the
     //circuit. See Mod_Gadget and Field_Division gadgets for examples.
     //  *
     //@param instruction
 
-    // crate::impl_fn_of_trait!(fn specifyProverWitnessComputation(&self, e: Box<dyn Instruction>));
+    // crate::impl_fn_of_trait!(fn specify_prover_witness_computation(&self, e: Box<dyn Instruction>));
 
-    // crate::impl_fn_of_trait!(fn addToEvaluationQueue(
+    // crate::impl_fn_of_trait!(fn add_to_evaluation_queue(
     //     &self,
     //     e: Box<dyn Instruction>
     // ) -> Option<Vec<Option<WireType>>>);
 
-    crate::impl_fn_of_trait!(fn printState(&self, message: String));
+    crate::impl_fn_of_trait!(fn print_state(&self, message: String));
 
-    // crate::impl_fn_of_trait!(fn addAssertion(&self, w1: &WireType, w2: &WireType, w3: &WireType, desc: &Option<String>) );
+    // crate::impl_fn_of_trait!(fn add_assertion(&self, w1: &WireType, w2: &WireType, w3: &WireType, desc: &Option<String>) );
 
-    // crate::impl_fn_of_trait!(fn addZeroAssertion(&self, w: &WireType, desc: &Option<String>));
+    // crate::impl_fn_of_trait!(fn add_zero_assertion(&self, w: &WireType, desc: &Option<String>));
 
-    // crate::impl_fn_of_trait!(fn addOneAssertion(&self, w: &WireType, desc: &Option<String>) );
+    // crate::impl_fn_of_trait!(fn add_one_assertion(&self, w: &WireType, desc: &Option<String>) );
 
-    // crate::impl_fn_of_trait!(fn addBinaryAssertion(&self, w: &WireType, desc: &Option<String>) );
+    // crate::impl_fn_of_trait!(fn add_binary_assertion(&self, w: &WireType, desc: &Option<String>) );
 
-    // crate::impl_fn_of_trait!(fn addEqualityAssertion(&self, w1: &WireType, w2: &WireType, desc: &Option<String>));
+    // crate::impl_fn_of_trait!(fn add_equality_assertion(&self, w1: &WireType, w2: &WireType, desc: &Option<String>));
 
-    // crate::impl_fn_of_trait!(fn addEqualityAssertionb(&self, w1: &WireType, b: &BigInteger, desc: &Option<String>) );
+    // crate::impl_fn_of_trait!(fn add_equality_assertionb(&self, w1: &WireType, b: &BigInteger, desc: &Option<String>) );
 
-    crate::impl_fn_of_trait!(fn evalCircuit(&mut self) -> eyre::Result<CircuitEvaluator> );
+    crate::impl_fn_of_trait!(fn eval_circuit(&mut self) -> eyre::Result<CircuitEvaluator> );
 
-    crate::impl_fn_of_trait!(fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) );
+    crate::impl_fn_of_trait!(fn prep_files(&self, circuit_evaluator: Option<CircuitEvaluator>) );
 
-    crate::impl_fn_of_trait!(fn runLibsnark(&self) );
+    crate::impl_fn_of_trait!(fn run_libsnark(&self) );
 }
 
 impl<T: StructNameConfig> StructNameConfig for RcCell<T> {

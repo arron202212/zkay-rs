@@ -28,7 +28,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -93,7 +93,7 @@ impl RSASigVerificationV1_5_Gadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
@@ -104,7 +104,7 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
     ];
 
     pub const SHA256_DIGEST_LENGTH: usize = 32; // in bytes
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let mut s = self.t.signature.clone();
 
         for i in 0..16 {
@@ -131,19 +131,19 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
         )
         .getRemainder()
         .clone();
-        let sChunks = s.getArray();
+        let sChunks = s.get_array();
 
         // note that the following can be improved, but for simplicity we
         // are going to compare byte by byte
 
         // get byte arrays
         let mut sBytes = WireArray::new(sChunks.clone(), self.generator.clone().downgrade())
-            .getBits(LongElement::CHUNK_BITWIDTH as usize, &None)
-            .packBitsIntoWords(8, &None);
+            .get_bits(LongElement::CHUNK_BITWIDTH as usize, &None)
+            .pack_bits_into_words(8, &None);
         let mut msgHashBytes =
             WireArray::new(self.t.msgHash.clone(), self.generator.clone().downgrade())
-                .getBits(32, &None)
-                .packBitsIntoWords(8, &None);
+                .get_bits(32, &None)
+                .pack_bits_into_words(8, &None);
 
         // reverse the byte array representation of each word of the digest to
         // be compatiable with the endianess
@@ -158,27 +158,27 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
             sBytes[lengthInBytes - 1]
                 .as_ref()
                 .unwrap()
-                .isEqualToi(0, &None),
+                .is_equal_toi(0, &None),
         );
         sumChecks = sumChecks.add(
             sBytes[lengthInBytes - 2]
                 .as_ref()
                 .unwrap()
-                .isEqualToi(1, &None),
+                .is_equal_toi(1, &None),
         );
         for i in 3..lengthInBytes - Self::SHA256_DIGEST_LENGTH - Self::SHA256_IDENTIFIER.len() {
             sumChecks = sumChecks.add(
                 sBytes[lengthInBytes - i]
                     .as_ref()
                     .unwrap()
-                    .isEqualToi(0xff, &None),
+                    .is_equal_toi(0xff, &None),
             );
         }
         sumChecks = sumChecks.add(
             sBytes[Self::SHA256_DIGEST_LENGTH + Self::SHA256_IDENTIFIER.len()]
                 .as_ref()
                 .unwrap()
-                .isEqualToi(0, &None),
+                .is_equal_toi(0, &None),
         );
 
         for i in 0..Self::SHA256_IDENTIFIER.len() {
@@ -186,7 +186,7 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
                 sBytes[Self::SHA256_IDENTIFIER.len() + Self::SHA256_DIGEST_LENGTH - 1 - i]
                     .as_ref()
                     .unwrap()
-                    .isEqualToi((Self::SHA256_IDENTIFIER[i] as i64 + 256) % 256, &None),
+                    .is_equal_toi((Self::SHA256_IDENTIFIER[i] as i64 + 256) % 256, &None),
             );
         }
         for i in (0..=Self::SHA256_DIGEST_LENGTH - 1).rev() {
@@ -194,15 +194,15 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
                 sBytes[Self::SHA256_DIGEST_LENGTH - 1 - i]
                     .as_ref()
                     .unwrap()
-                    .isEqualTo(msgHashBytes[i].as_ref().unwrap(), &None),
+                    .is_equal_tos(msgHashBytes[i].as_ref().unwrap(), &None),
             );
         }
 
-        self.t.isValidSignature = vec![Some(sumChecks.isEqualToi(lengthInBytes as i64, &None))];
+        self.t.isValidSignature = vec![Some(sumChecks.is_equal_toi(lengthInBytes as i64, &None))];
     }
 }
 impl GadgetConfig for Gadget<RSASigVerificationV1_5_Gadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.isValidSignature
     }
 }

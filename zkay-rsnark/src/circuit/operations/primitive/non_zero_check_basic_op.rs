@@ -39,15 +39,15 @@ impl NonZeroCheckBasicOp {
 crate::impl_instruction_for!(Op<NonZeroCheckBasicOp>);
 crate::impl_hash_code_for!(Op<NonZeroCheckBasicOp>);
 impl BasicOp for Op<NonZeroCheckBasicOp> {
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "zerop".to_owned()
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, out0_id, out1_id) = (
-            self.inputs[0].as_ref().unwrap().getWireId() as usize,
-            self.outputs[0].as_ref().unwrap().getWireId() as usize,
-            self.outputs[1].as_ref().unwrap().getWireId() as usize,
+            self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[1].as_ref().unwrap().get_wire_id() as usize,
         );
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
@@ -65,7 +65,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         2
     }
 }

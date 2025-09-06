@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -100,7 +100,7 @@ impl FieldExtensionDHKeyExchange {
         // done also outside the gadget. The back end takes care of caching
         let generators = generator.clone();
         for w in &secretExponentBits {
-            CircuitGenerator::addBinaryAssertion(generator.clone(), w.as_ref().unwrap(), &None);
+            CircuitGenerator::add_binary_assertion(generator.clone(), w.as_ref().unwrap(), &None);
         }
         let mut _self = Gadget::<Self>::new(
             generator,
@@ -118,12 +118,12 @@ impl FieldExtensionDHKeyExchange {
                 output: vec![],
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<FieldExtensionDHKeyExchange> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         self.t.gPowersTable = self.preparePowersTable(&self.t.g);
         self.t.hPowersTable = self.preparePowersTable(&self.t.h);
         self.t.outputPublicValue =
@@ -218,8 +218,8 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                 self.t.g[i]
                     .as_ref()
                     .unwrap()
-                    .checkNonZero(&None)
-                    .invAsBit(&None)
+                    .check_non_zero(&None)
+                    .inv_as_bit(&None)
                     .as_ref()
                     .unwrap(),
             );
@@ -227,8 +227,8 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                 self.t.h[i]
                     .as_ref()
                     .unwrap()
-                    .checkNonZero(&None)
-                    .invAsBit(&None)
+                    .check_non_zero(&None)
+                    .inv_as_bit(&None)
                     .as_ref()
                     .unwrap(),
             );
@@ -236,13 +236,13 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
         // assertion
 
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
             &zeroOrOne1.mul(allZero1),
             &None,
         );
 
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
             &zeroOrOne2.mul(allZero2),
             &None,
@@ -266,25 +266,25 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
         // both should be one
 
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
             result1[0].as_ref().unwrap(),
             &None,
         );
 
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
             result2[0].as_ref().unwrap(),
             &None,
         );
         for i in 1..self.t.mu as usize {
-            CircuitGenerator::addZeroAssertion(
+            CircuitGenerator::add_zero_assertion(
                 self.generator.clone(),
                 result1[i].as_ref().unwrap(),
                 &None,
             );
 
-            CircuitGenerator::addZeroAssertion(
+            CircuitGenerator::add_zero_assertion(
                 self.generator.clone(),
                 result1[i].as_ref().unwrap(),
                 &None,
@@ -300,7 +300,7 @@ impl Gadget<FieldExtensionDHKeyExchange> {
     }
 }
 impl GadgetConfig for Gadget<FieldExtensionDHKeyExchange> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }
 }

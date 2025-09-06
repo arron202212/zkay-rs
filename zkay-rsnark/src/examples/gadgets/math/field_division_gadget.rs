@@ -15,8 +15,8 @@ use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
 
 use crate::circuit::structure::circuit_generator::CreateConstantWire;
 use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-    getActiveCircuitGenerator,
+    CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+    get_active_circuit_generator,
 };
 use crate::circuit::structure::constant_wire;
 use crate::circuit::structure::wire::WireConfig;
@@ -51,14 +51,14 @@ impl FieldDivisionGadget {
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.t.a.instance_of("ConstantWire") && _self.t.b.instance_of("ConstantWire") {
-            let aConst = _self.t.a.try_as_constant_ref().unwrap().getConstant();
+            let aConst = _self.t.a.try_as_constant_ref().unwrap().get_constant();
 
             let bInverseConst = _self
                 .t
                 .b
                 .try_as_constant_ref()
                 .unwrap()
-                .getConstant()
+                .get_constant()
                 .modinv(&Configs.field_prime)
                 .unwrap();
 
@@ -67,19 +67,19 @@ impl FieldDivisionGadget {
                 &None,
             ))];
         } else {
-            let debug_str = _self.debugStr("division result");
+            let debug_str = _self.debug_str("division result");
 
-            let pww = CircuitGenerator::createProverWitnessWire(generator, &debug_str);
+            let pww = CircuitGenerator::create_prover_witness_wire(generator, &debug_str);
 
             _self.t.c = vec![Some(pww)];
 
-            _self.buildCircuit();
+            _self.build_circuit();
         }
         _self
     }
 }
 impl Gadget<FieldDivisionGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let start = std::time::Instant::now();
         // This is an example of computing a value outside the circuit and
         // verifying constraints about it in the circuit. See notes below.
@@ -91,28 +91,28 @@ impl Gadget<FieldDivisionGadget> {
                                 c: WireType)  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                       let aValue = evaluator.getWireValue(&self.a);
-                                    let bValue = evaluator.getWireValue(&self.b);
+                                       let aValue = evaluator.get_wire_value(&self.a);
+                                    let bValue = evaluator.get_wire_value(&self.b);
                                     // println!("===bValue==={}====={bValue}====",self.b);
                                     let cValue = aValue
                                         .mul(bValue.modinv(&Configs.field_prime).unwrap())
                                         .rem(&Configs.field_prime);
-                                    evaluator.setWireValue(&self.c, &cValue);
+                                    evaluator.set_wire_value(&self.c, &cValue);
         Ok(())
                 }
                 }
                             }
                         );
 
-        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+        CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
 
-        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-        //     let aValue = evaluator.getWireValue(self.t.a.clone());
-        //     let bValue = evaluator.getWireValue(self.t.b.clone());
+        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
+        //     let aValue = evaluator.get_wire_value(self.t.a.clone());
+        //     let bValue = evaluator.get_wire_value(self.t.b.clone());
         //     let cValue = aValue
         //         .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
         //         .rem(&Configs.field_prime);
-        //     evaluator.setWireValue(self.t.c.clone(), cValue);
+        //     evaluator.set_wire_value(self.t.c.clone(), cValue);
         // });
         // {
         //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
@@ -123,12 +123,12 @@ impl Gadget<FieldDivisionGadget> {
         //     }
         //     impl  Instruction for Prover {
         //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-        //             let aValue = evaluator.getWireValue(self.t.a.clone());
-        //             let bValue = evaluator.getWireValue(self.t.b.clone());
+        //             let aValue = evaluator.get_wire_value(self.t.a.clone());
+        //             let bValue = evaluator.get_wire_value(self.t.b.clone());
         //             let cValue = aValue
         //                 .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
         //                 .rem(&Configs.field_prime);
-        //             evaluator.setWireValue(self.t.c.clone(), cValue);
+        //             evaluator.set_wire_value(self.t.c.clone(), cValue);
         //         }
         //     }
         //     Box::new(Prover {
@@ -140,10 +140,10 @@ impl Gadget<FieldDivisionGadget> {
 
         let generator = self.generator.clone();
 
-        let debug_str = self.debugStr("Assertion for division result");
+        let debug_str = self.debug_str("Assertion for division result");
 
         // to handle the case where a or b can be both zero, see below
-        CircuitGenerator::addAssertion(generator, b, c, a, &debug_str);
+        CircuitGenerator::add_assertion(generator, b, c, a, &debug_str);
 
         //Few notes: 1) The order of the above two statements matters (the
         //specification and the assertion). In the current version, it's not
@@ -166,7 +166,7 @@ impl Gadget<FieldDivisionGadget> {
     }
 }
 impl GadgetConfig for Gadget<FieldDivisionGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.c
     }
 }

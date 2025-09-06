@@ -10,11 +10,13 @@ use crate::{
     circuit::{
         eval::circuit_evaluator::CircuitEvaluator,
         operations::gadget::GadgetConfig,
-        structure::{circuit_generator::{
-            CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-            addToEvaluationQueue, getActiveCircuitGenerator,
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                add_to_evaluation_queue, get_active_circuit_generator,
+            },
+            wire_type::WireType,
         },
-        wire_type::WireType},
     },
     examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget,
     util::util::BigInteger,
@@ -36,22 +38,22 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 4, &None);
-                let key = CircuitGenerator::createInputWireArray(self.cg(), 4, &None);
+            fn build_circuit(&mut self) {
+                let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 4, &None);
+                let key = CircuitGenerator::create_input_wire_array(self.cg(), 4, &None);
                 let ciphertext = ChaskeyLTS128CipherGadget::new(
                     plaintext.clone(),
                     key.clone(),
                     &None,
                     self.cg(),
                 )
-                .getOutputWires()
+                .get_output_wires()
                 .clone();
-                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let keyV = [
                     BigInteger::from(0x68e90956u32),
                     BigInteger::from(0x29e3585fu32),
@@ -67,10 +69,10 @@ mod test {
                 ];
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.setWireValue(self.t.plaintext[i].as_ref().unwrap(), &msgV[i]);
+                    evaluator.set_wire_value(self.t.plaintext[i].as_ref().unwrap(), &msgV[i]);
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator.setWireValue(self.t.key[i].as_ref().unwrap(), &keyV[i]);
+                    evaluator.set_wire_value(self.t.key[i].as_ref().unwrap(), &keyV[i]);
                 }
             }
         };
@@ -80,8 +82,8 @@ mod test {
             ciphertext: vec![], // 4 32-bit words
         };
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("Chaskey_Test1", t);
-        generator.generateCircuit();
-        let evaluator = generator.evalCircuit().unwrap();
+        generator.generate_circuit();
+        let evaluator = generator.eval_circuit().unwrap();
 
         let cipherText = generator.get_out_wires();
 
@@ -94,7 +96,7 @@ mod test {
 
         for i in 0..4 {
             assert_eq!(
-                evaluator.getWireValue(cipherText[i].as_ref().unwrap()),
+                evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
                 expeectedCiphertext[i],
             );
         }

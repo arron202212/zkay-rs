@@ -29,7 +29,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -84,22 +84,22 @@ impl SymmetricEncryptionCBCGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<SymmetricEncryptionCBCGadget> {
     const blocksize: i32 = 128;
 
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let numBlocks =
             (self.t.plaintextBits.len() as f64 * 1.0 / Self::blocksize as f64).ceil() as i32;
         let mut plaintextBits = WireArray::new(
             self.t.plaintextBits.clone(),
             self.generator.clone().downgrade(),
         )
-        .adjustLength(None, (numBlocks * Self::blocksize) as usize)
-        .asArray()
+        .adjust_length(None, (numBlocks * Self::blocksize) as usize)
+        .as_array()
         .clone();
 
         let preparedKey = self.prepareKey();
@@ -113,20 +113,23 @@ impl Gadget<SymmetricEncryptionCBCGadget> {
                     .to_vec(),
                 self.generator.clone().downgrade(),
             );
-            let xored = msgBlock.xorWireArrayi(&prevCipher, &None).asArray().clone();
+            let xored = msgBlock
+                .xor_wire_arrayi(&prevCipher, &None)
+                .as_array()
+                .clone();
             assert!(
                 &self.t.cipherName != "speck128",
                 "Other Ciphers not supported in this version!"
             );
             let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
-                .packBitsIntoWords(64, &None);
+                .pack_bits_into_words(64, &None);
             let gadget =
                 Speck128CipherGadget::new(tmp, preparedKey.clone(), &None, self.generator.clone());
-            let outputs = gadget.getOutputWires();
+            let outputs = gadget.get_output_wires();
             prevCipher = WireArray::new(outputs.clone(), self.generator.clone().downgrade())
-                .getBits(64, &None);
+                .get_bits(64, &None);
 
-            ciphertext = Util::concat(&ciphertext, &prevCipher.packBitsIntoWords(64, &None));
+            ciphertext = Util::concat(&ciphertext, &prevCipher.pack_bits_into_words(64, &None));
         }
     }
 
@@ -137,14 +140,14 @@ impl Gadget<SymmetricEncryptionCBCGadget> {
         );
 
         let packedKey = WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
-            .packBitsIntoWords(64, &None);
+            .pack_bits_into_words(64, &None);
         let preparedKey = Gadget::<Speck128CipherGadget>::expandKey(&packedKey, &self.generator);
 
         preparedKey
     }
 }
 impl GadgetConfig for Gadget<SymmetricEncryptionCBCGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.ciphertext
     }
 }

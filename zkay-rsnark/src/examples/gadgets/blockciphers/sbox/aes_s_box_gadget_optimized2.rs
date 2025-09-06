@@ -15,8 +15,8 @@ use crate::{
         operations::gadget::{Gadget, GadgetConfig},
         structure::{
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator, put_active_circuit_generator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+                get_active_circuit_generator, put_active_circuit_generator,
             },
             circuit_generator::{CGConfigFields, CGInstance},
             wire::{GetWireId, WireConfig},
@@ -106,7 +106,7 @@ impl AESSBoxGadgetOptimized2 {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
@@ -128,7 +128,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
     pub fn solve_linear_systems(bit_count: u8) -> Vec<Vec<BigInteger>> {
         println!("======bit_count========={bit_count}");
         let mut seed = 1;
-        let mut allCoeffSet = Vec::new();
+        let mut all_coeff_set = Vec::new();
         let mut list = Vec::new();
         for i in 0..=255 {
             list.push(256 * i as i32 + Self::SBox[i] as i32);
@@ -152,15 +152,15 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             // list.par_shuffle_seed_with(&mut rng);
             list.shuffle(&mut rng);
             // Collections.shuffle(list, Random::new(seed));
-            allCoeffSet.clear();
+            all_coeff_set.clear();
 
             for i in 0..=15 {
                 let mut mat = vec![vec![BigInteger::default(); 17]; 16];
-                let mut memberValueSet = HashSet::new();
+                let mut member_value_set = HashSet::new();
 
                 for k in 0..mat.len() {
                     let memberValue = list[k + i * 16];
-                    memberValueSet.insert(memberValue);
+                    member_value_set.insert(memberValue);
                     mat[k][16] = Util::one();
 
                     // now extract the values that correspond to memberValue
@@ -172,15 +172,15 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                     }
                 }
 
-                mat = LinearSystemSolver::new(mat).solveInPlace();
+                mat = LinearSystemSolver::new(mat).solve_in_place();
 
-                if Self::checkIfProverCanCheat(&mat, &memberValueSet, bit_count) {
-                    println!("Invalid solution {bit_count} {i} {}", allCoeffSet.len());
+                if Self::check_if_prover_can_cheat(&mat, &member_value_set, bit_count) {
+                    println!("Invalid solution {bit_count} {i} {}", all_coeff_set.len());
                     for ii in 0..16 {
                         if mat[ii][16] == BigInteger::ZERO {
                             println!(
                                 "Possibly invalid due to having zero coefficient(s) {i} {}",
-                                allCoeffSet.len()
+                                all_coeff_set.len()
                             );
                             break;
                         }
@@ -193,23 +193,24 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                 for ii in 0..16 {
                     coeffs[ii] = mat[ii][16].clone();
                 }
-                allCoeffSet.push(coeffs);
+                all_coeff_set.push(coeffs);
             }
             done = true;
-            // AESSBoxGadgetOptimized2.allCoeffSet = allCoeffSet;
+            // AESSBoxGadgetOptimized2.all_coeff_set = all_coeff_set;
             //println!("Solution found!");
         }
-        allCoeffSet
+        all_coeff_set
     }
 
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let generator = self.generator.clone();
-        let mut output = CircuitGenerator::createProverWitnessWire(self.generator.clone(), &None);
+        let mut output =
+            CircuitGenerator::create_prover_witness_wire(self.generator.clone(), &None);
         let input = &self.t.input;
-        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
+        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //     // TODO Auto-generated method stub
-        //     let value = evaluator.getWireValue(input);
-        //     evaluator.setWireValue(output, &BigInteger::from(SBox[value.intValue()]));
+        //     let value = evaluator.get_wire_value(input);
+        //     evaluator.set_wire_value(output, &BigInteger::from(SBox[value.intValue()]));
         // });
         let prover = crate::impl_prover!(
                                     eval(  input: WireType,
@@ -218,21 +219,21 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                     impl Instruction for Prover{
                      fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                                 // TODO Auto-generated method stub
-                let value = evaluator.getWireValue(&self.input);
-                evaluator.setWireValue(&self.output, &BigInteger::from(Gadget::<AESSBoxGadgetOptimized2>::SBox[value.to_str_radix(10).parse::<usize>().unwrap()]));
+                let value = evaluator.get_wire_value(&self.input);
+                evaluator.set_wire_value(&self.output, &BigInteger::from(Gadget::<AESSBoxGadgetOptimized2>::SBox[value.to_str_radix(10).parse::<usize>().unwrap()]));
         Ok(())
                     }
                     }
                                 }
                             );
-        CircuitGenerator::specifyProverWitnessComputation(generator.clone(), prover);
+        CircuitGenerator::specify_prover_witness_computation(generator.clone(), prover);
         // {
         //             struct Prover;
         //             impl Instruction for Prover {
         //                 &|evaluator: &mut CircuitEvaluator| {
         //                     // TODO Auto-generated method stub
-        //                     let value = evaluator.getWireValue(input);
-        //                     evaluator.setWireValue(output, BigInteger::from(SBox[value.intValue()]));
+        //                     let value = evaluator.get_wire_value(input);
+        //                     evaluator.set_wire_value(output, BigInteger::from(SBox[value.intValue()]));
         //                 }
         //             }
         //             Prover
@@ -240,15 +241,15 @@ impl Gadget<AESSBoxGadgetOptimized2> {
 
         // Although we are getting the bits below anyway (which implicitly
         // restricts the bitwidth), it's a safer practice to call
-        // restrictBitLength() explicitly to avoid some special cases with
-        // getBitWires().
+        // restrict_bit_length() explicitly to avoid some special cases with
+        // get_bit_wires().
         // Similar operations get filtered later, so this won't add extra
         // constraints.
-        output.restrictBitLength(8, &None);
-        input.restrictBitLength(8, &None);
+        output.restrict_bit_length(8, &None);
+        input.restrict_bit_length(8, &None);
 
-        let bitsIn = input.getBitWiresi(8, &None).asArray().clone();
-        let bitsOut = output.getBitWiresi(8, &None).asArray().clone();
+        let bitsIn = input.get_bit_wiresi(8, &None).as_array().clone();
+        let bitsOut = output.get_bit_wiresi(8, &None).as_array().clone();
         let mut vars = vec![None; 16];
         let mut p = input.muli(256, &None).add(&output).add(1);
         let mut currentProduct = p.clone();
@@ -281,7 +282,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             product = product.mul(accum);
         }
         self.t.output = vec![Some(output)];
-        CircuitGenerator::addZeroAssertion(generator.clone(), &product, &None);
+        CircuitGenerator::add_zero_assertion(generator.clone(), &product, &None);
     }
 
     fn getVariableValues(k: i32, bit_count: u8) -> Vec<BigInteger> {
@@ -306,9 +307,9 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         vars
     }
 
-    fn checkIfProverCanCheat(
+    fn check_if_prover_can_cheat(
         mat: &Vec<Vec<BigInteger>>,
-        valueSet: &HashSet<i32>,
+        value_set: &HashSet<i32>,
         bit_count: u8,
     ) -> bool {
         let mut coeffs = vec![BigInteger::default(); 16];
@@ -316,8 +317,8 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             coeffs[i] = mat[i][16].clone();
         }
 
-        let mut validResults = 0;
-        let mut outsidePermissibleSet = 0;
+        let mut valid_results = 0;
+        let mut outside_permissible_set = 0;
 
         // loop over the whole permissible domain (recall that input & output
         // are bounded)
@@ -330,16 +331,16 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             }
             result = result.rem(&Configs.field_prime);
             if result == Util::one() {
-                validResults += 1;
-                if !valueSet.contains(&k) {
-                    outsidePermissibleSet += 1;
+                valid_results += 1;
+                if !value_set.contains(&k) {
+                    outside_permissible_set += 1;
                 }
             }
         }
-        if validResults != 16 || outsidePermissibleSet != 0 {
+        if valid_results != 16 || outside_permissible_set != 0 {
             //println!("Prover can cheat with linear system solution");
-            //println!("Num of valid values that the prover can use = " + validResults);
-            //println!("Num of valid values outside permissible set = " + validResults);
+            //println!("Num of valid values that the prover can use = " + valid_results);
+            //println!("Num of valid values outside permissible set = " + valid_results);
             true
         } else {
             false
@@ -348,7 +349,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
 }
 
 impl GadgetConfig for Gadget<AESSBoxGadgetOptimized2> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }
 }

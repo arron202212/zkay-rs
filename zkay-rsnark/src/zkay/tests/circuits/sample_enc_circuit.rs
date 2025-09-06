@@ -80,16 +80,16 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleEncCircuit>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         self.super_buildCircuit();
         self.addKi("elgamal", "glob_key_Elgamal__owner", 2);
 
         self.__zk__foo();
     }
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         self.super_generateSampleInput(evaluator);
     }
-    fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
+    fn prep_files(&self, circuit_evaluator: Option<CircuitEvaluator>) {
         self.super_prepFiles(circuit_evaluator);
     }
 }

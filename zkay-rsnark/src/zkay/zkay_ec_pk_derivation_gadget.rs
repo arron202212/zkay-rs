@@ -54,11 +54,11 @@ impl ZkayEcPkDerivationGadget {
             desc,
             Self {
                 secretBits: secretKey
-                    .getBitWiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
-                    .asArray()
+                    .get_bit_wiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
+                    .as_array()
                     .clone(),
                 basePoint: AffinePoint::new(
-                    Some(CircuitGenerator::createConstantWirei(
+                    Some(CircuitGenerator::create_constant_wirei(
                         generator.clone(),
                         4,
                         &None,
@@ -79,13 +79,13 @@ impl ZkayEcPkDerivationGadget {
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
 
         // coordinates
-        _self.buildCircuit();
+        _self.build_circuit();
 
         _self
     }
 }
 impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let baseTable = Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::preprocess(
             &self.t.t.basePoint,
             self.generator.clone(),
@@ -114,8 +114,8 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
             .unwrap()
             .try_as_constant_ref()
             .unwrap()
-            .getConstant();
-        self.t.t.basePoint.y = Some(CircuitGenerator::createConstantWire(
+            .get_constant();
+        self.t.t.basePoint.y = Some(CircuitGenerator::create_constant_wire(
             self.generator.clone(),
             &Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::computeYCoordinate(x),
             &None,
@@ -123,7 +123,7 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
     }
 }
 impl GadgetConfig for Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t.outputs
     }
 }

@@ -13,7 +13,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire_type::WireType,
         },
@@ -66,26 +66,26 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let s = CircuitGenerator::createConstantWire(self.cg(), &self.t.sec1, &None);
-                CircuitGenerator::makeOutput(
+            fn build_circuit(&mut self) {
+                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1, &None);
+                CircuitGenerator::make_output(
                     self.cg(),
-                    ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).getOutputWires()[0]
+                    ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                     &None,
                 );
             }
 
-            fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+            fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
         }
         let t = CGTest { sec1: sec1.clone() };
         let mut cgen = CircuitGeneratorExtend::<CGTest>::new("pkder", t);
-        cgen.generateCircuit();
-        cgen.evalCircuit();
+        cgen.generate_circuit();
+        cgen.eval_circuit();
         let mut evaluator = CircuitEvaluator::new("pkder", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
-        let pk1_circ = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
+        let pk1_circ = evaluator.get_wire_value(cgen.get_out_wires()[0].as_ref().unwrap());
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTestpkder {
@@ -93,26 +93,26 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTestpkder>);
         impl CGConfig for CircuitGeneratorExtend<CGTestpkder> {
-            fn buildCircuit(&mut self) {
-                let s = CircuitGenerator::createConstantWire(self.cg(), &self.t.sec2, &None);
-                CircuitGenerator::makeOutput(
+            fn build_circuit(&mut self) {
+                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec2, &None);
+                CircuitGenerator::make_output(
                     self.cg(),
-                    ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).getOutputWires()[0]
+                    ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                     &None,
                 );
             }
 
-            fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+            fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
         };
         let t = CGTestpkder { sec2: sec2.clone() };
         let mut cgen = CircuitGeneratorExtend::<CGTestpkder>::new("pkder", t);
-        cgen.generateCircuit();
-        cgen.evalCircuit();
+        cgen.generate_circuit();
+        cgen.eval_circuit();
         evaluator = CircuitEvaluator::new("pkder", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
-        let pk2_circ = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
+        let pk2_circ = evaluator.get_wire_value(cgen.get_out_wires()[0].as_ref().unwrap());
 
         let pk1 = Util::parse_big_int_x(&CircuitGeneratorExtend::<ZkayECDHGenerator>::derivePk(
             &sec1,
@@ -130,30 +130,30 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTestecdh>);
         impl CGConfig for CircuitGeneratorExtend<CGTestecdh> {
-            fn buildCircuit(&mut self) {
-                let p = CircuitGenerator::createConstantWire(self.cg(), &self.t.pk2, &None);
-                let s = CircuitGenerator::createConstantWire(self.cg(), &self.t.sec1, &None);
-                CircuitGenerator::makeOutput(
+            fn build_circuit(&mut self) {
+                let p = CircuitGenerator::create_constant_wire(self.cg(), &self.t.pk2, &None);
+                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1, &None);
+                CircuitGenerator::make_output(
                     self.cg(),
-                    ZkayECDHGadget::new(p, s, false, &None, self.cg()).getOutputWires()[0]
+                    ZkayECDHGadget::new(p, s, false, &None, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                     &None,
                 );
             }
 
-            fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+            fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
         };
         let t = CGTestecdh {
             pk2: pk2.clone(),
             sec1: sec1.clone(),
         };
         let mut cgen = CircuitGeneratorExtend::<CGTestecdh>::new("ecdh", t);
-        cgen.generateCircuit();
-        cgen.evalCircuit();
+        cgen.generate_circuit();
+        cgen.eval_circuit();
         evaluator = CircuitEvaluator::new("ecdh", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
-        let sk_circ = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
+        let sk_circ = evaluator.get_wire_value(cgen.get_out_wires()[0].as_ref().unwrap());
 
         let sk_exp = Util::parse_big_int_x(
             &CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk2, &sec1),

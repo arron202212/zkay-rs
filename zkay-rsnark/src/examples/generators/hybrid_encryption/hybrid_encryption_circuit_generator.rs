@@ -29,7 +29,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -42,8 +42,8 @@ use crate::{
 };
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_array;
 // use crate::circuit::structure::wire_type::WireType;
@@ -87,8 +87,8 @@ impl HybridEncryptionCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
-    fn buildCircuit(&mut self) {
-        let plaintext = CircuitGenerator::createInputWireArray(
+    fn build_circuit(&mut self) {
+        let plaintext = CircuitGenerator::create_input_wire_array(
             self.cg(),
             self.t.plaintextSize as usize,
             &Some("plaint text".to_owned()),
@@ -97,20 +97,24 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Part I: Exchange a key:
 
         // The secret exponent is a  input by the prover
-        let mut secExpBits = CircuitGenerator::createProverWitnessWireArray(
+        let mut secExpBits = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize,
             &Some("SecretExponent".to_owned()),
         );
         for i in 0..HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize {
-            CircuitGenerator::addBinaryAssertion(self.cg(), secExpBits[i].as_ref().unwrap(), &None); // verify all bits are binary
+            CircuitGenerator::add_binary_assertion(
+                self.cg(),
+                secExpBits[i].as_ref().unwrap(),
+                &None,
+            ); // verify all bits are binary
         }
 
         let mut g = vec![None; HybridEncryptionCircuitGenerator::MU as usize];
         let mut h = vec![None; HybridEncryptionCircuitGenerator::MU as usize];
         let generator = self.cg();
         // Hardcode the base and the other party's key (suitable when keys are not expected to change)
-        g[0] = Some(CircuitGenerator::createConstantWire(
+        g[0] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"16377448892084713529161739182205318095580119111576802375181616547062197291263",
@@ -119,7 +123,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             .unwrap(),
             &None,
         ));
-        g[1] = Some(CircuitGenerator::createConstantWire(
+        g[1] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"13687683608888423916085091250849188813359145430644908352977567823030408967189",
@@ -128,7 +132,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             .unwrap(),
             &None,
         ));
-        g[2] = Some(CircuitGenerator::createConstantWire(
+        g[2] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"12629166084120705167185476169390021031074363183264910102253898080559854363106",
@@ -137,7 +141,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             .unwrap(),
             &None,
         ));
-        g[3] = Some(CircuitGenerator::createConstantWire(
+        g[3] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"19441276922979928804860196077335093208498949640381586557241379549605420212272",
@@ -147,7 +151,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             &None,
         ));
 
-        h[0] = Some(CircuitGenerator::createConstantWire(
+        h[0] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"8252578783913909531884765397785803733246236629821369091076513527284845891757",
@@ -156,7 +160,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             .unwrap(),
             &None,
         ));
-        h[1] = Some(CircuitGenerator::createConstantWire(
+        h[1] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"20829599225781884356477513064431048695774529855095864514701692089787151865093",
@@ -165,7 +169,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             .unwrap(),
             &None,
         ));
-        h[2] = Some(CircuitGenerator::createConstantWire(
+        h[2] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"1540379511125324102377803754608881114249455137236500477169164628692514244862",
@@ -174,7 +178,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             .unwrap(),
             &None,
         ));
-        h[3] = Some(CircuitGenerator::createConstantWire(
+        h[3] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
             &BigInteger::parse_bytes(
                 b"1294177986177175279602421915789749270823809536595962994745244158374705688266",
@@ -185,11 +189,11 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         ));
 
         // To make g and h variable inputs to the circuit, simply do the following
-        // instead, and supply the above values using the generateSampleInput()
+        // instead, and supply the above values using the generate_sample_input()
         // method instead.
 
-        //Vec<Option<WireType>> g = CircuitGenerator::createInputWireArray(self.cg(),mu);
-        //Vec<Option<WireType>> h = CircuitGenerator::createInputWireArray(self.cg(),mu);
+        //Vec<Option<WireType>> g = CircuitGenerator::create_input_wire_array(self.cg(),mu);
+        //Vec<Option<WireType>> h = CircuitGenerator::create_input_wire_array(self.cg(),mu);
 
         // Exchange keys
         let exchange = FieldExtensionDHKeyExchange::new(
@@ -203,7 +207,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
 
         // Output g^s
         let g_to_s = exchange.getOutputPublicValue();
-        CircuitGenerator::makeOutputArray(
+        CircuitGenerator::make_output_array(
             self.cg(),
             g_to_s,
             &Some("DH Key Exchange Output".to_owned()),
@@ -222,15 +226,15 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             self.cg(),
             Base,
         );
-        let secret = hashGadget.getOutputWires();
+        let secret = hashGadget.get_output_wires();
         let key = secret[0..128].to_vec();
         let iv = secret[128..256].to_vec();
 
         // Part II: Apply symmetric Encryption
 
         let plaintextBits = WireArray::new(plaintext.clone(), self.cg().downgrade())
-            .getBits(64, &None)
-            .asArray()
+            .get_bits(64, &None)
+            .as_array()
             .clone();
         let symEncGagdet = SymmetricEncryptionCBCGadget::new(
             plaintextBits.clone(),
@@ -240,22 +244,26 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             &None,
             self.cg(),
         );
-        let ciphertext = symEncGagdet.getOutputWires();
-        CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &Some("Cipher Text".to_owned()));
+        let ciphertext = symEncGagdet.get_output_wires();
+        CircuitGenerator::make_output_array(
+            self.cg(),
+            &ciphertext,
+            &Some("Cipher Text".to_owned()),
+        );
         (self.t.plaintext, self.t.secExpBits, self.t.ciphertext) =
             (plaintext, secExpBits, ciphertext.clone());
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         // TODO Auto-generated method stub
         for i in 0..self.t.plaintextSize as usize {
-            evaluator.setWireValue(
+            evaluator.set_wire_value(
                 self.t.plaintext[i].as_ref().unwrap(),
                 &Util::nextRandomBigIntegeri(64),
             );
         }
         for i in 0..HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize {
-            evaluator.setWireValue(
+            evaluator.set_wire_value(
                 self.t.secExpBits[i].as_ref().unwrap(),
                 &Util::nextRandomBigIntegeri(1),
             );
@@ -265,8 +273,8 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
 pub fn main(args: Vec<String>) {
     let mut generator =
         HybridEncryptionCircuitGenerator::new("enc_example", 16, "speck128".to_owned());
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

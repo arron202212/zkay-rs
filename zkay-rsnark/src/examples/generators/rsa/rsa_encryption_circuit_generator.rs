@@ -30,7 +30,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -43,8 +43,8 @@ use crate::{
 };
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_array;
 // use crate::circuit::structure::wire_type::WireType;
@@ -86,19 +86,19 @@ impl RSAEncryptionCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let (rsaKeyLength, plainTextLength) =
             (self.t.rsaKeyLength, self.t.plainTextLength as usize);
         let mut inputMessage =
-            CircuitGenerator::createProverWitnessWireArray(self.cg(), plainTextLength, &None); // in bytes
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), plainTextLength, &None); // in bytes
         for i in 0..plainTextLength {
             inputMessage[i]
                 .as_ref()
                 .unwrap()
-                .restrictBitLength(8, &None);
+                .restrict_bit_length(8, &None);
         }
 
-        let randomness = CircuitGenerator::createProverWitnessWireArray(
+        let randomness = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             Gadget::<RSAEncryptionV1_5_Gadget>::getExpectedRandomnessLength(
                 rsaKeyLength,
@@ -120,7 +120,8 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         //  * This way of doing this increases the number of gates a bit, but
         //  * reduces the VK size when crucial.
 
-        let rsaModulus = CircuitGenerator::createLongElementInput(self.cg(), rsaKeyLength, &None);
+        let rsaModulus =
+            CircuitGenerator::create_long_element_input(self.cg(), rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -128,7 +129,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         // BigInteger("f0dac4df56945ec31a037c5b736b64192f14baf27f2036feb85dfe45dc99d8d3c024e226e6fd7cabb56f780f9289c000a873ce32c66f4c1b2970ae6b7a3ceb2d7167fbbfe41f7b0ed7a07e3c32f14c3940176d280ceb25ed0bf830745a9425e1518f27de822b17b2b599e0aea7d72a2a6efe37160e46bf7c78b0573c9014380ab7ec12ce272a83aaa464f814c08a0b0328e191538fefaadd236ae10ba9cbb525df89da59118c7a7b861ec1c05e09976742fc2d08bd806d3715e702d9faa3491a3e4cf76b5546f927e067b281c25ddc1a21b1fb12788d39b27ca0052144ab0aad7410dc316bd7e9d2fe5e0c7a1028102454be9c26c3c347dd93ee044b680c93cb",
         // 16), LongElement::CHUNK_BITWIDTH));
 
-        // In case of hardcoding the modulus, comment the line that sets the modulus value in generateSampleInput() to avoid an exception
+        // In case of hardcoding the modulus, comment the line that sets the modulus value in generate_sample_input() to avoid an exception
 
         let rsaEncryptionV1_5_Gadget = RSAEncryptionV1_5_Gadget::new(
             rsaModulus.clone(),
@@ -142,12 +143,12 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         // since the randomness vector is a witness in this example, verify any needed constraints
         rsaEncryptionV1_5_Gadget.checkRandomnessCompliance();
 
-        let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires(); // in bytes
+        let cipherTextInBytes = rsaEncryptionV1_5_Gadget.get_output_wires(); // in bytes
 
         // do some grouping to reduce VK Size
         let cipherText = WireArray::new(cipherTextInBytes.clone(), self.cg().downgrade())
-            .packWordsIntoLargerWords(8, 30, &None);
-        CircuitGenerator::makeOutputArray(
+            .pack_words_into_larger_words(8, 30, &None);
+        CircuitGenerator::make_output_array(
             self.cg(),
             &cipherText,
             &Some("Output cipher text".to_owned()),
@@ -167,10 +168,10 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         );
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         let mut msg = String::new();
         for i in 0..self.t.inputMessage.len() {
-            evaluator.setWireValuei(
+            evaluator.set_wire_valuei(
                 self.t.inputMessage[i].as_ref().unwrap(),
                 (b'a' + i as u8) as i64,
             );
@@ -192,7 +193,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         let modulus = 1i32; //(pubKey).getModulus();
 
         // let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        evaluator.setWireValuebi(
+        evaluator.set_wire_valuebi(
             self.t.rsaModulus.as_ref().unwrap(),
             &BigInteger::from(modulus),
             LongElement::CHUNK_BITWIDTH,
@@ -219,7 +220,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
 
         let sampleRandomness = result[1].clone();
         for i in 0..sampleRandomness.len() {
-            evaluator.setWireValuei(
+            evaluator.set_wire_valuei(
                 self.t.randomness[i].as_ref().unwrap(),
                 (sampleRandomness[i] as i64 + 256) % 256,
             );
@@ -237,8 +238,8 @@ pub fn main(args: Vec<String>) {
         keyLength,
         msgLength,
     );
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

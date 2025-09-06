@@ -66,14 +66,14 @@ impl ZkayRSAEncryptionGadget {
                 cipher: vec![],
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayRSAEncryptionGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let plainBytes = ZkayUtil::reverseBytes(
-            self.t.plain.getBitWiresi(256, &None),
+            self.t.plain.get_bit_wiresi(256, &None),
             8,
             self.generator.clone(),
         );
@@ -83,7 +83,7 @@ impl Gadget<ZkayRSAEncryptionGadget> {
             PaddingType::OAEP => {
                 let rndBytes = ZkayUtil::reverseBytes(
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
-                        .getBits(RSABackend::OAEP_RND_CHUNK_SIZE as usize, &None),
+                        .get_bits(RSABackend::OAEP_RND_CHUNK_SIZE as usize, &None),
                     8,
                     self.generator.clone(),
                 );
@@ -102,8 +102,8 @@ impl Gadget<ZkayRSAEncryptionGadget> {
                 let rndLen = self.t.keyBits as usize / 8 - 3 - plainBytes.len();
                 let rndBytes = ZkayUtil::reverseBytes(
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
-                        .getBits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize, &None)
-                        .adjustLength(None, rndLen * 8),
+                        .get_bits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize, &None)
+                        .adjust_length(None, rndLen * 8),
                     8,
                     self.generator.clone(),
                 );
@@ -120,14 +120,14 @@ impl Gadget<ZkayRSAEncryptionGadget> {
         }
 
         self.t.cipher = WireArray::new(
-            enc.getOutputWires().clone(),
+            enc.get_output_wires().clone(),
             self.generator.clone().downgrade(),
         )
-        .packWordsIntoLargerWords(8, RSABackend::CIPHER_CHUNK_SIZE / 8, &None);
+        .pack_words_into_larger_words(8, RSABackend::CIPHER_CHUNK_SIZE / 8, &None);
     }
 }
 impl GadgetConfig for Gadget<ZkayRSAEncryptionGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.cipher
     }
 }

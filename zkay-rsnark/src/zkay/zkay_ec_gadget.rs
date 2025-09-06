@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         config::config::Configs,
         operations::gadget::{Gadget, GadgetConfig},
-        structure::{circuit_generator::CircuitGenerator, wire_type::WireType,wire::WireConfig},
+        structure::{circuit_generator::CircuitGenerator, wire::WireConfig, wire_type::WireType},
     },
     examples::gadgets::math::field_division_gadget::FieldDivisionGadget,
     util::util::BigInteger,
@@ -78,22 +78,22 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         //should be 1, and the three least significant bits should be zero.
 
         let desc = Some("Asserting secret bit conditions".to_owned());
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             generator.clone(),
             secretBits[0].as_ref().unwrap(),
             &desc,
         );
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             generator.clone(),
             secretBits[1].as_ref().unwrap(),
             &desc,
         );
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             generator.clone(),
             secretBits[2].as_ref().unwrap(),
             &desc,
         );
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             generator.clone(),
             secretBits[Self::SECRET_BITWIDTH as usize - 1]
                 .as_ref()
@@ -105,7 +105,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             // verifying all other bit wires are binary (as this is typically a
             // secret
             // witness by the prover)
-            CircuitGenerator::addBinaryAssertion(
+            CircuitGenerator::add_binary_assertion(
                 generator.clone(),
                 secretBits[i].as_ref().unwrap(),
                 &None,
@@ -121,7 +121,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let xCube = xSqr.clone().mul(x);
         let f = xCube.add(xSqr.mul(&BigInteger::from(Self::COEFF_A))).add(x);
         println!("====assertValidPointOnEC============{ySqr},{f}");
-        CircuitGenerator::addEqualityAssertion(self.generator.clone(), &ySqr, &f, &None);
+        CircuitGenerator::add_equality_assertion(self.generator.clone(), &ySqr, &f, &None);
     }
 
     pub fn preprocess(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> Vec<AffinePoint> {
@@ -184,7 +184,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             &None,
             generator,
         )
-        .getOutputWires()[0]
+        .get_output_wires()[0]
             .clone()
             .unwrap();
 
@@ -214,7 +214,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     ) -> AffinePoint {
         let diffY = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
         let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-        let q = FieldDivisionGadget::new(diffY, diffX, &None, generator).getOutputWires()[0]
+        let q = FieldDivisionGadget::new(diffY, diffX, &None, generator).get_output_wires()[0]
             .clone()
             .unwrap();
         let q2 = q.clone().mul(&q);
@@ -249,19 +249,19 @@ impl<T> Gadget<ZkayEcGadget<T>> {
 
     pub fn assertPointOrder(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
         // let generator = &self.generators;
-        let o = &CircuitGenerator::createConstantWire(
+        let o = &CircuitGenerator::create_constant_wire(
             self.generator.clone(),
             &BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap(),
             &None,
         );
         let bits = o
-            .getBitWiresi(
+            .get_bit_wiresi(
                 BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10)
                     .unwrap()
                     .bits(),
                 &None,
             )
-            .asArray()
+            .as_array()
             .clone();
 
         let mut result = table[bits.len() - 1].clone();
@@ -285,13 +285,13 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         }
 
         // verify that: result = -p
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             result.x.as_ref().unwrap(),
             p.x.as_ref().unwrap(),
             &None,
         );
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             result.y.as_ref().unwrap(),
             &p.y.clone().unwrap().mul(-1),

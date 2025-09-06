@@ -30,7 +30,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -43,8 +43,8 @@ use crate::{
 };
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_array;
 // use crate::circuit::structure::wire_type::WireType;
@@ -84,8 +84,8 @@ impl RSAEncryptionOAEPCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
-    fn buildCircuit(&mut self) {
-        let mut inputMessage = CircuitGenerator::createProverWitnessWireArray(
+    fn build_circuit(&mut self) {
+        let mut inputMessage = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             self.t.plainTextLength as usize,
             &None,
@@ -94,10 +94,10 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
             inputMessage[i]
                 .as_ref()
                 .unwrap()
-                .restrictBitLength(8, &None);
+                .restrict_bit_length(8, &None);
         }
 
-        let seed = CircuitGenerator::createProverWitnessWireArray(
+        let seed = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize,
             &None,
@@ -105,7 +105,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
         // constraints on the seed are checked later.
 
         let rsaModulus =
-            CircuitGenerator::createLongElementInput(self.cg(), self.t.rsaKeyLength, &None);
+            CircuitGenerator::create_long_element_input(self.cg(), self.t.rsaKeyLength, &None);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -113,7 +113,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
         // BigInteger("f0dac4df56945ec31a037c5b736b64192f14baf27f2036feb85dfe45dc99d8d3c024e226e6fd7cabb56f780f9289c000a873ce32c66f4c1b2970ae6b7a3ceb2d7167fbbfe41f7b0ed7a07e3c32f14c3940176d280ceb25ed0bf830745a9425e1518f27de822b17b2b599e0aea7d72a2a6efe37160e46bf7c78b0573c9014380ab7ec12ce272a83aaa464f814c08a0b0328e191538fefaadd236ae10ba9cbb525df89da59118c7a7b861ec1c05e09976742fc2d08bd806d3715e702d9faa3491a3e4cf76b5546f927e067b281c25ddc1a21b1fb12788d39b27ca0052144ab0aad7410dc316bd7e9d2fe5e0c7a1028102454be9c26c3c347dd93ee044b680c93cb",
         // 16), LongElement::CHUNK_BITWIDTH));
 
-        // In case of hardcoding, comment the line that sets the modulus value in generateSampleInput()
+        // In case of hardcoding, comment the line that sets the modulus value in generate_sample_input()
 
         let rsaEncryptionOAEPGadget = RSAEncryptionOAEPGadget::new(
             rsaModulus.clone(),
@@ -128,12 +128,12 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
         // If the key or the msg are witnesses, similar constraints are needed
         rsaEncryptionOAEPGadget.checkSeedCompliance();
 
-        let cipherTextInBytes = rsaEncryptionOAEPGadget.getOutputWires(); // in bytes
+        let cipherTextInBytes = rsaEncryptionOAEPGadget.get_output_wires(); // in bytes
 
         // do some grouping to reduce VK Size
         let cipherText = WireArray::new(cipherTextInBytes.clone(), self.cg().downgrade())
-            .packWordsIntoLargerWords(8, 30, &None);
-        CircuitGenerator::makeOutputArray(
+            .pack_words_into_larger_words(8, 30, &None);
+        CircuitGenerator::make_output_array(
             self.cg(),
             &cipherText,
             &Some("Output cipher text".to_owned()),
@@ -153,10 +153,10 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
         );
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         let mut msg = String::new();
         for i in 0..self.t.inputMessage.len() {
-            evaluator.setWireValuei(
+            evaluator.set_wire_valuei(
                 self.t.inputMessage[i].as_ref().unwrap(),
                 (b'a' + i as u8) as i64,
             );
@@ -181,7 +181,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
         // let pubKey = pair.getPublic();
         let modulus = 7i32; //(pubKey).getModulus();
 
-        evaluator.setWireValuebi(
+        evaluator.set_wire_valuebi(
             self.t.rsaModulus.as_ref().unwrap(),
             &BigInteger::from(modulus),
             LongElement::CHUNK_BITWIDTH,
@@ -208,7 +208,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionOAEPCircuitGenerator> {
 
         let sampleRandomness = result[1].clone();
         for i in 0..sampleRandomness.len() {
-            evaluator.setWireValuei(
+            evaluator.set_wire_valuei(
                 self.t.seed[i].as_ref().unwrap(),
                 (sampleRandomness[i] as i64 + 256) % 256,
             );
@@ -226,8 +226,8 @@ pub fn main(args: Vec<String>) {
         keyLength,
         msgLength,
     );
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

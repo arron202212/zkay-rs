@@ -40,19 +40,19 @@ impl OrBasicOp {
 crate::impl_instruction_for!(Op<OrBasicOp>);
 crate::impl_hash_code_for!(Op<OrBasicOp>);
 impl BasicOp for Op<OrBasicOp> {
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "or".to_owned()
     }
 
-    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        // //super.checkInputs(assignment);
-        self.super_checkInputs(assignment);
-        let check = Util::isBinary(
-            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+    fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
+        // //super.check_inputs(assignment);
+        self.super_check_inputs(assignment);
+        let check = Util::is_binary(
+            assignment[self.inputs[0].as_ref().unwrap().get_wire_id() as usize]
                 .as_ref()
                 .unwrap(),
-        ) && Util::isBinary(
-            assignment[self.inputs[1].as_ref().unwrap().getWireId() as usize]
+        ) && Util::is_binary(
+            assignment[self.inputs[1].as_ref().unwrap().get_wire_id() as usize]
                 .as_ref()
                 .unwrap(),
         );
@@ -64,9 +64,9 @@ impl BasicOp for Op<OrBasicOp> {
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (
-            self.inputs[0].as_ref().unwrap().getWireId() as usize,
-            self.inputs[1].as_ref().unwrap().getWireId() as usize,
-            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.inputs[1].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
@@ -81,7 +81,7 @@ impl BasicOp for Op<OrBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         1
     }
 }

@@ -7,12 +7,14 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::{
-    circuit::{auxiliary::long_element::LongElement,
-    operations::gadget::{Gadget, GadgetConfig},
-    structure::{
-        circuit_generator::CircuitGenerator, wire::WireConfig, wire_array::WireArray,
-        wire_type::WireType,
-    }},
+    circuit::{
+        auxiliary::long_element::LongElement,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::CircuitGenerator, wire::WireConfig, wire_array::WireArray,
+            wire_type::WireType,
+        },
+    },
     examples::gadgets::blockciphers::{
         aes128_cipher_gadget::AES128CipherGadget,
         chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget,
@@ -55,7 +57,8 @@ impl ZkayCBCSymmetricEncGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let plaintextBits = Util::reverseBytes(plaintext.wire.getBitWiresi(256, &None).asArray());
+        let plaintextBits =
+            Util::reverseBytes(plaintext.wire.get_bit_wiresi(256, &None).as_array());
         println!("Plain length [bits]: {}", plaintextBits.len());
 
         let mut _self = Gadget::<Self>::new(
@@ -64,30 +67,30 @@ impl ZkayCBCSymmetricEncGadget {
             Self {
                 plaintextBits,
                 keyBits: Util::reverseBytes(
-                    key.getBitWiresi(Self::KEY_SIZE as u64, &None).asArray(),
+                    key.get_bit_wiresi(Self::KEY_SIZE as u64, &None).as_array(),
                 ),
                 ivBits: Util::reverseBytes(
-                    iv.getBitWiresi(Self::BLOCK_SIZE as u64, &None).asArray(),
+                    iv.get_bit_wiresi(Self::BLOCK_SIZE as u64, &None).as_array(),
                 ),
                 cipherType,
                 cipherBits: vec![],
                 outputs: vec![],
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayCBCSymmetricEncGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let block_size = ZkayCBCSymmetricEncGadget::BLOCK_SIZE as usize;
         let numBlocks = (self.t.plaintextBits.len() as f64 / block_size as f64).ceil() as i32;
         let plaintextArray = WireArray::new(
             self.t.plaintextBits.clone(),
             self.generator.clone().downgrade(),
         )
-        .adjustLength(None, (numBlocks * block_size as i32) as usize)
-        .asArray()
+        .adjust_length(None, (numBlocks * block_size as i32) as usize)
+        .as_array()
         .clone();
 
         let preparedKey = self.prepareKey();
@@ -100,56 +103,59 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
                 plaintextArray[i * block_size..(i + 1) * block_size].to_vec(),
                 self.generator.clone().downgrade(),
             );
-            let xored = msgBlock.xorWireArrayi(&prevCipher, &None).asArray().clone();
+            let xored = msgBlock
+                .xor_wire_arrayi(&prevCipher, &None)
+                .as_array()
+                .clone();
             match &self.t.cipherType {
                 CipherType::SPECK_128 => {
                     let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
-                        .packBitsIntoWords(64, &None);
+                        .pack_bits_into_words(64, &None);
                     let gadget = Speck128CipherGadget::new(
                         tmp,
                         preparedKey.clone(),
                         &Some(self.description.clone()),
                         self.generator.clone(),
                     );
-                    let outputs = gadget.getOutputWires().clone();
+                    let outputs = gadget.get_output_wires().clone();
                     prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
-                        .getBits(64, &None);
+                        .get_bits(64, &None);
                 }
                 CipherType::AES_128 => {
                     let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
-                        .packBitsIntoWords(8, &None);
+                        .pack_bits_into_words(8, &None);
                     let gadget = AES128CipherGadget::new(
                         tmp,
                         preparedKey.clone(),
                         &Some("aes: ".to_owned() + &self.description),
                         self.generator.clone(),
                     );
-                    let outputs = gadget.getOutputWires().clone();
+                    let outputs = gadget.get_output_wires().clone();
                     prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
-                        .getBits(8, &None);
+                        .get_bits(8, &None);
                 }
                 CipherType::CHASKEY => {
                     let tmp = WireArray::new(xored.clone(), self.generator.clone().downgrade())
-                        .packBitsIntoWords(32, &None);
+                        .pack_bits_into_words(32, &None);
                     let gadget = ChaskeyLTS128CipherGadget::new(
                         tmp,
                         preparedKey.clone(),
                         &Some("chaskey: ".to_owned() + &self.description),
                         self.generator.clone(),
                     );
-                    let outputs = gadget.getOutputWires().clone();
+                    let outputs = gadget.get_output_wires().clone();
                     prevCipher = WireArray::new(outputs, self.generator.clone().downgrade())
-                        .getBits(3, &None);
+                        .get_bits(3, &None);
                 }
                 _ => panic!("Unknown cipher value:{:?} ", self.t.cipherType),
             }
-            cipherBits = Util::concat(&cipherBits, prevCipher.asArray());
+            cipherBits = Util::concat(&cipherBits, prevCipher.as_array());
         }
         self.t.outputs = WireArray::new(
             Util::reverseBytes(&Util::concat(&self.t.ivBits, &cipherBits)),
             self.generator.clone().downgrade(),
         )
-        .packBitsIntoWords(CIPHER_CHUNK_SIZE as usize, &None);
+        .pack_bits_into_words(CIPHER_CHUNK_SIZE as usize, &None);
     }
 
     fn prepareKey(&self) -> Vec<Option<WireType>> {
@@ -157,25 +163,25 @@ impl Gadget<ZkayCBCSymmetricEncGadget> {
             CipherType::SPECK_128 => {
                 let packedKey =
                     WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
-                        .packBitsIntoWords(64, &None);
+                        .pack_bits_into_words(64, &None);
                 Gadget::<Speck128CipherGadget>::expandKey(&packedKey, &self.generator)
             }
             CipherType::AES_128 => {
                 let packedKey =
                     WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
-                        .packBitsIntoWords(8, &None);
+                        .pack_bits_into_words(8, &None);
                 Gadget::<AES128CipherGadget>::expandKey(&packedKey, &self.generator)
             }
             CipherType::CHASKEY => {
                 WireArray::new(self.t.keyBits.clone(), self.generator.clone().downgrade())
-                    .packBitsIntoWords(32, &None)
+                    .pack_bits_into_words(32, &None)
             }
             _ => panic!("Other Ciphers not supported in this version!"),
         }
     }
 }
 impl GadgetConfig for Gadget<ZkayCBCSymmetricEncGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         //println!("Cipher length [bits]: {}", cipherBits.len());
         &self.t.outputs
     }

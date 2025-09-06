@@ -51,12 +51,12 @@ impl ZkayElgamalEncGadget {
             },
             generator,
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let msgEmbedded = self.mulScalar(&self.getGenerator(), &self.t.t.msgBits);
         let sharedSecret = self.mulScalar(&self.t.t.pk, &self.t.t.randomnessBits);
         let c1 = self.mulScalar(&self.getGenerator(), &self.t.t.randomnessBits);
@@ -69,7 +69,7 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
     }
 }
 impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t.outputs
     }
 }

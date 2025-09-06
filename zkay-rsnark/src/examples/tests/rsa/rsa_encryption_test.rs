@@ -14,16 +14,17 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
             wire_type::WireType,
         },
     },
-  examples::{gadgets::rsa::{
-        rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget, 
-    },generators::rsa::rsa_util::RSAUtil},
+    examples::{
+        gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget,
+        generators::rsa::rsa_util::RSAUtil,
+    },
     util::util::BigInteger,
 };
 
@@ -50,9 +51,9 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
+            fn build_circuit(&mut self) {
                 let plainTextLength = CGTest::plainText.len();
-                let mut inputMessage = CircuitGenerator::createProverWitnessWireArray(
+                let mut inputMessage = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
                     plainTextLength,
                     &None,
@@ -61,15 +62,15 @@ mod test {
                     inputMessage[i]
                         .as_ref()
                         .unwrap()
-                        .restrictBitLength(8, &None);
+                        .restrict_bit_length(8, &None);
                 }
 
-                let mut rsaModulus = CircuitGenerator::createLongElementInput(
+                let mut rsaModulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsaKeyLength as i32,
                     &None,
                 );
-                let mut randomness = CircuitGenerator::createProverWitnessWireArray(
+                let mut randomness = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
                     Gadget::<RSAEncryptionV1_5_Gadget>::getExpectedRandomnessLength(
                         self.t.rsaKeyLength as i32,
@@ -88,12 +89,12 @@ mod test {
 
                 // since randomness is a witness
                 rsaEncryptionV1_5_Gadget.checkRandomnessCompliance();
-                let cipherTextInBytes = rsaEncryptionV1_5_Gadget.getOutputWires().clone(); // in bytes
+                let cipherTextInBytes = rsaEncryptionV1_5_Gadget.get_output_wires().clone(); // in bytes
 
                 // group every 8 bytes together
                 let mut cipherText = WireArray::new(cipherTextInBytes, self.cg().downgrade())
-                    .packWordsIntoLargerWords(8, 8, &None);
-                CircuitGenerator::makeOutputArray(
+                    .pack_words_into_larger_words(8, 8, &None);
+                CircuitGenerator::make_output_array(
                     self.cg(),
                     &cipherText,
                     &Some("Output cipher text".to_owned()),
@@ -113,16 +114,16 @@ mod test {
                 );
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 for i in 0..self.t.inputMessage.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.inputMessage[i].as_ref().unwrap(),
                         CGTest::plainText[i] as i64,
                     );
                 }
                 // try {
                 // let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-                evaluator.setWireValuebi(
+                evaluator.set_wire_valuebi(
                     self.t.rsaModulus.as_ref().unwrap(),
                     &self.t.rsaModulusValue,
                     LongElement::CHUNK_BITWIDTH,
@@ -151,7 +152,7 @@ mod test {
 
                 let sampleRandomness = &result[1];
                 for i in 0..sampleRandomness.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.randomness[i].as_ref().unwrap(),
                         (sampleRandomness[i] as i64 + 256) % 256,
                     );
@@ -196,15 +197,15 @@ mod test {
                 &format!("RSA{keySize}_Enc_TestEncryption"),
                 t,
             );
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             // retrieve the ciphertext from the circuit, and verify that it matches the expected ciphertext and that it decrypts correctly (using the Java built-in RSA decryptor)
             let cipherTextList = generator.get_out_wires();
             let mut t = BigInteger::ZERO;
             let mut i = 0;
             for w in &cipherTextList {
-                let val = evaluator.getWireValue(w.as_ref().unwrap());
+                let val = evaluator.get_wire_value(w.as_ref().unwrap());
                 t = t.add(val.shl(i * 64));
                 i += 1;
             }

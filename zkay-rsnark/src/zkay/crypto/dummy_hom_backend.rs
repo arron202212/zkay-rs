@@ -12,8 +12,8 @@ use crate::{
         operations::gadget::{Gadget, GadgetConfig},
         structure::{
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+                get_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
@@ -80,9 +80,9 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
         let key = self.getKey(keyName, generator.clone());
         // let mut generator = self.generators();
 
-        let keyArr = key.getBits().unwrap().packBitsIntoWords(256, &None);
+        let keyArr = key.get_bits().unwrap().pack_bits_into_words(256, &None);
         for i in 1..keyArr.len() {
-            CircuitGenerator::addZeroAssertion(
+            CircuitGenerator::add_zero_assertion(
                 generator.clone(),
                 keyArr[i].as_ref().unwrap(),
                 &Some("Dummy-hom enc pk valid".to_owned()),
@@ -98,7 +98,7 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
 
         // Transform input 0 to ciphertext 0 (= encryption of 0); serialized inputs x+1 to ciphertext x
         let cipherWire = input.getCipher()[0].wire.clone();
-        let isNonZero = cipherWire.checkNonZero(&None);
+        let isNonZero = cipherWire.check_non_zero(&None);
         cipherWire.sub(isNonZero)
     }
 
@@ -106,10 +106,10 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
         if plain.zkay_type.signed {
             // Signed: wrap negative values around the field prime instead of around 2^n
             let bits = plain.zkay_type.bitwidth as u64;
-            let signBit = plain.wire.getBitWiresi(bits, &None)[bits as usize - 1]
+            let signBit = plain.wire.get_bit_wiresi(bits, &None)[bits as usize - 1]
                 .clone()
                 .unwrap();
-            let negValue = plain.wire.invBits(bits, &None).add(1).negate(&None);
+            let negValue = plain.wire.inv_bits(bits, &None).add(1).negate(&None);
             signBit.mux(&negValue, &plain.wire)
         } else {
             // Unsigned values get encoded as-is

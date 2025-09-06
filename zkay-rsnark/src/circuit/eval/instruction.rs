@@ -15,8 +15,8 @@ use crate::circuit::{
     },
     structure::{
         circuit_generator::{
-            CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-            getActiveCircuitGenerator,
+            CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+            get_active_circuit_generator,
         },
         wire_type::WireType,
     },
@@ -53,13 +53,13 @@ pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
 
     fn emit(&self, evaluator: &CircuitEvaluator) {}
 
-    fn doneWithinCircuit(&self) -> bool {
+    fn done_within_circuit(&self) -> bool {
         false
     }
-    // fn getNumMulGates(&self) -> i32 {
+    // fn get_num_mul_gates(&self) -> i32 {
     //     0
     // }
-    // fn getOutputs(&self) -> Vec<Option<WireType>> {
+    // fn get_outputs(&self) -> Vec<Option<WireType>> {
     //     vec![]
     // }
     // fn instance_of(&self, name: &str) -> bool {

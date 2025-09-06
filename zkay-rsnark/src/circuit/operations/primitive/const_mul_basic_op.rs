@@ -23,33 +23,33 @@ use num_bigint::Sign;
 use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct ConstMulBasicOp {
-    pub constInteger: BigInteger,
-    pub inSign: bool,
+    pub const_integer: BigInteger,
+    pub in_sign: bool,
 }
 
 impl ConstMulBasicOp {
     pub fn new(
         w: &WireType,
         out: &WireType,
-        constInteger: &BigInteger,
+        const_integer: &BigInteger,
         desc: String,
     ) -> Op<ConstMulBasicOp> {
-        let inSign = constInteger.sign() == Sign::Minus;
-        let constInteger = if !inSign {
-            Util::modulo(constInteger, &Configs.field_prime)
+        let in_sign = const_integer.sign() == Sign::Minus;
+        let const_integer = if !in_sign {
+            Util::modulo(const_integer, &Configs.field_prime)
         } else {
-            let mut _constInteger = constInteger.neg();
-            _constInteger = Util::modulo(&_constInteger, &Configs.field_prime);
-            Configs.field_prime.clone().sub(_constInteger)
+            let mut _const_integer = const_integer.neg();
+            _const_integer = Util::modulo(&_const_integer, &Configs.field_prime);
+            Configs.field_prime.clone().sub(_const_integer)
         };
-        // println!("======constInteger========================={constInteger}");
+        // println!("======const_integer========================={const_integer}");
         Op::<ConstMulBasicOp> {
             inputs: vec![Some(w.clone())],
             outputs: vec![Some(out.clone())],
             desc,
             t: ConstMulBasicOp {
-                constInteger,
-                inSign,
+                const_integer,
+                in_sign,
             },
         }
     }
@@ -57,21 +57,24 @@ impl ConstMulBasicOp {
 crate::impl_instruction_for!(Op<ConstMulBasicOp>);
 // crate::impl_hash_code_for!(Op<ConstMulBasicOp>);
 impl BasicOp for Op<ConstMulBasicOp> {
-    fn getOpcode(&self) -> String {
-        if !self.t.inSign {
-            format!("const-mul-{:x}", self.t.constInteger)
+    fn get_op_code(&self) -> String {
+        if !self.t.in_sign {
+            format!("const-mul-{:x}", self.t.const_integer)
         } else {
             format!(
                 "const-mul-neg-{:x}",
-                Configs.field_prime.clone().sub(self.t.constInteger.clone())
+                Configs
+                    .field_prime
+                    .clone()
+                    .sub(self.t.const_integer.clone())
             )
         }
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, out0_id) = (
-            self.inputs[0].as_ref().unwrap().getWireId() as usize,
-            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
@@ -83,7 +86,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         let mut result = assignment[in0_id]
             .clone()
             .unwrap()
-            .mul(&self.t.constInteger);
+            .mul(&self.t.const_integer);
         if result.bits() >= Configs.log2_field_prime {
             result = result.rem(&Configs.field_prime);
         }
@@ -98,13 +101,13 @@ impl BasicOp for Op<ConstMulBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         0
     }
 
     // fn hashCode(&self) -> u64 {
     //     let mut hasher = DefaultHasher::new();
-    //     self.t.constInteger.hash(&mut hasher);
+    //     self.t.const_integer.hash(&mut hasher);
     //     let mut h = hasher.finish();
     //     for i in &self.inputs {
     //         h += i.as_ref().unwrap().hashCode();
@@ -116,17 +119,17 @@ impl Eq for Op<ConstMulBasicOp> {}
 impl PartialEq for Op<ConstMulBasicOp> {
     fn eq(&self, other: &Self) -> bool {
         self.inputs[0].as_ref().unwrap() == other.inputs[0].as_ref().unwrap()
-            && self.t.constInteger == other.t.constInteger
+            && self.t.const_integer == other.t.const_integer
     }
 }
 
 impl Hash for Op<ConstMulBasicOp> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.t.constInteger.hash(state);
-        let mut inputs = self.getInputs();
-        // inputs.sort_unstable_by_key(|x|x.as_ref().unwrap().getWireId());
+        self.t.const_integer.hash(state);
+        let mut inputs = self.get_inputs();
+        // inputs.sort_unstable_by_key(|x|x.as_ref().unwrap().get_wire_id());
         for i in inputs {
-            i.as_ref().unwrap().getWireId().hash(state);
+            i.as_ref().unwrap().get_wire_id().hash(state);
         }
     }
 }

@@ -33,16 +33,16 @@ pub trait SubWire<T = Self> {
 //      fn and(&self, w: T, desc: &Option<String>) -> WireType;
 // }
 
-pub trait XorBitwise<T = Self> {
-    fn xor_bitwise(&self, w: T, numBits: u64, desc: &Option<String>) -> WireType;
+pub trait Xor_bitwise<T = Self> {
+    fn xor_bitwise(&self, w: T, num_bits: u64, desc: &Option<String>) -> WireType;
 }
 
 pub trait AndBitwise<T = Self> {
-    fn and_bitwise(&self, w: T, numBits: u64, desc: &Option<String>) -> WireType;
+    fn and_bitwise(&self, w: T, num_bits: u64, desc: &Option<String>) -> WireType;
 }
 
 pub trait OrBitwise<T = Self> {
-    fn or_bitwise(&self, w: T, numBits: u64, desc: &Option<String>) -> WireType;
+    fn or_bitwise(&self, w: T, num_bits: u64, desc: &Option<String>) -> WireType;
 }
 
 pub trait IsEqualTo<T = Self> {

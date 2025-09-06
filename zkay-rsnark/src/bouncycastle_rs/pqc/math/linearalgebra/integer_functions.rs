@@ -296,7 +296,7 @@ impl IntegerFunctions {
     //     {
     //         return divideAndRound(a, b.negate()).negate();
     //     }
-    //     return a.shiftLeft(1).add(b).divide(b.shiftLeft(1));
+    //     return a.shift_left(1).add(b).divide(b.shift_left(1));
     // }
 
     // public static BigInteger[] divideAndRound(BigInteger[] a, BigInteger b)
@@ -323,7 +323,7 @@ impl IntegerFunctions {
     //     while (p.compareTo(a) < 0)
     //     {
     //         result++;
-    //         p = p.shiftLeft(1);
+    //         p = p.shift_left(1);
     //     }
     //     return result;
     // }
@@ -425,7 +425,7 @@ impl IntegerFunctions {
     //     while (p.compareTo(a) <= 0)
     //     {
     //         result++;
-    //         p = p.shiftLeft(1);
+    //         p = p.shift_left(1);
     //     }
     //     return result;
     // }

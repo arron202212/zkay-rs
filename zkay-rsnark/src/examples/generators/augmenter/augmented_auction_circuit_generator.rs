@@ -29,7 +29,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -42,8 +42,8 @@ use crate::{
 };
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
 // use crate::util::util::{BigInteger, Util};
@@ -88,20 +88,20 @@ impl AugmentedAuctionCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let numParties = self.t.numParties as usize;
         let mut secretInputValues =
-            CircuitGenerator::createProverWitnessWireArray(self.cg(), numParties - 1, &None); // the manager has a zero input (no need to commit to it)
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), numParties - 1, &None); // the manager has a zero input (no need to commit to it)
         let mut secretInputRandomness = vec![vec![]; numParties - 1];
         let mut secretOutputRandomness = vec![vec![]; numParties];
         for i in 0..numParties - 1 {
             secretInputRandomness[i] =
-                CircuitGenerator::createProverWitnessWireArray(self.cg(), 7, &None);
+                CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
             secretOutputRandomness[i] =
-                CircuitGenerator::createProverWitnessWireArray(self.cg(), 7, &None);
+                CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
         }
         secretOutputRandomness[numParties - 1] =
-            CircuitGenerator::createProverWitnessWireArray(self.cg(), 7, &None);
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
         let mut secretInputValuess = secretInputValues.clone();
         secretInputValuess.insert(0, self.get_zero_wire());
         // instantiate a Pinocchio gadget for the auction circuit
@@ -111,7 +111,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
             &None,
             self.cg(),
         );
-        let outputs = auctionGagdet.getOutputWires();
+        let outputs = auctionGagdet.get_output_wires();
 
         // ignore the last output for this circuit which carries the index of the winner (not needed for this example)
         let mut secretOutputValues = outputs[..outputs.len() - 1].to_vec();
@@ -130,9 +130,9 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 self.cg(),
                 Base,
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                g.getOutputWires(),
+                g.get_output_wires(),
                 &Some(format!("Commitment for party # {i}'s input balance.")),
             );
         }
@@ -144,8 +144,8 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 secretOutputValues[i]
                     .as_ref()
                     .unwrap()
-                    .getBitWiresi(64 * 2, &None)
-                    .packAsBits(None, Some(64), &None),
+                    .get_bit_wiresi(64 * 2, &None)
+                    .pack_as_bits(None, Some(64), &None),
             );
             let mut secretOutputRandomnessi = secretOutputRandomness[i].clone();
             secretOutputRandomnessi.insert(0, secretOutputValues[i].clone());
@@ -159,9 +159,9 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 self.cg(),
                 Base,
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                g.getOutputWires(),
+                g.get_output_wires(),
                 &Some(format!("Commitment for party # {i}'s output balance.")),
             );
         }
@@ -178,10 +178,10 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
         );
     }
 
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         let numParties = self.t.numParties as usize;
         for i in 0..numParties - 1 {
-            evaluator.setWireValue(
+            evaluator.set_wire_value(
                 self.t.secretInputValues[i].as_ref().unwrap(),
                 &Util::nextRandomBigIntegeri(63),
             );
@@ -189,12 +189,12 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
 
         for i in 0..numParties - 1 {
             for w in &self.t.secretInputRandomness[i] {
-                evaluator.setWireValue(w.as_ref().unwrap(), &Util::nextRandomBigIntegeri(64));
+                evaluator.set_wire_value(w.as_ref().unwrap(), &Util::nextRandomBigIntegeri(64));
             }
         }
         for i in 0..numParties {
             for w in &self.t.secretOutputRandomness[i] {
-                evaluator.setWireValue(w.as_ref().unwrap(), &Util::nextRandomBigIntegeri(64));
+                evaluator.set_wire_value(w.as_ref().unwrap(), &Util::nextRandomBigIntegeri(64));
             }
         }
     }
@@ -206,8 +206,8 @@ pub fn main(args: Vec<String>) {
         "auction_10.arith".to_owned(),
         10,
     );
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -86,28 +86,28 @@ impl ModConstantGadget {
         );
 
         // TODO: add further checks.
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ModConstantGadget> {
-    fn buildCircuit(&mut self) {
-        let r = CircuitGenerator::createProverWitnessWire(
+    fn build_circuit(&mut self) {
+        let r = CircuitGenerator::create_prover_witness_wire(
             self.generator.clone(),
             &Some("mod result".to_owned()),
         );
-        let q = CircuitGenerator::createProverWitnessWire(
+        let q = CircuitGenerator::create_prover_witness_wire(
             self.generator.clone(),
             &Some("division result".to_owned()),
         );
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
-        // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),  &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a);
+        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),  &|evaluator: &mut CircuitEvaluator| {
+        //             let aValue = evaluator.get_wire_value(a);
         //             let rValue = aValue.rem(b);
-        //             evaluator.setWireValue(r, &rValue);
+        //             evaluator.set_wire_value(r, &rValue);
         //             let qValue = aValue.divide(b);
-        //             evaluator.setWireValue(q, &qValue);
+        //             evaluator.set_wire_value(q, &qValue);
         //         });
 
         let prover = crate::impl_prover!(
@@ -118,43 +118,43 @@ impl Gadget<ModConstantGadget> {
                                     )  {
                             impl Instruction for Prover{
                              fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                        let aValue = evaluator.getWireValue(&self.a);
+                                        let aValue = evaluator.get_wire_value(&self.a);
                                 let rValue = aValue.clone().rem(&self.b);
-                                evaluator.setWireValue(&self.r, &rValue);
+                                evaluator.set_wire_value(&self.r, &rValue);
                                 let qValue = aValue.div(&self.b);
-                                evaluator.setWireValue(&self.q, &qValue);
+                                evaluator.set_wire_value(&self.q, &qValue);
         Ok(())
 
                             }
                             }
                                         }
                                     );
-        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+        CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
         // {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.getWireValue(a);
+        //             let aValue = evaluator.get_wire_value(a);
         //             let rValue = aValue.rem(b);
-        //             evaluator.setWireValue(r, rValue);
+        //             evaluator.set_wire_value(r, rValue);
         //             let qValue = aValue.divide(b);
-        //             evaluator.setWireValue(q, qValue);
+        //             evaluator.set_wire_value(q, qValue);
         //         }
         //     }
         //     Prover
         // });
 
         let bBitwidth = b.bits();
-        r.restrictBitLength(bBitwidth, &None);
-        q.restrictBitLength(self.t.bitwidth as u64 - bBitwidth + 1, &None);
+        r.restrict_bit_length(bBitwidth, &None);
+        q.restrict_bit_length(self.t.bitwidth as u64 - bBitwidth + 1, &None);
 
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &r.isLessThanb(&b, bBitwidth as i32, &None),
+            &r.is_less_thanb(&b, bBitwidth as i32, &None),
             &None,
         );
 
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             &q.mulb(&b, &None).add(&r),
             &a,
@@ -164,7 +164,7 @@ impl Gadget<ModConstantGadget> {
     }
 }
 impl GadgetConfig for Gadget<ModConstantGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.r
     }
 }

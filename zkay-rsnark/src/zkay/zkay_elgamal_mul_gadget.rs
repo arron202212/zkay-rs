@@ -49,12 +49,12 @@ impl ZkayElgamalMulGadget {
             },
             generator,
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let e1 = self.mulScalar(&self.t.t.c1, &self.t.t.scalarBits);
         let e2 = self.mulScalar(&self.t.t.c2, &self.t.t.scalarBits);
         self.t.t.outputs = vec![&e1.x, &e1.y, &e2.x, &e2.y]
@@ -65,7 +65,7 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
     }
 }
 impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t.outputs
     }
 }

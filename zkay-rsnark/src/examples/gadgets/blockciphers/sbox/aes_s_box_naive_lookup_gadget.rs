@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_type::WireType,
         },
     },
@@ -65,19 +65,19 @@ impl AESSBoxNaiveLookupGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<AESSBoxNaiveLookupGadget> {
     const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let mut output = self.generator.borrow().get_zero_wire().unwrap();
         for i in 0..256 {
             output = output.add(
                 self.t
                     .input
-                    .isEqualToi(i, &None)
+                    .is_equal_toi(i, &None)
                     .muli(Self::SBox[i as usize] as i64, &None),
             );
         }
@@ -85,7 +85,7 @@ impl Gadget<AESSBoxNaiveLookupGadget> {
     }
 }
 impl GadgetConfig for Gadget<AESSBoxNaiveLookupGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }
 }

@@ -93,8 +93,8 @@ impl CryptoBackendConfigs for CryptoBackend<Asymmetric<ElgamalBackend>> {
         let c1 = JubJubPoint::new(cipher[0].clone().unwrap(), cipher[1].clone().unwrap());
         let c2 = JubJubPoint::new(cipher[2].clone().unwrap(), cipher[3].clone().unwrap());
         let skBits = WireArray::new(sk.clone(), generator.clone().downgrade())
-            .getBits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
-            .asArray()
+            .get_bits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
+            .as_array()
             .clone();
         Box::new(ZkayElgamalDecGadget::new(
             pk,
@@ -129,8 +129,8 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         let pkArray = self.getKeyArray(keyName);
         let pk = JubJubPoint::new(pkArray[0].clone().unwrap(), pkArray[1].clone().unwrap());
         let randomArray = WireArray::new(random.clone(), generator.clone().downgrade())
-            .getBits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
-            .asArray()
+            .get_bits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
+            .as_array()
             .clone();
         assert!(
             plain.zkay_type.bitwidth <= 32,
@@ -139,8 +139,8 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         Box::new(ZkayElgamalEncGadget::new(
             plain
                 .wire
-                .getBitWiresi(plain.zkay_type.bitwidth as u64, &None)
-                .asArray()
+                .get_bit_wiresi(plain.zkay_type.bitwidth as u64, &None)
+                .as_array()
                 .clone(),
             pk,
             randomArray.clone(),
@@ -187,9 +187,9 @@ impl CryptoBackend<Asymmetric<ElgamalBackend>> {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
         let oneIfBothZero =
-            p.x.checkNonZero(&None)
-                .orw(&p.y.checkNonZero(&None), &None)
-                .invAsBit(&None)
+            p.x.check_non_zero(&None)
+                .orw(&p.y.check_non_zero(&None), &None)
+                .inv_as_bit(&None)
                 .unwrap();
         JubJubPoint::new(p.x.clone(), p.y.clone().add(&oneIfBothZero))
     }
@@ -236,7 +236,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
             }
 
             let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2, generator);
-            self.toTypedWireArray(gadget.getOutputWires(), &outputName)
+            self.toTypedWireArray(gadget.get_output_wires(), &outputName)
         } else if op == '*' {
             let outputName = format!("({}) * ({})", lhs.getName(), rhs.getName());
 
@@ -262,10 +262,10 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
             let gadget = ZkayElgamalMulGadget::new(
                 c1,
                 c2,
-                plain_wire.wire.getBitWiresi(32, &None).asArray().clone(),
+                plain_wire.wire.get_bit_wiresi(32, &None).as_array().clone(),
                 generator,
             );
-            self.toTypedWireArray(gadget.getOutputWires(), &outputName)
+            self.toTypedWireArray(gadget.get_output_wires(), &outputName)
         } else {
             panic!("Binary operation {op} not supported");
         }
@@ -292,12 +292,12 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
         let pk = JubJubPoint::new(pkArray[0].clone().unwrap(), pkArray[1].clone().unwrap());
         let randomArray = randomness
             .wire
-            .getBitWiresi(ElgamalBackend::RND_CHUNK_SIZE as u64, &None)
-            .asArray()
+            .get_bit_wiresi(ElgamalBackend::RND_CHUNK_SIZE as u64, &None)
+            .as_array()
             .clone();
 
         // create gadget
         let gadget = ZkayElgamalRerandGadget::new(c1, c2, pk, randomArray.clone(), generator);
-        self.toTypedWireArray(gadget.getOutputWires(), &outputName)
+        self.toTypedWireArray(gadget.get_output_wires(), &outputName)
     }
 }

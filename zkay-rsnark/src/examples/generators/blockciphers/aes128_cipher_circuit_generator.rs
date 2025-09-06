@@ -27,7 +27,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -41,8 +41,8 @@ use crate::{
 // use crate::circuit::config::config::Configs;
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
 use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget;
@@ -70,20 +70,20 @@ impl AES128CipherCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
-    fn buildCircuit(&mut self) {
-        self.t.inputs = CircuitGenerator::createInputWireArray(self.cg(), 16, &None); // in bytes
-        self.t.key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None); // in bytes
+    fn build_circuit(&mut self) {
+        self.t.inputs = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None); // in bytes
+        self.t.key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None); // in bytes
 
         let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
         let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expandedKey, &None, self.cg());
-        self.t.outputs = gadget.getOutputWires().clone();
+        self.t.outputs = gadget.get_output_wires().clone();
         for o in &self.t.outputs {
-            CircuitGenerator::makeOutput(self.cg(), o.as_ref().unwrap(), &None);
+            CircuitGenerator::make_output(self.cg(), o.as_ref().unwrap(), &None);
         }
         self.t.gadget = Some(gadget);
     }
 
-    fn generateSampleInput(&self, circuitEvaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, circuit_evaluator: &mut CircuitEvaluator) {
         let keyV = BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
         let msgV = BigInteger::parse_bytes(b"ae2d8a571e03ac9c9eb76fac45af8e51", 16).unwrap();
 
@@ -95,15 +95,15 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
         keyArray = keyArray[keyArray.len() - 16..].to_vec();
 
         for i in 0..msgArray.len() {
-            circuitEvaluator.setWireValuei(
+            circuit_evaluator.set_wire_valuei(
                 self.t.inputs[i].as_ref().unwrap(),
                 (msgArray[i] as i64 & 0xff),
             );
         }
 
         for i in 0..keyArray.len() {
-            circuitEvaluator
-                .setWireValuei(self.t.key[i].as_ref().unwrap(), (keyArray[i] as i64 & 0xff));
+            circuit_evaluator
+                .set_wire_valuei(self.t.key[i].as_ref().unwrap(), (keyArray[i] as i64 & 0xff));
         }
     }
 }
@@ -113,8 +113,8 @@ pub fn main(args: Vec<String>) {
     //Configs.hex_output_enabled = true;
     crate::circuit::config::config::atomic_hex_output_enabled.store(true, Ordering::Relaxed);
     let mut generator = AES128CipherCircuitGenerator::new("AES_Circuit");
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

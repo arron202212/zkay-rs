@@ -26,7 +26,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_type::WireType,
         },
     },
@@ -74,13 +74,13 @@ impl AESSBoxComputeGadget {
                 input,
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<AESSBoxComputeGadget> {
-    fn buildCircuit(&mut self) {
-        let inverse = CircuitGenerator::createProverWitnessWire(self.generator.clone(), &None);
+    fn build_circuit(&mut self) {
+        let inverse = CircuitGenerator::create_prover_witness_wire(self.generator.clone(), &None);
         let input = &self.t.input;
         let prover = crate::impl_prover!(
                                                 eval(  input: WireType,
@@ -103,7 +103,7 @@ impl Gadget<AESSBoxComputeGadget> {
                         p
                     }
 
-                    fn findInv(mut a: i32) -> i32 {
+                    fn find_inv(mut a: i32) -> i32 {
                         if a == 0 {
                             return 0;
                         }
@@ -114,71 +114,71 @@ impl Gadget<AESSBoxComputeGadget> {
                         }
                         -1
                     }
-                                            let p = evaluator.getWireValue(&self.input).to_str_radix(10).parse::<i32>().unwrap();
-                                            let q = findInv(p);
-                                            evaluator.setWireValuei(&self.inverse, q as i64);
+                                            let p = evaluator.get_wire_value(&self.input).to_str_radix(10).parse::<i32>().unwrap();
+                                            let q = find_inv(p);
+                                            evaluator.set_wire_valuei(&self.inverse, q as i64);
         Ok(())
                                 }
                                 }
                                             }
                                         );
-        CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+        CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
 
         // &{
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let p = evaluator.getWireValue(input).intValue();
-        //             let q = findInv(p);
-        //             evaluator.setWireValue(inverse, q);
+        //             let p = evaluator.get_wire_value(input).intValue();
+        //             let q = find_inv(p);
+        //             evaluator.set_wire_value(inverse, q);
         //         }
         //     }
         //     Prover
         // });
 
-        inverse.restrictBitLength(8, &None);
+        inverse.restrict_bit_length(8, &None);
 
         let v = Self::gmul(
             self.t.input.clone(),
             inverse.clone(),
             self.generator.clone(),
         );
-        CircuitGenerator::addAssertion(
+        CircuitGenerator::add_assertion(
             self.generator.clone(),
             &v.sub(self.generator.get_one_wire().as_ref().unwrap()),
             &self.t.input.clone().add(&inverse),
             self.generator.get_zero_wire().as_ref().unwrap(),
             &None,
         );
-        let constant = CircuitGenerator::createConstantWirei(self.generator.clone(), 0x63, &None);
-        let mut output = constant.xorBitwise(&inverse, 8, &None);
-        output = output.xorBitwise(&inverse.rotateLeft(8, 1, &None), 8, &None);
-        output = output.xorBitwise(&inverse.rotateLeft(8, 2, &None), 8, &None);
-        output = output.xorBitwise(&inverse.rotateLeft(8, 3, &None), 8, &None);
-        output = output.xorBitwise(&inverse.rotateLeft(8, 4, &None), 8, &None);
+        let constant = CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x63, &None);
+        let mut output = constant.xor_bitwise(&inverse, 8, &None);
+        output = output.xor_bitwise(&inverse.rotate_left(8, 1, &None), 8, &None);
+        output = output.xor_bitwise(&inverse.rotate_left(8, 2, &None), 8, &None);
+        output = output.xor_bitwise(&inverse.rotate_left(8, 3, &None), 8, &None);
+        output = output.xor_bitwise(&inverse.rotate_left(8, 4, &None), 8, &None);
         (self.t.output, self.t.inverse) = (vec![Some(output)], Some(inverse));
     }
 
     fn gmul(mut a: WireType, mut b: WireType, generator: RcCell<CircuitGenerator>) -> WireType {
         let mut p = generator.get_zero_wire().unwrap();
-        let ccw = CircuitGenerator::createConstantWirei(generator.clone(), 0x1b, &None);
+        let ccw = CircuitGenerator::create_constant_wirei(generator.clone(), 0x1b, &None);
         for counter in 0..8 {
-            let tmp = p.xorBitwise(&a, 8, &None);
-            let bit = b.getBitWiresi(8, &None).get(0).clone().unwrap();
+            let tmp = p.xor_bitwise(&a, 8, &None);
+            let bit = b.get_bit_wiresi(8, &None).get(0).clone().unwrap();
             p = p.clone().add(bit.mul(tmp.sub(&p)));
 
-            let bit2 = a.getBitWiresi(8, &None).get(7).clone().unwrap();
-            a = a.shiftLeft(8, 1, &None);
+            let bit2 = a.get_bit_wiresi(8, &None).get(7).clone().unwrap();
+            a = a.shift_left(8, 1, &None);
 
-            let tmp2 = a.xorBitwise(&ccw, 8, &None);
+            let tmp2 = a.xor_bitwise(&ccw, 8, &None);
             a = a.clone().add(bit2.mul(tmp2.sub(&a)));
-            b = b.shiftRight(8, 1, &None);
+            b = b.shift_right(8, 1, &None);
         }
         p
     }
 }
 impl GadgetConfig for Gadget<AESSBoxComputeGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }
 }

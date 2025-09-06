@@ -42,16 +42,16 @@ pub struct WireLabelInstruction {
     pub desc: String,
 }
 pub trait WireLabel {
-    fn getWire(&self) -> WireType;
+    fn get_wire(&self) -> WireType;
 
-    fn getType(&self) -> LabelType;
+    fn get_type(&self) -> LabelType;
 }
 impl WireLabel for WireLabelInstruction {
-    fn getWire(&self) -> WireType {
+    fn get_wire(&self) -> WireType {
         self.w.clone()
     }
 
-    fn getType(&self) -> LabelType {
+    fn get_type(&self) -> LabelType {
         self.label_type.clone()
     }
 }
@@ -64,7 +64,7 @@ impl WireLabelInstruction {
         }
     }
 
-    pub fn getWire(&self) -> WireType {
+    pub fn get_wire(&self) -> WireType {
         self.w.clone()
     }
 
@@ -80,7 +80,7 @@ impl WireLabelInstruction {
     //         })
     //     )
     // }
-    pub fn getType(&self) -> LabelType {
+    pub fn get_type(&self) -> LabelType {
         self.label_type.clone()
     }
 }
@@ -107,15 +107,15 @@ impl Instruction for WireLabelInstruction {
                 },
                 if crate::circuit::config::config::atomic_hex_output_enabled.load(Ordering::Relaxed)
                 {
-                    format!("{:x}", evaluator.getWireValue(&self.w))
+                    format!("{:x}", evaluator.get_wire_value(&self.w))
                 } else {
-                    format!("{}", evaluator.getWireValue(&self.w))
+                    format!("{}", evaluator.get_wire_value(&self.w))
                 }
             );
         }
     }
 
-    fn doneWithinCircuit(&self) -> bool {
+    fn done_within_circuit(&self) -> bool {
         self.label_type != LabelType::debug
     }
 

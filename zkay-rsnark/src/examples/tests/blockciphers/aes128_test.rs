@@ -7,15 +7,17 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::{
-    circuit::{eval::circuit_evaluator::CircuitEvaluator,
-    operations::gadget::{Gadget, GadgetConfig},
-    structure::{
-        circuit_generator::{
-            CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-            addToEvaluationQueue, getActiveCircuitGenerator,
+    circuit::{
+        eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::{Gadget, GadgetConfig},
+        structure::{
+            circuit_generator::{
+                CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
+                add_to_evaluation_queue, get_active_circuit_generator,
+            },
+            wire_type::WireType,
         },
-        wire_type::WireType,
-    }},
+    },
     examples::gadgets::blockciphers::{
         aes128_cipher_gadget::{AES128CipherGadget, SBoxOption, atomic_sbox_option},
         sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2,
@@ -76,23 +78,23 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
+            fn build_circuit(&mut self) {
                 let start = std::time::Instant::now();
 
-                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
-                let key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
+                let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
+                let key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 // assert!(!plaintext.is_empty(),"plaintext.is_empty()");
                 // println!("=====plaintext.len()======{}",plaintext.len());
                 let ciphertext =
                     AES128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
-                        .getOutputWires()
+                        .get_output_wires()
                         .clone();
-                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let start = std::time::Instant::now();
 
                 let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
@@ -104,19 +106,19 @@ mod test {
                 keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.plaintext[i].as_ref().unwrap(),
                         (msgArray[i] as i64 & 0xff),
                     );
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.key[i].as_ref().unwrap(),
                         (keyArray[i] as i64 & 0xff),
                     );
                 }
                 println!(
-                    "===generateSampleInput===start==elapsed== {:?} ",
+                    "===generate_sample_input===start==elapsed== {:?} ",
                     start.elapsed()
                 );
             }
@@ -137,20 +139,20 @@ mod test {
             let mut generator =
                 CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test1_{sboxOption}"), t);
 
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             let cipherText = generator.get_out_wires();
 
             let result = Util::parse_big_int_x("f5d3d58503b9699de785895a96fdbaaf");
 
-            let mut resultArray = result.to_bytes_be().1.clone();
-            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
+            let mut result_array = result.to_bytes_be().1.clone();
+            result_array = result_array[result_array.len() - 16..result_array.len()].to_vec();
 
             for i in 0..16 {
                 assert_eq!(
-                    evaluator.getWireValue(cipherText[i].as_ref().unwrap()),
-                    BigInteger::from((resultArray[i] as i32 + 256) % 256),
+                    evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
+                    BigInteger::from((result_array[i] as i32 + 256) % 256),
                 );
             }
         }
@@ -166,19 +168,19 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
-                let key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
+            fn build_circuit(&mut self) {
+                let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
+                let key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
                     AES128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
-                        .getOutputWires()
+                        .get_output_wires()
                         .clone();
-                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
                 let msgV = Util::parse_big_int_x("6bc1bee22e409f96e93d7e117393172a");
 
@@ -188,13 +190,13 @@ mod test {
                 keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.plaintext[i].as_ref().unwrap(),
                         (msgArray[i] as i64 & 0xff),
                     );
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.key[i].as_ref().unwrap(),
                         (keyArray[i] as i64 & 0xff),
                     );
@@ -217,8 +219,8 @@ mod test {
             let mut generator =
                 CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test2_{sboxOption}"), t);
 
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             let cipherText = generator.get_out_wires();
 
@@ -226,13 +228,13 @@ mod test {
 
             // expected output:0xf5d3d58503b9699de785895a96fdbaaf
 
-            let (_, mut resultArray) = result.to_bytes_be();
-            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
+            let (_, mut result_array) = result.to_bytes_be();
+            result_array = result_array[result_array.len() - 16..result_array.len()].to_vec();
 
             for i in 0..16 {
                 assert_eq!(
-                    evaluator.getWireValue(cipherText[i].as_ref().unwrap()),
-                    BigInteger::from((resultArray[i] as i32 + 256) % 256),
+                    evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
+                    BigInteger::from((result_array[i] as i32 + 256) % 256),
                 );
             }
         }
@@ -248,19 +250,19 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
-                let key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
+            fn build_circuit(&mut self) {
+                let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
+                let key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
                     AES128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
-                        .getOutputWires()
+                        .get_output_wires()
                         .clone();
-                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
                 let msgV = Util::parse_big_int_x("30c81c46a35ce411e5fbc1191a0a52ef");
 
@@ -270,14 +272,16 @@ mod test {
                 keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.plaintext[i].as_ref().unwrap(),
                         msgArray[i] as i64 & 0xff,
                     );
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator
-                        .setWireValuei(self.t.key[i].as_ref().unwrap(), keyArray[i] as i64 & 0xff);
+                    evaluator.set_wire_valuei(
+                        self.t.key[i].as_ref().unwrap(),
+                        keyArray[i] as i64 & 0xff,
+                    );
                 }
             }
         }
@@ -296,20 +300,20 @@ mod test {
             };
             let mut generator =
                 CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test3_{sboxOption}"), t);
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             let cipherText = generator.get_out_wires();
 
             let result = Util::parse_big_int_x("43b1cd7f598ece23881b00e3ed030688");
 
-            let (_, mut resultArray) = result.to_bytes_be();
-            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
+            let (_, mut result_array) = result.to_bytes_be();
+            result_array = result_array[result_array.len() - 16..result_array.len()].to_vec();
 
             for i in 0..16 {
                 assert_eq!(
-                    evaluator.getWireValue(cipherText[i].as_ref().unwrap()),
-                    BigInteger::from((resultArray[i] as i32 + 256) % 256),
+                    evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
+                    BigInteger::from((result_array[i] as i32 + 256) % 256),
                 );
             }
         }
@@ -325,19 +329,19 @@ mod test {
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
-                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
-                let key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
+            fn build_circuit(&mut self) {
+                let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
+                let key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
                     AES128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
-                        .getOutputWires()
+                        .get_output_wires()
                         .clone();
-                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
                 let msgV = Util::parse_big_int_x("f69f2445df4f9b17ad2b417be66c3710");
 
@@ -347,13 +351,13 @@ mod test {
                 keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.plaintext[i].as_ref().unwrap(),
                         (msgArray[i] as i64 & 0xff),
                     );
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.key[i].as_ref().unwrap(),
                         (keyArray[i] as i64 & 0xff),
                     );
@@ -376,20 +380,20 @@ mod test {
             let mut generator =
                 CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test4_{sboxOption}"), t);
 
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             let cipherText = generator.get_out_wires();
 
             let result = Util::parse_big_int_x("7b0c785e27e8ad3f8223207104725dd4");
 
-            let (_, mut resultArray) = result.to_bytes_be();
-            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
+            let (_, mut result_array) = result.to_bytes_be();
+            result_array = result_array[result_array.len() - 16..result_array.len()].to_vec();
 
             for i in 0..16 {
                 assert_eq!(
-                    evaluator.getWireValue(cipherText[i].as_ref().unwrap()),
-                    BigInteger::from((resultArray[i] as i32 + 256) % 256),
+                    evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
+                    BigInteger::from((result_array[i] as i32 + 256) % 256),
                 );
             }
         }
@@ -406,20 +410,20 @@ mod test {
 
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
+            fn build_circuit(&mut self) {
                 let start = std::time::Instant::now();
-                let plaintext = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
-                let key = CircuitGenerator::createInputWireArray(self.cg(), 16, &None);
+                let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
+                let key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None);
                 let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
                     AES128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
-                        .getOutputWires()
+                        .get_output_wires()
                         .clone();
-                CircuitGenerator::makeOutputArray(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
-            fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+            fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let start = std::time::Instant::now();
                 let keyV = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
                 let msgV = Util::parse_big_int_x("f69f2445df4f9b17ad2b417be66c3710");
@@ -430,19 +434,19 @@ mod test {
                 keyArray = keyArray[keyArray.len() - 16..keyArray.len()].to_vec();
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.plaintext[i].as_ref().unwrap(),
                         (msgArray[i] as i64 & 0xff),
                     );
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator.setWireValuei(
+                    evaluator.set_wire_valuei(
                         self.t.key[i].as_ref().unwrap(),
                         (keyArray[i] as i64 & 0xff),
                     );
                 }
                 println!(
-                    "===generateSampleInput===start==elapsed== {:?} ",
+                    "===generate_sample_input===start==elapsed== {:?} ",
                     start.elapsed()
                 );
             }
@@ -461,20 +465,20 @@ mod test {
                 &format!("AES128_Test_SBox_Parametrization_{b}"),
                 t,
             );
-            generator.generateCircuit();
-            let evaluator = generator.evalCircuit().unwrap();
+            generator.generate_circuit();
+            let evaluator = generator.eval_circuit().unwrap();
 
             let cipherText = generator.get_out_wires();
 
             let result = Util::parse_big_int_x("7b0c785e27e8ad3f8223207104725dd4");
 
-            let (_, mut resultArray) = result.to_bytes_be();
-            resultArray = resultArray[resultArray.len() - 16..resultArray.len()].to_vec();
+            let (_, mut result_array) = result.to_bytes_be();
+            result_array = result_array[result_array.len() - 16..result_array.len()].to_vec();
 
             for i in 0..16 {
                 assert_eq!(
-                    evaluator.getWireValue(cipherText[i].as_ref().unwrap()),
-                    BigInteger::from((resultArray[i] as i32 + 256) % 256),
+                    evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
+                    BigInteger::from((result_array[i] as i32 + 256) % 256),
                 );
             }
         }

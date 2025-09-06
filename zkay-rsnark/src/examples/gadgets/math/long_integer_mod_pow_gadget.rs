@@ -28,7 +28,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -96,14 +96,14 @@ impl LongIntegerModPowGadget {
                 mMinBits,
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<LongIntegerModPowGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let one = LongElement::newb(vec![Util::one()], self.generator.clone().downgrade());
-        let eBits = self.t.e.getBitsi(self.t.eMaxBits).asArray().clone();
+        let eBits = self.t.e.get_bitsi(self.t.eMaxBits).as_array().clone();
 
         // Start with product = 1
         let mut product = one.clone();
@@ -128,7 +128,7 @@ impl Gadget<LongIntegerModPowGadget> {
             .clone();
             let squareTimesBase = squareModM
                 .clone()
-                .mul(&one.muxBit(&self.t.b, eBits[i].as_ref().unwrap()));
+                .mul(&one.mux_bit(&self.t.b, eBits[i].as_ref().unwrap()));
             product = LongIntegerModGadget::new(
                 squareTimesBase,
                 self.t.m.clone(),
@@ -158,7 +158,7 @@ impl Gadget<LongIntegerModPowGadget> {
     }
 }
 impl GadgetConfig for Gadget<LongIntegerModPowGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        self.t.c.getArray()
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        self.t.c.get_array()
     }
 }

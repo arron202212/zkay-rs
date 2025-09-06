@@ -13,7 +13,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
@@ -50,8 +50,8 @@ mod test {
         }
 
         pub fn asConstJubJub(&self, generator: &RcCell<CircuitGenerator>) -> JubJubPoint {
-            let wx = CircuitGenerator::createConstantWire(generator.clone(), &self.x, &None);
-            let wy = CircuitGenerator::createConstantWire(generator.clone(), &self.y, &None);
+            let wx = CircuitGenerator::create_constant_wire(generator.clone(), &self.x, &None);
+            let wy = CircuitGenerator::create_constant_wire(generator.clone(), &self.y, &None);
             JubJubPoint::new(wx, wy)
         }
     }
@@ -74,26 +74,27 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalEncCircuitGenerator> {
-        fn buildCircuit(&mut self) {
-            let randomness = CircuitGenerator::createConstantWire(self.cg(), &self.t.random, &None);
-            let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
-            let message = CircuitGenerator::createConstantWire(self.cg(), &self.t.plain, &None);
-            let messageBits = message.getBitWiresi(32, &None);
+        fn build_circuit(&mut self) {
+            let randomness =
+                CircuitGenerator::create_constant_wire(self.cg(), &self.t.random, &None);
+            let randomnessBits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
+            let message = CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain, &None);
+            let messageBits = message.get_bit_wiresi(32, &None);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalEncGadget::new(
-                messageBits.asArray().clone(),
+                messageBits.as_array().clone(),
                 self.t.pk.asConstJubJub(&generator),
-                randomnessBits.asArray().clone(),
+                randomnessBits.as_array().clone(),
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                gadget.getOutputWires(),
+                gadget.get_output_wires(),
                 &Some("cipher".to_owned()),
             );
         }
 
-        fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+        fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
     }
     #[derive(Debug, Clone, ImplStructNameConfig)]
     struct ElgamalRerandCircuitGenerator {
@@ -117,25 +118,26 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalRerandCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalRerandCircuitGenerator> {
-        fn buildCircuit(&mut self) {
-            let randomness = CircuitGenerator::createConstantWire(self.cg(), &self.t.random, &None);
-            let randomnessBits = randomness.getBitWiresi(self.t.random.bits(), &None);
+        fn build_circuit(&mut self) {
+            let randomness =
+                CircuitGenerator::create_constant_wire(self.cg(), &self.t.random, &None);
+            let randomnessBits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalRerandGadget::new(
                 self.t.c1.asConstJubJub(&generator),
                 self.t.c2.asConstJubJub(&generator),
                 self.t.pk.asConstJubJub(&generator),
-                randomnessBits.asArray().clone(),
+                randomnessBits.as_array().clone(),
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                gadget.getOutputWires(),
+                gadget.get_output_wires(),
                 &Some("rerand_cipher".to_owned()),
             );
         }
 
-        fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+        fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
     }
     #[derive(Debug, Clone, ImplStructNameConfig)]
     struct ElgamalDecCircuitGenerator {
@@ -170,27 +172,27 @@ mod test {
 
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalDecCircuitGenerator> {
-        fn buildCircuit(&mut self) {
-            let secretKey = CircuitGenerator::createConstantWire(self.cg(), &self.t.sk, &None);
-            let skBits = secretKey.getBitWiresi(self.t.sk.bits(), &None);
-            let msgWire = CircuitGenerator::createConstantWire(self.cg(), &self.t.msg, &None);
+        fn build_circuit(&mut self) {
+            let secretKey = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sk, &None);
+            let skBits = secretKey.get_bit_wiresi(self.t.sk.bits(), &None);
+            let msgWire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.msg, &None);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalDecGadget::new(
                 self.t.pk.asConstJubJub(&generator),
-                skBits.asArray().clone(),
+                skBits.as_array().clone(),
                 self.t.c1.asConstJubJub(&generator),
                 self.t.c2.asConstJubJub(&generator),
                 msgWire,
                 self.cg(),
             );
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                gadget.getOutputWires(),
+                gadget.get_output_wires(),
                 &Some("dummy output".to_owned()),
             );
         }
 
-        fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+        fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
     }
 
     fn oneInputTest(
@@ -206,13 +208,13 @@ mod test {
     ) {
         let mut cgen =
             ElgamalEncCircuitGenerator::new("test_enc", plain.clone(), random, pk.clone());
-        cgen.generateCircuit();
+        cgen.generate_circuit();
         let mut evaluator = CircuitEvaluator::new("test_enc", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
-        let c1x = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
-        let c1y = evaluator.getWireValue(cgen.get_out_wires()[1].as_ref().unwrap());
-        let c2x = evaluator.getWireValue(cgen.get_out_wires()[2].as_ref().unwrap());
-        let c2y = evaluator.getWireValue(cgen.get_out_wires()[3].as_ref().unwrap());
+        let c1x = evaluator.get_wire_value(cgen.get_out_wires()[0].as_ref().unwrap());
+        let c1y = evaluator.get_wire_value(cgen.get_out_wires()[1].as_ref().unwrap());
+        let c2x = evaluator.get_wire_value(cgen.get_out_wires()[2].as_ref().unwrap());
+        let c2y = evaluator.get_wire_value(cgen.get_out_wires()[3].as_ref().unwrap());
         assert_eq!(c1Expected.x, c1x);
         assert_eq!(c1Expected.y, c1y);
         assert_eq!(c2Expected.x, c2x);
@@ -226,21 +228,21 @@ mod test {
             c2Expected.clone(),
             plain,
         );
-        cgen.generateCircuit();
+        cgen.generate_circuit();
         let mut evaluator = CircuitEvaluator::new("test_dec", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
-        let one = evaluator.getWireValue(cgen.get_out_wires()[0].as_ref().unwrap());
+        let one = evaluator.get_wire_value(cgen.get_out_wires()[0].as_ref().unwrap());
         assert_eq!(Util::one(), one);
 
         let mut rgen =
             ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
-        rgen.generateCircuit();
+        rgen.generate_circuit();
         let mut evaluator = CircuitEvaluator::new("test_rerand", &rgen.cg);
         evaluator.evaluate(&rgen.cg);
-        let r1x = evaluator.getWireValue(rgen.get_out_wires()[0].as_ref().unwrap());
-        let r1y = evaluator.getWireValue(rgen.get_out_wires()[1].as_ref().unwrap());
-        let r2x = evaluator.getWireValue(rgen.get_out_wires()[2].as_ref().unwrap());
-        let r2y = evaluator.getWireValue(rgen.get_out_wires()[3].as_ref().unwrap());
+        let r1x = evaluator.get_wire_value(rgen.get_out_wires()[0].as_ref().unwrap());
+        let r1y = evaluator.get_wire_value(rgen.get_out_wires()[1].as_ref().unwrap());
+        let r2x = evaluator.get_wire_value(rgen.get_out_wires()[2].as_ref().unwrap());
+        let r2y = evaluator.get_wire_value(rgen.get_out_wires()[3].as_ref().unwrap());
         assert_eq!(r1Expected.x, r1x);
         assert_eq!(r1Expected.y, r1y);
         assert_eq!(r2Expected.x, r2x);

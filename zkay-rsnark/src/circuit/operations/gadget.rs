@@ -28,7 +28,7 @@ impl<T> Gadget<T> {
 }
 
 pub trait GadgetConfig: Debug {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>>;
+    fn get_output_wires(&self) -> &Vec<Option<WireType>>;
 
     // fn toString(&self) -> String {
     //     "getClass().getSimpleName()".to_owned() + " " + &self.description()
@@ -36,7 +36,7 @@ pub trait GadgetConfig: Debug {
     fn description(&self) -> String {
         String::new()
     }
-    fn debugStr(&self, s: &str) -> Option<String> {
+    fn debug_str(&self, s: &str) -> Option<String> {
         //{self:?}  MYTODO
         Some(format!(":{s}"))
     }

@@ -14,7 +14,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire_type::WireType,
         },
@@ -59,36 +59,36 @@ mod test {
     }
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ModPowCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ModPowCircuitGenerator> {
-        fn buildCircuit(&mut self) {
+        fn build_circuit(&mut self) {
             let start = std::time::Instant::now();
-            let bWire = CircuitGenerator::createLongElementInput(
+            let bWire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.b.bits() as i32),
                 &Some("b".to_owned()),
             );
             println!(
-                " =ModPowCircuitGenerator==buildCircuit==========={}== {:?} ",
+                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
                 line!(),
                 start.elapsed()
             );
-            let eWire = CircuitGenerator::createLongElementInput(
+            let eWire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.e.bits() as i32),
                 &Some("e".to_owned()),
             );
             println!(
-                " =ModPowCircuitGenerator==buildCircuit==========={}== {:?} ",
+                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
                 line!(),
                 start.elapsed()
             );
 
-            let mWire = CircuitGenerator::createLongElementInput(
+            let mWire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.m.bits() as i32),
                 &Some("m".to_owned()),
             );
             println!(
-                " =ModPowCircuitGenerator==buildCircuit==========={}== {:?} ",
+                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
                 line!(),
                 start.elapsed()
             );
@@ -103,18 +103,18 @@ mod test {
                 self.cg(),
             );
             println!(
-                " =ModPowCircuitGenerator==buildCircuit==========={}== {:?} ",
+                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
                 line!(),
                 start.elapsed()
             );
 
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
-                modPow.getOutputWires(),
+                modPow.get_output_wires(),
                 &Some("c".to_owned()),
             );
             println!(
-                " =ModPowCircuitGenerator==buildCircuit==========={}== {:?} ",
+                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
                 line!(),
                 start.elapsed()
             );
@@ -122,18 +122,18 @@ mod test {
             (self.t.bWire, self.t.eWire, self.t.mWire) = (Some(bWire), Some(eWire), Some(mWire));
         }
 
-        fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
-            evaluator.setWireValuebi(
+        fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
+            evaluator.set_wire_valuebi(
                 self.t.bWire.as_ref().unwrap(),
                 &self.t.b,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.eWire.as_ref().unwrap(),
                 &self.t.e,
                 LongElement::CHUNK_BITWIDTH,
             );
-            evaluator.setWireValuebi(
+            evaluator.set_wire_valuebi(
                 self.t.mWire.as_ref().unwrap(),
                 &self.t.m,
                 LongElement::CHUNK_BITWIDTH,
@@ -143,13 +143,13 @@ mod test {
     impl CircuitGeneratorExtend<ModPowCircuitGenerator> {
         pub fn computeResult(&mut self) -> BigInteger {
             // let t1 = Instant();
-            self.generateCircuit();
+            self.generate_circuit();
             // let t2 = System.nanoTime();
             // let ms = 1.e - 6 * (t2 - t1);
             // println!("Building took {} ms\n", ms);
-            let evaluator = self.evalCircuit().unwrap();
+            let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.getWiresValues(&self.get_out_wires());
+            let outValues = evaluator.get_wires_values(&self.get_out_wires());
             Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
         }
     }

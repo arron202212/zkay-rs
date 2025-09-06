@@ -29,7 +29,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -43,8 +43,8 @@ use crate::{
 // use crate::circuit::config::config::Configs;
 // use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
 // use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-//     getActiveCircuitGenerator,
+//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+//     get_active_circuit_generator,
 // };
 // use crate::circuit::structure::wire_type::WireType;
 // use crate::util::util::{BigInteger, Util};
@@ -85,24 +85,24 @@ impl MerkleTreeMembershipCircuitGenerator {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let hashDigestDimension = MerkleTreeMembershipCircuitGenerator::hashDigestDimension;
         //  declare inputs
-        let publicRootWires = CircuitGenerator::createInputWireArray(
+        let publicRootWires = CircuitGenerator::create_input_wire_array(
             self.cg(),
             hashDigestDimension as usize,
             &Some("Input Merkle Tree Root".to_owned()),
         );
-        let intermediateHasheWires = CircuitGenerator::createProverWitnessWireArray(
+        let intermediateHasheWires = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             (hashDigestDimension * self.t.treeHeight) as usize,
             &Some("Intermediate Hashes".to_owned()),
         );
-        let directionSelector = CircuitGenerator::createProverWitnessWire(
+        let directionSelector = CircuitGenerator::create_prover_witness_wire(
             self.cg(),
             &Some("Direction selector".to_owned()),
         );
-        let leafWires = CircuitGenerator::createProverWitnessWireArray(
+        let leafWires = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize,
             &Some("Secret Leaf".to_owned()),
@@ -118,7 +118,7 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             &None,
             self.cg(),
         );
-        let actualRoot = merkleTreeGadget.getOutputWires();
+        let actualRoot = merkleTreeGadget.get_output_wires();
 
         //  Now compare the actual root with the pub  known root **/
         let mut errorAccumulator = self.get_zero_wire().unwrap();
@@ -127,20 +127,20 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
                 .clone()
                 .unwrap()
                 .sub(publicRootWires[i].as_ref().unwrap());
-            let check = diff.checkNonZero(&None);
+            let check = diff.check_non_zero(&None);
             errorAccumulator = errorAccumulator.add(check);
         }
 
-        CircuitGenerator::makeOutputArray(
+        CircuitGenerator::make_output_array(
             self.cg(),
             &actualRoot,
             &Some("Computed Root".to_owned()),
         );
 
         //  Expected mismatch here if the sample input below is tried**/
-        CircuitGenerator::makeOutput(
+        CircuitGenerator::make_output(
             self.cg(),
-            &errorAccumulator.checkNonZero(&None),
+            &errorAccumulator.check_non_zero(&None),
             &Some("Error if NON-zero".to_owned()),
         );
         (
@@ -158,36 +158,37 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
         );
     }
 
-    fn generateSampleInput(&self, circuitEvaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, circuit_evaluator: &mut CircuitEvaluator) {
         for i in 0..MerkleTreeMembershipCircuitGenerator::hashDigestDimension as usize {
-            circuitEvaluator.setWireValue(
+            circuit_evaluator.set_wire_value(
                 self.t.publicRootWires[i].as_ref().unwrap(),
                 &Util::nextRandomBigInteger(&Configs.field_prime),
             );
         }
 
-        circuitEvaluator.setWireValue(
+        circuit_evaluator.set_wire_value(
             self.t.directionSelector.as_ref().unwrap(),
             &Util::nextRandomBigIntegeri(self.t.treeHeight as u64),
         );
         for i in 0..(MerkleTreeMembershipCircuitGenerator::hashDigestDimension * self.t.treeHeight)
             as usize
         {
-            circuitEvaluator.setWireValue(
+            circuit_evaluator.set_wire_value(
                 self.t.intermediateHasheWires[i].as_ref().unwrap(),
                 &Util::nextRandomBigInteger(&Configs.field_prime),
             );
         }
 
         for i in 0..MerkleTreeMembershipCircuitGenerator::leafNumOfWords as usize {
-            circuitEvaluator.setWireValuei(self.t.leafWires[i].as_ref().unwrap(), i32::MAX as i64);
+            circuit_evaluator
+                .set_wire_valuei(self.t.leafWires[i].as_ref().unwrap(), i32::MAX as i64);
         }
     }
 }
 pub fn main(args: Vec<String>) {
     let mut generator = MerkleTreeMembershipCircuitGenerator::new("tree_64", 64);
-    generator.generateCircuit();
-    let mut evaluator = generator.evalCircuit().ok();
-    generator.prepFiles(evaluator);
-    generator.runLibsnark();
+    generator.generate_circuit();
+    let mut evaluator = generator.eval_circuit().ok();
+    generator.prep_files(evaluator);
+    generator.run_libsnark();
 }

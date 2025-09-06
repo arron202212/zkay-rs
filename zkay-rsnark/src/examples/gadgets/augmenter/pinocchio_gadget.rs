@@ -17,10 +17,10 @@ use crate::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+                get_active_circuit_generator,
             },
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -39,14 +39,14 @@ use std::io::{BufRead, BufReader};
 use std::ops::{Add, Mul, Neg, Sub};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct PinocchioGadget {
-    pub inputWires: Vec<Option<WireType>>,
-    pub proverWitnessWires: Vec<Option<WireType>>,
-    pub outputWires: Vec<Option<WireType>>,
+    pub input_wires: Vec<Option<WireType>>,
+    pub prover_witness_wires: Vec<Option<WireType>>,
+    pub output_wires: Vec<Option<WireType>>,
 }
 impl PinocchioGadget {
     pub fn new(
-        inputWires: Vec<Option<WireType>>,
-        pathToArithFile: String,
+        input_wires: Vec<Option<WireType>>,
+        path_to_arith_file: String,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
@@ -54,20 +54,20 @@ impl PinocchioGadget {
             generator,
             desc,
             Self {
-                inputWires,
-                proverWitnessWires: vec![],
-                outputWires: vec![],
+                input_wires,
+                prover_witness_wires: vec![],
+                output_wires: vec![],
             },
         );
-        _self.buildCircuit(pathToArithFile);
+        _self.build_circuit(path_to_arith_file);
         _self
     }
 }
 
 impl Gadget<PinocchioGadget> {
-    fn buildCircuit(&mut self, path: String) {
-        let mut proverWitnessWires = Vec::new();
-        let mut outputWires = Vec::new();
+    fn build_circuit(&mut self, path: String) {
+        let mut prover_witness_wires = Vec::new();
+        let mut output_wires = Vec::new();
 
         let mut scanner = BufReader::new(File::open(path).unwrap()).lines();
 
@@ -76,11 +76,11 @@ impl Gadget<PinocchioGadget> {
             "Expected total %d in the first line"
         );
 
-        let numWires = scanner.next().unwrap().unwrap().parse::<i32>().unwrap();
+        let num_wires = scanner.next().unwrap().unwrap().parse::<i32>().unwrap();
         scanner.next();
-        let mut wireMapping = vec![None; numWires as usize];
+        let mut wire_mapping = vec![None; num_wires as usize];
 
-        let mut inputCount = 0;
+        let mut input_count = 0;
         while let Some(Ok(mut line)) = scanner.next() {
             // let line = scanner.nextLine();
             // remove comments
@@ -95,97 +95,97 @@ impl Gadget<PinocchioGadget> {
                     .split_ascii_whitespace()
                     .filter(|s| !s.is_empty())
                     .collect();
-                let wireIndex = tokens[1].parse::<i32>().unwrap() as usize;
+                let wire_index = tokens[1].parse::<i32>().unwrap() as usize;
                 assert!(
-                    wireMapping[wireIndex].is_none(),
-                    "WireType assigned twice!{wireIndex} "
+                    wire_mapping[wire_index].is_none(),
+                    "WireType assigned twice!{wire_index} "
                 );
 
-                if inputCount < self.t.inputWires.len() {
-                    wireMapping[wireIndex] = self.t.inputWires[inputCount].clone();
+                if input_count < self.t.input_wires.len() {
+                    wire_mapping[wire_index] = self.t.input_wires[input_count].clone();
                 } else {
                     // the last input wire is assumed to be the one wire
-                    wireMapping[wireIndex] = self.generator.get_one_wire();
+                    wire_mapping[wire_index] = self.generator.get_one_wire();
                 }
-                inputCount += 1;
+                input_count += 1;
             } else if line.starts_with("output") {
                 let tokens: Vec<_> = line
                     .split_ascii_whitespace()
                     .filter(|s| !s.is_empty())
                     .collect();
-                let wireIndex = tokens[1].parse::<i32>().unwrap() as usize;
-                outputWires.push(wireMapping[wireIndex].clone());
+                let wire_index = tokens[1].parse::<i32>().unwrap() as usize;
+                output_wires.push(wire_mapping[wire_index].clone());
             } else if line.starts_with("nizk") {
                 let tokens: Vec<_> = line
                     .split_ascii_whitespace()
                     .filter(|s| !s.is_empty())
                     .collect();
-                let wireIndex = tokens[1].parse::<i32>().unwrap() as usize;
+                let wire_index = tokens[1].parse::<i32>().unwrap() as usize;
                 assert!(
-                    wireMapping[wireIndex as usize].is_none(),
-                    "WireType assigned twice!{wireIndex} "
+                    wire_mapping[wire_index as usize].is_none(),
+                    "WireType assigned twice!{wire_index} "
                 );
 
-                let w = Some(CircuitGenerator::createProverWitnessWire(
+                let w = Some(CircuitGenerator::create_prover_witness_wire(
                     self.generator.clone(),
                     &None,
                 ));
-                proverWitnessWires.push(w.clone());
-                wireMapping[wireIndex] = w;
+                prover_witness_wires.push(w.clone());
+                wire_mapping[wire_index] = w;
             } else {
-                let ins = Self::getInputs(&line);
+                let ins = Self::get_inputs(&line);
                 for i in &ins {
                     assert!(i.is_some(), "Undefined input wire  {i:? } at line{line}",);
                 }
-                let outs = Self::getOutputs(&line);
+                let outs = Self::get_outputs(&line);
                 if line.starts_with("mul ") {
-                    wireMapping[*outs[0].as_ref().unwrap()] = Some(
-                        wireMapping[*ins[0].as_ref().unwrap()]
+                    wire_mapping[*outs[0].as_ref().unwrap()] = Some(
+                        wire_mapping[*ins[0].as_ref().unwrap()]
                             .clone()
                             .unwrap()
-                            .mul(wireMapping[*ins[1].as_ref().unwrap()].as_ref().unwrap()),
+                            .mul(wire_mapping[*ins[1].as_ref().unwrap()].as_ref().unwrap()),
                     );
                 } else if line.starts_with("add ") {
-                    let mut result = wireMapping[*ins[0].as_ref().unwrap()]
+                    let mut result = wire_mapping[*ins[0].as_ref().unwrap()]
                         .as_ref()
                         .unwrap()
                         .clone();
                     for i in 1..ins.len() {
                         result =
-                            result.add(wireMapping[*ins[i].as_ref().unwrap()].as_ref().unwrap());
+                            result.add(wire_mapping[*ins[i].as_ref().unwrap()].as_ref().unwrap());
                     }
-                    wireMapping[*outs[0].as_ref().unwrap()] = Some(result);
+                    wire_mapping[*outs[0].as_ref().unwrap()] = Some(result);
                 } else if line.starts_with("zerop ") {
-                    wireMapping[*outs[1].as_ref().unwrap()] = Some(
-                        wireMapping[*ins[0].as_ref().unwrap()]
+                    wire_mapping[*outs[1].as_ref().unwrap()] = Some(
+                        wire_mapping[*ins[0].as_ref().unwrap()]
                             .as_ref()
                             .unwrap()
-                            .checkNonZero(&None),
+                            .check_non_zero(&None),
                     );
                 } else if line.starts_with("split ") {
-                    let bits = wireMapping[*ins[0].as_ref().unwrap()]
+                    let bits = wire_mapping[*ins[0].as_ref().unwrap()]
                         .clone()
                         .unwrap()
-                        .getBitWiresi(outs.len() as u64, &None)
-                        .asArray()
+                        .get_bit_wiresi(outs.len() as u64, &None)
+                        .as_array()
                         .clone();
                     for i in 0..outs.len() {
-                        wireMapping[*outs[i].as_ref().unwrap()] = bits[i].clone();
+                        wire_mapping[*outs[i].as_ref().unwrap()] = bits[i].clone();
                     }
                 } else if line.starts_with("const-mul-neg-") {
-                    let constantStr = &line["const-mul-neg-".len()..line.find(" ").unwrap()];
-                    let constant = BigInteger::parse_bytes(constantStr.as_bytes(), 16).unwrap();
-                    wireMapping[*outs[0].as_ref().unwrap()] = Some(
-                        wireMapping[*ins[0].as_ref().unwrap()]
+                    let constant_str = &line["const-mul-neg-".len()..line.find(" ").unwrap()];
+                    let constant = BigInteger::parse_bytes(constant_str.as_bytes(), 16).unwrap();
+                    wire_mapping[*outs[0].as_ref().unwrap()] = Some(
+                        wire_mapping[*ins[0].as_ref().unwrap()]
                             .as_ref()
                             .unwrap()
                             .mulb(&constant.neg(), &None),
                     );
                 } else if line.starts_with("const-mul-") {
-                    let constantStr = &line["const-mul-".len()..line.find(" ").unwrap()];
-                    let constant = BigInteger::parse_bytes(constantStr.as_bytes(), 16).unwrap();
-                    wireMapping[*outs[0].as_ref().unwrap()] = Some(
-                        wireMapping[*ins[0].as_ref().unwrap()]
+                    let constant_str = &line["const-mul-".len()..line.find(" ").unwrap()];
+                    let constant = BigInteger::parse_bytes(constant_str.as_bytes(), 16).unwrap();
+                    wire_mapping[*outs[0].as_ref().unwrap()] = Some(
+                        wire_mapping[*ins[0].as_ref().unwrap()]
                             .as_ref()
                             .unwrap()
                             .mulb(&constant, &None),
@@ -196,29 +196,29 @@ impl Gadget<PinocchioGadget> {
             }
         }
 
-        self.t.proverWitnessWires = proverWitnessWires;
-        self.t.outputWires = outputWires;
+        self.t.prover_witness_wires = prover_witness_wires;
+        self.t.output_wires = output_wires;
     }
 
-    fn getOutputs(line: &String) -> Vec<Option<usize>> {
+    fn get_outputs(line: &String) -> Vec<Option<usize>> {
         line[line.rfind("<").unwrap() + 1..line.rfind(">").unwrap()]
             .split('\n')
             .filter_map(|v| (!v.is_empty()).then(|| v.parse::<usize>().ok()))
             .collect()
     }
 
-    fn getInputs(line: &String) -> Vec<Option<usize>> {
+    fn get_inputs(line: &String) -> Vec<Option<usize>> {
         line[line.rfind("<").unwrap() + 1..line.rfind(">").unwrap()]
             .split('\n')
             .map(|v| v.parse::<usize>().ok())
             .collect()
     }
     fn get_prover_witness_wires(&self) -> &Vec<Option<WireType>> {
-        &self.t.proverWitnessWires
+        &self.t.prover_witness_wires
     }
 }
 impl GadgetConfig for Gadget<PinocchioGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        &self.t.outputWires
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        &self.t.output_wires
     }
 }

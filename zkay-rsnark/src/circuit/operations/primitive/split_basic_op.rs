@@ -35,21 +35,21 @@ impl SplitBasicOp {
 crate::impl_instruction_for!(Op<SplitBasicOp>);
 crate::impl_hash_code_for!(Op<SplitBasicOp>);
 impl BasicOp for Op<SplitBasicOp> {
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "split".to_owned()
     }
 
-    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        //super.checkInputs(assignment);
-        self.super_checkInputs(assignment);
-        let bits_len = assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+    fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
+        //super.check_inputs(assignment);
+        self.super_check_inputs(assignment);
+        let bits_len = assignment[self.inputs[0].as_ref().unwrap().get_wire_id() as usize]
             .clone()
             .unwrap()
             .bits() as usize;
         assert!(
             self.outputs.len() >= bits_len,
             "Error in Split --- The number of bits does not fit -- Input: {:x},{self:?}\n\t{},{}",
-            assignment[self.inputs[0].as_ref().unwrap().getWireId() as usize]
+            assignment[self.inputs[0].as_ref().unwrap().get_wire_id() as usize]
                 .clone()
                 .unwrap(),
             self.outputs.len(),
@@ -58,15 +58,15 @@ impl BasicOp for Op<SplitBasicOp> {
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
-        let in0_id = self.inputs[0].as_ref().unwrap().getWireId() as usize;
+        let in0_id = self.inputs[0].as_ref().unwrap().get_wire_id() as usize;
 
-        let mut inVal = assignment[in0_id].clone().unwrap();
-        if inVal > Configs.field_prime {
-            inVal = inVal.rem(&Configs.field_prime);
+        let mut in_val = assignment[in0_id].clone().unwrap();
+        if in_val > Configs.field_prime {
+            in_val = in_val.rem(&Configs.field_prime);
         }
         for i in 0..self.outputs.len() {
-            let outi_id = self.outputs[i].as_ref().unwrap().getWireId() as usize;
-            assignment[outi_id] = Some(if inVal.bit(i as u64) {
+            let outi_id = self.outputs[i].as_ref().unwrap().get_wire_id() as usize;
+            assignment[outi_id] = Some(if in_val.bit(i as u64) {
                 Util::one()
             } else {
                 BigInteger::ZERO
@@ -85,7 +85,7 @@ impl BasicOp for Op<SplitBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         self.outputs.len() as i32 + 1
     }
 }

@@ -26,7 +26,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -48,8 +48,8 @@ use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SubsetSumHashGadget {
-    pub inputWires: Vec<Option<WireType>>,
-    pub outWires: Vec<Option<WireType>>,
+    pub input_wires: Vec<Option<WireType>>,
+    pub out_wires: Vec<Option<WireType>>,
     pub binaryOutput: bool,
 }
 use std::sync::OnceLock;
@@ -80,23 +80,23 @@ impl SubsetSumHashGadget {
         for i in 0..pad.len() {
             pad[i] = generator.get_zero_wire(); // TODO: adjust padding
         }
-        let inputWires = Util::concat(&ins, &pad);
+        let input_wires = Util::concat(&ins, &pad);
         let mut _self = Gadget::<Self>::new(
             generator,
             desc,
             Self {
                 binaryOutput,
-                inputWires,
-                outWires: vec![],
+                input_wires,
+                out_wires: vec![],
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<SubsetSumHashGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let (dimension, input_length) = (
             SubsetSumHashGadget::DIMENSION as usize,
             SubsetSumHashGadget::INPUT_LENGTH as usize,
@@ -110,37 +110,37 @@ impl Gadget<SubsetSumHashGadget> {
             }
             tmp
         });
-        let mut outDigest = vec![self.generator.get_zero_wire(); dimension];
+        let mut out_Digest = vec![self.generator.get_zero_wire(); dimension];
 
         for i in 0..dimension {
             for j in 0..input_length {
-                let t = self.t.inputWires[j]
+                let t = self.t.input_wires[j]
                     .as_ref()
                     .unwrap()
                     .mulb(&COEFFSS[i][j], &None);
-                outDigest[i] = Some(outDigest[i].clone().unwrap().add(t));
+                out_Digest[i] = Some(out_Digest[i].clone().unwrap().add(t));
             }
         }
         if !self.t.binaryOutput {
-            self.t.outWires = outDigest;
+            self.t.out_wires = out_Digest;
         } else {
-            self.t.outWires = vec![None; dimension * Configs.log2_field_prime as usize];
+            self.t.out_wires = vec![None; dimension * Configs.log2_field_prime as usize];
             for i in 0..dimension {
-                let bits = outDigest[i]
+                let bits = out_Digest[i]
                     .as_ref()
                     .unwrap()
-                    .getBitWiresi(Configs.log2_field_prime, &None)
-                    .asArray()
+                    .get_bit_wiresi(Configs.log2_field_prime, &None)
+                    .as_array()
                     .clone();
                 for j in 0..bits.len() {
-                    self.t.outWires[j + i * Configs.log2_field_prime as usize] = bits[j].clone();
+                    self.t.out_wires[j + i * Configs.log2_field_prime as usize] = bits[j].clone();
                 }
             }
         }
     }
 }
 impl GadgetConfig for Gadget<SubsetSumHashGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
-        &self.t.outWires
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
+        &self.t.out_wires
     }
 }

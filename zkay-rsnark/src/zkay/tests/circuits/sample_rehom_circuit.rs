@@ -81,7 +81,7 @@ impl CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
     }
 }
 impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         self.super_buildCircuit();
         self.addS("x1", 1, ZkayType::ZkUint(32));
         self.addS("x1_R", 1, ZkayType::ZkUint(256));
@@ -99,10 +99,10 @@ impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleRehomCircuit>> {
         );
         self.__zk__foo();
     }
-    fn generateSampleInput(&self, evaluator: &mut CircuitEvaluator) {
+    fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         self.super_generateSampleInput(evaluator);
     }
-    fn prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
+    fn prep_files(&self, circuit_evaluator: Option<CircuitEvaluator>) {
         self.super_prepFiles(circuit_evaluator);
     }
 }

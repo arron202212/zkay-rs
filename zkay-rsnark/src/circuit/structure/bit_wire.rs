@@ -20,13 +20,13 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             linear_combination_bit_wire::LinearCombinationBitWire,
             linear_combination_wire::LinearCombinationWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -48,23 +48,23 @@ pub struct BitWire;
 crate::impl_name_instance_of_wire_g_for!(Wire<BitWire>);
 
 impl BitWire {
-    pub fn new(wireId: i32, generator: WeakCell<CircuitGenerator>) -> Wire<BitWire> {
-        //   if wireId>0 && wireId<10000
+    pub fn new(wire_id: i32, generator: WeakCell<CircuitGenerator>) -> Wire<BitWire> {
+        //   if wire_id>0 && wire_id<10000
         // {
-        //     println!("=new_bit======={wireId}==");
+        //     println!("=new_bit======={wire_id}==");
         // }
-        // //super(wireId);
+        // //super(wire_id);
         // Wire::<BitWire> {
-        //     wireId,
+        //     wire_id,
         //     generator,
         //     t: BitWire,
         // }
-        // crate::new_wire!(BitWire,wireId,generator)
-        Wire::<BitWire>::new(BitWire, wireId, generator).unwrap()
+        // crate::new_wire!(BitWire,wire_id,generator)
+        Wire::<BitWire>::new(BitWire, wire_id, generator).unwrap()
     }
 }
-impl setBitsConfig for BitWire {}
-impl setBitsConfig for Wire<BitWire> {}
+impl SetBitsConfig for BitWire {}
+impl SetBitsConfig for Wire<BitWire> {}
 impl WireConfig for Wire<BitWire> {
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::Bit(self.clone()))
@@ -84,7 +84,7 @@ pub trait BitWireConfig: WireConfig {
         if w.instance_of("ConstantWire") {
             return BitWireConfig::mulb(
                 self,
-                &w.try_as_constant_ref().unwrap().getConstant(),
+                &w.try_as_constant_ref().unwrap().get_constant(),
                 desc,
             );
         }
@@ -109,12 +109,12 @@ pub trait BitWireConfig: WireConfig {
             desc.clone().unwrap_or(String::new()),
         );
 
-        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-        if let Some(cachedOutputs) = cachedOutputs {
+        let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
+        if let Some(cached_outputs) = cached_outputs {
             generator.borrow_mut().current_wire_id -= 1;
             //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
 
-            cachedOutputs[0].clone().unwrap()
+            cached_outputs[0].clone().unwrap()
         } else {
             output1
         }
@@ -141,24 +141,24 @@ pub trait BitWireConfig: WireConfig {
             b,
             desc.clone().unwrap_or(String::new()),
         );
-        //			generator.addToEvaluationQueue(Box::new(op));
+        //			generator.add_to_evaluation_queue(Box::new(op));
         //			return out;
 
-        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-        if let Some(cachedOutputs) = cachedOutputs {
+        let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
+        if let Some(cached_outputs) = cached_outputs {
             generator.borrow_mut().current_wire_id -= 1;
             //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
 
-            cachedOutputs[0].clone().unwrap()
+            cached_outputs[0].clone().unwrap()
         } else {
             out
         }
     }
 
-    fn invAsBit(&self, desc: &Option<String>) -> Option<WireType> {
+    fn inv_as_bit(&self, desc: &Option<String>) -> Option<WireType> {
         //		WireTypeneg = WireType::new(generator.borrow_mut().current_wire_id+=1);
         //		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
-        //		generator.addToEvaluationQueue(Box::new(op));
+        //		generator.add_to_evaluation_queue(Box::new(op));
         let mut generator = self.generator();
 
         let neg = BitWireConfig::mulb(self, &Util::one().neg(), desc);
@@ -172,14 +172,14 @@ pub trait BitWireConfig: WireConfig {
             &out,
             desc.clone().unwrap_or(String::new()),
         );
-        //		generator.addToEvaluationQueue(Box::new(op));
+        //		generator.add_to_evaluation_queue(Box::new(op));
 
-        let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-        if let Some(cachedOutputs) = cachedOutputs {
+        let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
+        if let Some(cached_outputs) = cached_outputs {
             generator.borrow_mut().current_wire_id -= 1;
             //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
 
-            cachedOutputs[0].clone()
+            cached_outputs[0].clone()
         } else {
             Some(out)
         }
@@ -209,12 +209,12 @@ pub trait BitWireConfig: WireConfig {
                 desc.clone().unwrap_or(String::new()),
             );
 
-            let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-            return if let Some(cachedOutputs) = cachedOutputs {
+            let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
+            return if let Some(cached_outputs) = cached_outputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
 
-                cachedOutputs[0].clone().unwrap()
+                cached_outputs[0].clone().unwrap()
             } else {
                 out
             };
@@ -246,11 +246,11 @@ pub trait BitWireConfig: WireConfig {
                 desc.clone().unwrap_or(String::new()),
             );
 
-            let cachedOutputs = addToEvaluationQueue(generator.clone(), Box::new(op));
-            if let Some(cachedOutputs) = cachedOutputs {
+            let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
+            if let Some(cached_outputs) = cached_outputs {
                 generator.borrow_mut().current_wire_id -= 1;
                 //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
-                cachedOutputs[0].clone().unwrap()
+                cached_outputs[0].clone().unwrap()
             } else {
                 out
             }
@@ -259,11 +259,11 @@ pub trait BitWireConfig: WireConfig {
         }
     }
 
-    fn getBits(&self, w: &WireType, bitwidth: i32, desc: &Option<String>) -> WireArray {
+    fn get_bits(&self, w: &WireType, bitwidth: i32, desc: &Option<String>) -> WireArray {
         return WireArray::new(
             vec![Some(self.self_clone().unwrap())],
             self.generator_weak(),
         )
-        .adjustLength(None, bitwidth as usize);
+        .adjust_length(None, bitwidth as usize);
     }
 }

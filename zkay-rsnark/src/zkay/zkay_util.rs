@@ -28,10 +28,10 @@ impl ZkayUtil {
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         WireArray::new(
-            Util::reverseBytes(bitArray.asArray()),
+            Util::reverseBytes(bitArray.as_array()),
             generator.downgrade(),
         )
-        .packBitsIntoWords(targetWordBits as usize, &None)
+        .pack_bits_into_words(targetWordBits as usize, &None)
     }
 
     pub fn unsignedBytesToBigInt(bytes: &[u8]) -> BigInteger {

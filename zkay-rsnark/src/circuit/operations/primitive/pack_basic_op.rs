@@ -23,9 +23,9 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct PackBasicOp;
 
 impl PackBasicOp {
-    pub fn new(inBits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<PackBasicOp> {
+    pub fn new(in_bits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<PackBasicOp> {
         Op::<PackBasicOp> {
-            inputs: inBits,
+            inputs: in_bits,
             outputs: vec![Some(out.clone())],
             desc,
             t: PackBasicOp,
@@ -35,16 +35,16 @@ impl PackBasicOp {
 crate::impl_instruction_for!(Op<PackBasicOp>);
 crate::impl_hash_code_for!(Op<PackBasicOp>);
 impl BasicOp for Op<PackBasicOp> {
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "pack".to_owned()
     }
 
-    fn checkInputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        // //super.checkInputs(assignment);
-        self.super_checkInputs(assignment);
+    fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
+        // //super.check_inputs(assignment);
+        self.super_check_inputs(assignment);
         assert!(
-            (0..self.inputs.len()).all(|i| Util::isBinary(
-                assignment[self.inputs[i].as_ref().unwrap().getWireId() as usize]
+            (0..self.inputs.len()).all(|i| Util::is_binary(
+                assignment[self.inputs[i].as_ref().unwrap().get_wire_id() as usize]
                     .as_ref()
                     .unwrap()
             )),
@@ -53,7 +53,7 @@ impl BasicOp for Op<PackBasicOp> {
     }
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
-        let out0_id = self.outputs[0].as_ref().unwrap().getWireId() as usize;
+        let out0_id = self.outputs[0].as_ref().unwrap().get_wire_id() as usize;
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
         //         "==compute=====outputs===={out0_id}======{}===={}====",
@@ -67,7 +67,7 @@ impl BasicOp for Op<PackBasicOp> {
             .enumerate()
             .fold(BigInteger::ZERO, |sum, (i, w)| {
                 sum.add(
-                    assignment[w.as_ref().unwrap().getWireId() as usize]
+                    assignment[w.as_ref().unwrap().get_wire_id() as usize]
                         .as_ref()
                         .unwrap()
                         .mul(BigInteger::from(2).pow(i as u32)),
@@ -78,7 +78,7 @@ impl BasicOp for Op<PackBasicOp> {
         Ok(())
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         0
     }
 }

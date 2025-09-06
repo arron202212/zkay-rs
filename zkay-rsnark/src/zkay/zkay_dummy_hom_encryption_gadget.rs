@@ -7,13 +7,12 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::{
-    
     circuit::{
         auxiliary::long_element::LongElement,
         operations::gadget::{Gadget, GadgetConfig},
         structure::{circuit_generator::CircuitGenerator, wire::WireConfig, wire_type::WireType},
     },
-    zkay::zkay_baby_jub_jub_gadget::{JubJubPoint,ZkayBabyJubJubGadget},
+    zkay::zkay_baby_jub_jub_gadget::{JubJubPoint, ZkayBabyJubJubGadget},
 };
 
 use rccell::RcCell;
@@ -57,13 +56,13 @@ impl ZkayDummyHomEncryptionGadget {
                 cipher: vec![None; 1],
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 
 impl Gadget<ZkayDummyHomEncryptionGadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         self.t.cipher[0] = Some(
             self.t
                 .plain
@@ -74,7 +73,7 @@ impl Gadget<ZkayDummyHomEncryptionGadget> {
 }
 
 impl GadgetConfig for Gadget<ZkayDummyHomEncryptionGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.cipher
     }
 }

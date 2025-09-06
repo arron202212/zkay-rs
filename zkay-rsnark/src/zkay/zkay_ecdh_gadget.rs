@@ -55,8 +55,8 @@ impl ZkayECDHGadget {
             desc,
             Self {
                 secretBits: secretKey
-                    .getBitWiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
-                    .asArray()
+                    .get_bit_wiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
+                    .as_array()
                     .clone(),
                 hPoint: AffinePoint::new(Some(hX), None),
                 sharedSecret: None,
@@ -71,13 +71,13 @@ impl ZkayECDHGadget {
         }
         _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         // coordinates
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 
 impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
-    pub fn buildCircuit(&mut self) {
+    pub fn build_circuit(&mut self) {
         //The reason this operates on affine coordinates is that in our
         //setting, this's slightly cheaper than the formulas in
         //https://cr.yp.to/ecdh/curve25519-20060209.pdf. Concretely, the
@@ -103,7 +103,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             &None,
             self.generator.clone(),
         )
-        .getOutputWires()[0]
+        .get_output_wires()[0]
             .clone();
         self.t.t.outputs = vec![sharedKey];
         (self.t.t.hTable, self.t.t.sharedSecret) = (hTable, sharedSecret);
@@ -132,21 +132,21 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                 .unwrap()
                 .try_as_constant_ref()
                 .unwrap()
-                .getConstant();
-            self.t.t.hPoint.y = Some(CircuitGenerator::createConstantWire(
+                .get_constant();
+            self.t.t.hPoint.y = Some(CircuitGenerator::create_constant_wire(
                 self.generator.clone(),
                 &Gadget::<ZkayEcGadget<ZkayECDHGadget>>::computeYCoordinate(x),
                 &None,
             ));
             println!("====self.t.t.hPoint=============={:?}", self.t.t.hPoint);
         } else {
-            self.t.t.hPoint.y = Some(CircuitGenerator::createProverWitnessWire(
+            self.t.t.hPoint.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
                 &None,
             ));
-            // CircuitGenerator::specifyProverWitnessComputation(generator.clone(), &|evaluator: &mut CircuitEvaluator| {
-            //             let x = evaluator.getWireValue(hPoint.x);
-            //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+            // CircuitGenerator::specify_prover_witness_computation(generator.clone(), &|evaluator: &mut CircuitEvaluator| {
+            //             let x = evaluator.get_wire_value(hPoint.x);
+            //             evaluator.set_wire_value(hPoint.y, computeYCoordinate(x));
             //         });
             let hPoint = &self.t.t.hPoint;
             let prover = crate::impl_prover!(
@@ -154,20 +154,20 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                                 )  {
                         impl Instruction for Prover{
                          fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
-                                evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ZkayEcGadget::<ZkayECDHGadget>>::computeYCoordinate(x));
+                                let x = evaluator.get_wire_value(self.hPoint.x.as_ref().unwrap());
+                                evaluator.set_wire_value(self.hPoint.y.as_ref().unwrap(), &Gadget::<ZkayEcGadget::<ZkayECDHGadget>>::computeYCoordinate(x));
             Ok(())
                         }
                         }
                                     }
                                 );
-            CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+            CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
             //         &|evaluator: &mut CircuitEvaluator| {
-            //             let x = evaluator.getWireValue(hPoint.x);
-            //             evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+            //             let x = evaluator.get_wire_value(hPoint.x);
+            //             evaluator.set_wire_value(hPoint.y, computeYCoordinate(x));
             //         }
             //     }
             //     Prover
@@ -179,9 +179,9 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
         }
     }
     pub fn validateInputs(&self) {
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &self.t.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
+            &self.t.t.hPoint.x.as_ref().unwrap().check_non_zero(&None),
             &None,
         );
         println!(
@@ -203,7 +203,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
 }
 
 impl GadgetConfig for Gadget<ZkayEcGadget<ZkayECDHGadget>> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.t.outputs
     }
 }

@@ -26,7 +26,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -158,7 +158,7 @@ impl ECDHKeyExchangeGadget {
             _self.computeYCoordinates(); // For efficiency reasons, we rely on affine
         }
         // coordinates
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
@@ -179,7 +179,7 @@ impl ECDHKeyExchangeGadget {
 //         basePoint: AffinePoint::new(baseX, baseY),
 //         hPoint: AffinePoint::new(hX, hY)};
 //         _self.checkSecretBits();
-//         _self.buildCircuit();
+//         _self.build_circuit();
 //         _self
 //     }
 //   }
@@ -208,7 +208,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
     // As in curve25519, CURVE_ORDER = SUBGROUP_ORDER * 2^3
     pub const SUBGROUP_ORDER: &str =
         "2736030358979909402780800718157159386074658810754251464600343418943805806723";
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         //
         // The reason this operates on affine coordinates is that in our
         // setting, this's slightly cheaper than the formulas in
@@ -245,25 +245,25 @@ impl Gadget<ECDHKeyExchangeGadget> {
         //should be 1, and the three least significant bits should be zero.
 
         assert!(self.t.secretBits.len() == Self::SECRET_BITWIDTH);
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
             self.t.secretBits[0].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
 
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
             self.t.secretBits[1].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
 
-        CircuitGenerator::addZeroAssertion(
+        CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
             self.t.secretBits[2].as_ref().unwrap(),
             &Some("Asserting secret bit conditions".to_owned()),
         );
 
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
             self.t.secretBits[Self::SECRET_BITWIDTH - 1]
                 .as_ref()
@@ -276,7 +276,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             // secret
             // witness by the prover)
 
-            CircuitGenerator::addBinaryAssertion(
+            CircuitGenerator::add_binary_assertion(
                 self.generator.clone(),
                 self.t.secretBits[i].as_ref().unwrap(),
                 &None,
@@ -304,41 +304,41 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .unwrap()
                 .try_as_constant_ref()
                 .unwrap()
-                .getConstant();
-            self.t.basePoint.y = Some(CircuitGenerator::createConstantWire(
+                .get_constant();
+            self.t.basePoint.y = Some(CircuitGenerator::create_constant_wire(
                 self.generator.clone(),
                 &Self::computeYCoordinate(x),
                 &None,
             ));
         } else {
-            self.t.basePoint.y = Some(CircuitGenerator::createProverWitnessWire(
+            self.t.basePoint.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
                 &None,
             ));
-            // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-            //     let x = evaluator.getWireValue(basePoint.x);
-            //     evaluator.setWireValue(basePoint.y, &computeYCoordinate(x));
+            // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
+            //     let x = evaluator.get_wire_value(basePoint.x);
+            //     evaluator.set_wire_value(basePoint.y, &computeYCoordinate(x));
             // });
             let basePoint = &self.t.basePoint;
             let prover = crate::impl_prover!(
                             eval(  basePoint: AffinePoint)  {
             impl Instruction for Prover{
              fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                       let x = evaluator.getWireValue(self.basePoint.x.as_ref().unwrap());
-            evaluator.setWireValue(self.basePoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
+                       let x = evaluator.get_wire_value(self.basePoint.x.as_ref().unwrap());
+            evaluator.set_wire_value(self.basePoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
 
                 Ok(())
             }
             }
                         }
                     );
-            CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+            CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
             // {
             //     struct Prover;
             //     impl Instruction for Prover {
             //         &|evaluator: &mut CircuitEvaluator| {
-            //             let x = evaluator.getWireValue(basePoint.x);
-            //             evaluator.setWireValue(basePoint.y, computeYCoordinate(x));
+            //             let x = evaluator.get_wire_value(basePoint.x);
+            //             evaluator.set_wire_value(basePoint.y, computeYCoordinate(x));
             //         }
             //     }
             //     Prover
@@ -366,20 +366,20 @@ impl Gadget<ECDHKeyExchangeGadget> {
                 .unwrap()
                 .try_as_constant_ref()
                 .unwrap()
-                .getConstant();
-            self.t.hPoint.y = Some(CircuitGenerator::createConstantWire(
+                .get_constant();
+            self.t.hPoint.y = Some(CircuitGenerator::create_constant_wire(
                 self.generator.clone(),
                 &Self::computeYCoordinate(x),
                 &None,
             ));
         } else {
-            self.t.hPoint.y = Some(CircuitGenerator::createProverWitnessWire(
+            self.t.hPoint.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
                 &None,
             ));
-            // CircuitGenerator::specifyProverWitnessComputation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-            //     let x = evaluator.getWireValue(hPoint.x);
-            //     evaluator.setWireValue(hPoint.y, &computeYCoordinate(x));
+            // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
+            //     let x = evaluator.get_wire_value(hPoint.x);
+            //     evaluator.set_wire_value(hPoint.y, &computeYCoordinate(x));
             // });
 
             let hPoint = &self.t.hPoint;
@@ -388,21 +388,21 @@ impl Gadget<ECDHKeyExchangeGadget> {
                                 )  {
                         impl Instruction for Prover{
                          fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                   let x = evaluator.getWireValue(self.hPoint.x.as_ref().unwrap());
-                        evaluator.setWireValue(self.hPoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
+                                   let x = evaluator.get_wire_value(self.hPoint.x.as_ref().unwrap());
+                        evaluator.set_wire_value(self.hPoint.y.as_ref().unwrap(), &Gadget::<ECDHKeyExchangeGadget>::computeYCoordinate(x));
             Ok(())
 
                         }
                         }
                                     }
                                 );
-            CircuitGenerator::specifyProverWitnessComputation(self.generator.clone(), prover);
+            CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
             // {
             //         struct Prover;
             //         impl Instruction for Prover {
             //             &|evaluator: &mut CircuitEvaluator| {
-            //                 let x = evaluator.getWireValue(hPoint.x);
-            //                 evaluator.setWireValue(hPoint.y, computeYCoordinate(x));
+            //                 let x = evaluator.get_wire_value(hPoint.x);
+            //                 evaluator.set_wire_value(hPoint.y, computeYCoordinate(x));
             //             }
             //         }
             //         Prover
@@ -425,7 +425,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
         let xCube = xSqr.clone().mul(x);
 
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             &ySqr,
             &xCube
@@ -498,7 +498,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         // println!("=====b====begin=====");
         let b = p.y.as_ref().unwrap().muli(2, &None);
         // println!("==a={}==b={}={a},{b}==end===={}===={}==",a.name(),b.name(),p.y.as_ref().unwrap(),p.y.as_ref().unwrap().name());
-        let l1 = FieldDivisionGadget::new(a, b, &None, generator).getOutputWires()[0].clone();
+        let l1 = FieldDivisionGadget::new(a, b, &None, generator).get_output_wires()[0].clone();
 
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
 
@@ -528,7 +528,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let diffX = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
         // println!("==diffX===diffY=={diffX},{diffY}");
         let q = FieldDivisionGadget::new(diffY, diffX, &None, self.generator.clone())
-            .getOutputWires()[0]
+            .get_output_wires()[0]
             .clone();
 
         let q2 = q.clone().unwrap().mul(q.as_ref().unwrap());
@@ -576,9 +576,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     pub fn validateInputs(&self) {
         let start = std::time::Instant::now();
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &self.t.basePoint.x.as_ref().unwrap().checkNonZero(&None),
+            &self.t.basePoint.x.as_ref().unwrap().check_non_zero(&None),
             &None,
         );
 
@@ -588,9 +588,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
         );
 
         self.assertPointOrder(&self.t.basePoint, &self.t.baseTable);
-        CircuitGenerator::addOneAssertion(
+        CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &self.t.hPoint.x.as_ref().unwrap().checkNonZero(&None),
+            &self.t.hPoint.x.as_ref().unwrap().check_non_zero(&None),
             &None,
         );
 
@@ -608,10 +608,10 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         let subgroup_order = BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap();
         let o =
-            CircuitGenerator::createConstantWire(self.generator.clone(), &subgroup_order, &None);
+            CircuitGenerator::create_constant_wire(self.generator.clone(), &subgroup_order, &None);
         let bits = o
-            .getBitWiresi(subgroup_order.bits(), &None)
-            .asArray()
+            .get_bit_wiresi(subgroup_order.bits(), &None)
+            .as_array()
             .clone();
 
         let mut result = table[bits.len() - 1].clone();
@@ -639,14 +639,14 @@ impl Gadget<ECDHKeyExchangeGadget> {
         }
 
         // verify that: result = -p
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             result.x.as_ref().unwrap(),
             p.x.as_ref().unwrap(),
             &None,
         );
 
-        CircuitGenerator::addEqualityAssertion(
+        CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             result.y.as_ref().unwrap(),
             &p.y.as_ref().unwrap().muli(-1, &None),
@@ -671,7 +671,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
     }
 }
 impl GadgetConfig for Gadget<ECDHKeyExchangeGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.output
     }
 }

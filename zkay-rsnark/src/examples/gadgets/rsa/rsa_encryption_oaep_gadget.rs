@@ -28,7 +28,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -115,7 +115,7 @@ impl RSAEncryptionOAEPGadget {
             },
         );
 
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
@@ -125,7 +125,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         0x24, 0x27, 0xae, 0x41, 0xe4, 0x64, 0x9b, 0x93, 0x4c, 0xa4, 0x95, 0x99, 0x1b, 0x78, 0x52,
         0xb8, 0x55,
     ];
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let mLen = self.t.plainText.len();
         let hLen = RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize;
         let keyLen = self.t.rsaKeyBitLength as usize / 8; // in bytes
@@ -134,7 +134,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let mut db = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
             if i < hLen {
-                db[i] = Some(CircuitGenerator::createConstantWirei(
+                db[i] = Some(CircuitGenerator::create_constant_wirei(
                     self.generator.clone(),
                     (Self::lSHA256_HASH[i] as i64 + 256) % 256,
                     &None,
@@ -151,7 +151,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let dbMask = self.mgf1(&self.t.seed, (keyLen - hLen - 1) as i32);
         let mut maskedDb = vec![None; keyLen - hLen - 1];
         for i in 0..keyLen - hLen - 1 {
-            maskedDb[i] = Some(dbMask[i].as_ref().unwrap().xorBitwise(
+            maskedDb[i] = Some(dbMask[i].as_ref().unwrap().xor_bitwise(
                 db[i].as_ref().unwrap(),
                 8,
                 &None,
@@ -161,7 +161,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let seededMask = self.mgf1(&maskedDb, hLen as i32);
         let mut maskedSeed = vec![None; hLen];
         for i in 0..hLen {
-            maskedSeed[i] = Some(seededMask[i].as_ref().unwrap().xorBitwise(
+            maskedSeed[i] = Some(seededMask[i].as_ref().unwrap().xor_bitwise(
                 self.t.seed[i].as_ref().unwrap(),
                 8,
                 &None,
@@ -216,15 +216,18 @@ impl Gadget<RSAEncryptionOAEPGadget> {
 
         // return the cipher text as byte array
         self.t.ciphertext = s
-            .getBitsi(self.t.rsaKeyBitLength)
-            .packBitsIntoWords(8, &None);
+            .get_bitsi(self.t.rsaKeyBitLength)
+            .pack_bits_into_words(8, &None);
     }
 
     pub fn checkSeedCompliance(&self) {
         for i in 0..self.t.seed.len() {
             // Verify that the seed wires are bytes
             // This is also checked already by the sha256 gadget in the mgf1 calls, but added here for clarity
-            self.t.seed[i].as_ref().unwrap().restrictBitLength(8, &None);
+            self.t.seed[i]
+                .as_ref()
+                .unwrap()
+                .restrict_bit_length(8, &None);
         }
     }
 
@@ -235,7 +238,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
             - 1
         {
             // the standard follows a Big Endian format
-            let counter = CircuitGenerator::createConstantWireArrayi(
+            let counter = CircuitGenerator::create_constant_wire_arrayi(
                 self.generator.clone(),
                 &vec![(i >> 24), (i >> 16), (i >> 8), i],
                 &None,
@@ -252,12 +255,12 @@ impl Gadget<RSAEncryptionOAEPGadget> {
                 self.generator.clone(),
                 Base,
             );
-            let digest = shaGadget.getOutputWires();
+            let digest = shaGadget.get_output_wires();
 
             let mut msgHashBytes =
                 WireArray::new(digest.clone(), self.generator.clone().downgrade())
-                    .getBits(32, &None)
-                    .packBitsIntoWords(8, &None);
+                    .get_bits(32, &None)
+                    .pack_bits_into_words(8, &None);
             // reverse the byte array representation of each word of the digest
             // to
             // be compatible with the endianess
@@ -274,7 +277,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
     }
 }
 impl GadgetConfig for Gadget<RSAEncryptionOAEPGadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.ciphertext
     }
 }

@@ -13,7 +13,7 @@ use crate::{
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
-                addToEvaluationQueue, getActiveCircuitGenerator,
+                add_to_evaluation_queue, get_active_circuit_generator,
             },
             wire::WireConfig,
             wire_array::WireArray,
@@ -49,13 +49,13 @@ mod test {
                 },
                 generator,
             );
-            _self.buildCircuit();
+            _self.build_circuit();
             _self
         }
     }
 
     impl Gadget<ZkayBabyJubJubGadget<TestGadget>> {
-        fn buildCircuit(&mut self) {
+        fn build_circuit(&mut self) {
             let generator = self.generator.clone();
             // check native inverse
             // println!(
@@ -64,7 +64,7 @@ mod test {
             //     self.generator.get_current_wire_id()
             // );
 
-            let a = CircuitGenerator::createConstantWire(
+            let a = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
                 &None,
@@ -75,7 +75,7 @@ mod test {
             //     self.generator.get_current_wire_id()
             // );
 
-            let ainv_expected = CircuitGenerator::createConstantWire(
+            let ainv_expected = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &pbi(
                     "20950552912096304742729232452120498732043875737213521271262032500972060322340",
@@ -111,15 +111,20 @@ mod test {
             //     generator.get_current_wire_id(),
             //     self.generator.get_current_wire_id()
             // );
-            CircuitGenerator::addEqualityAssertion(generator.clone(), &ainv, &ainv_expected, &None);
+            CircuitGenerator::add_equality_assertion(
+                generator.clone(),
+                &ainv,
+                &ainv_expected,
+                &None,
+            );
 
             // check generator on curve
-            let g_x = CircuitGenerator::createConstantWire(
+            let g_x = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &pbi(Self::GENERATOR_X),
                 &None,
             );
-            let g_y = CircuitGenerator::createConstantWire(
+            let g_y = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &pbi(Self::GENERATOR_Y),
                 &None,
@@ -135,13 +140,13 @@ mod test {
             let gneg = Gadget::<ZkayBabyJubJubGadget<TestGadget>>::negatePoint(&g);
             self.assertOnCurve(&gneg.x, &gneg.y);
             let inf = self.addPoints(&g, &gneg);
-            CircuitGenerator::addEqualityAssertion(
+            CircuitGenerator::add_equality_assertion(
                 generator.clone(),
                 &inf.x,
                 generator.get_zero_wire().as_ref().unwrap(),
                 &None,
             );
-            CircuitGenerator::addEqualityAssertion(
+            CircuitGenerator::add_equality_assertion(
                 generator.clone(),
                 &inf.y,
                 generator.get_one_wire().as_ref().unwrap(),
@@ -150,25 +155,35 @@ mod test {
 
             // check generator + INFINITY = generator
             let g_expected = self.addPoints(&g, &self.getInfinity());
-            CircuitGenerator::addEqualityAssertion(generator.clone(), &g_expected.x, &g.x, &None);
-            CircuitGenerator::addEqualityAssertion(generator.clone(), &g_expected.y, &g.y, &None);
+            CircuitGenerator::add_equality_assertion(generator.clone(), &g_expected.x, &g.x, &None);
+            CircuitGenerator::add_equality_assertion(generator.clone(), &g_expected.y, &g.y, &None);
 
             // check scalar multiplication
-            let scalar = CircuitGenerator::createConstantWirei(generator.clone(), 5, &None);
-            let scalarBits = scalar.getBitWiresi(4, &None);
-            let g5 = self.mulScalar(&g, scalarBits.asArray());
+            let scalar = CircuitGenerator::create_constant_wirei(generator.clone(), 5, &None);
+            let scalarBits = scalar.get_bit_wiresi(4, &None);
+            let g5 = self.mulScalar(&g, scalarBits.as_array());
             let g5_expected = self.addPoints(
                 &self.addPoints(&self.addPoints(&self.addPoints(&g, &g), &g), &g),
                 &g,
             );
             self.assertOnCurve(&g5.x, &g5.y);
-            CircuitGenerator::addEqualityAssertion(generator.clone(), &g5.x, &g5_expected.x, &None);
-            CircuitGenerator::addEqualityAssertion(generator.clone(), &g5.y, &g5_expected.y, &None);
+            CircuitGenerator::add_equality_assertion(
+                generator.clone(),
+                &g5.x,
+                &g5_expected.x,
+                &None,
+            );
+            CircuitGenerator::add_equality_assertion(
+                generator.clone(),
+                &g5.y,
+                &g5_expected.y,
+                &None,
+            );
         }
     }
 
     impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<TestGadget>> {
-        fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+        fn get_output_wires(&self) -> &Vec<Option<WireType>> {
             //  let dummy = generator.get_one_wire();
             &self.t.t.dummy
         }
@@ -181,21 +196,21 @@ mod test {
 
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
-            fn buildCircuit(&mut self) {
+            fn build_circuit(&mut self) {
                 let gadget = TestGadget::new(self.cg());
-                CircuitGenerator::makeOutput(
+                CircuitGenerator::make_output(
                     self.cg(),
-                    gadget.getOutputWires()[0].as_ref().unwrap(),
+                    gadget.get_output_wires()[0].as_ref().unwrap(),
                     &None,
                 );
             }
 
-            fn generateSampleInput(&self, _evaluator: &mut CircuitEvaluator) {}
+            fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
         }
         let t = CGTest;
         let mut cgen = CircuitGeneratorExtend::<CGTest>::new("test", t);
-        cgen.generateCircuit();
-        cgen.evalCircuit();
+        cgen.generate_circuit();
+        cgen.eval_circuit();
         let mut evaluator = CircuitEvaluator::new("CGTest", &cgen.cg);
         evaluator.evaluate(&cgen.cg);
     }

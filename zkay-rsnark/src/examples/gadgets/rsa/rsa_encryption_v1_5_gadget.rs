@@ -28,7 +28,7 @@ use crate::{
             constant_wire::ConstantWire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_array::WireArray,
             wire_type::WireType,
         },
@@ -108,12 +108,12 @@ impl RSAEncryptionV1_5_Gadget {
                 rsaKeyBitLength,
             },
         );
-        _self.buildCircuit();
+        _self.build_circuit();
         _self
     }
 }
 impl Gadget<RSAEncryptionV1_5_Gadget> {
-    fn buildCircuit(&mut self) {
+    fn build_circuit(&mut self) {
         let lengthInBytes = self.t.rsaKeyBitLength as usize / 8;
         let mut paddedPlainText = vec![None; lengthInBytes];
         for i in 0..self.t.plainText.len() {
@@ -124,7 +124,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             paddedPlainText[self.t.plainText.len() + 1 + (self.t.randomness.len() - 1) - i] =
                 self.t.randomness[i].clone();
         }
-        paddedPlainText[lengthInBytes - 2] = Some(CircuitGenerator::createConstantWirei(
+        paddedPlainText[lengthInBytes - 2] = Some(CircuitGenerator::create_constant_wirei(
             self.generator.clone(),
             2,
             &None,
@@ -135,7 +135,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
         //padddedPlainText array to a long element. Two ways to do that.
 
         // 1. safest method:
-        //		 WireArray allBits = WireArray::new(paddedPlainText).getBits(8);
+        //		 WireArray allBits = WireArray::new(paddedPlainText).get_bits(8);
         //		 LongElement paddedMsg = LongElement::new(allBits);
 
         // 2. Make multiple long integer constant multiplications (need to be
@@ -183,8 +183,8 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
 
         // return the cipher text as byte array
         self.t.ciphertext = s
-            .getBitsi(self.t.rsaKeyBitLength)
-            .packBitsIntoWords(8, &None);
+            .get_bitsi(self.t.rsaKeyBitLength)
+            .pack_bits_into_words(8, &None);
     }
     pub fn getExpectedRandomnessLength(rsaKeyBitLength: i32, plainTextLength: i32) -> i32 {
         assert!(
@@ -201,7 +201,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             self.t.randomness[i]
                 .as_ref()
                 .unwrap()
-                .restrictBitLength(8, &None);
+                .restrict_bit_length(8, &None);
             // verify that each element has a multiplicative inverse
             FieldDivisionGadget::new(
                 self.generator.get_one_wire().unwrap(),
@@ -213,7 +213,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
     }
 }
 impl GadgetConfig for Gadget<RSAEncryptionV1_5_Gadget> {
-    fn getOutputWires(&self) -> &Vec<Option<WireType>> {
+    fn get_output_wires(&self) -> &Vec<Option<WireType>> {
         &self.t.ciphertext
     }
 }

@@ -14,8 +14,8 @@ use crate::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
             circuit_generator::{
-                CGConfig, CircuitGenerator, CircuitGeneratorExtend, addToEvaluationQueue,
-                getActiveCircuitGenerator,
+                CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+                get_active_circuit_generator,
             },
             wire::GetWireId,
             wire::WireConfig,
@@ -26,8 +26,7 @@ use crate::{
     util::util::BigInteger,
     zkay::{
         crypto::crypto_backend::{
-            Backend, CryptoBackendConfig, CryptoBackendConfigs,
-            CryptoBackend,
+            Backend, CryptoBackend, CryptoBackendConfig, CryptoBackendConfigs,
         },
         crypto::homomorphic_backend::HomomorphicBackend,
         homomorphic_input::HomomorphicInput,
@@ -39,9 +38,9 @@ use crate::{
 };
 
 use std::{
-io::Write,
     collections::{BTreeMap, HashMap, VecDeque},
     fs::File,
+    io::Write,
     ops::{Add, Mul, Neg, Sub},
 };
 
@@ -272,12 +271,12 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
                 self.compileCircuit();
                 self.parseInputs(&args[1..].to_vec());
                 //println!("Evaluating circuit '" + realCircuitName + "'");
-                self.evalCircuit();
+                self.eval_circuit();
             }
 
             _ => panic!("invalid command"),
         }
-        self.prepFiles(None);
+        self.prep_files(None);
     }
 
     fn parseInputs(&mut self, args: &Vec<String>) {
@@ -302,7 +301,7 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
     fn compileCircuit(&mut self) {
         println!("Compiling circuit '{}'", self.realCircuitName());
         // let mut generator=self.cg.borrow().clone();
-        self.generateCircuit();
+        self.generate_circuit();
         assert!(
             self.currentPubInIdx() == self.pubInCount()
                 && self.currentPubOutIdx() == self.allPubIOWires().len() as i32,
@@ -319,14 +318,14 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
             self.allPrivInWires().len()
         );
         if self.useInputHashing() {
-            CircuitGenerator::makeOutputArray(
+            CircuitGenerator::make_output_array(
                 self.cg(),
                 ZkaySHA256Gadget::new(self.allPubIOWires().clone(), 253, &None, self.cg())
-                    .getOutputWires(),
+                    .get_output_wires(),
                 &Some("digest".to_owned()),
             );
         }
-        //println!("Done with generateCircuit, preparing dummy files...");
+        //println!("Done with generate_circuit, preparing dummy files...");
     }
 }
 
@@ -340,12 +339,12 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let pubOutCount = self.t.allPubIOWires.len() - pubInCount;
         let (inArray, outArray) = if self.t.useInputHashing {
             (
-                CircuitGenerator::createProverWitnessWireArray(
+                CircuitGenerator::create_prover_witness_wire_array(
                     self.cg.clone(),
                     pubInCount,
                     &Some("in_".to_owned()),
                 ),
-                CircuitGenerator::createProverWitnessWireArray(
+                CircuitGenerator::create_prover_witness_wire_array(
                     self.cg.clone(),
                     pubOutCount,
                     &Some("out_".to_owned()),
@@ -353,19 +352,19 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             )
         } else {
             (
-                CircuitGenerator::createInputWireArray(
+                CircuitGenerator::create_input_wire_array(
                     self.cg.clone(),
                     pubInCount,
                     &Some("in_".to_owned()),
                 ),
-                CircuitGenerator::createInputWireArray(
+                CircuitGenerator::create_input_wire_array(
                     self.cg.clone(),
                     pubOutCount,
                     &Some("out_".to_owned()),
                 ),
             )
         };
-        let privInArray = CircuitGenerator::createProverWitnessWireArray(
+        let privInArray = CircuitGenerator::create_prover_witness_wire_array(
             self.cg.clone(),
             self.t.allPrivInWires.len(),
             &Some("priv_".to_owned()),
@@ -408,8 +407,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
                 for w in wires {
                     let val = &self.t.serializedArguments[idx];
                     idx += 1;
-                    evaluator.setWireValue(&w.wire, val);
-                    sb.push_str(&format!("wid {}={}, ", w.wire.getWireId(), val));
+                    evaluator.set_wire_value(&w.wire, val);
+                    sb.push_str(&format!("wid {}={}, ", w.wire.get_wire_id(), val));
                 }
                 sb.pop();
                 sb.pop();
@@ -425,9 +424,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     }
     pub fn super_prepFiles(&self, circuit_evaluator: Option<CircuitEvaluator>) {
         if !self.t.serializedArguments.is_empty() {
-            // CGConfig::prepFiles(self, circuit_evaluator);
+            // CGConfig::prep_files(self, circuit_evaluator);
         } else {
-            self.cg.writeCircuitFile();
+            self.cg.write_circuit_file();
             self.writeDummyInputFile();
         }
     }
@@ -435,8 +434,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
 impl<T: std::fmt::Debug> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
     fn writeDummyInputFile(&self) {
-        let mut printWriter = File::create(self.get_name() + ".in").unwrap();
-        write!(printWriter, "0 1");
+        let mut print_writer = File::create(self.get_name() + ".in").unwrap();
+        write!(print_writer, "0 1");
         let mut allIOWires = Vec::with_capacity(
             self.get_in_wires().len()
                 + self.get_out_wires().len()
@@ -446,7 +445,7 @@ impl<T: std::fmt::Debug> CircuitGeneratorExtend<ZkayCircuitBase<T>> {
         allIOWires.append(&mut self.get_out_wires());
         allIOWires.append(&mut self.get_prover_witness_wires());
         for w in allIOWires {
-            write!(printWriter, "{} 0", w.as_ref().unwrap().getWireId());
+            write!(print_writer, "{} 0", w.as_ref().unwrap().get_wire_id());
         }
     }
 }
@@ -673,7 +672,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         );
 
         if !isTrue {
-            newWire = newWire.invAsBit(&None).unwrap();
+            newWire = newWire.inv_as_bit(&None).unwrap();
         }
 
         if let Some(v) = self.t.currentGuardCondition.front() {
@@ -719,14 +718,14 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let bits = val.zkay_type.bitwidth;
         if bits < 256 {
             // Take two's complement
-            let invBits = TypedWire::new(
-                val.wire.invBits(val.zkay_type.bitwidth as u64, &None),
+            let inv_bits = TypedWire::new(
+                val.wire.inv_bits(val.zkay_type.bitwidth as u64, &None),
                 val.zkay_type.clone(),
                 format!("~{}", val.name),
                 &vec![],
                 self.cg(),
             );
-            invBits.plus(&self.val_iz(1, val.zkay_type.clone()))
+            inv_bits.plus(&self.val_iz(1, val.zkay_type.clone()))
         } else {
             TypedWire::new(
                 val.wire.clone().muli(-1, &Some(format!("-{}", val.name))),
@@ -742,7 +741,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let resultType = ZkayType::checkTypeb(&val.zkay_type, &val.zkay_type, false);
         let res = val
             .wire
-            .invBits(resultType.bitwidth as u64, &Some(format!("~{}", val.name)));
+            .inv_bits(resultType.bitwidth as u64, &Some(format!("~{}", val.name)));
         TypedWire::new(
             res,
             resultType,
@@ -755,7 +754,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
     pub fn not(&self, val: &TypedWire) -> TypedWire {
         ZkayType::checkType(zkbool(), &val.zkay_type);
         TypedWire::new(
-            val.wire.invAsBit(&Some(format!("!{}", val.name))).unwrap(),
+            val.wire
+                .inv_as_bit(&Some(format!("!{}", val.name)))
+                .unwrap(),
             zkbool().clone(),
             format!("!{}", val.name),
             &vec![],
@@ -784,8 +785,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             '|' => lhs.bitOr(rhs),
             '&' => lhs.bitAnd(rhs),
             '^' => lhs.bitXor(rhs),
-            '<' => lhs.isLessThan(rhs),
-            '>'/*'*/=> lhs.isGreaterThan(rhs),
+            '<' => lhs.is_less_thans(rhs),
+            '>'/*'*/=> lhs.is_greater_thans(rhs),
             _ => panic!(),
         }
     }
@@ -804,18 +805,18 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn o_tsi(&self, lhs: &TypedWire, op: &str, rhs: i32) -> TypedWire {
         match op {
-            "<<" => lhs.shiftLeftBy(rhs),
-            ">>" => lhs.shiftRightBy(rhs),
+            "<<" => lhs.shift_leftBy(rhs),
+            ">>" => lhs.shift_rightBy(rhs),
             _ => panic!(),
         }
     }
 
     pub fn o_tst(&self, lhs: &TypedWire, op: &str, rhs: &TypedWire) -> TypedWire {
         match op {
-            "==" => lhs.isEqualTo(rhs),
+            "==" => lhs.is_equal_tos(rhs),
             "!=" => lhs.isNotEqualTo(rhs),
-            "<=" => lhs.isLessThanOrEqual(rhs),
-            ">=" => lhs.isGreaterThanOrEqual(rhs),
+            "<=" => lhs.is_less_than_or_equals(rhs),
+            ">=" => lhs.is_greater_than_or_equals(rhs),
             "&&" => lhs.and(rhs),
             "||" => lhs.or(rhs),
             _ => panic!(),
@@ -953,9 +954,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             assert!(!t.signed, "Cannot store negative constant in unsigned wire");
             let vNeg = ZkayType::GetNegativeConstant(&v.clone().neg(), t.bitwidth);
             assert!(vNeg.sign() != Sign::Minus, "Constant is still negative");
-            CircuitGenerator::createConstantWire(self.cg(), &vNeg, &Some(format!("const_{v}")))
+            CircuitGenerator::create_constant_wire(self.cg(), &vNeg, &Some(format!("const_{v}")))
         } else {
-            CircuitGenerator::createConstantWire(self.cg(), &v, &Some(format!("const_{v}")))
+            CircuitGenerator::create_constant_wire(self.cg(), &v, &Some(format!("const_{v}")))
         };
         TypedWire::new(w, t, format!("const_{v}"), &vec![], self.cg())
     }
@@ -1052,11 +1053,11 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn condExpr(&self, cond: &WireType, trueVal: &WireType, falseVal: &WireType) -> WireType {
         if ZkayUtil::ZKAY_RESTRICT_EVERYTHING {
-            CircuitGenerator::addBinaryAssertion(self.cg(), cond, &None);
+            CircuitGenerator::add_binary_assertion(self.cg(), cond, &None);
         }
         cond.mulw(trueVal, &Some("ite_true".to_owned())).addw(
             &cond
-                .invAsBit(&None)
+                .inv_as_bit(&None)
                 .unwrap()
                 .mulw(falseVal, &Some("ite_false".to_owned())),
             &Some("ite_res".to_owned()),
@@ -1072,27 +1073,27 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
         let newWire = if fromBitWidth < toBitWidth {
             // Upcast -> sign/zero extend
-            if !wasSigned && w.wire.getBitWiresIfExistAlready().is_none() {
+            if !wasSigned && w.wire.get_bit_wires_if_exist_already().is_none() {
                 // If this wire was not yet split we can return it without splitting as an optimization
                 // -> upcasts from an unsigned type (most common ) are for free this way
                 w.wire.clone()
             } else {
-                let bitWires = w.wire.getBitWiresi(fromBitWidth as u64, &None);
+                let bit_wires = w.wire.get_bit_wiresi(fromBitWidth as u64, &None);
                 if wasSigned && toBitWidth == 256 {
                     // Special  -> sign extension not possible since not enough bits,
                     // want -1 to be field_prime - 1
-                    let signBit = bitWires[fromBitWidth as usize - 1].clone().unwrap();
+                    let signBit = bit_wires[fromBitWidth as usize - 1].clone().unwrap();
                     signBit.mux(&self.negate(w).wire.muli(-1, &None), &w.wire)
                 } else {
                     let extendBit = if wasSigned {
-                        bitWires[fromBitWidth as usize - 1].clone().unwrap()
+                        bit_wires[fromBitWidth as usize - 1].clone().unwrap()
                     } else {
                         self.get_zero_wire().unwrap()
                     };
-                    let mut newWs = vec![None; toBitWidth as usize];
-                    newWs[..fromBitWidth as usize].clone_from_slice(&bitWires.asArray());
-                    newWs[fromBitWidth as usize..toBitWidth as usize].fill(Some(extendBit));
-                    WireArray::new(newWs, self.cg().downgrade()).packAsBits(
+                    let mut new_ws = vec![None; toBitWidth as usize];
+                    new_ws[..fromBitWidth as usize].clone_from_slice(&bit_wires.as_array());
+                    new_ws[fromBitWidth as usize..toBitWidth as usize].fill(Some(extendBit));
+                    WireArray::new(new_ws, self.cg().downgrade()).pack_as_bits(
                         None,
                         Some(toBitWidth as usize),
                         &None,
@@ -1102,8 +1103,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         } else if fromBitWidth > toBitWidth {
             // Downcast -> only keep lower bits
             w.wire
-                .getBitWiresi(fromBitWidth as u64, &Some(format!("downcast1 {} ", w.name)))
-                .packAsBits(
+                .get_bit_wiresi(fromBitWidth as u64, &Some(format!("downcast1 {} ", w.name)))
+                .pack_as_bits(
                     None,
                     Some(toBitWidth as usize),
                     &Some(format!("downcast2 {}", w.name)),
@@ -1151,7 +1152,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         );
 
         let enc = cryptoBackend.createEncryptionGadget(plain, key, rnd, &desc, generator);
-        enc.getOutputWires().clone()
+        enc.get_output_wires().clone()
     }
 
     pub fn cryptoDec(
@@ -1181,7 +1182,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
         let dec =
             cryptoBackend.createDecryptionGadget(expPlain, cipher, pkey, skey, &desc, generator);
-        dec.getOutputWires()[0].clone().unwrap()
+        dec.get_output_wires()[0].clone().unwrap()
     }
 
     pub fn cryptoSymmEnc(
@@ -1207,7 +1208,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         );
 
         let enc = cryptoBackend.createEncryptionGadget(plain, otherPk, ivCipher, &desc, generator);
-        enc.getOutputWires().clone()
+        enc.get_output_wires().clone()
     }
 
     pub fn addGuardedEncryptionAssertion(
@@ -1299,7 +1300,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             let expCipher = self.getArr(cipher);
             let expCipherIsNonZero = self.isNonZero(&expCipher, cipher); // "!= 0"
             let expCipherIsZero = expCipherIsNonZero
-                .invAsBit(&Some(cipher.to_owned() + " == 0"))
+                .inv_as_bit(&Some(cipher.to_owned() + " == 0"))
                 .unwrap();
             let plainZero = self.isZero(&self.getArr(plain), plain);
 
@@ -1315,7 +1316,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             let expCipher = self.getArr(cipher);
             let expCipherIsNonZero = self.isNonZero(&expCipher, cipher); // "!= 0"
             let expCipherIsZero = expCipherIsNonZero
-                .invAsBit(&Some(cipher.to_owned() + " == 0"))
+                .inv_as_bit(&Some(cipher.to_owned() + " == 0"))
                 .unwrap();
             let plainZero = self.isZero(&self.getArr(plain), plain);
             let rndZero = self.isZero(&self.getArr(rnd), rnd);
@@ -1356,14 +1357,14 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let expIvCipher = self.getArr(ivCipher);
         let expCipherNonZero = self.isNonZero(&expIvCipher, ivCipher);
         let expCipherZero = expCipherNonZero
-            .invAsBit(&Some(ivCipher.to_owned() + " == 0"))
+            .inv_as_bit(&Some(ivCipher.to_owned() + " == 0"))
             .unwrap();
         let otherPkNonZero = self
             .get(otherPk)
             .wire
-            .checkNonZero(&Some(otherPk.to_owned() + "!= 0"));
+            .check_non_zero(&Some(otherPk.to_owned() + "!= 0"));
         let otherPkZero = otherPkNonZero
-            .invAsBit(&Some(otherPk.to_owned() + " == 0"))
+            .inv_as_bit(&Some(otherPk.to_owned() + " == 0"))
             .unwrap();
         let plainZero = self.isZero(&self.getArr(plain), plain);
 
@@ -1447,22 +1448,22 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let mut res = value[0]
             .as_ref()
             .unwrap()
-            .checkNonZero(&Some(name.to_owned() + "[0] != 0"));
+            .check_non_zero(&Some(name.to_owned() + "[0] != 0"));
         for i in 1..value.len() {
             res = res.addw(
                 &value[i]
                     .as_ref()
                     .unwrap()
-                    .checkNonZero(&Some(format!("{}[{}] != 0", name, i))),
+                    .check_non_zero(&Some(format!("{}[{}] != 0", name, i))),
                 &Some(format!("or {}[{}] != 0", name, i)),
             );
         }
-        res.checkNonZero(&Some(name.to_owned() + " != 0"))
+        res.check_non_zero(&Some(name.to_owned() + " != 0"))
     }
 
     pub fn isZero(&self, value: &Vec<Option<WireType>>, name: &str) -> WireType {
         self.isNonZero(value, name)
-            .invAsBit(&Some(name.to_owned() + " == 0"))
+            .inv_as_bit(&Some(name.to_owned() + " == 0"))
             .unwrap()
     }
 
@@ -1477,7 +1478,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let mut res = self.get_one_wire().unwrap();
         for i in 0..wires1.len() {
             res = res.and(
-                &wires1[i].as_ref().unwrap().isEqualTo(
+                &wires1[i].as_ref().unwrap().is_equal_tos(
                     wires2[i].as_ref().unwrap(),
                     &Some(format!("{}[{}] == {}[{}]", name1, i, name2, i)),
                 ),
@@ -1530,10 +1531,10 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         desc: &Option<String>,
     ) {
         if self.t.currentGuardCondition.is_empty() {
-            CircuitGenerator::addEqualityAssertion(self.cg(), lhs, rhs, desc);
+            CircuitGenerator::add_equality_assertion(self.cg(), lhs, rhs, desc);
         } else {
-            let eq = lhs.isEqualTo(rhs, &None);
-            CircuitGenerator::addOneAssertion(
+            let eq = lhs.is_equal_tos(rhs, &None);
+            CircuitGenerator::add_one_assertion(
                 self.cg(),
                 &self
                     .t
@@ -1541,7 +1542,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
                     .front()
                     .unwrap()
                     .wire
-                    .invAsBit(&None)
+                    .inv_as_bit(&None)
                     .unwrap()
                     .orw(&eq, &None),
                 desc,
@@ -1551,9 +1552,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
 
     pub fn addGuardedOneAssertion(&self, val: &WireType, desc: &Option<String>) {
         if self.t.currentGuardCondition.is_empty() {
-            CircuitGenerator::addOneAssertion(self.cg(), val, desc);
+            CircuitGenerator::add_one_assertion(self.cg(), val, desc);
         } else {
-            CircuitGenerator::addOneAssertion(
+            CircuitGenerator::add_one_assertion(
                 self.cg(),
                 &self
                     .t
@@ -1561,7 +1562,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
                     .front()
                     .unwrap()
                     .wire
-                    .invAsBit(&None)
+                    .inv_as_bit(&None)
                     .unwrap()
                     .orw(val, &None),
                 desc,
@@ -1602,14 +1603,14 @@ pub fn s_negate(val: &TypedWire, generator: &RcCell<CircuitGenerator>) -> TypedW
     let bits = val.zkay_type.bitwidth;
     if bits < 256 {
         // Take two's complement
-        let invBits = TypedWire::new(
-            val.wire.invBits(val.zkay_type.bitwidth as u64, &None),
+        let inv_bits = TypedWire::new(
+            val.wire.inv_bits(val.zkay_type.bitwidth as u64, &None),
             val.zkay_type.clone(),
             format!("~{}", val.name),
             &vec![],
             generator.clone(),
         );
-        invBits.plus(&s_val_iz(1, val.zkay_type.clone(), generator))
+        inv_bits.plus(&s_val_iz(1, val.zkay_type.clone(), generator))
     } else {
         TypedWire::new(
             val.wire.muli(-1, &Some(format!("-{}", val.name))),
@@ -1649,9 +1650,13 @@ pub fn s_val_sz(val: &str, t: ZkayType, generator: &RcCell<CircuitGenerator>) ->
         assert!(!t.signed, "Cannot store negative constant in unsigned wire");
         let vNeg = ZkayType::GetNegativeConstant(&v.clone().neg(), t.bitwidth);
         assert!(vNeg.sign() != Sign::Minus, "Constant is still negative");
-        CircuitGenerator::createConstantWire(generator.clone(), &vNeg, &Some(format!("const_{v}")))
+        CircuitGenerator::create_constant_wire(
+            generator.clone(),
+            &vNeg,
+            &Some(format!("const_{v}")),
+        )
     } else {
-        CircuitGenerator::createConstantWire(generator.clone(), &v, &Some(format!("const_{v}")))
+        CircuitGenerator::create_constant_wire(generator.clone(), &v, &Some(format!("const_{v}")))
     };
     TypedWire::new(w, t, format!("const_{v}"), &vec![], generator.clone())
 }

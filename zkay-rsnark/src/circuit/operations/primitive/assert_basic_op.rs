@@ -12,7 +12,7 @@ use crate::{
         config::config::Configs,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
-            wire::{GetWireId, Wire, WireConfig, setBitsConfig},
+            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_type::WireType,
         },
     },
@@ -28,7 +28,7 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct AssertBasicOp;
 impl AssertBasicOp {
     pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<AssertBasicOp> {
-        // if w1.getWireId()==4 && w2.getWireId()==0 && output.getWireId()==48124{
+        // if w1.get_wire_id()==4 && w2.get_wire_id()==0 && output.get_wire_id()==48124{
         //     panic!("{},{},{}",w1.name(),w2.name(),output.name());
         // }
         let start = std::time::Instant::now();
@@ -63,9 +63,9 @@ crate::impl_hash_code_for!(Op<AssertBasicOp>);
 impl BasicOp for Op<AssertBasicOp> {
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (
-            self.inputs[0].as_ref().unwrap().getWireId() as usize,
-            self.inputs[1].as_ref().unwrap().getWireId() as usize,
-            self.outputs[0].as_ref().unwrap().getWireId() as usize,
+            self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
+            self.inputs[1].as_ref().unwrap().get_wire_id() as usize,
+            self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
         // if out0_id == 48124 || out0_id == 4{
         //     println!(
@@ -74,15 +74,15 @@ impl BasicOp for Op<AssertBasicOp> {
         //         self.outputs[0].as_ref().unwrap().name()
         //     );
         // }
-        let leftSide = assignment[in0_id]
+        let left_side = assignment[in0_id]
             .clone()
             .unwrap()
             .mul(assignment[in1_id].as_ref().unwrap())
             .rem(&Configs.field_prime);
-        let rightSide = assignment[out0_id].clone().unwrap();
+        let right_side = assignment[out0_id].clone().unwrap();
 
         eyre::ensure!(
-            leftSide == rightSide,
+            left_side == right_side,
             "Error During Evaluation    {} * {} != {}  in {} * {} != {}",
             assignment[in0_id].as_ref().unwrap(),
             assignment[in1_id].as_ref().unwrap(),
@@ -94,15 +94,15 @@ impl BasicOp for Op<AssertBasicOp> {
         Ok(())
     }
 
-    fn checkOutputs(&self, assignment: &Vec<Option<BigInteger>>) {
+    fn check_outputs(&self, assignment: &Vec<Option<BigInteger>>) {
         // do nothing
     }
 
-    fn getOpcode(&self) -> String {
+    fn get_op_code(&self) -> String {
         "assert".to_owned()
     }
 
-    fn getNumMulGates(&self) -> i32 {
+    fn get_num_mul_gates(&self) -> i32 {
         1
     }
 }
