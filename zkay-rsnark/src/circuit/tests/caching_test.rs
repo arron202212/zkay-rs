@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -10,7 +10,7 @@ use crate::{
     arc_cell_new,
     circuit::{
         StructNameConfig,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::gadget::GadgetConfig,
         structure::{
@@ -47,9 +47,9 @@ mod test {
     #[test]
     pub fn test_caching1() {
         unsafe { backtrace_on_stack_overflow::enable() };
-        let mut num_ins = Configs.log2_field_prime.clone();
-        let mut in_vals1 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
-        let mut in_vals2 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
+        let mut num_ins = CONFIGS.log2_field_prime.clone();
+        let mut in_vals1 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
+        let mut in_vals2 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
         let mut in_vals3 = Util::random_big_integer_arrayi(num_ins, 32);
         let num_ins = num_ins as usize;
         let mut shifted_right_vals = vec![BigInteger::default(); num_ins];
@@ -64,7 +64,7 @@ mod test {
         let mut added_vals = vec![BigInteger::default(); num_ins];
 
         let mut mask = BigInteger::from(2)
-            .pow(Configs.log2_field_prime as u32)
+            .pow(CONFIGS.log2_field_prime as u32)
             .sub(Util::one());
         //4215603241   3977511079
         let s = BigInteger::from(3977511079u64);
@@ -75,7 +75,6 @@ mod test {
                 .rotate_right((2 % 32) as u32)
                 & 0x00000000ffffffffu32,
         );
-        println!("==t===={}===s==={}==============", t, s);
 
         let s = BigInteger::from(3491785456u64);
         let t = BigInteger::from(
@@ -85,18 +84,18 @@ mod test {
                 .rotate_left((2 % 32) as u32)
                 & 0x00000000ffffffff,
         );
-        println!("==t===={}===s==={}======rotate_left========", t, s);
+
         //8181139172870928967080305625624286096015218543390575358010383571265581920620
         //8181139172870928967080305625624286096015218543390575358010383571265581920620===16362278345741857934160611251248572192030437086781150716020767142531163841240==
         for i in 0..num_ins {
-            shifted_right_vals[i] = in_vals1[i].clone().shr(i).rem(&Configs.field_prime);
-            // println!("=calc=={i}===shifted_right_vals[i]===={}==={}==",shifted_right_vals[i],in_vals1[i]);
+            shifted_right_vals[i] = in_vals1[i].clone().shr(i).rem(&CONFIGS.field_prime);
+            //
             shifted_left_vals[i] = in_vals1[i]
                 .clone()
                 .shl(i)
                 .bitand(&mask)
-                .rem(&Configs.field_prime);
-            // println!("=******************=={i}===rotated_right_vals[i]===={}==={}==",rotated_right_vals[i],in_vals3[i]);
+                .rem(&CONFIGS.field_prime);
+            //
             rotated_right_vals[i] = BigInteger::from(
                 in_vals3[i]
                     .to_str_radix(10)
@@ -106,10 +105,6 @@ mod test {
                     & 0x00000000ffffffff,
             );
 
-            // println!(
-            //     "==rotated_right_vals[i]===={}===in_vals3[i]====={}====={i}=========",
-            //     rotated_right_vals[i], in_vals3[i]
-            // );
             rotated_left_vals[i] = BigInteger::from(
                 in_vals3[i]
                     .to_str_radix(10)
@@ -118,33 +113,30 @@ mod test {
                     .rotate_left((i % 32) as u32)
                     & 0x00000000ffffffff,
             );
-            // println!(
-            //     "==rotated_left_vals[i]===={}===in_vals3[i]====={}====={i}=========",
-            //     rotated_left_vals[i], in_vals3[i]
-            // );
+
             xored_vals[i] = in_vals1[i]
                 .clone()
                 .bitxor(&in_vals2[i])
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             ored_vals[i] = in_vals1[i]
                 .clone()
                 .bitor(&in_vals2[i])
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             anded_vals[i] = in_vals1[i]
                 .clone()
                 .bitand(&in_vals2[i])
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             inverted_vals[i] = BigInteger::from(
                 !in_vals3[i].to_str_radix(10).parse::<u32>().unwrap() & 0x00000000ffffffff,
             );
             multiplied_vals[i] = in_vals1[i]
                 .clone()
                 .mul(&in_vals2[i])
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             added_vals[i] = in_vals1[i]
                 .clone()
                 .add(&in_vals2[i])
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
         }
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
@@ -160,23 +152,16 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                // println!("=====build_circuit================={},{}", file!(), line!());
                 let mut generator = &*self;
 
-                //println!("=====build_circuit================={},{}",file!(),line!());
                 let num_ins = self.t.num_ins as usize;
-                let mut inputs1 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
-                let mut inputs2 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
-                let mut inputs3 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
-                //println!("=====build_circuit================={},{}",file!(),line!());
+                let mut inputs1 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
+                let mut inputs2 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
+                let mut inputs3 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
                 let mut shifted_right = vec![None; num_ins];
                 let mut shifted_left = vec![None; num_ins];
                 let mut rotated_right = vec![None; num_ins];
                 let mut rotated_left = vec![None; num_ins];
-                //println!("=====build_circuit================={},{}",file!(),line!());
                 let mut xored = vec![None; num_ins];
                 let mut ored = vec![None; num_ins];
                 let mut anded = vec![None; num_ins];
@@ -184,109 +169,74 @@ mod test {
 
                 let mut multiplied = vec![None; num_ins];
                 let mut added = vec![None; num_ins];
-                // println!(
-                //     "=====build_circuit=========={num_ins}======={},{}",
-                //     file!(),
-                //     line!()
-                // );
+
                 use std::time::Instant;
                 let start = Instant::now();
                 for i in 0..num_ins {
                     shifted_right[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.shift_right(Configs.log2_field_prime as usize, i, &None));
-                    // println!(
-                    //     "End shift_right  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
+                        .map(|x| x.shift_right(CONFIGS.log2_field_prime as usize, i, &None));
+
                     shifted_left[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.shift_left(Configs.log2_field_prime as usize, i, &None));
-                    // println!(
-                    //     "End shift_left  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
+                        .map(|x| x.shift_left(CONFIGS.log2_field_prime as usize, i, &None));
+
                     rotated_right[i] = inputs3[i]
                         .as_ref()
                         .map(|x| x.rotate_right(32, i % 32, &None));
-                    // println!(
-                    //     "End rotate_right  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
+
                     rotated_left[i] = inputs3[i]
                         .as_ref()
                         .map(|x| x.rotate_left(32, i % 32, &None));
-                    // println!(
-                    //     "End rotate_left  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
 
                     xored[i] = inputs1[i].as_ref().map(|x| {
                         x.xor_bitwise(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
-                    // println!(
-                    //     "End xor_bitwise  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
+
                     ored[i] = inputs1[i].as_ref().map(|x| {
                         x.or_bitwises(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
-                    // println!(
-                    //     "End or_bitwises  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
+
                     anded[i] = inputs1[i].as_ref().map(|x| {
                         x.and_bitwise(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
-                    // println!(
-                    //     "End and_bitwise  Time: {i}=== {} s",
-                    //     start.elapsed().as_secs()
-                    // );
+
                     inverted[i] = inputs3[i].as_ref().map(|x| x.inv_bits(32, &None));
-                    // println!("End inv_bits  Time: {i}=== {} s", start.elapsed().as_secs());
+                    //
                     multiplied[i] = inputs1[i]
                         .clone()
                         .map(|x| x.mul(inputs2[i].as_ref().unwrap()));
-                    // println!("End mul  Time: {i}=== {} s", start.elapsed().as_secs());
+                    //
 
                     added[i] = inputs1[i]
                         .clone()
                         .map(|x| x.add(inputs2[i].as_ref().unwrap()));
-                    // println!("End  add  Time: {i}=== {} s", start.elapsed().as_secs());
+                    //
                 }
-                // println!(
-                //     "=====build_circuit=====*************============={},{}",
-                //     file!(),
-                //     line!()
-                // );
 
                 let mut current_cost = generator.get_num_of_constraints();
-                // println!(
-                //     "=====build_circuit========188==********======={},{}",
-                //     file!(),
-                //     line!()
-                // );
+
                 // repeat everything again, and verify that the number of
                 // multiplication gates will not be affected
                 for i in 0..num_ins {
                     shifted_right[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.shift_right(Configs.log2_field_prime as usize, i, &None));
+                        .map(|x| x.shift_right(CONFIGS.log2_field_prime as usize, i, &None));
                     shifted_left[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.shift_left(Configs.log2_field_prime as usize, i, &None));
+                        .map(|x| x.shift_left(CONFIGS.log2_field_prime as usize, i, &None));
                     rotated_right[i] = inputs3[i]
                         .as_ref()
                         .map(|x| x.rotate_right(32, i % 32, &None));
@@ -296,21 +246,21 @@ mod test {
                     xored[i] = inputs1[i].as_ref().map(|x| {
                         x.xor_bitwise(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
                     ored[i] = inputs1[i].as_ref().map(|x| {
                         x.or_bitwises(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
                     anded[i] = inputs1[i].as_ref().map(|x| {
                         x.and_bitwise(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
@@ -324,11 +274,7 @@ mod test {
                 }
 
                 assert_eq!(generator.get_num_of_constraints(), current_cost);
-                println!(
-                    "=====build_circuit=====__________*****___________________________________________====*************========{},{}",
-                    file!(),
-                    line!()
-                );
+
                 // repeat binary operations again while changing the order of
                 // the operands, and verify that the number of multiplication
                 // gates will not be affected
@@ -336,7 +282,7 @@ mod test {
                     xored[i] = inputs2[i].as_ref().map(|x| {
                         x.xor_bitwise(
                             inputs1[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
@@ -344,14 +290,14 @@ mod test {
                     ored[i] = inputs2[i].as_ref().map(|x| {
                         x.or_bitwises(
                             inputs1[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
                     anded[i] = inputs2[i].as_ref().map(|x| {
                         x.and_bitwise(
                             inputs1[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
@@ -362,99 +308,36 @@ mod test {
                         .clone()
                         .map(|x| x.add(inputs1[i].as_ref().unwrap()));
                 }
-                println!(
-                    "=====build_circuit====shifted_right before====*************=========={},{},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 assert_eq!(generator.get_num_of_constraints(), current_cost);
-                // println!(
-                //     "=====build_circuit========*************=========={},{}",
-                //     file!(),
-                //     line!()
-                // );
+
                 CircuitGenerator::make_output_array(self.cg(), &shifted_right, &None);
-                println!(
-                    "=====build_circuit===shifted_right======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &shifted_left, &None);
-                println!(
-                    "=====build_circuit==shifted_left==rotated_right=before===*************======{},{},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &rotated_right, &None);
-                println!(
-                    "=====build_circuit===rotated_right======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &rotated_left, &None);
-                println!(
-                    "=====build_circuit===rotated_left======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &xored, &None);
-                println!(
-                    "=====build_circuit===xored======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &ored, &None);
-                println!(
-                    "=====build_circuit===ored======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &anded, &None);
-                println!(
-                    "=====build_circuit===anded======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &inverted, &None);
-                println!(
-                    "=====build_circuit===inverted======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &multiplied, &None);
-                println!(
-                    "=====build_circuit===multiplied======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &added, &None);
-                println!(
-                    "=====build_circuit===added======*************===={}====={},{}",
-                    self.get_num_wires(),
-                    file!(),
-                    line!()
-                );
+
                 current_cost = generator.get_num_of_constraints();
 
                 // repeat labeling as output (although not really meaningful)
                 // and make sure no more constraints are added
                 CircuitGenerator::make_output_array(self.cg(), &shifted_right, &None);
                 CircuitGenerator::make_output_array(self.cg(), &shifted_left, &None);
-                println!(
-                    "=====build_circuit===rotated_right=====222222=*************========={},{}",
-                    file!(),
-                    line!()
-                );
+
                 CircuitGenerator::make_output_array(self.cg(), &rotated_right, &None);
                 CircuitGenerator::make_output_array(self.cg(), &rotated_left, &None);
                 CircuitGenerator::make_output_array(self.cg(), &xored, &None);
@@ -465,27 +348,19 @@ mod test {
                 CircuitGenerator::make_output_array(self.cg(), &added, &None);
 
                 assert_eq!(generator.get_num_of_constraints(), current_cost);
-                // println!(
-                //     "=====build_circuit========*************=========={},{}",
-                //     file!(),
-                //     line!()
-                // );
+
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
                 self.t.inputs3 = inputs3;
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                // println!("=====evaluator.get_assignment().len()============{}",evaluator.get_assignment().len());
-                // println!("=====1======{}===={}===",&self.t.inputs1.len(), &self.t.in_vals1.len());
-                // println!("=====2======{}===={}===",&self.t.inputs2.len(), &self.t.in_vals2.len());
-                // println!("======3====={}===={}===",&self.t.inputs3.len(), &self.t.in_vals3.len());
                 evaluator.set_wire_valuea(&self.t.inputs1, &self.t.in_vals1);
                 evaluator.set_wire_valuea(&self.t.inputs2, &self.t.in_vals2);
                 evaluator.set_wire_valuea(&self.t.inputs3, &self.t.in_vals3);
             }
         }
-        //println!("{}",line!());
+
         let t = CGTest {
             inputs1: vec![],
             inputs2: vec![],
@@ -496,13 +371,12 @@ mod test {
             num_ins: num_ins as u64,
         };
         let mut generator = CircuitGeneratorExtend::<CGTest>::new("Caching_Test", t);
-        // println!("==================={}", line!());
+
         // let mut generator = arc_cell_new!(generator);
         // put_active_circuit_generator("CGTest", generator.cg());
 
-        // println!("================{}", line!());
         generator.generate_circuit();
-        // println!("================={},{}", file!(), line!());
+
         // let generator = RcCell::new(generator);
         let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generate_sample_input(&mut evaluator);
@@ -511,7 +385,6 @@ mod test {
         let mut out_wires = generator.get_out_wires();
         let mut output_index = 0;
         for i in 0..num_ins {
-            // println!("=check=={i}===shifted_right_vals[i]===={}=={}===",shifted_right_vals[i],out_wires[i + output_index].as_ref().unwrap().get_wire_id());
             assert_eq!(
                 shifted_right_vals[i],
                 evaluator.get_wire_value(out_wires[i + output_index].as_ref().unwrap())
@@ -528,11 +401,6 @@ mod test {
 
         output_index += num_ins;
         for i in 0..num_ins {
-            // println!(
-            //     "=====rotated_right_vals===+++======{i}==={}={}==",
-            //     out_wires[i + output_index].as_ref().unwrap().name(),
-            //     out_wires[i + output_index].as_ref().unwrap().get_wire_id()
-            // );
             assert_eq!(
                 rotated_right_vals[i],
                 evaluator.get_wire_value(out_wires[i + output_index].as_ref().unwrap())
@@ -540,9 +408,7 @@ mod test {
         }
 
         output_index += num_ins;
-        // println!("=349759=={}==",evaluator.get_wire_value(out_wires[i + output_index].as_ref().unwrap()));
         for i in 0..num_ins {
-            // println!("={i}==={}==rotated_left_vals======={}",rotated_left_vals[i],out_wires[i + output_index].as_ref().unwrap().get_wire_id());
             assert_eq!(
                 rotated_left_vals[i],
                 evaluator.get_wire_value(out_wires[i + output_index].as_ref().unwrap())
@@ -694,7 +560,7 @@ mod test {
                 let mut generator = &*self;
                 let input_str = &self.t.input_str;
                 let mut input_wires =
-                    CircuitGenerator::create_input_wire_array(self.cg(), input_str.len(), &None);
+                    CircuitGenerator::create_input_wire_array(self.cg(), input_str.len());
                 let mut digest = SHA256Gadget::new(
                     input_wires.clone(),
                     8,

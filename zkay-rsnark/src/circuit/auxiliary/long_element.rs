@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -10,7 +10,7 @@ use crate::{
     circuit::{
         InstanceOf,
         {
-            config::config::Configs,
+            config::config::CONFIGS,
             eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
             structure::{
                 circuit_generator::{
@@ -207,7 +207,7 @@ impl LongElement {
         self.current_max_values
             .iter()
             .zip(&o.current_max_values)
-            .any(|(a, b)| a + b >= Configs.field_prime)
+            .any(|(a, b)| a + b >= CONFIGS.field_prime)
     }
 
     pub fn mul_overflow_check(&self, o: &Self) -> bool {
@@ -224,7 +224,7 @@ impl LongElement {
             }
         }
         for i in 0..length {
-            if new_max_values[i] >= Configs.field_prime {
+            if new_max_values[i] >= CONFIGS.field_prime {
                 overflow = true;
                 break;
             }
@@ -406,7 +406,7 @@ impl LongElement {
                 solution[i + j] = solution[i + j]
                     .clone()
                     .add(ai_vals[i].clone().mul(bi_vals[j].clone()))
-                    .rem(&Configs.field_prime);
+                    .rem(&CONFIGS.field_prime);
             }
         }
         solution
@@ -528,15 +528,12 @@ impl LongElement {
             println!(
                 "Warning [restrict_bitwidth()]: Might want to align before checking bitwidth constraints"
             );
-            if Configs.print_stack_trace_at_warnings {
+            if CONFIGS.print_stack_trace_at_warnings {
                 // Thread.dumpStack();
                 //println!("Thread.dumpStack()");
             }
         }
         for i in 0..self.array.len() {
-            // if self.current_bitwidth[i]==16{
-            //     println!("=====self.current_bitwidth[i]==16============{i},{}",self.array.len() );
-            // }
             self.array[i]
                 .as_ref()
                 .unwrap()
@@ -579,7 +576,6 @@ impl LongElement {
         );
 
         let limit = a1.len().max(a2.len());
-        // println!("======a1====a2===={a1:?},{a2:?}");
         // padding
         if e.array.len() != limit {
             a2 = WireArray::new(a2, self.generator.clone())
@@ -644,9 +640,9 @@ impl LongElement {
             while i + step <= limit - 1 {
                 let delta = shift.pow(step as u32);
                 if b1.clone().add(bounds1[i + step].clone().mul(&delta)).bits()
-                    < Configs.log2_field_prime - 2
+                    < CONFIGS.log2_field_prime - 2
                     && b2.clone().add(bounds2[i + step].clone().mul(&delta)).bits()
-                        < Configs.log2_field_prime - 2
+                        < CONFIGS.log2_field_prime - 2
                 {
                     w1 = w1.add(a1[i + step].as_ref().unwrap().mulb(&delta, &None));
                     w2 = w2.add(a2[i + step].as_ref().unwrap().mulb(&delta, &None));
@@ -755,7 +751,6 @@ impl LongElement {
                                         aligned_aux_constant_chunks: Vec<BigInteger>)  {
                         impl Instruction for Prover{
                          fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                // println!("=============={}==========",evaluator.get_assignment().len());
                                             let mut prev_carry = BigInteger::ZERO;
                                             for i in 0..self.carries.len() {
                                                 let a = evaluator.get_wire_value(self.group1[i].as_ref().unwrap());
@@ -876,7 +871,7 @@ impl LongElement {
             if aux_constant_chunks[j]
                 .clone()
                 .add(group1_bounds[j].clone())
-                .add(BigInteger::from((prev_bound >= Configs.field_prime) as u8))
+                .add(BigInteger::from((prev_bound >= CONFIGS.field_prime) as u8))
                 != BigInteger::ZERO
             {
 
@@ -951,7 +946,6 @@ impl LongElement {
                                 impl Instruction for Prover{
                                     fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
 
-                                        // println!("===assert_less_than===get_assignment========{}==========",evaluator.get_assignment().len());
                                         let mut found = false;
                                         for i in (0..self.length).rev() {
                                             let v1 = evaluator.get_wire_value(self.padded_a1[i].as_ref().unwrap());
@@ -1191,7 +1185,6 @@ impl Sub<&Self> for LongElement {
                                         result:LongElement)  {
                                         impl Instruction for Prover{
                                             fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                // println!("=====get_assignment====sub====={}==========",evaluator.get_assignment().len());
                                                let my_value = evaluator
                                                 .get_wire_valuei(&self.long_element, LongElement::CHUNK_BITWIDTH);
                                             let other_value =
@@ -1274,7 +1267,6 @@ impl Mul<&Self> for LongElement {
             //println!("Warning: Mul overflow could happen");
         }
         let length = self.array.len() + rhs.array.len() - 1;
-        //  println!("=self.array,rhs.array===={:?}=={:?}====",self.array,rhs.array);
         let mut result: Vec<Option<WireType>>;
         let mut generator = self.generator();
         // check if we can just apply the simpl e non-costly multiplication
@@ -1299,7 +1291,6 @@ impl Mul<&Self> for LongElement {
                     });
                 }
             }
-            // println!("===result====1========={result:?}========={:?}========={:?}=====",rhs.array , self.array);
         } else {
             // impl ement the optimization
 
@@ -1308,7 +1299,6 @@ impl Mul<&Self> for LongElement {
                 length,
                 &None,
             );
-            // println!("===result======2======={result:?}");
             // for safety
             let (array1, array2) = (&self.array, &rhs.array);
             let prover = crate::impl_prover!(
@@ -1317,7 +1307,6 @@ impl Mul<&Self> for LongElement {
                                     array2: Vec<Option<WireType>>)  {
                                     impl Instruction for Prover{
                                      fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                        // println!("=====get_assignment===mul======{}==========",evaluator.get_assignment().len());
                                                                let a = evaluator.get_wires_values(&self.array1);
                                                             let b = evaluator.get_wires_values(&self.array2);
                                                             let result_vals = LongElement::multiply_polys(a, b);
@@ -1375,7 +1364,7 @@ impl Mul<&Self> for LongElement {
                         vector2[i] = rhs.array[i].as_ref().map(|x| x.clone().mulb(&coeff, &None));
                     }
                     vector3[i] = result[i].clone().map(|x| x.mulb(&coeff, &None));
-                    coeff = Util::modulo(&coeff.mul(&constant), &Configs.field_prime);
+                    coeff = Util::modulo(&coeff.mul(&constant), &CONFIGS.field_prime);
                 }
 
                 let v1 = WireArray::new(vector1, self.generator.clone()).sum_all_elements(&None);
@@ -1395,7 +1384,6 @@ impl Mul<&Self> for LongElement {
                 );
             }
         }
-        // println!("===result============={result:?}");
         LongElement::neww(result, new_max_values, self.generator.clone())
     }
 }

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -13,7 +13,7 @@ use crate::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -143,7 +143,6 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
             .get_max_val(LongElement::CHUNK_BITWIDTH)
             .bits()
             .max(1);
-        // println!("=====a_bitwidth================{a_bitwidth}");
         let b_bitwidth = self
             .t
             .b
@@ -182,12 +181,6 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
                 r_bitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }
         if q_bitwidth % LongElement::CHUNK_BITWIDTH as u64 != 0 {
-            // println!(
-            //     "===LongElement::CHUNK_BITWIDTH====={}===={}====={q_bitwidth} % {} ",
-            //     LongElement::CHUNK_BITWIDTH,
-            //     file!(),
-            //     line!()
-            // );
             q_chunk_bitwidths[q_length as usize - 1] =
                 q_bitwidth % LongElement::CHUNK_BITWIDTH as u64;
         }

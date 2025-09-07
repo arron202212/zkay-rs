@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -45,7 +45,7 @@ pub struct LinearSystemSolver {
     pub mat: Vec<Vec<BigInteger>>,
 }
 impl LinearSystemSolver {
-    // const prime: BigInteger = Configs.field_prime.clone();
+    // const prime: BigInteger = CONFIGS.field_prime.clone();
     pub fn new(mat: Vec<Vec<BigInteger>>) -> Self {
         Self { mat }
     }
@@ -83,31 +83,18 @@ impl LinearSystemSolver {
                 self.mat[pivot_row_idx][j] = self.mat[pivot_row_idx][j]
                     .clone()
                     .mul(&inv_f)
-                    .rem(&Configs.field_prime);
-                // if self.mat[pivot_row_idx][j]==BigInteger::ZERO{
-                //     println!("=zero=mat=lss=={pivot_row_idx}=={j}============");
-                // }
+                    .rem(&CONFIGS.field_prime);
             }
 
             for k in pivot_row_idx + 1..num_rows {
                 let f = Self::negate(&self.mat[k][col_idx]);
-                // println!("=zero=mat==k={k}=col_idx={col_idx}=f==={f}===={}=",self.mat[k][col_idx]);
 
                 for j in 0..num_cols {
-                    // if self.mat[k][j]==BigInteger::ZERO||j==16{
-                    //     println!("=zero=mat==1={k}=={j}======{}=",self.mat[k][j]);
-                    // }
                     self.mat[k][j] = self.mat[k][j]
                         .clone()
                         .add(&self.mat[pivot_row_idx][j].clone().mul(&f));
-                    // if self.mat[k][j]==BigInteger::ZERO||j==16{
-                    //     println!("=zero=mat==2={k}=={j}====={}=={}=",self.mat[pivot_row_idx][j].clone().mul(&f),self.mat[k][j]);
-                    // }
                     let old = self.mat[k][j].clone();
-                    self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
-                    // if self.mat[k][j]==BigInteger::ZERO && j==16{
-                    //      println!("=zero=mat==lss103={k}=={j}====={old}==={}=={}==",self.mat[k][j],Configs.field_prime);
-                    // }
+                    self.mat[k][j] = self.mat[k][j].clone().rem(&CONFIGS.field_prime);
                 }
             }
             row_idx += 1;
@@ -132,27 +119,23 @@ impl LinearSystemSolver {
                     self.mat[k][j] = self.mat[k][j]
                         .clone()
                         .add(Self::negate(&self.mat[row_idx][j].clone().mul(&f)));
-                    // let old=self.mat[k][j].clone();
-                    self.mat[k][j] = self.mat[k][j].clone().rem(&Configs.field_prime);
-                    //  if self.mat[k][j]==BigInteger::ZERO||j==16{
-                    // println!("=zero=mat==lss133={k}=={j}==={old}====={}====",self.mat[k][j]);
-                    // }
+                    self.mat[k][j] = self.mat[k][j].clone().rem(&CONFIGS.field_prime);
                 }
             }
         }
     }
 
     fn negate(x: &BigInteger) -> BigInteger {
-        Configs
+        CONFIGS
             .field_prime
             .clone()
-            .sub(x.rem(&Configs.field_prime))
-            .rem(&Configs.field_prime)
+            .sub(x.rem(&CONFIGS.field_prime))
+            .rem(&CONFIGS.field_prime)
     }
 
     fn inverse(x: &BigInteger) -> BigInteger {
-        x.rem(&Configs.field_prime)
-            .modinv(&Configs.field_prime)
+        x.rem(&CONFIGS.field_prime)
+            .modinv(&CONFIGS.field_prime)
             .unwrap()
     }
 }

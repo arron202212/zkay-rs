@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -59,10 +59,10 @@ mod test {
     pub fn test_hardcoded_keys() {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let exponent_bits = CircuitGenerator::create_input_wire_array(
+                let exponent_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
 
                 let ccw = |s: &str| {
@@ -167,14 +167,14 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let exponent_bits = CircuitGenerator::create_input_wire_array(
+                let exponent_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
 
-                let mut g = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
-                let mut h = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
+                let mut g = CircuitGenerator::create_input_wire_array(self.cg(), mu);
+                let mut h = CircuitGenerator::create_input_wire_array(self.cg(), mu);
 
                 let field_extension_dh_key_exchange = FieldExtensionDHKeyExchange::new(
                     g.clone(),
@@ -278,14 +278,14 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let exponent_bits = CircuitGenerator::create_input_wire_array(
+                let exponent_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
 
-                let mut g = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
-                let mut h = CircuitGenerator::create_input_wire_array(self.cg(), mu, &None);
+                let mut g = CircuitGenerator::create_input_wire_array(self.cg(), mu);
+                let mut h = CircuitGenerator::create_input_wire_array(self.cg(), mu);
 
                 let field_extension_dh_key_exchange = FieldExtensionDHKeyExchange::new(
                     g.clone(),

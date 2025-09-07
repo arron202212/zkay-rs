@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -135,7 +135,7 @@ impl Gadget<MerkleTreePathGadget> {
             }
 
             let next_input_bits = WireArray::new(in_hash, self.generator.clone().downgrade())
-                .get_bits(Configs.log2_field_prime as usize, &None)
+                .get_bits(CONFIGS.log2_field_prime as usize, &None)
                 .as_array()
                 .clone();
             subset_sum_gadget = SubsetSumHashGadget::new(

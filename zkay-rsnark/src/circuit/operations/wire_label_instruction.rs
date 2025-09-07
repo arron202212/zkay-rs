@@ -1,13 +1,13 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::circuit::{
-    config::config::Configs,
+    config::config::CONFIGS,
     eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
     structure::wire_type::WireType,
 };
@@ -92,8 +92,8 @@ impl Instruction for WireLabelInstruction {
     }
 
     fn emit(&self, evaluator: &CircuitEvaluator) {
-        if self.label_type == LabelType::output && Configs.output_verbose
-            || self.label_type == LabelType::debug && Configs.debug_verbose
+        if self.label_type == LabelType::output && CONFIGS.output_verbose
+            || self.label_type == LabelType::debug && CONFIGS.debug_verbose
         {
             use std::sync::atomic::{self, AtomicBool, Ordering};
             println!(
@@ -105,7 +105,7 @@ impl Instruction for WireLabelInstruction {
                 } else {
                     format!(" ({}) ", self.desc)
                 },
-                if crate::circuit::config::config::atomic_hex_output_enabled.load(Ordering::Relaxed)
+                if crate::circuit::config::config::ATOMIC_HEX_OUTPUT_ENABLED.load(Ordering::Relaxed)
                 {
                     format!("{:x}", evaluator.get_wire_value(&self.w))
                 } else {

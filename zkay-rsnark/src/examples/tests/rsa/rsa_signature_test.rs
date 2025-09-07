@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -56,11 +56,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_message = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_message =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let sha2_gadget = SHA256Gadget::new(
                     input_message.clone(),
                     8,
@@ -205,11 +202,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_message = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_message =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let sha2_gadget = SHA256Gadget::new(
                     input_message.clone(),
                     8,
@@ -356,11 +350,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_message = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_message =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let sha2_gadget = SHA256Gadget::new(
                     input_message.clone(),
                     8,

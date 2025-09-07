@@ -1,14 +1,14 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::{
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::circuit_evaluator::CircuitEvaluator,
         structure::{
             circuit_generator::{
@@ -44,11 +44,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_wires = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_wires =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let digest = SHA256Gadget::new(
                     input_wires.clone(),
                     8,
@@ -102,11 +99,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_wires = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_wires =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let digest = SHA256Gadget::new(
                     input_wires.clone(),
                     8,
@@ -166,11 +160,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_wires = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_wires =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let digest = SHA256Gadget::new(
                     input_wires.clone(),
                     8,
@@ -227,11 +218,8 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_wires = CircuitGenerator::create_input_wire_array(
-                    self.cg(),
-                    CGTest::input_str.len(),
-                    &None,
-                );
+                let input_wires =
+                    CircuitGenerator::create_input_wire_array(self.cg(), CGTest::input_str.len());
                 let digest = SHA256Gadget::new(
                     input_wires.clone(),
                     8,
@@ -300,7 +288,6 @@ mod test {
                         } else {
                             0
                         },
-                    &None,
                 );
                 let digest = SHA256Gadget::new(
                     input_wires.clone(),
@@ -340,7 +327,7 @@ mod test {
         // Testing different settings of the bit_width_per_input_element parameter
         // word_size = # of bytes per input wire
 
-        for word_size in 1..Configs.log2_field_prime / 8 {
+        for word_size in 1..CONFIGS.log2_field_prime / 8 {
             let num_bytes_per_input_wire = word_size as usize;
             let t = CGTest {
                 input_wires: vec![],

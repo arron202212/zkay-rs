@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -143,7 +143,6 @@ impl WireArray {
             let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
             if let Some(cached_outputs) = cached_outputs {
                 generator.borrow_mut().current_wire_id -= 1;
-                //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
                 cached_outputs[0].clone().unwrap()
             } else {
                 output
@@ -214,18 +213,7 @@ impl WireArray {
     ) -> Self {
         use std::time::Instant;
         let start = Instant::now();
-        // let ws1 = ;
-        // println!("End adjust_length  Time: == {} s", start.elapsed().as_secs());
 
-        // let ws2 = ;
-        // println!("End adjust_length  Time: == {} s", start.elapsed().as_secs());
-
-        // let mut out = vec![None; desired_length];
-        // for i in 0..out.len() {
-        //     out[i] = ws1[i]
-        //         .as_ref()
-        //         .map(|x| x.clone().mulw(ws2[i].clone().unwrap(), desc));
-        // }
         let out: Vec<_> = self
             .adjust_length(Some(&self.array), desired_length)
             .as_array()
@@ -236,13 +224,8 @@ impl WireArray {
             )
             .map(|(w1, w2)| w1.as_ref().map(|w1v| w1v.mulw(w2.as_ref().unwrap(), desc)))
             .collect();
-        // println!(
-        //     "End mulw  {desired_length} Time: == {} s",
-        //     start.elapsed().as_secs()
-        // );
 
         let v = WireArray::new(out, self.generator.clone());
-        // println!("End WireArray  Time: == {} s", start.elapsed().as_secs());
         v
     }
 
@@ -400,7 +383,6 @@ impl WireArray {
             let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
             if let Some(cached_outputs) = cached_outputs {
                 generator.borrow_mut().current_wire_id -= 1;
-                //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
                 cached_outputs[0].clone().unwrap()
             } else {
                 out

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -47,16 +47,6 @@ impl LinearCombination_wire {
         bits: Option<WireArray>,
         generator: WeakCell<CircuitGenerator>,
     ) -> Wire<LinearCombination_wire> {
-        //   if  wire_id>0 && wire_id<10000
-        //     {
-        //         println!("===LinearCombination_wire::new====={wire_id}==");
-        //     }
-        // //super(wire_id);
-        // Wire::<LinearCombination_wire> {
-        //     wire_id,
-        //     generator,
-        //     t: LinearCombination_wire { bit_wires: bits },
-        // }
         Wire::<LinearCombination_wire>::new(
             LinearCombination_wire { bit_wires: bits },
             wire_id,

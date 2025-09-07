@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -40,16 +40,6 @@ impl PartialEq for VariableWire {
 crate::impl_name_instance_of_wire_g_for!(Wire<VariableWire>);
 impl VariableWire {
     pub fn new(wire_id: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableWire> {
-        //   if wire_id>0 && wire_id<10000
-        //     {
-        //         println!("==VariableWire::new======{wire_id}==");
-        //     }
-        // //super(wire_id);
-        // Wire::<VariableWire> {
-        //     wire_id,
-        //     generator,
-        //     t: VariableWire { bit_wires: None },
-        // }
         Wire::<VariableWire>::new(VariableWire { bit_wires: None }, wire_id, generator).unwrap()
     }
 }

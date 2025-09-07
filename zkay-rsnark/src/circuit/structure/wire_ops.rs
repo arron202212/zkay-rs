@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -33,7 +33,7 @@ pub trait SubWire<T = Self> {
 //      fn and(&self, w: T, desc: &Option<String>) -> WireType;
 // }
 
-pub trait Xor_bitwise<T = Self> {
+pub trait XorBitwise<T = Self> {
     fn xor_bitwise(&self, w: T, num_bits: u64, desc: &Option<String>) -> WireType;
 }
 

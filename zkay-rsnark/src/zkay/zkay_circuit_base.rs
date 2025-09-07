@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -346,15 +346,15 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
             )
         } else {
             (
-                CircuitGenerator::create_input_wire_array(
+                CircuitGenerator::create_input_wire_array_with_str(
                     self.cg.clone(),
                     pub_in_count,
-                    &Some("in_".to_owned()),
+                    "in_",
                 ),
-                CircuitGenerator::create_input_wire_array(
+                CircuitGenerator::create_input_wire_array_with_str(
                     self.cg.clone(),
                     pub_out_count,
-                    &Some("out_".to_owned()),
+                    "out_",
                 ),
             )
         };

@@ -1,14 +1,14 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use crate::{
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::gadget::{Gadget, GadgetConfig},
         structure::{
@@ -48,7 +48,7 @@ impl<T> ZkayBabyJubJubGadget<T> {
     pub fn new(desc: &Option<String>, t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
         // We assume the underlying field matches the base field of BabyJubJub (so that we can avoid alignment/modulus)
         assert_eq!(
-            Configs.field_prime.to_str_radix(10),
+            CONFIGS.field_prime.to_str_radix(10),
             "21888242871839275222246405745257275088548364400416034343698204186575808495617"
         );
         Gadget::<Self>::new(generator, desc, ZkayBabyJubJubGadget::<T> { t })
@@ -158,20 +158,8 @@ pub trait ZkayBabyJubJubGadgetConfig {
     //Returns a wire holding the inverse of a in the native base field.
 
     fn native_inverse(&self, a: &WireType) -> WireType {
-        // println!(
-        //     "===self.get_current_wire_id()======native_inverse======before======{}",
-        //     self.generators().get_current_wire_id()
-        // );
         let ainv = CircuitGenerator::create_prover_witness_wire(self.generators(), &None);
-        // println!(
-        //     "===self.get_current_wire_id()======native_inverse====after========{}",
-        //     self.generators().get_current_wire_id()
-        // );
-        // CircuitGenerator::specify_prover_witness_computation(self.generators(), &|evaluator: &mut CircuitEvaluator| {
-        //             let a_value = evaluator.get_wire_value(a);
-        //             let inverse_value = a_value.modInverse(Self::BASE_ORDER);
-        //             evaluator.set_wire_value(ainv, inverse_value);
-        //         });
+
         let base_order = Self::BASE_ORDER.to_owned();
         let prover = crate::impl_prover!(
                                 eval(  a: WireType,
@@ -189,21 +177,9 @@ pub trait ZkayBabyJubJubGadgetConfig {
                             }
                         );
         CircuitGenerator::specify_prover_witness_computation(self.generators(), prover);
-        // {
-        //     struct Prover;
-        //     impl Instruction for Prover {
-        //         &|evaluator: &mut CircuitEvaluator| {
-        //             let a_value = evaluator.get_wire_value(a);
-        //             let inverse_value = a_value.modInverse(Self::BASE_ORDER);
-        //             evaluator.set_wire_value(ainv, inverse_value);
-        //         }
-        //     }
-        //     Prover
-        // });
 
         // check if a * ainv = 1 (natively)
         let test = a.clone().mul(&ainv);
-        // println!("==test====={},{},{}", a, ainv, test);
         CircuitGenerator::add_equality_assertion(
             self.generators(),
             &test,

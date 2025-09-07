@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -45,10 +45,10 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let start = std::time::Instant::now();
-                let secret_bits = CircuitGenerator::create_input_wire_array(
+                let secret_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
                 let mut base_x = CircuitGenerator::create_input_wire(self.cg(), &None);
                 let mut h_x = CircuitGenerator::create_input_wire(self.cg(), &None);
@@ -140,10 +140,10 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let secret_bits = CircuitGenerator::create_input_wire_array(
+                let secret_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
                 let base_x =
                     CircuitGenerator::create_constant_wire(self.cg(), &BigInteger::from(4), &None);
@@ -233,10 +233,10 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let secret_bits = CircuitGenerator::create_input_wire_array(
+                let secret_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
                 let base_x = CircuitGenerator::create_input_wire(self.cg(), &None);
                 let h_x = CircuitGenerator::create_input_wire(self.cg(), &None);
@@ -297,10 +297,10 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let secret_bits = CircuitGenerator::create_input_wire_array(
+                let secret_bits = CircuitGenerator::create_input_wire_array_with_str(
                     self.cg(),
                     EXPONENT_BIT_LENGTH,
-                    &Some("exponent".to_owned()),
+                    "exponent",
                 );
                 let base_x = CircuitGenerator::create_input_wire(self.cg(), &None);
                 let h_x = CircuitGenerator::create_input_wire(self.cg(), &None);

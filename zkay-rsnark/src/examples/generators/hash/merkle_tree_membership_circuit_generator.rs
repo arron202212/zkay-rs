@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -80,10 +80,10 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
     fn build_circuit(&mut self) {
         let hash_digest_dimension = MerkleTreeMembershipCircuitGenerator::hash_digest_dimension;
         //  declare inputs
-        let public_root_wires = CircuitGenerator::create_input_wire_array(
+        let public_root_wires = CircuitGenerator::create_input_wire_array_with_str(
             self.cg(),
             hash_digest_dimension as usize,
-            &Some("Input Merkle Tree Root".to_owned()),
+            "Input Merkle Tree Root",
         );
         let intermediate_hashe_wires = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
@@ -154,7 +154,7 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
         for i in 0..MerkleTreeMembershipCircuitGenerator::hash_digest_dimension as usize {
             circuit_evaluator.set_wire_value(
                 self.t.public_root_wires[i].as_ref().unwrap(),
-                &Util::next_random_big_integer(&Configs.field_prime),
+                &Util::next_random_big_integer(&CONFIGS.field_prime),
             );
         }
 
@@ -167,7 +167,7 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
         {
             circuit_evaluator.set_wire_value(
                 self.t.intermediate_hashe_wires[i].as_ref().unwrap(),
-                &Util::next_random_big_integer(&Configs.field_prime),
+                &Util::next_random_big_integer(&CONFIGS.field_prime),
             );
         }
 

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -12,7 +12,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::{self, LongElement},
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -76,7 +76,7 @@ impl RSASigVerCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
     fn build_circuit(&mut self) {
         // a sample input message of 3 byte
-        let input_message = CircuitGenerator::create_input_wire_array(self.cg(), 3, &None);
+        let input_message = CircuitGenerator::create_input_wire_array(self.cg(), 3);
         let sha2_gadget = SHA256Gadget::new(
             input_message.clone(),
             8,
@@ -194,9 +194,9 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         );
         // } else {
         // evaluator.set_wire_value(self.rsaModulusWires,
-        // Util::split(modulus, Configs.log2_field_prime - 1));
+        // Util::split(modulus, CONFIGS.log2_field_prime - 1));
         // evaluator.set_wire_value(self.signatureWires,
-        // Util::split(sig, Configs.log2_field_prime - 1));
+        // Util::split(sig, CONFIGS.log2_field_prime - 1));
         // }
 
         // //println!("Error while generating sample input for circuit");

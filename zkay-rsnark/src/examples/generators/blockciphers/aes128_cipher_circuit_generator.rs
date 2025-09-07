@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -66,8 +66,8 @@ impl AES128CipherCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
     fn build_circuit(&mut self) {
-        self.t.inputs = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None); // in bytes
-        self.t.key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None); // in bytes
+        self.t.inputs = CircuitGenerator::create_input_wire_array(self.cg(), 16); // in bytes
+        self.t.key = CircuitGenerator::create_input_wire_array(self.cg(), 16); // in bytes
 
         let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
         let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expanded_key, &None, self.cg());
@@ -107,8 +107,8 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
 
 pub fn main(args: Vec<String>) {
     use std::sync::atomic::{self, AtomicBool, Ordering};
-    //Configs.hex_output_enabled = true;
-    crate::circuit::config::config::atomic_hex_output_enabled.store(true, Ordering::Relaxed);
+    //CONFIGS.hex_output_enabled = true;
+    crate::circuit::config::config::ATOMIC_HEX_OUTPUT_ENABLED.store(true, Ordering::Relaxed);
     let mut generator = AES128CipherCircuitGenerator::new("AES_Circuit");
     generator.generate_circuit();
     let mut evaluator = generator.eval_circuit().ok();

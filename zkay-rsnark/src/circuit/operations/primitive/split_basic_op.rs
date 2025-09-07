@@ -1,13 +1,13 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{wire::GetWireId, wire_type::WireType},
     },
@@ -61,8 +61,8 @@ impl BasicOp for Op<SplitBasicOp> {
         let in0_id = self.inputs[0].as_ref().unwrap().get_wire_id() as usize;
 
         let mut in_val = assignment[in0_id].clone().unwrap();
-        if in_val > Configs.field_prime {
-            in_val = in_val.rem(&Configs.field_prime);
+        if in_val > CONFIGS.field_prime {
+            in_val = in_val.rem(&CONFIGS.field_prime);
         }
         for i in 0..self.outputs.len() {
             let outi_id = self.outputs[i].as_ref().unwrap().get_wire_id() as usize;
@@ -71,16 +71,6 @@ impl BasicOp for Op<SplitBasicOp> {
             } else {
                 BigInteger::ZERO
             });
-            // if outi_id == 48124 || outi_id == 4{
-            //         println!(
-            //             "==compute=====outputs====={outi_id}===={}===={}==={}====))))===",
-            //             file!(),
-            //             self.outputs[i].as_ref().unwrap().name(),
-            //             assignment[outi_id]
-            //                 .as_ref()
-            //                 .unwrap()
-            //         );
-            //     }
         }
         Ok(())
     }

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::{Gadget, GadgetConfig},
@@ -56,7 +56,7 @@ use std::sync::OnceLock;
 static COEFFS: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 impl SubsetSumHashGadget {
     pub const DIMENSION: i32 = 3; // set to 4 for higher security
-    pub const INPUT_LENGTH: i32 = 2 * Self::DIMENSION * 64; //Configs.log2_field_prime as i32; // length in bits
+    pub const INPUT_LENGTH: i32 = 2 * Self::DIMENSION * 64; //CONFIGS.log2_field_prime as i32; // length in bits
 
     //@param ins
     //           The bitwires of the input.
@@ -105,7 +105,7 @@ impl Gadget<SubsetSumHashGadget> {
             let mut tmp = vec![vec![BigInteger::default(); input_length]; dimension];
             for i in 0..dimension {
                 for k in 0..input_length {
-                    tmp[i][k] = Util::next_random_big_integer(&Configs.field_prime);
+                    tmp[i][k] = Util::next_random_big_integer(&CONFIGS.field_prime);
                 }
             }
             tmp
@@ -124,16 +124,16 @@ impl Gadget<SubsetSumHashGadget> {
         if !self.t.binary_output {
             self.t.out_wires = out_digest;
         } else {
-            self.t.out_wires = vec![None; dimension * Configs.log2_field_prime as usize];
+            self.t.out_wires = vec![None; dimension * CONFIGS.log2_field_prime as usize];
             for i in 0..dimension {
                 let bits = out_digest[i]
                     .as_ref()
                     .unwrap()
-                    .get_bit_wiresi(Configs.log2_field_prime, &None)
+                    .get_bit_wiresi(CONFIGS.log2_field_prime, &None)
                     .as_array()
                     .clone();
                 for j in 0..bits.len() {
-                    self.t.out_wires[j + i * Configs.log2_field_prime as usize] = bits[j].clone();
+                    self.t.out_wires[j + i * CONFIGS.log2_field_prime as usize] = bits[j].clone();
                 }
             }
         }

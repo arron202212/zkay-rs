@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -27,17 +27,6 @@ crate::impl_name_instance_of_wire_g_for!(Wire<VariableBitWire>);
 
 impl VariableBitWire {
     pub fn new(wire_id: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableBitWire> {
-        //   if wire_id>0 && wire_id<10000
-        //     {
-        //         println!("==VariableBitWire::new======{wire_id}==");
-        //     }
-        // //super(wire_id);
-        // Wire::<VariableBitWire> {
-        //     wire_id,
-        //     generator,
-        //     t: VariableBitWire,
-        // }
-        // crate::new_wire!(VariableBitWire,wire_id,generator)
         Wire::<VariableBitWire>::new(VariableBitWire, wire_id, generator).unwrap()
     }
 }

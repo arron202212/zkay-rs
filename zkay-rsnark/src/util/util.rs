@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -21,7 +21,7 @@ use rand::distributions::Distribution;
 
 pub type BigInteger = BigInt;
 
-pub type ARcCell<typ> = Arc<Mutex<typ>>;
+pub type ARcCell<Typ> = Arc<Mutex<Typ>>;
 #[macro_export]
 macro_rules! arc_cell_new {
     ($exp:expr) => {{ std::sync::Arc::new(parking_lot::Mutex::new($exp)) }};
@@ -53,13 +53,13 @@ impl Util {
         BigInteger::one()
     }
     pub fn split(x: &BigInteger, chunk_size: i32) -> Vec<BigInteger> {
-        let numChunks = 1i32.max((x.bits() as i32 + chunk_size - 1) / chunk_size); // ceil(x.bits() / chunk_size)
-        Self::spliti(x, numChunks, chunk_size)
+        let num_chunks = 1i32.max((x.bits() as i32 + chunk_size - 1) / chunk_size); // ceil(x.bits() / chunk_size)
+        Self::spliti(x, num_chunks, chunk_size)
     }
 
-    pub fn spliti(x: &BigInteger, numChunks: i32, chunk_size: i32) -> Vec<BigInteger> {
+    pub fn spliti(x: &BigInteger, num_chunks: i32, chunk_size: i32) -> Vec<BigInteger> {
         let mask = Util::one().shl(chunk_size).sub(Util::one());
-        (0..numChunks)
+        (0..num_chunks)
             .map(|i| x.clone().shr(chunk_size * i).bitand(&mask))
             .collect()
     }

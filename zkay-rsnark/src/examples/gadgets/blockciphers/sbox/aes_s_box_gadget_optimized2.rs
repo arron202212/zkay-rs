@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -10,7 +10,7 @@ use crate::{
     arc_cell_new,
     circuit::{
         StructNameConfig,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::gadget::{Gadget, GadgetConfig},
         structure::{
@@ -128,7 +128,6 @@ impl Gadget<AESSBoxGadgetOptimized2> {
     }
 
     pub fn solve_linear_systems(bit_count: u8) -> Vec<Vec<BigInteger>> {
-        println!("======bit_count========={bit_count}");
         let mut seed = 1;
         let mut all_coeff_set = Vec::new();
         let mut list = Vec::new();
@@ -292,7 +291,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         let mut v = BigInteger::from(k).add(Util::one());
         let mut product = v.clone();
         if bit_count != 0 {
-            product = product.mul(&v).rem(&Configs.field_prime);
+            product = product.mul(&v).rem(&CONFIGS.field_prime);
         }
         for j in 0..16 {
             if j < bit_count as usize {
@@ -303,7 +302,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
                 };
             } else {
                 vars[j] = product.clone();
-                product = product.mul(&v).rem(&Configs.field_prime);
+                product = product.mul(&v).rem(&CONFIGS.field_prime);
             }
         }
         vars
@@ -331,7 +330,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
             for i in 0..16 {
                 result = result.add(variable_values[i].clone().mul(&coeffs[i]));
             }
-            result = result.rem(&Configs.field_prime);
+            result = result.rem(&CONFIGS.field_prime);
             if result == Util::one() {
                 valid_results += 1;
                 if !value_set.contains(&k) {

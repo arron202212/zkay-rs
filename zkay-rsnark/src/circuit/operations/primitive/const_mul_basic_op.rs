@@ -1,13 +1,13 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{wire::GetWireId, wire_type::WireType},
     },
@@ -36,13 +36,12 @@ impl ConstMulBasicOp {
     ) -> Op<ConstMulBasicOp> {
         let in_sign = const_integer.sign() == Sign::Minus;
         let const_integer = if !in_sign {
-            Util::modulo(const_integer, &Configs.field_prime)
+            Util::modulo(const_integer, &CONFIGS.field_prime)
         } else {
             let mut _const_integer = const_integer.neg();
-            _const_integer = Util::modulo(&_const_integer, &Configs.field_prime);
-            Configs.field_prime.clone().sub(_const_integer)
+            _const_integer = Util::modulo(&_const_integer, &CONFIGS.field_prime);
+            CONFIGS.field_prime.clone().sub(_const_integer)
         };
-        // println!("======const_integer========================={const_integer}");
         Op::<ConstMulBasicOp> {
             inputs: vec![Some(w.clone())],
             outputs: vec![Some(out.clone())],
@@ -63,7 +62,7 @@ impl BasicOp for Op<ConstMulBasicOp> {
         } else {
             format!(
                 "const-mul-neg-{:x}",
-                Configs
+                CONFIGS
                     .field_prime
                     .clone()
                     .sub(self.t.const_integer.clone())
@@ -76,27 +75,15 @@ impl BasicOp for Op<ConstMulBasicOp> {
             self.inputs[0].as_ref().unwrap().get_wire_id() as usize,
             self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
-        // if out0_id == 48124 || out0_id == 4{
-        //     println!(
-        //         "==compute=====outputs======{out0_id}===={}===={}====",
-        //         file!(),
-        //         self.outputs[0].as_ref().unwrap().name()
-        //     );
-        // }
+
         let mut result = assignment[in0_id]
             .clone()
             .unwrap()
             .mul(&self.t.const_integer);
-        if result.bits() >= Configs.log2_field_prime {
-            result = result.rem(&Configs.field_prime);
+        if result.bits() >= CONFIGS.log2_field_prime {
+            result = result.rem(&CONFIGS.field_prime);
         }
-        // if out0_id == 48124 || out0_id == 4{
-        //     println!(
-        //         "==compute=====outputs==={result}==={out0_id}===={}===={}====",
-        //         file!(),
-        //         self.outputs[0].as_ref().unwrap().name()
-        //     );
-        // }
+
         assignment[out0_id] = Some(result);
         Ok(())
     }

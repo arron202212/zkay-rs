@@ -1,15 +1,14 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::wire_label_instruction::LabelType,
         structure::{
             circuit_generator::CGConfig,
@@ -48,29 +47,12 @@ impl CircuitEvaluator {
 
     pub fn set_wire_value(&mut self, w: &WireType, v: &BigInteger) {
         assert!(
-            v.sign() != Sign::Minus && v < &Configs.field_prime,
+            v.sign() != Sign::Minus && v < &CONFIGS.field_prime,
             "Only positive values that are less than the modulus are allowed for this method.{:?},{},{}",
             w,
             w.get_wire_id(),
             v
         );
-        if *v
-            == Util::parse_big_int(
-                "4791453329370480208338917599763329258431616614496986402522529110684255984585",
-            )
-            || *v
-                == Util::parse_big_int(
-                    "13970443093117176793321745021511292434216648861635796193749801964876617418268",
-                )
-            || w.get_wire_id() == 4
-            || w.get_wire_id() == 48124
-        {
-            println!(
-                "==wireid====setwv========={}======{}======",
-                w.get_wire_id(),
-                w.name()
-            );
-        }
 
         self.value_assignment[w.get_wire_id() as usize] = Some(v.clone());
     }
@@ -78,14 +60,11 @@ impl CircuitEvaluator {
     pub fn get_wire_value(&self, w: &WireType) -> BigInteger {
         let mut v = &self.value_assignment[w.get_wire_id() as usize];
         if let Some(v) = v {
-            // println!("==wireid==get_wire_value==some========={}============",w.get_wire_id());
             return v.clone();
         }
         let Some(bits) = w.get_bit_wires_if_exist_already() else {
-            // println!("==wireid==get_wire_value==get_bit_wires_if_exist_already==none======={}============",w.get_wire_id());
             return BigInteger::ZERO;
         };
-        // println!("==wireid==get_wire_value==get_bit_wires_if_exist_already==some======={}============",w.get_wire_id());
 
         bits.array
             .iter()
@@ -137,10 +116,6 @@ impl CircuitEvaluator {
     }
 
     pub fn evaluate<T: CGConfig>(&mut self, generator: &RcCell<T>) -> eyre::Result<()> {
-        println!(
-            "==evaluate===evaluator.get_assignment().len()============{}",
-            self.get_assignment().len()
-        );
         println!("Running Circuit Evaluator for < {} >", generator.get_name());
         let eval_sequence = generator.get_evaluation_queue();
 
@@ -367,11 +342,9 @@ impl CircuitEvaluator {
     }
 
     fn get_outputs(&self, line: &String) -> Vec<i32> {
-        // //println!(line);
         let scanner = &line[line.rfind("<").unwrap() + 1..line.rfind(">").unwrap()];
         let mut outs = vec![];
         for v in scanner.split_whitespace() {
-            // //println!(v);
             outs.push(v.parse::<i32>().unwrap());
         }
         outs

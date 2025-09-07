@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -12,7 +12,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::{Gadget, GadgetConfig},
@@ -184,7 +184,7 @@ impl ECDHKeyExchangeGadget {
 //   }
 impl Gadget<ECDHKeyExchangeGadget> {
     // Note: this parameterization assumes that the underlying field has
-    // Configs.field_prime =
+    // CONFIGS.field_prime =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
     pub const SECRET_BITWIDTH: usize = 253; // number of bits in the
@@ -494,9 +494,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             .muli(3, &None)
             .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
             .add(1);
-        // println!("=====b====begin=====");
         let b = p.y.as_ref().unwrap().muli(2, &None);
-        // println!("==a={}==b={}={a},{b}==end===={}===={}==",a.name(),b.name(),p.y.as_ref().unwrap(),p.y.as_ref().unwrap().name());
         let l1 = FieldDivisionGadget::new(a, b, &None, generator).get_output_wires()[0].clone();
 
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
@@ -525,7 +523,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let diff_y = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
 
         let diff_x = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-        // println!("==diff_x===diff_y=={diff_x},{diff_y}");
         let q = FieldDivisionGadget::new(diff_y, diff_x, &None, self.generator.clone())
             .get_output_wires()[0]
             .clone();
@@ -555,9 +552,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     pub fn compute_y_coordinate(x: BigInteger) -> BigInteger {
         let start = std::time::Instant::now();
-        let x_sqred = x.clone().mul(&x).rem(&Configs.field_prime);
+        let x_sqred = x.clone().mul(&x).rem(&CONFIGS.field_prime);
 
-        let x_cubed = x_sqred.clone().mul(&x).rem(&Configs.field_prime);
+        let x_cubed = x_sqred.clone().mul(&x).rem(&CONFIGS.field_prime);
 
         let y_sqred = x_cubed
             .add(
@@ -566,10 +563,8 @@ impl Gadget<ECDHKeyExchangeGadget> {
                     .mul(x_sqred),
             )
             .add(&x)
-            .rem(&Configs.field_prime);
-        // println!("==y=====Configs.field_prime========={y_sqred},{}",Configs.field_prime);
-        let y = IntegerFunctions::ressol(y_sqred, &Configs.field_prime); //MYTODO 
-        // println!("==y=**={y}========");
+            .rem(&CONFIGS.field_prime);
+        let y = IntegerFunctions::ressol(y_sqred, &CONFIGS.field_prime); //MYTODO 
         y
     }
 

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -58,22 +58,12 @@ mod test {
         fn build_circuit(&mut self) {
             let generator = self.generator.clone();
             // check native inverse
-            // println!(
-            //     "===self.get_current_wire_id()======test=={}==={}",
-            //     generator.get_current_wire_id(),
-            //     self.generator.get_current_wire_id()
-            // );
 
             let a = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
                 &None,
             );
-            // println!(
-            //     "===self.get_current_wire_id()=====test==={}=={}",
-            //     generator.get_current_wire_id(),
-            //     self.generator.get_current_wire_id()
-            // );
 
             let ainv_expected = CircuitGenerator::create_constant_wire(
                 generator.clone(),
@@ -82,11 +72,6 @@ mod test {
                 ),
                 &None,
             );
-            // println!(
-            //     "===self.get_current_wire_id()=====test=={}==={}",
-            //     generator.get_current_wire_id(),
-            //     self.generator.get_current_wire_id()
-            // );
 
             const BASE_ORDER: &str =
                 "21888242871839275222246405745257275088548364400416034343698204186575808495617";
@@ -100,17 +85,9 @@ mod test {
                     "20950552912096304742729232452120498732043875737213521271262032500972060322340",
                 )
             );
-            // println!(
-            //     "===self.get_current_wire_id()======native_inverse==test====before=={}===={}",
-            //     generator.get_current_wire_id(),
-            //     self.generator.get_current_wire_id()
-            // );
+
             let ainv = self.native_inverse(&a);
-            // println!(
-            //     "===self.get_current_wire_id()======native_inverse===test===after=={}===={}",
-            //     generator.get_current_wire_id(),
-            //     self.generator.get_current_wire_id()
-            // );
+
             CircuitGenerator::add_equality_assertion(
                 generator.clone(),
                 &ainv,

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -10,7 +10,7 @@ use crate::{
     circuit::{
         InstanceOf,
         {
-            config::config::Configs,
+            config::config::CONFIGS,
             eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
             operations::gadget::{Gadget, GadgetConfig},
             structure::{
@@ -106,34 +106,27 @@ impl Gadget<AESSBoxGadgetOptimized1> {
 
             for k in 0..mat.len() {
                 let value = list[k + i * 16];
-                // println!("==value=={value}====");
+
                 member_value_set.insert(value);
                 let p = BigInteger::from(value);
                 mat[k][0] = Util::one();
                 for j in 1..=16 {
-                    mat[k][j] = p.clone().mul(&mat[k][j - 1]).rem(&Configs.field_prime);
-                    // if mat[k][j]==BigInteger::ZERO||j==16{
-                    // println!("=zero=mat==={k}=={j}==p=={p}=v=={value}======{}======{}==",p.clone().mul(&mat[k][j - 1]),mat[k][j]);
-                    // }
+                    mat[k][j] = p.clone().mul(&mat[k][j - 1]).rem(&CONFIGS.field_prime);
                 }
                 // let old=mat[k][16].clone();
                 // negate the last element, just to make things consistent with
                 // the paper notations
-                mat[k][16] = Configs.field_prime.clone().sub(&mat[k][16]);
-                // println!("=={old}=={i}==mat[k][16]=={k}======={}",mat[k][16]);
+                mat[k][16] = CONFIGS.field_prime.clone().sub(&mat[k][16]);
                 // used for a sanity check (verifying that the output solution
                 // is equivalent to coefficients of polynomial that has roots at
                 // member_value_set. see note above)
                 poly_coeffs = Self::poly_mul(
                     poly_coeffs,
-                    vec![Configs.field_prime.clone().sub(&p), Util::one()],
+                    vec![CONFIGS.field_prime.clone().sub(&p), Util::one()],
                 );
             }
 
             mat = LinearSystemSolver::new(mat).solve_in_place();
-            // for ii in 0..16 {
-            //     println!( "=mat).solve_in_place==mat[{ii}][16]===={}",mat[ii][16]);
-            // }
             // Note that this is just a sanity check here. It should be always
             // the case that the prover cannot cheat using this method,
             // because this method is equivalent to finding a polynomial with
@@ -167,7 +160,7 @@ impl Gadget<AESSBoxGadgetOptimized1> {
                 out[i + j] = out[i + j]
                     .clone()
                     .add(a1[i].clone().mul(&a2[j]))
-                    .rem(&Configs.field_prime);
+                    .rem(&CONFIGS.field_prime);
             }
         }
         out
@@ -177,9 +170,6 @@ impl Gadget<AESSBoxGadgetOptimized1> {
         let mut coeffs = vec![BigInteger::default(); 16];
         for i in 0..16 {
             coeffs[i] = mat[i][16].clone();
-            // if mat[i][16]==BigInteger::ZERO{
-            //         println!("=zero=mat==check_if_prover_can_cheat={i}==16============");
-            // }
         }
 
         let mut valid_results = 0;
@@ -192,23 +182,17 @@ impl Gadget<AESSBoxGadgetOptimized1> {
             let mut p = BigInteger::from(k);
             let kb = BigInteger::from(k);
             for i in 1..16 {
-                // println!("======result===={result}=========p========{p}======{i}=={}==",coeffs[i]);
                 result = result.add(p.clone().mul(&coeffs[i]));
-                p = p.clone().mul(&kb).rem(&Configs.field_prime);
+                p = p.clone().mul(&kb).rem(&CONFIGS.field_prime);
             }
-            result = result.rem(&Configs.field_prime);
-            // println!("======result===={result}=====");
-            if result == Configs.field_prime.clone().sub(&p) {
+            result = result.rem(&CONFIGS.field_prime);
+            if result == CONFIGS.field_prime.clone().sub(&p) {
                 valid_results += 1;
                 if !value_set.contains(&k) {
                     outside_permissible_set += 1;
                 }
             }
-            // else if k==99{
-            //     println!("===result===={result}=========p========{p}=====");
-            // }
         }
-        // println!("valid_results={valid_results},outside_permissible_set={outside_permissible_set}");
         if valid_results != 16 || outside_permissible_set != 0 {
             //println!("Prover can cheat with linear system solution");
             //println!("Num of valid values that the prover can use = " + valid_results);

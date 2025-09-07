@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -56,7 +56,7 @@ impl SimpleCircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
     fn build_circuit(&mut self) {
         // declare input array of length 4.
-        let inputs = CircuitGenerator::create_input_wire_array(self.cg(), 4, &None);
+        let inputs = CircuitGenerator::create_input_wire_array(self.cg(), 4);
 
         // r1 = in0 * in1
         let r1 = inputs[0].clone().unwrap().mul(inputs[1].as_ref().unwrap());

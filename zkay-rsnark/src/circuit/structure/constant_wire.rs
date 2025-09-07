@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -9,7 +9,7 @@
 use crate::{
     circuit::{
         InstanceOf,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::instruction::Instruction,
         operations::primitive::const_mul_basic_op::ConstMulBasicOp,
         structure::{
@@ -48,21 +48,9 @@ impl ConstantWire {
         value: BigInteger,
         generator: WeakCell<CircuitGenerator>,
     ) -> Wire<ConstantWire> {
-        // if wire_id>0 && wire_id<10000
-        // {
-        //     println!("==ConstantWire::new======{wire_id}==");
-        // }
-        // //super(wire_id);
-        // Wire::<ConstantWire> {
-        //     wire_id,
-        //     generator,
-        //     t: ConstantWire {
-        //         constant: value.rem(&Configs.field_prime),
-        //     },
-        // }
         Wire::<ConstantWire>::new(
             ConstantWire {
-                constant: value.rem(&Configs.field_prime),
+                constant: value.rem(&CONFIGS.field_prime),
             },
             wire_id,
             generator,
@@ -76,7 +64,7 @@ impl Wire<ConstantWire> {
     // pub fn new(wire_id: i32, value: BigInteger) -> Self {
     //     // //super(wire_id);
     //     Self {
-    //         constant: value.rem(&Configs.field_prime),
+    //         constant: value.rem(&CONFIGS.field_prime),
     //     }
     // }
     pub fn get_constant(&self) -> BigInteger {
@@ -94,13 +82,7 @@ impl WireConfig for Wire<ConstantWire> {
     fn mulw(&self, w: &WireType, desc: &Option<String>) -> WireType {
         let start = Instant::now();
         let generator = self.generator();
-        //  println!("End const mulw Time: == {} s", start.elapsed().as_secs());
         if w.instance_of("ConstantWire") {
-            // println!(
-            //     "===w.instance_of(ConstantWire)================={}===={}=======",
-            //     line!(),
-            //     file!()
-            // );
             generator.create_constant_wire(
                 &self
                     .t
@@ -116,43 +98,25 @@ impl WireConfig for Wire<ConstantWire> {
 
     fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
-        // println!(
-        //     "========constant===============mulb======{}======{}===={}======= {} ",
-        //     file!(),
-        //     line!(),
-        //     generator.get_current_wire_id(),
-        //     generator.borrow_mut().current_wire_id
-        // );
+
         let sign = b.sign() == Sign::Minus;
-        let new_constant = self.t.constant.clone().mul(b).rem(&Configs.field_prime);
-        //println!"End Name Time: ccccccc {} s", line!());
-
-        //println!"End Name Time: ccccccc {} s", line!());
-
-        //println!"End Name Time: ccccccc {} s", line!());
+        let new_constant = self.t.constant.clone().mul(b).rem(&CONFIGS.field_prime);
         let mut out: Option<WireType> = generator
             .get_known_constant_wires()
             .get(&new_constant)
             .cloned();
         if let Some(out) = out {
-            // println!(
-            //     "========constant======get_known_constant_wires=========mulb============{}=========== {} ",
-            //     file!(),
-            //     line!()
-            // );
             return out.clone();
         }
-        //println!"End Name Time: ccccccc {} s", line!());
         out = Some(WireType::Constant(ConstantWire::new(
             generator.get_current_wire_id(),
             if !sign {
                 new_constant.clone()
             } else {
-                new_constant.clone().sub(&Configs.field_prime)
+                new_constant.clone().sub(&CONFIGS.field_prime)
             },
             self.generator.clone(),
         )));
-        //println!"End Name Time: ccccccc {} s", line!());
         generator.borrow_mut().current_wire_id += 1;
         let op = ConstMulBasicOp::new(
             &WireType::Constant(self.clone()),
@@ -160,26 +124,13 @@ impl WireConfig for Wire<ConstantWire> {
             b,
             desc.clone().unwrap_or(String::new()),
         );
-        //println!"End Name Time: ccccccc {} s", line!());
-        // let g = generator.borrow().clone();
+
         let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
         if let Some(cached_outputs) = cached_outputs {
             // self branch might not be needed
             generator.borrow_mut().current_wire_id -= 1;
-            // println!(
-            //     "====generator.borrow_mut().current_wire_id==constant===={}====={}{}",
-            //     generator.borrow_mut().current_wire_id,
-            //     file!(),
-            //     line!()
-            // );
             cached_outputs[0].clone().unwrap()
         } else {
-            // println!(
-            //     "====generator.borrow_mut().current_wire_id==constant==else=={}====={}{}",
-            //     generator.borrow_mut().current_wire_id,
-            //     file!(),
-            //     line!()
-            // );
             generator
                 .borrow_mut()
                 .known_constant_wires
@@ -214,11 +165,6 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            // println!(
-            //     "===w.instance_of(ConstantWire)================={}===={}=======",
-            //     line!(),
-            //     file!()
-            // );
             let cw = w;
             assert!(
                 self.is_binary() && cw.try_as_constant_ref().unwrap().is_binary(),
@@ -243,11 +189,6 @@ impl WireConfig for Wire<ConstantWire> {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            // println!(
-            //     "===w.instance_of(ConstantWire)================={}===={}=======",
-            //     line!(),
-            //     file!()
-            // );
             let cw = w;
             assert!(
                 self.is_binary() && cw.try_as_constant_ref().unwrap().is_binary(),

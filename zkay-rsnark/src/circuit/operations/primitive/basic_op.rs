@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -101,10 +101,6 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
         let inputs = self.get_inputs();
         let n = inputs.len();
         for (_i, w) in inputs.iter().enumerate() {
-            // println!(
-            //     "===w.as_ref().unwrap().get_wire_id()==={i}===={}==",
-            //     w.as_ref().unwrap().get_wire_id()
-            // );
             // if assignment[w.as_ref().unwrap().get_wire_id() as usize].is_none() {
             //println!("Error - The in_wire {w:? } has not been assigned {self:?}\n");
             assert!(

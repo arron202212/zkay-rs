@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -9,7 +9,7 @@
 use crate::{
     circuit::{
         StructNameConfig,
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{
             wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
@@ -67,18 +67,12 @@ impl BasicOp for Op<AssertBasicOp> {
             self.inputs[1].as_ref().unwrap().get_wire_id() as usize,
             self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
         );
-        // if out0_id == 48124 || out0_id == 4{
-        //     println!(
-        //         "==compute=====outputs==={out0_id}======={}===={}====",
-        //         file!(),
-        //         self.outputs[0].as_ref().unwrap().name()
-        //     );
-        // }
+
         let left_side = assignment[in0_id]
             .clone()
             .unwrap()
             .mul(assignment[in1_id].as_ref().unwrap())
-            .rem(&Configs.field_prime);
+            .rem(&CONFIGS.field_prime);
         let right_side = assignment[out0_id].clone().unwrap();
 
         eyre::ensure!(

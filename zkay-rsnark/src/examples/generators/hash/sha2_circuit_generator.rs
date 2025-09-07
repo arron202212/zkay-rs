@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -62,7 +62,7 @@ impl SHA2CircuitGenerator {
 impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
     fn build_circuit(&mut self) {
         // assuming the circuit input will be 64 bytes
-        let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 64, &None);
+        let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 64);
         // this gadget is not applying any padding.
         let sha2_gadget = SHA256Gadget::new(
             input_wires.clone(),

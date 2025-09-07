@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -11,7 +11,7 @@ use crate::{
     circuit::{
         InstanceOf, StructNameConfig,
         auxiliary::long_element::LongElement,
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
             gadget::Gadget,
@@ -65,15 +65,15 @@ impl DotProductCircuitGenerator {
 }
 impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
     fn build_circuit(&mut self) {
-        let a = CircuitGenerator::create_input_wire_array(
+        let a = CircuitGenerator::create_input_wire_array_with_str(
             self.cg(),
             self.t.dimension as usize,
-            &Some("Input a".to_owned()),
+            "Input a",
         );
-        let b = CircuitGenerator::create_input_wire_array(
+        let b = CircuitGenerator::create_input_wire_array_with_str(
             self.cg(),
             self.t.dimension as usize,
-            &Some("Input b".to_owned()),
+            "Input b",
         );
 
         let dot_product_gadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -49,13 +49,7 @@ impl BasicOp for Op<NonZeroCheckBasicOp> {
             self.outputs[0].as_ref().unwrap().get_wire_id() as usize,
             self.outputs[1].as_ref().unwrap().get_wire_id() as usize,
         );
-        // if out0_id == 48124 || out0_id == 4{
-        //     println!(
-        //         "==compute=====outputs===={out0_id}======{}===={}====",
-        //         file!(),
-        //         self.outputs[0].as_ref().unwrap().name()
-        //     );
-        // }
+
         if assignment[in0_id].as_ref().unwrap().sign() == Sign::NoSign {
             assignment[out1_id] = Some(BigInteger::ZERO);
         } else {

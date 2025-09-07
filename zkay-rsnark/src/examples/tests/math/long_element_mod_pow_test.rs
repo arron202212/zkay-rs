@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -66,31 +66,17 @@ mod test {
                 1i32.max(self.t.b.bits() as i32),
                 &Some("b".to_owned()),
             );
-            println!(
-                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
-                line!(),
-                start.elapsed()
-            );
+
             let e_wire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.e.bits() as i32),
                 &Some("e".to_owned()),
-            );
-            println!(
-                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
-                line!(),
-                start.elapsed()
             );
 
             let m_wire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.m.bits() as i32),
                 &Some("m".to_owned()),
-            );
-            println!(
-                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
-                line!(),
-                start.elapsed()
             );
 
             let mod_pow = LongIntegerModPowGadget::new(
@@ -102,21 +88,11 @@ mod test {
                 &None,
                 self.cg(),
             );
-            println!(
-                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
-                line!(),
-                start.elapsed()
-            );
 
             CircuitGenerator::make_output_array(
                 self.cg(),
                 mod_pow.get_output_wires(),
                 &Some("c".to_owned()),
-            );
-            println!(
-                " =ModPowCircuitGenerator==build_circuit==========={}== {:?} ",
-                line!(),
-                start.elapsed()
             );
 
             (self.t.b_wire, self.t.e_wire, self.t.m_wire) =

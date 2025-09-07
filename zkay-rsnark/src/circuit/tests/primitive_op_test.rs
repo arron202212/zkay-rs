@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -9,7 +9,7 @@
 use crate::{
     arc_cell_new,
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::gadget::GadgetConfig,
         structure::{
@@ -44,28 +44,28 @@ mod test {
     #[test]
     pub fn test_addition() {
         let mut num_ins = 100;
-        let mut in_vals1 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
-        let mut in_vals2 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
+        let mut in_vals1 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
+        let mut in_vals2 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
 
         let mut result = vec![];
         result.push(
             in_vals1[0]
                 .clone()
                 .add(&in_vals1[1])
-                .rem(&Configs.field_prime),
+                .rem(&CONFIGS.field_prime),
         );
         let mut s = BigInteger::ZERO;
         let num_ins = num_ins as usize;
         for i in 0..num_ins {
             s = s.add(&in_vals1[i]);
         }
-        result.push(s.rem(&Configs.field_prime));
+        result.push(s.rem(&CONFIGS.field_prime));
         for i in 0..num_ins {
             result.push(
                 in_vals1[i]
                     .clone()
                     .add(&in_vals2[i])
-                    .rem(&Configs.field_prime),
+                    .rem(&CONFIGS.field_prime),
             );
         }
 
@@ -86,11 +86,11 @@ mod test {
 
                 let num_ins = self.t.num_ins as usize;
                 let mut inputs1 = WireArray::new(
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None),
+                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins),
                     generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None),
+                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins),
                     generator.cg_weak(),
                 );
 
@@ -141,15 +141,15 @@ mod test {
     #[test]
     pub fn test_multiplication() {
         let mut num_ins = 100;
-        let mut in_vals1 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
-        let mut in_vals2 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
+        let mut in_vals1 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
+        let mut in_vals2 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
 
         let mut result = vec![];
         result.push(
             in_vals1[0]
                 .clone()
                 .mul(&in_vals1[1])
-                .rem(&Configs.field_prime),
+                .rem(&CONFIGS.field_prime),
         );
         let num_ins = num_ins as usize;
         for i in 0..num_ins {
@@ -157,7 +157,7 @@ mod test {
                 in_vals1[i]
                     .clone()
                     .mul(&in_vals2[i])
-                    .rem(&Configs.field_prime),
+                    .rem(&CONFIGS.field_prime),
             );
         }
 
@@ -178,11 +178,11 @@ mod test {
 
                 let num_ins = self.t.num_ins as usize;
                 let mut inputs1 = WireArray::new(
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None),
+                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins),
                     generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None),
+                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins),
                     generator.cg_weak(),
                 );
 
@@ -274,10 +274,8 @@ mod test {
                 let mut result3 = vec![None; num_ins];
                 let mut result4 = vec![None; num_ins];
                 let mut result5 = vec![None; num_ins];
-                let mut inputs1 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
-                let mut inputs2 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
+                let mut inputs1 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
+                let mut inputs2 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
 
                 for i in 0..num_ins {
                     result1[i] = inputs1[i]
@@ -406,9 +404,9 @@ mod test {
 
     #[test]
     pub fn test_boolean_operations() {
-        let mut num_ins = Configs.log2_field_prime;
-        let mut in_vals1 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
-        let mut in_vals2 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
+        let mut num_ins = CONFIGS.log2_field_prime;
+        let mut in_vals1 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
+        let mut in_vals2 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
         let mut in_vals3 = Util::random_big_integer_arrayi(num_ins, 32);
         let num_ins = num_ins as usize;
         let mut shifted_right_vals = vec![BigInteger::default(); num_ins];
@@ -421,16 +419,16 @@ mod test {
         let mut inverted_vals = vec![BigInteger::default(); num_ins];
 
         let mut mask = BigInteger::from(2)
-            .pow(Configs.log2_field_prime as u32)
+            .pow(CONFIGS.log2_field_prime as u32)
             .sub(Util::one());
 
         for i in 0..num_ins {
-            shifted_right_vals[i] = in_vals1[i].clone().shr(i).rem(&Configs.field_prime);
+            shifted_right_vals[i] = in_vals1[i].clone().shr(i).rem(&CONFIGS.field_prime);
             shifted_left_vals[i] = in_vals1[i]
                 .clone()
                 .shl(i)
                 .bitand(mask.clone())
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             rotated_right_vals[i] = BigInteger::from(
                 in_vals3[i]
                     .to_str_radix(10)
@@ -450,15 +448,15 @@ mod test {
             xored_vals[i] = in_vals1[i]
                 .clone()
                 .bitxor(in_vals2[i].clone())
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             ored_vals[i] = in_vals1[i]
                 .clone()
                 .bitor(in_vals2[i].clone())
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             anded_vals[i] = in_vals1[i]
                 .clone()
                 .bitand(in_vals2[i].clone())
-                .rem(&Configs.field_prime);
+                .rem(&CONFIGS.field_prime);
             inverted_vals[i] = BigInteger::from(
                 !in_vals3[i].to_str_radix(10).parse::<u32>().unwrap() & 0x00000000ffffffff,
             );
@@ -482,12 +480,9 @@ mod test {
                 let mut generator = &*self;
 
                 let num_ins = self.t.num_ins as usize;
-                let mut inputs1 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
-                let mut inputs2 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
-                let mut inputs3 =
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None);
+                let mut inputs1 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
+                let mut inputs2 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
+                let mut inputs3 = CircuitGenerator::create_input_wire_array(self.cg(), num_ins);
 
                 let mut shifted_right = vec![None; num_ins];
                 let mut shifted_left = vec![None; num_ins];
@@ -501,10 +496,10 @@ mod test {
                 for i in 0..num_ins {
                     shifted_right[i] = inputs1[i]
                         .clone()
-                        .map(|x| x.shift_right(Configs.log2_field_prime as usize, i, &None));
+                        .map(|x| x.shift_right(CONFIGS.log2_field_prime as usize, i, &None));
                     shifted_left[i] = inputs1[i]
                         .clone()
-                        .map(|x| x.shift_left(Configs.log2_field_prime as usize, i, &None));
+                        .map(|x| x.shift_left(CONFIGS.log2_field_prime as usize, i, &None));
                     rotated_right[i] = inputs3[i]
                         .clone()
                         .map(|x| x.rotate_right(32, i % 32, &None));
@@ -512,21 +507,21 @@ mod test {
                     xored[i] = inputs1[i].clone().map(|x| {
                         x.xor_bitwise(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
                     ored[i] = inputs1[i].clone().map(|x| {
                         x.or_bitwises(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
                     anded[i] = inputs1[i].clone().map(|x| {
                         x.and_bitwise(
                             inputs2[i].as_ref().unwrap(),
-                            Configs.log2_field_prime,
+                            CONFIGS.log2_field_prime,
                             &None,
                         )
                     });
@@ -637,22 +632,22 @@ mod test {
     #[test]
     pub fn test_assertions() {
         let mut num_ins = 100;
-        let mut in_vals1 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
-        let mut in_vals2 = Util::random_big_integer_array(num_ins, &Configs.field_prime);
+        let mut in_vals1 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
+        let mut in_vals2 = Util::random_big_integer_array(num_ins, &CONFIGS.field_prime);
         let num_ins = num_ins as usize;
         let mut result = vec![];
         result.push(
             in_vals1[0]
                 .clone()
                 .mul(&in_vals1[0])
-                .rem(&Configs.field_prime),
+                .rem(&CONFIGS.field_prime),
         );
         for i in 0..num_ins {
             result.push(
                 in_vals1[i]
                     .clone()
                     .mul(&in_vals2[i])
-                    .rem(&Configs.field_prime),
+                    .rem(&CONFIGS.field_prime),
             );
         }
 
@@ -677,11 +672,11 @@ mod test {
 
                 let num_ins = self.t.num_ins as usize;
                 let mut inputs1 = WireArray::new(
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None),
+                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins),
                     generator.cg_weak(),
                 );
                 let mut inputs2 = WireArray::new(
-                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins, &None),
+                    CircuitGenerator::create_input_wire_array(self.cg(), num_ins),
                     generator.cg_weak(),
                 );
                 let mut solutions = WireArray::new(

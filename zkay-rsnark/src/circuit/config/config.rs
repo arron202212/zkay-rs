@@ -1,19 +1,19 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use std::sync::LazyLock;
-pub static Configs: LazyLock<Config> = LazyLock::new(|| Config::new());
+pub static CONFIGS: LazyLock<Config> = LazyLock::new(|| Config::new());
 use num_bigint::BigInt;
 use std::fmt::Debug;
 use std::hash::Hash;
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-pub static atomic_hex_output_enabled: AtomicBool = AtomicBool::new(false);
+pub static ATOMIC_HEX_OUTPUT_ENABLED: AtomicBool = AtomicBool::new(false);
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Config {
     pub field_prime: BigInt,
@@ -26,7 +26,7 @@ pub struct Config {
     pub print_stack_trace_at_warnings: bool,
 }
 // pub fn init() {
-//     Configs.get_or_init(|| Config::new());
+//     CONFIGS.get_or_init(|| Config::new());
 // }
 impl Config {
     pub fn new() -> Self {
@@ -35,11 +35,6 @@ impl Config {
         let cp = config_dir.join("config.properties");
         //'/Users/lisheng/mygit/arron/zkay-rs/zkay-rsnark/src/circuit/config/config.properties'
         // /Users/lisheng/mygit/arron/zkay-rs/zkay-rsnark/circuit/config/config.properties
-        // //println!("==config_dir====={cp:?}====={config_dir:?}===={:?}===={:?}={:?}",cp.try_exists(),file!(),std::fs::canonicalize(".")
-        //     );
-        // //println!("{:?}",std::path::PathBuf::from(file!()).parent().unwrap().to_str().unwrap().to_string());
-
-        // //println!("{:?}",std::fs::canonicalize(std::path::PathBuf::from(file!()).parent().unwrap().to_str().unwrap().to_string()));
         let mut c = std::fs::read_to_string(cp).unwrap();
         let mut m = std::collections::HashMap::new();
         for item in c.lines() {
@@ -50,11 +45,10 @@ impl Config {
             BigInt::parse_bytes(m.get("FIELD_PRIME").map_or("0", |v| v).as_bytes(), 10).unwrap();
         let log2_field_prime = field_prime.bits();
         let libsnark_exec = m.get("PATH_TO_LIBSNARK_EXEC").map_or(".", |v| v);
-        //println!("===libsnark_exec============={libsnark_exec:?}");
         let running_multi_generators =
             m.get("RUNNING_GENERATORS_IN_PARALLEL").map_or("0", |v| v) == "0";
         let hex_output_enabled = m.get("PRINT_HEX").map_or("0", |v| v) == "1";
-        atomic_hex_output_enabled.store(hex_output_enabled, Ordering::Relaxed);
+        ATOMIC_HEX_OUTPUT_ENABLED.store(hex_output_enabled, Ordering::Relaxed);
         let output_verbose = m.get("OUTPUT_VERBOSE").map_or("0", |v| v) == "1";
         let debug_verbose = m.get("DEBUG_VERBOSE").map_or("0", |v| v) == "1";
         let print_stack_trace_at_warnings = false;
@@ -81,9 +75,7 @@ macro_rules! file_abs_workspace {
 
 pub fn pop_first_two_path_components(path: &str) -> PathBuf {
     let mut components = std::path::Path::new(path).components();
-    // //println!("========={:?}===={:?},{}",std::path::Path::new(env!("CARGO_MANIFEST_DIR")),components,path);
     components.next();
     // components.next();
-    // //println!("=======2======{:?},{}",components,path);
     components.as_path().to_path_buf()
 }

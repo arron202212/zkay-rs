@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -41,7 +41,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 2, &None);
+                let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 2);
                 //				WireType r = ModGadget::new(input_wires[0], (i32) Math.ceil(Math.log10(a) / Math.log10(2)), input_wires[1],
                 //						(i32) Math.ceil(Math.log10(b) / Math.log10(2))).get_output_wires()[0];
 
@@ -91,7 +91,7 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 1, &None);
+                let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 1);
                 let r = ModConstantGadget::new(
                     input_wires[0].clone().unwrap(),
                     32,

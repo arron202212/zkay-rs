@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -112,8 +112,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     pub fn compute_y_coordinates(&mut self) {
         // Easy to handle if h_point is constant, otherwise, let the prover input
         // a witness and verify some properties
-        // let generator = &self.generators;
-        // let mut h_point = self.t.t.h_point;
+
         if self
             .t
             .t
@@ -138,16 +137,12 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                 &Gadget::<ZkayEcGadget<ZkayECDHGadget>>::compute_y_coordinate(x),
                 &None,
             ));
-            println!("====self.t.t.h_point=============={:?}", self.t.t.h_point);
         } else {
             self.t.t.h_point.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
                 &None,
             ));
-            // CircuitGenerator::specify_prover_witness_computation(generator.clone(), &|evaluator: &mut CircuitEvaluator| {
-            //             let x = evaluator.get_wire_value(h_point.x);
-            //             evaluator.set_wire_value(h_point.y, compute_y_coordinate(x));
-            //         });
+
             let h_point = &self.t.t.h_point;
             let prover = crate::impl_prover!(
                                         eval( h_point: AffinePoint
@@ -162,16 +157,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
                                     }
                                 );
             CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
-            // {
-            //     struct Prover;
-            //     impl Instruction for Prover {
-            //         &|evaluator: &mut CircuitEvaluator| {
-            //             let x = evaluator.get_wire_value(h_point.x);
-            //             evaluator.set_wire_value(h_point.y, compute_y_coordinate(x));
-            //         }
-            //     }
-            //     Prover
-            // });
+
             self.assert_valid_point_on_ec(
                 self.t.t.h_point.x.as_ref().unwrap(),
                 self.t.t.h_point.y.as_ref().unwrap(),
@@ -184,20 +170,12 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
             &self.t.t.h_point.x.as_ref().unwrap().check_non_zero(&None),
             &None,
         );
-        println!(
-            "====self.t.t.h_point====validate_inputs======={}==={}",
-            self.t.t.h_point.x.as_ref().unwrap(),
-            self.t.t.h_point.y.as_ref().unwrap()
-        );
+
         self.assert_valid_point_on_ec(
             self.t.t.h_point.x.as_ref().unwrap(),
             self.t.t.h_point.y.as_ref().unwrap(),
         );
-        println!(
-            "====self.t.t.h_point====validate_inputs======={}==={}",
-            self.t.t.h_point.x.as_ref().unwrap(),
-            self.t.t.h_point.y.as_ref().unwrap()
-        );
+
         self.assert_point_order(&self.t.t.h_point, &self.t.t.h_table);
     }
 }

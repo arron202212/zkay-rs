@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -76,10 +76,7 @@ impl Gadget<ZkayPaillierEncGadget> {
     fn build_circuit(&mut self) {
         let n_square_min_bits = 2 * self.t.n_bits - 1; // Minimum bit length of n^2
         // Prove that random is in Z_n* by checking that random has an inverse mod n
-        // println!(
-        //     "===t==random.array===build_circuit======{:?}",
-        //     self.t.random.array
-        // );
+
         let rand_inv = LongIntegerModInverseGadget::new(
             self.t.random.clone(),
             self.t.n.clone(),

@@ -1,13 +1,13 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{wire::GetWireId, wire_type::WireType},
     },
@@ -54,13 +54,6 @@ impl BasicOp for Op<PackBasicOp> {
 
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let out0_id = self.outputs[0].as_ref().unwrap().get_wire_id() as usize;
-        // if out0_id == 48124 || out0_id == 4{
-        //     println!(
-        //         "==compute=====outputs===={out0_id}======{}===={}====",
-        //         file!(),
-        //         self.outputs[0].as_ref().unwrap().name()
-        //     );
-        // }
         let sum = self
             .inputs
             .iter()
@@ -74,7 +67,7 @@ impl BasicOp for Op<PackBasicOp> {
                 )
             });
 
-        assignment[out0_id] = Some(sum.rem(&Configs.field_prime));
+        assignment[out0_id] = Some(sum.rem(&CONFIGS.field_prime));
         Ok(())
     }
 

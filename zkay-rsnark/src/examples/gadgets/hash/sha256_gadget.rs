@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -337,7 +337,6 @@ impl<T> Gadget<SHA256Gadget<T>> {
             }
             let total_number_of_bits = self.t.num_blocks * 512;
             let mut prepared_input_bits = vec![generator.get_zero_wire(); total_number_of_bits];
-            // println!("===total_length_in_bytes========={}======{},{}",self.t.total_length_in_bytes ,self.t.total_length_in_bytes * 8,bits.len());
             let len = self.t.total_length_in_bytes * 8;
             prepared_input_bits[..len].clone_from_slice(&bits[..len]);
             prepared_input_bits[len + 7] = generator.get_one_wire();

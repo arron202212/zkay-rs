@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -30,17 +30,6 @@ impl LinearCombinationBitWire {
         wire_id: i32,
         generator: WeakCell<CircuitGenerator>,
     ) -> Wire<LinearCombinationBitWire> {
-        //   if wire_id>0 && wire_id<10000
-        //     {
-        //         println!("==LinearCombinationBitWire::new======{wire_id}==");
-        //     }
-        // //super(wire_id);
-        // Wire::<LinearCombinationBitWire> {
-        //     wire_id,
-        //     generator,
-        //     t: LinearCombinationBitWire,
-        // }
-        // crate::new_wire!(LinearCombinationBitWire,wire_id,generator)
         Wire::<LinearCombinationBitWire>::new(LinearCombinationBitWire, wire_id, generator).unwrap()
     }
 }

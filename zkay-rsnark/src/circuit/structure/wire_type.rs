@@ -1,14 +1,14 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 use super::wire_ops::{
     AddWire, AndBitwise, IsEqualTo, IsGreaterThan, IsGreaterThanOrEqual, IsLessThan,
-    IsLessThanOrEqual, MulWire, OrBitwise, SubWire, Xor_bitwise,
+    IsLessThanOrEqual, MulWire, OrBitwise, SubWire, XorBitwise,
 };
 use crate::{
     circuit::{
@@ -126,7 +126,6 @@ impl MulWire<&BigInteger> for WireType {
         let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
         if let Some(cached_outputs) = cached_outputs {
             generator.borrow_mut().current_wire_id -= 1;
-            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cached_outputs[0].clone().unwrap()
         } else {
             out
@@ -150,7 +149,6 @@ impl MulWire<&WireType> for WireType {
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            // println!("===============================");
             return self.mulb(&w.try_as_constant_ref().unwrap().get_constant(), desc);
         }
         self.pack_if_needed(desc);
@@ -170,7 +168,6 @@ impl MulWire<&WireType> for WireType {
         let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
         if let Some(cached_outputs) = cached_outputs {
             generator.borrow_mut().current_wire_id -= 1;
-            //println!("====generator.borrow_mut().current_wire_id======{}====={}{}",generator.borrow_mut().current_wire_id ,file!(),line!());
             cached_outputs[0].clone().unwrap()
         } else {
             output
@@ -226,7 +223,7 @@ impl SubWire<&BigInteger> for WireType {
     }
 }
 
-impl Xor_bitwise<&WireType> for WireType {
+impl XorBitwise<&WireType> for WireType {
     fn xor_bitwise(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
@@ -246,7 +243,7 @@ impl Xor_bitwise<&WireType> for WireType {
     }
 }
 
-impl Xor_bitwise<i64> for WireType {
+impl XorBitwise<i64> for WireType {
     fn xor_bitwise(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
@@ -254,7 +251,7 @@ impl Xor_bitwise<i64> for WireType {
     }
 }
 
-impl Xor_bitwise<&BigInteger> for WireType {
+impl XorBitwise<&BigInteger> for WireType {
     fn xor_bitwise(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 

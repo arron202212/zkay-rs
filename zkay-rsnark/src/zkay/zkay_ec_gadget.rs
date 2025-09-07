@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -9,7 +9,7 @@
 use crate::{
     bouncycastle_rs::pqc::math::linearalgebra::integer_functions::IntegerFunctions,
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::gadget::{Gadget, GadgetConfig},
         structure::{circuit_generator::CircuitGenerator, wire::WireConfig, wire_type::WireType},
     },
@@ -46,7 +46,7 @@ impl<T> ZkayEcGadget<T> {
 
 impl<T> Gadget<ZkayEcGadget<T>> {
     // Note: this parameterization assumes that the underlying field has
-    // Configs.field_prime =
+    // CONFIGS.field_prime =
     // 21888242871839275222246405745257275088548364400416034343698204186575808495617
 
     pub const SECRET_BITWIDTH: usize = 253; // number of bits in the
@@ -122,7 +122,6 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let f = x_cube
             .add(x_sqr.mul(&BigInteger::from(Self::COEFF_A)))
             .add(x);
-        println!("====assert_valid_point_on_ec============{y_sqr},{f}");
         CircuitGenerator::add_equality_assertion(self.generator.clone(), &y_sqr, &f, &None);
     }
 
@@ -242,13 +241,13 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     }
 
     pub fn compute_y_coordinate(x: BigInteger) -> BigInteger {
-        let x_sqred = x.clone().mul(&x).rem(&Configs.field_prime);
-        let x_cubed = x_sqred.clone().mul(&x).rem(&Configs.field_prime);
+        let x_sqred = x.clone().mul(&x).rem(&CONFIGS.field_prime);
+        let x_cubed = x_sqred.clone().mul(&x).rem(&CONFIGS.field_prime);
         let y_sqred = x_cubed
             .add(BigInteger::from(Self::COEFF_A).mul(&x_sqred))
             .add(&x)
-            .rem(&Configs.field_prime);
-        let y = IntegerFunctions::ressol(y_sqred, &Configs.field_prime); //MYTODO
+            .rem(&CONFIGS.field_prime);
+        let y = IntegerFunctions::ressol(y_sqred, &CONFIGS.field_prime); //MYTODO
         y
     }
 

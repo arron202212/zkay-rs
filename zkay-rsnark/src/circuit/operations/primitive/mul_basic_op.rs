@@ -1,13 +1,13 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 use crate::{
     circuit::{
-        config::config::Configs,
+        config::config::CONFIGS,
         operations::primitive::basic_op::{BasicOp, BasicOpInOut, Op},
         structure::{wire::GetWireId, wire_type::WireType},
     },
@@ -50,62 +50,14 @@ impl BasicOp for Op<MulBasicOp> {
             .unwrap()
             .mul(assignment[in1_id].as_ref().unwrap());
         if result.sign() == Sign::Minus {
-            if out0_id == 48124 || out0_id == 4 {
-                println!(
-                    "===result.sign() == Sign::Minus ========{out0_id}================{},{},{}",
-                    result,
-                    result.clone().add(&Configs.field_prime),
-                    result
-                        .clone()
-                        .add(&Configs.field_prime)
-                        .rem(&Configs.field_prime)
-                );
-            }
-            result = result.add(&Configs.field_prime).rem(&Configs.field_prime);
+            result = result.add(&CONFIGS.field_prime).rem(&CONFIGS.field_prime);
         }
-        if result > Configs.field_prime {
-            if out0_id == 48124 || out0_id == 4 {
-                println!(
-                    "===result > Configs.field_prime ============{out0_id}============{},{}",
-                    result,
-                    result.clone().rem(&Configs.field_prime)
-                );
-            }
-            result = result.rem(&Configs.field_prime);
+        if result > CONFIGS.field_prime {
+            result = result.rem(&CONFIGS.field_prime);
         }
-        // if self.outputs[0].as_ref().unwrap().get_wire_id() == 5 {
-        // println!(
-        //     "====result================={}======{},{}",
-        //     self.outputs[0].as_ref().unwrap().get_wire_id(),
-        //     result,
-        //     result.clone().rem(&Configs.field_prime)
-        // );
-        // }
+
         assignment[out0_id] = Some(result);
-        // if out0_id == 4 {
-        //     println!(
-        //         "==compute=====outputs==={}={}=={}===={}===={}=={}==",
-        //         file!(),
-        //         assignment[in0_id]
-        //             .clone()
-        //             .unwrap(),
-        //         assignment[in1_id]
-        //             .as_ref()
-        //             .unwrap(),
-        //         assignment[in0_id]
-        //             .clone()
-        //             .unwrap()
-        //             .mul(
-        //                 assignment[in1_id]
-        //                     .as_ref()
-        //                     .unwrap(),
-        //             ),
-        //         self.outputs[0].as_ref().unwrap().name(),
-        //         assignment[out0_id]
-        //             .as_ref()
-        //             .unwrap()
-        //     );
-        // }
+
         Ok(())
     }
 

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -46,7 +46,7 @@ impl IntegerFunctions {
     // private static SecureRandom sr = null;
 
     // // the jacobi function uses this lookup table
-    const jacobiTable: [i8; 8] = [0, 1, 0, -1, 0, -1, 0, 1];
+    const JACOBITABLE: [i8; 8] = [0, 1, 0, -1, 0, -1, 0, 1];
 
     // private IntegerFunctions()
     // {
@@ -71,7 +71,6 @@ impl IntegerFunctions {
     //@return value of the jacobi symbol (A|B)
 
     pub fn jacobi(aa: BigInteger, bb: BigInteger) -> i64 {
-        // println!("==aa==begin==bb==={aa},{bb}");
         let (mut a, mut b, mut v);
         let mut k = 1;
 
@@ -87,7 +86,6 @@ impl IntegerFunctions {
 
         a = aa;
         b = bb;
-        //   println!("==a=={}==b==={a},{b}",line!());
         if b.sign() == Sign::Minus {
             // b < 0
             b = b.neg(); // b = -b
@@ -95,15 +93,13 @@ impl IntegerFunctions {
                 k = -1;
             }
         }
-        //  println!("==a=={}==b==={a},{b}",line!());
         v = Self::ZERO;
         while !b.bit(0) {
             v = v.add(Self::one()); // v = v + 1
             b = b.div(Self::two()); // b = b/2
         }
-        //  println!("==a=={}==b==={a},{b}",line!());
         if v.bit(0) {
-            k = k * Self::jacobiTable[(a.clone() & BigInteger::from(7))
+            k = k * Self::JACOBITABLE[(a.clone() & BigInteger::from(7))
                 .to_str_radix(10)
                 .parse::<i64>()
                 .unwrap() as usize];
@@ -116,20 +112,16 @@ impl IntegerFunctions {
             }
             a = a.neg(); // a = -a
         }
-        //  println!("==a=={}==b==={a},{b}",line!());
         // main loop
         while a.sign() != Sign::NoSign {
-            // println!("==a====b==={a},{b}");
             v = Self::ZERO;
             while !a.bit(0) {
                 // a is even
                 v = v.add(Self::one());
                 a = a.div(Self::two());
             }
-            // println!("=137=a=={v}==b==={a},{b}");
             if v.bit(0) {
-                // println!("=====radix==========={b},{},{:?}",b.to_str_radix(10),b.to_str_radix(10).parse::<i64>());
-                k = k * Self::jacobiTable[(b.clone() & BigInteger::from(7))
+                k = k * Self::JACOBITABLE[(b.clone() & BigInteger::from(7))
                     .to_str_radix(10)
                     .parse::<i64>()
                     .unwrap() as usize];

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-#![allow(non_snake_case)]
-#![allow(non_upper_case_globals)]
-#![allow(nonstandard_style)]
+//#![allow(non_snake_case)]
+//#![allow(non_upper_case_globals)]
+//#![allow(nonstandard_style)]
 //#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
@@ -9,7 +9,7 @@
 
 use crate::circuit::{
     InstanceOf,
-    config::config::Configs,
+    config::config::CONFIGS,
     eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
     operations::gadget::{Gadget, GadgetConfig},
     structure::{
@@ -64,11 +64,11 @@ impl FieldDivisionGadget {
                 .try_as_constant_ref()
                 .unwrap()
                 .get_constant()
-                .modinv(&Configs.field_prime)
+                .modinv(&CONFIGS.field_prime)
                 .unwrap();
 
             _self.t.c = vec![Some(generator.create_constant_wire(
-                &a_const.mul(b_inverse_const).rem(&Configs.field_prime),
+                &a_const.mul(b_inverse_const).rem(&CONFIGS.field_prime),
                 &None,
             ))];
         } else {
@@ -98,10 +98,9 @@ impl Gadget<FieldDivisionGadget> {
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                                        let a_value = evaluator.get_wire_value(&self.a);
                                     let b_value = evaluator.get_wire_value(&self.b);
-                                    // println!("===b_value==={}====={b_value}====",self.b);
                                     let c_value = a_value
-                                        .mul(b_value.modinv(&Configs.field_prime).unwrap())
-                                        .rem(&Configs.field_prime);
+                                        .mul(b_value.modinv(&CONFIGS.field_prime).unwrap())
+                                        .rem(&CONFIGS.field_prime);
                                     evaluator.set_wire_value(&self.c, &c_value);
         Ok(())
                 }
@@ -115,8 +114,8 @@ impl Gadget<FieldDivisionGadget> {
         //     let a_value = evaluator.get_wire_value(self.t.a.clone());
         //     let b_value = evaluator.get_wire_value(self.t.b.clone());
         //     let c_value = a_value
-        //         .mul(b_value.modinv(&Configs.field_prime.clone()).unwrap())
-        //         .rem(&Configs.field_prime);
+        //         .mul(b_value.modinv(&CONFIGS.field_prime.clone()).unwrap())
+        //         .rem(&CONFIGS.field_prime);
         //     evaluator.set_wire_value(self.t.c.clone(), c_value);
         // });
         // {
@@ -131,8 +130,8 @@ impl Gadget<FieldDivisionGadget> {
         //             let a_value = evaluator.get_wire_value(self.t.a.clone());
         //             let b_value = evaluator.get_wire_value(self.t.b.clone());
         //             let c_value = a_value
-        //                 .mul(b_value.modinv(&Configs.field_prime.clone()).unwrap())
-        //                 .rem(&Configs.field_prime);
+        //                 .mul(b_value.modinv(&CONFIGS.field_prime.clone()).unwrap())
+        //                 .rem(&CONFIGS.field_prime);
         //             evaluator.set_wire_value(self.t.c.clone(), c_value);
         //         }
         //     }
