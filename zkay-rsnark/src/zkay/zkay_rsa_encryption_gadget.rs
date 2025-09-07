@@ -26,17 +26,17 @@ use rccell::RcCell;
 
 #[derive(Debug, Clone)]
 pub enum PaddingType {
-    PKCS_1_5,
-    OAEP,
+    Pkcs_1_5,
+    Oaep,
 }
 
 #[derive(Debug, Clone)]
 pub struct ZkayRSAEncryptionGadget {
-    pub paddingType: PaddingType,
+    pub padding_type: PaddingType,
     pub pk: LongElement,
     pub plain: WireType,
     pub rnd: Vec<Option<WireType>>,
-    pub keyBits: i32,
+    pub key_bits: i32,
     pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayRSAEncryptionGadget {
@@ -44,25 +44,25 @@ impl ZkayRSAEncryptionGadget {
         plain: TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
-        keyBits: i32,
-        paddingType: PaddingType,
+        key_bits: i32,
+        padding_type: PaddingType,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         // assert!(plain, "plain");
         // assert!(pk, "pk");
         assert!(!rnd.is_empty(), "rnd");
-        // assert!(paddingType, "paddingType");
+        // assert!(padding_type, "padding_type");
 
         let mut _self = Gadget::<Self>::new(
             generator,
             desc,
             Self {
-                paddingType,
+                padding_type,
                 plain: plain.wire.clone(),
                 pk,
                 rnd,
-                keyBits,
+                key_bits,
                 cipher: vec![],
             },
         );
@@ -72,16 +72,16 @@ impl ZkayRSAEncryptionGadget {
 }
 impl Gadget<ZkayRSAEncryptionGadget> {
     fn build_circuit(&mut self) {
-        let plainBytes = ZkayUtil::reverseBytes(
+        let plain_bytes = ZkayUtil::reverse_bytes(
             self.t.plain.get_bit_wiresi(256, &None),
             8,
             self.generator.clone(),
         );
 
         let mut enc: Box<dyn GadgetConfig>;
-        match self.t.paddingType {
-            PaddingType::OAEP => {
-                let rndBytes = ZkayUtil::reverseBytes(
+        match self.t.padding_type {
+            PaddingType::Oaep => {
+                let rnd_bytes = ZkayUtil::reverse_bytes(
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
                         .get_bits(RSABackend::OAEP_RND_CHUNK_SIZE as usize, &None),
                     8,
@@ -89,34 +89,34 @@ impl Gadget<ZkayRSAEncryptionGadget> {
                 );
                 let e = RSAEncryptionOAEPGadget::new(
                     self.t.pk.clone(),
-                    plainBytes,
-                    rndBytes,
-                    self.t.keyBits.clone(),
+                    plain_bytes,
+                    rnd_bytes,
+                    self.t.key_bits.clone(),
                     &Some(self.description.clone()),
                     self.generator.clone(),
                 );
-                e.checkSeedCompliance();
+                e.check_seed_compliance();
                 enc = Box::new(e);
             }
-            PaddingType::PKCS_1_5 => {
-                let rndLen = self.t.keyBits as usize / 8 - 3 - plainBytes.len();
-                let rndBytes = ZkayUtil::reverseBytes(
+            PaddingType::Pkcs_1_5 => {
+                let rnd_len = self.t.key_bits as usize / 8 - 3 - plain_bytes.len();
+                let rnd_bytes = ZkayUtil::reverse_bytes(
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
                         .get_bits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize, &None)
-                        .adjust_length(None, rndLen * 8),
+                        .adjust_length(None, rnd_len * 8),
                     8,
                     self.generator.clone(),
                 );
                 enc = Box::new(RSAEncryptionV1_5_Gadget::new(
                     self.t.pk.clone(),
-                    plainBytes,
-                    rndBytes,
-                    self.t.keyBits.clone(),
+                    plain_bytes,
+                    rnd_bytes,
+                    self.t.key_bits.clone(),
                     &Some(self.description.clone()),
                     self.generator.clone(),
                 ));
             }
-            _ => panic!("Unexpected padding type: {:?}", self.t.paddingType),
+            _ => panic!("Unexpected padding type: {:?}", self.t.padding_type),
         }
 
         self.t.cipher = WireArray::new(

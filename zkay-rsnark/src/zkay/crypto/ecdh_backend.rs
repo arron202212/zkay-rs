@@ -28,37 +28,37 @@ use rccell::RcCell;
 
 #[derive(Debug, Clone)]
 pub struct ECDHBackend {
-    pub cipherType: CipherType,
+    pub cipher_type: CipherType,
 }
 impl ECDHBackend {
     const KEY_CHUNK_SIZE: i32 = 256;
 
     pub fn new(
-        keyBits: i32,
-        cipherType: CipherType,
+        key_bits: i32,
+        cipher_type: CipherType,
         generator: RcCell<CircuitGenerator>,
     ) -> CryptoBackend<Symmetric<Self>> {
-        Symmetric::<Self>::new(keyBits, Self { cipherType }, generator)
+        Symmetric::<Self>::new(key_bits, Self { cipher_type }, generator)
     }
 }
 // impl SymmetricConfig for CryptoBackend<Symmetric<ECDHBackend>> {}
 impl CryptoBackendConfig for CryptoBackend<Symmetric<ECDHBackend>> {
-    fn getKeyChunkSize(&self) -> i32 {
+    fn get_key_chunk_size(&self) -> i32 {
         ECDHBackend::KEY_CHUNK_SIZE
     }
-    fn createEncryptionGadget(
+    fn create_encryption_gadget(
         &mut self,
         plain: &TypedWire,
         key: &String,
-        ivArr: &Vec<Option<WireType>>,
+        iv_arr: &Vec<Option<WireType>>,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
         Box::new(ZkayCBCSymmetricEncGadget::new(
             plain.clone(),
-            self.getKey(key, generator.clone()),
-            Self::extractIV(&Some(ivArr.clone())),
-            self.t.t.cipherType.clone(),
+            self.get_key(key, generator.clone()),
+            Self::extract_iv(&Some(iv_arr.clone())),
+            self.t.t.cipher_type.clone(),
             desc,
             generator,
         ))

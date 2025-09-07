@@ -29,7 +29,7 @@ impl ZkayDummyEncryptionGadget {
         plain: TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
-        keyBits: i32,
+        key_bits: i32,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
@@ -56,7 +56,7 @@ impl ZkayDummyEncryptionGadget {
                 pk: pkarr[0].clone().unwrap(),
                 cipher: vec![
                     None;
-                    ((keyBits as f64) / DummyBackend::CIPHER_CHUNK_SIZE as f64).ceil()
+                    ((key_bits as f64) / DummyBackend::CIPHER_CHUNK_SIZE as f64).ceil()
                         as usize
                 ],
             },

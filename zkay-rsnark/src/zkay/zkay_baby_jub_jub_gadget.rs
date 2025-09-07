@@ -60,33 +60,27 @@ pub trait ZkayBabyJubJubGadgetConfig {
         "21888242871839275222246405745257275088548364400416034343698204186575808495617";
     const CURVE_ORDER: &str =
         "2736030358979909402780800718157159386076813972158567259200215660948447373041";
-
     const COFACTOR: u8 = 8;
-
     const COEFF_A: u8 = 1;
-
     const COEFF_D: &str =
         "9706598848417545097372247223557719406784115219466060233080913168975159366771";
-
     // arbitrary generator
     const GENERATOR_X: &str =
         "11904062828411472290643689191857696496057424932476499415469791423656658550213";
-
     const GENERATOR_Y: &str =
         "9356450144216313082194365820021861619676443907964402770398322487858544118183";
-
     fn generators(&self) -> RcCell<CircuitGenerator>;
     // {
     //     &self.generators
     // }
-    fn getInfinity(&self) -> JubJubPoint {
+    fn get_infinity(&self) -> JubJubPoint {
         JubJubPoint::new(
             self.generators().get_zero_wire().unwrap(),
             self.generators().get_one_wire().unwrap(),
         )
     }
 
-    fn getGenerator(&self) -> JubJubPoint {
+    fn get_generator(&self) -> JubJubPoint {
         let g_x = CircuitGenerator::create_constant_wire(
             self.generators(),
             &Util::parse_big_int(Self::GENERATOR_X),
@@ -100,17 +94,17 @@ pub trait ZkayBabyJubJubGadgetConfig {
         JubJubPoint::new(g_x, g_y)
     }
 
-    fn assertOnCurve(&self, x: &WireType, y: &WireType) {
+    fn assert_on_curve(&self, x: &WireType, y: &WireType) {
         // assert COEFF_A*x*x + y*y == 1 + COEFF_D*x*x*y*y
-        let xSqr = x.clone().mul(x);
-        let ySqr = y.clone().mul(y);
-        let prod = xSqr.clone().mul(&ySqr);
-        let lhs = xSqr.mul(&BigInteger::from(Self::COEFF_A)).add(ySqr);
+        let x_sqr = x.clone().mul(x);
+        let y_sqr = y.clone().mul(y);
+        let prod = x_sqr.clone().mul(&y_sqr);
+        let lhs = x_sqr.mul(&BigInteger::from(Self::COEFF_A)).add(y_sqr);
         let rhs = prod.mul(&Util::parse_big_int(Self::COEFF_D)).add(1);
         CircuitGenerator::add_equality_assertion(self.generators(), &lhs, &rhs, &None);
     }
 
-    fn addPoints(&self, p1: &JubJubPoint, p2: &JubJubPoint) -> JubJubPoint {
+    fn add_points(&self, p1: &JubJubPoint, p2: &JubJubPoint) -> JubJubPoint {
         // Twisted Edwards addition according to https://en.wikipedia.org/wiki/Twisted_Edwards_curve#Addition_on_twisted_Edwards_curves
 
         let a1 = p1.x.clone().mul(&p2.y).add(p1.y.clone().mul(&p2.x));
@@ -133,29 +127,29 @@ pub trait ZkayBabyJubJubGadgetConfig {
                 .negate(&None)
                 .add(1);
 
-        let x = a1.clone().mul(self.nativeInverse(&a2));
-        let y = b1.clone().mul(self.nativeInverse(&b2));
+        let x = a1.clone().mul(self.native_inverse(&a2));
+        let y = b1.clone().mul(self.native_inverse(&b2));
         JubJubPoint::new(x, y)
     }
 
-    fn negatePoint(p: &JubJubPoint) -> JubJubPoint {
+    fn negate_point(p: &JubJubPoint) -> JubJubPoint {
         let new_x = p.x.negate(&None);
         JubJubPoint::new(new_x, p.y.clone())
     }
 
-    //@param scalarBits the scalar bit representation in little-endian order
+    //@param scalar_bits the scalar bit representation in little-endian order
 
-    fn mulScalar(&self, p: &JubJubPoint, scalarBits: &Vec<Option<WireType>>) -> JubJubPoint {
+    fn mul_scalar(&self, p: &JubJubPoint, scalar_bits: &Vec<Option<WireType>>) -> JubJubPoint {
         // Scalar point multiplication using double-and-add algorithm
-        let mut result = self.getInfinity();
+        let mut result = self.get_infinity();
         let mut doubling = p.clone();
 
-        for i in 0..scalarBits.len() {
-            let q = self.addPoints(&doubling, &result);
-            let new_x = scalarBits[i].as_ref().unwrap().mux(&q.x, &result.x);
-            let new_y = scalarBits[i].as_ref().unwrap().mux(&q.y, &result.y);
+        for i in 0..scalar_bits.len() {
+            let q = self.add_points(&doubling, &result);
+            let new_x = scalar_bits[i].as_ref().unwrap().mux(&q.x, &result.x);
+            let new_y = scalar_bits[i].as_ref().unwrap().mux(&q.y, &result.y);
             result = JubJubPoint::new(new_x, new_y);
-            doubling = self.addPoints(&doubling, &doubling);
+            doubling = self.add_points(&doubling, &doubling);
         }
 
         result
@@ -163,20 +157,20 @@ pub trait ZkayBabyJubJubGadgetConfig {
 
     //Returns a wire holding the inverse of a in the native base field.
 
-    fn nativeInverse(&self, a: &WireType) -> WireType {
+    fn native_inverse(&self, a: &WireType) -> WireType {
         // println!(
-        //     "===self.get_current_wire_id()======nativeInverse======before======{}",
+        //     "===self.get_current_wire_id()======native_inverse======before======{}",
         //     self.generators().get_current_wire_id()
         // );
         let ainv = CircuitGenerator::create_prover_witness_wire(self.generators(), &None);
         // println!(
-        //     "===self.get_current_wire_id()======nativeInverse====after========{}",
+        //     "===self.get_current_wire_id()======native_inverse====after========{}",
         //     self.generators().get_current_wire_id()
         // );
         // CircuitGenerator::specify_prover_witness_computation(self.generators(), &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.get_wire_value(a);
-        //             let inverseValue = aValue.modInverse(Self::BASE_ORDER);
-        //             evaluator.set_wire_value(ainv, inverseValue);
+        //             let a_value = evaluator.get_wire_value(a);
+        //             let inverse_value = a_value.modInverse(Self::BASE_ORDER);
+        //             evaluator.set_wire_value(ainv, inverse_value);
         //         });
         let base_order = Self::BASE_ORDER.to_owned();
         let prover = crate::impl_prover!(
@@ -186,9 +180,9 @@ pub trait ZkayBabyJubJubGadgetConfig {
                         )  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                    let aValue = evaluator.get_wire_value(&self.a);
-                    let inverseValue = aValue.modinv(&Util::parse_big_int(&self.base_order));
-                    evaluator.set_wire_value(&self.ainv, inverseValue.as_ref().unwrap());
+                    let a_value = evaluator.get_wire_value(&self.a);
+                    let inverse_value = a_value.modinv(&Util::parse_big_int(&self.base_order));
+                    evaluator.set_wire_value(&self.ainv, inverse_value.as_ref().unwrap());
         Ok(())
                 }
                 }
@@ -199,9 +193,9 @@ pub trait ZkayBabyJubJubGadgetConfig {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.get_wire_value(a);
-        //             let inverseValue = aValue.modInverse(Self::BASE_ORDER);
-        //             evaluator.set_wire_value(ainv, inverseValue);
+        //             let a_value = evaluator.get_wire_value(a);
+        //             let inverse_value = a_value.modInverse(Self::BASE_ORDER);
+        //             evaluator.set_wire_value(ainv, inverse_value);
         //         }
         //     }
         //     Prover

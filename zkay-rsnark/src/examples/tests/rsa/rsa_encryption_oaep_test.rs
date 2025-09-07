@@ -37,36 +37,36 @@ mod test {
     pub fn oaep_test_encryption_different_key_lengths() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            inputMessage: Vec<Option<WireType>>,
+            input_message: Vec<Option<WireType>>,
             seed: Vec<Option<WireType>>,
-            cipherText: Vec<Option<WireType>>,
-            rsaModulus: Option<LongElement>,
-            rsaEncryptionOAEPGadget: Option<Gadget<RSAEncryptionOAEPGadget>>,
-            rsaKeyLength: usize,
-            rsaModulusValue: BigInteger,
+            cipher_text: Vec<Option<WireType>>,
+            rsa_modulus: Option<LongElement>,
+            rsa_encryption_oaep_gadget: Option<Gadget<RSAEncryptionOAEPGadget>>,
+            rsa_key_length: usize,
+            rsa_modulus_value: BigInteger,
         }
         impl CGTest {
-            const plainText: &[u8] = b"abc";
+            const plain_text: &[u8] = b"abc";
         }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let plainTextLength = CGTest::plainText.len();
-                let inputMessage = CircuitGenerator::create_prover_witness_wire_array(
+                let plain_text_length = CGTest::plain_text.len();
+                let input_message = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
-                    plainTextLength,
+                    plain_text_length,
                     &None,
                 ); // in bytes
-                for i in 0..plainTextLength {
-                    inputMessage[i]
+                for i in 0..plain_text_length {
+                    input_message[i]
                         .as_ref()
                         .unwrap()
                         .restrict_bit_length(8, &None);
                 }
 
-                let rsaModulus = CircuitGenerator::create_long_element_input(
+                let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
                 let seed = CircuitGenerator::create_prover_witness_wire_array(
@@ -74,48 +74,48 @@ mod test {
                     RSAEncryptionOAEPGadget::SHA256_DIGEST_LENGTH as usize,
                     &None,
                 );
-                let rsaEncryptionOAEPGadget = RSAEncryptionOAEPGadget::new(
-                    rsaModulus.clone(),
-                    inputMessage.clone(),
+                let rsa_encryption_oaep_gadget = RSAEncryptionOAEPGadget::new(
+                    rsa_modulus.clone(),
+                    input_message.clone(),
                     seed.clone(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                     self.cg(),
                 );
 
                 // since seed is a witness
-                rsaEncryptionOAEPGadget.checkSeedCompliance();
+                rsa_encryption_oaep_gadget.check_seed_compliance();
 
-                let cipherTextInBytes = rsaEncryptionOAEPGadget.get_output_wires().clone(); // in bytes
+                let cipher_text_in_bytes = rsa_encryption_oaep_gadget.get_output_wires().clone(); // in bytes
 
                 // group every 8 bytes together
-                let cipherText = WireArray::new(cipherTextInBytes, self.cg().downgrade())
+                let cipher_text = WireArray::new(cipher_text_in_bytes, self.cg().downgrade())
                     .pack_words_into_larger_words(8, 8, &None);
                 CircuitGenerator::make_output_array(
                     self.cg(),
-                    &cipherText,
+                    &cipher_text,
                     &Some("Output cipher text".to_owned()),
                 );
                 (
-                    self.t.rsaModulus,
-                    self.t.inputMessage,
+                    self.t.rsa_modulus,
+                    self.t.input_message,
                     self.t.seed,
-                    self.t.cipherText,
-                    self.t.rsaEncryptionOAEPGadget,
+                    self.t.cipher_text,
+                    self.t.rsa_encryption_oaep_gadget,
                 ) = (
-                    Some(rsaModulus),
-                    inputMessage,
+                    Some(rsa_modulus),
+                    input_message,
                     seed,
-                    cipherText,
-                    Some(rsaEncryptionOAEPGadget),
+                    cipher_text,
+                    Some(rsa_encryption_oaep_gadget),
                 );
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                for i in 0..self.t.inputMessage.len() {
+                for i in 0..self.t.input_message.len() {
                     evaluator.set_wire_valuei(
-                        self.t.inputMessage[i].as_ref().unwrap(),
-                        CGTest::plainText[i] as i64,
+                        self.t.input_message[i].as_ref().unwrap(),
+                        CGTest::plain_text[i] as i64,
                     );
                 }
                 // try {
@@ -124,36 +124,36 @@ mod test {
                 let cipher = vec![0; 32]; //Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
 
                 evaluator.set_wire_valuebi(
-                    self.t.rsaModulus.as_ref().unwrap(),
-                    &self.t.rsaModulusValue,
+                    self.t.rsa_modulus.as_ref().unwrap(),
+                    &self.t.rsa_modulus_value,
                     LongElement::CHUNK_BITWIDTH,
                 );
 
-                let privKey = vec![0; 32]; //keyPair.getPrivate();
+                let priv_key = vec![0; 32]; //keyPair.getPrivate();
 
                 // cipher.init(Cipher.ENCRYPT_MODE, pubKey, random);
-                let tmp = vec![0; 32]; //cipher.doFinal(CGTest::plainText);
-                let mut cipherTextBytes = vec![0; self.t.rsaKeyLength / 8];
-                cipherTextBytes[0..self.t.rsaKeyLength / 8].clone_from_slice(&tmp[0..]);
+                let tmp = vec![0; 32]; //cipher.do_final(CGTest::plain_text);
+                let mut cipher_text_bytes = vec![0; self.t.rsa_key_length / 8];
+                cipher_text_bytes[0..self.t.rsa_key_length / 8].clone_from_slice(&tmp[0..]);
 
-                let mut cipherTextPadded = vec![0; cipherTextBytes.len() + 1];
-                cipherTextPadded[1..].clone_from_slice(&cipherTextBytes);
+                let mut cipher_text_padded = vec![0; cipher_text_bytes.len() + 1];
+                cipher_text_padded[1..].clone_from_slice(&cipher_text_bytes);
 
-                cipherTextPadded[0] = 0;
+                cipher_text_padded[0] = 0;
 
-                let result = RSAUtil::extractRSAOAEPSeed(&cipherTextBytes, &privKey);
+                let result = RSAUtil::extract_rsa_oaep_seed(&cipher_text_bytes, &priv_key);
 
                 assert_eq!(
                     result[0],
-                    CGTest::plainText,
+                    CGTest::plain_text,
                     "Randomness Extraction did not decrypt right"
                 );
 
-                let sampleRandomness = &result[1];
-                for i in 0..sampleRandomness.len() {
+                let sample_randomness = &result[1];
+                for i in 0..sample_randomness.len() {
                     evaluator.set_wire_valuei(
                         self.t.seed[i].as_ref().unwrap(),
-                        (sampleRandomness[i] as i64 + 256) % 256,
+                        (sample_randomness[i] as i64 + 256) % 256,
                     );
                 }
 
@@ -169,31 +169,31 @@ mod test {
 
         // might need to increase memory heap to run this test on some platforms
 
-        let keySizeArray = vec![1024, 2048, 3072];
+        let key_size_array = vec![1024, 2048, 3072];
 
-        for keySize in keySizeArray {
-            let cipherTextBytes = vec![0; keySize / 8];
+        for key_size in key_size_array {
+            let cipher_text_bytes = vec![0; key_size / 8];
 
             // let random = SecureRandom::new();
             // let keyGen = KeyPairGenerator.getInstance("RSA");
-            // keyGen.initialize(keySize, random);
+            // keyGen.initialize(key_size, random);
             // let keyPair = keyGen.generateKeyPair();
             // let pubKey = keyPair.getPublic();
-            let rsaModulusValue = BigInteger::from(64); //(pubKey).getModulus();
+            let rsa_modulus_value = BigInteger::from(64); //(pubKey).getModulus();
 
-            let rsaKeyLength = keySize;
-            let plainTextLength = CGTest::plainText.len();
+            let rsa_key_length = key_size;
+            let plain_text_length = CGTest::plain_text.len();
             let t = CGTest {
-                inputMessage: vec![],
+                input_message: vec![],
                 seed: vec![],
-                cipherText: vec![],
-                rsaModulus: None,
-                rsaEncryptionOAEPGadget: None,
-                rsaKeyLength,
-                rsaModulusValue,
+                cipher_text: vec![],
+                rsa_modulus: None,
+                rsa_encryption_oaep_gadget: None,
+                rsa_key_length,
+                rsa_modulus_value,
             };
             let mut generator = CircuitGeneratorExtend::<CGTest>::new(
-                &format!("RSA{keySize}_OAEP_Enc_TestEncryption"),
+                &format!("RSA{key_size}_OAEP_Enc_TestEncryption"),
                 t,
             );
 
@@ -203,31 +203,33 @@ mod test {
             // retrieve the ciphertext from the circuit, and verify that it
             // matches the expected ciphertext and that it decrypts correctly
             // (using the BouncyCastle RSA decryptor)
-            let mut cipherTextList = generator.get_out_wires();
+            let mut cipher_text_list = generator.get_out_wires();
             let mut t = BigInteger::ZERO;
             let mut i = 0;
-            for w in cipherTextList {
+            for w in cipher_text_list {
                 let val = evaluator.get_wire_value(w.as_ref().unwrap());
                 t = t.add(val.shl(i * 64));
                 i += 1;
             }
 
             // extract the bytes
-            let (_, mut cipherTextBytesFromCircuit) = t.to_bytes_be();
+            let (_, mut cipher_text_bytes_from_circuit) = t.to_bytes_be();
 
             // ignore the sign byte if any was added
-            if t.bits() == keySize as u64 && cipherTextBytesFromCircuit.len() == keySize / 8 + 1 {
-                cipherTextBytesFromCircuit = cipherTextBytesFromCircuit[1..].to_vec();
+            if t.bits() == key_size as u64
+                && cipher_text_bytes_from_circuit.len() == key_size / 8 + 1
+            {
+                cipher_text_bytes_from_circuit = cipher_text_bytes_from_circuit[1..].to_vec();
             }
 
-            for k in 0..cipherTextBytesFromCircuit.len() {
-                assert_eq!(&cipherTextBytes[k], &cipherTextBytesFromCircuit[k]);
+            for k in 0..cipher_text_bytes_from_circuit.len() {
+                assert_eq!(&cipher_text_bytes[k], &cipher_text_bytes_from_circuit[k]);
             }
 
             let cipher = vec![0; 32]; //Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding", "BC");
             // cipher.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-            let cipherTextDecrypted = vec![0; 32]; //cipher.doFinal(cipherTextBytesFromCircuit);
-            assert_eq!(CGTest::plainText, cipherTextDecrypted);
+            let cipher_text_decrypted = vec![0; 32]; //cipher.do_final(cipher_text_bytes_from_circuit);
+            assert_eq!(CGTest::plain_text, cipher_text_decrypted);
         }
     }
 }

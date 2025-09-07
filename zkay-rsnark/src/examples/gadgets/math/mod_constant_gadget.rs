@@ -38,16 +38,19 @@ use crate::{
     },
 };
 
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Div, Mul, Rem, Sub},
+};
+
 use num_bigint::Sign;
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use zkay_derive::ImplStructNameConfig;
 
 //  * This gadget provides the remainder of a % b, where b is a circuit constant.
 
-use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ModConstantGadget {
     pub a: WireType,
@@ -103,11 +106,11 @@ impl Gadget<ModConstantGadget> {
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
         // CircuitGenerator::specify_prover_witness_computation(generator.clone(),  &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.get_wire_value(a);
-        //             let rValue = aValue.rem(b);
-        //             evaluator.set_wire_value(r, &rValue);
-        //             let qValue = aValue.divide(b);
-        //             evaluator.set_wire_value(q, &qValue);
+        //             let a_value = evaluator.get_wire_value(a);
+        //             let r_value = a_value.rem(b);
+        //             evaluator.set_wire_value(r, &r_value);
+        //             let q_value = a_value.divide(b);
+        //             evaluator.set_wire_value(q, &q_value);
         //         });
 
         let prover = crate::impl_prover!(
@@ -118,11 +121,11 @@ impl Gadget<ModConstantGadget> {
                                     )  {
                             impl Instruction for Prover{
                              fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                        let aValue = evaluator.get_wire_value(&self.a);
-                                let rValue = aValue.clone().rem(&self.b);
-                                evaluator.set_wire_value(&self.r, &rValue);
-                                let qValue = aValue.div(&self.b);
-                                evaluator.set_wire_value(&self.q, &qValue);
+                                        let a_value = evaluator.get_wire_value(&self.a);
+                                let r_value = a_value.clone().rem(&self.b);
+                                evaluator.set_wire_value(&self.r, &r_value);
+                                let q_value = a_value.div(&self.b);
+                                evaluator.set_wire_value(&self.q, &q_value);
         Ok(())
 
                             }
@@ -134,23 +137,23 @@ impl Gadget<ModConstantGadget> {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.get_wire_value(a);
-        //             let rValue = aValue.rem(b);
-        //             evaluator.set_wire_value(r, rValue);
-        //             let qValue = aValue.divide(b);
-        //             evaluator.set_wire_value(q, qValue);
+        //             let a_value = evaluator.get_wire_value(a);
+        //             let r_value = a_value.rem(b);
+        //             evaluator.set_wire_value(r, r_value);
+        //             let q_value = a_value.divide(b);
+        //             evaluator.set_wire_value(q, q_value);
         //         }
         //     }
         //     Prover
         // });
 
-        let bBitwidth = b.bits();
-        r.restrict_bit_length(bBitwidth, &None);
-        q.restrict_bit_length(self.t.bitwidth as u64 - bBitwidth + 1, &None);
+        let b_bitwidth = b.bits();
+        r.restrict_bit_length(b_bitwidth, &None);
+        q.restrict_bit_length(self.t.bitwidth as u64 - b_bitwidth + 1, &None);
 
         CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &r.is_less_thanb(&b, bBitwidth as i32, &None),
+            &r.is_less_thanb(&b, b_bitwidth as i32, &None),
             &None,
         );
 

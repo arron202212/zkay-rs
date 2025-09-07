@@ -6,14 +6,12 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::auxiliary::long_element;
-use crate::examples::gadgets::math::long_integer_division::{
-    LongIntegerDivision, LongIntegerDivisionConfig,
-};
+
 use crate::{
     arc_cell_new,
     circuit::{
         InstanceOf, StructNameConfig,
+        auxiliary::long_element,
         auxiliary::long_element::LongElement,
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
@@ -36,15 +34,21 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::math::long_integer_division::{
+        LongIntegerDivision, LongIntegerDivisionConfig,
+    },
     util::{
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+};
 
 //  * This gadget provides a % b, when both operands are represented as long
 //  * elements. You can check the RSA gadgets/circuit generators for an example.
@@ -58,7 +62,7 @@ impl LongIntegerModGadget {
     //
     // //@param a
     // //@param b
-    // //@param restrictRange
+    // //@param restrict_range
     // //		if true, the output will be forced to be less than b,
     // //		otherwise the output remainder will only be guaranteed
     // //		to have the same bitwidth as b, but not necessarily less
@@ -77,16 +81,16 @@ impl LongIntegerModGadget {
     // //		illustration.
     // //@param desc
     //
-    //     // pub  fn new(a:LongElement, b:LongElement, restrictRange:bool, desc:Vec<String>)  ->Self{
-    //     // 	//super(a, b, restrictRange, desc);
+    //     // pub  fn new(a:LongElement, b:LongElement, restrict_range:bool, desc:Vec<String>)  ->Self{
+    //     // 	//super(a, b, restrict_range, desc);
     //     // }
 
     //
     // //@param a
     // //@param b
-    // //@param bMinBitwidth
+    // //@param b_min_bitwidth
     // //		The minimum bitwidth of the second operand
-    // //@param restrictRange
+    // //@param restrict_range
     // //		if true, the output will be forced to be less than b,
     // //		otherwise the output remainder will only be guaranteed
     // //		to have the same bitwidth as b, but not necessarily less
@@ -108,19 +112,19 @@ impl LongIntegerModGadget {
     pub fn new(
         a: LongElement,
         b: LongElement,
-        bMinBitwidth: i32,
-        restrictRange: bool,
+        b_min_bitwidth: i32,
+        restrict_range: bool,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<LongIntegerDivision<Self>> {
-        //super(a, b, bMinBitwidth, restrictRange, desc);
-        LongIntegerDivision::<Self>::new(a, b, bMinBitwidth, restrictRange, desc, generator)
+        //super(a, b, b_min_bitwidth, restrict_range, desc);
+        LongIntegerDivision::<Self>::new(a, b, b_min_bitwidth, restrict_range, desc, generator)
     }
 }
 
 // impl LongIntegerDivision for LongIntegerModGadget {
 //     fn get_output_wires() -> Vec<Option<WireType>> {
-//         getRemainder().get_array()
+//         get_remainder().get_array()
 //     }
 // }
 
@@ -128,6 +132,6 @@ crate::impl_long_integer_division_config_for!(LongIntegerModGadget);
 
 impl GadgetConfig for Gadget<LongIntegerDivision<LongIntegerModGadget>> {
     fn get_output_wires(&self) -> &Vec<Option<WireType>> {
-        self.getRemainder().get_array()
+        self.get_remainder().get_array()
     }
 }

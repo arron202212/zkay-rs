@@ -25,28 +25,28 @@ use rccell::RcCell;
 
 #[derive(Debug, Clone)]
 pub struct ZkayElgamalEncGadget {
-    pub randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
-    pub msgBits: Vec<Option<WireType>>,        // little-endian message bits
-    pub pk: JubJubPoint,                       // pub  key
+    pub randomness_bits: Vec<Option<WireType>>, // little-endian randomness bits
+    pub msg_bits: Vec<Option<WireType>>,        // little-endian message bits
+    pub pk: JubJubPoint,                        // pub  key
     pub c1: Option<JubJubPoint>,
     pub c2: Option<JubJubPoint>,
     pub outputs: Vec<Option<WireType>>,
 }
 impl ZkayElgamalEncGadget {
     pub fn new(
-        msgBits: Vec<Option<WireType>>,
+        msg_bits: Vec<Option<WireType>>,
         pk: JubJubPoint,
-        randomnessBits: Vec<Option<WireType>>,
+        randomness_bits: Vec<Option<WireType>>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
         let mut _self = ZkayBabyJubJubGadget::<Self>::new(
             &None,
             Self {
-                randomnessBits,
+                randomness_bits,
                 pk,
                 c1: None,
                 c2: None,
-                msgBits,
+                msg_bits,
                 outputs: vec![],
             },
             generator,
@@ -57,10 +57,10 @@ impl ZkayElgamalEncGadget {
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalEncGadget>> {
     fn build_circuit(&mut self) {
-        let msgEmbedded = self.mulScalar(&self.getGenerator(), &self.t.t.msgBits);
-        let sharedSecret = self.mulScalar(&self.t.t.pk, &self.t.t.randomnessBits);
-        let c1 = self.mulScalar(&self.getGenerator(), &self.t.t.randomnessBits);
-        let c2 = self.addPoints(&msgEmbedded, &sharedSecret);
+        let msg_embedded = self.mul_scalar(&self.get_generator(), &self.t.t.msg_bits);
+        let shared_secret = self.mul_scalar(&self.t.t.pk, &self.t.t.randomness_bits);
+        let c1 = self.mul_scalar(&self.get_generator(), &self.t.t.randomness_bits);
+        let c2 = self.add_points(&msg_embedded, &shared_secret);
         self.t.t.outputs = [&c1.x, &c1.y, &c2.x, &c2.y]
             .iter()
             .map(|&v| Some(v.clone()))

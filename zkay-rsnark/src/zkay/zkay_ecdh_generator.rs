@@ -31,7 +31,6 @@ pub struct ZkayECDHGenerator {
     pub secret: BigInteger,
     pub pk: Option<BigInteger>,
     pub late_eval: bool,
-
     pub secret_wire: Option<WireType>,
     pub pk_wire: Option<WireType>,
 }
@@ -76,7 +75,7 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
                 &None,
                 self.cg(),
             );
-            gadget.validateInputs();
+            gadget.validate_inputs();
             CircuitGenerator::make_output(
                 self.cg(),
                 gadget.get_output_wires()[0].as_ref().unwrap(),
@@ -111,28 +110,28 @@ impl CircuitGeneratorExtend<ZkayECDHGenerator> {
         panic!("This circuit is only for evaluation");
     }
 
-    pub fn computeECKey(pk: Option<&BigInteger>, sk: &BigInteger) -> BigInteger {
+    pub fn compute_ec_key(pk: Option<&BigInteger>, sk: &BigInteger) -> BigInteger {
         let mut ecdh_generator = ZkayECDHGenerator::new(pk.cloned(), sk.clone(), false);
         ecdh_generator.generate_circuit();
         let evaluator = ecdh_generator.eval_circuit().unwrap();
         evaluator.get_wire_value(ecdh_generator.get_out_wires()[0].as_ref().unwrap())
     }
 
-    pub fn derivePk(secret: &BigInteger) -> String {
-        Self::computeECKey(None, secret).to_str_radix(16)
+    pub fn derive_pk(secret: &BigInteger) -> String {
+        Self::compute_ec_key(None, secret).to_str_radix(16)
     }
 
-    pub fn getSharedSecret(public_key: &BigInteger, secret: &BigInteger) -> String {
-        Self::computeECKey(Some(public_key), secret).to_str_radix(16)
+    pub fn get_shared_secret(public_key: &BigInteger, secret: &BigInteger) -> String {
+        Self::compute_ec_key(Some(public_key), secret).to_str_radix(16)
     }
 
     pub fn rnd_to_secret(rnd_32: &String) -> BigInteger {
         let val = BigInteger::parse_bytes(rnd_32.as_bytes(), 16).unwrap();
-        let mut arr = ZkayUtil::unsignedBigintToBytesi(val, 32);
+        let mut arr = ZkayUtil::unsigned_bigint_to_bytesi(val, 32);
         arr[0] &= 0x0f;
         arr[0] |= 0x10;
         arr[31] &= 0xf8;
-        ZkayUtil::unsignedBytesToBigInt(&arr)
+        ZkayUtil::unsigned_bytes_to_big_int(&arr)
     }
 }
 
@@ -140,7 +139,7 @@ pub fn main(args: Vec<String>) {
     if args.len() == 1 {
         let secret = CircuitGeneratorExtend::<ZkayECDHGenerator>::rnd_to_secret(&args[0]);
         //println!("Deriving pub  key from secret key 0x{:x}", secret);
-        //println!(derivePk(secret));
+        //println!(derive_pk(secret));
         //println!(secret.toString(16));
     } else if args.len() == 2 {
         let secret = BigInteger::parse_bytes(args[0].as_bytes(), 16).unwrap();
@@ -151,7 +150,7 @@ pub fn main(args: Vec<String>) {
         );
         println!(
             "{}",
-            CircuitGeneratorExtend::<ZkayECDHGenerator>::getSharedSecret(&pk, &secret)
+            CircuitGeneratorExtend::<ZkayECDHGenerator>::get_shared_secret(&pk, &secret)
         );
     } else {
         panic!();

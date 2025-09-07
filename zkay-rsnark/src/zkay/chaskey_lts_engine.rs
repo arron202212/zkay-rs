@@ -24,7 +24,7 @@ impl CipherParameters {
     pub fn instance_of(&self, s: &str) -> bool {
         true
     }
-    pub fn getKey(&self) -> &Vec<u8> {
+    pub fn get_key(&self) -> &Vec<u8> {
         &self.key
     }
 }
@@ -36,32 +36,32 @@ pub struct ChaskeyLTSEngine {
 }
 //BlockCipher for
 impl ChaskeyLTSEngine {
-    pub fn new(encrypt: bool, cipherParameters: CipherParameters) -> Self {
+    pub fn new(encrypt: bool, cipher_parameters: CipherParameters) -> Self {
         assert!(
-            cipherParameters.instance_of("CipherParameters")
-                && cipherParameters.getKey().len() == 16,
+            cipher_parameters.instance_of("CipherParameters")
+                && cipher_parameters.get_key().len() == 16,
             "{},",
-            cipherParameters.getKey().len()
+            cipher_parameters.get_key().len()
         );
 
         let mut key = vec![0; 4];
         // ByteBuffer
-        //     .wrap((cipherParameters).getKey())
+        //     .wrap((cipher_parameters).get_key())
         //     .order(ByteOrder.LITTLE_ENDIAN)
         //     .asIntBuffer()
         //     .get(key);
         Self { enc: encrypt, key }
     }
 
-    pub fn getAlgorithmName() -> &'static str {
+    pub fn get_algorithm_name() -> &'static str {
         "chaskey_lts_128"
     }
 
-    pub fn getBlockSize() -> i32 {
+    pub fn get_block_size() -> i32 {
         16
     }
 
-    pub fn processBlock(&self, ins: &Vec<u8>, inOff: i32, out: &Vec<u8>, outOff: i32) -> i32 {
+    pub fn process_block(&self, ins: &Vec<u8>, inOff: i32, out: &Vec<u8>, outOff: i32) -> i32 {
         let mut v = vec![0; 4];
         // ByteBuffer
         //     .wrap(ins, inOff, 16)

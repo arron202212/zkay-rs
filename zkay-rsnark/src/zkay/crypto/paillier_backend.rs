@@ -41,13 +41,13 @@ use std::ops::{Add, Mul, Sub};
 
 #[derive(Debug, Clone)]
 pub struct PaillierBackend {
-    pub minNumCipherChunks: i32,
-    pub maxNumCipherChunks: i32,
+    pub min_num_cipher_chunks: i32,
+    pub max_num_cipher_chunks: i32,
 }
 impl PaillierBackend {
     const CHUNK_SIZE: i32 = LongElement::CHUNK_BITWIDTH; //120;
     pub fn new(
-        keyBits: i32,
+        key_bits: i32,
         generator: RcCell<CircuitGenerator>,
     ) -> CryptoBackend<Asymmetric<Self>> {
         // Same chunk size for key, randomness, and ciphertext
@@ -59,22 +59,23 @@ impl PaillierBackend {
         // 	}
         // }
 
-        // //super(keyBits); // keyBits = bits of n
+        // //super(key_bits); // key_bits = bits of n
         assert!(
-            keyBits > Self::CHUNK_SIZE,
-            "Key size too small ( {keyBits}  <  {}  bits)",
+            key_bits > Self::CHUNK_SIZE,
+            "Key size too small ( {key_bits}  <  {}  bits)",
             Self::CHUNK_SIZE
         );
 
-        // n^2 has either length (2 * keyBits - 1) or (2 * keyBits) bits
-        // minNumCipherChunks = ceil((2 * keyBits - 1) / CHUNK_SIZE)
-        // maxNumCipherChunks = ceil((2 * keyBits) / CHUNK_SIZE)
-        let minNSquareBits = 2 * keyBits - 1;
+        // n^2 has either length (2 * key_bits - 1) or (2 * key_bits) bits
+        // min_num_cipher_chunks = ceil((2 * key_bits - 1) / CHUNK_SIZE)
+        // max_num_cipher_chunks = ceil((2 * key_bits) / CHUNK_SIZE)
+        let min_n_square_bits = 2 * key_bits - 1;
         Asymmetric::<Self>::new(
-            keyBits,
+            key_bits,
             Self {
-                minNumCipherChunks: (minNSquareBits + Self::CHUNK_SIZE - 1) / Self::CHUNK_SIZE,
-                maxNumCipherChunks: (minNSquareBits + Self::CHUNK_SIZE) / Self::CHUNK_SIZE,
+                min_num_cipher_chunks: (min_n_square_bits + Self::CHUNK_SIZE - 1)
+                    / Self::CHUNK_SIZE,
+                max_num_cipher_chunks: (min_n_square_bits + Self::CHUNK_SIZE) / Self::CHUNK_SIZE,
             },
             generator,
         )
@@ -83,31 +84,31 @@ impl PaillierBackend {
 //impl AsymmetricConfig for CryptoBackend<Asymmetric<PaillierBackend>> {}
 crate::impl_crypto_backend_configs_for!(PaillierBackend);
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
-    fn getKeyChunkSize(&self) -> i32 {
+    fn get_key_chunk_size(&self) -> i32 {
         PaillierBackend::CHUNK_SIZE
     }
 
-    fn createEncryptionGadget(
+    fn create_encryption_gadget(
         &mut self,
         plain: &TypedWire,
-        keyName: &String,
-        randomWires: &Vec<Option<WireType>>,
+        key_name: &String,
+        random_wires: &Vec<Option<WireType>>,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
-        let key = self.getKey(keyName, generator.clone());
-        let encodedPlain = self.encodeSignedToModN(plain, &key, generator.clone());
-        let randArr = LongElement::newa(
-            WireArray::new(randomWires.clone(), generator.clone().downgrade())
+        let key = self.get_key(key_name, generator.clone());
+        let encoded_plain = self.encode_signed_to_mod_n(plain, &key, generator.clone());
+        let rand_arr = LongElement::newa(
+            WireArray::new(random_wires.clone(), generator.clone().downgrade())
                 .get_bits(PaillierBackend::CHUNK_SIZE as usize, &None)
-                .adjust_length(None, self.keyBits as usize),
+                .adjust_length(None, self.key_bits as usize),
             generator.clone().downgrade(),
         );
-        let random = self.uninitZeroToOne(&randArr); // Also replace randomness 0 with 1 (for uninit ciphers)
+        let random = self.uninit_zero_to_one(&rand_arr); // Also replace randomness 0 with 1 (for uninit ciphers)
         Box::new(ZkayPaillierFastEncGadget::new(
             key,
-            self.keyBits,
-            encodedPlain,
+            self.key_bits,
+            encoded_plain,
             random,
             desc,
             generator,
@@ -115,213 +116,213 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
     }
 }
 impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
-    fn doHomomorphicOpu(
+    fn do_homomorphic_opu(
         &self,
         op: char,
         arg: &HomomorphicInput,
-        keyName: &String,
+        key_name: &String,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
-        assert!(!arg.isPlain(), "arg");
+        assert!(!arg.is_plain(), "arg");
 
-        let nSquare = self.getNSquare(keyName);
-        let cipherVal = self.toLongElement(arg, generator.clone());
+        let n_square = self.get_n_square(key_name);
+        let cipher_val = self.to_long_element(arg, generator.clone());
 
         if op == '-' {
             // Enc(m, r)^(-1) = (g^m * r^n)^(-1) = (g^m)^(-1) * (r^n)^(-1) = g^(-m) * (r^(-1))^n = Enc(-m, r^(-1))
-            let result = self.invert(&cipherVal, &nSquare, generator);
-            self.toWireArray(&result, &format!("-({})", arg.getName()))
+            let result = self.invert(&cipher_val, &n_square, generator);
+            self.to_wire_array(&result, &format!("-({})", arg.get_name()))
         } else {
             panic!("Unary operation {op} not supported");
         }
     }
 
-    fn doHomomorphicOp(
+    fn do_homomorphic_op(
         &self,
         lhs: &HomomorphicInput,
         op: char,
         rhs: &HomomorphicInput,
-        keyName: &String,
+        key_name: &String,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
-        let nSquare = self.getNSquare(keyName);
+        let n_square = self.get_n_square(key_name);
 
         match op {
             '+' => {
                 // Enc(m1, r1) * Enc(m2, r2) = (g^m1 * r1^n) * (g^m2 * r2^n) = g^(m1 + m2) * (r1 * r2)^n = Enc(m1 + m2, r1 * r2)
-                let outputName = format!("({}) + ({})", lhs.getName(), rhs.getName());
-                let lhsVal = self.toLongElement(&lhs, generator.clone());
-                let rhsVal = self.toLongElement(&rhs, generator.clone());
-                let result = self.mulMod(&lhsVal, &rhsVal, &nSquare, generator);
-                self.toWireArray(&result, &outputName)
+                let output_name = format!("({}) + ({})", lhs.get_name(), rhs.get_name());
+                let lhs_val = self.to_long_element(&lhs, generator.clone());
+                let rhs_val = self.to_long_element(&rhs, generator.clone());
+                let result = self.mul_mod(&lhs_val, &rhs_val, &n_square, generator);
+                self.to_wire_array(&result, &output_name)
             }
             '-' => {
                 // Enc(m1, r1) * Enc(m2, r2)^(-1) = Enc(m1 + (-m2), r1 * r2^(-1)) = Enc(m1 - m2, r1 * r2^(-1))
-                let outputName = format!("({}) - ({})", lhs.getName(), rhs.getName());
-                let lhsVal = self.toLongElement(&lhs, generator.clone());
-                let rhsVal = self.toLongElement(&rhs, generator.clone());
-                let result = self.mulMod(
-                    &lhsVal,
-                    &self.invert(&rhsVal, &nSquare, generator.clone()),
-                    &nSquare,
+                let output_name = format!("({}) - ({})", lhs.get_name(), rhs.get_name());
+                let lhs_val = self.to_long_element(&lhs, generator.clone());
+                let rhs_val = self.to_long_element(&rhs, generator.clone());
+                let result = self.mul_mod(
+                    &lhs_val,
+                    &self.invert(&rhs_val, &n_square, generator.clone()),
+                    &n_square,
                     generator,
                 );
-                self.toWireArray(&result, &outputName)
+                self.to_wire_array(&result, &output_name)
             }
             '*' => {
                 // Multiplication on additively homomorphic ciphertexts requires 1 ciphertext and 1 plaintext argument
-                let mut cipherVal;
-                let mut plainWire;
+                let mut cipher_val;
+                let mut plain_wire;
 
                 // assert!(lhs.is_some(), "lhs is None");
                 // assert!(rhs.is_some(), "rhs is None");
-                if lhs.isPlain() && rhs.isCipher() {
-                    plainWire = lhs.getPlain();
-                    cipherVal = self.toLongElement(&rhs, generator.clone());
-                } else if lhs.isCipher() && rhs.isPlain() {
-                    cipherVal = self.toLongElement(&lhs, generator.clone());
-                    plainWire = rhs.getPlain();
+                if lhs.is_plain() && rhs.is_cipher() {
+                    plain_wire = lhs.get_plain();
+                    cipher_val = self.to_long_element(&rhs, generator.clone());
+                } else if lhs.is_cipher() && rhs.is_plain() {
+                    cipher_val = self.to_long_element(&lhs, generator.clone());
+                    plain_wire = rhs.get_plain();
                 } else {
                     panic!("Paillier multiplication requires exactly 1 plaintext argument");
                 }
 
-                let plainBits = plainWire.zkay_type.bitwidth;
-                let plainBitWires = plainWire.wire.get_bit_wiresi(plainBits as u64, &None);
-                let mut absPlainVal;
-                if !plainWire.zkay_type.signed {
+                let plain_bits = plain_wire.zkay_type.bitwidth;
+                let plain_bit_wires = plain_wire.wire.get_bit_wiresi(plain_bits as u64, &None);
+                let mut abs_plain_val;
+                if !plain_wire.zkay_type.signed {
                     // Unsigned, easy , just do the multiplication.
-                    absPlainVal =
-                        LongElement::newa(plainBitWires.clone(), generator.clone().downgrade());
+                    abs_plain_val =
+                        LongElement::newa(plain_bit_wires.clone(), generator.clone().downgrade());
                 } else {
                     // Signed. Multiply by the absolute value, later negate result if sign bit was set.
-                    let twosComplement = plainWire.wire.inv_bits(plainBits as u64, &None).add(1);
-                    let posValue =
-                        LongElement::newa(plainBitWires.clone(), generator.clone().downgrade());
-                    let negValue = LongElement::newa(
-                        twosComplement.get_bit_wiresi(plainBits as u64, &None),
+                    let twos_complement = plain_wire.wire.inv_bits(plain_bits as u64, &None).add(1);
+                    let pos_value =
+                        LongElement::newa(plain_bit_wires.clone(), generator.clone().downgrade());
+                    let neg_value = LongElement::newa(
+                        twos_complement.get_bit_wiresi(plain_bits as u64, &None),
                         generator.clone().downgrade(),
                     );
-                    let signBit = plainBitWires[plainBits as usize - 1].as_ref().unwrap();
-                    absPlainVal = posValue.mux_bit(&negValue, signBit);
+                    let sign_bit = plain_bit_wires[plain_bits as usize - 1].as_ref().unwrap();
+                    abs_plain_val = pos_value.mux_bit(&neg_value, sign_bit);
                 }
-                let outputName = format!("({}) * ({})", lhs.getName(), rhs.getName());
+                let output_name = format!("({}) * ({})", lhs.get_name(), rhs.get_name());
 
                 // Enc(m1, r1) ^ m2 = (g^m1 * r1^n) ^ m2 = (g^m1)^m2 * (r1^n)^m2 = g^(m1*m2) * (r1^m2)^n = Enc(m1 * m2, r1 ^ m2)
-                let mut result = self.modPow(&cipherVal, &absPlainVal, plainBits, &nSquare);
+                let mut result = self.mod_pow(&cipher_val, &abs_plain_val, plain_bits, &n_square);
 
-                if plainWire.zkay_type.signed {
+                if plain_wire.zkay_type.signed {
                     // Correct for sign
-                    let signBit = plainBitWires[plainBits as usize - 1].clone().unwrap();
-                    let negResult = self.invert(&result, &nSquare, generator);
-                    result = result.mux_bit(&negResult, &signBit);
+                    let sign_bit = plain_bit_wires[plain_bits as usize - 1].clone().unwrap();
+                    let neg_result = self.invert(&result, &n_square, generator);
+                    result = result.mux_bit(&neg_result, &sign_bit);
                 }
 
-                self.toWireArray(&result, &outputName)
+                self.to_wire_array(&result, &output_name)
             }
             _ => panic!("Binary operation  {op} not supported"),
         }
     }
 }
 impl CryptoBackend<Asymmetric<PaillierBackend>> {
-    fn getNSquare(&self, keyName: &String) -> LongElement {
-        let n = self.getKey(keyName, self.generator.clone());
-        let nSquareMaxBits = 2 * self.keyBits; // Maximum bit length of n^2
-        let maxNumChunks =
-            (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        n.clone().mul(&n).align(maxNumChunks as usize)
+    fn get_n_square(&self, key_name: &String) -> LongElement {
+        let n = self.get_key(key_name, self.generator.clone());
+        let n_square_max_bits = 2 * self.key_bits; // Maximum bit length of n^2
+        let max_num_chunks =
+            (n_square_max_bits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
+        n.clone().mul(&n).align(max_num_chunks as usize)
     }
 
     fn invert(
         &self,
         val: &LongElement,
-        nSquare: &LongElement,
+        n_square: &LongElement,
         generator: RcCell<CircuitGenerator>,
     ) -> LongElement {
         LongIntegerModInverseGadget::new(
             val.clone(),
-            nSquare.clone(),
+            n_square.clone(),
             true,
             &Some("Paillier negation".to_owned()),
             generator,
         )
-        .getResult()
+        .get_result()
         .clone()
     }
 
-    fn mulMod(
+    fn mul_mod(
         &self,
         lhs: &LongElement,
         rhs: &LongElement,
-        nSquare: &LongElement,
+        n_square: &LongElement,
         generator: RcCell<CircuitGenerator>,
     ) -> LongElement {
         LongIntegerModGadget::new(
             lhs.clone().mul(rhs),
-            nSquare.clone(),
-            2 * self.keyBits,
+            n_square.clone(),
+            2 * self.key_bits,
             true,
             &Some("Paillier addition".to_owned()),
             generator,
         )
-        .getRemainder()
+        .get_remainder()
         .clone()
     }
 
-    fn modPow(
+    fn mod_pow(
         &self,
         lhs: &LongElement,
         rhs: &LongElement,
-        rhsBits: i32,
-        nSquare: &LongElement,
+        rhs_bits: i32,
+        n_square: &LongElement,
     ) -> LongElement {
         LongIntegerModPowGadget::new(
             lhs.clone(),
             rhs.clone(),
-            nSquare.clone(),
-            2 * self.keyBits,
-            rhsBits,
+            n_square.clone(),
+            2 * self.key_bits,
+            rhs_bits,
             &Some("Paillier multiplication".to_owned()),
             self.generator.clone(),
         )
-        .getResult()
+        .get_result()
         .clone()
     }
 
-    fn toLongElement(
+    fn to_long_element(
         &self,
         input: &HomomorphicInput,
         generator: RcCell<CircuitGenerator>,
     ) -> LongElement {
-        assert!(!input.isPlain(), "Input None or not ciphertext");
-        let cipher = input.getCipher();
+        assert!(!input.is_plain(), "Input None or not ciphertext");
+        let cipher = input.get_cipher();
         assert!(
-            cipher.len() >= self.t.t.minNumCipherChunks as usize
-                && cipher.len() <= self.t.t.maxNumCipherChunks as usize,
+            cipher.len() >= self.t.t.min_num_cipher_chunks as usize
+                && cipher.len() <= self.t.t.max_num_cipher_chunks as usize,
             "Ciphertext has invalid length {}",
             cipher.len()
         );
 
-        // Ciphertext inputs seem to be passed as ZkUint(256); sanity check to make sure we got that.
-        let uint256 = ZkayType::ZkUint(256);
-        for cipherWire in cipher {
-            ZkayType::checkType(&uint256, &cipherWire.zkay_type);
+        // Ciphertext inputs seem to be passed as zk_uint(256); sanity check to make sure we got that.
+        let uint256 = ZkayType::zk_uint(256);
+        for cipher_wire in cipher {
+            ZkayType::check_type(&uint256, &cipher_wire.zkay_type);
         }
 
         // Input is a Paillier ciphertext - front-end must already check that this is the
         let wires: Vec<_> = cipher.iter().map(|c| Some(c.wire.clone())).collect();
 
-        let mut bitWidths = vec![PaillierBackend::CHUNK_SIZE as u64; wires.len()];
-        //bitWidths.last_mut().unwrap() =
-        (2 * self.keyBits - (bitWidths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE) as u64;
+        let mut bit_widths = vec![PaillierBackend::CHUNK_SIZE as u64; wires.len()];
+        //bit_widths.last_mut().unwrap() =
+        (2 * self.key_bits - (bit_widths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE) as u64;
 
         // Cipher could still be uninitialized-zero, which we need to fix
-        self.uninitZeroToOne(&LongElement::new(wires, bitWidths, generator.downgrade()))
+        self.uninit_zero_to_one(&LongElement::new(wires, bit_widths, generator.downgrade()))
     }
 
-    fn toWireArray(&self, value: &LongElement, name: &String) -> Vec<TypedWire> {
-        // First, sanity check that the result has at most maxNumCipherChunks wires of at most CHUNK_SIZE bits each
+    fn to_wire_array(&self, value: &LongElement, name: &String) -> Vec<TypedWire> {
+        // First, sanity check that the result has at most max_num_cipher_chunks wires of at most CHUNK_SIZE bits each
         assert!(
-            value.get_size() <= self.t.t.maxNumCipherChunks as usize,
+            value.get_size() <= self.t.t.max_num_cipher_chunks as usize,
             "Paillier output contains too many wires"
         );
         assert!(
@@ -332,9 +333,9 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
             "Paillier output cipher bit width too large"
         );
 
-        // If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as ZkUint(256).
+        // If ok, wrap the output wires in TypedWire. As with the input, treat ciphertexts as zk_uint(256).
         let wires = value.get_array();
-        let uint256 = ZkayType::ZkUint(256);
+        let uint256 = ZkayType::zk_uint(256);
         wires
             .iter()
             .map(|w| {
@@ -349,19 +350,19 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
             .collect()
     }
 
-    fn uninitZeroToOne(&self, val: &LongElement) -> LongElement {
+    fn uninit_zero_to_one(&self, val: &LongElement) -> LongElement {
         // Uninitialized values have a ciphertext of all zeros, which is not a valid Paillier cipher.
         // Instead, replace those values with 1 == g^0 * 1^n = Enc(0, 1)
-        let valIsZero = val.check_non_zero().inv_as_bit(&None);
-        let oneIfAllZero = LongElement::new(
-            vec![valIsZero],
+        let val_is_zero = val.check_non_zero().inv_as_bit(&None);
+        let one_if_all_zero = LongElement::new(
+            vec![val_is_zero],
             vec![1], // bit
             self.generator.clone().downgrade(),
         );
-        val.clone().add(&oneIfAllZero)
+        val.clone().add(&one_if_all_zero)
     }
 
-    fn encodeSignedToModN(
+    fn encode_signed_to_mod_n(
         &self,
         input: &TypedWire,
         key: &LongElement,
@@ -370,11 +371,11 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         if input.zkay_type.signed {
             // Signed. Encode positive values as-is, negative values (-v) as (key - v)
             let bits = input.zkay_type.bitwidth;
-            let inputBits = input.wire.get_bit_wiresi(bits as u64, &None);
-            let signBit = inputBits[bits as usize - 1].clone().unwrap();
+            let input_bits = input.wire.get_bit_wiresi(bits as u64, &None);
+            let sign_bit = input_bits[bits as usize - 1].clone().unwrap();
 
-            let posValue = LongElement::newa(inputBits.clone(), generator.downgrade());
-            let rawNegValue = LongElement::newa(
+            let pos_value = LongElement::newa(input_bits.clone(), generator.downgrade());
+            let raw_neg_value = LongElement::newa(
                 input
                     .wire
                     .inv_bits(bits as u64, &None)
@@ -382,9 +383,9 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
                     .get_bit_wiresi(bits as u64 + 1, &None),
                 generator.downgrade(),
             );
-            let negValue = key.clone().sub(&rawNegValue);
+            let neg_value = key.clone().sub(&raw_neg_value);
 
-            posValue.mux_bit(&negValue, &signBit)
+            pos_value.mux_bit(&neg_value, &sign_bit)
         } else {
             // Unsigned, encode as-is, just convert the input wire to a LongElement
             LongElement::newa(

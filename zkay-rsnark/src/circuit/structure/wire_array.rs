@@ -17,7 +17,7 @@ use crate::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
                 add_to_evaluation_queue, get_active_circuit_generator,
             },
-            linear_combination_wire::LinearCombinationWire,
+            linear_combination_wire::LinearCombination_wire,
             wire::GeneratorConfig,
             wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
             wire_type::WireType,
@@ -127,7 +127,7 @@ impl WireArray {
             }
         }
         if !all_constant {
-            let output = WireType::LinearCombination(LinearCombinationWire::new(
+            let output = WireType::LinearCombination(LinearCombination_wire::new(
                 generator.get_current_wire_id(),
                 None,
                 generator.clone().downgrade(),
@@ -334,7 +334,7 @@ impl WireArray {
                 } else if !v == BigInteger::ZERO {
                     println!(
                         "Warning, one of the bit wires is constant but not binary : {}",
-                        Util::getDesc(desc)
+                        Util::get_desc(desc)
                     );
                 }
             } else {
@@ -377,7 +377,7 @@ impl WireArray {
                     assert!(
                         v == BigInteger::ZERO,
                         "Trying to pack non-binary constant bits : {}",
-                        Util::getDesc(desc)
+                        Util::get_desc(desc)
                     );
                 }
             } else {
@@ -385,7 +385,7 @@ impl WireArray {
             }
         }
         if !all_constant {
-            let out = WireType::LinearCombination(LinearCombinationWire::new(
+            let out = WireType::LinearCombination(LinearCombination_wire::new(
                 generator.get_current_wire_id(),
                 None,
                 generator.clone().downgrade(),

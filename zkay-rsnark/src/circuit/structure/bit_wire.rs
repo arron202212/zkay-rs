@@ -23,7 +23,7 @@ use crate::{
                 add_to_evaluation_queue, get_active_circuit_generator,
             },
             linear_combination_bit_wire::LinearCombinationBitWire,
-            linear_combination_wire::LinearCombinationWire,
+            linear_combination_wire::LinearCombination_wire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
             wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
@@ -129,7 +129,7 @@ pub trait BitWireConfig: WireConfig {
         } else if b == &Util::one() {
             return self.self_clone().unwrap();
         }
-        let out = WireType::LinearCombination(LinearCombinationWire::new(
+        let out = WireType::LinearCombination(LinearCombination_wire::new(
             generator.get_current_wire_id(),
             None,
             self.generator_weak(),

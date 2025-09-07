@@ -6,26 +6,28 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::{
-    InstanceOf,
-    {
-        config::config::Configs,
-        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
-        structure::{
-            circuit_generator::{
-                CGConfig, CGConfigFields, CircuitGenerator, add_to_evaluation_queue,
-                get_active_circuit_generator,
+use crate::{
+    circuit::{
+        InstanceOf,
+        {
+            config::config::Configs,
+            eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+            structure::{
+                circuit_generator::{
+                    CGConfig, CGConfigFields, CircuitGenerator, add_to_evaluation_queue,
+                    get_active_circuit_generator,
+                },
+                constant_wire,
+                wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
+                wire_array::WireArray,
+                wire_ops::{AddWire, MulWire, SubWire},
+                wire_type::WireType,
             },
-            constant_wire,
-            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
-            wire_array::WireArray,
-            wire_ops::{AddWire, MulWire, SubWire},
-            wire_type::WireType,
         },
     },
-};
-use crate::util::util::{
-    ARcCell, {BigInteger, Util},
+    util::util::{
+        ARcCell, {BigInteger, Util},
+    },
 };
 use num_bigint::Sign;
 use num_traits::Signed;

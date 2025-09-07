@@ -22,12 +22,12 @@ mod test {
         Util::parse_big_int(bs).to_str_radix(16)
     }
     #[test]
-    pub fn testSampleEncCircuitCompile() {
+    pub fn test_sample_enc_circuit_compile() {
         sample_enc_circuit::main(vec!["compile".to_owned()]);
     }
 
     #[test]
-    pub fn testSampleEncCircuitProve() {
+    pub fn test_sample_enc_circuit_prove() {
         // zk__out0_cipher = Enc(3, glob_key_Elgamal__owner, zk__out0_cipher_R)
         // zk__in0_cipher_val = <42>
         // zk__out1_cipher = <42 + 3>
@@ -92,12 +92,12 @@ mod test {
     }
 
     #[test]
-    pub fn testSampleDecCircuitCompile() {
+    pub fn test_sample_dec_circuit_compile() {
         sample_dec_circuit::main(vec!["compile".to_owned()]);
     }
 
     #[test]
-    pub fn testSampleDecCircuitProve() {
+    pub fn test_sample_dec_circuit_prove() {
         // zk__in0_cipher_val = Enc(42, glob_key_Elgamal__me, ...)
         // secret0_plain_val = 42
         // zk__out0_plain_val = 42
@@ -143,7 +143,7 @@ mod test {
     }
 
     #[test]
-    pub fn testSampleDecCircuitProveUninitialized() {
+    pub fn test_sample_dec_circuit_prove_uninitialized() {
         let pkx =
             &pbixs("2543111965495064707612623550577403881714453669184859408922451773306175031318");
         let pky =
@@ -168,12 +168,12 @@ mod test {
     }
 
     #[test]
-    pub fn testSampleMulCircuitCompile() {
+    pub fn test_sample_mul_circuit_compile() {
         sample_mul_circuit::main(vec!["compile".to_owned()]);
     }
 
     #[test]
-    pub fn testSampleMulCircuitProve() {
+    pub fn test_sample_mul_circuit_prove() {
         let pkx =
             pbixs("2543111965495064707612623550577403881714453669184859408922451773306175031318");
         let pky =
@@ -213,12 +213,12 @@ mod test {
     }
 
     #[test]
-    pub fn testSampleRehomCircuitCompile() {
+    pub fn test_sample_rehom_circuit_compile() {
         sample_rehom_circuit::main(vec!["compile".to_owned()]);
     }
 
     #[test]
-    pub fn testSampleRehomCircuitProve() {
+    pub fn test_sample_rehom_circuit_prove() {
         let in0_pk1_rec =
             pbixs("6050894705972791558909254891616996674986810630226664089378712055547845936530");
         let in0_pk2_rec =

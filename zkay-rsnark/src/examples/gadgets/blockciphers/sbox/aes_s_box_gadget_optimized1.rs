@@ -6,44 +6,48 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::{
-    InstanceOf,
-    {
-        config::config::Configs,
-        eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
-        structure::{
-            circuit_generator::{
-                CGConfig, CGConfigFields, CircuitGenerator, add_to_evaluation_queue,
-                get_active_circuit_generator,
+use crate::{
+    circuit::{
+        InstanceOf,
+        {
+            config::config::Configs,
+            eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+            operations::gadget::{Gadget, GadgetConfig},
+            structure::{
+                circuit_generator::{
+                    CGConfig, CGConfigFields, CircuitGenerator, add_to_evaluation_queue,
+                    get_active_circuit_generator,
+                },
+                constant_wire,
+                wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
+                wire_array::WireArray,
+                wire_ops::{AddWire, MulWire, SubWire},
+                wire_type::WireType,
             },
-            constant_wire,
-            wire::{GetWireId, SetBitsConfig, Wire, WireConfig},
-            wire_array::WireArray,
-            wire_ops::{AddWire, MulWire, SubWire},
-            wire_type::WireType,
         },
     },
+    examples::gadgets::blockciphers::{
+        aes128_cipher_gadget::AES128CipherGadget,
+        sbox::util::linear_system_solver::LinearSystemSolver,
+    },
+    util::util::{
+        ARcCell, {BigInteger, Util},
+    },
 };
-use crate::util::util::{
-    ARcCell, {BigInteger, Util},
-};
-// use crate::circuit::config::config::Configs;
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
-// use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget;
-use crate::examples::gadgets::blockciphers::sbox::util::linear_system_solver::LinearSystemSolver;
+
 use rccell::RcCell;
-use std::collections::HashSet;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Rem, Sub};
-use std::sync::{
-    OnceLock,
-    atomic::{self, AtomicU8, Ordering},
+use std::{
+    collections::HashSet,
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Rem, Sub},
+    sync::{
+        OnceLock,
+        atomic::{self, AtomicU8, Ordering},
+    },
 };
+
 pub static s_all_coeff_set: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
 
 //  * This gadget implements the efficient read-only memory access from xjsnark
@@ -82,7 +86,7 @@ impl AESSBoxGadgetOptimized1 {
     }
 }
 impl Gadget<AESSBoxGadgetOptimized1> {
-    const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
+    const SBOX: [u8; 256] = Gadget::<AES128CipherGadget>::SBOX;
     //static
     fn preprocessing() -> &'static Vec<Vec<BigInteger>> {
         s_all_coeff_set.get_or_init(|| Self::solve_linear_systems())
@@ -90,7 +94,7 @@ impl Gadget<AESSBoxGadgetOptimized1> {
     pub fn solve_linear_systems() -> Vec<Vec<BigInteger>> {
         let mut all_coeff_set = Vec::new();
         let list: Vec<_> = (0..=255)
-            .map(|i| 256 * i as i32 + Self::SBox[i] as i32)
+            .map(|i| 256 * i as i32 + Self::SBOX[i] as i32)
             .collect();
 
         for i in 0..=15 {
@@ -221,11 +225,11 @@ impl Gadget<AESSBoxGadgetOptimized1> {
             CircuitGenerator::create_prover_witness_wire(self.generator.clone(), &None);
         self.t.input.restrict_bit_length(8, &None);
         let input = self.t.input.clone();
-        let SBox = Self::SBox.clone();
+        let SBOX = Self::SBOX.clone();
         // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
         //     // TODO Auto-generated method stub
         //     let value = evaluator.get_wire_value(input);
-        //     evaluator.set_wire_value(output, &BigInteger::from(SBox[value.intValue()]));
+        //     evaluator.set_wire_value(output, &BigInteger::from(SBOX[value.intValue()]));
         // });
         let prover = crate::impl_prover!(
                                     eval(  input: WireType,
@@ -235,7 +239,7 @@ impl Gadget<AESSBoxGadgetOptimized1> {
                      fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                                 // TODO Auto-generated method stub
                 let value = evaluator.get_wire_value(&self.input);
-                evaluator.set_wire_value(&self.output, &BigInteger::from(Gadget::<AESSBoxGadgetOptimized1>::SBox[value.to_str_radix(10).parse::<usize>().unwrap()]));
+                evaluator.set_wire_value(&self.output, &BigInteger::from(Gadget::<AESSBoxGadgetOptimized1>::SBOX[value.to_str_radix(10).parse::<usize>().unwrap()]));
         Ok(())
                     }
                     }
@@ -248,7 +252,7 @@ impl Gadget<AESSBoxGadgetOptimized1> {
         //                 &|evaluator: &mut CircuitEvaluator| {
         //                     // TODO Auto-generated method stub
         //                     let value = evaluator.get_wire_value(input);
-        //                     evaluator.set_wire_value(output, BigInteger::from(SBox[value.intValue()]));
+        //                     evaluator.set_wire_value(output, BigInteger::from(SBOX[value.intValue()]));
         //                 }
         //             }
         //             Prover

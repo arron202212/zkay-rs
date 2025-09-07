@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::GadgetConfig;
+
 use crate::{
     arc_cell_new,
     circuit::{
@@ -14,7 +14,11 @@ use crate::{
         auxiliary::long_element::LongElement,
         config::config::Configs,
         eval::instruction::Instruction,
-        operations::{gadget::Gadget, wire_label_instruction, wire_label_instruction::LabelType},
+        operations::{
+            gadget::{Gadget, GadgetConfig},
+            wire_label_instruction,
+            wire_label_instruction::LabelType,
+        },
         structure::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
@@ -27,24 +31,23 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::blockciphers::sbox::{
+        aes_s_box_compute_gadget::AESSBoxComputeGadget,
+        aes_s_box_gadget_optimized1::AESSBoxGadgetOptimized1,
+        aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2,
+        aes_s_box_naive_lookup_gadget::AESSBoxNaiveLookupGadget,
+    },
     util::util::{ARcCell, BigInteger, Util},
 };
-// use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-//     get_active_circuit_generator,
-// };
-// use crate::circuit::structure::wire_array;
-// use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::sbox::aes_s_box_compute_gadget::AESSBoxComputeGadget;
-use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized1::AESSBoxGadgetOptimized1;
-use crate::examples::gadgets::blockciphers::sbox::aes_s_box_gadget_optimized2::AESSBoxGadgetOptimized2;
-use crate::examples::gadgets::blockciphers::sbox::aes_s_box_naive_lookup_gadget::AESSBoxNaiveLookupGadget;
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Sub};
-use std::sync::atomic::{self, AtomicU8, Ordering};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Sub},
+    sync::atomic::{self, AtomicU8, Ordering},
+};
 use zkay_derive::ImplStructNameConfig;
 // #[macro_use]
 // extern crate num_derive;
@@ -54,13 +57,13 @@ use strum::{Display, EnumIter, EnumString};
 #[derive(EnumIter, Clone, EnumString, Display, Debug, FromPrimitive, IntoPrimitive)]
 #[repr(u8)]
 pub enum SBoxOption {
-    LINEAR_SCAN,
-    COMPUTE,
-    OPTIMIZED1,
+    LinearScan,
+    Compute,
+    Optimized1,
     #[num_enum(default)]
-    OPTIMIZED2,
+    Optimized2,
 }
-pub static atomic_sbox_option: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 as u8);
+pub static atomic_sbox_option: AtomicU8 = AtomicU8::new(SBoxOption::Optimized2 as u8);
 
 //  * Implements an AES 128-bit block cipher. The gadget applies an improved
 //  * read-only memory lookup from xjsnark (to appear) to reduce the cost of the
@@ -68,9 +71,9 @@ pub static atomic_sbox_option: AtomicU8 = AtomicU8::new(SBoxOption::OPTIMIZED2 a
 
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AES128CipherGadget {
-    pub plaintext: Vec<Option<WireType>>,   // array of 16 bytes
-    pub expandedKey: Vec<Option<WireType>>, // array of 176 bytes (call expandKey(..))
-    pub ciphertext: Vec<Option<WireType>>,  // array of 16 bytes
+    pub plaintext: Vec<Option<WireType>>,    // array of 16 bytes
+    pub expanded_key: Vec<Option<WireType>>, // array of 176 bytes (call expandKey(..))
+    pub ciphertext: Vec<Option<WireType>>,   // array of 16 bytes
 }
 impl AES128CipherGadget {
     const nb: usize = 4;
@@ -80,19 +83,19 @@ impl AES128CipherGadget {
     //
     //@param inputs
     //           : array of 16 bytes (each wire represents a byte)
-    //@param expandedKey
+    //@param expanded_key
     //           : array of 176 bytes (each wire represents a byte) -- call
     //           expandKey() to get it
 
     pub fn new(
         inputs: Vec<Option<WireType>>,
-        expandedKey: Vec<Option<WireType>>,
+        expanded_key: Vec<Option<WireType>>,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         assert!(
             inputs.len() == 4 * AES128CipherGadget::nb
-                && expandedKey.len() == 4 * AES128CipherGadget::nb * (AES128CipherGadget::nr + 1),
+                && expanded_key.len() == 4 * AES128CipherGadget::nb * (AES128CipherGadget::nr + 1),
             "Invalid Input"
         );
         let mut _self = Gadget::<Self>::new(
@@ -101,7 +104,7 @@ impl AES128CipherGadget {
             Self {
                 plaintext: inputs,
                 ciphertext: vec![],
-                expandedKey,
+                expanded_key,
             },
         );
 
@@ -110,11 +113,11 @@ impl AES128CipherGadget {
     }
 }
 impl Gadget<AES128CipherGadget> {
-    pub const RCon: [u8; 11] = [
+    pub const RCON: [u8; 11] = [
         0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
     ];
 
-    pub const SBox: [u8; 256] = [
+    pub const SBOX: [u8; 256] = [
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab,
         0x76, 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4,
         0x72, 0xc0, 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71,
@@ -146,22 +149,22 @@ impl Gadget<AES128CipherGadget> {
             }
         }
 
-        state = self.addRoundKey(state, 0, AES128CipherGadget::nb as i32 - 1);
+        state = self.add_round_key(state, 0, AES128CipherGadget::nb as i32 - 1);
 
         for round in 1..AES128CipherGadget::nr as i32 {
-            self.subBytes(&mut state);
-            state = self.shiftRows(state);
-            state = self.mixColumns(state);
-            state = self.addRoundKey(
+            self.sub_bytes(&mut state);
+            state = self.shift_rows(state);
+            state = self.mix_columns(state);
+            state = self.add_round_key(
                 state,
                 round * AES128CipherGadget::nb as i32 * 4,
                 (round + 1) * AES128CipherGadget::nb as i32 * 4 - 1,
             );
         }
         let round = AES128CipherGadget::nr as i32;
-        self.subBytes(&mut state);
-        state = self.shiftRows(state);
-        state = self.addRoundKey(
+        self.sub_bytes(&mut state);
+        state = self.shift_rows(state);
+        state = self.add_round_key(
             state,
             round * AES128CipherGadget::nb as i32 * 4,
             (round + 1) * AES128CipherGadget::nb as i32 * 4 - 1,
@@ -177,10 +180,10 @@ impl Gadget<AES128CipherGadget> {
         self.t.ciphertext = ciphertext;
     }
 
-    fn subBytes(&self, state: &mut Vec<Vec<Option<WireType>>>) {
+    fn sub_bytes(&self, state: &mut Vec<Vec<Option<WireType>>>) {
         for i in 0..state.len() {
             for j in 0..state[i].len() {
-                state[i][j] = Some(Self::randomAccess(
+                state[i][j] = Some(Self::random_access(
                     state[i][j].as_ref().unwrap(),
                     &self.generator,
                 ));
@@ -188,15 +191,15 @@ impl Gadget<AES128CipherGadget> {
         }
     }
 
-    fn mixColumns(&self, mut state: Vec<Vec<Option<WireType>>>) -> Vec<Vec<Option<WireType>>> {
+    fn mix_columns(&self, mut state: Vec<Vec<Option<WireType>>>) -> Vec<Vec<Option<WireType>>> {
         let mut a = vec![None; 4];
         for c in 0..4 {
             for i in 0..4 {
                 a[i] = state[i][c].clone();
             }
             state[0][c] = Some(
-                self.galoisMulConst(a[0].as_ref().unwrap(), 2)
-                    .xor_wire_arrayi(&self.galoisMulConst(a[1].as_ref().unwrap(), 3), &None)
+                self.galois_mul_const(a[0].as_ref().unwrap(), 2)
+                    .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 3), &None)
                     .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
                     .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
                     .pack_as_bits(None, None, &None),
@@ -206,8 +209,8 @@ impl Gadget<AES128CipherGadget> {
                 a[0].as_ref()
                     .unwrap()
                     .get_bit_wiresi(8, &None)
-                    .xor_wire_arrayi(&self.galoisMulConst(a[1].as_ref().unwrap(), 2), &None)
-                    .xor_wire_arrayi(&self.galoisMulConst(a[2].as_ref().unwrap(), 3), &None)
+                    .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 2), &None)
+                    .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 3), &None)
                     .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
                     .pack_as_bits(None, None, &None),
             );
@@ -217,75 +220,73 @@ impl Gadget<AES128CipherGadget> {
                     .unwrap()
                     .get_bit_wiresi(8, &None)
                     .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
-                    .xor_wire_arrayi(&self.galoisMulConst(a[2].as_ref().unwrap(), 2), &None)
-                    .xor_wire_arrayi(&self.galoisMulConst(a[3].as_ref().unwrap(), 3), &None)
+                    .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 2), &None)
+                    .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 3), &None)
                     .pack_as_bits(None, None, &None),
             );
             state[3][c] = Some(
-                self.galoisMulConst(a[0].as_ref().unwrap(), 3)
+                self.galois_mul_const(a[0].as_ref().unwrap(), 3)
                     .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
                     .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
-                    .xor_wire_arrayi(&self.galoisMulConst(a[3].as_ref().unwrap(), 2), &None)
+                    .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 2), &None)
                     .pack_as_bits(None, None, &None),
             );
         }
         state
     }
 
-    fn galoisMulConst(&self, wire: &WireType, mut i: i32) -> WireArray {
+    fn galois_mul_const(&self, wire: &WireType, mut i: i32) -> WireArray {
         let mut p = self.generator.get_zero_wire().unwrap();
-        let mut hiBitSet;
+        let mut hi_bit_set;
         let mut wire = wire.clone();
         for counter in 0..8 {
             if (i & 1) != 0 {
-                p = p.xor_bitwise(&wire, 8, &None);
+                p = p.xor_bitwises(&wire, 8, &None);
             }
             i >>= 1;
             if i == 0 {}
-            hiBitSet = wire.get_bit_wiresi(8, &None).get(7).clone();
+            hi_bit_set = wire.get_bit_wiresi(8, &None)[7].clone().unwrap();
             wire = wire.shift_left(8, 1, &None);
-            let tmp = wire.xor_bitwise(
+            let tmp = wire.xor_bitwises(
                 &CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x1b, &None),
                 8,
                 &None,
             );
-            wire = wire
-                .clone()
-                .add(hiBitSet.clone().unwrap().mul(tmp.sub(&wire)));
+            wire = wire.clone().add(hi_bit_set.clone().mul(tmp.sub(&wire)));
         }
         p.get_bit_wiresi(8, &None)
     }
 
-    fn shiftRows(&self, state: Vec<Vec<Option<WireType>>>) -> Vec<Vec<Option<WireType>>> {
-        let mut newState = vec![vec![None; AES128CipherGadget::nb]; 4];
-        newState[0] = state[0][..AES128CipherGadget::nb].to_vec();
+    fn shift_rows(&self, state: Vec<Vec<Option<WireType>>>) -> Vec<Vec<Option<WireType>>> {
+        let mut new_state = vec![vec![None; AES128CipherGadget::nb]; 4];
+        new_state[0] = state[0][..AES128CipherGadget::nb].to_vec();
         for j in 0..AES128CipherGadget::nb {
-            newState[1][j] = state[1][(j + 1) % AES128CipherGadget::nb].clone();
-            newState[2][j] = state[2][(j + 2) % AES128CipherGadget::nb].clone();
-            newState[3][j] = state[3][(j + 3) % AES128CipherGadget::nb].clone();
+            new_state[1][j] = state[1][(j + 1) % AES128CipherGadget::nb].clone();
+            new_state[2][j] = state[2][(j + 2) % AES128CipherGadget::nb].clone();
+            new_state[3][j] = state[3][(j + 3) % AES128CipherGadget::nb].clone();
         }
-        newState
+        new_state
     }
 
-    fn addRoundKey(
+    fn add_round_key(
         &self,
         state: Vec<Vec<Option<WireType>>>,
         from: i32,
         to: i32,
     ) -> Vec<Vec<Option<WireType>>> {
-        let mut newState = vec![vec![None; AES128CipherGadget::nb]; 4];
+        let mut new_state = vec![vec![None; AES128CipherGadget::nb]; 4];
         let mut idx = 0;
         for j in 0..AES128CipherGadget::nb {
             for i in 0..4 {
-                newState[i][j] = Some(state[i][j].as_ref().unwrap().xor_bitwise(
-                    self.t.expandedKey[from as usize + idx].as_ref().unwrap(),
+                new_state[i][j] = Some(state[i][j].as_ref().unwrap().xor_bitwises(
+                    self.t.expanded_key[from as usize + idx].as_ref().unwrap(),
                     8,
                     &None,
                 ));
                 idx += 1;
             }
         }
-        newState
+        new_state
     }
 
     // key is a 16-byte array. Each wire represents a byte.
@@ -305,18 +306,18 @@ impl Gadget<AES128CipherGadget> {
         while i < AES128CipherGadget::nb * (AES128CipherGadget::nr + 1) {
             let mut temp = w[i - 1].clone();
             if i % AES128CipherGadget::nk == 0 {
-                temp = Self::subWord(Self::rotateWord(&temp), generator);
-                temp[0] = Some(temp[0].as_ref().unwrap().xor_bitwise(
+                temp = Self::sub_word(Self::rotate_word(&temp), generator);
+                temp[0] = Some(temp[0].as_ref().unwrap().xor_bitwises(
                     &CircuitGenerator::create_constant_wirei(
                         generator.clone(),
-                        Self::RCon[i / AES128CipherGadget::nk] as i64,
+                        Self::RCON[i / AES128CipherGadget::nk] as i64,
                         &None,
                     ),
                     8,
                     &None,
                 ));
             } else if AES128CipherGadget::nk > 6 && (i % AES128CipherGadget::nk) == 4 {
-                temp = Self::subWord(temp, generator);
+                temp = Self::sub_word(temp, generator);
             }
 
             for v in 0..4 {
@@ -324,7 +325,7 @@ impl Gadget<AES128CipherGadget> {
                     w[i - AES128CipherGadget::nk][v]
                         .as_ref()
                         .unwrap()
-                        .xor_bitwise(temp[v].as_ref().unwrap(), 8, &None),
+                        .xor_bitwises(temp[v].as_ref().unwrap(), 8, &None),
                 );
             }
 
@@ -342,43 +343,42 @@ impl Gadget<AES128CipherGadget> {
         expanded
     }
 
-    fn subWord(
+    fn sub_word(
         mut w: Vec<Option<WireType>>,
         generator: &RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         for i in 0..w.len() {
-            w[i] = Some(Self::randomAccess(w[i].as_ref().unwrap(), generator));
+            w[i] = Some(Self::random_access(w[i].as_ref().unwrap(), generator));
         }
         w
     }
 
-    fn rotateWord(w: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut newW = vec![None; w.len()];
+    fn rotate_word(w: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+        let mut new_w = vec![None; w.len()];
         for j in 0..w.len() {
-            newW[j] = w[(j + 1) % w.len()].clone();
+            new_w[j] = w[(j + 1) % w.len()].clone();
         }
-        newW
+        new_w
     }
 
-    fn randomAccess(wire: &WireType, generator: &RcCell<CircuitGenerator>) -> WireType {
-        // assert!(wire.get_wire_id()!=-1,"========-1===randomAccess={}==",wire.name());
+    fn random_access(wire: &WireType, generator: &RcCell<CircuitGenerator>) -> WireType {
+        // assert!(wire.get_wire_id()!=-1,"========-1===random_access={}==",wire.name());
         let wire = wire.clone();
 
         match SBoxOption::from(atomic_sbox_option.load(Ordering::Relaxed)) {
-            SBoxOption::LINEAR_SCAN => {
-                AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone()).get_output_wires()[0]
-                    .clone()
-                    .unwrap()
-            }
-            SBoxOption::COMPUTE => AESSBoxComputeGadget::new(wire, &None, generator.clone())
+            SBoxOption::LinearScan => AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),
-            SBoxOption::OPTIMIZED1 => AESSBoxGadgetOptimized1::new(wire, &None, generator.clone())
+            SBoxOption::Compute => AESSBoxComputeGadget::new(wire, &None, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),
-            SBoxOption::OPTIMIZED2 => AESSBoxGadgetOptimized2::new(wire, &None, generator.clone())
+            SBoxOption::Optimized1 => AESSBoxGadgetOptimized1::new(wire, &None, generator.clone())
+                .get_output_wires()[0]
+                .clone()
+                .unwrap(),
+            SBoxOption::Optimized2 => AESSBoxGadgetOptimized2::new(wire, &None, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),

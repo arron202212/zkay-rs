@@ -18,11 +18,11 @@ use crate::zkay::typed_wire::TypedWire;
 #[derive(Debug, Clone)]
 pub struct HomomorphicInput {
     pub array: Vec<TypedWire>,
-    pub isCipher: bool,
+    pub is_cipher: bool,
 }
 impl HomomorphicInput {
-    pub fn new(array: Vec<TypedWire>, isCipher: bool) -> Self {
-        Self { array, isCipher }
+    pub fn new(array: Vec<TypedWire>, is_cipher: bool) -> Self {
+        Self { array, is_cipher }
     }
 
     pub fn ofv(cipher: Vec<TypedWire>) -> Self {
@@ -33,29 +33,29 @@ impl HomomorphicInput {
         HomomorphicInput::new(vec![plain], false)
     }
 
-    pub fn isCipher(&self) -> bool {
-        self.isCipher
+    pub fn is_cipher(&self) -> bool {
+        self.is_cipher
     }
 
-    pub fn isPlain(&self) -> bool {
-        !self.isCipher
+    pub fn is_plain(&self) -> bool {
+        !self.is_cipher
     }
 
-    pub fn getCipher(&self) -> &Vec<TypedWire> {
-        assert!(self.isCipher(), "Homomorphic input was not a ciphertext");
+    pub fn get_cipher(&self) -> &Vec<TypedWire> {
+        assert!(self.is_cipher(), "Homomorphic input was not a ciphertext");
         &self.array
     }
 
-    pub fn getPlain(&self) -> TypedWire {
-        assert!(!self.isCipher(), "Homomorphic input was not a plaintext");
+    pub fn get_plain(&self) -> TypedWire {
+        assert!(!self.is_cipher(), "Homomorphic input was not a plaintext");
         self.array[0].clone()
     }
 
-    pub fn getLength(&self) -> i32 {
+    pub fn get_length(&self) -> i32 {
         self.array.len() as _
     }
 
-    pub fn getName(&self) -> &String {
+    pub fn get_name(&self) -> &String {
         &self.array[0].name
     }
 }

@@ -35,47 +35,47 @@ impl SampleMulCircuit {
             true,
             Self,
         );
-        // _self.addCryptoBackend("elgamal", "elgamal", 508);
+        // _self.add_crypto_backend("elgamal", "elgamal", 508);
         _self
     }
 }
 
 impl CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
     fn __zk__foo(&mut self) {
-        self.stepIn("_zk__foo");
-        self.addIn("zk__in0_cipher_val", 4, ZkayType::ZkUint(256));
-        self.addOut("zk__out0_cipher", 4, ZkayType::ZkUint(256));
+        self.step_in("_zk__foo");
+        self.add_in("zk__in0_cipher_val", 4, ZkayType::zk_uint(256));
+        self.add_out("zk__out0_cipher", 4, ZkayType::zk_uint(256));
 
         //[ --- val * 3 ---
         // zk__in0_cipher_val = val
         let o_hom_sshch = self.o_hom_sshch(
             "elgamal",
             "glob_key_Elgamal__owner",
-            &HomomorphicInput::ofv(self.getCipher("zk__in0_cipher_val").clone()),
+            &HomomorphicInput::ofv(self.get_cipher("zk__in0_cipher_val").clone()),
             '*',
             &HomomorphicInput::of(
-                self.cast(&self.val_iz(3, ZkayType::ZkUint(8)), ZkayType::ZkUint(32)),
+                self.cast(&self.val_iz(3, ZkayType::zk_uint(8)), ZkayType::zk_uint(32)),
             ),
         );
         self.decl_svt("tmp0_cipher", &o_hom_sshch);
-        self.checkEq("tmp0_cipher", "zk__out0_cipher");
+        self.check_eq("tmp0_cipher", "zk__out0_cipher");
         //] --- val * 3 ---
 
-        self.stepOut();
+        self.step_out();
     }
 }
 impl CGConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {
     fn build_circuit(&mut self) {
-        self.super_buildCircuit();
-        self.addKi("elgamal", "glob_key_Elgamal__owner", 2);
+        self.super_build_circuit();
+        self.add_ki("elgamal", "glob_key_Elgamal__owner", 2);
 
         self.__zk__foo();
     }
     fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-        self.super_generateSampleInput(evaluator);
+        self.super_generate_sample_input(evaluator);
     }
     fn prep_files(&self, circuit_evaluator: Option<CircuitEvaluator>) {
-        self.super_prepFiles(circuit_evaluator);
+        self.super_prep_files(circuit_evaluator);
     }
 }
 impl ZkayCircuitBaseConfig for CircuitGeneratorExtend<ZkayCircuitBase<SampleMulCircuit>> {}

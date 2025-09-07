@@ -68,104 +68,107 @@ impl TypedWire {
     //  ARITH OPS
 
     pub fn plus(&self, rhs: &TypedWire) -> TypedWire {
-        let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        let result_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " + " + &rhs.name;
         self.handle_overflow(
             &self.wire.clone().addw(&rhs.wire, &Some(op.clone())),
-            &resultType,
+            &result_type,
             false,
             &op,
         )
     }
 
     pub fn minus(&self, rhs: &TypedWire) -> TypedWire {
-        let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        let result_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " - " + &rhs.name;
         let ret = self
             .wire
             .addw(&s_negate(rhs, &self.generator).wire, &Some(op.clone()));
-        self.handle_overflow(&ret, &resultType, false, &op)
+        self.handle_overflow(&ret, &result_type, false, &op)
     }
 
     pub fn times(&self, rhs: &TypedWire) -> TypedWire {
-        let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        let result_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " * " + &rhs.name;
-        if resultType.bitwidth == 256 {
+        if result_type.bitwidth == 256 {
             // Don't care about overflow with uint zkay_type
             return TypedWire::new(
                 self.wire.mulw(&rhs.wire, &Some(op.clone())),
-                resultType,
+                result_type,
                 op.clone(),
                 &vec![],
                 self.generator.clone(),
             );
         }
-        if resultType.bitwidth <= 120 {
+        if result_type.bitwidth <= 120 {
             // Result always fits into 240 < 253 bits
             return self.handle_overflow(
                 &self.wire.mulw(&rhs.wire, &Some(op.clone())),
-                &resultType,
+                &result_type,
                 true,
                 &op,
             );
         }
 
         // Result could overflow 253 bits -> do it in two halves to get correct overflow behavior
-        let LhsLoHi = self
+        let _lhs_lo_hi = self
             .wire
-            .get_bit_wiresi(resultType.bitwidth as u64, &None)
+            .get_bit_wiresi(result_type.bitwidth as u64, &None)
             .pack_bits_into_words(124, &None);
-        let RhsLoHi = rhs
+        let _rhs_lo_hi = rhs
             .wire
-            .get_bit_wiresi(resultType.bitwidth as u64, &None)
+            .get_bit_wiresi(result_type.bitwidth as u64, &None)
             .pack_bits_into_words(124, &None);
 
         // https://www.codeproject.com/Tips/618570/UInt-Multiplication-Squaring, BSD license
-        let mut ansLoHi = LhsLoHi[0]
+        let mut ans_lo_hi = _lhs_lo_hi[0]
             .as_ref()
             .unwrap()
-            .mulw(RhsLoHi[0].as_ref().unwrap(), &Some(op.clone() + "[lo*lo]"))
-            .get_bit_wiresi(resultType.bitwidth as u64, &None)
+            .mulw(
+                _rhs_lo_hi[0].as_ref().unwrap(),
+                &Some(op.clone() + "[lo*lo]"),
+            )
+            .get_bit_wiresi(result_type.bitwidth as u64, &None)
             .pack_bits_into_words(124, &None);
-        let hiLoMul = self
+        let hi_lo_mul = self
             .handle_overflow(
-                &LhsLoHi[1]
-                    .as_ref()
-                    .unwrap()
-                    .mulw(RhsLoHi[0].as_ref().unwrap(), &Some(op.clone() + "[hi*lo]")),
+                &_lhs_lo_hi[1].as_ref().unwrap().mulw(
+                    _rhs_lo_hi[0].as_ref().unwrap(),
+                    &Some(op.clone() + "[hi*lo]"),
+                ),
                 zk124(),
                 true,
                 &(op.clone() + "[hi*lo]"),
             )
             .wire
             .clone();
-        let loHiMul = self
+        let lo_hi_mul = self
             .handle_overflow(
-                &LhsLoHi[0]
-                    .as_ref()
-                    .unwrap()
-                    .mulw(RhsLoHi[1].as_ref().unwrap(), &Some(op.clone() + "[lo*hi]")),
+                &_lhs_lo_hi[0].as_ref().unwrap().mulw(
+                    _rhs_lo_hi[1].as_ref().unwrap(),
+                    &Some(op.clone() + "[lo*hi]"),
+                ),
                 zk124(),
                 true,
                 &(op.clone() + "[lo*hi]"),
             )
             .wire
             .clone();
-        let hiLoPlusloHi = self
+        let hi_lo_pluslo_hi = self
             .handle_overflow(
-                &hiLoMul.addw(&loHiMul, &Some(op.clone() + "[hi*lo + lo*hi]")),
+                &hi_lo_mul.addw(&lo_hi_mul, &Some(op.clone() + "[hi*lo + lo*hi]")),
                 zk124(),
                 false,
                 &(op.clone() + "[hi*lo + lo*hi]"),
             )
             .wire
             .clone();
-        ansLoHi[1] = Some(
+        ans_lo_hi[1] = Some(
             self.handle_overflow(
-                &ansLoHi[1]
-                    .as_ref()
-                    .unwrap()
-                    .addw(&hiLoPlusloHi, &Some(op.clone() + "[anshi + hi*lo + lo*hi]")),
+                &ans_lo_hi[1].as_ref().unwrap().addw(
+                    &hi_lo_pluslo_hi,
+                    &Some(op.clone() + "[anshi + hi*lo + lo*hi]"),
+                ),
                 zk124(),
                 false,
                 &(op.clone() + "[anshi + hi*lo + lo*hi]"),
@@ -174,24 +177,24 @@ impl TypedWire {
             .clone(),
         );
 
-        let ans = WireArray::new(ansLoHi, self.generator.clone().downgrade())
+        let ans = WireArray::new(ans_lo_hi, self.generator.clone().downgrade())
             .get_bits(124, &None)
             .pack_bits_into_words(
-                resultType.bitwidth as usize,
+                result_type.bitwidth as usize,
                 &Some(op.clone() + "[combine hi and lo]"),
             );
         assert!(ans.len() == 1, "Multiplication ans array has wrong length");
         TypedWire::new(
             ans[0].clone().unwrap(),
-            resultType,
+            result_type,
             op,
             &vec![],
             self.generator.clone(),
         )
     }
 
-    pub fn divideBy(&self, rhs: &TypedWire, generator: RcCell<CircuitGenerator>) -> TypedWire {
-        let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+    pub fn divide_by(&self, rhs: &TypedWire, generator: RcCell<CircuitGenerator>) -> TypedWire {
+        let result_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " / " + &rhs.name;
         // let mut generator = CircuitGenerator.get_active_circuit_generator();
         CircuitGenerator::add_one_assertion(
@@ -201,62 +204,62 @@ impl TypedWire {
         );
 
         // Sign handling...
-        let mut resultSign = generator.get_zero_wire().unwrap();
-        let mut lhsWire = self.wire.clone();
-        let mut rhsWire = rhs.wire.clone();
+        let mut result_sign = generator.get_zero_wire().unwrap();
+        let mut lhs_wire = self.wire.clone();
+        let mut rhs_wire = rhs.wire.clone();
 
         if self.zkay_type.signed {
-            let lhsSign = lhsWire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None)
+            let lhs_sign = lhs_wire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None)
                 [self.zkay_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
-            lhsWire = lhsSign.mux(&s_negate(self, &self.generator).wire, &lhsWire);
-            resultSign = resultSign.xor_bitwise(&lhsSign, 1, &None);
+            lhs_wire = lhs_sign.mux(&s_negate(self, &self.generator).wire, &lhs_wire);
+            result_sign = result_sign.xor_bitwises(&lhs_sign, 1, &None);
         }
         if rhs.zkay_type.signed {
-            let rhsSign = rhsWire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None)
+            let rhs_sign = rhs_wire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None)
                 [rhs.zkay_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
-            rhsWire = rhsSign.mux(&s_negate(rhs, &self.generator).wire, &rhsWire);
-            resultSign = resultSign.xor_bitwise(&rhsSign, 1, &None);
+            rhs_wire = rhs_sign.mux(&s_negate(rhs, &self.generator).wire, &rhs_wire);
+            result_sign = result_sign.xor_bitwises(&rhs_sign, 1, &None);
         }
 
         // Need to operate on integers:long , regular div / mod gadget only works for <= 126 bits
-        let lhsLong = LongElement::newa(
-            lhsWire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None),
+        let lhs_long = LongElement::newa(
+            lhs_wire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None),
             self.generator.clone().downgrade(),
         );
-        let rhsLong = LongElement::newa(
-            rhsWire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None),
+        let rhs_long = LongElement::newa(
+            rhs_wire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None),
             self.generator.clone().downgrade(),
         );
         let mut q = LongIntegerFloorDivGadget::new(
-            lhsLong,
-            rhsLong,
+            lhs_long,
+            rhs_long,
             0,
             &Some(op.clone()),
             self.generator.clone(),
         )
-        .getQuotient()
+        .get_quotient()
         .clone();
-        let resAbs = q
-            .get_bitsi(resultType.bitwidth)
-            .pack_bits_into_words(resultType.bitwidth as usize, &None)[0]
+        let res_abs = q
+            .get_bitsi(result_type.bitwidth)
+            .pack_bits_into_words(result_type.bitwidth as usize, &None)[0]
             .clone()
             .unwrap();
 
-        let resPos = TypedWire::new(
-            resAbs,
-            resultType.clone(),
+        let res_pos = TypedWire::new(
+            res_abs,
+            result_type.clone(),
             op.clone(),
             &vec![],
             self.generator.clone(),
         );
-        let resNeg = s_negate(&resPos, &self.generator);
+        let res_neg = s_negate(&res_pos, &self.generator);
         TypedWire::new(
-            resultSign.mux(&resNeg.wire, &resPos.wire),
-            resultType,
+            result_sign.mux(&res_neg.wire, &res_pos.wire),
+            result_type,
             op,
             &vec![],
             self.generator.clone(),
@@ -264,7 +267,7 @@ impl TypedWire {
     }
 
     pub fn modulo(&self, rhs: &TypedWire, generator: RcCell<CircuitGenerator>) -> TypedWire {
-        let resultType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        let result_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " % " + &rhs.name;
         // let mut generator = CircuitGenerator.get_active_circuit_generator();
         CircuitGenerator::add_one_assertion(
@@ -274,61 +277,61 @@ impl TypedWire {
         );
 
         // Sign handling...
-        let mut resultSign = generator.get_zero_wire().unwrap();
-        let mut lhsWire = self.wire.clone();
-        let mut rhsWire = rhs.wire.clone();
+        let mut result_sign = generator.get_zero_wire().unwrap();
+        let mut lhs_wire = self.wire.clone();
+        let mut rhs_wire = rhs.wire.clone();
 
         if self.zkay_type.signed {
-            let lhsSign = lhsWire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None)
+            let lhs_sign = lhs_wire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None)
                 [self.zkay_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
-            lhsWire = lhsSign.mux(&s_negate(self, &self.generator).wire, &lhsWire);
-            resultSign = lhsSign;
+            lhs_wire = lhs_sign.mux(&s_negate(self, &self.generator).wire, &lhs_wire);
+            result_sign = lhs_sign;
         }
         if rhs.zkay_type.signed {
-            let rhsSign = rhsWire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None)
+            let rhs_sign = rhs_wire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None)
                 [rhs.zkay_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
-            rhsWire = rhsSign.mux(&s_negate(rhs, &self.generator).wire, &rhsWire);
+            rhs_wire = rhs_sign.mux(&s_negate(rhs, &self.generator).wire, &rhs_wire);
         }
 
         // Need to operate on long integers, regular div / mod gadget only works for <= 126 bits
-        let lhsLong = LongElement::newa(
-            lhsWire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None),
+        let lhs_long = LongElement::newa(
+            lhs_wire.get_bit_wiresi(self.zkay_type.bitwidth as u64, &None),
             self.generator.clone().downgrade(),
         );
-        let rhsLong = LongElement::newa(
-            rhsWire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None),
+        let rhs_long = LongElement::newa(
+            rhs_wire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64, &None),
             self.generator.clone().downgrade(),
         );
         let mut r = LongIntegerModGadget::new(
-            lhsLong,
-            rhsLong,
+            lhs_long,
+            rhs_long,
             0,
             true,
             &Some(op.clone()),
             self.generator.clone(),
         )
-        .getRemainder()
+        .get_remainder()
         .clone();
-        let resAbs = r
-            .get_bitsi(resultType.bitwidth)
-            .pack_bits_into_words(resultType.bitwidth as usize, &None)[0]
+        let res_abs = r
+            .get_bitsi(result_type.bitwidth)
+            .pack_bits_into_words(result_type.bitwidth as usize, &None)[0]
             .clone();
 
-        let resPos = TypedWire::new(
-            resAbs.unwrap(),
-            resultType.clone(),
+        let res_pos = TypedWire::new(
+            res_abs.unwrap(),
+            result_type.clone(),
             op.clone(),
             &vec![],
             self.generator.clone(),
         );
-        let resNeg = s_negate(&resPos, &self.generator);
+        let res_neg = s_negate(&res_pos, &self.generator);
         TypedWire::new(
-            resultSign.mux(&resNeg.wire, &resPos.wire),
-            resultType,
+            result_sign.mux(&res_neg.wire, &res_pos.wire),
+            result_type,
             op,
             &vec![],
             self.generator.clone(),
@@ -337,70 +340,70 @@ impl TypedWire {
 
     //  BIT OPS
 
-    pub fn bitOr(&self, rhs: &TypedWire) -> TypedWire {
-        let resultType = ZkayType::checkTypeb(&self.zkay_type, &rhs.zkay_type, false);
+    pub fn bit_or(&self, rhs: &TypedWire) -> TypedWire {
+        let result_type = ZkayType::check_typeb(&self.zkay_type, &rhs.zkay_type, false);
         let op = self.name.clone() + " | " + &rhs.name;
         let res = self
             .wire
-            .or_bitwises(&rhs.wire, resultType.bitwidth as u64, &Some(op.clone()));
-        TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
+            .or_bitwises(&rhs.wire, result_type.bitwidth as u64, &Some(op.clone()));
+        TypedWire::new(res, result_type, op, &vec![], self.generator.clone())
     }
 
-    pub fn bitAnd(&self, rhs: &TypedWire) -> TypedWire {
-        let resultType = ZkayType::checkTypeb(&self.zkay_type, &rhs.zkay_type, false);
+    pub fn bit_and(&self, rhs: &TypedWire) -> TypedWire {
+        let result_type = ZkayType::check_typeb(&self.zkay_type, &rhs.zkay_type, false);
         let op = self.name.clone() + " & " + &rhs.name;
         let res = self
             .wire
-            .and_bitwise(&rhs.wire, resultType.bitwidth as u64, &Some(op.clone()));
-        TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
+            .and_bitwises(&rhs.wire, result_type.bitwidth as u64, &Some(op.clone()));
+        TypedWire::new(res, result_type, op, &vec![], self.generator.clone())
     }
 
-    pub fn bitXor(&self, rhs: &TypedWire) -> TypedWire {
-        let resultType = ZkayType::checkTypeb(&self.zkay_type, &rhs.zkay_type, false);
+    pub fn bit_xor(&self, rhs: &TypedWire) -> TypedWire {
+        let result_type = ZkayType::check_typeb(&self.zkay_type, &rhs.zkay_type, false);
         let op = self.name.clone() + " ^ " + &rhs.name;
         let res = self
             .wire
-            .xor_bitwise(&rhs.wire, resultType.bitwidth as u64, &Some(op.clone()));
-        TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
+            .xor_bitwises(&rhs.wire, result_type.bitwidth as u64, &Some(op.clone()));
+        TypedWire::new(res, result_type, op, &vec![], self.generator.clone())
     }
 
     //  SHIFT OPS
 
-    pub fn shift_leftBy(&self, amount: i32) -> TypedWire {
-        let resultType = ZkayType::checkTypeb(&self.zkay_type, &self.zkay_type, false);
+    pub fn shift_left_by(&self, amount: i32) -> TypedWire {
+        let result_type = ZkayType::check_typeb(&self.zkay_type, &self.zkay_type, false);
         let op = self.name.clone() + " << " + &amount.to_string();
         let res = self.wire.shift_left(
-            resultType.bitwidth as usize,
+            result_type.bitwidth as usize,
             amount as usize,
             &Some(op.clone()),
         );
-        TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
+        TypedWire::new(res, result_type, op, &vec![], self.generator.clone())
     }
 
-    pub fn shift_rightBy(&self, amount: i32) -> TypedWire {
-        let resultType = ZkayType::checkTypeb(&self.zkay_type, &self.zkay_type, false);
+    pub fn shift_right_by(&self, amount: i32) -> TypedWire {
+        let result_type = ZkayType::check_typeb(&self.zkay_type, &self.zkay_type, false);
         let res;
         let op = self.name.clone() + " >> " + &amount.to_string();
-        if resultType.signed {
+        if result_type.signed {
             res = self.wire.shift_arith_right(
-                resultType.bitwidth as usize,
-                amount.min(resultType.bitwidth) as usize,
+                result_type.bitwidth as usize,
+                amount.min(result_type.bitwidth) as usize,
                 &Some(op.clone()),
             );
         } else {
             res = self.wire.shift_right(
-                resultType.bitwidth as usize,
+                result_type.bitwidth as usize,
                 amount as usize,
                 &Some(op.clone()),
             );
         }
-        TypedWire::new(res, resultType, op, &vec![], self.generator.clone())
+        TypedWire::new(res, result_type, op, &vec![], self.generator.clone())
     }
 
     //  EQ OPS
 
     pub fn is_equal_tos(&self, rhs: &TypedWire) -> TypedWire {
-        ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " == " + &rhs.name;
         TypedWire::new(
             self.wire.is_equal_tos(&rhs.wire, &Some(op.clone())),
@@ -411,8 +414,8 @@ impl TypedWire {
         )
     }
 
-    pub fn isNotEqualTo(&self, rhs: &TypedWire) -> TypedWire {
-        ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+    pub fn is_not_equal_to(&self, rhs: &TypedWire) -> TypedWire {
+        ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " != " + &rhs.name;
         TypedWire::new(
             self.wire
@@ -428,30 +431,33 @@ impl TypedWire {
     //  INEQ OPS
 
     pub fn is_less_thans(&self, rhs: &TypedWire) -> TypedWire {
-        let commonType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        let common_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " < " + &rhs.name;
-        if commonType.signed {
-            let lhsSign = self.wire.get_bit_wiresi(commonType.bitwidth as u64, &None)
-                [commonType.bitwidth as usize - 1]
+        if common_type.signed {
+            let lhs_sign = self.wire.get_bit_wiresi(common_type.bitwidth as u64, &None)
+                [common_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
-            let rhsSign = rhs.wire.get_bit_wiresi(commonType.bitwidth as u64, &None)
-                [commonType.bitwidth as usize - 1]
+            let rhs_sign = rhs.wire.get_bit_wiresi(common_type.bitwidth as u64, &None)
+                [common_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
 
-            let alwaysLt = lhsSign.is_greater_thans(&rhsSign, 1, &None);
-            let sameSign = lhsSign.is_equal_tos(&rhsSign, &None);
-            let lhsLess = self
+            let always_lt = lhs_sign.is_greater_thans(&rhs_sign, 1, &None);
+            let same_sign = lhs_sign.is_equal_tos(&rhs_sign, &None);
+            let lhs_less = self
                 .wire
-                .is_less_thans(&rhs.wire, commonType.bitwidth, &None);
-            let isLt = alwaysLt.orw(&sameSign.and(&lhsLess, &None), &Some(op.clone()));
-            TypedWire::new(isLt, zkbool().clone(), op, &vec![], self.generator.clone())
+                .is_less_thans(&rhs.wire, common_type.bitwidth, &None);
+            let is_lt = always_lt.orw(&same_sign.and(&lhs_less, &None), &Some(op.clone()));
+            TypedWire::new(is_lt, zkbool().clone(), op, &vec![], self.generator.clone())
         } else {
             // Note: breaks if value > 253 bit
             TypedWire::new(
-                self.wire
-                    .is_less_thans(&rhs.wire, commonType.bitwidth.min(253), &Some(op.clone())),
+                self.wire.is_less_thans(
+                    &rhs.wire,
+                    common_type.bitwidth.min(253),
+                    &Some(op.clone()),
+                ),
                 zkbool().clone(),
                 op,
                 &vec![],
@@ -461,31 +467,31 @@ impl TypedWire {
     }
 
     pub fn is_less_than_or_equals(&self, rhs: &TypedWire) -> TypedWire {
-        let commonType = ZkayType::checkType(&self.zkay_type, &rhs.zkay_type);
+        let common_type = ZkayType::check_type(&self.zkay_type, &rhs.zkay_type);
         let op = self.name.clone() + " <= " + &rhs.name;
-        if commonType.signed {
-            let lhsSign = self.wire.get_bit_wiresi(commonType.bitwidth as u64, &None)
-                [commonType.bitwidth as usize - 1]
+        if common_type.signed {
+            let lhs_sign = self.wire.get_bit_wiresi(common_type.bitwidth as u64, &None)
+                [common_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
-            let rhsSign = rhs.wire.get_bit_wiresi(commonType.bitwidth as u64, &None)
-                [commonType.bitwidth as usize - 1]
+            let rhs_sign = rhs.wire.get_bit_wiresi(common_type.bitwidth as u64, &None)
+                [common_type.bitwidth as usize - 1]
                 .clone()
                 .unwrap();
 
-            let alwaysLt = lhsSign.is_greater_thans(&rhsSign, 1, &None);
-            let sameSign = lhsSign.is_equal_tos(&rhsSign, &None);
-            let lhsLessEq = self
-                .wire
-                .is_less_than_or_equals(&rhs.wire, commonType.bitwidth, &None);
-            let isLt = alwaysLt.orw(&sameSign.and(&lhsLessEq, &None), &Some(op.clone()));
-            TypedWire::new(isLt, zkbool().clone(), op, &vec![], self.generator.clone())
+            let always_lt = lhs_sign.is_greater_thans(&rhs_sign, 1, &None);
+            let same_sign = lhs_sign.is_equal_tos(&rhs_sign, &None);
+            let lhs_less_eq =
+                self.wire
+                    .is_less_than_or_equals(&rhs.wire, common_type.bitwidth, &None);
+            let is_lt = always_lt.orw(&same_sign.and(&lhs_less_eq, &None), &Some(op.clone()));
+            TypedWire::new(is_lt, zkbool().clone(), op, &vec![], self.generator.clone())
         } else {
             // Note: breaks if value > 253 bit
             TypedWire::new(
                 self.wire.is_less_than_or_equals(
                     &rhs.wire,
-                    commonType.bitwidth.min(253),
+                    common_type.bitwidth.min(253),
                     &Some(op.clone()),
                 ),
                 zkbool().clone(),
@@ -507,8 +513,8 @@ impl TypedWire {
     //  BOOL OPS
 
     pub fn and(&self, rhs: &TypedWire) -> TypedWire {
-        ZkayType::checkType(zkbool(), &self.zkay_type);
-        ZkayType::checkType(zkbool(), &rhs.zkay_type);
+        ZkayType::check_type(zkbool(), &self.zkay_type);
+        ZkayType::check_type(zkbool(), &rhs.zkay_type);
         let op = self.name.clone() + " && " + &rhs.name;
         TypedWire::new(
             self.wire.and(&rhs.wire, &Some(op.clone())),
@@ -520,8 +526,8 @@ impl TypedWire {
     }
 
     pub fn or(&self, rhs: &TypedWire) -> TypedWire {
-        ZkayType::checkType(zkbool(), &self.zkay_type);
-        ZkayType::checkType(zkbool(), &rhs.zkay_type);
+        ZkayType::check_type(zkbool(), &self.zkay_type);
+        ZkayType::check_type(zkbool(), &rhs.zkay_type);
         let op = self.name.clone() + " || " + &rhs.name;
         TypedWire::new(
             self.wire.orw(&rhs.wire, &Some(op.clone())),
@@ -535,31 +541,31 @@ impl TypedWire {
     fn handle_overflow(
         &self,
         w: &WireType,
-        targetType: &ZkayType,
+        target_type: &ZkayType,
         was_mul: bool,
         name: &String,
     ) -> TypedWire {
         let mut w = w.clone();
-        if targetType.bitwidth < 256 {
+        if target_type.bitwidth < 256 {
             // Downcast or result with overflow modulo < field prime -> modulo/mask lower bits
             let from_bits = std::cmp::min(
                 256,
                 if was_mul {
-                    targetType.bitwidth * 2
+                    target_type.bitwidth * 2
                 } else {
-                    targetType.bitwidth + 1
+                    target_type.bitwidth + 1
                 },
             );
             w = w.trim_bits(
                 from_bits,
-                targetType.bitwidth,
-                &Some(format!("% 2^{}", targetType.bitwidth)),
+                target_type.bitwidth,
+                &Some(format!("% 2^{}", target_type.bitwidth)),
             );
         }
         TypedWire::new(
             w,
-            targetType.clone(),
-            format!("{}({})", targetType, name),
+            target_type.clone(),
+            format!("{}({})", target_type, name),
             &vec![],
             self.generator.clone(),
         )

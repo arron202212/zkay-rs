@@ -54,14 +54,14 @@ mod test {
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                let keyV = [
+                let key_v = [
                     BigInteger::from(0x68e90956u32),
                     BigInteger::from(0x29e3585fu32),
                     BigInteger::from(0x98ecec40u32),
                     BigInteger::from(0x2f9822c5u32),
                 ];
 
-                let msgV = [
+                let msg_v = [
                     BigInteger::from(0x262823b8u32),
                     BigInteger::from(0x5e405efdu32),
                     BigInteger::from(0xa901a369u32),
@@ -69,10 +69,10 @@ mod test {
                 ];
 
                 for i in 0..self.t.plaintext.len() {
-                    evaluator.set_wire_value(self.t.plaintext[i].as_ref().unwrap(), &msgV[i]);
+                    evaluator.set_wire_value(self.t.plaintext[i].as_ref().unwrap(), &msg_v[i]);
                 }
                 for i in 0..self.t.key.len() {
-                    evaluator.set_wire_value(self.t.key[i].as_ref().unwrap(), &keyV[i]);
+                    evaluator.set_wire_value(self.t.key[i].as_ref().unwrap(), &key_v[i]);
                 }
             }
         };
@@ -85,9 +85,9 @@ mod test {
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
-        let cipherText = generator.get_out_wires();
+        let cipher_text = generator.get_out_wires();
 
-        let expeectedCiphertext = [
+        let expeected_cipher_text = [
             BigInteger::from(0x4d8d60d5),
             BigInteger::from(0x7b34bfa2),
             BigInteger::from(0x2f77f8ab),
@@ -96,8 +96,8 @@ mod test {
 
         for i in 0..4 {
             assert_eq!(
-                evaluator.get_wire_value(cipherText[i].as_ref().unwrap()),
-                expeectedCiphertext[i],
+                evaluator.get_wire_value(cipher_text[i].as_ref().unwrap()),
+                expeected_cipher_text[i],
             );
         }
     }

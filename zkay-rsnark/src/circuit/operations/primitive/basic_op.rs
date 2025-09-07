@@ -106,7 +106,7 @@ pub trait BasicOp: Instruction + BasicOpInOut + Debug + crate::circuit::OpCodeCo
             //     w.as_ref().unwrap().get_wire_id()
             // );
             // if assignment[w.as_ref().unwrap().get_wire_id() as usize].is_none() {
-            //println!("Error - The inWire {w:? } has not been assigned {self:?}\n");
+            //println!("Error - The in_wire {w:? } has not been assigned {self:?}\n");
             assert!(
                 assignment[w.as_ref().unwrap().get_wire_id() as usize].is_some(),
                 "Error During Evaluation in check_inputs wire id={},{},{}",

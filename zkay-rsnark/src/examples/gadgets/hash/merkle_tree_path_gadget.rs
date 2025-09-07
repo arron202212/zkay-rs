@@ -32,43 +32,38 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::hash::subset_sum_hash_gadget::SubsetSumHashGadget,
     util::{
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::config::config::Configs;
-// use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
-// use crate::circuit::structure::wire_array;
-use crate::examples::gadgets::hash::subset_sum_hash_gadget::SubsetSumHashGadget;
+
 use rccell::RcCell;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
-
 //  * A Merkle tree authentication gadget using the subsetsum hash function
 
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct MerkleTreePathGadget {
-    pub treeHeight: i32,
-    pub directionSelectorWire: WireType,
-    pub directionSelectorBits: Vec<Option<WireType>>,
-    pub leafWires: Vec<Option<WireType>>,
-    pub intermediateHashWires: Vec<Option<WireType>>,
-    pub outRoot: Vec<Option<WireType>>,
-
-    pub leafWordBitWidth: i32,
+    pub tree_height: i32,
+    pub direction_selector_wire: WireType,
+    pub direction_selector_bits: Vec<Option<WireType>>,
+    pub leaf_wires: Vec<Option<WireType>>,
+    pub intermediate_hash_wires: Vec<Option<WireType>>,
+    pub out_root: Vec<Option<WireType>>,
+    pub leaf_word_bit_width: i32,
 }
 impl MerkleTreePathGadget {
     pub fn new(
-        directionSelectorWire: WireType,
-        leafWires: Vec<Option<WireType>>,
-        intermediateHashWires: Vec<Option<WireType>>,
-        leafWordBitWidth: i32,
-        treeHeight: i32,
+        direction_selector_wire: WireType,
+        leaf_wires: Vec<Option<WireType>>,
+        intermediate_hash_wires: Vec<Option<WireType>>,
+        leaf_word_bit_width: i32,
+        tree_height: i32,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
@@ -76,13 +71,13 @@ impl MerkleTreePathGadget {
             generator,
             desc,
             Self {
-                directionSelectorWire,
-                treeHeight,
-                leafWires,
-                intermediateHashWires,
-                leafWordBitWidth,
-                directionSelectorBits: vec![],
-                outRoot: vec![],
+                direction_selector_wire,
+                tree_height,
+                leaf_wires,
+                intermediate_hash_wires,
+                leaf_word_bit_width,
+                direction_selector_bits: vec![],
+                out_root: vec![],
             },
         );
 
@@ -91,68 +86,71 @@ impl MerkleTreePathGadget {
     }
 }
 impl Gadget<MerkleTreePathGadget> {
-    const digestWidth: i32 = SubsetSumHashGadget::DIMENSION;
+    const digest_width: i32 = SubsetSumHashGadget::DIMENSION;
     fn build_circuit(&mut self) {
-        let digestWidth = Self::digestWidth as usize;
-        let mut directionSelectorBits = self
+        let digest_width = Self::digest_width as usize;
+        let mut direction_selector_bits = self
             .t
-            .directionSelectorWire
-            .get_bit_wiresi(self.t.treeHeight as u64, &None)
+            .direction_selector_wire
+            .get_bit_wiresi(self.t.tree_height as u64, &None)
             .as_array()
             .clone();
 
         // Apply CRH to leaf data
-        let leafBits = WireArray::new(self.t.leafWires.clone(), self.generator.clone().downgrade())
-            .get_bits(self.t.leafWordBitWidth as usize, &None)
-            .as_array()
-            .clone();
-        let mut subsetSumGadget =
-            SubsetSumHashGadget::new(leafBits.clone(), false, &None, self.generator.clone());
-        let mut currentHash = subsetSumGadget.get_output_wires();
+        let leaf_bits = WireArray::new(
+            self.t.leaf_wires.clone(),
+            self.generator.clone().downgrade(),
+        )
+        .get_bits(self.t.leaf_word_bit_width as usize, &None)
+        .as_array()
+        .clone();
+        let mut subset_sum_gadget =
+            SubsetSumHashGadget::new(leaf_bits.clone(), false, &None, self.generator.clone());
+        let mut current_hash = subset_sum_gadget.get_output_wires();
 
         // Apply CRH across tree path guided by the direction bits
-        for i in 0..self.t.treeHeight as usize {
-            let mut inHash = vec![None; 2 * digestWidth as usize];
-            for j in 0..digestWidth {
-                let temp = currentHash[j].clone().unwrap().sub(
-                    self.t.intermediateHashWires[i * digestWidth + j]
+        for i in 0..self.t.tree_height as usize {
+            let mut in_hash = vec![None; 2 * digest_width as usize];
+            for j in 0..digest_width {
+                let temp = current_hash[j].clone().unwrap().sub(
+                    self.t.intermediate_hash_wires[i * digest_width + j]
                         .as_ref()
                         .unwrap(),
                 );
-                let temp2 = directionSelectorBits[i].clone().unwrap().mul(temp);
-                inHash[j] = Some(
-                    self.t.intermediateHashWires[i * digestWidth + j]
+                let temp2 = direction_selector_bits[i].clone().unwrap().mul(temp);
+                in_hash[j] = Some(
+                    self.t.intermediate_hash_wires[i * digest_width + j]
                         .clone()
                         .unwrap()
                         .add(temp2),
                 );
             }
-            for j in digestWidth..2 * digestWidth {
-                let temp = currentHash[j - digestWidth].clone().unwrap().add(
-                    self.t.intermediateHashWires[i * digestWidth + j - digestWidth]
+            for j in digest_width..2 * digest_width {
+                let temp = current_hash[j - digest_width].clone().unwrap().add(
+                    self.t.intermediate_hash_wires[i * digest_width + j - digest_width]
                         .as_ref()
                         .unwrap(),
                 );
-                inHash[j] = Some(temp.sub(inHash[j - digestWidth].as_ref().unwrap()));
+                in_hash[j] = Some(temp.sub(in_hash[j - digest_width].as_ref().unwrap()));
             }
 
-            let nextInputBits = WireArray::new(inHash, self.generator.clone().downgrade())
+            let next_input_bits = WireArray::new(in_hash, self.generator.clone().downgrade())
                 .get_bits(Configs.log2_field_prime as usize, &None)
                 .as_array()
                 .clone();
-            subsetSumGadget = SubsetSumHashGadget::new(
-                nextInputBits.clone(),
+            subset_sum_gadget = SubsetSumHashGadget::new(
+                next_input_bits.clone(),
                 false,
                 &None,
                 self.generator.clone(),
             );
-            currentHash = subsetSumGadget.get_output_wires();
+            current_hash = subset_sum_gadget.get_output_wires();
         }
-        self.t.outRoot = currentHash.clone();
+        self.t.out_root = current_hash.clone();
     }
 }
 impl GadgetConfig for Gadget<MerkleTreePathGadget> {
     fn get_output_wires(&self) -> &Vec<Option<WireType>> {
-        &self.t.outRoot
+        &self.t.out_root
     }
 }

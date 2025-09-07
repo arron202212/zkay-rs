@@ -29,10 +29,10 @@ impl BufferedBlockCipher {
     pub fn new() -> Self {
         Self
     }
-    pub fn getOutputSize(&self, len: usize) -> usize {
+    pub fn get_output_size(&self, len: usize) -> usize {
         len
     }
-    pub fn processBytes(
+    pub fn process_bytes(
         &self,
         ins: &Vec<u8>,
         inOff: usize,
@@ -42,7 +42,7 @@ impl BufferedBlockCipher {
     ) -> i32 {
         0
     }
-    pub fn doFinal(&self, out: &Vec<u8>, outOff: i32) -> i32 {
+    pub fn do_final(&self, out: &Vec<u8>, outOff: i32) -> i32 {
         outOff
     }
 }
@@ -62,7 +62,10 @@ impl KeyParameter {
 pub struct ChaskeyLtsCbc;
 impl ChaskeyLtsCbc {
     fn parse(val: &String, len: i32) -> Vec<u8> {
-        ZkayUtil::unsignedBigintToBytesi(BigInteger::parse_bytes(val.as_bytes(), 16).unwrap(), len)
+        ZkayUtil::unsigned_bigint_to_bytesi(
+            BigInteger::parse_bytes(val.as_bytes(), 16).unwrap(),
+            len,
+        )
     }
 
     const blocksize: i32 = 16;
@@ -80,13 +83,13 @@ impl ChaskeyLtsCbc {
 
         // Encrypt / Decrypt
         assert!(
-            cipher.getOutputSize(input.len()) == input.len(),
+            cipher.get_output_size(input.len()) == input.len(),
             "Wrong size"
         );
-        let outbuf = vec![0; cipher.getOutputSize(input.len())];
-        let out_size = cipher.processBytes(&input, 0, input.len(), &outbuf, 0);
+        let outbuf = vec![0; cipher.get_output_size(input.len())];
+        let out_size = cipher.process_bytes(&input, 0, input.len(), &outbuf, 0);
         assert!(
-            cipher.doFinal(&outbuf, out_size) == 0,
+            cipher.do_final(&outbuf, out_size) == 0,
             "Input not aligned to block size"
         );
 
@@ -113,5 +116,5 @@ pub fn main(args: Vec<String>) {
     let output = ChaskeyLtsCbc::crypt(enc, &key, &iv, &input);
 
     // Output result
-    //println!(unsignedBytesToBigInt(output).toString(16));
+    //println!(unsigned_bytes_to_big_int(output).toString(16));
 }

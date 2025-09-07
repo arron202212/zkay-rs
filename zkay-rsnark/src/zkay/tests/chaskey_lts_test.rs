@@ -54,21 +54,21 @@ mod test {
     ];
 
     #[test]
-    pub fn byteBigintConversionTest() {
-        let mut b = ZkayUtil::unsignedBytesToBigInt(&PLAIN);
-        let mut o = ZkayUtil::unsignedBigintToBytesi(b, PLAIN.len() as i32);
+    pub fn byte_bigint_conversion_test() {
+        let mut b = ZkayUtil::unsigned_bytes_to_big_int(&PLAIN);
+        let mut o = ZkayUtil::unsigned_bigint_to_bytesi(b, PLAIN.len() as i32);
         assert_eq!(o, PLAIN, "Array bigint conversion does not preserve values");
 
-        b = ZkayUtil::unsignedBytesToBigInt(&CIPHER);
-        o = ZkayUtil::unsignedBigintToBytesi(b, CIPHER.len() as i32);
+        b = ZkayUtil::unsigned_bytes_to_big_int(&CIPHER);
+        o = ZkayUtil::unsigned_bigint_to_bytesi(b, CIPHER.len() as i32);
         assert_eq!(
             o, CIPHER,
             "Array bigint conversion does not preserve values"
         );
 
         let zero_arr = vec![0; 16];
-        b = ZkayUtil::unsignedBytesToBigInt(&zero_arr);
-        o = ZkayUtil::unsignedBigintToBytesi(b, zero_arr.len() as i32);
+        b = ZkayUtil::unsigned_bytes_to_big_int(&zero_arr);
+        o = ZkayUtil::unsigned_bigint_to_bytesi(b, zero_arr.len() as i32);
         assert_eq!(
             o, zero_arr,
             "Array bigint conversion does not preserve values"
@@ -76,13 +76,13 @@ mod test {
     }
 
     #[test]
-    pub fn chaskeyLtsTest() {
+    pub fn chaskey_lts_test() {
         let crypto = ChaskeyLTSEngine::new(true, CipherParameters::new(KEY.to_vec()));
 
         // Test encrypt
         // crypto.init(true, KeyParameter::new(&KEY));
         let out = vec![0; 16];
-        crypto.processBlock(&PLAIN.to_vec(), 0, &out, 0);
+        crypto.process_block(&PLAIN.to_vec(), 0, &out, 0);
         assert_eq!(CIPHER.to_vec(), out, "Wrong encryption output");
 
         // crypto.reset();
@@ -90,12 +90,12 @@ mod test {
         // Test decrypt
         // crypto.init(false, KeyParameter::new(KEY));
         let crypto = ChaskeyLTSEngine::new(false, CipherParameters::new(KEY.to_vec()));
-        crypto.processBlock(&out, 0, &out, 0);
+        crypto.process_block(&out, 0, &out, 0);
         assert_eq!(PLAIN.to_vec(), out, "Wrong decryption output");
     }
 
     #[test]
-    pub fn cbcChaskeyOutputSameAsGadgetTest() {
+    pub fn cbc_chaskey_output_same_as_gadget_test() {
         // Define inputs
         let key = BigInteger::parse_bytes(b"b2e21df10a222a69ee1e6a2d60465f4c", 16).unwrap();
         let iv = BigInteger::parse_bytes(b"f2c605c86352cea9fcaf88f12eba6371", 16).unwrap();
@@ -118,7 +118,7 @@ mod test {
             fn build_circuit(&mut self) {
                 let plainwire = TypedWire::new(
                     CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain, &None),
-                    ZkayType::ZkUint(256),
+                    ZkayType::zk_uint(256),
                     "plaintext".to_owned(),
                     &vec![],
                     self.cg(),
@@ -132,7 +132,7 @@ mod test {
                         plainwire,
                         keywire,
                         ivwire,
-                        CipherType::CHASKEY,
+                        CipherType::Chaskey,
                         &None,
                         self.cg(),
                     )
@@ -160,12 +160,12 @@ mod test {
             .collect();
 
         // Compute encryption via CbcChaskey implementation
-        let iv_bytes = ZkayUtil::unsignedBigintToBytesi(iv, 16);
+        let iv_bytes = ZkayUtil::unsigned_bigint_to_bytesi(iv, 16);
         let result = ChaskeyLtsCbc::crypt(
             true,
-            &ZkayUtil::unsignedBigintToBytesi(key, 16),
+            &ZkayUtil::unsigned_bigint_to_bytesi(key, 16),
             &iv_bytes,
-            &ZkayUtil::unsignedBigintToBytesi(plain, 32),
+            &ZkayUtil::unsigned_bigint_to_bytesi(plain, 32),
         );
 
         // Convert output to format produced by gadget (iv included, packed 248bit values in reverse order)
@@ -177,12 +177,12 @@ mod test {
         let first_chunk_size = iv_cipher.len() % chunk_size;
         let mut bigints = vec![];
         if first_chunk_size != 0 {
-            bigints.push(ZkayUtil::unsignedBytesToBigInt(
+            bigints.push(ZkayUtil::unsigned_bytes_to_big_int(
                 &iv_cipher[0..first_chunk_size],
             ));
         }
         for i in first_chunk_size..iv_cipher.len() - first_chunk_size {
-            bigints.push(ZkayUtil::unsignedBytesToBigInt(
+            bigints.push(ZkayUtil::unsigned_bytes_to_big_int(
                 &iv_cipher[i..i + chunk_size],
             ));
         }

@@ -32,22 +32,17 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget,
     util::{
         run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::config::config::Configs;
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-//     get_active_circuit_generator,
-// };
-// use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget;
+
 use zkay_derive::ImplStructNameConfig;
-// A sample usage of the AES128 block cipher gadget
+
+// A sample usage of the Aes128 block cipher gadget
 crate::impl_struct_name_for!(CircuitGeneratorExtend<AES128CipherCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AES128CipherCircuitGenerator {
@@ -74,8 +69,8 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
         self.t.inputs = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None); // in bytes
         self.t.key = CircuitGenerator::create_input_wire_array(self.cg(), 16, &None); // in bytes
 
-        let expandedKey = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
-        let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expandedKey, &None, self.cg());
+        let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
+        let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expanded_key, &None, self.cg());
         self.t.outputs = gadget.get_output_wires().clone();
         for o in &self.t.outputs {
             CircuitGenerator::make_output(self.cg(), o.as_ref().unwrap(), &None);
@@ -84,26 +79,28 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
     }
 
     fn generate_sample_input(&self, circuit_evaluator: &mut CircuitEvaluator) {
-        let keyV = BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-        let msgV = BigInteger::parse_bytes(b"ae2d8a571e03ac9c9eb76fac45af8e51", 16).unwrap();
+        let key_v = BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
+        let msg_v = BigInteger::parse_bytes(b"ae2d8a571e03ac9c9eb76fac45af8e51", 16).unwrap();
 
         // expected output:0xf5d3d58503b9699de785895a96fdbaaf
 
-        let mut keyArray = keyV.to_bytes_be().1.clone();
-        let mut msgArray = msgV.to_bytes_be().1.clone();
-        msgArray = msgArray[msgArray.len() - 16..].to_vec();
-        keyArray = keyArray[keyArray.len() - 16..].to_vec();
+        let mut key_array = key_v.to_bytes_be().1.clone();
+        let mut msg_array = msg_v.to_bytes_be().1.clone();
+        msg_array = msg_array[msg_array.len() - 16..].to_vec();
+        key_array = key_array[key_array.len() - 16..].to_vec();
 
-        for i in 0..msgArray.len() {
+        for i in 0..msg_array.len() {
             circuit_evaluator.set_wire_valuei(
                 self.t.inputs[i].as_ref().unwrap(),
-                (msgArray[i] as i64 & 0xff),
+                (msg_array[i] as i64 & 0xff),
             );
         }
 
-        for i in 0..keyArray.len() {
-            circuit_evaluator
-                .set_wire_valuei(self.t.key[i].as_ref().unwrap(), (keyArray[i] as i64 & 0xff));
+        for i in 0..key_array.len() {
+            circuit_evaluator.set_wire_valuei(
+                self.t.key[i].as_ref().unwrap(),
+                (key_array[i] as i64 & 0xff),
+            );
         }
     }
 }

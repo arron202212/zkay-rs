@@ -41,9 +41,9 @@ mod test {
             fn build_circuit(&mut self) {
                 let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 2, &None);
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 2, &None);
-                let expandedKey = Gadget::<Speck128CipherGadget>::expandKey(&key, &self.cg);
+                let expanded_key = Gadget::<Speck128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
-                    Speck128CipherGadget::new(plaintext.clone(), expandedKey, &None, self.cg())
+                    Speck128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
@@ -85,13 +85,13 @@ mod test {
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
-        let cipherText = generator.get_out_wires();
+        let cipher_text = generator.get_out_wires();
         assert_eq!(
-            evaluator.get_wire_value(cipherText[0].as_ref().unwrap()),
+            evaluator.get_wire_value(cipher_text[0].as_ref().unwrap()),
             BigInteger::parse_bytes(b"7860fedf5c570d18", 16).unwrap(),
         );
         assert_eq!(
-            evaluator.get_wire_value(cipherText[1].as_ref().unwrap()),
+            evaluator.get_wire_value(cipher_text[1].as_ref().unwrap()),
             BigInteger::parse_bytes(b"a65d985179783265", 16).unwrap(),
         );
     }

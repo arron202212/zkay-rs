@@ -21,7 +21,7 @@ pub trait HomomorphicBackend {
     //		a char identifying the operation; one of {'-', '~', '!'}
     //@param arg
     //		the operand, either a ciphertext or a plain wire
-    //@param keyName
+    //@param key_name
     //		the qualified name of the key to be used
     //
     //@return the resulting ciphertext
@@ -29,11 +29,11 @@ pub trait HomomorphicBackend {
     //@throws UnsupportedOperationException
     //		if the backend does not support operation 'op'
 
-    fn doHomomorphicOpu(
+    fn do_homomorphic_opu(
         &self,
         op: char,
         arg: &HomomorphicInput,
-        keyName: &String,
+        key_name: &String,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         panic!("Unary operation {op} not supported");
@@ -47,7 +47,7 @@ pub trait HomomorphicBackend {
     //		a char identifying the operation; one of {'+', '-', '*', '/', '%', '|', '&', '^', '<', '>'}
     //@param rhs
     //		the right-hand side operand, either a ciphertext or a plain wire
-    //@param keyName
+    //@param key_name
     //		the qualified name of the key to be used
     //
     //@return the resulting ciphertext
@@ -55,12 +55,12 @@ pub trait HomomorphicBackend {
     //@throws UnsupportedOperationException
     //		if the backend does not support operation 'op'
 
-    fn doHomomorphicOp(
+    fn do_homomorphic_op(
         &self,
         lhs: &HomomorphicInput,
         op: char,
         rhs: &HomomorphicInput,
-        keyName: &String,
+        key_name: &String,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
         panic!("Binary operation {op} not supported");
@@ -74,7 +74,7 @@ pub trait HomomorphicBackend {
     //		a char identifying the operation; one of {"==", "!=", "<=", ">=", "&&", "||"}
     //@param rhs
     //		the right-hand side operand, either a ciphertext or a plain wire
-    //@param keyName
+    //@param key_name
     //		the qualified name of the key to be used
     //
     //@return the resulting ciphertext
@@ -82,25 +82,25 @@ pub trait HomomorphicBackend {
     //@throws UnsupportedOperationException
     //		if the backend does not support operation 'op'
 
-    fn doHomomorphicOps(
+    fn do_homomorphic_ops(
         &self,
         lhs: &HomomorphicInput,
         op: &str,
         rhs: &HomomorphicInput,
-        keyName: &String,
+        key_name: &String,
     ) -> Vec<TypedWire> {
         panic!("Boolean / comparison operation {op} not supported");
     }
 
-    //Perform the ternary conditional operation on the ciphertexts 'cond', 'trueVal', 'falseVal'.
+    //Perform the ternary conditional operation on the ciphertexts 'cond', 'true_val', 'false_val'.
     //
     //@param cond
     //		the condition, either a ciphertext or a plain wire
-    //@param trueVal
+    //@param true_val
     //		the value if cond is true, either a ciphertext or a plain wire
-    //@param falseVal
+    //@param false_val
     //		the value if cond is false, either a ciphertext or a plain wire
-    //@param keyName
+    //@param key_name
     //		the qualified name of the key to be used
     //
     //@return the resulting ciphertext
@@ -108,12 +108,12 @@ pub trait HomomorphicBackend {
     //@throws UnsupportedOperationException
     //		if the backend does not support operation 'op'
 
-    fn doHomomorphicCond(
+    fn do_homomorphic_cond(
         &self,
         cond: &HomomorphicInput,
-        trueVal: &HomomorphicInput,
-        falseVal: &HomomorphicInput,
-        keyName: &String,
+        true_val: &HomomorphicInput,
+        false_val: &HomomorphicInput,
+        key_name: &String,
     ) -> Vec<TypedWire> {
         panic!("Ternary conditional not supported");
     }
@@ -122,17 +122,17 @@ pub trait HomomorphicBackend {
     //
     //@param arg
     //		the ciphertext to be re-randomized
-    //@param keyName
+    //@param key_name
     //		the qualified name of the key under which arg is encrypted
     //@param randomness
     //		the randomness to use for re-randomization
     //
     //@return the re-randomized ciphertext
 
-    fn doHomomorphicRerand(
+    fn do_homomorphic_rerand(
         &self,
         arg: &Vec<TypedWire>,
-        keyName: &String,
+        key_name: &String,
         randomness: &TypedWire,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {

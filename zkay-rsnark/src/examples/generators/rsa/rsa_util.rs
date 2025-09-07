@@ -16,19 +16,19 @@ use std::ops::{Add, Div, Mul, Rem, Sub};
 
 pub struct RSAUtil;
 impl RSAUtil {
-    pub fn extractRSARandomness1_5(cipherText: &Vec<u8>, privateKey: &Vec<u8>) -> Vec<Vec<u8>> {
-        let modulus = BigInteger::from(7); //privateKey.getModulus();
-        let keySize = modulus.bits();
-        let d = BigInteger::from(1); //privateKey.getPrivateExponent();
+    pub fn extract_rsa_randomness1_5(cipher_text: &Vec<u8>, private_key: &Vec<u8>) -> Vec<Vec<u8>> {
+        let modulus = BigInteger::from(7); //private_key.getModulus();
+        let key_size = modulus.bits();
+        let d = BigInteger::from(1); //private_key.getPrivateExponent();
 
-        let mut cipherTextPadded = vec![0; cipherText.len() + 1];
-        cipherTextPadded[1..cipherText.len()].clone_from_slice(&cipherText[0..]);
-        cipherTextPadded[0] = 0;
+        let mut cipher_text_padded = vec![0; cipher_text.len() + 1];
+        cipher_text_padded[1..cipher_text.len()].clone_from_slice(&cipher_text[0..]);
+        cipher_text_padded[0] = 0;
 
-        let mut c = BigInteger::from_signed_bytes_be(&cipherText);
-        c = BigInteger::from_signed_bytes_be(&cipherTextPadded);
+        let mut c = BigInteger::from_signed_bytes_be(&cipher_text);
+        c = BigInteger::from_signed_bytes_be(&cipher_text_padded);
         let mut product = Util::one();
-        for i in (0..=keySize - 1).rev() {
+        for i in (0..=key_size - 1).rev() {
             product = product.clone().mul(&product).rem(&modulus);
             let bit = d.bit(i);
             if bit {
@@ -39,23 +39,23 @@ impl RSAUtil {
         //		//println!("After decryption manually = "
         //				+ product.toString(16));
 
-        let paddedPlaintext = product.to_bytes_be().1.clone();
-        if paddedPlaintext.len() != keySize as usize / 8 - 1 {
+        let padded_plain_text = product.to_bytes_be().1.clone();
+        if padded_plain_text.len() != key_size as usize / 8 - 1 {
             println!("Error");
             return vec![];
         }
         let mut plaintext = vec![];
         let mut randomness = vec![];
 
-        if paddedPlaintext[0] != 2 {
+        if padded_plain_text[0] != 2 {
             println!("Error");
         } else {
-            for i in 1..keySize as usize / 8 - 2 {
-                if paddedPlaintext[i] == 0 {
-                    plaintext = vec![0; (keySize as usize / 8 - 2) - i];
+            for i in 1..key_size as usize / 8 - 2 {
+                if padded_plain_text[i] == 0 {
+                    plaintext = vec![0; (key_size as usize / 8 - 2) - i];
                     randomness = vec![0; i - 1];
-                    plaintext.clone_from_slice(&paddedPlaintext[i + 1..]);
-                    randomness.clone_from_slice(&paddedPlaintext[1..]);
+                    plaintext.clone_from_slice(&padded_plain_text[i + 1..]);
+                    randomness.clone_from_slice(&padded_plain_text[1..]);
 
                     break;
                 }
@@ -65,7 +65,7 @@ impl RSAUtil {
         result
     }
 
-    fn intToByteArray(value: i32) -> Vec<u8> {
+    fn int_to_byte_array(value: i32) -> Vec<u8> {
         vec![
             (value >> 24) as u8,
             (value >> 16) as u8,
@@ -77,7 +77,7 @@ impl RSAUtil {
     fn mgf(array: &Vec<u8>, maskLen: i32, hlen: i32) -> Vec<u8> {
         let mut v = vec![];
         for i in 0..=(maskLen as f64 / hlen as f64).ceil() as i32 - 1 {
-            let c = Self::intToByteArray(i);
+            let c = Self::int_to_byte_array(i);
             // let hash = None;
 
             // hash = MessageDigest.getInstance("SHA-256");
@@ -102,20 +102,20 @@ impl RSAUtil {
         result
     }
 
-    pub fn extractRSAOAEPSeed(cipherText: &Vec<u8>, privateKey: &Vec<u8>) -> Vec<Vec<u8>> {
-        let modulus = BigInteger::from_signed_bytes_be(&privateKey); //.getModulus();
-        let keySize = modulus.bits() as usize;
-        let d = BigInteger::from(1); //privateKey.getPrivateExponent();
+    pub fn extract_rsa_oaep_seed(cipher_text: &Vec<u8>, private_key: &Vec<u8>) -> Vec<Vec<u8>> {
+        let modulus = BigInteger::from_signed_bytes_be(&private_key); //.getModulus();
+        let key_size = modulus.bits() as usize;
+        let d = BigInteger::from(1); //private_key.getPrivateExponent();
 
-        let mut cipherTextPadded = vec![0; cipherText.len() + 1];
-        cipherTextPadded[1..1 + cipherText.len()].clone_from_slice(&cipherText);
-        cipherTextPadded[0] = 0;
+        let mut cipher_text_padded = vec![0; cipher_text.len() + 1];
+        cipher_text_padded[1..1 + cipher_text.len()].clone_from_slice(&cipher_text);
+        cipher_text_padded[0] = 0;
 
-        let mut c = BigInteger::from_signed_bytes_be(&cipherText);
-        c = BigInteger::from_signed_bytes_be(&cipherTextPadded);
+        let mut c = BigInteger::from_signed_bytes_be(&cipher_text);
+        c = BigInteger::from_signed_bytes_be(&cipher_text_padded);
 
         let mut product = Util::one();
-        for i in (0..=keySize - 1).rev() {
+        for i in (0..=key_size - 1).rev() {
             product = product.clone().mul(&product).rem(&modulus);
             let bit = d.bit(i as u64);
             if bit {
@@ -124,46 +124,46 @@ impl RSAUtil {
         }
 
         let hlen = 32usize;
-        let maskedDBLength = keySize / 8 - hlen - 1;
+        let masked_db_length = key_size / 8 - hlen - 1;
 
-        let mut encodedMessageBytes = product.to_bytes_be().1.clone();
+        let mut encoded_message_bytes = product.to_bytes_be().1.clone();
 
-        if encodedMessageBytes.len() > keySize / 8 {
-            encodedMessageBytes = encodedMessageBytes[1..].to_vec();
+        if encoded_message_bytes.len() > key_size / 8 {
+            encoded_message_bytes = encoded_message_bytes[1..].to_vec();
         } else {
-            while (encodedMessageBytes.len() < keySize / 8) {
-                encodedMessageBytes = Self::concat(vec![0], encodedMessageBytes);
+            while (encoded_message_bytes.len() < key_size / 8) {
+                encoded_message_bytes = Self::concat(vec![0], encoded_message_bytes);
             }
         }
 
-        let maskedSeed = encodedMessageBytes[1..hlen + 2].to_vec();
-        let maskedDb = encodedMessageBytes[hlen + 1..].to_vec();
+        let masked_seed = encoded_message_bytes[1..hlen + 2].to_vec();
+        let masked_db = encoded_message_bytes[hlen + 1..].to_vec();
 
-        let seedMask = Self::mgf(&maskedDb, hlen as i32, hlen as i32);
-        let mut seed = seedMask.clone();
+        let seed_mask = Self::mgf(&masked_db, hlen as i32, hlen as i32);
+        let mut seed = seed_mask.clone();
         for i in 0..hlen {
-            seed[i] ^= maskedSeed[i];
+            seed[i] ^= masked_seed[i];
         }
 
-        let mut dbMask = Self::mgf(&seed, keySize as i32 / 8 - hlen as i32 - 1, hlen as i32);
-        dbMask = dbMask[..keySize / 8 - hlen - 1].to_vec();
+        let mut db_mask = Self::mgf(&seed, key_size as i32 / 8 - hlen as i32 - 1, hlen as i32);
+        db_mask = db_mask[..key_size / 8 - hlen - 1].to_vec();
 
-        let mut DB = vec![0; dbMask.len() + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
-        DB[1..1 + maskedDBLength].clone_from_slice(&maskedDb);
-        for i in 0..maskedDBLength {
-            DB[i + 1] ^= dbMask[i];
+        let mut db = vec![0; db_mask.len() + 1]; // appending a zero to the left, to avoid sign issues in the BigInteger
+        db[1..1 + masked_db_length].clone_from_slice(&masked_db);
+        for i in 0..masked_db_length {
+            db[i + 1] ^= db_mask[i];
         }
-        //		let dbInt = BigInteger::new(DB);
+        //		let dbInt = BigInteger::new(db);
 
         let mut shift1 = 0;
-        while (DB[shift1] == 0) {
+        while (db[shift1] == 0) {
             shift1 += 1;
         }
         let mut idx = 32 + shift1;
-        while (DB[idx] == 0) {
+        while (db[idx] == 0) {
             idx += 1;
         }
-        let plaintext = DB[idx + 1..].to_vec();
+        let plaintext = db[idx + 1..].to_vec();
         let result = vec![plaintext, seed];
         result
     }

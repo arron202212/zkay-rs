@@ -34,20 +34,16 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::math::dot_product_gadget::DotProductGadget,
     util::{
         run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-//     get_active_circuit_generator,
-// };
-// use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::math::dot_product_gadget::DotProductGadget;
+
 use zkay_derive::ImplStructNameConfig;
+
 crate::impl_struct_name_for!(CircuitGeneratorExtend<DotProductCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct DotProductCircuitGenerator {
@@ -80,8 +76,8 @@ impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
             &Some("Input b".to_owned()),
         );
 
-        let dotProductGadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());
-        let result = dotProductGadget.get_output_wires();
+        let dot_product_gadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());
+        let result = dot_product_gadget.get_output_wires();
         CircuitGenerator::make_output(
             self.cg(),
             result[0].as_ref().unwrap(),

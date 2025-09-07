@@ -53,18 +53,20 @@ pub enum Backend {
     // RsaPkcs15(CryptoBackend<Asymmetric<RSABackend>>),
 }
 impl Backend {
-    pub fn create(name: &str, keyBits: i32, generator: RcCell<CircuitGenerator>) -> Backend {
+    pub fn create(name: &str, key_bits: i32, generator: RcCell<CircuitGenerator>) -> Backend {
         match name {
-            "dummy" => Backend::Dummy(DummyBackend::new(keyBits, generator)),
-            "dummyhom" => Backend::DummyHom(DummyHomBackend::new(keyBits, generator)),
-            "ecdhaes" => Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::AES_128, generator)),
+            "dummy" => Backend::Dummy(DummyBackend::new(key_bits, generator)),
+            "dummyhom" => Backend::DummyHom(DummyHomBackend::new(key_bits, generator)),
+            "ecdhaes" => Backend::Ecdh(ECDHBackend::new(key_bits, CipherType::Aes128, generator)),
             "ecdhchaskey" => {
-                Backend::Ecdh(ECDHBackend::new(keyBits, CipherType::CHASKEY, generator))
+                Backend::Ecdh(ECDHBackend::new(key_bits, CipherType::Chaskey, generator))
             }
-            "paillier" => Backend::Paillier(PaillierBackend::new(keyBits, generator)),
-            "elgamal" => Backend::Elgamal(ElgamalBackend::new(keyBits, generator)),
-            "rsaoaep" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::OAEP, generator)),
-            "rsapkcs15" => Backend::Rsa(RSABackend::new(keyBits, PaddingType::PKCS_1_5, generator)),
+            "paillier" => Backend::Paillier(PaillierBackend::new(key_bits, generator)),
+            "elgamal" => Backend::Elgamal(ElgamalBackend::new(key_bits, generator)),
+            "rsaoaep" => Backend::Rsa(RSABackend::new(key_bits, PaddingType::Oaep, generator)),
+            "rsapkcs15" => {
+                Backend::Rsa(RSABackend::new(key_bits, PaddingType::Pkcs_1_5, generator))
+            }
             _ => {
                 panic!("{}", name)
             }
@@ -89,14 +91,14 @@ pub trait CryptoBackendField {
 
 #[derive(Debug, Clone)]
 pub struct CryptoBackend<T> {
-    pub keyBits: i32,
+    pub key_bits: i32,
     pub t: T,
     pub generator: RcCell<CircuitGenerator>,
 }
 impl<T> CryptoBackend<T> {
-    pub fn new(keyBits: i32, t: T, generator: RcCell<CircuitGenerator>) -> Self {
+    pub fn new(key_bits: i32, t: T, generator: RcCell<CircuitGenerator>) -> Self {
         Self {
-            keyBits,
+            key_bits,
             t,
             generator,
         }
@@ -104,46 +106,51 @@ impl<T> CryptoBackend<T> {
 }
 impl<T> CryptoBackendField for CryptoBackend<T> {
     fn key_bits(&self) -> i32 {
-        self.keyBits
+        self.key_bits
     }
 }
 
 #[enum_dispatch]
 pub trait CryptoBackendConfigs {
-    fn isSymmetric(&self) -> bool;
+    fn is_symmetric(&self) -> bool;
 
     //Whether a separate decryption gadget is used for the backend. For efficiency reasons,
     //decryption is checked via encryption gadgets in many backends. For backends where the randomness
     //cannot be extracted, a separate decryption gadget is needed.
 
-    fn usesDecryptionGadget(&self) -> bool;
+    fn uses_decryption_gadget(&self) -> bool;
 
-    fn addKey(
+    fn add_key(
         &mut self,
-        keyName: &String,
-        keyWires: &Vec<Option<WireType>>,
+        key_name: &String,
+        key_wires: &Vec<Option<WireType>>,
         generator: RcCell<CircuitGenerator>,
     );
 
-    fn createDecryptionGadget(
+    fn create_decryption_gadget(
         &self,
         plain: &TypedWire,
         cipher: &Vec<Option<WireType>>,
-        pkName: &String,
+        pk_name: &String,
         sk: &Vec<Option<WireType>>,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
         panic!("No separate decryption gadget for backend");
     }
-    fn setKeyPair(&mut self, myPk: &WireType, mySk: &WireType, generator: RcCell<CircuitGenerator>);
+    fn set_key_pair(
+        &mut self,
+        my_pk: &WireType,
+        my_sk: &WireType,
+        generator: RcCell<CircuitGenerator>,
+    );
 }
 
 #[enum_dispatch]
 pub trait CryptoBackendConfig {
-    fn getKeyChunkSize(&self) -> i32;
+    fn get_key_chunk_size(&self) -> i32;
 
-    fn createEncryptionGadget(
+    fn create_encryption_gadget(
         &mut self,
         plain: &TypedWire,
         key: &String,
@@ -158,28 +165,28 @@ pub trait CircuitGeneratorField {
 }
 impl<T> SymmetricField for CryptoBackend<Symmetric<T>> {
     fn public_keys(&self) -> &HashMap<String, WireType> {
-        &self.t.publicKeys
+        &self.t.public_keys
     }
     fn shared_keys(&self) -> &HashMap<String, WireType> {
-        &self.t.sharedKeys
+        &self.t.shared_keys
     }
     fn my_pk(&self) -> &Option<WireType> {
-        &self.t.myPk
+        &self.t.my_pk
     }
     fn my_sk(&self) -> &Option<WireType> {
-        &self.t.mySk
+        &self.t.my_sk
     }
     fn public_keys_mut(&mut self) -> &mut HashMap<String, WireType> {
-        &mut self.t.publicKeys
+        &mut self.t.public_keys
     }
     fn shared_keys_mut(&mut self) -> &mut HashMap<String, WireType> {
-        &mut self.t.sharedKeys
+        &mut self.t.shared_keys
     }
     fn my_pk_mut(&mut self) -> &mut Option<WireType> {
-        &mut self.t.myPk
+        &mut self.t.my_pk
     }
     fn my_sk_mut(&mut self) -> &mut Option<WireType> {
-        &mut self.t.mySk
+        &mut self.t.my_sk
     }
 }
 #[enum_dispatch]
@@ -195,21 +202,21 @@ pub trait SymmetricField {
 }
 #[derive(Debug, Clone)]
 pub struct Symmetric<T> {
-    pub publicKeys: HashMap<String, WireType>,
-    pub sharedKeys: HashMap<String, WireType>,
-    pub myPk: Option<WireType>,
-    pub mySk: Option<WireType>,
+    pub public_keys: HashMap<String, WireType>,
+    pub shared_keys: HashMap<String, WireType>,
+    pub my_pk: Option<WireType>,
+    pub my_sk: Option<WireType>,
     pub t: T,
 }
 impl<T> Symmetric<T> {
-    pub fn new(keyBits: i32, t: T, generator: RcCell<CircuitGenerator>) -> CryptoBackend<Self> {
+    pub fn new(key_bits: i32, t: T, generator: RcCell<CircuitGenerator>) -> CryptoBackend<Self> {
         CryptoBackend::new(
-            keyBits,
+            key_bits,
             Self {
-                publicKeys: HashMap::new(),
-                sharedKeys: HashMap::new(),
-                myPk: None,
-                mySk: None,
+                public_keys: HashMap::new(),
+                shared_keys: HashMap::new(),
+                my_pk: None,
+                my_sk: None,
                 t,
             },
             generator,
@@ -223,72 +230,72 @@ impl<T> Symmetric<T> {
 // If self should change in the future, the optimal chunk size should be computed on demand based on the plaintext size
 // (optimal: pick such that data has 1. least amount of chunks, 2. for that chunk amount least possible bit amount)
 impl<T> CryptoBackendConfigs for CryptoBackend<Symmetric<T>> {
-    fn isSymmetric(&self) -> bool {
+    fn is_symmetric(&self) -> bool {
         true
     }
 
-    fn usesDecryptionGadget(&self) -> bool {
+    fn uses_decryption_gadget(&self) -> bool {
         false
     }
 
-    fn addKey(
+    fn add_key(
         &mut self,
-        keyName: &String,
-        keyWires: &Vec<Option<WireType>>,
+        key_name: &String,
+        key_wires: &Vec<Option<WireType>>,
         generator: RcCell<CircuitGenerator>,
     ) {
         assert!(
-            keyWires.len() == 1,
+            key_wires.len() == 1,
             "Expected key size 1uint for symmetric keys"
         );
         self.t
-            .publicKeys
-            .insert(keyName.clone(), keyWires[0].clone().unwrap());
+            .public_keys
+            .insert(key_name.clone(), key_wires[0].clone().unwrap());
     }
-    fn setKeyPair(
+    fn set_key_pair(
         &mut self,
-        myPk: &WireType,
-        mySk: &WireType,
+        my_pk: &WireType,
+        my_sk: &WireType,
         generator: RcCell<CircuitGenerator>,
     ) {
-        // Objects.requireNonNull(myPk);
-        // Objects.requireNonNull(mySk);
-        assert!(self.t.myPk.is_none(), "Key pair already set");
+        // Objects.requireNonNull(my_pk);
+        // Objects.requireNonNull(my_sk);
+        assert!(self.t.my_pk.is_none(), "Key pair already set");
 
         // Ensure that provided sender keys form a key pair
 
-        let pkDerivationGadget = ZkayEcPkDerivationGadget::new(
-            mySk.clone(),
+        let pk_derivation_gadget = ZkayEcPkDerivationGadget::new(
+            my_sk.clone(),
             true,
-            &Some("getPk(mySk)".to_owned()),
+            &Some("getPk(my_sk)".to_owned()),
             generator.clone(),
         );
         CircuitGenerator::add_equality_assertion(
             generator.clone(),
-            myPk,
-            pkDerivationGadget.get_output_wires()[0].as_ref().unwrap(),
+            my_pk,
+            pk_derivation_gadget.get_output_wires()[0].as_ref().unwrap(),
             &None,
         );
 
-        self.t.myPk = Some(myPk.clone());
-        self.t.mySk = Some(mySk.clone());
+        self.t.my_pk = Some(my_pk.clone());
+        self.t.my_sk = Some(my_sk.clone());
     }
 }
 pub const CIPHER_CHUNK_SIZE: i32 = 192;
 impl<T> CryptoBackend<Symmetric<T>> {
-    pub fn getKey(&mut self, keyName: &String, generator: RcCell<CircuitGenerator>) -> WireType {
-        let v = self.computeKey(keyName, generator);
+    pub fn get_key(&mut self, key_name: &String, generator: RcCell<CircuitGenerator>) -> WireType {
+        let v = self.compute_key(key_name, generator);
         self.t
-            .sharedKeys
-            .entry(keyName.clone())
+            .shared_keys
+            .entry(key_name.clone())
             .or_insert(v)
             .clone()
     }
 
-    pub fn computeKey(&self, keyName: &String, generator: RcCell<CircuitGenerator>) -> WireType {
+    pub fn compute_key(&self, key_name: &String, generator: RcCell<CircuitGenerator>) -> WireType {
         assert!(
-            self.t.myPk.is_some(),
-            "setKeyPair not called on symmetric crypto backend"
+            self.t.my_pk.is_some(),
+            "set_key_pair not called on symmetric crypto backend"
         );
 
         // Get other pub  key
@@ -296,46 +303,49 @@ impl<T> CryptoBackend<Symmetric<T>> {
         // cipher struct is 0. In that case -> replace with any valid pk (my_pk for simplicity), to prevent ecdh gadget
         // from crashing (wrong output is not a problem since decryption enforces (pk_zero || cipher_zero) => all_zero
         // and ignores the ecdh result in that case.
-        let actualOtherPk = self.t.publicKeys.get(keyName);
-        assert!(actualOtherPk.is_some(), "Key variable {keyName}  is absent");
-        let mut actualOtherPk = actualOtherPk.cloned().unwrap();
-        actualOtherPk = actualOtherPk
-            .check_non_zero(&Some(keyName.to_owned() + " != 0"))
-            .mux(&actualOtherPk, self.my_pk().as_ref().unwrap());
+        let actual_other_pk = self.t.public_keys.get(key_name);
+        assert!(
+            actual_other_pk.is_some(),
+            "Key variable {key_name}  is absent"
+        );
+        let mut actual_other_pk = actual_other_pk.cloned().unwrap();
+        actual_other_pk = actual_other_pk
+            .check_non_zero(&Some(key_name.to_owned() + " != 0"))
+            .mux(&actual_other_pk, self.my_pk().as_ref().unwrap());
 
         // Compute shared key with me
         let desc = format!(
             "sha256(ecdh({}, {}))",
-            keyName,
-            self.t.mySk.as_ref().unwrap()
+            key_name,
+            self.t.my_sk.as_ref().unwrap()
         );
-        let sharedKeyGadget = ZkayECDHGadget::new(
-            actualOtherPk,
-            self.t.mySk.clone().unwrap(),
+        let shared_key_gadget = ZkayECDHGadget::new(
+            actual_other_pk,
+            self.t.my_sk.clone().unwrap(),
             false,
             &Some(desc),
             generator,
         );
-        sharedKeyGadget.validateInputs();
-        sharedKeyGadget.get_output_wires()[0].clone().unwrap()
+        shared_key_gadget.validate_inputs();
+        shared_key_gadget.get_output_wires()[0].clone().unwrap()
     }
 
-    pub fn extractIV(ivCipher: &Option<Vec<Option<WireType>>>) -> WireType {
+    pub fn extract_iv(iv_cipher: &Option<Vec<Option<WireType>>>) -> WireType {
         assert!(
-            ivCipher.as_ref().is_some_and(|v| !v.is_empty()),
+            iv_cipher.as_ref().is_some_and(|v| !v.is_empty()),
             "IV cipher must not be empty"
         );
         // This assumes as cipher length of 256 bits
-        let lastBlockCipherLen = (256
-            - (((ivCipher.as_ref().unwrap().len() as i32 - 1) * CIPHER_CHUNK_SIZE) % 256))
+        let last_block_cipher_len = (256
+            - (((iv_cipher.as_ref().unwrap().len() as i32 - 1) * CIPHER_CHUNK_SIZE) % 256))
             % 256;
-        let mut iv = ivCipher.as_ref().unwrap()[ivCipher.as_ref().unwrap().len() - 1]
+        let mut iv = iv_cipher.as_ref().unwrap()[iv_cipher.as_ref().unwrap().len() - 1]
             .clone()
             .unwrap();
-        if lastBlockCipherLen > 0 {
+        if last_block_cipher_len > 0 {
             iv = iv.shift_right(
                 CIPHER_CHUNK_SIZE as usize,
-                lastBlockCipherLen as usize,
+                last_block_cipher_len as usize,
                 &None,
             );
         }
@@ -363,9 +373,9 @@ pub struct Asymmetric<T> {
     pub t: T,
 }
 impl<T> Asymmetric<T> {
-    pub fn new(keyBits: i32, t: T, generator: RcCell<CircuitGenerator>) -> CryptoBackend<Self> {
+    pub fn new(key_bits: i32, t: T, generator: RcCell<CircuitGenerator>) -> CryptoBackend<Self> {
         CryptoBackend::new(
-            keyBits,
+            key_bits,
             Self {
                 keys: HashMap::new(),
                 t,
@@ -381,50 +391,50 @@ impl<T> Asymmetric<T> {
 macro_rules! impl_crypto_backend_configs_for {
     ($impl_type:ty) => {
         impl CryptoBackendConfigs for CryptoBackend<Asymmetric<$impl_type>> {
-            fn isSymmetric(&self) -> bool {
+            fn is_symmetric(&self) -> bool {
                 false
             }
 
-            fn usesDecryptionGadget(&self) -> bool {
+            fn uses_decryption_gadget(&self) -> bool {
                 false
             }
 
-            fn addKey(
+            fn add_key(
                 &mut self,
-                keyName: &String,
-                keyWires: &Vec<Option<WireType>>,
+                key_name: &String,
+                key_wires: &Vec<Option<WireType>>,
                 generator: RcCell<CircuitGenerator>,
             ) {
-                let chunk_bits = self.getKeyChunkSize();
-                let keyArray = WireArray::new(keyWires.clone(), generator.downgrade())
-                    .get_bits(chunk_bits as usize, &Some(keyName.to_owned() + "_bits"))
-                    .adjust_length(None, self.keyBits as usize);
-                self.t.keys.insert(keyName.clone(), keyArray);
+                let chunk_bits = self.get_key_chunk_size();
+                let key_array = WireArray::new(key_wires.clone(), generator.downgrade())
+                    .get_bits(chunk_bits as usize, &Some(key_name.to_owned() + "_bits"))
+                    .adjust_length(None, self.key_bits as usize);
+                self.t.keys.insert(key_name.clone(), key_array);
             }
-            fn setKeyPair(
+            fn set_key_pair(
                 &mut self,
-                myPk: &WireType,
-                mySk: &WireType,
+                my_pk: &WireType,
+                my_sk: &WireType,
                 generator: RcCell<CircuitGenerator>,
             ) {
-                panic!("setKeyPair no in Asymmetric");
+                panic!("set_key_pair no in Asymmetric");
             }
         }
     };
 }
 
 impl<T> CryptoBackend<Asymmetric<T>> {
-    pub fn getKey(&self, keyName: &String, generator: RcCell<CircuitGenerator>) -> LongElement {
-        let keyArr = self.getKeyArray(keyName);
-        LongElement::newa(keyArr, generator.downgrade())
+    pub fn get_key(&self, key_name: &String, generator: RcCell<CircuitGenerator>) -> LongElement {
+        let key_arr = self.get_key_array(key_name);
+        LongElement::newa(key_arr, generator.downgrade())
     }
 
-    pub fn getKeyArray(&self, keyName: &String) -> WireArray {
-        let keyArr = self.t.keys.get(keyName);
+    pub fn get_key_array(&self, key_name: &String) -> WireArray {
+        let key_arr = self.t.keys.get(key_name);
         assert!(
-            keyArr.is_some(),
-            "Key variable {keyName} is not associated with a WireArray"
+            key_arr.is_some(),
+            "Key variable {key_name} is not associated with a WireArray"
         );
-        keyArr.cloned().unwrap()
+        key_arr.cloned().unwrap()
     }
 }

@@ -76,16 +76,16 @@ mod test {
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
-        let mut out_Digest = String::new();
+        let mut out_digest = String::new();
         for w in generator.get_out_wires() {
-            out_Digest += &Util::padZeros(
+            out_digest += &Util::pad_zeros(
                 &evaluator
                     .get_wire_value(w.as_ref().unwrap())
                     .to_str_radix(16),
                 8,
             );
         }
-        assert_eq!(out_Digest, expected_digest);
+        assert_eq!(out_digest, expected_digest);
     }
 
     #[test]
@@ -139,16 +139,16 @@ mod test {
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
-        let mut out_Digest = String::new();
+        let mut out_digest = String::new();
         for w in generator.get_out_wires() {
-            out_Digest += &Util::padZeros(
+            out_digest += &Util::pad_zeros(
                 &evaluator
                     .get_wire_value(w.as_ref().unwrap())
                     .to_str_radix(16),
                 8,
             );
         }
-        assert_eq!(out_Digest, expected_digest);
+        assert_eq!(out_digest, expected_digest);
     }
 
     #[test]
@@ -203,16 +203,16 @@ mod test {
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
-        let mut out_Digest = String::new();
+        let mut out_digest = String::new();
         for w in generator.get_out_wires() {
-            out_Digest += &Util::padZeros(
+            out_digest += &Util::pad_zeros(
                 &evaluator
                     .get_wire_value(w.as_ref().unwrap())
                     .to_str_radix(16),
                 8,
             );
         }
-        assert_eq!(out_Digest, expected_digest);
+        assert_eq!(out_digest, expected_digest);
     }
 
     #[test]
@@ -267,16 +267,16 @@ mod test {
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
-        let mut out_Digest = String::new();
+        let mut out_digest = String::new();
         for w in generator.get_out_wires() {
-            out_Digest += &Util::padZeros(
+            out_digest += &Util::pad_zeros(
                 &evaluator
                     .get_wire_value(w.as_ref().unwrap())
                     .to_str_radix(16),
                 8,
             );
         }
-        assert_eq!(out_Digest, expected_digest);
+        assert_eq!(out_digest, expected_digest);
     }
 
     #[test]
@@ -284,7 +284,7 @@ mod test {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
             input_wires: Vec<Option<WireType>>,
-            numBytesPerInputWire: usize,
+            num_bytes_per_input_wire: usize,
         }
         impl CGTest {
             const input_str: &[u8] = b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
@@ -294,8 +294,8 @@ mod test {
             fn build_circuit(&mut self) {
                 let input_wires = CircuitGenerator::create_input_wire_array(
                     self.cg(),
-                    CGTest::input_str.len() / self.t.numBytesPerInputWire
-                        + if CGTest::input_str.len() % self.t.numBytesPerInputWire != 0 {
+                    CGTest::input_str.len() / self.t.num_bytes_per_input_wire
+                        + if CGTest::input_str.len() % self.t.num_bytes_per_input_wire != 0 {
                             1
                         } else {
                             0
@@ -304,7 +304,7 @@ mod test {
                 );
                 let digest = SHA256Gadget::new(
                     input_wires.clone(),
-                    8 * self.t.numBytesPerInputWire,
+                    8 * self.t.num_bytes_per_input_wire,
                     CGTest::input_str.len(),
                     false,
                     true,
@@ -321,13 +321,13 @@ mod test {
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 for i in 0..self.t.input_wires.len() {
                     let mut sum = BigInteger::ZERO;
-                    for j in i * self.t.numBytesPerInputWire
+                    for j in i * self.t.num_bytes_per_input_wire
                         ..CGTest::input_str
                             .len()
-                            .min((i + 1) * self.t.numBytesPerInputWire)
+                            .min((i + 1) * self.t.num_bytes_per_input_wire)
                     {
                         let v = BigInteger::from(CGTest::input_str[j]);
-                        sum = sum.add(v.shl((j % self.t.numBytesPerInputWire) * 8));
+                        sum = sum.add(v.shl((j % self.t.num_bytes_per_input_wire) * 8));
                     }
                     evaluator.set_wire_value(self.t.input_wires[i].as_ref().unwrap(), &sum);
                 }
@@ -337,25 +337,25 @@ mod test {
         let expected_digest =
             "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1".to_owned();
 
-        // Testing different settings of the bitWidthPerInputElement parameter
-        // wordSize = # of bytes per input wire
+        // Testing different settings of the bit_width_per_input_element parameter
+        // word_size = # of bytes per input wire
 
-        for wordSize in 1..Configs.log2_field_prime / 8 {
-            let numBytesPerInputWire = wordSize as usize;
+        for word_size in 1..Configs.log2_field_prime / 8 {
+            let num_bytes_per_input_wire = word_size as usize;
             let t = CGTest {
                 input_wires: vec![],
-                numBytesPerInputWire,
+                num_bytes_per_input_wire,
             };
             let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test5", t);
 
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
 
-            let mut out_Digest = generator
+            let mut out_digest = generator
                 .get_out_wires()
                 .into_iter()
                 .map(|w| {
-                    Util::padZeros(
+                    Util::pad_zeros(
                         &evaluator
                             .get_wire_value(w.as_ref().unwrap())
                             .to_str_radix(16),
@@ -363,7 +363,7 @@ mod test {
                     )
                 })
                 .collect::<String>();
-            assert_eq!(out_Digest, expected_digest);
+            assert_eq!(out_digest, expected_digest);
         }
     }
 }

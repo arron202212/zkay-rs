@@ -71,9 +71,9 @@ mod test {
         let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generate_sample_input(&mut evaluator);
         evaluator.evaluate(&generator.cg);
-        let rWire = generator.get_out_wires()[0].clone();
+        let r_wire = generator.get_out_wires()[0].clone();
         assert_eq!(
-            evaluator.get_wire_value(rWire.as_ref().unwrap()),
+            evaluator.get_wire_value(r_wire.as_ref().unwrap()),
             BigInteger::from(CGTest::a % CGTest::b)
         );
     }
@@ -117,9 +117,9 @@ mod test {
         let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generate_sample_input(&mut evaluator);
         evaluator.evaluate(&generator.cg);
-        let rWire = generator.get_out_wires()[0].clone();
+        let r_wire = generator.get_out_wires()[0].clone();
         assert_eq!(
-            evaluator.get_wire_value(rWire.as_ref().unwrap()),
+            evaluator.get_wire_value(r_wire.as_ref().unwrap()),
             BigInteger::from(CGTest::a % CGTest::b)
         );
     }

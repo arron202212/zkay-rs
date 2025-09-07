@@ -7,28 +7,33 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
-use crate::circuit::InstanceOf;
-use crate::circuit::config::config::Configs;
-use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
-
-use crate::circuit::structure::circuit_generator::CreateConstantWire;
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-    get_active_circuit_generator,
+use crate::circuit::{
+    InstanceOf,
+    config::config::Configs,
+    eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
+    operations::gadget::{Gadget, GadgetConfig},
+    structure::{
+        circuit_generator::CreateConstantWire,
+        circuit_generator::{
+            CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+            get_active_circuit_generator,
+        },
+        constant_wire,
+        wire::WireConfig,
+        wire_type::WireType,
+    },
 };
-use crate::circuit::structure::constant_wire;
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
+
+// see notes in the end of the code.
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Neg, Rem, Sub},
+};
+
 use rccell::{RcCell, WeakCell};
 use zkay_derive::ImplStructNameConfig;
-// see notes in the end of the code.
-use std::fmt::Debug;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Neg, Rem, Sub};
-
-use std::fs::File;
 
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct FieldDivisionGadget {
@@ -51,9 +56,9 @@ impl FieldDivisionGadget {
         // if the input values are constant (i.e. known at compilation time), we
         // can save one constraint
         if _self.t.a.instance_of("ConstantWire") && _self.t.b.instance_of("ConstantWire") {
-            let aConst = _self.t.a.try_as_constant_ref().unwrap().get_constant();
+            let a_const = _self.t.a.try_as_constant_ref().unwrap().get_constant();
 
-            let bInverseConst = _self
+            let b_inverse_const = _self
                 .t
                 .b
                 .try_as_constant_ref()
@@ -63,7 +68,7 @@ impl FieldDivisionGadget {
                 .unwrap();
 
             _self.t.c = vec![Some(generator.create_constant_wire(
-                &aConst.mul(bInverseConst).rem(&Configs.field_prime),
+                &a_const.mul(b_inverse_const).rem(&Configs.field_prime),
                 &None,
             ))];
         } else {
@@ -91,13 +96,13 @@ impl Gadget<FieldDivisionGadget> {
                                 c: WireType)  {
                 impl Instruction for Prover{
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                       let aValue = evaluator.get_wire_value(&self.a);
-                                    let bValue = evaluator.get_wire_value(&self.b);
-                                    // println!("===bValue==={}====={bValue}====",self.b);
-                                    let cValue = aValue
-                                        .mul(bValue.modinv(&Configs.field_prime).unwrap())
+                                       let a_value = evaluator.get_wire_value(&self.a);
+                                    let b_value = evaluator.get_wire_value(&self.b);
+                                    // println!("===b_value==={}====={b_value}====",self.b);
+                                    let c_value = a_value
+                                        .mul(b_value.modinv(&Configs.field_prime).unwrap())
                                         .rem(&Configs.field_prime);
-                                    evaluator.set_wire_value(&self.c, &cValue);
+                                    evaluator.set_wire_value(&self.c, &c_value);
         Ok(())
                 }
                 }
@@ -107,12 +112,12 @@ impl Gadget<FieldDivisionGadget> {
         CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
 
         // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-        //     let aValue = evaluator.get_wire_value(self.t.a.clone());
-        //     let bValue = evaluator.get_wire_value(self.t.b.clone());
-        //     let cValue = aValue
-        //         .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+        //     let a_value = evaluator.get_wire_value(self.t.a.clone());
+        //     let b_value = evaluator.get_wire_value(self.t.b.clone());
+        //     let c_value = a_value
+        //         .mul(b_value.modinv(&Configs.field_prime.clone()).unwrap())
         //         .rem(&Configs.field_prime);
-        //     evaluator.set_wire_value(self.t.c.clone(), cValue);
+        //     evaluator.set_wire_value(self.t.c.clone(), c_value);
         // });
         // {
         //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
@@ -123,12 +128,12 @@ impl Gadget<FieldDivisionGadget> {
         //     }
         //     impl  Instruction for Prover {
         //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-        //             let aValue = evaluator.get_wire_value(self.t.a.clone());
-        //             let bValue = evaluator.get_wire_value(self.t.b.clone());
-        //             let cValue = aValue
-        //                 .mul(bValue.modinv(&Configs.field_prime.clone()).unwrap())
+        //             let a_value = evaluator.get_wire_value(self.t.a.clone());
+        //             let b_value = evaluator.get_wire_value(self.t.b.clone());
+        //             let c_value = a_value
+        //                 .mul(b_value.modinv(&Configs.field_prime.clone()).unwrap())
         //                 .rem(&Configs.field_prime);
-        //             evaluator.set_wire_value(self.t.c.clone(), cValue);
+        //             evaluator.set_wire_value(self.t.c.clone(), c_value);
         //         }
         //     }
         //     Box::new(Prover {

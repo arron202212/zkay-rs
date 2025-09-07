@@ -25,49 +25,49 @@ use std::{
 };
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig, PartialEq)]
-pub struct LinearCombinationWire {
+pub struct LinearCombination_wire {
     pub bit_wires: Option<WireArray>,
 }
-// impl Hash for LinearCombinationWire {
+// impl Hash for LinearCombination_wire {
 //     fn hash<H: Hasher>(&self, state: &mut H) {
 //         // self.bit_wires.hash(state);
 //     }
 // }
-// impl PartialEq for LinearCombinationWire {
+// impl PartialEq for LinearCombination_wire {
 //     fn eq(&self, other: &Self) -> bool {
 //         self.bit_wires == other.bit_wires
 //     }
 // }
-//crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationWire>);
-crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationWire>);
+//crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombination_wire>);
+crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombination_wire>);
 
-impl LinearCombinationWire {
+impl LinearCombination_wire {
     pub fn new(
         wire_id: i32,
         bits: Option<WireArray>,
         generator: WeakCell<CircuitGenerator>,
-    ) -> Wire<LinearCombinationWire> {
+    ) -> Wire<LinearCombination_wire> {
         //   if  wire_id>0 && wire_id<10000
         //     {
-        //         println!("===LinearCombinationWire::new====={wire_id}==");
+        //         println!("===LinearCombination_wire::new====={wire_id}==");
         //     }
         // //super(wire_id);
-        // Wire::<LinearCombinationWire> {
+        // Wire::<LinearCombination_wire> {
         //     wire_id,
         //     generator,
-        //     t: LinearCombinationWire { bit_wires: bits },
+        //     t: LinearCombination_wire { bit_wires: bits },
         // }
-        Wire::<LinearCombinationWire>::new(
-            LinearCombinationWire { bit_wires: bits },
+        Wire::<LinearCombination_wire>::new(
+            LinearCombination_wire { bit_wires: bits },
             wire_id,
             generator,
         )
         .unwrap()
     }
 }
-impl SetBitsConfig for LinearCombinationWire {}
-impl SetBitsConfig for Wire<LinearCombinationWire> {}
-impl WireConfig for Wire<LinearCombinationWire> {
+impl SetBitsConfig for LinearCombination_wire {}
+impl SetBitsConfig for Wire<LinearCombination_wire> {}
+impl WireConfig for Wire<LinearCombination_wire> {
     fn get_bit_wires(&self) -> Option<WireArray> {
         self.t.bit_wires.clone()
     }
@@ -75,7 +75,7 @@ impl WireConfig for Wire<LinearCombinationWire> {
         Some(WireType::LinearCombination(self.clone()))
     }
 }
-impl Wire<LinearCombinationWire> {
+impl Wire<LinearCombination_wire> {
     // pub fn new(wire_id: i32) -> Self {
     //     // //super(wire_id);
     //     Self {

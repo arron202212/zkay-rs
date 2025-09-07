@@ -36,21 +36,21 @@ use crate::{
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::config::config::Configs;
-// use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
-// use crate::util::util::{Util,BigInteger};
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Sub};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Sub},
+};
 use zkay_derive::ImplStructNameConfig;
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SubsetSumHashGadget {
     pub input_wires: Vec<Option<WireType>>,
     pub out_wires: Vec<Option<WireType>>,
-    pub binaryOutput: bool,
+    pub binary_output: bool,
 }
 use std::sync::OnceLock;
 static COEFFS: OnceLock<Vec<Vec<BigInteger>>> = OnceLock::new();
@@ -60,21 +60,21 @@ impl SubsetSumHashGadget {
 
     //@param ins
     //           The bitwires of the input.
-    //@param binaryOutput
+    //@param binary_output
     //           Whether the output digest should be splitted into bits or not.
     //@param desc
 
     pub fn new(
         ins: Vec<Option<WireType>>,
-        binaryOutput: bool,
+        binary_output: bool,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let numBlocks = (ins.len() as f64 * 1.0 / Self::INPUT_LENGTH as f64).ceil() as i32;
+        let num_blocks = (ins.len() as f64 * 1.0 / Self::INPUT_LENGTH as f64).ceil() as i32;
 
-        assert!(numBlocks <= 1, "Only one block is supported at this point");
+        assert!(num_blocks <= 1, "Only one block is supported at this point");
 
-        let rem = (numBlocks * Self::INPUT_LENGTH) as usize - ins.len();
+        let rem = (num_blocks * Self::INPUT_LENGTH) as usize - ins.len();
 
         let mut pad = vec![None; rem];
         for i in 0..pad.len() {
@@ -85,7 +85,7 @@ impl SubsetSumHashGadget {
             generator,
             desc,
             Self {
-                binaryOutput,
+                binary_output,
                 input_wires,
                 out_wires: vec![],
             },
@@ -101,32 +101,32 @@ impl Gadget<SubsetSumHashGadget> {
             SubsetSumHashGadget::DIMENSION as usize,
             SubsetSumHashGadget::INPUT_LENGTH as usize,
         );
-        let COEFFSS = COEFFS.get_or_init(|| {
+        let coeffss = COEFFS.get_or_init(|| {
             let mut tmp = vec![vec![BigInteger::default(); input_length]; dimension];
             for i in 0..dimension {
                 for k in 0..input_length {
-                    tmp[i][k] = Util::nextRandomBigInteger(&Configs.field_prime);
+                    tmp[i][k] = Util::next_random_big_integer(&Configs.field_prime);
                 }
             }
             tmp
         });
-        let mut out_Digest = vec![self.generator.get_zero_wire(); dimension];
+        let mut out_digest = vec![self.generator.get_zero_wire(); dimension];
 
         for i in 0..dimension {
             for j in 0..input_length {
                 let t = self.t.input_wires[j]
                     .as_ref()
                     .unwrap()
-                    .mulb(&COEFFSS[i][j], &None);
-                out_Digest[i] = Some(out_Digest[i].clone().unwrap().add(t));
+                    .mulb(&coeffss[i][j], &None);
+                out_digest[i] = Some(out_digest[i].clone().unwrap().add(t));
             }
         }
-        if !self.t.binaryOutput {
-            self.t.out_wires = out_Digest;
+        if !self.t.binary_output {
+            self.t.out_wires = out_digest;
         } else {
             self.t.out_wires = vec![None; dimension * Configs.log2_field_prime as usize];
             for i in 0..dimension {
-                let bits = out_Digest[i]
+                let bits = out_digest[i]
                     .as_ref()
                     .unwrap()
                     .get_bit_wiresi(Configs.log2_field_prime, &None)

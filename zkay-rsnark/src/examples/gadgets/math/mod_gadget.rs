@@ -38,27 +38,25 @@ use crate::{
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::eval::instruction::Instruction;
-// use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
+
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Div, Mul, Rem, Sub},
+};
 
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Div, Mul, Rem, Sub};
+use zkay_derive::ImplStructNameConfig;
 
 //  * This gadget provides the remainder of a % b.
 
-use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct ModGadget {
     pub a: WireType,
     pub b: WireType,
     pub r: Vec<Option<WireType>>,
     pub q: WireType,
-
     pub bitwidth: i32, // bitwidth for both a, b
 }
 impl ModGadget {
@@ -99,12 +97,12 @@ impl Gadget<ModGadget> {
         let (a, b) = (&self.t.a, &self.t.b);
         // notes about how to use this code block can be found in FieldDivisionGadget
         // CircuitGenerator::specify_prover_witness_computation(generator.clone(), &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.get_wire_value(a);
-        //             let bValue = evaluator.get_wire_value(b);
-        //             let rValue = aValue.rem(bValue);
-        //             evaluator.set_wire_value(r, &rValue);
-        //             let qValue = aValue.div(bValue);
-        //             evaluator.set_wire_value(q, &qValue);
+        //             let a_value = evaluator.get_wire_value(a);
+        //             let b_value = evaluator.get_wire_value(b);
+        //             let r_value = a_value.rem(b_value);
+        //             evaluator.set_wire_value(r, &r_value);
+        //             let q_value = a_value.div(b_value);
+        //             evaluator.set_wire_value(q, &q_value);
         //         });
         let prover = crate::impl_prover!(
                                             eval(  a: WireType,
@@ -114,12 +112,12 @@ impl Gadget<ModGadget> {
                                     )  {
                             impl Instruction for Prover{
                              fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                                        let aValue = evaluator.get_wire_value(&self.a);
-                                let bValue = evaluator.get_wire_value(&self.b);
-                                let rValue = aValue.clone().rem(&bValue);
-                                evaluator.set_wire_value(&self.r, &rValue);
-                                let qValue = aValue.div(&bValue);
-                                evaluator.set_wire_value(&self.q, &qValue);
+                                        let a_value = evaluator.get_wire_value(&self.a);
+                                let b_value = evaluator.get_wire_value(&self.b);
+                                let r_value = a_value.clone().rem(&b_value);
+                                evaluator.set_wire_value(&self.r, &r_value);
+                                let q_value = a_value.div(&b_value);
+                                evaluator.set_wire_value(&self.q, &q_value);
         Ok(())
 
                             }
@@ -131,12 +129,12 @@ impl Gadget<ModGadget> {
         //     struct Prover;
         //     impl Instruction for Prover {
         //         &|evaluator: &mut CircuitEvaluator| {
-        //             let aValue = evaluator.get_wire_value(a);
-        //             let bValue = evaluator.get_wire_value(b);
-        //             let rValue = aValue.rem(bValue);
-        //             evaluator.set_wire_value(r, rValue);
-        //             let qValue = aValue.div(bValue);
-        //             evaluator.set_wire_value(q, qValue);
+        //             let a_value = evaluator.get_wire_value(a);
+        //             let b_value = evaluator.get_wire_value(b);
+        //             let r_value = a_value.rem(b_value);
+        //             evaluator.set_wire_value(r, r_value);
+        //             let q_value = a_value.div(b_value);
+        //             evaluator.set_wire_value(q, q_value);
         //         }
         //     }
         //     Prover

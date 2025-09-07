@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::GadgetConfig;
+
 use crate::{
     arc_cell_new,
     circuit::{
@@ -15,7 +15,7 @@ use crate::{
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
-            gadget::Gadget,
+            gadget::{Gadget, GadgetConfig},
             primitive::{
                 assert_basic_op::AssertBasicOp, basic_op::BasicOp, mul_basic_op::MulBasicOp,
             },
@@ -37,19 +37,20 @@ use crate::{
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::structure::wire_type::WireType;
-// use crate::util::util::{BigInteger, Util};
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Neg, Rem, Sub};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Neg, Rem, Sub},
+};
 use zkay_derive::ImplStructNameConfig;
 
 //  * Performs Key Exchange using a field extension F_p[x]/(x^\mu - \omega), where
 //  * the polynomial (x^\mu - \omega) is irreducible. The inputs to this gadget:
 //  * the base g, the other party's input h = g^a, the bits of the secret exponent
-//  * secExpBits and omega. The outputs of this gadget: the derived key h^s to be
+//  * sec_exp_bits and omega. The outputs of this gadget: the derived key h^s to be
 //  * used for symmetric key derivation, and g^s which is sent to the other party.
 //  *
 //  * A sample parameterization that gives low security (~80 bits of security) can
@@ -61,17 +62,17 @@ pub struct FieldExtensionDHKeyExchange {
     pub g: Vec<Option<WireType>>, // base
     pub h: Vec<Option<WireType>>, // other party's pub  input (supposedly, h = g^(the
     // other party's secret))
-    pub secretExponentBits: Vec<Option<WireType>>, // the bits of the secret exponent of the
+    pub secret_exponent_bits: Vec<Option<WireType>>, // the bits of the secret exponent of the
     // party
     // executing this gadget
     pub omega: i64,
     pub mu: i32,
 
     // gadget outputs
-    pub outputPublicValue: Vec<Option<WireType>>, // g^s (to be sent to the other party)
-    pub sharedSecret: Vec<Option<WireType>>,      // the derived secret key h^s
-    pub gPowersTable: Vec<Vec<Option<WireType>>>,
-    pub hPowersTable: Vec<Vec<Option<WireType>>>,
+    pub output_public_value: Vec<Option<WireType>>, // g^s (to be sent to the other party)
+    pub shared_secret: Vec<Option<WireType>>,       // the derived secret key h^s
+    pub g_powers_table: Vec<Vec<Option<WireType>>>,
+    pub h_powers_table: Vec<Vec<Option<WireType>>>,
     pub output: Vec<Option<WireType>>,
 }
 impl FieldExtensionDHKeyExchange {
@@ -80,7 +81,7 @@ impl FieldExtensionDHKeyExchange {
     //input of the other's party are proper elements. Since these values are
     //pub , they could be checked outside the circuit.
     //
-    //If the validation is needed inside, the method "validateInputs()" should
+    //If the validation is needed inside, the method "validate_inputs()" should
     //be called explicitly. Example is provided in
     //FieldExtensionDHKeyExchange_Test
     //
@@ -88,7 +89,7 @@ impl FieldExtensionDHKeyExchange {
     pub fn new(
         g: Vec<Option<WireType>>,
         h: Vec<Option<WireType>>,
-        secretExponentBits: Vec<Option<WireType>>,
+        secret_exponent_bits: Vec<Option<WireType>>,
         omega: i64,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
@@ -99,7 +100,7 @@ impl FieldExtensionDHKeyExchange {
         // the check is also done here for safety. No need to remove this if
         // done also outside the gadget. The back end takes care of caching
         let generators = generator.clone();
-        for w in &secretExponentBits {
+        for w in &secret_exponent_bits {
             CircuitGenerator::add_binary_assertion(generator.clone(), w.as_ref().unwrap(), &None);
         }
         let mut _self = Gadget::<Self>::new(
@@ -109,12 +110,12 @@ impl FieldExtensionDHKeyExchange {
                 mu: g.len() as i32,
                 g,
                 h,
-                secretExponentBits,
+                secret_exponent_bits,
                 omega,
-                outputPublicValue: vec![],
-                sharedSecret: vec![],
-                gPowersTable: vec![],
-                hPowersTable: vec![],
+                output_public_value: vec![],
+                shared_secret: vec![],
+                g_powers_table: vec![],
+                h_powers_table: vec![],
                 output: vec![],
             },
         );
@@ -124,12 +125,19 @@ impl FieldExtensionDHKeyExchange {
 }
 impl Gadget<FieldExtensionDHKeyExchange> {
     fn build_circuit(&mut self) {
-        self.t.gPowersTable = self.preparePowersTable(&self.t.g);
-        self.t.hPowersTable = self.preparePowersTable(&self.t.h);
-        self.t.outputPublicValue =
-            self.exp(&self.t.g, &self.t.secretExponentBits, &self.t.gPowersTable);
-        self.t.sharedSecret = self.exp(&self.t.h, &self.t.secretExponentBits, &self.t.hPowersTable);
-        self.t.output = Util::concat(&self.t.outputPublicValue, &self.t.sharedSecret);
+        self.t.g_powers_table = self.preparePowersTable(&self.t.g);
+        self.t.h_powers_table = self.preparePowersTable(&self.t.h);
+        self.t.output_public_value = self.exp(
+            &self.t.g,
+            &self.t.secret_exponent_bits,
+            &self.t.g_powers_table,
+        );
+        self.t.shared_secret = self.exp(
+            &self.t.h,
+            &self.t.secret_exponent_bits,
+            &self.t.h_powers_table,
+        );
+        self.t.output = Util::concat(&self.t.output_public_value, &self.t.shared_secret);
     }
 
     fn mul(&self, a: &Vec<Option<WireType>>, b: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
@@ -163,28 +171,28 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
     fn preparePowersTable(&self, base: &Vec<Option<WireType>>) -> Vec<Vec<Option<WireType>>> {
         let mu = self.t.mu as usize;
-        let mut powersTable = vec![vec![None; mu]; self.t.secretExponentBits.len() + 1];
-        powersTable[0] = base[..mu].to_vec();
-        for j in 1..self.t.secretExponentBits.len() + 1 {
-            powersTable[j] = self.mul(&powersTable[j - 1], &powersTable[j - 1]);
+        let mut powers_table = vec![vec![None; mu]; self.t.secret_exponent_bits.len() + 1];
+        powers_table[0] = base[..mu].to_vec();
+        for j in 1..self.t.secret_exponent_bits.len() + 1 {
+            powers_table[j] = self.mul(&powers_table[j - 1], &powers_table[j - 1]);
         }
-        powersTable
+        powers_table
     }
 
     fn exp(
         &self,
         base: &Vec<Option<WireType>>,
-        expBits: &Vec<Option<WireType>>,
-        powersTable: &Vec<Vec<Option<WireType>>>,
+        exp_bits: &Vec<Option<WireType>>,
+        powers_table: &Vec<Vec<Option<WireType>>>,
     ) -> Vec<Option<WireType>> {
         let mut c = vec![self.generator.get_zero_wire(); self.t.mu as usize];
         c[0] = self.generator.get_one_wire();
-        for j in 0..expBits.len() {
-            let tmp = self.mul(&c, &powersTable[j]);
+        for j in 0..exp_bits.len() {
+            let tmp = self.mul(&c, &powers_table[j]);
             for i in 0..self.t.mu as usize {
                 c[i] = Some(
                     c[i].clone().unwrap().add(
-                        expBits[j]
+                        exp_bits[j]
                             .clone()
                             .unwrap()
                             .mul(tmp[i].clone().unwrap().sub(c[i].as_ref().unwrap())),
@@ -196,25 +204,25 @@ impl Gadget<FieldExtensionDHKeyExchange> {
     }
 
     // TODO: Test more scenarios
-    pub fn validateInputs(&self, subGroupOrder: BigInteger) {
+    pub fn validate_inputs(&self, sub_group_order: BigInteger) {
         // g and h are not zero and not one
 
         // checking the first chunk
-        let zeroOrOne1 = self.t.g[0]
+        let zero_or_one1 = self.t.g[0]
             .clone()
             .unwrap()
             .mul(self.t.g[0].clone().unwrap().sub(1));
-        let zeroOrOne2 = self.t.h[0]
+        let zero_or_one2 = self.t.h[0]
             .clone()
             .unwrap()
             .mul(self.t.h[0].clone().unwrap().sub(1));
 
         // checking the rest
-        let mut allZero1 = self.generator.get_one_wire().unwrap();
-        let mut allZero2 = self.generator.get_one_wire().unwrap();
+        let mut all_zero1 = self.generator.get_one_wire().unwrap();
+        let mut all_zero2 = self.generator.get_one_wire().unwrap();
 
         for i in 1..self.t.mu as usize {
-            allZero1 = allZero1.mul(
+            all_zero1 = all_zero1.mul(
                 self.t.g[i]
                     .as_ref()
                     .unwrap()
@@ -223,7 +231,7 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                     .as_ref()
                     .unwrap(),
             );
-            allZero2 = allZero2.mul(
+            all_zero2 = all_zero2.mul(
                 self.t.h[i]
                     .as_ref()
                     .unwrap()
@@ -238,22 +246,22 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
         CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
-            &zeroOrOne1.mul(allZero1),
+            &zero_or_one1.mul(all_zero1),
             &None,
         );
 
         CircuitGenerator::add_zero_assertion(
             self.generator.clone(),
-            &zeroOrOne2.mul(allZero2),
+            &zero_or_one2.mul(all_zero2),
             &None,
         );
 
         // verify order of points
 
-        let bitLength = subGroupOrder.bits();
-        let bits: Vec<_> = (0..bitLength)
+        let bit_length = sub_group_order.bits();
+        let bits: Vec<_> = (0..bit_length)
             .map(|i| {
-                if subGroupOrder.bit(i) {
+                if sub_group_order.bit(i) {
                     self.generator.get_one_wire()
                 } else {
                     self.generator.get_zero_wire()
@@ -261,8 +269,8 @@ impl Gadget<FieldExtensionDHKeyExchange> {
             })
             .collect();
 
-        let result1 = self.exp(&self.t.g, &bits, &self.t.gPowersTable);
-        let result2 = self.exp(&self.t.h, &bits, &self.t.hPowersTable);
+        let result1 = self.exp(&self.t.g, &bits, &self.t.g_powers_table);
+        let result2 = self.exp(&self.t.h, &bits, &self.t.h_powers_table);
 
         // both should be one
 
@@ -291,12 +299,12 @@ impl Gadget<FieldExtensionDHKeyExchange> {
             );
         }
     }
-    pub fn getOutputPublicValue(&self) -> &Vec<Option<WireType>> {
-        &self.t.outputPublicValue
+    pub fn get_output_public_value(&self) -> &Vec<Option<WireType>> {
+        &self.t.output_public_value
     }
 
-    pub fn getSharedSecret(&self) -> &Vec<Option<WireType>> {
-        &self.t.sharedSecret
+    pub fn get_shared_secret(&self) -> &Vec<Option<WireType>> {
+        &self.t.shared_secret
     }
 }
 impl GadgetConfig for Gadget<FieldExtensionDHKeyExchange> {

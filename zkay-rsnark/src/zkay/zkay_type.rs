@@ -24,7 +24,7 @@ static ZK124: OnceLock<ZkayType> = OnceLock::new();
 pub struct ZkayType {
     pub bitwidth: i32,
     pub signed: bool,
-    pub minusOne: BigInteger,
+    pub minus_one: BigInteger,
 }
 #[inline]
 pub fn utypes() -> &'static HashMap<i32, ZkayType> {
@@ -49,32 +49,32 @@ impl ZkayType {
         Self {
             bitwidth,
             signed,
-            minusOne: Util::one().shl(bitwidth).sub(Util::one()),
+            minus_one: Util::one().shl(bitwidth).sub(Util::one()),
         }
     }
 
-    pub fn ZkUint(bitwidth: i32) -> ZkayType {
+    pub fn zk_uint(bitwidth: i32) -> ZkayType {
         utypes()
             .get(&bitwidth)
             .expect(&format!("No uint type with bitwidth {bitwidth} exists."))
             .clone()
     }
-    pub fn ZkInt(bitwidth: i32) -> ZkayType {
+    pub fn zk_int(bitwidth: i32) -> ZkayType {
         stypes()
             .get(&bitwidth)
             .expect(&format!("No i32 type with bitwidth {bitwidth} exists."))
             .clone()
     }
 
-    pub fn GetNegativeConstant(val: &BigInteger, bitwidth: i32) -> BigInteger {
-        let m1 = Self::ZkInt(bitwidth).minusOne;
+    pub fn _get_negative_constant(val: &BigInteger, bitwidth: i32) -> BigInteger {
+        let m1 = Self::zk_int(bitwidth).minus_one;
         m1.clone().mul(val).bitand(&m1)
     }
 
-    pub fn checkType(expected: &ZkayType, actual: &ZkayType) -> ZkayType {
-        Self::checkTypeb(expected, actual, true)
+    pub fn check_type(expected: &ZkayType, actual: &ZkayType) -> ZkayType {
+        Self::check_typeb(expected, actual, true)
     }
-    pub fn checkTypeb(expected: &ZkayType, actual: &ZkayType, allow_field_type: bool) -> ZkayType {
+    pub fn check_typeb(expected: &ZkayType, actual: &ZkayType, allow_field_type: bool) -> ZkayType {
         // assert!(
         //     actual.is_some() && expected.is_some(),
         //     "Tried to use untyped wires"

@@ -52,15 +52,15 @@ impl Util {
     pub fn one() -> BigInteger {
         BigInteger::one()
     }
-    pub fn split(x: &BigInteger, chunkSize: i32) -> Vec<BigInteger> {
-        let numChunks = 1i32.max((x.bits() as i32 + chunkSize - 1) / chunkSize); // ceil(x.bits() / chunkSize)
-        Self::spliti(x, numChunks, chunkSize)
+    pub fn split(x: &BigInteger, chunk_size: i32) -> Vec<BigInteger> {
+        let numChunks = 1i32.max((x.bits() as i32 + chunk_size - 1) / chunk_size); // ceil(x.bits() / chunk_size)
+        Self::spliti(x, numChunks, chunk_size)
     }
 
-    pub fn spliti(x: &BigInteger, numChunks: i32, chunkSize: i32) -> Vec<BigInteger> {
-        let mask = Util::one().shl(chunkSize).sub(Util::one());
+    pub fn spliti(x: &BigInteger, numChunks: i32, chunk_size: i32) -> Vec<BigInteger> {
+        let mask = Util::one().shl(chunk_size).sub(Util::one());
         (0..numChunks)
-            .map(|i| x.clone().shr(chunkSize * i).bitand(&mask))
+            .map(|i| x.clone().shr(chunk_size * i).bitand(&mask))
             .collect()
     }
 
@@ -112,11 +112,11 @@ impl Util {
 
     pub fn random_big_integer_array(num: u64, n: &BigInteger) -> Vec<BigInteger> {
         (0..num as usize)
-            .map(|_| Self::nextRandomBigInteger(n))
+            .map(|_| Self::next_random_big_integer(n))
             .collect()
     }
 
-    pub fn nextRandomBigInteger(n: &BigInteger) -> BigInteger {
+    pub fn next_random_big_integer(n: &BigInteger) -> BigInteger {
         let rand = RandomBits::new(n.bits());
         let mut result: BigInteger = rand.sample(&mut rand::thread_rng());
         while result.sign() == Sign::Minus || &result >= n {
@@ -127,11 +127,11 @@ impl Util {
 
     pub fn random_big_integer_arrayi(num: u64, num_bits: i32) -> Vec<BigInteger> {
         (0..num as usize)
-            .map(|_| Self::nextRandomBigIntegeri(num_bits as u64))
+            .map(|_| Self::next_random_big_integeri(num_bits as u64))
             .collect()
     }
 
-    pub fn nextRandomBigIntegeri(num_bits: u64) -> BigInteger {
+    pub fn next_random_big_integeri(num_bits: u64) -> BigInteger {
         let rand = RandomBits::new(num_bits);
         let mut result: BigInteger = rand.sample(&mut rand::thread_rng());
         while result.sign() == Sign::Minus {
@@ -140,11 +140,11 @@ impl Util {
         result
     }
 
-    pub fn getDesc(desc: &Option<String>) -> String {
+    pub fn get_desc(desc: &Option<String>) -> String {
         desc.clone().unwrap_or(String::new())
     }
 
-    pub fn parseSequenceLists(s: String) -> Vec<i32> {
+    pub fn parse_sequence_lists(s: String) -> Vec<i32> {
         s.split(",")
             .filter_map(|c| {
                 (!c.is_empty()).then(|| {
@@ -156,11 +156,11 @@ impl Util {
             .collect()
     }
 
-    pub fn reverseBytes(inBitWires: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
-        let mut outs = inBitWires.clone();
-        let numBytes = inBitWires.len() / 8;
-        for i in 0..numBytes / 2 {
-            let other = numBytes - i - 1;
+    pub fn reverse_bytes(in_bit_wires: &Vec<Option<WireType>>) -> Vec<Option<WireType>> {
+        let mut outs = in_bit_wires.clone();
+        let num_bytes = in_bit_wires.len() / 8;
+        for i in 0..num_bytes / 2 {
+            let other = num_bytes - i - 1;
             for j in 0..8 {
                 let temp = outs[i * 8 + j].clone();
                 outs[i * 8 + j] = outs[other * 8 + j].clone();
@@ -170,7 +170,7 @@ impl Util {
         outs
     }
 
-    pub fn arrayToStringi(a: &Vec<i32>, separator: &String) -> String {
+    pub fn array_to_stringi(a: &Vec<i32>, separator: &String) -> String {
         let mut s = String::new();
         for i in 0..a.len() - 1 {
             s.push_str(&a[i].to_string());
@@ -194,23 +194,23 @@ impl Util {
         v == &BigInteger::ZERO || v == &Util::one()
     }
 
-    pub fn padZeros(s: &String, l: usize) -> String {
+    pub fn pad_zeros(s: &String, l: usize) -> String {
         format!("{s:0>l$}")
     }
 
     // Computation is cheap, keeping lots of BigIntegers in memory likely isn't, so use a weak hash map
 
     pub fn compute_max_value(num_bits: u64) -> BigInteger {
-        let mut maxValueCache = HashMap::new();
-        maxValueCache
+        let mut max_value_cache = HashMap::new();
+        max_value_cache
             .entry(num_bits)
             .or_insert_with_key(|i| Util::one().shl(i).sub(Util::one()))
             .clone()
     }
 
-    pub fn computeBound(num_bits: i32) -> BigInteger {
-        let mut boundCache = HashMap::new();
-        return boundCache
+    pub fn compute_bound(num_bits: i32) -> BigInteger {
+        let mut bound_cache = HashMap::new();
+        return bound_cache
             .entry(num_bits)
             .or_insert_with(|| Util::one().shl(num_bits))
             .clone();

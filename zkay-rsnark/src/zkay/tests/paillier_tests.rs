@@ -37,29 +37,29 @@ mod test {
         Util::parse_big_int(bs)
     }
     #[test]
-    pub fn testEncryptionExample() {
+    pub fn test_encryption_example() {
         let plain = BigInteger::from(42);
         let random = BigInteger::from(25);
         let n = BigInteger::from(9047);
         let mut generator = BigInteger::from(27);
         let mut enc = PaillierEncCircuitGenerator::new("Paillier Enc", plain, random, n, generator);
-        let cipher = enc.computeResult();
+        let cipher = enc.compute_result();
         assert_eq!(BigInteger::from(45106492), cipher);
     }
 
     #[test]
-    pub fn testDecryptionExample() {
+    pub fn test_decryption_example() {
         let n = BigInteger::from(9047);
         let cipher = BigInteger::from(2587834);
         let lambda = BigInteger::from(4428);
         let mu = BigInteger::from(1680);
         let mut dec = PaillierDecCircuitGenerator::new("Paillier Dec", cipher, n, lambda, mu);
-        let plain = dec.computeResult();
+        let plain = dec.compute_result();
         assert_eq!(BigInteger::from(55), plain);
     }
 
     #[test]
-    pub fn test256BitEncryption() {
+    pub fn test256_bit_encryption() {
         let plain =
             pbi("58620521968995858419238449046464883186412581610038046858008683322252437292505");
 
@@ -71,7 +71,7 @@ mod test {
 
         let mut generator = BigInteger::from(27);
         let mut enc = PaillierEncCircuitGenerator::new("Paillier Enc", plain, random, n, generator);
-        let cipher = enc.computeResult();
+        let cipher = enc.compute_result();
         assert_eq!(
             pbi(
                 "3507594166975424775795724429703273237581693482251350761249288990776233360058698524194928568270852256828927631672223419615120374443722184016172266681685963"
@@ -81,7 +81,7 @@ mod test {
     }
 
     #[test]
-    pub fn test256BitDecryption() {
+    pub fn test256_bit_decryption() {
         let n =
             pbi("71705678335151044143714697909938764102247769560297862447809589632641441407751");
 
@@ -95,7 +95,7 @@ mod test {
             pbi("38822179779668243734206910236945399376867932682990009748733172869327079310544");
 
         let mut dec = PaillierDecCircuitGenerator::new("Paillier Dec", cipher, n, lambda, mu);
-        let plain = dec.computeResult();
+        let plain = dec.compute_result();
         assert_eq!(
             pbi("58620521968995858419238449046464883186412581610038046858008683322252437292505"),
             plain
@@ -103,7 +103,7 @@ mod test {
     }
 
     #[test]
-    pub fn test256BitFastEncryption() {
+    pub fn test256_bit_fast_encryption() {
         let plain =
             pbi("58620521968995858419238449046464883186412581610038046858008683322252437292505");
 
@@ -114,7 +114,7 @@ mod test {
             pbi("71705678335151044143714697909938764102247769560297862447809589632641441407751");
 
         let mut enc = PaillierFastEncCircuitGenerator::new("Paillier Enc", n, plain, random);
-        let cipher = enc.computeResult();
+        let cipher = enc.compute_result();
         assert_eq!(
             pbi(
                 "3505470225408264473467386810920807437821858174488064393364776746993551415781505226520807868351169269605924531821264861279222635802527118722105662515867136"
@@ -124,7 +124,7 @@ mod test {
     }
 
     #[test]
-    pub fn test256BitFastDecryption() {
+    pub fn test256_bit_fast_decryption() {
         let n =
             pbi("71705678335151044143714697909938764102247769560297862447809589632641441407751");
 
@@ -135,7 +135,7 @@ mod test {
             "3505470225408264473467386810920807437821858174488064393364776746993551415781505226520807868351169269605924531821264861279222635802527118722105662515867136",
         );
         let mut dec = PaillierFastDecCircuitGenerator::new("Paillier Dec", n, lambda, cipher);
-        let plain = dec.computeResult();
+        let plain = dec.compute_result();
         assert_eq!(
             pbi("58620521968995858419238449046464883186412581610038046858008683322252437292505"),
             plain
@@ -149,11 +149,10 @@ mod test {
         random: BigInteger,
         n: BigInteger,
         generator: BigInteger,
-
-        plainWire: Option<LongElement>,
-        randomWire: Option<LongElement>,
-        nWire: Option<LongElement>,
-        generatorWire: Option<LongElement>,
+        plain_wire: Option<LongElement>,
+        random_wire: Option<LongElement>,
+        n_wire: Option<LongElement>,
+        generator_wire: Option<LongElement>,
     }
 
     impl PaillierEncCircuitGenerator {
@@ -171,10 +170,10 @@ mod test {
                     random,
                     n,
                     generator,
-                    plainWire: None,
-                    randomWire: None,
-                    nWire: None,
-                    generatorWire: None,
+                    plain_wire: None,
+                    random_wire: None,
+                    n_wire: None,
+                    generator_wire: None,
                 },
             )
         }
@@ -183,34 +182,34 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierEncCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let plainWire = CircuitGenerator::create_long_element_input(
+            let plain_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.plain.bits().max(1) as i32,
                 &Some("plain".to_owned()),
             );
-            let randomWire = CircuitGenerator::create_long_element_input(
+            let random_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.random.bits().max(1) as i32,
                 &Some("random".to_owned()),
             );
-            let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::create_long_element_input(
+            let n_bits = self.t.n.bits().max(1);
+            let n_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
-                nBits as i32,
+                n_bits as i32,
                 &Some("n".to_owned()),
             );
 
-            let generatorWire = CircuitGenerator::create_long_element_input(
+            let generator_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.generator.bits().max(1) as i32,
                 &Some("generator".to_owned()),
             );
             let enc = ZkayPaillierEncGadget::new(
-                nWire.clone(),
-                nBits as i32,
-                generatorWire.clone(),
-                plainWire.clone(),
-                randomWire.clone(),
+                n_wire.clone(),
+                n_bits as i32,
+                generator_wire.clone(),
+                plain_wire.clone(),
+                random_wire.clone(),
                 &None,
                 self.cg(),
             );
@@ -220,43 +219,43 @@ mod test {
                 &Some("cipher".to_owned()),
             );
             (
-                self.t.nWire,
-                self.t.generatorWire,
-                self.t.randomWire,
-                self.t.plainWire,
+                self.t.n_wire,
+                self.t.generator_wire,
+                self.t.random_wire,
+                self.t.plain_wire,
             ) = (
-                Some(nWire),
-                Some(generatorWire),
-                Some(randomWire),
-                Some(plainWire),
+                Some(n_wire),
+                Some(generator_wire),
+                Some(random_wire),
+                Some(plain_wire),
             );
         }
 
         fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
             evaluator.set_wire_valuebi(
-                self.t.plainWire.as_ref().unwrap(),
+                self.t.plain_wire.as_ref().unwrap(),
                 &self.t.plain,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.randomWire.as_ref().unwrap(),
+                self.t.random_wire.as_ref().unwrap(),
                 &self.t.random,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.nWire.as_ref().unwrap(),
+                self.t.n_wire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.generatorWire.as_ref().unwrap(),
+                self.t.generator_wire.as_ref().unwrap(),
                 &self.t.generator,
                 LongElement::CHUNK_BITWIDTH,
             );
         }
     }
     impl CircuitGeneratorExtend<PaillierEncCircuitGenerator> {
-        pub fn computeResult(&mut self) -> BigInteger {
+        pub fn compute_result(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
             self.generate_circuit();
             // let t2 = System.nanoTime();
@@ -264,8 +263,8 @@ mod test {
             // System.out.format("Building took %.3f ms\n", ms);
             let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.get_wires_values(&self.get_out_wires());
-            Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
+            let out_values = evaluator.get_wires_values(&self.get_out_wires());
+            Util::group(&out_values, LongElement::CHUNK_BITWIDTH)
         }
     }
     #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -274,11 +273,10 @@ mod test {
         n: BigInteger,
         lambda: BigInteger,
         mu: BigInteger,
-
-        cipherWire: Option<LongElement>,
-        nWire: Option<LongElement>,
-        lambdaWire: Option<LongElement>,
-        muWire: Option<LongElement>,
+        cipher_wire: Option<LongElement>,
+        n_wire: Option<LongElement>,
+        lambda_wire: Option<LongElement>,
+        mu_wire: Option<LongElement>,
     }
 
     impl PaillierDecCircuitGenerator {
@@ -296,10 +294,10 @@ mod test {
                     n,
                     lambda,
                     mu,
-                    cipherWire: None,
-                    nWire: None,
-                    lambdaWire: None,
-                    muWire: None,
+                    cipher_wire: None,
+                    n_wire: None,
+                    lambda_wire: None,
+                    mu_wire: None,
                 },
             )
         }
@@ -308,33 +306,33 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierDecCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let cipherWire = CircuitGenerator::create_long_element_input(
+            let cipher_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.cipher.bits().max(1) as i32,
                 &Some("cipher".to_owned()),
             );
-            let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::create_long_element_input(
+            let n_bits = self.t.n.bits().max(1);
+            let n_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
-                nBits as i32,
+                n_bits as i32,
                 &Some("n".to_owned()),
             );
-            let lambdaWire = CircuitGenerator::create_long_element_input(
+            let lambda_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.lambda.bits().max(1) as i32,
                 &Some("lambda".to_owned()),
             );
-            let muWire = CircuitGenerator::create_long_element_input(
+            let mu_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.mu.bits().max(1) as i32,
                 &Some("mu".to_owned()),
             );
             let dec = ZkayPaillierDecGadget::new(
-                nWire.clone(),
-                nBits as i32,
-                lambdaWire.clone(),
-                muWire.clone(),
-                cipherWire.clone(),
+                n_wire.clone(),
+                n_bits as i32,
+                lambda_wire.clone(),
+                mu_wire.clone(),
+                cipher_wire.clone(),
                 &None,
                 self.cg(),
             );
@@ -344,43 +342,43 @@ mod test {
                 &Some("plain".to_owned()),
             );
             (
-                self.t.cipherWire,
-                self.t.nWire,
-                self.t.lambdaWire,
-                self.t.muWire,
+                self.t.cipher_wire,
+                self.t.n_wire,
+                self.t.lambda_wire,
+                self.t.mu_wire,
             ) = (
-                Some(cipherWire),
-                Some(nWire),
-                Some(lambdaWire),
-                Some(muWire),
+                Some(cipher_wire),
+                Some(n_wire),
+                Some(lambda_wire),
+                Some(mu_wire),
             );
         }
 
         fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
             evaluator.set_wire_valuebi(
-                self.t.cipherWire.as_ref().unwrap(),
+                self.t.cipher_wire.as_ref().unwrap(),
                 &self.t.cipher,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.nWire.as_ref().unwrap(),
+                self.t.n_wire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.lambdaWire.as_ref().unwrap(),
+                self.t.lambda_wire.as_ref().unwrap(),
                 &self.t.lambda,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.muWire.as_ref().unwrap(),
+                self.t.mu_wire.as_ref().unwrap(),
                 &self.t.mu,
                 LongElement::CHUNK_BITWIDTH,
             );
         }
     }
     impl CircuitGeneratorExtend<PaillierDecCircuitGenerator> {
-        pub fn computeResult(&mut self) -> BigInteger {
+        pub fn compute_result(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
             self.generate_circuit();
             // let t2 = System.nanoTime();
@@ -388,8 +386,8 @@ mod test {
             // System.out.format("Building took %.3f ms\n", ms);
             let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.get_wires_values(&self.get_out_wires());
-            Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
+            let out_values = evaluator.get_wires_values(&self.get_out_wires());
+            Util::group(&out_values, LongElement::CHUNK_BITWIDTH)
         }
     }
     #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -397,10 +395,9 @@ mod test {
         n: BigInteger,
         plain: BigInteger,
         random: BigInteger,
-
-        nWire: Option<LongElement>,
-        plainWire: Option<LongElement>,
-        randomWire: Option<LongElement>,
+        n_wire: Option<LongElement>,
+        plain_wire: Option<LongElement>,
+        random_wire: Option<LongElement>,
     }
 
     impl PaillierFastEncCircuitGenerator {
@@ -416,9 +413,9 @@ mod test {
                     n,
                     plain,
                     random,
-                    nWire: None,
-                    plainWire: None,
-                    randomWire: None,
+                    n_wire: None,
+                    plain_wire: None,
+                    random_wire: None,
                 },
             )
         }
@@ -427,27 +424,27 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierFastEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierFastEncCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::create_long_element_input(
+            let n_bits = self.t.n.bits().max(1);
+            let n_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
-                nBits as i32,
+                n_bits as i32,
                 &Some("n".to_owned()),
             );
-            let plainWire = CircuitGenerator::create_long_element_input(
+            let plain_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.plain.bits().max(1) as i32,
                 &Some("plain".to_owned()),
             );
-            let randomWire = CircuitGenerator::create_long_element_input(
+            let random_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.random.bits().max(1) as i32,
                 &Some("random".to_owned()),
             );
             let enc = ZkayPaillierFastEncGadget::new(
-                nWire.clone(),
-                nBits as i32,
-                plainWire.clone(),
-                randomWire.clone(),
+                n_wire.clone(),
+                n_bits as i32,
+                plain_wire.clone(),
+                random_wire.clone(),
                 &None,
                 self.cg(),
             );
@@ -456,30 +453,30 @@ mod test {
                 enc.get_output_wires(),
                 &Some("cipher".to_owned()),
             );
-            (self.t.nWire, self.t.plainWire, self.t.randomWire) =
-                (Some(nWire), Some(plainWire), Some(randomWire));
+            (self.t.n_wire, self.t.plain_wire, self.t.random_wire) =
+                (Some(n_wire), Some(plain_wire), Some(random_wire));
         }
 
         fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
             evaluator.set_wire_valuebi(
-                self.t.nWire.as_ref().unwrap(),
+                self.t.n_wire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.plainWire.as_ref().unwrap(),
+                self.t.plain_wire.as_ref().unwrap(),
                 &self.t.plain,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.randomWire.as_ref().unwrap(),
+                self.t.random_wire.as_ref().unwrap(),
                 &self.t.random,
                 LongElement::CHUNK_BITWIDTH,
             );
         }
     }
     impl CircuitGeneratorExtend<PaillierFastEncCircuitGenerator> {
-        pub fn computeResult(&mut self) -> BigInteger {
+        pub fn compute_result(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
             self.generate_circuit();
             // let t2 = System.nanoTime();
@@ -487,8 +484,8 @@ mod test {
             // System.out.format("Building took %.3f ms\n", ms);
             let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.get_wires_values(&self.get_out_wires());
-            Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
+            let out_values = evaluator.get_wires_values(&self.get_out_wires());
+            Util::group(&out_values, LongElement::CHUNK_BITWIDTH)
         }
     }
     #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -496,10 +493,9 @@ mod test {
         n: BigInteger,
         lambda: BigInteger,
         cipher: BigInteger,
-
-        nWire: Option<LongElement>,
-        lambdaWire: Option<LongElement>,
-        cipherWire: Option<LongElement>,
+        n_wire: Option<LongElement>,
+        lambda_wire: Option<LongElement>,
+        cipher_wire: Option<LongElement>,
     }
 
     impl PaillierFastDecCircuitGenerator {
@@ -515,9 +511,9 @@ mod test {
                     n,
                     lambda,
                     cipher,
-                    nWire: None,
-                    lambdaWire: None,
-                    cipherWire: None,
+                    n_wire: None,
+                    lambda_wire: None,
+                    cipher_wire: None,
                 },
             )
         }
@@ -526,27 +522,27 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierFastDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierFastDecCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let nBits = self.t.n.bits().max(1);
-            let nWire = CircuitGenerator::create_long_element_input(
+            let n_bits = self.t.n.bits().max(1);
+            let n_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
-                nBits as i32,
+                n_bits as i32,
                 &Some("n".to_owned()),
             );
-            let lambdaWire = CircuitGenerator::create_long_element_input(
+            let lambda_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.lambda.bits().max(1) as i32,
                 &Some("lambda".to_owned()),
             );
-            let cipherWire = CircuitGenerator::create_long_element_input(
+            let cipher_wire = CircuitGenerator::create_long_element_input(
                 self.cg(),
                 self.t.cipher.bits().max(1) as i32,
                 &Some("cipher".to_owned()),
             );
             let dec = ZkayPaillierFastDecGadget::new(
-                nWire.clone(),
-                nBits as i32,
-                lambdaWire.clone(),
-                cipherWire.clone(),
+                n_wire.clone(),
+                n_bits as i32,
+                lambda_wire.clone(),
+                cipher_wire.clone(),
                 &None,
                 self.cg(),
             );
@@ -555,30 +551,30 @@ mod test {
                 dec.get_output_wires(),
                 &Some("plain".to_owned()),
             );
-            (self.t.nWire, self.t.lambdaWire, self.t.cipherWire) =
-                (Some(nWire), Some(lambdaWire), Some(cipherWire));
+            (self.t.n_wire, self.t.lambda_wire, self.t.cipher_wire) =
+                (Some(n_wire), Some(lambda_wire), Some(cipher_wire));
         }
 
         fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
             evaluator.set_wire_valuebi(
-                self.t.nWire.as_ref().unwrap(),
+                self.t.n_wire.as_ref().unwrap(),
                 &self.t.n,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.lambdaWire.as_ref().unwrap(),
+                self.t.lambda_wire.as_ref().unwrap(),
                 &self.t.lambda,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.cipherWire.as_ref().unwrap(),
+                self.t.cipher_wire.as_ref().unwrap(),
                 &self.t.cipher,
                 LongElement::CHUNK_BITWIDTH,
             );
         }
     }
     impl CircuitGeneratorExtend<PaillierFastDecCircuitGenerator> {
-        pub fn computeResult(&mut self) -> BigInteger {
+        pub fn compute_result(&mut self) -> BigInteger {
             // let t1 = System.nanoTime();
             self.generate_circuit();
             // let t2 = System.nanoTime();
@@ -586,8 +582,8 @@ mod test {
             // System.out.format("Building took %.3f ms\n", ms);
             let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.get_wires_values(&self.get_out_wires());
-            Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
+            let out_values = evaluator.get_wires_values(&self.get_out_wires());
+            Util::group(&out_values, LongElement::CHUNK_BITWIDTH)
         }
     }
 }

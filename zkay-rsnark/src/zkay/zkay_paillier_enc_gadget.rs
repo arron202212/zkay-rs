@@ -31,9 +31,9 @@ use std::ops::{Add, Mul, Sub};
 #[derive(Debug, Clone)]
 pub struct ZkayPaillierEncGadget {
     pub n: LongElement,
-    pub nSquare: LongElement,
-    pub nBits: i32,
-    pub nSquareMaxBits: i32,
+    pub n_square: LongElement,
+    pub n_bits: i32,
+    pub n_square_max_bits: i32,
     pub g: LongElement,
     pub plain: LongElement,
     pub random: LongElement,
@@ -42,26 +42,26 @@ pub struct ZkayPaillierEncGadget {
 impl ZkayPaillierEncGadget {
     pub fn new(
         n: LongElement,
-        nBits: i32,
+        n_bits: i32,
         g: LongElement,
         plain: LongElement,
         random: LongElement,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let nSquareMaxBits = 2 * nBits; // Maximum bit length of n^2
-        let maxNumChunks =
-            (nSquareMaxBits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
-        let nSquare = n.clone().mul(&n).align(maxNumChunks as usize);
+        let n_square_max_bits = 2 * n_bits; // Maximum bit length of n^2
+        let max_num_chunks =
+            (n_square_max_bits + (LongElement::CHUNK_BITWIDTH - 1)) / LongElement::CHUNK_BITWIDTH;
+        let n_square = n.clone().mul(&n).align(max_num_chunks as usize);
 
         let mut _self = Gadget::<Self>::new(
             generator,
             desc,
             Self {
                 n,
-                nSquare,
-                nBits,
-                nSquareMaxBits,
+                n_square,
+                n_bits,
+                n_square_max_bits,
                 g,
                 plain,
                 random,
@@ -74,66 +74,66 @@ impl ZkayPaillierEncGadget {
 }
 impl Gadget<ZkayPaillierEncGadget> {
     fn build_circuit(&mut self) {
-        let nSquareMinBits = 2 * self.t.nBits - 1; // Minimum bit length of n^2
+        let n_square_min_bits = 2 * self.t.n_bits - 1; // Minimum bit length of n^2
         // Prove that random is in Z_n* by checking that random has an inverse mod n
         // println!(
         //     "===t==random.array===build_circuit======{:?}",
         //     self.t.random.array
         // );
-        let randInv = LongIntegerModInverseGadget::new(
+        let rand_inv = LongIntegerModInverseGadget::new(
             self.t.random.clone(),
             self.t.n.clone(),
             false,
             &None,
             self.generator.clone(),
         )
-        .getResult()
+        .get_result()
         .clone();
 
         CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &randInv.check_non_zero(),
+            &rand_inv.check_non_zero(),
             &None,
         );
         // let c = g^m * r^n mod n^2
-        let gPowPlain = LongIntegerModPowGadget::new(
+        let g_pow_plain = LongIntegerModPowGadget::new(
             self.t.g.clone(),
             self.t.plain.clone(),
-            self.t.nSquare.clone(),
-            nSquareMinBits,
-            self.t.nBits,
+            self.t.n_square.clone(),
+            n_square_min_bits,
+            self.t.n_bits,
             &Some("g^m".to_owned()),
             self.generator.clone(),
         )
-        .getResult()
+        .get_result()
         .clone();
-        let randPowN = LongIntegerModPowGadget::new(
+        let rand_pow_n = LongIntegerModPowGadget::new(
             self.t.random.clone(),
             self.t.n.clone(),
-            self.t.nSquare.clone(),
-            nSquareMinBits,
-            self.t.nBits,
+            self.t.n_square.clone(),
+            n_square_min_bits,
+            self.t.n_bits,
             &Some("r^m".to_owned()),
             self.generator.clone(),
         )
-        .getResult()
+        .get_result()
         .clone();
-        let product = gPowPlain.clone().mul(&randPowN);
+        let product = g_pow_plain.clone().mul(&rand_pow_n);
         self.t.cipher = Some(
             LongIntegerModGadget::new(
                 product,
-                self.t.nSquare.clone(),
-                nSquareMinBits,
+                self.t.n_square.clone(),
+                n_square_min_bits,
                 true,
                 &Some("g^m * r^n mod n^2".to_owned()),
                 self.generator.clone(),
             )
-            .getRemainder()
+            .get_remainder()
             .clone(),
         );
     }
 
-    pub fn getCiphertext(&self) -> &Option<LongElement> {
+    pub fn get_cipher_text(&self) -> &Option<LongElement> {
         &self.t.cipher
     }
 }

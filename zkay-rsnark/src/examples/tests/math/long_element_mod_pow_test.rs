@@ -33,9 +33,9 @@ mod test {
         b: BigInteger,
         e: BigInteger,
         m: BigInteger,
-        bWire: Option<LongElement>,
-        eWire: Option<LongElement>,
-        mWire: Option<LongElement>,
+        b_wire: Option<LongElement>,
+        e_wire: Option<LongElement>,
+        m_wire: Option<LongElement>,
     }
     impl ModPowCircuitGenerator {
         pub fn new(
@@ -50,9 +50,9 @@ mod test {
                     b,
                     e,
                     m,
-                    bWire: None,
-                    eWire: None,
-                    mWire: None,
+                    b_wire: None,
+                    e_wire: None,
+                    m_wire: None,
                 },
             )
         }
@@ -61,7 +61,7 @@ mod test {
     impl CGConfig for CircuitGeneratorExtend<ModPowCircuitGenerator> {
         fn build_circuit(&mut self) {
             let start = std::time::Instant::now();
-            let bWire = CircuitGenerator::create_long_element_input(
+            let b_wire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.b.bits() as i32),
                 &Some("b".to_owned()),
@@ -71,7 +71,7 @@ mod test {
                 line!(),
                 start.elapsed()
             );
-            let eWire = CircuitGenerator::create_long_element_input(
+            let e_wire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.e.bits() as i32),
                 &Some("e".to_owned()),
@@ -82,7 +82,7 @@ mod test {
                 start.elapsed()
             );
 
-            let mWire = CircuitGenerator::create_long_element_input(
+            let m_wire = CircuitGenerator::create_long_element_input(
                 self.cg.clone(),
                 1i32.max(self.t.m.bits() as i32),
                 &Some("m".to_owned()),
@@ -93,10 +93,10 @@ mod test {
                 start.elapsed()
             );
 
-            let modPow = LongIntegerModPowGadget::new(
-                bWire.clone(),
-                eWire.clone(),
-                mWire.clone(),
+            let mod_pow = LongIntegerModPowGadget::new(
+                b_wire.clone(),
+                e_wire.clone(),
+                m_wire.clone(),
                 self.t.m.bits().max(1) as i32,
                 -1,
                 &None,
@@ -110,7 +110,7 @@ mod test {
 
             CircuitGenerator::make_output_array(
                 self.cg(),
-                modPow.get_output_wires(),
+                mod_pow.get_output_wires(),
                 &Some("c".to_owned()),
             );
             println!(
@@ -119,29 +119,30 @@ mod test {
                 start.elapsed()
             );
 
-            (self.t.bWire, self.t.eWire, self.t.mWire) = (Some(bWire), Some(eWire), Some(mWire));
+            (self.t.b_wire, self.t.e_wire, self.t.m_wire) =
+                (Some(b_wire), Some(e_wire), Some(m_wire));
         }
 
         fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
             evaluator.set_wire_valuebi(
-                self.t.bWire.as_ref().unwrap(),
+                self.t.b_wire.as_ref().unwrap(),
                 &self.t.b,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.eWire.as_ref().unwrap(),
+                self.t.e_wire.as_ref().unwrap(),
                 &self.t.e,
                 LongElement::CHUNK_BITWIDTH,
             );
             evaluator.set_wire_valuebi(
-                self.t.mWire.as_ref().unwrap(),
+                self.t.m_wire.as_ref().unwrap(),
                 &self.t.m,
                 LongElement::CHUNK_BITWIDTH,
             );
         }
     }
     impl CircuitGeneratorExtend<ModPowCircuitGenerator> {
-        pub fn computeResult(&mut self) -> BigInteger {
+        pub fn compute_result(&mut self) -> BigInteger {
             // let t1 = Instant();
             self.generate_circuit();
             // let t2 = System.nanoTime();
@@ -149,8 +150,8 @@ mod test {
             // println!("Building took {} ms\n", ms);
             let evaluator = self.eval_circuit().unwrap();
 
-            let outValues = evaluator.get_wires_values(&self.get_out_wires());
-            Util::group(&outValues, LongElement::CHUNK_BITWIDTH)
+            let out_values = evaluator.get_wires_values(&self.get_out_wires());
+            Util::group(&out_values, LongElement::CHUNK_BITWIDTH)
         }
     }
 
@@ -162,7 +163,7 @@ mod test {
             BigInteger::from(123),
             BigInteger::from(456),
         );
-        let c = generator.computeResult();
+        let c = generator.compute_result();
         assert_eq!(BigInteger::ZERO, c);
     }
 
@@ -174,7 +175,7 @@ mod test {
             BigInteger::ZERO,
             BigInteger::from(456),
         );
-        let c = generator.computeResult();
+        let c = generator.compute_result();
         assert_eq!(Util::one(), c);
     }
 
@@ -186,7 +187,7 @@ mod test {
             BigInteger::from(123),
             BigInteger::from(49),
         );
-        let c = generator.computeResult();
+        let c = generator.compute_result();
         assert_eq!(BigInteger::from(34), c);
     }
 
@@ -198,7 +199,7 @@ mod test {
             BigInteger::from(1924438110),
             BigInteger::from(1244548309),
         );
-        let c = generator.computeResult();
+        let c = generator.compute_result();
         assert_eq!(BigInteger::from(1150783129), c);
     }
 
@@ -214,7 +215,7 @@ mod test {
             "9039856562572728185463362753817675352642505391922098683577910062101216793612391112534717706865738103447277202233662317581994672238651788740521423343996904",
         );
         let mut generator = ModPowCircuitGenerator::new("ModPow testBigNumbers", b, e, m);
-        let c = generator.computeResult();
+        let c = generator.compute_result();
         assert_eq!(
             Util::parse_big_int(
                 "4080165247529688641168795936577955464635773385849731658617235197161883010753794462149192697334812616262060998583715533488845149182881410994561908785903409"
@@ -235,7 +236,7 @@ mod test {
             "16341107832445116205501640528523261649363266022751014553926605400693992782728289669386500685967279904769515360460915461397699260232363692028255467589874731199535552036007819650139350306063649544137976119483100038509538628484509854982386732484301157451219210675460186536136186548019152716874977265904275559936393790071667479245132633151965846094409277716712783297072377828830780475770963688044926163259779633640754286181456464469086710235592710358693699582021363258539943667538953498866708030079155181768578680991002618462287324087199367911154799129512810687516524784908002605102740236792183147799768358168657519262340",
         );
         let mut generator = ModPowCircuitGenerator::new("ModPow testRealisticNumbers", b, e, m);
-        let c = generator.computeResult();
+        let c = generator.compute_result();
         assert_eq!(
             Util::parse_big_int(
                 "10041145040912246792217185960634142108882886420753112974004655693388733371253235530595367456730729439413713751150336230317387437323376172933840749743237925669646554701289404960263378809774983613579908750440162249938462891358444658196275015202486701830487504498862099547626730682213413245677424282244485936393385592413321214705531388577136462497417228753441282460805240686370595534242850057667908832877962069581872660385376872916767607794259471107512500691855904718103808084312491865904816163148549790852213092902579604085427284017671072032889098384745537545758045971825649926841956464860846563496600900920159805348436"

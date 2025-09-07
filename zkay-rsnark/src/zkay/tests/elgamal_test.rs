@@ -77,14 +77,14 @@ mod test {
         fn build_circuit(&mut self) {
             let randomness =
                 CircuitGenerator::create_constant_wire(self.cg(), &self.t.random, &None);
-            let randomnessBits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
+            let randomness_bits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
             let message = CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain, &None);
-            let messageBits = message.get_bit_wiresi(32, &None);
+            let message_bits = message.get_bit_wiresi(32, &None);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalEncGadget::new(
-                messageBits.as_array().clone(),
+                message_bits.as_array().clone(),
                 self.t.pk.asConstJubJub(&generator),
-                randomnessBits.as_array().clone(),
+                randomness_bits.as_array().clone(),
                 self.cg(),
             );
             CircuitGenerator::make_output_array(
@@ -121,13 +121,13 @@ mod test {
         fn build_circuit(&mut self) {
             let randomness =
                 CircuitGenerator::create_constant_wire(self.cg(), &self.t.random, &None);
-            let randomnessBits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
+            let randomness_bits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalRerandGadget::new(
                 self.t.c1.asConstJubJub(&generator),
                 self.t.c2.asConstJubJub(&generator),
                 self.t.pk.asConstJubJub(&generator),
-                randomnessBits.as_array().clone(),
+                randomness_bits.as_array().clone(),
                 self.cg(),
             );
             CircuitGenerator::make_output_array(
@@ -173,16 +173,16 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalDecCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let secretKey = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sk, &None);
-            let skBits = secretKey.get_bit_wiresi(self.t.sk.bits(), &None);
-            let msgWire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.msg, &None);
+            let secret_key = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sk, &None);
+            let sk_bits = secret_key.get_bit_wiresi(self.t.sk.bits(), &None);
+            let msg_wire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.msg, &None);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalDecGadget::new(
                 self.t.pk.asConstJubJub(&generator),
-                skBits.as_array().clone(),
+                sk_bits.as_array().clone(),
                 self.t.c1.asConstJubJub(&generator),
                 self.t.c2.asConstJubJub(&generator),
-                msgWire,
+                msg_wire,
                 self.cg(),
             );
             CircuitGenerator::make_output_array(
@@ -195,16 +195,16 @@ mod test {
         fn generate_sample_input(&self, _evaluator: &mut CircuitEvaluator) {}
     }
 
-    fn oneInputTest(
+    fn one_input_test(
         plain: BigInteger,
         random: BigInteger,
         random2: BigInteger,
         sk: BigInteger,
         pk: AffinePoint,
-        c1Expected: AffinePoint,
-        c2Expected: AffinePoint,
-        r1Expected: AffinePoint,
-        r2Expected: AffinePoint,
+        c1_expected: AffinePoint,
+        c2_expected: AffinePoint,
+        r1_expected: AffinePoint,
+        r2_expected: AffinePoint,
     ) {
         let mut cgen =
             ElgamalEncCircuitGenerator::new("test_enc", plain.clone(), random, pk.clone());
@@ -215,17 +215,17 @@ mod test {
         let c1y = evaluator.get_wire_value(cgen.get_out_wires()[1].as_ref().unwrap());
         let c2x = evaluator.get_wire_value(cgen.get_out_wires()[2].as_ref().unwrap());
         let c2y = evaluator.get_wire_value(cgen.get_out_wires()[3].as_ref().unwrap());
-        assert_eq!(c1Expected.x, c1x);
-        assert_eq!(c1Expected.y, c1y);
-        assert_eq!(c2Expected.x, c2x);
-        assert_eq!(c2Expected.y, c2y);
+        assert_eq!(c1_expected.x, c1x);
+        assert_eq!(c1_expected.y, c1y);
+        assert_eq!(c2_expected.x, c2x);
+        assert_eq!(c2_expected.y, c2y);
 
         let mut cgen = ElgamalDecCircuitGenerator::new(
             "test_dec",
             pk.clone(),
             sk.clone(),
-            c1Expected.clone(),
-            c2Expected.clone(),
+            c1_expected.clone(),
+            c2_expected.clone(),
             plain,
         );
         cgen.generate_circuit();
@@ -234,8 +234,13 @@ mod test {
         let one = evaluator.get_wire_value(cgen.get_out_wires()[0].as_ref().unwrap());
         assert_eq!(Util::one(), one);
 
-        let mut rgen =
-            ElgamalRerandCircuitGenerator::new("test_rerand", c1Expected, c2Expected, pk, random2);
+        let mut rgen = ElgamalRerandCircuitGenerator::new(
+            "test_rerand",
+            c1_expected,
+            c2_expected,
+            pk,
+            random2,
+        );
         rgen.generate_circuit();
         let mut evaluator = CircuitEvaluator::new("test_rerand", &rgen.cg);
         evaluator.evaluate(&rgen.cg);
@@ -243,10 +248,10 @@ mod test {
         let r1y = evaluator.get_wire_value(rgen.get_out_wires()[1].as_ref().unwrap());
         let r2x = evaluator.get_wire_value(rgen.get_out_wires()[2].as_ref().unwrap());
         let r2y = evaluator.get_wire_value(rgen.get_out_wires()[3].as_ref().unwrap());
-        assert_eq!(r1Expected.x, r1x);
-        assert_eq!(r1Expected.y, r1y);
-        assert_eq!(r2Expected.x, r2x);
-        assert_eq!(r2Expected.y, r2y);
+        assert_eq!(r1_expected.x, r1x);
+        assert_eq!(r1_expected.y, r1y);
+        assert_eq!(r2_expected.x, r2x);
+        assert_eq!(r2_expected.y, r2y);
     }
 
     // * SAGE SCRIPT TO GENERATE TEST CASES
@@ -328,7 +333,7 @@ mod test {
     //        Run(448344687855328518203304384067387474955750326758815542295083498526674852893, 42, 4992017890738015216991440853823451346783754228142718316135811893930821210517, 39278167679809198687982907130870918672986098198762678158021231)
 
     #[test]
-    pub fn testElgamal1() {
+    pub fn test_elgamal1() {
         let plain = BigInteger::from(42);
         let random = BigInteger::from(405309899802i64);
         let random2 = BigInteger::from(498372940021i64);
@@ -354,7 +359,7 @@ mod test {
         let r2y_exp =
             pbi("14767943092180306325317567029873935159218010704312689008185444061546749553058");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -367,7 +372,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal2() {
+    pub fn test_elgamal2() {
         let plain = BigInteger::from(439864);
         let random = BigInteger::from(450983970634i64);
         let random2 = BigInteger::from(1293840028489i64);
@@ -393,7 +398,7 @@ mod test {
         let r2y_exp =
             pbi("448225545923890529546465107524885423214165045321928302012946805889055497548");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -406,7 +411,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal3() {
+    pub fn test_elgamal3() {
         let plain = BigInteger::from(29479828);
         let random = BigInteger::from(11053400909823i64);
         let random2 = BigInteger::from(2818211);
@@ -432,7 +437,7 @@ mod test {
         let r2y_exp =
             pbi("4050578578711337375872799728115034683479047059868613096904707326437389065410");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -445,7 +450,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal4() {
+    pub fn test_elgamal4() {
         let plain = BigInteger::from(20503);
         let random = BigInteger::from(40394702098873424340i128);
         let random2 = BigInteger::from(1199860398278648324i128);
@@ -471,7 +476,7 @@ mod test {
         let r2y_exp =
             pbi("16572497279801942880250856433861727900257767071582946132942024691743685883868");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -484,7 +489,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal5() {
+    pub fn test_elgamal5() {
         let plain = BigInteger::from(9973);
         let random = BigInteger::from(400939876470980734i64);
         let random2 = BigInteger::from(980387209578i64);
@@ -510,7 +515,7 @@ mod test {
         let r2y_exp =
             pbi("19260145642157386527783785376105740564939772326492185963463823034939637900510");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -523,7 +528,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal6() {
+    pub fn test_elgamal6() {
         let plain = BigInteger::from(3092);
         let random = BigInteger::from(304047020868704i64);
         let random2 = BigInteger::from(29059219019893i64);
@@ -549,7 +554,7 @@ mod test {
         let r2y_exp =
             pbi("1217462091073599572419023941043993348899274045225302280909460520543019198569");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -562,7 +567,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal7() {
+    pub fn test_elgamal7() {
         let plain = BigInteger::from(11);
         let random = BigInteger::from(9438929848i64);
         let random2 = BigInteger::from(472788712);
@@ -588,7 +593,7 @@ mod test {
         let r2y_exp =
             pbi("20283399076363492534661102577978890614478101704954633485201009460012598302984");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -601,7 +606,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal8() {
+    pub fn test_elgamal8() {
         let plain = BigInteger::from(309904);
         let random = BigInteger::from(2249);
         let random2 = BigInteger::from(187498091987891i64);
@@ -627,7 +632,7 @@ mod test {
         let r2y_exp =
             pbi("20884432215848566718856711647507988451300507966194327106115486784790475250127");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,
@@ -640,7 +645,7 @@ mod test {
         );
     }
     #[test]
-    pub fn testElgamal9() {
+    pub fn test_elgamal9() {
         let plain = BigInteger::from(42);
         let random =
             pbi("4992017890738015216991440853823451346783754228142718316135811893930821210517");
@@ -667,7 +672,7 @@ mod test {
         let r2y_exp =
             pbi("10093888871955407903732269877335284565715256278559408224374937460596986224178");
 
-        oneInputTest(
+        one_input_test(
             plain,
             random,
             random2,

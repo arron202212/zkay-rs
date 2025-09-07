@@ -810,15 +810,15 @@ mod test {
 
         let mut evaluator = generator.eval_circuit().unwrap();
 
-        let mut out_Digest = String::new();
+        let mut out_digest = String::new();
         for w in generator.get_out_wires() {
-            out_Digest.push_str(&Util::padZeros(
+            out_digest.push_str(&Util::pad_zeros(
                 &evaluator
                     .get_wire_value(w.as_ref().unwrap())
                     .to_str_radix(16),
                 8,
             ));
         }
-        assert_eq!(out_Digest, expected_digest);
+        assert_eq!(out_digest, expected_digest);
     }
 }

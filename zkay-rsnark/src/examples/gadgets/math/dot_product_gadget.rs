@@ -37,14 +37,17 @@ use crate::{
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
+
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Sub},
+};
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Sub};
 use zkay_derive::ImplStructNameConfig;
+
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct DotProductGadget {
     pub a: Vec<Option<WireType>>,

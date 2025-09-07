@@ -25,7 +25,7 @@ use rccell::RcCell;
 pub struct ZkayElgamalMulGadget {
     pub c1: JubJubPoint,
     pub c2: JubJubPoint,
-    pub scalarBits: Vec<Option<WireType>>,
+    pub scalar_bits: Vec<Option<WireType>>,
     pub e1: Option<JubJubPoint>,
     pub e2: Option<JubJubPoint>,
     pub outputs: Vec<Option<WireType>>,
@@ -34,13 +34,13 @@ impl ZkayElgamalMulGadget {
     pub fn new(
         c1: JubJubPoint,
         c2: JubJubPoint,
-        scalarBits: Vec<Option<WireType>>,
+        scalar_bits: Vec<Option<WireType>>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
         let mut _self = ZkayBabyJubJubGadget::<Self>::new(
             &None,
             Self {
-                scalarBits,
+                scalar_bits,
                 c1,
                 c2,
                 e1: None,
@@ -55,8 +55,8 @@ impl ZkayElgamalMulGadget {
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalMulGadget>> {
     fn build_circuit(&mut self) {
-        let e1 = self.mulScalar(&self.t.t.c1, &self.t.t.scalarBits);
-        let e2 = self.mulScalar(&self.t.t.c2, &self.t.t.scalarBits);
+        let e1 = self.mul_scalar(&self.t.t.c1, &self.t.t.scalar_bits);
+        let e2 = self.mul_scalar(&self.t.t.c2, &self.t.t.scalar_bits);
         self.t.t.outputs = vec![&e1.x, &e1.y, &e2.x, &e2.y]
             .iter()
             .map(|&v| Some(v.clone()))

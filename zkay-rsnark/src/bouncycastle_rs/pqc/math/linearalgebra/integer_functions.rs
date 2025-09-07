@@ -924,7 +924,7 @@ impl IntegerFunctions {
     //     while (true)
     //     {
     //         // Do cheap "pre-test" if applicable
-    //         if (result.bitLength() > 6)
+    //         if (result.bit_length() > 6)
     //         {
     //             long r = result.rem(
     //                 BigInteger.valueOf(SMALL_PRIME_PRODUCT)).longValue();
@@ -938,8 +938,8 @@ impl IntegerFunctions {
     //             }
     //         }
 
-    //         // All candidates of bitLength 2 and 3 are prime by this point
-    //         if (result.bitLength() < 4)
+    //         // All candidates of bit_length 2 and 3 are prime by this point
+    //         if (result.bit_length() < 4)
     //         {
     //             return result;
     //         }
@@ -1062,7 +1062,7 @@ impl IntegerFunctions {
     // public static BigInteger randomize(BigInteger upperBound,
     //                                    SecureRandom prng)
     // {
-    //     int blen = upperBound.bitLength();
+    //     int blen = upperBound.bit_length();
     //     BigInteger randomNum = BigInteger.valueOf(0);
 
     //     if (prng == null)
@@ -1098,7 +1098,7 @@ impl IntegerFunctions {
     //             "cannot extract root of negative number" + a + ".");
     //     }
 
-    //     bl = a.bitLength();
+    //     bl = a.bit_length();
     //     result = Self::ZERO;
     //     rem = Self::ZERO;
 
@@ -1368,12 +1368,12 @@ impl IntegerFunctions {
     //     byte[] valBytes = val.abs().toByteArray();
 
     //     // check whether the array includes a sign bit
-    //     if ((val.bitLength() & 7) != 0)
+    //     if ((val.bit_length() & 7) != 0)
     //     {
     //         return valBytes;
     //     }
     //     // get rid of the sign bit (first byte)
-    //     byte[] tmp = new byte[val.bitLength() >> 3];
+    //     byte[] tmp = new byte[val.bit_length() >> 3];
     //     System.arraycopy(valBytes, 1, tmp, 0, tmp.length);
     //     return tmp;
     // }

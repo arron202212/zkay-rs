@@ -22,19 +22,19 @@ pub struct ZkayUtil;
 impl ZkayUtil {
     pub const ZKAY_RESTRICT_EVERYTHING: bool = false; // if set to true for debugging, each typed wire constructor restricts bitwidth (rather than just  inputs)
 
-    pub fn reverseBytes(
-        bitArray: WireArray,
-        targetWordBits: i32,
+    pub fn reverse_bytes(
+        bit_array: WireArray,
+        target_word_bits: i32,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         WireArray::new(
-            Util::reverseBytes(bitArray.as_array()),
+            Util::reverse_bytes(bit_array.as_array()),
             generator.downgrade(),
         )
-        .pack_bits_into_words(targetWordBits as usize, &None)
+        .pack_bits_into_words(target_word_bits as usize, &None)
     }
 
-    pub fn unsignedBytesToBigInt(bytes: &[u8]) -> BigInteger {
+    pub fn unsigned_bytes_to_big_int(bytes: &[u8]) -> BigInteger {
         let signum = if bytes.iter().all(|&b| b == 0) {
             Sign::NoSign
         } else {
@@ -44,7 +44,7 @@ impl ZkayUtil {
         BigInteger::from_bytes_be(signum, bytes)
     }
 
-    pub fn unsignedBigintToBytes(val: BigInteger) -> Vec<u8> {
+    pub fn unsigned_bigint_to_bytes(val: BigInteger) -> Vec<u8> {
         let (_, b) = val.to_bytes_be();
         let mut ret;
         if b[0] == 0 && b.len() > 1 {
@@ -56,9 +56,9 @@ impl ZkayUtil {
         ret
     }
 
-    pub fn unsignedBigintToBytesi(val: BigInteger, byteCount: i32) -> Vec<u8> {
-        let byte_count = byteCount as usize;
-        let t = Self::unsignedBigintToBytes(val);
+    pub fn unsigned_bigint_to_bytesi(val: BigInteger, byte_count: i32) -> Vec<u8> {
+        let byte_count = byte_count as usize;
+        let t = Self::unsigned_bigint_to_bytes(val);
         assert!(
             t.len() <= byte_count,
             "Value too large to fit into {byte_count} bytes"
@@ -68,7 +68,7 @@ impl ZkayUtil {
         ret
     }
 
-    pub fn runZkayJsnarkInterface() {
+    pub fn run_zkay_jsnark_interface() {
         let (Some(p), _) = run_command(
             vec![
                 "../libsnark/build/libsnark/zkay_interface/run_snark",

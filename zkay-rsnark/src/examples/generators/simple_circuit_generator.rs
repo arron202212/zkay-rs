@@ -38,14 +38,10 @@ use crate::{
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-//     get_active_circuit_generator,
-// };
-// use crate::circuit::structure::wire_type::WireType;
+
 use std::ops::{Add, Div, Mul, Rem, Sub};
 use zkay_derive::ImplStructNameConfig;
+
 crate::impl_struct_name_for!(CircuitGeneratorExtend<SimpleCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct SimpleCircuitGenerator {

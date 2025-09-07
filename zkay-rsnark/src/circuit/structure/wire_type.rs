@@ -27,7 +27,7 @@ use crate::{
             },
             constant_wire::ConstantWire,
             linear_combination_bit_wire::LinearCombinationBitWire,
-            linear_combination_wire::LinearCombinationWire,
+            linear_combination_wire::LinearCombination_wire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
             wire::{Base, GeneratorConfig, GetWireId, SetBitsConfig, Wire, WireConfig},
@@ -59,7 +59,7 @@ use strum_macros::{EnumIs, EnumTryAs};
 pub enum WireType {
     Wire(Wire<Base>),
     LinearCombinationBit(Wire<LinearCombinationBitWire>),
-    LinearCombination(Wire<LinearCombinationWire>),
+    LinearCombination(Wire<LinearCombination_wire>),
     Variable(Wire<VariableWire>),
     VariableBit(Wire<VariableBitWire>),
     Constant(Wire<ConstantWire>),
@@ -109,7 +109,7 @@ impl MulWire<&BigInteger> for WireType {
         if b == &BigInteger::ZERO {
             return generator.get_zero_wire().unwrap();
         }
-        let out = WireType::LinearCombination(LinearCombinationWire::new(
+        let out = WireType::LinearCombination(LinearCombination_wire::new(
             generator.get_current_wire_id(),
             None,
             generator.clone().downgrade(),
@@ -237,7 +237,7 @@ impl Xor_bitwise<&WireType> for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(&v, &None)
         } else {
-            WireType::LinearCombination(LinearCombinationWire::new(
+            WireType::LinearCombination(LinearCombination_wire::new(
                 -1,
                 Some(result),
                 generator.clone().downgrade(),
@@ -250,7 +250,7 @@ impl Xor_bitwise<i64> for WireType {
     fn xor_bitwise(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
-        self.xor_bitwise(&generator.create_constant_wire(v, desc), num_bits, desc)
+        self.xor_bitwises(&generator.create_constant_wire(v, desc), num_bits, desc)
     }
 }
 
@@ -258,7 +258,7 @@ impl Xor_bitwise<&BigInteger> for WireType {
     fn xor_bitwise(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
-        self.xor_bitwise(&generator.create_constant_wire(b, desc), num_bits, desc)
+        self.xor_bitwises(&generator.create_constant_wire(b, desc), num_bits, desc)
     }
 }
 
@@ -273,7 +273,7 @@ impl AndBitwise<&WireType> for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(&v, &None)
         } else {
-            WireType::LinearCombination(LinearCombinationWire::new(
+            WireType::LinearCombination(LinearCombination_wire::new(
                 -1,
                 Some(result),
                 generator.clone().downgrade(),
@@ -309,7 +309,7 @@ impl OrBitwise<&WireType> for WireType {
         if let Some(v) = v {
             generator.create_constant_wire(&v, &None)
         } else {
-            WireType::LinearCombination(LinearCombinationWire::new(
+            WireType::LinearCombination(LinearCombination_wire::new(
                 -1,
                 Some(result),
                 generator.clone().downgrade(),

@@ -32,19 +32,19 @@ impl DummyBackend {
     pub const KEY_CHUNK_SIZE: i32 = 256;
 
     pub fn new(
-        keyBits: i32,
+        key_bits: i32,
         generator: RcCell<CircuitGenerator>,
     ) -> CryptoBackend<Asymmetric<Self>> {
-        Asymmetric::<Self>::new(keyBits, Self, generator)
+        Asymmetric::<Self>::new(key_bits, Self, generator)
     }
 }
 //impl AsymmetricConfig for CryptoBackend<Asymmetric<DummyBackend>> {}
 crate::impl_crypto_backend_configs_for!(DummyBackend);
 impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyBackend>> {
-    fn getKeyChunkSize(&self) -> i32 {
+    fn get_key_chunk_size(&self) -> i32 {
         DummyBackend::KEY_CHUNK_SIZE
     }
-    fn createEncryptionGadget(
+    fn create_encryption_gadget(
         &mut self,
         plain: &TypedWire,
         key: &String,
@@ -54,9 +54,9 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyBackend>> {
     ) -> Box<dyn GadgetConfig> {
         Box::new(ZkayDummyEncryptionGadget::new(
             plain.clone(),
-            self.getKey(key, generator.clone()),
+            self.get_key(key, generator.clone()),
             random.clone(),
-            self.keyBits,
+            self.key_bits,
             desc,
             generator,
         ))

@@ -6,7 +6,7 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::GadgetConfig;
+
 use crate::{
     arc_cell_new,
     circuit::{
@@ -15,7 +15,7 @@ use crate::{
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
-            gadget::Gadget,
+            gadget::{Gadget, GadgetConfig},
             primitive::{
                 assert_basic_op::AssertBasicOp, basic_op::BasicOp, mul_basic_op::MulBasicOp,
             },
@@ -31,18 +31,20 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget,
     util::{
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::structure::wire_type::WireType;
-use crate::examples::gadgets::blockciphers::aes128_cipher_gadget::AES128CipherGadget;
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Rem, Sub};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Rem, Sub},
+};
 use zkay_derive::ImplStructNameConfig;
 
 #[derive(Debug, Clone, ImplStructNameConfig)]
@@ -70,7 +72,7 @@ impl AESSBoxNaiveLookupGadget {
     }
 }
 impl Gadget<AESSBoxNaiveLookupGadget> {
-    const SBox: [u8; 256] = Gadget::<AES128CipherGadget>::SBox;
+    const SBOX: [u8; 256] = Gadget::<AES128CipherGadget>::SBOX;
     fn build_circuit(&mut self) {
         let mut output = self.generator.borrow().get_zero_wire().unwrap();
         for i in 0..256 {
@@ -78,7 +80,7 @@ impl Gadget<AESSBoxNaiveLookupGadget> {
                 self.t
                     .input
                     .is_equal_toi(i, &None)
-                    .muli(Self::SBox[i as usize] as i64, &None),
+                    .muli(Self::SBOX[i as usize] as i64, &None),
             );
         }
         self.t.output = vec![Some(output)];

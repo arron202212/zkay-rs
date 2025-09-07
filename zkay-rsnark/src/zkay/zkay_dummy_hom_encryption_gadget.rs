@@ -38,7 +38,7 @@ impl ZkayDummyHomEncryptionGadget {
         plain: WireType,
         pk: WireType,
         rnd: Vec<Option<WireType>>,
-        keyBits: i32,
+        key_bits: i32,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {

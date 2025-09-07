@@ -24,33 +24,33 @@ use rccell::RcCell;
 
 #[derive(Debug, Clone)]
 pub struct ZkayElgamalDecGadget {
-    pub skBits: Vec<Option<WireType>>, // little-endian randomness bits
+    pub sk_bits: Vec<Option<WireType>>, // little-endian randomness bits
     pub pk: JubJubPoint,
     pub c1: JubJubPoint,
     pub c2: JubJubPoint,
-    pub expectedMsg: WireType,
-    pub msgOk: Option<WireType>,
+    pub expected_msg: WireType,
+    pub msg_ok: Option<WireType>,
     pub outputs: Vec<Option<WireType>>,
 }
 
 impl ZkayElgamalDecGadget {
     pub fn new(
         pk: JubJubPoint,
-        skBits: Vec<Option<WireType>>,
+        sk_bits: Vec<Option<WireType>>,
         c1: JubJubPoint,
         c2: JubJubPoint,
-        expectedMsg: WireType,
+        expected_msg: WireType,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
         let mut _self = ZkayBabyJubJubGadget::<Self>::new(
             &None,
             Self {
-                skBits,
+                sk_bits,
                 pk,
                 c1,
                 c2,
-                expectedMsg,
-                msgOk: None,
+                expected_msg,
+                msg_ok: None,
                 outputs: vec![],
             },
             generator,
@@ -63,37 +63,37 @@ impl ZkayElgamalDecGadget {
 // }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
     fn build_circuit(&mut self) {
-        // ensure pk and skBits form a key pair
-        let pkExpected = self.mulScalar(&self.getGenerator(), &self.t.t.skBits);
-        let keyOk = pkExpected
+        // ensure pk and sk_bits form a key pair
+        let pk_expected = self.mul_scalar(&self.get_generator(), &self.t.t.sk_bits);
+        let key_ok = pk_expected
             .x
             .is_equal_tos(&self.t.t.pk.x, &None)
-            .and(&pkExpected.y.is_equal_tos(&self.t.t.pk.y, &None), &None);
+            .and(&pk_expected.y.is_equal_tos(&self.t.t.pk.y, &None), &None);
 
         // decrypt ciphertext (without de-embedding)
-        let sharedSecret = self.mulScalar(&self.t.t.c1, &self.t.t.skBits);
-        let msgEmbedded = self.addPoints(&self.t.t.c2, &Self::negatePoint(&sharedSecret));
+        let shared_secret = self.mul_scalar(&self.t.t.c1, &self.t.t.sk_bits);
+        let msg_embedded = self.add_points(&self.t.t.c2, &Self::negate_point(&shared_secret));
 
         // embed expected message and assert equality
-        let expectedMsgBits = self
+        let expected_msg_bits = self
             .t
             .t
-            .expectedMsg
+            .expected_msg
             .get_bit_wiresi(32, &None)
             .as_array()
             .clone();
-        let expectedMsgEmbedded = self.mulScalar(&self.getGenerator(), &expectedMsgBits);
-        self.t.t.msgOk = Some(
-            expectedMsgEmbedded
+        let expected_msg_embedded = self.mul_scalar(&self.get_generator(), &expected_msg_bits);
+        self.t.t.msg_ok = Some(
+            expected_msg_embedded
                 .x
-                .is_equal_tos(&msgEmbedded.x, &None)
+                .is_equal_tos(&msg_embedded.x, &None)
                 .and(
-                    &expectedMsgEmbedded.y.is_equal_tos(&msgEmbedded.y, &None),
+                    &expected_msg_embedded.y.is_equal_tos(&msg_embedded.y, &None),
                     &None,
                 )
-                .and(&keyOk, &None),
+                .and(&key_ok, &None),
         );
-        self.t.t.outputs = vec![self.t.t.msgOk.clone()];
+        self.t.t.outputs = vec![self.t.t.msg_ok.clone()];
     }
 }
 impl GadgetConfig for Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {

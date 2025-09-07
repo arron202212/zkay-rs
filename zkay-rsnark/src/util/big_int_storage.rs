@@ -17,17 +17,17 @@ pub fn init() {
 //  * shares big integer constants
 
 pub struct BigIntStorage {
-    pub bigIntegerSet: HashMap<BigInteger, BigInteger>,
+    pub big_integer_set: HashMap<BigInteger, BigInteger>,
 }
 impl BigIntStorage {
     pub fn new() -> Self {
         Self {
-            bigIntegerSet: HashMap::new(),
+            big_integer_set: HashMap::new(),
         }
     }
 
     pub fn getBigInteger(&mut self, x: BigInteger) -> BigInteger {
-        self.bigIntegerSet.entry(x.clone()).or_insert(x.clone());
-        self.bigIntegerSet.get(&x).unwrap().clone()
+        self.big_integer_set.entry(x.clone()).or_insert(x.clone());
+        self.big_integer_set.get(&x).unwrap().clone()
     }
 }

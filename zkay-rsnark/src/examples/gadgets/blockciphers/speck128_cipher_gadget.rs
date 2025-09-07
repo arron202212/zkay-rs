@@ -6,45 +6,52 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use crate::circuit::operations::gadget::{Gadget, GadgetConfig};
-use crate::circuit::structure::circuit_generator::{
-    CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-    get_active_circuit_generator,
+use crate::circuit::{
+    operations::gadget::{Gadget, GadgetConfig},
+    structure::{
+        circuit_generator::{
+            CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
+            get_active_circuit_generator,
+        },
+        wire::WireConfig,
+        wire_type::WireType,
+    },
 };
-use crate::circuit::structure::wire::WireConfig;
-use crate::circuit::structure::wire_type::WireType;
-use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Neg, Rem, Sub};
-use zkay_derive::ImplStructNameConfig;
 
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Neg, Rem, Sub},
+};
+
+use rccell::RcCell;
+use zkay_derive::ImplStructNameConfig;
 //  * Implements the Speck lightweight block cipher
 //  * https://eprint.iacr.org/2015/585.pdf
 
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct Speck128CipherGadget {
     pub plaintext: Vec<Option<WireType>>,
-    pub expandedKey: Vec<Option<WireType>>,
+    pub expanded_key: Vec<Option<WireType>>,
     pub ciphertext: Vec<Option<WireType>>,
 }
 impl Speck128CipherGadget {
     //
     //@param inputs
     //           : Array of 2 64-bit elements.
-    //@param expandedKey
+    //@param expanded_key
     //           : Array of 32 64-bit elements. (Call expandKey(..))
     //@param desc
 
     pub fn new(
         plaintext: Vec<Option<WireType>>,
-        expandedKey: Vec<Option<WireType>>,
+        expanded_key: Vec<Option<WireType>>,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
         assert!(
-            plaintext.len() == 2 && expandedKey.len() == 32,
+            plaintext.len() == 2 && expanded_key.len() == 32,
             "Invalid Input"
         );
         let mut _self = Gadget::<Self>::new(
@@ -52,7 +59,7 @@ impl Speck128CipherGadget {
             desc,
             Self {
                 plaintext,
-                expandedKey,
+                expanded_key,
                 ciphertext: vec![],
             },
         );
@@ -71,8 +78,8 @@ impl Gadget<Speck128CipherGadget> {
         for i in 0..=31 {
             x = x.rotate_right(64, 8, &None).add(&y);
             x = x.trim_bits(65, 64, &None);
-            x = x.xor_bitwise(self.t.expandedKey[i].as_ref().unwrap(), 64, &None);
-            y = y.rotate_left(64, 3, &None).xor_bitwise(&x, 64, &None);
+            x = x.xor_bitwises(self.t.expanded_key[i].as_ref().unwrap(), 64, &None);
+            y = y.rotate_left(64, 3, &None).xor_bitwises(&x, 64, &None);
         }
         self.t.ciphertext = vec![Some(y), Some(x)];
     }
@@ -86,7 +93,6 @@ impl Gadget<Speck128CipherGadget> {
         key: &Vec<Option<WireType>>,
         generator: &RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
-        let mut generator = generator.clone();
         let mut k = vec![None; 32];
         let mut l = vec![None; 32];
         k[0] = key[0].clone();
@@ -98,7 +104,7 @@ impl Gadget<Speck128CipherGadget> {
                     .add(l[i].as_ref().unwrap().rotate_left(64, 56, &None)),
             );
             l[i + 1] = Some(l[i + 1].as_ref().unwrap().trim_bits(65, 64, &None));
-            l[i + 1] = Some(l[i + 1].as_ref().unwrap().xor_bitwise(
+            l[i + 1] = Some(l[i + 1].as_ref().unwrap().xor_bitwises(
                 &CircuitGenerator::create_constant_wirei(generator.clone(), i as i64, &None),
                 64,
                 &None,
@@ -107,7 +113,7 @@ impl Gadget<Speck128CipherGadget> {
                 k[i].as_ref()
                     .unwrap()
                     .rotate_left(64, 3, &None)
-                    .xor_bitwise(l[i + 1].as_ref().unwrap(), 64, &None),
+                    .xor_bitwises(l[i + 1].as_ref().unwrap(), 64, &None),
             );
         }
         k

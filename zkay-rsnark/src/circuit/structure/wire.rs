@@ -21,7 +21,7 @@ use crate::{
                 CGConfig, CGConfigFields, CircuitGenerator, CircuitGeneratorExtend,
                 CreateConstantWire, add_to_evaluation_queue, get_active_circuit_generator,
             },
-            linear_combination_wire::LinearCombinationWire,
+            linear_combination_wire::LinearCombination_wire,
             variable_bit_wire::VariableBitWire,
             variable_wire::VariableWire,
             wire_array::WireArray,
@@ -170,7 +170,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
             return generator.get_zero_wire().unwrap();
         }
 
-        let out = WireType::LinearCombination(LinearCombinationWire::new(
+        let out = WireType::LinearCombination(LinearCombination_wire::new(
             generator.get_current_wire_id(),
             None,
             self.generator_weak(),
@@ -558,7 +558,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         }
     }
 
-    fn xor_bitwise(&self, w: &WireType, num_bits: u64, desc: &Option<String>) -> WireType {
+    fn xor_bitwises(&self, w: &WireType, num_bits: u64, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
         let bits1 = self.get_bit_wiresi(num_bits as u64, desc);
@@ -568,7 +568,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -578,16 +578,16 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
     fn xor_bitwisei(&self, v: i64, num_bits: u64, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
-        return self.xor_bitwise(&generator.create_constant_wire(v, desc), num_bits, desc);
+        return self.xor_bitwises(&generator.create_constant_wire(v, desc), num_bits, desc);
     }
 
     fn xor_bitwiseb(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
-        return self.xor_bitwise(&generator.create_constant_wire(b, desc), num_bits, desc);
+        return self.xor_bitwises(&generator.create_constant_wire(b, desc), num_bits, desc);
     }
 
-    fn and_bitwise(&self, w: &WireType, num_bits: u64, desc: &Option<String>) -> WireType {
+    fn and_bitwises(&self, w: &WireType, num_bits: u64, desc: &Option<String>) -> WireType {
         use std::time::Instant;
         let start = Instant::now();
         let mut generator = self.generator();
@@ -613,13 +613,13 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         //     "End create_constant_wire  Time: == {} s",
         //     start.elapsed().as_secs()
         // );
-        let v = WireType::LinearCombination(LinearCombinationWire::new(
+        let v = WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
         ));
         // println!(
-        //     "End LinearCombinationWire::new  Time: == {} s",
+        //     "End LinearCombination_wire::new  Time: == {} s",
         //     start.elapsed().as_secs()
         // );
         v
@@ -628,13 +628,13 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
     fn and_bitwisei(&self, v: i64, num_bits: u64, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
-        return self.and_bitwise(&generator.create_constant_wire(v, desc), num_bits, desc);
+        return self.and_bitwises(&generator.create_constant_wire(v, desc), num_bits, desc);
     }
 
     fn and_bitwiseb(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
-        return self.and_bitwise(&generator.create_constant_wire(b, desc), num_bits, desc);
+        return self.and_bitwises(&generator.create_constant_wire(b, desc), num_bits, desc);
     }
 
     fn or_bitwises(&self, w: &WireType, num_bits: u64, desc: &Option<String>) -> WireType {
@@ -669,7 +669,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         //             "End or_bitwises 0 Time: == {:?} ",
         //             start.elapsed()
         //         );
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -866,7 +866,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -890,7 +890,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -919,7 +919,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -953,7 +953,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
             return generator.create_constant_wire(&v, &None);
         }
         //println!("======================{},{}",file!(),line!());
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -978,7 +978,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),
@@ -992,7 +992,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         for i in 0..resultBits.len() {
             resultBits[i] = bits[i].as_ref().and_then(|x| x.clone().inv_as_bit(desc));
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(WireArray::new(resultBits, self.generator_weak())),
             self.generator_weak(),
@@ -1013,7 +1013,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         if let Some(v) = v {
             return generator.create_constant_wire(&v, &None);
         }
-        WireType::LinearCombination(LinearCombinationWire::new(
+        WireType::LinearCombination(LinearCombination_wire::new(
             -1,
             Some(result),
             generator.clone().downgrade(),

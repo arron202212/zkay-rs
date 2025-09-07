@@ -14,7 +14,7 @@ use crate::{
         config::config::Configs,
         eval::{circuit_evaluator::CircuitEvaluator, instruction::Instruction},
         operations::{
-            gadget::Gadget,
+            gadget::{Gadget, GadgetConfig},
             primitive::{
                 assert_basic_op::AssertBasicOp, basic_op::BasicOp, mul_basic_op::MulBasicOp,
             },
@@ -35,17 +35,17 @@ use crate::{
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::eval::instruction::Instruction;
-use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
+
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    ops::{Add, Mul, Sub},
+};
+
 use zkay_derive::ImplStructNameConfig;
 
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ops::{Add, Mul, Sub};
 
 //  * This gadget does not apply any lookups in the circuit. Instead, it verifies
 //  * the solution using the AES S-Box properties.
@@ -151,11 +151,11 @@ impl Gadget<AESSBoxComputeGadget> {
             &None,
         );
         let constant = CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x63, &None);
-        let mut output = constant.xor_bitwise(&inverse, 8, &None);
-        output = output.xor_bitwise(&inverse.rotate_left(8, 1, &None), 8, &None);
-        output = output.xor_bitwise(&inverse.rotate_left(8, 2, &None), 8, &None);
-        output = output.xor_bitwise(&inverse.rotate_left(8, 3, &None), 8, &None);
-        output = output.xor_bitwise(&inverse.rotate_left(8, 4, &None), 8, &None);
+        let mut output = constant.xor_bitwises(&inverse, 8, &None);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 1, &None), 8, &None);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 2, &None), 8, &None);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 3, &None), 8, &None);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 4, &None), 8, &None);
         (self.t.output, self.t.inverse) = (vec![Some(output)], Some(inverse));
     }
 
@@ -163,14 +163,14 @@ impl Gadget<AESSBoxComputeGadget> {
         let mut p = generator.get_zero_wire().unwrap();
         let ccw = CircuitGenerator::create_constant_wirei(generator.clone(), 0x1b, &None);
         for counter in 0..8 {
-            let tmp = p.xor_bitwise(&a, 8, &None);
+            let tmp = p.xor_bitwises(&a, 8, &None);
             let bit = b.get_bit_wiresi(8, &None).get(0).clone().unwrap();
             p = p.clone().add(bit.mul(tmp.sub(&p)));
 
             let bit2 = a.get_bit_wiresi(8, &None).get(7).clone().unwrap();
             a = a.shift_left(8, 1, &None);
 
-            let tmp2 = a.xor_bitwise(&ccw, 8, &None);
+            let tmp2 = a.xor_bitwises(&ccw, 8, &None);
             a = a.clone().add(bit2.mul(tmp2.sub(&a)));
             b = b.shift_right(8, 1, &None);
         }

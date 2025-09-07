@@ -58,8 +58,8 @@ impl ZkayElgamalAddGadget {
 }
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalAddGadget>> {
     fn build_circuit(&mut self) {
-        let e1 = self.addPoints(&self.t.t.c1, &self.t.t.d1);
-        let e2 = self.addPoints(&self.t.t.c2, &self.t.t.d2);
+        let e1 = self.add_points(&self.t.t.c1, &self.t.t.d1);
+        let e2 = self.add_points(&self.t.t.c2, &self.t.t.d2);
         self.t.t.outputs = vec![
             Some(e1.x.clone()),
             Some(e1.y.clone()),

@@ -12,7 +12,11 @@ use crate::{
         auxiliary::long_element::LongElement,
         config::config::Configs,
         eval::instruction::Instruction,
-        operations::{gadget::Gadget, wire_label_instruction, wire_label_instruction::LabelType},
+        operations::{
+            gadget::{Gadget, GadgetConfig},
+            wire_label_instruction,
+            wire_label_instruction::LabelType,
+        },
         structure::{
             circuit_generator::CGConfigFields,
             circuit_generator::CGInstance,
@@ -27,16 +31,16 @@ use crate::{
     },
     util::util::{ARcCell, BigInteger, Util},
 };
-// use crate::circuit::structure::circuit_generator::CircuitGenerator;
-use crate::circuit::operations::gadget::GadgetConfig;
-// use crate::circuit::structure::wire_type::WireType;
-//  use crate::util::util::BigInteger;
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::io::{BufRead, BufReader};
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+    io::{BufRead, BufReader},
+    ops::{Add, Mul, Neg, Sub},
+};
+
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct PinocchioGadget {
     pub input_wires: Vec<Option<WireType>>,

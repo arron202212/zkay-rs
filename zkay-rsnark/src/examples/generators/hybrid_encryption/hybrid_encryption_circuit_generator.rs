@@ -34,34 +34,30 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::{
+        blockciphers::symmetric_encryption_cbc_gadget::SymmetricEncryptionCBCGadget,
+        diffie_hellman_key_exchange::field_extension_dh_key_exchange::FieldExtensionDHKeyExchange,
+        hash::sha256_gadget::{Base, SHA256Gadget},
+    },
     util::{
         run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-//     get_active_circuit_generator,
-// };
-// use crate::circuit::structure::wire_array;
-// use crate::circuit::structure::wire_type::WireType;
-// use crate::util::util::{BigInteger, Util};
-use crate::examples::gadgets::blockciphers::symmetric_encryption_cbc_gadget::SymmetricEncryptionCBCGadget;
-use crate::examples::gadgets::diffie_hellman_key_exchange::field_extension_dh_key_exchange::FieldExtensionDHKeyExchange;
-use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
+
 use zkay_derive::ImplStructNameConfig;
+
 // This gadget shows a simple example of hybrid encryption for illustration purposes
 // It currently uses the field extension key exchange gadget with the speck cipher
 crate::impl_struct_name_for!(CircuitGeneratorExtend<HybridEncryptionCircuitGenerator>);
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct HybridEncryptionCircuitGenerator {
     pub plaintext: Vec<Option<WireType>>,  // as 64-bit words
-    pub plaintextSize: i32,                // number of 64-bit words
+    pub plain_text_size: i32,              // number of 64-bit words
     pub ciphertext: Vec<Option<WireType>>, // as 64-bit words
     pub ciphername: String,
-    pub secExpBits: Vec<Option<WireType>>,
+    pub sec_exp_bits: Vec<Option<WireType>>,
 }
 impl HybridEncryptionCircuitGenerator {
     // Will assume the parameterization used in the test files ~ 80-bits
@@ -71,17 +67,17 @@ impl HybridEncryptionCircuitGenerator {
     pub const OMEGA: i32 = 7;
     pub fn new(
         circuit_name: &str,
-        plaintextSize: i32,
+        plain_text_size: i32,
         ciphername: String,
     ) -> CircuitGeneratorExtend<Self> {
         CircuitGeneratorExtend::new(
             circuit_name,
             Self {
                 plaintext: vec![],
-                plaintextSize,
+                plain_text_size,
                 ciphertext: vec![],
                 ciphername,
-                secExpBits: vec![],
+                sec_exp_bits: vec![],
             },
         )
     }
@@ -90,14 +86,14 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
     fn build_circuit(&mut self) {
         let plaintext = CircuitGenerator::create_input_wire_array(
             self.cg(),
-            self.t.plaintextSize as usize,
+            self.t.plain_text_size as usize,
             &Some("plaint text".to_owned()),
         );
 
         // Part I: Exchange a key:
 
         // The secret exponent is a  input by the prover
-        let mut secExpBits = CircuitGenerator::create_prover_witness_wire_array(
+        let mut sec_exp_bits = CircuitGenerator::create_prover_witness_wire_array(
             self.cg(),
             HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize,
             &Some("SecretExponent".to_owned()),
@@ -105,7 +101,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         for i in 0..HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize {
             CircuitGenerator::add_binary_assertion(
                 self.cg(),
-                secExpBits[i].as_ref().unwrap(),
+                sec_exp_bits[i].as_ref().unwrap(),
                 &None,
             ); // verify all bits are binary
         }
@@ -199,14 +195,14 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         let exchange = FieldExtensionDHKeyExchange::new(
             g,
             h,
-            secExpBits.clone(),
+            sec_exp_bits.clone(),
             HybridEncryptionCircuitGenerator::OMEGA as i64,
             &None,
             self.cg(),
         );
 
         // Output g^s
-        let g_to_s = exchange.getOutputPublicValue();
+        let g_to_s = exchange.get_output_public_value();
         CircuitGenerator::make_output_array(
             self.cg(),
             g_to_s,
@@ -215,8 +211,8 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
 
         // Use h^s to generate a symmetric secret key and an initialization
         // vector. Apply a Hash-based KDF.
-        let h_to_s = exchange.getSharedSecret();
-        let hashGadget = SHA256Gadget::new(
+        let h_to_s = exchange.get_shared_secret();
+        let hash_gadget = SHA256Gadget::new(
             h_to_s.clone(),
             256,
             128,
@@ -226,46 +222,46 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             self.cg(),
             Base,
         );
-        let secret = hashGadget.get_output_wires();
+        let secret = hash_gadget.get_output_wires();
         let key = secret[0..128].to_vec();
         let iv = secret[128..256].to_vec();
 
         // Part II: Apply symmetric Encryption
 
-        let plaintextBits = WireArray::new(plaintext.clone(), self.cg().downgrade())
+        let plaintext_bits = WireArray::new(plaintext.clone(), self.cg().downgrade())
             .get_bits(64, &None)
             .as_array()
             .clone();
-        let symEncGagdet = SymmetricEncryptionCBCGadget::new(
-            plaintextBits.clone(),
+        let sym_enc_gagdet = SymmetricEncryptionCBCGadget::new(
+            plaintext_bits.clone(),
             key,
             iv,
             self.t.ciphername.clone(),
             &None,
             self.cg(),
         );
-        let ciphertext = symEncGagdet.get_output_wires();
+        let ciphertext = sym_enc_gagdet.get_output_wires();
         CircuitGenerator::make_output_array(
             self.cg(),
             &ciphertext,
             &Some("Cipher Text".to_owned()),
         );
-        (self.t.plaintext, self.t.secExpBits, self.t.ciphertext) =
-            (plaintext, secExpBits, ciphertext.clone());
+        (self.t.plaintext, self.t.sec_exp_bits, self.t.ciphertext) =
+            (plaintext, sec_exp_bits, ciphertext.clone());
     }
 
     fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
         // TODO Auto-generated method stub
-        for i in 0..self.t.plaintextSize as usize {
+        for i in 0..self.t.plain_text_size as usize {
             evaluator.set_wire_value(
                 self.t.plaintext[i].as_ref().unwrap(),
-                &Util::nextRandomBigIntegeri(64),
+                &Util::next_random_big_integeri(64),
             );
         }
         for i in 0..HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize {
             evaluator.set_wire_value(
-                self.t.secExpBits[i].as_ref().unwrap(),
-                &Util::nextRandomBigIntegeri(1),
+                self.t.sec_exp_bits[i].as_ref().unwrap(),
+                &Util::next_random_big_integeri(1),
             );
         }
     }

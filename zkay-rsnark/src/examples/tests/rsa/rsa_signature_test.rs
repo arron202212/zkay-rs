@@ -42,12 +42,12 @@ mod test {
     pub fn test_valid_signature_different_key_lengths() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            inputMessage: Vec<Option<WireType>>,
+            input_message: Vec<Option<WireType>>,
             signature: Option<LongElement>,
-            rsaModulus: Option<LongElement>,
-            sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
-            rsaSigVerificationV1_5_Gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
-            rsaKeyLength: usize,
+            rsa_modulus: Option<LongElement>,
+            sha2_gadget: Option<Gadget<SHA256Gadget<Base>>>,
+            rsa_sig_verification_v1_5_gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
+            rsa_key_length: usize,
         }
         impl CGTest {
             const input_str: &[u8] = b"abc";
@@ -56,72 +56,72 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let inputMessage = CircuitGenerator::create_input_wire_array(
+                let input_message = CircuitGenerator::create_input_wire_array(
                     self.cg(),
                     CGTest::input_str.len(),
                     &None,
                 );
-                let sha2Gadget = SHA256Gadget::new(
-                    inputMessage.clone(),
+                let sha2_gadget = SHA256Gadget::new(
+                    input_message.clone(),
                     8,
-                    inputMessage.len(),
+                    input_message.len(),
                     false,
                     true,
                     &None,
                     self.cg(),
                     Base,
                 );
-                let digest = sha2Gadget.get_output_wires().clone();
-                let rsaModulus = CircuitGenerator::create_long_element_input(
+                let digest = sha2_gadget.get_output_wires().clone();
+                let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
                 let signature = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
-                let rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
-                    rsaModulus.clone(),
+                let rsa_sig_verification_v1_5_gadget = RSASigVerificationV1_5_Gadget::new(
+                    rsa_modulus.clone(),
                     digest.clone(),
                     signature.clone(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                     self.cg(),
                 );
                 CircuitGenerator::make_output(
                     self.cg(),
-                    rsaSigVerificationV1_5_Gadget.get_output_wires()[0]
+                    rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                     &None,
                 );
                 (
-                    self.t.rsaModulus,
-                    self.t.inputMessage,
+                    self.t.rsa_modulus,
+                    self.t.input_message,
                     self.t.signature,
-                    self.t.sha2Gadget,
-                    self.t.rsaSigVerificationV1_5_Gadget,
+                    self.t.sha2_gadget,
+                    self.t.rsa_sig_verification_v1_5_gadget,
                 ) = (
-                    Some(rsaModulus),
-                    inputMessage,
+                    Some(rsa_modulus),
+                    input_message,
                     Some(signature),
-                    Some(sha2Gadget),
-                    Some(rsaSigVerificationV1_5_Gadget),
+                    Some(sha2_gadget),
+                    Some(rsa_sig_verification_v1_5_gadget),
                 );
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                for i in 0..self.t.inputMessage.len() {
+                for i in 0..self.t.input_message.len() {
                     evaluator.set_wire_valuei(
-                        self.t.inputMessage[i].as_ref().unwrap(),
+                        self.t.input_message[i].as_ref().unwrap(),
                         CGTest::input_str[i] as i64,
                     );
                 }
                 // try {
                 // let keyGen = KeyPairGenerator.getInstance("RSA");
-                // keyGen.initialize(rsaKeyLength, SecureRandom::new());
+                // keyGen.initialize(rsa_key_length, SecureRandom::new());
                 // let keyPair = keyGen.generateKeyPair();
                 // let signature = Signature.getInstance("SHA256withRSA");
                 // signature.initSign(keyPair.getPrivate());
@@ -129,18 +129,18 @@ mod test {
                 let message = CGTest::input_str;
                 // signature.update(message);
 
-                let sigBytes = vec![0; 32]; //signature.sign();
+                let sig_bytes = vec![0; 32]; //signature.sign();
 
                 // pad an extra zero byte to avoid having a negative big
                 // integer
-                let mut signaturePadded = vec![0; sigBytes.len() + 1];
-                signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
-                signaturePadded[0] = 0;
+                let mut signature_padded = vec![0; sig_bytes.len() + 1];
+                signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
+                signature_padded[0] = 0;
                 let modulus = BigInteger::from(1); //(keyPair.getPublic()).getModulus();
-                let sig = BigInteger::parse_bytes(&signaturePadded, 10).unwrap();
+                let sig = BigInteger::parse_bytes(&signature_padded, 10).unwrap();
 
                 evaluator.set_wire_valuebi(
-                    self.t.rsaModulus.as_ref().unwrap(),
+                    self.t.rsa_modulus.as_ref().unwrap(),
                     &modulus,
                     LongElement::CHUNK_BITWIDTH,
                 );
@@ -163,21 +163,21 @@ mod test {
 
         // might need to increase memory heap to run this test on some platforms
 
-        let keySizeArray = vec![1024, 2048, 3072, 4096, 2047, 2049];
+        let key_size_array = vec![1024, 2048, 3072, 4096, 2047, 2049];
 
-        for keySize in keySizeArray {
-            let rsaKeyLength = keySize;
+        for key_size in key_size_array {
+            let rsa_key_length = key_size;
 
             let t = CGTest {
-                inputMessage: vec![],
+                input_message: vec![],
                 signature: None,
-                rsaModulus: None,
-                sha2Gadget: None,
-                rsaSigVerificationV1_5_Gadget: None,
-                rsaKeyLength,
+                rsa_modulus: None,
+                sha2_gadget: None,
+                rsa_sig_verification_v1_5_gadget: None,
+                rsa_key_length,
             };
             let mut generator =
-                CircuitGeneratorExtend::<CGTest>::new(&format!("RSA{keySize}_SIG_TestValid"), t);
+                CircuitGeneratorExtend::<CGTest>::new(&format!("RSA{key_size}_SIG_TestValid"), t);
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
 
@@ -192,12 +192,12 @@ mod test {
     pub fn test_invalid_signature_different_key_lengths() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            inputMessage: Vec<Option<WireType>>,
+            input_message: Vec<Option<WireType>>,
             signature: Option<LongElement>,
-            rsaModulus: Option<LongElement>,
-            sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
-            rsaSigVerificationV1_5_Gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
-            rsaKeyLength: usize,
+            rsa_modulus: Option<LongElement>,
+            sha2_gadget: Option<Gadget<SHA256Gadget<Base>>>,
+            rsa_sig_verification_v1_5_gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
+            rsa_key_length: usize,
         }
         impl CGTest {
             const input_str: &[u8] = b"abc";
@@ -205,72 +205,72 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let inputMessage = CircuitGenerator::create_input_wire_array(
+                let input_message = CircuitGenerator::create_input_wire_array(
                     self.cg(),
                     CGTest::input_str.len(),
                     &None,
                 );
-                let sha2Gadget = SHA256Gadget::new(
-                    inputMessage.clone(),
+                let sha2_gadget = SHA256Gadget::new(
+                    input_message.clone(),
                     8,
-                    inputMessage.len(),
+                    input_message.len(),
                     false,
                     true,
                     &None,
                     self.cg(),
                     Base,
                 );
-                let digest = sha2Gadget.get_output_wires().clone();
-                let rsaModulus = CircuitGenerator::create_long_element_input(
+                let digest = sha2_gadget.get_output_wires().clone();
+                let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
                 let signature = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
-                let rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
-                    rsaModulus.clone(),
+                let rsa_sig_verification_v1_5_gadget = RSASigVerificationV1_5_Gadget::new(
+                    rsa_modulus.clone(),
                     digest.clone(),
                     signature.clone(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                     self.cg(),
                 );
                 CircuitGenerator::make_output(
                     self.cg(),
-                    &rsaSigVerificationV1_5_Gadget.get_output_wires()[0]
+                    &rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                     &None,
                 );
                 (
-                    self.t.rsaModulus,
-                    self.t.inputMessage,
+                    self.t.rsa_modulus,
+                    self.t.input_message,
                     self.t.signature,
-                    self.t.sha2Gadget,
-                    self.t.rsaSigVerificationV1_5_Gadget,
+                    self.t.sha2_gadget,
+                    self.t.rsa_sig_verification_v1_5_gadget,
                 ) = (
-                    Some(rsaModulus),
-                    inputMessage,
+                    Some(rsa_modulus),
+                    input_message,
                     Some(signature),
-                    Some(sha2Gadget),
-                    Some(rsaSigVerificationV1_5_Gadget),
+                    Some(sha2_gadget),
+                    Some(rsa_sig_verification_v1_5_gadget),
                 );
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                for i in 0..self.t.inputMessage.len() {
+                for i in 0..self.t.input_message.len() {
                     evaluator.set_wire_valuei(
-                        self.t.inputMessage[i].as_ref().unwrap(),
+                        self.t.input_message[i].as_ref().unwrap(),
                         CGTest::input_str[i] as i64,
                     );
                 }
                 // try {
                 // let keyGen = KeyPairGenerator.getInstance("RSA");
-                // keyGen.initialize(rsaKeyLength, SecureRandom::new());
+                // keyGen.initialize(rsa_key_length, SecureRandom::new());
                 // let keyPair = keyGen.generateKeyPair();
                 // let signature = Signature.getInstance("SHA256withRSA");
                 // signature.initSign(keyPair.getPrivate());
@@ -278,18 +278,18 @@ mod test {
                 let message = CGTest::input_str.clone();
                 // signature.update(message);
 
-                let sigBytes = vec![0; 32]; //signature.sign();
+                let sig_bytes = vec![0; 32]; //signature.sign();
 
                 // pad an extra zero byte to avoid having a negative big
                 // integer
-                let mut signaturePadded = vec![0; sigBytes.len() + 1];
-                signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
-                signaturePadded[0] = 0;
+                let mut signature_padded = vec![0; sig_bytes.len() + 1];
+                signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
+                signature_padded[0] = 0;
                 let modulus = BigInteger::from(64); //(keyPair.getPublic()).getModulus();
-                let sig = BigInteger::parse_bytes(&signaturePadded, 10).unwrap();
+                let sig = BigInteger::parse_bytes(&signature_padded, 10).unwrap();
 
                 evaluator.set_wire_valuebi(
-                    self.t.rsaModulus.as_ref().unwrap(),
+                    self.t.rsa_modulus.as_ref().unwrap(),
                     &modulus,
                     LongElement::CHUNK_BITWIDTH,
                 );
@@ -312,21 +312,21 @@ mod test {
         // testing commonly used rsa key lengths in addition to non-power of two
         // ones
 
-        let keySizeArray = vec![1024, 2048, 3072, 4096, 2047, 2049];
+        let key_size_array = vec![1024, 2048, 3072, 4096, 2047, 2049];
 
-        for keySize in keySizeArray {
-            let rsaKeyLength = keySize;
+        for key_size in key_size_array {
+            let rsa_key_length = key_size;
 
             let t = CGTest {
-                inputMessage: vec![],
+                input_message: vec![],
                 signature: None,
-                rsaModulus: None,
-                sha2Gadget: None,
-                rsaSigVerificationV1_5_Gadget: None,
-                rsaKeyLength,
+                rsa_modulus: None,
+                sha2_gadget: None,
+                rsa_sig_verification_v1_5_gadget: None,
+                rsa_key_length,
             };
             let mut generator =
-                CircuitGeneratorExtend::<CGTest>::new(&format!("RSA{keySize}_SIG_TestInvalid"), t);
+                CircuitGeneratorExtend::<CGTest>::new(&format!("RSA{key_size}_SIG_TestInvalid"), t);
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
 
@@ -343,12 +343,12 @@ mod test {
     pub fn test_valid_signature_different_chunk_bitwidth() {
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
-            inputMessage: Vec<Option<WireType>>,
+            input_message: Vec<Option<WireType>>,
             signature: Option<LongElement>,
-            rsaModulus: Option<LongElement>,
-            sha2Gadget: Option<Gadget<SHA256Gadget<Base>>>,
-            rsaSigVerificationV1_5_Gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
-            rsaKeyLength: usize,
+            rsa_modulus: Option<LongElement>,
+            sha2_gadget: Option<Gadget<SHA256Gadget<Base>>>,
+            rsa_sig_verification_v1_5_gadget: Option<Gadget<RSASigVerificationV1_5_Gadget>>,
+            rsa_key_length: usize,
         }
         impl CGTest {
             const input_str: &[u8] = b"abc";
@@ -356,72 +356,72 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let inputMessage = CircuitGenerator::create_input_wire_array(
+                let input_message = CircuitGenerator::create_input_wire_array(
                     self.cg(),
                     CGTest::input_str.len(),
                     &None,
                 );
-                let sha2Gadget = SHA256Gadget::new(
-                    inputMessage.clone(),
+                let sha2_gadget = SHA256Gadget::new(
+                    input_message.clone(),
                     8,
-                    inputMessage.len(),
+                    input_message.len(),
                     false,
                     true,
                     &None,
                     self.cg(),
                     Base,
                 );
-                let digest = sha2Gadget.get_output_wires().clone();
-                let rsaModulus = CircuitGenerator::create_long_element_input(
+                let digest = sha2_gadget.get_output_wires().clone();
+                let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
                 let signature = CircuitGenerator::create_long_element_input(
                     self.cg(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                 );
-                let rsaSigVerificationV1_5_Gadget = RSASigVerificationV1_5_Gadget::new(
-                    rsaModulus.clone(),
+                let rsa_sig_verification_v1_5_gadget = RSASigVerificationV1_5_Gadget::new(
+                    rsa_modulus.clone(),
                     digest.clone(),
                     signature.clone(),
-                    self.t.rsaKeyLength as i32,
+                    self.t.rsa_key_length as i32,
                     &None,
                     self.cg(),
                 );
                 CircuitGenerator::make_output(
                     self.cg(),
-                    rsaSigVerificationV1_5_Gadget.get_output_wires()[0]
+                    rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                     &None,
                 );
                 (
-                    self.t.rsaModulus,
-                    self.t.inputMessage,
+                    self.t.rsa_modulus,
+                    self.t.input_message,
                     self.t.signature,
-                    self.t.sha2Gadget,
-                    self.t.rsaSigVerificationV1_5_Gadget,
+                    self.t.sha2_gadget,
+                    self.t.rsa_sig_verification_v1_5_gadget,
                 ) = (
-                    Some(rsaModulus),
-                    inputMessage,
+                    Some(rsa_modulus),
+                    input_message,
                     Some(signature),
-                    Some(sha2Gadget),
-                    Some(rsaSigVerificationV1_5_Gadget),
+                    Some(sha2_gadget),
+                    Some(rsa_sig_verification_v1_5_gadget),
                 );
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                for i in 0..self.t.inputMessage.len() {
+                for i in 0..self.t.input_message.len() {
                     evaluator.set_wire_valuei(
-                        self.t.inputMessage[i].as_ref().unwrap(),
+                        self.t.input_message[i].as_ref().unwrap(),
                         CGTest::input_str[i] as i64,
                     );
                 }
                 // try {
                 // let keyGen = KeyPairGenerator.getInstance("RSA");
-                // keyGen.initialize(rsaKeyLength, SecureRandom::new());
+                // keyGen.initialize(rsa_key_length, SecureRandom::new());
                 // let keyPair = keyGen.generateKeyPair();
                 // let signature = Signature.getInstance("SHA256withRSA");
                 // signature.initSign(keyPair.getPrivate());
@@ -429,18 +429,18 @@ mod test {
                 let message = CGTest::input_str.clone();
                 // signature.update(message);
 
-                let sigBytes = vec![0; 32]; //signature.sign();
+                let sig_bytes = vec![0; 32]; //signature.sign();
 
                 // pad an extra zero byte to avoid having a negative big
                 // integer
-                let mut signaturePadded = vec![0; sigBytes.len() + 1];
-                signaturePadded[1..sigBytes.len()].clone_from_slice(&sigBytes[0..]);
-                signaturePadded[0] = 0;
+                let mut signature_padded = vec![0; sig_bytes.len() + 1];
+                signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
+                signature_padded[0] = 0;
                 let modulus = BigInteger::from(1); //(keyPair.getPublic()).getModulus();
-                let sig = BigInteger::parse_bytes(&signaturePadded, 10).unwrap();
+                let sig = BigInteger::parse_bytes(&signature_padded, 10).unwrap();
 
                 evaluator.set_wire_valuebi(
-                    self.t.rsaModulus.as_ref().unwrap(),
+                    self.t.rsa_modulus.as_ref().unwrap(),
                     &modulus,
                     LongElement::CHUNK_BITWIDTH,
                 );
@@ -457,24 +457,24 @@ mod test {
                 // }
             }
         };
-        let keySize = 1024;
-        let defaultBitwidth = LongElement::CHUNK_BITWIDTH;
+        let key_size = 1024;
+        let default_bitwidth = LongElement::CHUNK_BITWIDTH;
 
-        let chunkBiwidthArray = vec![i32::default(); 106];
-        for b in 16..chunkBiwidthArray.len() {
+        let chunk_biwidth_array = vec![i32::default(); 106];
+        for b in 16..chunk_biwidth_array.len() {
             // LongElement::CHUNK_BITWIDTH = b;
-            let rsaKeyLength = keySize;
+            let rsa_key_length = key_size;
 
             let t = CGTest {
-                inputMessage: vec![],
+                input_message: vec![],
                 signature: None,
-                rsaModulus: None,
-                sha2Gadget: None,
-                rsaSigVerificationV1_5_Gadget: None,
-                rsaKeyLength,
+                rsa_modulus: None,
+                sha2_gadget: None,
+                rsa_sig_verification_v1_5_gadget: None,
+                rsa_key_length,
             };
             let mut generator = CircuitGeneratorExtend::<CGTest>::new(
-                &format!("RSA{keySize}_SIG_TestValid_ChunkB_{b}"),
+                &format!("RSA{key_size}_SIG_TestValid_ChunkB_{b}"),
                 t,
             );
             generator.generate_circuit();
@@ -485,7 +485,7 @@ mod test {
                 evaluator.get_wire_value(generator.get_out_wires()[0].as_ref().unwrap()),
             );
 
-            // LongElement::CHUNK_BITWIDTH = defaultBitwidth; // needed for running all tests together
+            // LongElement::CHUNK_BITWIDTH = default_bitwidth; // needed for running all tests together
         }
     }
 }

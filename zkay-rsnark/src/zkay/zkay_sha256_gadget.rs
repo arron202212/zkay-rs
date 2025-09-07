@@ -48,7 +48,7 @@ impl ZkaySHA256Gadget {
             truncated_bits <= 253 && truncated_bits >= 0,
             "Unsupported output length {truncated_bits} bits"
         );
-        _self.assembleOutput(truncated_bits);
+        _self.assemble_output(truncated_bits);
         _self
     }
 
@@ -68,7 +68,7 @@ impl ZkaySHA256Gadget {
 }
 
 impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
-    fn assembleOutput(&mut self, truncated_length: i32) {
+    fn assemble_output(&mut self, truncated_length: i32) {
         let mut digest = self.super_get_output_wires().clone();
         // Invert word order to get correct byte order when packed into one big word below
         digest.reverse();

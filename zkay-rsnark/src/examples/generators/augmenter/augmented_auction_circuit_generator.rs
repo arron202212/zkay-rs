@@ -34,21 +34,17 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::{
+        augmenter::pinocchio_gadget::PinocchioGadget,
+        hash::sha256_gadget::{Base, SHA256Gadget},
+    },
     util::{
         run_command::run_command,
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
-// use crate::circuit::eval::circuit_evaluator::CircuitEvaluator;
-// use crate::circuit::structure::circuit_generator::{
-//     CGConfig, CircuitGenerator, CircuitGeneratorExtend, add_to_evaluation_queue,
-//     get_active_circuit_generator,
-// };
-// use crate::circuit::structure::wire_type::WireType;
-// use crate::util::util::{BigInteger, Util};
-use crate::examples::gadgets::augmenter::pinocchio_gadget::PinocchioGadget;
-use crate::examples::gadgets::hash::sha256_gadget::{Base, SHA256Gadget};
+
 use zkay_derive::ImplStructNameConfig;
 
 //  * This circuit generator augments a second-price auction circuit (produced by Pinocchio's compiler)
@@ -58,70 +54,70 @@ crate::impl_struct_name_for!(CircuitGeneratorExtend<AugmentedAuctionCircuitGener
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct AugmentedAuctionCircuitGenerator {
     // each value is assumed to be a 64-bit value
-    pub secretInputValues: Vec<Option<WireType>>,
-    pub secretOutputValues: Vec<Option<WireType>>,
+    pub secret_input_values: Vec<Option<WireType>>,
+    pub secret_output_values: Vec<Option<WireType>>,
 
     // randomness vectors for each participant (each random vector is 7 64-bit words)
-    pub secretInputRandomness: Vec<Vec<Option<WireType>>>,
-    pub secretOutputRandomness: Vec<Vec<Option<WireType>>>,
+    pub secret_input_randomness: Vec<Vec<Option<WireType>>>,
+    pub secret_output_randomness: Vec<Vec<Option<WireType>>>,
 
-    pub pathToCompiledCircuit: String,
-    pub numParties: i32, // includes the auction manager + the participants
+    pub path_to_compiled_circuit: String,
+    pub num_parties: i32, // includes the auction manager + the participants
 }
 impl AugmentedAuctionCircuitGenerator {
     pub fn new(
         circuit_name: &str,
-        pathToCompiledCircuit: String,
-        numParticipants: i32,
+        path_to_compiled_circuit: String,
+        num_participants: i32,
     ) -> CircuitGeneratorExtend<Self> {
         CircuitGeneratorExtend::<Self>::new(
             circuit_name,
             Self {
-                secretInputValues: vec![],
-                secretOutputValues: vec![],
-                secretInputRandomness: vec![],
-                secretOutputRandomness: vec![],
-                pathToCompiledCircuit,
-                numParties: numParticipants + 1,
+                secret_input_values: vec![],
+                secret_output_values: vec![],
+                secret_input_randomness: vec![],
+                secret_output_randomness: vec![],
+                path_to_compiled_circuit,
+                num_parties: num_participants + 1,
             },
         )
     }
 }
 impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
     fn build_circuit(&mut self) {
-        let numParties = self.t.numParties as usize;
-        let mut secretInputValues =
-            CircuitGenerator::create_prover_witness_wire_array(self.cg(), numParties - 1, &None); // the manager has a zero input (no need to commit to it)
-        let mut secretInputRandomness = vec![vec![]; numParties - 1];
-        let mut secretOutputRandomness = vec![vec![]; numParties];
-        for i in 0..numParties - 1 {
-            secretInputRandomness[i] =
+        let num_parties = self.t.num_parties as usize;
+        let mut secret_input_values =
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), num_parties - 1, &None); // the manager has a zero input (no need to commit to it)
+        let mut secret_input_randomness = vec![vec![]; num_parties - 1];
+        let mut secret_output_randomness = vec![vec![]; num_parties];
+        for i in 0..num_parties - 1 {
+            secret_input_randomness[i] =
                 CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
-            secretOutputRandomness[i] =
+            secret_output_randomness[i] =
                 CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
         }
-        secretOutputRandomness[numParties - 1] =
+        secret_output_randomness[num_parties - 1] =
             CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
-        let mut secretInputValuess = secretInputValues.clone();
-        secretInputValuess.insert(0, self.get_zero_wire());
+        let mut secret_input_valuess = secret_input_values.clone();
+        secret_input_valuess.insert(0, self.get_zero_wire());
         // instantiate a Pinocchio gadget for the auction circuit
-        let auctionGagdet = PinocchioGadget::new(
-            secretInputValuess,
-            self.t.pathToCompiledCircuit.clone(),
+        let auction_gagdet = PinocchioGadget::new(
+            secret_input_valuess,
+            self.t.path_to_compiled_circuit.clone(),
             &None,
             self.cg(),
         );
-        let outputs = auctionGagdet.get_output_wires();
+        let outputs = auction_gagdet.get_output_wires();
 
         // ignore the last output for this circuit which carries the index of the winner (not needed for this example)
-        let mut secretOutputValues = outputs[..outputs.len() - 1].to_vec();
+        let mut secret_output_values = outputs[..outputs.len() - 1].to_vec();
 
         // augment the input side
-        for i in 0..numParties - 1 {
-            let mut secretInputRandomnessi = secretInputRandomness[i].clone();
-            secretInputRandomnessi.insert(0, secretInputValues[i].clone());
+        for i in 0..num_parties - 1 {
+            let mut secret_input_randomnessi = secret_input_randomness[i].clone();
+            secret_input_randomnessi.insert(0, secret_input_values[i].clone());
             let g = SHA256Gadget::new(
-                secretInputRandomnessi,
+                secret_input_randomnessi,
                 64,
                 64,
                 false,
@@ -138,19 +134,19 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
         }
 
         // augment the output side
-        for i in 0..numParties {
+        for i in 0..num_parties {
             // adapt the output values to 64-bit values (adaptation is needed due to the way Pinocchio's compiler handles subtractions)
-            secretOutputValues[i] = Some(
-                secretOutputValues[i]
+            secret_output_values[i] = Some(
+                secret_output_values[i]
                     .as_ref()
                     .unwrap()
                     .get_bit_wiresi(64 * 2, &None)
                     .pack_as_bits(None, Some(64), &None),
             );
-            let mut secretOutputRandomnessi = secretOutputRandomness[i].clone();
-            secretOutputRandomnessi.insert(0, secretOutputValues[i].clone());
+            let mut secret_output_randomnessi = secret_output_randomness[i].clone();
+            secret_output_randomnessi.insert(0, secret_output_values[i].clone());
             let g = SHA256Gadget::new(
-                secretOutputRandomnessi,
+                secret_output_randomnessi,
                 64,
                 64,
                 false,
@@ -166,35 +162,35 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
             );
         }
         (
-            self.t.secretInputValues,
-            self.t.secretOutputValues,
-            self.t.secretInputRandomness,
-            self.t.secretOutputRandomness,
+            self.t.secret_input_values,
+            self.t.secret_output_values,
+            self.t.secret_input_randomness,
+            self.t.secret_output_randomness,
         ) = (
-            secretInputValues,
-            secretOutputValues,
-            secretInputRandomness,
-            secretOutputRandomness,
+            secret_input_values,
+            secret_output_values,
+            secret_input_randomness,
+            secret_output_randomness,
         );
     }
 
     fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-        let numParties = self.t.numParties as usize;
-        for i in 0..numParties - 1 {
+        let num_parties = self.t.num_parties as usize;
+        for i in 0..num_parties - 1 {
             evaluator.set_wire_value(
-                self.t.secretInputValues[i].as_ref().unwrap(),
-                &Util::nextRandomBigIntegeri(63),
+                self.t.secret_input_values[i].as_ref().unwrap(),
+                &Util::next_random_big_integeri(63),
             );
         }
 
-        for i in 0..numParties - 1 {
-            for w in &self.t.secretInputRandomness[i] {
-                evaluator.set_wire_value(w.as_ref().unwrap(), &Util::nextRandomBigIntegeri(64));
+        for i in 0..num_parties - 1 {
+            for w in &self.t.secret_input_randomness[i] {
+                evaluator.set_wire_value(w.as_ref().unwrap(), &Util::next_random_big_integeri(64));
             }
         }
-        for i in 0..numParties {
-            for w in &self.t.secretOutputRandomness[i] {
-                evaluator.set_wire_value(w.as_ref().unwrap(), &Util::nextRandomBigIntegeri(64));
+        for i in 0..num_parties {
+            for w in &self.t.secret_output_randomness[i] {
+                evaluator.set_wire_value(w.as_ref().unwrap(), &Util::next_random_big_integeri(64));
             }
         }
     }

@@ -23,10 +23,10 @@ use rccell::RcCell;
 
 #[derive(Debug, Clone)]
 pub struct ZkayElgamalRerandGadget {
-    pub randomnessBits: Vec<Option<WireType>>, // little-endian randomness bits
-    pub pk: JubJubPoint,                       // pub  key
-    pub c1: JubJubPoint,                       // input ciphertext first point
-    pub c2: JubJubPoint,                       // input ciphertext second point
+    pub randomness_bits: Vec<Option<WireType>>, // little-endian randomness bits
+    pub pk: JubJubPoint,                        // pub  key
+    pub c1: JubJubPoint,                        // input ciphertext first point
+    pub c2: JubJubPoint,                        // input ciphertext second point
     pub o1: Option<JubJubPoint>,
     pub o2: Option<JubJubPoint>,
     pub outputs: Vec<Option<WireType>>,
@@ -36,13 +36,13 @@ impl ZkayElgamalRerandGadget {
         c1: JubJubPoint,
         c2: JubJubPoint,
         pk: JubJubPoint,
-        randomnessBits: Vec<Option<WireType>>,
+        randomness_bits: Vec<Option<WireType>>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
         let mut _self = ZkayBabyJubJubGadget::<Self>::new(
             &None,
             Self {
-                randomnessBits,
+                randomness_bits,
                 pk,
                 c1,
                 c2,
@@ -59,13 +59,13 @@ impl ZkayElgamalRerandGadget {
 impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalRerandGadget>> {
     fn build_circuit(&mut self) {
         // create encryption of zero (z1, z2)
-        let sharedSecret = self.mulScalar(&self.t.t.pk, &self.t.t.randomnessBits);
-        let z1 = self.mulScalar(&self.getGenerator(), &self.t.t.randomnessBits);
-        let z2 = sharedSecret;
+        let shared_secret = self.mul_scalar(&self.t.t.pk, &self.t.t.randomness_bits);
+        let z1 = self.mul_scalar(&self.get_generator(), &self.t.t.randomness_bits);
+        let z2 = shared_secret;
 
         // add encryption of zero to re-randomize
-        let o1 = self.addPoints(&self.t.t.c1, &z1);
-        let o2 = self.addPoints(&self.t.t.c2, &z2);
+        let o1 = self.add_points(&self.t.t.c1, &z1);
+        let o2 = self.add_points(&self.t.t.c2, &z2);
         self.t.t.outputs = vec![
             Some(o1.x.clone()),
             Some(o1.y.clone()),

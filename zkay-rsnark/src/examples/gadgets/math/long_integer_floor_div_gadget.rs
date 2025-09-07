@@ -7,9 +7,6 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
-use crate::examples::gadgets::math::long_integer_division::{
-    LongIntegerDivision, LongIntegerDivisionConfig,
-};
 use crate::{
     arc_cell_new,
     circuit::{
@@ -36,15 +33,21 @@ use crate::{
             wire_type::WireType,
         },
     },
+    examples::gadgets::math::long_integer_division::{
+        LongIntegerDivision, LongIntegerDivisionConfig,
+    },
     util::{
         util::ARcCell,
         util::{BigInteger, Util},
     },
 };
+
 use rccell::RcCell;
-use std::fmt::Debug;
-use std::fs::File;
-use std::hash::{DefaultHasher, Hash, Hasher};
+use std::{
+    fmt::Debug,
+    fs::File,
+    hash::{DefaultHasher, Hash, Hasher},
+};
 
 //  * This gadget provides floor(a / b), when both operands are represented as long
 //  * elements. You can check the RSA gadgets/circuit generators for an example.
@@ -58,23 +61,23 @@ impl LongIntegerFloorDivGadget {
     pub fn new(
         a: LongElement,
         b: LongElement,
-        bMinBitwidth: i32,
+        b_min_bitwidth: i32,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<LongIntegerDivision<Self>> {
-        //super(a, b, bMinBitwidth, true, desc);
-        LongIntegerDivision::<Self>::new(a, b, bMinBitwidth, true, desc, generator)
+        //super(a, b, b_min_bitwidth, true, desc);
+        LongIntegerDivision::<Self>::new(a, b, b_min_bitwidth, true, desc, generator)
     }
 }
 // LongIntegerDivision exteand  GadgetConfig
 // impl LongIntegerDivision for LongIntegerFloorDivGadget {
 //     fn get_output_wires(&self) -> Vec<Option<WireType>> {
-//         getQuotient().get_array()
+//         get_quotient().get_array()
 //     }
 // }
 // impl GadgetConfig for Gadget<LongIntegerFloorDivGadget> {
 //     fn get_output_wires(&self) -> &Vec<Option<WireType>> {
-//         self.getQuotient().get_array()
+//         self.get_quotient().get_array()
 //     }
 // }
 
@@ -82,6 +85,6 @@ crate::impl_long_integer_division_config_for!(LongIntegerFloorDivGadget);
 
 impl GadgetConfig for Gadget<LongIntegerDivision<LongIntegerFloorDivGadget>> {
     fn get_output_wires(&self) -> &Vec<Option<WireType>> {
-        self.getQuotient().get_array()
+        self.get_quotient().get_array()
     }
 }
