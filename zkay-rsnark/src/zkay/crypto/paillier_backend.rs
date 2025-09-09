@@ -100,12 +100,12 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<PaillierBackend>> {
         let encoded_plain = self.encode_signed_to_mod_n(plain, &key, generator.clone());
         let rand_arr = LongElement::newa(
             WireArray::new(random_wires.clone(), generator.clone().downgrade())
-                .get_bits(PaillierBackend::CHUNK_SIZE as usize, &None)
+                .get_bits(PaillierBackend::CHUNK_SIZE as usize)
                 .adjust_length(None, self.key_bits as usize),
             generator.clone().downgrade(),
         );
         let random = self.uninit_zero_to_one(&rand_arr); // Also replace randomness 0 with 1 (for uninit ciphers)
-        Box::new(ZkayPaillierFastEncGadget::new(
+        Box::new(ZkayPaillierFastEncGadget::new_with_option(
             key,
             self.key_bits,
             encoded_plain,
@@ -238,7 +238,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         n_square: &LongElement,
         generator: RcCell<CircuitGenerator>,
     ) -> LongElement {
-        LongIntegerModInverseGadget::new(
+        LongIntegerModInverseGadget::new_with_option(
             val.clone(),
             n_square.clone(),
             true,
@@ -256,7 +256,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         n_square: &LongElement,
         generator: RcCell<CircuitGenerator>,
     ) -> LongElement {
-        LongIntegerModGadget::new(
+        LongIntegerModGadget::new_with_option(
             lhs.clone().mul(rhs),
             n_square.clone(),
             2 * self.key_bits,
@@ -275,7 +275,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         rhs_bits: i32,
         n_square: &LongElement,
     ) -> LongElement {
-        LongIntegerModPowGadget::new(
+        LongIntegerModPowGadget::new_with_option(
             lhs.clone(),
             rhs.clone(),
             n_square.clone(),

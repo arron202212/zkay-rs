@@ -45,7 +45,28 @@ pub struct SHA256Gadget<T> {
     pub t: T,
 }
 impl<T> SHA256Gadget<T> {
+    #[inline]
     pub fn new(
+        ins: Vec<Option<WireType>>,
+        bit_width_per_input_element: usize,
+        total_length_in_bytes: usize,
+        binary_output: bool,
+        padding_required: bool,
+        generator: RcCell<CircuitGenerator>,
+        t: T,
+    ) -> Gadget<Self> {
+        Self::new_with_option(
+            ins,
+            bit_width_per_input_element,
+            total_length_in_bytes,
+            binary_output,
+            padding_required,
+            &None,
+            generator,
+            t,
+        )
+    }
+    pub fn new_with_option(
         ins: Vec<Option<WireType>>,
         bit_width_per_input_element: usize,
         total_length_in_bytes: usize,
@@ -134,7 +155,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
 
                     w[i] = Some(
                         WireArray::new(ws_splitted[i].clone(), generator.clone().downgrade())
-                            .pack_as_bits(None, Some(32), &None),
+                            .pack_as_bits_with_to(32),
                     );
                 } else {
                     let t1 = w[i - 15].as_ref().unwrap().rotate_right(32, 7);
@@ -279,7 +300,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
                 .add(t1.muli(-2));
             result[i] = Some(t1.add(c_bits[i].clone().unwrap().mul(t2)));
         }
-        WireArray::new(result, self.generator.clone().downgrade()).pack_as_bits(None, None, &None)
+        WireArray::new(result, self.generator.clone().downgrade()).pack_as_bits()
     }
 
     fn compute_ch(&self, a: &WireType, b: &WireType, c: &WireType, num_bits: usize) -> WireType {
@@ -297,7 +318,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
             let t2 = t1.mul(a_bits[i].as_ref().unwrap());
             result[i] = Some(t2.add(c_bits[i].as_ref().unwrap()));
         }
-        WireArray::new(result, self.generator.clone().downgrade()).pack_as_bits(None, None, &None)
+        WireArray::new(result, self.generator.clone().downgrade()).pack_as_bits()
     }
 
     fn prepare(&mut self) {
@@ -308,7 +329,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
             self.t.unpadded_inputs.clone(),
             self.generator.clone().downgrade(),
         )
-        .get_bits(self.t.bit_width_per_input_element, &None);
+        .get_bits(self.t.bit_width_per_input_element);
         let bits = bits.as_array();
         let tail_length = self.t.total_length_in_bytes % 64;
         if self.t.padding_required {

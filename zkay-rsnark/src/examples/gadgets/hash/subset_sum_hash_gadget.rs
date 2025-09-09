@@ -64,7 +64,15 @@ impl SubsetSumHashGadget {
     //           Whether the output digest should be splitted into bits or not.
     //@param desc
 
+    #[inline]
     pub fn new(
+        ins: Vec<Option<WireType>>,
+        binary_output: bool,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(ins, binary_output, &None, generator)
+    }
+    pub fn new_with_option(
         ins: Vec<Option<WireType>>,
         binary_output: bool,
         desc: &Option<String>,

@@ -68,7 +68,18 @@ pub struct LongIntegerModPowGadget {
     pub c: LongElement, // c = m^e mod m
 }
 impl LongIntegerModPowGadget {
+    #[inline]
     pub fn new(
+        b: LongElement,
+        e: LongElement,
+        m: LongElement,
+        m_min_bits: i32,
+        e_max_bits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(b, e, m, m_min_bits, e_max_bits, &None, generator)
+    }
+    pub fn new_with_option(
         b: LongElement,
         e: LongElement,
         m: LongElement,
@@ -107,7 +118,7 @@ impl Gadget<LongIntegerModPowGadget> {
         let start = std::time::Instant::now();
         for i in (0..e_bits.len()).rev() {
             let square = product.clone().mul(&product);
-            let square_mod_m = LongIntegerModGadget::new(
+            let square_mod_m = LongIntegerModGadget::new_with_option(
                 square,
                 self.t.m.clone(),
                 self.t.m_min_bits,
@@ -120,7 +131,7 @@ impl Gadget<LongIntegerModPowGadget> {
             let square_times_base = square_mod_m
                 .clone()
                 .mul(&one.mux_bit(&self.t.b, e_bits[i].as_ref().unwrap()));
-            product = LongIntegerModGadget::new(
+            product = LongIntegerModGadget::new_with_option(
                 square_times_base,
                 self.t.m.clone(),
                 self.t.m_min_bits,
@@ -132,7 +143,7 @@ impl Gadget<LongIntegerModPowGadget> {
             .clone();
         }
 
-        self.t.c = LongIntegerModGadget::new(
+        self.t.c = LongIntegerModGadget::new_with_option(
             product,
             self.t.m.clone(),
             0,

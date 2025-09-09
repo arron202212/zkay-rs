@@ -35,7 +35,17 @@ pub struct ZkayPaillierFastDecGadget {
     pub plain: Option<LongElement>,
 }
 impl ZkayPaillierFastDecGadget {
+    #[inline]
     pub fn new(
+        n: LongElement,
+        n_bits: i32,
+        lambda: LongElement,
+        cipher: LongElement,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(n, n_bits, lambda, cipher, &None, generator)
+    }
+    pub fn new_with_option(
         n: LongElement,
         n_bits: i32,
         lambda: LongElement,
@@ -66,7 +76,7 @@ impl ZkayPaillierFastDecGadget {
 impl Gadget<ZkayPaillierFastDecGadget> {
     fn build_circuit(&mut self) {
         let n_square_min_bits = 2 * self.t.n_bits - 1; // Minimum bit length of n^2
-        let lambda_inverse = LongIntegerModInverseGadget::new(
+        let lambda_inverse = LongIntegerModInverseGadget::new_with_option(
             self.t.lambda.clone(),
             self.t.n.clone(),
             false,
@@ -77,7 +87,7 @@ impl Gadget<ZkayPaillierFastDecGadget> {
         .clone();
 
         // plain = L(cipher^lambda mod n^2) / lambda mod n
-        let c_pow_lambda = LongIntegerModPowGadget::new(
+        let c_pow_lambda = LongIntegerModPowGadget::new_with_option(
             self.t.cipher.clone(),
             self.t.lambda.clone(),
             self.t.n_square.clone(),
@@ -88,7 +98,7 @@ impl Gadget<ZkayPaillierFastDecGadget> {
         )
         .get_result()
         .clone();
-        let l_output = LongIntegerFloorDivGadget::new(
+        let l_output = LongIntegerFloorDivGadget::new_with_option(
             c_pow_lambda.sub(1),
             self.t.n.clone(),
             0,
@@ -104,7 +114,6 @@ impl Gadget<ZkayPaillierFastDecGadget> {
                 self.t.n.clone(),
                 self.t.n_bits,
                 true,
-                &None,
                 self.generator.clone(),
             )
             .get_remainder()

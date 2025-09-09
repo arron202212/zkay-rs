@@ -55,7 +55,15 @@ pub struct DotProductGadget {
     pub output: Vec<Option<WireType>>,
 }
 impl DotProductGadget {
+    #[inline]
     pub fn new(
+        a: Vec<Option<WireType>>,
+        b: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(a, b, &None, generator)
+    }
+    pub fn new_with_option(
         a: Vec<Option<WireType>>,
         b: Vec<Option<WireType>>,
         desc: &Option<String>,

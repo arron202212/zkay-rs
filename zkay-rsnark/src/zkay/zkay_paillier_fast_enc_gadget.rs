@@ -37,7 +37,17 @@ pub struct ZkayPaillierFastEncGadget {
     pub cipher: Option<LongElement>,
 }
 impl ZkayPaillierFastEncGadget {
+    #[inline]
     pub fn new(
+        n: LongElement,
+        n_bits: i32,
+        plain: LongElement,
+        random: LongElement,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(n, n_bits, plain, random, &None, generator)
+    }
+    pub fn new_with_option(
         n: LongElement,
         n_bits: i32,
         plain: LongElement,
@@ -75,7 +85,6 @@ impl Gadget<ZkayPaillierFastEncGadget> {
             self.t.random.clone(),
             self.t.n.clone(),
             false,
-            &None,
             self.generator.clone(),
         )
         .get_result()
@@ -90,7 +99,7 @@ impl Gadget<ZkayPaillierFastEncGadget> {
             .mul(&self.t.plain)
             .add(1)
             .align(self.t.n_square.get_size());
-        let rand_pow_n = LongIntegerModPowGadget::new(
+        let rand_pow_n = LongIntegerModPowGadget::new_with_option(
             self.t.random.clone(),
             self.t.n.clone(),
             self.t.n_square.clone(),
@@ -103,7 +112,7 @@ impl Gadget<ZkayPaillierFastEncGadget> {
         .clone();
         let product = g_pow_plain.mul(&rand_pow_n);
         self.t.cipher = Some(
-            LongIntegerModGadget::new(
+            LongIntegerModGadget::new_with_option(
                 product,
                 self.t.n_square.clone(),
                 n_square_min_bits,

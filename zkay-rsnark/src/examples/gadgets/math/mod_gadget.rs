@@ -60,7 +60,16 @@ pub struct ModGadget {
     pub bitwidth: i32, // bitwidth for both a, b
 }
 impl ModGadget {
+    #[inline]
     pub fn new(
+        a: WireType,
+        b: WireType,
+        bitwidth: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(a, b, bitwidth, &None, generator)
+    }
+    pub fn new_with_option(
         a: WireType,
         b: WireType,
         bitwidth: i32,

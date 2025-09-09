@@ -124,7 +124,18 @@ impl ECDHKeyExchangeGadget {
     //
     //
 
+    #[inline]
     pub fn new(
+        base_x: Option<WireType>,
+        base_y: Option<WireType>,
+        h_x: Option<WireType>,
+        h_y: Option<WireType>,
+        secret_bits: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(base_x, base_y, h_x, h_y, secret_bits, &None, generator)
+    }
+    pub fn new_with_option(
         base_x: Option<WireType>,
         base_y: Option<WireType>,
         h_x: Option<WireType>,
@@ -446,7 +457,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
             .add(p.x.as_ref().unwrap().mulb(&coeff_a).muli(2))
             .add(1);
         let b = p.y.as_ref().unwrap().muli(2);
-        let l1 = FieldDivisionGadget::new(a, b, &None, generator).get_output_wires()[0].clone();
+        let l1 = FieldDivisionGadget::new(a, b, generator).get_output_wires()[0].clone();
 
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
 
@@ -474,9 +485,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let diff_y = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
 
         let diff_x = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-        let q = FieldDivisionGadget::new(diff_y, diff_x, &None, self.generator.clone())
-            .get_output_wires()[0]
-            .clone();
+        let q = FieldDivisionGadget::new(diff_y, diff_x, self.generator.clone()).get_output_wires()
+            [0]
+        .clone();
 
         let q2 = q.clone().unwrap().mul(q.as_ref().unwrap());
 

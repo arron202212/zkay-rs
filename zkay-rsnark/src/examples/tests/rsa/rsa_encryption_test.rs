@@ -87,7 +87,7 @@ mod test {
 
                 // group every 8 bytes together
                 let mut cipher_text = WireArray::new(cipher_text_in_bytes, self.cg().downgrade())
-                    .pack_words_into_larger_words(8, 8, &None);
+                    .pack_words_into_larger_words(8, 8);
                 CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     &cipher_text,

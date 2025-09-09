@@ -85,7 +85,24 @@ pub struct RSAEncryptionOAEPGadget {
 }
 impl RSAEncryptionOAEPGadget {
     pub const SHA256_DIGEST_LENGTH: i32 = 32; // in bytes
+    #[inline]
     pub fn new(
+        modulus: LongElement,
+        plain_text: Vec<Option<WireType>>,
+        seed: Vec<Option<WireType>>,
+        rsa_key_bit_length: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(
+            modulus,
+            plain_text,
+            seed,
+            rsa_key_bit_length,
+            &None,
+            generator,
+        )
+    }
+    pub fn new_with_option(
         modulus: LongElement,
         plain_text: Vec<Option<WireType>>,
         seed: Vec<Option<WireType>>,
@@ -202,7 +219,6 @@ impl Gadget<RSAEncryptionOAEPGadget> {
                 self.t.modulus.clone(),
                 self.t.rsa_key_bit_length,
                 false,
-                &None,
                 self.generator.clone(),
             )
             .get_remainder()
@@ -214,7 +230,6 @@ impl Gadget<RSAEncryptionOAEPGadget> {
             self.t.modulus.clone(),
             self.t.rsa_key_bit_length,
             true,
-            &None,
             self.generator.clone(),
         )
         .get_remainder()
@@ -223,7 +238,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         // return the cipher text as byte array
         self.t.ciphertext = s
             .get_bitsi(self.t.rsa_key_bit_length)
-            .pack_bits_into_words(8, &None);
+            .pack_bits_into_words(8);
     }
 
     pub fn check_seed_compliance(&self) {
@@ -254,7 +269,6 @@ impl Gadget<RSAEncryptionOAEPGadget> {
                 input_to_hash.len(),
                 false,
                 true,
-                &None,
                 self.generator.clone(),
                 Base,
             );
@@ -262,8 +276,8 @@ impl Gadget<RSAEncryptionOAEPGadget> {
 
             let mut msg_hash_bytes =
                 WireArray::new(digest.clone(), self.generator.clone().downgrade())
-                    .get_bits(32, &None)
-                    .pack_bits_into_words(8, &None);
+                    .get_bits(32)
+                    .pack_bits_into_words(8);
             // reverse the byte array representation of each word of the digest
             // to
             // be compatible with the endianess

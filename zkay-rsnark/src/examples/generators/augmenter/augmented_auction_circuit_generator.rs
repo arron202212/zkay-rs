@@ -104,7 +104,6 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
         let auction_gagdet = PinocchioGadget::new(
             secret_input_valuess,
             self.t.path_to_compiled_circuit.clone(),
-            &None,
             self.cg(),
         );
         let outputs = auction_gagdet.get_output_wires();
@@ -122,7 +121,6 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 64,
                 false,
                 false,
-                &None,
                 self.cg(),
                 Base,
             );
@@ -141,7 +139,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                     .as_ref()
                     .unwrap()
                     .get_bit_wiresi(64 * 2)
-                    .pack_as_bits(None, Some(64), &None),
+                    .pack_as_bits_with_to(64),
             );
             let mut secret_output_randomnessi = secret_output_randomness[i].clone();
             secret_output_randomnessi.insert(0, secret_output_values[i].clone());
@@ -151,7 +149,6 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 64,
                 false,
                 false,
-                &None,
                 self.cg(),
                 Base,
             );

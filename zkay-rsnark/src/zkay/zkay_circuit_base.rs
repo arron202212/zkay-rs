@@ -314,7 +314,7 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
         if self.use_input_hashing() {
             CircuitGenerator::make_output_array_with_str(
                 self.cg(),
-                ZkaySHA256Gadget::new(self.all_pub_io_wires().clone(), 253, &None, self.cg())
+                ZkaySHA256Gadget::new(self.all_pub_io_wires().clone(), 253, self.cg())
                     .get_output_wires(),
                 "digest",
             );
@@ -597,7 +597,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         crypto_backend.add_key(&name, &input, generator);
     }
 
-    pub fn addK(&mut self, name: &str, size: i32) {
+    pub fn add_k(&mut self, name: &str, size: i32) {
         self.add_ki(LEGACY_CRYPTO_BACKEND, name, size);
     }
 
@@ -1104,11 +1104,8 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
                     let mut new_ws = vec![None; to_bit_width as usize];
                     new_ws[..from_bitwidth as usize].clone_from_slice(&bit_wires.as_array());
                     new_ws[from_bitwidth as usize..to_bit_width as usize].fill(Some(extendBit));
-                    WireArray::new(new_ws, self.cg().downgrade()).pack_as_bits(
-                        None,
-                        Some(to_bit_width as usize),
-                        &None,
-                    )
+                    WireArray::new(new_ws, self.cg().downgrade())
+                        .pack_as_bits_with_to(to_bit_width as usize)
                 }
             }
         } else if from_bitwidth > to_bit_width {
@@ -1118,10 +1115,9 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
                     from_bitwidth as u64,
                     &Some(format!("downcast1 {} ", w.name)),
                 )
-                .pack_as_bits(
-                    None,
-                    Some(to_bit_width as usize),
-                    &Some(format!("downcast2 {}", w.name)),
+                .pack_as_bits_with_to_and_desc(
+                    to_bit_width as usize,
+                    format!("downcast2 {}", w.name),
                 )
         } else {
             // Type stays the same -> no expensive bitwise operations necessary
@@ -1195,7 +1191,7 @@ impl<T: crate::circuit::StructNameConfig + std::fmt::Debug + std::clone::Clone>
         let mut crypto_backend = self.get_crypto_backend(crypto_backend_id);
 
         let dec = crypto_backend
-            .create_decryption_gadget(exp_plain, cipher, pkey, skey, &desc, generator);
+            .create_decryption_gadget_with_option(exp_plain, cipher, pkey, skey, &desc, generator);
         dec.get_output_wires()[0].clone().unwrap()
     }
 

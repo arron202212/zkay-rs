@@ -42,7 +42,11 @@ pub struct FieldDivisionGadget {
     pub c: Vec<Option<WireType>>,
 }
 impl FieldDivisionGadget {
-    pub fn new(
+    #[inline]
+    pub fn new(a: WireType, b: WireType, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+        Self::new_with_option(a, b, &None, generator)
+    }
+    pub fn new_with_option(
         a: WireType,
         b: WireType,
         desc: &Option<String>,

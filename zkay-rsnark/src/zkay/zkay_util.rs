@@ -31,7 +31,7 @@ impl ZkayUtil {
             Util::reverse_bytes(bit_array.as_array()),
             generator.downgrade(),
         )
-        .pack_bits_into_words(target_word_bits as usize, &None)
+        .pack_bits_into_words(target_word_bits as usize)
     }
 
     pub fn unsigned_bytes_to_big_int(bytes: &[u8]) -> BigInteger {

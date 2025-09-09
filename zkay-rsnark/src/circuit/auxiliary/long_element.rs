@@ -73,7 +73,7 @@ impl LongElement {
             >= bits.size() as i32
         {
             (
-                vec![Some(bits.pack_as_bits(None, Some(bits.size()), &None))],
+                vec![Some(bits.pack_as_bits_with_to(bits.size()))],
                 vec![Util::compute_max_value(bits.size() as u64)],
                 vec![bits.size() as u64],
             )
@@ -100,7 +100,7 @@ impl LongElement {
                             .to_vec(),
                         generator.clone(),
                     )
-                    .pack_as_bits(None, None, &None),
+                    .pack_as_bits(),
                 );
                 if i == array.len() - 1 {
                     current_max_values[i] = max_last_chunk_val.clone();
@@ -268,14 +268,14 @@ impl LongElement {
                         chunk_bits[..Self::CHUNK_BITWIDTH as usize].to_vec(),
                         self.generator.clone(),
                     )
-                    .pack_as_bits(None, None, &None),
+                    .pack_as_bits(),
                 );
                 let mut rem = WireArray::new(
                     chunk_bits[Self::CHUNK_BITWIDTH as usize..new_max_values[i].bits() as usize]
                         .to_vec(),
                     self.generator.clone(),
                 )
-                .pack_as_bits(None, None, &None);
+                .pack_as_bits();
                 if i != total_num_chunks - 1 {
                     new_max_values[i + 1] = new_max_values[i]
                         .clone()
@@ -369,7 +369,7 @@ impl LongElement {
                         .to_vec(),
                     self.generator.clone(),
                 )
-                .pack_as_bits(None, None, &None);
+                .pack_as_bits();
 
                 if chunk_index != new_array.len() - 1 {
                     new_max_values[chunk_index + 1] = new_max_values[chunk_index]
@@ -459,7 +459,7 @@ impl LongElement {
             wire_non_zero[i] = self.array[i].as_ref().map(|x| x.check_non_zero());
         }
         WireArray::new(wire_non_zero, self.generator.clone())
-            .sum_all_elements(&None)
+            .sum_all_elements()
             .check_non_zero()
     }
 
@@ -890,7 +890,7 @@ impl LongElement {
         // Only one bit should be set.
         CircuitGenerator::add_one_assertion(
             generator.clone(),
-            &WireArray::new(helper_bits.clone(), self.generator.clone()).sum_all_elements(&None),
+            &WireArray::new(helper_bits.clone(), self.generator.clone()).sum_all_elements(),
         );
 
         // verify "the greater than condition" for the specified chunk
@@ -1153,9 +1153,9 @@ impl Mul<&Self> for LongElement {
                     coeff = Util::modulo(&coeff.mul(&constant), &CONFIGS.field_prime);
                 }
 
-                let v1 = WireArray::new(vector1, self.generator.clone()).sum_all_elements(&None);
-                let v2 = WireArray::new(vector2, self.generator.clone()).sum_all_elements(&None);
-                let v3 = WireArray::new(vector3, self.generator.clone()).sum_all_elements(&None);
+                let v1 = WireArray::new(vector1, self.generator.clone()).sum_all_elements();
+                let v2 = WireArray::new(vector2, self.generator.clone()).sum_all_elements();
+                let v3 = WireArray::new(vector3, self.generator.clone()).sum_all_elements();
                 CircuitGenerator::add_assertion(generator.clone(), &v1, &v2, &v3);
             }
         }

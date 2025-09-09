@@ -72,7 +72,6 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
                 self.t.pk_wire.clone().unwrap(),
                 secret_wire.clone(),
                 true,
-                &None,
                 self.cg(),
             );
             gadget.validate_inputs();
@@ -84,7 +83,7 @@ impl CGConfig for CircuitGeneratorExtend<ZkayECDHGenerator> {
             // If no pub  key specified, compute own pub  key
             CircuitGenerator::make_output(
                 self.cg(),
-                ZkayEcPkDerivationGadget::new(secret_wire.clone(), true, &None, self.cg())
+                ZkayEcPkDerivationGadget::new(secret_wire.clone(), true, self.cg())
                     .get_output_wires()[0]
                     .as_ref()
                     .unwrap(),

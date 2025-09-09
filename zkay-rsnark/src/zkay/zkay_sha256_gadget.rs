@@ -25,13 +25,21 @@ pub struct ZkaySHA256Gadget {
 
 impl ZkaySHA256Gadget {
     const bytes_per_word: usize = 32;
+    #[inline]
     pub fn new(
+        uint256_inputs: Vec<Option<WireType>>,
+        truncated_bits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<SHA256Gadget<Self>> {
+        Self::new_with_option(uint256_inputs, truncated_bits, &None, generator)
+    }
+    pub fn new_with_option(
         uint256_inputs: Vec<Option<WireType>>,
         truncated_bits: i32,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<SHA256Gadget<Self>> {
-        let mut _self = SHA256Gadget::<Self>::new(
+        let mut _self = SHA256Gadget::<Self>::new_with_option(
             Self::convert_inputs_to_bytes(&uint256_inputs, generator.clone()),
             8,
             uint256_inputs.len() * Self::bytes_per_word,
@@ -57,8 +65,8 @@ impl ZkaySHA256Gadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<Option<WireType>> {
         let mut input_bytes = WireArray::new(uint256_inputs.clone(), generator.downgrade())
-            .get_bits(Self::bytes_per_word * 8, &None)
-            .pack_bits_into_words(8, &None);
+            .get_bits(Self::bytes_per_word * 8)
+            .pack_bits_into_words(8);
         // Reverse byte order of each input because jsnark reverses internally when packing
         for j in 0..uint256_inputs.len() {
             input_bytes[j * Self::bytes_per_word..(j + 1) * Self::bytes_per_word].reverse();
@@ -84,15 +92,15 @@ impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
             } else {
                 self.t.t._uint_output = vec![Some(
                     WireArray::new(digest, self.generator.clone().downgrade())
-                        .get_bits(32, &None)
+                        .get_bits(32)
                         .shift_right(256, 256 - truncated_length as usize)
-                        .pack_as_bits(None, None, &Some(truncated_length.to_string())),
+                        .pack_as_bits_with_desc(truncated_length.to_string()),
                 )];
                 return;
             }
         }
         self.t.t._uint_output = WireArray::new(digest, self.generator.clone().downgrade())
-            .pack_words_into_larger_words(32, 8, &None);
+            .pack_words_into_larger_words(32, 8);
         assert!(self.t.t._uint_output.len() == 1, "Wrong wire length");
     }
 }

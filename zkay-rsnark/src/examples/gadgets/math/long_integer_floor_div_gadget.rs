@@ -58,7 +58,16 @@ use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, ImplStructNameConfig)]
 pub struct LongIntegerFloorDivGadget;
 impl LongIntegerFloorDivGadget {
+    #[inline]
     pub fn new(
+        a: LongElement,
+        b: LongElement,
+        b_min_bitwidth: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<LongIntegerDivision<Self>> {
+        Self::new_with_option(a, b, b_min_bitwidth, &None, generator)
+    }
+    pub fn new_with_option(
         a: LongElement,
         b: LongElement,
         b_min_bitwidth: i32,
@@ -66,7 +75,7 @@ impl LongIntegerFloorDivGadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<LongIntegerDivision<Self>> {
         //super(a, b, b_min_bitwidth, true, desc);
-        LongIntegerDivision::<Self>::new(a, b, b_min_bitwidth, true, desc, generator)
+        LongIntegerDivision::<Self>::new_with_option(a, b, b_min_bitwidth, true, desc, generator)
     }
 }
 // LongIntegerDivision exteand  GadgetConfig

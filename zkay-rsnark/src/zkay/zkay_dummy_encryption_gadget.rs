@@ -25,7 +25,17 @@ pub struct ZkayDummyEncryptionGadget {
     pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyEncryptionGadget {
+    #[inline]
     pub fn new(
+        plain: TypedWire,
+        pk: LongElement,
+        rnd: Vec<Option<WireType>>,
+        key_bits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(plain, pk, rnd, key_bits, &None, generator)
+    }
+    pub fn new_with_option(
         plain: TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
@@ -35,11 +45,7 @@ impl ZkayDummyEncryptionGadget {
     ) -> Gadget<Self> {
         // let generators=generator.borrow().clone();
         // assert!(plain.is_some() && pk.is_some() && rnd.is_some());
-        let pkarr = pk
-            .get_bits()
-            .as_ref()
-            .unwrap()
-            .pack_bits_into_words(256, &None);
+        let pkarr = pk.get_bits().as_ref().unwrap().pack_bits_into_words(256);
         for i in 1..pkarr.len() {
             CircuitGenerator::add_zero_assertion_with_str(
                 generator.clone(),

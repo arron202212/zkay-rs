@@ -54,7 +54,7 @@ impl CryptoBackendConfig for CryptoBackend<Symmetric<ECDHBackend>> {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
-        Box::new(ZkayCBCSymmetricEncGadget::new(
+        Box::new(ZkayCBCSymmetricEncGadget::new_with_option(
             plain.clone(),
             self.get_key(key, generator.clone()),
             Self::extract_iv(&Some(iv_arr.clone())),

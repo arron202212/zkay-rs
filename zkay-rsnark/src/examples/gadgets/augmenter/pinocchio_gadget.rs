@@ -48,7 +48,15 @@ pub struct PinocchioGadget {
     pub output_wires: Vec<Option<WireType>>,
 }
 impl PinocchioGadget {
+    #[inline]
     pub fn new(
+        input_wires: Vec<Option<WireType>>,
+        path_to_arith_file: String,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(input_wires, path_to_arith_file, &None, generator)
+    }
+    pub fn new_with_option(
         input_wires: Vec<Option<WireType>>,
         path_to_arith_file: String,
         desc: &Option<String>,

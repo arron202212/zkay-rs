@@ -44,14 +44,23 @@ pub struct ZkayECDHGadget {
     pub outputs: Vec<Option<WireType>>,
 }
 impl ZkayECDHGadget {
+    #[inline]
     pub fn new(
+        h_x: WireType,
+        secret_key: WireType,
+        validate_secret: bool,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<ZkayEcGadget<Self>> {
+        Self::new_with_option(h_x, secret_key, validate_secret, &None, generator)
+    }
+    pub fn new_with_option(
         h_x: WireType,
         secret_key: WireType,
         validate_secret: bool,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayEcGadget<Self>> {
-        let mut _self = ZkayEcGadget::<Self>::new(
+        let mut _self = ZkayEcGadget::<Self>::new_with_option(
             desc,
             Self {
                 secret_bits: secret_key
@@ -97,14 +106,10 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
         )
         .x
         .clone();
-        let shared_key = ZkaySHA256Gadget::new(
-            vec![shared_secret.clone()],
-            128,
-            &None,
-            self.generator.clone(),
-        )
-        .get_output_wires()[0]
-            .clone();
+        let shared_key =
+            ZkaySHA256Gadget::new(vec![shared_secret.clone()], 128, self.generator.clone())
+                .get_output_wires()[0]
+                .clone();
         self.t.t.outputs = vec![shared_key];
         (self.t.t.h_table, self.t.t.shared_secret) = (h_table, shared_secret);
     }

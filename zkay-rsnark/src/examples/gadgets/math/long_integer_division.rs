@@ -109,7 +109,17 @@ impl<T: Debug + Clone> LongIntegerDivision<T> {
     //		See the RSA encryption gadget for an illustration.
     //@param desc
 
+    #[inline]
     pub fn new(
+        a: LongElement,
+        b: LongElement,
+        b_min_bitwidth: i32,
+        restrict_range: bool,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(a, b, b_min_bitwidth, restrict_range, &None, generator)
+    }
+    pub fn new_with_option(
         a: LongElement,
         b: LongElement,
         b_min_bitwidth: i32,

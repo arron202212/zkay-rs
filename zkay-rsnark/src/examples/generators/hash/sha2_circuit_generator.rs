@@ -64,16 +64,8 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
         // assuming the circuit input will be 64 bytes
         let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 64);
         // this gadget is not applying any padding.
-        let sha2_gadget = SHA256Gadget::new(
-            input_wires.clone(),
-            8,
-            64,
-            false,
-            false,
-            &None,
-            self.cg(),
-            Base,
-        );
+        let sha2_gadget =
+            SHA256Gadget::new(input_wires.clone(), 8, 64, false, false, self.cg(), Base);
         let digest = sha2_gadget.get_output_wires();
         CircuitGenerator::make_output_array_with_str(self.cg(), digest, "digest");
 

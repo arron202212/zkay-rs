@@ -78,7 +78,24 @@ pub struct RSAEncryptionV1_5_Gadget {
     pub rsa_key_bit_length: i32, // in bits (assumed to be divisible by 8)
 }
 impl RSAEncryptionV1_5_Gadget {
+    #[inline]
     pub fn new(
+        modulus: LongElement,
+        plain_text: Vec<Option<WireType>>,
+        randomness: Vec<Option<WireType>>,
+        rsa_key_bit_length: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(
+            modulus,
+            plain_text,
+            randomness,
+            rsa_key_bit_length,
+            &None,
+            generator,
+        )
+    }
+    pub fn new_with_option(
         modulus: LongElement,
         plain_text: Vec<Option<WireType>>,
         randomness: Vec<Option<WireType>>,
@@ -163,7 +180,6 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
                 self.t.modulus.clone(),
                 self.t.rsa_key_bit_length,
                 false,
-                &None,
                 self.generator.clone(),
             )
             .get_remainder()
@@ -175,7 +191,6 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             self.t.modulus.clone(),
             self.t.rsa_key_bit_length,
             true,
-            &None,
             self.generator.clone(),
         )
         .get_remainder()
@@ -184,7 +199,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
         // return the cipher text as byte array
         self.t.ciphertext = s
             .get_bitsi(self.t.rsa_key_bit_length)
-            .pack_bits_into_words(8, &None);
+            .pack_bits_into_words(8);
     }
     pub fn get_expected_randomness_length(rsa_key_bit_length: i32, plain_text_length: i32) -> i32 {
         assert!(
@@ -206,7 +221,6 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             FieldDivisionGadget::new(
                 self.generator.get_one_wire().unwrap(),
                 self.t.randomness[i].clone().unwrap(),
-                &None,
                 self.generator.clone(),
             );
         }

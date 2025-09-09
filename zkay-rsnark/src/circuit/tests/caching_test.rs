@@ -185,11 +185,7 @@ mod test {
                     rotated_left[i] = inputs3[i].as_ref().map(|x| x.rotate_left(32, i % 32));
 
                     xored[i] = inputs1[i].as_ref().map(|x| {
-                        x.xor_bitwise(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.xor_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
 
                     ored[i] = inputs1[i].as_ref().map(|x| {
@@ -197,11 +193,7 @@ mod test {
                     });
 
                     anded[i] = inputs1[i].as_ref().map(|x| {
-                        x.and_bitwise(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.and_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
 
                     inverted[i] = inputs3[i].as_ref().map(|x| x.inv_bits(32));
@@ -229,21 +221,13 @@ mod test {
                     rotated_right[i] = inputs3[i].as_ref().map(|x| x.rotate_right(32, i % 32));
                     rotated_left[i] = inputs3[i].as_ref().map(|x| x.rotate_left(32, i % 32));
                     xored[i] = inputs1[i].as_ref().map(|x| {
-                        x.xor_bitwise(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.xor_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     ored[i] = inputs1[i].as_ref().map(|x| {
                         x.or_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     anded[i] = inputs1[i].as_ref().map(|x| {
-                        x.and_bitwise(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.and_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     inverted[i] = inputs3[i].as_ref().map(|x| x.inv_bits(32));
                     multiplied[i] = inputs1[i]
@@ -261,22 +245,14 @@ mod test {
                 // gates will not be affected
                 for i in 0..num_ins {
                     xored[i] = inputs2[i].as_ref().map(|x| {
-                        x.xor_bitwise(
-                            inputs1[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.xor_bitwise(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     // assert_eq!(generator.get_num_of_constraints(), current_cost);
                     ored[i] = inputs2[i].as_ref().map(|x| {
                         x.or_bitwises(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     anded[i] = inputs2[i].as_ref().map(|x| {
-                        x.and_bitwise(
-                            inputs1[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.and_bitwise(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     multiplied[i] = inputs2[i]
                         .clone()

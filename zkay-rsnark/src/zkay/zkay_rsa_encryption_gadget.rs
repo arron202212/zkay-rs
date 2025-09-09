@@ -40,7 +40,18 @@ pub struct ZkayRSAEncryptionGadget {
     pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayRSAEncryptionGadget {
+    #[inline]
     pub fn new(
+        plain: TypedWire,
+        pk: LongElement,
+        rnd: Vec<Option<WireType>>,
+        key_bits: i32,
+        padding_type: PaddingType,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(plain, pk, rnd, key_bits, padding_type, &None, generator)
+    }
+    pub fn new_with_option(
         plain: TypedWire,
         pk: LongElement,
         rnd: Vec<Option<WireType>>,
@@ -80,11 +91,11 @@ impl Gadget<ZkayRSAEncryptionGadget> {
             PaddingType::Oaep => {
                 let rnd_bytes = ZkayUtil::reverse_bytes(
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
-                        .get_bits(RSABackend::OAEP_RND_CHUNK_SIZE as usize, &None),
+                        .get_bits(RSABackend::OAEP_RND_CHUNK_SIZE as usize),
                     8,
                     self.generator.clone(),
                 );
-                let e = RSAEncryptionOAEPGadget::new(
+                let e = RSAEncryptionOAEPGadget::new_with_option(
                     self.t.pk.clone(),
                     plain_bytes,
                     rnd_bytes,
@@ -99,12 +110,12 @@ impl Gadget<ZkayRSAEncryptionGadget> {
                 let rnd_len = self.t.key_bits as usize / 8 - 3 - plain_bytes.len();
                 let rnd_bytes = ZkayUtil::reverse_bytes(
                     WireArray::new(self.t.rnd.clone(), self.generator.clone().downgrade())
-                        .get_bits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize, &None)
+                        .get_bits(RSABackend::PKCS15_RND_CHUNK_SIZE as usize)
                         .adjust_length(None, rnd_len * 8),
                     8,
                     self.generator.clone(),
                 );
-                enc = Box::new(RSAEncryptionV1_5_Gadget::new(
+                enc = Box::new(RSAEncryptionV1_5_Gadget::new_with_option(
                     self.t.pk.clone(),
                     plain_bytes,
                     rnd_bytes,
@@ -120,7 +131,7 @@ impl Gadget<ZkayRSAEncryptionGadget> {
             enc.get_output_wires().clone(),
             self.generator.clone().downgrade(),
         )
-        .pack_words_into_larger_words(8, RSABackend::CIPHER_CHUNK_SIZE / 8, &None);
+        .pack_words_into_larger_words(8, RSABackend::CIPHER_CHUNK_SIZE / 8);
     }
 }
 impl GadgetConfig for Gadget<ZkayRSAEncryptionGadget> {

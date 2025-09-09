@@ -40,7 +40,6 @@ impl ZkayElgamalAddGadget {
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayBabyJubJubGadget<Self>> {
         let mut _self = ZkayBabyJubJubGadget::<Self>::new(
-            &None,
             Self {
                 c1,
                 c2,

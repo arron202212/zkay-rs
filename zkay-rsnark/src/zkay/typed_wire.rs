@@ -117,11 +117,11 @@ impl TypedWire {
         let _lhs_lo_hi = self
             .wire
             .get_bit_wiresi(result_type.bitwidth as u64)
-            .pack_bits_into_words(124, &None);
+            .pack_bits_into_words(124);
         let _rhs_lo_hi = rhs
             .wire
             .get_bit_wiresi(result_type.bitwidth as u64)
-            .pack_bits_into_words(124, &None);
+            .pack_bits_into_words(124);
 
         // https://www.codeproject.com/Tips/618570/UInt-Multiplication-Squaring, BSD license
         let mut ans_lo_hi = _lhs_lo_hi[0]
@@ -129,19 +129,19 @@ impl TypedWire {
             .unwrap()
             .mulw_with_option(
                 _rhs_lo_hi[0].as_ref().unwrap(),
-                &Some(op.clone() + "[lo*lo]"),
+                &Some(format!("{op}[lo*lo]")),
             )
             .get_bit_wiresi(result_type.bitwidth as u64)
-            .pack_bits_into_words(124, &None);
+            .pack_bits_into_words(124);
         let hi_lo_mul = self
             .handle_overflow(
                 &_lhs_lo_hi[1].as_ref().unwrap().mulw_with_option(
                     _rhs_lo_hi[0].as_ref().unwrap(),
-                    &Some(op.clone() + "[hi*lo]"),
+                    &Some(format!("{op}[hi*lo]")),
                 ),
                 zk124(),
                 true,
-                &(op.clone() + "[hi*lo]"),
+                &format!("{op}[hi*lo]"),
             )
             .wire
             .clone();
@@ -149,11 +149,11 @@ impl TypedWire {
             .handle_overflow(
                 &_lhs_lo_hi[0].as_ref().unwrap().mulw_with_option(
                     _rhs_lo_hi[1].as_ref().unwrap(),
-                    &Some(op.clone() + "[lo*hi]"),
+                    &Some(format!("{op}[lo*hi]")),
                 ),
                 zk124(),
                 true,
-                &(op.clone() + "[lo*hi]"),
+                &format!("{op}[lo*hi]"),
             )
             .wire
             .clone();
@@ -162,7 +162,7 @@ impl TypedWire {
                 &hi_lo_mul.addw_with_option(&lo_hi_mul, &Some(op.clone() + "[hi*lo + lo*hi]")),
                 zk124(),
                 false,
-                &(op.clone() + "[hi*lo + lo*hi]"),
+                &format!("{op}[hi*lo + lo*hi]"),
             )
             .wire
             .clone();
@@ -170,21 +170,21 @@ impl TypedWire {
             self.handle_overflow(
                 &ans_lo_hi[1].as_ref().unwrap().addw_with_option(
                     &hi_lo_pluslo_hi,
-                    &Some(op.clone() + "[anshi + hi*lo + lo*hi]"),
+                    &Some(format!("{op}[anshi + hi*lo + lo*hi]")),
                 ),
                 zk124(),
                 false,
-                &(op.clone() + "[anshi + hi*lo + lo*hi]"),
+                &format!("{op}[anshi + hi*lo + lo*hi]"),
             )
             .wire
             .clone(),
         );
 
         let ans = WireArray::new(ans_lo_hi, self.generator.clone().downgrade())
-            .get_bits(124, &None)
-            .pack_bits_into_words(
+            .get_bits(124)
+            .pack_bits_into_words_with_option(
                 result_type.bitwidth as usize,
-                &Some(op.clone() + "[combine hi and lo]"),
+                &Some(format!("{op}[combine hi and lo]")),
             );
         assert!(ans.len() == 1, "Multiplication ans array has wrong length");
         TypedWire::new(
@@ -237,7 +237,7 @@ impl TypedWire {
             rhs_wire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64),
             self.generator.clone().downgrade(),
         );
-        let mut q = LongIntegerFloorDivGadget::new(
+        let mut q = LongIntegerFloorDivGadget::new_with_option(
             lhs_long,
             rhs_long,
             0,
@@ -248,7 +248,7 @@ impl TypedWire {
         .clone();
         let res_abs = q
             .get_bitsi(result_type.bitwidth)
-            .pack_bits_into_words(result_type.bitwidth as usize, &None)[0]
+            .pack_bits_into_words(result_type.bitwidth as usize)[0]
             .clone()
             .unwrap();
 
@@ -309,7 +309,7 @@ impl TypedWire {
             rhs_wire.get_bit_wiresi(rhs.zkay_type.bitwidth as u64),
             self.generator.clone().downgrade(),
         );
-        let mut r = LongIntegerModGadget::new(
+        let mut r = LongIntegerModGadget::new_with_option(
             lhs_long,
             rhs_long,
             0,
@@ -321,7 +321,7 @@ impl TypedWire {
         .clone();
         let res_abs = r
             .get_bitsi(result_type.bitwidth)
-            .pack_bits_into_words(result_type.bitwidth as usize, &None)[0]
+            .pack_bits_into_words(result_type.bitwidth as usize)[0]
             .clone();
 
         let res_pos = TypedWire::new(

@@ -70,7 +70,7 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
         self.t.key = CircuitGenerator::create_input_wire_array(self.cg(), 16); // in bytes
 
         let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&self.t.key, &self.cg);
-        let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expanded_key, &None, self.cg());
+        let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expanded_key, self.cg());
         self.t.outputs = gadget.get_output_wires().clone();
         for o in &self.t.outputs {
             CircuitGenerator::make_output(self.cg(), o.as_ref().unwrap());

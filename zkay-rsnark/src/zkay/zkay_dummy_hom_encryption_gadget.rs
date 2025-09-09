@@ -34,7 +34,17 @@ pub struct ZkayDummyHomEncryptionGadget {
     pub cipher: Vec<Option<WireType>>,
 }
 impl ZkayDummyHomEncryptionGadget {
+    #[inline]
     pub fn new(
+        plain: WireType,
+        pk: WireType,
+        rnd: Vec<Option<WireType>>,
+        key_bits: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(plain, pk, rnd, key_bits, &None, generator)
+    }
+    pub fn new_with_option(
         plain: WireType,
         pk: WireType,
         rnd: Vec<Option<WireType>>,

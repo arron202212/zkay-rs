@@ -247,7 +247,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
             vec![Some(self.self_clone().unwrap()), Some(w.clone())],
             self.generator_weak(),
         )
-        .sum_all_elements(desc)
+        .sum_all_elements_with_option(desc)
     }
 
     fn addi(&self, v: i64, desc: &Option<String>) -> WireType {

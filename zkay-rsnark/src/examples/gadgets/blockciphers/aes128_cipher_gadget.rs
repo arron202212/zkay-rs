@@ -85,8 +85,15 @@ impl AES128CipherGadget {
     //@param expanded_key
     //           : array of 176 bytes (each wire represents a byte) -- call
     //           expandKey() to get it
-
+    #[inline]
     pub fn new(
+        inputs: Vec<Option<WireType>>,
+        expanded_key: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(inputs, expanded_key, &None, generator)
+    }
+    pub fn new_with_option(
         inputs: Vec<Option<WireType>>,
         expanded_key: Vec<Option<WireType>>,
         desc: &Option<String>,
@@ -198,37 +205,37 @@ impl Gadget<AES128CipherGadget> {
             }
             state[0][c] = Some(
                 self.galois_mul_const(a[0].as_ref().unwrap(), 2)
-                    .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 3), &None)
-                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8), &None)
-                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8), &None)
-                    .pack_as_bits(None, None, &None),
+                    .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 3))
+                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8))
+                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8))
+                    .pack_as_bits(),
             );
 
             state[1][c] = Some(
                 a[0].as_ref()
                     .unwrap()
                     .get_bit_wiresi(8)
-                    .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 2), &None)
-                    .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 3), &None)
-                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8), &None)
-                    .pack_as_bits(None, None, &None),
+                    .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 2))
+                    .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 3))
+                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8))
+                    .pack_as_bits(),
             );
 
             state[2][c] = Some(
                 a[0].as_ref()
                     .unwrap()
                     .get_bit_wiresi(8)
-                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8), &None)
-                    .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 2), &None)
-                    .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 3), &None)
-                    .pack_as_bits(None, None, &None),
+                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8))
+                    .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 2))
+                    .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 3))
+                    .pack_as_bits(),
             );
             state[3][c] = Some(
                 self.galois_mul_const(a[0].as_ref().unwrap(), 3)
-                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8), &None)
-                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8), &None)
-                    .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 2), &None)
-                    .pack_as_bits(None, None, &None),
+                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8))
+                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8))
+                    .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 2))
+                    .pack_as_bits(),
             );
         }
         state
@@ -361,19 +368,19 @@ impl Gadget<AES128CipherGadget> {
         let wire = wire.clone();
 
         match SBoxOption::from(atomic_sbox_option.load(Ordering::Relaxed)) {
-            SBoxOption::LinearScan => AESSBoxNaiveLookupGadget::new(wire, &None, generator.clone())
+            SBoxOption::LinearScan => AESSBoxNaiveLookupGadget::new(wire, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),
-            SBoxOption::Compute => AESSBoxComputeGadget::new(wire, &None, generator.clone())
+            SBoxOption::Compute => AESSBoxComputeGadget::new(wire, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),
-            SBoxOption::Optimized1 => AESSBoxGadgetOptimized1::new(wire, &None, generator.clone())
+            SBoxOption::Optimized1 => AESSBoxGadgetOptimized1::new(wire, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),
-            SBoxOption::Optimized2 => AESSBoxGadgetOptimized2::new(wire, &None, generator.clone())
+            SBoxOption::Optimized2 => AESSBoxGadgetOptimized2::new(wire, generator.clone())
                 .get_output_wires()[0]
                 .clone()
                 .unwrap(),

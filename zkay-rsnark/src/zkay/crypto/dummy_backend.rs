@@ -52,7 +52,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyBackend>> {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
-        Box::new(ZkayDummyEncryptionGadget::new(
+        Box::new(ZkayDummyEncryptionGadget::new_with_option(
             plain.clone(),
             self.get_key(key, generator.clone()),
             random.clone(),

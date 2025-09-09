@@ -98,7 +98,7 @@ mod test {
                     .clone()
                     .unwrap()
                     .add(inputs1[1].as_ref().unwrap());
-                let mut result2 = inputs1.sum_all_elements(&None);
+                let mut result2 = inputs1.sum_all_elements();
                 let mut result_array = inputs1.add_wire_array(&inputs2, inputs1.size(), &None);
 
                 CircuitGenerator::make_output(self.cg(), &result1);

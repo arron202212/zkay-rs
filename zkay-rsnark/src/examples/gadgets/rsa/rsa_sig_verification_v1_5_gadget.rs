@@ -74,7 +74,24 @@ pub struct RSASigVerificationV1_5_Gadget {
     pub rsa_key_bit_length: i32, // in bits
 }
 impl RSASigVerificationV1_5_Gadget {
+    #[inline]
     pub fn new(
+        modulus: LongElement,
+        msg_hash: Vec<Option<WireType>>,
+        signature: LongElement,
+        rsa_key_bit_length: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(
+            modulus,
+            msg_hash,
+            signature,
+            rsa_key_bit_length,
+            &None,
+            generator,
+        )
+    }
+    pub fn new_with_option(
         modulus: LongElement,
         msg_hash: Vec<Option<WireType>>,
         signature: LongElement,
@@ -115,7 +132,6 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
                 self.t.modulus.clone(),
                 self.t.rsa_key_bit_length,
                 false,
-                &None,
                 self.generator.clone(),
             )
             .get_remainder()
@@ -127,7 +143,6 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
             self.t.modulus.clone(),
             self.t.rsa_key_bit_length,
             true,
-            &None,
             self.generator.clone(),
         )
         .get_remainder()
@@ -139,12 +154,12 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
 
         // get byte arrays
         let mut s_bytes = WireArray::new(s_chunks.clone(), self.generator.clone().downgrade())
-            .get_bits(LongElement::CHUNK_BITWIDTH as usize, &None)
-            .pack_bits_into_words(8, &None);
+            .get_bits(LongElement::CHUNK_BITWIDTH as usize)
+            .pack_bits_into_words(8);
         let mut msg_hash_bytes =
             WireArray::new(self.t.msg_hash.clone(), self.generator.clone().downgrade())
-                .get_bits(32, &None)
-                .pack_bits_into_words(8, &None);
+                .get_bits(32)
+                .pack_bits_into_words(8);
 
         // reverse the byte array representation of each word of the digest to
         // be compatiable with the endianess

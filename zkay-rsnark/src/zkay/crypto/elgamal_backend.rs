@@ -80,7 +80,7 @@ impl CryptoBackendConfigs for CryptoBackend<Asymmetric<ElgamalBackend>> {
             WireArray::new(key_wires.clone(), generator.downgrade()),
         );
     }
-    fn create_decryption_gadget(
+    fn create_decryption_gadget_with_option(
         &self,
         plain: &TypedWire,
         cipher: &Vec<Option<WireType>>,
@@ -94,7 +94,7 @@ impl CryptoBackendConfigs for CryptoBackend<Asymmetric<ElgamalBackend>> {
         let c1 = JubJubPoint::new(cipher[0].clone().unwrap(), cipher[1].clone().unwrap());
         let c2 = JubJubPoint::new(cipher[2].clone().unwrap(), cipher[3].clone().unwrap());
         let sk_bits = WireArray::new(sk.clone(), generator.clone().downgrade())
-            .get_bits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
+            .get_bits(ElgamalBackend::RND_CHUNK_SIZE as usize)
             .as_array()
             .clone();
         Box::new(ZkayElgamalDecGadget::new(
@@ -130,7 +130,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         let pk_array = self.get_key_array(key_name);
         let pk = JubJubPoint::new(pk_array[0].clone().unwrap(), pk_array[1].clone().unwrap());
         let random_array = WireArray::new(random.clone(), generator.clone().downgrade())
-            .get_bits(ElgamalBackend::RND_CHUNK_SIZE as usize, &None)
+            .get_bits(ElgamalBackend::RND_CHUNK_SIZE as usize)
             .as_array()
             .clone();
         assert!(

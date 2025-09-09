@@ -58,7 +58,26 @@ pub struct MerkleTreePathGadget {
     pub leaf_word_bit_width: i32,
 }
 impl MerkleTreePathGadget {
+    #[inline]
     pub fn new(
+        direction_selector_wire: WireType,
+        leaf_wires: Vec<Option<WireType>>,
+        intermediate_hash_wires: Vec<Option<WireType>>,
+        leaf_word_bit_width: i32,
+        tree_height: i32,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(
+            direction_selector_wire,
+            leaf_wires,
+            intermediate_hash_wires,
+            leaf_word_bit_width,
+            tree_height,
+            &None,
+            generator,
+        )
+    }
+    pub fn new_with_option(
         direction_selector_wire: WireType,
         leaf_wires: Vec<Option<WireType>>,
         intermediate_hash_wires: Vec<Option<WireType>>,
@@ -101,11 +120,11 @@ impl Gadget<MerkleTreePathGadget> {
             self.t.leaf_wires.clone(),
             self.generator.clone().downgrade(),
         )
-        .get_bits(self.t.leaf_word_bit_width as usize, &None)
+        .get_bits(self.t.leaf_word_bit_width as usize)
         .as_array()
         .clone();
         let mut subset_sum_gadget =
-            SubsetSumHashGadget::new(leaf_bits.clone(), false, &None, self.generator.clone());
+            SubsetSumHashGadget::new(leaf_bits.clone(), false, self.generator.clone());
         let mut current_hash = subset_sum_gadget.get_output_wires();
 
         // Apply CRH across tree path guided by the direction bits
@@ -135,15 +154,11 @@ impl Gadget<MerkleTreePathGadget> {
             }
 
             let next_input_bits = WireArray::new(in_hash, self.generator.clone().downgrade())
-                .get_bits(CONFIGS.log2_field_prime as usize, &None)
+                .get_bits(CONFIGS.log2_field_prime as usize)
                 .as_array()
                 .clone();
-            subset_sum_gadget = SubsetSumHashGadget::new(
-                next_input_bits.clone(),
-                false,
-                &None,
-                self.generator.clone(),
-            );
+            subset_sum_gadget =
+                SubsetSumHashGadget::new(next_input_bits.clone(), false, self.generator.clone());
             current_hash = subset_sum_gadget.get_output_wires();
         }
         self.t.out_root = current_hash.clone();

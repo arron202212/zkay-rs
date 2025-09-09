@@ -40,7 +40,18 @@ pub struct ZkayPaillierDecGadget {
 }
 
 impl ZkayPaillierDecGadget {
+    #[inline]
     pub fn new(
+        n: LongElement,
+        n_bits: i32,
+        lambda: LongElement,
+        mu: LongElement,
+        cipher: LongElement,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(n, n_bits, lambda, mu, cipher, &None, generator)
+    }
+    pub fn new_with_option(
         n: LongElement,
         n_bits: i32,
         lambda: LongElement,
@@ -75,7 +86,7 @@ impl Gadget<ZkayPaillierDecGadget> {
         let n_square_min_bits = 2 * self.t.n_bits - 1; // Minimum bit length of n^2
 
         // plain = L(cipher^lambda mod n^2) * mu mod n
-        let c_pow_lambda = LongIntegerModPowGadget::new(
+        let c_pow_lambda = LongIntegerModPowGadget::new_with_option(
             self.t.cipher.clone(),
             self.t.lambda.clone(),
             self.t.n_square.clone(),
@@ -86,7 +97,7 @@ impl Gadget<ZkayPaillierDecGadget> {
         )
         .get_result()
         .clone();
-        let l_output = LongIntegerFloorDivGadget::new(
+        let l_output = LongIntegerFloorDivGadget::new_with_option(
             c_pow_lambda.clone().sub(1),
             self.t.n.clone(),
             0,
@@ -102,7 +113,6 @@ impl Gadget<ZkayPaillierDecGadget> {
                 self.t.n.clone(),
                 self.t.n_bits,
                 true,
-                &None,
                 self.generator.clone(),
             )
             .get_remainder()

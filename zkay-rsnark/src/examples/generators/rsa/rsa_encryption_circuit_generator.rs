@@ -127,7 +127,6 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
             input_message.clone(),
             randomness.clone(),
             rsa_key_length,
-            &None,
             self.cg(),
         );
 
@@ -138,7 +137,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
 
         // do some grouping to reduce VK Size
         let cipher_text = WireArray::new(cipher_text_in_bytes.clone(), self.cg().downgrade())
-            .pack_words_into_larger_words(8, 30, &None);
+            .pack_words_into_larger_words(8, 30);
         CircuitGenerator::make_output_array_with_str(self.cg(), &cipher_text, "Output cipher text");
         (
             self.t.input_message,

@@ -76,7 +76,7 @@ impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
             "Input b",
         );
 
-        let dot_product_gadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());
+        let dot_product_gadget = DotProductGadget::new(a.clone(), b.clone(), self.cg());
         let result = dot_product_gadget.get_output_wires();
         CircuitGenerator::make_output_with_str(
             self.cg(),

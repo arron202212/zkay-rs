@@ -102,59 +102,32 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             CircuitGenerator::add_binary_assertion(self.cg(), sec_exp_bits[i].as_ref().unwrap()); // verify all bits are binary
         }
 
-        let mut g = vec![None; HybridEncryptionCircuitGenerator::MU as usize];
-        let mut h = vec![None; HybridEncryptionCircuitGenerator::MU as usize];
-        let generator = self.cg();
+        let ccw = |s: &str| {
+            Some(CircuitGenerator::create_constant_wire(
+                self.cg(),
+                &Util::parse_big_int(s),
+            ))
+        };
         // Hardcode the base and the other party's key (suitable when keys are not expected to change)
-        g[0] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "16377448892084713529161739182205318095580119111576802375181616547062197291263",
-            ),
-        ));
-        g[1] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "13687683608888423916085091250849188813359145430644908352977567823030408967189",
-            ),
-        ));
-        g[2] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "12629166084120705167185476169390021031074363183264910102253898080559854363106",
-            ),
-        ));
-        g[3] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "19441276922979928804860196077335093208498949640381586557241379549605420212272",
-            ),
-        ));
+        let g: Vec<_> = [
+            "16377448892084713529161739182205318095580119111576802375181616547062197291263",
+            "13687683608888423916085091250849188813359145430644908352977567823030408967189",
+            "12629166084120705167185476169390021031074363183264910102253898080559854363106",
+            "19441276922979928804860196077335093208498949640381586557241379549605420212272",
+        ]
+        .into_iter()
+        .map(ccw)
+        .collect();
 
-        h[0] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "8252578783913909531884765397785803733246236629821369091076513527284845891757",
-            ),
-        ));
-        h[1] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "20829599225781884356477513064431048695774529855095864514701692089787151865093",
-            ),
-        ));
-        h[2] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "1540379511125324102377803754608881114249455137236500477169164628692514244862",
-            ),
-        ));
-        h[3] = Some(CircuitGenerator::create_constant_wire(
-            generator.clone(),
-            &Util::parse_big_int(
-                "1294177986177175279602421915789749270823809536595962994745244158374705688266",
-            ),
-        ));
+        let h: Vec<_> = [
+            "8252578783913909531884765397785803733246236629821369091076513527284845891757",
+            "20829599225781884356477513064431048695774529855095864514701692089787151865093",
+            "1540379511125324102377803754608881114249455137236500477169164628692514244862",
+            "1294177986177175279602421915789749270823809536595962994745244158374705688266",
+        ]
+        .into_iter()
+        .map(ccw)
+        .collect();
 
         // To make g and h variable inputs to the circuit, simply do the following
         // instead, and supply the above values using the generate_sample_input()
@@ -169,7 +142,6 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             h,
             sec_exp_bits.clone(),
             HybridEncryptionCircuitGenerator::OMEGA as i64,
-            &None,
             self.cg(),
         );
 
@@ -180,16 +152,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Use h^s to generate a symmetric secret key and an initialization
         // vector. Apply a Hash-based KDF.
         let h_to_s = exchange.get_shared_secret();
-        let hash_gadget = SHA256Gadget::new(
-            h_to_s.clone(),
-            256,
-            128,
-            true,
-            false,
-            &None,
-            self.cg(),
-            Base,
-        );
+        let hash_gadget = SHA256Gadget::new(h_to_s.clone(), 256, 128, true, false, self.cg(), Base);
         let secret = hash_gadget.get_output_wires();
         let key = secret[0..128].to_vec();
         let iv = secret[128..256].to_vec();
@@ -197,7 +160,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Part II: Apply symmetric Encryption
 
         let plaintext_bits = WireArray::new(plaintext.clone(), self.cg().downgrade())
-            .get_bits(64, &None)
+            .get_bits(64)
             .as_array()
             .clone();
         let sym_enc_gagdet = SymmetricEncryptionCBCGadget::new(
@@ -205,7 +168,6 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             key,
             iv,
             self.t.ciphername.clone(),
-            &None,
             self.cg(),
         );
         let ciphertext = sym_enc_gagdet.get_output_wires();

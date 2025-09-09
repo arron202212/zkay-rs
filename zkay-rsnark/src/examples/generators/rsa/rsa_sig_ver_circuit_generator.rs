@@ -83,7 +83,6 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
             input_message.len(),
             false,
             true,
-            &None,
             self.cg(),
             Base,
         );
@@ -129,7 +128,6 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
             digest.clone(),
             signature.clone(),
             self.t.rsa_key_length,
-            &None,
             self.cg(),
         );
         CircuitGenerator::make_output_with_str(

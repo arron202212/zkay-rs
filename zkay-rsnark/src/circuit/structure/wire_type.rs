@@ -150,7 +150,7 @@ impl AddWire<&WireType> for WireType {
             vec![Some(self.self_clone().unwrap()), Some(w.clone())],
             self.generator().clone().downgrade(),
         )
-        .sum_all_elements(desc)
+        .sum_all_elements_with_option(desc)
     }
 }
 impl AddWire<i64> for WireType {

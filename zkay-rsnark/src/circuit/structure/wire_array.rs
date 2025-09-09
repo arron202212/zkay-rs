@@ -106,8 +106,11 @@ impl WireArray {
         }
         WireArray::new(out, self.generator.clone())
     }
-
-    pub fn sum_all_elements(&self, desc: &Option<String>) -> WireType {
+    #[inline]
+    pub fn sum_all_elements(&self) -> WireType {
+        self.sum_all_elements_with_option(&None)
+    }
+    pub fn sum_all_elements_with_option(&self, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
         let mut all_constant = true;
@@ -190,8 +193,11 @@ impl WireArray {
 
         WireArray::new(out, self.generator.clone())
     }
-
-    pub fn xor_wire_arrayi(&self, v: &WireArray, desc: &Option<String>) -> Self {
+    #[inline]
+    pub fn xor_wire_arrayi(&self, v: &WireArray) -> Self {
+        self.xor_wire_arrayi_with_option(v, &None)
+    }
+    pub fn xor_wire_arrayi_with_option(&self, v: &WireArray, desc: &Option<String>) -> Self {
         assert!(self.size() == v.size());
         let (ws1, ws2) = (&self.array, &v.array);
 
@@ -309,8 +315,23 @@ impl WireArray {
         }
         all_constant.then_some(sum)
     }
-
-    pub fn pack_as_bits(
+    #[inline]
+    pub fn pack_as_bits(&self) -> WireType {
+        self.pack_as_bits_with_option(None, None, &None)
+    }
+    #[inline]
+    pub fn pack_as_bits_with_to(&self, to: usize) -> WireType {
+        self.pack_as_bits_with_option(None, Some(to), &None)
+    }
+    #[inline]
+    pub fn pack_as_bits_with_to_and_desc(&self, to: usize, desc: String) -> WireType {
+        self.pack_as_bits_with_option(None, Some(to), &Some(desc))
+    }
+    #[inline]
+    pub fn pack_as_bits_with_desc(&self, desc: String) -> WireType {
+        self.pack_as_bits_with_option(None, None, &Some(desc))
+    }
+    pub fn pack_as_bits_with_option(
         &self,
         from: Option<usize>,
         to: Option<usize>,
@@ -422,8 +443,11 @@ impl WireArray {
         shifted_bits[..num_bits.saturating_sub(s)].clone_from_slice(&bits[s..]);
         WireArray::new(shifted_bits, self.generator.clone())
     }
-
-    pub fn pack_bits_into_words(
+    #[inline]
+    pub fn pack_bits_into_words(&self, word_bitwidth: usize) -> Vec<Option<WireType>> {
+        self.pack_bits_into_words_with_option(word_bitwidth, &None)
+    }
+    pub fn pack_bits_into_words_with_option(
         &self,
         word_bitwidth: usize,
         desc: &Option<String>,
@@ -438,13 +462,24 @@ impl WireArray {
                     padded[i * word_bitwidth..(i + 1) * word_bitwidth].to_vec(),
                     self.generator.clone(),
                 )
-                .pack_as_bits(None, None, &None),
+                .pack_as_bits(),
             );
         }
         result
     }
-
+    #[inline]
     pub fn pack_words_into_larger_words(
+        &self,
+        word_bitwidth: i32,
+        num_words_per_larger_word: i32,
+    ) -> Vec<Option<WireType>> {
+        self.pack_words_into_larger_words_with_option(
+            word_bitwidth,
+            num_words_per_larger_word,
+            &None,
+        )
+    }
+    pub fn pack_words_into_larger_words_with_option(
         &self,
         word_bitwidth: i32,
         num_words_per_larger_word: i32,
@@ -470,8 +505,11 @@ impl WireArray {
         }
         result
     }
-
-    pub fn get_bits(&self, bitwidth: usize, desc: &Option<String>) -> Self {
+    #[inline]
+    pub fn get_bits(&self, bitwidth: usize) -> Self {
+        self.get_bits_with_option(bitwidth, &None)
+    }
+    pub fn get_bits_with_option(&self, bitwidth: usize, desc: &Option<String>) -> Self {
         let mut bits = vec![None; bitwidth * self.array.len()];
         let mut idx = 0;
         for i in 0..self.array.len() {

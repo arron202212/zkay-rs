@@ -39,7 +39,15 @@ pub struct ZkayEcGadget<T> {
 }
 
 impl<T> ZkayEcGadget<T> {
-    pub fn new(desc: &Option<String>, t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+    #[inline]
+    pub fn new(t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+        Self::new_with_option(&None, t, generator)
+    }
+    pub fn new_with_option(
+        desc: &Option<String>,
+        t: T,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         Gadget::<Self>::new(generator, desc, ZkayEcGadget::<T> { t })
     }
 }
@@ -184,7 +192,6 @@ impl<T> Gadget<ZkayEcGadget<T>> {
                 )
                 .add(1),
             p.y.clone().unwrap().mul(2),
-            &None,
             generator,
         )
         .get_output_wires()[0]
@@ -217,7 +224,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
     ) -> AffinePoint {
         let diff_y = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
         let diff_x = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
-        let q = FieldDivisionGadget::new(diff_y, diff_x, &None, generator).get_output_wires()[0]
+        let q = FieldDivisionGadget::new(diff_y, diff_x, generator).get_output_wires()[0]
             .clone()
             .unwrap();
         let q2 = q.clone().mul(&q);

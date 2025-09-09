@@ -57,7 +57,16 @@ pub struct ChaskeyLTS128CipherGadget {
     pub ciphertext: Vec<Option<WireType>>, // 4 32-bit words
 }
 impl ChaskeyLTS128CipherGadget {
+    #[inline]
     pub fn new(
+        inputs: Vec<Option<WireType>>,
+        key: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(inputs, key, &None, generator)
+    }
+
+    pub fn new_with_option(
         inputs: Vec<Option<WireType>>,
         key: Vec<Option<WireType>>,
         desc: &Option<String>,

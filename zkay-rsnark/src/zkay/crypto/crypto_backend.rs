@@ -133,6 +133,16 @@ pub trait CryptoBackendConfigs {
         cipher: &Vec<Option<WireType>>,
         pk_name: &String,
         sk: &Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Box<dyn GadgetConfig> {
+        self.create_decryption_gadget_with_option(plain, cipher, pk_name, sk, &None, generator)
+    }
+    fn create_decryption_gadget_with_option(
+        &self,
+        plain: &TypedWire,
+        cipher: &Vec<Option<WireType>>,
+        pk_name: &String,
+        sk: &Vec<Option<WireType>>,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
@@ -264,7 +274,7 @@ impl<T> CryptoBackendConfigs for CryptoBackend<Symmetric<T>> {
 
         // Ensure that provided sender keys form a key pair
 
-        let pk_derivation_gadget = ZkayEcPkDerivationGadget::new(
+        let pk_derivation_gadget = ZkayEcPkDerivationGadget::new_with_option(
             my_sk.clone(),
             true,
             &Some("getPk(my_sk)".to_owned()),
@@ -318,7 +328,7 @@ impl<T> CryptoBackend<Symmetric<T>> {
             key_name,
             self.t.my_sk.as_ref().unwrap()
         );
-        let shared_key_gadget = ZkayECDHGadget::new(
+        let shared_key_gadget = ZkayECDHGadget::new_with_option(
             actual_other_pk,
             self.t.my_sk.clone().unwrap(),
             false,
@@ -402,7 +412,7 @@ macro_rules! impl_crypto_backend_configs_for {
             ) {
                 let chunk_bits = self.get_key_chunk_size();
                 let key_array = WireArray::new(key_wires.clone(), generator.downgrade())
-                    .get_bits(chunk_bits as usize, &Some(key_name.to_owned() + "_bits"))
+                    .get_bits_with_option(chunk_bits as usize, &Some(format!("{key_name}_bits")))
                     .adjust_length(None, self.key_bits as usize);
                 self.t.keys.insert(key_name.clone(), key_array);
             }

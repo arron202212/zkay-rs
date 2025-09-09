@@ -45,7 +45,14 @@ pub struct ZkayBabyJubJubGadget<T> {
 }
 
 impl<T> ZkayBabyJubJubGadget<T> {
-    pub fn new(desc: &Option<String>, t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+    pub fn new(t: T, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+        Self::new_with_option(&None, t, generator)
+    }
+    pub fn new_with_option(
+        desc: &Option<String>,
+        t: T,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
         // We assume the underlying field matches the base field of BabyJubJub (so that we can avoid alignment/modulus)
         assert_eq!(
             CONFIGS.field_prime.to_str_radix(10),

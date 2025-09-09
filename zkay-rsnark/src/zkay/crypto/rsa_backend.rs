@@ -65,7 +65,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<RSABackend>> {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
-        Box::new(ZkayRSAEncryptionGadget::new(
+        Box::new(ZkayRSAEncryptionGadget::new_with_option(
             plain.clone(),
             self.get_key(key, generator.clone()),
             random.clone(),

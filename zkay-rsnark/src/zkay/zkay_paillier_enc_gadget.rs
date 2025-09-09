@@ -40,7 +40,18 @@ pub struct ZkayPaillierEncGadget {
     pub cipher: Option<LongElement>,
 }
 impl ZkayPaillierEncGadget {
+    #[inline]
     pub fn new(
+        n: LongElement,
+        n_bits: i32,
+        g: LongElement,
+        plain: LongElement,
+        random: LongElement,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(n, n_bits, g, plain, random, &None, generator)
+    }
+    pub fn new_with_option(
         n: LongElement,
         n_bits: i32,
         g: LongElement,
@@ -81,7 +92,6 @@ impl Gadget<ZkayPaillierEncGadget> {
             self.t.random.clone(),
             self.t.n.clone(),
             false,
-            &None,
             self.generator.clone(),
         )
         .get_result()
@@ -89,7 +99,7 @@ impl Gadget<ZkayPaillierEncGadget> {
 
         CircuitGenerator::add_one_assertion(self.generator.clone(), &rand_inv.check_non_zero());
         // let c = g^m * r^n mod n^2
-        let g_pow_plain = LongIntegerModPowGadget::new(
+        let g_pow_plain = LongIntegerModPowGadget::new_with_option(
             self.t.g.clone(),
             self.t.plain.clone(),
             self.t.n_square.clone(),
@@ -100,7 +110,7 @@ impl Gadget<ZkayPaillierEncGadget> {
         )
         .get_result()
         .clone();
-        let rand_pow_n = LongIntegerModPowGadget::new(
+        let rand_pow_n = LongIntegerModPowGadget::new_with_option(
             self.t.random.clone(),
             self.t.n.clone(),
             self.t.n_square.clone(),
@@ -113,7 +123,7 @@ impl Gadget<ZkayPaillierEncGadget> {
         .clone();
         let product = g_pow_plain.clone().mul(&rand_pow_n);
         self.t.cipher = Some(
-            LongIntegerModGadget::new(
+            LongIntegerModGadget::new_with_option(
                 product,
                 self.t.n_square.clone(),
                 n_square_min_bits,

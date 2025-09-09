@@ -44,13 +44,21 @@ pub struct ZkayEcPkDerivationGadget {
 }
 
 impl ZkayEcPkDerivationGadget {
+    #[inline]
     pub fn new(
+        secret_key: WireType,
+        validate_secret: bool,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<ZkayEcGadget<Self>> {
+        Self::new_with_option(secret_key, validate_secret, &None, generator)
+    }
+    pub fn new_with_option(
         secret_key: WireType,
         validate_secret: bool,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<ZkayEcGadget<Self>> {
-        let mut _self = ZkayEcGadget::<Self>::new(
+        let mut _self = ZkayEcGadget::<Self>::new_with_option(
             desc,
             Self {
                 secret_bits: secret_key

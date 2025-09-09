@@ -43,8 +43,15 @@ impl Speck128CipherGadget {
     //@param expanded_key
     //           : Array of 32 64-bit elements. (Call expandKey(..))
     //@param desc
-
+    #[inline]
     pub fn new(
+        inputs: Vec<Option<WireType>>,
+        expanded_key: Vec<Option<WireType>>,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(inputs, expanded_key, &None, generator)
+    }
+    pub fn new_with_option(
         plaintext: Vec<Option<WireType>>,
         expanded_key: Vec<Option<WireType>>,
         desc: &Option<String>,

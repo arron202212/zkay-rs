@@ -65,7 +65,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
         generator: RcCell<CircuitGenerator>,
     ) -> Box<dyn GadgetConfig> {
         let encoded_plain = self.encode_plaintext_if_signed(plain);
-        Box::new(ZkayDummyHomEncryptionGadget::new(
+        Box::new(ZkayDummyHomEncryptionGadget::new_with_option(
             encoded_plain,
             self.get_key_wire(key, generator.clone()),
             random.clone(),
@@ -78,7 +78,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
 impl CryptoBackend<Asymmetric<DummyHomBackend>> {
     fn get_key_wire(&self, key_name: &String, generator: RcCell<CircuitGenerator>) -> WireType {
         let key = self.get_key(key_name, generator.clone());
-        let key_arr = key.get_bits().unwrap().pack_bits_into_words(256, &None);
+        let key_arr = key.get_bits().unwrap().pack_bits_into_words(256);
         for i in 1..key_arr.len() {
             CircuitGenerator::add_zero_assertion_with_str(
                 generator.clone(),

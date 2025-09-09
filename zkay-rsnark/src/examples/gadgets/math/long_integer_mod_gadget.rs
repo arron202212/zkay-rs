@@ -109,7 +109,17 @@ impl LongIntegerModGadget {
     // //		illustration.
     // //@param desc
     //
+    #[inline]
     pub fn new(
+        a: LongElement,
+        b: LongElement,
+        b_min_bitwidth: i32,
+        restrict_range: bool,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<LongIntegerDivision<Self>> {
+        Self::new_with_option(a, b, b_min_bitwidth, restrict_range, &None, generator)
+    }
+    pub fn new_with_option(
         a: LongElement,
         b: LongElement,
         b_min_bitwidth: i32,
@@ -117,7 +127,14 @@ impl LongIntegerModGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<LongIntegerDivision<Self>> {
-        LongIntegerDivision::<Self>::new(a, b, b_min_bitwidth, restrict_range, desc, generator)
+        LongIntegerDivision::<Self>::new_with_option(
+            a,
+            b,
+            b_min_bitwidth,
+            restrict_range,
+            desc,
+            generator,
+        )
     }
 }
 

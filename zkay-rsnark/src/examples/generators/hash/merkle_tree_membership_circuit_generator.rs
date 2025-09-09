@@ -105,7 +105,6 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             intermediate_hashe_wires.clone(),
             MerkleTreeMembershipCircuitGenerator::leaf_word_bit_width,
             self.t.tree_height,
-            &None,
             self.cg(),
         );
         let actual_root = merkle_tree_gadget.get_output_wires();

@@ -146,7 +146,6 @@ mod test {
                     &Util::parse_big_int(
                         "21766081959050939664800904742925354518084319102596785077490863571049214729748",
                     ),
-                    &None,
                 );
 
                 let key_exchange_gadget = ECDHKeyExchangeGadget::new(

@@ -94,7 +94,11 @@ pub struct AESSBoxGadgetOptimized2 {
     pub output: Vec<Option<WireType>>,
 }
 impl AESSBoxGadgetOptimized2 {
-    pub fn new(
+    #[inline]
+    pub fn new(input: WireType, generator: RcCell<CircuitGenerator>) -> Gadget<Self> {
+        Self::new_with_option(input, &None, generator)
+    }
+    pub fn new_with_option(
         input: WireType,
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,

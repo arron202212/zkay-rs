@@ -66,7 +66,16 @@ pub struct LongIntegerModInverseGadget {
     pub inverse: Option<LongElement>,
 }
 impl LongIntegerModInverseGadget {
+    #[inline]
     pub fn new(
+        a: LongElement,
+        m: LongElement,
+        restrict_range: bool,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(a, m, restrict_range, &None, generator)
+    }
+    pub fn new_with_option(
         a: LongElement,
         m: LongElement,
         restrict_range: bool,

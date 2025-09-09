@@ -86,7 +86,17 @@ impl FieldExtensionDHKeyExchange {
     //FieldExtensionDHKeyExchange_Test
     //
 
+    #[inline]
     pub fn new(
+        g: Vec<Option<WireType>>,
+        h: Vec<Option<WireType>>,
+        secret_exponent_bits: Vec<Option<WireType>>,
+        omega: i64,
+        generator: RcCell<CircuitGenerator>,
+    ) -> Gadget<Self> {
+        Self::new_with_option(g, h, secret_exponent_bits, omega, &None, generator)
+    }
+    pub fn new_with_option(
         g: Vec<Option<WireType>>,
         h: Vec<Option<WireType>>,
         secret_exponent_bits: Vec<Option<WireType>>,
