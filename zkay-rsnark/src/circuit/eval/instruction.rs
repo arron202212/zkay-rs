@@ -56,31 +56,14 @@ pub trait Instruction: DynClone + DynHash + Debug + InstanceOf {
     fn done_within_circuit(&self) -> bool {
         false
     }
-    // fn get_num_mul_gates(&self) -> i32 {
-    //     0
-    // }
-    // fn get_outputs(&self) -> Vec<Option<WireType>> {
-    //     vec![]
-    // }
-    // fn instance_of(&self, name: &str) -> bool {
-    //     self.name() == name
-    // }
-    // fn name(&self) -> &str {
-    //     ""
-    // }
+
     fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
         None
     }
     fn wire_label(&self) -> Option<Box<dyn WireLabel>> {
         None
     }
-    // fn hash_code(&self)->u64{
-    //     let mut s = DefaultHasher::new();
-    //     self.hash(&mut s);
-    //     s.finish()
-    // }
 }
-// dyn_clone::clone_trait_object!(Instruction);
 
 impl Clone for Box<dyn Instruction> {
     fn clone(&self) -> Self {
@@ -88,11 +71,6 @@ impl Clone for Box<dyn Instruction> {
     }
 }
 
-// impl Debug for dyn Instruction {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//         self.my_fmt(f)
-//     }
-// }
 impl Hash for dyn Instruction {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.dyn_hash(state)
@@ -106,13 +84,3 @@ impl PartialEq for dyn Instruction {
 }
 
 impl Eq for dyn Instruction {}
-
-//dyn Fn<(&mut CircuitEvaluator,), Output = ()>
-// pub type InstructionFunction<'a> =Box<dyn  Fns<(&'a mut CircuitEvaluator,), Output = ()>>;//fn(&mut CircuitEvaluator);
-
-// #[enum_dispatch(Instruction)]
-// #[derive(Clone,Hash,Debug,Eq,PartialEq,ImplStructNameConfig)]
-// pub enum Box<dyn Instruction><'a>{
-// Trait(Box<dyn Instruction>),
-// Function(InstructionFunction<'a>),
-// }

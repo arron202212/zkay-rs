@@ -101,9 +101,9 @@ mod test {
                 let mut result2 = inputs1.sum_all_elements(&None);
                 let mut result_array = inputs1.add_wire_array(&inputs2, inputs1.size(), &None);
 
-                CircuitGenerator::make_output(self.cg(), &result1, &None);
-                CircuitGenerator::make_output(self.cg(), &result2, &None);
-                CircuitGenerator::make_output_array(self.cg(), result_array.as_array(), &None);
+                CircuitGenerator::make_output(self.cg(), &result1);
+                CircuitGenerator::make_output(self.cg(), &result2);
+                CircuitGenerator::make_output_array(self.cg(), result_array.as_array());
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
             }
@@ -192,8 +192,8 @@ mod test {
                     .mul(inputs1[1].as_ref().unwrap());
                 let mut result_array = inputs1.mul_wire_array(&inputs2, num_ins, &None);
 
-                CircuitGenerator::make_output(self.cg(), &result1, &None);
-                CircuitGenerator::make_output_array(self.cg(), result_array.as_array(), &None);
+                CircuitGenerator::make_output(self.cg(), &result1);
+                CircuitGenerator::make_output_array(self.cg(), result_array.as_array());
                 self.t.inputs1 = inputs1.as_array().clone();
                 self.t.inputs2 = inputs2.as_array().clone();
             }
@@ -280,20 +280,20 @@ mod test {
                 for i in 0..num_ins {
                     result1[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.is_less_thans(inputs2[i].as_ref().unwrap(), num_bits, &None));
+                        .map(|x| x.is_less_thans(inputs2[i].as_ref().unwrap(), num_bits));
 
-                    result2[i] = inputs1[i].as_ref().map(|x| {
-                        x.is_less_than_or_equals(inputs2[i].as_ref().unwrap(), num_bits, &None)
-                    });
+                    result2[i] = inputs1[i]
+                        .as_ref()
+                        .map(|x| x.is_less_than_or_equals(inputs2[i].as_ref().unwrap(), num_bits));
                     result3[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.is_greater_thans(inputs2[i].as_ref().unwrap(), num_bits, &None));
+                        .map(|x| x.is_greater_thans(inputs2[i].as_ref().unwrap(), num_bits));
                     result4[i] = inputs1[i].as_ref().map(|x| {
-                        x.is_greater_than_or_equals(inputs2[i].as_ref().unwrap(), num_bits, &None)
+                        x.is_greater_than_or_equals(inputs2[i].as_ref().unwrap(), num_bits)
                     });
                     result5[i] = inputs1[i]
                         .as_ref()
-                        .map(|x| x.is_equal_tos(inputs2[i].as_ref().unwrap(), &None));
+                        .map(|x| x.is_equal_tos(inputs2[i].as_ref().unwrap()));
                 }
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
@@ -496,14 +496,12 @@ mod test {
                 for i in 0..num_ins {
                     shifted_right[i] = inputs1[i]
                         .clone()
-                        .map(|x| x.shift_right(CONFIGS.log2_field_prime as usize, i, &None));
+                        .map(|x| x.shift_right(CONFIGS.log2_field_prime as usize, i));
                     shifted_left[i] = inputs1[i]
                         .clone()
-                        .map(|x| x.shift_left(CONFIGS.log2_field_prime as usize, i, &None));
-                    rotated_right[i] = inputs3[i]
-                        .clone()
-                        .map(|x| x.rotate_right(32, i % 32, &None));
-                    rotated_left[i] = inputs3[i].clone().map(|x| x.rotate_left(32, i % 32, &None));
+                        .map(|x| x.shift_left(CONFIGS.log2_field_prime as usize, i));
+                    rotated_right[i] = inputs3[i].clone().map(|x| x.rotate_right(32, i % 32));
+                    rotated_left[i] = inputs3[i].clone().map(|x| x.rotate_left(32, i % 32));
                     xored[i] = inputs1[i].clone().map(|x| {
                         x.xor_bitwise(
                             inputs2[i].as_ref().unwrap(),
@@ -512,11 +510,7 @@ mod test {
                         )
                     });
                     ored[i] = inputs1[i].clone().map(|x| {
-                        x.or_bitwises(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.or_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     anded[i] = inputs1[i].clone().map(|x| {
                         x.and_bitwise(
@@ -526,17 +520,17 @@ mod test {
                         )
                     });
 
-                    inverted[i] = inputs3[i].clone().map(|x| x.inv_bits(32, &None));
+                    inverted[i] = inputs3[i].clone().map(|x| x.inv_bits(32));
                 }
 
-                CircuitGenerator::make_output_array(self.cg(), &shifted_right, &None);
-                CircuitGenerator::make_output_array(self.cg(), &shifted_left, &None);
-                CircuitGenerator::make_output_array(self.cg(), &rotated_right, &None);
-                CircuitGenerator::make_output_array(self.cg(), &rotated_left, &None);
-                CircuitGenerator::make_output_array(self.cg(), &xored, &None);
-                CircuitGenerator::make_output_array(self.cg(), &ored, &None);
-                CircuitGenerator::make_output_array(self.cg(), &anded, &None);
-                CircuitGenerator::make_output_array(self.cg(), &inverted, &None);
+                CircuitGenerator::make_output_array(self.cg(), &shifted_right);
+                CircuitGenerator::make_output_array(self.cg(), &shifted_left);
+                CircuitGenerator::make_output_array(self.cg(), &rotated_right);
+                CircuitGenerator::make_output_array(self.cg(), &rotated_left);
+                CircuitGenerator::make_output_array(self.cg(), &xored);
+                CircuitGenerator::make_output_array(self.cg(), &ored);
+                CircuitGenerator::make_output_array(self.cg(), &anded);
+                CircuitGenerator::make_output_array(self.cg(), &inverted);
                 self.t.inputs1 = inputs1;
                 self.t.inputs2 = inputs2;
                 self.t.inputs3 = inputs3;
@@ -683,7 +677,6 @@ mod test {
                     CircuitGenerator::create_prover_witness_wire_array(
                         self.cg.clone(),
                         num_ins + 1,
-                        &None,
                     ),
                     generator.cg_weak(),
                 );
@@ -710,50 +703,12 @@ mod test {
                                             }
                                         );
                 CircuitGenerator::specify_prover_witness_computation(self.cg(), prover);
-                // CircuitGenerator::specify_prover_witness_computation(self.cg(),&|evaluator: &mut CircuitEvaluator| {
-                //     evaluator.set_wire_value(solutions[0].as_ref().unwrap(), self.t.result[0].clone());
-                //     for i in 0..num_ins {
-                //         evaluator.set_wire_value(
-                //             solutions[i + 1].as_ref().unwrap(),
-                //             self.t.result[i + 1].clone(),
-                //         );
-                //     }
-                // });
-                // {
-                //     use zkay_derive::ImplStructNameConfig;
-                //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-                //     struct Prover {
-                //         result: Vec<BigInteger>,
-                //         solutions: WireArray,
-                //         num_ins: usize,
-                //     }
-                //     impl Instruction for Prover {
-                //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-                //             evaluator.set_wire_value(
-                //                 self.solutions[0].as_ref().unwrap(),
-                //                 self.result[0].clone(),
-                //             );
-                //             for i in 0..self.num_ins {
-                //                 evaluator.set_wire_value(
-                //                     self.solutions[i + 1].as_ref().unwrap(),
-                //                     self.result[i + 1].clone(),
-                //                 );
-                //             }
-                //         }
-                //     }
-                //     Box::new(Prover {
-                //         result: self.t.result.clone(),
-                //         solutions: solutions.clone(),
-                //         num_ins,
-                //     })
-                // });
 
                 CircuitGenerator::add_assertion(
                     self.cg(),
                     inputs1[0].as_ref().unwrap(),
                     inputs1[0].as_ref().unwrap(),
                     solutions[0].as_ref().unwrap(),
-                    &None,
                 );
                 for i in 0..num_ins {
                     CircuitGenerator::add_assertion(
@@ -761,31 +716,23 @@ mod test {
                         inputs1[i].as_ref().unwrap(),
                         inputs2[i].as_ref().unwrap(),
                         solutions[i + 1].as_ref().unwrap(),
-                        &None,
                     );
                 }
                 let (zero_wire, one_wire) =
                     (self.get_zero_wire().unwrap(), self.get_one_wire().unwrap());
                 // constant assertions will not add constraints
-                CircuitGenerator::add_zero_assertion(self.cg(), &zero_wire, &None);
-                CircuitGenerator::add_one_assertion(self.cg(), &one_wire, &None);
-                CircuitGenerator::add_assertion(
-                    self.cg(),
-                    &zero_wire,
-                    &one_wire,
-                    &zero_wire,
-                    &None,
-                );
-                CircuitGenerator::add_assertion(self.cg(), &one_wire, &one_wire, &one_wire, &None);
-                CircuitGenerator::add_binary_assertion(self.cg(), &zero_wire, &None);
-                CircuitGenerator::add_binary_assertion(self.cg(), &one_wire, &None);
+                CircuitGenerator::add_zero_assertion(self.cg(), &zero_wire);
+                CircuitGenerator::add_one_assertion(self.cg(), &one_wire);
+                CircuitGenerator::add_assertion(self.cg(), &zero_wire, &one_wire, &zero_wire);
+                CircuitGenerator::add_assertion(self.cg(), &one_wire, &one_wire, &one_wire);
+                CircuitGenerator::add_binary_assertion(self.cg(), &zero_wire);
+                CircuitGenerator::add_binary_assertion(self.cg(), &one_wire);
 
                 // won't add a constraint
                 CircuitGenerator::add_equality_assertion(
                     self.cg(),
                     inputs1[0].as_ref().unwrap(),
                     inputs1[0].as_ref().unwrap(),
-                    &None,
                 );
 
                 // will add a constraint
@@ -797,7 +744,6 @@ mod test {
                 );
                 self.t.inputs1 = inputs1.as_array().clone();
                 self.t.inputs2 = inputs2.as_array().clone();
-                // self.t.inputs2=inputs2;
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {

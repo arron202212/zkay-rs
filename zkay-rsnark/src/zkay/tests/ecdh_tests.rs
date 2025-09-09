@@ -67,13 +67,12 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
-                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1, &None);
+                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1);
                 CircuitGenerator::make_output(
                     self.cg(),
                     ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
             }
 
@@ -94,13 +93,12 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTestpkder>);
         impl CGConfig for CircuitGeneratorExtend<CGTestpkder> {
             fn build_circuit(&mut self) {
-                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec2, &None);
+                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec2);
                 CircuitGenerator::make_output(
                     self.cg(),
                     ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
             }
 
@@ -131,14 +129,13 @@ mod test {
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTestecdh>);
         impl CGConfig for CircuitGeneratorExtend<CGTestecdh> {
             fn build_circuit(&mut self) {
-                let p = CircuitGenerator::create_constant_wire(self.cg(), &self.t.pk2, &None);
-                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1, &None);
+                let p = CircuitGenerator::create_constant_wire(self.cg(), &self.t.pk2);
+                let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1);
                 CircuitGenerator::make_output(
                     self.cg(),
                     ZkayECDHGadget::new(p, s, false, &None, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
             }
 

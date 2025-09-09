@@ -68,16 +68,6 @@ pub struct LongIntegerModPowGadget {
     pub c: LongElement, // c = m^e mod m
 }
 impl LongIntegerModPowGadget {
-    // pub fn new(
-    //     b: LongElement,
-    //     e: LongElement,
-    //     m: LongElement,
-    //     mMinBitLength: i32,
-    //     desc: &Option<String>,
-    // ) -> Self {
-    //     Self::news(b, e, -1, m, mMinBitLength, desc);
-    // }
-
     pub fn new(
         b: LongElement,
         e: LongElement,

@@ -27,39 +27,19 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AssertBasicOp;
 impl AssertBasicOp {
-    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<AssertBasicOp> {
-        // if w1.get_wire_id()==4 && w2.get_wire_id()==0 && output.get_wire_id()==48124{
-        //     panic!("{},{},{}",w1.name(),w2.name(),output.name());
-        // }
-        let start = std::time::Instant::now();
-
-        let w1 = Some(w1.clone());
-
-        let w2 = Some(w2.clone());
-
-        let output = Some(output.clone());
-
-        let t = AssertBasicOp;
-
-        let inputs = vec![w1, w2];
-
-        let outputs = vec![output];
-
-        Op::<AssertBasicOp> {
-            inputs,
-            outputs,
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<Self> {
+        Op::<Self>::new(
+            vec![Some(w1.clone()), Some(w2.clone())],
+            vec![Some(output.clone())],
             desc,
-            t,
-        }
+            Self,
+        )
+        .unwrap()
     }
 }
 crate::impl_instruction_for!(Op<AssertBasicOp>);
 crate::impl_hash_code_for!(Op<AssertBasicOp>);
-// impl crate::circuit::eval::instruction::Instruction for Op<AssertBasicOp>{
-//      fn basic_op(&self) -> Option<Box<dyn BasicOp>> {
-//         Box::new(self.clone())
-//     }
-// }
+
 impl BasicOp for Op<AssertBasicOp> {
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let (in0_id, in1_id, out0_id) = (

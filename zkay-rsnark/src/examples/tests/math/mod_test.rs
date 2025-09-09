@@ -54,7 +54,7 @@ mod test {
                 )
                 .get_output_wires()[0]
                     .clone();
-                CircuitGenerator::make_output(self.cg(), r.as_ref().unwrap(), &None);
+                CircuitGenerator::make_output(self.cg(), r.as_ref().unwrap());
                 self.t.input_wires = input_wires;
             }
 
@@ -101,7 +101,7 @@ mod test {
                 )
                 .get_output_wires()[0]
                     .clone();
-                CircuitGenerator::make_output(self.cg(), r.as_ref().unwrap(), &None);
+                CircuitGenerator::make_output(self.cg(), r.as_ref().unwrap());
                 self.t.input_wires = input_wires;
             }
 

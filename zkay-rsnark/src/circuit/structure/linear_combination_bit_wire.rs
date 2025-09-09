@@ -22,7 +22,6 @@ use std::{
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct LinearCombinationBitWire;
-//crate::impl_hash_code_of_wire_g_for!(Wire<LinearCombinationBitWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<LinearCombinationBitWire>);
 
 impl LinearCombinationBitWire {
@@ -42,11 +41,6 @@ impl WireConfig for Wire<LinearCombinationBitWire> {
 }
 impl BitWireConfig for Wire<LinearCombinationBitWire> {}
 impl Wire<LinearCombinationBitWire> {
-    // pub fn new(wire_id: i32) -> Self {
-    //     // //super(wire_id);
-    //     Self
-    // }
-
     pub fn get_bit_wires(&self) -> WireArray {
         WireArray::new(
             vec![Some(WireType::LinearCombinationBit(self.clone()))],

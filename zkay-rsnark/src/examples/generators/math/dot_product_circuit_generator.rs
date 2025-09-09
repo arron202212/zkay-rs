@@ -78,10 +78,10 @@ impl CGConfig for CircuitGeneratorExtend<DotProductCircuitGenerator> {
 
         let dot_product_gadget = DotProductGadget::new(a.clone(), b.clone(), &None, self.cg());
         let result = dot_product_gadget.get_output_wires();
-        CircuitGenerator::make_output(
+        CircuitGenerator::make_output_with_str(
             self.cg(),
             result[0].as_ref().unwrap(),
-            &Some("output of dot product a, b".to_owned()),
+            "output of dot product a, b",
         );
         (self.t.a, self.t.b) = (a, b);
     }

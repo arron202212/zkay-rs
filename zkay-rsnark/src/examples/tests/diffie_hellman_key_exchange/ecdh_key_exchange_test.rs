@@ -50,8 +50,8 @@ mod test {
                     EXPONENT_BIT_LENGTH,
                     "exponent",
                 );
-                let mut base_x = CircuitGenerator::create_input_wire(self.cg(), &None);
-                let mut h_x = CircuitGenerator::create_input_wire(self.cg(), &None);
+                let mut base_x = CircuitGenerator::create_input_wire(self.cg());
+                let mut h_x = CircuitGenerator::create_input_wire(self.cg());
 
                 let key_exchange_gadget = ECDHKeyExchangeGadget::new(
                     Some(base_x.clone()),
@@ -69,14 +69,12 @@ mod test {
                         .get_output_public_value()
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
 
                 // Just for testing. In real scenarios, this should not be made pub
                 CircuitGenerator::make_output(
                     self.cg(),
                     key_exchange_gadget.get_shared_secret().as_ref().unwrap(),
-                    &None,
                 );
 
                 (self.t.base_x, self.t.h_x, self.t.secret_bits) =
@@ -86,11 +84,11 @@ mod test {
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 let start = std::time::Instant::now();
                 evaluator.set_wire_value(self.t.base_x.as_ref().unwrap(), &BigInteger::from(4u8));
-                evaluator.set_wire_value(self.t.h_x.as_ref().unwrap(), BigInteger::parse_bytes(b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10).as_ref().unwrap());
+                evaluator.set_wire_value(self.t.h_x.as_ref().unwrap(), &Util::parse_big_int("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 
-                let exponent = BigInteger::parse_bytes(
-                    b"13867691842196510828352345865165018381161315605899394650350519162543016860992",10
-                ).unwrap();
+                let exponent = Util::parse_big_int(
+                    "13867691842196510828352345865165018381161315605899394650350519162543016860992",
+                );
                 for i in 0..EXPONENT_BIT_LENGTH {
                     evaluator.set_wire_valuei(
                         self.t.secret_bits[i].as_ref().unwrap(),
@@ -112,19 +110,15 @@ mod test {
 
         assert_eq!(
             evaluator.get_wire_value(output[0].as_ref().unwrap()),
-            BigInteger::parse_bytes(
-                b"13458082339735734368462130456283583571822918321676509705348825437102113182254",
-                10
-            )
-            .unwrap(),
+            Util::parse_big_int(
+                "13458082339735734368462130456283583571822918321676509705348825437102113182254"
+            ),
         );
         assert_eq!(
             evaluator.get_wire_value(output[1].as_ref().unwrap()),
-            BigInteger::parse_bytes(
-                b"4167917227796707610764894996898236918915412447839980711033808347811701875717",
-                10
-            )
-            .unwrap(),
+            Util::parse_big_int(
+                "4167917227796707610764894996898236918915412447839980711033808347811701875717"
+            ),
         );
     }
 
@@ -146,10 +140,14 @@ mod test {
                     "exponent",
                 );
                 let base_x =
-                    CircuitGenerator::create_constant_wire(self.cg(), &BigInteger::from(4), &None);
-                let h_x =  CircuitGenerator::create_constant_wire(self.cg(),BigInteger::parse_bytes(
-                    b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10
-                ).as_ref().unwrap(),&None);
+                    CircuitGenerator::create_constant_wire(self.cg(), &BigInteger::from(4));
+                let h_x = CircuitGenerator::create_constant_wire(
+                    self.cg(),
+                    &Util::parse_big_int(
+                        "21766081959050939664800904742925354518084319102596785077490863571049214729748",
+                    ),
+                    &None,
+                );
 
                 let key_exchange_gadget = ECDHKeyExchangeGadget::new(
                     Some(base_x.clone()),
@@ -167,23 +165,21 @@ mod test {
                         .get_output_public_value()
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
 
                 // Just for testing. In real scenarios, this should not be made pub
                 CircuitGenerator::make_output(
                     self.cg(),
                     key_exchange_gadget.get_shared_secret().as_ref().unwrap(),
-                    &None,
                 );
                 (self.t.base_x, self.t.h_x, self.t.secret_bits) =
                     (Some(base_x), Some(h_x), secret_bits);
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
-                let exponent =BigInteger::parse_bytes(
-                    b"13867691842196510828352345865165018381161315605899394650350519162543016860992",10
-                ).unwrap();
+                let exponent = Util::parse_big_int(
+                    "13867691842196510828352345865165018381161315605899394650350519162543016860992",
+                );
                 for i in 0..EXPONENT_BIT_LENGTH {
                     evaluator.set_wire_valuei(
                         self.t.secret_bits[i].as_ref().unwrap(),
@@ -205,19 +201,15 @@ mod test {
 
         assert_eq!(
             evaluator.get_wire_value(output[0].as_ref().unwrap()),
-            BigInteger::parse_bytes(
-                b"13458082339735734368462130456283583571822918321676509705348825437102113182254",
-                10
-            )
-            .unwrap(),
+            Util::parse_big_int(
+                "13458082339735734368462130456283583571822918321676509705348825437102113182254"
+            ),
         );
         assert_eq!(
             evaluator.get_wire_value(output[1].as_ref().unwrap()),
-            BigInteger::parse_bytes(
-                b"4167917227796707610764894996898236918915412447839980711033808347811701875717",
-                10
-            )
-            .unwrap(),
+            Util::parse_big_int(
+                "4167917227796707610764894996898236918915412447839980711033808347811701875717"
+            ),
         );
     }
 
@@ -238,8 +230,8 @@ mod test {
                     EXPONENT_BIT_LENGTH,
                     "exponent",
                 );
-                let base_x = CircuitGenerator::create_input_wire(self.cg(), &None);
-                let h_x = CircuitGenerator::create_input_wire(self.cg(), &None);
+                let base_x = CircuitGenerator::create_input_wire(self.cg());
+                let h_x = CircuitGenerator::create_input_wire(self.cg());
 
                 let key_exchange_gadget = ECDHKeyExchangeGadget::new(
                     Some(base_x.clone()),
@@ -258,11 +250,11 @@ mod test {
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 evaluator.set_wire_value(self.t.base_x.as_ref().unwrap(), &BigInteger::from(4));
-                evaluator.set_wire_value(self.t.h_x.as_ref().unwrap(),BigInteger::parse_bytes(b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10).as_ref().unwrap());
+                evaluator.set_wire_value(self.t.h_x.as_ref().unwrap(),&Util::parse_big_int("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 
-                let exponent =BigInteger::parse_bytes(
-                    b"13867691842196510828352345865165018381161315605899394650350519162543016860992",10
-                ).unwrap();
+                let exponent = Util::parse_big_int(
+                    "13867691842196510828352345865165018381161315605899394650350519162543016860992",
+                );
                 for i in 0..EXPONENT_BIT_LENGTH {
                     evaluator.set_wire_valuei(
                         self.t.secret_bits[i].as_ref().unwrap(),
@@ -302,8 +294,8 @@ mod test {
                     EXPONENT_BIT_LENGTH,
                     "exponent",
                 );
-                let base_x = CircuitGenerator::create_input_wire(self.cg(), &None);
-                let h_x = CircuitGenerator::create_input_wire(self.cg(), &None);
+                let base_x = CircuitGenerator::create_input_wire(self.cg());
+                let h_x = CircuitGenerator::create_input_wire(self.cg());
 
                 let key_exchange_gadget = ECDHKeyExchangeGadget::new(
                     Some(base_x.clone()),
@@ -323,11 +315,11 @@ mod test {
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 // invalid
                 evaluator.set_wire_value(self.t.base_x.as_ref().unwrap(), &BigInteger::from(14));
-                evaluator.set_wire_value(self.t.h_x.as_ref().unwrap(),BigInteger::parse_bytes(b"21766081959050939664800904742925354518084319102596785077490863571049214729748",10).as_ref().unwrap());
+                evaluator.set_wire_value(self.t.h_x.as_ref().unwrap(),Util::parse_big_int("21766081959050939664800904742925354518084319102596785077490863571049214729748"));
 
-                let exponent =BigInteger::parse_bytes(
-                    b"13867691842196510828352345865165018381161315605899394650350519162543016860992",10
-                ).unwrap();
+                let exponent = Util::parse_big_int(
+                    "13867691842196510828352345865165018381161315605899394650350519162543016860992",
+                );
                 for i in 0..EXPONENT_BIT_LENGTH {
                     evaluator.set_wire_valuei(
                         self.t.secret_bits[i].as_ref().unwrap(),
@@ -345,13 +337,7 @@ mod test {
         generator.generate_circuit();
 
         // we expect an exception somewhere
-        // try{
         assert!(generator.eval_circuit().is_err());
-        // assert!(false);
-        // } catch(Exception e){
-        // 	//println!("Exception Expected!");
-        // 	assert!(true);
-        // }
 
         // TODO: test more error conditions
     }

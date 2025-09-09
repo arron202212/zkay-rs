@@ -97,13 +97,11 @@ mod test {
     #[test]
     pub fn cbc_chaskey_output_same_as_gadget_test() {
         // Define inputs
-        let key = BigInteger::parse_bytes(b"b2e21df10a222a69ee1e6a2d60465f4c", 16).unwrap();
-        let iv = BigInteger::parse_bytes(b"f2c605c86352cea9fcaf88f12eba6371", 16).unwrap();
-        let plain = BigInteger::parse_bytes(
-            b"6d60ad00cd9efa16841c842876fd4dc9f0fba1eb9e1ce623a83f45483a221f9",
-            16,
-        )
-        .unwrap();
+        let key = Util::parse_big_int_x("b2e21df10a222a69ee1e6a2d60465f4c");
+        let iv = Util::parse_big_int_x("f2c605c86352cea9fcaf88f12eba6371");
+        let plain = Util::parse_big_int_x(
+            "6d60ad00cd9efa16841c842876fd4dc9f0fba1eb9e1ce623a83f45483a221f9",
+        );
 
         #[derive(Debug, Clone, ImplStructNameConfig)]
         struct CGTest {
@@ -117,14 +115,14 @@ mod test {
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let plainwire = TypedWire::new(
-                    CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain, &None),
+                    CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain),
                     ZkayType::zk_uint(256),
                     "plaintext".to_owned(),
                     &vec![],
                     self.cg(),
                 );
-                let ivwire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.iv, &None);
-                let keywire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.key, &None);
+                let ivwire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.iv);
+                let keywire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.key);
 
                 CircuitGenerator::make_output_array(
                     self.cg(),
@@ -137,7 +135,6 @@ mod test {
                         self.cg(),
                     )
                     .get_output_wires(),
-                    &None,
                 );
             }
 

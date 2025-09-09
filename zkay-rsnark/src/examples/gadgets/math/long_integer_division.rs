@@ -165,12 +165,10 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
         let r_wires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
             r_length as usize,
-            &None,
         );
         let q_wires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
             q_length as usize,
-            &None,
         );
 
         let mut r_chunk_bitwidths = vec![LongElement::CHUNK_BITWIDTH as u64; r_length as usize];
@@ -197,21 +195,6 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
             self.generator.clone().downgrade(),
         );
 
-        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-        //             let a_value = evaluator.get_wire_value(a, LongElement::CHUNK_BITWIDTH);
-        //             let b_value = evaluator.get_wire_value(b, LongElement::CHUNK_BITWIDTH);
-        //             let r_value = a_value.rem(b_value);
-        //             let q_value = a_value.div(b_value);
-
-        //             evaluator.set_wire_value(
-        //                 r.get_array(),
-        //                 &Util::split(r_value, LongElement::CHUNK_BITWIDTH),
-        //             );
-        //             evaluator.set_wire_value(
-        //                 q.get_array(),
-        //                 &Util::split(q_value, LongElement::CHUNK_BITWIDTH),
-        //             );
-        //         });
         let prover = crate::impl_prover!(
                                 eval(  a: LongElement,
                             b: LongElement,r: LongElement,
@@ -239,27 +222,6 @@ impl<T: Debug + Clone> Gadget<LongIntegerDivision<T>> {
                             }
                         );
         CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
-        // {
-        //     struct Prover;
-        //     impl Instruction for Prover {
-        //         &|evaluator: &mut CircuitEvaluator| {
-        //             let a_value = evaluator.get_wire_value(a, LongElement::CHUNK_BITWIDTH);
-        //             let b_value = evaluator.get_wire_value(b, LongElement::CHUNK_BITWIDTH);
-        //             let r_value = a_value.rem(b_value);
-        //             let q_value = a_value.div(b_value);
-
-        //             evaluator.set_wire_value(
-        //                 r.get_array(),
-        //                 Util::split(r_value, LongElement::CHUNK_BITWIDTH),
-        //             );
-        //             evaluator.set_wire_value(
-        //                 q.get_array(),
-        //                 Util::split(q_value, LongElement::CHUNK_BITWIDTH),
-        //             );
-        //         }
-        //     }
-        //     Prover
-        // });
 
         r.restrict_bitwidth();
         q.restrict_bitwidth(); //bits  16

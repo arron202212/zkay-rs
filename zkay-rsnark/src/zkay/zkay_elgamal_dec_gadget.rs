@@ -67,31 +67,22 @@ impl Gadget<ZkayBabyJubJubGadget<ZkayElgamalDecGadget>> {
         let pk_expected = self.mul_scalar(&self.get_generator(), &self.t.t.sk_bits);
         let key_ok = pk_expected
             .x
-            .is_equal_tos(&self.t.t.pk.x, &None)
-            .and(&pk_expected.y.is_equal_tos(&self.t.t.pk.y, &None), &None);
+            .is_equal_tos(&self.t.t.pk.x)
+            .and(&pk_expected.y.is_equal_tos(&self.t.t.pk.y));
 
         // decrypt ciphertext (without de-embedding)
         let shared_secret = self.mul_scalar(&self.t.t.c1, &self.t.t.sk_bits);
         let msg_embedded = self.add_points(&self.t.t.c2, &Self::negate_point(&shared_secret));
 
         // embed expected message and assert equality
-        let expected_msg_bits = self
-            .t
-            .t
-            .expected_msg
-            .get_bit_wiresi(32, &None)
-            .as_array()
-            .clone();
+        let expected_msg_bits = self.t.t.expected_msg.get_bit_wiresi(32).as_array().clone();
         let expected_msg_embedded = self.mul_scalar(&self.get_generator(), &expected_msg_bits);
         self.t.t.msg_ok = Some(
             expected_msg_embedded
                 .x
-                .is_equal_tos(&msg_embedded.x, &None)
-                .and(
-                    &expected_msg_embedded.y.is_equal_tos(&msg_embedded.y, &None),
-                    &None,
-                )
-                .and(&key_ok, &None),
+                .is_equal_tos(&msg_embedded.x)
+                .and(&expected_msg_embedded.y.is_equal_tos(&msg_embedded.y))
+                .and(&key_ok),
         );
         self.t.t.outputs = vec![self.t.t.msg_ok.clone()];
     }

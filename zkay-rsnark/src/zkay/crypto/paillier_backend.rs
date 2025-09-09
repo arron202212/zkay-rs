@@ -187,7 +187,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                 }
 
                 let plain_bits = plain_wire.zkay_type.bitwidth;
-                let plain_bit_wires = plain_wire.wire.get_bit_wiresi(plain_bits as u64, &None);
+                let plain_bit_wires = plain_wire.wire.get_bit_wiresi(plain_bits as u64);
                 let mut abs_plain_val;
                 if !plain_wire.zkay_type.signed {
                     // Unsigned, easy , just do the multiplication.
@@ -195,11 +195,11 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<PaillierBackend>> {
                         LongElement::newa(plain_bit_wires.clone(), generator.clone().downgrade());
                 } else {
                     // Signed. Multiply by the absolute value, later negate result if sign bit was set.
-                    let twos_complement = plain_wire.wire.inv_bits(plain_bits as u64, &None).add(1);
+                    let twos_complement = plain_wire.wire.inv_bits(plain_bits as u64).add(1);
                     let pos_value =
                         LongElement::newa(plain_bit_wires.clone(), generator.clone().downgrade());
                     let neg_value = LongElement::newa(
-                        twos_complement.get_bit_wiresi(plain_bits as u64, &None),
+                        twos_complement.get_bit_wiresi(plain_bits as u64),
                         generator.clone().downgrade(),
                     );
                     let sign_bit = plain_bit_wires[plain_bits as usize - 1].as_ref().unwrap();
@@ -353,7 +353,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
     fn uninit_zero_to_one(&self, val: &LongElement) -> LongElement {
         // Uninitialized values have a ciphertext of all zeros, which is not a valid Paillier cipher.
         // Instead, replace those values with 1 == g^0 * 1^n = Enc(0, 1)
-        let val_is_zero = val.check_non_zero().inv_as_bit(&None);
+        let val_is_zero = val.check_non_zero().inv_as_bit();
         let one_if_all_zero = LongElement::new(
             vec![val_is_zero],
             vec![1], // bit
@@ -371,16 +371,16 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         if input.zkay_type.signed {
             // Signed. Encode positive values as-is, negative values (-v) as (key - v)
             let bits = input.zkay_type.bitwidth;
-            let input_bits = input.wire.get_bit_wiresi(bits as u64, &None);
+            let input_bits = input.wire.get_bit_wiresi(bits as u64);
             let sign_bit = input_bits[bits as usize - 1].clone().unwrap();
 
             let pos_value = LongElement::newa(input_bits.clone(), generator.downgrade());
             let raw_neg_value = LongElement::newa(
                 input
                     .wire
-                    .inv_bits(bits as u64, &None)
+                    .inv_bits(bits as u64)
                     .add(1)
-                    .get_bit_wiresi(bits as u64 + 1, &None),
+                    .get_bit_wiresi(bits as u64 + 1),
                 generator.downgrade(),
             );
             let neg_value = key.clone().sub(&raw_neg_value);
@@ -389,9 +389,7 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         } else {
             // Unsigned, encode as-is, just convert the input wire to a LongElement
             LongElement::newa(
-                input
-                    .wire
-                    .get_bit_wiresi(input.zkay_type.bitwidth as u64, &None),
+                input.wire.get_bit_wiresi(input.zkay_type.bitwidth as u64),
                 generator.downgrade(),
             )
         }

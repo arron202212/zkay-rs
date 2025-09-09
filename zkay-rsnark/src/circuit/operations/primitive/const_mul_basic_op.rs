@@ -28,12 +28,7 @@ pub struct ConstMulBasicOp {
 }
 
 impl ConstMulBasicOp {
-    pub fn new(
-        w: &WireType,
-        out: &WireType,
-        const_integer: &BigInteger,
-        desc: String,
-    ) -> Op<ConstMulBasicOp> {
+    pub fn new(w: &WireType, out: &WireType, const_integer: &BigInteger, desc: String) -> Op<Self> {
         let in_sign = const_integer.sign() == Sign::Minus;
         let const_integer = if !in_sign {
             Util::modulo(const_integer, &CONFIGS.field_prime)
@@ -42,19 +37,19 @@ impl ConstMulBasicOp {
             _const_integer = Util::modulo(&_const_integer, &CONFIGS.field_prime);
             CONFIGS.field_prime.clone().sub(_const_integer)
         };
-        Op::<ConstMulBasicOp> {
-            inputs: vec![Some(w.clone())],
-            outputs: vec![Some(out.clone())],
+        Op::<Self>::new(
+            vec![Some(w.clone())],
+            vec![Some(out.clone())],
             desc,
-            t: ConstMulBasicOp {
+            Self {
                 const_integer,
                 in_sign,
             },
-        }
+        )
+        .unwrap()
     }
 }
 crate::impl_instruction_for!(Op<ConstMulBasicOp>);
-// crate::impl_hash_code_for!(Op<ConstMulBasicOp>);
 impl BasicOp for Op<ConstMulBasicOp> {
     fn get_op_code(&self) -> String {
         if !self.t.in_sign {
@@ -91,16 +86,6 @@ impl BasicOp for Op<ConstMulBasicOp> {
     fn get_num_mul_gates(&self) -> i32 {
         0
     }
-
-    // fn hashCode(&self) -> u64 {
-    //     let mut hasher = DefaultHasher::new();
-    //     self.t.const_integer.hash(&mut hasher);
-    //     let mut h = hasher.finish();
-    //     for i in &self.inputs {
-    //         h += i.as_ref().unwrap().hashCode();
-    //     }
-    //     h
-    // }
 }
 impl Eq for Op<ConstMulBasicOp> {}
 impl PartialEq for Op<ConstMulBasicOp> {

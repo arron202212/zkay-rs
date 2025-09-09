@@ -22,18 +22,14 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct NonZeroCheckBasicOp;
 
 impl NonZeroCheckBasicOp {
-    pub fn new(
-        w: &WireType,
-        out1: &WireType,
-        out2: &WireType,
-        desc: String,
-    ) -> Op<NonZeroCheckBasicOp> {
-        Op::<NonZeroCheckBasicOp> {
-            inputs: vec![Some(w.clone())],
-            outputs: vec![Some(out1.clone()), Some(out2.clone())],
+    pub fn new(w: &WireType, out1: &WireType, out2: &WireType, desc: String) -> Op<Self> {
+        Op::<Self>::new(
+            vec![Some(w.clone())],
+            vec![Some(out1.clone()), Some(out2.clone())],
             desc,
-            t: NonZeroCheckBasicOp,
-        }
+            Self,
+        )
+        .unwrap()
     }
 }
 crate::impl_instruction_for!(Op<NonZeroCheckBasicOp>);

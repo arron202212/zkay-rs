@@ -86,12 +86,9 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         let (rsa_key_length, plain_text_length) =
             (self.t.rsa_key_length, self.t.plain_text_length as usize);
         let mut input_message =
-            CircuitGenerator::create_prover_witness_wire_array(self.cg(), plain_text_length, &None); // in bytes
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), plain_text_length); // in bytes
         for i in 0..plain_text_length {
-            input_message[i]
-                .as_ref()
-                .unwrap()
-                .restrict_bit_length(8, &None);
+            input_message[i].as_ref().unwrap().restrict_bit_length(8);
         }
 
         let randomness = CircuitGenerator::create_prover_witness_wire_array(
@@ -100,7 +97,6 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
                 rsa_key_length,
                 plain_text_length as i32,
             ) as usize,
-            &None,
         );
         // constraints on the randomness vector are checked later.
 
@@ -116,8 +112,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         //  * This way of doing this increases the number of gates a bit, but
         //  * reduces the VK size when crucial.
 
-        let rsa_modulus =
-            CircuitGenerator::create_long_element_input(self.cg(), rsa_key_length, &None);
+        let rsa_modulus = CircuitGenerator::create_long_element_input(self.cg(), rsa_key_length);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -144,11 +139,7 @@ impl CGConfig for CircuitGeneratorExtend<RSAEncryptionCircuitGenerator> {
         // do some grouping to reduce VK Size
         let cipher_text = WireArray::new(cipher_text_in_bytes.clone(), self.cg().downgrade())
             .pack_words_into_larger_words(8, 30, &None);
-        CircuitGenerator::make_output_array(
-            self.cg(),
-            &cipher_text,
-            &Some("Output cipher text".to_owned()),
-        );
+        CircuitGenerator::make_output_array_with_str(self.cg(), &cipher_text, "Output cipher text");
         (
             self.t.input_message,
             self.t.randomness,

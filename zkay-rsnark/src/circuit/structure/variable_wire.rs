@@ -26,17 +26,12 @@ use zkay_derive::ImplStructNameConfig;
 pub struct VariableWire {
     pub bit_wires: Option<WireArray>,
 }
-// impl Hash for VariableWire {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         // self.bit_wires.hash(state);
-//     }
-// }
+
 impl PartialEq for VariableWire {
     fn eq(&self, other: &Self) -> bool {
         self.bit_wires == other.bit_wires
     }
 }
-//crate::impl_hash_code_of_wire_g_for!(Wire<VariableWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<VariableWire>);
 impl VariableWire {
     pub fn new(wire_id: i32, generator: WeakCell<CircuitGenerator>) -> Wire<VariableWire> {
@@ -54,16 +49,6 @@ impl WireConfig for Wire<VariableWire> {
     }
 }
 impl Wire<VariableWire> {
-    // pub fn new(wire_id: i32) -> Self {
-    //     // //super(wire_id);
-    //     Self {
-    //         bit_wires: RcCell::new(None),
-    //     }
-    // }
-    // fn get_bit_wires(&self) -> Option<WireArray> {
-    //     self.t.bit_wires.borrow().clone()
-    // }
-
     fn set_bits(&mut self, bit_wires: Option<WireArray>) {
         self.t.bit_wires = bit_wires;
     }

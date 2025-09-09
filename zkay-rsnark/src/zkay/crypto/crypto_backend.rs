@@ -274,7 +274,6 @@ impl<T> CryptoBackendConfigs for CryptoBackend<Symmetric<T>> {
             generator.clone(),
             my_pk,
             pk_derivation_gadget.get_output_wires()[0].as_ref().unwrap(),
-            &None,
         );
 
         self.t.my_pk = Some(my_pk.clone());
@@ -310,7 +309,7 @@ impl<T> CryptoBackend<Symmetric<T>> {
         );
         let mut actual_other_pk = actual_other_pk.cloned().unwrap();
         actual_other_pk = actual_other_pk
-            .check_non_zero(&Some(key_name.to_owned() + " != 0"))
+            .check_non_zero_with_option(&Some(key_name.to_owned() + " != 0"))
             .mux(&actual_other_pk, self.my_pk().as_ref().unwrap());
 
         // Compute shared key with me
@@ -343,11 +342,7 @@ impl<T> CryptoBackend<Symmetric<T>> {
             .clone()
             .unwrap();
         if last_block_cipher_len > 0 {
-            iv = iv.shift_right(
-                CIPHER_CHUNK_SIZE as usize,
-                last_block_cipher_len as usize,
-                &None,
-            );
+            iv = iv.shift_right(CIPHER_CHUNK_SIZE as usize, last_block_cipher_len as usize);
         }
         iv
     }

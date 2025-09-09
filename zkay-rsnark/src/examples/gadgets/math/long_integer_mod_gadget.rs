@@ -117,16 +117,9 @@ impl LongIntegerModGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<LongIntegerDivision<Self>> {
-        //super(a, b, b_min_bitwidth, restrict_range, desc);
         LongIntegerDivision::<Self>::new(a, b, b_min_bitwidth, restrict_range, desc, generator)
     }
 }
-
-// impl LongIntegerDivision for LongIntegerModGadget {
-//     fn get_output_wires() -> Vec<Option<WireType>> {
-//         get_remainder().get_array()
-//     }
-// }
 
 crate::impl_long_integer_division_config_for!(LongIntegerModGadget);
 

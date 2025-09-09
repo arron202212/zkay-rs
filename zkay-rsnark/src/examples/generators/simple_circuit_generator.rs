@@ -65,10 +65,10 @@ impl CGConfig for CircuitGeneratorExtend<SimpleCircuitGenerator> {
         let r2 = inputs[2].clone().unwrap().add(inputs[3].as_ref().unwrap());
 
         // result = (r1+5)*(6*r2)
-        let result = r1.add(5).mul(&r2.muli(6, &None));
+        let result = r1.add(5).mul(&r2.muli(6));
 
         // mark the wire as output
-        CircuitGenerator::make_output(self.cg(), &result, &None);
+        CircuitGenerator::make_output(self.cg(), &result);
         self.t.inputs = inputs;
     }
 

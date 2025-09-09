@@ -92,7 +92,7 @@ impl Gadget<MerkleTreePathGadget> {
         let mut direction_selector_bits = self
             .t
             .direction_selector_wire
-            .get_bit_wiresi(self.t.tree_height as u64, &None)
+            .get_bit_wiresi(self.t.tree_height as u64)
             .as_array()
             .clone();
 

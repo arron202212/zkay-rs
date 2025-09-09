@@ -87,17 +87,17 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
     fn build_circuit(&mut self) {
         let num_parties = self.t.num_parties as usize;
         let mut secret_input_values =
-            CircuitGenerator::create_prover_witness_wire_array(self.cg(), num_parties - 1, &None); // the manager has a zero input (no need to commit to it)
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), num_parties - 1); // the manager has a zero input (no need to commit to it)
         let mut secret_input_randomness = vec![vec![]; num_parties - 1];
         let mut secret_output_randomness = vec![vec![]; num_parties];
         for i in 0..num_parties - 1 {
             secret_input_randomness[i] =
-                CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
+                CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7);
             secret_output_randomness[i] =
-                CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
+                CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7);
         }
         secret_output_randomness[num_parties - 1] =
-            CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7, &None);
+            CircuitGenerator::create_prover_witness_wire_array(self.cg(), 7);
         let mut secret_input_valuess = secret_input_values.clone();
         secret_input_valuess.insert(0, self.get_zero_wire());
         // instantiate a Pinocchio gadget for the auction circuit
@@ -126,7 +126,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 self.cg(),
                 Base,
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_option(
                 self.cg(),
                 g.get_output_wires(),
                 &Some(format!("Commitment for party # {i}'s input balance.")),
@@ -140,7 +140,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 secret_output_values[i]
                     .as_ref()
                     .unwrap()
-                    .get_bit_wiresi(64 * 2, &None)
+                    .get_bit_wiresi(64 * 2)
                     .pack_as_bits(None, Some(64), &None),
             );
             let mut secret_output_randomnessi = secret_output_randomness[i].clone();
@@ -155,7 +155,7 @@ impl CGConfig for CircuitGeneratorExtend<AugmentedAuctionCircuitGenerator> {
                 self.cg(),
                 Base,
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_option(
                 self.cg(),
                 g.get_output_wires(),
                 &Some(format!("Commitment for party # {i}'s output balance.")),

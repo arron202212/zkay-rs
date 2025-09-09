@@ -153,7 +153,7 @@ impl LongElement {
         let mut generator = self.generator();
         // let generators = self.generator.clone().upgrade().unwrap();
         for w in self.get_array() {
-            CircuitGenerator::make_output(generator.clone(), w.as_ref().unwrap(), desc);
+            CircuitGenerator::make_output_with_option(generator.clone(), w.as_ref().unwrap(), desc);
         }
     }
 
@@ -261,7 +261,7 @@ impl LongElement {
                 let chunk_bits = new_array[i]
                     .as_ref()
                     .unwrap()
-                    .get_bit_wiresi(new_max_values[i].bits(), &None);
+                    .get_bit_wiresi(new_max_values[i].bits());
                 let chunk_bits = chunk_bits.as_array();
                 new_array[i] = Some(
                     WireArray::new(
@@ -311,7 +311,7 @@ impl LongElement {
                 self.array[0]
                     .as_ref()
                     .unwrap()
-                    .get_bit_wiresi(self.current_max_values[0].bits(), &None),
+                    .get_bit_wiresi(self.current_max_values[0].bits()),
             );
             return self.bits.as_ref().unwrap().adjust_length(
                 None,
@@ -326,7 +326,7 @@ impl LongElement {
             let out = self.array[0]
                 .as_ref()
                 .unwrap()
-                .get_bit_wiresi(self.current_max_values[0].bits(), &None);
+                .get_bit_wiresi(self.current_max_values[0].bits());
             return out.adjust_length(None, total_bitwidth as usize);
         }
 
@@ -358,7 +358,7 @@ impl LongElement {
             let chunk_bits = new_array[chunk_index]
                 .as_ref()
                 .unwrap()
-                .get_bit_wiresi(bits.max(bitwidth), &None);
+                .get_bit_wiresi(bits.max(bitwidth));
             let chunk_bits = chunk_bits.as_array();
             let aligned_chunk_bits;
             if new_max_values[chunk_index].bits() > Self::CHUNK_BITWIDTH as u64 {
@@ -456,11 +456,11 @@ impl LongElement {
     pub fn check_non_zero(&self) -> WireType {
         let mut wire_non_zero = vec![None; self.array.len()];
         for i in 0..self.array.len() {
-            wire_non_zero[i] = self.array[i].as_ref().map(|x| x.check_non_zero(&None));
+            wire_non_zero[i] = self.array[i].as_ref().map(|x| x.check_non_zero());
         }
         WireArray::new(wire_non_zero, self.generator.clone())
             .sum_all_elements(&None)
-            .check_non_zero(&None)
+            .check_non_zero()
     }
 
     pub fn get_array(&self) -> &Vec<Option<WireType>> {
@@ -501,27 +501,6 @@ impl LongElement {
         Some(Util::group(&constants, bitwidth_per_chunk))
     }
 
-    // the equals java method to compare objects (this is NOT for circuit
-    // equality check)
-    // pub fn equals(&self, v:Self) -> bool {
-    //     // if o == None || !(o instance_of LongElement) {
-    //     // 	return false;
-    //     // }
-    //     // LongElement v = (LongElement) o;
-    //     if v.array.len() != self.array.len() {
-    //         return false;
-    //     }
-    //     // let mut  check = true;
-    //     // for i in 0.. self.array.len() {
-    //     // 	if !v.array[i]==self.array[i] {
-    //     // 		check = false;
-    //     // 		break;
-    //     // 	}
-    //     // }
-    //     // return check;
-    //     self.array.iter().zip(&v.array).all(|(a, b)| a == b)
-    // }
-
     // This asserts that the current bitwidth conditions are satisfied
     pub fn restrict_bitwidth(&self) {
         if !self.is_aligned() {
@@ -537,7 +516,7 @@ impl LongElement {
             self.array[i]
                 .as_ref()
                 .unwrap()
-                .restrict_bit_length(self.current_bitwidth[i], &None);
+                .restrict_bit_length(self.current_bitwidth[i]);
         }
     }
 
@@ -561,7 +540,6 @@ impl LongElement {
                 generator.clone(),
                 v1.array[i].as_ref().unwrap(),
                 v2.array[i].as_ref().unwrap(),
-                &None,
             );
         }
     }
@@ -596,16 +574,16 @@ impl LongElement {
 
         // simpl e equality assertion cases
         if a1.len() == a2.len() && a1.len() == 1 {
-            CircuitGenerator::add_equality_assertion(
+            CircuitGenerator::add_equality_assertion_with_str(
                 generator.clone(),
                 a1[0].as_ref().unwrap(),
                 a2[0].as_ref().unwrap(),
-                &Some("Equality assertion of long elements | case 1".to_owned()),
+                "Equality assertion of long elements | case 1",
             );
             return;
         } else if self.is_aligned() && e.is_aligned() {
             for i in 0..limit {
-                CircuitGenerator::add_equality_assertion(
+                CircuitGenerator::add_equality_assertion_with_option(
                     generator.clone(),
                     a1[i].as_ref().unwrap(),
                     a2[i].as_ref().unwrap(),
@@ -644,8 +622,8 @@ impl LongElement {
                     && b2.clone().add(bounds2[i + step].clone().mul(&delta)).bits()
                         < CONFIGS.log2_field_prime - 2
                 {
-                    w1 = w1.add(a1[i + step].as_ref().unwrap().mulb(&delta, &None));
-                    w2 = w2.add(a2[i + step].as_ref().unwrap().mulb(&delta, &None));
+                    w1 = w1.add(a1[i + step].as_ref().unwrap().mulb(&delta));
+                    w2 = w2.add(a2[i + step].as_ref().unwrap().mulb(&delta));
                     b1 = b1.add(bounds1[i + step].clone().mul(&delta));
                     b2 = b2.add(bounds2[i + step].clone().mul(&delta));
                     step += 1;
@@ -678,7 +656,6 @@ impl LongElement {
         let mut carries = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone().upgrade().unwrap(),
             num_of_grouped_chunks - 1,
-            &None,
         );
         let mut carries_bitwidth_bounds = vec![0; carries.len()];
 
@@ -772,70 +749,14 @@ impl LongElement {
                                     }
                                 );
         CircuitGenerator::specify_prover_witness_computation(generator.clone(), prover);
-        // self.generator()
-        //     .specify_prover_witness_computation(&|evaluator: &mut CircuitEvaluator| {
-        //         let mut prev_carry = BigInteger::ZERO;
-        //         for i in 0..carries.len() {
-        //             let a = evaluator.get_wire_value(group1[i].clone().unwrap());
-        //             let b = evaluator.get_wire_value(group2[i].clone().unwrap());
-        //             let mut carry_value = aux_constant_chunks[i]
-        //                 .clone()
-        //                 .add(a)
-        //                 .sub(b)
-        //                 .sub(aligned_aux_constant_chunks[i].clone())
-        //                 .add(prev_carry);
-        //             carry_value = carry_value.shr(steps[i] * LongElement::CHUNK_BITWIDTH as usize);
-        //             evaluator.set_wire_value(carries[i].clone().unwrap(), carry_value.clone());
-        //             prev_carry = carry_value;
-        //         }
-        //     });
-        //     {
-        //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-        //     struct Prover {
-        //         carries: Vec<Option<WireType>>,
-        //         group1: Vec<Option<WireType>>,
-        //         group2: Vec<Option<WireType>>,
-        //         steps: Vec<i32>,
-        //         aux_constant_chunks: Vec<BigInteger>,
-        //         aligned_aux_constant_chunks: Vec<BigInteger>,
-        //     }
-        //     impl Instruction for Prover{
-        //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-        //             let mut prev_carry = BigInteger::ZERO;
-        //             for i in 0..carries.len() {
-        //                 let a = evaluator.get_wire_value(self.group1[i].clone().unwrap());
-        //                 let b = evaluator.get_wire_value(self.group2[i].clone().unwrap());
-        //                 let mut carry_value = self.aux_constant_chunks[i]
-        //                     .clone()
-        //                     .add(a)
-        //                     .sub(b)
-        //                     .sub(self.aligned_aux_constant_chunks[i].clone())
-        //                     .add(prev_carry);
-        //                 carry_value = carry_value.shr(self.steps[i] * LongElement::CHUNK_BITWIDTH);
-        //                 evaluator
-        //                     .set_wire_value(self.carries[i].clone().unwrap(), carry_value.clone());
-        //                 prev_carry = carry_value;
-        //             }
-        //         }
-        //     }
-        //     Box::new(Prover {
-        //         carries: carries.clone(),
-        //         group1: group1.clone(),
-        //         group2: group2.clone(),
-        //         steps: steps.iter().map(|&i| i as i32).collect(),
-        //         aux_constant_chunks: aux_constant_chunks.clone(),
-        //         aligned_aux_constant_chunks: aligned_aux_constant_chunks.clone(),
-        //     })
-        // });
 
         // We must make sure that the carries values are bounded.
 
         for j in 0..carries.len() {
-            // carries[j].get_bit_wires(carries_bitwidth_bounds[j]);
             carries[j]
                 .as_ref()
                 .unwrap()
-                .restrict_bit_length(carries_bitwidth_bounds[j], &None);
+                .restrict_bit_length(carries_bitwidth_bounds[j]);
 
             // Note: in this context restrict_bit_length and get_bit_wires will be
             // the same, but it's safer to use restrict_bit_length
@@ -849,15 +770,11 @@ impl LongElement {
 
         // recall carries.len() = num_of_grouped_chunks - 1
         for j in 0..carries.len() + 1 {
-            let aux_constant_chunk_wire = CircuitGenerator::create_constant_wire(
-                generator.clone(),
-                &aux_constant_chunks[j],
-                &None,
-            );
+            let aux_constant_chunk_wire =
+                CircuitGenerator::create_constant_wire(generator.clone(), &aux_constant_chunks[j]);
             let aligned_aux_constant_chunk_wire = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &aligned_aux_constant_chunks[j],
-                &None,
             );
 
             // the last carry value must be zero
@@ -885,7 +802,7 @@ impl LongElement {
                 current_carry
                     .clone()
                     .unwrap()
-                    .mulb(&shift.pow(steps[j] as u32), &None),
+                    .mulb(&shift.pow(steps[j] as u32)),
             );
 
             // enforce w1 = w2
@@ -893,7 +810,7 @@ impl LongElement {
             // current_carry will be zero,
             // i.e., there will be no more values to be checked.
 
-            CircuitGenerator::add_equality_assertion(
+            CircuitGenerator::add_equality_assertion_with_option(
                 generator.clone(),
                 &w1,
                 &w2,
@@ -934,7 +851,6 @@ impl LongElement {
         let helper_bits = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone().upgrade().unwrap(),
             length,
-            &None,
         );
         // set the value of the helper_bits outside the circuits
         let prover = crate::impl_prover!(
@@ -966,66 +882,15 @@ impl LongElement {
                     }
                 );
         CircuitGenerator::specify_prover_witness_computation(generator.clone(), prover);
-        // self.generator()
-        //     .specify_prover_witness_computation(&|evaluator: &mut CircuitEvaluator| {
-        //         let mut found = false;
-        //         for i in (0..length).rev() {
-        //             let v1 = evaluator.get_wire_value(padded_a1[i].clone().unwrap());
-        //             let v2 = evaluator.get_wire_value(padded_a2[i].clone().unwrap());
-
-        //             let check = v2 > v1 && !found;
-        //             evaluator.set_wire_value(
-        //                 helper_bits[i].clone().unwrap(),
-        //                 if check { Util::one() } else { BigInteger::ZERO },
-        //             );
-        //             if check {
-        //                 found = true;
-        //             }
-        //         }
-        //     });
-        // {
-        //             #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-        //             struct Prover {
-        //                 pub length: usize,
-        //                 pub padded_a1: Vec<Option<WireType>>,
-        //                 pub padded_a2: Vec<Option<WireType>>,
-        //                 pub helper_bits: Vec<Option<WireType>>,
-        //             }
-        //             impl Instruction for Prover{
-        //                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-        //                     let mut found = false;
-        //                     for i in (0..length).rev() {
-        //                         let v1 = evaluator.get_wire_value(self.padded_a1[i].clone().unwrap());
-        //                         let v2 = evaluator.get_wire_value(self.padded_a2[i].clone().unwrap());
-
-        //                         let check = v2 > v1 && !found;
-        //                         evaluator.set_wire_value(
-        //                             self.helper_bits[i].clone().unwrap(),
-        //                             if check { Util::one() } else { BigInteger::ZERO },
-        //                         );
-        //                         if check {
-        //                             found = true;
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //             Box::new(Prover {
-        //                 length,
-        //                 padded_a1: padded_a1.clone(),
-        //                 padded_a2: padded_a2.clone(),
-        //                 helper_bits: helper_bits.clone(),
-        //             })
-        //         });
 
         // verify constraints about helper bits.
         for w in &helper_bits {
-            CircuitGenerator::add_binary_assertion(generator.clone(), w.as_ref().unwrap(), &None);
+            CircuitGenerator::add_binary_assertion(generator.clone(), w.as_ref().unwrap());
         }
         // Only one bit should be set.
         CircuitGenerator::add_one_assertion(
             generator.clone(),
             &WireArray::new(helper_bits.clone(), self.generator.clone()).sum_all_elements(&None),
-            &None,
         );
 
         // verify "the greater than condition" for the specified chunk
@@ -1048,8 +913,7 @@ impl LongElement {
         }
         CircuitGenerator::add_one_assertion(
             generator.clone(),
-            &chunk1.is_less_thans(&chunk2, Self::CHUNK_BITWIDTH, &None),
-            &None,
+            &chunk1.is_less_thans(&chunk2, Self::CHUNK_BITWIDTH),
         );
 
         // check that the other more significant chunks are equal
@@ -1068,7 +932,6 @@ impl LongElement {
                     .unwrap()
                     .sub(padded_a2[i].as_ref().unwrap()),
                 &zero_wire,
-                &None,
             );
         }
 
@@ -1205,52 +1068,7 @@ impl Sub<&Self> for LongElement {
                             }
                         );
         CircuitGenerator::specify_prover_witness_computation(generator.clone(), prover);
-        // self.generator()
-        //     .specify_prover_witness_computation(&|evaluator: &mut CircuitEvaluator| {
-        //         let my_value = evaluator.get_wire_valuei(self.clone(), LongElement::CHUNK_BITWIDTH);
-        //         let other_value =
-        //             evaluator.get_wire_valuei(other.clone(), LongElement::CHUNK_BITWIDTH);
-        //         let result_value = my_value.sub(other_value);
-        //         assert!(
-        //             result_value.sign() != Sign::Minus,
-        //             "Result of subtraction is negative!"
-        //         );
-        //         evaluator.set_wire_valuebi(result.clone(), result_value, LongElement::CHUNK_BITWIDTH);
-        //     });
-        // {
-        // #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-        //             struct Prover<'a+Hash+Clone+Debug> {
-        //                 pub long_element:LongElement<'a>,
-        //                 pub other:LongElement<'a>,
-        //                 pub result:LongElement<'a>,
-        //             }
 
-        //             impl <'a+Hash+Clone+Debug> Instruction for Prover<'a> {
-        //                 fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-        //                     let my_value = evaluator
-        //                         .get_wire_valuei(self.long_element.clone(), LongElement::CHUNK_BITWIDTH);
-        //                     let other_value =
-        //                         evaluator.get_wire_valuei(self.other.clone(), LongElement::CHUNK_BITWIDTH);
-        //                     let result_value = my_value.sub(other_value);
-        //                     assert!(
-        //                         result_value.sign() != Sign::Minus,
-        //                         "Result of subtraction is negative!"
-        //                     );
-        //                     evaluator.set_wire_valuebi(
-        //                         self.result.clone(),
-        //                         result_value,
-        //                         LongElement::CHUNK_BITWIDTH,
-        //                     );
-        //                 }
-        //             }
-
-        //             Box::new(Prover::<'_,C> {
-        //                 long_element: self.clone(),
-        //                 other: rhs.clone(),
-        //                 result: result.clone(),
-        //             })
-        //         });
-        // let generator = self.generator();
         result.restrict_bitwidth();
         self.assert_equality(&result.clone().add(rhs));
         result
@@ -1297,7 +1115,6 @@ impl Mul<&Self> for LongElement {
             result = CircuitGenerator::create_prover_witness_wire_array(
                 self.generator.clone().upgrade().unwrap(),
                 length,
-                &None,
             );
             // for safety
             let (array1, array2) = (&self.array, &rhs.array);
@@ -1317,35 +1134,6 @@ impl Mul<&Self> for LongElement {
                                                 }
                                             );
             CircuitGenerator::specify_prover_witness_computation(generator.clone(), prover);
-            // self.generator().specify_prover_witness_computation(
-            //     &|evaluator: &mut CircuitEvaluator| {
-            //         let a = evaluator.get_wires_values(self.array.clone());
-            //         let b = evaluator.get_wires_values(rhs.array.clone());
-            //         let result_vals = LongElement::multiply_polys(a, b);
-            //         evaluator.set_wire_valuea(result.clone(), result_vals);
-            //     },
-            // );
-            // {
-            //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-            //     struct Prover {
-            //         pub result: Vec<Option<WireType>>,
-            //         pub array1: Vec<Option<WireType>>,
-            //         pub array2: Vec<Option<WireType>>,
-            //     }
-            //     impl Instruction for Prover{
-            //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-            //             let a = evaluator.get_wires_values(self.array1.clone());
-            //             let b = evaluator.get_wires_values(self.array2.clone());
-            //             let result_vals = LongElement::multiply_polys(a, b);
-            //             evaluator.set_wire_valuea(self.result.clone(), result_vals);
-            //         }
-            //     }
-            //     Box::new(Prover {
-            //         result: result.clone(),
-            //         array1: self.array.clone(),
-            //         array2: rhs.array.clone(),
-            //     })
-            // });
 
             for k in 0..length {
                 let constant = BigInteger::from(k as u64 + 1);
@@ -1356,21 +1144,19 @@ impl Mul<&Self> for LongElement {
                 let mut vector3 = vec![None; length];
                 for i in 0..length {
                     if i < self.array.len() {
-                        vector1[i] = self.array[i]
-                            .as_ref()
-                            .map(|x| x.clone().mulb(&coeff, &None));
+                        vector1[i] = self.array[i].as_ref().map(|x| x.clone().mulb(&coeff));
                     }
                     if i < rhs.array.len() {
-                        vector2[i] = rhs.array[i].as_ref().map(|x| x.clone().mulb(&coeff, &None));
+                        vector2[i] = rhs.array[i].as_ref().map(|x| x.clone().mulb(&coeff));
                     }
-                    vector3[i] = result[i].clone().map(|x| x.mulb(&coeff, &None));
+                    vector3[i] = result[i].clone().map(|x| x.mulb(&coeff));
                     coeff = Util::modulo(&coeff.mul(&constant), &CONFIGS.field_prime);
                 }
 
                 let v1 = WireArray::new(vector1, self.generator.clone()).sum_all_elements(&None);
                 let v2 = WireArray::new(vector2, self.generator.clone()).sum_all_elements(&None);
                 let v3 = WireArray::new(vector3, self.generator.clone()).sum_all_elements(&None);
-                CircuitGenerator::add_assertion(generator.clone(), &v1, &v2, &v3, &None);
+                CircuitGenerator::add_assertion(generator.clone(), &v1, &v2, &v3);
             }
         }
 

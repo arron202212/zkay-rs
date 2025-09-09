@@ -40,7 +40,6 @@ use zkay_derive::ImplStructNameConfig;
 pub struct ConstantWire {
     pub constant: BigInteger,
 }
-//crate::impl_hash_code_of_wire_g_for!(Wire<ConstantWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<ConstantWire>);
 impl ConstantWire {
     pub fn new(
@@ -61,12 +60,6 @@ impl ConstantWire {
 impl SetBitsConfig for ConstantWire {}
 impl SetBitsConfig for Wire<ConstantWire> {}
 impl Wire<ConstantWire> {
-    // pub fn new(wire_id: i32, value: BigInteger) -> Self {
-    //     // //super(wire_id);
-    //     Self {
-    //         constant: value.rem(&CONFIGS.field_prime),
-    //     }
-    // }
     pub fn get_constant(&self) -> BigInteger {
         self.t.constant.clone()
     }
@@ -79,11 +72,11 @@ impl WireConfig for Wire<ConstantWire> {
     fn self_clone(&self) -> Option<WireType> {
         Some(WireType::Constant(self.clone()))
     }
-    fn mulw(&self, w: &WireType, desc: &Option<String>) -> WireType {
+    fn mulw_with_option(&self, w: &WireType, desc: &Option<String>) -> WireType {
         let start = Instant::now();
         let generator = self.generator();
         if w.instance_of("ConstantWire") {
-            generator.create_constant_wire(
+            generator.create_constant_wire_with_option(
                 &self
                     .t
                     .constant
@@ -92,11 +85,11 @@ impl WireConfig for Wire<ConstantWire> {
                 desc,
             )
         } else {
-            w.mulb(&self.t.constant, desc)
+            w.mulb_with_option(&self.t.constant, desc)
         }
     }
 
-    fn mulb(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
+    fn mulb_with_option(&self, b: &BigInteger, desc: &Option<String>) -> WireType {
         let mut generator = self.generator();
 
         let sign = b.sign() == Sign::Minus;
@@ -139,7 +132,7 @@ impl WireConfig for Wire<ConstantWire> {
         }
     }
 
-    fn check_non_zero(&self, desc: &Option<String>) -> WireType {
+    fn check_non_zero_with_option(&self, desc: &Option<String>) -> WireType {
         let generator = self.generator();
 
         if self.t.constant == BigInteger::ZERO {
@@ -149,7 +142,7 @@ impl WireConfig for Wire<ConstantWire> {
         }
     }
 
-    fn inv_as_bit(&self, desc: &Option<String>) -> Option<WireType> {
+    fn inv_as_bit_with_option(&self, desc: &Option<String>) -> Option<WireType> {
         assert!(self.is_binary(), "Trying to invert a non-binary constant!");
 
         let generator = self.generator();
@@ -161,7 +154,7 @@ impl WireConfig for Wire<ConstantWire> {
         }
     }
 
-    fn orw(&self, w: &WireType, desc: &Option<String>) -> WireType {
+    fn orw_with_option(&self, w: &WireType, desc: &Option<String>) -> WireType {
         let generator = self.generator();
 
         if w.instance_of("ConstantWire") {
@@ -201,13 +194,13 @@ impl WireConfig for Wire<ConstantWire> {
             };
         }
         if self.t.constant == Util::one() {
-            w.inv_as_bit(desc).unwrap()
+            w.inv_as_bit_with_option(desc).unwrap()
         } else {
             w.clone()
         }
     }
 
-    fn get_bit_wiresi(&self, bitwidth: u64, desc: &Option<String>) -> WireArray {
+    fn get_bit_wiresi_with_option(&self, bitwidth: u64, desc: &Option<String>) -> WireArray {
         assert!(
             self.t.constant.bits() <= bitwidth,
             "Trying to split a constant of {} bits into  {bitwidth} bits",
@@ -226,8 +219,8 @@ impl WireConfig for Wire<ConstantWire> {
         WireArray::new(bits, self.generator.clone())
     }
 
-    fn restrict_bit_length(&self, bitwidth: u64, desc: &Option<String>) {
-        self.get_bit_wiresi(bitwidth, desc);
+    fn restrict_bit_length_with_option(&self, bitwidth: u64, desc: &Option<String>) {
+        self.get_bit_wiresi_with_option(bitwidth, desc);
     }
 
     fn pack(&self, desc: &Option<String>) {}

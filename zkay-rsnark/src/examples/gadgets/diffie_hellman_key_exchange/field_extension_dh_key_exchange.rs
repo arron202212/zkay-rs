@@ -101,7 +101,7 @@ impl FieldExtensionDHKeyExchange {
         // done also outside the gadget. The back end takes care of caching
         let generators = generator.clone();
         for w in &secret_exponent_bits {
-            CircuitGenerator::add_binary_assertion(generator.clone(), w.as_ref().unwrap(), &None);
+            CircuitGenerator::add_binary_assertion(generator.clone(), w.as_ref().unwrap());
         }
         let mut _self = Gadget::<Self>::new(
             generator,
@@ -161,7 +161,7 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                             .clone()
                             .unwrap()
                             .mul(b[j].as_ref().unwrap())
-                            .muli(self.t.omega, &None),
+                            .muli(self.t.omega),
                     );
                 }
             }
@@ -226,8 +226,8 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                 self.t.g[i]
                     .as_ref()
                     .unwrap()
-                    .check_non_zero(&None)
-                    .inv_as_bit(&None)
+                    .check_non_zero()
+                    .inv_as_bit()
                     .as_ref()
                     .unwrap(),
             );
@@ -235,8 +235,8 @@ impl Gadget<FieldExtensionDHKeyExchange> {
                 self.t.h[i]
                     .as_ref()
                     .unwrap()
-                    .check_non_zero(&None)
-                    .inv_as_bit(&None)
+                    .check_non_zero()
+                    .inv_as_bit()
                     .as_ref()
                     .unwrap(),
             );
@@ -244,17 +244,9 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
         // assertion
 
-        CircuitGenerator::add_zero_assertion(
-            self.generator.clone(),
-            &zero_or_one1.mul(all_zero1),
-            &None,
-        );
+        CircuitGenerator::add_zero_assertion(self.generator.clone(), &zero_or_one1.mul(all_zero1));
 
-        CircuitGenerator::add_zero_assertion(
-            self.generator.clone(),
-            &zero_or_one2.mul(all_zero2),
-            &None,
-        );
+        CircuitGenerator::add_zero_assertion(self.generator.clone(), &zero_or_one2.mul(all_zero2));
 
         // verify order of points
 
@@ -274,28 +266,18 @@ impl Gadget<FieldExtensionDHKeyExchange> {
 
         // both should be one
 
-        CircuitGenerator::add_one_assertion(
-            self.generator.clone(),
-            result1[0].as_ref().unwrap(),
-            &None,
-        );
+        CircuitGenerator::add_one_assertion(self.generator.clone(), result1[0].as_ref().unwrap());
 
-        CircuitGenerator::add_one_assertion(
-            self.generator.clone(),
-            result2[0].as_ref().unwrap(),
-            &None,
-        );
+        CircuitGenerator::add_one_assertion(self.generator.clone(), result2[0].as_ref().unwrap());
         for i in 1..self.t.mu as usize {
             CircuitGenerator::add_zero_assertion(
                 self.generator.clone(),
                 result1[i].as_ref().unwrap(),
-                &None,
             );
 
             CircuitGenerator::add_zero_assertion(
                 self.generator.clone(),
-                result1[i].as_ref().unwrap(),
-                &None,
+                result2[i].as_ref().unwrap(),
             );
         }
     }

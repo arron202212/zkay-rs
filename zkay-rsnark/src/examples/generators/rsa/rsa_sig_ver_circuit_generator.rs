@@ -102,7 +102,7 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
         //  * bit, but reduces the VK size when needed.
 
         let rsa_modulus =
-            CircuitGenerator::create_long_element_input(self.cg(), self.t.rsa_key_length, &None);
+            CircuitGenerator::create_long_element_input(self.cg(), self.t.rsa_key_length);
 
         // The modulus can also be hardcoded by changing the statement above to the following
 
@@ -132,12 +132,12 @@ impl CGConfig for CircuitGeneratorExtend<RSASigVerCircuitGenerator> {
             &None,
             self.cg(),
         );
-        CircuitGenerator::make_output(
+        CircuitGenerator::make_output_with_str(
             self.cg(),
             rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                 .as_ref()
                 .unwrap(),
-            &Some("Is Signature valid?".to_owned()),
+            "Is Signature valid?",
         );
         (
             self.t.input_message,

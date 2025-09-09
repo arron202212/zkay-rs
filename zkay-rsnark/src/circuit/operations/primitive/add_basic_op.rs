@@ -22,22 +22,13 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct AddBasicOp;
 impl AddBasicOp {
-    pub fn new(ws: Vec<Option<WireType>>, output: &WireType, desc: String) -> Op<AddBasicOp> {
-        Op::<AddBasicOp> {
-            inputs: ws,
-            outputs: vec![Some(output.clone())],
-            desc,
-            t: AddBasicOp,
-        }
+    pub fn new(ws: Vec<Option<WireType>>, output: &WireType, desc: String) -> Op<Self> {
+        Op::<Self>::new(ws, vec![Some(output.clone())], desc, AddBasicOp).unwrap()
     }
 }
 crate::impl_instruction_for!(Op<AddBasicOp>);
 crate::impl_hash_code_for!(Op<AddBasicOp>);
 impl BasicOp for Op<AddBasicOp> {
-    // fn get_op_code(&self) -> String {
-    //     return "add".to_owned();
-    // }
-
     fn compute(&self, assignment: &mut Vec<Option<BigInteger>>) -> eyre::Result<()> {
         let out0_id = self.outputs[0].as_ref().unwrap().get_wire_id() as usize;
         let s = self.inputs.iter().fold(BigInteger::ZERO, |s, w| {

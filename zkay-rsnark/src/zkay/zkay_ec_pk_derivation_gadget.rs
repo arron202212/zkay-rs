@@ -54,14 +54,13 @@ impl ZkayEcPkDerivationGadget {
             desc,
             Self {
                 secret_bits: secret_key
-                    .get_bit_wiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
+                    .get_bit_wiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64)
                     .as_array()
                     .clone(),
                 base_point: AffinePoint::new(
                     Some(CircuitGenerator::create_constant_wirei(
                         generator.clone(),
                         4,
-                        &None,
                     )),
                     None,
                 ),
@@ -121,7 +120,6 @@ impl Gadget<ZkayEcGadget<ZkayEcPkDerivationGadget>> {
         self.t.t.base_point.y = Some(CircuitGenerator::create_constant_wire(
             self.generator.clone(),
             &Gadget::<ZkayEcGadget<ZkayEcPkDerivationGadget>>::compute_y_coordinate(x),
-            &None,
         ));
     }
 }

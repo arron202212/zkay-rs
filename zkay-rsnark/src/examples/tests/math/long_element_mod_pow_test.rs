@@ -61,22 +61,22 @@ mod test {
     impl CGConfig for CircuitGeneratorExtend<ModPowCircuitGenerator> {
         fn build_circuit(&mut self) {
             let start = std::time::Instant::now();
-            let b_wire = CircuitGenerator::create_long_element_input(
+            let b_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg.clone(),
                 1i32.max(self.t.b.bits() as i32),
-                &Some("b".to_owned()),
+                "b",
             );
 
-            let e_wire = CircuitGenerator::create_long_element_input(
+            let e_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg.clone(),
                 1i32.max(self.t.e.bits() as i32),
-                &Some("e".to_owned()),
+                "e",
             );
 
-            let m_wire = CircuitGenerator::create_long_element_input(
+            let m_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg.clone(),
                 1i32.max(self.t.m.bits() as i32),
-                &Some("m".to_owned()),
+                "m",
             );
 
             let mod_pow = LongIntegerModPowGadget::new(
@@ -89,10 +89,10 @@ mod test {
                 self.cg(),
             );
 
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 mod_pow.get_output_wires(),
-                &Some("c".to_owned()),
+                "c",
             );
 
             (self.t.b_wire, self.t.e_wire, self.t.m_wire) =

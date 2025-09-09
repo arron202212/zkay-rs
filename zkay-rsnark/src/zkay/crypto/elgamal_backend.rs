@@ -140,7 +140,7 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<ElgamalBackend>> {
         Box::new(ZkayElgamalEncGadget::new(
             plain
                 .wire
-                .get_bit_wiresi(plain.zkay_type.bitwidth as u64, &None)
+                .get_bit_wiresi(plain.zkay_type.bitwidth as u64)
                 .as_array()
                 .clone(),
             pk,
@@ -188,9 +188,9 @@ impl CryptoBackend<Asymmetric<ElgamalBackend>> {
         // Uninitialized values have a ciphertext of all zeroes, which is not a valid ElGamal cipher.
         // Instead, replace those values with the point at infinity (0, 1).
         let one_if_both_zero =
-            p.x.check_non_zero(&None)
-                .orw(&p.y.check_non_zero(&None), &None)
-                .inv_as_bit(&None)
+            p.x.check_non_zero()
+                .orw(&p.y.check_non_zero())
+                .inv_as_bit()
                 .unwrap();
         JubJubPoint::new(p.x.clone(), p.y.clone().add(&one_if_both_zero))
     }
@@ -232,8 +232,8 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
             d2 = self.uninit_zero_to_identity(&d2);
 
             if op == '-' {
-                d1.x = d1.x.negate(&None);
-                d2.x = d2.x.negate(&None);
+                d1.x = d1.x.negate();
+                d2.x = d2.x.negate();
             }
 
             let gadget = ZkayElgamalAddGadget::new(c1, c2, d1, d2, generator);
@@ -263,7 +263,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
             let gadget = ZkayElgamalMulGadget::new(
                 c1,
                 c2,
-                plain_wire.wire.get_bit_wiresi(32, &None).as_array().clone(),
+                plain_wire.wire.get_bit_wiresi(32).as_array().clone(),
                 generator,
             );
             self.to_typed_wire_array(gadget.get_output_wires(), &output_name)
@@ -293,7 +293,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
         let pk = JubJubPoint::new(pk_array[0].clone().unwrap(), pk_array[1].clone().unwrap());
         let random_array = randomness
             .wire
-            .get_bit_wiresi(ElgamalBackend::RND_CHUNK_SIZE as u64, &None)
+            .get_bit_wiresi(ElgamalBackend::RND_CHUNK_SIZE as u64)
             .as_array()
             .clone();
 

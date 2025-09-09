@@ -69,12 +69,12 @@ impl FieldDivisionGadget {
 
             _self.t.c = vec![Some(generator.create_constant_wire(
                 &a_const.mul(b_inverse_const).rem(&CONFIGS.field_prime),
-                &None,
             ))];
         } else {
             let debug_str = _self.debug_str("division result");
 
-            let pww = CircuitGenerator::create_prover_witness_wire(generator, &debug_str);
+            let pww =
+                CircuitGenerator::create_prover_witness_wire_with_option(generator, &debug_str);
 
             _self.t.c = vec![Some(pww)];
 
@@ -110,44 +110,12 @@ impl Gadget<FieldDivisionGadget> {
 
         CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
 
-        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-        //     let a_value = evaluator.get_wire_value(self.t.a.clone());
-        //     let b_value = evaluator.get_wire_value(self.t.b.clone());
-        //     let c_value = a_value
-        //         .mul(b_value.modinv(&CONFIGS.field_prime.clone()).unwrap())
-        //         .rem(&CONFIGS.field_prime);
-        //     evaluator.set_wire_value(self.t.c.clone(), c_value);
-        // });
-        // {
-        //     #[derive(Hash, Clone, Debug, ImplStructNameConfig)]
-        //     struct Prover {
-        //         a: WireType,
-        //         b: WireType,
-        //         c: WireType,
-        //     }
-        //     impl  Instruction for Prover {
-        //         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
-        //             let a_value = evaluator.get_wire_value(self.t.a.clone());
-        //             let b_value = evaluator.get_wire_value(self.t.b.clone());
-        //             let c_value = a_value
-        //                 .mul(b_value.modinv(&CONFIGS.field_prime.clone()).unwrap())
-        //                 .rem(&CONFIGS.field_prime);
-        //             evaluator.set_wire_value(self.t.c.clone(), c_value);
-        //         }
-        //     }
-        //     Box::new(Prover {
-        //         a: self.t.a.clone(),
-        //         b: self.t.b.clone(),
-        //         c: self.t.c.clone(),
-        //     })
-        // });
-
         let generator = self.generator.clone();
 
         let debug_str = self.debug_str("Assertion for division result");
 
         // to handle the case where a or b can be both zero, see below
-        CircuitGenerator::add_assertion(generator, b, c, a, &debug_str);
+        CircuitGenerator::add_assertion_with_option(generator, b, c, a, &debug_str);
 
         //Few notes: 1) The order of the above two statements matters (the
         //specification and the assertion). In the current version, it's not

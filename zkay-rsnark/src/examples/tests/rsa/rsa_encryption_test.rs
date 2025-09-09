@@ -56,19 +56,14 @@ mod test {
                 let mut input_message = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
                     plain_text_length,
-                    &None,
                 ); // in bytes
                 for i in 0..plain_text_length {
-                    input_message[i]
-                        .as_ref()
-                        .unwrap()
-                        .restrict_bit_length(8, &None);
+                    input_message[i].as_ref().unwrap().restrict_bit_length(8);
                 }
 
                 let mut rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let mut randomness = CircuitGenerator::create_prover_witness_wire_array(
                     self.cg(),
@@ -76,7 +71,6 @@ mod test {
                         self.t.rsa_key_length as i32,
                         plain_text_length as i32,
                     ) as usize,
-                    &None,
                 );
                 let mut rsa_encryption_v1_5_gadget = RSAEncryptionV1_5_Gadget::new(
                     rsa_modulus.clone(),
@@ -94,10 +88,10 @@ mod test {
                 // group every 8 bytes together
                 let mut cipher_text = WireArray::new(cipher_text_in_bytes, self.cg().downgrade())
                     .pack_words_into_larger_words(8, 8, &None);
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     &cipher_text,
-                    &Some("Output cipher text".to_owned()),
+                    "Output cipher text",
                 );
                 (
                     self.t.rsa_modulus,
@@ -121,7 +115,6 @@ mod test {
                         CGTest::plain_text[i] as i64,
                     );
                 }
-                // try {
                 // let cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),

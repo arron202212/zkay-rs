@@ -189,11 +189,9 @@ impl CircuitEvaluator {
             // assignment.put(wire_number, BigInteger::new(num));
         }
 
-        let prime = BigInteger::parse_bytes(
-            b"21888242871839275222246405745257275088548364400416034343698204186575808495617",
-            10,
-        )
-        .unwrap();
+        let prime = Util::parse_big_int(
+            "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+        );
 
         circuit_scanner.next();
         while let Some(Ok(mut line)) = circuit_scanner.next() {
@@ -297,9 +295,7 @@ impl CircuitEvaluator {
                 }
                 _ if line.starts_with("const-mul-neg-") => {
                     let constant_str = &line["const-mul-neg-".len()..line.find(" ").unwrap()];
-                    let constant = prime
-                        .clone()
-                        .sub(BigInteger::parse_bytes(constant_str.as_bytes(), 16).unwrap());
+                    let constant = prime.clone().sub(Util::parse_big_int_x(constant_str));
                     assignment[outs[0] as usize] = Some(
                         assignment[ins[0] as usize]
                             .clone()
@@ -310,7 +306,7 @@ impl CircuitEvaluator {
                 }
                 _ if line.starts_with("const-mul-") => {
                     let constant_str = &line["const-mul-".len()..line.find(" ").unwrap()];
-                    let constant = BigInteger::parse_bytes(constant_str.as_bytes(), 16).unwrap();
+                    let constant = Util::parse_big_int_x(constant_str);
                     assignment[outs[0] as usize] = Some(
                         assignment[ins[0] as usize]
                             .clone()

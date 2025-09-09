@@ -72,12 +72,10 @@ mod test {
                 let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let signature = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let rsa_sig_verification_v1_5_gadget = RSASigVerificationV1_5_Gadget::new(
                     rsa_modulus.clone(),
@@ -92,7 +90,6 @@ mod test {
                     rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
                 (
                     self.t.rsa_modulus,
@@ -134,7 +131,7 @@ mod test {
                 signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
                 signature_padded[0] = 0;
                 let modulus = BigInteger::from(1); //(keyPair.getPublic()).getModulus();
-                let sig = BigInteger::parse_bytes(&signature_padded, 10).unwrap();
+                let sig = Util::parse_big_int(&signature_padded);
 
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),
@@ -218,12 +215,10 @@ mod test {
                 let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let signature = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let rsa_sig_verification_v1_5_gadget = RSASigVerificationV1_5_Gadget::new(
                     rsa_modulus.clone(),
@@ -238,7 +233,6 @@ mod test {
                     &rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
                 (
                     self.t.rsa_modulus,
@@ -280,7 +274,7 @@ mod test {
                 signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
                 signature_padded[0] = 0;
                 let modulus = BigInteger::from(64); //(keyPair.getPublic()).getModulus();
-                let sig = BigInteger::parse_bytes(&signature_padded, 10).unwrap();
+                let sig = Util::parse_big_int(&signature_padded);
 
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),
@@ -366,12 +360,10 @@ mod test {
                 let rsa_modulus = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let signature = CircuitGenerator::create_long_element_input(
                     self.cg(),
                     self.t.rsa_key_length as i32,
-                    &None,
                 );
                 let rsa_sig_verification_v1_5_gadget = RSASigVerificationV1_5_Gadget::new(
                     rsa_modulus.clone(),
@@ -386,7 +378,6 @@ mod test {
                     rsa_sig_verification_v1_5_gadget.get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
-                    &None,
                 );
                 (
                     self.t.rsa_modulus,
@@ -428,7 +419,7 @@ mod test {
                 signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
                 signature_padded[0] = 0;
                 let modulus = BigInteger::from(1); //(keyPair.getPublic()).getModulus();
-                let sig = BigInteger::parse_bytes(&signature_padded, 10).unwrap();
+                let sig = Util::parse_big_int(&signature_padded);
 
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),

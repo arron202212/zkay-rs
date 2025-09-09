@@ -85,7 +85,7 @@ impl Gadget<SHA256Gadget<ZkaySHA256Gadget>> {
                 self.t.t._uint_output = vec![Some(
                     WireArray::new(digest, self.generator.clone().downgrade())
                         .get_bits(32, &None)
-                        .shift_right(256, 256 - truncated_length as usize, &None)
+                        .shift_right(256, 256 - truncated_length as usize)
                         .pack_as_bits(None, None, &Some(truncated_length.to_string())),
                 )];
                 return;

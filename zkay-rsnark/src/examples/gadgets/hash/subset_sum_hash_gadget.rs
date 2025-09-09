@@ -114,10 +114,7 @@ impl Gadget<SubsetSumHashGadget> {
 
         for i in 0..dimension {
             for j in 0..input_length {
-                let t = self.t.input_wires[j]
-                    .as_ref()
-                    .unwrap()
-                    .mulb(&coeffss[i][j], &None);
+                let t = self.t.input_wires[j].as_ref().unwrap().mulb(&coeffss[i][j]);
                 out_digest[i] = Some(out_digest[i].clone().unwrap().add(t));
             }
         }
@@ -129,7 +126,7 @@ impl Gadget<SubsetSumHashGadget> {
                 let bits = out_digest[i]
                     .as_ref()
                     .unwrap()
-                    .get_bit_wiresi(CONFIGS.log2_field_prime, &None)
+                    .get_bit_wiresi(CONFIGS.log2_field_prime)
                     .as_array()
                     .clone();
                 for j in 0..bits.len() {

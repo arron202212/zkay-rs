@@ -57,8 +57,7 @@ impl ZkayCBCSymmetricEncGadget {
         desc: &Option<String>,
         generator: RcCell<CircuitGenerator>,
     ) -> Gadget<Self> {
-        let plaintext_bits =
-            Util::reverse_bytes(plaintext.wire.get_bit_wiresi(256, &None).as_array());
+        let plaintext_bits = Util::reverse_bytes(plaintext.wire.get_bit_wiresi(256).as_array());
         println!("Plain length [bits]: {}", plaintext_bits.len());
 
         let mut _self = Gadget::<Self>::new(
@@ -66,12 +65,8 @@ impl ZkayCBCSymmetricEncGadget {
             desc,
             Self {
                 plaintext_bits,
-                key_bits: Util::reverse_bytes(
-                    key.get_bit_wiresi(Self::KEY_SIZE as u64, &None).as_array(),
-                ),
-                iv_bits: Util::reverse_bytes(
-                    iv.get_bit_wiresi(Self::BLOCK_SIZE as u64, &None).as_array(),
-                ),
+                key_bits: Util::reverse_bytes(key.get_bit_wiresi(Self::KEY_SIZE as u64).as_array()),
+                iv_bits: Util::reverse_bytes(iv.get_bit_wiresi(Self::BLOCK_SIZE as u64).as_array()),
                 cipher_type,
                 cipher_bits: vec![],
                 outputs: vec![],

@@ -21,17 +21,16 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct OrBasicOp;
 impl OrBasicOp {
-    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<OrBasicOp> {
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<Self> {
         use std::time::Instant;
         let _start = Instant::now();
-        let op = Op::<OrBasicOp> {
-            inputs: vec![Some(w1.clone()), Some(w2.clone())],
-            outputs: vec![Some(output.clone())],
+        Op::<Self>::new(
+            vec![Some(w1.clone()), Some(w2.clone())],
+            vec![Some(output.clone())],
             desc,
-            t: OrBasicOp,
-        };
-
-        op
+            Self,
+        )
+        .unwrap()
     }
 }
 crate::impl_instruction_for!(Op<OrBasicOp>);
@@ -42,7 +41,6 @@ impl BasicOp for Op<OrBasicOp> {
     }
 
     fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        // //super.check_inputs(assignment);
         self.super_check_inputs(assignment);
         let check = Util::is_binary(
             assignment[self.inputs[0].as_ref().unwrap().get_wire_id() as usize]

@@ -84,12 +84,10 @@ pub trait ZkayBabyJubJubGadgetConfig {
         let g_x = CircuitGenerator::create_constant_wire(
             self.generators(),
             &Util::parse_big_int(Self::GENERATOR_X),
-            &None,
         );
         let g_y = CircuitGenerator::create_constant_wire(
             self.generators(),
             &Util::parse_big_int(Self::GENERATOR_Y),
-            &None,
         );
         JubJubPoint::new(g_x, g_y)
     }
@@ -101,7 +99,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
         let prod = x_sqr.clone().mul(&y_sqr);
         let lhs = x_sqr.mul(&BigInteger::from(Self::COEFF_A)).add(y_sqr);
         let rhs = prod.mul(&Util::parse_big_int(Self::COEFF_D)).add(1);
-        CircuitGenerator::add_equality_assertion(self.generators(), &lhs, &rhs, &None);
+        CircuitGenerator::add_equality_assertion(self.generators(), &lhs, &rhs);
     }
 
     fn add_points(&self, p1: &JubJubPoint, p2: &JubJubPoint) -> JubJubPoint {
@@ -124,7 +122,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
                 .mul(&p2.x)
                 .mul(p1.y.clone().mul(&p2.y))
                 .mul(&Util::parse_big_int(Self::COEFF_D))
-                .negate(&None)
+                .negate()
                 .add(1);
 
         let x = a1.clone().mul(self.native_inverse(&a2));
@@ -133,7 +131,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
     }
 
     fn negate_point(p: &JubJubPoint) -> JubJubPoint {
-        let new_x = p.x.negate(&None);
+        let new_x = p.x.negate();
         JubJubPoint::new(new_x, p.y.clone())
     }
 
@@ -158,7 +156,7 @@ pub trait ZkayBabyJubJubGadgetConfig {
     //Returns a wire holding the inverse of a in the native base field.
 
     fn native_inverse(&self, a: &WireType) -> WireType {
-        let ainv = CircuitGenerator::create_prover_witness_wire(self.generators(), &None);
+        let ainv = CircuitGenerator::create_prover_witness_wire(self.generators());
 
         let base_order = Self::BASE_ORDER.to_owned();
         let prover = crate::impl_prover!(
@@ -184,7 +182,6 @@ pub trait ZkayBabyJubJubGadgetConfig {
             self.generators(),
             &test,
             self.generators().get_one_wire().as_ref().unwrap(),
-            &None,
         );
 
         ainv

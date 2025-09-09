@@ -142,7 +142,6 @@ impl Gadget<RSAEncryptionOAEPGadget> {
                 db[i] = Some(CircuitGenerator::create_constant_wirei(
                     self.generator.clone(),
                     (Self::lSHA256_HASH[i] as i64 + 256) % 256,
-                    &None,
                 ));
             } else if i < h_len + padding_string.len() {
                 db[i] = padding_string[i - h_len].clone();
@@ -156,21 +155,23 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         let db_mask = self.mgf1(&self.t.seed, (key_len - h_len - 1) as i32);
         let mut masked_db = vec![None; key_len - h_len - 1];
         for i in 0..key_len - h_len - 1 {
-            masked_db[i] = Some(db_mask[i].as_ref().unwrap().xor_bitwises(
-                db[i].as_ref().unwrap(),
-                8,
-                &None,
-            ));
+            masked_db[i] = Some(
+                db_mask[i]
+                    .as_ref()
+                    .unwrap()
+                    .xor_bitwises(db[i].as_ref().unwrap(), 8),
+            );
         }
 
         let seeded_mask = self.mgf1(&masked_db, h_len as i32);
         let mut masked_seed = vec![None; h_len];
         for i in 0..h_len {
-            masked_seed[i] = Some(seeded_mask[i].as_ref().unwrap().xor_bitwises(
-                self.t.seed[i].as_ref().unwrap(),
-                8,
-                &None,
-            ));
+            masked_seed[i] = Some(
+                seeded_mask[i]
+                    .as_ref()
+                    .unwrap()
+                    .xor_bitwises(self.t.seed[i].as_ref().unwrap(), 8),
+            );
         }
 
         let padded_byte_array = Util::concat(&masked_seed, &masked_db); // Big-Endian
@@ -229,10 +230,7 @@ impl Gadget<RSAEncryptionOAEPGadget> {
         for i in 0..self.t.seed.len() {
             // Verify that the seed wires are bytes
             // This is also checked already by the sha256 gadget in the mgf1 calls, but added here for clarity
-            self.t.seed[i]
-                .as_ref()
-                .unwrap()
-                .restrict_bit_length(8, &None);
+            self.t.seed[i].as_ref().unwrap().restrict_bit_length(8);
         }
     }
 

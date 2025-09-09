@@ -80,7 +80,6 @@ impl AES128CipherGadget {
     const nk: usize = 4;
     const nr: usize = 6 + AES128CipherGadget::nk;
 
-    //
     //@param inputs
     //           : array of 16 bytes (each wire represents a byte)
     //@param expanded_key
@@ -200,34 +199,34 @@ impl Gadget<AES128CipherGadget> {
             state[0][c] = Some(
                 self.galois_mul_const(a[0].as_ref().unwrap(), 2)
                     .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 3), &None)
-                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
-                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
+                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8), &None)
+                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8), &None)
                     .pack_as_bits(None, None, &None),
             );
 
             state[1][c] = Some(
                 a[0].as_ref()
                     .unwrap()
-                    .get_bit_wiresi(8, &None)
+                    .get_bit_wiresi(8)
                     .xor_wire_arrayi(&self.galois_mul_const(a[1].as_ref().unwrap(), 2), &None)
                     .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 3), &None)
-                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
+                    .xor_wire_arrayi(&a[3].as_ref().unwrap().get_bit_wiresi(8), &None)
                     .pack_as_bits(None, None, &None),
             );
 
             state[2][c] = Some(
                 a[0].as_ref()
                     .unwrap()
-                    .get_bit_wiresi(8, &None)
-                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
+                    .get_bit_wiresi(8)
+                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8), &None)
                     .xor_wire_arrayi(&self.galois_mul_const(a[2].as_ref().unwrap(), 2), &None)
                     .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 3), &None)
                     .pack_as_bits(None, None, &None),
             );
             state[3][c] = Some(
                 self.galois_mul_const(a[0].as_ref().unwrap(), 3)
-                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
-                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8, &None), &None)
+                    .xor_wire_arrayi(&a[1].as_ref().unwrap().get_bit_wiresi(8), &None)
+                    .xor_wire_arrayi(&a[2].as_ref().unwrap().get_bit_wiresi(8), &None)
                     .xor_wire_arrayi(&self.galois_mul_const(a[3].as_ref().unwrap(), 2), &None)
                     .pack_as_bits(None, None, &None),
             );
@@ -241,20 +240,19 @@ impl Gadget<AES128CipherGadget> {
         let mut wire = wire.clone();
         for counter in 0..8 {
             if (i & 1) != 0 {
-                p = p.xor_bitwises(&wire, 8, &None);
+                p = p.xor_bitwises(&wire, 8);
             }
             i >>= 1;
             if i == 0 {}
-            hi_bit_set = wire.get_bit_wiresi(8, &None)[7].clone().unwrap();
-            wire = wire.shift_left(8, 1, &None);
+            hi_bit_set = wire.get_bit_wiresi(8)[7].clone().unwrap();
+            wire = wire.shift_left(8, 1);
             let tmp = wire.xor_bitwises(
-                &CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x1b, &None),
+                &CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x1b),
                 8,
-                &None,
             );
             wire = wire.clone().add(hi_bit_set.clone().mul(tmp.sub(&wire)));
         }
-        p.get_bit_wiresi(8, &None)
+        p.get_bit_wiresi(8)
     }
 
     fn shift_rows(&self, state: Vec<Vec<Option<WireType>>>) -> Vec<Vec<Option<WireType>>> {
@@ -281,7 +279,6 @@ impl Gadget<AES128CipherGadget> {
                 new_state[i][j] = Some(state[i][j].as_ref().unwrap().xor_bitwises(
                     self.t.expanded_key[from as usize + idx].as_ref().unwrap(),
                     8,
-                    &None,
                 ));
                 idx += 1;
             }
@@ -311,10 +308,8 @@ impl Gadget<AES128CipherGadget> {
                     &CircuitGenerator::create_constant_wirei(
                         generator.clone(),
                         Self::RCON[i / AES128CipherGadget::nk] as i64,
-                        &None,
                     ),
                     8,
-                    &None,
                 ));
             } else if AES128CipherGadget::nk > 6 && (i % AES128CipherGadget::nk) == 4 {
                 temp = Self::sub_word(temp, generator);
@@ -325,7 +320,7 @@ impl Gadget<AES128CipherGadget> {
                     w[i - AES128CipherGadget::nk][v]
                         .as_ref()
                         .unwrap()
-                        .xor_bitwises(temp[v].as_ref().unwrap(), 8, &None),
+                        .xor_bitwises(temp[v].as_ref().unwrap(), 8),
                 );
             }
 

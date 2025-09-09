@@ -80,7 +80,7 @@ impl AESSBoxComputeGadget {
 }
 impl Gadget<AESSBoxComputeGadget> {
     fn build_circuit(&mut self) {
-        let inverse = CircuitGenerator::create_prover_witness_wire(self.generator.clone(), &None);
+        let inverse = CircuitGenerator::create_prover_witness_wire(self.generator.clone());
         let input = &self.t.input;
         let prover = crate::impl_prover!(
                                                 eval(  input: WireType,
@@ -124,19 +124,7 @@ impl Gadget<AESSBoxComputeGadget> {
                                         );
         CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
 
-        // &{
-        //     struct Prover;
-        //     impl Instruction for Prover {
-        //         &|evaluator: &mut CircuitEvaluator| {
-        //             let p = evaluator.get_wire_value(input).intValue();
-        //             let q = find_inv(p);
-        //             evaluator.set_wire_value(inverse, q);
-        //         }
-        //     }
-        //     Prover
-        // });
-
-        inverse.restrict_bit_length(8, &None);
+        inverse.restrict_bit_length(8);
 
         let v = Self::gmul(
             self.t.input.clone(),
@@ -148,31 +136,30 @@ impl Gadget<AESSBoxComputeGadget> {
             &v.sub(self.generator.get_one_wire().as_ref().unwrap()),
             &self.t.input.clone().add(&inverse),
             self.generator.get_zero_wire().as_ref().unwrap(),
-            &None,
         );
-        let constant = CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x63, &None);
-        let mut output = constant.xor_bitwises(&inverse, 8, &None);
-        output = output.xor_bitwises(&inverse.rotate_left(8, 1, &None), 8, &None);
-        output = output.xor_bitwises(&inverse.rotate_left(8, 2, &None), 8, &None);
-        output = output.xor_bitwises(&inverse.rotate_left(8, 3, &None), 8, &None);
-        output = output.xor_bitwises(&inverse.rotate_left(8, 4, &None), 8, &None);
+        let constant = CircuitGenerator::create_constant_wirei(self.generator.clone(), 0x63);
+        let mut output = constant.xor_bitwises(&inverse, 8);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 1), 8);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 2), 8);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 3), 8);
+        output = output.xor_bitwises(&inverse.rotate_left(8, 4), 8);
         (self.t.output, self.t.inverse) = (vec![Some(output)], Some(inverse));
     }
 
     fn gmul(mut a: WireType, mut b: WireType, generator: RcCell<CircuitGenerator>) -> WireType {
         let mut p = generator.get_zero_wire().unwrap();
-        let ccw = CircuitGenerator::create_constant_wirei(generator.clone(), 0x1b, &None);
+        let ccw = CircuitGenerator::create_constant_wirei(generator.clone(), 0x1b);
         for counter in 0..8 {
-            let tmp = p.xor_bitwises(&a, 8, &None);
-            let bit = b.get_bit_wiresi(8, &None).get(0).clone().unwrap();
+            let tmp = p.xor_bitwises(&a, 8);
+            let bit = b.get_bit_wiresi(8).get(0).clone().unwrap();
             p = p.clone().add(bit.mul(tmp.sub(&p)));
 
-            let bit2 = a.get_bit_wiresi(8, &None).get(7).clone().unwrap();
-            a = a.shift_left(8, 1, &None);
+            let bit2 = a.get_bit_wiresi(8).get(7).clone().unwrap();
+            a = a.shift_left(8, 1);
 
-            let tmp2 = a.xor_bitwises(&ccw, 8, &None);
+            let tmp2 = a.xor_bitwises(&ccw, 8);
             a = a.clone().add(bit2.mul(tmp2.sub(&a)));
-            b = b.shift_right(8, 1, &None);
+            b = b.shift_right(8, 1);
         }
         p
     }

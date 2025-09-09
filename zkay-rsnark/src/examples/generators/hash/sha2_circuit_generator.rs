@@ -75,7 +75,7 @@ impl CGConfig for CircuitGeneratorExtend<SHA2CircuitGenerator> {
             Base,
         );
         let digest = sha2_gadget.get_output_wires();
-        CircuitGenerator::make_output_array(self.cg(), digest, &Some("digest".to_owned()));
+        CircuitGenerator::make_output_array_with_str(self.cg(), digest, "digest");
 
         // ======================================================================
         // To see how padding can be done, and see how the gadget library will save constraints automatically,

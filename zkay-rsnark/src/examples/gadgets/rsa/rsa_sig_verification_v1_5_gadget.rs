@@ -159,27 +159,27 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
             s_bytes[length_in_bytes - 1]
                 .as_ref()
                 .unwrap()
-                .is_equal_toi(0, &None),
+                .is_equal_toi(0),
         );
         sum_checks = sum_checks.add(
             s_bytes[length_in_bytes - 2]
                 .as_ref()
                 .unwrap()
-                .is_equal_toi(1, &None),
+                .is_equal_toi(1),
         );
         for i in 3..length_in_bytes - Self::SHA256_DIGEST_LENGTH - Self::SHA256_IDENTIFIER.len() {
             sum_checks = sum_checks.add(
                 s_bytes[length_in_bytes - i]
                     .as_ref()
                     .unwrap()
-                    .is_equal_toi(0xff, &None),
+                    .is_equal_toi(0xff),
             );
         }
         sum_checks = sum_checks.add(
             s_bytes[Self::SHA256_DIGEST_LENGTH + Self::SHA256_IDENTIFIER.len()]
                 .as_ref()
                 .unwrap()
-                .is_equal_toi(0, &None),
+                .is_equal_toi(0),
         );
 
         for i in 0..Self::SHA256_IDENTIFIER.len() {
@@ -187,7 +187,7 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
                 s_bytes[Self::SHA256_IDENTIFIER.len() + Self::SHA256_DIGEST_LENGTH - 1 - i]
                     .as_ref()
                     .unwrap()
-                    .is_equal_toi((Self::SHA256_IDENTIFIER[i] as i64 + 256) % 256, &None),
+                    .is_equal_toi((Self::SHA256_IDENTIFIER[i] as i64 + 256) % 256),
             );
         }
         for i in (0..=Self::SHA256_DIGEST_LENGTH - 1).rev() {
@@ -195,12 +195,11 @@ impl Gadget<RSASigVerificationV1_5_Gadget> {
                 s_bytes[Self::SHA256_DIGEST_LENGTH - 1 - i]
                     .as_ref()
                     .unwrap()
-                    .is_equal_tos(msg_hash_bytes[i].as_ref().unwrap(), &None),
+                    .is_equal_tos(msg_hash_bytes[i].as_ref().unwrap()),
             );
         }
 
-        self.t.is_valid_signature =
-            vec![Some(sum_checks.is_equal_toi(length_in_bytes as i64, &None))];
+        self.t.is_valid_signature = vec![Some(sum_checks.is_equal_toi(length_in_bytes as i64))];
     }
 }
 impl GadgetConfig for Gadget<RSASigVerificationV1_5_Gadget> {

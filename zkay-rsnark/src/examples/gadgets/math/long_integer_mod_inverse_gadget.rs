@@ -93,7 +93,6 @@ impl Gadget<LongIntegerModInverseGadget> {
         let inverse_wires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
             self.t.m.get_size(),
-            &None,
         );
         let inverse = LongElement::new(
             inverse_wires.clone(),
@@ -103,7 +102,6 @@ impl Gadget<LongIntegerModInverseGadget> {
         let quotient_wires = CircuitGenerator::create_prover_witness_wire_array(
             self.generator.clone(),
             self.t.m.get_size(),
-            &None,
         );
         let quotient = LongElement::new(
             quotient_wires.clone(),

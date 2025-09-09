@@ -89,7 +89,7 @@ mod test {
                     AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
@@ -171,7 +171,7 @@ mod test {
                     AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
@@ -253,7 +253,7 @@ mod test {
                     AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
@@ -332,7 +332,7 @@ mod test {
                     AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 
@@ -414,7 +414,7 @@ mod test {
                     AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 

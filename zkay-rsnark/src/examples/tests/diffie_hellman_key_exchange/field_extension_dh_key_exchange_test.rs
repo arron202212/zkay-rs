@@ -69,7 +69,6 @@ mod test {
                     Some(CircuitGenerator::create_constant_wire(
                         self.cg(),
                         &Util::parse_big_int(s),
-                        &None,
                     ))
                 };
                 // Hardcode the base and the other party's key (suitable when keys are not expected to change)
@@ -104,16 +103,16 @@ mod test {
                 );
 
                 let g_to_s = field_extension_dh_key_exchange.get_output_public_value();
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     g_to_s,
-                    &Some("DH Key Exchange Output".to_owned()),
+                    "DH Key Exchange Output",
                 );
                 let h_to_s = field_extension_dh_key_exchange.get_shared_secret();
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     h_to_s,
-                    &Some("Derived Secret Key".to_owned()),
+                    "Derived Secret Key",
                 );
                 self.t.exponent_bits = exponent_bits;
             }
@@ -186,16 +185,16 @@ mod test {
                 );
 
                 let g_to_s = field_extension_dh_key_exchange.get_output_public_value();
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     g_to_s,
-                    &Some("DH Key Exchange Output".to_owned()),
+                    "DH Key Exchange Output",
                 );
                 let h_to_s = field_extension_dh_key_exchange.get_shared_secret();
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     h_to_s,
-                    &Some("Derived Secret Key".to_owned()),
+                    "Derived Secret Key",
                 );
                 (self.t.exponent_bits, self.t.g, self.t.h) = (exponent_bits, g, h);
             }
@@ -300,16 +299,16 @@ mod test {
                 field_extension_dh_key_exchange.validate_inputs(Util::parse_big_int("566003748421165623973140684210338877916630960782201693595769129706864925719318115473892932098619423042929922932476493069"));
 
                 let g_to_s = field_extension_dh_key_exchange.get_output_public_value();
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     g_to_s,
-                    &Some("DH Key Exchange Output".to_owned()),
+                    "DH Key Exchange Output",
                 );
                 let h_to_s = field_extension_dh_key_exchange.get_shared_secret();
-                CircuitGenerator::make_output_array(
+                CircuitGenerator::make_output_array_with_str(
                     self.cg(),
                     h_to_s,
-                    &Some("Derived Secret Key".to_owned()),
+                    "Derived Secret Key",
                 );
                 (self.t.exponent_bits, self.t.g, self.t.h) = (exponent_bits, g, h);
             }

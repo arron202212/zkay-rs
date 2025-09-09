@@ -117,7 +117,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
         let mut out_digest = vec![None; 8];
         let mut h_wires = vec![None; Self::H.len()];
         for i in 0..Self::H.len() {
-            h_wires[i] = Some(generator.create_constant_wire(Self::H[i], &None));
+            h_wires[i] = Some(generator.create_constant_wire(Self::H[i]));
         }
 
         for block_num in 0..self.t.num_blocks {
@@ -137,23 +137,23 @@ impl<T> Gadget<SHA256Gadget<T>> {
                             .pack_as_bits(None, Some(32), &None),
                     );
                 } else {
-                    let t1 = w[i - 15].as_ref().unwrap().rotate_right(32, 7, &None);
-                    let t2 = w[i - 15].as_ref().unwrap().rotate_right(32, 18, &None);
-                    let t3 = w[i - 15].as_ref().unwrap().shift_right(32, 3, &None);
-                    let mut s0 = t1.xor_bitwises(&t2, 32, &None);
-                    s0 = s0.xor_bitwises(&t3, 32, &None);
+                    let t1 = w[i - 15].as_ref().unwrap().rotate_right(32, 7);
+                    let t2 = w[i - 15].as_ref().unwrap().rotate_right(32, 18);
+                    let t3 = w[i - 15].as_ref().unwrap().shift_right(32, 3);
+                    let mut s0 = t1.xor_bitwises(&t2, 32);
+                    s0 = s0.xor_bitwises(&t3, 32);
 
-                    let t4 = w[i - 2].as_ref().unwrap().rotate_right(32, 17, &None);
-                    let t5 = w[i - 2].as_ref().unwrap().rotate_right(32, 19, &None);
-                    let t6 = w[i - 2].as_ref().unwrap().shift_right(32, 10, &None);
-                    let mut s1 = t4.xor_bitwises(&t5, 32, &None);
-                    s1 = s1.xor_bitwises(&t6, 32, &None);
+                    let t4 = w[i - 2].as_ref().unwrap().rotate_right(32, 17);
+                    let t5 = w[i - 2].as_ref().unwrap().rotate_right(32, 19);
+                    let t6 = w[i - 2].as_ref().unwrap().shift_right(32, 10);
+                    let mut s1 = t4.xor_bitwises(&t5, 32);
+                    s1 = s1.xor_bitwises(&t6, 32);
 
                     w[i] = w[i - 16]
                         .as_ref()
                         .map(|x| x.clone().add(w[i - 7].as_ref().unwrap()));
                     w[i] = w[i].as_ref().map(|x| x.clone().add(s0).add(s1));
-                    w[i] = w[i].as_ref().map(|x| x.clone().trim_bits(34, 32, &None));
+                    w[i] = w[i].as_ref().map(|x| x.clone().trim_bits(34, 32));
                 }
             }
 
@@ -167,19 +167,19 @@ impl<T> Gadget<SHA256Gadget<T>> {
             let mut h = h_wires[7].clone().unwrap();
 
             for i in 0..64 {
-                let t1 = e.rotate_right(32, 6, &None);
-                let t2 = e.rotate_right(32, 11, &None);
-                let t3 = e.rotate_right(32, 25, &None);
-                let mut s1 = t1.xor_bitwises(&t2, 32, &None);
-                s1 = s1.xor_bitwises(&t3, 32, &None);
+                let t1 = e.rotate_right(32, 6);
+                let t2 = e.rotate_right(32, 11);
+                let t3 = e.rotate_right(32, 25);
+                let mut s1 = t1.xor_bitwises(&t2, 32);
+                s1 = s1.xor_bitwises(&t3, 32);
 
                 let ch = self.compute_ch(&e, &f, &g, 32);
 
-                let t4 = a.rotate_right(32, 2, &None);
-                let t5 = a.rotate_right(32, 13, &None);
-                let t6 = a.rotate_right(32, 22, &None);
-                let mut s0 = t4.xor_bitwises(&t5, 32, &None);
-                s0 = s0.xor_bitwises(&t6, 32, &None);
+                let t4 = a.rotate_right(32, 2);
+                let t5 = a.rotate_right(32, 13);
+                let t6 = a.rotate_right(32, 22);
+                let mut s0 = t4.xor_bitwises(&t5, 32);
+                s0 = s0.xor_bitwises(&t6, 32);
 
                 // since after each iteration, SHA256 does c = b; and b = a;, we can make use of that to save multiplications in maj computation.
                 // To do this, we make use of the caching feature, by just changing the order of wires sent to maj(). Caching will take care of the rest.
@@ -203,39 +203,39 @@ impl<T> Gadget<SHA256Gadget<T>> {
                 g = f;
                 f = e;
                 e = temp1.clone().add(d);
-                e = e.trim_bits(35, 32, &None);
+                e = e.trim_bits(35, 32);
 
                 d = c;
                 c = b;
                 b = a;
                 a = temp2.add(temp1);
-                a = a.trim_bits(35, 32, &None);
+                a = a.trim_bits(35, 32);
             }
 
             h_wires[0] = h_wires[0]
                 .clone()
-                .map(|x| x.add(a.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(a.clone()).trim_bits(33, 32));
             h_wires[1] = h_wires[1]
                 .clone()
-                .map(|x| x.add(b.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(b.clone()).trim_bits(33, 32));
             h_wires[2] = h_wires[2]
                 .clone()
-                .map(|x| x.add(c.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(c.clone()).trim_bits(33, 32));
             h_wires[3] = h_wires[3]
                 .clone()
-                .map(|x| x.add(d.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(d.clone()).trim_bits(33, 32));
             h_wires[4] = h_wires[4]
                 .clone()
-                .map(|x| x.add(e.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(e.clone()).trim_bits(33, 32));
             h_wires[5] = h_wires[5]
                 .clone()
-                .map(|x| x.add(f.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(f.clone()).trim_bits(33, 32));
             h_wires[6] = h_wires[6]
                 .clone()
-                .map(|x| x.add(g.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(g.clone()).trim_bits(33, 32));
             h_wires[7] = h_wires[7]
                 .clone()
-                .map(|x| x.add(h.clone()).trim_bits(33, 32, &None));
+                .map(|x| x.add(h.clone()).trim_bits(33, 32));
         }
 
         out_digest[0] = h_wires[0].clone();
@@ -253,7 +253,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
         }
         self.t.output = vec![None; 8 * 32];
         for i in 0..8 {
-            let bits = out_digest[i].as_ref().unwrap().get_bit_wiresi(32, &None);
+            let bits = out_digest[i].as_ref().unwrap().get_bit_wiresi(32);
             let bits = bits.as_array();
             for j in 0..32 {
                 self.t.output[j + i * 32] = bits[j].clone();
@@ -264,9 +264,9 @@ impl<T> Gadget<SHA256Gadget<T>> {
     fn compute_maj(&self, a: &WireType, b: &WireType, c: &WireType, num_bits: usize) -> WireType {
         let mut result = vec![None; num_bits];
         let (a_bits, b_bits, c_bits) = (
-            a.get_bit_wiresi(num_bits as u64, &None),
-            b.get_bit_wiresi(num_bits as u64, &None),
-            c.get_bit_wiresi(num_bits as u64, &None),
+            a.get_bit_wiresi(num_bits as u64),
+            b.get_bit_wiresi(num_bits as u64),
+            c.get_bit_wiresi(num_bits as u64),
         );
         let (a_bits, b_bits, c_bits) = (a_bits.as_array(), b_bits.as_array(), c_bits.as_array());
 
@@ -276,7 +276,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
                 .clone()
                 .unwrap()
                 .add(b_bits[i].clone().unwrap())
-                .add(t1.muli(-2, &None));
+                .add(t1.muli(-2));
             result[i] = Some(t1.add(c_bits[i].clone().unwrap().mul(t2)));
         }
         WireArray::new(result, self.generator.clone().downgrade()).pack_as_bits(None, None, &None)
@@ -286,9 +286,9 @@ impl<T> Gadget<SHA256Gadget<T>> {
         let mut result = vec![None; num_bits];
 
         let (a_bits, b_bits, c_bits) = (
-            a.get_bit_wiresi(num_bits as u64, &None),
-            b.get_bit_wiresi(num_bits as u64, &None),
-            c.get_bit_wiresi(num_bits as u64, &None),
+            a.get_bit_wiresi(num_bits as u64),
+            b.get_bit_wiresi(num_bits as u64),
+            c.get_bit_wiresi(num_bits as u64),
         );
         let (a_bits, b_bits, c_bits) = (a_bits.as_array(), b_bits.as_array(), c_bits.as_array());
 
@@ -319,7 +319,7 @@ impl<T> Gadget<SHA256Gadget<T>> {
                 pad = vec![None; 128 - tail_length];
             }
             self.t.num_blocks = (self.t.total_length_in_bytes + pad.len()) / 64;
-            pad[0] = Some(generator.create_constant_wire(0x80, &None));
+            pad[0] = Some(generator.create_constant_wire(0x80));
             for i in 1..pad.len() - 8 {
                 pad[i] = generator.get_zero_wire();
             }
@@ -328,10 +328,9 @@ impl<T> Gadget<SHA256Gadget<T>> {
             let pn = pad.len();
             for i in 0..8 {
                 pad[pn - 1 - i] = Some(
-                    generator
-                        .create_constant_wire(((length_in_bits >> (8 * i)) & 0xFF) as i64, &None),
+                    generator.create_constant_wire(((length_in_bits >> (8 * i)) & 0xFF) as i64),
                 );
-                let tmp = pad[pn - 1 - i].as_ref().unwrap().get_bit_wiresi(8, &None);
+                let tmp = pad[pn - 1 - i].as_ref().unwrap().get_bit_wiresi(8);
                 let tmp = tmp.as_array();
                 length_bits[(7 - i) * 8..(7 - i + 1) * 8].clone_from_slice(&tmp);
             }

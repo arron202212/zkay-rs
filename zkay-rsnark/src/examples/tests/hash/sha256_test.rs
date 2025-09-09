@@ -58,7 +58,7 @@ mod test {
                 )
                 .get_output_wires()
                 .clone();
-                CircuitGenerator::make_output_array(self.cg(), &digest, &None);
+                CircuitGenerator::make_output_array(self.cg(), &digest);
                 self.t.input_wires = input_wires;
             }
 
@@ -113,7 +113,7 @@ mod test {
                 )
                 .get_output_wires()
                 .clone();
-                CircuitGenerator::make_output_array(self.cg(), &digest, &None);
+                CircuitGenerator::make_output_array(self.cg(), &digest);
                 self.t.input_wires = input_wires;
             }
 
@@ -174,7 +174,7 @@ mod test {
                 )
                 .get_output_wires()
                 .clone();
-                CircuitGenerator::make_output_array(self.cg(), &digest, &None);
+                CircuitGenerator::make_output_array(self.cg(), &digest);
                 self.t.input_wires = input_wires;
             }
 
@@ -232,7 +232,7 @@ mod test {
                 )
                 .get_output_wires()
                 .clone();
-                CircuitGenerator::make_output_array(self.cg(), &digest, &None);
+                CircuitGenerator::make_output_array(self.cg(), &digest);
                 self.t.input_wires = input_wires;
             }
 
@@ -301,7 +301,7 @@ mod test {
                 )
                 .get_output_wires()
                 .clone();
-                CircuitGenerator::make_output_array(self.cg(), &digest, &None);
+                CircuitGenerator::make_output_array(self.cg(), &digest);
                 self.t.input_wires = input_wires;
             }
 

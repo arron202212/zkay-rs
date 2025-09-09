@@ -41,10 +41,10 @@ impl ZkayDummyEncryptionGadget {
             .unwrap()
             .pack_bits_into_words(256, &None);
         for i in 1..pkarr.len() {
-            CircuitGenerator::add_zero_assertion(
+            CircuitGenerator::add_zero_assertion_with_str(
                 generator.clone(),
                 pkarr[i].as_ref().unwrap(),
-                &Some("Dummy enc pk valid".to_owned()),
+                "Dummy enc pk valid",
             );
         }
 
@@ -67,10 +67,7 @@ impl ZkayDummyEncryptionGadget {
 }
 impl Gadget<ZkayDummyEncryptionGadget> {
     fn build_circuit(&mut self) {
-        let res = self
-            .t
-            .plain
-            .addw(&self.t.pk, &Some("plain + pk".to_owned()));
+        let res = self.t.plain.addw_with_str(&self.t.pk, "plain + pk");
         self.t.cipher.fill(Some(res));
     }
 }

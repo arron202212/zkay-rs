@@ -102,7 +102,7 @@ impl WireArray {
         for i in 0..out.len() {
             out[i] = ws1[i]
                 .as_ref()
-                .map(|x| x.clone().mulw(ws2[i].as_ref().unwrap(), desc));
+                .map(|x| x.clone().mulw_with_option(ws2[i].as_ref().unwrap(), desc));
         }
         WireArray::new(out, self.generator.clone())
     }
@@ -138,7 +138,6 @@ impl WireArray {
                 &output,
                 desc.clone().unwrap_or(String::new()),
             );
-            //			generator.add_to_evaluation_queue(Box::new(op));
 
             let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
             if let Some(cached_outputs) = cached_outputs {
@@ -148,7 +147,7 @@ impl WireArray {
                 output
             }
         } else {
-            generator.create_constant_wire(&sum, desc)
+            generator.create_constant_wire_with_option(&sum, desc)
         }
     }
 
@@ -167,7 +166,7 @@ impl WireArray {
         for i in 0..out.len() {
             out[i] = ws1[i]
                 .as_ref()
-                .map(|x| x.clone().addw(ws2[i].as_ref().unwrap(), desc));
+                .map(|x| x.clone().addw_with_option(ws2[i].as_ref().unwrap(), desc));
         }
         WireArray::new(out, self.generator.clone())
     }
@@ -222,7 +221,10 @@ impl WireArray {
                 self.adjust_length(Some(&v.array), desired_length)
                     .as_array(),
             )
-            .map(|(w1, w2)| w1.as_ref().map(|w1v| w1v.mulw(w2.as_ref().unwrap(), desc)))
+            .map(|(w1, w2)| {
+                w1.as_ref()
+                    .map(|w1v| w1v.mulw_with_option(w2.as_ref().unwrap(), desc))
+            })
             .collect();
 
         let v = WireArray::new(out, self.generator.clone());
@@ -243,7 +245,10 @@ impl WireArray {
                 self.adjust_length(Some(&v.array), desired_length)
                     .as_array(),
             )
-            .map(|(x, y)| x.as_ref().map(|x| x.orw(y.as_ref().unwrap(), desc)))
+            .map(|(x, y)| {
+                x.as_ref()
+                    .map(|x| x.orw_with_option(y.as_ref().unwrap(), desc))
+            })
             .collect();
 
         WireArray::new(out, self.generator.clone())
@@ -256,7 +261,7 @@ impl WireArray {
         for i in 0..desired_bit_width {
             out[i] = self.array.get(i).map_or_else(
                 || generator.get_one_wire(),
-                |v| v.as_ref().and_then(|x| x.inv_as_bit(desc)),
+                |v| v.as_ref().and_then(|x| x.inv_as_bit_with_option(desc)),
             );
         }
         WireArray::new(out, self.generator.clone())
@@ -276,28 +281,6 @@ impl WireArray {
 
         WireArray::new(new_ws, self.generator.clone())
     }
-
-    // pub fn adjustLengthi(&self, desired_length: usize) ->Self{
-    //     if self.array.len() == desired_length {
-    //         self.clone()
-    //     }
-    //     let mut new_ws = vec![None; desired_length];
-    //     new_ws[..std::cmp::min(self.array.len(), desired_length)].clone_from_slice(&self.array);
-    //     if self.array.len() < desired_length {
-    //         for i in self.array.len()..desired_length {
-    //             new_ws[i] = generator.get_zero_wire();
-    //         }
-    //     }
-    //     WireArray::new(new_ws,self.generator.clone())
-    // }
-
-    // pub fn packAsBitsi(&self, n: usize, desc: &Option<String>) -> WireType{
-    //     self.packAsBitsii(0, n, desc)
-    // }
-
-    // pub fn pack_as_bits(None,None,&self, desc: &Option<String>) -> WireType{
-    //     self.packAsBitsi(self.array.len(), desc)
-    // }
 
     pub fn check_if_constant_bits(&self, desc: &Option<String>) -> Option<BigInteger> {
         let mut all_constant = true;
@@ -388,7 +371,7 @@ impl WireArray {
                 out
             }
         } else {
-            generator.create_constant_wire(&sum, desc)
+            generator.create_constant_wire_with_option(&sum, desc)
         }
     }
 
@@ -421,8 +404,16 @@ impl WireArray {
         shifted_bits[s..num_bits].clone_from_slice(&bits[..num_bits - s]);
         WireArray::new(shifted_bits, self.generator.clone())
     }
-
-    pub fn shift_right(&self, num_bits: usize, s: usize, desc: &Option<String>) -> Self {
+    #[inline]
+    pub fn shift_right(&self, num_bits: usize, s: usize) -> Self {
+        self.shift_right_with_option(num_bits, s, &None)
+    }
+    pub fn shift_right_with_option(
+        &self,
+        num_bits: usize,
+        s: usize,
+        desc: &Option<String>,
+    ) -> Self {
         let mut generator = self.generator();
         let bits = self.adjust_length(Some(&self.array), num_bits);
         let bits = bits.as_array();
@@ -466,18 +457,16 @@ impl WireArray {
         let mut result = vec![generator.get_zero_wire(); num_larger_words];
         for i in 0..self.array.len() {
             let subIndex = i % num_words_per_larger_word as usize;
-            result[i / num_words_per_larger_word as usize] = result
-                [i / num_words_per_larger_word as usize]
-                .as_ref()
-                .map(|x| {
-                    x.clone().addw(
-                        &self.array[i].clone().unwrap().mulb(
-                            &BigInteger::from(2).pow(subIndex as u32 * word_bitwidth as u32),
-                            &None,
-                        ),
-                        &None,
-                    )
-                });
+            result[i / num_words_per_larger_word as usize] =
+                result[i / num_words_per_larger_word as usize]
+                    .as_ref()
+                    .map(|x| {
+                        x.clone().addw(
+                            &self.array[i].clone().unwrap().mulb(
+                                &BigInteger::from(2).pow(subIndex as u32 * word_bitwidth as u32),
+                            ),
+                        )
+                    });
         }
         result
     }
@@ -489,7 +478,7 @@ impl WireArray {
             let tmp = self.array[i]
                 .as_ref()
                 .unwrap()
-                .get_bit_wiresi(bitwidth as u64, desc);
+                .get_bit_wiresi_with_option(bitwidth as u64, desc);
             let tmp = tmp.as_array();
             for j in 0..bitwidth {
                 bits[idx] = tmp[j].clone();

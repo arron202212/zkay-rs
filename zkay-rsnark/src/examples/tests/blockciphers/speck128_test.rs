@@ -46,34 +46,26 @@ mod test {
                     Speck128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
                         .get_output_wires()
                         .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key) = (plaintext, key);
             }
 
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 evaluator.set_wire_value(
                     self.t.key[0].as_ref().unwrap(),
-                    BigInteger::parse_bytes(b"0706050403020100", 16)
-                        .as_ref()
-                        .unwrap(),
+                    Util::parse_big_int_x("0706050403020100"),
                 );
                 evaluator.set_wire_value(
                     self.t.key[1].as_ref().unwrap(),
-                    BigInteger::parse_bytes(b"0f0e0d0c0b0a0908", 16)
-                        .as_ref()
-                        .unwrap(),
+                    Util::parse_big_int_x("0f0e0d0c0b0a0908"),
                 );
                 evaluator.set_wire_value(
                     self.t.plaintext[0].as_ref().unwrap(),
-                    BigInteger::parse_bytes(b"7469206564616d20", 16)
-                        .as_ref()
-                        .unwrap(),
+                    Util::parse_big_int_x("7469206564616d20"),
                 );
                 evaluator.set_wire_value(
                     self.t.plaintext[1].as_ref().unwrap(),
-                    BigInteger::parse_bytes(b"6c61766975716520", 16)
-                        .as_ref()
-                        .unwrap(),
+                    Util::parse_big_int_x("6c61766975716520"),
                 );
             }
         };
@@ -88,11 +80,11 @@ mod test {
         let cipher_text = generator.get_out_wires();
         assert_eq!(
             evaluator.get_wire_value(cipher_text[0].as_ref().unwrap()),
-            BigInteger::parse_bytes(b"7860fedf5c570d18", 16).unwrap(),
+            Util::parse_big_int_x("7860fedf5c570d18"),
         );
         assert_eq!(
             evaluator.get_wire_value(cipher_text[1].as_ref().unwrap()),
-            BigInteger::parse_bytes(b"a65d985179783265", 16).unwrap(),
+            Util::parse_big_int_x("a65d985179783265"),
         );
     }
 }

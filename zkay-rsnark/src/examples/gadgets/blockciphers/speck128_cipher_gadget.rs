@@ -76,10 +76,10 @@ impl Gadget<Speck128CipherGadget> {
         );
 
         for i in 0..=31 {
-            x = x.rotate_right(64, 8, &None).add(&y);
-            x = x.trim_bits(65, 64, &None);
-            x = x.xor_bitwises(self.t.expanded_key[i].as_ref().unwrap(), 64, &None);
-            y = y.rotate_left(64, 3, &None).xor_bitwises(&x, 64, &None);
+            x = x.rotate_right(64, 8).add(&y);
+            x = x.trim_bits(65, 64);
+            x = x.xor_bitwises(self.t.expanded_key[i].as_ref().unwrap(), 64);
+            y = y.rotate_left(64, 3).xor_bitwises(&x, 64);
         }
         self.t.ciphertext = vec![Some(y), Some(x)];
     }
@@ -101,19 +101,18 @@ impl Gadget<Speck128CipherGadget> {
             l[i + 1] = Some(
                 k[i].clone()
                     .unwrap()
-                    .add(l[i].as_ref().unwrap().rotate_left(64, 56, &None)),
+                    .add(l[i].as_ref().unwrap().rotate_left(64, 56)),
             );
-            l[i + 1] = Some(l[i + 1].as_ref().unwrap().trim_bits(65, 64, &None));
+            l[i + 1] = Some(l[i + 1].as_ref().unwrap().trim_bits(65, 64));
             l[i + 1] = Some(l[i + 1].as_ref().unwrap().xor_bitwises(
-                &CircuitGenerator::create_constant_wirei(generator.clone(), i as i64, &None),
+                &CircuitGenerator::create_constant_wirei(generator.clone(), i as i64),
                 64,
-                &None,
             ));
             k[i + 1] = Some(
                 k[i].as_ref()
                     .unwrap()
-                    .rotate_left(64, 3, &None)
-                    .xor_bitwises(l[i + 1].as_ref().unwrap(), 64, &None),
+                    .rotate_left(64, 3)
+                    .xor_bitwises(l[i + 1].as_ref().unwrap(), 64),
             );
         }
         k

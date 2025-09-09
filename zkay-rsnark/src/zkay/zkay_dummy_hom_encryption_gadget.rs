@@ -63,12 +63,7 @@ impl ZkayDummyHomEncryptionGadget {
 
 impl Gadget<ZkayDummyHomEncryptionGadget> {
     fn build_circuit(&mut self) {
-        self.t.cipher[0] = Some(
-            self.t
-                .plain
-                .mulw(&self.t.pk, &Some("plain * pk".to_owned()))
-                .add(1),
-        );
+        self.t.cipher[0] = Some(self.t.plain.mulw_with_str(&self.t.pk, "plain * pk").add(1));
     }
 }
 

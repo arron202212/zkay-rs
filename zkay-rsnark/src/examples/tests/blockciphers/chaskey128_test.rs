@@ -49,7 +49,7 @@ mod test {
                 )
                 .get_output_wires()
                 .clone();
-                CircuitGenerator::make_output_array(self.cg(), &ciphertext, &None);
+                CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
 

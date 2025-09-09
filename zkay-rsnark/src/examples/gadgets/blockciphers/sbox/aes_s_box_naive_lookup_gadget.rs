@@ -79,8 +79,8 @@ impl Gadget<AESSBoxNaiveLookupGadget> {
             output = output.add(
                 self.t
                     .input
-                    .is_equal_toi(i, &None)
-                    .muli(Self::SBOX[i as usize] as i64, &None),
+                    .is_equal_toi(i)
+                    .muli(Self::SBOX[i as usize] as i64),
             );
         }
         self.t.output = vec![Some(output)];

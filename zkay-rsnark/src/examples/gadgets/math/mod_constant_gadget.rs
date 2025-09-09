@@ -95,23 +95,15 @@ impl ModConstantGadget {
 }
 impl Gadget<ModConstantGadget> {
     fn build_circuit(&mut self) {
-        let r = CircuitGenerator::create_prover_witness_wire(
+        let r = CircuitGenerator::create_prover_witness_wire_with_str(
             self.generator.clone(),
-            &Some("mod result".to_owned()),
+            "mod result",
         );
-        let q = CircuitGenerator::create_prover_witness_wire(
+        let q = CircuitGenerator::create_prover_witness_wire_with_str(
             self.generator.clone(),
-            &Some("division result".to_owned()),
+            "division result",
         );
         let (a, b) = (&self.t.a, &self.t.b);
-        // notes about how to use this code block can be found in FieldDivisionGadget
-        // CircuitGenerator::specify_prover_witness_computation(generator.clone(),  &|evaluator: &mut CircuitEvaluator| {
-        //             let a_value = evaluator.get_wire_value(a);
-        //             let r_value = a_value.rem(b);
-        //             evaluator.set_wire_value(r, &r_value);
-        //             let q_value = a_value.divide(b);
-        //             evaluator.set_wire_value(q, &q_value);
-        //         });
 
         let prover = crate::impl_prover!(
                                             eval(  a: WireType,
@@ -133,36 +125,17 @@ impl Gadget<ModConstantGadget> {
                                         }
                                     );
         CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
-        // {
-        //     struct Prover;
-        //     impl Instruction for Prover {
-        //         &|evaluator: &mut CircuitEvaluator| {
-        //             let a_value = evaluator.get_wire_value(a);
-        //             let r_value = a_value.rem(b);
-        //             evaluator.set_wire_value(r, r_value);
-        //             let q_value = a_value.divide(b);
-        //             evaluator.set_wire_value(q, q_value);
-        //         }
-        //     }
-        //     Prover
-        // });
 
         let b_bitwidth = b.bits();
-        r.restrict_bit_length(b_bitwidth, &None);
-        q.restrict_bit_length(self.t.bitwidth as u64 - b_bitwidth + 1, &None);
+        r.restrict_bit_length(b_bitwidth);
+        q.restrict_bit_length(self.t.bitwidth as u64 - b_bitwidth + 1);
 
         CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &r.is_less_thanb(&b, b_bitwidth as i32, &None),
-            &None,
+            &r.is_less_thanb(&b, b_bitwidth as i32),
         );
 
-        CircuitGenerator::add_equality_assertion(
-            self.generator.clone(),
-            &q.mulb(&b, &None).add(&r),
-            &a,
-            &None,
-        );
+        CircuitGenerator::add_equality_assertion(self.generator.clone(), &q.mulb(&b).add(&r), &a);
         (self.t.r, self.t.q) = (vec![Some(r)], q);
     }
 }

@@ -78,14 +78,12 @@ impl CryptoBackendConfig for CryptoBackend<Asymmetric<DummyHomBackend>> {
 impl CryptoBackend<Asymmetric<DummyHomBackend>> {
     fn get_key_wire(&self, key_name: &String, generator: RcCell<CircuitGenerator>) -> WireType {
         let key = self.get_key(key_name, generator.clone());
-        // let mut generator = self.generators();
-
         let key_arr = key.get_bits().unwrap().pack_bits_into_words(256, &None);
         for i in 1..key_arr.len() {
-            CircuitGenerator::add_zero_assertion(
+            CircuitGenerator::add_zero_assertion_with_str(
                 generator.clone(),
                 key_arr[i].as_ref().unwrap(),
-                &Some("Dummy-hom enc pk valid".to_owned()),
+                "Dummy-hom enc pk valid",
             );
         }
         key_arr[0].clone().unwrap()
@@ -98,7 +96,7 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
 
         // Transform input 0 to ciphertext 0 (= encryption of 0); serialized inputs x+1 to ciphertext x
         let cipher_wire = input.get_cipher()[0].wire.clone();
-        let is_non_zero = cipher_wire.check_non_zero(&None);
+        let is_non_zero = cipher_wire.check_non_zero();
         cipher_wire.sub(is_non_zero)
     }
 
@@ -106,10 +104,10 @@ impl CryptoBackend<Asymmetric<DummyHomBackend>> {
         if plain.zkay_type.signed {
             // Signed: wrap negative values around the field prime instead of around 2^n
             let bits = plain.zkay_type.bitwidth as u64;
-            let sign_bit = plain.wire.get_bit_wiresi(bits, &None)[bits as usize - 1]
+            let sign_bit = plain.wire.get_bit_wiresi(bits)[bits as usize - 1]
                 .clone()
                 .unwrap();
-            let neg_value = plain.wire.inv_bits(bits, &None).add(1).negate(&None);
+            let neg_value = plain.wire.inv_bits(bits).add(1).negate();
             sign_bit.mux(&neg_value, &plain.wire)
         } else {
             // Unsigned values get encoded as-is
@@ -141,7 +139,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<DummyHomBackend>> {
         assert!(op == '-', "Unary operation {op} not supported");
 
         // -Enc(msg, p) = -(msg * p) = (-msg) * p = Enc(-msg, p)
-        let minus = cipher.negate(&None);
+        let minus = cipher.negate();
         self.typed_as_uint(&minus, &format!("-({})", arg.get_name()))
     }
 

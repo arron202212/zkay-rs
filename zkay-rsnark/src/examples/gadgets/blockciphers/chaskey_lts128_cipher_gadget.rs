@@ -82,41 +82,32 @@ impl Gadget<ChaskeyLTS128CipherGadget> {
     fn build_circuit(&mut self) {
         let mut v: Vec<_> = (0..4)
             .map(|i| {
-                self.t.plaintext[i].as_ref().unwrap().xor_bitwises(
-                    self.t.key[i].as_ref().unwrap(),
-                    32,
-                    &None,
-                )
+                self.t.plaintext[i]
+                    .as_ref()
+                    .unwrap()
+                    .xor_bitwises(self.t.key[i].as_ref().unwrap(), 32)
             })
             .collect();
 
         for i in 0..16 {
             v[0] = v[0].clone().add(&v[1]);
-            v[0] = v[0].trim_bits(33, 32, &None);
-            v[1] = v[1]
-                .rotate_left(32, 5, &None)
-                .xor_bitwises(&v[0], 32, &None);
-            v[0] = v[0].rotate_left(32, 16, &None);
+            v[0] = v[0].trim_bits(33, 32);
+            v[1] = v[1].rotate_left(32, 5).xor_bitwises(&v[0], 32);
+            v[0] = v[0].rotate_left(32, 16);
 
-            v[2] = v[2].clone().add(&v[3]).trim_bits(33, 32, &None);
-            v[3] = v[3]
-                .rotate_left(32, 8, &None)
-                .xor_bitwises(&v[2], 32, &None);
+            v[2] = v[2].clone().add(&v[3]).trim_bits(33, 32);
+            v[3] = v[3].rotate_left(32, 8).xor_bitwises(&v[2], 32);
 
-            v[0] = v[0].clone().add(&v[3]).trim_bits(33, 32, &None);
-            v[3] = v[3]
-                .rotate_left(32, 13, &None)
-                .xor_bitwises(&v[0], 32, &None);
+            v[0] = v[0].clone().add(&v[3]).trim_bits(33, 32);
+            v[3] = v[3].rotate_left(32, 13).xor_bitwises(&v[0], 32);
 
-            v[2] = v[2].clone().add(&v[1]).trim_bits(33, 32, &None);
-            v[1] = v[1]
-                .rotate_left(32, 7, &None)
-                .xor_bitwises(&v[2], 32, &None);
-            v[2] = v[2].rotate_left(32, 16, &None);
+            v[2] = v[2].clone().add(&v[1]).trim_bits(33, 32);
+            v[1] = v[1].rotate_left(32, 7).xor_bitwises(&v[2], 32);
+            v[2] = v[2].rotate_left(32, 16);
         }
 
         for i in 0..4 {
-            v[i] = v[i].xor_bitwises(self.t.key[i].as_ref().unwrap(), 32, &None);
+            v[i] = v[i].xor_bitwises(self.t.key[i].as_ref().unwrap(), 32);
         }
         self.t.ciphertext = v.into_iter().map(|x| Some(x)).collect();
     }

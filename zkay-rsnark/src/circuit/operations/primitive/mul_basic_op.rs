@@ -23,13 +23,14 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct MulBasicOp;
 impl MulBasicOp {
-    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<MulBasicOp> {
-        Op::<MulBasicOp> {
-            inputs: vec![Some(w1.clone()), Some(w2.clone())],
-            outputs: vec![Some(output.clone())],
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<Self> {
+        Op::<Self>::new(
+            vec![Some(w1.clone()), Some(w2.clone())],
+            vec![Some(output.clone())],
             desc,
-            t: MulBasicOp,
-        }
+            Self,
+        )
+        .unwrap()
     }
 }
 crate::impl_instruction_for!(Op<MulBasicOp>);

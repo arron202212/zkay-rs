@@ -182,27 +182,24 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierEncCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let plain_wire = CircuitGenerator::create_long_element_input(
+            let plain_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.plain.bits().max(1) as i32,
-                &Some("plain".to_owned()),
+                "plain",
             );
-            let random_wire = CircuitGenerator::create_long_element_input(
+            let random_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.random.bits().max(1) as i32,
-                &Some("random".to_owned()),
+                "random",
             );
             let n_bits = self.t.n.bits().max(1);
-            let n_wire = CircuitGenerator::create_long_element_input(
-                self.cg(),
-                n_bits as i32,
-                &Some("n".to_owned()),
-            );
+            let n_wire =
+                CircuitGenerator::create_long_element_input_with_str(self.cg(), n_bits as i32, "n");
 
-            let generator_wire = CircuitGenerator::create_long_element_input(
+            let generator_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.generator.bits().max(1) as i32,
-                &Some("generator".to_owned()),
+                "generator",
             );
             let enc = ZkayPaillierEncGadget::new(
                 n_wire.clone(),
@@ -213,10 +210,10 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 enc.get_output_wires(),
-                &Some("cipher".to_owned()),
+                "cipher",
             );
             (
                 self.t.n_wire,
@@ -306,26 +303,23 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<PaillierDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<PaillierDecCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let cipher_wire = CircuitGenerator::create_long_element_input(
+            let cipher_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.cipher.bits().max(1) as i32,
-                &Some("cipher".to_owned()),
+                "cipher",
             );
             let n_bits = self.t.n.bits().max(1);
-            let n_wire = CircuitGenerator::create_long_element_input(
-                self.cg(),
-                n_bits as i32,
-                &Some("n".to_owned()),
-            );
-            let lambda_wire = CircuitGenerator::create_long_element_input(
+            let n_wire =
+                CircuitGenerator::create_long_element_input_with_str(self.cg(), n_bits as i32, "n");
+            let lambda_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.lambda.bits().max(1) as i32,
-                &Some("lambda".to_owned()),
+                "lambda",
             );
-            let mu_wire = CircuitGenerator::create_long_element_input(
+            let mu_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.mu.bits().max(1) as i32,
-                &Some("mu".to_owned()),
+                "mu",
             );
             let dec = ZkayPaillierDecGadget::new(
                 n_wire.clone(),
@@ -336,10 +330,10 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 dec.get_output_wires(),
-                &Some("plain".to_owned()),
+                "plain",
             );
             (
                 self.t.cipher_wire,
@@ -425,20 +419,17 @@ mod test {
     impl CGConfig for CircuitGeneratorExtend<PaillierFastEncCircuitGenerator> {
         fn build_circuit(&mut self) {
             let n_bits = self.t.n.bits().max(1);
-            let n_wire = CircuitGenerator::create_long_element_input(
-                self.cg(),
-                n_bits as i32,
-                &Some("n".to_owned()),
-            );
-            let plain_wire = CircuitGenerator::create_long_element_input(
+            let n_wire =
+                CircuitGenerator::create_long_element_input_with_str(self.cg(), n_bits as i32, "n");
+            let plain_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.plain.bits().max(1) as i32,
-                &Some("plain".to_owned()),
+                "plain",
             );
-            let random_wire = CircuitGenerator::create_long_element_input(
+            let random_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.random.bits().max(1) as i32,
-                &Some("random".to_owned()),
+                "random",
             );
             let enc = ZkayPaillierFastEncGadget::new(
                 n_wire.clone(),
@@ -448,10 +439,10 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 enc.get_output_wires(),
-                &Some("cipher".to_owned()),
+                "cipher",
             );
             (self.t.n_wire, self.t.plain_wire, self.t.random_wire) =
                 (Some(n_wire), Some(plain_wire), Some(random_wire));
@@ -523,20 +514,17 @@ mod test {
     impl CGConfig for CircuitGeneratorExtend<PaillierFastDecCircuitGenerator> {
         fn build_circuit(&mut self) {
             let n_bits = self.t.n.bits().max(1);
-            let n_wire = CircuitGenerator::create_long_element_input(
-                self.cg(),
-                n_bits as i32,
-                &Some("n".to_owned()),
-            );
-            let lambda_wire = CircuitGenerator::create_long_element_input(
+            let n_wire =
+                CircuitGenerator::create_long_element_input_with_str(self.cg(), n_bits as i32, "n");
+            let lambda_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.lambda.bits().max(1) as i32,
-                &Some("lambda".to_owned()),
+                "lambda",
             );
-            let cipher_wire = CircuitGenerator::create_long_element_input(
+            let cipher_wire = CircuitGenerator::create_long_element_input_with_str(
                 self.cg(),
                 self.t.cipher.bits().max(1) as i32,
-                &Some("cipher".to_owned()),
+                "cipher",
             );
             let dec = ZkayPaillierFastDecGadget::new(
                 n_wire.clone(),
@@ -546,10 +534,10 @@ mod test {
                 &None,
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 dec.get_output_wires(),
-                &Some("plain".to_owned()),
+                "plain",
             );
             (self.t.n_wire, self.t.lambda_wire, self.t.cipher_wire) =
                 (Some(n_wire), Some(lambda_wire), Some(cipher_wire));

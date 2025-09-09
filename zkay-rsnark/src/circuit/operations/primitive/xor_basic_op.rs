@@ -21,17 +21,14 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct XorBasicOp;
 impl XorBasicOp {
-    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<XorBasicOp> {
-        // if w1.get_wire_id()==147444 ||  w2.get_wire_id()==147444
-        // {
-        //     panic!("===XorBasicOp::new====w1.as_ref().unwrap().get_wire_id()========================{}",w1.get_wire_id());
-        // }
-        Op::<XorBasicOp> {
-            inputs: vec![Some(w1.clone()), Some(w2.clone())],
-            outputs: vec![Some(output.clone())],
+    pub fn new(w1: &WireType, w2: &WireType, output: &WireType, desc: String) -> Op<Self> {
+        Op::<Self>::new(
+            vec![Some(w1.clone()), Some(w2.clone())],
+            vec![Some(output.clone())],
             desc,
-            t: XorBasicOp,
-        }
+            Self,
+        )
+        .unwrap()
     }
 }
 crate::impl_instruction_for!(Op<XorBasicOp>);

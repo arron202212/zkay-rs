@@ -65,44 +65,12 @@ pub enum WireType {
     Constant(Wire<ConstantWire>),
     Bit(Wire<BitWire>),
 }
-// impl  Default for WireType{
-//     fn default() -> Self {
-//         Self::Wire(Wire::<Base>::new(-1, Base).unwrap())
-//     }
-// }
-impl WireType {
-    // pub fn instance_of(&self, name: &str) -> bool {
-    //     self.name() == name
-    // }
-    // fn name(&self) -> &str {
-    //     ""
-    // }
 
-    // pub fn get_constant(&self) -> BigInteger {
-    //     BigInteger::ZERO
-    // }
-    // pub fn is_binary(&self) -> bool {
-    //     false
-    // }
-    // pub fn inv_as_bit(&self, desc: &Option<String>) -> Option<WireType> {
-    //     None
-    // }
-    // pub fn get_bit_wires_if_exist_already(&self) -> Option<WireArray> {
-    //     self.get_bit_wires()
-    // }
-    // pub fn pack_if_needed(&self, desc: &Option<String>) {
-    //     // if self.wire_id == -1 {
-    //     //     self.pack();
-    //     // }
-    // }
-}
-// impl SetBitsConfig for WireType{}
-// impl WireConfig for WireType{}
 impl MulWire<&BigInteger> for WireType {
-    fn mul_wire(&self, b: &BigInteger, desc: &Option<String>) -> Self {
+    fn mul_wire_with_option(&self, b: &BigInteger, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
-        self.pack_if_needed(desc);
+        self.pack_if_needed_with_option(desc);
         if b == &Util::one() {
             return self.self_clone().unwrap();
         }
@@ -121,7 +89,6 @@ impl MulWire<&BigInteger> for WireType {
             b,
             desc.clone().unwrap_or(String::new()),
         );
-        //		generator.add_to_evaluation_queue(Box::new(op));
 
         let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
         if let Some(cached_outputs) = cached_outputs {
@@ -133,26 +100,26 @@ impl MulWire<&BigInteger> for WireType {
     }
 }
 impl MulWire<i64> for WireType {
-    fn mul_wire(&self, l: i64, desc: &Option<String>) -> Self {
-        self.mulb(&BigInteger::from(l), desc)
+    fn mul_wire_with_option(&self, l: i64, desc: &Option<String>) -> Self {
+        self.mulb_with_option(&BigInteger::from(l), desc)
     }
 }
 impl MulWire<(i64, i32)> for WireType {
-    fn mul_wire(&self, (base, exp): (i64, i32), desc: &Option<String>) -> Self {
+    fn mul_wire_with_option(&self, (base, exp): (i64, i32), desc: &Option<String>) -> Self {
         let mut b = BigInteger::from(base);
         b = b.pow(exp as u32);
-        self.mulb(&b, desc)
+        self.mulb_with_option(&b, desc)
     }
 }
 impl MulWire<&WireType> for WireType {
-    fn mul_wire(&self, w: &Self, desc: &Option<String>) -> Self {
+    fn mul_wire_with_option(&self, w: &Self, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
         if w.instance_of("ConstantWire") {
-            return self.mulb(&w.try_as_constant_ref().unwrap().get_constant(), desc);
+            return self.mulb_with_option(&w.try_as_constant_ref().unwrap().get_constant(), desc);
         }
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
         let output = WireType::Variable(VariableWire::new(
             generator.get_current_wire_id(),
             generator.clone().downgrade(),
@@ -176,9 +143,9 @@ impl MulWire<&WireType> for WireType {
 }
 
 impl AddWire<&WireType> for WireType {
-    fn add_wire(&self, w: &Self, desc: &Option<String>) -> Self {
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
+    fn add_wire_with_option(&self, w: &Self, desc: &Option<String>) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
         WireArray::new(
             vec![Some(self.self_clone().unwrap()), Some(w.clone())],
             self.generator().clone().downgrade(),
@@ -187,52 +154,58 @@ impl AddWire<&WireType> for WireType {
     }
 }
 impl AddWire<i64> for WireType {
-    fn add_wire(&self, v: i64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.addw(&generator.create_constant_wire(v, desc), desc)
+    fn add_wire_with_option(&self, v: i64, desc: &Option<String>) -> Self {
+        self.addw_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            desc,
+        )
     }
 }
 impl AddWire<&BigInteger> for WireType {
-    fn add_wire(&self, b: &BigInteger, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.addw(&generator.create_constant_wire(b, desc), desc)
+    fn add_wire_with_option(&self, b: &BigInteger, desc: &Option<String>) -> Self {
+        self.addw_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            desc,
+        )
     }
 }
 impl SubWire<&WireType> for WireType {
-    fn sub_wire(&self, w: &Self, desc: &Option<String>) -> Self {
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
-        let neg = w.muli(-1, desc);
-        self.addw(&neg, desc)
+    fn sub_wire_with_option(&self, w: &Self, desc: &Option<String>) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
+        let neg = w.muli_with_option(-1, desc);
+        self.addw_with_option(&neg, desc)
     }
 }
 impl SubWire<i64> for WireType {
-    fn sub_wire(&self, v: i64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.subw(&generator.create_constant_wire(v as i64, desc), desc)
+    fn sub_wire_with_option(&self, v: i64, desc: &Option<String>) -> Self {
+        self.subw(
+            &self
+                .generator()
+                .create_constant_wire_with_option(v as i64, desc),
+            desc,
+        )
     }
 }
 impl SubWire<&BigInteger> for WireType {
-    fn sub_wire(&self, b: &BigInteger, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.subw(&generator.create_constant_wire(b, desc), desc)
+    fn sub_wire_with_option(&self, b: &BigInteger, desc: &Option<String>) -> Self {
+        self.subw(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            desc,
+        )
     }
 }
 
 impl XorBitwise<&WireType> for WireType {
-    fn xor_bitwise(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
+    fn xor_bitwise_with_option(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
-        let bits1 = self.get_bit_wiresi(num_bits as u64, desc);
-        let bits2 = w.get_bit_wiresi(num_bits as u64, desc);
+        let bits1 = self.get_bit_wiresi_with_option(num_bits as u64, desc);
+        let bits2 = w.get_bit_wiresi_with_option(num_bits as u64, desc);
         let result = bits1.xor_wire_array(&bits2, num_bits as usize, desc);
         let v = result.check_if_constant_bits(desc);
         if let Some(v) = v {
-            generator.create_constant_wire(&v, &None)
+            generator.create_constant_wire(&v)
         } else {
             WireType::LinearCombination(LinearCombination_wire::new(
                 -1,
@@ -244,31 +217,40 @@ impl XorBitwise<&WireType> for WireType {
 }
 
 impl XorBitwise<i64> for WireType {
-    fn xor_bitwise(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.xor_bitwises(&generator.create_constant_wire(v, desc), num_bits, desc)
+    fn xor_bitwise_with_option(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
+        self.xor_bitwises_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            num_bits,
+            desc,
+        )
     }
 }
 
 impl XorBitwise<&BigInteger> for WireType {
-    fn xor_bitwise(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.xor_bitwises(&generator.create_constant_wire(b, desc), num_bits, desc)
+    fn xor_bitwise_with_option(
+        &self,
+        b: &BigInteger,
+        num_bits: u64,
+        desc: &Option<String>,
+    ) -> Self {
+        self.xor_bitwises_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            num_bits,
+            desc,
+        )
     }
 }
 
 impl AndBitwise<&WireType> for WireType {
-    fn and_bitwise(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
+    fn and_bitwise_with_option(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
-        let bits1 = self.get_bit_wiresi(num_bits as u64, desc);
-        let bits2 = w.get_bit_wiresi(num_bits as u64, desc);
+        let bits1 = self.get_bit_wiresi_with_option(num_bits as u64, desc);
+        let bits2 = w.get_bit_wiresi_with_option(num_bits as u64, desc);
         let result = bits1.and_wire_array(&bits2, num_bits as usize, desc);
         let v = result.check_if_constant_bits(desc);
         if let Some(v) = v {
-            generator.create_constant_wire(&v, &None)
+            generator.create_constant_wire(&v)
         } else {
             WireType::LinearCombination(LinearCombination_wire::new(
                 -1,
@@ -280,31 +262,40 @@ impl AndBitwise<&WireType> for WireType {
 }
 
 impl AndBitwise<i64> for WireType {
-    fn and_bitwise(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.and_bitwise(&generator.create_constant_wire(v, desc), num_bits, desc)
+    fn and_bitwise_with_option(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
+        self.and_bitwise_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            num_bits,
+            desc,
+        )
     }
 }
 
 impl AndBitwise<&BigInteger> for WireType {
-    fn and_bitwise(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.and_bitwise(&generator.create_constant_wire(b, desc), num_bits, desc)
+    fn and_bitwise_with_option(
+        &self,
+        b: &BigInteger,
+        num_bits: u64,
+        desc: &Option<String>,
+    ) -> Self {
+        self.and_bitwise_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            num_bits,
+            desc,
+        )
     }
 }
 
 impl OrBitwise<&WireType> for WireType {
-    fn or_bitwise(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
+    fn or_bitwise_with_option(&self, w: &Self, num_bits: u64, desc: &Option<String>) -> Self {
         let mut generator = self.generator();
 
-        let bits1 = self.get_bit_wiresi(num_bits as u64, desc);
-        let bits2 = w.get_bit_wiresi(num_bits as u64, desc);
+        let bits1 = self.get_bit_wiresi_with_option(num_bits as u64, desc);
+        let bits2 = w.get_bit_wiresi_with_option(num_bits as u64, desc);
         let result = bits1.or_wire_array(bits2, num_bits as usize, desc);
         let v = result.check_if_constant_bits(desc);
         if let Some(v) = v {
-            generator.create_constant_wire(&v, &None)
+            generator.create_constant_wire(&v)
         } else {
             WireType::LinearCombination(LinearCombination_wire::new(
                 -1,
@@ -315,160 +306,213 @@ impl OrBitwise<&WireType> for WireType {
     }
 }
 impl OrBitwise<i64> for WireType {
-    fn or_bitwise(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.or_bitwises(&generator.create_constant_wire(v, desc), num_bits, desc)
+    fn or_bitwise_with_option(&self, v: i64, num_bits: u64, desc: &Option<String>) -> Self {
+        self.or_bitwises_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            num_bits,
+            desc,
+        )
     }
 }
 impl OrBitwise<&BigInteger> for WireType {
-    fn or_bitwise(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.or_bitwises(&generator.create_constant_wire(b, desc), num_bits, desc)
+    fn or_bitwise_with_option(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> Self {
+        self.or_bitwises_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            num_bits,
+            desc,
+        )
     }
 }
 impl IsEqualTo<&WireType> for WireType {
-    fn is_equal_to(&self, w: &Self, desc: &Option<String>) -> Self {
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
+    fn is_equal_to_with_option(&self, w: &Self, desc: &Option<String>) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
         let s = self.subw(w, desc);
-        s.check_non_zero(desc).inv_as_bit(desc).unwrap()
+        s.check_non_zero_with_option(desc)
+            .inv_as_bit_with_option(desc)
+            .unwrap()
     }
 }
 impl IsEqualTo<&BigInteger> for WireType {
-    fn is_equal_to(&self, b: &BigInteger, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_equal_tos(&generator.create_constant_wire(b, desc), &None)
+    fn is_equal_to_with_option(&self, b: &BigInteger, desc: &Option<String>) -> Self {
+        self.is_equal_tos(&self.generator().create_constant_wire_with_option(b, desc))
     }
 }
 impl IsEqualTo<i64> for WireType {
-    fn is_equal_to(&self, v: i64, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_equal_tos(&generator.create_constant_wire(v, desc), &None)
+    fn is_equal_to_with_option(&self, v: i64, desc: &Option<String>) -> Self {
+        self.is_equal_tos(&self.generator().create_constant_wire_with_option(v, desc))
     }
 }
 impl IsLessThanOrEqual<&WireType> for WireType {
-    fn is_less_than_or_equal(&self, w: &Self, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
+    fn is_less_than_or_equal_with_option(
+        &self,
+        w: &Self,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
         let p = BigInteger::from(2u8).pow(bitwidth as u32);
-        let pWire = generator.create_constant_wire(&p, desc);
-        let sum = pWire.addw(w, desc).subw(&self.self_clone().unwrap(), desc);
-        let bit_wires = sum.get_bit_wiresi(bitwidth as u64 + 1, desc);
+        let pWire = self.generator().create_constant_wire_with_option(&p, desc);
+        let sum = pWire
+            .addw_with_option(w, desc)
+            .subw(&self.self_clone().unwrap(), desc);
+        let bit_wires = sum.get_bit_wiresi_with_option(bitwidth as u64 + 1, desc);
         bit_wires[bitwidth as usize].clone().unwrap()
     }
 }
 impl IsLessThanOrEqual<i64> for WireType {
-    fn is_less_than_or_equal(&self, v: i64, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_less_than_or_equals(&generator.create_constant_wire(v, desc), bitwidth, desc)
+    fn is_less_than_or_equal_with_option(
+        &self,
+        v: i64,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.is_less_than_or_equals_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            bitwidth,
+            desc,
+        )
     }
 }
 impl IsLessThanOrEqual<&BigInteger> for WireType {
-    fn is_less_than_or_equal(&self, b: &BigInteger, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_less_than_or_equals(&generator.create_constant_wire(b, desc), bitwidth, desc)
-    }
-}
-impl IsLessThan<&WireType> for WireType {
-    fn is_less_than(&self, w: &Self, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
-        let p = BigInteger::from(2u8).pow(bitwidth as u32);
-        let pWire = generator.create_constant_wire(&p, desc);
-        let sum = pWire.addw(&self.self_clone().unwrap(), desc).subw(w, desc);
-        let bit_wires = sum.get_bit_wiresi(bitwidth as u64 + 1, desc);
-        bit_wires[bitwidth as usize]
-            .as_ref()
-            .unwrap()
-            .inv_as_bit(desc)
-            .unwrap()
-    }
-}
-impl IsLessThan<i64> for WireType {
-    fn is_less_than(&self, v: i64, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_less_thans(&generator.create_constant_wire(v, desc), bitwidth, desc)
-    }
-}
-impl IsLessThan<&BigInteger> for WireType {
-    fn is_less_than(&self, b: &BigInteger, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_less_thans(&generator.create_constant_wire(b, desc), bitwidth, desc)
-    }
-}
-impl IsGreaterThanOrEqual<&WireType> for WireType {
-    fn is_greater_than_or_equal(&self, w: &Self, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
-        let p = BigInteger::from(2u8).pow(bitwidth as u32);
-        let pWire = generator.create_constant_wire(&p, desc);
-        let sum = pWire.addw(&self.self_clone().unwrap(), desc).subw(w, desc);
-        let bit_wires = sum.get_bit_wiresi(bitwidth as u64 + 1, desc);
-        bit_wires[bitwidth as usize].clone().unwrap()
-    }
-}
-impl IsGreaterThanOrEqual<i64> for WireType {
-    fn is_greater_than_or_equal(&self, v: i64, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_greater_than_or_equals(&generator.create_constant_wire(v, desc), bitwidth, desc)
-    }
-}
-impl IsGreaterThanOrEqual<&BigInteger> for WireType {
-    fn is_greater_than_or_equal(
+    fn is_less_than_or_equal_with_option(
         &self,
         b: &BigInteger,
         bitwidth: i32,
         desc: &Option<String>,
     ) -> Self {
-        let mut generator = self.generator();
-
-        self.is_greater_than_or_equals(&generator.create_constant_wire(b, desc), bitwidth, desc)
+        self.is_less_than_or_equals_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            bitwidth,
+            desc,
+        )
+    }
+}
+impl IsLessThan<&WireType> for WireType {
+    fn is_less_than_with_option(&self, w: &Self, bitwidth: i32, desc: &Option<String>) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
+        let p = BigInteger::from(2u8).pow(bitwidth as u32);
+        let pWire = self.generator().create_constant_wire_with_option(&p, desc);
+        let sum = pWire
+            .addw_with_option(&self.self_clone().unwrap(), desc)
+            .subw(w, desc);
+        let bit_wires = sum.get_bit_wiresi_with_option(bitwidth as u64 + 1, desc);
+        bit_wires[bitwidth as usize]
+            .as_ref()
+            .unwrap()
+            .inv_as_bit_with_option(desc)
+            .unwrap()
+    }
+}
+impl IsLessThan<i64> for WireType {
+    fn is_less_than_with_option(&self, v: i64, bitwidth: i32, desc: &Option<String>) -> Self {
+        self.is_less_thans_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            bitwidth,
+            desc,
+        )
+    }
+}
+impl IsLessThan<&BigInteger> for WireType {
+    fn is_less_than_with_option(
+        &self,
+        b: &BigInteger,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.is_less_thans_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            bitwidth,
+            desc,
+        )
+    }
+}
+impl IsGreaterThanOrEqual<&WireType> for WireType {
+    fn is_greater_than_or_equal_with_option(
+        &self,
+        w: &Self,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
+        let p = BigInteger::from(2u8).pow(bitwidth as u32);
+        let pWire = self.generator().create_constant_wire_with_option(&p, desc);
+        let sum = pWire
+            .addw_with_option(&self.self_clone().unwrap(), desc)
+            .subw(w, desc);
+        let bit_wires = sum.get_bit_wiresi_with_option(bitwidth as u64 + 1, desc);
+        bit_wires[bitwidth as usize].clone().unwrap()
+    }
+}
+impl IsGreaterThanOrEqual<i64> for WireType {
+    fn is_greater_than_or_equal_with_option(
+        &self,
+        v: i64,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.is_greater_than_or_equals_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            bitwidth,
+            desc,
+        )
+    }
+}
+impl IsGreaterThanOrEqual<&BigInteger> for WireType {
+    fn is_greater_than_or_equal_with_option(
+        &self,
+        b: &BigInteger,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.is_greater_than_or_equals_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            bitwidth,
+            desc,
+        )
     }
 }
 impl IsGreaterThan<&WireType> for WireType {
-    fn is_greater_than(&self, w: &Self, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.pack_if_needed(desc);
-        w.pack_if_needed(desc);
+    fn is_greater_than_with_option(&self, w: &Self, bitwidth: i32, desc: &Option<String>) -> Self {
+        self.pack_if_needed_with_option(desc);
+        w.pack_if_needed_with_option(desc);
         let p = BigInteger::from(2).pow(bitwidth as u32);
-        let pWire = generator.create_constant_wire(&p, desc);
-        let sum = pWire.addw(w, desc).subw(&self.self_clone().unwrap(), desc);
-        let bit_wires = sum.get_bit_wiresi(bitwidth as u64 + 1, desc);
+        let pWire = self.generator().create_constant_wire_with_option(&p, desc);
+        let sum = pWire
+            .addw_with_option(w, desc)
+            .subw(&self.self_clone().unwrap(), desc);
+        let bit_wires = sum.get_bit_wiresi_with_option(bitwidth as u64 + 1, desc);
         bit_wires[bitwidth as usize]
             .clone()
             .unwrap()
-            .inv_as_bit(desc)
+            .inv_as_bit_with_option(desc)
             .unwrap()
     }
 }
 impl IsGreaterThan<i64> for WireType {
-    fn is_greater_than(&self, v: i64, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_greater_thans(&generator.create_constant_wire(v, desc), bitwidth, desc)
+    fn is_greater_than_with_option(&self, v: i64, bitwidth: i32, desc: &Option<String>) -> Self {
+        self.is_greater_thans_with_option(
+            &self.generator().create_constant_wire_with_option(v, desc),
+            bitwidth,
+            desc,
+        )
     }
 }
 impl IsGreaterThan<&BigInteger> for WireType {
-    fn is_greater_than(&self, b: &BigInteger, bitwidth: i32, desc: &Option<String>) -> Self {
-        let mut generator = self.generator();
-
-        self.is_greater_thans(&generator.create_constant_wire(b, desc), bitwidth, desc)
+    fn is_greater_than_with_option(
+        &self,
+        b: &BigInteger,
+        bitwidth: i32,
+        desc: &Option<String>,
+    ) -> Self {
+        self.is_greater_thans_with_option(
+            &self.generator().create_constant_wire_with_option(b, desc),
+            bitwidth,
+            desc,
+        )
     }
 }
 
@@ -476,21 +520,21 @@ impl Add for WireType {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        self.add_wire(&rhs, &None)
+        self.add_wire(&rhs)
     }
 }
 impl Add<&WireType> for WireType {
     type Output = Self;
 
     fn add(self, rhs: &Self) -> Self::Output {
-        self.add_wire(rhs, &None)
+        self.add_wire(rhs)
     }
 }
 impl Add<i64> for WireType {
     type Output = Self;
 
     fn add(self, rhs: i64) -> Self::Output {
-        self.add_wire(rhs, &None)
+        self.add_wire(rhs)
     }
 }
 
@@ -498,14 +542,14 @@ impl Add<&BigInteger> for WireType {
     type Output = Self;
 
     fn add(self, rhs: &BigInteger) -> Self::Output {
-        self.add_wire(rhs, &None)
+        self.add_wire(rhs)
     }
 }
 impl Sub<&WireType> for WireType {
     type Output = Self;
 
     fn sub(self, rhs: &Self) -> Self::Output {
-        self.sub_wire(rhs, &None)
+        self.sub_wire(rhs)
     }
 }
 
@@ -513,7 +557,7 @@ impl Sub for WireType {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self.sub_wire(&rhs, &None)
+        self.sub_wire(&rhs)
     }
 }
 
@@ -521,14 +565,14 @@ impl Sub<i64> for WireType {
     type Output = Self;
 
     fn sub(self, rhs: i64) -> Self::Output {
-        self.sub_wire(rhs, &None)
+        self.sub_wire(rhs)
     }
 }
 impl Sub<&BigInteger> for WireType {
     type Output = Self;
 
     fn sub(self, rhs: &BigInteger) -> Self::Output {
-        self.sub_wire(rhs, &None)
+        self.sub_wire(rhs)
     }
 }
 
@@ -536,7 +580,7 @@ impl Mul<i64> for WireType {
     type Output = Self;
 
     fn mul(self, rhs: i64) -> Self::Output {
-        self.mul_wire(rhs, &None)
+        self.mul_wire(rhs)
     }
 }
 
@@ -544,7 +588,7 @@ impl Mul<&BigInteger> for WireType {
     type Output = Self;
 
     fn mul(self, rhs: &BigInteger) -> Self::Output {
-        self.mul_wire(rhs, &None)
+        self.mul_wire(rhs)
     }
 }
 
@@ -552,14 +596,14 @@ impl Mul<&WireType> for WireType {
     type Output = Self;
 
     fn mul(self, rhs: &Self) -> Self::Output {
-        self.mul_wire(rhs, &None)
+        self.mul_wire(rhs)
     }
 }
 impl Mul for WireType {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        self.mul_wire(&rhs, &None)
+        self.mul_wire(&rhs)
     }
 }
 
@@ -567,7 +611,7 @@ impl BitAnd for WireType {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
-        self.and_bitwise(&rhs, 32, &None)
+        self.and_bitwise(&rhs, 32)
     }
 }
 
@@ -575,7 +619,7 @@ impl BitAnd<&WireType> for WireType {
     type Output = Self;
 
     fn bitand(self, rhs: &Self) -> Self::Output {
-        self.and_bitwise(rhs, 32, &None)
+        self.and_bitwise(rhs, 32)
     }
 }
 
@@ -583,7 +627,7 @@ impl BitAnd<i64> for WireType {
     type Output = Self;
 
     fn bitand(self, rhs: i64) -> Self::Output {
-        self.and_bitwise(rhs, 32, &None)
+        self.and_bitwise(rhs, 32)
     }
 }
 
@@ -591,14 +635,14 @@ impl BitAnd<&BigInteger> for WireType {
     type Output = Self;
 
     fn bitand(self, rhs: &BigInteger) -> Self::Output {
-        self.and_bitwise(rhs, 32, &None)
+        self.and_bitwise(rhs, 32)
     }
 }
 impl BitOr for WireType {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self::Output {
-        self.or_bitwise(&rhs, 32, &None)
+        self.or_bitwise(&rhs, 32)
     }
 }
 
@@ -606,14 +650,14 @@ impl BitOr<i64> for WireType {
     type Output = Self;
 
     fn bitor(self, rhs: i64) -> Self::Output {
-        self.or_bitwise(rhs, 32, &None)
+        self.or_bitwise(rhs, 32)
     }
 }
 impl BitOr<&BigInteger> for WireType {
     type Output = Self;
 
     fn bitor(self, rhs: &BigInteger) -> Self::Output {
-        self.or_bitwise(rhs, 32, &None)
+        self.or_bitwise(rhs, 32)
     }
 }
 
@@ -621,7 +665,7 @@ impl BitXor for WireType {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        self.xor_bitwise(&rhs, 32, &None)
+        self.xor_bitwise(&rhs, 32)
     }
 }
 
@@ -629,14 +673,14 @@ impl BitXor<i64> for WireType {
     type Output = Self;
 
     fn bitxor(self, rhs: i64) -> Self::Output {
-        self.xor_bitwise(rhs, 32, &None)
+        self.xor_bitwise(rhs, 32)
     }
 }
 impl BitXor<&BigInteger> for WireType {
     type Output = Self;
 
     fn bitxor(self, rhs: &BigInteger) -> Self::Output {
-        self.xor_bitwise(rhs, 32, &None)
+        self.xor_bitwise(rhs, 32)
     }
 }
 

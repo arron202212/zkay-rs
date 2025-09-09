@@ -44,7 +44,6 @@ use rccell::{RcCell, WeakCell};
 use zkay_derive::ImplStructNameConfig;
 #[derive(Debug, Clone, Hash, PartialEq, ImplStructNameConfig)]
 pub struct BitWire;
-//crate::impl_hash_code_of_wire_g_for!(Wire<BitWire>);
 crate::impl_name_instance_of_wire_g_for!(Wire<BitWire>);
 
 impl BitWire {
@@ -120,9 +119,6 @@ pub trait BitWireConfig: WireConfig {
             b,
             desc.clone().unwrap_or(String::new()),
         );
-        //			generator.add_to_evaluation_queue(Box::new(op));
-        //			return out;
-
         let cached_outputs = add_to_evaluation_queue(generator.clone(), Box::new(op));
         if let Some(cached_outputs) = cached_outputs {
             generator.borrow_mut().current_wire_id -= 1;
@@ -133,9 +129,6 @@ pub trait BitWireConfig: WireConfig {
     }
 
     fn inv_as_bit(&self, desc: &Option<String>) -> Option<WireType> {
-        //		WireTypeneg = WireType::new(generator.borrow_mut().current_wire_id+=1);
-        //		Instruction op = ConstMulBasicOp::new(self, neg, -1, desc);
-        //		generator.add_to_evaluation_queue(Box::new(op));
         let mut generator = self.generator();
 
         let neg = BitWireConfig::mulb(self, &Util::one().neg(), desc);
@@ -162,7 +155,7 @@ pub trait BitWireConfig: WireConfig {
 
     fn or(&self, w: &WireType, desc: &Option<String>) -> WireType {
         if w.instance_of("ConstantWire") {
-            return w.orw(self.self_clone().as_ref().unwrap(), desc);
+            return w.orw_with_option(self.self_clone().as_ref().unwrap(), desc);
         }
         let mut generator = self.generator();
 
@@ -187,7 +180,7 @@ pub trait BitWireConfig: WireConfig {
                 out
             };
         }
-        self.orw(w, desc)
+        self.orw_with_option(w, desc)
     }
 
     fn xor(&self, w: &WireType, desc: &Option<String>) -> WireType {

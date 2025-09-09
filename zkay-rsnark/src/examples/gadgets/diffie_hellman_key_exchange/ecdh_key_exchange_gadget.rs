@@ -162,26 +162,6 @@ impl ECDHKeyExchangeGadget {
     }
 }
 
-// impl  ECDHKeyExchangeGadget {
-//     // same constructor as before, but accepts also base_y, and h_y as inputs
-//     pub fn news(
-//         base_x: WireType,
-//         base_y: WireType,
-//         h_x: WireType,
-//         h_y: WireType,
-//         secret_bits: Vec<Option<WireType>>,
-//         desc: &Option<String>,
-//     ) -> Self {
-//         //super(desc);
-
-//         let mut _self = Self{secret_bits,
-//         base_point: AffinePoint::new(base_x, base_y),
-//         h_point: AffinePoint::new(h_x, h_y)};
-//         _self.check_secret_bits();
-//         _self.build_circuit();
-//         _self
-//     }
-//   }
 impl Gadget<ECDHKeyExchangeGadget> {
     // Note: this parameterization assumes that the underlying field has
     // CONFIGS.field_prime =
@@ -244,30 +224,30 @@ impl Gadget<ECDHKeyExchangeGadget> {
         //should be 1, and the three least significant bits should be zero.
 
         assert!(self.t.secret_bits.len() == Self::SECRET_BITWIDTH);
-        CircuitGenerator::add_zero_assertion(
+        CircuitGenerator::add_zero_assertion_with_str(
             self.generator.clone(),
             self.t.secret_bits[0].as_ref().unwrap(),
-            &Some("Asserting secret bit conditions".to_owned()),
+            "Asserting secret bit conditions",
         );
 
-        CircuitGenerator::add_zero_assertion(
+        CircuitGenerator::add_zero_assertion_with_str(
             self.generator.clone(),
             self.t.secret_bits[1].as_ref().unwrap(),
-            &Some("Asserting secret bit conditions".to_owned()),
+            "Asserting secret bit conditions",
         );
 
-        CircuitGenerator::add_zero_assertion(
+        CircuitGenerator::add_zero_assertion_with_str(
             self.generator.clone(),
             self.t.secret_bits[2].as_ref().unwrap(),
-            &Some("Asserting secret bit conditions".to_owned()),
+            "Asserting secret bit conditions",
         );
 
-        CircuitGenerator::add_one_assertion(
+        CircuitGenerator::add_one_assertion_with_str(
             self.generator.clone(),
             self.t.secret_bits[Self::SECRET_BITWIDTH - 1]
                 .as_ref()
                 .unwrap(),
-            &Some("Asserting secret bit conditions".to_owned()),
+            "Asserting secret bit conditions",
         );
 
         for i in 3..Self::SECRET_BITWIDTH - 1 {
@@ -278,7 +258,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
             CircuitGenerator::add_binary_assertion(
                 self.generator.clone(),
                 self.t.secret_bits[i].as_ref().unwrap(),
-                &None,
             );
         }
     }
@@ -307,17 +286,12 @@ impl Gadget<ECDHKeyExchangeGadget> {
             self.t.base_point.y = Some(CircuitGenerator::create_constant_wire(
                 self.generator.clone(),
                 &Self::compute_y_coordinate(x),
-                &None,
             ));
         } else {
             self.t.base_point.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
-                &None,
             ));
-            // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-            //     let x = evaluator.get_wire_value(base_point.x);
-            //     evaluator.set_wire_value(base_point.y, &compute_y_coordinate(x));
-            // });
+
             let base_point = &self.t.base_point;
             let prover = crate::impl_prover!(
                             eval(  base_point: AffinePoint)  {
@@ -332,16 +306,6 @@ impl Gadget<ECDHKeyExchangeGadget> {
                         }
                     );
             CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
-            // {
-            //     struct Prover;
-            //     impl Instruction for Prover {
-            //         &|evaluator: &mut CircuitEvaluator| {
-            //             let x = evaluator.get_wire_value(base_point.x);
-            //             evaluator.set_wire_value(base_point.y, compute_y_coordinate(x));
-            //         }
-            //     }
-            //     Prover
-            // });
 
             self.assert_valid_point_on_ec(
                 self.t.base_point.x.as_ref().unwrap(),
@@ -369,17 +333,11 @@ impl Gadget<ECDHKeyExchangeGadget> {
             self.t.h_point.y = Some(CircuitGenerator::create_constant_wire(
                 self.generator.clone(),
                 &Self::compute_y_coordinate(x),
-                &None,
             ));
         } else {
             self.t.h_point.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
-                &None,
             ));
-            // CircuitGenerator::specify_prover_witness_computation(generator.clone(),&|evaluator: &mut CircuitEvaluator| {
-            //     let x = evaluator.get_wire_value(h_point.x);
-            //     evaluator.set_wire_value(h_point.y, &compute_y_coordinate(x));
-            // });
 
             let h_point = &self.t.h_point;
             let prover = crate::impl_prover!(
@@ -428,22 +386,15 @@ impl Gadget<ECDHKeyExchangeGadget> {
             self.generator.clone(),
             &y_sqr,
             &x_cube
-                .add(x_sqr.mulb(
-                    &BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap(),
-                    &None,
-                ))
+                .add(x_sqr.mulb(&Util::parse_big_int(Self::COEFF_A)))
                 .add(x),
-            &None,
         );
     }
 
     fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
         let start = std::time::Instant::now();
         let mut precomputed_table: Vec<_> = (1..self.t.secret_bits.len())
-            .scan(p.clone(), |s, _j| {
-                //s = Self::double_affine_point(&s, self.generator.clone());
-                Some((*s).clone())
-            })
+            .scan(p.clone(), |s, _j| Some((*s).clone()))
             .collect();
 
         precomputed_table.insert(0, p.clone());
@@ -488,13 +439,13 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     fn double_affine_point(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> AffinePoint {
         let start = std::time::Instant::now();
-        let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
+        let coeff_a = Util::parse_big_int(Self::COEFF_A);
         let x_2 = p.x.clone().unwrap().mul(p.x.as_ref().unwrap());
         let a = x_2
-            .muli(3, &None)
-            .add(p.x.as_ref().unwrap().mulb(&coeff_a, &None).muli(2, &None))
+            .muli(3)
+            .add(p.x.as_ref().unwrap().mulb(&coeff_a).muli(2))
             .add(1);
-        let b = p.y.as_ref().unwrap().muli(2, &None);
+        let b = p.y.as_ref().unwrap().muli(2);
         let l1 = FieldDivisionGadget::new(a, b, &None, generator).get_output_wires()[0].clone();
 
         let l2 = l1.clone().unwrap().mul(l1.as_ref().unwrap());
@@ -508,7 +459,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let new_y =
             p.x.as_ref()
                 .unwrap()
-                .muli(3, &None)
+                .muli(3)
                 .add(&coeff_a)
                 .sub(&l2)
                 .mul(l1.as_ref().unwrap())
@@ -519,7 +470,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     fn add_affine_points(&self, p1: &AffinePoint, p2: &AffinePoint) -> AffinePoint {
         let start = std::time::Instant::now();
-        let coeff_a = BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10).unwrap();
+        let coeff_a = Util::parse_big_int(Self::COEFF_A);
         let diff_y = p1.y.clone().unwrap().sub(p2.y.as_ref().unwrap());
 
         let diff_x = p1.x.clone().unwrap().sub(p2.x.as_ref().unwrap());
@@ -540,7 +491,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let new_y =
             p1.x.as_ref()
                 .unwrap()
-                .muli(2, &None)
+                .muli(2)
                 .add(p2.x.as_ref().unwrap())
                 .add(&coeff_a)
                 .mul(q.as_ref().unwrap())
@@ -557,11 +508,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let x_cubed = x_sqred.clone().mul(&x).rem(&CONFIGS.field_prime);
 
         let y_sqred = x_cubed
-            .add(
-                BigInteger::parse_bytes(Self::COEFF_A.as_bytes(), 10)
-                    .unwrap()
-                    .mul(x_sqred),
-            )
+            .add(Util::parse_big_int(Self::COEFF_A).mul(x_sqred))
             .add(&x)
             .rem(&CONFIGS.field_prime);
         let y = IntegerFunctions::ressol(y_sqred, &CONFIGS.field_prime); //MYTODO 
@@ -572,8 +519,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         let start = std::time::Instant::now();
         CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &self.t.base_point.x.as_ref().unwrap().check_non_zero(&None),
-            &None,
+            &self.t.base_point.x.as_ref().unwrap().check_non_zero(),
         );
 
         self.assert_valid_point_on_ec(
@@ -584,8 +530,7 @@ impl Gadget<ECDHKeyExchangeGadget> {
         self.assert_point_order(&self.t.base_point, &self.t.base_table);
         CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &self.t.h_point.x.as_ref().unwrap().check_non_zero(&None),
-            &None,
+            &self.t.h_point.x.as_ref().unwrap().check_non_zero(),
         );
 
         self.assert_valid_point_on_ec(
@@ -600,13 +545,9 @@ impl Gadget<ECDHKeyExchangeGadget> {
 
     fn assert_point_order(&self, p: &AffinePoint, table: &Vec<AffinePoint>) {
         let start = std::time::Instant::now();
-        let subgroup_order = BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap();
-        let o =
-            CircuitGenerator::create_constant_wire(self.generator.clone(), &subgroup_order, &None);
-        let bits = o
-            .get_bit_wiresi(subgroup_order.bits(), &None)
-            .as_array()
-            .clone();
+        let subgroup_order = Util::parse_big_int(Self::SUBGROUP_ORDER);
+        let o = CircuitGenerator::create_constant_wire(self.generator.clone(), &subgroup_order);
+        let bits = o.get_bit_wiresi(subgroup_order.bits()).as_array().clone();
 
         let mut result = table[bits.len() - 1].clone();
         for j in (1..=bits.len() - 2).rev() {
@@ -637,14 +578,12 @@ impl Gadget<ECDHKeyExchangeGadget> {
             self.generator.clone(),
             result.x.as_ref().unwrap(),
             p.x.as_ref().unwrap(),
-            &None,
         );
 
         CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             result.y.as_ref().unwrap(),
-            &p.y.as_ref().unwrap().muli(-1, &None),
-            &None,
+            &p.y.as_ref().unwrap().muli(-1),
         );
 
         // the reason the last iteration is handled separately is that the

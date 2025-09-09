@@ -128,7 +128,6 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
         padded_plain_text[length_in_bytes - 2] = Some(CircuitGenerator::create_constant_wirei(
             self.generator.clone(),
             2,
-            &None,
         ));
         padded_plain_text[length_in_bytes - 1] = self.generator.get_zero_wire();
 
@@ -202,7 +201,7 @@ impl Gadget<RSAEncryptionV1_5_Gadget> {
             self.t.randomness[i]
                 .as_ref()
                 .unwrap()
-                .restrict_bit_length(8, &None);
+                .restrict_bit_length(8);
             // verify that each element has a multiplicative inverse
             FieldDivisionGadget::new(
                 self.generator.get_one_wire().unwrap(),

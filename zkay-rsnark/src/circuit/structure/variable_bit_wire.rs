@@ -44,9 +44,3 @@ impl WireConfig for Wire<VariableBitWire> {
     }
 }
 impl BitWireConfig for Wire<VariableBitWire> {}
-impl Wire<VariableBitWire> {
-    // pub fn new(wire_id: i32) -> Self {
-    //     // //super(wire_id);
-    //     Self
-    // }
-}

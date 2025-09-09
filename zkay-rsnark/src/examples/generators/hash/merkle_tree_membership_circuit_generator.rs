@@ -85,19 +85,17 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
             hash_digest_dimension as usize,
             "Input Merkle Tree Root",
         );
-        let intermediate_hashe_wires = CircuitGenerator::create_prover_witness_wire_array(
+        let intermediate_hashe_wires = CircuitGenerator::create_prover_witness_wire_array_with_str(
             self.cg(),
             (hash_digest_dimension * self.t.tree_height) as usize,
-            &Some("Intermediate Hashes".to_owned()),
+            "Intermediate Hashes",
         );
-        let direction_selector = CircuitGenerator::create_prover_witness_wire(
-            self.cg(),
-            &Some("Direction selector".to_owned()),
-        );
-        let leaf_wires = CircuitGenerator::create_prover_witness_wire_array(
+        let direction_selector =
+            CircuitGenerator::create_prover_witness_wire_with_str(self.cg(), "Direction selector");
+        let leaf_wires = CircuitGenerator::create_prover_witness_wire_array_with_str(
             self.cg(),
             MerkleTreeMembershipCircuitGenerator::leaf_num_of_words as usize,
-            &Some("Secret Leaf".to_owned()),
+            "Secret Leaf",
         );
 
         // connect gadget
@@ -119,21 +117,17 @@ impl CGConfig for CircuitGeneratorExtend<MerkleTreeMembershipCircuitGenerator> {
                 .clone()
                 .unwrap()
                 .sub(public_root_wires[i].as_ref().unwrap());
-            let check = diff.check_non_zero(&None);
+            let check = diff.check_non_zero();
             error_accumulator = error_accumulator.add(check);
         }
 
-        CircuitGenerator::make_output_array(
-            self.cg(),
-            &actual_root,
-            &Some("Computed Root".to_owned()),
-        );
+        CircuitGenerator::make_output_array_with_str(self.cg(), &actual_root, "Computed Root");
 
         //  Expected mismatch here if the sample input below is tried**/
-        CircuitGenerator::make_output(
+        CircuitGenerator::make_output_with_str(
             self.cg(),
-            &error_accumulator.check_non_zero(&None),
-            &Some("Error if NON-zero".to_owned()),
+            &error_accumulator.check_non_zero(),
+            "Error if NON-zero",
         );
         (
             self.t.public_root_wires,

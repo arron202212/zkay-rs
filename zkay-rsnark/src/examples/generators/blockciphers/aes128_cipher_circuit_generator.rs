@@ -73,14 +73,14 @@ impl CGConfig for CircuitGeneratorExtend<AES128CipherCircuitGenerator> {
         let gadget = AES128CipherGadget::new(self.t.inputs.clone(), expanded_key, &None, self.cg());
         self.t.outputs = gadget.get_output_wires().clone();
         for o in &self.t.outputs {
-            CircuitGenerator::make_output(self.cg(), o.as_ref().unwrap(), &None);
+            CircuitGenerator::make_output(self.cg(), o.as_ref().unwrap());
         }
         self.t.gadget = Some(gadget);
     }
 
     fn generate_sample_input(&self, circuit_evaluator: &mut CircuitEvaluator) {
-        let key_v = BigInteger::parse_bytes(b"2b7e151628aed2a6abf7158809cf4f3c", 16).unwrap();
-        let msg_v = BigInteger::parse_bytes(b"ae2d8a571e03ac9c9eb76fac45af8e51", 16).unwrap();
+        let key_v = Util::parse_big_int_x("2b7e151628aed2a6abf7158809cf4f3c");
+        let msg_v = Util::parse_big_int_x("ae2d8a571e03ac9c9eb76fac45af8e51");
 
         // expected output:0xf5d3d58503b9699de785895a96fdbaaf
 

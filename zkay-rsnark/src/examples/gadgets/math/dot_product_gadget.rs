@@ -80,7 +80,7 @@ impl Gadget<DotProductGadget> {
     fn build_circuit(&mut self) {
         let mut output = self.generator.get_zero_wire();
         for i in 0..self.t.a.len() {
-            let product = self.t.a[i].as_ref().unwrap().mulw(
+            let product = self.t.a[i].as_ref().unwrap().mulw_with_option(
                 self.t.b[i].as_ref().unwrap(),
                 &Some(format!("Multiply elements # {i}")),
             );

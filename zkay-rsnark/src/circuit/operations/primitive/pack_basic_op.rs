@@ -23,13 +23,8 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 pub struct PackBasicOp;
 
 impl PackBasicOp {
-    pub fn new(in_bits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<PackBasicOp> {
-        Op::<PackBasicOp> {
-            inputs: in_bits,
-            outputs: vec![Some(out.clone())],
-            desc,
-            t: PackBasicOp,
-        }
+    pub fn new(in_bits: Vec<Option<WireType>>, out: &WireType, desc: String) -> Op<Self> {
+        Op::<Self>::new(in_bits, vec![Some(out.clone())], desc, Self).unwrap()
     }
 }
 crate::impl_instruction_for!(Op<PackBasicOp>);
@@ -40,7 +35,6 @@ impl BasicOp for Op<PackBasicOp> {
     }
 
     fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        // //super.check_inputs(assignment);
         self.super_check_inputs(assignment);
         assert!(
             (0..self.inputs.len()).all(|i| Util::is_binary(

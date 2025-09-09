@@ -14,7 +14,7 @@
 // import org.bouncycastle.crypto.params.ParametersWithIV;
 
 use crate::{
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
     zkay::{chaskey_lts_engine::ChaskeyLTSEngine, zkay_util::ZkayUtil},
 };
 
@@ -62,10 +62,7 @@ impl KeyParameter {
 pub struct ChaskeyLtsCbc;
 impl ChaskeyLtsCbc {
     fn parse(val: &String, len: i32) -> Vec<u8> {
-        ZkayUtil::unsigned_bigint_to_bytesi(
-            BigInteger::parse_bytes(val.as_bytes(), 16).unwrap(),
-            len,
-        )
+        ZkayUtil::unsigned_bigint_to_bytesi(Util::parse_big_int_x(val), len)
     }
 
     const blocksize: i32 = 16;

@@ -62,7 +62,6 @@ mod test {
             let a = CircuitGenerator::create_constant_wire(
                 generator.clone(),
                 &pbi("11985782033876175911769025829561891428638139496693105005957757653258"),
-                &None,
             );
 
             let ainv_expected = CircuitGenerator::create_constant_wire(
@@ -70,7 +69,6 @@ mod test {
                 &pbi(
                     "20950552912096304742729232452120498732043875737213521271262032500972060322340",
                 ),
-                &None,
             );
 
             const BASE_ORDER: &str =
@@ -88,24 +86,13 @@ mod test {
 
             let ainv = self.native_inverse(&a);
 
-            CircuitGenerator::add_equality_assertion(
-                generator.clone(),
-                &ainv,
-                &ainv_expected,
-                &None,
-            );
+            CircuitGenerator::add_equality_assertion(generator.clone(), &ainv, &ainv_expected);
 
             // check generator on curve
-            let g_x = CircuitGenerator::create_constant_wire(
-                generator.clone(),
-                &pbi(Self::GENERATOR_X),
-                &None,
-            );
-            let g_y = CircuitGenerator::create_constant_wire(
-                generator.clone(),
-                &pbi(Self::GENERATOR_Y),
-                &None,
-            );
+            let g_x =
+                CircuitGenerator::create_constant_wire(generator.clone(), &pbi(Self::GENERATOR_X));
+            let g_y =
+                CircuitGenerator::create_constant_wire(generator.clone(), &pbi(Self::GENERATOR_Y));
             self.assert_on_curve(&g_x, &g_y);
 
             // check generator + generator on curve
@@ -121,41 +108,29 @@ mod test {
                 generator.clone(),
                 &inf.x,
                 generator.get_zero_wire().as_ref().unwrap(),
-                &None,
             );
             CircuitGenerator::add_equality_assertion(
                 generator.clone(),
                 &inf.y,
                 generator.get_one_wire().as_ref().unwrap(),
-                &None,
             );
 
             // check generator + INFINITY = generator
             let g_expected = self.add_points(&g, &self.get_infinity());
-            CircuitGenerator::add_equality_assertion(generator.clone(), &g_expected.x, &g.x, &None);
-            CircuitGenerator::add_equality_assertion(generator.clone(), &g_expected.y, &g.y, &None);
+            CircuitGenerator::add_equality_assertion(generator.clone(), &g_expected.x, &g.x);
+            CircuitGenerator::add_equality_assertion(generator.clone(), &g_expected.y, &g.y);
 
             // check scalar multiplication
-            let scalar = CircuitGenerator::create_constant_wirei(generator.clone(), 5, &None);
-            let scalar_bits = scalar.get_bit_wiresi(4, &None);
+            let scalar = CircuitGenerator::create_constant_wirei(generator.clone(), 5);
+            let scalar_bits = scalar.get_bit_wiresi(4);
             let g5 = self.mul_scalar(&g, scalar_bits.as_array());
             let g5_expected = self.add_points(
                 &self.add_points(&self.add_points(&self.add_points(&g, &g), &g), &g),
                 &g,
             );
             self.assert_on_curve(&g5.x, &g5.y);
-            CircuitGenerator::add_equality_assertion(
-                generator.clone(),
-                &g5.x,
-                &g5_expected.x,
-                &None,
-            );
-            CircuitGenerator::add_equality_assertion(
-                generator.clone(),
-                &g5.y,
-                &g5_expected.y,
-                &None,
-            );
+            CircuitGenerator::add_equality_assertion(generator.clone(), &g5.x, &g5_expected.x);
+            CircuitGenerator::add_equality_assertion(generator.clone(), &g5.y, &g5_expected.y);
         }
     }
 
@@ -178,7 +153,6 @@ mod test {
                 CircuitGenerator::make_output(
                     self.cg(),
                     gadget.get_output_wires()[0].as_ref().unwrap(),
-                    &None,
                 );
             }
 

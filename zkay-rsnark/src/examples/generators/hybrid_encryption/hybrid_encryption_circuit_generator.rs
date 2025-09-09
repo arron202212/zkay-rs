@@ -93,17 +93,13 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Part I: Exchange a key:
 
         // The secret exponent is a  input by the prover
-        let mut sec_exp_bits = CircuitGenerator::create_prover_witness_wire_array(
+        let mut sec_exp_bits = CircuitGenerator::create_prover_witness_wire_array_with_str(
             self.cg(),
             HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize,
-            &Some("SecretExponent".to_owned()),
+            "SecretExponent",
         );
         for i in 0..HybridEncryptionCircuitGenerator::EXPONENT_BITWIDTH as usize {
-            CircuitGenerator::add_binary_assertion(
-                self.cg(),
-                sec_exp_bits[i].as_ref().unwrap(),
-                &None,
-            ); // verify all bits are binary
+            CircuitGenerator::add_binary_assertion(self.cg(), sec_exp_bits[i].as_ref().unwrap()); // verify all bits are binary
         }
 
         let mut g = vec![None; HybridEncryptionCircuitGenerator::MU as usize];
@@ -112,76 +108,52 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
         // Hardcode the base and the other party's key (suitable when keys are not expected to change)
         g[0] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"16377448892084713529161739182205318095580119111576802375181616547062197291263",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "16377448892084713529161739182205318095580119111576802375181616547062197291263",
+            ),
         ));
         g[1] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"13687683608888423916085091250849188813359145430644908352977567823030408967189",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "13687683608888423916085091250849188813359145430644908352977567823030408967189",
+            ),
         ));
         g[2] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"12629166084120705167185476169390021031074363183264910102253898080559854363106",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "12629166084120705167185476169390021031074363183264910102253898080559854363106",
+            ),
         ));
         g[3] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"19441276922979928804860196077335093208498949640381586557241379549605420212272",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "19441276922979928804860196077335093208498949640381586557241379549605420212272",
+            ),
         ));
 
         h[0] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"8252578783913909531884765397785803733246236629821369091076513527284845891757",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "8252578783913909531884765397785803733246236629821369091076513527284845891757",
+            ),
         ));
         h[1] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"20829599225781884356477513064431048695774529855095864514701692089787151865093",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "20829599225781884356477513064431048695774529855095864514701692089787151865093",
+            ),
         ));
         h[2] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"1540379511125324102377803754608881114249455137236500477169164628692514244862",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "1540379511125324102377803754608881114249455137236500477169164628692514244862",
+            ),
         ));
         h[3] = Some(CircuitGenerator::create_constant_wire(
             generator.clone(),
-            &BigInteger::parse_bytes(
-                b"1294177986177175279602421915789749270823809536595962994745244158374705688266",
-                10,
-            )
-            .unwrap(),
-            &None,
+            &Util::parse_big_int(
+                "1294177986177175279602421915789749270823809536595962994745244158374705688266",
+            ),
         ));
 
         // To make g and h variable inputs to the circuit, simply do the following
@@ -203,11 +175,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
 
         // Output g^s
         let g_to_s = exchange.get_output_public_value();
-        CircuitGenerator::make_output_array(
-            self.cg(),
-            g_to_s,
-            &Some("DH Key Exchange Output".to_owned()),
-        );
+        CircuitGenerator::make_output_array_with_str(self.cg(), g_to_s, "DH Key Exchange Output");
 
         // Use h^s to generate a symmetric secret key and an initialization
         // vector. Apply a Hash-based KDF.
@@ -241,11 +209,7 @@ impl CGConfig for CircuitGeneratorExtend<HybridEncryptionCircuitGenerator> {
             self.cg(),
         );
         let ciphertext = sym_enc_gagdet.get_output_wires();
-        CircuitGenerator::make_output_array(
-            self.cg(),
-            &ciphertext,
-            &Some("Cipher Text".to_owned()),
-        );
+        CircuitGenerator::make_output_array_with_str(self.cg(), &ciphertext, "Cipher Text");
         (self.t.plaintext, self.t.sec_exp_bits, self.t.ciphertext) =
             (plaintext, sec_exp_bits, ciphertext.clone());
     }

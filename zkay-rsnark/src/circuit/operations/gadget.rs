@@ -11,16 +11,13 @@ use std::{fmt::Debug, hash::Hash};
 #[derive(Debug, Clone, Hash, PartialEq)]
 pub struct Gadget<T> {
     pub generator: RcCell<CircuitGenerator>,
-    // pub generators: CircuitGenerator,
     pub description: String,
     pub t: T,
 }
 impl<T> Gadget<T> {
     pub fn new(generator: RcCell<CircuitGenerator>, desc: &Option<String>, t: T) -> Self {
-        // let generators = generator.borrow().clone();
         Self {
             generator,
-            // generators,
             description: desc.clone().unwrap_or(String::new()),
             t,
         }
@@ -30,9 +27,6 @@ impl<T> Gadget<T> {
 pub trait GadgetConfig: Debug {
     fn get_output_wires(&self) -> &Vec<Option<WireType>>;
 
-    // fn toString(&self) -> String {
-    //     "getClass().getSimpleName()".to_owned() + " " + &self.description()
-    // }
     fn description(&self) -> String {
         String::new()
     }

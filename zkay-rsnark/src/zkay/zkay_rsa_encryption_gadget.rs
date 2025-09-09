@@ -72,11 +72,8 @@ impl ZkayRSAEncryptionGadget {
 }
 impl Gadget<ZkayRSAEncryptionGadget> {
     fn build_circuit(&mut self) {
-        let plain_bytes = ZkayUtil::reverse_bytes(
-            self.t.plain.get_bit_wiresi(256, &None),
-            8,
-            self.generator.clone(),
-        );
+        let plain_bytes =
+            ZkayUtil::reverse_bytes(self.t.plain.get_bit_wiresi(256), 8, self.generator.clone());
 
         let mut enc: Box<dyn GadgetConfig>;
         match self.t.padding_type {

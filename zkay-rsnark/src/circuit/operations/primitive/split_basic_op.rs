@@ -22,14 +22,8 @@ use zkay_derive::{ImplOpCodeConfig, ImplStructNameConfig};
 #[derive(Debug, Clone, Hash, PartialEq, ImplOpCodeConfig, ImplStructNameConfig)]
 pub struct SplitBasicOp;
 impl SplitBasicOp {
-    pub fn new(w: &WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<SplitBasicOp> {
-        // assert!(outs.len()!=16,"==SplitBasicOp====outs==len=={}==",outs.len());
-        Op::<SplitBasicOp> {
-            inputs: vec![Some(w.clone())],
-            outputs: outs,
-            desc,
-            t: SplitBasicOp,
-        }
+    pub fn new(w: &WireType, outs: Vec<Option<WireType>>, desc: String) -> Op<Self> {
+        Op::<Self>::new(vec![Some(w.clone())], outs, desc, Self).unwrap()
     }
 }
 crate::impl_instruction_for!(Op<SplitBasicOp>);
@@ -40,7 +34,6 @@ impl BasicOp for Op<SplitBasicOp> {
     }
 
     fn check_inputs(&self, assignment: &Vec<Option<BigInteger>>) {
-        //super.check_inputs(assignment);
         self.super_check_inputs(assignment);
         let bits_len = assignment[self.inputs[0].as_ref().unwrap().get_wire_id() as usize]
             .clone()

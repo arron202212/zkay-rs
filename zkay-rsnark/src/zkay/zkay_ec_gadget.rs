@@ -14,7 +14,7 @@ use crate::{
         structure::{circuit_generator::CircuitGenerator, wire::WireConfig, wire_type::WireType},
     },
     examples::gadgets::math::field_division_gadget::FieldDivisionGadget,
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
 };
 
 use std::ops::{Add, Mul, Rem, Sub};
@@ -77,28 +77,28 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         //expected to follow a little endian order. The most significant bit
         //should be 1, and the three least significant bits should be zero.
 
-        let desc = Some("Asserting secret bit conditions".to_owned());
-        CircuitGenerator::add_zero_assertion(
+        let desc = "Asserting secret bit conditions";
+        CircuitGenerator::add_zero_assertion_with_str(
             generator.clone(),
             secret_bits[0].as_ref().unwrap(),
-            &desc,
+            desc,
         );
-        CircuitGenerator::add_zero_assertion(
+        CircuitGenerator::add_zero_assertion_with_str(
             generator.clone(),
             secret_bits[1].as_ref().unwrap(),
-            &desc,
+            desc,
         );
-        CircuitGenerator::add_zero_assertion(
+        CircuitGenerator::add_zero_assertion_with_str(
             generator.clone(),
             secret_bits[2].as_ref().unwrap(),
-            &desc,
+            desc,
         );
-        CircuitGenerator::add_one_assertion(
+        CircuitGenerator::add_one_assertion_with_str(
             generator.clone(),
             secret_bits[Self::SECRET_BITWIDTH as usize - 1]
                 .as_ref()
                 .unwrap(),
-            &desc,
+            desc,
         );
 
         for i in 3..Self::SECRET_BITWIDTH - 1 {
@@ -108,7 +108,6 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             CircuitGenerator::add_binary_assertion(
                 generator.clone(),
                 secret_bits[i].as_ref().unwrap(),
-                &None,
             );
         }
     }
@@ -122,7 +121,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let f = x_cube
             .add(x_sqr.mul(&BigInteger::from(Self::COEFF_A)))
             .add(x);
-        CircuitGenerator::add_equality_assertion(self.generator.clone(), &y_sqr, &f, &None);
+        CircuitGenerator::add_equality_assertion(self.generator.clone(), &y_sqr, &f);
     }
 
     pub fn preprocess(p: &AffinePoint, generator: RcCell<CircuitGenerator>) -> Vec<AffinePoint> {
@@ -255,16 +254,10 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         // let generator = &self.generators;
         let o = &CircuitGenerator::create_constant_wire(
             self.generator.clone(),
-            &BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10).unwrap(),
-            &None,
+            &Util::parse_big_int(Self::SUBGROUP_ORDER),
         );
         let bits = o
-            .get_bit_wiresi(
-                BigInteger::parse_bytes(Self::SUBGROUP_ORDER.as_bytes(), 10)
-                    .unwrap()
-                    .bits(),
-                &None,
-            )
+            .get_bit_wiresi(Util::parse_big_int(Self::SUBGROUP_ORDER).bits())
             .as_array()
             .clone();
 
@@ -293,13 +286,11 @@ impl<T> Gadget<ZkayEcGadget<T>> {
             self.generator.clone(),
             result.x.as_ref().unwrap(),
             p.x.as_ref().unwrap(),
-            &None,
         );
         CircuitGenerator::add_equality_assertion(
             self.generator.clone(),
             result.y.as_ref().unwrap(),
             &p.y.clone().unwrap().mul(-1),
-            &None,
         );
 
         // the reason the last iteration is handled separately is that the

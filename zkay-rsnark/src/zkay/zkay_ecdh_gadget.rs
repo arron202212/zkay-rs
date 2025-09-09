@@ -55,7 +55,7 @@ impl ZkayECDHGadget {
             desc,
             Self {
                 secret_bits: secret_key
-                    .get_bit_wiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64, &None)
+                    .get_bit_wiresi(Gadget::<ZkayEcGadget<Self>>::SECRET_BITWIDTH as u64)
                     .as_array()
                     .clone(),
                 h_point: AffinePoint::new(Some(h_x), None),
@@ -112,50 +112,29 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     pub fn compute_y_coordinates(&mut self) {
         // Easy to handle if h_point is constant, otherwise, let the prover input
         // a witness and verify some properties
-
-        if self
-            .t
-            .t
-            .h_point
-            .x
-            .as_ref()
-            .unwrap()
-            .instance_of("ConstantWire")
-        {
-            let x = self
-                .t
-                .t
-                .h_point
-                .x
-                .as_ref()
-                .unwrap()
-                .try_as_constant_ref()
-                .unwrap()
-                .get_constant();
+        let x = self.t.t.h_point.x.as_ref().unwrap();
+        if x.instance_of("ConstantWire") {
+            let x = x.try_as_constant_ref().unwrap().get_constant();
             self.t.t.h_point.y = Some(CircuitGenerator::create_constant_wire(
                 self.generator.clone(),
                 &Gadget::<ZkayEcGadget<ZkayECDHGadget>>::compute_y_coordinate(x),
-                &None,
             ));
         } else {
             self.t.t.h_point.y = Some(CircuitGenerator::create_prover_witness_wire(
                 self.generator.clone(),
-                &None,
             ));
 
             let h_point = &self.t.t.h_point;
-            let prover = crate::impl_prover!(
-                                        eval( h_point: AffinePoint
-                                )  {
-                        impl Instruction for Prover{
-                         fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
+            let prover = crate::impl_prover!(eval( h_point: AffinePoint)  {
+            impl Instruction for Prover{
+                        fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                                 let x = evaluator.get_wire_value(self.h_point.x.as_ref().unwrap());
                                 evaluator.set_wire_value(self.h_point.y.as_ref().unwrap(), &Gadget::<ZkayEcGadget::<ZkayECDHGadget>>::compute_y_coordinate(x));
-            Ok(())
+                                Ok(())
+                            }
                         }
-                        }
-                                    }
-                                );
+                    }
+                    );
             CircuitGenerator::specify_prover_witness_computation(self.generator.clone(), prover);
 
             self.assert_valid_point_on_ec(
@@ -167,8 +146,7 @@ impl Gadget<ZkayEcGadget<ZkayECDHGadget>> {
     pub fn validate_inputs(&self) {
         CircuitGenerator::add_one_assertion(
             self.generator.clone(),
-            &self.t.t.h_point.x.as_ref().unwrap().check_non_zero(&None),
-            &None,
+            &self.t.t.h_point.x.as_ref().unwrap().check_non_zero(),
         );
 
         self.assert_valid_point_on_ec(

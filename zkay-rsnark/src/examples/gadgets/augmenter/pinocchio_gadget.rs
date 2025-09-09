@@ -86,7 +86,6 @@ impl Gadget<PinocchioGadget> {
 
         let mut input_count = 0;
         while let Some(Ok(mut line)) = scanner.next() {
-            // let line = scanner.nextLine();
             // remove comments
             if let Some(i) = line.find('#') {
                 line = line[..i].to_owned();
@@ -132,7 +131,6 @@ impl Gadget<PinocchioGadget> {
 
                 let w = Some(CircuitGenerator::create_prover_witness_wire(
                     self.generator.clone(),
-                    &None,
                 ));
                 prover_witness_wires.push(w.clone());
                 wire_mapping[wire_index] = w;
@@ -164,13 +162,13 @@ impl Gadget<PinocchioGadget> {
                         wire_mapping[*ins[0].as_ref().unwrap()]
                             .as_ref()
                             .unwrap()
-                            .check_non_zero(&None),
+                            .check_non_zero(),
                     );
                 } else if line.starts_with("split ") {
                     let bits = wire_mapping[*ins[0].as_ref().unwrap()]
                         .clone()
                         .unwrap()
-                        .get_bit_wiresi(outs.len() as u64, &None)
+                        .get_bit_wiresi(outs.len() as u64)
                         .as_array()
                         .clone();
                     for i in 0..outs.len() {
@@ -178,21 +176,21 @@ impl Gadget<PinocchioGadget> {
                     }
                 } else if line.starts_with("const-mul-neg-") {
                     let constant_str = &line["const-mul-neg-".len()..line.find(" ").unwrap()];
-                    let constant = BigInteger::parse_bytes(constant_str.as_bytes(), 16).unwrap();
+                    let constant = Util::parse_big_int_x(constant_str);
                     wire_mapping[*outs[0].as_ref().unwrap()] = Some(
                         wire_mapping[*ins[0].as_ref().unwrap()]
                             .as_ref()
                             .unwrap()
-                            .mulb(&constant.neg(), &None),
+                            .mulb(&constant.neg()),
                     );
                 } else if line.starts_with("const-mul-") {
                     let constant_str = &line["const-mul-".len()..line.find(" ").unwrap()];
-                    let constant = BigInteger::parse_bytes(constant_str.as_bytes(), 16).unwrap();
+                    let constant = Util::parse_big_int_x(constant_str);
                     wire_mapping[*outs[0].as_ref().unwrap()] = Some(
                         wire_mapping[*ins[0].as_ref().unwrap()]
                             .as_ref()
                             .unwrap()
-                            .mulb(&constant, &None),
+                            .mulb(&constant),
                     );
                 } else {
                     panic!("Unsupport Circuit Line {line} ");

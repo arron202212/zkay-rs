@@ -50,8 +50,8 @@ mod test {
         }
 
         pub fn asConstJubJub(&self, generator: &RcCell<CircuitGenerator>) -> JubJubPoint {
-            let wx = CircuitGenerator::create_constant_wire(generator.clone(), &self.x, &None);
-            let wy = CircuitGenerator::create_constant_wire(generator.clone(), &self.y, &None);
+            let wx = CircuitGenerator::create_constant_wire(generator.clone(), &self.x);
+            let wy = CircuitGenerator::create_constant_wire(generator.clone(), &self.y);
             JubJubPoint::new(wx, wy)
         }
     }
@@ -75,11 +75,10 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalEncCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalEncCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let randomness =
-                CircuitGenerator::create_constant_wire(self.cg(), &self.t.random, &None);
-            let randomness_bits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
-            let message = CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain, &None);
-            let message_bits = message.get_bit_wiresi(32, &None);
+            let randomness = CircuitGenerator::create_constant_wire(self.cg(), &self.t.random);
+            let randomness_bits = randomness.get_bit_wiresi(self.t.random.bits());
+            let message = CircuitGenerator::create_constant_wire(self.cg(), &self.t.plain);
+            let message_bits = message.get_bit_wiresi(32);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalEncGadget::new(
                 message_bits.as_array().clone(),
@@ -87,10 +86,10 @@ mod test {
                 randomness_bits.as_array().clone(),
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 gadget.get_output_wires(),
-                &Some("cipher".to_owned()),
+                "cipher",
             );
         }
 
@@ -119,9 +118,8 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalRerandCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalRerandCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let randomness =
-                CircuitGenerator::create_constant_wire(self.cg(), &self.t.random, &None);
-            let randomness_bits = randomness.get_bit_wiresi(self.t.random.bits(), &None);
+            let randomness = CircuitGenerator::create_constant_wire(self.cg(), &self.t.random);
+            let randomness_bits = randomness.get_bit_wiresi(self.t.random.bits());
             let generator = self.cg.clone();
             let gadget = ZkayElgamalRerandGadget::new(
                 self.t.c1.asConstJubJub(&generator),
@@ -130,10 +128,10 @@ mod test {
                 randomness_bits.as_array().clone(),
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 gadget.get_output_wires(),
-                &Some("rerand_cipher".to_owned()),
+                "rerand_cipher",
             );
         }
 
@@ -173,9 +171,9 @@ mod test {
     crate::impl_struct_name_for!(CircuitGeneratorExtend<ElgamalDecCircuitGenerator>);
     impl CGConfig for CircuitGeneratorExtend<ElgamalDecCircuitGenerator> {
         fn build_circuit(&mut self) {
-            let secret_key = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sk, &None);
-            let sk_bits = secret_key.get_bit_wiresi(self.t.sk.bits(), &None);
-            let msg_wire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.msg, &None);
+            let secret_key = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sk);
+            let sk_bits = secret_key.get_bit_wiresi(self.t.sk.bits());
+            let msg_wire = CircuitGenerator::create_constant_wire(self.cg(), &self.t.msg);
             let generator = self.cg.clone();
             let gadget = ZkayElgamalDecGadget::new(
                 self.t.pk.asConstJubJub(&generator),
@@ -185,10 +183,10 @@ mod test {
                 msg_wire,
                 self.cg(),
             );
-            CircuitGenerator::make_output_array(
+            CircuitGenerator::make_output_array_with_str(
                 self.cg(),
                 gadget.get_output_wires(),
-                &Some("dummy output".to_owned()),
+                "dummy output",
             );
         }
 

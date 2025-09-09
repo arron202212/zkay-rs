@@ -81,11 +81,7 @@ impl Gadget<ZkayPaillierFastEncGadget> {
         .get_result()
         .clone();
         let generators = self.generator.clone();
-        CircuitGenerator::add_one_assertion(
-            self.generator.clone(),
-            &rand_inv.check_non_zero(),
-            &None,
-        );
+        CircuitGenerator::add_one_assertion(self.generator.clone(), &rand_inv.check_non_zero());
         // Compute c = g^m * r^n mod n^2
         let g_pow_plain = self
             .t
