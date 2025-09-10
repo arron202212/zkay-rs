@@ -46,8 +46,9 @@ impl<T> Op<T> {
                 //println!("One of the input wires is None: {inputs:?}");
                 eyre::bail!("A None wire");
             } else if w.as_ref().unwrap().get_wire_id() == -1 {
+                //MYTODO
                 //println!("One of the input wires is not packed: {inputs:?}");
-                eyre::bail!("A wire with a negative id");
+                eyre::bail!("A wire with a negative id {}", w.as_ref().unwrap().name());
             }
         }
         for w in &outputs {

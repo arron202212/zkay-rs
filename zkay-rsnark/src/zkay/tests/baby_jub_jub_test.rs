@@ -43,7 +43,6 @@ mod test {
     impl TestGadget {
         fn new(generator: RcCell<CircuitGenerator>) -> Gadget<ZkayBabyJubJubGadget<Self>> {
             let mut _self = ZkayBabyJubJubGadget::<Self>::new(
-                &None,
                 TestGadget {
                     dummy: vec![generator.get_one_wire()],
                 },

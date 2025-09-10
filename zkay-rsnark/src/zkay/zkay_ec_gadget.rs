@@ -136,7 +136,7 @@ impl<T> Gadget<ZkayEcGadget<T>> {
         let start = std::time::Instant::now();
         let mut precomputed_table: Vec<AffinePoint> = (1..Self::SECRET_BITWIDTH)
             .scan(p.clone(), |pre, _| {
-                //pre = Self::double_affine_point(&pre, generator.clone());
+                *pre = Self::double_affine_point(&pre, generator.clone());
                 Some(pre.clone())
             })
             .collect();

@@ -10,6 +10,7 @@ use crate::{
     circuit::{
         config::config::CONFIGS,
         eval::circuit_evaluator::CircuitEvaluator,
+        operations::gadget::{Gadget, GadgetConfig},
         structure::{
             circuit_generator::{
                 CGConfig, CGConfigFields, CGInstance, CircuitGenerator, CircuitGeneratorExtend,
@@ -28,20 +29,42 @@ use zkay_derive::ImplStructNameConfig;
 
 #[cfg(test)]
 mod test {
+    macro_rules! impl_cg_test_for_sha {
+        ($expr:expr) => {
+            #[derive(Debug, Clone, ImplStructNameConfig)]
+            struct CGTest {
+                input_wires: Vec<Option<WireType>>,
+                num_bytes_per_input_wire: usize,
+            }
+            impl CGTest {
+                const input_str: &[u8] = $expr;
+                pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
+                    Self::new_with_bytes(name, 0)
+                }
+                pub fn new_with_bytes(
+                    name: &str,
+                    num_bytes_per_input_wire: usize,
+                ) -> CircuitGeneratorExtend<Self> {
+                    CircuitGeneratorExtend::<Self>::new(
+                        name,
+                        Self {
+                            input_wires: vec![],
+                            num_bytes_per_input_wire,
+                        },
+                    )
+                }
+            }
+            crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        };
+    }
+
     use super::*;
     #[test]
     pub fn sha256_test_case1() {
+        impl_cg_test_for_sha!(b"");
         let expected_digest =
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".to_owned();
 
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-        }
-        impl CGTest {
-            const input_str: &[u8] = b"";
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires =
@@ -52,7 +75,6 @@ mod test {
                     CGTest::input_str.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 )
@@ -66,10 +88,10 @@ mod test {
                 // no input needed
             }
         };
-        let t = CGTest {
-            input_wires: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test1", t);
+        // let t = CGTest {
+        //     input_wires: vec![],
+        // };
+        let mut generator = CGTest::new("SHA2_Test1");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
@@ -87,16 +109,9 @@ mod test {
 
     #[test]
     pub fn sha256_test_case2() {
+        impl_cg_test_for_sha!(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
         let expected_digest = "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1";
 
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-        }
-        impl CGTest {
-            const input_str: &[u8] = b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires =
@@ -107,7 +122,6 @@ mod test {
                     CGTest::input_str.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 )
@@ -126,10 +140,8 @@ mod test {
                 }
             }
         };
-        let t = CGTest {
-            input_wires: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test2", t);
+
+        let mut generator = CGTest::new("SHA2_Test2");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
@@ -147,17 +159,10 @@ mod test {
 
     #[test]
     pub fn sha256_test_case3() {
+        impl_cg_test_for_sha!(b"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
         let expected_digest =
             "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1".to_owned();
 
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-        }
-        impl CGTest {
-            const input_str:&[u8] = b"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu";
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires =
@@ -168,7 +173,6 @@ mod test {
                     CGTest::input_str.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 )
@@ -187,10 +191,8 @@ mod test {
                 }
             }
         };
-        let t = CGTest {
-            input_wires: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test3", t);
+
+        let mut generator = CGTest::new("SHA2_Test3");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
@@ -208,14 +210,8 @@ mod test {
 
     #[test]
     pub fn sha256_test_case4() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-        }
-        impl CGTest {
-            const input_str: &[u8] = b"abc";
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test_for_sha!(b"abc");
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires =
@@ -226,7 +222,6 @@ mod test {
                     CGTest::input_str.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 )
@@ -248,10 +243,7 @@ mod test {
         let expected_digest =
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad".to_owned();
 
-        let t = CGTest {
-            input_wires: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test4", t);
+        let mut generator = CGTest::new("SHA2_Test4");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
@@ -269,15 +261,8 @@ mod test {
 
     #[test]
     pub fn sha256_test_case5() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-            num_bytes_per_input_wire: usize,
-        }
-        impl CGTest {
-            const input_str: &[u8] = b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test_for_sha!(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires = CircuitGenerator::create_input_wire_array(
@@ -295,7 +280,6 @@ mod test {
                     CGTest::input_str.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 )
@@ -328,12 +312,7 @@ mod test {
         // word_size = # of bytes per input wire
 
         for word_size in 1..CONFIGS.log2_field_prime / 8 {
-            let num_bytes_per_input_wire = word_size as usize;
-            let t = CGTest {
-                input_wires: vec![],
-                num_bytes_per_input_wire,
-            };
-            let mut generator = CircuitGeneratorExtend::<CGTest>::new("SHA2_Test5", t);
+            let mut generator = CGTest::new_with_bytes("SHA2_Test5", word_size as usize);
 
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();

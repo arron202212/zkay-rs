@@ -673,7 +673,7 @@ impl LongElement {
 
         // since the two elements should be equal, we should not need any aux
         // chunk in the last step
-        //aux_constant_chunks.last_mut().unwrap() = BigInteger::ZERO;
+        *aux_constant_chunks.last_mut().unwrap() = BigInteger::ZERO;
 
         // Note: the previous aux_constant_chunks are not aligned. We compute an
         // aligned version as follows.

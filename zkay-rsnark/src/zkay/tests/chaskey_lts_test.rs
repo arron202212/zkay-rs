@@ -19,7 +19,7 @@ use crate::{
             wire_type::WireType,
         },
     },
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
     zkay::{
         chaskey_lts_cbc::{ChaskeyLtsCbc, KeyParameter},
         chaskey_lts_engine::{ChaskeyLTSEngine, CipherParameters},
@@ -77,6 +77,7 @@ mod test {
 
     #[test]
     pub fn chaskey_lts_test() {
+        //MYTODO TEST
         let crypto = ChaskeyLTSEngine::new(true, CipherParameters::new(KEY.to_vec()));
 
         // Test encrypt
@@ -96,6 +97,7 @@ mod test {
 
     #[test]
     pub fn cbc_chaskey_output_same_as_gadget_test() {
+        //MYTODO TEST
         // Define inputs
         let key = Util::parse_big_int_x("b2e21df10a222a69ee1e6a2d60465f4c");
         let iv = Util::parse_big_int_x("f2c605c86352cea9fcaf88f12eba6371");
@@ -131,7 +133,6 @@ mod test {
                         keywire,
                         ivwire,
                         CipherType::Chaskey,
-                        &None,
                         self.cg(),
                     )
                     .get_output_wires(),

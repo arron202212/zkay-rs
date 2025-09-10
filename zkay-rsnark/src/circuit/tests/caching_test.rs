@@ -185,7 +185,7 @@ mod test {
                     rotated_left[i] = inputs3[i].as_ref().map(|x| x.rotate_left(32, i % 32));
 
                     xored[i] = inputs1[i].as_ref().map(|x| {
-                        x.xor_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
+                        x.xor_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
 
                     ored[i] = inputs1[i].as_ref().map(|x| {
@@ -193,7 +193,7 @@ mod test {
                     });
 
                     anded[i] = inputs1[i].as_ref().map(|x| {
-                        x.and_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
+                        x.and_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
 
                     inverted[i] = inputs3[i].as_ref().map(|x| x.inv_bits(32));
@@ -221,13 +221,13 @@ mod test {
                     rotated_right[i] = inputs3[i].as_ref().map(|x| x.rotate_right(32, i % 32));
                     rotated_left[i] = inputs3[i].as_ref().map(|x| x.rotate_left(32, i % 32));
                     xored[i] = inputs1[i].as_ref().map(|x| {
-                        x.xor_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
+                        x.xor_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     ored[i] = inputs1[i].as_ref().map(|x| {
                         x.or_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     anded[i] = inputs1[i].as_ref().map(|x| {
-                        x.and_bitwise(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
+                        x.and_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     inverted[i] = inputs3[i].as_ref().map(|x| x.inv_bits(32));
                     multiplied[i] = inputs1[i]
@@ -245,14 +245,14 @@ mod test {
                 // gates will not be affected
                 for i in 0..num_ins {
                     xored[i] = inputs2[i].as_ref().map(|x| {
-                        x.xor_bitwise(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
+                        x.xor_bitwises(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     // assert_eq!(generator.get_num_of_constraints(), current_cost);
                     ored[i] = inputs2[i].as_ref().map(|x| {
                         x.or_bitwises(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     anded[i] = inputs2[i].as_ref().map(|x| {
-                        x.and_bitwise(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
+                        x.and_bitwises(inputs1[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     multiplied[i] = inputs2[i]
                         .clone()
@@ -454,9 +454,9 @@ mod test {
                 assert_eq!(generator.get_num_of_constraints(), 4); // we don't detect
                 // similarity here yet
 
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, self.cg());
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), self.cg());
                 assert_eq!(generator.get_num_of_constraints(), 5);
-                FieldDivisionGadget::new(in1.clone(), in2.clone(), &None, self.cg());
+                FieldDivisionGadget::new(in1.clone(), in2.clone(), self.cg());
                 // since this operation is implemented externally, it's not easy
                 // to filter it, because everytime a witness wire is introduced
                 // by the gadget. To eliminate such similar operations, the
@@ -516,7 +516,6 @@ mod test {
                     input_str.len(),
                     false,
                     true,
-                    &None,
                     generator.cg(),
                     Base,
                 )
@@ -529,7 +528,6 @@ mod test {
                     input_str.len(),
                     false,
                     true,
-                    &None,
                     generator.cg(),
                     Base,
                 )
@@ -541,7 +539,6 @@ mod test {
                     input_str.len(),
                     false,
                     true,
-                    &None,
                     generator.cg(),
                     Base,
                 )
@@ -553,7 +550,6 @@ mod test {
                     input_str.len(),
                     false,
                     true,
-                    &None,
                     generator.cg(),
                     Base,
                 )
@@ -565,7 +561,6 @@ mod test {
                     input_str.len(),
                     false,
                     true,
-                    &None,
                     generator.cg(),
                     Base,
                 )
@@ -577,7 +572,6 @@ mod test {
                     input_str.len(),
                     false,
                     true,
-                    &None,
                     generator.cg(),
                     Base,
                 )
@@ -593,17 +587,8 @@ mod test {
                 // do a small change and verify that number changes
                 let mut in2 = input_wires.clone();
                 in2[0] = in2[1].clone();
-                SHA256Gadget::new(
-                    in2,
-                    8,
-                    input_str.len(),
-                    false,
-                    true,
-                    &None,
-                    generator.cg(),
-                    Base,
-                )
-                .get_output_wires();
+                SHA256Gadget::new(in2, 8, input_str.len(), false, true, generator.cg(), Base)
+                    .get_output_wires();
                 assert!(num_of_constraints_before < generator.get_num_of_constraints());
 
                 CircuitGenerator::make_output_array(self.cg(), &digest);

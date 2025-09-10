@@ -28,6 +28,31 @@ use zkay_derive::ImplStructNameConfig;
 
 #[cfg(test)]
 mod test {
+    // #[macro_export]
+    macro_rules! impl_cg_test_for_fe {
+        () => {
+            #[derive(Debug, Clone, ImplStructNameConfig)]
+            struct CGTest {
+                exponent_bits: Vec<Option<WireType>>,
+                g: Vec<Option<WireType>>,
+                h: Vec<Option<WireType>>,
+            }
+            impl CGTest {
+                pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
+                    CircuitGeneratorExtend::<Self>::new(
+                        name,
+                        Self {
+                            exponent_bits: vec![],
+                            g: vec![],
+                            h: vec![],
+                        },
+                    )
+                }
+            }
+            crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        };
+    }
+
     use super::*;
     pub const mu: usize = 4;
     pub const omega: usize = 7;
@@ -36,27 +61,10 @@ mod test {
     // check the HybridEncryptionCircuitGenerator
 
     // The sage script to compute the sample case is commented in the end of the file.
-    #[derive(Debug, Clone, ImplStructNameConfig)]
-    struct CGTest {
-        exponent_bits: Vec<Option<WireType>>,
-        g: Vec<Option<WireType>>,
-        h: Vec<Option<WireType>>,
-    }
-    impl CGTest {
-        pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
-            CircuitGeneratorExtend::<CGTest>::new(
-                name,
-                Self {
-                    exponent_bits: vec![],
-                    g: vec![],
-                    h: vec![],
-                },
-            )
-        }
-    }
-    crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+
     #[test]
     pub fn test_hardcoded_keys() {
+        impl_cg_test_for_fe!();
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let exponent_bits = CircuitGenerator::create_input_wire_array_with_str(
@@ -98,7 +106,6 @@ mod test {
                     h,
                     exponent_bits.clone(),
                     omega as i64,
-                    &None,
                     self.cg(),
                 );
 
@@ -156,14 +163,7 @@ mod test {
 
     #[test]
     pub fn test_variable_keys() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            exponent_bits: Vec<Option<WireType>>,
-            g: Vec<Option<WireType>>,
-            h: Vec<Option<WireType>>,
-        }
-
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test_for_fe!();
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let exponent_bits = CircuitGenerator::create_input_wire_array_with_str(
@@ -180,7 +180,6 @@ mod test {
                     h.clone(),
                     exponent_bits.clone(),
                     omega as i64,
-                    &None,
                     self.cg(),
                 );
 
@@ -237,12 +236,7 @@ mod test {
             }
         };
 
-        let t = CGTest {
-            exponent_bits: vec![],
-            g: vec![],
-            h: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test2", t);
+        let mut generator = CGTest::new("FieldExtension_Test2");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 
@@ -268,13 +262,7 @@ mod test {
 
     #[test]
     pub fn test_fedhke_input_validation() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            exponent_bits: Vec<Option<WireType>>,
-            g: Vec<Option<WireType>>,
-            h: Vec<Option<WireType>>,
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test_for_fe!();
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let exponent_bits = CircuitGenerator::create_input_wire_array_with_str(
@@ -291,7 +279,6 @@ mod test {
                     h.clone(),
                     exponent_bits.clone(),
                     omega as i64,
-                    &None,
                     self.cg(),
                 );
 
@@ -351,12 +338,8 @@ mod test {
                 }
             }
         };
-        let t = CGTest {
-            exponent_bits: vec![],
-            g: vec![],
-            h: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("FieldExtension_Test3", t);
+
+        let mut generator = CGTest::new("FieldExtension_Test3");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 

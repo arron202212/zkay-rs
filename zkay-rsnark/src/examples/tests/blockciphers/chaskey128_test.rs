@@ -19,7 +19,7 @@ use crate::{
         },
     },
     examples::gadgets::blockciphers::chaskey_lts128_cipher_gadget::ChaskeyLTS128CipherGadget,
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
 };
 
 use zkay_derive::ImplStructNameConfig;
@@ -36,19 +36,27 @@ mod test {
             key: Vec<Option<WireType>>,        // 4 32-bit words
             ciphertext: Vec<Option<WireType>>, // 4 32-bit words
         }
+        impl CGTest {
+            pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
+                CircuitGeneratorExtend::<Self>::new(
+                    name,
+                    Self {
+                        plaintext: vec![],
+                        key: vec![],
+                        ciphertext: vec![],
+                    },
+                )
+            }
+        }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 4);
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 4);
-                let ciphertext = ChaskeyLTS128CipherGadget::new(
-                    plaintext.clone(),
-                    key.clone(),
-                    &None,
-                    self.cg(),
-                )
-                .get_output_wires()
-                .clone();
+                let ciphertext =
+                    ChaskeyLTS128CipherGadget::new(plaintext.clone(), key.clone(), self.cg())
+                        .get_output_wires()
+                        .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
                 (self.t.plaintext, self.t.key, self.t.ciphertext) = (plaintext, key, ciphertext);
             }
@@ -76,12 +84,7 @@ mod test {
                 }
             }
         };
-        let t = CGTest {
-            plaintext: vec![],  // 4 32-bit words
-            key: vec![],        // 4 32-bit words
-            ciphertext: vec![], // 4 32-bit words
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Chaskey_Test1", t);
+        let mut generator = CGTest::new("Chaskey_Test1");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 

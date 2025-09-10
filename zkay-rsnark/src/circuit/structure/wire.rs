@@ -554,8 +554,16 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
             desc,
         )
     }
-
-    fn and_bitwises(&self, w: &WireType, num_bits: u64, desc: &Option<String>) -> WireType {
+    #[inline]
+    fn and_bitwises(&self, w: &WireType, num_bits: u64) -> WireType {
+        self.and_bitwises_with_option(w, num_bits, &None)
+    }
+    fn and_bitwises_with_option(
+        &self,
+        w: &WireType,
+        num_bits: u64,
+        desc: &Option<String>,
+    ) -> WireType {
         use std::time::Instant;
         let start = Instant::now();
         let mut generator = self.generator();
@@ -578,7 +586,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn and_bitwisei(&self, v: i64, num_bits: u64, desc: &Option<String>) -> WireType {
-        self.and_bitwises(
+        self.and_bitwises_with_option(
             &self.generator().create_constant_wire_with_option(v, desc),
             num_bits,
             desc,
@@ -586,7 +594,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
     }
 
     fn and_bitwiseb(&self, b: &BigInteger, num_bits: u64, desc: &Option<String>) -> WireType {
-        self.and_bitwises(
+        self.and_bitwises_with_option(
             &self.generator().create_constant_wire_with_option(b, desc),
             num_bits,
             desc,
@@ -751,12 +759,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
         )
     }
     #[inline]
-    fn is_greater_than_or_equals(
-        &self,
-        w: &WireType,
-        bitwidth: i32,
-        desc: &Option<String>,
-    ) -> WireType {
+    fn is_greater_than_or_equals(&self, w: &WireType, bitwidth: i32) -> WireType {
         self.is_greater_than_or_equals_with_option(w, bitwidth, &None)
     }
 
@@ -1062,6 +1065,7 @@ pub trait WireConfig: PartialEq + SetBitsConfig + InstanceOf + GetWireId + Gener
             bits.is_some(),
             "A Pack operation is tried on a wire that has no bits."
         );
+        *self.get_wire_id_mut().borrow_mut() = generator.borrow().current_wire_id;
         generator.borrow_mut().current_wire_id += 1;
 
         let op = PackBasicOp::new(

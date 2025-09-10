@@ -102,6 +102,7 @@ impl Gadget<FieldDivisionGadget> {
                  fn evaluate(&self, evaluator: &mut CircuitEvaluator) ->eyre::Result<()>{
                                        let a_value = evaluator.get_wire_value(&self.a);
                                     let b_value = evaluator.get_wire_value(&self.b);
+                                    // println!("===CONFIGS.field_prime======={b_value},{}",self.b);
                                     let c_value = a_value
                                         .mul(b_value.modinv(&CONFIGS.field_prime).unwrap())
                                         .rem(&CONFIGS.field_prime);

@@ -503,21 +503,13 @@ mod test {
                     rotated_right[i] = inputs3[i].clone().map(|x| x.rotate_right(32, i % 32));
                     rotated_left[i] = inputs3[i].clone().map(|x| x.rotate_left(32, i % 32));
                     xored[i] = inputs1[i].clone().map(|x| {
-                        x.xor_bitwise(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.xor_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     ored[i] = inputs1[i].clone().map(|x| {
                         x.or_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
                     anded[i] = inputs1[i].clone().map(|x| {
-                        x.and_bitwise(
-                            inputs2[i].as_ref().unwrap(),
-                            CONFIGS.log2_field_prime,
-                            &None,
-                        )
+                        x.and_bitwises(inputs2[i].as_ref().unwrap(), CONFIGS.log2_field_prime)
                     });
 
                     inverted[i] = inputs3[i].clone().map(|x| x.inv_bits(32));

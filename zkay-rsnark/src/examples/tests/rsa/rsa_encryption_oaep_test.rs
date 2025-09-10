@@ -25,7 +25,7 @@ use crate::{
         gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget,
         generators::rsa::rsa_util::RSAUtil,
     },
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
 };
 
 use std::ops::{Add, Mul, Shl, Sub};
@@ -73,7 +73,6 @@ mod test {
                     input_message.clone(),
                     seed.clone(),
                     self.t.rsa_key_length as i32,
-                    &None,
                     self.cg(),
                 );
 

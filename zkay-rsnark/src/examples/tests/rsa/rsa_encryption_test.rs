@@ -22,10 +22,13 @@ use crate::{
         },
     },
     examples::{
-        gadgets::rsa::rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget,
+        gadgets::rsa::{
+            rsa_encryption_oaep_gadget::RSAEncryptionOAEPGadget,
+            rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget,
+        },
         generators::rsa::rsa_util::RSAUtil,
     },
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
 };
 
 use std::ops::{Add, Mul, Shl, Sub};
@@ -77,7 +80,6 @@ mod test {
                     input_message.clone(),
                     randomness.clone(),
                     self.t.rsa_key_length as i32,
-                    &None,
                     self.cg(),
                 );
 

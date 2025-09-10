@@ -1,4 +1,4 @@
-total 497891WireLabelInstruction { label_type: input, w: Constant(Wire { wire_id: RcCell(RefCell { value: 0 }), generator: WeakCell((Weak)), t: ConstantWire { constant: 1 } }), desc: "The one-input wire." } 
+total 497892WireLabelInstruction { label_type: input, w: Constant(Wire { wire_id: RcCell(RefCell { value: 0 }), generator: WeakCell((Weak)), t: ConstantWire { constant: 1 } }), desc: "The one-input wire." } 
 WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell(RefCell { value: 2 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "in_ 0" } 
 WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell(RefCell { value: 3 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "in_ 1" } 
 WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell(RefCell { value: 4 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "in_ 2" } 
@@ -6688,4 +6688,4 @@ WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell
 WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell(RefCell { value: 75767 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "" } 
 WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell(RefCell { value: 75783 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "" } 
 WireLabelInstruction { label_type: nizkinput, w: Variable(Wire { wire_id: RcCell(RefCell { value: 75786 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "" } 
-WireLabelInstruction { label_type: output, w: Variable(Wire { wire_id: RcCell(RefCell { value: 497890 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "digest[0]" } 
+WireLabelInstruction { label_type: output, w: Variable(Wire { wire_id: RcCell(RefCell { value: 497891 }), generator: WeakCell((Weak)), t: VariableWire { bit_wires: None } }), desc: "digest[0]" } 

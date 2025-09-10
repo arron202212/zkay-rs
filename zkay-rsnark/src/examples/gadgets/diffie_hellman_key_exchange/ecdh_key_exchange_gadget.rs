@@ -405,7 +405,10 @@ impl Gadget<ECDHKeyExchangeGadget> {
     fn preprocess(&self, p: &AffinePoint) -> Vec<AffinePoint> {
         let start = std::time::Instant::now();
         let mut precomputed_table: Vec<_> = (1..self.t.secret_bits.len())
-            .scan(p.clone(), |s, _j| Some((*s).clone()))
+            .scan(p.clone(), |s, _j| {
+                *s = Self::double_affine_point(&s, self.generator.clone());
+                Some((*s).clone())
+            })
             .collect();
 
         precomputed_table.insert(0, p.clone());

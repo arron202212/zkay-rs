@@ -18,27 +18,42 @@ use crate::{
             wire_type::WireType,
         },
     },
-    examples::gadgets::math::mod_gadget::ModGadget,
-    util::util::BigInteger,
+    examples::gadgets::math::{mod_constant_gadget::ModConstantGadget, mod_gadget::ModGadget},
+    util::util::{BigInteger, Util},
 };
 use zkay_derive::ImplStructNameConfig;
 #[cfg(test)]
 mod test {
+    macro_rules! impl_cg_test_for_mod {
+        () => {
+            #[derive(Debug, Clone, ImplStructNameConfig)]
+            struct CGTest {
+                input_wires: Vec<Option<WireType>>,
+            }
+            impl CGTest {
+                const a: i64 = 1262178522;
+                const b: i64 = 257; // b will be an input to the circuit
+                pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
+                    CircuitGeneratorExtend::<Self>::new(
+                        name,
+                        Self {
+                            input_wires: vec![],
+                        },
+                    )
+                }
+            }
+            crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        };
+    }
+
     use super::*;
 
     // TODO; add more tests
 
     #[test]
     pub fn mod_test_case1() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-        }
-        impl CGTest {
-            const a: i64 = 1262178522;
-            const b: i64 = 257; // b will be an input to the circuit
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test_for_mod!();
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 2);
@@ -49,7 +64,6 @@ mod test {
                     input_wires[0].clone().unwrap(),
                     input_wires[1].clone().unwrap(),
                     32,
-                    &None,
                     self.cg(),
                 )
                 .get_output_wires()[0]
@@ -63,10 +77,8 @@ mod test {
                 evaluator.set_wire_valuei(self.t.input_wires[1].as_ref().unwrap(), CGTest::b);
             }
         };
-        let t = CGTest {
-            input_wires: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Mod_Test1", t);
+
+        let mut generator = CGTest::new("Mod_Test1");
         generator.generate_circuit();
         let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generate_sample_input(&mut evaluator);
@@ -80,15 +92,8 @@ mod test {
 
     #[test]
     pub fn mod_test_case2() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            input_wires: Vec<Option<WireType>>,
-        }
-        impl CGTest {
-            const a: i64 = 1262178522;
-            const b: i64 = 257; //  b will be a constant
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test_for_mod!();
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let input_wires = CircuitGenerator::create_input_wire_array(self.cg(), 1);
@@ -96,7 +101,6 @@ mod test {
                     input_wires[0].clone().unwrap(),
                     32,
                     BigInteger::from(CGTest::b),
-                    &None,
                     self.cg(),
                 )
                 .get_output_wires()[0]
@@ -109,10 +113,8 @@ mod test {
                 evaluator.set_wire_valuei(self.t.input_wires[0].as_ref().unwrap(), CGTest::a);
             }
         };
-        let t = CGTest {
-            input_wires: vec![],
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Mod_Test2", t);
+
+        let mut generator = CGTest::new("Mod_Test2");
         generator.generate_circuit();
         let mut evaluator = CircuitEvaluator::new("CGTest", &generator.cg);
         generator.generate_sample_input(&mut evaluator);

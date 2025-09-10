@@ -19,7 +19,7 @@ use crate::{
         },
     },
     examples::gadgets::blockciphers::speck128_cipher_gadget::Speck128CipherGadget,
-    util::util::BigInteger,
+    util::util::{BigInteger, Util},
 };
 use zkay_derive::ImplStructNameConfig;
 
@@ -36,6 +36,17 @@ mod test {
             plaintext: Vec<Option<WireType>>, // 2 64-bit words
             key: Vec<Option<WireType>>,       // 2 64-bit words
         }
+        impl CGTest {
+            pub fn new(name: &str) -> CircuitGeneratorExtend<Self> {
+                CircuitGeneratorExtend::<Self>::new(
+                    name,
+                    Self {
+                        plaintext: vec![],
+                        key: vec![],
+                    },
+                )
+            }
+        }
         crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
@@ -43,7 +54,7 @@ mod test {
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 2);
                 let expanded_key = Gadget::<Speck128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
-                    Speck128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
+                    Speck128CipherGadget::new(plaintext.clone(), expanded_key, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
@@ -53,27 +64,23 @@ mod test {
             fn generate_sample_input(&self, evaluator: &mut CircuitEvaluator) {
                 evaluator.set_wire_value(
                     self.t.key[0].as_ref().unwrap(),
-                    Util::parse_big_int_x("0706050403020100"),
+                    &Util::parse_big_int_x("0706050403020100"),
                 );
                 evaluator.set_wire_value(
                     self.t.key[1].as_ref().unwrap(),
-                    Util::parse_big_int_x("0f0e0d0c0b0a0908"),
+                    &Util::parse_big_int_x("0f0e0d0c0b0a0908"),
                 );
                 evaluator.set_wire_value(
                     self.t.plaintext[0].as_ref().unwrap(),
-                    Util::parse_big_int_x("7469206564616d20"),
+                    &Util::parse_big_int_x("7469206564616d20"),
                 );
                 evaluator.set_wire_value(
                     self.t.plaintext[1].as_ref().unwrap(),
-                    Util::parse_big_int_x("6c61766975716520"),
+                    &Util::parse_big_int_x("6c61766975716520"),
                 );
             }
         };
-        let t = CGTest {
-            plaintext: vec![], // 2 64-bit words
-            key: vec![],       // 2 64-bit words
-        };
-        let mut generator = CircuitGeneratorExtend::<CGTest>::new("Speck128_Test", t);
+        let mut generator = CGTest::new("Speck128_Test");
         generator.generate_circuit();
         let evaluator = generator.eval_circuit().unwrap();
 

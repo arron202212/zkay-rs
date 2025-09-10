@@ -357,9 +357,11 @@ impl TypedWire {
     pub fn bit_and(&self, rhs: &TypedWire) -> TypedWire {
         let result_type = ZkayType::check_typeb(&self.zkay_type, &rhs.zkay_type, false);
         let op = self.name.clone() + " & " + &rhs.name;
-        let res = self
-            .wire
-            .and_bitwises(&rhs.wire, result_type.bitwidth as u64, &Some(op.clone()));
+        let res = self.wire.and_bitwises_with_option(
+            &rhs.wire,
+            result_type.bitwidth as u64,
+            &Some(op.clone()),
+        );
         TypedWire::new(res, result_type, op, &vec![], self.generator.clone())
     }
 

@@ -49,6 +49,14 @@ impl Util {
         BigInteger::parse_bytes(s.as_bytes(), 16).unwrap()
     }
     #[inline]
+    pub fn parse_bytes(s: &[u8]) -> BigInteger {
+        BigInteger::parse_bytes(s, 10).unwrap()
+    }
+    #[inline]
+    pub fn parse_bytes_x(s: &[u8]) -> BigInteger {
+        BigInteger::parse_bytes(s, 16).unwrap()
+    }
+    #[inline]
     pub fn one() -> BigInteger {
         BigInteger::one()
     }

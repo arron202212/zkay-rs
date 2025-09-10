@@ -312,8 +312,9 @@ impl CryptoBackend<Asymmetric<PaillierBackend>> {
         let wires: Vec<_> = cipher.iter().map(|c| Some(c.wire.clone())).collect();
 
         let mut bit_widths = vec![PaillierBackend::CHUNK_SIZE as u64; wires.len()];
-        //bit_widths.last_mut().unwrap() =
-        (2 * self.key_bits - (bit_widths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE) as u64;
+        *bit_widths.last_mut().unwrap() = (2 * self.key_bits
+            - (bit_widths.len() as i32 - 1) * PaillierBackend::CHUNK_SIZE)
+            as u64;
 
         // Cipher could still be uninitialized-zero, which we need to fix
         self.uninit_zero_to_one(&LongElement::new(wires, bit_widths, generator.downgrade()))

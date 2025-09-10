@@ -70,7 +70,7 @@ mod test {
                 let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1);
                 CircuitGenerator::make_output(
                     self.cg(),
-                    ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).get_output_wires()[0]
+                    ZkayEcPkDerivationGadget::new(s, true, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                 );
@@ -96,7 +96,7 @@ mod test {
                 let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec2);
                 CircuitGenerator::make_output(
                     self.cg(),
-                    ZkayEcPkDerivationGadget::new(s, true, &None, self.cg()).get_output_wires()[0]
+                    ZkayEcPkDerivationGadget::new(s, true, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                 );
@@ -133,7 +133,7 @@ mod test {
                 let s = CircuitGenerator::create_constant_wire(self.cg(), &self.t.sec1);
                 CircuitGenerator::make_output(
                     self.cg(),
-                    ZkayECDHGadget::new(p, s, false, &None, self.cg()).get_output_wires()[0]
+                    ZkayECDHGadget::new(p, s, false, self.cg()).get_output_wires()[0]
                         .as_ref()
                         .unwrap(),
                 );

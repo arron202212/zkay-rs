@@ -207,7 +207,6 @@ mod test {
                 generator_wire.clone(),
                 plain_wire.clone(),
                 random_wire.clone(),
-                &None,
                 self.cg(),
             );
             CircuitGenerator::make_output_array_with_str(
@@ -327,7 +326,6 @@ mod test {
                 lambda_wire.clone(),
                 mu_wire.clone(),
                 cipher_wire.clone(),
-                &None,
                 self.cg(),
             );
             CircuitGenerator::make_output_array_with_str(
@@ -436,7 +434,6 @@ mod test {
                 n_bits as i32,
                 plain_wire.clone(),
                 random_wire.clone(),
-                &None,
                 self.cg(),
             );
             CircuitGenerator::make_output_array_with_str(
@@ -531,7 +528,6 @@ mod test {
                 n_bits as i32,
                 lambda_wire.clone(),
                 cipher_wire.clone(),
-                &None,
                 self.cg(),
             );
             CircuitGenerator::make_output_array_with_str(

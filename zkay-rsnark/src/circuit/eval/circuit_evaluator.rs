@@ -53,19 +53,22 @@ impl CircuitEvaluator {
             w.get_wire_id(),
             v
         );
-
+        // assert!(w.get_wire_id()!=774,"panic bt");
         self.value_assignment[w.get_wire_id() as usize] = Some(v.clone());
     }
 
     pub fn get_wire_value(&self, w: &WireType) -> BigInteger {
         let mut v = &self.value_assignment[w.get_wire_id() as usize];
         if let Some(v) = v {
+            // println!("====get_wire_value==vv={w}=v=={v}==");
+
             return v.clone();
         }
         let Some(bits) = w.get_bit_wires_if_exist_already() else {
+            // println!("=====get_bit_wires_if_exist_already=======");
             return BigInteger::ZERO;
         };
-
+        // println!("====get_wire_value========");
         bits.array
             .iter()
             .enumerate()

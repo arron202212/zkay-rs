@@ -64,7 +64,6 @@ mod test {
                     input_message.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 );
@@ -82,7 +81,6 @@ mod test {
                     digest.clone(),
                     signature.clone(),
                     self.t.rsa_key_length as i32,
-                    &None,
                     self.cg(),
                 );
                 CircuitGenerator::make_output(
@@ -123,7 +121,7 @@ mod test {
                 let message = CGTest::input_str;
                 // signature.update(message);
 
-                let sig_bytes = vec![0; 32]; //signature.sign();
+                let sig_bytes = vec![0u8; 32]; //signature.sign();
 
                 // pad an extra zero byte to avoid having a negative big
                 // integer
@@ -131,7 +129,7 @@ mod test {
                 signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
                 signature_padded[0] = 0;
                 let modulus = BigInteger::from(1); //(keyPair.getPublic()).getModulus();
-                let sig = Util::parse_big_int(&signature_padded);
+                let sig = Util::parse_bytes(&signature_padded);
 
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),
@@ -207,7 +205,6 @@ mod test {
                     input_message.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 );
@@ -225,7 +222,6 @@ mod test {
                     digest.clone(),
                     signature.clone(),
                     self.t.rsa_key_length as i32,
-                    &None,
                     self.cg(),
                 );
                 CircuitGenerator::make_output(
@@ -274,7 +270,7 @@ mod test {
                 signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
                 signature_padded[0] = 0;
                 let modulus = BigInteger::from(64); //(keyPair.getPublic()).getModulus();
-                let sig = Util::parse_big_int(&signature_padded);
+                let sig = Util::parse_bytes(&signature_padded);
 
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),
@@ -352,7 +348,6 @@ mod test {
                     input_message.len(),
                     false,
                     true,
-                    &None,
                     self.cg(),
                     Base,
                 );
@@ -370,7 +365,6 @@ mod test {
                     digest.clone(),
                     signature.clone(),
                     self.t.rsa_key_length as i32,
-                    &None,
                     self.cg(),
                 );
                 CircuitGenerator::make_output(
@@ -419,7 +413,7 @@ mod test {
                 signature_padded[1..sig_bytes.len()].clone_from_slice(&sig_bytes[0..]);
                 signature_padded[0] = 0;
                 let modulus = BigInteger::from(1); //(keyPair.getPublic()).getModulus();
-                let sig = Util::parse_big_int(&signature_padded);
+                let sig = Util::parse_bytes(&signature_padded);
 
                 evaluator.set_wire_valuebi(
                     self.t.rsa_modulus.as_ref().unwrap(),

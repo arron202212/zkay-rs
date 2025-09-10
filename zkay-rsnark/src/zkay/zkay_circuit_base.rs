@@ -290,7 +290,7 @@ pub trait ZkayCircuitBaseConfig: ZkayCircuitBaseFields + CGConfig {
             );
             serialized_arguments[i] = v;
         }
-        //self.serializedArguments_mut() = serialized_arguments;
+        *self.serializedArguments_mut() = serialized_arguments;
     }
     fn compile_circuit(&mut self) {
         println!("Compiling circuit '{}'", self.real_circuit_name());

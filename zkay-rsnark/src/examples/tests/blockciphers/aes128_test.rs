@@ -70,13 +70,8 @@ mod test {
     }
     #[test]
     pub fn aes128_test_case1() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            plaintext: Vec<Option<WireType>>,  // 16 bytes
-            key: Vec<Option<WireType>>,        // 16 bytes
-            ciphertext: Vec<Option<WireType>>, // 16 bytes
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test!();
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let start = std::time::Instant::now();
@@ -86,7 +81,7 @@ mod test {
                 let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 // assert!(!plaintext.is_empty(),"plaintext.is_empty()");
                 let ciphertext =
-                    AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
+                    AES128CipherGadget::new(plaintext.clone(), expanded_key, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
@@ -126,13 +121,7 @@ mod test {
         let start = std::time::Instant::now();
         for sbox_option in SBoxOption::iter() {
             atomic_sbox_option.store(sbox_option.clone().into(), Ordering::Relaxed);
-            let t = CGTest {
-                plaintext: vec![],  // 16 bytes
-                key: vec![],        // 16 bytes
-                ciphertext: vec![], // 16 bytes
-            };
-            let mut generator =
-                CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test1_{sbox_option}"), t);
+            let mut generator = CGTest::new(&format!("AES128_Test1_{sbox_option}"));
 
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
@@ -155,20 +144,15 @@ mod test {
 
     #[test]
     pub fn aes128_test_case2() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            plaintext: Vec<Option<WireType>>,  // 16 bytes
-            key: Vec<Option<WireType>>,        // 16 bytes
-            ciphertext: Vec<Option<WireType>>, // 16 bytes
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test!();
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
-                    AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
+                    AES128CipherGadget::new(plaintext.clone(), expanded_key, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
@@ -206,13 +190,8 @@ mod test {
         // testing all available sBox implementations
         for sbox_option in SBoxOption::iter() {
             atomic_sbox_option.store(sbox_option.clone().into(), Ordering::Relaxed);
-            let t = CGTest {
-                plaintext: vec![],  // 16 bytes
-                key: vec![],        // 16 bytes
-                ciphertext: vec![], // 16 bytes
-            };
-            let mut generator =
-                CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test2_{sbox_option}"), t);
+
+            let mut generator = CGTest::new(&format!("AES128_Test2_{sbox_option}"));
 
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
@@ -237,20 +216,15 @@ mod test {
 
     #[test]
     pub fn aes128_test_case3() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            plaintext: Vec<Option<WireType>>,  // 16 bytes
-            key: Vec<Option<WireType>>,        // 16 bytes
-            ciphertext: Vec<Option<WireType>>, // 16 bytes
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test!();
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
-                    AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
+                    AES128CipherGadget::new(plaintext.clone(), expanded_key, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
@@ -288,13 +262,7 @@ mod test {
         for sbox_option in SBoxOption::iter() {
             atomic_sbox_option.store(sbox_option.clone().into(), Ordering::Relaxed);
 
-            let t = CGTest {
-                plaintext: vec![],  // 16 bytes
-                key: vec![],        // 16 bytes
-                ciphertext: vec![], // 16 bytes
-            };
-            let mut generator =
-                CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test3_{sbox_option}"), t);
+            let mut generator = CGTest::new(&format!("AES128_Test3_{sbox_option}"));
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
 
@@ -316,20 +284,15 @@ mod test {
 
     #[test]
     pub fn aes128_test_case4() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            plaintext: Vec<Option<WireType>>,  // 16 bytes
-            key: Vec<Option<WireType>>,        // 16 bytes
-            ciphertext: Vec<Option<WireType>>, // 16 bytes
-        }
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test!();
+
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let plaintext = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
-                    AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
+                    AES128CipherGadget::new(plaintext.clone(), expanded_key, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
@@ -366,14 +329,7 @@ mod test {
         // testing all available sBox implementations
         for sbox_option in SBoxOption::iter() {
             atomic_sbox_option.store(sbox_option.clone().into(), Ordering::Relaxed);
-
-            let t = CGTest {
-                plaintext: vec![],  // 16 bytes
-                key: vec![],        // 16 bytes
-                ciphertext: vec![], // 16 bytes
-            };
-            let mut generator =
-                CircuitGeneratorExtend::<CGTest>::new(&format!("AES128_Test4_{sbox_option}"), t);
+            let mut generator = CGTest::new(&format!("AES128_Test4_{sbox_option}"));
 
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
@@ -396,14 +352,7 @@ mod test {
 
     #[test]
     pub fn testCustomSboxImplementation() {
-        #[derive(Debug, Clone, ImplStructNameConfig)]
-        struct CGTest {
-            plaintext: Vec<Option<WireType>>,  // 16 bytes
-            key: Vec<Option<WireType>>,        // 16 bytes
-            ciphertext: Vec<Option<WireType>>, // 16 bytes
-        }
-
-        crate::impl_struct_name_for!(CircuitGeneratorExtend<CGTest>);
+        impl_cg_test!();
         impl CGConfig for CircuitGeneratorExtend<CGTest> {
             fn build_circuit(&mut self) {
                 let start = std::time::Instant::now();
@@ -411,7 +360,7 @@ mod test {
                 let key = CircuitGenerator::create_input_wire_array(self.cg(), 16);
                 let expanded_key = Gadget::<AES128CipherGadget>::expandKey(&key, &self.cg);
                 let ciphertext =
-                    AES128CipherGadget::new(plaintext.clone(), expanded_key, &None, self.cg())
+                    AES128CipherGadget::new(plaintext.clone(), expanded_key, self.cg())
                         .get_output_wires()
                         .clone();
                 CircuitGenerator::make_output_array(self.cg(), &ciphertext);
@@ -447,15 +396,7 @@ mod test {
         for b in 0..=15 {
             Gadget::<AESSBoxGadgetOptimized2>::set_bit_count(b);
             // AESSBoxGadgetOptimized2::solveLinearSystems();
-            let t = CGTest {
-                plaintext: vec![],  // 16 bytes
-                key: vec![],        // 16 bytes
-                ciphertext: vec![], // 16 bytes
-            };
-            let mut generator = CircuitGeneratorExtend::<CGTest>::new(
-                &format!("AES128_Test_SBox_Parametrization_{b}"),
-                t,
-            );
+            let mut generator = CGTest::new(&format!("AES128_Test_SBox_Parametrization_{b}"));
             generator.generate_circuit();
             let evaluator = generator.eval_circuit().unwrap();
 

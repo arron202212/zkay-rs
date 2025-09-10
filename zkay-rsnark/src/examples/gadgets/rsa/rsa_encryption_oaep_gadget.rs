@@ -40,6 +40,7 @@ use crate::{
             long_integer_division::LongIntegerDivisionConfig,
             long_integer_mod_gadget::LongIntegerModGadget,
         },
+        rsa::rsa_encryption_v1_5_gadget::RSAEncryptionV1_5_Gadget,
     },
     util::{
         run_command::run_command,

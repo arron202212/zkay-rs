@@ -85,7 +85,6 @@ mod test {
                 m_wire.clone(),
                 self.t.m.bits().max(1) as i32,
                 -1,
-                &None,
                 self.cg(),
             );
 
