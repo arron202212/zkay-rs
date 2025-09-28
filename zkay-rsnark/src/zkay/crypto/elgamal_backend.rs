@@ -204,7 +204,7 @@ impl HomomorphicBackend for &CryptoBackend<Asymmetric<ElgamalBackend>> {
         key_name: &String,
         generator: RcCell<CircuitGenerator>,
     ) -> Vec<TypedWire> {
-        if (op == '+') || (op == '-') {
+        if op == '+') || (op == '-' {
             // for (c1, c2) = Enc(m1, r1)
             //     (d1, d2) = Enc(m2, r2)
             //     e1 = c1 + d1

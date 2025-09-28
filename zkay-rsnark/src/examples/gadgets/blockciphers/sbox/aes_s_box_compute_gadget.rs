@@ -95,11 +95,11 @@ impl Gadget<AESSBoxComputeGadget> {
                 fn gmuli( mut a: i32, mut  b:  i32) -> i32 {
                         let mut p = 0;
                         for j in 0..8 {
-                            if (b & 1) != 0 {
+                            if b & 1 != 0 {
                                 p ^= a;
                             }
                             a <<= 1;
-                            if (a & 0x100) != 0 {
+                            if a & 0x100 != 0 {
                                 a ^= 0x11b;
                             }
                             b >>= 1;

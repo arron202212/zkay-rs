@@ -280,11 +280,11 @@ impl IntegerFunctions {
 
     // public static BigInteger divideAndRound(BigInteger a, BigInteger b)
     // {
-    //     if (a.signum() < 0)
+    //     if a.signum() < 0
     //     {
     //         return divideAndRound(a.negate(), b).negate();
     //     }
-    //     if (b.signum() < 0)
+    //     if b.signum() < 0
     //     {
     //         return divideAndRound(a, b.negate()).negate();
     //     }
@@ -348,12 +348,12 @@ impl IntegerFunctions {
     //
     // public static int ceilLog256(int n)
     // {
-    //     if (n == 0)
+    //     if n == 0
     //     {
     //         return 1;
     //     }
     //     int m;
-    //     if (n < 0)
+    //     if n < 0
     //     {
     //         m = -n;
     //     }
@@ -380,12 +380,12 @@ impl IntegerFunctions {
     //
     // public static int ceilLog256(long n)
     // {
-    //     if (n == 0)
+    //     if n == 0
     //     {
     //         return 1;
     //     }
     //     long m;
-    //     if (n < 0)
+    //     if n < 0
     //     {
     //         m = -n;
     //     }
@@ -432,7 +432,7 @@ impl IntegerFunctions {
     // public static int floorLog(int a)
     // {
     //     int h = 0;
-    //     if (a <= 0)
+    //     if a <= 0
     //     {
     //         return -1;
     //     }
@@ -456,7 +456,7 @@ impl IntegerFunctions {
     // public static int maxPower(int a)
     // {
     //     int h = 0;
-    //     if (a != 0)
+    //     if a != 0
     //     {
     //         int p = 1;
     //         while ((a & p) == 0)
@@ -503,7 +503,7 @@ impl IntegerFunctions {
     //     j = 1;
 
     //     // Check whether g == 0 mod p (avoiding endless loop).
-    //     if (b == 0)
+    //     if b == 0
     //     {
     //         throw new IllegalArgumentException(g + " is not an element of Z/("
     //             + p + "Z)^*; it is not meaningful to compute its order.");
@@ -514,7 +514,7 @@ impl IntegerFunctions {
     //     {
     //         b *= g;
     //         b %= p;
-    //         if (b < 0)
+    //         if b < 0
     //         {
     //             b += p;
     //         }
@@ -550,7 +550,7 @@ impl IntegerFunctions {
     //     int result = 1;
     //     while (e > 0)
     //     {
-    //         if ((e & 1) == 1)
+    //         if (e & 1) == 1
     //         {
     //             result *= a;
     //         }
@@ -572,7 +572,7 @@ impl IntegerFunctions {
     //     long result = 1;
     //     while (e > 0)
     //     {
-    //         if ((e & 1) == 1)
+    //         if (e & 1) == 1
     //         {
     //             result *= a;
     //         }
@@ -592,7 +592,7 @@ impl IntegerFunctions {
     //
     // public static int modpow(int a, int e, int n)
     // {
-    //     if (n <= 0 || (n * n) > Integer.MAX_VALUE || e < 0)
+    //     if n <= 0 || (n * n) > Integer.MAX_VALUE || e < 0
     //     {
     //         return 0;
     //     }
@@ -600,7 +600,7 @@ impl IntegerFunctions {
     //     a = (a % n + n) % n;
     //     while (e > 0)
     //     {
-    //         if ((e & 1) == 1)
+    //         if (e & 1) == 1
     //         {
     //             result = (result * a) % n;
     //         }
@@ -622,7 +622,7 @@ impl IntegerFunctions {
     //     BigInteger u = Self::one();
     //     BigInteger v = Self::ZERO;
     //     BigInteger d = a;
-    //     if (b.signum() != 0)
+    //     if b.signum() != 0
     //     {
     //         BigInteger v1 = Self::ZERO;
     //         BigInteger v3 = b;
@@ -672,7 +672,7 @@ impl IntegerFunctions {
     // public static long mod(long a, long m)
     // {
     //     long result = a % m;
-    //     if (result < 0)
+    //     if result < 0
     //     {
     //         result += m;
     //     }
@@ -715,7 +715,7 @@ impl IntegerFunctions {
     //
     // public static int isPower(int a, int p)
     // {
-    //     if (a <= 0)
+    //     if a <= 0
     //     {
     //         return -1;
     //     }
@@ -723,7 +723,7 @@ impl IntegerFunctions {
     //     int d = a;
     //     while (d > 1)
     //     {
-    //         if (d % p != 0)
+    //         if d % p != 0
     //         {
     //             return -1;
     //         }
@@ -741,22 +741,22 @@ impl IntegerFunctions {
     //
     // public static int leastDiv(int a)
     // {
-    //     if (a < 0)
+    //     if a < 0
     //     {
     //         a = -a;
     //     }
-    //     if (a == 0)
+    //     if a == 0
     //     {
     //         return 1;
     //     }
-    //     if ((a & 1) == 0)
+    //     if (a & 1) == 0
     //     {
     //         return 2;
     //     }
     //     int p = 3;
     //     while (p <= (a / p))
     //     {
-    //         if ((a % p) == 0)
+    //         if (a % p) == 0
     //         {
     //             return p;
     //         }
@@ -777,30 +777,30 @@ impl IntegerFunctions {
     //
     // public static boolean isPrime(int n)
     // {
-    //     if (n < 2)
+    //     if n < 2
     //     {
     //         return false;
     //     }
-    //     if (n == 2)
+    //     if n == 2
     //     {
     //         return true;
     //     }
-    //     if ((n & 1) == 0)
+    //     if (n & 1) == 0
     //     {
     //         return false;
     //     }
-    //     if (n < 42)
+    //     if n < 42
     //     {
     //         for (int i = 0; i < SMALL_PRIMES.length; i++)
     //         {
-    //             if (n == SMALL_PRIMES[i])
+    //             if n == SMALL_PRIMES[i]
     //             {
     //                 return true;
     //             }
     //         }
     //     }
 
-    //     if ((n % 3 == 0) || (n % 5 == 0) || (n % 7 == 0) || (n % 11 == 0)
+    //     if (n % 3 == 0) || (n % 5 == 0) || (n % 7 == 0) || (n % 11 == 0
     //         || (n % 13 == 0) || (n % 17 == 0) || (n % 19 == 0)
     //         || (n % 23 == 0) || (n % 29 == 0) || (n % 31 == 0)
     //         || (n % 37 == 0) || (n % 41 == 0))
@@ -845,7 +845,7 @@ impl IntegerFunctions {
 
     //     for (int i = 0; i < smallPrime.length; i++)
     //     {
-    //         if (candidate.mod(BigInteger.valueOf(smallPrime[i])).equals(
+    //         if candidate.mod(BigInteger.valueOf(smallPrime[i]).equals(
     //             Self::ZERO))
     //         {
     //             return false;
@@ -863,17 +863,17 @@ impl IntegerFunctions {
     //
     // public static int nextSmallerPrime(int n)
     // {
-    //     if (n <= 2)
+    //     if n <= 2
     //     {
     //         return 1;
     //     }
 
-    //     if (n == 3)
+    //     if n == 3
     //     {
     //         return 2;
     //     }
 
-    //     if ((n & 1) == 0)
+    //     if (n & 1) == 0
     //     {
     //         n--;
     //     }
@@ -900,7 +900,7 @@ impl IntegerFunctions {
     // public static BigInteger nextProbablePrime(BigInteger n, int certainty)
     // {
 
-    //     if (n.signum() < 0 || n.signum() == 0 || n.equals(Self::one()))
+    //     if n.signum() < 0 || n.signum() == 0 || n.equals(Self::one())
     //     {
     //         return Self::two();
     //     }
@@ -908,7 +908,7 @@ impl IntegerFunctions {
     //     BigInteger result = n.add(Self::one());
 
     //     // Ensure an odd number
-    //     if (!result.bit(0))
+    //     if !result.bit(0)
     //     {
     //         result = result.add(Self::one());
     //     }
@@ -916,11 +916,11 @@ impl IntegerFunctions {
     //     while (true)
     //     {
     //         // Do cheap "pre-test" if applicable
-    //         if (result.bit_length() > 6)
+    //         if result.bit_length() > 6
     //         {
     //             long r = result.rem(
     //                 BigInteger.valueOf(SMALL_PRIME_PRODUCT)).longValue();
-    //             if ((r % 3 == 0) || (r % 5 == 0) || (r % 7 == 0)
+    //             if (r % 3 == 0) || (r % 5 == 0) || (r % 7 == 0
     //                 || (r % 11 == 0) || (r % 13 == 0) || (r % 17 == 0)
     //                 || (r % 19 == 0) || (r % 23 == 0) || (r % 29 == 0)
     //                 || (r % 31 == 0) || (r % 37 == 0) || (r % 41 == 0))
@@ -931,13 +931,13 @@ impl IntegerFunctions {
     //         }
 
     //         // All candidates of bit_length 2 and 3 are prime by this point
-    //         if (result.bit_length() < 4)
+    //         if result.bit_length() < 4
     //         {
     //             return result;
     //         }
 
     //         // The expensive test
-    //         if (result.isProbablePrime(certainty))
+    //         if result.isProbablePrime(certainty)
     //         {
     //             return result;
     //         }
@@ -970,11 +970,11 @@ impl IntegerFunctions {
     //     boolean found = false;
     //     long result = 0;
 
-    //     if (n <= 1)
+    //     if n <= 1
     //     {
     //         return BigInteger.valueOf(2);
     //     }
-    //     if (n == 2)
+    //     if n == 2
     //     {
     //         return BigInteger.valueOf(3);
     //     }
@@ -983,12 +983,12 @@ impl IntegerFunctions {
     //     {
     //         for (long j = 3; (j <= i >> 1) && !found; j += 2)
     //         {
-    //             if (i % j == 0)
+    //             if i % j == 0
     //             {
     //                 found = true;
     //             }
     //         }
-    //         if (found)
+    //         if found
     //         {
     //             found = false;
     //         }
@@ -1018,9 +1018,9 @@ impl IntegerFunctions {
 
     //     BigInteger result = Self::one();
 
-    //     if (n == 0)
+    //     if n == 0
     //     {
-    //         if (t == 0)
+    //         if t == 0
     //         {
     //             return result;
     //         }
@@ -1028,7 +1028,7 @@ impl IntegerFunctions {
     //     }
 
     //     // the property (n|t) = (n|n-t) be used to reduce numbers of operations
-    //     if (t > (n >>> 1))
+    //     if t > (n >>> 1)
     //     {
     //         t = n - t;
     //     }
@@ -1044,7 +1044,7 @@ impl IntegerFunctions {
 
     // public static BigInteger randomize(BigInteger upperBound)
     // {
-    //     if (sr == null)
+    //     if sr == null
     //     {
     //         sr = CryptoServicesRegistrar.getSecureRandom();
     //     }
@@ -1057,7 +1057,7 @@ impl IntegerFunctions {
     //     int blen = upperBound.bit_length();
     //     BigInteger randomNum = BigInteger.valueOf(0);
 
-    //     if (prng == null)
+    //     if prng == null
     //     {
     //         prng = sr != null ? sr : CryptoServicesRegistrar.getSecureRandom();
     //     }
@@ -1065,7 +1065,7 @@ impl IntegerFunctions {
     //     for (int i = 0; i < 20; i++)
     //     {
     //         randomNum = BigIntegers.createRandomBigInteger(blen, prng);
-    //         if (randomNum.compareTo(upperBound) < 0)
+    //         if randomNum.compareTo(upperBound) < 0
     //         {
     //             return randomNum;
     //         }
@@ -1084,7 +1084,7 @@ impl IntegerFunctions {
     //     int bl;
     //     BigInteger result, rem, b;
 
-    //     if (a.compareTo(Self::ZERO) < 0)
+    //     if a.compareTo(Self::ZERO) < 0
     //     {
     //         throw new ArithmeticException(
     //             "cannot extract root of negative number" + a + ".");
@@ -1095,7 +1095,7 @@ impl IntegerFunctions {
     //     rem = Self::ZERO;
 
     //     // if the bit length is odd then extra step
-    //     if ((bl & 1) != 0)
+    //     if (bl & 1) != 0
     //     {
     //         result = result.add(Self::one());
     //         bl--;
@@ -1109,7 +1109,7 @@ impl IntegerFunctions {
     //             + (a.bit(--bl) ? 1 : 0)));
     //         b = result.mul(FOUR).add(Self::one());
     //         result = result.mul(Self::two());
-    //         if (rem.compareTo(b) != -1)
+    //         if rem.compareTo(b) != -1
     //         {
     //             result = result.add(Self::one());
     //             rem = rem.subtract(b);
@@ -1172,7 +1172,7 @@ impl IntegerFunctions {
     //
     // public static double log(double x)
     // {
-    //     if (x > 0 && x < 1)
+    //     if x > 0 && x < 1
     //     {
     //         double d = 1 / x;
     //         double result = -log(d);
@@ -1331,7 +1331,7 @@ impl IntegerFunctions {
     //     for (k = 0; k < n; k++)
     //     {
     //         z = x + x * s;
-    //         if (z <= arg)
+    //         if z <= arg
     //         {
     //             x = z;
     //             y += ae[k];
@@ -1345,7 +1345,7 @@ impl IntegerFunctions {
     // {
     //     for (int i = 1; i < a.length; i++)
     //     {
-    //         if (a[i - 1] >= a[i])
+    //         if a[i - 1] >= a[i]
     //         {
     //             System.out.println("a[" + (i - 1) + "] = " + a[i - 1] + " >= "
     //                 + a[i] + " = a[" + i + "]");
@@ -1360,7 +1360,7 @@ impl IntegerFunctions {
     //     byte[] valBytes = val.abs().toByteArray();
 
     //     // check whether the array includes a sign bit
-    //     if ((val.bit_length() & 7) != 0)
+    //     if (val.bit_length() & 7) != 0
     //     {
     //         return valBytes;
     //     }

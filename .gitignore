@@ -19,3 +19,4 @@
 *.json
 solc-macos
 **/.cargo
+**/circuit.*

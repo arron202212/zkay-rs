@@ -246,7 +246,7 @@ impl Gadget<AES128CipherGadget> {
         let mut hi_bit_set;
         let mut wire = wire.clone();
         for counter in 0..8 {
-            if (i & 1) != 0 {
+            if i & 1 != 0 {
                 p = p.xor_bitwises(&wire, 8);
             }
             i >>= 1;

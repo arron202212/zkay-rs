@@ -282,7 +282,7 @@ impl Gadget<AESSBoxGadgetOptimized2> {
         }
         for j in 0..16 {
             if j < bit_count as usize {
-                vars[j] = if ((k >> j) & 0x01) == 1 {
+                vars[j] = if (k >> j) & 0x01 == 1 {
                     Util::one()
                 } else {
                     BigInteger::ZERO
