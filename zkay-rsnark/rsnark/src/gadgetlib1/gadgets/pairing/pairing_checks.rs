@@ -13,22 +13,22 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef PAIRING_CHECKS_HPP_
-#define PAIRING_CHECKS_HPP_
+//#ifndef PAIRING_CHECKS_HPP_
+// #define PAIRING_CHECKS_HPP_
 
 use  <memory>
 
-use  <libsnark/gadgetlib1/gadgets/pairing/pairing_params.hpp>
-use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_final_exponentiation.hpp>
-use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop.hpp>
+use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use libsnark/gadgetlib1/gadgets/pairing/weierstrass_final_exponentiation;
+use libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop;
 
-namespace libsnark {
+
 
 template<typename ppT>
-class check_e_equals_e_gadget : public gadget<libff::Fr<ppT> > {
+class check_e_equals_e_gadget : public gadget<ffec::Fr<ppT> > {
 public:
 
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<Fqk_variable<ppT> > ratio;
     std::shared_ptr<e_over_e_miller_loop_gadget<ppT> > compute_ratio;
@@ -55,10 +55,10 @@ public:
 };
 
 template<typename ppT>
-class check_e_equals_ee_gadget : public gadget<libff::Fr<ppT> > {
+class check_e_equals_ee_gadget : public gadget<ffec::Fr<ppT> > {
 public:
 
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<Fqk_variable<ppT> > ratio;
     std::shared_ptr<e_times_e_over_e_miller_loop_gadget<ppT> > compute_ratio;
@@ -88,11 +88,11 @@ public:
     void generate_r1cs_witness();
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/pairing/pairing_checks.tcc>
 
-#endif // PAIRING_CHECKS_HPP_
+use libsnark/gadgetlib1/gadgets/pairing/pairing_checks;
+
+//#endif // PAIRING_CHECKS_HPP_
 /** @file
  *****************************************************************************
 
@@ -106,10 +106,10 @@ use  <libsnark/gadgetlib1/gadgets/pairing/pairing_checks.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef PAIRING_CHECKS_TCC_
-#define PAIRING_CHECKS_TCC_
+//#ifndef PAIRING_CHECKS_TCC_
+// #define PAIRING_CHECKS_TCC_
 
-namespace libsnark {
+
 
 template<typename ppT>
 check_e_equals_e_gadget<ppT>::check_e_equals_e_gadget(protoboard<FieldT> &pb,
@@ -183,6 +183,6 @@ void check_e_equals_ee_gadget<ppT>::generate_r1cs_witness()
     check_finexp->generate_r1cs_witness();
 }
 
-} // libsnark
 
-#endif // PAIRING_CHECKS_TCC_
+
+//#endif // PAIRING_CHECKS_TCC_

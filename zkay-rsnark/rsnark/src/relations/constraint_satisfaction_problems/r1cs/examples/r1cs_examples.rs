@@ -10,12 +10,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_EXAMPLES_HPP_
-#define R1CS_EXAMPLES_HPP_
+//#ifndef R1CS_EXAMPLES_HPP_
+// #define R1CS_EXAMPLES_HPP_
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
-namespace libsnark {
+
 
 /**
  * A R1CS example comprises a R1CS constraint system, R1CS input, and R1CS witness.
@@ -38,9 +38,9 @@ struct r1cs_example {
     r1cs_example<FieldT>(r1cs_constraint_system<FieldT> &&constraint_system,
                          r1cs_primary_input<FieldT> &&primary_input,
                          r1cs_auxiliary_input<FieldT> &&auxiliary_input) :
-        constraint_system(std::move(constraint_system)),
-        primary_input(std::move(primary_input)),
-        auxiliary_input(std::move(auxiliary_input))
+        constraint_system((constraint_system)),
+        primary_input((primary_input)),
+        auxiliary_input((auxiliary_input))
     {};
 };
 
@@ -66,11 +66,11 @@ template<typename FieldT>
 r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_constraints,
                                                              const size_t num_inputs);
 
-} // libsnark
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.tcc>
 
-#endif // R1CS_EXAMPLES_HPP_
+use libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples;
+
+//#endif // R1CS_EXAMPLES_HPP_
 /** @file
  *****************************************************************************
 
@@ -85,22 +85,22 @@ use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_exa
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_EXAMPLES_TCC_
-#define R1CS_EXAMPLES_TCC_
+//#ifndef R1CS_EXAMPLES_TCC_
+// #define R1CS_EXAMPLES_TCC_
 
 use  <cassert>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 r1cs_example<FieldT> generate_r1cs_example_with_field_input(const size_t num_constraints,
                                                             const size_t num_inputs)
 {
-    libff::enter_block("Call to generate_r1cs_example_with_field_input");
+    ffec::enter_block("Call to generate_r1cs_example_with_field_input");
 
-    assert(num_inputs <= num_constraints + 2);
+    assert!(num_inputs <= num_constraints + 2);
 
     r1cs_constraint_system<FieldT> cs;
     cs.primary_input_size = num_inputs;
@@ -158,24 +158,24 @@ r1cs_example<FieldT> generate_r1cs_example_with_field_input(const size_t num_con
     r1cs_primary_input<FieldT> auxiliary_input(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert(cs.num_variables() == full_variable_assignment.size());
-    assert(cs.num_variables() >= num_inputs);
-    assert(cs.num_inputs() == num_inputs);
-    assert(cs.num_constraints() == num_constraints);
-    assert(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() >= num_inputs);
+    assert!(cs.num_inputs() == num_inputs);
+    assert!(cs.num_constraints() == num_constraints);
+    assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    libff::leave_block("Call to generate_r1cs_example_with_field_input");
+    ffec::leave_block("Call to generate_r1cs_example_with_field_input");
 
-    return r1cs_example<FieldT>(std::move(cs), std::move(primary_input), std::move(auxiliary_input));
+    return r1cs_example<FieldT>((cs), (primary_input), (auxiliary_input));
 }
 
 template<typename FieldT>
 r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_constraints,
                                                              const size_t num_inputs)
 {
-    libff::enter_block("Call to generate_r1cs_example_with_binary_input");
+    ffec::enter_block("Call to generate_r1cs_example_with_binary_input");
 
-    assert(num_inputs >= 1);
+    assert!(num_inputs >= 1);
 
     r1cs_constraint_system<FieldT> cs;
     cs.primary_input_size = num_inputs;
@@ -190,7 +190,7 @@ r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_co
     size_t lastvar = num_inputs-1;
     for (size_t i = 0; i < num_constraints; ++i)
     {
-        ++lastvar;
+        lastvar+=1;
         const size_t u = (i == 0 ? std::rand() % num_inputs : std::rand() % i);
         const size_t v = (i == 0 ? std::rand() % num_inputs : std::rand() % i);
 
@@ -221,17 +221,17 @@ r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_co
     r1cs_primary_input<FieldT> auxiliary_input(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert(cs.num_variables() == full_variable_assignment.size());
-    assert(cs.num_variables() >= num_inputs);
-    assert(cs.num_inputs() == num_inputs);
-    assert(cs.num_constraints() == num_constraints);
-    assert(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() >= num_inputs);
+    assert!(cs.num_inputs() == num_inputs);
+    assert!(cs.num_constraints() == num_constraints);
+    assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    libff::leave_block("Call to generate_r1cs_example_with_binary_input");
+    ffec::leave_block("Call to generate_r1cs_example_with_binary_input");
 
-    return r1cs_example<FieldT>(std::move(cs), std::move(primary_input), std::move(auxiliary_input));
+    return r1cs_example<FieldT>((cs), (primary_input), (auxiliary_input));
 }
 
-} // libsnark
 
-#endif // R1CS_EXAMPLES_TCC
+
+//#endif // R1CS_EXAMPLES_TCC

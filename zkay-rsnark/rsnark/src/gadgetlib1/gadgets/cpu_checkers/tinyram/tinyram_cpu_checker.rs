@@ -11,17 +11,17 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_CPU_CHECKER_HPP_
-#define TINYRAM_CPU_CHECKER_HPP_
+//#ifndef TINYRAM_CPU_CHECKER_HPP_
+// #define TINYRAM_CPU_CHECKER_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/consistency_enforcer_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/memory_masking_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget.hpp>
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_gadget;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/consistency_enforcer_gadget;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/memory_masking_gadget;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class tinyram_cpu_checker : public tinyram_standard_gadget<FieldT> {
@@ -87,18 +87,18 @@ public:
                         const std::string &annotation_prefix);
 
     void generate_r1cs_constraints();
-    void generate_r1cs_witness() { assert(0); }
+    void generate_r1cs_witness() { assert!(0); }
     void generate_r1cs_witness_address();
     void generate_r1cs_witness_other(tinyram_input_tape_iterator &aux_it,
                                      const tinyram_input_tape_iterator &aux_end);
     void dump() const;
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker.tcc>
 
-#endif // TINYRAM_CPU_CHECKER_HPP_
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
+
+//#endif // TINYRAM_CPU_CHECKER_HPP_
 /** @file
  *****************************************************************************
 
@@ -112,12 +112,12 @@ use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_CPU_CHECKER_TCC_
-#define TINYRAM_CPU_CHECKER_TCC_
+//#ifndef TINYRAM_CPU_CHECKER_TCC_
+// #define TINYRAM_CPU_CHECKER_TCC_
 
-use  <libff/algebra/fields/field_utils.hpp>
+use ffec::algebra::fields::field_utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 tinyram_cpu_checker<FieldT>::tinyram_cpu_checker(tinyram_protoboard<FieldT> &pb,
@@ -147,17 +147,17 @@ tinyram_standard_gadget<FieldT>(pb, annotation_prefix), prev_pc_addr(prev_pc_add
     arg2_is_imm = *pc_val_it; std::advance(pc_val_it, 1);
     opcode = pb_variable_array<FieldT>(pc_val_it, pc_val_it + pb.ap.opcode_width()); std::advance(pc_val_it, pb.ap.opcode_width());
 
-    assert(pc_val_it == prev_pc_val.end());
+    assert!(pc_val_it == prev_pc_val.end());
 
     /* parse state as registers + flags */
     pb_variable_array<FieldT> packed_prev_registers, packed_next_registers;
     for (size_t i = 0; i < pb.ap.k; ++i)
     {
-        prev_registers.emplace_back(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), FMT(annotation_prefix, " prev_registers_%zu", i)));
-        next_registers.emplace_back(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), FMT(annotation_prefix, " next_registers_%zu", i)));
+        prev_registers.push(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), FMT(annotation_prefix, " prev_registers_{}", i)));
+        next_registers.push(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), FMT(annotation_prefix, " next_registers_{}", i)));
 
-        packed_prev_registers.emplace_back(prev_registers[i].packed);
-        packed_next_registers.emplace_back(next_registers[i].packed);
+        packed_prev_registers.push(prev_registers[i].packed);
+        packed_next_registers.push(next_registers[i].packed);
     }
     prev_flag = *(++prev_state.rbegin());
     next_flag = *(++next_state.rbegin());
@@ -227,16 +227,16 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_constraints()
     decode_arguments->generate_r1cs_constraints();
 
     /* generate indicator variables for opcode */
-    for (size_t i = 0; i < 1ul<<this->pb.ap.opcode_width(); ++i)
+    for (size_t i = 0; i < 1ul<<self.pb.ap.opcode_width(); ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[i], pb_packing_sum<FieldT>(opcode) - i, 0),
-                                     FMT(this->annotation_prefix, " opcode_indicators_%zu", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[i], pb_packing_sum<FieldT>(opcode) - i, 0),
+                                     FMT(self.annotation_prefix, " opcode_indicators_{}", i));
     }
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_sum<FieldT>(opcode_indicators), 1),
-                                 FMT(this->annotation_prefix, " opcode_indicators_sum_to_1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_sum<FieldT>(opcode_indicators), 1),
+                                 FMT(self.annotation_prefix, " opcode_indicators_sum_to_1"));
 
     /* consistency checks for repacked variables */
-    for (size_t i = 0; i < this->pb.ap.k; ++i)
+    for (size_t i = 0; i < self.pb.ap.k; ++i)
     {
         prev_registers[i].generate_r1cs_constraints(true);
         next_registers[i].generate_r1cs_constraints(true);
@@ -257,12 +257,12 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_constraints()
     memory_subaddress->generate_r1cs_constraints(false);
     check_memory->generate_r1cs_constraints();
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
                                                          pb_packing_sum<FieldT>(
-                                                             pb_variable_array<FieldT>(arg2val->bits.begin() + this->pb.ap.subaddr_len(),
+                                                             pb_variable_array<FieldT>(arg2val->bits.begin() + self.pb.ap.subaddr_len(),
                                                                                        arg2val->bits.end())),
                                                          pb_packing_sum<FieldT>(ls_addr)),
-                                 FMT(this->annotation_prefix, " ls_addr_is_arg2val_minus_subaddress"));
+                                 FMT(self.annotation_prefix, " ls_addr_is_arg2val_minus_subaddress"));
 
     /* We require that if opcode is one of load.{b,w}, then
        subcontents is appropriately stored in instruction_results. If
@@ -272,38 +272,38 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_constraints()
        Note that ls_addr is *always* going to be arg2val. If the
        instruction is a non-memory instruction, we will treat it as a
        load from that memory location. */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_LOADB],
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_LOADB],
                                                          memory_subcontents - instruction_results[tinyram_opcode_LOADB],
                                                          0),
-                                 FMT(this->annotation_prefix, " handle_loadb"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_LOADW],
+                                 FMT(self.annotation_prefix, " handle_loadb"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_LOADW],
                                                          memory_subcontents - instruction_results[tinyram_opcode_LOADW],
                                                          0),
-                                 FMT(this->annotation_prefix, " handle_loadw"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_STOREB],
+                                 FMT(self.annotation_prefix, " handle_loadw"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_STOREB],
                                                          memory_subcontents - pb_packing_sum<FieldT>(
                                                              pb_variable_array<FieldT>(desval->bits.begin(),
                                                                                        desval->bits.begin() + 8)),
                                                          0),
-                                 FMT(this->annotation_prefix, " handle_storeb"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_STOREW],
+                                 FMT(self.annotation_prefix, " handle_storeb"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_STOREW],
                                                          memory_subcontents - desval->packed,
                                                          0),
-                                 FMT(this->annotation_prefix, " handle_storew"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1 - (opcode_indicators[tinyram_opcode_STOREB] + opcode_indicators[tinyram_opcode_STOREW]),
+                                 FMT(self.annotation_prefix, " handle_storew"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1 - (opcode_indicators[tinyram_opcode_STOREB] + opcode_indicators[tinyram_opcode_STOREW]),
                                                          ls_prev_val_as_doubleword_variable->packed - ls_next_val_as_doubleword_variable->packed,
                                                          0),
-                                 FMT(this->annotation_prefix, " non_store_instructions_dont_change_memory"));
+                                 FMT(self.annotation_prefix, " non_store_instructions_dont_change_memory"));
 
     /* specify that accepting state implies opcode = answer && arg2val == 0 */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(next_has_accepted,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(next_has_accepted,
                                                          1 - opcode_indicators[tinyram_opcode_ANSWER],
                                                          0),
-                                 FMT(this->annotation_prefix, " accepting_requires_answer"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(next_has_accepted,
+                                 FMT(self.annotation_prefix, " accepting_requires_answer"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(next_has_accepted,
                                                          arg2val->packed,
                                                          0),
-                                 FMT(this->annotation_prefix, " accepting_requires_arg2val_equal_zero"));
+                                 FMT(self.annotation_prefix, " accepting_requires_arg2val_equal_zero"));
 
     /*
        handle tapes:
@@ -314,26 +314,26 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_constraints()
        reads other than from tape 1 imply flag to be set
        flag implies result to be 0
     */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(prev_tape1_exhausted,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(prev_tape1_exhausted,
                                                          1 - next_tape1_exhausted,
                                                          0),
-                                 FMT(this->annotation_prefix, " prev_tape1_exhausted_implies_next_tape1_exhausted"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(prev_tape1_exhausted,
+                                 FMT(self.annotation_prefix, " prev_tape1_exhausted_implies_next_tape1_exhausted"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(prev_tape1_exhausted,
                                                          1 - instruction_flags[tinyram_opcode_READ],
                                                          0),
-                                 FMT(this->annotation_prefix, " prev_tape1_exhausted_implies_flag"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_READ],
+                                 FMT(self.annotation_prefix, " prev_tape1_exhausted_implies_flag"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[tinyram_opcode_READ],
                                                          1 - arg2val->packed,
                                                          read_not1),
-                                 FMT(this->annotation_prefix, " read_not1")); /* will be nonzero for read X for X != 1 */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(read_not1,
+                                 FMT(self.annotation_prefix, " read_not1")); /* will be nonzero for read X for X != 1 */
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(read_not1,
                                                          1 - instruction_flags[tinyram_opcode_READ],
                                                          0),
-                                 FMT(this->annotation_prefix, " other_reads_imply_flag"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(instruction_flags[tinyram_opcode_READ],
+                                 FMT(self.annotation_prefix, " other_reads_imply_flag"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(instruction_flags[tinyram_opcode_READ],
                                                          instruction_results[tinyram_opcode_READ],
                                                          0),
-                                 FMT(this->annotation_prefix, " read_flag_implies_result_0"));
+                                 FMT(self.annotation_prefix, " read_flag_implies_result_0"));
 }
 
 template<typename FieldT>
@@ -341,7 +341,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_address()
 {
     /* decode instruction and arguments */
     prev_pc_addr_as_word_variable->generate_r1cs_witness_from_bits();
-    for (size_t i = 0; i < this->pb.ap.k; ++i)
+    for (size_t i = 0; i < self.pb.ap.k; ++i)
     {
         prev_registers[i].generate_r1cs_witness_from_bits();
     }
@@ -353,7 +353,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_address()
     arg2val->generate_r1cs_witness_from_packed();
 
     /* clear out ls_addr and fill with everything of arg2val except the subaddress */
-    ls_addr.fill_with_bits_of_field_element(this->pb, this->pb.val(arg2val->packed).as_ulong() >> this->pb.ap.subaddr_len());
+    ls_addr.fill_with_bits_of_field_element(self.pb, self.pb.val(arg2val->packed).as_ulong() >> self.pb.ap.subaddr_len());
 }
 
 template<typename FieldT>
@@ -365,18 +365,18 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     ls_prev_val_as_doubleword_variable->generate_r1cs_witness_from_bits();
 
     /* fill in the opcode indicators */
-    const size_t opcode_val = opcode.get_field_element_from_bits(this->pb).as_ulong();
-    for (size_t i = 0; i < 1ul<<this->pb.ap.opcode_width(); ++i)
+    const size_t opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
+    for (size_t i = 0; i < 1ul<<self.pb.ap.opcode_width(); ++i)
     {
-        this->pb.val(opcode_indicators[i]) = (i == opcode_val ? FieldT::one() : FieldT::zero());
+        self.pb.val(opcode_indicators[i]) = (i == opcode_val ? FieldT::one() : FieldT::zero());
     }
 
     /* execute the ALU */
     ALU->generate_r1cs_witness();
 
     /* fill memory_subaddress */
-    memory_subaddress->bits.fill_with_bits(this->pb, pb_variable_array<FieldT>(arg2val->bits.begin(),
-                                                                               arg2val->bits.begin() +  + this->pb.ap.subaddr_len()).get_bits(this->pb));
+    memory_subaddress->bits.fill_with_bits(self.pb, pb_variable_array<FieldT>(arg2val->bits.begin(),
+                                                                               arg2val->bits.begin() +  + self.pb.ap.subaddr_len()).get_bits(self.pb));
     memory_subaddress->generate_r1cs_witness_from_bits();
 
     /* we distinguish four cases for memory handling:
@@ -384,64 +384,64 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
        b) store.b
        c) store.w
        d) load.w or any non-memory instruction */
-    const size_t prev_doubleword = this->pb.val(ls_prev_val_as_doubleword_variable->packed).as_ulong();
-    const size_t subaddress = this->pb.val(memory_subaddress->packed).as_ulong();
+    const size_t prev_doubleword = self.pb.val(ls_prev_val_as_doubleword_variable->packed).as_ulong();
+    const size_t subaddress = self.pb.val(memory_subaddress->packed).as_ulong();
 
-    if (this->pb.val(opcode_indicators[tinyram_opcode_LOADB]) == FieldT::one())
+    if (self.pb.val(opcode_indicators[tinyram_opcode_LOADB]) == FieldT::one())
     {
         const size_t loaded_byte = (prev_doubleword >> (8 * subaddress)) & 0xFF;
-        this->pb.val(instruction_results[tinyram_opcode_LOADB]) = FieldT(loaded_byte);
-        this->pb.val(memory_subcontents) = FieldT(loaded_byte);
+        self.pb.val(instruction_results[tinyram_opcode_LOADB]) = FieldT(loaded_byte);
+        self.pb.val(memory_subcontents) = FieldT(loaded_byte);
     }
-    else if (this->pb.val(opcode_indicators[tinyram_opcode_STOREB]) == FieldT::one())
+    else if (self.pb.val(opcode_indicators[tinyram_opcode_STOREB]) == FieldT::one())
     {
-        const size_t stored_byte = (this->pb.val(desval->packed).as_ulong()) & 0xFF;
-        this->pb.val(memory_subcontents) = FieldT(stored_byte);
+        const size_t stored_byte = (self.pb.val(desval->packed).as_ulong()) & 0xFF;
+        self.pb.val(memory_subcontents) = FieldT(stored_byte);
     }
-    else if (this->pb.val(opcode_indicators[tinyram_opcode_STOREW]) == FieldT::one())
+    else if (self.pb.val(opcode_indicators[tinyram_opcode_STOREW]) == FieldT::one())
     {
-        const size_t stored_word = (this->pb.val(desval->packed).as_ulong());
-        this->pb.val(memory_subcontents) = FieldT(stored_word);
+        const size_t stored_word = (self.pb.val(desval->packed).as_ulong());
+        self.pb.val(memory_subcontents) = FieldT(stored_word);
     }
     else
     {
-        const bool access_is_word0 = (this->pb.val(*memory_subaddress->bits.rbegin()) == FieldT::zero());
-        const size_t loaded_word = (prev_doubleword >> (access_is_word0 ? 0 : this->pb.ap.w)) & ((1ul << this->pb.ap.w) - 1);
-        this->pb.val(instruction_results[tinyram_opcode_LOADW]) = FieldT(loaded_word); /* does not hurt even for non-memory instructions */
-        this->pb.val(memory_subcontents) = FieldT(loaded_word);
+        const bool access_is_word0 = (self.pb.val(*memory_subaddress->bits.rbegin()) == FieldT::zero());
+        const size_t loaded_word = (prev_doubleword >> (access_is_word0 ? 0 : self.pb.ap.w)) & ((1ul << self.pb.ap.w) - 1);
+        self.pb.val(instruction_results[tinyram_opcode_LOADW]) = FieldT(loaded_word); /* does not hurt even for non-memory instructions */
+        self.pb.val(memory_subcontents) = FieldT(loaded_word);
     }
 
-    memory_access_is_word.evaluate(this->pb);
-    memory_access_is_byte.evaluate(this->pb);
+    memory_access_is_word.evaluate(self.pb);
+    memory_access_is_byte.evaluate(self.pb);
 
     check_memory->generate_r1cs_witness();
 
     /* handle reads */
-    if (this->pb.val(prev_tape1_exhausted) == FieldT::one())
+    if (self.pb.val(prev_tape1_exhausted) == FieldT::one())
     {
         /* if tape was exhausted before, it will always be
            exhausted. we also need to only handle reads from tape 1,
            so we can safely set flag here */
-        this->pb.val(next_tape1_exhausted) = FieldT::one();
-        this->pb.val(instruction_flags[tinyram_opcode_READ]) = FieldT::one();
+        self.pb.val(next_tape1_exhausted) = FieldT::one();
+        self.pb.val(instruction_flags[tinyram_opcode_READ]) = FieldT::one();
     }
 
-    this->pb.val(read_not1) = this->pb.val(opcode_indicators[tinyram_opcode_READ]) * (FieldT::one() - this->pb.val(arg2val->packed));
-    if (this->pb.val(read_not1) != FieldT::one())
+    self.pb.val(read_not1) = self.pb.val(opcode_indicators[tinyram_opcode_READ]) * (FieldT::one() - self.pb.val(arg2val->packed));
+    if (self.pb.val(read_not1) != FieldT::one())
     {
         /* reading from tape other than 0 raises the flag */
-        this->pb.val(instruction_flags[tinyram_opcode_READ]) = FieldT::one();
+        self.pb.val(instruction_flags[tinyram_opcode_READ]) = FieldT::one();
     }
     else
     {
         /* otherwise perform the actual read */
         if (aux_it != aux_end)
         {
-            this->pb.val(instruction_results[tinyram_opcode_READ]) = FieldT(*aux_it);
+            self.pb.val(instruction_results[tinyram_opcode_READ]) = FieldT(*aux_it);
             if (++aux_it == aux_end)
             {
                 /* tape has ended! */
-                this->pb.val(next_tape1_exhausted) = FieldT::one();
+                self.pb.val(next_tape1_exhausted) = FieldT::one();
             }
         }
         else
@@ -451,48 +451,48 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     }
 
     /* flag implies result zero */
-    if (this->pb.val(instruction_flags[tinyram_opcode_READ]) == FieldT::one())
+    if (self.pb.val(instruction_flags[tinyram_opcode_READ]) == FieldT::one())
     {
-        this->pb.val(instruction_results[tinyram_opcode_READ]) = FieldT::zero();
+        self.pb.val(instruction_results[tinyram_opcode_READ]) = FieldT::zero();
     }
 
     /* execute consistency enforcer */
     consistency_enforcer->generate_r1cs_witness();
     next_pc_addr_as_word_variable->generate_r1cs_witness_from_packed();
 
-    for (size_t i = 0; i < this->pb.ap.k; ++i)
+    for (size_t i = 0; i < self.pb.ap.k; ++i)
     {
         next_registers[i].generate_r1cs_witness_from_packed();
     }
 
     /* finally set has_accepted to 1 if both the opcode is ANSWER and arg2val is 0 */
-    this->pb.val(next_has_accepted) = (this->pb.val(opcode_indicators[tinyram_opcode_ANSWER]) == FieldT::one() &&
-                                       this->pb.val(arg2val->packed) == FieldT::zero()) ? FieldT::one() : FieldT::zero();
+    self.pb.val(next_has_accepted) = (self.pb.val(opcode_indicators[tinyram_opcode_ANSWER]) == FieldT::one() &&
+                                       self.pb.val(arg2val->packed) == FieldT::zero()) ? FieldT::one() : FieldT::zero();
 }
 
 template<typename FieldT>
 void tinyram_cpu_checker<FieldT>::dump() const
 {
-    printf("   pc = %lu, flag = %lu\n",
-           this->pb.val(prev_pc_addr_as_word_variable->packed).as_ulong(),
-           this->pb.val(prev_flag).as_ulong());
-    printf("   ");
+    print!("   pc = %lu, flag = %lu\n",
+           self.pb.val(prev_pc_addr_as_word_variable->packed).as_ulong(),
+           self.pb.val(prev_flag).as_ulong());
+    print!("   ");
 
-    for (size_t j = 0; j < this->pb.ap.k; ++j)
+    for (size_t j = 0; j < self.pb.ap.k; ++j)
     {
-        printf("r%zu = %2lu ", j, this->pb.val(prev_registers[j].packed).as_ulong());
+        print!("r{} = %2lu ", j, self.pb.val(prev_registers[j].packed).as_ulong());
     }
-    printf("\n");
+    print!("\n");
 
-    const size_t opcode_val = opcode.get_field_element_from_bits(this->pb).as_ulong();
-    printf("   %s r%lu, r%lu, %s%lu\n",
+    const size_t opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
+    print!("   %s r%lu, r%lu, %s%lu\n",
            tinyram_opcode_names[static_cast<tinyram_opcode>(opcode_val)].c_str(),
-           desidx.get_field_element_from_bits(this->pb).as_ulong(),
-           arg1idx.get_field_element_from_bits(this->pb).as_ulong(),
-           (this->pb.val(arg2_is_imm) == FieldT::one() ? "" : "r"),
-           arg2idx.get_field_element_from_bits(this->pb).as_ulong());
+           desidx.get_field_element_from_bits(self.pb).as_ulong(),
+           arg1idx.get_field_element_from_bits(self.pb).as_ulong(),
+           (self.pb.val(arg2_is_imm) == FieldT::one() ? "" : "r"),
+           arg2idx.get_field_element_from_bits(self.pb).as_ulong());
 }
 
-} // libsnark
 
-#endif // TINYRAM_CPU_CHECKER_TCC_
+
+//#endif // TINYRAM_CPU_CHECKER_TCC_

@@ -20,15 +20,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SAP_HPP_
-#define SAP_HPP_
+//#ifndef SAP_HPP_
+// #define SAP_HPP_
 
 use  <map>
 use  <memory>
 
-use  <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use fqfft::evaluation_domain::evaluation_domain;
 
-namespace libsnark {
+
 
 /* forward declaration */
 template<typename FieldT>
@@ -183,11 +183,11 @@ public:
     size_t num_inputs() const;
 };
 
-} // libsnark
 
-use  <libsnark/relations/arithmetic_programs/sap/sap.tcc>
 
-#endif // SAP_HPP_
+use libsnark::relations::arithmetic_programs::sap::sap;
+
+//#endif // SAP_HPP_
 /** @file
 *****************************************************************************
 
@@ -201,15 +201,15 @@ See sap.hpp .
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
 
-#ifndef SAP_TCC_
-#define SAP_TCC_
+//#ifndef SAP_TCC_
+// #define SAP_TCC_
 
-use  <libff/algebra/scalar_multiplication/multiexp.hpp>
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
-use  <libfqfft/evaluation_domain/evaluation_domain.hpp>
+ use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::common::profiling;
+use ffec::common::utils;
+use fqfft::evaluation_domain::evaluation_domain;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 sap_instance<FieldT>::sap_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
@@ -238,8 +238,8 @@ sap_instance<FieldT>::sap_instance(const std::shared_ptr<libfqfft::evaluation_do
     degree_(degree),
     num_inputs_(num_inputs),
     domain(domain),
-    A_in_Lagrange_basis(std::move(A_in_Lagrange_basis)),
-    C_in_Lagrange_basis(std::move(C_in_Lagrange_basis))
+    A_in_Lagrange_basis((A_in_Lagrange_basis)),
+    C_in_Lagrange_basis((C_in_Lagrange_basis))
 {
 }
 
@@ -266,15 +266,15 @@ bool sap_instance<FieldT>::is_satisfied(const sap_witness<FieldT> &witness) cons
 {
     const FieldT t = FieldT::random_element();
 
-    std::vector<FieldT> At(this->num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ct(this->num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ht(this->degree()+1);
+    std::vector<FieldT> At(self.num_variables()+1, FieldT::zero());
+    std::vector<FieldT> Ct(self.num_variables()+1, FieldT::zero());
+    std::vector<FieldT> Ht(self.degree()+1);
 
-    const FieldT Zt = this->domain->compute_vanishing_polynomial(t);
+    const FieldT Zt = self.domain->compute_vanishing_polynomial(t);
 
-    const std::vector<FieldT> u = this->domain->evaluate_all_lagrange_polynomials(t);
+    const std::vector<FieldT> u = self.domain->evaluate_all_lagrange_polynomials(t);
 
-    for (size_t i = 0; i < this->num_variables()+1; ++i)
+    for (size_t i = 0; i < self.num_variables()+1; ++i)
     {
         for (auto &el : A_in_Lagrange_basis[i])
         {
@@ -288,20 +288,20 @@ bool sap_instance<FieldT>::is_satisfied(const sap_witness<FieldT> &witness) cons
     }
 
     FieldT ti = FieldT::one();
-    for (size_t i = 0; i < this->degree()+1; ++i)
+    for (size_t i = 0; i < self.degree()+1; ++i)
     {
         Ht[i] = ti;
         ti *= t;
     }
 
-    const sap_instance_evaluation<FieldT> eval_sap_inst(this->domain,
-                                                        this->num_variables(),
-                                                        this->degree(),
-                                                        this->num_inputs(),
+    const sap_instance_evaluation<FieldT> eval_sap_inst(self.domain,
+                                                        self.num_variables(),
+                                                        self.degree(),
+                                                        self.num_inputs(),
                                                         t,
-                                                        std::move(At),
-                                                        std::move(Ct),
-                                                        std::move(Ht),
+                                                        (At),
+                                                        (Ct),
+                                                        (Ht),
                                                         Zt);
     return eval_sap_inst.is_satisfied(witness);
 }
@@ -343,9 +343,9 @@ sap_instance_evaluation<FieldT>::sap_instance_evaluation(const std::shared_ptr<l
     num_inputs_(num_inputs),
     domain(domain),
     t(t),
-    At(std::move(At)),
-    Ct(std::move(Ct)),
-    Ht(std::move(Ht)),
+    At((At)),
+    Ct((Ct)),
+    Ht((Ht)),
     Zt(Zt)
 {
 }
@@ -371,64 +371,64 @@ size_t sap_instance_evaluation<FieldT>::num_inputs() const
 template<typename FieldT>
 bool sap_instance_evaluation<FieldT>::is_satisfied(const sap_witness<FieldT> &witness) const
 {
-    if (this->num_variables() != witness.num_variables())
+    if (self.num_variables() != witness.num_variables())
     {
         return false;
     }
 
-    if (this->degree() != witness.degree())
+    if (self.degree() != witness.degree())
     {
         return false;
     }
 
-    if (this->num_inputs() != witness.num_inputs())
+    if (self.num_inputs() != witness.num_inputs())
     {
         return false;
     }
 
-    if (this->num_variables() != witness.coefficients_for_ACs.size())
+    if (self.num_variables() != witness.coefficients_for_ACs.size())
     {
         return false;
     }
 
-    if (this->degree()+1 != witness.coefficients_for_H.size())
+    if (self.degree()+1 != witness.coefficients_for_H.size())
     {
         return false;
     }
 
-    if (this->At.size() != this->num_variables()+1 || this->Ct.size() != this->num_variables()+1)
+    if (self.At.size() != self.num_variables()+1 || self.Ct.size() != self.num_variables()+1)
     {
         return false;
     }
 
-    if (this->Ht.size() != this->degree()+1)
+    if (self.Ht.size() != self.degree()+1)
     {
         return false;
     }
 
-    if (this->Zt != this->domain->compute_vanishing_polynomial(this->t))
+    if (self.Zt != self.domain->compute_vanishing_polynomial(self.t))
     {
         return false;
     }
 
-    FieldT ans_A = this->At[0] + witness.d1*this->Zt;
-    FieldT ans_C = this->Ct[0] + witness.d2*this->Zt;
+    FieldT ans_A = self.At[0] + witness.d1*self.Zt;
+    FieldT ans_C = self.Ct[0] + witness.d2*self.Zt;
     FieldT ans_H = FieldT::zero();
 
-    ans_A = ans_A + libff::inner_product<FieldT>(this->At.begin()+1,
-                                                 this->At.begin()+1+this->num_variables(),
+    ans_A = ans_A + ffec::inner_product<FieldT>(self.At.begin()+1,
+                                                 self.At.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ACs.begin(),
-                                                 witness.coefficients_for_ACs.begin()+this->num_variables());
-    ans_C = ans_C + libff::inner_product<FieldT>(this->Ct.begin()+1,
-                                                 this->Ct.begin()+1+this->num_variables(),
+                                                 witness.coefficients_for_ACs.begin()+self.num_variables());
+    ans_C = ans_C + ffec::inner_product<FieldT>(self.Ct.begin()+1,
+                                                 self.Ct.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ACs.begin(),
-                                                 witness.coefficients_for_ACs.begin()+this->num_variables());
-    ans_H = ans_H + libff::inner_product<FieldT>(this->Ht.begin(),
-                                                 this->Ht.begin()+this->degree()+1,
+                                                 witness.coefficients_for_ACs.begin()+self.num_variables());
+    ans_H = ans_H + ffec::inner_product<FieldT>(self.Ht.begin(),
+                                                 self.Ht.begin()+self.degree()+1,
                                                  witness.coefficients_for_H.begin(),
-                                                 witness.coefficients_for_H.begin()+this->degree()+1);
+                                                 witness.coefficients_for_H.begin()+self.degree()+1);
 
-    if (ans_A * ans_A - ans_C != ans_H * this->Zt)
+    if (ans_A * ans_A - ans_C != ans_H * self.Zt)
     {
         return false;
     }
@@ -468,7 +468,7 @@ sap_witness<FieldT>::sap_witness(const size_t num_variables,
     d1(d1),
     d2(d2),
     coefficients_for_ACs(coefficients_for_ACs),
-    coefficients_for_H(std::move(coefficients_for_H))
+    coefficients_for_H((coefficients_for_H))
 {
 }
 
@@ -492,6 +492,6 @@ size_t sap_witness<FieldT>::num_inputs() const
 }
 
 
-} // libsnark
 
-#endif // SAP_TCC_
+
+//#endif // SAP_TCC_

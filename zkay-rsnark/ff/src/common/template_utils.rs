@@ -6,10 +6,10 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef TEMPLATE_UTILS_HPP_
-#define TEMPLATE_UTILS_HPP_
+//#ifndef TEMPLATE_UTILS_HPP_
+// #define TEMPLATE_UTILS_HPP_
 
-namespace libff {
+// namespace libff {
 
 /* A commonly used SFINAE helper type */
 template<typename T>
@@ -18,6 +18,6 @@ struct void_type
     typedef void type;
 };
 
-} // namespace libff
+// } // namespace libff
 
-#endif // TEMPLATE_UTILS_HPP_
+//#endif // TEMPLATE_UTILS_HPP_

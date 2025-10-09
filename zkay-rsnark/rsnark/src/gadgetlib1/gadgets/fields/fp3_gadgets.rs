@@ -12,14 +12,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP3_GADGETS_HPP_
-#define FP3_GADGETS_HPP_
+//#ifndef FP3_GADGETS_HPP_
+// #define FP3_GADGETS_HPP_
 
 use  <memory>
 
-use  <libsnark/gadgetlib1/gadget.hpp>
+use libsnark/gadgetlib1/gadget;
 
-namespace libsnark {
+
 
 /**
  * Gadget that represents an Fp3 variable.
@@ -132,11 +132,11 @@ public:
 };
 
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/fields/fp3_gadgets.tcc>
 
-#endif // FP3_GADGETS_HPP_
+use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
+
+//#endif // FP3_GADGETS_HPP_
 /** @file
  *****************************************************************************
 
@@ -150,10 +150,10 @@ use  <libsnark/gadgetlib1/gadgets/fields/fp3_gadgets.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP3_GADGETS_TCC_
-#define FP3_GADGETS_TCC_
+//#ifndef FP3_GADGETS_TCC_
+// #define FP3_GADGETS_TCC_
 
-namespace libsnark {
+
 
 template<typename Fp3T>
 Fp3_variable<Fp3T>::Fp3_variable(protoboard<FieldT> &pb,
@@ -169,9 +169,9 @@ Fp3_variable<Fp3T>::Fp3_variable(protoboard<FieldT> &pb,
     c1 = pb_linear_combination<FieldT>(c1_var);
     c2 = pb_linear_combination<FieldT>(c2_var);
 
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
-    all_vars.emplace_back(c2);
+    all_vars.push(c0);
+    all_vars.push(c1);
+    all_vars.push(c2);
 }
 
 template<typename Fp3T>
@@ -188,9 +188,9 @@ Fp3_variable<Fp3T>::Fp3_variable(protoboard<FieldT> &pb,
     c1.evaluate(pb);
     c2.evaluate(pb);
 
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
-    all_vars.emplace_back(c2);
+    all_vars.push(c0);
+    all_vars.push(c1);
+    all_vars.push(c2);
 }
 
 template<typename Fp3T>
@@ -204,9 +204,9 @@ Fp3_variable<Fp3T>::Fp3_variable(protoboard<FieldT> &pb,
     c1.assign(pb, el.c1 * coeff);
     c2.assign(pb, el.c2 * coeff);
 
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
-    all_vars.emplace_back(c2);
+    all_vars.push(c0);
+    all_vars.push(c1);
+    all_vars.push(c2);
 }
 
 template<typename Fp3T>
@@ -217,37 +217,37 @@ Fp3_variable<Fp3T>::Fp3_variable(protoboard<FieldT> &pb,
                                  const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix), c0(c0), c1(c1), c2(c2)
 {
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
-    all_vars.emplace_back(c2);
+    all_vars.push(c0);
+    all_vars.push(c1);
+    all_vars.push(c2);
 }
 
 template<typename Fp3T>
 void Fp3_variable<Fp3T>::generate_r1cs_equals_const_constraints(const Fp3T &el)
 {
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c0, c0),
-                                 FMT(this->annotation_prefix, " c0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c1, c1),
-                                 FMT(this->annotation_prefix, " c1"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c2, c2),
-                                 FMT(this->annotation_prefix, " c2"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c0, c0),
+                                 FMT(self.annotation_prefix, " c0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c1, c1),
+                                 FMT(self.annotation_prefix, " c1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c2, c2),
+                                 FMT(self.annotation_prefix, " c2"));
 }
 
 template<typename Fp3T>
 void Fp3_variable<Fp3T>::generate_r1cs_witness(const Fp3T &el)
 {
-    this->pb.lc_val(c0) = el.c0;
-    this->pb.lc_val(c1) = el.c1;
-    this->pb.lc_val(c2) = el.c2;
+    self.pb.lc_val(c0) = el.c0;
+    self.pb.lc_val(c1) = el.c1;
+    self.pb.lc_val(c2) = el.c2;
 }
 
 template<typename Fp3T>
 Fp3T Fp3_variable<Fp3T>::get_element()
 {
     Fp3T el;
-    el.c0 = this->pb.lc_val(c0);
-    el.c1 = this->pb.lc_val(c1);
-    el.c2 = this->pb.lc_val(c2);
+    el.c0 = self.pb.lc_val(c0);
+    el.c1 = self.pb.lc_val(c1);
+    el.c2 = self.pb.lc_val(c2);
     return el;
 }
 
@@ -255,48 +255,48 @@ template<typename Fp3T>
 Fp3_variable<Fp3T> Fp3_variable<Fp3T>::operator*(const FieldT &coeff) const
 {
     pb_linear_combination<FieldT> new_c0, new_c1, new_c2;
-    new_c0.assign(this->pb, this->c0 * coeff);
-    new_c1.assign(this->pb, this->c1 * coeff);
-    new_c2.assign(this->pb, this->c2 * coeff);
-    return Fp3_variable<Fp3T>(this->pb, new_c0, new_c1, new_c2, FMT(this->annotation_prefix, " operator*"));
+    new_c0.assign(self.pb, self.c0 * coeff);
+    new_c1.assign(self.pb, self.c1 * coeff);
+    new_c2.assign(self.pb, self.c2 * coeff);
+    return Fp3_variable<Fp3T>(self.pb, new_c0, new_c1, new_c2, FMT(self.annotation_prefix, " operator*"));
 }
 
 template<typename Fp3T>
 Fp3_variable<Fp3T> Fp3_variable<Fp3T>::operator+(const Fp3_variable<Fp3T> &other) const
 {
     pb_linear_combination<FieldT> new_c0, new_c1, new_c2;
-    new_c0.assign(this->pb, this->c0 + other.c0);
-    new_c1.assign(this->pb, this->c1 + other.c1);
-    new_c2.assign(this->pb, this->c2 + other.c2);
-    return Fp3_variable<Fp3T>(this->pb, new_c0, new_c1, new_c2, FMT(this->annotation_prefix, " operator+"));
+    new_c0.assign(self.pb, self.c0 + other.c0);
+    new_c1.assign(self.pb, self.c1 + other.c1);
+    new_c2.assign(self.pb, self.c2 + other.c2);
+    return Fp3_variable<Fp3T>(self.pb, new_c0, new_c1, new_c2, FMT(self.annotation_prefix, " operator+"));
 }
 
 template<typename Fp3T>
 Fp3_variable<Fp3T> Fp3_variable<Fp3T>::operator+(const Fp3T &other) const
 {
     pb_linear_combination<FieldT> new_c0, new_c1, new_c2;
-    new_c0.assign(this->pb, this->c0 + other.c0);
-    new_c1.assign(this->pb, this->c1 + other.c1);
-    new_c2.assign(this->pb, this->c2 + other.c2);
-    return Fp3_variable<Fp3T>(this->pb, new_c0, new_c1, new_c2, FMT(this->annotation_prefix, " operator+"));
+    new_c0.assign(self.pb, self.c0 + other.c0);
+    new_c1.assign(self.pb, self.c1 + other.c1);
+    new_c2.assign(self.pb, self.c2 + other.c2);
+    return Fp3_variable<Fp3T>(self.pb, new_c0, new_c1, new_c2, FMT(self.annotation_prefix, " operator+"));
 }
 
 template<typename Fp3T>
 Fp3_variable<Fp3T> Fp3_variable<Fp3T>::mul_by_X() const
 {
     pb_linear_combination<FieldT> new_c0, new_c1, new_c2;
-    new_c0.assign(this->pb, this->c2 * Fp3T::non_residue);
-    new_c1.assign(this->pb, this->c0);
-    new_c2.assign(this->pb, this->c1);
-    return Fp3_variable<Fp3T>(this->pb, new_c0, new_c1, new_c2, FMT(this->annotation_prefix, " mul_by_X"));
+    new_c0.assign(self.pb, self.c2 * Fp3T::non_residue);
+    new_c1.assign(self.pb, self.c0);
+    new_c2.assign(self.pb, self.c1);
+    return Fp3_variable<Fp3T>(self.pb, new_c0, new_c1, new_c2, FMT(self.annotation_prefix, " mul_by_X"));
 }
 
 template<typename Fp3T>
 void Fp3_variable<Fp3T>::evaluate() const
 {
-    c0.evaluate(this->pb);
-    c1.evaluate(this->pb);
-    c2.evaluate(this->pb);
+    c0.evaluate(self.pb);
+    c1.evaluate(self.pb);
+    c2.evaluate(self.pb);
 }
 
 template<typename Fp3T>
@@ -367,30 +367,30 @@ void Fp3_mul_gadget<Fp3T>::generate_r1cs_constraints()
                 c2 == -v0 + (1/2) v1 + (1/2) v2 - v4}, #] // FullSimplify) & /@
     Subsets[{v0, v1, v2, v3, v4}, {3}]
 */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, B.c0, v0), FMT(this->annotation_prefix, " v0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c2, B.c2, v4), FMT(this->annotation_prefix, " v4"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, B.c0, v0), FMT(self.annotation_prefix, " v0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c2, B.c2, v4), FMT(self.annotation_prefix, " v4"));
 
     const FieldT beta = Fp3T::non_residue;
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + A.c1 + A.c2,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + A.c1 + A.c2,
                                                          B.c0 + B.c1 + B.c2,
                                                          result.c1 + result.c2 + result.c0 * beta.inverse() + v0 * (FieldT(1) - beta.inverse()) + v4 * (FieldT(1) - beta)),
-                                 FMT(this->annotation_prefix, " v1"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 - A.c1 + A.c2,
+                                 FMT(self.annotation_prefix, " v1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 - A.c1 + A.c2,
                                                          B.c0 - B.c1 + B.c2,
                                                          -result.c1 + result.c2 + v0 * (FieldT(1) + beta.inverse()) - result.c0 * beta.inverse() + v4 * (FieldT(1) + beta)),
-                                 FMT(this->annotation_prefix, " v2"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + 2 * A.c1 + 4 * A.c2,
+                                 FMT(self.annotation_prefix, " v2"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + 2 * A.c1 + 4 * A.c2,
                                                          B.c0 + 2 * B.c1 + 4 * B.c2,
                                                          2 * result.c1 + 4 * result.c2 + result.c0 * (FieldT(8) * beta.inverse()) + v0 * (FieldT(1) - FieldT(8) * beta.inverse()) + v4 * (FieldT(16) - FieldT(2) * beta)),
-                                 FMT(this->annotation_prefix, " v3"));
+                                 FMT(self.annotation_prefix, " v3"));
 }
 
 template<typename Fp3T>
 void Fp3_mul_gadget<Fp3T>::generate_r1cs_witness()
 {
-    this->pb.val(v0) = this->pb.lc_val(A.c0) * this->pb.lc_val(B.c0);
-    this->pb.val(v4) = this->pb.lc_val(A.c2) * this->pb.lc_val(B.c2);
+    self.pb.val(v0) = self.pb.lc_val(A.c0) * self.pb.lc_val(B.c0);
+    self.pb.val(v4) = self.pb.lc_val(A.c2) * self.pb.lc_val(B.c2);
 
     const Fp3T Aval = A.get_element();
     const Fp3T Bval = B.get_element();
@@ -411,20 +411,20 @@ Fp3_mul_by_lc_gadget<Fp3T>::Fp3_mul_by_lc_gadget(protoboard<FieldT> &pb,
 template<typename Fp3T>
 void Fp3_mul_by_lc_gadget<Fp3T>::generate_r1cs_constraints()
 {
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, lc, result.c0),
-                                 FMT(this->annotation_prefix, " result.c0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c1, lc, result.c1),
-                                 FMT(this->annotation_prefix, " result.c1"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c2, lc, result.c2),
-                                 FMT(this->annotation_prefix, " result.c2"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, lc, result.c0),
+                                 FMT(self.annotation_prefix, " result.c0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c1, lc, result.c1),
+                                 FMT(self.annotation_prefix, " result.c1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c2, lc, result.c2),
+                                 FMT(self.annotation_prefix, " result.c2"));
 }
 
 template<typename Fp3T>
 void Fp3_mul_by_lc_gadget<Fp3T>::generate_r1cs_witness()
 {
-    this->pb.lc_val(result.c0) = this->pb.lc_val(A.c0) * this->pb.lc_val(lc);
-    this->pb.lc_val(result.c1) = this->pb.lc_val(A.c1) * this->pb.lc_val(lc);
-    this->pb.lc_val(result.c2) = this->pb.lc_val(A.c2) * this->pb.lc_val(lc);
+    self.pb.lc_val(result.c0) = self.pb.lc_val(A.c0) * self.pb.lc_val(lc);
+    self.pb.lc_val(result.c1) = self.pb.lc_val(A.c1) * self.pb.lc_val(lc);
+    self.pb.lc_val(result.c2) = self.pb.lc_val(A.c2) * self.pb.lc_val(lc);
 }
 
 template<typename Fp3T>
@@ -450,6 +450,6 @@ void Fp3_sqr_gadget<Fp3T>::generate_r1cs_witness()
     mul->generate_r1cs_witness();
 }
 
-} // libsnark
 
-#endif // FP3_GADGETS_TCC_
+
+//#endif // FP3_GADGETS_TCC_

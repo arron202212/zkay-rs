@@ -7,13 +7,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP6_2OVER3_HPP_
-#define FP6_2OVER3_HPP_
-#include <libff/algebra/fields/prime_base/fp.hpp>
-#include <libff/algebra/fields/prime_extension/fp2.hpp>
-#include <libff/algebra/fields/prime_extension/fp3.hpp>
+//#ifndef FP6_2OVER3_HPP_
+// #define FP6_2OVER3_HPP_
+use libff/algebra/fields/prime_base/fp;
+use libff/algebra/fields/prime_extension/fp2;
+use libff/algebra/fields/prime_extension/fp3;
 
-namespace libff {
+// namespace libff {
 
 /**
  * Arithmetic in the finite field F[(p^3)^2].
@@ -39,13 +39,13 @@ public:
     typedef Fp2_model<n, modulus> my_Fp2;
     typedef Fp3_model<n, modulus> my_Fp3;
     typedef my_Fp3 my_Fpe;
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
 
     static bigint<6*n> euler; // (modulus^6-1)/2
     static std::size_t s; // modulus^6 = 2^s * t + 1
@@ -60,7 +60,7 @@ public:
     Fp6_2over3_model() {};
     Fp6_2over3_model(const my_Fp3& c0, const my_Fp3& c1) : c0(c0), c1(c1) {};
 
-    void print() const { printf("c0/c1:\n"); c0.print(); c1.print(); }
+    void print() const { print!("c0/c1:\n"); c0.print(); c1.print(); }
     void clear() { c0.clear(); c1.clear(); }
     void randomize();
 
@@ -126,7 +126,7 @@ public:
     friend std::istream& operator>> <n, modulus>(std::istream &in, Fp6_2over3_model<n, modulus> &el);
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp6_2over3_model<n, modulus>::add_cnt = 0;
 
@@ -141,7 +141,7 @@ long long Fp6_2over3_model<n, modulus>::sqr_cnt = 0;
 
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp6_2over3_model<n, modulus>::inv_cnt = 0;
-#endif
+//#endif
 
 template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp6_2over3_model<n, modulus> > &v);
@@ -176,10 +176,10 @@ Fp_model<n, modulus> Fp6_2over3_model<n, modulus>::non_residue;
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n, modulus> Fp6_2over3_model<n, modulus>::Frobenius_coeffs_c1[6];
 
-} // namespace libff
-#include <libff/algebra/fields/prime_extension/fp6_2over3.tcc>
+// } // namespace libff
+use libff/algebra/fields/prime_extension/fp6_2over3.tcc;
 
-#endif // FP6_2OVER3_HPP_
+//#endif // FP6_2OVER3_HPP_
 /** @file
  *****************************************************************************
  Implementation of arithmetic in the finite field F[(p^3)^2].
@@ -189,12 +189,12 @@ Fp_model<n, modulus> Fp6_2over3_model<n, modulus>::Frobenius_coeffs_c1[6];
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP6_2OVER3_TCC_
-#define FP6_2OVER3_TCC_
-#include <libff/algebra/field_utils/field_utils.hpp>
-#include <libff/algebra/scalar_multiplication/wnaf.hpp>
+//#ifndef FP6_2OVER3_TCC_
+// #define FP6_2OVER3_TCC_
+use crate::algebra::field_utils::field_utils;
+use crate::algebra::scalar_multiplication::wnaf;
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n,modulus> Fp6_2over3_model<n, modulus>::mul_by_non_residue(const Fp3_model<n,modulus> &elem)
@@ -247,9 +247,9 @@ bool Fp6_2over3_model<n,modulus>::operator!=(const Fp6_2over3_model<n,modulus> &
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator+(const Fp6_2over3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     return Fp6_2over3_model<n,modulus>(this->c0 + other.c0,
                                 this->c1 + other.c1);
 }
@@ -257,9 +257,9 @@ Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator+(const Fp6_2ov
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator-(const Fp6_2over3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     return Fp6_2over3_model<n,modulus>(this->c0 - other.c0,
                                 this->c1 - other.c1);
 }
@@ -267,9 +267,9 @@ Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator-(const Fp6_2ov
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n, modulus> operator*(const Fp_model<n, modulus> &lhs, const Fp6_2over3_model<n, modulus> &rhs)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     rhs.mul_cnt++;
-#endif
+//#endif
     return Fp6_2over3_model<n,modulus>(lhs*rhs.c0,
                                 lhs*rhs.c1);
 }
@@ -277,9 +277,9 @@ Fp6_2over3_model<n, modulus> operator*(const Fp_model<n, modulus> &lhs, const Fp
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator*(const Fp6_2over3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
 
     const my_Fp3 &B = other.c1, &A = other.c0,
@@ -295,12 +295,12 @@ Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator*(const Fp6_2ov
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::mul_by_2345(const Fp6_2over3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
-    assert(other.c0.c0.is_zero());
-    assert(other.c0.c1.is_zero());
+    assert!(other.c0.c0.is_zero());
+    assert!(other.c0.c1.is_zero());
 
     const my_Fp3 &B = other.c1, &A = other.c0,
                  &b = this->c1, &a = this->c0;
@@ -378,9 +378,9 @@ Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::operator^=(const bigin
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::squared() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex) */
     const my_Fp3 &b = this->c1, &a = this->c0;
     const my_Fp3 ab = a * b;
@@ -399,9 +399,9 @@ Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::square()
 template<mp_size_t n, const bigint<n>& modulus>
 Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
-#endif
+//#endif
     /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
 
     const my_Fp3 &b = this->c1, &a = this->c0;
@@ -564,5 +564,5 @@ std::istream& operator>>(std::istream &in, Fp6_2over3_model<n, modulus> &el)
     return in;
 }
 
-} // namespace libff
-#endif // FP6_2OVER3_TCC_
+// } // namespace libff
+//#endif // FP6_2OVER3_TCC_

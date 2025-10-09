@@ -23,10 +23,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EVALUATION_DOMAIN_HPP_
-#define EVALUATION_DOMAIN_HPP_
+//#ifndef EVALUATION_DOMAIN_HPP_
+// #define EVALUATION_DOMAIN_HPP_
 
-#include <vector>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -100,4 +100,4 @@ class evaluation_domain {
 
 } // libfqfft
 
-#endif // EVALUATION_DOMAIN_HPP_
+//#endif // EVALUATION_DOMAIN_HPP_

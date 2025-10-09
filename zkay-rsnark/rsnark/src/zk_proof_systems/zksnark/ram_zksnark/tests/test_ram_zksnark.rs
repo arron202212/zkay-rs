@@ -6,12 +6,12 @@
  *****************************************************************************/
 use  <sstream>
 
-use  <libsnark/common/default_types/ram_zksnark_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/examples/ram_examples.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_params.hpp>
-use  <libsnark/zk_proof_systems/zksnark/ram_zksnark/examples/run_ram_zksnark.hpp>
+use crate::common::default_types::ram_zksnark_pp;
+use libsnark/relations/ram_computations/rams/examples/ram_examples;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
+use libsnark/zk_proof_systems/zksnark/ram_zksnark/examples/run_ram_zksnark;
 
-using namespace libsnark;
+
 
 template<typename ppT>
 void test_ram_zksnark(const size_t w,
@@ -24,12 +24,12 @@ void test_ram_zksnark(const size_t w,
     const ram_example<ramT> example = gen_ram_example_complex<ramT>(ap, boot_trace_size_bound, time_bound, true);
     const bool test_serialization = true;
     const bool ans = run_ram_zksnark<ppT>(example, test_serialization);
-    assert(ans);
+    assert!(ans);
 }
 
 int main(void)
 {
-    libff::start_profiling();
+    ffec::start_profiling();
     ram_zksnark_PCD_pp<default_ram_zksnark_pp>::init_public_params();
 
     const size_t w = 32;

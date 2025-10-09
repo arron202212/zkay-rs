@@ -5,22 +5,22 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SIMPLE_EXAMPLE_HPP_
-#define SIMPLE_EXAMPLE_HPP_
+//#ifndef SIMPLE_EXAMPLE_HPP_
+// #define SIMPLE_EXAMPLE_HPP_
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 r1cs_example<FieldT> gen_r1cs_example_from_protoboard(const size_t num_constraints,
                                                       const size_t num_inputs);
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/examples/simple_example.tcc>
 
-#endif // SIMPLE_EXAMPLE_HPP_
+use libsnark/gadgetlib1/examples/simple_example;
+
+//#endif // SIMPLE_EXAMPLE_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -28,12 +28,12 @@ use  <libsnark/gadgetlib1/examples/simple_example.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SIMPLE_EXAMPLE_TCC_
-#define SIMPLE_EXAMPLE_TCC_
+//#ifndef SIMPLE_EXAMPLE_TCC_
+// #define SIMPLE_EXAMPLE_TCC_
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
 
-namespace libsnark {
+
 
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
 
@@ -67,5 +67,5 @@ r1cs_example<FieldT> gen_r1cs_example_from_protoboard(const size_t num_constrain
     return r1cs_example<FieldT>(pb.get_constraint_system(), pb.primary_input(), pb.auxiliary_input());
 }
 
-} // libsnark
-#endif // R1CS_EXAMPLES_TCC_
+
+//#endif // R1CS_EXAMPLES_TCC_

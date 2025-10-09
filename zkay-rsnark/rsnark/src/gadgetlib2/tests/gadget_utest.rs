@@ -12,9 +12,9 @@ use  <sstream>
 
 use  <gtest/gtest.h>
 
-use  <libsnark/gadgetlib2/gadget.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
-use  <libsnark/gadgetlib2/protoboard.hpp>
+use libsnark/gadgetlib2/gadget;
+use libsnark/gadgetlib2/pp;
+use libsnark/gadgetlib2/protoboard;
 
 using ::std::cerr;
 using ::std::cout;
@@ -22,7 +22,7 @@ using ::std::endl;
 using ::std::stringstream;
 using namespace gadgetlib2;
 
-#define EXHAUSTIVE_N 4
+// #define EXHAUSTIVE_N 4
 
 namespace {
 

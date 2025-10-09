@@ -9,15 +9,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_PROTOBOARD_HPP_
-#define TINYRAM_PROTOBOARD_HPP_
+//#ifndef TINYRAM_PROTOBOARD_HPP_
+// #define TINYRAM_PROTOBOARD_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/gadgetlib1/protoboard.hpp>
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_aux.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/gadgetlib1/protoboard;
+use libsnark/relations/ram_computations/rams/ram_params;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_aux;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class tinyram_protoboard : public protoboard<FieldT> {
@@ -45,11 +45,11 @@ public:
     virtual void generate_r1cs_witness() = 0;
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard.tcc>
 
-#endif // TINYRAM_PROTOBOARD_HPP_
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+
+//#endif // TINYRAM_PROTOBOARD_HPP_
 /** @file
  *****************************************************************************
 
@@ -63,10 +63,10 @@ use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protob
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_PROTOBOARD_TCC_
-#define TINYRAM_PROTOBOARD_TCC_
+//#ifndef TINYRAM_PROTOBOARD_TCC_
+// #define TINYRAM_PROTOBOARD_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT>
 tinyram_protoboard<FieldT>::tinyram_protoboard(const tinyram_architecture_params &ap) :
@@ -86,6 +86,6 @@ tinyram_standard_gadget<FieldT>::tinyram_standard_gadget(tinyram_protoboard<Fiel
 {
 }
 
-} // libsnark
 
-#endif // TINYRAM_PROTOBOARD_TCC_
+
+//#endif // TINYRAM_PROTOBOARD_TCC_

@@ -4,10 +4,10 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-use  <libsnark/common/default_types/r1cs_ppzkpcd_pp.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/examples/run_r1cs_sp_ppzkpcd.hpp>
+use crate::common::default_types::r1cs_ppzkpcd_pp;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/examples/run_r1cs_sp_ppzkpcd;
 
-using namespace libsnark;
+
 
 template<typename PCD_ppT>
 void test_tally(const size_t arity, const size_t max_layer)
@@ -15,14 +15,14 @@ void test_tally(const size_t arity, const size_t max_layer)
     const size_t wordsize = 32;
     const bool test_serialization = true;
     const bool bit = run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize, arity, max_layer, test_serialization);
-    assert(bit);
+    assert!(bit);
 }
 
 int main(void)
 {
     type default_r1cs_ppzkpcd_pp PCD_pp;
 
-    libff::start_profiling();
+    ffec::start_profiling();
     PCD_pp::init_public_params();
 
     const size_t arity = 2;

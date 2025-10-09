@@ -10,10 +10,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
 
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/variable;
 
 namespace gadgetlib2 {
 
@@ -222,4 +222,4 @@ inline Polynomial        operator*(const Polynomial& first,        const int sec
 
 } // namespace gadgetlib2
 
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_

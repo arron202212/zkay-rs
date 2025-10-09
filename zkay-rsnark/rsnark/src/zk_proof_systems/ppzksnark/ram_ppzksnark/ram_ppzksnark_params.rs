@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_PPZKSNARK_PARAMS_HPP_
-#define RAM_PPZKSNARK_PARAMS_HPP_
+//#ifndef RAM_PPZKSNARK_PARAMS_HPP_
+// #define RAM_PPZKSNARK_PARAMS_HPP_
 
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
+use libsnark/relations/ram_computations/rams/ram_params;
 
-namespace libsnark {
+
 
 /**
  * The interfaces of the RAM ppzkSNARK are templatized via the parameter
@@ -69,6 +69,6 @@ using ram_ppzksnark_primary_input = ram_boot_trace<ram_ppzksnark_machine_pp<ram_
 template<typename ram_ppzksnark_ppT>
 using ram_ppzksnark_auxiliary_input = ram_input_tape<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
 
-} // libsnark
 
-#endif // RAM_PPZKSNARK_PARAMS_HPP_
+
+//#endif // RAM_PPZKSNARK_PARAMS_HPP_

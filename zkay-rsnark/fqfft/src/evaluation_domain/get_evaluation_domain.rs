@@ -13,12 +13,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef GET_EVALUATION_DOMAIN_HPP_
-#define GET_EVALUATION_DOMAIN_HPP_
+//#ifndef GET_EVALUATION_DOMAIN_HPP_
+// #define GET_EVALUATION_DOMAIN_HPP_
 
-#include <memory>
+//#include <memory>
 
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use libfqfft/evaluation_domain/evaluation_domain;
 
 namespace libfqfft {
 
@@ -27,9 +27,9 @@ std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t m
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/get_evaluation_domain.tcc>
+use libfqfft/evaluation_domain/get_evaluation_domain.tcc;
 
-#endif // GET_EVALUATION_DOMAIN_HPP_
+//#endif // GET_EVALUATION_DOMAIN_HPP_
 
 
 
@@ -51,16 +51,16 @@ std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t m
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef GET_EVALUATION_DOMAIN_TCC_
-#define GET_EVALUATION_DOMAIN_TCC_
+//#ifndef GET_EVALUATION_DOMAIN_TCC_
+// #define GET_EVALUATION_DOMAIN_TCC_
 
-#include <libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/extended_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/geometric_sequence_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/step_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
-#include <libfqfft/tools/exceptions.hpp>
+use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain;
+use libfqfft/evaluation_domain/domains/basic_radix2_domain;
+use libfqfft/evaluation_domain/domains/extended_radix2_domain;
+use libfqfft/evaluation_domain/domains/geometric_sequence_domain;
+use libfqfft/evaluation_domain/domains/step_radix2_domain;
+use libfqfft/evaluation_domain/evaluation_domain;
+use libfqfft/tools/exceptions;
 
 namespace libfqfft {
 
@@ -88,4 +88,4 @@ std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t m
 
 } // libfqfft
 
-#endif // GET_EVALUATION_DOMAIN_TCC_
+//#endif // GET_EVALUATION_DOMAIN_TCC_

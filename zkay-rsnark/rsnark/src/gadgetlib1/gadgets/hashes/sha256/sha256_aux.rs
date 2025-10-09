@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SHA256_AUX_HPP_
-#define SHA256_AUX_HPP_
+//#ifndef SHA256_AUX_HPP_
+// #define SHA256_AUX_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class lastbits_gadget : public gadget<FieldT> {
@@ -153,11 +153,11 @@ public:
     void generate_r1cs_witness();
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_aux.tcc>
 
-#endif // SHA256_AUX_HPP_
+use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_aux;
+
+//#endif // SHA256_AUX_HPP_
 /** @file
  *****************************************************************************
 
@@ -171,10 +171,10 @@ use  <libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_aux.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SHA256_AUX_TCC_
-#define SHA256_AUX_TCC_
+//#ifndef SHA256_AUX_TCC_
+// #define SHA256_AUX_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT>
 lastbits_gadget<FieldT>::lastbits_gadget(protoboard<FieldT> &pb,
@@ -193,12 +193,12 @@ lastbits_gadget<FieldT>::lastbits_gadget(protoboard<FieldT> &pb,
     for (size_t i = result_bits.size(); i < X_bits; ++i)
     {
         pb_variable<FieldT> full_bits_overflow;
-        full_bits_overflow.allocate(pb, FMT(this->annotation_prefix, " full_bits_%zu", i));
-        full_bits.emplace_back(full_bits_overflow);
+        full_bits_overflow.allocate(pb, FMT(self.annotation_prefix, " full_bits_{}", i));
+        full_bits.push(full_bits_overflow);
     }
 
-    unpack_bits.reset(new packing_gadget<FieldT>(pb, full_bits, X, FMT(this->annotation_prefix, " unpack_bits")));
-    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(this->annotation_prefix, " pack_result")));
+    unpack_bits.reset(new packing_gadget<FieldT>(pb, full_bits, X, FMT(self.annotation_prefix, " unpack_bits")));
+    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
 }
 
 template<typename FieldT>
@@ -232,7 +232,7 @@ XOR3_gadget<FieldT>::XOR3_gadget(protoboard<FieldT> &pb,
 {
     if (!assume_C_is_zero)
     {
-        tmp.allocate(pb, FMT(this->annotation_prefix, " tmp"));
+        tmp.allocate(pb, FMT(self.annotation_prefix, " tmp"));
     }
 }
 
@@ -245,12 +245,12 @@ void XOR3_gadget<FieldT>::generate_r1cs_constraints()
     */
     if (assume_C_is_zero)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2*A, B, A + B - out), FMT(this->annotation_prefix, " implicit_tmp_equals_out"));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2*A, B, A + B - out), FMT(self.annotation_prefix, " implicit_tmp_equals_out"));
     }
     else
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2*A, B, A + B - tmp), FMT(this->annotation_prefix, " tmp"));
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2 * tmp, C, tmp + C - out), FMT(this->annotation_prefix, " out"));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2*A, B, A + B - tmp), FMT(self.annotation_prefix, " tmp"));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2 * tmp, C, tmp + C - out), FMT(self.annotation_prefix, " out"));
     }
 }
 
@@ -259,16 +259,16 @@ void XOR3_gadget<FieldT>::generate_r1cs_witness()
 {
     if (assume_C_is_zero)
     {
-        this->pb.lc_val(out) = this->pb.lc_val(A) + this->pb.lc_val(B) - FieldT(2) * this->pb.lc_val(A) * this->pb.lc_val(B);
+        self.pb.lc_val(out) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
     }
     else
     {
-        this->pb.val(tmp) = this->pb.lc_val(A) + this->pb.lc_val(B) - FieldT(2) * this->pb.lc_val(A) * this->pb.lc_val(B);
-        this->pb.lc_val(out) = this->pb.val(tmp) + this->pb.lc_val(C) - FieldT(2) * this->pb.val(tmp) * this->pb.lc_val(C);
+        self.pb.val(tmp) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
+        self.pb.lc_val(out) = self.pb.val(tmp) + self.pb.lc_val(C) - FieldT(2) * self.pb.val(tmp) * self.pb.lc_val(C);
     }
 }
 
-#define SHA256_GADGET_ROTR(A, i, k) A[((i)+(k)) % 32]
+// #define SHA256_GADGET_ROTR(A, i, k) A[((i)+(k)) % 32]
 
 /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
 template<typename FieldT>
@@ -283,16 +283,16 @@ small_sigma_gadget<FieldT>::small_sigma_gadget(protoboard<FieldT> &pb,
     W(W),
     result(result)
 {
-    result_bits.allocate(pb, 32, FMT(this->annotation_prefix, " result_bits"));
+    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
     compute_bits.resize(32);
     for (size_t i = 0; i < 32; ++i)
     {
         compute_bits[i].reset(new XOR3_gadget<FieldT>(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2),
                                               (i + shift < 32 ? W[i+shift] : ONE),
                                               (i + shift >= 32), result_bits[i],
-                                              FMT(this->annotation_prefix, " compute_bits_%zu", i)));
+                                              FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
-    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(this->annotation_prefix, " pack_result")));
+    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
 }
 
 template<typename FieldT>
@@ -329,15 +329,15 @@ big_sigma_gadget<FieldT>::big_sigma_gadget(protoboard<FieldT> &pb,
     W(W),
     result(result)
 {
-    result_bits.allocate(pb, 32, FMT(this->annotation_prefix, " result_bits"));
+    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
     compute_bits.resize(32);
     for (size_t i = 0; i < 32; ++i)
     {
         compute_bits[i].reset(new XOR3_gadget<FieldT>(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2), SHA256_GADGET_ROTR(W, i, rot3), false, result_bits[i],
-                                                      FMT(this->annotation_prefix, " compute_bits_%zu", i)));
+                                                      FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
 
-    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(this->annotation_prefix, " pack_result")));
+    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
 }
 
 template<typename FieldT>
@@ -375,8 +375,8 @@ choice_gadget<FieldT>::choice_gadget(protoboard<FieldT> &pb,
     Z(Z),
     result(result)
 {
-    result_bits.allocate(pb, 32, FMT(this->annotation_prefix, " result_bits"));
-    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(this->annotation_prefix, " result")));
+    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
+    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
 }
 
 template<typename FieldT>
@@ -388,7 +388,7 @@ void choice_gadget<FieldT>::generate_r1cs_constraints()
           result = x * y + (1-x) * z
           result - z = x * (y - z)
         */
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(X[i], Y[i] - Z[i], result_bits[i] - Z[i]), FMT(this->annotation_prefix, " result_bits_%zu", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(X[i], Y[i] - Z[i], result_bits[i] - Z[i]), FMT(self.annotation_prefix, " result_bits_{}", i));
     }
     pack_result->generate_r1cs_constraints(false);
 }
@@ -398,7 +398,7 @@ void choice_gadget<FieldT>::generate_r1cs_witness()
 {
     for (size_t i = 0; i < 32; ++i)
     {
-        this->pb.val(result_bits[i]) = this->pb.lc_val(X[i]) * this->pb.lc_val(Y[i]) + (FieldT::one() - this->pb.lc_val(X[i])) * this->pb.lc_val(Z[i]);
+        self.pb.val(result_bits[i]) = self.pb.lc_val(X[i]) * self.pb.lc_val(Y[i]) + (FieldT::one() - self.pb.lc_val(X[i])) * self.pb.lc_val(Z[i]);
     }
     pack_result->generate_r1cs_witness_from_bits();
 }
@@ -417,8 +417,8 @@ majority_gadget<FieldT>::majority_gadget(protoboard<FieldT> &pb,
     Z(Z),
     result(result)
 {
-    result_bits.allocate(pb, 32, FMT(this->annotation_prefix, " result_bits"));
-    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(this->annotation_prefix, " result")));
+    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
+    pack_result.reset(new packing_gadget<FieldT>(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
 }
 
 template<typename FieldT>
@@ -431,11 +431,11 @@ void majority_gadget<FieldT>::generate_r1cs_constraints()
           x, y, z, aux -- bits
           aux = x + y + z - 2*result
         */
-        generate_boolean_r1cs_constraint<FieldT>(this->pb, result_bits[i], FMT(this->annotation_prefix, " result_%zu", i));
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(X[i] + Y[i] + Z[i] - 2 * result_bits[i],
+        generate_boolean_r1cs_constraint<FieldT>(self.pb, result_bits[i], FMT(self.annotation_prefix, " result_{}", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(X[i] + Y[i] + Z[i] - 2 * result_bits[i],
                                                              1 - (X[i] + Y[i] + Z[i] -  2 * result_bits[i]),
                                                              0),
-                                     FMT(this->annotation_prefix, " result_bits_%zu", i));
+                                     FMT(self.annotation_prefix, " result_bits_{}", i));
     }
     pack_result->generate_r1cs_constraints(false);
 }
@@ -445,13 +445,13 @@ void majority_gadget<FieldT>::generate_r1cs_witness()
 {
     for (size_t i = 0; i < 32; ++i)
     {
-        const long v = (this->pb.lc_val(X[i]) + this->pb.lc_val(Y[i]) + this->pb.lc_val(Z[i])).as_ulong();
-        this->pb.val(result_bits[i]) = FieldT(v / 2);
+        const long v = (self.pb.lc_val(X[i]) + self.pb.lc_val(Y[i]) + self.pb.lc_val(Z[i])).as_ulong();
+        self.pb.val(result_bits[i]) = FieldT(v / 2);
     }
 
     pack_result->generate_r1cs_witness_from_bits();
 }
 
-} // libsnark
 
-#endif // SHA256_AUX_TCC_
+
+//#endif // SHA256_AUX_TCC_

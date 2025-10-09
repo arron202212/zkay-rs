@@ -5,15 +5,15 @@
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
 
-#ifndef ALT_BN128_PP_HPP_
-#define ALT_BN128_PP_HPP_
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g1.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g2.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_init.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_pairing.hpp>
-#include <libff/algebra/curves/public_params.hpp>
+//#ifndef ALT_BN128_PP_HPP_
+// #define ALT_BN128_PP_HPP_
+use libff/algebra/curves/alt_bn128/alt_bn128_g1;
+use libff/algebra/curves/alt_bn128/alt_bn128_g2;
+use libff/algebra/curves/alt_bn128/alt_bn128_init;
+use libff/algebra/curves/alt_bn128/alt_bn128_pairing;
+use libff/algebra/curves/public_params;
 
-namespace libff {
+// namespace libff {
 
 class alt_bn128_pp {
 public:
@@ -45,9 +45,9 @@ public:
                                           const alt_bn128_G2 &Q);
 };
 
-} // namespace libff
+// } // namespace libff
 
-#endif // ALT_BN128_PP_HPP_
+//#endif // ALT_BN128_PP_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -55,9 +55,9 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_pp;
 
-namespace libff {
+// namespace libff {
 
 void alt_bn128_pp::init_public_params()
 {
@@ -105,4 +105,4 @@ alt_bn128_Fq12 alt_bn128_pp::reduced_pairing(const alt_bn128_G1 &P,
     return alt_bn128_reduced_pairing(P, Q);
 }
 
-} // namespace libff
+// } // namespace libff

@@ -1,7 +1,7 @@
 
-use  libff::common::default_types::ec_pp;
+use  ffec::common::default_types::ec_pp;
 
-type libff::Fr<libff::default_ec_pp> FieldT;
+type FieldT=ffec::Fr::<ffec::default_ec_pp> ;
 
 fn  readIds(str:&str,  vec:&Vec<u32>){
 

@@ -12,16 +12,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef CP_HANDLER_HPP_
-#define CP_HANDLER_HPP_
+//#ifndef CP_HANDLER_HPP_
+// #define CP_HANDLER_HPP_
 
 use  <numeric>
 
-use  <libsnark/gadgetlib1/gadget.hpp>
-use  <libsnark/gadgetlib1/protoboard.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate.hpp>
+use libsnark/gadgetlib1/gadget;
+use libsnark/gadgetlib1/protoboard;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
 
-namespace libsnark {
+
 
 /***************************** Message variable ******************************/
 
@@ -110,11 +110,11 @@ public:
     r1cs_variable_assignment<FieldT> get_witness() const;
 };
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler.tcc>
 
-#endif // CP_HANDLER_HPP_
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
+
+//#endif // CP_HANDLER_HPP_
 /** @file
  *****************************************************************************
 
@@ -128,12 +128,12 @@ use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler.tcc
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef CP_HANDLER_TCC_
-#define CP_HANDLER_TCC_
+//#ifndef CP_HANDLER_TCC_
+// #define CP_HANDLER_TCC_
 
 use  <algorithm>
 
-namespace libsnark {
+
 
 template<typename FieldT>
 r1cs_pcd_message_variable<FieldT>::r1cs_pcd_message_variable(protoboard<FieldT> &pb,
@@ -141,7 +141,7 @@ r1cs_pcd_message_variable<FieldT>::r1cs_pcd_message_variable(protoboard<FieldT> 
     gadget<FieldT>(pb, annotation_prefix)
 {
     type.allocate(pb, FMT(annotation_prefix, " type"));
-    all_vars.emplace_back(type);
+    all_vars.push(type);
 
     num_vars_at_construction = pb.num_variables();
 }
@@ -153,16 +153,16 @@ void r1cs_pcd_message_variable<FieldT>::update_all_vars()
      * only gadget allocating variables on the protoboard and needs to
      * be updated, e.g., in multicore variable allocation scenario. */
 
-    for (size_t var_idx = num_vars_at_construction + 1; var_idx <= this->pb.num_variables(); ++var_idx)
+    for (size_t var_idx = num_vars_at_construction + 1; var_idx <= self.pb.num_variables(); ++var_idx)
     {
-        all_vars.emplace_back(pb_variable<FieldT>(var_idx));
+        all_vars.push(pb_variable<FieldT>(var_idx));
     }
 }
 
 template<typename FieldT>
 void r1cs_pcd_message_variable<FieldT>::generate_r1cs_witness(const std::shared_ptr<r1cs_pcd_message<FieldT> > &message)
 {
-    all_vars.fill_with_field_elements(this->pb, message->as_r1cs_variable_assignment());
+    all_vars.fill_with_field_elements(self.pb, message->as_r1cs_variable_assignment());
 }
 
 template<typename FieldT>
@@ -178,16 +178,16 @@ void r1cs_pcd_local_data_variable<FieldT>::update_all_vars()
 {
     /* (the same NOTE as for r1cs_message_variable applies) */
 
-    for (size_t var_idx = num_vars_at_construction + 1; var_idx <= this->pb.num_variables(); ++var_idx)
+    for (size_t var_idx = num_vars_at_construction + 1; var_idx <= self.pb.num_variables(); ++var_idx)
     {
-        all_vars.emplace_back(pb_variable<FieldT>(var_idx));
+        all_vars.push(pb_variable<FieldT>(var_idx));
     }
 }
 
 template<typename FieldT>
 void r1cs_pcd_local_data_variable<FieldT>::generate_r1cs_witness(const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data)
 {
-    all_vars.fill_with_field_elements(this->pb, local_data->as_r1cs_variable_assignment());
+    all_vars.fill_with_field_elements(self.pb, local_data->as_r1cs_variable_assignment());
 }
 
 template<typename FieldT, typename protoboardT>
@@ -223,7 +223,7 @@ void compliance_predicate_handler<FieldT, protoboardT>::generate_r1cs_witness(co
 template<typename FieldT, typename protoboardT>
 r1cs_pcd_compliance_predicate<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_compliance_predicate() const
 {
-    assert(incoming_messages.size() == max_arity);
+    assert!(incoming_messages.size() == max_arity);
 
     const size_t outgoing_message_payload_length = outgoing_message->all_vars.size() - 1;
 
@@ -277,7 +277,7 @@ size_t compliance_predicate_handler<FieldT, protoboardT>::get_arity() const
 template<typename FieldT, typename protoboardT>
 std::shared_ptr<r1cs_pcd_message<FieldT> > compliance_predicate_handler<FieldT, protoboardT>::get_incoming_message(const size_t message_idx) const
 {
-    assert(message_idx < max_arity);
+    assert!(message_idx < max_arity);
     return incoming_messages[message_idx]->get_message();
 }
 
@@ -301,6 +301,6 @@ r1cs_pcd_witness<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_
     return r1cs_variable_assignment<FieldT>(va.begin() + witness_pos, va.end());
 }
 
-} // libsnark
 
-#endif // CP_HANDLER_TCC_
+
+//#endif // CP_HANDLER_TCC_

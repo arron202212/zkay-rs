@@ -19,15 +19,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef QAP_HPP_
-#define QAP_HPP_
+//#ifndef QAP_HPP_
+// #define QAP_HPP_
 
 use  <map>
 use  <memory>
 
-use  <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use fqfft::evaluation_domain::evaluation_domain;
 
-namespace libsnark {
+
 
 /* forward declaration */
 template<typename FieldT>
@@ -189,11 +189,11 @@ private:
     size_t num_inputs() const;
 };
 
-} // libsnark
 
-use  <libsnark/relations/arithmetic_programs/qap/qap.tcc>
 
-#endif // QAP_HPP_
+use crate::relations::arithmetic_programs::qap::qap;
+
+//#endif // QAP_HPP_
 /** @file
 *****************************************************************************
 
@@ -207,15 +207,15 @@ See qap.hpp .
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
 
-#ifndef QAP_TCC_
-#define QAP_TCC_
+//#ifndef QAP_TCC_
+// #define QAP_TCC_
 
-use  <libff/algebra/scalar_multiplication/multiexp.hpp>
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
-use  <libfqfft/evaluation_domain/evaluation_domain.hpp>
+ use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::common::profiling;
+use ffec::common::utils;
+use fqfft::evaluation_domain::evaluation_domain;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 qap_instance<FieldT>::qap_instance(domain:&std::shared_ptr<libfqfft::evaluation_domain<FieldT> >
@@ -247,9 +247,9 @@ qap_instance<FieldT>::qap_instance(domain:&std::shared_ptr<libfqfft::evaluation_
     degree_(degree),
     num_inputs_(num_inputs),
     domain(domain),
-    A_in_Lagrange_basis(std::move(A_in_Lagrange_basis)),
-    B_in_Lagrange_basis(std::move(B_in_Lagrange_basis)),
-    C_in_Lagrange_basis(std::move(C_in_Lagrange_basis))
+    A_in_Lagrange_basis((A_in_Lagrange_basis)),
+    B_in_Lagrange_basis((B_in_Lagrange_basis)),
+    C_in_Lagrange_basis((C_in_Lagrange_basis))
 {
 }
 
@@ -276,16 +276,16 @@ bool qap_instance<FieldT>::is_satisfied(&witness:qap_witness<FieldT>) const
 {
     FieldT::random_element(:FieldT t =);
 
-    std::vector<FieldT> At(this->num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Bt(this->num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ct(this->num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ht(this->degree()+1);
+    std::vector<FieldT> At(self.num_variables()+1, FieldT::zero());
+    std::vector<FieldT> Bt(self.num_variables()+1, FieldT::zero());
+    std::vector<FieldT> Ct(self.num_variables()+1, FieldT::zero());
+    std::vector<FieldT> Ht(self.degree()+1);
 
-    this->domain->compute_vanishing_polynomial(t:FieldT Zt =);
+    self.domain->compute_vanishing_polynomial(t:FieldT Zt =);
 
-    this->domain->evaluate_all_lagrange_polynomials(t:std::vector<FieldT> u =);
+    self.domain->evaluate_all_lagrange_polynomials(t:std::vector<FieldT> u =);
 
-    for i in 0..this->num_variables()+1
+    for i in 0..self.num_variables()+1
     {
         for (auto &el : A_in_Lagrange_basis[i])
         {
@@ -304,21 +304,21 @@ bool qap_instance<FieldT>::is_satisfied(&witness:qap_witness<FieldT>) const
     }
 
     FieldT ti = FieldT::one();
-    for i in 0..this->degree()+1
+    for i in 0..self.degree()+1
     {
         Ht[i] = ti;
         ti *= t;
     }
 
-    eval_qap_inst(this->domain:qap_instance_evaluation<FieldT>
-                                                        this->num_variables(),
-                                                        this->degree(),
-                                                        this->num_inputs(),
+    eval_qap_inst(self.domain:qap_instance_evaluation<FieldT>
+                                                        self.num_variables(),
+                                                        self.degree(),
+                                                        self.num_inputs(),
                                                         t,
-                                                        std::move(At),
-                                                        std::move(Bt),
-                                                        std::move(Ct),
-                                                        std::move(Ht),
+                                                        (At),
+                                                        (Bt),
+                                                        (Ct),
+                                                        (Ht),
                                                         Zt);
     return eval_qap_inst.is_satisfied(witness);
 }
@@ -363,10 +363,10 @@ qap_instance_evaluation<FieldT>::qap_instance_evaluation(domain:&std::shared_ptr
     num_inputs_(num_inputs),
     domain(domain),
     t(t),
-    At(std::move(At)),
-    Bt(std::move(Bt)),
-    Ct(std::move(Ct)),
-    Ht(std::move(Ht)),
+    At((At)),
+    Bt((Bt)),
+    Ct((Ct)),
+    Ht((Ht)),
     Zt(Zt)
 {
 }
@@ -393,69 +393,69 @@ template<typename FieldT>
 bool qap_instance_evaluation<FieldT>::is_satisfied(&witness:qap_witness<FieldT>) const
 {
 
-    if this->num_variables() != witness.num_variables()
+    if self.num_variables() != witness.num_variables()
     {
         return false;
     }
 
-    if this->degree() != witness.degree()
+    if self.degree() != witness.degree()
     {
         return false;
     }
 
-    if this->num_inputs() != witness.num_inputs()
+    if self.num_inputs() != witness.num_inputs()
     {
         return false;
     }
 
-    if this->num_variables() != witness.coefficients_for_ABCs.size()
+    if self.num_variables() != witness.coefficients_for_ABCs.size()
     {
         return false;
     }
 
-    if this->degree()+1 != witness.coefficients_for_H.size()
+    if self.degree()+1 != witness.coefficients_for_H.size()
     {
         return false;
     }
 
-    if this->At.size() != this->num_variables()+1 || this->Bt.size() != this->num_variables()+1 || this->Ct.size() != this->num_variables()+1
+    if self.At.size() != self.num_variables()+1 || self.Bt.size() != self.num_variables()+1 || self.Ct.size() != self.num_variables()+1
     {
         return false;
     }
 
-    if this->Ht.size() != this->degree()+1
+    if self.Ht.size() != self.degree()+1
     {
         return false;
     }
 
-    if this->Zt != this->domain->compute_vanishing_polynomial(this->t)
+    if self.Zt != self.domain->compute_vanishing_polynomial(self.t)
     {
         return false;
     }
 
-    FieldT ans_A = this->At[0] + witness.d1*this->Zt;
-    FieldT ans_B = this->Bt[0] + witness.d2*this->Zt;
-    FieldT ans_C = this->Ct[0] + witness.d3*this->Zt;
+    FieldT ans_A = self.At[0] + witness.d1*self.Zt;
+    FieldT ans_B = self.Bt[0] + witness.d2*self.Zt;
+    FieldT ans_C = self.Ct[0] + witness.d3*self.Zt;
     FieldT ans_H = FieldT::zero();
 
-    ans_A = ans_A + libff::inner_product<FieldT>(this->At.begin()+1,
-                                                 this->At.begin()+1+this->num_variables(),
+    ans_A = ans_A + ffec::inner_product<FieldT>(self.At.begin()+1,
+                                                 self.At.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ABCs.begin(),
-                                                 witness.coefficients_for_ABCs.begin()+this->num_variables());
-    ans_B = ans_B + libff::inner_product<FieldT>(this->Bt.begin()+1,
-                                                 this->Bt.begin()+1+this->num_variables(),
+                                                 witness.coefficients_for_ABCs.begin()+self.num_variables());
+    ans_B = ans_B + ffec::inner_product<FieldT>(self.Bt.begin()+1,
+                                                 self.Bt.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ABCs.begin(),
-                                                 witness.coefficients_for_ABCs.begin()+this->num_variables());
-    ans_C = ans_C + libff::inner_product<FieldT>(this->Ct.begin()+1,
-                                                 this->Ct.begin()+1+this->num_variables(),
+                                                 witness.coefficients_for_ABCs.begin()+self.num_variables());
+    ans_C = ans_C + ffec::inner_product<FieldT>(self.Ct.begin()+1,
+                                                 self.Ct.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ABCs.begin(),
-                                                 witness.coefficients_for_ABCs.begin()+this->num_variables());
-    ans_H = ans_H + libff::inner_product<FieldT>(this->Ht.begin(),
-                                                 this->Ht.begin()+this->degree()+1,
+                                                 witness.coefficients_for_ABCs.begin()+self.num_variables());
+    ans_H = ans_H + ffec::inner_product<FieldT>(self.Ht.begin(),
+                                                 self.Ht.begin()+self.degree()+1,
                                                  witness.coefficients_for_H.begin(),
-                                                 witness.coefficients_for_H.begin()+this->degree()+1);
+                                                 witness.coefficients_for_H.begin()+self.degree()+1);
 
-    if ans_A * ans_B - ans_C != ans_H * this->Zt
+    if ans_A * ans_B - ans_C != ans_H * self.Zt
     {
         return false;
     }
@@ -499,7 +499,7 @@ qap_witness<FieldT>::qap_witness(num_variables:size_t
     d2(d2),
     d3(d3),
     coefficients_for_ABCs(coefficients_for_ABCs),
-    coefficients_for_H(std::move(coefficients_for_H))
+    coefficients_for_H((coefficients_for_H))
 {
 }
 
@@ -523,6 +523,6 @@ size_t qap_witness<FieldT>::num_inputs() const
 }
 
 
-} // libsnark
 
-#endif // QAP_TCC_
+
+//#endif // QAP_TCC_

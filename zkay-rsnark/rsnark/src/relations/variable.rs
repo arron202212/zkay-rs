@@ -12,15 +12,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef VARIABLE_HPP_
-#define VARIABLE_HPP_
+//#ifndef VARIABLE_HPP_
+// #define VARIABLE_HPP_
 
 use  <cstddef>
 use  <map>
 use  <string>
 use  <vector>
 
-namespace libsnark {
+
 
 /**
  * Mnemonic typedefs.
@@ -198,11 +198,11 @@ linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &lc:linear_combin
 template<typename FieldT>
 linear_combination<FieldT> operator-(field_coeff:&FieldT &lc:linear_combination<FieldT>);
 
-} // libsnark
 
-use  <libsnark/relations/variable.tcc>
 
-#endif // VARIABLE_HPP_
+use libsnark/relations/variable;
+
+//#endif // VARIABLE_HPP_
 
 
 
@@ -222,15 +222,15 @@ use  <libsnark/relations/variable.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef VARIABLE_TCC_
-#define VARIABLE_TCC_
+//#ifndef VARIABLE_TCC_
+// #define VARIABLE_TCC_
 
 use  <algorithm>
 use  <cassert>
 
-use  <libff/algebra/fields/bigint.hpp>
+use ffec::algebra::fields::bigint;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 linear_term<FieldT> variable<FieldT>::operator*(int_coeff:integer_coeff_t) const
@@ -286,7 +286,7 @@ impl<ppT> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
 template<typename FieldT>
 bool variable<FieldT>::operator==(&other:variable<FieldT>) const
 {
-    return (this->index == other.index);
+    return (self.index == other.index);
 }
 
 template<typename FieldT>
@@ -346,13 +346,13 @@ linear_term<FieldT>::linear_term(var:&variable<FieldT> &coeff:FieldT) :
 template<typename FieldT>
 linear_term<FieldT> linear_term<FieldT>::operator*(int_coeff:integer_coeff_t) const
 {
-    return (this->operator*(FieldT(int_coeff)));
+    return (self.operator*(FieldT(int_coeff)));
 }
 
 template<typename FieldT>
 linear_term<FieldT> linear_term<FieldT>::operator*(&field_coeff:FieldT) const
 {
-    return linear_term<FieldT>(this->index, field_coeff * this->coeff);
+    return linear_term<FieldT>(self.index, field_coeff * self.coeff);
 }
 
 template<typename FieldT>
@@ -394,7 +394,7 @@ linear_combination<FieldT> linear_term<FieldT>::operator-(&other:linear_combinat
 template<typename FieldT>
 linear_term<FieldT> linear_term<FieldT>::operator-() const
 {
-    return linear_term<FieldT>(this->index, -this->coeff);
+    return linear_term<FieldT>(self.index, -self.coeff);
 }
 
 impl<ppT> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
@@ -416,8 +416,8 @@ impl<ppT> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
 template<typename FieldT>
 bool linear_term<FieldT>::operator==(&other:linear_term<FieldT>) const
 {
-    return (this->index == other.index &&
-            this->coeff == other.coeff);
+    return (self.index == other.index &&
+            self.coeff == other.coeff);
 }
 
 template<typename FieldT>
@@ -435,25 +435,25 @@ linear_term<FieldT> operator*(field_coeff:&FieldT &lt:linear_term<FieldT>)
 template<typename FieldT>
 linear_combination<FieldT>::linear_combination(int_coeff:integer_coeff_t)
 {
-    this->add_term(linear_term<FieldT>(0, int_coeff));
+    self.add_term(linear_term<FieldT>(0, int_coeff));
 }
 
 template<typename FieldT>
 linear_combination<FieldT>::linear_combination(&field_coeff:FieldT)
 {
-    this->add_term(linear_term<FieldT>(0, field_coeff));
+    self.add_term(linear_term<FieldT>(0, field_coeff));
 }
 
 template<typename FieldT>
 linear_combination<FieldT>::linear_combination(&var:variable<FieldT>)
 {
-    this->add_term(var);
+    self.add_term(var);
 }
 
 template<typename FieldT>
 linear_combination<FieldT>::linear_combination(&lt:linear_term<FieldT>)
 {
-    this->add_term(lt);
+    self.add_term(lt);
 }
 
 template<typename FieldT>
@@ -471,25 +471,25 @@ typename std::vector<linear_term<FieldT> >::const_iterator linear_combination<Fi
 template<typename FieldT>
 void linear_combination<FieldT>::add_term(&var:variable<FieldT>)
 {
-    this->terms.emplace_back(linear_term<FieldT>(var.index, FieldT::one()));
+    self.terms.push(linear_term<FieldT>(var.index, FieldT::one()));
 }
 
 template<typename FieldT>
 void linear_combination<FieldT>::add_term(var:&variable<FieldT> int_coeff:integer_coeff_t)
 {
-    this->terms.emplace_back(linear_term<FieldT>(var.index, int_coeff));
+    self.terms.push(linear_term<FieldT>(var.index, int_coeff));
 }
 
 template<typename FieldT>
 void linear_combination<FieldT>::add_term(var:&variable<FieldT> &coeff:FieldT)
 {
-    this->terms.emplace_back(linear_term<FieldT>(var.index, coeff));
+    self.terms.push(linear_term<FieldT>(var.index, coeff));
 }
 
 template<typename FieldT>
 void linear_combination<FieldT>::add_term(&other:linear_term<FieldT>)
 {
-    this->terms.emplace_back(other);
+    self.terms.push(other);
 }
 
 template<typename FieldT>
@@ -513,10 +513,10 @@ template<typename FieldT>
 linear_combination<FieldT> linear_combination<FieldT>::operator*(&field_coeff:FieldT) const
 {
     linear_combination<FieldT> result;
-    result.terms.reserve(this->terms.size());
-    for (this->terms:linear_term<FieldT> &lt :)
+    result.terms.reserve(self.terms.size());
+    for (self.terms:linear_term<FieldT> &lt :)
     {
-        result.terms.emplace_back(lt * field_coeff);
+        result.terms.push(lt * field_coeff);
     }
     return result;
 }
@@ -525,36 +525,36 @@ template<typename FieldT>
 linear_combination<FieldT> linear_combination<FieldT>::operator+(&other:linear_combination<FieldT>) const
 {
     linear_combination<FieldT> result;
-    result.terms.reserve(this->terms.size() + other.terms.size());
+    result.terms.reserve(self.terms.size() + other.terms.size());
 
-    auto it1 = this->terms.begin();
+    auto it1 = self.terms.begin();
     auto it2 = other.terms.begin();
 
     /* invariant: it1 and it2 always point to unprocessed items in the corresponding linear combinations */
-    while (it1 != this->terms.end() && it2 != other.terms.end())
+    while (it1 != self.terms.end() && it2 != other.terms.end())
     {
         if it1->index < it2->index
         {
-            result.terms.emplace_back(*it1);
-            ++it1;
+            result.terms.push(*it1);
+            it1+=1;
         }
         else if it1->index > it2->index
         {
-            result.terms.emplace_back(*it2);
-            ++it2;
+            result.terms.push(*it2);
+            it2+=1;
         }
         else
         {
             /* it1->index == it2->index */
-            result.terms.emplace_back(variable<FieldT>(it1->index), it1->coeff + it2->coeff);
-            ++it1;
-            ++it2;
+            result.terms.push(variable<FieldT>(it1->index), it1->coeff + it2->coeff);
+            it1+=1;
+            it2+=1;
         }
     }
 
-    if it1 != this->terms.end()
+    if it1 != self.terms.end()
     {
-        result.terms.insert(result.terms.end(), it1, this->terms.end());
+        result.terms.insert(result.terms.end(), it1, self.terms.end());
     }
     else
     {
@@ -579,7 +579,7 @@ linear_combination<FieldT> linear_combination<FieldT>::operator-() const
 template<typename FieldT>
 bool linear_combination<FieldT>::operator==(&other:linear_combination<FieldT>) const
 {
-    return (this->terms == other.terms);
+    return (self.terms == other.terms);
 }
 
 template<typename FieldT>
@@ -611,13 +611,13 @@ void linear_combination<FieldT>::print(&variable_annotations:std::map<size_t, st
     {
         if lt.index == 0
         {
-            printf!("    1 * ");
+            print!("    1 * ");
             lt.coeff.print();
         }
         else
         {
             auto it = variable_annotations.find(lt.index);
-            printf!("    x_%zu (%s) * ", lt.index, (it == variable_annotations.end() ? "no annotation" : it->second.c_str()));
+            print!("    x_{} (%s) * ", lt.index, (it == variable_annotations.end() ? "no annotation" : it->second.c_str()));
             lt.coeff.print();
         }
     }
@@ -630,19 +630,19 @@ void linear_combination<FieldT>::print_with_assignment(full_assignment, &variabl
     {
         if lt.index == 0
         {
-            printf!("    1 * ");
+            print!("    1 * ");
             lt.coeff.print();
         }
         else
         {
-            printf!("    x_%zu * ", lt.index);
+            print!("    x_{} * ", lt.index);
             lt.coeff.print();
 
             auto it = variable_annotations.find(lt.index);
-            printf!("    where x_%zu (%s) was assigned value ", lt.index,
+            print!("    where x_{} (%s) was assigned value ", lt.index,
                    (it == variable_annotations.end() ? "no annotation" : it->second.c_str()));
             full_assignment[lt.index-1].print();
-            printf!("      i.e. negative of ");
+            print!("      i.e. negative of ");
             (-full_assignment[lt.index-1]).print();
         }
     }
@@ -683,7 +683,7 @@ std::istream& operator>>(std::istream &in, linear_combination<FieldT> &lc)
     size_t s;
     in >> s;
 
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
 
     lc.terms.reserve(s);
 
@@ -691,10 +691,10 @@ std::istream& operator>>(std::istream &in, linear_combination<FieldT> &lc)
     {
         linear_term<FieldT> lt;
         in >> lt.index;
-        libff::consume_newline(in);
+        ffec::consume_newline(in);
         in >> lt.coeff;
-        libff::consume_OUTPUT_NEWLINE(in);
-        lc.terms.emplace_back(lt);
+        ffec::consume_OUTPUT_NEWLINE(in);
+        lc.terms.push(lt);
     }
 
     return in;
@@ -762,6 +762,6 @@ linear_combination<FieldT>::linear_combination(&all_terms:std::vector<linear_ter
     terms.resize((result_it - terms.begin()) + 1);
 }
 
-} // libsnark
 
-#endif // VARIABLE_TCC
+
+//#endif // VARIABLE_TCC

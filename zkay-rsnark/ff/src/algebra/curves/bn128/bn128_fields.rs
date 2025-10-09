@@ -5,12 +5,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BN128_FIELDS_HPP_
-#define BN128_FIELDS_HPP_
+//#ifndef BN128_FIELDS_HPP_
+// #define BN128_FIELDS_HPP_
 #include "depends/ate-pairing/include/bn.h"
-#include <libff/algebra/fields/prime_base/fp.hpp>
+use libff/algebra/fields/prime_base/fp;
 
-namespace libff {
+// namespace libff {
 
 const mp_size_t bn128_r_bitcount = 254;
 const mp_size_t bn128_q_bitcount = 254;
@@ -26,8 +26,8 @@ typedef Fp_model<bn128_q_limbs, bn128_modulus_q> bn128_Fq;
 
 void init_bn128_fields();
 
-} // namespace libff
-#endif // BN128_FIELDS_HPP_
+// } // namespace libff
+//#endif // BN128_FIELDS_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -35,9 +35,9 @@ void init_bn128_fields();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/bn128/bn128_fields.hpp>
+use libff/algebra/curves/bn128/bn128_fields;
 
-namespace libff {
+// namespace libff {
 
 bigint<bn128_r_limbs> bn128_modulus_r;
 bigint<bn128_q_limbs> bn128_modulus_q;
@@ -49,11 +49,11 @@ void init_bn128_fields()
     using  bigint_r = bigint<bn128_r_limbs>;
     using  bigint_q = bigint<bn128_q_limbs>;
 
-    assert(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
+    assert!(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
 
     /* parameters for scalar field Fr */
     bn128_modulus_r = bigint_r("21888242871839275222246405745257275088548364400416034343698204186575808495617");
-    assert(bn128_Fr::modulus_is_valid());
+    assert!(bn128_Fr::modulus_is_valid());
     if (sizeof(mp_limb_t) == 8)
     {
         bn128_Fr::Rsquared = bigint_r("944936681149208446651664254269745548490766851729442924617792859073125903783");
@@ -78,7 +78,7 @@ void init_bn128_fields()
 
     /* parameters for base field Fq */
     bn128_modulus_q = bigint_q("21888242871839275222246405745257275088696311157297823662689037894645226208583");
-    assert(bn128_Fq::modulus_is_valid());
+    assert!(bn128_Fq::modulus_is_valid());
     if (sizeof(mp_limb_t) == 8)
     {
         bn128_Fq::Rsquared = bigint_q("3096616502983703923843567936837374451735540968419076528771170197431451843209");
@@ -102,4 +102,4 @@ void init_bn128_fields()
     bn128_Fq::nqr_to_t = bn128_Fq("21888242871839275222246405745257275088696311157297823662689037894645226208582");
 }
 
-} // namespace libff
+// } // namespace libff

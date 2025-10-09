@@ -5,12 +5,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALT_BN128_INIT_HPP_
-#define ALT_BN128_INIT_HPP_
-#include <libff/algebra/curves/public_params.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_fields.hpp>
+//#ifndef ALT_BN128_INIT_HPP_
+// #define ALT_BN128_INIT_HPP_
+use libff/algebra/curves/public_params;
+use libff/algebra/curves/alt_bn128/alt_bn128_fields;
 
-namespace libff {
+// namespace libff {
 
 // parameters for Barreto--Naehrig curve E/Fq : y^2 = x^3 + b
 extern alt_bn128_Fq alt_bn128_coeff_b;
@@ -33,8 +33,8 @@ void init_alt_bn128_params();
 class alt_bn128_G1;
 class alt_bn128_G2;
 
-} // namespace libff
-#endif // ALT_BN128_INIT_HPP_
+// } // namespace libff
+//#endif // ALT_BN128_INIT_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -42,11 +42,11 @@ class alt_bn128_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g1.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g2.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_init.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_g1;
+use libff/algebra/curves/alt_bn128/alt_bn128_g2;
+use libff/algebra/curves/alt_bn128/alt_bn128_init;
 
-namespace libff {
+// namespace libff {
 
 alt_bn128_Fq alt_bn128_coeff_b;
 alt_bn128_Fq2 alt_bn128_twist;
@@ -222,4 +222,4 @@ void init_alt_bn128_params()
     alt_bn128_final_exponent_is_z_neg = false;
 
 }
-} // namespace libff
+// } // namespace libff

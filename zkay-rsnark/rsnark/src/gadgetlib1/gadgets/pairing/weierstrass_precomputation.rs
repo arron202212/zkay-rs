@@ -11,19 +11,19 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef WEIERSTRASS_PRECOMPUTATION_HPP_
-#define WEIERSTRASS_PRECOMPUTATION_HPP_
+//#ifndef WEIERSTRASS_PRECOMPUTATION_HPP_
+// #define WEIERSTRASS_PRECOMPUTATION_HPP_
 
 use  <memory>
 
-use  <libff/algebra/curves/mnt/mnt4/mnt4_init.hpp>
-use  <libff/algebra/curves/mnt/mnt6/mnt6_init.hpp>
+use ffec::algebra::curves::mnt/mnt4/mnt4_init;
+use ffec::algebra::curves::mnt/mnt6/mnt6_init;
 
-use  <libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/pairing/pairing_params.hpp>
+use libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget;
+use libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget;
+use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
 
-namespace libsnark {
+
 
 /**************************** G1 Precomputation ******************************/
 
@@ -33,16 +33,16 @@ namespace libsnark {
 template<typename ppT>
 class G1_precomputation {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::shared_ptr<G1_variable<ppT> > P;
     std::shared_ptr<Fqe_variable<ppT> > PY_twist_squared;
 
     G1_precomputation();
     G1_precomputation(protoboard<FieldT> &pb,
-                      const libff::G1<other_curve<ppT> > &P,
+                      const ffec::G1<other_curve<ppT> > &P,
                       const std::string &annotation_prefix);
 };
 
@@ -50,10 +50,10 @@ public:
  * Gadget that verifies correct precomputation of the G1 variable.
  */
 template<typename ppT>
-class precompute_G1_gadget : public gadget<libff::Fr<ppT> > {
+class precompute_G1_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     G1_precomputation<ppT> &precomp; // must be a reference.
 
@@ -63,13 +63,13 @@ public:
                          const G1_variable<ppT> &P,
                          G1_precomputation<ppT> &precomp, // will allocate this inside
                          const std::string &annotation_prefix,
-                         const typename std::enable_if<libff::Fqk<other_curve<ppT> >::extension_degree() == 4, FieldT>::type& = FieldT()) :
+                         const typename std::enable_if<ffec::Fqk<other_curve<ppT> >::extension_degree() == 4, FieldT>::type& = FieldT()) :
             gadget<FieldT>(pb, annotation_prefix),
             precomp(precomp)
     {
         pb_linear_combination<FieldT> c0, c1;
-        c0.assign(pb, P.Y * ((libff::mnt4_twist).squared().c0));
-        c1.assign(pb, P.Y * ((libff::mnt4_twist).squared().c1));
+        c0.assign(pb, P.Y * ((ffec::mnt4_twist).squared().c0));
+        c1.assign(pb, P.Y * ((ffec::mnt4_twist).squared().c1));
 
         precomp.P.reset(new G1_variable<ppT>(P));
         precomp.PY_twist_squared.reset(new Fqe_variable<ppT>(pb, c0, c1, FMT(annotation_prefix, " PY_twist_squared")));
@@ -80,14 +80,14 @@ public:
                          const G1_variable<ppT> &P,
                          G1_precomputation<ppT> &precomp, // will allocate this inside
                          const std::string &annotation_prefix,
-                         const typename std::enable_if<libff::Fqk<other_curve<ppT> >::extension_degree() == 6, FieldT>::type& = FieldT()) :
+                         const typename std::enable_if<ffec::Fqk<other_curve<ppT> >::extension_degree() == 6, FieldT>::type& = FieldT()) :
         gadget<FieldT>(pb, annotation_prefix),
             precomp(precomp)
     {
         pb_linear_combination<FieldT> c0, c1, c2;
-        c0.assign(pb, P.Y * ((libff::mnt6_twist).squared().c0));
-        c1.assign(pb, P.Y * ((libff::mnt6_twist).squared().c1));
-        c2.assign(pb, P.Y * ((libff::mnt6_twist).squared().c2));
+        c0.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c0));
+        c1.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c1));
+        c2.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c2));
 
         precomp.P.reset(new G1_variable<ppT>(P));
         precomp.PY_twist_squared.reset(new Fqe_variable<ppT>(pb, c0, c1, c2, FMT(annotation_prefix, " PY_twist_squared")));
@@ -109,9 +109,9 @@ void test_G1_variable_precomp(const std::string &annotation);
 template<typename ppT>
 class precompute_G2_gadget_coeffs {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::shared_ptr<Fqe_variable<ppT> > RX;
     std::shared_ptr<Fqe_variable<ppT> > RY;
@@ -132,9 +132,9 @@ public:
 template<typename ppT>
 class G2_precomputation {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::shared_ptr<G2_variable<ppT> > Q;
 
@@ -142,7 +142,7 @@ public:
 
     G2_precomputation();
     G2_precomputation(protoboard<FieldT> &pb,
-                      const libff::G2<other_curve<ppT> > &Q_val,
+                      const ffec::G2<other_curve<ppT> > &Q_val,
                       const std::string &annotation_prefix);
 };
 
@@ -166,11 +166,11 @@ public:
  * RY = prev_gamma * (prev_RX - RX) - prev_RY
  */
 template<typename ppT>
-class precompute_G2_gadget_doubling_step : public gadget<libff::Fr<ppT> > {
+class precompute_G2_gadget_doubling_step : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     precompute_G2_gadget_coeffs<ppT> cur;
     precompute_G2_gadget_coeffs<ppT> next;
@@ -215,11 +215,11 @@ public:
  * If invert_Q is set to true: use -QY in place of QY everywhere above.
  */
 template<typename ppT>
-class precompute_G2_gadget_addition_step : public gadget<libff::Fr<ppT> > {
+class precompute_G2_gadget_addition_step : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     bool invert_Q;
     precompute_G2_gadget_coeffs<ppT> cur;
@@ -252,11 +252,11 @@ public:
  * Gadget that verifies correct precomputation of the G2 variable.
  */
 template<typename ppT>
-class precompute_G2_gadget : public gadget<libff::Fr<ppT> > {
+class precompute_G2_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::vector<std::shared_ptr<precompute_G2_gadget_addition_step<ppT> > > addition_steps;
     std::vector<std::shared_ptr<precompute_G2_gadget_doubling_step<ppT> > > doubling_steps;
@@ -277,11 +277,11 @@ public:
 template<typename ppT>
 void test_G2_variable_precomp(const std::string &annotation);
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation.tcc>
 
-#endif // WEIERSTRASS_PRECOMPUTATION_HPP_
+use libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation;
+
+//#endif // WEIERSTRASS_PRECOMPUTATION_HPP_
 /** @file
  *****************************************************************************
 
@@ -295,14 +295,14 @@ use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef WEIERSTRASS_PRECOMPUTATION_TCC_
-#define WEIERSTRASS_PRECOMPUTATION_TCC_
+//#ifndef WEIERSTRASS_PRECOMPUTATION_TCC_
+// #define WEIERSTRASS_PRECOMPUTATION_TCC_
 
 use  <type_traits>
 
-use  <libsnark/gadgetlib1/gadgets/pairing/mnt_pairing_params.hpp>
+use libsnark/gadgetlib1/gadgets/pairing/mnt_pairing_params;
 
-namespace libsnark {
+
 
 template<typename ppT>
 G1_precomputation<ppT>::G1_precomputation()
@@ -312,13 +312,13 @@ G1_precomputation<ppT>::G1_precomputation()
 
 template<typename ppT>
 G1_precomputation<ppT>::G1_precomputation(protoboard<FieldT> &pb,
-                                          const libff::G1<other_curve<ppT> > &P_val,
+                                          const ffec::G1<other_curve<ppT> > &P_val,
                                           const std::string &annotation_prefix)
 {
-    libff::G1<other_curve<ppT> > P_val_copy = P_val;
+    ffec::G1<other_curve<ppT> > P_val_copy = P_val;
     P_val_copy.to_affine_coordinates();
     P.reset(new G1_variable<ppT>(pb, P_val_copy, FMT(annotation_prefix, " P")));
-    PY_twist_squared.reset(new Fqe_variable<ppT>(pb, P_val_copy.Y() * libff::G2<other_curve<ppT> >::twist.squared(), " PY_twist_squared"));
+    PY_twist_squared.reset(new Fqe_variable<ppT>(pb, P_val_copy.Y() * ffec::G2<other_curve<ppT> >::twist.squared(), " PY_twist_squared"));
 }
 
 template<typename ppT>
@@ -336,8 +336,8 @@ void precompute_G1_gadget<ppT>::generate_r1cs_witness()
 template<typename ppT>
 void test_G1_variable_precomp(const std::string &annotation)
 {
-    protoboard<libff::Fr<ppT> > pb;
-    libff::G1<other_curve<ppT> > g_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
+    protoboard<ffec::Fr<ppT> > pb;
+    ffec::G1<other_curve<ppT> > g_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
 
     G1_variable<ppT> g(pb, "g");
     G1_precomputation<ppT> precomp;
@@ -346,15 +346,15 @@ void test_G1_variable_precomp(const std::string &annotation)
 
     g.generate_r1cs_witness(g_val);
     do_precomp.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
     G1_precomputation<ppT> const_precomp(pb, g_val, "const_precomp");
 
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G1(g_val);
-    assert(precomp.PY_twist_squared->get_element() == native_precomp.PY_twist_squared);
-    assert(const_precomp.PY_twist_squared->get_element() == native_precomp.PY_twist_squared);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G1(g_val);
+    assert!(precomp.PY_twist_squared->get_element() == native_precomp.PY_twist_squared);
+    assert!(const_precomp.PY_twist_squared->get_element() == native_precomp.PY_twist_squared);
 
-    printf("number of constraints for G1 precomp (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for G1 precomp (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename ppT>
@@ -364,11 +364,11 @@ G2_precomputation<ppT>::G2_precomputation()
 
 template<typename ppT>
 G2_precomputation<ppT>::G2_precomputation(protoboard<FieldT> &pb,
-                                          const libff::G2<other_curve<ppT> > &Q_val,
+                                          const ffec::G2<other_curve<ppT> > &Q_val,
                                           const std::string &annotation_prefix)
 {
     Q.reset(new G2_variable<ppT>(pb, Q_val, FMT(annotation_prefix, " Q")));
-    const libff::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
+    const ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
 
     coeffs.resize(native_precomp.coeffs.size() + 1); // the last precomp remains for convenient programming
     for (size_t i = 0; i < native_precomp.coeffs.size(); ++i)
@@ -437,7 +437,7 @@ precompute_G2_gadget_doubling_step<ppT>::precompute_G2_gadget_doubling_step(prot
 {
     RXsquared.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " RXsquared")));
     compute_RXsquared.reset(new Fqe_sqr_gadget<ppT>(pb, *(cur.RX), *RXsquared, FMT(annotation_prefix, " compute_RXsquared")));
-    three_RXsquared_plus_a.reset(new Fqe_variable<ppT>((*RXsquared) * FieldT(3) + libff::G2<other_curve<ppT> >::coeff_a));
+    three_RXsquared_plus_a.reset(new Fqe_variable<ppT>((*RXsquared) * FieldT(3) + ffec::G2<other_curve<ppT> >::coeff_a));
     two_RY.reset(new Fqe_variable<ppT>(*(cur.RY) * FieldT(2)));
 
     compute_gamma.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *two_RY, *three_RXsquared_plus_a, FMT(annotation_prefix, " compute_gamma")));
@@ -585,8 +585,8 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
 
     const auto &loop_count = pairing_selector<ppT>::pairing_loop_count;
     size_t coeff_count = 1; // the last RX/RY are unused in Miller loop, but will need to get allocated somehow
-    this->add_count = 0;
-    this->dbl_count = 0;
+    self.add_count = 0;
+    self.dbl_count = 0;
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
@@ -599,13 +599,13 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
             continue;
         }
 
-        ++dbl_count;
-        ++coeff_count;
+        dbl_count+=1;
+        coeff_count+=1;
 
         if (NAF[i] != 0)
         {
-            ++add_count;
-            ++coeff_count;
+            add_count+=1;
+            coeff_count+=1;
         }
     }
 
@@ -616,7 +616,7 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
     precomp.coeffs[0].reset(new precompute_G2_gadget_coeffs<ppT>(pb, Q, FMT(annotation_prefix, " coeffs_0")));
     for (size_t i = 1; i < coeff_count; ++i)
     {
-        precomp.coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>(pb, FMT(annotation_prefix, " coeffs_%zu", i)));
+        precomp.coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>(pb, FMT(annotation_prefix, " coeffs_{}", i)));
     }
 
     size_t add_id = 0;
@@ -634,16 +634,16 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
         }
 
         doubling_steps[dbl_id].reset(new precompute_G2_gadget_doubling_step<ppT>(pb, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]),
-                                                                                 FMT(annotation_prefix, " doubling_steps_%zu", dbl_id)));
-        ++dbl_id;
-        ++coeff_id;
+                                                                                 FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
+        dbl_id+=1;
+        coeff_id+=1;
 
         if (NAF[i] != 0)
         {
             addition_steps[add_id].reset(new precompute_G2_gadget_addition_step<ppT>(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
-                                                                                     FMT(annotation_prefix, " addition_steps_%zu", add_id)));
-            ++add_id;
-            ++coeff_id;
+                                                                                     FMT(annotation_prefix, " addition_steps_{}", add_id)));
+            add_id+=1;
+            coeff_id+=1;
         }
     }
 }
@@ -685,12 +685,12 @@ void precompute_G2_gadget<ppT>::generate_r1cs_witness()
         }
 
         doubling_steps[dbl_id]->generate_r1cs_witness();
-        ++dbl_id;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
             addition_steps[add_id]->generate_r1cs_witness();
-            ++add_id;
+            add_id+=1;
         }
     }
 }
@@ -698,8 +698,8 @@ void precompute_G2_gadget<ppT>::generate_r1cs_witness()
 template<typename ppT>
 void test_G2_variable_precomp(const std::string &annotation)
 {
-    protoboard<libff::Fr<ppT> > pb;
-    libff::G2<other_curve<ppT> > g_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    protoboard<ffec::Fr<ppT> > pb;
+    ffec::G2<other_curve<ppT> > g_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
     G2_variable<ppT> g(pb, "g");
     G2_precomputation<ppT> precomp;
@@ -708,22 +708,22 @@ void test_G2_variable_precomp(const std::string &annotation)
 
     g.generate_r1cs_witness(g_val);
     do_precomp.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(g_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(g_val);
 
-    assert(precomp.coeffs.size() - 1 == native_precomp.coeffs.size()); // the last precomp is unused, but remains for convenient programming
+    assert!(precomp.coeffs.size() - 1 == native_precomp.coeffs.size()); // the last precomp is unused, but remains for convenient programming
     for (size_t i = 0; i < native_precomp.coeffs.size(); ++i)
     {
-        assert(precomp.coeffs[i]->RX->get_element() == native_precomp.coeffs[i].old_RX);
-        assert(precomp.coeffs[i]->RY->get_element() == native_precomp.coeffs[i].old_RY);
-        assert(precomp.coeffs[i]->gamma->get_element() == native_precomp.coeffs[i].gamma);
-        assert(precomp.coeffs[i]->gamma_X->get_element() == native_precomp.coeffs[i].gamma_X);
+        assert!(precomp.coeffs[i]->RX->get_element() == native_precomp.coeffs[i].old_RX);
+        assert!(precomp.coeffs[i]->RY->get_element() == native_precomp.coeffs[i].old_RY);
+        assert!(precomp.coeffs[i]->gamma->get_element() == native_precomp.coeffs[i].gamma);
+        assert!(precomp.coeffs[i]->gamma_X->get_element() == native_precomp.coeffs[i].gamma_X);
     }
 
-    printf("number of constraints for G2 precomp (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for G2 precomp (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
-} // libsnark
 
-#endif // WEIERSTRASS_PRECOMPUTATION_TCC_
+
+//#endif // WEIERSTRASS_PRECOMPUTATION_TCC_

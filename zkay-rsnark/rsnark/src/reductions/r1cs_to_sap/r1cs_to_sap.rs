@@ -30,51 +30,51 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_TO_SAP_HPP_
-#define R1CS_TO_SAP_HPP_
+// //#ifndef R1CS_TO_SAP_HPP_
+// // #define R1CS_TO_SAP_HPP_
 
-use  <libsnark/relations/arithmetic_programs/sap/sap.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
+use libsnark::relations::arithmetic_programs::sap::sap;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
-namespace libsnark {
+
 
 /**
  * Helper function to find evaluation domain that will be used by the reduction
  * for a given R1CS instance.
  */
-template<typename FieldT>
-std::shared_ptr<libfqfft::evaluation_domain<FieldT> > r1cs_to_sap_get_domain(&cs:r1cs_constraint_system<FieldT>);
+// template<typename FieldT>
+// std::shared_ptr<libfqfft::evaluation_domain<FieldT> > r1cs_to_sap_get_domain(&cs:r1cs_constraint_system<FieldT>);
 
 /**
  * Instance map for the R1CS-to-QAP reduction.
  */
-template<typename FieldT>
-sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>);
+// template<typename FieldT>
+// sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>);
 
 /**
  * Instance map for the R1CS-to-QAP reduction followed by evaluation of the resulting QAP instance.
  */
-template<typename FieldT>
-sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1cs_constraint_system<FieldT>
-                                                                         &t:FieldT);
+// template<typename FieldT>
+// sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1cs_constraint_system<FieldT>
+//                                                                          &t:FieldT);
 
 /**
  * Witness map for the R1CS-to-QAP reduction.
  *
  * The witness map takes zero knowledge into account when d1,d2 are random.
  */
-template<typename FieldT>
-sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
-                                            primary_input:&r1cs_primary_input<FieldT>
-                                            auxiliary_input:&r1cs_auxiliary_input<FieldT>
-                                            d1:&FieldT
-                                            &d2:FieldT);
+// template<typename FieldT>
+// sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
+//                                             primary_input:&r1cs_primary_input<FieldT>
+//                                             auxiliary_input:&r1cs_auxiliary_input<FieldT>
+//                                             d1:&FieldT
+//                                             &d2:FieldT);
 
-} // libsnark
 
-use  <libsnark/reductions/r1cs_to_sap/r1cs_to_sap.tcc>
 
-#endif // R1CS_TO_SAP_HPP_
+// use libsnark::reductions::r1cs_to_sap::r1cs_to_sap;
+
+// //#endif // R1CS_TO_SAP_HPP_
 /** @file
  *****************************************************************************
 
@@ -88,22 +88,22 @@ use  <libsnark/reductions/r1cs_to_sap/r1cs_to_sap.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_TO_SAP_TCC_
-#define R1CS_TO_SAP_TCC_
+// //#ifndef R1CS_TO_SAP_TCC_
+// // #define R1CS_TO_SAP_TCC_
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
-use  <libfqfft/evaluation_domain/get_evaluation_domain.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
+use fqfft::evaluation_domain::get_evaluation_domain;
 
-namespace libsnark {
+
 
 /**
  * Helper function to multiply a field element by 4 efficiently
  */
-template<typename FieldT>
-FieldT times_four(FieldT x)
+
+ pub fn times_four< FieldT>( x:FieldT)->FieldT
 {
-    FieldT times_two = x + x;
+    let times_two = x + x;
     return times_two + times_two;
 }
 
@@ -111,8 +111,8 @@ FieldT times_four(FieldT x)
  * Helper function to find evaluation domain that will be used by the reduction
  * for a given R1CS instance.
  */
-template<typename FieldT>
-std::shared_ptr<libfqfft::evaluation_domain<FieldT> > r1cs_to_sap_get_domain(&cs:r1cs_constraint_system<FieldT>)
+
+pub fn r1cs_to_sap_get_domain< FieldT>(&cs:r1cs_constraint_system<FieldT>)->std::shared_ptr<libfqfft::evaluation_domain<FieldT> > 
 {
     /*
      * the SAP instance will have:
@@ -122,26 +122,26 @@ std::shared_ptr<libfqfft::evaluation_domain<FieldT> > r1cs_to_sap_get_domain(&cs
      * see comments in r1cs_to_sap_instance_map for details on where these
      * constraints come from.
      */
-    return libfqfft::get_evaluation_domain<FieldT>(2 * cs.num_constraints() + 2 * cs.num_inputs() + 1);
+    return libfqfft::get_evaluation_domain::<FieldT>(2 * cs.num_constraints() + 2 * cs.num_inputs() + 1);
 }
 
 /**
  * Instance map for the R1CS-to-SAP reduction.
  */
-template<typename FieldT>
-sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>)
+pub fn 
+r1cs_to_sap_instance_map< FieldT>(&cs:r1cs_constraint_system<FieldT>)->sap_instance<FieldT> 
 {
-    libff::enter_block("Call to r1cs_to_sap_instance_map");
+    ffec::enter_block("Call to r1cs_to_sap_instance_map");
 
-    const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain =
+    let  domain =
         r1cs_to_sap_get_domain(cs);
 
-    size_t sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
+    let  sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
 
-    std::vector<std::map<size_t, FieldT> > A_in_Lagrange_basis(sap_num_variables + 1);
-    std::vector<std::map<size_t, FieldT> > C_in_Lagrange_basis(sap_num_variables + 1);
+    let mut A_in_Lagrange_basis=Vec::with_capicity(sap_num_variables + 1);
+    let mut C_in_Lagrange_basis=Vec::with_capicity(sap_num_variables + 1);
 
-    libff::enter_block("Compute polynomials A, C in Lagrange basis");
+    ffec::enter_block("Compute polynomials A, C in Lagrange basis");
     /**
      * process R1CS constraints, converting a constraint of the form
      *   \sum a_i x_i * \sum b_i x_i = \sum c_i x_i
@@ -156,7 +156,7 @@ sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>
      * and cs.num_constraints() extra variables
      *   (numbered cs.num_variables() + 1 .. cs.num_variables() + cs.num_constraints())
      */
-    size_t extra_var_offset = cs.num_variables() + 1;
+    let  extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints()
     {
         for j in 0..cs.constraints[i].a.terms.size()
@@ -206,12 +206,12 @@ sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>
      *             cs.num_variables() + cs.num_constraints() + cs.num_inputs())
      */
 
-    size_t extra_constr_offset = 2 * cs.num_constraints();
-    size_t extra_var_offset2 = cs.num_variables() + cs.num_constraints();
-    /**
-     * NB: extra variables start at (extra_var_offset2 + 1), because i starts at
-     *     1 below
-     */
+    let  extra_constr_offset = 2 * cs.num_constraints();
+    let extra_var_offset2 = cs.num_variables() + cs.num_constraints();
+    
+    //   NB: extra variables start at (extra_var_offset2 + 1), because i starts at
+        // 1 below
+    
 
     A_in_Lagrange_basis[0][extra_constr_offset] = FieldT::one();
     C_in_Lagrange_basis[0][extra_constr_offset] = FieldT::one();
@@ -229,47 +229,43 @@ sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>
         C_in_Lagrange_basis[extra_var_offset2 + i][2 * cs.num_constraints() + 2 * i] += FieldT::one();
     }
 
-    libff::leave_block("Compute polynomials A, C in Lagrange basis");
+    ffec::leave_block("Compute polynomials A, C in Lagrange basis");
 
-    libff::leave_block("Call to r1cs_to_sap_instance_map");
+    ffec::leave_block("Call to r1cs_to_sap_instance_map");
 
-    return sap_instance<FieldT>(domain,
+    return sap_instance::<FieldT>::new(domain,
                                 sap_num_variables,
-                                domain->m,
+                                domain.m,
                                 cs.num_inputs(),
-                                std::move(A_in_Lagrange_basis),
-                                std::move(C_in_Lagrange_basis));
+                                A_in_Lagrange_basis,
+                                 C_in_Lagrange_basis);
 }
 
 /**
  * Instance map for the R1CS-to-SAP reduction followed by evaluation
  * of the resulting QAP instance.
  */
-template<typename FieldT>
-sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1cs_constraint_system<FieldT>
-                                                                         &t:FieldT)
+pub fn 
+ r1cs_to_sap_instance_map_with_evaluation< FieldT>(cs:&r1cs_constraint_system<FieldT>,
+                                                                         &t:FieldT)->sap_instance_evaluation<FieldT>
 {
-    libff::enter_block("Call to r1cs_to_sap_instance_map_with_evaluation");
+    ffec::enter_block("Call to r1cs_to_sap_instance_map_with_evaluation");
 
-    const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain =
+    let  domain =
         r1cs_to_sap_get_domain(cs);
 
-    size_t sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
+    let sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
 
-    std::vector<FieldT> At, Ct, Ht;
+    let  (mut At, mut Ct,mut Ht)=(vec![FieldT::zero();sap_num_variables + 1],vec![FieldT::zero();sap_num_variables + 1],Vec::with_capicity(domain.m+1));
 
-    At.resize(sap_num_variables + 1, FieldT::zero());
-    Ct.resize(sap_num_variables + 1, FieldT::zero());
-    Ht.reserve(domain->m+1);
+    let Zt =domain.compute_vanishing_polynomial(t);
 
-    domain->compute_vanishing_polynomial(t:FieldT Zt =);
-
-    libff::enter_block("Compute evaluations of A, C, H at t");
-    domain->evaluate_all_lagrange_polynomials(t:std::vector<FieldT> u =);
+    ffec::enter_block("Compute evaluations of A, C, H at t");
+    let u =domain.evaluate_all_lagrange_polynomials(t);
     /**
      * add and process all constraints as in r1cs_to_sap_instance_map
      */
-    size_t extra_var_offset = cs.num_variables() + 1;
+    let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints()
     {
         for j in 0..cs.constraints[i].a.terms.size()
@@ -298,8 +294,8 @@ sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1c
         Ct[extra_var_offset + i] += u[2 * i + 1];
     }
 
-    size_t extra_constr_offset = 2 * cs.num_constraints();
-    size_t extra_var_offset2 = cs.num_variables() + cs.num_constraints();
+    let extra_constr_offset = 2 * cs.num_constraints();
+    let extra_var_offset2 = cs.num_variables() + cs.num_constraints();
 
     At[0] += u[extra_constr_offset];
     Ct[0] += u[extra_constr_offset];
@@ -316,24 +312,24 @@ sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1c
         Ct[extra_var_offset2 + i] += u[extra_constr_offset + 2 * i];
     }
 
-    FieldT ti = FieldT::one();
-    for i in 0..domain->m+1
+    let ti = FieldT::one();
+    for i in 0..domain.m+1
     {
-        Ht.emplace_back(ti);
+        Ht.push(ti);
         ti *= t;
     }
-    libff::leave_block("Compute evaluations of A, C, H at t");
+    ffec::leave_block("Compute evaluations of A, C, H at t");
 
-    libff::leave_block("Call to r1cs_to_sap_instance_map_with_evaluation");
+    ffec::leave_block("Call to r1cs_to_sap_instance_map_with_evaluation");
 
-    return sap_instance_evaluation<FieldT>(domain,
+    return sap_instance_evaluation::<FieldT>(domain,
                                            sap_num_variables,
-                                           domain->m,
+                                           domain.m,
                                            cs.num_inputs(),
                                            t,
-                                           std::move(At),
-                                           std::move(Ct),
-                                           std::move(Ht),
+                                           (At),
+                                           (Ct),
+                                           (Ht),
                                            Zt);
 }
 
@@ -366,24 +362,24 @@ sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1c
  * The code below is not as simple as the above high-level description due to
  * some reshuffling to save space.
  */
-template<typename FieldT>
-sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
-                                            primary_input:&r1cs_primary_input<FieldT>
-                                            auxiliary_input:&r1cs_auxiliary_input<FieldT>
-                                            d1:&FieldT
-                                            &d2:FieldT)
+pub fn 
+ r1cs_to_sap_witness_map< FieldT>(cs:&r1cs_constraint_system<FieldT>,
+                                            primary_input:&r1cs_primary_input<FieldT>,
+                                            auxiliary_input:&r1cs_auxiliary_input<FieldT>,
+                                            d1:&FieldT,
+                                            d2:&FieldT)->sap_witness<FieldT>
 {
-    libff::enter_block("Call to r1cs_to_sap_witness_map");
+    ffec::enter_block("Call to r1cs_to_sap_witness_map");
 
     /* sanity check */
-    assert(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain =
+    let  domain =
         r1cs_to_sap_get_domain(cs);
 
-    size_t sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
+    let sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
 
-    r1cs_variable_assignment<FieldT> full_variable_assignment = primary_input;
+    let mut  full_variable_assignment = primary_input.clone();
     full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
     /**
      * we need to generate values of all the extra variables that we added
@@ -401,7 +397,7 @@ sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
          * we introduced that is not present in the input.
          * its value is (a - b)^2
          */
-        FieldT extra_var = cs.constraints[i].a.evaluate(full_variable_assignment) -
+        let mut extra_var = cs.constraints[i].a.evaluate(full_variable_assignment) -
             cs.constraints[i].b.evaluate(full_variable_assignment);
         extra_var = extra_var * extra_var;
         full_variable_assignment.push_back(extra_var);
@@ -413,13 +409,13 @@ sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
          * we introduced that is not present in the input.
          * its value is (x_i - 1)^2
          */
-        FieldT extra_var = full_variable_assignment[i - 1] - FieldT::one();
+        let mut  extra_var = full_variable_assignment[i - 1] - FieldT::one();
         extra_var = extra_var * extra_var;
         full_variable_assignment.push_back(extra_var);
     }
 
-    libff::enter_block("Compute evaluation of polynomial A on set S");
-    std::vector<FieldT> aA(domain->m, FieldT::zero());
+    ffec::enter_block("Compute evaluation of polynomial A on set S");
+    let mut aA=vec![FieldT::zero();domain.m];
 
     /* account for all constraints, as in r1cs_to_sap_instance_map */
     for i in 0..cs.num_constraints()
@@ -431,7 +427,7 @@ sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
         aA[2 * i + 1] -= cs.constraints[i].b.evaluate(full_variable_assignment);
     }
 
-    size_t extra_constr_offset = 2 * cs.num_constraints();
+    let extra_constr_offset = 2 * cs.num_constraints();
 
     aA[extra_constr_offset] += FieldT::one();
 
@@ -444,44 +440,44 @@ sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
         aA[extra_constr_offset + 2 * i] -= FieldT::one();
     }
 
-    libff::leave_block("Compute evaluation of polynomial A on set S");
+    ffec::leave_block("Compute evaluation of polynomial A on set S");
 
-    libff::enter_block("Compute coefficients of polynomial A");
-    domain->iFFT(aA);
-    libff::leave_block("Compute coefficients of polynomial A");
+    ffec::enter_block("Compute coefficients of polynomial A");
+    domain.iFFT(aA);
+    ffec::leave_block("Compute coefficients of polynomial A");
 
-    libff::enter_block("Compute ZK-patch");
-    std::vector<FieldT> coefficients_for_H(domain->m+1, FieldT::zero());
-#ifdef MULTICORE
-#pragma omp parallel for
-#endif
+    ffec::enter_block("Compute ZK-patch");
+    let coefficients_for_H=vec![FieldT::zero();domain.m+1];
+// // #ifdef MULTICORE
+// #pragma omp parallel for
+// //#endif
     /* add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z */
-    for i in 0..domain->m
+    for i in 0..domain.m
     {
         coefficients_for_H[i] = (d1 * aA[i]) + (d1 * aA[i]);
     }
     coefficients_for_H[0] -= d2;
-    domain->add_poly_Z(d1 * d1, coefficients_for_H);
-    libff::leave_block("Compute ZK-patch");
+    domain.add_poly_Z(d1 * d1, coefficients_for_H);
+    ffec::leave_block("Compute ZK-patch");
 
-    libff::enter_block("Compute evaluation of polynomial A on set T");
-    domain->cosetFFT(aA, FieldT::multiplicative_generator);
-    libff::leave_block("Compute evaluation of polynomial A on set T");
+    ffec::enter_block("Compute evaluation of polynomial A on set T");
+    domain.cosetFFT(aA, FieldT::multiplicative_generator);
+    ffec::leave_block("Compute evaluation of polynomial A on set T");
 
-    libff::enter_block("Compute evaluation of polynomial H on set T");
-    std::vector<FieldT> &H_tmp = aA; // can overwrite aA because it is not used later
-#ifdef MULTICORE
-#pragma omp parallel for
-#endif
-    for i in 0..domain->m
+    ffec::enter_block("Compute evaluation of polynomial H on set T");
+    let mut H_tmp = &aA; // can overwrite aA because it is not used later
+// // #ifdef MULTICORE
+// #pragma omp parallel for
+// //#endif
+    for i in 0..domain.m
     {
         H_tmp[i] = aA[i]*aA[i];
     }
 
-    libff::enter_block("Compute evaluation of polynomial C on set S");
-    std::vector<FieldT> aC(domain->m, FieldT::zero());
+    ffec::enter_block("Compute evaluation of polynomial C on set S");
+    let mut aC=vec![FieldT::zero();domain.m];
     /* again, accounting for all constraints */
-    size_t extra_var_offset = cs.num_variables() + 1;
+    let  extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints()
     {
         aC[2 * i] +=
@@ -491,7 +487,7 @@ sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
         aC[2 * i + 1] += full_variable_assignment[extra_var_offset + i - 1];
     }
 
-    size_t extra_var_offset2 = cs.num_variables() + cs.num_constraints();
+    let  extra_var_offset2 = cs.num_variables() + cs.num_constraints();
     aC[extra_constr_offset] += FieldT::one();
 
     for i in 1..=cs.num_inputs()
@@ -505,55 +501,55 @@ sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
             full_variable_assignment[extra_var_offset2 + i - 1];
     }
 
-    libff::leave_block("Compute evaluation of polynomial C on set S");
+    ffec::leave_block("Compute evaluation of polynomial C on set S");
 
-    libff::enter_block("Compute coefficients of polynomial C");
-    domain->iFFT(aC);
-    libff::leave_block("Compute coefficients of polynomial C");
+    ffec::enter_block("Compute coefficients of polynomial C");
+    domain.iFFT(aC);
+    ffec::leave_block("Compute coefficients of polynomial C");
 
-    libff::enter_block("Compute evaluation of polynomial C on set T");
-    domain->cosetFFT(aC, FieldT::multiplicative_generator);
-    libff::leave_block("Compute evaluation of polynomial C on set T");
+    ffec::enter_block("Compute evaluation of polynomial C on set T");
+    domain.cosetFFT(aC, FieldT::multiplicative_generator);
+    ffec::leave_block("Compute evaluation of polynomial C on set T");
 
-#ifdef MULTICORE
-#pragma omp parallel for
-#endif
-    for i in 0..domain->m
+// // #ifdef MULTICORE
+// #pragma omp parallel for
+// //#endif
+    for i in 0..domain.m
     {
         H_tmp[i] = (H_tmp[i]-aC[i]);
     }
 
-    libff::enter_block("Divide by Z on set T");
-    domain->divide_by_Z_on_coset(H_tmp);
-    libff::leave_block("Divide by Z on set T");
+    ffec::enter_block("Divide by Z on set T");
+    domain.divide_by_Z_on_coset(H_tmp);
+    ffec::leave_block("Divide by Z on set T");
 
-    libff::leave_block("Compute evaluation of polynomial H on set T");
+    ffec::leave_block("Compute evaluation of polynomial H on set T");
 
-    libff::enter_block("Compute coefficients of polynomial H");
-    domain->icosetFFT(H_tmp, FieldT::multiplicative_generator);
-    libff::leave_block("Compute coefficients of polynomial H");
+    ffec::enter_block("Compute coefficients of polynomial H");
+    domain.icosetFFT(H_tmp, FieldT::multiplicative_generator);
+    ffec::leave_block("Compute coefficients of polynomial H");
 
-    libff::enter_block("Compute sum of H and ZK-patch");
-#ifdef MULTICORE
-#pragma omp parallel for
-#endif
-    for i in 0..domain->m
+    ffec::enter_block("Compute sum of H and ZK-patch");
+// // #ifdef MULTICORE
+// #pragma omp parallel for
+// //#endif
+    for i in 0..domain.m
     {
         coefficients_for_H[i] += H_tmp[i];
     }
-    libff::leave_block("Compute sum of H and ZK-patch");
+    ffec::leave_block("Compute sum of H and ZK-patch");
 
-    libff::leave_block("Call to r1cs_to_sap_witness_map");
+    ffec::leave_block("Call to r1cs_to_sap_witness_map");
 
-    return sap_witness<FieldT>(sap_num_variables,
-                               domain->m,
+    return sap_witness::<FieldT>(sap_num_variables,
+                               domain.m,
                                cs.num_inputs(),
                                d1,
                                d2,
                                full_variable_assignment,
-                               std::move(coefficients_for_H));
+                               (coefficients_for_H));
 }
 
-} // libsnark
 
-#endif // R1CS_TO_SAP_TCC_
+
+// //#endif // R1CS_TO_SAP_TCC_

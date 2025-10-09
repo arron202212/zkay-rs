@@ -11,8 +11,8 @@ use  <set>
 
 use  "depends/gtest/googletest/include/gtest/gtest.h"
 
-use  <libsnark/gadgetlib2/constraint.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
+use libsnark/gadgetlib2/constraint;
+use libsnark/gadgetlib2/pp;
 
 using ::std::set;
 using namespace gadgetlib2;

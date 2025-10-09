@@ -4,15 +4,15 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef R1CS_PCD_PARAMS_HPP_
-#define R1CS_PCD_PARAMS_HPP_
+//#ifndef R1CS_PCD_PARAMS_HPP_
+// #define R1CS_PCD_PARAMS_HPP_
 
 use  <memory>
 use  <vector>
 
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler.hpp>
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class r1cs_pcd_compliance_predicate_primary_input {
@@ -38,21 +38,21 @@ public:
     r1cs_auxiliary_input<FieldT> as_r1cs_auxiliary_input(const std::vector<size_t> &incoming_message_payload_lengths) const;
 };
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_pcd_params.tcc>
 
-#endif // R1CS_PCD_PARAMS_HPP_
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_pcd_params;
+
+//#endif // R1CS_PCD_PARAMS_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef R1CS_PCD_PARAMS_TCC_
-#define R1CS_PCD_PARAMS_TCC_
+//#ifndef R1CS_PCD_PARAMS_TCC_
+// #define R1CS_PCD_PARAMS_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT>
 r1cs_primary_input<FieldT> r1cs_pcd_compliance_predicate_primary_input<FieldT>::as_r1cs_primary_input() const
@@ -66,15 +66,15 @@ r1cs_auxiliary_input<FieldT> r1cs_pcd_compliance_predicate_auxiliary_input<Field
     const size_t arity = incoming_messages.size();
 
     r1cs_auxiliary_input<FieldT> result;
-    result.emplace_back(FieldT(arity));
+    result.push(FieldT(arity));
 
     const size_t max_arity = incoming_message_payload_lengths.size();
-    assert(arity <= max_arity);
+    assert!(arity <= max_arity);
 
     for (size_t i = 0; i < arity; ++i)
     {
         const r1cs_variable_assignment<FieldT> msg_as_r1cs_va = incoming_messages[i]->as_r1cs_variable_assignment();
-        assert(msg_as_r1cs_va.size() == (1 + incoming_message_payload_lengths[i]));
+        assert!(msg_as_r1cs_va.size() == (1 + incoming_message_payload_lengths[i]));
         result.insert(result.end(), msg_as_r1cs_va.begin(), msg_as_r1cs_va.end());
     }
 
@@ -91,6 +91,6 @@ r1cs_auxiliary_input<FieldT> r1cs_pcd_compliance_predicate_auxiliary_input<Field
     return result;
 }
 
-} // libsnark
 
-#endif // R1CS_PCD_PARAMS_TCC_
+
+//#endif // R1CS_PCD_PARAMS_TCC_

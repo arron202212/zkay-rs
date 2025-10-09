@@ -11,13 +11,13 @@
 use  <cassert>
 use  <cstdio>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/common/default_types/bacs_ppzksnark_pp.hpp>
-use  <libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark.hpp>
+use crate::common::default_types::bacs_ppzksnark_pp;
+use libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples;
+use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark;
 
-using namespace libsnark;
+
 
 template<typename ppT>
 void test_bacs_ppzksnark(const size_t primary_input_size,
@@ -25,23 +25,23 @@ void test_bacs_ppzksnark(const size_t primary_input_size,
                          const size_t num_gates,
                          const size_t num_outputs)
 {
-    libff::print_header("(enter) Test BACS ppzkSNARK");
+    ffec::print_header("(enter) Test BACS ppzkSNARK");
 
     const bool test_serialization = true;
-    const bacs_example<libff::Fr<ppT> > example = generate_bacs_example<libff::Fr<ppT> >(primary_input_size, auxiliary_input_size, num_gates, num_outputs);
-#ifdef DEBUG
+    const bacs_example<ffec::Fr<ppT> > example = generate_bacs_example<ffec::Fr<ppT> >(primary_input_size, auxiliary_input_size, num_gates, num_outputs);
+// #ifdef DEBUG
     example.circuit.print();
-#endif
+//#endif
     const bool bit = run_bacs_ppzksnark<ppT>(example, test_serialization);
-    assert(bit);
+    assert!(bit);
 
-    libff::print_header("(leave) Test BACS ppzkSNARK");
+    ffec::print_header("(leave) Test BACS ppzkSNARK");
 }
 
 int main()
 {
     default_bacs_ppzksnark_pp::init_public_params();
-    libff::start_profiling();
+    ffec::start_profiling();
 
     test_bacs_ppzksnark<default_bacs_ppzksnark_pp>(10, 10, 20, 5);
 }

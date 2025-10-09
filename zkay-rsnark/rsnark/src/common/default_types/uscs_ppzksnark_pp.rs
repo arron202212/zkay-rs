@@ -11,13 +11,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef USCS_PPZKSNARK_PP_HPP_
-#define USCS_PPZKSNARK_PP_HPP_
+//#ifndef USCS_PPZKSNARK_PP_HPP_
+// #define USCS_PPZKSNARK_PP_HPP_
 
-use  <libff/common/default_types/ec_pp.hpp>
+use ffec::common::default_types::ec_pp;
 
-namespace libsnark {
-type libff::default_ec_pp default_uscs_ppzksnark_pp;
-} // libsnark
 
-#endif // USCS_PPZKSNARK_PP_HPP_
+type ffec::default_ec_pp default_uscs_ppzksnark_pp;
+
+
+//#endif // USCS_PPZKSNARK_PP_HPP_

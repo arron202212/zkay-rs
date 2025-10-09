@@ -5,13 +5,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EDWARDS_PAIRING_HPP_
-#define EDWARDS_PAIRING_HPP_
-#include <vector>
+//#ifndef EDWARDS_PAIRING_HPP_
+// #define EDWARDS_PAIRING_HPP_
+//#include <vector>
 
-#include <libff/algebra/curves/edwards/edwards_init.hpp>
+use libff/algebra/curves/edwards/edwards_init;
 
-namespace libff {
+// namespace libff {
 
 /* final exponentiation */
 
@@ -119,8 +119,8 @@ edwards_Fq6 edwards_pairing(const edwards_G1& P,
 edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
                                    const edwards_G2 &Q);
 
-} // namespace libff
-#endif // EDWARDS_PAIRING_HPP_
+// } // namespace libff
+//#endif // EDWARDS_PAIRING_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -128,15 +128,15 @@ edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <cassert>
+//#include <cassert>
 
-#include <libff/algebra/curves/edwards/edwards_g1.hpp>
-#include <libff/algebra/curves/edwards/edwards_g2.hpp>
-#include <libff/algebra/curves/edwards/edwards_init.hpp>
-#include <libff/algebra/curves/edwards/edwards_pairing.hpp>
-#include <libff/common/profiling.hpp>
+use libff/algebra/curves/edwards/edwards_g1;
+use libff/algebra/curves/edwards/edwards_g2;
+use libff/algebra/curves/edwards/edwards_init;
+use libff/algebra/curves/edwards/edwards_pairing;
+use crate::common::profiling;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -362,7 +362,7 @@ struct extended_edwards_G1_projective {
 
     void print() const
     {
-        printf("extended edwards_G1 projective X/Y/Z/T:\n");
+        print!("extended edwards_G1 projective X/Y/Z/T:\n");
         X.print();
         Y.print();
         Z.print();
@@ -371,7 +371,7 @@ struct extended_edwards_G1_projective {
 
     static void test_invariant()
     {
-        assert(T*Z == X*Y);
+        assert!(T*Z == X*Y);
     }
 };
 
@@ -403,9 +403,9 @@ void doubling_step_for_miller_loop(extended_edwards_G1_projective &current,
     current.Z = I*K;              // Z3 = I*K
     current.T = F*(B-H);          // T3 = F*(B-H)
 
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 void full_addition_step_for_miller_loop(const extended_edwards_G1_projective &base,
@@ -433,9 +433,9 @@ void full_addition_step_for_miller_loop(const extended_edwards_G1_projective &ba
     current.Z = F*G;                  // Z3   = F*G
     current.T = E*H;                  // T3   = E*H
 
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 void mixed_addition_step_for_miller_loop(const extended_edwards_G1_projective &base,
@@ -463,9 +463,9 @@ void mixed_addition_step_for_miller_loop(const extended_edwards_G1_projective &b
     current.Z = F*G;                  // Z3   = F*G
     current.T = E*H;                  // T3   = E*H
 
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P)
@@ -580,7 +580,7 @@ struct extended_edwards_G2_projective {
 
     void print() const
         {
-            printf("extended edwards_G2 projective X/Y/Z/T:\n");
+            print!("extended edwards_G2 projective X/Y/Z/T:\n");
             X.print();
             Y.print();
             Z.print();
@@ -589,7 +589,7 @@ struct extended_edwards_G2_projective {
 
     static void test_invariant()
         {
-            assert(T*Z == X*Y);
+            assert!(T*Z == X*Y);
         }
 };
 
@@ -625,9 +625,9 @@ void doubling_step_for_flipped_miller_loop(extended_edwards_G2_projective &curre
     current.Y = I*(B-H);          // Y3 = I*(B-H)
     current.Z = I*K;              // Z3 = I*K
     current.T = F*(B-H);          // T3 = F*(B-H)
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 void full_addition_step_for_flipped_miller_loop(const extended_edwards_G2_projective &base,
@@ -658,9 +658,9 @@ void full_addition_step_for_flipped_miller_loop(const extended_edwards_G2_projec
     current.Z = F*G;                  // Z3   = F*G
     current.T = E*H;                  // T3   = E*H
 
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 void mixed_addition_step_for_flipped_miller_loop(const extended_edwards_G2_projective &base,
@@ -690,9 +690,9 @@ void mixed_addition_step_for_flipped_miller_loop(const extended_edwards_G2_proje
     current.Z = F*G;                  // Z3   = F*G
     current.T = E*H;                  // T3   = E*H
 
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 edwards_ate_G1_precomp edwards_ate_precompute_G1(const edwards_G1& P)
@@ -898,4 +898,4 @@ edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
 {
     return edwards_ate_reduced_pairing(P, Q);
 }
-} // namespace libff
+// } // namespace libff

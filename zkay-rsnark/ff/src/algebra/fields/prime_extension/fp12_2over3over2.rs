@@ -7,15 +7,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP12_2OVER3OVER2_HPP_
-#define FP12_2OVER3OVER2_HPP_
-#include <vector>
+//#ifndef FP12_2OVER3OVER2_HPP_
+// #define FP12_2OVER3OVER2_HPP_
+//#include <vector>
 
-#include <libff/algebra/fields/prime_base/fp.hpp>
-#include <libff/algebra/fields/prime_extension/fp2.hpp>
-#include <libff/algebra/fields/prime_extension/fp6_3over2.hpp>
+use libff/algebra/fields/prime_base/fp;
+use libff/algebra/fields/prime_extension/fp2;
+use libff/algebra/fields/prime_extension/fp6_3over2;
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t n, const bigint<n>& modulus>
 class Fp12_2over3over2_model;
@@ -40,13 +40,13 @@ public:
     typedef Fp_model<n, modulus> my_Fp;
     typedef Fp2_model<n, modulus> my_Fp2;
     typedef Fp6_3over2_model<n, modulus> my_Fp6;
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
 
     static bigint<12*n> euler; // (modulus^12-1)/2
     static std::size_t s; // modulus^12 = 2^s * t + 1
@@ -62,7 +62,7 @@ public:
     Fp12_2over3over2_model(const my_Fp6& c0, const my_Fp6& c1) : c0(c0), c1(c1) {};
 
     void clear() { c0.clear(); c1.clear(); }
-    void print() const { printf("c0/c1:\n"); c0.print(); c1.print(); }
+    void print() const { print!("c0/c1:\n"); c0.print(); c1.print(); }
     void randomize();
 
     /**
@@ -131,7 +131,7 @@ public:
     friend std::istream& operator>> <n, modulus>(std::istream &in, Fp12_2over3over2_model<n, modulus> &el);
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp12_2over3over2_model<n, modulus>::add_cnt = 0;
 
@@ -146,7 +146,7 @@ long long Fp12_2over3over2_model<n, modulus>::sqr_cnt = 0;
 
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp12_2over3over2_model<n, modulus>::inv_cnt = 0;
-#endif
+//#endif
 
 template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp12_2over3over2_model<n, modulus> > &v);
@@ -187,9 +187,9 @@ Fp2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::non_residue;
 template<mp_size_t n, const bigint<n>& modulus>
 Fp2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::Frobenius_coeffs_c1[12];
 
-} // namespace libff
-#include <libff/algebra/fields/prime_extension/fp12_2over3over2.tcc>
-#endif // FP12_2OVER3OVER2_HPP_
+// } // namespace libff
+use libff/algebra/fields/prime_extension/fp12_2over3over2.tcc;
+//#endif // FP12_2OVER3OVER2_HPP_
 /** @file
  *****************************************************************************
  Implementation of arithmetic in the finite field F[((p^2)^3)^2].
@@ -199,10 +199,10 @@ Fp2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::Frobenius_coeffs_c1[12
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP12_2OVER3OVER2_TCC_
-#define FP12_2OVER3OVER2_TCC_
+//#ifndef FP12_2OVER3OVER2_TCC_
+// #define FP12_2OVER3OVER2_TCC_
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -255,9 +255,9 @@ bool Fp12_2over3over2_model<n,modulus>::operator!=(const Fp12_2over3over2_model<
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator+(const Fp12_2over3over2_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     return Fp12_2over3over2_model<n,modulus>(this->c0 + other.c0,
                                              this->c1 + other.c1);
 }
@@ -265,9 +265,9 @@ Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator+(c
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator-(const Fp12_2over3over2_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     return Fp12_2over3over2_model<n,modulus>(this->c0 - other.c0,
                                              this->c1 - other.c1);
 }
@@ -275,9 +275,9 @@ Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator-(c
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n, modulus> operator*(const Fp_model<n, modulus> &lhs, const Fp12_2over3over2_model<n, modulus> &rhs)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     rhs.mul_cnt++;
-#endif
+//#endif
     return Fp12_2over3over2_model<n,modulus>(lhs*rhs.c0,
                                              lhs*rhs.c1);
 }
@@ -285,9 +285,9 @@ Fp12_2over3over2_model<n, modulus> operator*(const Fp_model<n, modulus> &lhs, co
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n, modulus> operator*(const Fp2_model<n, modulus> &lhs, const Fp12_2over3over2_model<n, modulus> &rhs)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     rhs.mul_cnt++;
-#endif
+//#endif
     return Fp12_2over3over2_model<n,modulus>(lhs*rhs.c0,
                                              lhs*rhs.c1);
 }
@@ -295,9 +295,9 @@ Fp12_2over3over2_model<n, modulus> operator*(const Fp2_model<n, modulus> &lhs, c
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n, modulus> operator*(const Fp6_3over2_model<n, modulus> &lhs, const Fp12_2over3over2_model<n, modulus> &rhs)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     rhs.mul_cnt++;
-#endif
+//#endif
     return Fp12_2over3over2_model<n,modulus>(lhs*rhs.c0,
                                              lhs*rhs.c1);
 }
@@ -305,9 +305,9 @@ Fp12_2over3over2_model<n, modulus> operator*(const Fp6_3over2_model<n, modulus> 
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator*(const Fp12_2over3over2_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
 
     const my_Fp6 &A = other.c0, &B = other.c1,
@@ -398,9 +398,9 @@ Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::square()
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared_karatsuba() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
 
     const my_Fp6 &a = this->c0, &b = this->c1;
@@ -414,9 +414,9 @@ Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared_kar
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared_complex() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
 
     const my_Fp6 &a = this->c0, &b = this->c1;
@@ -429,9 +429,9 @@ Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared_com
 template<mp_size_t n, const bigint<n>& modulus>
 Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
-#endif
+//#endif
     /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
 
     const my_Fp6 &a = this->c0, &b = this->c1;
@@ -760,5 +760,5 @@ std::istream& operator>>(std::istream& in, std::vector<Fp12_2over3over2_model<n,
     return in;
 }
 
-} // namespace libff
-#endif // FP12_2OVER3OVER2_TCC_
+// } // namespace libff
+//#endif // FP12_2OVER3OVER2_TCC_

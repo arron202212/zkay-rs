@@ -6,21 +6,21 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef RNG_HPP_
-#define RNG_HPP_
+//#ifndef RNG_HPP_
+// #define RNG_HPP_
 
-#include <cstdint>
+//#include <cstdint>
 
-namespace libff {
+// namespace libff {
 
 template<typename FieldT>
 FieldT SHA512_rng(const uint64_t idx);
 
-} // namespace libff
+// } // namespace libff
 
-#include <libff/common/rng.tcc>
+use libff/common/rng.tcc;
 
-#endif // RNG_HPP_
+//#endif // RNG_HPP_
 /** @file
  *****************************************************************************
  Implementation of functions for generating randomness.
@@ -31,27 +31,27 @@ FieldT SHA512_rng(const uint64_t idx);
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef RNG_TCC_
-#define RNG_TCC_
+//#ifndef RNG_TCC_
+// #define RNG_TCC_
 
-#include <gmp.h>
-#include <openssl/sha.h>
+//#include <gmp.h>
+//#include <openssl/sha.h>
 
-#include <libff/algebra/field_utils/bigint.hpp>
-#include <libff/common/rng.hpp>
-#include <libff/common/utils.hpp>
+use crate::algebra::field_utils::bigint;
+use crate::common::rng;
+use crate::common::utils;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
 template<typename FieldT>
 FieldT SHA512_rng(const uint64_t idx)
 {
-    assert(GMP_NUMB_BITS == 64); // current Python code cannot handle larger values, so testing here for some assumptions.
-    assert(is_little_endian());
+    assert!(GMP_NUMB_BITS == 64); // current Python code cannot handle larger values, so testing here for some assumptions.
+    assert!(is_little_endian());
 
-    assert(FieldT::ceil_size_in_bits() <= SHA512_DIGEST_LENGTH * 8);
+    assert!(FieldT::ceil_size_in_bits() <= SHA512_DIGEST_LENGTH * 8);
 
     bigint<FieldT::num_limbs> rval;
     uint64_t iter = 0;
@@ -94,6 +94,6 @@ FieldT SHA512_rng(const uint64_t idx)
     return FieldT(rval);
 }
 
-} // namespace libff
+// } // namespace libff
 
-#endif // RNG_TCC_
+//#endif // RNG_TCC_

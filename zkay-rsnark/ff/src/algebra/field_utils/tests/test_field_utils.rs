@@ -12,7 +12,7 @@
 #include "libff/algebra/field_utils/algorithms.hpp"
 #include "libff/algebra/fields/binary/gf64.hpp"
 #include "libff/algebra/curves/edwards/edwards_fields.hpp"
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
 using namespace libff;
 

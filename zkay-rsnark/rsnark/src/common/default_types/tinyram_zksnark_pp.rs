@@ -9,13 +9,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_PPZKSNARK_PP_HPP_
-#define TINYRAM_PPZKSNARK_PP_HPP_
+//#ifndef TINYRAM_PPZKSNARK_PP_HPP_
+// #define TINYRAM_PPZKSNARK_PP_HPP_
 
-use  <libsnark/common/default_types/r1cs_ppzkpcd_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_params.hpp>
+use crate::common::default_types::r1cs_ppzkpcd_pp;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
 
-namespace libsnark {
+
 
 class default_tinyram_zksnark_pp {
 public:
@@ -26,9 +26,9 @@ public:
     static void init_public_params();
 };
 
-} // libsnark
 
-#endif // TINYRAM_PPZKSNARK_PP_HPP_
+
+//#endif // TINYRAM_PPZKSNARK_PP_HPP_
 /** @file
  *****************************************************************************
  This file provides the initialization methods for the default TinyRAM zk-SNARK.
@@ -38,13 +38,12 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libsnark/common/default_types/tinyram_zksnark_pp.hpp>
+use crate::common::default_types::tinyram_zksnark_pp;
 
-namespace libsnark {
+
 
 void default_tinyram_zksnark_pp::init_public_params()
 {
     PCD_pp::init_public_params();
 }
 
-} // libsnark

@@ -4,16 +4,16 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef SET_COMMITMENT_GADGET_HPP_
-#define SET_COMMITMENT_GADGET_HPP_
+//#ifndef SET_COMMITMENT_GADGET_HPP_
+// #define SET_COMMITMENT_GADGET_HPP_
 
-use  <libsnark/gadgetlib1/gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/hash_io.hpp>
-use  <libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable.hpp>
+use libsnark/gadgetlib1/gadget;
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget;
+use libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable;
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 using set_commitment_variable = digest_variable<FieldT>;
@@ -50,23 +50,23 @@ public:
 template<typename FieldT, typename HashT>
 void test_set_commitment_gadget();
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/set_commitment/set_commitment_gadget.tcc>
 
-#endif // SET_COMMITMENT_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/set_commitment/set_commitment_gadget;
+
+//#endif // SET_COMMITMENT_GADGET_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef SET_COMMITMENT_GADGET_TCC_
-#define SET_COMMITMENT_GADGET_TCC_
+//#ifndef SET_COMMITMENT_GADGET_TCC_
+// #define SET_COMMITMENT_GADGET_TCC_
 
-use  <libsnark/common/data_structures/set_commitment.hpp>
+use crate::common::data_structures::set_commitment;
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 set_commitment_gadget<FieldT, HashT>::set_commitment_gadget(protoboard<FieldT> &pb,
@@ -76,7 +76,7 @@ set_commitment_gadget<FieldT, HashT>::set_commitment_gadget(protoboard<FieldT> &
                                                             const set_membership_proof_variable<FieldT, HashT> &proof,
                                                             const pb_linear_combination<FieldT> &check_successful,
                                                             const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix), tree_depth(libff::log2(max_entries)), element_bits(element_bits),
+    gadget<FieldT>(pb, annotation_prefix), tree_depth(ffec::log2(max_entries)), element_bits(element_bits),
     root_digest(root_digest), proof(proof), check_successful(check_successful)
 {
     element_block.reset(new block_variable<FieldT>(pb, { element_bits }, FMT(annotation_prefix, " element_block")));
@@ -138,14 +138,14 @@ void test_set_commitment_gadget()
 
     set_commitment_accumulator<HashT> accumulator(max_set_size, value_size);
 
-    std::vector<libff::bit_vector> set_elems;
+    std::vector<ffec::bit_vector> set_elems;
     for (size_t i = 0; i < max_set_size; ++i)
     {
-        libff::bit_vector elem(value_size);
+        ffec::bit_vector elem(value_size);
         std::generate(elem.begin(), elem.end(), [&]() { return std::rand() % 2; });
-        set_elems.emplace_back(elem);
+        set_elems.push(elem);
         accumulator.add(elem);
-        assert(accumulator.is_in_set(elem));
+        assert!(accumulator.is_in_set(elem));
     }
 
     protoboard<FieldT> pb;
@@ -169,9 +169,9 @@ void test_set_commitment_gadget()
         proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[i]));
         sc.generate_r1cs_witness();
         root_digest.generate_r1cs_witness(accumulator.get_commitment());
-        assert(pb.is_satisfied());
+        assert!(pb.is_satisfied());
     }
-    printf("membership tests OK\n");
+    print!("membership tests OK\n");
 
     /* test an element not in set */
     for (size_t i = 0; i < value_size; ++i)
@@ -183,16 +183,16 @@ void test_set_commitment_gadget()
     proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[0])); /* try it with invalid proof */
     sc.generate_r1cs_witness();
     root_digest.generate_r1cs_witness(accumulator.get_commitment());
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
     pb.val(check_succesful) = FieldT::one(); /* now require the check result to be succesful */
     proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[0])); /* try it with invalid proof */
     sc.generate_r1cs_witness();
     root_digest.generate_r1cs_witness(accumulator.get_commitment());
-    assert(!pb.is_satisfied()); /* the protoboard should be unsatisfied */
-    printf("non-membership test OK\n");
+    assert!(!pb.is_satisfied()); /* the protoboard should be unsatisfied */
+    print!("non-membership test OK\n");
 }
 
-} // libsnark
 
-#endif // SET_COMMITMENT_GADGET_TCC_
+
+//#endif // SET_COMMITMENT_GADGET_TCC_

@@ -15,12 +15,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ED25519SIG_HPP_
-#define ED25519SIG_HPP_
+//#ifndef ED25519SIG_HPP_
+// #define ED25519SIG_HPP_
 
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_signature.hpp>
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_signature;
 
-namespace libsnark {
+
 
 class ed25519_sigT {
 public:
@@ -37,9 +37,9 @@ public:
     unsigned char sk_bytes[64];
 };
 
-} // libsnark
 
-#endif // ED25519SIG_HPP_
+
+//#endif // ED25519SIG_HPP_
 /** @file
  *****************************************************************************
 
@@ -59,9 +59,9 @@ public:
 
 use  "depends/libsnark-supercop/include/crypto_sign.h"
 
-use  <libsnark/common/default_types/r1cs_ppzkadsnark_pp.hpp>
+use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
-namespace libsnark {
+
 
 template<>
 kpT<default_r1cs_ppzkadsnark_pp> sigGen<default_r1cs_ppzkadsnark_pp>(void) {
@@ -72,13 +72,13 @@ kpT<default_r1cs_ppzkadsnark_pp> sigGen<default_r1cs_ppzkadsnark_pp>(void) {
 
 template<>
 ed25519_sigT sigSign<default_r1cs_ppzkadsnark_pp>(const ed25519_skT &sk, const labelT &label,
-                                                  const libff::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> &Lambda) {
+                                                  const ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> &Lambda) {
     ed25519_sigT sigma;
     unsigned long long sigmalen;
     unsigned char signature[64+16+320];
     unsigned char message[16+320];
 
-    libff::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> Lambda_copy(Lambda);
+    ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> Lambda_copy(Lambda);
     Lambda_copy.to_affine_coordinates();
 
     for(size_t i = 0; i<16;i++)
@@ -94,7 +94,7 @@ ed25519_sigT sigSign<default_r1cs_ppzkadsnark_pp>(const ed25519_skT &sk, const l
 
     crypto_sign_ed25519_amd64_51_30k(signature,&sigmalen,message,16+320,sk.sk_bytes);
 
-    assert(sigmalen == 64+16+320);
+    assert!(sigmalen == 64+16+320);
 
     for(size_t i = 0; i<64;i++)
         sigma.sig_bytes[i] = signature[i];
@@ -104,13 +104,13 @@ ed25519_sigT sigSign<default_r1cs_ppzkadsnark_pp>(const ed25519_skT &sk, const l
 
 template<>
 bool sigVerif<default_r1cs_ppzkadsnark_pp>(const ed25519_vkT &vk, const labelT &label,
-                                           const libff::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> &Lambda,
+                                           const ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> &Lambda,
                                            const ed25519_sigT &sig) {
     unsigned long long msglen;
     unsigned char message[64+16+320];
     unsigned char signature[64+16+320];
 
-    libff::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> Lambda_copy(Lambda);
+    ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> Lambda_copy(Lambda);
     Lambda_copy.to_affine_coordinates();
 
     for(size_t i = 0; i<64;i++)
@@ -133,12 +133,12 @@ bool sigVerif<default_r1cs_ppzkadsnark_pp>(const ed25519_vkT &vk, const labelT &
 
 template<>
 bool sigBatchVerif<default_r1cs_ppzkadsnark_pp>(const ed25519_vkT &vk, const std::vector<labelT> &labels,
-                                                const std::vector<libff::G2<snark_pp<default_r1cs_ppzkadsnark_pp>>> &Lambdas,
+                                                const std::vector<ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>>> &Lambdas,
                                                 const std::vector<ed25519_sigT> &sigs) {
     std::stringstream stream;
 
-    assert(labels.size() == Lambdas.size());
-    assert(labels.size() == sigs.size());
+    assert!(labels.size() == Lambdas.size());
+    assert!(labels.size() == sigs.size());
 
     unsigned long long msglen[labels.size()];
     unsigned long long siglen[labels.size()];
@@ -152,9 +152,9 @@ bool sigBatchVerif<default_r1cs_ppzkadsnark_pp>(const ed25519_vkT &vk, const std
     }
 
     unsigned char *messagemem = (unsigned char*)malloc(labels.size()*(64+16+320));
-    assert(messagemem != NULL);
+    assert!(messagemem != NULL);
     unsigned char *signaturemem = (unsigned char*)malloc(labels.size()*(64+16+320));
-    assert(signaturemem != NULL);
+    assert!(signaturemem != NULL);
 
     for(size_t i = 0; i < labels.size(); i++) {
         siglen[i] = 64+16+320;
@@ -169,7 +169,7 @@ bool sigBatchVerif<default_r1cs_ppzkadsnark_pp>(const ed25519_vkT &vk, const std
             signaturemem[i*(64+16+320)+64+j] = labels[i].label_bytes[j];
 
         // More efficient way to get canonical point rep?
-       	libff::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> Lambda_copy(Lambdas[i]);
+       	ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> Lambda_copy(Lambdas[i]);
         Lambda_copy.to_affine_coordinates();
         stream.clear();
         stream.rdbuf()->pubsetbuf((char*)(signaturemem+i*(64+16+320)+64+16), 320);
@@ -189,4 +189,4 @@ bool sigBatchVerif<default_r1cs_ppzkadsnark_pp>(const ed25519_vkT &vk, const std
     return (res==0);
 }
 
-} // libsnark
+

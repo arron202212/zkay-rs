@@ -11,12 +11,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_RADIX2_DOMAIN_HPP_
-#define BASIC_RADIX2_DOMAIN_HPP_
+//#ifndef BASIC_RADIX2_DOMAIN_HPP_
+// #define BASIC_RADIX2_DOMAIN_HPP_
 
-#include <vector>
+//#include <vector>
 
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use libfqfft/evaluation_domain/evaluation_domain;
 
 namespace libfqfft {
 
@@ -42,9 +42,9 @@ class basic_radix2_domain : public evaluation_domain<FieldT> {
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain.tcc>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain.tcc;
 
-#endif // BASIC_RADIX2_DOMAIN_HPP_
+//#endif // BASIC_RADIX2_DOMAIN_HPP_
 /** @file
  *****************************************************************************
 
@@ -58,14 +58,14 @@ class basic_radix2_domain : public evaluation_domain<FieldT> {
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_RADIX2_DOMAIN_TCC_
-#define BASIC_RADIX2_DOMAIN_TCC_
+//#ifndef BASIC_RADIX2_DOMAIN_TCC_
+// #define BASIC_RADIX2_DOMAIN_TCC_
 
-#include <libff/algebra/fields/field_utils.hpp>
-#include <libff/common/double.hpp>
-#include <libff/common/utils.hpp>
+use libff/algebra/fields/field_utils;
+use ffec::common::double;
+use ffec::common::utils;
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
 
 namespace libfqfft {
 
@@ -160,4 +160,4 @@ void basic_radix2_domain<FieldT>::divide_by_Z_on_coset(std::vector<FieldT> &P)
 
 } // libfqfft
 
-#endif // BASIC_RADIX2_DOMAIN_TCC_
+//#endif // BASIC_RADIX2_DOMAIN_TCC_

@@ -12,14 +12,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP6_GADGETS_HPP_
-#define FP6_GADGETS_HPP_
+//#ifndef FP6_GADGETS_HPP_
+// #define FP6_GADGETS_HPP_
 
-use  <libsnark/gadgetlib1/gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/fields/fp2_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/fields/fp3_gadgets.hpp>
+use libsnark/gadgetlib1/gadget;
+use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
+use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
 
-namespace libsnark {
+
 
 /**
  * Gadget that represents an Fp6 variable.
@@ -200,11 +200,11 @@ public:
     void generate_r1cs_witness();
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/fields/fp6_gadgets.tcc>
 
-#endif // FP6_GADGETS_HPP_
+use libsnark/gadgetlib1/gadgets/fields/fp6_gadgets;
+
+//#endif // FP6_GADGETS_HPP_
 /** @file
  *****************************************************************************
 
@@ -218,10 +218,10 @@ use  <libsnark/gadgetlib1/gadgets/fields/fp6_gadgets.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP6_GADGETS_TCC_
-#define FP6_GADGETS_TCC_
+//#ifndef FP6_GADGETS_TCC_
+// #define FP6_GADGETS_TCC_
 
-namespace libsnark {
+
 
 template<typename Fp6T>
 Fp6_variable<Fp6T>::Fp6_variable(protoboard<FieldT> &pb, const std::string &annotation_prefix) :
@@ -270,17 +270,17 @@ template<typename Fp6T>
 Fp6_variable<Fp6T> Fp6_variable<Fp6T>::Frobenius_map(const size_t power) const
 {
     pb_linear_combination<FieldT> new_c0c0, new_c0c1, new_c0c2, new_c1c0, new_c1c1, new_c1c2;
-    new_c0c0.assign(this->pb, c0.c0);
-    new_c0c1.assign(this->pb, c0.c1 * Fp3T::Frobenius_coeffs_c1[power % 3]);
-    new_c0c2.assign(this->pb, c0.c2 * Fp3T::Frobenius_coeffs_c2[power % 3]);
-    new_c1c0.assign(this->pb, c1.c0 * Fp6T::Frobenius_coeffs_c1[power % 6]);
-    new_c1c1.assign(this->pb, c1.c1 * (Fp6T::Frobenius_coeffs_c1[power % 6] * Fp3T::Frobenius_coeffs_c1[power % 3]));
-    new_c1c2.assign(this->pb, c1.c2 * (Fp6T::Frobenius_coeffs_c1[power % 6] * Fp3T::Frobenius_coeffs_c2[power % 3]));
+    new_c0c0.assign(self.pb, c0.c0);
+    new_c0c1.assign(self.pb, c0.c1 * Fp3T::Frobenius_coeffs_c1[power % 3]);
+    new_c0c2.assign(self.pb, c0.c2 * Fp3T::Frobenius_coeffs_c2[power % 3]);
+    new_c1c0.assign(self.pb, c1.c0 * Fp6T::Frobenius_coeffs_c1[power % 6]);
+    new_c1c1.assign(self.pb, c1.c1 * (Fp6T::Frobenius_coeffs_c1[power % 6] * Fp3T::Frobenius_coeffs_c1[power % 3]));
+    new_c1c2.assign(self.pb, c1.c2 * (Fp6T::Frobenius_coeffs_c1[power % 6] * Fp3T::Frobenius_coeffs_c2[power % 3]));
 
-    return Fp6_variable<Fp6T>(this->pb,
-                              Fp3_variable<Fp3T>(this->pb, new_c0c0, new_c0c1, new_c0c2, FMT(this->annotation_prefix, " Frobenius_map_c0")),
-                              Fp3_variable<Fp3T>(this->pb, new_c1c0, new_c1c1, new_c1c2, FMT(this->annotation_prefix, " Frobenius_map_c1")),
-                              FMT(this->annotation_prefix, " Frobenius_map"));
+    return Fp6_variable<Fp6T>(self.pb,
+                              Fp3_variable<Fp3T>(self.pb, new_c0c0, new_c0c1, new_c0c2, FMT(self.annotation_prefix, " Frobenius_map_c0")),
+                              Fp3_variable<Fp3T>(self.pb, new_c1c0, new_c1c1, new_c1c2, FMT(self.annotation_prefix, " Frobenius_map_c1")),
+                              FMT(self.annotation_prefix, " Frobenius_map"));
 }
 
 template<typename Fp6T>
@@ -362,13 +362,13 @@ void Fp6_mul_gadget<Fp6T>::generate_r1cs_witness()
     compute_v0->generate_r1cs_witness();
     compute_v1->generate_r1cs_witness();
 
-    Ac0_plus_Ac1_c0.evaluate(this->pb);
-    Ac0_plus_Ac1_c1.evaluate(this->pb);
-    Ac0_plus_Ac1_c2.evaluate(this->pb);
+    Ac0_plus_Ac1_c0.evaluate(self.pb);
+    Ac0_plus_Ac1_c1.evaluate(self.pb);
+    Ac0_plus_Ac1_c2.evaluate(self.pb);
 
-    Bc0_plus_Bc1_c0.evaluate(this->pb);
-    Bc0_plus_Bc1_c1.evaluate(this->pb);
-    Bc0_plus_Bc1_c2.evaluate(this->pb);
+    Bc0_plus_Bc1_c0.evaluate(self.pb);
+    Bc0_plus_Bc1_c1.evaluate(self.pb);
+    Bc0_plus_Bc1_c2.evaluate(self.pb);
 
     compute_result_c1->generate_r1cs_witness();
 
@@ -378,9 +378,9 @@ void Fp6_mul_gadget<Fp6T>::generate_r1cs_witness()
 
     result.generate_r1cs_witness(Rval);
 
-    result_c1_plus_v0_plus_v1_c0.evaluate(this->pb);
-    result_c1_plus_v0_plus_v1_c1.evaluate(this->pb);
-    result_c1_plus_v0_plus_v1_c2.evaluate(this->pb);
+    result_c1_plus_v0_plus_v1_c0.evaluate(self.pb);
+    result_c1_plus_v0_plus_v1_c1.evaluate(self.pb);
+    result_c1_plus_v0_plus_v1_c2.evaluate(self.pb);
 
     compute_result_c1->generate_r1cs_witness();
 }
@@ -449,18 +449,18 @@ template<typename Fp6T>
 void Fp6_mul_by_2345_gadget<Fp6T>::generate_r1cs_constraints()
 {
     compute_v1->generate_r1cs_constraints();
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0.c1,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0.c1,
                                                          Fp3T::non_residue * B.c0.c2,
                                                          result.c0.c0 - Fp6T::non_residue * v1->c2),
-                                 FMT(this->annotation_prefix, " v0.c0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0.c2,
+                                 FMT(self.annotation_prefix, " v0.c0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0.c2,
                                                          Fp3T::non_residue * B.c0.c2,
                                                          result.c0.c1 - v1->c0),
-                                 FMT(this->annotation_prefix, " v0.c1"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0.c0,
+                                 FMT(self.annotation_prefix, " v0.c1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0.c0,
                                                          B.c0.c2,
                                                          result.c0.c2 - v1->c1),
-                                 FMT(this->annotation_prefix, " v0.c2"));
+                                 FMT(self.annotation_prefix, " v0.c2"));
     compute_result_c1->generate_r1cs_constraints();
 }
 
@@ -471,19 +471,19 @@ void Fp6_mul_by_2345_gadget<Fp6T>::generate_r1cs_witness()
 
     const Fp3T A_c0_val = A.c0.get_element();
     const Fp3T B_c0_val = B.c0.get_element();
-    assert(B_c0_val.c0.is_zero());
-    assert(B_c0_val.c1.is_zero());
+    assert!(B_c0_val.c0.is_zero());
+    assert!(B_c0_val.c1.is_zero());
 
     const Fp3T v0_val = A_c0_val * B_c0_val;
     v0->generate_r1cs_witness(v0_val);
 
-    Ac0_plus_Ac1_c0.evaluate(this->pb);
-    Ac0_plus_Ac1_c1.evaluate(this->pb);
-    Ac0_plus_Ac1_c2.evaluate(this->pb);
+    Ac0_plus_Ac1_c0.evaluate(self.pb);
+    Ac0_plus_Ac1_c1.evaluate(self.pb);
+    Ac0_plus_Ac1_c2.evaluate(self.pb);
 
-    Bc0_plus_Bc1_c0.evaluate(this->pb);
-    Bc0_plus_Bc1_c1.evaluate(this->pb);
-    Bc0_plus_Bc1_c2.evaluate(this->pb);
+    Bc0_plus_Bc1_c0.evaluate(self.pb);
+    Bc0_plus_Bc1_c1.evaluate(self.pb);
+    Bc0_plus_Bc1_c2.evaluate(self.pb);
 
     compute_result_c1->generate_r1cs_witness();
 
@@ -493,9 +493,9 @@ void Fp6_mul_by_2345_gadget<Fp6T>::generate_r1cs_witness()
 
     result.generate_r1cs_witness(Rval);
 
-    result_c1_plus_v0_plus_v1_c0.evaluate(this->pb);
-    result_c1_plus_v0_plus_v1_c1.evaluate(this->pb);
-    result_c1_plus_v0_plus_v1_c2.evaluate(this->pb);
+    result_c1_plus_v0_plus_v1_c0.evaluate(self.pb);
+    result_c1_plus_v0_plus_v1_c1.evaluate(self.pb);
+    result_c1_plus_v0_plus_v1_c2.evaluate(self.pb);
 
     compute_result_c1->generate_r1cs_witness();
 }
@@ -598,6 +598,6 @@ void Fp6_cyclotomic_sqr_gadget<Fp6T>::generate_r1cs_witness()
     compute_csq->generate_r1cs_witness();
 }
 
-} // libsnark
 
-#endif // FP6_GADGETS_TCC_
+
+//#endif // FP6_GADGETS_TCC_

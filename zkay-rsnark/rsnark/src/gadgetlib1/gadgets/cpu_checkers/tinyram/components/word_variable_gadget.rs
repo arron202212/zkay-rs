@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef WORD_VARIABLE_GADGET_HPP_
-#define WORD_VARIABLE_GADGET_HPP_
+//#ifndef WORD_VARIABLE_GADGET_HPP_
+// #define WORD_VARIABLE_GADGET_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard.hpp>
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
 
-namespace libsnark {
+
 
 /**
  * Holds both binary and field representaton of a word.
@@ -44,6 +44,6 @@ public:
         dual_variable_gadget<FieldT>(pb, packed, 2*pb.ap.w, annotation_prefix) {}
 };
 
-} // libsnark
 
-#endif // WORD_VARIABLE_GADGET_HPP_
+
+//#endif // WORD_VARIABLE_GADGET_HPP_

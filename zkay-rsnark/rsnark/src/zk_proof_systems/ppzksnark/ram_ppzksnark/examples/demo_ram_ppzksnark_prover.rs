@@ -6,15 +6,15 @@
  *****************************************************************************/
 use  <fstream>
 use  <iostream>
-#ifndef MINDEPS
-use  <boost/program_options.hpp>
-#endif
+//#ifndef MINDEPS
+use boost/program_options;
+//#endif
 
-use  <libsnark/common/default_types/tinyram_ppzksnark_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark.hpp>
+use crate::common::default_types::tinyram_ppzksnark_pp;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
+use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark;
 
-#ifndef MINDEPS
+//#ifndef MINDEPS
 namespace po = boost::program_options;
 
 bool process_prover_command_line(const int argc, const char** argv,
@@ -54,15 +54,15 @@ bool process_prover_command_line(const int argc, const char** argv,
 
     return true;
 }
-#endif
+//#endif
 
-using namespace libsnark;
+
 
 int main(int argc, const char * argv[])
 {
     default_tinyram_ppzksnark_pp::init_public_params();
 
-#ifdef MINDEPS
+// #ifdef MINDEPS
     std::string processed_assembly_fn = "processed.txt";
     std::string proving_key_fn = "proving_key.txt";
     std::string primary_input_fn = "primary_input.txt";
@@ -80,8 +80,8 @@ int main(int argc, const char * argv[])
     {
         return 1;
     }
-#endif
-    libff::start_profiling();
+//#endif
+    ffec::start_profiling();
 
     /* load everything */
     ram_ppzksnark_proving_key<default_tinyram_ppzksnark_pp> pk;

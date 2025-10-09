@@ -5,15 +5,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EDWARDS_PP_HPP_
-#define EDWARDS_PP_HPP_
-#include <libff/algebra/curves/edwards/edwards_g1.hpp>
-#include <libff/algebra/curves/edwards/edwards_g2.hpp>
-#include <libff/algebra/curves/edwards/edwards_init.hpp>
-#include <libff/algebra/curves/edwards/edwards_pairing.hpp>
-#include <libff/algebra/curves/public_params.hpp>
+//#ifndef EDWARDS_PP_HPP_
+// #define EDWARDS_PP_HPP_
+use libff/algebra/curves/edwards/edwards_g1;
+use libff/algebra/curves/edwards/edwards_g2;
+use libff/algebra/curves/edwards/edwards_init;
+use libff/algebra/curves/edwards/edwards_pairing;
+use libff/algebra/curves/public_params;
 
-namespace libff {
+// namespace libff {
 
 class edwards_pp {
 public:
@@ -46,8 +46,8 @@ public:
                                        const edwards_G2 &Q);
 };
 
-} // namespace libff
-#endif // EDWARDS_PP_HPP_
+// } // namespace libff
+//#endif // EDWARDS_PP_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -55,9 +55,9 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/edwards/edwards_pp.hpp>
+use libff/algebra/curves/edwards/edwards_pp;
 
-namespace libff {
+// namespace libff {
 
 void edwards_pp::init_public_params()
 {
@@ -105,4 +105,4 @@ edwards_Fq6 edwards_pp::reduced_pairing(const edwards_G1 &P,
     return edwards_reduced_pairing(P, Q);
 }
 
-} // namespace libff
+// } // namespace libff

@@ -9,20 +9,20 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <cmath>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
+//#include <cmath>
+//#include <ctime>
+//#include <fstream>
+//#include <iostream>
+//#include <sstream>
+//#include <vector>
 
-#include <dirent.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/resource.h>
-#include <unistd.h>
+//#include <dirent.h>
+//#include <stdint.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <sys/resource.h>
+//#include <unistd.h>
 
 /* Level 2: Profile */
 void profile()
@@ -135,11 +135,11 @@ void profile()
 
         /* Perform Profiling */
         std::cout << "\n\033[1;32mStarting Profiling:\033[0m\n";
-#ifdef PROF_DOUBLE
-        printf("Profiling with Double\n");
+// #ifdef PROF_DOUBLE
+        print!("Profiling with Double\n");
 #else
-        printf("Profiling with Fr<edwards_pp>\n");
-#endif
+        print!("Profiling with Fr<edwards_pp>\n");
+//#endif
         for (int threads = 0; threads < 4; threads++)
         {
           for (int key = 0; key < 4; key++) /* Change key to 5 for arithmetic domain */
@@ -152,7 +152,7 @@ void profile()
                         + datetime + " "
                         + "\"" + profile_type + "\" "
                         + "\"" + domains[domain_choice] + "\"").c_str()))
-              printf("\n error: profiling\n");
+              print!("\n error: profiling\n");
           }
         }
         std::cout << "\n\033[1;32mDone Profiling\033[0m\n";
@@ -227,7 +227,7 @@ void plot()
         std::string log_path = path[type - 1] + files[file_number - 1];
         /* System Call */
         std::string cmd = "gnuplot -e \"input_directory=\'" + log_path + "\'\" " + gnufile[type - 1];
-        if (system(cmd.c_str()) == 0) printf("Plotted in %s\n", log_path.c_str());
+        if (system(cmd.c_str()) == 0) print!("Plotted in %s\n", log_path.c_str());
       }
     }
   }

@@ -11,13 +11,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
 
 use  <string>
 use  <vector>
 
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/variable;
 
 namespace gadgetlib2 {
 
@@ -175,7 +175,7 @@ public:
 
 } // namespace gadgetlib2
 
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
 /** @file
  *****************************************************************************
  Implementation of the Constraint class.
@@ -191,8 +191,8 @@ use  <iostream>
 use  <memory>
 use  <set>
 
-use  <libsnark/gadgetlib2/constraint.hpp>
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/constraint;
+use libsnark/gadgetlib2/variable;
 
 using ::std::string;
 using ::std::vector;
@@ -212,11 +212,11 @@ namespace gadgetlib2 {
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-#ifdef DEBUG
+// #ifdef DEBUG
 Constraint::Constraint(const string& name) : name_(name) {}
 #else
-Constraint::Constraint(const string& name) { libff::UNUSED(name); }
-#endif
+Constraint::Constraint(const string& name) { ffec::UNUSED(name); }
+//#endif
 
 string Constraint::name() const {
 #   ifdef DEBUG
@@ -270,7 +270,7 @@ bool Rank1Constraint::isSatisfied(const VariableAssignment& assignment,
             cerr << "c:   " << cres.asString() << endl;
         }
 #       else
-        libff::UNUSED(printOnFail);
+        ffec::UNUSED(printOnFail);
 #       endif
         return false;
     }
@@ -328,7 +328,7 @@ bool PolynomialConstraint::isSatisfied(const VariableAssignment& assignment,
                 }
             }
 #       else
-            libff::UNUSED(printOnFail);
+            ffec::UNUSED(printOnFail);
 #       endif
 
         return false;
@@ -358,11 +358,11 @@ const Variable::set PolynomialConstraint::getUsedVariables() const {
 
 
 void ConstraintSystem::addConstraint(const Rank1Constraint& c) {
-    constraintsPtrs_.emplace_back(::std::shared_ptr<Constraint>(new Rank1Constraint(c)));
+    constraintsPtrs_.push(::std::shared_ptr<Constraint>(new Rank1Constraint(c)));
 }
 
 void ConstraintSystem::addConstraint(const PolynomialConstraint& c) {
-    constraintsPtrs_.emplace_back(::std::shared_ptr<Constraint>(new PolynomialConstraint(c)));
+    constraintsPtrs_.push(::std::shared_ptr<Constraint>(new PolynomialConstraint(c)));
 }
 
 bool ConstraintSystem::isSatisfied(const VariableAssignment& assignment,

@@ -5,15 +5,15 @@
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
 
-#ifndef BLS12_381_PP_HPP_
-#define BLS12_381_PP_HPP_
-#include <libff/algebra/curves/bls12_381/bls12_381_g1.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_g2.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_init.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_pairing.hpp>
-#include <libff/algebra/curves/public_params.hpp>
+//#ifndef BLS12_381_PP_HPP_
+// #define BLS12_381_PP_HPP_
+use libff/algebra/curves/bls12_381/bls12_381_g1;
+use libff/algebra/curves/bls12_381/bls12_381_g2;
+use libff/algebra/curves/bls12_381/bls12_381_init;
+use libff/algebra/curves/bls12_381/bls12_381_pairing;
+use libff/algebra/curves/public_params;
 
-namespace libff {
+// namespace libff {
 
 class bls12_381_pp {
 public:
@@ -45,12 +45,12 @@ public:
                                           const bls12_381_G2 &Q);
 };
 
-} // namespace libff
+// } // namespace libff
 
-#endif // BLS12_381_PP_HPP_
-#include <libff/algebra/curves/bls12_381/bls12_381_pp.hpp>
+//#endif // BLS12_381_PP_HPP_
+use libff/algebra/curves/bls12_381/bls12_381_pp;
 
-namespace libff {
+// namespace libff {
 
 void bls12_381_pp::init_public_params()
 {
@@ -98,4 +98,4 @@ bls12_381_Fq12 bls12_381_pp::reduced_pairing(const bls12_381_G1 &P,
     return bls12_381_reduced_pairing(P, Q);
 }
 
-} // namespace libff
+// } // namespace libff

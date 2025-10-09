@@ -5,20 +5,20 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <memory>
-#include <vector>
+//#include <memory>
+//#include <vector>
 
-#include <gtest/gtest.h>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_pp.hpp>
-#include <stdint.h>
+//#include <gtest/gtest.h>
+use libff/algebra/curves/mnt/mnt4/mnt4_pp;
+//#include <stdint.h>
 
-#include <libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/extended_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/geometric_sequence_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/step_radix2_domain.hpp>
-#include <libfqfft/polynomial_arithmetic/naive_evaluate.hpp>
-#include <libfqfft/tools/exceptions.hpp>
+use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain;
+use libfqfft/evaluation_domain/domains/basic_radix2_domain;
+use libfqfft/evaluation_domain/domains/extended_radix2_domain;
+use libfqfft/evaluation_domain/domains/geometric_sequence_domain;
+use libfqfft/evaluation_domain/domains/step_radix2_domain;
+use libfqfft/polynomial_arithmetic/naive_evaluate;
+use libfqfft/tools/exceptions;
 
 namespace libfqfft {
 
@@ -70,11 +70,11 @@ namespace libfqfft {
       }
       catch(DomainSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
       catch(InvalidSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
     }
   }
@@ -106,11 +106,11 @@ namespace libfqfft {
       }
       catch(const DomainSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
       catch(const InvalidSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
     }
   }
@@ -144,11 +144,11 @@ namespace libfqfft {
       }
       catch(const DomainSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
       catch(const InvalidSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
     }
   }
@@ -182,17 +182,17 @@ namespace libfqfft {
         for (size_t i = 0; i < m; i++)
         {
           TypeParam e = evaluate_lagrange_polynomial(m, d, t, i);
-          printf("%ld == %ld\n", e.as_ulong(), a[i].as_ulong());
+          print!("%ld == %ld\n", e.as_ulong(), a[i].as_ulong());
           EXPECT_TRUE(e == a[i]);
         }
       }
       catch(const DomainSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
       catch(const InvalidSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
     }
   }
@@ -226,11 +226,11 @@ namespace libfqfft {
       }
       catch(const DomainSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
       catch(const InvalidSizeException &e)
       {
-        printf("%s - skipping\n", e.what());
+        print!("%s - skipping\n", e.what());
       }
     }
   }

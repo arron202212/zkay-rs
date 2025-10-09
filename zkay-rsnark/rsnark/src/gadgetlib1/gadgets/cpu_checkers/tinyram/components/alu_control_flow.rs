@@ -11,14 +11,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALU_CONTROL_FLOW_HPP_
-#define ALU_CONTROL_FLOW_HPP_
+//#ifndef ALU_CONTROL_FLOW_HPP_
+// #define ALU_CONTROL_FLOW_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard.hpp>
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
 
-namespace libsnark {
+
 
 /* control flow gadgets */
 template<typename FieldT>
@@ -96,11 +96,11 @@ public:
 template<typename FieldT>
 void test_ALU_cnjmp_gadget();
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_control_flow.tcc>
 
-#endif // ALU_CONTROL_FLOW_HPP_
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_control_flow;
+
+//#endif // ALU_CONTROL_FLOW_HPP_
 /** @file
  *****************************************************************************
 
@@ -114,35 +114,35 @@ use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_control_fl
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALU_CONTROL_FLOW_TCC_
-#define ALU_CONTROL_FLOW_TCC_
+//#ifndef ALU_CONTROL_FLOW_TCC_
+// #define ALU_CONTROL_FLOW_TCC_
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-namespace libsnark {
+
 
 /* jmp */
 template<typename FieldT>
 void ALU_jmp_gadget<FieldT>::generate_r1cs_constraints()
 {
-    this->pb.add_r1cs_constraint(
+    self.pb.add_r1cs_constraint(
         r1cs_constraint<FieldT>(
             { ONE },
-            { this->argval2.packed },
-            { this->result }),
-        FMT(this->annotation_prefix, " jmp_result"));
+            { self.argval2.packed },
+            { self.result }),
+        FMT(self.annotation_prefix, " jmp_result"));
 }
 
 template<typename FieldT>
 void ALU_jmp_gadget<FieldT>::generate_r1cs_witness()
 {
-    this->pb.val(this->result) = this->pb.val(this->argval2.packed);
+    self.pb.val(self.result) = self.pb.val(self.argval2.packed);
 }
 
 template<typename FieldT>
 void test_ALU_jmp_gadget()
 {
-    libff::print_time("starting jmp test");
+    ffec::print_time("starting jmp test");
 
     tinyram_architecture_params ap(16, 16);
     tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
@@ -164,13 +164,13 @@ void test_ALU_jmp_gadget()
 
     jmp.generate_r1cs_witness();
 
-    assert(pb.val(result) == FieldT(123));
-    assert(pb.is_satisfied());
-    libff::print_time("positive jmp test successful");
+    assert!(pb.val(result) == FieldT(123));
+    assert!(pb.is_satisfied());
+    ffec::print_time("positive jmp test successful");
 
     pb.val(result) = FieldT(1);
-    assert(!pb.is_satisfied());
-    libff::print_time("negative jmp test successful");
+    assert!(!pb.is_satisfied());
+    ffec::print_time("negative jmp test successful");
 }
 
 /* cjmp */
@@ -187,27 +187,27 @@ void ALU_cjmp_gadget<FieldT>::generate_r1cs_constraints()
       achieve this we just discard the first ap.subaddr_len() bits of
       the byte address of the PC.
     */
-    this->pb.add_r1cs_constraint(
+    self.pb.add_r1cs_constraint(
         r1cs_constraint<FieldT>(
-            this->flag,
-            pb_packing_sum<FieldT>(pb_variable_array<FieldT>(this->argval2.bits.begin() + this->pb.ap.subaddr_len(), this->argval2.bits.end())) - this->pc.packed - 1,
-            this->result - this->pc.packed - 1),
-        FMT(this->annotation_prefix, " cjmp_result"));
+            self.flag,
+            pb_packing_sum<FieldT>(pb_variable_array<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end())) - self.pc.packed - 1,
+            self.result - self.pc.packed - 1),
+        FMT(self.annotation_prefix, " cjmp_result"));
 }
 
 template<typename FieldT>
 void ALU_cjmp_gadget<FieldT>::generate_r1cs_witness()
 {
-    this->pb.val(this->result) = ((this->pb.val(this->flag) == FieldT::one()) ?
-                                  FieldT(this->pb.val(this->argval2.packed).as_ulong() >> this->pb.ap.subaddr_len()) :
-                                  this->pb.val(this->pc.packed) + FieldT::one());
+    self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
+                                  FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()) :
+                                  self.pb.val(self.pc.packed) + FieldT::one());
 }
 
 template<typename FieldT>
 void test_ALU_cjmp_gadget()
 {
     // TODO: update
-    libff::print_time("starting cjmp test");
+    ffec::print_time("starting cjmp test");
 
     tinyram_architecture_params ap(16, 16);
     tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
@@ -232,24 +232,24 @@ void test_ALU_cjmp_gadget()
     pb.val(flag) = FieldT(1);
     cjmp.generate_r1cs_witness();
 
-    assert(pb.val(result) == FieldT(123));
-    assert(pb.is_satisfied());
-    libff::print_time("positive cjmp test successful");
+    assert!(pb.val(result) == FieldT(123));
+    assert!(pb.is_satisfied());
+    ffec::print_time("positive cjmp test successful");
 
     pb.val(flag) = FieldT(0);
-    assert(!pb.is_satisfied());
-    libff::print_time("negative cjmp test successful");
+    assert!(!pb.is_satisfied());
+    ffec::print_time("negative cjmp test successful");
 
     pb.val(flag) = FieldT(0);
     cjmp.generate_r1cs_witness();
 
-    assert(pb.val(result) == FieldT(456+2*ap.w/8));
-    assert(pb.is_satisfied());
-    libff::print_time("positive cjmp test successful");
+    assert!(pb.val(result) == FieldT(456+2*ap.w/8));
+    assert!(pb.is_satisfied());
+    ffec::print_time("positive cjmp test successful");
 
     pb.val(flag) = FieldT(1);
-    assert(!pb.is_satisfied());
-    libff::print_time("negative cjmp test successful");
+    assert!(!pb.is_satisfied());
+    ffec::print_time("negative cjmp test successful");
 }
 
 /* cnjmp */
@@ -266,27 +266,27 @@ void ALU_cnjmp_gadget<FieldT>::generate_r1cs_constraints()
       achieve this we just discard the first ap.subaddr_len() bits of
       the byte address of the PC.
     */
-    this->pb.add_r1cs_constraint(
+    self.pb.add_r1cs_constraint(
         r1cs_constraint<FieldT>(
-            this->flag,
-            this->pc.packed + 1 - pb_packing_sum<FieldT>(pb_variable_array<FieldT>(this->argval2.bits.begin() + this->pb.ap.subaddr_len(), this->argval2.bits.end())),
-            this->result - pb_packing_sum<FieldT>(pb_variable_array<FieldT>(this->argval2.bits.begin() + this->pb.ap.subaddr_len(), this->argval2.bits.end()))),
-        FMT(this->annotation_prefix, " cnjmp_result"));
+            self.flag,
+            self.pc.packed + 1 - pb_packing_sum<FieldT>(pb_variable_array<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end())),
+            self.result - pb_packing_sum<FieldT>(pb_variable_array<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end()))),
+        FMT(self.annotation_prefix, " cnjmp_result"));
 }
 
 template<typename FieldT>
 void ALU_cnjmp_gadget<FieldT>::generate_r1cs_witness()
 {
-    this->pb.val(this->result) = ((this->pb.val(this->flag) == FieldT::one()) ?
-                                  this->pb.val(this->pc.packed) + FieldT::one() :
-                                  FieldT(this->pb.val(this->argval2.packed).as_ulong() >> this->pb.ap.subaddr_len()));
+    self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
+                                  self.pb.val(self.pc.packed) + FieldT::one() :
+                                  FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()));
 }
 
 template<typename FieldT>
 void test_ALU_cnjmp_gadget()
 {
     // TODO: update
-    libff::print_time("starting cnjmp test");
+    ffec::print_time("starting cnjmp test");
 
     tinyram_architecture_params ap(16, 16);
     tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
@@ -311,26 +311,26 @@ void test_ALU_cnjmp_gadget()
     pb.val(flag) = FieldT(0);
     cnjmp.generate_r1cs_witness();
 
-    assert(pb.val(result) == FieldT(123));
-    assert(pb.is_satisfied());
-    libff::print_time("positive cnjmp test successful");
+    assert!(pb.val(result) == FieldT(123));
+    assert!(pb.is_satisfied());
+    ffec::print_time("positive cnjmp test successful");
 
     pb.val(flag) = FieldT(1);
-    assert(!pb.is_satisfied());
-    libff::print_time("negative cnjmp test successful");
+    assert!(!pb.is_satisfied());
+    ffec::print_time("negative cnjmp test successful");
 
     pb.val(flag) = FieldT(1);
     cnjmp.generate_r1cs_witness();
 
-    assert(pb.val(result) == FieldT(456 + (2*pb.ap.w/8)));
-    assert(pb.is_satisfied());
-    libff::print_time("positive cnjmp test successful");
+    assert!(pb.val(result) == FieldT(456 + (2*pb.ap.w/8)));
+    assert!(pb.is_satisfied());
+    ffec::print_time("positive cnjmp test successful");
 
     pb.val(flag) = FieldT(0);
-    assert(!pb.is_satisfied());
-    libff::print_time("negative cnjmp test successful");
+    assert!(!pb.is_satisfied());
+    ffec::print_time("negative cnjmp test successful");
 }
 
-} // libsnark
 
-#endif // ALU_CONTROL_FLOW_TCC_
+
+//#endif // ALU_CONTROL_FLOW_TCC_

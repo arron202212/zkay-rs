@@ -9,18 +9,18 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EXPONENTIATION_GADGET_HPP_
-#define EXPONENTIATION_GADGET_HPP_
+//#ifndef EXPONENTIATION_GADGET_HPP_
+// #define EXPONENTIATION_GADGET_HPP_
 
 use  <memory>
 use  <vector>
 
-use  <libff/algebra/fields/bigint.hpp>
-use  <libff/algebra/scalar_multiplication/wnaf.hpp>
+use ffec::algebra::fields::bigint;
+ use ffec::algebra::scalar_multiplication::wnaf;
 
-use  <libsnark/gadgetlib1/gadget.hpp>
+use libsnark/gadgetlib1/gadget;
 
-namespace libsnark {
+
 
 /**
  * The exponentiation gadget verifies field exponentiation in the field F_{p^k}.
@@ -39,7 +39,7 @@ public:
     std::vector<std::shared_ptr<Fpk_sqr_gadgetT<FpkT> > > doubling_steps;
 
     Fpk_variableT<FpkT> elt;
-    libff::bigint<m> power;
+    ffec::bigint<m> power;
     Fpk_variableT<FpkT> result;
 
     size_t intermed_count;
@@ -49,7 +49,7 @@ public:
 
     exponentiation_gadget(protoboard<FieldT> &pb,
                           const Fpk_variableT<FpkT> &elt,
-                          const libff::bigint<m> &power,
+                          const ffec::bigint<m> &power,
                           const Fpk_variableT<FpkT> &result,
                           const std::string &annotation_prefix);
     void generate_r1cs_constraints();
@@ -57,13 +57,13 @@ public:
 };
 
 template<typename FpkT, template<class> class Fpk_variableT, template<class> class Fpk_mul_gadgetT, template<class> class Fpk_sqr_gadgetT, mp_size_t m>
-void test_exponentiation_gadget(const libff::bigint<m> &power, const std::string &annotation);
+void test_exponentiation_gadget(const ffec::bigint<m> &power, const std::string &annotation);
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/fields/exponentiation_gadget.tcc>
 
-#endif // EXPONENTIATION_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/fields/exponentiation_gadget;
+
+//#endif // EXPONENTIATION_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -77,15 +77,15 @@ use  <libsnark/gadgetlib1/gadgets/fields/exponentiation_gadget.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EXPONENTIATION_GADGET_TCC_
-#define EXPONENTIATION_GADGET_TCC_
+//#ifndef EXPONENTIATION_GADGET_TCC_
+// #define EXPONENTIATION_GADGET_TCC_
 
-namespace libsnark {
+
 
 template<typename FpkT, template<class> class Fpk_variableT, template<class> class Fpk_mul_gadgetT, template<class> class Fpk_sqr_gadgetT, mp_size_t m>
 exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>::exponentiation_gadget(protoboard<FieldT> &pb,
                                                                                                        const Fpk_variableT<FpkT> &elt,
-                                                                                                       const libff::bigint<m> &power,
+                                                                                                       const ffec::bigint<m> &power,
                                                                                                        const Fpk_variableT<FpkT> &result,
                                                                                                        const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix), elt(elt), power(power), result(result)
@@ -102,8 +102,8 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
     {
         if (found_nonzero)
         {
-            ++dbl_count;
-            ++intermed_count;
+            dbl_count+=1;
+            intermed_count+=1;
         }
 
         if (NAF[i] != 0)
@@ -112,13 +112,13 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
 
             if (NAF[i] > 0)
             {
-                ++add_count;
-                ++intermed_count;
+                add_count+=1;
+                intermed_count+=1;
             }
             else
             {
-                ++sub_count;
-                ++intermed_count;
+                sub_count+=1;
+                intermed_count+=1;
             }
         }
     }
@@ -127,7 +127,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
     intermediate[0].reset(new Fpk_variableT<FpkT>(pb, FpkT::one(), FMT(annotation_prefix, " intermediate_0")));
     for (size_t i = 1; i < intermed_count; ++i)
     {
-        intermediate[i].reset(new Fpk_variableT<FpkT>(pb, FMT(annotation_prefix, " intermediate_%zu", i)));
+        intermediate[i].reset(new Fpk_variableT<FpkT>(pb, FMT(annotation_prefix, " intermediate_{}", i)));
     }
     addition_steps.resize(add_count);
     subtraction_steps.resize(sub_count);
@@ -144,9 +144,9 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
             doubling_steps[dbl_id].reset(new Fpk_sqr_gadgetT<FpkT>(pb,
                                                                    *intermediate[intermed_id],
                                                                    (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]),
-                                                                   FMT(annotation_prefix, " doubling_steps_%zu", dbl_count)));
-            ++intermed_id;
-            ++dbl_id;
+                                                                   FMT(annotation_prefix, " doubling_steps_{}", dbl_count)));
+            intermed_id+=1;
+            dbl_id+=1;
         }
 
         if (NAF[i] != 0)
@@ -160,9 +160,9 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
                                                                        *intermediate[intermed_id],
                                                                        elt,
                                                                        (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]),
-                                                                       FMT(annotation_prefix, " addition_steps_%zu", dbl_count)));
-                ++add_id;
-                ++intermed_id;
+                                                                       FMT(annotation_prefix, " addition_steps_{}", dbl_count)));
+                add_id+=1;
+                intermed_id+=1;
             }
             else
             {
@@ -171,9 +171,9 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
                                                                           (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]),
                                                                           elt,
                                                                           *intermediate[intermed_id],
-                                                                          FMT(annotation_prefix, " subtraction_steps_%zu", dbl_count)));
-                ++sub_id;
-                ++intermed_id;
+                                                                          FMT(annotation_prefix, " subtraction_steps_{}", dbl_count)));
+                sub_id+=1;
+                intermed_id+=1;
             }
         }
     }
@@ -211,8 +211,8 @@ void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT
         if (found_nonzero)
         {
             doubling_steps[dbl_id]->generate_r1cs_witness();
-            ++intermed_id;
-            ++dbl_id;
+            intermed_id+=1;
+            dbl_id+=1;
         }
 
         if (NAF[i] != 0)
@@ -222,8 +222,8 @@ void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT
             if (NAF[i] > 0)
             {
                 addition_steps[add_id]->generate_r1cs_witness();
-                ++intermed_id;
-                ++add_id;
+                intermed_id+=1;
+                add_id+=1;
             }
             else
             {
@@ -235,15 +235,15 @@ void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT
 
                 subtraction_steps[sub_id]->generate_r1cs_witness();
 
-                ++intermed_id;
-                ++sub_id;
+                intermed_id+=1;
+                sub_id+=1;
             }
         }
     }
 }
 
 template<typename FpkT, template<class> class Fpk_variableT, template<class> class Fpk_mul_gadgetT, template<class> class Fpk_sqr_gadgetT, mp_size_t m>
-void test_exponentiation_gadget(const libff::bigint<m> &power, const std::string &annotation)
+void test_exponentiation_gadget(const ffec::bigint<m> &power, const std::string &annotation)
 {
     type typename FpkT::my_Fp FieldT;
 
@@ -259,14 +259,14 @@ void test_exponentiation_gadget(const libff::bigint<m> &power, const std::string
         x.generate_r1cs_witness(x_val);
         exp_gadget.generate_r1cs_witness();
         const FpkT res = x_to_power.get_element();
-        assert(pb.is_satisfied());
-        assert(res == (x_val ^ power));
+        assert!(pb.is_satisfied());
+        assert!(res == (x_val ^ power));
     }
-    printf("number of constraints for %s_exp = %zu\n", annotation.c_str(), pb.num_constraints());
-    printf("exponent was: ");
+    print!("number of constraints for %s_exp = {}\n", annotation.c_str(), pb.num_constraints());
+    print!("exponent was: ");
     power.print();
 }
 
-} // libsnark
 
-#endif // EXPONENTIATION_GADGET_TCC_
+
+//#endif // EXPONENTIATION_GADGET_TCC_

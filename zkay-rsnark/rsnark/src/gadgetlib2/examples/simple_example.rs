@@ -5,20 +5,20 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SIMPLE_EXAMPLE_HPP_
-#define SIMPLE_EXAMPLE_HPP_
+//#ifndef SIMPLE_EXAMPLE_HPP_
+// #define SIMPLE_EXAMPLE_HPP_
 
-use  <libff/common/default_types/ec_pp.hpp>
+use ffec::common::default_types::ec_pp;
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 
-namespace libsnark {
 
-r1cs_example<libff::Fr<libff::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size);
 
-} // libsnark
+r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size);
 
-#endif // SIMPLE_EXAMPLE_HPP_
+
+
+//#endif // SIMPLE_EXAMPLE_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -26,17 +26,17 @@ r1cs_example<libff::Fr<libff::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libsnark/gadgetlib2/adapters.hpp>
-use  <libsnark/gadgetlib2/examples/simple_example.hpp>
-use  <libsnark/gadgetlib2/gadget.hpp>
-use  <libsnark/gadgetlib2/integration.hpp>
+use libsnark/gadgetlib2/adapters;
+use libsnark/gadgetlib2/examples/simple_example;
+use libsnark/gadgetlib2/gadget;
+use libsnark/gadgetlib2/integration;
 
-namespace libsnark {
+
 
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
-r1cs_example<libff::Fr<libff::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size)
+r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size)
 {
-    type libff::Fr<libff::default_ec_pp> FieldT;
+    type ffec::Fr<ffec::default_ec_pp> FieldT;
 
     gadgetlib2::initPublicParamsFromDefaultPp();
     // necessary in case a protoboard was built before,  libsnark assumes variable indices always
@@ -67,11 +67,11 @@ r1cs_example<libff::Fr<libff::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_
     const r1cs_primary_input<FieldT> primary_input(full_assignment.begin(), full_assignment.begin() + cs.num_inputs());
     const r1cs_auxiliary_input<FieldT> auxiliary_input(full_assignment.begin() + cs.num_inputs(), full_assignment.end());
 
-    assert(cs.is_valid());
-    assert(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.is_valid());
+    assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
     return r1cs_example<FieldT>(cs, primary_input, auxiliary_input);
 }
 
-} // libsnark
+
 

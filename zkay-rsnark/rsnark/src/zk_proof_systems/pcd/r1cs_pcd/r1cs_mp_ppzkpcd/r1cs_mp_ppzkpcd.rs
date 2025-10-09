@@ -35,18 +35,18 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_MP_PPZKPCD_HPP_
-#define R1CS_MP_PPZKPCD_HPP_
+//#ifndef R1CS_MP_PPZKPCD_HPP_
+// #define R1CS_MP_PPZKPCD_HPP_
 
 use  <memory>
 use  <vector>
 
-use  <libsnark/common/data_structures/set_commitment.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/ppzkpcd_compliance_predicate.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/r1cs_mp_ppzkpcd_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+use crate::common::data_structures::set_commitment;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/ppzkpcd_compliance_predicate;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/r1cs_mp_ppzkpcd_params;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
-namespace libsnark {
+
 
 /******************************** Proving key ********************************/
 
@@ -193,8 +193,8 @@ public:
     r1cs_mp_ppzkpcd_processed_verification_key(std::vector<r1cs_ppzksnark_processed_verification_key<A_pp> > &&compliance_step_r1cs_pvks,
                                                std::vector<r1cs_ppzksnark_processed_verification_key<B_pp> > &&translation_step_r1cs_pvks,
                                                const set_commitment &commitment_to_translation_step_r1cs_vks) :
-        compliance_step_r1cs_pvks(std::move(compliance_step_r1cs_pvks)),
-        translation_step_r1cs_pvks(std::move(translation_step_r1cs_pvks)),
+        compliance_step_r1cs_pvks((compliance_step_r1cs_pvks)),
+        translation_step_r1cs_pvks((translation_step_r1cs_pvks)),
         commitment_to_translation_step_r1cs_vks(commitment_to_translation_step_r1cs_vks)
     {};
 
@@ -223,8 +223,8 @@ public:
     r1cs_mp_ppzkpcd_keypair(r1cs_mp_ppzkpcd_keypair<PCD_ppT> &&other) = default;
     r1cs_mp_ppzkpcd_keypair(r1cs_mp_ppzkpcd_proving_key<PCD_ppT> &&pk,
                             r1cs_mp_ppzkpcd_verification_key<PCD_ppT> &&vk) :
-        pk(std::move(pk)),
-        vk(std::move(vk))
+        pk((pk)),
+        vk((vk))
     {};
 };
 
@@ -321,11 +321,11 @@ bool r1cs_mp_ppzkpcd_online_verifier(const r1cs_mp_ppzkpcd_processed_verificatio
                                      const r1cs_mp_ppzkpcd_primary_input<PCD_ppT> &primary_input,
                                      const r1cs_mp_ppzkpcd_proof<PCD_ppT> &proof);
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/r1cs_mp_ppzkpcd.tcc>
 
-#endif // R1CS_MP_PPZKPCD_HPP_
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/r1cs_mp_ppzkpcd;
+
+//#endif // R1CS_MP_PPZKPCD_HPP_
 /** @file
  *****************************************************************************
 
@@ -339,20 +339,20 @@ use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/r1cs_mp_ppzkpcd.tcc
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_MP_PPZKPCD_TCC_
-#define R1CS_MP_PPZKPCD_TCC_
+//#ifndef R1CS_MP_PPZKPCD_TCC_
+// #define R1CS_MP_PPZKPCD_TCC_
 
 use  <algorithm>
 use  <cassert>
 use  <iostream>
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-use  <libsnark/common/libsnark_serialization.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/mp_pcd_circuits.hpp>
+use libsnark/common/libsnark_serialization;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/mp_pcd_circuits;
 
-namespace libsnark {
+
 
 template<typename PCD_ppT>
 size_t r1cs_mp_ppzkpcd_proving_key<PCD_ppT>::size_in_bits() const
@@ -392,14 +392,14 @@ bool r1cs_mp_ppzkpcd_proving_key<PCD_ppT>::is_well_formed() const
 template<typename PCD_ppT>
 bool r1cs_mp_ppzkpcd_proving_key<PCD_ppT>::operator==(const r1cs_mp_ppzkpcd_proving_key<PCD_ppT> &other) const
 {
-    return (this->compliance_predicates == other.compliance_predicates &&
-            this->compliance_step_r1cs_pks == other.compliance_step_r1cs_pks &&
-            this->translation_step_r1cs_pks == other.translation_step_r1cs_pks &&
-            this->compliance_step_r1cs_vks == other.compliance_step_r1cs_vks &&
-            this->translation_step_r1cs_vks == other.translation_step_r1cs_vks &&
-            this->commitment_to_translation_step_r1cs_vks == other.commitment_to_translation_step_r1cs_vks &&
-            this->compliance_step_r1cs_vk_membership_proofs == other.compliance_step_r1cs_vk_membership_proofs &&
-            this->compliance_predicate_name_to_idx == other.compliance_predicate_name_to_idx);
+    return (self.compliance_predicates == other.compliance_predicates &&
+            self.compliance_step_r1cs_pks == other.compliance_step_r1cs_pks &&
+            self.translation_step_r1cs_pks == other.translation_step_r1cs_pks &&
+            self.compliance_step_r1cs_vks == other.compliance_step_r1cs_vks &&
+            self.translation_step_r1cs_vks == other.translation_step_r1cs_vks &&
+            self.commitment_to_translation_step_r1cs_vks == other.commitment_to_translation_step_r1cs_vks &&
+            self.compliance_step_r1cs_vk_membership_proofs == other.compliance_step_r1cs_vk_membership_proofs &&
+            self.compliance_predicate_name_to_idx == other.compliance_predicate_name_to_idx);
 }
 
 template<typename PCD_ppT>
@@ -452,9 +452,9 @@ size_t r1cs_mp_ppzkpcd_verification_key<PCD_ppT>::size_in_bits() const
 template<typename PCD_ppT>
 bool r1cs_mp_ppzkpcd_verification_key<PCD_ppT>::operator==(const r1cs_mp_ppzkpcd_verification_key<PCD_ppT> &other) const
 {
-    return (this->compliance_step_r1cs_vks == other.compliance_step_r1cs_vks &&
-            this->translation_step_r1cs_vks == other.translation_step_r1cs_vks &&
-            this->commitment_to_translation_step_r1cs_vks == other.commitment_to_translation_step_r1cs_vks);
+    return (self.compliance_step_r1cs_vks == other.compliance_step_r1cs_vks &&
+            self.translation_step_r1cs_vks == other.translation_step_r1cs_vks &&
+            self.commitment_to_translation_step_r1cs_vks == other.commitment_to_translation_step_r1cs_vks);
 }
 
 template<typename PCD_ppT>
@@ -462,7 +462,7 @@ std::ostream& operator<<(std::ostream &out, const r1cs_mp_ppzkpcd_verification_k
 {
     out << vk.compliance_step_r1cs_vks;
     out << vk.translation_step_r1cs_vks;
-    libff::output_bool_vector(out, vk.commitment_to_translation_step_r1cs_vks);
+    ffec::output_bool_vector(out, vk.commitment_to_translation_step_r1cs_vks);
 
     return out;
 }
@@ -472,7 +472,7 @@ std::istream& operator>>(std::istream &in, r1cs_mp_ppzkpcd_verification_key<PCD_
 {
     in >> vk.compliance_step_r1cs_vks;
     in >> vk.translation_step_r1cs_vks;
-    libff::input_bool_vector(in, vk.commitment_to_translation_step_r1cs_vks);
+    ffec::input_bool_vector(in, vk.commitment_to_translation_step_r1cs_vks);
 
     return in;
 }
@@ -497,9 +497,9 @@ size_t r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>::size_in_bits() const
 template<typename PCD_ppT>
 bool r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>::operator==(const r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> &other) const
 {
-    return (this->compliance_step_r1cs_pvks == other.compliance_step_r1cs_pvks &&
-            this->translation_step_r1cs_pvks == other.translation_step_r1cs_pvks &&
-            this->commitment_to_translation_step_r1cs_vks == other.commitment_to_translation_step_r1cs_vks);
+    return (self.compliance_step_r1cs_pvks == other.compliance_step_r1cs_pvks &&
+            self.translation_step_r1cs_pvks == other.translation_step_r1cs_pvks &&
+            self.commitment_to_translation_step_r1cs_vks == other.commitment_to_translation_step_r1cs_vks);
 }
 
 template<typename PCD_ppT>
@@ -507,7 +507,7 @@ std::ostream& operator<<(std::ostream &out, const r1cs_mp_ppzkpcd_processed_veri
 {
     out << pvk.compliance_step_r1cs_pvks;
     out << pvk.translation_step_r1cs_pvks;
-    libff::output_bool_vector(out, pvk.commitment_to_translation_step_r1cs_vks);
+    ffec::output_bool_vector(out, pvk.commitment_to_translation_step_r1cs_vks);
 
     return out;
 }
@@ -517,7 +517,7 @@ std::istream& operator>>(std::istream &in, r1cs_mp_ppzkpcd_processed_verificatio
 {
     in >> pvk.compliance_step_r1cs_pvks;
     in >> pvk.translation_step_r1cs_pvks;
-    libff::input_bool_vector(in, pvk.commitment_to_translation_step_r1cs_vks);
+    ffec::input_bool_vector(in, pvk.commitment_to_translation_step_r1cs_vks);
 
     return in;
 }
@@ -525,8 +525,8 @@ std::istream& operator>>(std::istream &in, r1cs_mp_ppzkpcd_processed_verificatio
 template<typename PCD_ppT>
 bool r1cs_mp_ppzkpcd_proof<PCD_ppT>::operator==(const r1cs_mp_ppzkpcd_proof<PCD_ppT> &other) const
 {
-    return (this->compliance_predicate_idx == other.compliance_predicate_idx &&
-            this->r1cs_proof == other.r1cs_proof);
+    return (self.compliance_predicate_idx == other.compliance_predicate_idx &&
+            self.r1cs_proof == other.r1cs_proof);
 }
 
 template<typename PCD_ppT>
@@ -542,7 +542,7 @@ template<typename PCD_ppT>
 std::istream& operator>>(std::istream &in, r1cs_mp_ppzkpcd_proof<PCD_ppT> &proof)
 {
     in >> proof.compliance_predicate_idx;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     in >> proof.r1cs_proof;
 
     return in;
@@ -551,25 +551,25 @@ std::istream& operator>>(std::istream &in, r1cs_mp_ppzkpcd_proof<PCD_ppT> &proof
 template<typename PCD_ppT>
 r1cs_mp_ppzkpcd_keypair<PCD_ppT> r1cs_mp_ppzkpcd_generator(const std::vector<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT> > &compliance_predicates)
 {
-    assert(libff::Fr<typename PCD_ppT::curve_A_pp>::mod == libff::Fq<typename PCD_ppT::curve_B_pp>::mod);
-    assert(libff::Fq<typename PCD_ppT::curve_A_pp>::mod == libff::Fr<typename PCD_ppT::curve_B_pp>::mod);
+    assert!(ffec::Fr<typename PCD_ppT::curve_A_pp>::mod == ffec::Fq<typename PCD_ppT::curve_B_pp>::mod);
+    assert!(ffec::Fq<typename PCD_ppT::curve_A_pp>::mod == ffec::Fr<typename PCD_ppT::curve_B_pp>::mod);
 
     type typename PCD_ppT::curve_A_pp curve_A_pp;
     type typename PCD_ppT::curve_B_pp curve_B_pp;
 
-    type libff::Fr<curve_A_pp> FieldT_A;
-    type libff::Fr<curve_B_pp> FieldT_B;
+    type ffec::Fr<curve_A_pp> FieldT_A;
+    type ffec::Fr<curve_B_pp> FieldT_B;
 
-    libff::enter_block("Call to r1cs_mp_ppzkpcd_generator");
+    ffec::enter_block("Call to r1cs_mp_ppzkpcd_generator");
 
     r1cs_mp_ppzkpcd_keypair<PCD_ppT> keypair;
     const size_t translation_input_size = mp_translation_step_pcd_circuit_maker<curve_B_pp>::input_size_in_elts();
     const size_t vk_size_in_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::size_in_bits(translation_input_size);
-    printf("%zu %zu\n", translation_input_size, vk_size_in_bits);
+    print!("{} {}\n", translation_input_size, vk_size_in_bits);
 
     set_commitment_accumulator<CRH_with_bit_out_gadget<FieldT_A> > all_translation_vks(compliance_predicates.size(), vk_size_in_bits);
 
-    libff::enter_block("Perform type checks");
+    ffec::enter_block("Perform type checks");
     std::map<size_t, size_t> type_counts;
 
     for (auto &cp : compliance_predicates)
@@ -583,78 +583,78 @@ r1cs_mp_ppzkpcd_keypair<PCD_ppT> r1cs_mp_ppzkpcd_generator(const std::vector<r1c
         {
             for (size_t type : cp.accepted_input_types)
             {
-                assert(type_counts[type] == 1); /* each of accepted_input_types must be unique */
+                assert!(type_counts[type] == 1); /* each of accepted_input_types must be unique */
             }
         }
         else
         {
-            assert(cp.accepted_input_types.empty());
+            assert!(cp.accepted_input_types.empty());
         }
     }
-    libff::leave_block("Perform type checks");
+    ffec::leave_block("Perform type checks");
 
     for (size_t i = 0; i < compliance_predicates.size(); ++i)
     {
-        libff::enter_block(FMT("", "Process predicate %zu (with name %zu and type %zu)", i, compliance_predicates[i].name, compliance_predicates[i].type));
-        assert(compliance_predicates[i].is_well_formed());
+        ffec::enter_block(FMT("", "Process predicate {} (with name {} and type {})", i, compliance_predicates[i].name, compliance_predicates[i].type));
+        assert!(compliance_predicates[i].is_well_formed());
 
-        libff::enter_block("Construct compliance step PCD circuit");
+        ffec::enter_block("Construct compliance step PCD circuit");
         mp_compliance_step_pcd_circuit_maker<curve_A_pp> mp_compliance_step_pcd_circuit(compliance_predicates[i], compliance_predicates.size());
         mp_compliance_step_pcd_circuit.generate_r1cs_constraints();
         r1cs_constraint_system<FieldT_A> mp_compliance_step_pcd_circuit_cs = mp_compliance_step_pcd_circuit.get_circuit();
-        libff::leave_block("Construct compliance step PCD circuit");
+        ffec::leave_block("Construct compliance step PCD circuit");
 
-        libff::enter_block("Generate key pair for compliance step PCD circuit");
+        ffec::enter_block("Generate key pair for compliance step PCD circuit");
         r1cs_ppzksnark_keypair<curve_A_pp> mp_compliance_step_keypair = r1cs_ppzksnark_generator<curve_A_pp>(mp_compliance_step_pcd_circuit_cs);
-        libff::leave_block("Generate key pair for compliance step PCD circuit");
+        ffec::leave_block("Generate key pair for compliance step PCD circuit");
 
-        libff::enter_block("Construct translation step PCD circuit");
+        ffec::enter_block("Construct translation step PCD circuit");
         mp_translation_step_pcd_circuit_maker<curve_B_pp> mp_translation_step_pcd_circuit(mp_compliance_step_keypair.vk);
         mp_translation_step_pcd_circuit.generate_r1cs_constraints();
         r1cs_constraint_system<FieldT_B> mp_translation_step_pcd_circuit_cs = mp_translation_step_pcd_circuit.get_circuit();
-        libff::leave_block("Construct translation step PCD circuit");
+        ffec::leave_block("Construct translation step PCD circuit");
 
-        libff::enter_block("Generate key pair for translation step PCD circuit");
+        ffec::enter_block("Generate key pair for translation step PCD circuit");
         r1cs_ppzksnark_keypair<curve_B_pp> mp_translation_step_keypair = r1cs_ppzksnark_generator<curve_B_pp>(mp_translation_step_pcd_circuit_cs);
-        libff::leave_block("Generate key pair for translation step PCD circuit");
+        ffec::leave_block("Generate key pair for translation step PCD circuit");
 
-        libff::enter_block("Augment set of translation step verification keys");
-        const libff::bit_vector vk_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::get_verification_key_bits(mp_translation_step_keypair.vk);
+        ffec::enter_block("Augment set of translation step verification keys");
+        const ffec::bit_vector vk_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::get_verification_key_bits(mp_translation_step_keypair.vk);
         all_translation_vks.add(vk_bits);
-        libff::leave_block("Augment set of translation step verification keys");
+        ffec::leave_block("Augment set of translation step verification keys");
 
-        libff::enter_block("Update r1cs_mp_ppzkpcd keypair");
-        keypair.pk.compliance_predicates.emplace_back(compliance_predicates[i]);
-        keypair.pk.compliance_step_r1cs_pks.emplace_back(mp_compliance_step_keypair.pk);
-        keypair.pk.translation_step_r1cs_pks.emplace_back(mp_translation_step_keypair.pk);
-        keypair.pk.compliance_step_r1cs_vks.emplace_back(mp_compliance_step_keypair.vk);
-        keypair.pk.translation_step_r1cs_vks.emplace_back(mp_translation_step_keypair.vk);
+        ffec::enter_block("Update r1cs_mp_ppzkpcd keypair");
+        keypair.pk.compliance_predicates.push(compliance_predicates[i]);
+        keypair.pk.compliance_step_r1cs_pks.push(mp_compliance_step_keypair.pk);
+        keypair.pk.translation_step_r1cs_pks.push(mp_translation_step_keypair.pk);
+        keypair.pk.compliance_step_r1cs_vks.push(mp_compliance_step_keypair.vk);
+        keypair.pk.translation_step_r1cs_vks.push(mp_translation_step_keypair.vk);
         const size_t cp_name = compliance_predicates[i].name;
-        assert(keypair.pk.compliance_predicate_name_to_idx.find(cp_name) == keypair.pk.compliance_predicate_name_to_idx.end()); // all names must be distinct
+        assert!(keypair.pk.compliance_predicate_name_to_idx.find(cp_name) == keypair.pk.compliance_predicate_name_to_idx.end()); // all names must be distinct
         keypair.pk.compliance_predicate_name_to_idx[cp_name] = i;
 
-        keypair.vk.compliance_step_r1cs_vks.emplace_back(mp_compliance_step_keypair.vk);
-        keypair.vk.translation_step_r1cs_vks.emplace_back(mp_translation_step_keypair.vk);
-        libff::leave_block("Update r1cs_mp_ppzkpcd keypair");
+        keypair.vk.compliance_step_r1cs_vks.push(mp_compliance_step_keypair.vk);
+        keypair.vk.translation_step_r1cs_vks.push(mp_translation_step_keypair.vk);
+        ffec::leave_block("Update r1cs_mp_ppzkpcd keypair");
 
-        libff::leave_block(FMT("", "Process predicate %zu (with name %zu and type %zu)", i, compliance_predicates[i].name, compliance_predicates[i].type));
+        ffec::leave_block(FMT("", "Process predicate {} (with name {} and type {})", i, compliance_predicates[i].name, compliance_predicates[i].type));
     }
 
-    libff::enter_block("Compute set commitment and corresponding membership proofs");
+    ffec::enter_block("Compute set commitment and corresponding membership proofs");
     const set_commitment cm = all_translation_vks.get_commitment();
     keypair.pk.commitment_to_translation_step_r1cs_vks = cm;
     keypair.vk.commitment_to_translation_step_r1cs_vks = cm;
     for (size_t i = 0; i < compliance_predicates.size(); ++i)
     {
-        const libff::bit_vector vk_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::get_verification_key_bits(keypair.vk.translation_step_r1cs_vks[i]);
+        const ffec::bit_vector vk_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::get_verification_key_bits(keypair.vk.translation_step_r1cs_vks[i]);
         const set_membership_proof proof = all_translation_vks.get_membership_proof(vk_bits);
 
-        keypair.pk.compliance_step_r1cs_vk_membership_proofs.emplace_back(proof);
+        keypair.pk.compliance_step_r1cs_vk_membership_proofs.push(proof);
     }
-    libff::leave_block("Compute set commitment and corresponding membership proofs");
+    ffec::leave_block("Compute set commitment and corresponding membership proofs");
 
-    libff::print_indent(); libff::print_mem("in generator");
-    libff::leave_block("Call to r1cs_mp_ppzkpcd_generator");
+    ffec::print_indent(); ffec::print_mem("in generator");
+    ffec::leave_block("Call to r1cs_mp_ppzkpcd_generator");
 
     return keypair;
 }
@@ -669,26 +669,26 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
     type typename PCD_ppT::curve_A_pp curve_A_pp;
     type typename PCD_ppT::curve_B_pp curve_B_pp;
 
-    type libff::Fr<curve_A_pp> FieldT_A;
-    type libff::Fr<curve_B_pp> FieldT_B;
+    type ffec::Fr<curve_A_pp> FieldT_A;
+    type ffec::Fr<curve_B_pp> FieldT_B;
 
-    libff::enter_block("Call to r1cs_mp_ppzkpcd_prover");
+    ffec::enter_block("Call to r1cs_mp_ppzkpcd_prover");
 
-#ifdef DEBUG
-    printf("Compliance predicate name: %zu\n", compliance_predicate_name);
-#endif
+// #ifdef DEBUG
+    print!("Compliance predicate name: {}\n", compliance_predicate_name);
+//#endif
     auto it = pk.compliance_predicate_name_to_idx.find(compliance_predicate_name);
-    assert(it != pk.compliance_predicate_name_to_idx.end());
+    assert!(it != pk.compliance_predicate_name_to_idx.end());
     const size_t compliance_predicate_idx = it->second;
 
-#ifdef DEBUG
-    printf("Outgoing message:\n");
+// #ifdef DEBUG
+    print!("Outgoing message:\n");
     primary_input.outgoing_message->print();
-#endif
+//#endif
 
-    libff::enter_block("Prove compliance step");
-    assert(compliance_predicate_idx < pk.compliance_predicates.size());
-    assert(prev_proofs.size() <= pk.compliance_predicates[compliance_predicate_idx].max_arity);
+    ffec::enter_block("Prove compliance step");
+    assert!(compliance_predicate_idx < pk.compliance_predicates.size());
+    assert!(prev_proofs.size() <= pk.compliance_predicates[compliance_predicate_idx].max_arity);
 
     const size_t arity = prev_proofs.size();
     const size_t max_arity = pk.compliance_predicates[compliance_predicate_idx].max_arity;
@@ -698,7 +698,7 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
         const size_t input_predicate_idx = prev_proofs[0].compliance_predicate_idx;
         for (size_t i = 1; i < arity; ++i)
         {
-            assert(prev_proofs[i].compliance_predicate_idx == input_predicate_idx);
+            assert!(prev_proofs[i].compliance_predicate_idx == input_predicate_idx);
         }
     }
 
@@ -714,31 +714,31 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
     for (size_t i = 0; i < arity; ++i)
     {
         const size_t input_predicate_idx = prev_proofs[i].compliance_predicate_idx;
-        translation_step_vks.emplace_back(pk.translation_step_r1cs_vks[input_predicate_idx]);
-        membership_proofs.emplace_back(pk.compliance_step_r1cs_vk_membership_proofs[input_predicate_idx]);
+        translation_step_vks.push(pk.translation_step_r1cs_vks[input_predicate_idx]);
+        membership_proofs.push(pk.compliance_step_r1cs_vk_membership_proofs[input_predicate_idx]);
 
-#ifdef DEBUG
+// #ifdef DEBUG
         if (auxiliary_input.incoming_messages[i]->type != 0)
         {
-            printf("check proof for message %zu\n", i);
+            print!("check proof for message {}\n", i);
             const r1cs_primary_input<FieldT_B> translated_msg = get_mp_translation_step_pcd_circuit_input<curve_B_pp>(pk.commitment_to_translation_step_r1cs_vks,
                                                                                                                       auxiliary_input.incoming_messages[i]);
             const bool bit = r1cs_ppzksnark_verifier_strong_IC<curve_B_pp>(translation_step_vks[i], translated_msg, padded_proofs[i]);
-            assert(bit);
+            assert!(bit);
         }
         else
         {
-            printf("message %zu is base case\n", i);
+            print!("message {} is base case\n", i);
         }
-#endif
+//#endif
     }
 
     /* pad with dummy vks/membership proofs */
     for (size_t i = arity; i < max_arity; ++i)
     {
-        printf("proof %zu will be a dummy\n", arity);
-        translation_step_vks.emplace_back(pk.translation_step_r1cs_vks[0]);
-        membership_proofs.emplace_back(pk.compliance_step_r1cs_vk_membership_proofs[0]);
+        print!("proof {} will be a dummy\n", arity);
+        translation_step_vks.push(pk.translation_step_r1cs_vks[0]);
+        membership_proofs.push(pk.compliance_step_r1cs_vk_membership_proofs[0]);
     }
 
     mp_compliance_step_pcd_circuit_maker<curve_A_pp> mp_compliance_step_pcd_circuit(pk.compliance_predicates[compliance_predicate_idx], pk.compliance_predicates.size());
@@ -753,15 +753,15 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
     const r1cs_primary_input<FieldT_A> compliance_step_primary_input = mp_compliance_step_pcd_circuit.get_primary_input();
     const r1cs_auxiliary_input<FieldT_A> compliance_step_auxiliary_input = mp_compliance_step_pcd_circuit.get_auxiliary_input();
     const r1cs_ppzksnark_proof<curve_A_pp> compliance_step_proof = r1cs_ppzksnark_prover<curve_A_pp>(pk.compliance_step_r1cs_pks[compliance_predicate_idx], compliance_step_primary_input, compliance_step_auxiliary_input);
-    libff::leave_block("Prove compliance step");
+    ffec::leave_block("Prove compliance step");
 
-#ifdef DEBUG
+// #ifdef DEBUG
     const r1cs_primary_input<FieldT_A> compliance_step_input = get_mp_compliance_step_pcd_circuit_input<curve_A_pp>(pk.commitment_to_translation_step_r1cs_vks, primary_input.outgoing_message);
     const bool compliance_step_ok = r1cs_ppzksnark_verifier_strong_IC<curve_A_pp>(pk.compliance_step_r1cs_vks[compliance_predicate_idx], compliance_step_input, compliance_step_proof);
-    assert(compliance_step_ok);
-#endif
+    assert!(compliance_step_ok);
+//#endif
 
-    libff::enter_block("Prove translation step");
+    ffec::enter_block("Prove translation step");
     mp_translation_step_pcd_circuit_maker<curve_B_pp> mp_translation_step_pcd_circuit(pk.compliance_step_r1cs_vks[compliance_predicate_idx]);
 
     const r1cs_primary_input<FieldT_B> translation_step_primary_input = get_mp_translation_step_pcd_circuit_input<curve_B_pp>(pk.commitment_to_translation_step_r1cs_vks, primary_input);
@@ -770,15 +770,15 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
 
     const r1cs_ppzksnark_proof<curve_B_pp> translation_step_proof = r1cs_ppzksnark_prover<curve_B_pp>(pk.translation_step_r1cs_pks[compliance_predicate_idx], translation_step_primary_input, translation_step_auxiliary_input);
 
-    libff::leave_block("Prove translation step");
+    ffec::leave_block("Prove translation step");
 
-#ifdef DEBUG
+// #ifdef DEBUG
     const bool translation_step_ok = r1cs_ppzksnark_verifier_strong_IC<curve_B_pp>(pk.translation_step_r1cs_vks[compliance_predicate_idx], translation_step_primary_input, translation_step_proof);
-    assert(translation_step_ok);
-#endif
+    assert!(translation_step_ok);
+//#endif
 
-    libff::print_indent(); libff::print_mem("in prover");
-    libff::leave_block("Call to r1cs_mp_ppzkpcd_prover");
+    ffec::print_indent(); ffec::print_mem("in prover");
+    ffec::leave_block("Call to r1cs_mp_ppzkpcd_prover");
 
     r1cs_mp_ppzkpcd_proof<PCD_ppT> result;
     result.compliance_predicate_idx = compliance_predicate_idx;
@@ -793,12 +793,12 @@ bool r1cs_mp_ppzkpcd_online_verifier(const r1cs_mp_ppzkpcd_processed_verificatio
 {
     type typename PCD_ppT::curve_B_pp curve_B_pp;
 
-    libff::enter_block("Call to r1cs_mp_ppzkpcd_online_verifier");
-    const r1cs_primary_input<libff::Fr<curve_B_pp> > r1cs_input = get_mp_translation_step_pcd_circuit_input<curve_B_pp>(pvk.commitment_to_translation_step_r1cs_vks, primary_input);
+    ffec::enter_block("Call to r1cs_mp_ppzkpcd_online_verifier");
+    const r1cs_primary_input<ffec::Fr<curve_B_pp> > r1cs_input = get_mp_translation_step_pcd_circuit_input<curve_B_pp>(pvk.commitment_to_translation_step_r1cs_vks, primary_input);
     const bool result = r1cs_ppzksnark_online_verifier_strong_IC(pvk.translation_step_r1cs_pvks[proof.compliance_predicate_idx], r1cs_input, proof.r1cs_proof);
 
-    libff::print_indent(); libff::print_mem("in online verifier");
-    libff::leave_block("Call to r1cs_mp_ppzkpcd_online_verifier");
+    ffec::print_indent(); ffec::print_mem("in online verifier");
+    ffec::leave_block("Call to r1cs_mp_ppzkpcd_online_verifier");
     return result;
 }
 
@@ -808,7 +808,7 @@ r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> r1cs_mp_ppzkpcd_process_vk(c
     type typename PCD_ppT::curve_A_pp curve_A_pp;
     type typename PCD_ppT::curve_B_pp curve_B_pp;
 
-    libff::enter_block("Call to r1cs_mp_ppzkpcd_processed_verification_key");
+    ffec::enter_block("Call to r1cs_mp_ppzkpcd_processed_verification_key");
 
     r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> result;
     result.commitment_to_translation_step_r1cs_vks = vk.commitment_to_translation_step_r1cs_vks;
@@ -818,10 +818,10 @@ r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> r1cs_mp_ppzkpcd_process_vk(c
         const r1cs_ppzksnark_processed_verification_key<curve_A_pp> compliance_step_r1cs_pvk = r1cs_ppzksnark_verifier_process_vk<curve_A_pp>(vk.compliance_step_r1cs_vks[i]);
         const r1cs_ppzksnark_processed_verification_key<curve_B_pp> translation_step_r1cs_pvk = r1cs_ppzksnark_verifier_process_vk<curve_B_pp>(vk.translation_step_r1cs_vks[i]);
 
-        result.compliance_step_r1cs_pvks.emplace_back(compliance_step_r1cs_pvk);
-        result.translation_step_r1cs_pvks.emplace_back(translation_step_r1cs_pvk);
+        result.compliance_step_r1cs_pvks.push(compliance_step_r1cs_pvk);
+        result.translation_step_r1cs_pvks.push(translation_step_r1cs_pvk);
     }
-    libff::leave_block("Call to r1cs_mp_ppzkpcd_processed_verification_key");
+    ffec::leave_block("Call to r1cs_mp_ppzkpcd_processed_verification_key");
 
     return result;
 }
@@ -832,16 +832,16 @@ bool r1cs_mp_ppzkpcd_verifier(const r1cs_mp_ppzkpcd_verification_key<PCD_ppT> &v
                               const r1cs_mp_ppzkpcd_primary_input<PCD_ppT> &primary_input,
                               const r1cs_mp_ppzkpcd_proof<PCD_ppT> &proof)
 {
-    libff::enter_block("Call to r1cs_mp_ppzkpcd_verifier");
+    ffec::enter_block("Call to r1cs_mp_ppzkpcd_verifier");
     r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> pvk = r1cs_mp_ppzkpcd_process_vk(vk);
     const bool result = r1cs_mp_ppzkpcd_online_verifier(pvk, primary_input, proof);
 
-    libff::print_indent(); libff::print_mem("in verifier");
-    libff::leave_block("Call to r1cs_mp_ppzkpcd_verifier");
+    ffec::print_indent(); ffec::print_mem("in verifier");
+    ffec::leave_block("Call to r1cs_mp_ppzkpcd_verifier");
     return result;
 }
 
 
-} // libsnark
 
-#endif // R1CS_MP_PPZKPCD_TCC_
+
+//#endif // R1CS_MP_PPZKPCD_TCC_

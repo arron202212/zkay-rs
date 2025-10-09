@@ -9,23 +9,23 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef DELEGATED_RA_MEMORY_HPP_
-#define DELEGATED_RA_MEMORY_HPP_
+//#ifndef DELEGATED_RA_MEMORY_HPP_
+// #define DELEGATED_RA_MEMORY_HPP_
 
 use  <map>
 use  <memory>
 use  <vector>
 
-use  <libsnark/common/data_structures/merkle_tree.hpp>
-use  <libsnark/relations/ram_computations/memory/memory_interface.hpp>
+use crate::common::data_structures::merkle_tree;
+use libsnark/relations/ram_computations/memory/memory_interface;
 
-namespace libsnark {
+
 
 template<typename HashT>
 class delegated_ra_memory : public memory_interface {
 private:
-    libff::bit_vector int_to_tree_elem(const size_t i) const;
-    size_t int_from_tree_elem(const libff::bit_vector &v) const;
+    ffec::bit_vector int_to_tree_elem(const size_t i) const;
+    size_t int_from_tree_elem(const ffec::bit_vector &v) const;
 
     std::unique_ptr<merkle_tree<HashT> > contents;
 
@@ -43,11 +43,11 @@ public:
     void dump() const;
 };
 
-} // libsnark
 
-use  <libsnark/relations/ram_computations/memory/delegated_ra_memory.tcc>
 
-#endif // DELEGATED_RA_MEMORY_HPP_
+use libsnark/relations/ram_computations/memory/delegated_ra_memory;
+
+//#endif // DELEGATED_RA_MEMORY_HPP_
 /** @file
  *****************************************************************************
 
@@ -61,20 +61,20 @@ use  <libsnark/relations/ram_computations/memory/delegated_ra_memory.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef DELEGATED_RA_MEMORY_TCC
-#define DELEGATED_RA_MEMORY_TCC
+//#ifndef DELEGATED_RA_MEMORY_TCC
+// #define DELEGATED_RA_MEMORY_TCC
 
 use  <algorithm>
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-namespace libsnark {
+
 
 template<typename HashT>
-libff::bit_vector delegated_ra_memory<HashT>::int_to_tree_elem(const size_t i) const
+ffec::bit_vector delegated_ra_memory<HashT>::int_to_tree_elem(const size_t i) const
 {
-    libff::bit_vector v(value_size, false);
+    ffec::bit_vector v(value_size, false);
     for (size_t k = 0; k < value_size; ++k)
     {
         v[k] = ((i & (1ul << k)) != 0);
@@ -83,7 +83,7 @@ libff::bit_vector delegated_ra_memory<HashT>::int_to_tree_elem(const size_t i) c
 }
 
 template<typename HashT>
-size_t delegated_ra_memory<HashT>::int_from_tree_elem(const libff::bit_vector &v) const
+size_t delegated_ra_memory<HashT>::int_from_tree_elem(const ffec::bit_vector &v) const
 {
     size_t result = 0;
     for (size_t i = 0; i < value_size; ++i)
@@ -99,7 +99,7 @@ delegated_ra_memory<HashT>::delegated_ra_memory(const size_t num_addresses,
                                                 const size_t value_size) :
     memory_interface(num_addresses, value_size)
 {
-    contents.reset(new merkle_tree<HashT>(libff::log2(num_addresses), value_size));
+    contents.reset(new merkle_tree<HashT>(ffec::log2(num_addresses), value_size));
 }
 
 template<typename HashT>
@@ -108,9 +108,9 @@ delegated_ra_memory<HashT>::delegated_ra_memory(const size_t num_addresses,
                                                 const std::vector<size_t> &contents_as_vector) :
     memory_interface(num_addresses, value_size)
 {
-    std::vector<libff::bit_vector> contents_as_bit_vector_vector(contents.size());
+    std::vector<ffec::bit_vector> contents_as_bit_vector_vector(contents.size());
     std::transform(contents_as_vector.begin(), contents_as_vector.end(), contents_as_bit_vector_vector, [this](size_t value) { return int_to_tree_elem(value); });
-    contents.reset(new merkle_tree<HashT>(libff::log2(num_addresses), value_size, contents_as_bit_vector_vector));
+    contents.reset(new merkle_tree<HashT>(ffec::log2(num_addresses), value_size, contents_as_bit_vector_vector));
 }
 
 template<typename HashT>
@@ -119,13 +119,13 @@ delegated_ra_memory<HashT>::delegated_ra_memory(const size_t num_addresses,
                                                 const std::map<size_t, size_t> &contents_as_map) :
     memory_interface(num_addresses, value_size)
 {
-    std::map<size_t, libff::bit_vector> contents_as_bit_vector_map;
+    std::map<size_t, ffec::bit_vector> contents_as_bit_vector_map;
     for (auto &it : contents_as_map)
     {
         contents_as_bit_vector_map[it.first] = int_to_tree_elem(it.second);
     }
 
-    contents.reset(new merkle_tree<HashT>(libff::log2(num_addresses), value_size, contents_as_bit_vector_map));
+    contents.reset(new merkle_tree<HashT>(ffec::log2(num_addresses), value_size, contents_as_bit_vector_map));
 }
 
 template<typename HashT>
@@ -159,6 +159,6 @@ void delegated_ra_memory<HashT>::dump() const
     contents->dump();
 }
 
-} // libsnark
 
-#endif // DELEGATED_RA_MEMORY_TCC
+
+//#endif // DELEGATED_RA_MEMORY_TCC

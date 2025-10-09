@@ -9,16 +9,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT6_PP_HPP_
-#define MNT6_PP_HPP_
+//#ifndef MNT6_PP_HPP_
+// #define MNT6_PP_HPP_
 
-#include <libff/algebra/curves/mnt/mnt6/mnt6_g1.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_g2.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_init.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_pairing.hpp>
-#include <libff/algebra/curves/public_params.hpp>
+use libff/algebra/curves/mnt/mnt6/mnt6_g1;
+use libff/algebra/curves/mnt/mnt6/mnt6_g2;
+use libff/algebra/curves/mnt/mnt6/mnt6_init;
+use libff/algebra/curves/mnt/mnt6/mnt6_pairing;
+use libff/algebra/curves/public_params;
 
-namespace libff {
+// namespace libff {
 
 class mnt6_pp {
 public:
@@ -70,9 +70,9 @@ public:
                                            const mnt6_G2 &Q);
 };
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT6_PP_HPP_
+//#endif // MNT6_PP_HPP_
 /** @file
  *****************************************************************************
 
@@ -86,9 +86,9 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt6/mnt6_pp.hpp>
+use libff/algebra/curves/mnt/mnt6/mnt6_pp;
 
-namespace libff {
+// namespace libff {
 
 void mnt6_pp::init_public_params()
 {
@@ -178,4 +178,4 @@ mnt6_Fq6 mnt6_pp::affine_reduced_pairing(const mnt6_G1 &P,
     return mnt6_affine_reduced_pairing(P, Q);
 }
 
-} // namespace libff
+// } // namespace libff

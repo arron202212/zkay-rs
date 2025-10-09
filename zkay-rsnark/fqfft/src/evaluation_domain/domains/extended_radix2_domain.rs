@@ -12,10 +12,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EXTENDED_RADIX2_DOMAIN_HPP_
-#define EXTENDED_RADIX2_DOMAIN_HPP_
+//#ifndef EXTENDED_RADIX2_DOMAIN_HPP_
+// #define EXTENDED_RADIX2_DOMAIN_HPP_
 
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use libfqfft/evaluation_domain/evaluation_domain;
 
 namespace libfqfft {
 
@@ -43,9 +43,9 @@ class extended_radix2_domain : public evaluation_domain<FieldT> {
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/domains/extended_radix2_domain.tcc>
+use libfqfft/evaluation_domain/domains/extended_radix2_domain.tcc;
 
-#endif // EXTENDED_RADIX2_DOMAIN_HPP_
+//#endif // EXTENDED_RADIX2_DOMAIN_HPP_
 
 
 /** @file
@@ -61,9 +61,9 @@ class extended_radix2_domain : public evaluation_domain<FieldT> {
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EXTENDED_RADIX2_DOMAIN_TCC_
+//#ifndef EXTENDED_RADIX2_DOMAIN_TCC_
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
 
 namespace libfqfft {
 
@@ -233,4 +233,4 @@ void extended_radix2_domain<FieldT>::divide_by_Z_on_coset(std::vector<FieldT> &P
 
 } // libfqfft
 
-#endif // EXTENDED_RADIX2_DOMAIN_TCC_
+//#endif // EXTENDED_RADIX2_DOMAIN_TCC_

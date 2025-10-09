@@ -6,15 +6,15 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include <cmath>
-#include <complex>
+//#include <cmath>
+//#include <complex>
 
-#include <math.h>
+//#include <math.h>
 
-#include <libff/algebra/field_utils/bigint.hpp>
-#include <libff/common/double.hpp>
+use crate::algebra::field_utils::bigint;
+use crate::common::double;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -45,27 +45,27 @@ unsigned Double::inv_cnt = 0;
 
 Double Double::operator+(const Double &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++add_cnt;
-#endif
+//#endif
 
     return Double(val + other.val);
 }
 
 Double Double::operator-(const Double &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++sub_cnt;
-#endif
+//#endif
 
     return Double(val - other.val);
 }
 
 Double Double::operator*(const Double &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++mul_cnt;
-#endif
+//#endif
 
     return Double(val * other.val);
 }
@@ -81,9 +81,9 @@ Double Double::operator-() const
 
 Double& Double::operator+=(const Double &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++add_cnt;
-#endif
+//#endif
 
     this->val = std::complex<double>(val + other.val);
     return *this;
@@ -91,9 +91,9 @@ Double& Double::operator+=(const Double &other)
 
 Double& Double::operator-=(const Double &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++sub_cnt;
-#endif
+//#endif
 
     this->val = std::complex<double>(val - other.val);
     return *this;
@@ -101,9 +101,9 @@ Double& Double::operator-=(const Double &other)
 
 Double& Double::operator*=(const Double &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++mul_cnt;
-#endif
+//#endif
 
     this->val *= std::complex<double>(other.val);
     return *this;
@@ -142,9 +142,9 @@ Double Double::operator^(const size_t power) const
 
 Double Double::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     ++inv_cnt;
-#endif
+//#endif
 
     return Double(std::complex<double>(1) / val);
 }
@@ -191,4 +191,4 @@ Double Double::arithmetic_generator()
 
 Double Double::multiplicative_generator = Double(2);
 
-} // namespace libff
+// } // namespace libff

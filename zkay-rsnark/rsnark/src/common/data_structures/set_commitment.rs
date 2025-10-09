@@ -9,17 +9,17 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SET_COMMITMENT_HPP_
-#define SET_COMMITMENT_HPP_
+//#ifndef SET_COMMITMENT_HPP_
+// #define SET_COMMITMENT_HPP_
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/common/data_structures/merkle_tree.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/hash_io.hpp> // TODO: the current structure is suboptimal
+use crate::common::data_structures::merkle_tree;
+use libsnark/gadgetlib1/gadgets/hashes/hash_io; // TODO: the current structure is suboptimal
 
-namespace libsnark {
 
-type libff::bit_vector set_commitment;
+
+type ffec::bit_vector set_commitment;
 
 struct set_membership_proof {
     size_t address;
@@ -35,7 +35,7 @@ template<typename HashT>
 class set_commitment_accumulator {
 private:
     std::shared_ptr<merkle_tree<HashT> > tree;
-    std::map<libff::bit_vector, size_t> hash_to_pos;
+    std::map<ffec::bit_vector, size_t> hash_to_pos;
 public:
 
     size_t depth;
@@ -44,21 +44,21 @@ public:
 
     set_commitment_accumulator(const size_t max_entries, const size_t value_size=0);
 
-    void add(const libff::bit_vector &value);
-    bool is_in_set(const libff::bit_vector &value) const;
+    void add(const ffec::bit_vector &value);
+    bool is_in_set(const ffec::bit_vector &value) const;
     set_commitment get_commitment() const;
 
-    set_membership_proof get_membership_proof(const libff::bit_vector &value) const;
+    set_membership_proof get_membership_proof(const ffec::bit_vector &value) const;
 };
 
-} // libsnark
+
 
 /* note that set_commitment has both .cpp, for implementation of
    non-templatized code (methods of set_membership_proof) and .tcc
    (implementation of set_commitment_accumulator<HashT> */
-use  <libsnark/common/data_structures/set_commitment.tcc>
+use libsnark::common::data_structures::set_commitment;
 
-#endif // SET_COMMITMENT_HPP_
+//#endif // SET_COMMITMENT_HPP_
 /**
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -66,16 +66,16 @@ use  <libsnark/common/data_structures/set_commitment.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libff/common/serialization.hpp>
+use ffec::common::serialization;
 
-use  <libsnark/common/data_structures/set_commitment.hpp>
+use crate::common::data_structures::set_commitment;
 
-namespace libsnark {
+
 
 bool set_membership_proof::operator==(const set_membership_proof &other) const
 {
-    return (this->address == other.address &&
-            this->merkle_path == other.merkle_path);
+    return (self.address == other.address &&
+            self.merkle_path == other.merkle_path);
 }
 
 size_t set_membership_proof::size_in_bits() const
@@ -96,7 +96,7 @@ std::ostream& operator<<(std::ostream &out, const set_membership_proof &proof)
     out << proof.merkle_path.size() << "\n";
     for (size_t i = 0; i < proof.merkle_path.size(); ++i)
     {
-        libff::output_bool_vector(out, proof.merkle_path[i]);
+        ffec::output_bool_vector(out, proof.merkle_path[i]);
     }
 
     return out;
@@ -105,21 +105,21 @@ std::ostream& operator<<(std::ostream &out, const set_membership_proof &proof)
 std::istream& operator>>(std::istream &in, set_membership_proof &proof)
 {
     in >> proof.address;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     size_t tree_depth;
     in >> tree_depth;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     proof.merkle_path.resize(tree_depth);
 
     for (size_t i = 0; i < tree_depth; ++i)
     {
-        libff::input_bool_vector(in, proof.merkle_path[i]);
+        ffec::input_bool_vector(in, proof.merkle_path[i]);
     }
 
     return in;
 }
 
-} // libsnark
+
 /** @file
  *****************************************************************************
 
@@ -131,26 +131,26 @@ std::istream& operator>>(std::istream &in, set_membership_proof &proof)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SET_COMMITMENT_TCC_
-#define SET_COMMITMENT_TCC_
+//#ifndef SET_COMMITMENT_TCC_
+// #define SET_COMMITMENT_TCC_
 
-namespace libsnark {
+
 
 template<typename HashT>
 set_commitment_accumulator<HashT>::set_commitment_accumulator(const size_t max_entries, const size_t value_size) :
     value_size(value_size)
 {
-    depth = libff::log2(max_entries);
+    depth = ffec::log2(max_entries);
     digest_size = HashT::get_digest_len();
 
     tree.reset(new merkle_tree<HashT>(depth, digest_size));
 }
 
 template<typename HashT>
-void set_commitment_accumulator<HashT>::add(const libff::bit_vector &value)
+void set_commitment_accumulator<HashT>::add(const ffec::bit_vector &value)
 {
-    assert(value_size == 0 || value.size() == value_size);
-    const libff::bit_vector hash = HashT::get_hash(value);
+    assert!(value_size == 0 || value.size() == value_size);
+    const ffec::bit_vector hash = HashT::get_hash(value);
     if (hash_to_pos.find(hash) == hash_to_pos.end())
     {
         const size_t pos = hash_to_pos.size();
@@ -160,10 +160,10 @@ void set_commitment_accumulator<HashT>::add(const libff::bit_vector &value)
 }
 
 template<typename HashT>
-bool set_commitment_accumulator<HashT>::is_in_set(const libff::bit_vector &value) const
+bool set_commitment_accumulator<HashT>::is_in_set(const ffec::bit_vector &value) const
 {
-    assert(value_size == 0 || value.size() == value_size);
-    const libff::bit_vector hash = HashT::get_hash(value);
+    assert!(value_size == 0 || value.size() == value_size);
+    const ffec::bit_vector hash = HashT::get_hash(value);
     return (hash_to_pos.find(hash) != hash_to_pos.end());
 }
 
@@ -174,11 +174,11 @@ set_commitment set_commitment_accumulator<HashT>::get_commitment() const
 }
 
 template<typename HashT>
-set_membership_proof set_commitment_accumulator<HashT>::get_membership_proof(const libff::bit_vector &value) const
+set_membership_proof set_commitment_accumulator<HashT>::get_membership_proof(const ffec::bit_vector &value) const
 {
-    const libff::bit_vector hash = HashT::get_hash(value);
+    const ffec::bit_vector hash = HashT::get_hash(value);
     auto it = hash_to_pos.find(hash);
-    assert(it != hash_to_pos.end());
+    assert!(it != hash_to_pos.end());
 
     set_membership_proof proof;
     proof.address = it->second;
@@ -187,6 +187,6 @@ set_membership_proof set_commitment_accumulator<HashT>::get_membership_proof(con
     return proof;
 }
 
-} // libsnark
 
-#endif // SET_COMMITMENT_TCC_
+
+//#endif // SET_COMMITMENT_TCC_

@@ -11,10 +11,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef GEOMETRIC_SEQUENCE_DOMAIN_HPP
-#define GEOMETRIC_SEQUENCE_DOMAIN_HPP
+//#ifndef GEOMETRIC_SEQUENCE_DOMAIN_HPP
+// #define GEOMETRIC_SEQUENCE_DOMAIN_HPP
 
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use libfqfft/evaluation_domain/evaluation_domain;
 
 namespace libfqfft {
 
@@ -43,9 +43,9 @@ namespace libfqfft {
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/domains/geometric_sequence_domain.tcc>
+use libfqfft/evaluation_domain/domains/geometric_sequence_domain.tcc;
 
-#endif // GEOMETRIC_SEQUENCE_DOMAIN_HPP
+//#endif // GEOMETRIC_SEQUENCE_DOMAIN_HPP
 
 
 
@@ -62,15 +62,15 @@ namespace libfqfft {
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef GEOMETRIC_SEQUENCE_DOMAIN_TCC_
-#define GEOMETRIC_SEQUENCE_DOMAIN_TCC_
+//#ifndef GEOMETRIC_SEQUENCE_DOMAIN_TCC_
+// #define GEOMETRIC_SEQUENCE_DOMAIN_TCC_
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
-#include <libfqfft/polynomial_arithmetic/basis_change.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
+use libfqfft/polynomial_arithmetic/basis_change;
 
-#ifdef MULTICORE
-#include <omp.h>
-#endif
+// #ifdef MULTICORE
+//#include <omp.h>
+//#endif
 
 namespace libfqfft {
 
@@ -109,9 +109,9 @@ void geometric_sequence_domain<FieldT>::FFT(std::vector<FieldT> &a)
   _polynomial_multiplication(a, g, T);
   a.resize(this->m);
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
   #pragma omp parallel for
-#endif
+//#endif
   for i in 0..this->m
   {
     a[i] *= T[i].inverse();
@@ -145,9 +145,9 @@ void geometric_sequence_domain<FieldT>::iFFT(std::vector<FieldT> &a)
   _polynomial_multiplication(a, W, T);
   a.resize(this->m);
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
   #pragma omp parallel for
-#endif
+//#endif
   for i in 0..this->m
   {
     a[i] *= this->geometric_triangular_sequence[i].inverse();
@@ -277,9 +277,9 @@ void geometric_sequence_domain<FieldT>::add_poly_Z(const FieldT &coeff, std::vec
     _polynomial_multiplication(x, x, t);
   }
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
   #pragma omp parallel for
-#endif
+//#endif
   for i in 0..this->m+1
   {
     H[i] += (x[i] * coeff);
@@ -317,4 +317,4 @@ void geometric_sequence_domain<FieldT>::do_precomputation()
 
 } // libfqfft
 
-#endif // GEOMETRIC_SEQUENCE_DOMAIN_TCC_
+//#endif // GEOMETRIC_SEQUENCE_DOMAIN_TCC_

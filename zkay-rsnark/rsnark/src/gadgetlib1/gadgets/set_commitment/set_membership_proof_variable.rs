@@ -5,15 +5,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SET_MEMBERSHIP_PROOF_VARIABLE_HPP_
-#define SET_MEMBERSHIP_PROOF_VARIABLE_HPP_
+//#ifndef SET_MEMBERSHIP_PROOF_VARIABLE_HPP_
+// #define SET_MEMBERSHIP_PROOF_VARIABLE_HPP_
 
-use  <libsnark/common/data_structures/set_commitment.hpp>
-use  <libsnark/gadgetlib1/gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/hash_io.hpp>
-use  <libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable.hpp>
+use crate::common::data_structures::set_commitment;
+use libsnark/gadgetlib1/gadget;
+use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable;
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 class set_membership_proof_variable : public gadget<FieldT> {
@@ -36,11 +36,11 @@ public:
     static r1cs_variable_assignment<FieldT> as_r1cs_variable_assignment(const set_membership_proof &proof);
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable.tcc>
 
-#endif // SET_MEMBERSHIP_PROOF_VARIABLE_HPP
+use libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable;
+
+//#endif // SET_MEMBERSHIP_PROOF_VARIABLE_HPP
 /**
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -48,10 +48,10 @@ use  <libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable.t
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SET_MEMBERSHIP_PROOF_VARIABLE_TCC_
-#define SET_MEMBERSHIP_PROOF_VARIABLE_TCC_
+//#ifndef SET_MEMBERSHIP_PROOF_VARIABLE_TCC_
+// #define SET_MEMBERSHIP_PROOF_VARIABLE_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 set_membership_proof_variable<FieldT, HashT>::set_membership_proof_variable(protoboard<FieldT> &pb,
@@ -59,7 +59,7 @@ set_membership_proof_variable<FieldT, HashT>::set_membership_proof_variable(prot
                                                                             const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix),
     max_entries(max_entries),
-    tree_depth(libff::log2(max_entries))
+    tree_depth(ffec::log2(max_entries))
 {
     if (tree_depth > 0)
     {
@@ -75,7 +75,7 @@ void set_membership_proof_variable<FieldT, HashT>::generate_r1cs_constraints()
     {
         for (size_t i = 0; i < tree_depth; ++i)
         {
-            generate_boolean_r1cs_constraint<FieldT>(this->pb, address_bits[i], FMT(this->annotation_prefix, " address_bits"));
+            generate_boolean_r1cs_constraint<FieldT>(self.pb, address_bits[i], FMT(self.annotation_prefix, " address_bits"));
         }
         merkle_path->generate_r1cs_constraints();
     }
@@ -86,7 +86,7 @@ void set_membership_proof_variable<FieldT, HashT>::generate_r1cs_witness(const s
 {
     if (tree_depth > 0)
     {
-        address_bits.fill_with_bits_of_field_element(this->pb, FieldT(proof.address));
+        address_bits.fill_with_bits_of_field_element(self.pb, FieldT(proof.address));
         merkle_path->generate_r1cs_witness(proof.address, proof.merkle_path);
     }
 }
@@ -102,7 +102,7 @@ set_membership_proof set_membership_proof_variable<FieldT, HashT>::get_membershi
     }
     else
     {
-        result.address = address_bits.get_field_element_from_bits(this->pb).as_ulong();
+        result.address = address_bits.get_field_element_from_bits(self.pb).as_ulong();
         result.merkle_path = merkle_path->get_authentication_path(result.address);
     }
 
@@ -120,6 +120,6 @@ r1cs_variable_assignment<FieldT> set_membership_proof_variable<FieldT, HashT>::a
     return pb.full_variable_assignment();
 }
 
-} // libsnark
 
-#endif // SET_MEMBERSHIP_PROOF_VARIABLE_TCC
+
+//#endif // SET_MEMBERSHIP_PROOF_VARIABLE_TCC

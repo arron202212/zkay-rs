@@ -10,14 +10,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_R1CS_SE_PPZKSNARK_HPP_
-#define RUN_R1CS_SE_PPZKSNARK_HPP_
+//#ifndef RUN_R1CS_SE_PPZKSNARK_HPP_
+// #define RUN_R1CS_SE_PPZKSNARK_HPP_
 
-use  <libff/common/default_types/ec_pp.hpp>
+use ffec::common::default_types::ec_pp;
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 
-namespace libsnark {
+
 
 /**
  * Runs the SEppzkSNARK (generator, prover, and verifier) for a given
@@ -27,14 +27,14 @@ namespace libsnark {
  * (This takes additional time.)
  */
 template<typename ppT>
-bool run_r1cs_se_ppzksnark(const r1cs_example<libff::Fr<ppT> > &example,
+bool run_r1cs_se_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
                            const bool test_serialization);
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/examples/run_r1cs_se_ppzksnark.tcc>
 
-#endif // RUN_R1CS_SE_PPZKSNARK_HPP_
+use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples/run_r1cs_se_ppzksnark;
+
+//#endif // RUN_R1CS_SE_PPZKSNARK_HPP_
 /** @file
  *****************************************************************************
 
@@ -49,17 +49,17 @@ use  <libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/examples/run_r1cs_se
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_R1CS_SE_PPZKSNARK_TCC_
-#define RUN_R1CS_SE_PPZKSNARK_TCC_
+//#ifndef RUN_R1CS_SE_PPZKSNARK_TCC_
+// #define RUN_R1CS_SE_PPZKSNARK_TCC_
 
 use  <sstream>
 use  <type_traits>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/r1cs_se_ppzksnark.hpp>
+use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
 
-namespace libsnark {
+
 
 /**
  * The code below provides an example of all stages of running a R1CS SEppzkSNARK.
@@ -74,52 +74,52 @@ namespace libsnark {
  *     a primary input for CS, and a proof.
  */
 template<typename ppT>
-bool run_r1cs_se_ppzksnark(const r1cs_example<libff::Fr<ppT> > &example,
+bool run_r1cs_se_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
                         const bool test_serialization)
 {
-    libff::enter_block("Call to run_r1cs_se_ppzksnark");
+    ffec::enter_block("Call to run_r1cs_se_ppzksnark");
 
-    libff::print_header("R1CS SEppzkSNARK Generator");
+    ffec::print_header("R1CS SEppzkSNARK Generator");
     r1cs_se_ppzksnark_keypair<ppT> keypair = r1cs_se_ppzksnark_generator<ppT>(example.constraint_system);
-    printf("\n"); libff::print_indent(); libff::print_mem("after generator");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
 
-    libff::print_header("Preprocess verification key");
+    ffec::print_header("Preprocess verification key");
     r1cs_se_ppzksnark_processed_verification_key<ppT> pvk = r1cs_se_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of keys");
-        keypair.pk = libff::reserialize<r1cs_se_ppzksnark_proving_key<ppT> >(keypair.pk);
-        keypair.vk = libff::reserialize<r1cs_se_ppzksnark_verification_key<ppT> >(keypair.vk);
-        pvk = libff::reserialize<r1cs_se_ppzksnark_processed_verification_key<ppT> >(pvk);
-        libff::leave_block("Test serialization of keys");
+        ffec::enter_block("Test serialization of keys");
+        keypair.pk = ffec::reserialize<r1cs_se_ppzksnark_proving_key<ppT> >(keypair.pk);
+        keypair.vk = ffec::reserialize<r1cs_se_ppzksnark_verification_key<ppT> >(keypair.vk);
+        pvk = ffec::reserialize<r1cs_se_ppzksnark_processed_verification_key<ppT> >(pvk);
+        ffec::leave_block("Test serialization of keys");
     }
 
-    libff::print_header("R1CS SEppzkSNARK Prover");
+    ffec::print_header("R1CS SEppzkSNARK Prover");
     r1cs_se_ppzksnark_proof<ppT> proof = r1cs_se_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
-    printf("\n"); libff::print_indent(); libff::print_mem("after prover");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of proof");
-        proof = libff::reserialize<r1cs_se_ppzksnark_proof<ppT> >(proof);
-        libff::leave_block("Test serialization of proof");
+        ffec::enter_block("Test serialization of proof");
+        proof = ffec::reserialize<r1cs_se_ppzksnark_proof<ppT> >(proof);
+        ffec::leave_block("Test serialization of proof");
     }
 
-    libff::print_header("R1CS SEppzkSNARK Verifier");
+    ffec::print_header("R1CS SEppzkSNARK Verifier");
     const bool ans = r1cs_se_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
-    printf("\n"); libff::print_indent(); libff::print_mem("after verifier");
-    printf("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
+    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
 
-    libff::print_header("R1CS SEppzkSNARK Online Verifier");
+    ffec::print_header("R1CS SEppzkSNARK Online Verifier");
     const bool ans2 = r1cs_se_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
-    assert(ans == ans2);
+    assert!(ans == ans2);
 
-    libff::leave_block("Call to run_r1cs_se_ppzksnark");
+    ffec::leave_block("Call to run_r1cs_se_ppzksnark");
 
     return ans;
 }
 
-} // libsnark
 
-#endif // RUN_R1CS_SE_PPZKSNARK_TCC_
+
+//#endif // RUN_R1CS_SE_PPZKSNARK_TCC_

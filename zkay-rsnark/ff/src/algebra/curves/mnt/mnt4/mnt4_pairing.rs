@@ -9,14 +9,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT4_PAIRING_HPP_
-#define MNT4_PAIRING_HPP_
+//#ifndef MNT4_PAIRING_HPP_
+// #define MNT4_PAIRING_HPP_
 
-#include <vector>
+//#include <vector>
 
-#include <libff/algebra/curves/mnt/mnt4/mnt4_init.hpp>
+use libff/algebra/curves/mnt/mnt4/mnt4_init;
 
-namespace libff {
+// namespace libff {
 
 /* final exponentiation */
 
@@ -143,9 +143,9 @@ mnt4_GT mnt4_reduced_pairing(const mnt4_G1 &P,
 mnt4_GT mnt4_affine_reduced_pairing(const mnt4_G1 &P,
                                     const mnt4_G2 &Q);
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT4_PAIRING_HPP_
+//#endif // MNT4_PAIRING_HPP_
 /** @file
  *****************************************************************************
 
@@ -159,16 +159,16 @@ mnt4_GT mnt4_affine_reduced_pairing(const mnt4_G1 &P,
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <cassert>
+//#include <cassert>
 
-#include <libff/algebra/curves/mnt/mnt4/mnt4_g1.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_g2.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_init.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_pairing.hpp>
-#include <libff/algebra/scalar_multiplication/wnaf.hpp>
-#include <libff/common/profiling.hpp>
+use libff/algebra/curves/mnt/mnt4/mnt4_g1;
+use libff/algebra/curves/mnt/mnt4/mnt4_g2;
+use libff/algebra/curves/mnt/mnt4/mnt4_init;
+use libff/algebra/curves/mnt/mnt4/mnt4_pairing;
+use crate::algebra::scalar_multiplication::wnaf;
+use crate::common::profiling;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -544,7 +544,7 @@ struct extended_mnt4_G2_projective {
 
     void print() const
     {
-        printf("extended mnt4_G2 projective X/Y/Z/T:\n");
+        print!("extended mnt4_G2 projective X/Y/Z/T:\n");
         X.print();
         Y.print();
         Z.print();
@@ -553,7 +553,7 @@ struct extended_mnt4_G2_projective {
 
     static void test_invariant()
     {
-        assert(T == Z.squared());
+        assert!(T == Z.squared());
     }
 };
 
@@ -580,9 +580,9 @@ void doubling_step_for_flipped_miller_loop(extended_mnt4_G2_projective &current,
     dc.c_J = (F+T).squared() - G - A; // J = (F+T1)^2-G-A
     dc.c_L = (F+X).squared() - G - B; // L = (F+X1)^2-G-B
 
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 void mixed_addition_step_for_flipped_miller_loop(const mnt4_Fq2 base_X, const mnt4_Fq2 base_Y, const mnt4_Fq2 base_Y_squared,
@@ -608,9 +608,9 @@ void mixed_addition_step_for_flipped_miller_loop(const mnt4_Fq2 base_X, const mn
 
     ac.c_L1 = L1;
     ac.c_RZ = current.Z;
-#ifdef DEBUG
+// #ifdef DEBUG
     current.test_invariant();
-#endif
+//#endif
 }
 
 mnt4_ate_G1_precomp mnt4_ate_precompute_G1(const mnt4_G1& P)
@@ -888,4 +888,4 @@ mnt4_GT mnt4_affine_reduced_pairing(const mnt4_G1 &P,
     return result;
 }
 
-} // namespace libff
+// } // namespace libff

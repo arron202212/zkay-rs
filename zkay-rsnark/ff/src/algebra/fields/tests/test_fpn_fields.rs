@@ -10,18 +10,18 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_pp.hpp>
-#ifdef CURVE_BN128
-#include <libff/algebra/curves/bn128/bn128_pp.hpp>
-#endif
-#include <libff/algebra/curves/edwards/edwards_pp.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_pp.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_pp.hpp>
-#include <libff/common/profiling.hpp>
-#include <libff/common/utils.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_pp;
+use libff/algebra/curves/bls12_381/bls12_381_pp;
+// #ifdef CURVE_BN128
+use libff/algebra/curves/bn128/bn128_pp;
+//#endif
+use libff/algebra/curves/edwards/edwards_pp;
+use libff/algebra/curves/mnt/mnt4/mnt4_pp;
+use libff/algebra/curves/mnt/mnt6/mnt6_pp;
+use crate::common::profiling;
+use crate::common::utils;
 
 using namespace libff;
 
@@ -34,9 +34,9 @@ public:
         init_mnt6_fields();
         init_alt_bn128_fields();
         init_bls12_381_fields();
-#ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled.
+// #ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled.
         init_bn128_fields();
-#endif
+//#endif
     }
 };
 
@@ -259,10 +259,10 @@ TEST_F(FpnFieldsTest, GeneralTest)
 
     test_all_fields<bls12_381_pp>();
     test_field<bls12_381_Fq6>(); // bls12_381_Fq6 is not included in test_all_fields().
-#ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled.
+// #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled.
     test_field<Fr<bn128_pp> >();
     test_field<Fq<bn128_pp> >();
-#endif
+//#endif
 }
 
 TEST_F(FpnFieldsTest, SquareTest)

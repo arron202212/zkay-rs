@@ -19,15 +19,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SSP_HPP_
-#define SSP_HPP_
+//#ifndef SSP_HPP_
+// #define SSP_HPP_
 
 use  <map>
 use  <memory>
 
-use  <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use fqfft::evaluation_domain::evaluation_domain;
 
-namespace libsnark {
+
 
 /* forward declaration */
 template<typename FieldT>
@@ -174,11 +174,11 @@ public:
     size_t num_inputs() const;
 };
 
-} // libsnark
 
-use  <libsnark/relations/arithmetic_programs/ssp/ssp.tcc>
 
-#endif // SSP_HPP_
+use libsnark/relations/arithmetic_programs/ssp/ssp;
+
+//#endif // SSP_HPP_
 /** @file
  *****************************************************************************
 
@@ -192,15 +192,15 @@ use  <libsnark/relations/arithmetic_programs/ssp/ssp.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SSP_TCC_
-#define SSP_TCC_
+//#ifndef SSP_TCC_
+// #define SSP_TCC_
 
-use  <libff/algebra/scalar_multiplication/multiexp.hpp>
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
-use  <libfqfft/evaluation_domain/evaluation_domain.hpp>
+ use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::common::profiling;
+use ffec::common::utils;
+use fqfft::evaluation_domain::evaluation_domain;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 ssp_instance<FieldT>::ssp_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
@@ -226,7 +226,7 @@ ssp_instance<FieldT>::ssp_instance(const std::shared_ptr<libfqfft::evaluation_do
     degree_(degree),
     num_inputs_(num_inputs),
     domain(domain),
-    V_in_Lagrange_basis(std::move(V_in_Lagrange_basis))
+    V_in_Lagrange_basis((V_in_Lagrange_basis))
 {
 }
 
@@ -252,14 +252,14 @@ template<typename FieldT>
 bool ssp_instance<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) const
 {
     const FieldT t = FieldT::random_element();;
-    std::vector<FieldT> Vt(this->num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ht(this->degree()+1);
+    std::vector<FieldT> Vt(self.num_variables()+1, FieldT::zero());
+    std::vector<FieldT> Ht(self.degree()+1);
 
-    const FieldT Zt = this->domain->compute_vanishing_polynomial(t);
+    const FieldT Zt = self.domain->compute_vanishing_polynomial(t);
 
-    const std::vector<FieldT> u = this->domain->evaluate_all_lagrange_polynomials(t);
+    const std::vector<FieldT> u = self.domain->evaluate_all_lagrange_polynomials(t);
 
-    for (size_t i = 0; i < this->num_variables()+1; ++i)
+    for (size_t i = 0; i < self.num_variables()+1; ++i)
     {
         for (auto &el : V_in_Lagrange_basis[i])
         {
@@ -268,19 +268,19 @@ bool ssp_instance<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) cons
     }
 
     FieldT ti = FieldT::one();
-    for (size_t i = 0; i < this->degree()+1; ++i)
+    for (size_t i = 0; i < self.degree()+1; ++i)
     {
         Ht[i] = ti;
         ti *= t;
     }
 
-    const ssp_instance_evaluation<FieldT> eval_ssp_inst(this->domain,
-                                                        this->num_variables(),
-                                                        this->degree(),
-                                                        this->num_inputs(),
+    const ssp_instance_evaluation<FieldT> eval_ssp_inst(self.domain,
+                                                        self.num_variables(),
+                                                        self.degree(),
+                                                        self.num_inputs(),
                                                         t,
-                                                        std::move(Vt),
-                                                        std::move(Ht),
+                                                        (Vt),
+                                                        (Ht),
                                                         Zt);
     return eval_ssp_inst.is_satisfied(witness);
 }
@@ -319,8 +319,8 @@ ssp_instance_evaluation<FieldT>::ssp_instance_evaluation(const std::shared_ptr<l
     num_inputs_(num_inputs),
     domain(domain),
     t(t),
-    Vt(std::move(Vt)),
-    Ht(std::move(Ht)),
+    Vt((Vt)),
+    Ht((Ht)),
     Zt(Zt)
 {
 }
@@ -347,59 +347,59 @@ template<typename FieldT>
 bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) const
 {
 
-    if (this->num_variables() != witness.num_variables())
+    if (self.num_variables() != witness.num_variables())
     {
         return false;
     }
 
-    if (this->degree() != witness.degree())
+    if (self.degree() != witness.degree())
     {
         return false;
     }
 
-    if (this->num_inputs() != witness.num_inputs())
+    if (self.num_inputs() != witness.num_inputs())
     {
         return false;
     }
 
-    if (this->num_variables() != witness.coefficients_for_Vs.size())
+    if (self.num_variables() != witness.coefficients_for_Vs.size())
     {
         return false;
     }
 
-    if (this->degree()+1 != witness.coefficients_for_H.size())
+    if (self.degree()+1 != witness.coefficients_for_H.size())
     {
         return false;
     }
 
-    if (this->Vt.size() != this->num_variables()+1)
+    if (self.Vt.size() != self.num_variables()+1)
     {
         return false;
     }
 
-    if (this->Ht.size() != this->degree()+1)
+    if (self.Ht.size() != self.degree()+1)
     {
         return false;
     }
 
-    if (this->Zt != this->domain->compute_vanishing_polynomial(this->t))
+    if (self.Zt != self.domain->compute_vanishing_polynomial(self.t))
     {
         return false;
     }
 
-    FieldT ans_V = this->Vt[0] + witness.d*this->Zt;
+    FieldT ans_V = self.Vt[0] + witness.d*self.Zt;
     FieldT ans_H = FieldT::zero();
 
-    ans_V = ans_V + libff::inner_product<FieldT>(this->Vt.begin()+1,
-                                                 this->Vt.begin()+1+this->num_variables(),
+    ans_V = ans_V + ffec::inner_product<FieldT>(self.Vt.begin()+1,
+                                                 self.Vt.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_Vs.begin(),
-                                                 witness.coefficients_for_Vs.begin()+this->num_variables());
-    ans_H = ans_H + libff::inner_product<FieldT>(this->Ht.begin(),
-                                                 this->Ht.begin()+this->degree()+1,
+                                                 witness.coefficients_for_Vs.begin()+self.num_variables());
+    ans_H = ans_H + ffec::inner_product<FieldT>(self.Ht.begin(),
+                                                 self.Ht.begin()+self.degree()+1,
                                                  witness.coefficients_for_H.begin(),
-                                                 witness.coefficients_for_H.begin()+this->degree()+1);
+                                                 witness.coefficients_for_H.begin()+self.degree()+1);
 
-    if (ans_V.squared() - FieldT::one() != ans_H * this->Zt)
+    if (ans_V.squared() - FieldT::one() != ans_H * self.Zt)
     {
         return false;
     }
@@ -435,7 +435,7 @@ ssp_witness<FieldT>::ssp_witness(const size_t num_variables,
     num_inputs_(num_inputs),
     d(d),
     coefficients_for_Vs(coefficients_for_Vs),
-    coefficients_for_H(std::move(coefficients_for_H))
+    coefficients_for_H((coefficients_for_H))
 {
 }
 
@@ -457,6 +457,6 @@ size_t ssp_witness<FieldT>::num_inputs() const
     return num_inputs_;
 }
 
-} // libsnark
 
-#endif // SSP_TCC_
+
+//#endif // SSP_TCC_

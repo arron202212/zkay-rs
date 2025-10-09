@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 /** @file
  *****************************************************************************
  Declaration of interfaces for wNAF ("width-w Non-Adjacent Form") exponentiation routines.
@@ -6,38 +14,38 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef WNAF_HPP_
-#define WNAF_HPP_
+// //#ifndef WNAF_HPP_
+// // #define WNAF_HPP_
 
-#include <vector>
+// //#include <vector>
 
-#include <libff/algebra/field_utils/bigint.hpp>
+use crate::algebra::field_utils::bigint::bigint;
 
-namespace libff {
+// // namespace libff {
 
-/**
- * Find the wNAF representation of the given scalar relative to the given window size.
- */
-template<mp_size_t n>
-std::vector<long> find_wnaf(const std::size_t window_size, const bigint<n> &scalar);
+// /**
+//  * Find the wNAF representation of the given scalar relative to the given window size.
+//  */
+// template<mp_size_t N>
+// std::vector<long> find_wnaf(window_size:std::usize, scalar:&bigint<N>);
 
-/**
- * In additive notation, use wNAF exponentiation (with the given window size) to compute scalar * base.
- */
-template<typename T, mp_size_t n>
-T fixed_window_wnaf_exp(const std::size_t window_size, const T &base, const bigint<n> &scalar);
+// /**
+//  * In additive notation, use wNAF exponentiation (with the given window size) to compute scalar * base.
+//  */
+// template<typename T, mp_size_t N>
+// T fixed_window_wnaf_exp(window_size:std::usize, base:&T, scalar:&bigint<N>);
 
-/**
- * In additive notation, use wNAF exponentiation (with the window size determined by T) to compute scalar * base.
- */
-template<typename T, mp_size_t n>
-T opt_window_wnaf_exp(const T &base, const bigint<n> &scalar, const std::size_t scalar_bits);
+// /**
+//  * In additive notation, use wNAF exponentiation (with the window size determined by T) to compute scalar * base.
+//  */
+// template<typename T, mp_size_t N>
+// T opt_window_wnaf_exp(base:&T, scalar:&bigint<N>, const std::usize scalar_bits);
 
-} // namespace libff
+// } // namespace libff
 
-#include <libff/algebra/scalar_multiplication/wnaf.tcc>
+// use libff::algebra::scalar_multiplication::wnaf.tcc;
 
-#endif // WNAF_HPP_
+//#endif // WNAF_HPP_
 /** @file
  *****************************************************************************
  Implementation of interfaces for wNAF ("weighted Non-Adjacent Form") exponentiation routines.
@@ -48,28 +56,27 @@ T opt_window_wnaf_exp(const T &base, const bigint<n> &scalar, const std::size_t 
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef WNAF_TCC_
-#define WNAF_TCC_
+//#ifndef WNAF_TCC_
+// #define WNAF_TCC_
 
-#include <gmp.h>
+//#include <gmp.h>
 
-namespace libff {
+// namespace libff {
 
-using std::size_t;
+// using std::usize;
 
-template<mp_size_t n>
-std::vector<long> find_wnaf(const size_t window_size, const bigint<n> &scalar)
+pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
 {
-    const size_t length = scalar.max_bits(); // upper bound
-    std::vector<long> res(length+1);
-    bigint<n> c = scalar;
-    long j = 0;
-    while (!c.is_zero())
+    let   length = scalar.max_bits(); // upper bound
+    let mut  res=Vec::with_capacity(length+1);
+    let  mut c = scalar;
+    let mut  j = 0;
+    while !c.is_zero()
     {
-        long u;
+        let mut  u;
         if (c.data[0] & 1) == 1
         {
-            u = c.data[0] % (1u << (window_size+1));
+            u = c.data[0] % (1u32 << (window_size+1));
             if u > (1 << window_size)
             {
                 u = u - (1 << (window_size+1));
@@ -77,11 +84,11 @@ std::vector<long> find_wnaf(const size_t window_size, const bigint<n> &scalar)
 
             if u > 0
             {
-                mpn_sub_1(c.data, c.data, n, u);
+                // mpn_sub_1(c.data, c.data, N, u);
             }
             else
             {
-                mpn_add_1(c.data, c.data, n, -u);
+                // mpn_add_1(c.data, c.data, N, -u);
             }
         }
         else
@@ -89,30 +96,29 @@ std::vector<long> find_wnaf(const size_t window_size, const bigint<n> &scalar)
             u = 0;
         }
         res[j] = u;
-        ++j;
+        j+=1;
 
-        mpn_rshift(c.data, c.data, n, 1); // c = c/2
+        // mpn_rshift(c.data, c.data, N, 1); // c = c/2
     }
 
     return res;
 }
 
-template<typename T, mp_size_t n>
-T fixed_window_wnaf_exp(const size_t window_size, const T &base, const bigint<n> &scalar)
+pub fn fixed_window_wnaf_exp<T,const N:usize>(window_size:usize, base:&T, scalar:&bigint<N>)->T
 {
-    std::vector<long> naf = find_wnaf(window_size, scalar);
-    std::vector<T> table(1ul<<(window_size-1));
-    T tmp = base;
-    T dbl = base.dbl();
-    for i in 0..1ul<<(window_size-1)
+    let  naf = find_wnaf(window_size, scalar);
+    let mut  table=Vec::with_capacity(1u64<<(window_size-1));
+    let mut  tmp = base;
+    let mut  dbl = base.dbl();
+    for i in 0..1u64<<(window_size-1)
     {
         table[i] = tmp;
         tmp = tmp + dbl;
     }
 
-    T res = T::zero();
-    bool found_nonzero = false;
-    for (long i = naf.size()-1; i >= 0; --i)
+    let mut  res = T::zero();
+    let mut  found_nonzero = false;
+    for  i in (0.. naf.len()).rev()
     {
         if found_nonzero
         {
@@ -136,11 +142,10 @@ T fixed_window_wnaf_exp(const size_t window_size, const T &base, const bigint<n>
     return res;
 }
 
-template<typename T, mp_size_t n>
-T opt_window_wnaf_exp(const T &base, const bigint<n> &scalar, const size_t scalar_bits)
+pub fn  opt_window_wnaf_exp<T,const N:usize>(base:&T, scalar:&bigint<N>, scalar_bits:usize)->T
 {
-    size_t best = 0;
-    for (long i = T::wnaf_window_table.size() - 1; i >= 0; --i)
+    let mut  best = 0;
+    for  i in (0.. T::wnaf_window_table.len()).rev()
     {
         if scalar_bits >= T::wnaf_window_table[i]
         {
@@ -159,6 +164,6 @@ T opt_window_wnaf_exp(const T &base, const bigint<n> &scalar, const size_t scala
     }
 }
 
-} // namespace libff
+// } // namespace libff
 
-#endif // WNAF_TCC_
+//#endif // WNAF_TCC_

@@ -7,17 +7,17 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
 
 use  <map>
 use  <tuple>
 use  <utility>
 
-use  <libsnark/gadgetlib2/constraint.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
-use  <libsnark/gadgetlib2/protoboard.hpp>
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/constraint;
+use libsnark/gadgetlib2/pp;
+use libsnark/gadgetlib2/protoboard;
+use libsnark/gadgetlib2/variable;
 
 using gadgetlib2::LinearTerm;
 using gadgetlib2::LinearCombination;
@@ -69,7 +69,7 @@ bool operator==(const GadgetLibAdapter::linear_combination_t& lhs,
 
 }
 
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
 /** @file
  *****************************************************************************
  Implementation of an adapter for interfacing to SNARKs.
@@ -79,7 +79,7 @@ bool operator==(const GadgetLibAdapter::linear_combination_t& lhs,
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libsnark/gadgetlib2/adapters.hpp>
+use libsnark/gadgetlib2/adapters;
 
 using gadgetlib2::Variable;
 using gadgetlib2::Rank1Constraint;
@@ -98,7 +98,7 @@ GLA::linear_combination_t GLA::convert(const LinearCombination& lc) const {
     sparse_vec_t sparse_vec;
     sparse_vec.reserve(lc.linearTerms_.size());
     for (auto lt : lc.linearTerms_) {
-        sparse_vec.emplace_back(convert(lt));
+        sparse_vec.push(convert(lt));
     }
     const Fp_elem_t offset = convert(lc.constant_);
     return{ sparse_vec, offset };
@@ -115,7 +115,7 @@ GLA::constraint_sys_t GLA::convert(const ConstraintSystem& constraint_sys) const
     constraint_sys_t retval;
     retval.reserve(constraint_sys.constraintsPtrs_.size());
     for (auto constraintPtr : constraint_sys.constraintsPtrs_) {
-        retval.emplace_back(convert(*constraintPtr));
+        retval.push(convert(*constraintPtr));
     }
     return retval;
 }

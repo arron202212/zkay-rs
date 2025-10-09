@@ -5,8 +5,8 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef KC_MULTIEXP_HPP_
-#define KC_MULTIEXP_HPP_
+//#ifndef KC_MULTIEXP_HPP_
+// #define KC_MULTIEXP_HPP_
 
 /*
   Split out from multiexp to prevent cyclical
@@ -17,17 +17,17 @@
   Will probably go away in more general exp refactoring.
 */
 
-use  <libff/algebra/scalar_multiplication/multiexp.hpp>
+ use ffec::algebra::scalar_multiplication::multiexp;
 
-use  <libsnark/knowledge_commitment/knowledge_commitment.hpp>
+use crate::knowledge_commitment::knowledge_commitment;
 
-namespace libsnark {
+
 
 template<typename T1, typename T2, mp_size_t n>
 knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
-                                                scalar:&libff::bigint<n> scalar_bits:size_t);
+                                                scalar:&ffec::bigint<n> scalar_bits:size_t);
 
-template<typename T1, typename T2, typename FieldT, libff::multi_exp_method Method>
+template<typename T1, typename T2, typename FieldT, ffec::multi_exp_method Method>
 knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_commitment_vector<T1, T2>
                                                                 min_idx:size_t
                                                                 max_idx:size_t
@@ -39,18 +39,18 @@ template<typename T1, typename T2, typename FieldT>
 knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
                                                  T1_window:size_t
                                                  T2_window:size_t
-                                                 T1_table:&libff::window_table<T1>
-                                                 T2_table:&libff::window_table<T2>
+                                                 T1_table:&ffec::window_table<T1>
+                                                 T2_table:&ffec::window_table<T2>
                                                  T1_coeff:&FieldT
                                                  T2_coeff:&FieldT
                                                  v:&std::vector<FieldT>
                                                  suggested_num_chunks:size_t);
 
-} // libsnark
 
-use  <libsnark/knowledge_commitment/kc_multiexp.tcc>
 
-#endif // KC_MULTIEXP_HPP_
+use libsnark/knowledge_commitment/kc_multiexp;
+
+//#endif // KC_MULTIEXP_HPP_
 
 
 /** @file
@@ -60,20 +60,20 @@ use  <libsnark/knowledge_commitment/kc_multiexp.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef KC_MULTIEXP_TCC_
-#define KC_MULTIEXP_TCC_
+//#ifndef KC_MULTIEXP_TCC_
+// #define KC_MULTIEXP_TCC_
 
-namespace libsnark {
+
 
 template<typename T1, typename T2, mp_size_t n>
 knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
-                                                scalar:&libff::bigint<n> scalar_bits:size_t)
+                                                scalar:&ffec::bigint<n> scalar_bits:size_t)
 {
     return knowledge_commitment<T1,T2>(opt_window_wnaf_exp(base.g, scalar, scalar_bits),
                                        opt_window_wnaf_exp(base.h, scalar, scalar_bits));
 }
 
-template<typename T1, typename T2, typename FieldT, libff::multi_exp_method Method>
+template<typename T1, typename T2, typename FieldT, ffec::multi_exp_method Method>
 knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_commitment_vector<T1, T2>
                                                                 min_idx:size_t
                                                                 max_idx:size_t
@@ -81,7 +81,7 @@ knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_com
                                                                 typename std::vector<FieldT>::const_iterator scalar_end,
                                                                 chunks:size_t)
 {
-    libff::enter_block("Process scalar vector");
+    ffec::enter_block("Process scalar vector");
     auto index_it = std::lower_bound(vec.indices.begin(), vec.indices.end(), min_idx);
     vec.indices.begin(:size_t offset = index_it -);
 
@@ -104,51 +104,51 @@ knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_com
     while (index_it != vec.indices.end() && *index_it < max_idx)
     {
         (*index_it:size_t scalar_position =) - min_idx;
-        assert(scalar_position < scalar_length);
+        assert!(scalar_position < scalar_length);
 
         scalar_position:FieldT scalar = *(scalar_start +);
 
         if scalar == zero
         {
             // do nothing
-            ++num_skip;
+            num_skip+=1;
         }
         else if scalar == one
         {
-#ifdef USE_MIXED_ADDITION
+// #ifdef USE_MIXED_ADDITION
             acc.g = acc.g.mixed_add(value_it->g);
             acc.h = acc.h.mixed_add(value_it->h);
 #else
             acc.g = acc.g + value_it->g;
             acc.h = acc.h + value_it->h;
-#endif
-            ++num_add;
+//#endif
+            num_add+=1;
         }
         else
         {
-            p.emplace_back(scalar);
-            g.emplace_back(*value_it);
-            ++num_other;
+            p.push(scalar);
+            g.push(*value_it);
+            num_other+=1;
         }
 
-        ++index_it;
-        ++value_it;
+        index_it+=1;
+        value_it+=1;
     }
 
-    libff::print_indent(); printf!("* Elements of w skipped: %zu (%0.2f%%)\n", num_skip, 100.*num_skip/(num_skip+num_add+num_other));
-    libff::print_indent(); printf!("* Elements of w processed with special addition: %zu (%0.2f%%)\n", num_add, 100.*num_add/(num_skip+num_add+num_other));
-    libff::print_indent(); printf!("* Elements of w remaining: %zu (%0.2f%%)\n", num_other, 100.*num_other/(num_skip+num_add+num_other));
-    libff::leave_block("Process scalar vector");
+    ffec::print_indent(); print!("* Elements of w skipped: {} {}\n", num_skip, 100.*num_skip/(num_skip+num_add+num_other));
+    ffec::print_indent(); print!("* Elements of w processed with special addition: {} {}\n", num_add, 100.*num_add/(num_skip+num_add+num_other));
+    ffec::print_indent(); print!("* Elements of w remaining: {} {}\n", num_other, 100.*num_other/(num_skip+num_add+num_other));
+    ffec::leave_block("Process scalar vector");
 
-    return acc + libff::multi_exp<knowledge_commitment<T1, T2>, FieldT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
+    return acc + ffec::multi_exp<knowledge_commitment<T1, T2>, FieldT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
 }
 
 template<typename T1, typename T2, typename FieldT>
 knowledge_commitment_vector<T1, T2> kc_batch_exp_internal(scalar_size:size_t
                                                           T1_window:size_t
                                                           T2_window:size_t
-                                                          T1_table:&libff::window_table<T1>
-                                                          T2_table:&libff::window_table<T2>
+                                                          T1_table:&ffec::window_table<T1>
+                                                          T2_table:&ffec::window_table<T2>
                                                           T1_coeff:&FieldT
                                                           T2_coeff:&FieldT
                                                           v:&std::vector<FieldT>
@@ -165,9 +165,9 @@ knowledge_commitment_vector<T1, T2> kc_batch_exp_internal(scalar_size:size_t
     {
         if !v[pos].is_zero()
         {
-            res.values.emplace_back(knowledge_commitment<T1, T2>(windowed_exp(scalar_size, T1_window, T1_table, T1_coeff * v[pos]),
+            res.values.push(knowledge_commitment<T1, T2>(windowed_exp(scalar_size, T1_window, T1_table, T1_coeff * v[pos]),
                                                                  windowed_exp(scalar_size, T2_window, T2_table, T2_coeff * v[pos])));
-            res.indices.emplace_back(pos);
+            res.indices.push(pos);
         }
     }
 
@@ -178,8 +178,8 @@ template<typename T1, typename T2, typename FieldT>
 knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
                                                  T1_window:size_t
                                                  T2_window:size_t
-                                                 T1_table:&libff::window_table<T1>
-                                                 T2_table:&libff::window_table<T2>
+                                                 T1_table:&ffec::window_table<T1>
+                                                 T2_table:&ffec::window_table<T2>
                                                  T1_coeff:&FieldT
                                                  T2_coeff:&FieldT
                                                  v:&std::vector<FieldT>
@@ -196,9 +196,9 @@ knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
 
     std::min(nonzero:size_t num_chunks = std::max((size_t)1, suggested_num_chunks));
 
-    if !libff::inhibit_profiling_info
+    if !ffec::inhibit_profiling_info
     {
-        libff::print_indent(); printf!("Non-zero coordinate count: %zu/%zu (%0.2f%%)\n", nonzero, v.size(), 100.*nonzero/v.size());
+        ffec::print_indent(); print!("Non-zero coordinate count: {}/{} {}\n", nonzero, v.size(), 100.*nonzero/v.size());
     }
 
     std::vector<knowledge_commitment_vector<T1, T2> > tmp(num_chunks);
@@ -219,22 +219,22 @@ knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
         {
             chunk_pos[chunkno] = i;
             cnt = 0;
-            ++chunkno;
+            chunkno+=1;
         }
     }
 
     chunk_pos[num_chunks] = v.size();
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
 #pragma omp parallel for
-#endif
+//#endif
     for i in 0..num_chunks
     {
         tmp[i] = kc_batch_exp_internal<T1, T2, FieldT>(scalar_size, T1_window, T2_window, T1_table, T2_table, T1_coeff, T2_coeff, v,
                                                        chunk_pos[i], chunk_pos[i+1], i == num_chunks - 1 ? last_chunk : chunk_size);
-#ifdef USE_MIXED_ADDITION
-        libff::batch_to_special<knowledge_commitment<T1, T2>>(tmp[i].values);
-#endif
+// #ifdef USE_MIXED_ADDITION
+        ffec::batch_to_special<knowledge_commitment<T1, T2>>(tmp[i].values);
+//#endif
     }
 
     if num_chunks == 1
@@ -253,6 +253,6 @@ knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
     }
 }
 
-} // libsnark
 
-#endif // KC_MULTIEXP_TCC_
+
+//#endif // KC_MULTIEXP_TCC_

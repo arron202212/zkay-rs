@@ -9,13 +9,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT6_INIT_HPP_
-#define MNT6_INIT_HPP_
+//#ifndef MNT6_INIT_HPP_
+// #define MNT6_INIT_HPP_
 
-#include <libff/algebra/curves/public_params.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_fields.hpp>
+use libff/algebra/curves/public_params;
+use libff/algebra/curves/mnt/mnt6/mnt6_fields;
 
-namespace libff {
+// namespace libff {
 
 typedef Fp_model<mnt6_r_limbs, mnt6_modulus_r> mnt6_Fr;
 typedef Fp_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq;
@@ -49,9 +49,9 @@ void init_mnt6_params();
 class mnt6_G1;
 class mnt6_G2;
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT6_INIT_HPP_
+//#endif // MNT6_INIT_HPP_
 /** @file
  *****************************************************************************
 
@@ -65,11 +65,11 @@ class mnt6_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt6/mnt6_g1.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_g2.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_init.hpp>
+use libff/algebra/curves/mnt/mnt6/mnt6_g1;
+use libff/algebra/curves/mnt/mnt6/mnt6_g2;
+use libff/algebra/curves/mnt/mnt6/mnt6_init;
 
-namespace libff {
+// namespace libff {
 
 mnt6_Fq3 mnt6_twist;
 mnt6_Fq3 mnt6_twist_coeff_a;
@@ -255,4 +255,4 @@ void init_mnt6_params()
     mnt6_final_exponent_last_chunk_w1 = bigint<mnt6_q_limbs>("1");
 }
 
-} // namespace libff
+// } // namespace libff

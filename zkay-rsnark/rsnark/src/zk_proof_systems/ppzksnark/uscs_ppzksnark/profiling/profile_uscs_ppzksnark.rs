@@ -26,41 +26,41 @@
 use  <cassert>
 use  <cstdio>
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-use  <libsnark/common/default_types/uscs_ppzksnark_pp.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark.hpp>
+use crate::common::default_types::uscs_ppzksnark_pp;
+use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
 
-using namespace libsnark;
+
 
 int main(int argc, const char * argv[])
 {
     default_uscs_ppzksnark_pp::init_public_params();
-    libff::start_profiling();
+    ffec::start_profiling();
 
     if (argc == 2 && strcmp(argv[1], "-v") == 0)
     {
-        libff::print_compilation_info();
+        ffec::print_compilation_info();
         return 0;
     }
 
     if (argc != 3)
     {
-        printf("usage: %s num_constraints input_size\n", argv[0]);
+        print!("usage: %s num_constraints input_size\n", argv[0]);
         return 1;
     }
 
     const int num_constraints = atoi(argv[1]);
     const int input_size = atoi(argv[2]);
 
-    libff::enter_block("Generate USCS example");
-    uscs_example<libff::Fr<default_uscs_ppzksnark_pp> > example = generate_uscs_example_with_field_input<libff::Fr<default_uscs_ppzksnark_pp> >(num_constraints, input_size);
-    libff::leave_block("Generate USCS example");
+    ffec::enter_block("Generate USCS example");
+    uscs_example<ffec::Fr<default_uscs_ppzksnark_pp> > example = generate_uscs_example_with_field_input<ffec::Fr<default_uscs_ppzksnark_pp> >(num_constraints, input_size);
+    ffec::leave_block("Generate USCS example");
 
-    libff::print_header("(enter) Profile USCS ppzkSNARK");
+    ffec::print_header("(enter) Profile USCS ppzkSNARK");
     const bool test_serialization = true;
     run_uscs_ppzksnark<default_uscs_ppzksnark_pp>(example, test_serialization);
-    libff::print_header("(leave) Profile USCS ppzkSNARK");
+    ffec::print_header("(leave) Profile USCS ppzkSNARK");
 }

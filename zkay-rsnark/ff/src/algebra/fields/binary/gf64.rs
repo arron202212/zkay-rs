@@ -6,27 +6,27 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBFF_ALGEBRA_GF64_HPP_
-#define LIBFF_ALGEBRA_GF64_HPP_
+//#ifndef LIBFF_ALGEBRA_GF64_HPP_
+// #define LIBFF_ALGEBRA_GF64_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <vector>
-#include <libff/algebra/field_utils/bigint.hpp>
+//#include <cstddef>
+//#include <cstdint>
+//#include <vector>
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 /* gf64 implements the field GF(2)/[x^64 + x^4 + x^3 + x + 1].
    Elements are represented internally with a single uint64 */
 class gf64 {
 
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
     // x^64 + x^4 + x^3 + x + 1. The assembly code assumes that no term other
     // than x^64 is greater than x^31, to enable faster multiplication.
     static const constexpr uint64_t modulus_ = 0b11011;
@@ -96,38 +96,38 @@ private:
     uint64_t value_;
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long gf64::add_cnt = 0;
 long long gf64::sub_cnt = 0;
 long long gf64::mul_cnt = 0;
 long long gf64::sqr_cnt = 0;
 long long gf64::inv_cnt = 0;
-#endif
+//#endif
 
-} // namespace libff
-#include <libff/algebra/fields/binary/gf64.tcc>
+// } // namespace libff
+use libff/algebra/fields/binary/gf64.tcc;
 
-#endif // namespace libff_ALGEBRA_GF64_HPP_
+//#endif // namespace libff_ALGEBRA_GF64_HPP_
 
 
 
-#include <cstdio>
+//#include <cstdio>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+// #define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
 
-#include <sodium/randombytes.h>
+//#include <sodium/randombytes.h>
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 #include "libff/algebra/fields/binary/gf64.hpp"
 
-#ifdef USE_ASM
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#endif
+// #ifdef USE_ASM
+//#include <emmintrin.h>
+//#include <immintrin.h>
+//#include <smmintrin.h>
+//#endif
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -155,18 +155,18 @@ bool gf64::from_words(std::vector<uint64_t> words)
 
 gf64& gf64::operator+=(const gf64 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     this->value_ ^= other.value_;
     return (*this);
 }
 
 gf64& gf64::operator-=(const gf64 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     this->value_ ^= other.value_;
     return (*this);
 }
@@ -174,12 +174,12 @@ gf64& gf64::operator-=(const gf64 &other)
 // multiplication over GF(2^k) is carryless multiplication
 gf64& gf64::operator*=(const gf64 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Does not require *this and other to be different, and therefore
        also works for squaring, implemented below. */
-#ifdef USE_ASM
+// #ifdef USE_ASM
     const __m128i modulus = _mm_loadl_epi64((const __m128i*)&(libff::gf64::modulus_));
     const __m128i mul128 = _mm_clmulepi64_si128(_mm_loadl_epi64((const __m128i*)&(this->value_)),
                                                 _mm_loadl_epi64((const __m128i*)&(other.value_)), 0);
@@ -220,7 +220,7 @@ gf64& gf64::operator*=(const gf64 &other)
     this->value_ = result;
 
     return (*this);
-#endif
+//#endif
 }
 
 gf64& gf64::operator^=(const unsigned long pow)
@@ -231,10 +231,10 @@ gf64& gf64::operator^=(const unsigned long pow)
 
 gf64& gf64::square()
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
     this->mul_cnt--;
-#endif
+//#endif
     this->operator*=(*this);
     return *this;
 }
@@ -296,12 +296,12 @@ void square_multi(gf64* pt, int8_t num_times)
    https://github.com/kwantam/addchain. */
 gf64 gf64::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
     this->mul_cnt -= 15;
     this->sqr_cnt -= 58;
-#endif
-    assert(!this->is_zero());
+//#endif
+    assert!(!this->is_zero());
     // comments on the right side are of the form operation_number : exponent at the set variable
     gf64 t0 = *this;        //    1 : 1
     gf64 t1 = t0 * t0;      //    2 : 2
@@ -378,7 +378,7 @@ bool gf64::operator!=(const gf64 &other) const
 
 void gf64::print() const
 {
-    printf("%016" PRIx64 "\n", this->value_);
+    print!("%016" PRIx64 "\n", this->value_);
 }
 
 bool gf64::is_zero() const
@@ -415,7 +415,7 @@ std::istream& operator>>(std::istream &in, gf64 &el)
     return in;
 }
 
-} // namespace libff
+// } // namespace libff
 
 
 
@@ -424,7 +424,7 @@ std::istream& operator>>(std::istream &in, gf64 &el)
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t m>
 gf64& gf64::operator^=(const bigint<m> &pow)
@@ -439,4 +439,4 @@ gf64 gf64::operator^(const bigint<m> &pow) const
     return power<gf64>(*this, pow);
 }
 
-} // namespace libff
+// } // namespace libff

@@ -5,15 +5,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EDWARDS_G2_HPP_
-#define EDWARDS_G2_HPP_
-#include <iostream>
-#include <vector>
+//#ifndef EDWARDS_G2_HPP_
+// #define EDWARDS_G2_HPP_
+//#include <iostream>
+//#include <vector>
 
-#include <libff/algebra/curves/curve_utils.hpp>
-#include <libff/algebra/curves/edwards/edwards_init.hpp>
+use libff/algebra/curves/curve_utils;
+use libff/algebra/curves/edwards/edwards_init;
 
-namespace libff {
+// namespace libff {
 
 class edwards_G2;
 std::ostream& operator<<(std::ostream &, const edwards_G2&);
@@ -21,10 +21,10 @@ std::istream& operator>>(std::istream &, edwards_G2&);
 
 class edwards_G2 {
 public:
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
-#endif
+//#endif
     static std::vector<std::size_t> wnaf_window_table;
     static std::vector<std::size_t> fixed_base_exp_window_table;
 
@@ -95,8 +95,8 @@ edwards_G2 operator*(const Fp_model<m, modulus_p> &lhs, const edwards_G2 &rhs)
    return scalar_mul<edwards_G2, m>(rhs, lhs.as_bigint());
 }
 
-} // namespace libff
-#endif // EDWARDS_G2_HPP_
+// } // namespace libff
+//#endif // EDWARDS_G2_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -104,14 +104,14 @@ edwards_G2 operator*(const Fp_model<m, modulus_p> &lhs, const edwards_G2 &rhs)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/edwards/edwards_g2.hpp>
+use libff/algebra/curves/edwards/edwards_g2;
 
-namespace libff {
+// namespace libff {
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long edwards_G2::add_cnt = 0;
 long long edwards_G2::dbl_cnt = 0;
-#endif
+//#endif
 
 std::vector<size_t> edwards_G2::wnaf_window_table;
 std::vector<size_t> edwards_G2::fixed_base_exp_window_table;
@@ -147,13 +147,13 @@ void edwards_G2::print() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
         edwards_G2 copy(*this);
         copy.to_affine_coordinates();
-        gmp_printf("(%Nd*z^2 + %Nd*z + %Nd , %Nd*z^2 + %Nd*z + %Nd)\n",
+        print!("(%Nd*z^2 + %Nd*z + %Nd , %Nd*z^2 + %Nd*z + %Nd)\n",
                    copy.X.c2.as_bigint().data, edwards_Fq::num_limbs,
                    copy.X.c1.as_bigint().data, edwards_Fq::num_limbs,
                    copy.X.c0.as_bigint().data, edwards_Fq::num_limbs,
@@ -167,11 +167,11 @@ void edwards_G2::print_coordinates() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
-        gmp_printf("(%Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd)\n",
+        print!("(%Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd)\n",
                    this->X.c2.as_bigint().data, edwards_Fq::num_limbs,
                    this->X.c1.as_bigint().data, edwards_Fq::num_limbs,
                    this->X.c0.as_bigint().data, edwards_Fq::num_limbs,
@@ -213,18 +213,18 @@ void edwards_G2::to_special()
         return;
     }
 
-#ifdef DEBUG
+// #ifdef DEBUG
     const edwards_G2 copy(*this);
-#endif
+//#endif
 
     edwards_Fq3 Z_inv = this->Z.inverse();
     this->X = this->X * Z_inv;
     this->Y = this->Y * Z_inv;
     this->Z = edwards_Fq3::one();
 
-#ifdef DEBUG
-    assert((*this) == copy);
-#endif
+// #ifdef DEBUG
+    assert!((*this) == copy);
+//#endif
 }
 
 bool edwards_G2::is_special() const
@@ -300,9 +300,9 @@ edwards_G2 edwards_G2::operator-(const edwards_G2 &other) const
 
 edwards_G2 edwards_G2::add(const edwards_G2 &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-twisted-inverted.html#addition-add-2008-bbjlp
 
@@ -322,9 +322,9 @@ edwards_G2 edwards_G2::add(const edwards_G2 &other) const
 
 edwards_G2 edwards_G2::mixed_add(const edwards_G2 &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     // handle special cases having to do with O
     if (this->is_zero())
     {
@@ -336,9 +336,9 @@ edwards_G2 edwards_G2::mixed_add(const edwards_G2 &other) const
         return *this;
     }
 
-#ifdef DEBUG
-    assert(other.is_special());
-#endif
+// #ifdef DEBUG
+    assert!(other.is_special());
+//#endif
 
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-madd-2007-lb
@@ -359,9 +359,9 @@ edwards_G2 edwards_G2::mixed_add(const edwards_G2 &other) const
 
 edwards_G2 edwards_G2::dbl() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-#endif
+//#endif
     if (this->is_zero())
     {
         return (*this);
@@ -433,12 +433,12 @@ std::ostream& operator<<(std::ostream &out, const edwards_G2 &g)
 {
     edwards_G2 copy(g);
     copy.to_affine_coordinates();
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().data[0] & 1);
-#endif
+//#endif
     return out;
 }
 
@@ -446,7 +446,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
 {
     edwards_Fq3 tX, tY;
 
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     in >> tX;
     consume_OUTPUT_SEPARATOR(in);
     in >> tY;
@@ -472,16 +472,16 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
     {
         tY = -tY;
     }
-#endif
+//#endif
 
     // using inverted coordinates
     g.X = tY;
     g.Y = tX;
     g.Z = tX * tY;
 
-#ifdef USE_MIXED_ADDITION
+// #ifdef USE_MIXED_ADDITION
     g.to_special();
-#endif
+//#endif
 
     return in;
 }
@@ -507,4 +507,4 @@ void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
     }
 }
 
-} // namespace libff
+// } // namespace libff

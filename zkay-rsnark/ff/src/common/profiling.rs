@@ -5,15 +5,15 @@
 
 //  Reports time, operation counts, memory usage, and others.
 
-// #ifndef PROFILING_HPP_
-// #define PROFILING_HPP_
+// //#ifndef PROFILING_HPP_
+// // #define PROFILING_HPP_
 
-// #include <cstddef>
-// #include <map>
-// #include <string>
-// #include <vector>
+// //#include <cstddef>
+// //#include <map>
+// //#include <string>
+// //#include <vector>
 
-// namespace libff {
+// // namespace libff {
 
 // void start_profiling();
 // long long get_nsec_time();
@@ -41,34 +41,35 @@
 // void print_mem(const std::string &s = "");
 // void print_compilation_info();
 
-// } // namespace libff
+// // } // namespace libff
 
-// #endif // PROFILING_HPP_
+// //#endif // PROFILING_HPP_
 
 
 //  Implementation of functions for profiling code blocks.
 
 // //  See profiling.hpp .
 
-// #include <cassert>
-// #include <chrono>
-// #include <cstdio>
-// #include <ctime>
-// #include <list>
-// #include <stdexcept>
-// #include <vector>
+// //#include <cassert>
+// //#include <chrono>
+// //#include <cstdio>
+// //#include <ctime>
+// //#include <list>
+// //#include <stdexcept>
+// //#include <vector>
 
-// #include <libff/common/default_types/ec_pp.hpp>
-// #include <libff/common/profiling.hpp>
-// #include <libff/common/utils.hpp>
+// use crate::common::default_types/ec_pp;
+// use crate::common::profiling;
+// use crate::common::utils;
 
-// #ifndef NO_PROCPS
-// #include <proc/readproc.h>
-// #endif
+// //#ifndef NO_PROCPS
+// //#include <proc/readproc.h>
+// //#endif
+const  indentation:usize = 0;
 
-pub struct Profiling;
+// pub struct Profiling;
 
-impl Profiling {
+// impl Profiling {
 
 // using std::size_t;
 
@@ -88,10 +89,10 @@ impl Profiling {
 //     if  ::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) != 0  {
 //         throw ::std::runtime_error("clock_gettime(CLOCK_PROCESS_CPUTIME_ID) failed");
 //     }
-//         // If we expected this to work, don't silently ignore failures, because that would hide the problem and incur an unnecessarily system-call overhead. So if we ever observe this exception, we should probably add a suitable #ifdef .
-//         //TODO: clock_gettime(CLOCK_PROCESS_CPUTIME_ID) is not supported by native Windows. What about Cygwin? Should we #ifdef on CLOCK_PROCESS_CPUTIME_ID or on __linux__?
+//         // If we expected this to work, don't silently ignore failures, because that would hide the problem and incur an unnecessarily system-call overhead. So if we ever observe this exception, we should probably add a suitable // #ifdef .
+//         //TODO: clock_gettime(CLOCK_PROCESS_CPUTIME_ID) is not supported by native Windows. What about Cygwin? Should we // #ifdef on CLOCK_PROCESS_CPUTIME_ID or on __linux__?
 //     return ts.tv_sec * 1000000000LL + ts.tv_nsec;
-// #endif
+// //#endif
 // }
 
 // long long start_time, last_time;
@@ -99,7 +100,7 @@ impl Profiling {
 
 // void start_profiling()
 // {
-//     printf("Reset time counters for profiling\n");
+//     print!("Reset time counters for profiling\n");
 
 //     last_time = start_time = get_nsec_time();
 //     last_cpu_time = start_cpu_time = get_nsec_cpu_time();
@@ -115,12 +116,11 @@ impl Profiling {
 // std::map<std::pair<std::string, std::string>, long long> op_counts;
 // std::map<std::pair<std::string, std::string>, long long> cumulative_op_counts; // ((msg, data_point), value)
 //     // TODO: Convert op_counts and cumulative_op_counts from pair to structs
-// size_t indentation = 0;
 
 // std::vector<std::string> block_names;
 
 // std::list<std::pair<std::string, long long*> > op_data_points = {
-// #ifdef PROFILE_OP_COUNTS
+// // #ifdef PROFILE_OP_COUNTS
 //     std::make_pair("Fradd", &Fr<default_ec_pp>::add_cnt),
 //     std::make_pair("Frsub", &Fr<default_ec_pp>::sub_cnt),
 //     std::make_pair("Frmul", &Fr<default_ec_pp>::mul_cnt),
@@ -133,7 +133,7 @@ impl Profiling {
 //     std::make_pair("G1dbl", &G1<default_ec_pp>::dbl_cnt),
 //     std::make_pair("G2add", &G2<default_ec_pp>::add_cnt),
 //     std::make_pair("G2dbl", &G2<default_ec_pp>::dbl_cnt)
-// #endif
+// //#endif
 // };
 
 // bool inhibit_profiling_info = false;
@@ -152,12 +152,12 @@ impl Profiling {
 //     const double total_ms = (cumulative_times.at(key) * 1e-6);
 //     const size_t cnt = invocation_counts.at(key);
 //     const double avg_ms = total_ms / cnt;
-//     printf("   %-45s: %12.5fms = %lld * %0.5fms (%zu invocations, %0.5fms = %lld * %0.5fms per invocation)\n", key.c_str(), total_ms, factor, total_ms/ (double) factor, cnt, avg_ms, factor, avg_ms/ (double) factor);
+//     print!("   %-45s: %12.5fms = %lld * %0.5fms ({} invocations, %0.5fms = %lld * %0.5fms per invocation)\n", key.c_str(), total_ms, factor, total_ms/ (double) factor, cnt, avg_ms, factor, avg_ms/ (double) factor);
 // }
 
 // void print_cumulative_times(const long long factor)
 // {
-//     printf("Dumping times:\n");
+//     print!("Dumping times:\n");
 //     for (auto& kv : cumulative_times)
 //     {
 //         print_cumulative_time_entry(kv.first, factor);
@@ -166,11 +166,11 @@ impl Profiling {
 
 // void print_cumulative_op_counts(const bool only_fq)
 // {
-// #ifdef PROFILE_OP_COUNTS
-//     printf("Dumping operation counts:\n");
+// // #ifdef PROFILE_OP_COUNTS
+//     print!("Dumping operation counts:\n");
 //     for (auto& msg : invocation_counts)
 //     {
-//         printf("  %-45s: ", msg.first.c_str());
+//         print!("  %-45s: ", msg.first.c_str());
 //         bool first = true;
 //         for (auto& data_point : op_data_points)
 //         {
@@ -181,43 +181,43 @@ impl Profiling {
 
 //             if !first
 //             {
-//                 printf(", ");
+//                 print!(", ");
 //             }
-//             printf("%-5s = %7.0f (%3zu)",
+//             print!("%-5s = %7.0f (%3zu)",
 //                    data_point.first.c_str(),
 //                    1. * cumulative_op_counts[std::make_pair(msg.first, data_point.first)] / msg.second,
 //                    msg.second);
 //             first = false;
 //         }
-//         printf("\n");
+//         print!("\n");
 //     }
 // #else
 //     UNUSED(only_fq);
-// #endif
+// //#endif
 // }
 
 // void print_op_profiling(const std::string &msg)
 // {
-// #ifdef PROFILE_OP_COUNTS
-//     printf("\n");
+// // #ifdef PROFILE_OP_COUNTS
+//     print!("\n");
 //     print_indent();
 
-//     printf("(opcounts) = (");
+//     print!("(opcounts) = (");
 //     bool first = true;
 //     for (std::pair<std::string, long long*> p : op_data_points)
 //     {
 //         if !first
 //         {
-//             printf(", ");
+//             print!(", ");
 //         }
 
-//         printf("%s=%lld", p.first.c_str(), *(p.second)-op_counts[std::make_pair(msg, p.first)]);
+//         print!("%s=%lld", p.first.c_str(), *(p.second)-op_counts[std::make_pair(msg, p.first)]);
 //         first = false;
 //     }
-//     printf(")");
+//     print!(")");
 // #else
 //     UNUSED(msg);
-// #endif
+// //#endif
 // }
 
 // static void print_times_from_last_and_start(long long     now, long long     last,
@@ -231,13 +231,13 @@ impl Profiling {
 
 //     if time_from_last != 0 {
 //         double parallelism_from_last = 1.0 * (double) cpu_time_from_last / (double) time_from_last;
-//         printf("[%0.4fs x%0.2f]", (double) time_from_last * 1e-9, parallelism_from_last);
+//         print!("[%0.4fs x%0.2f]", (double) time_from_last * 1e-9, parallelism_from_last);
 //     } else {
-//         printf("[             ]");
+//         print!("[             ]");
 //     }
 //     if time_from_start != 0 {
 //         double parallelism_from_start = 1.0 * (double) cpu_time_from_start / (double) time_from_start;
-//         printf("\t(%0.4fs x%0.2f from start)", (double) time_from_start * 1e-9, parallelism_from_start);
+//         print!("\t(%0.4fs x%0.2f from start)", (double) time_from_start * 1e-9, parallelism_from_start);
 //     }
 // }
 
@@ -251,12 +251,12 @@ impl Profiling {
 //     long long now = get_nsec_time();
 //     long long cpu_now = get_nsec_cpu_time();
 
-//     printf("%-35s\t", msg);
+//     print!("%-35s\t", msg);
 //     print_times_from_last_and_start(now, last_time, cpu_now, last_cpu_time);
-// #ifdef PROFILE_OP_COUNTS
+// // #ifdef PROFILE_OP_COUNTS
 //     print_op_profiling(msg);
-// #endif
-//     printf("\n");
+// //#endif
+//     print!("\n");
 
 //     fflush(stdout);
 //     last_time = now;
@@ -265,23 +265,23 @@ impl Profiling {
 
 // void print_header(const char *msg)
 // {
-//     printf("\n================================================================================\n");
-//     printf("%s\n", msg);
-//     printf("================================================================================\n\n");
+//     print!("\n================================================================================\n");
+//     print!("%s\n", msg);
+//     print!("================================================================================\n\n");
 // }
 
 // void print_separator()
 // {
-//     printf("\n================================================================================\n\n");
+//     print!("\n================================================================================\n\n");
 // }
 
-// void print_indent()
-// {
-//     for (size_t i = 0; i < indentation; ++i)
-//     {
-//         printf("  ");
-//     }
-// }
+pub fn print_indent()
+{
+    for  i in  0..indentation
+    {
+        print!("  ");
+    }
+}
 
 // void op_profiling_enter(const std::string &msg)
 // {
@@ -291,7 +291,7 @@ impl Profiling {
 //     }
 // }
 
-fn enter_block(msg:&str,  indent:bool)
+pub fn enter_block(msg:&str,  indent:bool)
 {
 //     if inhibit_profiling_counters
 //     {
@@ -309,16 +309,16 @@ fn enter_block(msg:&str,  indent:bool)
 //         return;
 //     }
 
-// #ifdef MULTICORE
+// // #ifdef MULTICORE
 // #pragma omp critical
-// #endif
+// //#endif
 //     {
 //         op_profiling_enter(msg);
 
 //         print_indent();
-//         printf("(enter) %-35s\t", msg.c_str());
+//         print!("(enter) %-35s\t", msg.c_str());
 //         print_times_from_last_and_start(t, t, cpu_t, cpu_t);
-//         printf("\n");
+//         print!("\n");
 //         fflush(stdout);
 
 //         if indent
@@ -327,16 +327,16 @@ fn enter_block(msg:&str,  indent:bool)
 //         }
 //     }
 }
-fn leave_block(msg:&str,  indent:bool)
+pub fn leave_block(msg:&str,  indent:bool)
 {
 //     if inhibit_profiling_counters
 //     {
 //         return;
 //     }
 
-// #ifndef MULTICORE
-//     assert(*(--block_names.end()) == msg);
-// #endif
+// //#ifndef MULTICORE
+//     assert!(*(--block_names.end()) == msg);
+// //#endif
 //     block_names.pop_back();
 
 //     ++invocation_counts[msg];
@@ -348,21 +348,21 @@ fn leave_block(msg:&str,  indent:bool)
 //     long long cpu_t = get_nsec_cpu_time();
 //     last_cpu_times[msg] = (cpu_t - enter_cpu_times[msg]);
 
-// #ifdef PROFILE_OP_COUNTS
+// // #ifdef PROFILE_OP_COUNTS
 //     for (std::pair<std::string, long long*> p : op_data_points)
 //     {
 //         cumulative_op_counts[std::make_pair(msg, p.first)] += *(p.second)-op_counts[std::make_pair(msg, p.first)];
 //     }
-// #endif
+// //#endif
 
 //     if inhibit_profiling_info
 //     {
 //         return;
 //     }
 
-// #ifdef MULTICORE
+// // #ifdef MULTICORE
 // #pragma omp critical
-// #endif
+// //#endif
 //     {
 //         if indent
 //         {
@@ -370,64 +370,64 @@ fn leave_block(msg:&str,  indent:bool)
 //         }
 
 //         print_indent();
-//         printf("(leave) %-35s\t", msg.c_str());
+//         print!("(leave) %-35s\t", msg.c_str());
 //         print_times_from_last_and_start(t, enter_times[msg], cpu_t, enter_cpu_times[msg]);
 //         print_op_profiling(msg);
-//         printf("\n");
+//         print!("\n");
 //         fflush(stdout);
 //     }
 }
 
 // void print_mem(const std::string &s)
 // {
-// #ifndef NO_PROCPS
+// //#ifndef NO_PROCPS
 //     struct proc_t usage;
 //     look_up_our_self(&usage);
 //     if s.empty()
 //     {
-//         printf("* Peak vsize (physical memory+swap) in mebibytes: %lu\n", usage.vsize >> 20);
+//         print!("* Peak vsize (physical memory+swap) in mebibytes: %lu\n", usage.vsize >> 20);
 //     }
 //     else
 //     {
-//         printf("* Peak vsize (physical memory+swap) in mebibytes (%s): %lu\n", s.c_str(), usage.vsize >> 20);
+//         print!("* Peak vsize (physical memory+swap) in mebibytes (%s): %lu\n", s.c_str(), usage.vsize >> 20);
 //     }
 // #else
 //     UNUSED(s);
-//     printf("* Memory profiling not supported in NO_PROCPS mode\n");
-// #endif
+//     print!("* Memory profiling not supported in NO_PROCPS mode\n");
+// //#endif
 // }
 
 // void print_compilation_info()
 // {
-// #ifdef __GNUC__
-//     printf("g++ version: %s\n", __VERSION__);
-//     printf("Compiled on %s %s\n", __DATE__, __TIME__);
-// #endif
-// #ifdef STATIC
-//     printf("STATIC: yes\n");
+// // #ifdef __GNUC__
+//     print!("g++ version: %s\n", __VERSION__);
+//     print!("Compiled on %s %s\n", __DATE__, __TIME__);
+// //#endif
+// // #ifdef STATIC
+//     print!("STATIC: yes\n");
 // #else
-//     printf("STATIC: no\n");
-// #endif
-// #ifdef MULTICORE
-//     printf("MULTICORE: yes\n");
+//     print!("STATIC: no\n");
+// //#endif
+// // #ifdef MULTICORE
+//     print!("MULTICORE: yes\n");
 // #else
-//     printf("MULTICORE: no\n");
-// #endif
-// #ifdef DEBUG
-//     printf("DEBUG: yes\n");
+//     print!("MULTICORE: no\n");
+// //#endif
+// // #ifdef DEBUG
+//     print!("DEBUG: yes\n");
 // #else
-//     printf("DEBUG: no\n");
-// #endif
-// #ifdef PROFILE_OP_COUNTS
-//     printf("PROFILE_OP_COUNTS: yes\n");
+//     print!("DEBUG: no\n");
+// //#endif
+// // #ifdef PROFILE_OP_COUNTS
+//     print!("PROFILE_OP_COUNTS: yes\n");
 // #else
-//     printf("PROFILE_OP_COUNTS: no\n");
-// #endif
-// #ifdef _GLIBCXX_DEBUG
-//     printf("_GLIBCXX_DEBUG: yes\n");
+//     print!("PROFILE_OP_COUNTS: no\n");
+// //#endif
+// // #ifdef _GLIBCXX_DEBUG
+//     print!("_GLIBCXX_DEBUG: yes\n");
 // #else
-//     printf("_GLIBCXX_DEBUG: no\n");
-// #endif
+//     print!("_GLIBCXX_DEBUG: no\n");
+// //#endif
 // }
 
-} // namespace lisff
+// } // namespace ffec

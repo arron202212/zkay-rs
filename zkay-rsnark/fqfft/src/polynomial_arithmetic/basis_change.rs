@@ -9,10 +9,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIS_CHANGE_HPP_
-#define BASIS_CHANGE_HPP_
+//#ifndef BASIS_CHANGE_HPP_
+// #define BASIS_CHANGE_HPP_
 
-#include <vector>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -64,9 +64,9 @@ void newton_to_monomial_basis_geometric(std::vector<FieldT> &a,
 
 } // libfqfft
 
-#include <libfqfft/polynomial_arithmetic/basis_change.tcc>
+use libfqfft/polynomial_arithmetic/basis_change.tcc;
 
-#endif // BASIS_CHANGE_HPP_
+//#endif // BASIS_CHANGE_HPP_
 
 
 /** @file
@@ -82,14 +82,14 @@ void newton_to_monomial_basis_geometric(std::vector<FieldT> &a,
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIS_CHANGE_TCC_
-#define BASIS_CHANGE_TCC_
+//#ifndef BASIS_CHANGE_TCC_
+// #define BASIS_CHANGE_TCC_
 
-#include <algorithm>
+//#include <algorithm>
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
-#include <libfqfft/polynomial_arithmetic/basic_operations.hpp>
-#include <libfqfft/polynomial_arithmetic/xgcd.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
+use libfqfft/polynomial_arithmetic/basic_operations;
+use libfqfft/polynomial_arithmetic/xgcd;
 
 namespace libfqfft {
 
@@ -242,9 +242,9 @@ void monomial_to_newton_basis_geometric(std::vector<FieldT> &a,
 
     w = _polynomial_multiplication_transpose(n - 1, z, f);
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     #pragma omp parallel for
-#endif
+//#endif
     for i in 0..n
     {
         a[i] = w[i] * z[i];
@@ -280,9 +280,9 @@ void newton_to_monomial_basis_geometric(std::vector<FieldT> &a,
 
     w = _polynomial_multiplication_transpose(n - 1, u, w);
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     #pragma omp parallel for
-#endif
+//#endif
     for i in 0..n
     {
         a[i] = w[i] * z[i];
@@ -291,4 +291,4 @@ void newton_to_monomial_basis_geometric(std::vector<FieldT> &a,
 
 } // libfqfft
 
-#endif // BASIS_CHANGE_TCC_
+//#endif // BASIS_CHANGE_TCC_

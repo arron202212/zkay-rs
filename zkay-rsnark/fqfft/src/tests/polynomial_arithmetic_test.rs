@@ -5,13 +5,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <vector>
+//#include <vector>
 
-#include <gtest/gtest.h>
-#include <stdint.h>
+//#include <gtest/gtest.h>
+//#include <stdint.h>
 
-#include <libfqfft/polynomial_arithmetic/basic_operations.hpp>
-#include <libfqfft/polynomial_arithmetic/xgcd.hpp>
+use libfqfft/polynomial_arithmetic/basic_operations;
+use libfqfft/polynomial_arithmetic/xgcd;
 
 namespace libfqfft {
 

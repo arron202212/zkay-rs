@@ -40,14 +40,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef KNAPSACK_GADGET_HPP_
-#define KNAPSACK_GADGET_HPP_
+//#ifndef KNAPSACK_GADGET_HPP_
+// #define KNAPSACK_GADGET_HPP_
 
-use  <libsnark/common/data_structures/merkle_tree.hpp>
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/hash_io.hpp>
+use crate::common::data_structures::merkle_tree;
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/gadgetlib1/gadgets/hashes/hash_io;
 
-namespace libsnark {
+
 
 /************************** Choice of dimension ******************************/
 
@@ -82,7 +82,7 @@ public:
 
     static size_t get_digest_len();
     static size_t get_block_len(); /* return 0 as block length, as the hash function is variable-input */
-    static std::vector<FieldT> get_hash(const libff::bit_vector &input);
+    static std::vector<FieldT> get_hash(const ffec::bit_vector &input);
     static void sample_randomness(const size_t input_len);
 
     /* for debugging */
@@ -94,7 +94,7 @@ public:
 template<typename FieldT>
 class knapsack_CRH_with_bit_out_gadget : public gadget<FieldT> {
 public:
-    type libff::bit_vector hash_value_type;
+    type ffec::bit_vector hash_value_type;
     type merkle_authentication_path merkle_authentication_path_type;
 
     size_t input_len;
@@ -117,7 +117,7 @@ public:
 
     static size_t get_digest_len();
     static size_t get_block_len(); /* return 0 as block length, as the hash function is variable-input */
-    static hash_value_type get_hash(const libff::bit_vector &input);
+    static hash_value_type get_hash(const ffec::bit_vector &input);
     static void sample_randomness(const size_t input_len);
 
     /* for debugging */
@@ -127,11 +127,11 @@ public:
 template<typename FieldT>
 void test_knapsack_CRH_with_bit_out_gadget();
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget.tcc>
 
-#endif // KNAPSACK_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget;
+
+//#endif // KNAPSACK_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -145,13 +145,13 @@ use  <libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef KNAPSACK_GADGET_TCC_
-#define KNAPSACK_GADGET_TCC_
+//#ifndef KNAPSACK_GADGET_TCC_
+// #define KNAPSACK_GADGET_TCC_
 
-use  <libff/algebra/fields/field_utils.hpp>
-use  <libff/common/rng.hpp>
+use ffec::algebra::fields::field_utils;
+use ffec::common::rng;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 std::vector<FieldT> knapsack_CRH_with_field_out_gadget<FieldT>::knapsack_coefficients;
@@ -170,12 +170,12 @@ knapsack_CRH_with_field_out_gadget<FieldT>::knapsack_CRH_with_field_out_gadget(p
     input_block(input_block),
     output(output)
 {
-    assert(input_block.bits.size() == input_len);
+    assert!(input_block.bits.size() == input_len);
     if (num_cached_coefficients < dimension * input_len)
     {
         sample_randomness(input_len);
     }
-    assert(output.size() == this->get_digest_len());
+    assert!(output.size() == self.get_digest_len());
 }
 
 template<typename FieldT>
@@ -183,18 +183,18 @@ void knapsack_CRH_with_field_out_gadget<FieldT>::generate_r1cs_constraints()
 {
     for (size_t i = 0; i < dimension; ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
                                                              pb_coeff_sum<FieldT>(input_block.bits,
                                                                                   std::vector<FieldT>(knapsack_coefficients.begin() + input_len * i,
                                                                                                       knapsack_coefficients.begin() + input_len * (i+1))),
-                                                             output[i]), FMT(this->annotation_prefix, " knapsack_%zu", i));
+                                                             output[i]), FMT(self.annotation_prefix, " knapsack_{}", i));
     }
 }
 
 template<typename FieldT>
 void knapsack_CRH_with_field_out_gadget<FieldT>::generate_r1cs_witness()
 {
-    const libff::bit_vector input = input_block.get_block();
+    const ffec::bit_vector input = input_block.get_block();
 
     for (size_t i = 0; i < dimension; ++i)
     {
@@ -207,7 +207,7 @@ void knapsack_CRH_with_field_out_gadget<FieldT>::generate_r1cs_witness()
             }
         }
 
-        this->pb.lc_val(output[i]) = sum;
+        self.pb.lc_val(output[i]) = sum;
     }
 }
 
@@ -224,7 +224,7 @@ size_t knapsack_CRH_with_field_out_gadget<FieldT>::get_block_len()
 }
 
 template<typename FieldT>
-std::vector<FieldT> knapsack_CRH_with_field_out_gadget<FieldT>::get_hash(const libff::bit_vector &input)
+std::vector<FieldT> knapsack_CRH_with_field_out_gadget<FieldT>::get_hash(const ffec::bit_vector &input)
 {
     const size_t dimension = knapsack_dimension<FieldT>::dimension;
     if (num_cached_coefficients < dimension * input.size())
@@ -263,7 +263,7 @@ void knapsack_CRH_with_field_out_gadget<FieldT>::sample_randomness(const size_t 
         knapsack_coefficients.resize(num_coefficients);
         for (size_t i = num_cached_coefficients; i < num_coefficients; ++i)
         {
-            knapsack_coefficients[i] = libff::SHA512_rng<FieldT>(i);
+            knapsack_coefficients[i] = ffec::SHA512_rng<FieldT>(i);
         }
         num_cached_coefficients = num_coefficients;
     }
@@ -281,7 +281,7 @@ knapsack_CRH_with_bit_out_gadget<FieldT>::knapsack_CRH_with_bit_out_gadget(proto
     input_block(input_block),
     output_digest(output_digest)
 {
-    assert(output_digest.bits.size() == this->get_digest_len());
+    assert!(output_digest.bits.size() == self.get_digest_len());
 
     output.resize(dimension);
 
@@ -304,7 +304,7 @@ void knapsack_CRH_with_bit_out_gadget<FieldT>::generate_r1cs_constraints(const b
     {
         for (size_t k = 0; k < output_digest.bits.size(); ++k)
         {
-            generate_boolean_r1cs_constraint<FieldT>(this->pb, output_digest.bits[k], FMT(this->annotation_prefix, " output_digest_%zu", k));
+            generate_boolean_r1cs_constraint<FieldT>(self.pb, output_digest.bits[k], FMT(self.annotation_prefix, " output_digest_{}", k));
         }
     }
 }
@@ -315,12 +315,12 @@ void knapsack_CRH_with_bit_out_gadget<FieldT>::generate_r1cs_witness()
     hasher->generate_r1cs_witness();
 
     /* do unpacking in place */
-    const libff::bit_vector input = input_block.bits.get_bits(this->pb);
+    const ffec::bit_vector input = input_block.bits.get_bits(self.pb);
     for (size_t i = 0; i < dimension; ++i)
     {
         pb_variable_array<FieldT> va(output_digest.bits.begin() + i * FieldT::size_in_bits(),
                                      output_digest.bits.begin() + (i + 1) * FieldT::size_in_bits());
-        va.fill_with_bits_of_field_element(this->pb, this->pb.lc_val(output[i]));
+        va.fill_with_bits_of_field_element(self.pb, self.pb.lc_val(output[i]));
     }
 }
 
@@ -337,14 +337,14 @@ size_t knapsack_CRH_with_bit_out_gadget<FieldT>::get_block_len()
 }
 
 template<typename FieldT>
-libff::bit_vector knapsack_CRH_with_bit_out_gadget<FieldT>::get_hash(const libff::bit_vector &input)
+ffec::bit_vector knapsack_CRH_with_bit_out_gadget<FieldT>::get_hash(const ffec::bit_vector &input)
 {
     const std::vector<FieldT> hash_elems = knapsack_CRH_with_field_out_gadget<FieldT>::get_hash(input);
     hash_value_type result;
 
     for (const FieldT &elt : hash_elems)
     {
-        libff::bit_vector elt_bits = libff::convert_field_element_to_bit_vector<FieldT>(elt);
+        ffec::bit_vector elt_bits = ffec::convert_field_element_to_bit_vector<FieldT>(elt);
         result.insert(result.end(), elt_bits.begin(), elt_bits.end());
     }
 
@@ -366,9 +366,9 @@ void knapsack_CRH_with_bit_out_gadget<FieldT>::sample_randomness(const size_t in
 }
 
 template<typename FieldT>
-void test_knapsack_CRH_with_bit_out_gadget_internal(const size_t dimension, const libff::bit_vector &input_bits, const libff::bit_vector &digest_bits)
+void test_knapsack_CRH_with_bit_out_gadget_internal(const size_t dimension, const ffec::bit_vector &input_bits, const ffec::bit_vector &digest_bits)
 {
-    assert(knapsack_dimension<FieldT>::dimension == dimension);
+    assert!(knapsack_dimension<FieldT>::dimension == dimension);
     knapsack_CRH_with_bit_out_gadget<FieldT>::sample_randomness(input_bits.size());
     protoboard<FieldT> pb;
 
@@ -380,14 +380,14 @@ void test_knapsack_CRH_with_bit_out_gadget_internal(const size_t dimension, cons
     H.generate_r1cs_constraints();
     H.generate_r1cs_witness();
 
-    assert(output_digest.get_digest().size() == digest_bits.size());
-    assert(pb.is_satisfied());
+    assert!(output_digest.get_digest().size() == digest_bits.size());
+    assert!(pb.is_satisfied());
 
     const size_t num_constraints = pb.num_constraints();
     const size_t expected_constraints = knapsack_CRH_with_bit_out_gadget<FieldT>::expected_constraints();
-    assert(num_constraints == expected_constraints);
+    assert!(num_constraints == expected_constraints);
 }
 
-} // libsnark
 
-#endif // KNAPSACK_GADGET_TCC_
+
+//#endif // KNAPSACK_GADGET_TCC_

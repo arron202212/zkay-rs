@@ -1,15 +1,4 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-#ifndef PUBLIC_PARAMS_HPP_
-#define PUBLIC_PARAMS_HPP_
-#include <vector>
-
-namespace libff {
 
 /*
   for every curve the user should define corresponding
@@ -68,36 +57,34 @@ namespace libff {
                                     const G2<EC_ppT> &Q);
 */
 
-template<typename EC_ppT>
-using Fr = typename EC_ppT::Fp_type;
-template<typename EC_ppT>
-using G1 = typename EC_ppT::G1_type;
-template<typename EC_ppT>
-using G2 = typename EC_ppT::G2_type;
-template<typename EC_ppT>
-using G1_precomp = typename EC_ppT::G1_precomp_type;
-template<typename EC_ppT>
-using G2_precomp = typename EC_ppT::G2_precomp_type;
-template<typename EC_ppT>
-using affine_ate_G1_precomp = typename EC_ppT::affine_ate_G1_precomp_type;
-template<typename EC_ppT>
-using affine_ate_G2_precomp = typename EC_ppT::affine_ate_G2_precomp_type;
-template<typename EC_ppT>
-using Fq = typename EC_ppT::Fq_type;
-template<typename EC_ppT>
-using Fqe = typename EC_ppT::Fqe_type;
-template<typename EC_ppT>
-using Fqk = typename EC_ppT::Fqk_type;
-template<typename EC_ppT>
-using GT = typename EC_ppT::GT_type;
 
-template<typename EC_ppT>
-using Fr_vector = std::vector<Fr<EC_ppT> >;
-template<typename EC_ppT>
-using G1_vector = std::vector<G1<EC_ppT> >;
-template<typename EC_ppT>
-using G2_vector = std::vector<G2<EC_ppT> >;
+// type Fr<EC_ppT> =  EC_ppT::Fp_type;
 
-} // namespace libff
+// type G1<EC_ppT> =  EC_ppT::G1_type;
 
-#endif // PUBLIC_PARAMS_HPP_
+// type G2<EC_ppT> =  EC_ppT::G2_type;
+
+// type G1_precomp<EC_ppT> =  EC_ppT::G1_precomp_type;
+
+// type G2_precomp<EC_ppT> =  EC_ppT::G2_precomp_type;
+
+// type affine_ate_G1_precomp<EC_ppT> =  EC_ppT::affine_ate_G1_precomp_type;
+
+// type affine_ate_G2_precomp<EC_ppT> =  EC_ppT::affine_ate_G2_precomp_type;
+
+// type Fq<EC_ppT> =  EC_ppT::Fq_type;
+
+// type Fqe<EC_ppT> =  EC_ppT::Fqe_type;
+
+// type Fqk<EC_ppT> =  EC_ppT::Fqk_type;
+
+// type GT<EC_ppT> =  EC_ppT::GT_type;
+
+
+// type Fr_vector<EC_ppT> = Vec<Fr<EC_ppT> >;
+
+// type G1_vector<EC_ppT> = Vec<G1<EC_ppT> >;
+
+// type G2_vector<EC_ppT> = Vec<G2<EC_ppT> >;
+
+

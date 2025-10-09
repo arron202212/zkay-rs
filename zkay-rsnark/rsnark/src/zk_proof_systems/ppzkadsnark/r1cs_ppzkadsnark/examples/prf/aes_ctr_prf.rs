@@ -9,21 +9,21 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef AESCTRPRF_HPP_
-#define AESCTRPRF_HPP_
+//#ifndef AESCTRPRF_HPP_
+// #define AESCTRPRF_HPP_
 
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_prf.hpp>
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_prf;
 
-namespace libsnark {
+
 
 class aesPrfKeyT {
 public:
     unsigned char key_bytes[32];
 };
 
-} // libsnark
 
-#endif // AESCTRPRF_HPP_
+
+//#endif // AESCTRPRF_HPP_
 /** @file
  *****************************************************************************
 
@@ -39,9 +39,9 @@ use  "gmp.h"
 use  "depends/libsnark-supercop/include/crypto_core_aes128encrypt.h"
 use  "depends/libsnark-supercop/include/randombytes.h"
 
-use  <libsnark/common/default_types/r1cs_ppzkadsnark_pp.hpp>
+use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
-namespace libsnark {
+
 
 template <>
 aesPrfKeyT prfGen<default_r1cs_ppzkadsnark_pp>() {
@@ -51,7 +51,7 @@ aesPrfKeyT prfGen<default_r1cs_ppzkadsnark_pp>() {
 }
 
 template<>
-libff::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>> prfCompute<default_r1cs_ppzkadsnark_pp>(
+ffec::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>> prfCompute<default_r1cs_ppzkadsnark_pp>(
     const aesPrfKeyT &key,  const labelT &label) {
     unsigned char seed_bytes[16];
     mpz_t aux,Fr_mod;
@@ -85,11 +85,11 @@ libff::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>> prfCompute<default_r1cs_ppzkads
 
     // see output as integer and reduce modulo r
     mpz_import(aux, 16*3, 0, 1, 0, 0, random_bytes);
-    libff::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>::mod.to_mpz(Fr_mod);
+    ffec::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>::mod.to_mpz(Fr_mod);
     mpz_mod(aux,aux,Fr_mod);
 
-    return libff::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>(
-        libff::bigint<libff::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>::num_limbs>(aux));
+    return ffec::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>(
+        ffec::bigint<ffec::Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>::num_limbs>(aux));
 }
 
-} // libsnark
+

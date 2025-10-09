@@ -9,10 +9,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef KRONECKER_SUBSTITUTION_HPP_
-#define KRONECKER_SUBSTITUTION_HPP_
+//#ifndef KRONECKER_SUBSTITUTION_HPP_
+// #define KRONECKER_SUBSTITUTION_HPP_
 
-#include <vector>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -28,9 +28,9 @@ void kronecker_substitution(std::vector<FieldT> &v3, const std::vector<FieldT> &
 
 } // libfqfft
 
-#include <libfqfft/kronecker_substitution/kronecker_substitution.tcc>
+use libfqfft/kronecker_substitution/kronecker_substitution.tcc;
 
-#endif // KRONECKER_SUBSTITUTION_HPP_
+//#endif // KRONECKER_SUBSTITUTION_HPP_
 /** @file
  *****************************************************************************
 
@@ -44,14 +44,14 @@ void kronecker_substitution(std::vector<FieldT> &v3, const std::vector<FieldT> &
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef KRONECKER_SUBSTITUTION_TCC_
-#define KRONECKER_SUBSTITUTION_TCC_
+//#ifndef KRONECKER_SUBSTITUTION_TCC_
+// #define KRONECKER_SUBSTITUTION_TCC_
 
-#include <algorithm>
-#include <cmath>
+//#include <algorithm>
+//#include <cmath>
 
-#include <gmp.h>
-#include <libff/common/utils.hpp>
+//#include <gmp.h>
+use ffec::common::utils;
 
 namespace libfqfft {
 
@@ -204,4 +204,4 @@ void kronecker_substitution(std::vector<FieldT> &v3, const std::vector<FieldT> &
 
 } // libfqfft
 
-#endif // KRONECKER_SUBSTITUTION_TCC_
+//#endif // KRONECKER_SUBSTITUTION_TCC_

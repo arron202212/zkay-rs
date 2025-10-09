@@ -7,13 +7,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP3_HPP_
-#define FP3_HPP_
-#include <vector>
+//#ifndef FP3_HPP_
+// #define FP3_HPP_
+//#include <vector>
 
-#include <libff/algebra/fields/prime_base/fp.hpp>
+use libff/algebra/fields/prime_base/fp;
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t n, const bigint<n>& modulus>
 class Fp3_model;
@@ -36,13 +36,13 @@ template<mp_size_t n, const bigint<n>& modulus>
 class Fp3_model {
 public:
     typedef Fp_model<n, modulus> my_Fp;
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
 
     static bigint<3*n> euler; // (modulus^3-1)/2
     static std::size_t s;       // modulus^3 = 2^s * t + 1
@@ -59,7 +59,7 @@ public:
     Fp3_model(const my_Fp& c0, const my_Fp& c1, const my_Fp& c2) : c0(c0), c1(c1), c2(c2) {};
 
     void clear() { c0.clear(); c1.clear(); c2.clear(); }
-    void print() const { printf("c0/c1/c2:\n"); c0.print(); c1.print(); c2.print(); }
+    void print() const { print!("c0/c1/c2:\n"); c0.print(); c1.print(); c2.print(); }
     void randomize();
 
     /**
@@ -114,7 +114,7 @@ public:
     friend std::istream& operator>> <n, modulus>(std::istream &in, Fp3_model<n, modulus> &el);
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp3_model<n, modulus>::add_cnt = 0;
 
@@ -129,7 +129,7 @@ long long Fp3_model<n, modulus>::sqr_cnt = 0;
 
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp3_model<n, modulus>::inv_cnt = 0;
-#endif
+//#endif
 
 template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp3_model<n, modulus> > &v);
@@ -167,10 +167,10 @@ Fp_model<n, modulus> Fp3_model<n, modulus>::Frobenius_coeffs_c1[3];
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n, modulus> Fp3_model<n, modulus>::Frobenius_coeffs_c2[3];
 
-} // namespace libff
-#include <libff/algebra/fields/prime_extension/fp3.tcc>
+// } // namespace libff
+use libff/algebra/fields/prime_extension/fp3.tcc;
 
-#endif // FP3_HPP_
+//#endif // FP3_HPP_
 /** @file
  *****************************************************************************
  Implementation of arithmetic in the finite field F[p^3].
@@ -180,12 +180,12 @@ Fp_model<n, modulus> Fp3_model<n, modulus>::Frobenius_coeffs_c2[3];
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP3_TCC_
-#define FP3_TCC_
+//#ifndef FP3_TCC_
+// #define FP3_TCC_
 
-#include <libff/algebra/field_utils/field_utils.hpp>
+use crate::algebra::field_utils::field_utils;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -233,9 +233,9 @@ bool Fp3_model<n,modulus>::operator!=(const Fp3_model<n,modulus> &other) const
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n,modulus> Fp3_model<n,modulus>::operator+(const Fp3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     return Fp3_model<n,modulus>(this->c0 + other.c0,
                                 this->c1 + other.c1,
                                 this->c2 + other.c2);
@@ -244,9 +244,9 @@ Fp3_model<n,modulus> Fp3_model<n,modulus>::operator+(const Fp3_model<n,modulus> 
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n,modulus> Fp3_model<n,modulus>::operator-(const Fp3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     return Fp3_model<n,modulus>(this->c0 - other.c0,
                                 this->c1 - other.c1,
                                 this->c2 - other.c2);
@@ -255,9 +255,9 @@ Fp3_model<n,modulus> Fp3_model<n,modulus>::operator-(const Fp3_model<n,modulus> 
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n, modulus> operator*(const Fp_model<n, modulus> &lhs, const Fp3_model<n, modulus> &rhs)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     rhs.mul_cnt++;
-#endif
+//#endif
     return Fp3_model<n,modulus>(lhs*rhs.c0,
                                 lhs*rhs.c1,
                                 lhs*rhs.c2);
@@ -266,9 +266,9 @@ Fp3_model<n, modulus> operator*(const Fp_model<n, modulus> &lhs, const Fp3_model
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n,modulus> Fp3_model<n,modulus>::operator*(const Fp3_model<n,modulus> &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba) */
     const my_Fp
         &A = other.c0, &B = other.c1, &C = other.c2,
@@ -342,9 +342,9 @@ Fp3_model<n,modulus>& Fp3_model<n,modulus>::operator^=(const bigint<m> &pow)
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n,modulus> Fp3_model<n,modulus>::squared() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
-#endif
+//#endif
     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
     const my_Fp
         &a = this->c0, &b = this->c1, &c = this->c2;
@@ -371,9 +371,9 @@ Fp3_model<n,modulus>& Fp3_model<n,modulus>::square()
 template<mp_size_t n, const bigint<n>& modulus>
 Fp3_model<n,modulus> Fp3_model<n,modulus>::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
-#endif
+//#endif
     const my_Fp
         &a = this->c0, &b = this->c1, &c = this->c2;
 
@@ -486,5 +486,5 @@ std::istream& operator>>(std::istream& in, std::vector<Fp3_model<n, modulus> > &
     return in;
 }
 
-} // namespace libff
-#endif // FP3_TCC_
+// } // namespace libff
+//#endif // FP3_TCC_

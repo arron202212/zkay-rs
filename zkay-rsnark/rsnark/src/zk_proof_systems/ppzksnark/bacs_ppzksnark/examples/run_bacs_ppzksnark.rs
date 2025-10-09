@@ -10,14 +10,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_BACS_PPZKSNARK_HPP_
-#define RUN_BACS_PPZKSNARK_HPP_
+//#ifndef RUN_BACS_PPZKSNARK_HPP_
+// #define RUN_BACS_PPZKSNARK_HPP_
 
-use  <libff/algebra/curves/public_params.hpp>
+use ffec::algebra::curves::public_params;
 
-use  <libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples.hpp>
+use libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples;
 
-namespace libsnark {
+
 
 /**
  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
@@ -27,14 +27,14 @@ namespace libsnark {
  * (This takes additional time.)
  */
 template<typename ppT>
-bool run_bacs_ppzksnark(const bacs_example<libff::Fr<ppT> > &example,
+bool run_bacs_ppzksnark(const bacs_example<ffec::Fr<ppT> > &example,
                         const bool test_serialization);
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark.tcc>
 
-#endif // RUN_BACS_PPZKSNARK_HPP_
+use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark;
+
+//#endif // RUN_BACS_PPZKSNARK_HPP_
 /** @file
  *****************************************************************************
 
@@ -49,16 +49,16 @@ use  <libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzks
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_BACS_PPZKSNARK_TCC_
-#define RUN_BACS_PPZKSNARK_TCC_
+//#ifndef RUN_BACS_PPZKSNARK_TCC_
+// #define RUN_BACS_PPZKSNARK_TCC_
 
 use  <sstream>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/bacs_ppzksnark.hpp>
+use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/bacs_ppzksnark;
 
-namespace libsnark {
+
 
 /**
  * The code below provides an example of all stages of running a BACS ppzkSNARK.
@@ -73,52 +73,52 @@ namespace libsnark {
  *     a primary input for C, and a proof.
  */
 template<typename ppT>
-bool run_bacs_ppzksnark(const bacs_example<libff::Fr<ppT> > &example,
+bool run_bacs_ppzksnark(const bacs_example<ffec::Fr<ppT> > &example,
                         const bool test_serialization)
 {
-    libff::enter_block("Call to run_bacs_ppzksnark");
+    ffec::enter_block("Call to run_bacs_ppzksnark");
 
-    libff::print_header("BACS ppzkSNARK Generator");
+    ffec::print_header("BACS ppzkSNARK Generator");
     bacs_ppzksnark_keypair<ppT> keypair = bacs_ppzksnark_generator<ppT>(example.circuit);
-    printf("\n"); libff::print_indent(); libff::print_mem("after generator");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
 
-    libff::print_header("Preprocess verification key");
+    ffec::print_header("Preprocess verification key");
     bacs_ppzksnark_processed_verification_key<ppT> pvk = bacs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of keys");
-        keypair.pk = libff::reserialize<bacs_ppzksnark_proving_key<ppT> >(keypair.pk);
-        keypair.vk = libff::reserialize<bacs_ppzksnark_verification_key<ppT> >(keypair.vk);
-        pvk = libff::reserialize<bacs_ppzksnark_processed_verification_key<ppT> >(pvk);
-        libff::leave_block("Test serialization of keys");
+        ffec::enter_block("Test serialization of keys");
+        keypair.pk = ffec::reserialize<bacs_ppzksnark_proving_key<ppT> >(keypair.pk);
+        keypair.vk = ffec::reserialize<bacs_ppzksnark_verification_key<ppT> >(keypair.vk);
+        pvk = ffec::reserialize<bacs_ppzksnark_processed_verification_key<ppT> >(pvk);
+        ffec::leave_block("Test serialization of keys");
     }
 
-    libff::print_header("BACS ppzkSNARK Prover");
+    ffec::print_header("BACS ppzkSNARK Prover");
     bacs_ppzksnark_proof<ppT> proof = bacs_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
-    printf("\n"); libff::print_indent(); libff::print_mem("after prover");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of proof");
-        proof = libff::reserialize<bacs_ppzksnark_proof<ppT> >(proof);
-        libff::leave_block("Test serialization of proof");
+        ffec::enter_block("Test serialization of proof");
+        proof = ffec::reserialize<bacs_ppzksnark_proof<ppT> >(proof);
+        ffec::leave_block("Test serialization of proof");
     }
 
-    libff::print_header("BACS ppzkSNARK Verifier");
+    ffec::print_header("BACS ppzkSNARK Verifier");
     bool ans = bacs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
-    printf("\n"); libff::print_indent(); libff::print_mem("after verifier");
-    printf("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
+    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
 
-    libff::print_header("BACS ppzkSNARK Online Verifier");
+    ffec::print_header("BACS ppzkSNARK Online Verifier");
     bool ans2 = bacs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
-    assert(ans == ans2);
+    assert!(ans == ans2);
 
-    libff::leave_block("Call to run_bacs_ppzksnark");
+    ffec::leave_block("Call to run_bacs_ppzksnark");
 
     return ans;
 }
 
-} // libsnark
 
-#endif // RUN_BACS_PPZKSNARK_TCC_
+
+//#endif // RUN_BACS_PPZKSNARK_TCC_

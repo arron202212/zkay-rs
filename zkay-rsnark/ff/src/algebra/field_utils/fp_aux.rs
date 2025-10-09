@@ -10,68 +10,68 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP_AUX_TCC_
-#define FP_AUX_TCC_
+//#ifndef FP_AUX_TCC_
+// #define FP_AUX_TCC_
 
-namespace libff {
+// namespace libff {
 
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
+// #define STR_HELPER(x) #x
+// #define STR(x) STR_HELPER(x)
 
 /* addq is faster than adcq, even if preceded by clc */
-#define ADD_FIRSTADD                            \
+// #define ADD_FIRSTADD                            \
     "movq    (%[B]), %%rax           \n\t"      \
     "addq    %%rax, (%[A])           \n\t"
 
-#define ADD_NEXTADD(ofs)                                \
+// #define ADD_NEXTADD(ofs)                                \
     "movq    " STR(ofs) "(%[B]), %%rax          \n\t"   \
     "adcq    %%rax, " STR(ofs) "(%[A])          \n\t"
 
-#define ADD_CMP(ofs)                                  \
+// #define ADD_CMP(ofs)                                  \
     "movq    " STR(ofs) "(%[mod]), %%rax   \n\t"      \
     "cmpq    %%rax, " STR(ofs) "(%[A])     \n\t"      \
     "jb      done%=              \n\t"                \
     "ja      subtract%=          \n\t"
 
-#define ADD_FIRSTSUB                            \
+// #define ADD_FIRSTSUB                            \
     "movq    (%[mod]), %%rax     \n\t"          \
     "subq    %%rax, (%[A])       \n\t"
 
-#define ADD_FIRSTSUB                            \
+// #define ADD_FIRSTSUB                            \
     "movq    (%[mod]), %%rax     \n\t"          \
     "subq    %%rax, (%[A])       \n\t"
 
-#define ADD_NEXTSUB(ofs)                                \
+// #define ADD_NEXTSUB(ofs)                                \
     "movq    " STR(ofs) "(%[mod]), %%rax    \n\t"       \
     "sbbq    %%rax, " STR(ofs) "(%[A])      \n\t"
 
-#define SUB_FIRSTSUB                            \
+// #define SUB_FIRSTSUB                            \
     "movq    (%[B]), %%rax\n\t"                 \
     "subq    %%rax, (%[A])\n\t"
 
-#define SUB_NEXTSUB(ofs)                        \
+// #define SUB_NEXTSUB(ofs)                        \
     "movq    " STR(ofs) "(%[B]), %%rax\n\t"     \
     "sbbq    %%rax, " STR(ofs) "(%[A])\n\t"
 
-#define SUB_FIRSTADD                            \
+// #define SUB_FIRSTADD                            \
     "movq    (%[mod]), %%rax\n\t"               \
     "addq    %%rax, (%[A])\n\t"
 
-#define SUB_NEXTADD(ofs)                        \
+// #define SUB_NEXTADD(ofs)                        \
     "movq    " STR(ofs) "(%[mod]), %%rax\n\t"   \
     "adcq    %%rax, " STR(ofs) "(%[A])\n\t"
 
-#define MONT_CMP(ofs)                                 \
+// #define MONT_CMP(ofs)                                 \
     "movq    " STR(ofs) "(%[M]), %%rax   \n\t"        \
     "cmpq    %%rax, " STR(ofs) "(%[tmp])   \n\t"      \
     "jb      done%=              \n\t"                \
     "ja      subtract%=          \n\t"
 
-#define MONT_FIRSTSUB                           \
+// #define MONT_FIRSTSUB                           \
     "movq    (%[M]), %%rax     \n\t"            \
     "subq    %%rax, (%[tmp])     \n\t"
 
-#define MONT_NEXTSUB(ofs)                               \
+// #define MONT_NEXTSUB(ofs)                               \
     "movq    " STR(ofs) "(%[M]), %%rax    \n\t"         \
     "sbbq    %%rax, " STR(ofs) "(%[tmp])   \n\t"
 
@@ -82,7 +82,7 @@ namespace libff {
   (see comments on top of powerpc64/mulredc.m4).
 */
 
-#define MONT_PRECOMPUTE                                                 \
+// #define MONT_PRECOMPUTE                                                 \
     "xorq    %[cy], %[cy]            \n\t"                              \
     "movq    0(%[A]), %%rax          \n\t"                              \
     "mulq    0(%[B])                 \n\t"                              \
@@ -95,7 +95,7 @@ namespace libff {
     "adcq    %%rdx, %[T1]            \n\t"                              \
     "adcq    $0, %[cy]               # cy:T1 <- (M[0]*u + T1 * b + T0) / b\n\t"
 
-#define MONT_FIRSTITER(j)                                               \
+// #define MONT_FIRSTITER(j)                                               \
     "xorq    %[T0], %[T0]            \n\t"                              \
     "movq    0(%[A]), %%rax          \n\t"                              \
     "mulq    " STR((j*8)) "(%[B])                 \n\t"                 \
@@ -112,7 +112,7 @@ namespace libff {
     "addq    %%rdx, %[T1]            \n\t"                              \
     "adcq    %[T0], %[cy]            # cy:T1:tmp[j-1] <---- (X[0] * Y[j] + T1) + (M[j] * u + cy * b) \n\t"
 
-#define MONT_ITERFIRST(i)                            \
+// #define MONT_ITERFIRST(i)                            \
     "xorq    %[cy], %[cy]            \n\t"              \
     "movq    " STR((i*8)) "(%[A]), %%rax          \n\t" \
     "mulq    0(%[B])                 \n\t"              \
@@ -128,7 +128,7 @@ namespace libff {
     "adcq    %%rdx, %[T1]            \n\t"                              \
     "adcq    $0, %[cy]               # cy:T1 <- (M[0]*u + cy * b * b + T1 * b + T0) / b\n\t"
 
-#define MONT_ITERITER(i, j)                                             \
+// #define MONT_ITERITER(i, j)                                             \
     "xorq    %[T0], %[T0]            \n\t"                              \
     "movq    " STR((i*8)) "(%[A]), %%rax          \n\t"                 \
     "mulq    " STR((j*8)) "(%[B])                 \n\t"                 \
@@ -147,7 +147,7 @@ namespace libff {
     "addq    " STR(((j+1)*8)) "(%[tmp]), %[T1]       \n\t" \
     "adcq    $0, %[cy]               # cy:T1:tmp[j-1] <-- (X[i] * Y[j] + T1) + M[j] * u + (tmp[j+1] + cy) * b \n\t"
 
-#define MONT_FINALIZE(j)                  \
+// #define MONT_FINALIZE(j)                  \
     "movq    %[T1], " STR((j*8)) "(%[tmp])       \n\t"          \
     "movq    %[cy], " STR(((j+1)*8)) "(%[tmp])       \n\t"
 
@@ -162,7 +162,7 @@ namespace libff {
   renaming to implement Comba forward operation.
  */
 
-#define COMBA_3_BY_3_MUL(c0_, c1_, c2_, res_, A_, B_)    \
+// #define COMBA_3_BY_3_MUL(c0_, c1_, c2_, res_, A_, B_)    \
     asm volatile (                              \
         "movq  0(%[A]), %%rax             \n\t" \
         "mulq  0(%[B])                    \n\t" \
@@ -231,7 +231,7 @@ namespace libff {
         : [res] "r" (res_), [A] "r" (A_), [B] "r" (B_)     \
         : "%rax", "%rdx", "cc", "memory")
 
-#define COMBA_3_BY_3_SQR(c0_, c1_, c2_, res_, A_)    \
+// #define COMBA_3_BY_3_SQR(c0_, c1_, c2_, res_, A_)    \
     asm volatile (                              \
         "xorq  %[c1], %[c1]               \n\t" \
         "xorq  %[c2], %[c2]               \n\t" \
@@ -296,7 +296,7 @@ namespace libff {
   Handbook of Applied Cryptography
   <http://cacr.uwaterloo.ca/hac/about/chap14.pdf>.
  */
-#define REDUCE_6_LIMB_PRODUCT(k_, tmp1_, tmp2_, tmp3_, inv_, res_, mod_) \
+// #define REDUCE_6_LIMB_PRODUCT(k_, tmp1_, tmp2_, tmp3_, inv_, res_, mod_) \
     __asm__ volatile                               \
         ("///////////////////////////////////\n\t" \
          "movq   0(%[res]), %%rax            \n\t" \
@@ -385,5 +385,5 @@ namespace libff {
          : [modprime] "r" (inv_), [res] "r" (res_), [mod] "r" (mod_) \
          : "%rax", "%rdx", "cc", "memory")
 
-} // namespace libff
-#endif // FP_AUX_TCC_
+// } // namespace libff
+//#endif // FP_AUX_TCC_

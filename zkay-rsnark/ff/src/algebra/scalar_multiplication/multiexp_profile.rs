@@ -8,13 +8,13 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include <cstdio>
-#include <vector>
+//#include <cstdio>
+//#include <vector>
 
-#include <libff/algebra/curves/bn128/bn128_pp.hpp>
-#include <libff/algebra/scalar_multiplication/multiexp.hpp>
-#include <libff/common/profiling.hpp>
-#include <libff/common/rng.hpp>
+use libff/algebra/curves/bn128/bn128_pp;
+use crate::algebra::scalar_multiplication::multiexp;
+use crate::common::profiling;
+use crate::common::rng;
 
 using namespace libff;
 
@@ -89,7 +89,7 @@ void print_performance_csv(
     bool compare_answers)
 {
     for (size_t expn = expn_start; expn <= expn_end_fast; expn++) {
-        printf("%ld", expn); fflush(stdout);
+        print!("%ld", expn); fflush(stdout);
 
         test_instances_t<GroupT> group_elements =
             generate_group_elements<GroupT>(10, 1 << expn);
@@ -99,12 +99,12 @@ void print_performance_csv(
         run_result_t<GroupT> result_bos_coster =
             profile_multiexp<GroupT, FieldT, multi_exp_method_bos_coster>(
                 group_elements, scalars);
-        printf("\t%lld", result_bos_coster.first); fflush(stdout);
+        print!("\t%lld", result_bos_coster.first); fflush(stdout);
 
         run_result_t<GroupT> result_djb =
             profile_multiexp<GroupT, FieldT, multi_exp_method_BDLO12>(
                 group_elements, scalars);
-        printf("\t%lld", result_djb.first); fflush(stdout);
+        print!("\t%lld", result_djb.first); fflush(stdout);
 
         if (compare_answers && (result_bos_coster.second != result_djb.second)) {
             fprintf(stderr, "Answers NOT MATCHING (bos coster != djb)\n");
@@ -114,14 +114,14 @@ void print_performance_csv(
             run_result_t<GroupT> result_naive =
                 profile_multiexp<GroupT, FieldT, multi_exp_method_naive>(
                     group_elements, scalars);
-            printf("\t%lld", result_naive.first); fflush(stdout);
+            print!("\t%lld", result_naive.first); fflush(stdout);
 
             if (compare_answers && (result_bos_coster.second != result_naive.second)) {
                 fprintf(stderr, "Answers NOT MATCHING (bos coster != naive)\n");
             }
         }
 
-        printf("\n");
+        print!("\n");
     }
 }
 
@@ -129,11 +129,11 @@ int main()
 {
     print_compilation_info();
 
-    printf("Profiling BN128_G1\n");
+    print!("Profiling BN128_G1\n");
     bn128_pp::init_public_params();
     print_performance_csv<G1<bn128_pp>, Fr<bn128_pp> >(2, 20, 14, true);
 
-    printf("Profiling BN128_G2\n");
+    print!("Profiling BN128_G2\n");
     print_performance_csv<G2<bn128_pp>, Fr<bn128_pp> >(2, 20, 14, true);
 
     return 0;

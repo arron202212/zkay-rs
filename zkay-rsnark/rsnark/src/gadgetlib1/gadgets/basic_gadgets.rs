@@ -5,15 +5,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_GADGETS_HPP_
-#define BASIC_GADGETS_HPP_
+//#ifndef BASIC_GADGETS_HPP_
+// #define BASIC_GADGETS_HPP_
 
 use  <cassert>
 use  <memory>
 
-use  <libsnark/gadgetlib1/gadget.hpp>
+use libsnark/gadgetlib1/gadget;
 
-namespace libsnark {
+
 
 /* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
 template<typename FieldT>
@@ -121,12 +121,12 @@ public:
                          const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix)
     {
-        packed.allocate(pb, FMT(this->annotation_prefix, " packed"));
-        bits.allocate(pb, width, FMT(this->annotation_prefix, " bits"));
+        packed.allocate(pb, FMT(self.annotation_prefix, " packed"));
+        bits.allocate(pb, width, FMT(self.annotation_prefix, " bits"));
         consistency_check.reset(new packing_gadget<FieldT>(pb,
                                                            bits,
                                                            packed,
-                                                           FMT(this->annotation_prefix, " consistency_check")));
+                                                           FMT(self.annotation_prefix, " consistency_check")));
     }
 
     dual_variable_gadget(protoboard<FieldT> &pb,
@@ -134,11 +134,11 @@ public:
                          const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), bits(bits)
     {
-        packed.allocate(pb, FMT(this->annotation_prefix, " packed"));
+        packed.allocate(pb, FMT(self.annotation_prefix, " packed"));
         consistency_check.reset(new packing_gadget<FieldT>(pb,
                                                            bits,
                                                            packed,
-                                                           FMT(this->annotation_prefix, " consistency_check")));
+                                                           FMT(self.annotation_prefix, " consistency_check")));
     }
 
     dual_variable_gadget(protoboard<FieldT> &pb,
@@ -147,11 +147,11 @@ public:
                          const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), packed(packed)
     {
-        bits.allocate(pb, width, FMT(this->annotation_prefix, " bits"));
+        bits.allocate(pb, width, FMT(self.annotation_prefix, " bits"));
         consistency_check.reset(new packing_gadget<FieldT>(pb,
                                                            bits,
                                                            packed,
-                                                           FMT(this->annotation_prefix, " consistency_check")));
+                                                           FMT(self.annotation_prefix, " consistency_check")));
     }
 
     void generate_r1cs_constraints(const bool enforce_bitness);
@@ -182,8 +182,8 @@ public:
                        const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), inputs(inputs), output(output)
     {
-        assert(inputs.size() >= 1);
-        inv.allocate(pb, FMT(this->annotation_prefix, " inv"));
+        assert!(inputs.size() >= 1);
+        inv.allocate(pb, FMT(self.annotation_prefix, " inv"));
     }
 
     void generate_r1cs_constraints();
@@ -207,8 +207,8 @@ public:
                        const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), inputs(inputs), output(output)
     {
-        assert(inputs.size() >= 1);
-        inv.allocate(pb, FMT(this->annotation_prefix, " inv"));
+        assert!(inputs.size() >= 1);
+        inv.allocate(pb, FMT(self.annotation_prefix, " inv"));
     }
 
     void generate_r1cs_constraints();
@@ -243,19 +243,19 @@ public:
                       const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), n(n), A(A), B(B), less(less), less_or_eq(less_or_eq)
     {
-        alpha.allocate(pb, n, FMT(this->annotation_prefix, " alpha"));
-        alpha.emplace_back(less_or_eq); // alpha[n] is less_or_eq
+        alpha.allocate(pb, n, FMT(self.annotation_prefix, " alpha"));
+        alpha.push(less_or_eq); // alpha[n] is less_or_eq
 
-        alpha_packed.allocate(pb, FMT(this->annotation_prefix, " alpha_packed"));
-        not_all_zeros.allocate(pb, FMT(this->annotation_prefix, " not_all_zeros"));
+        alpha_packed.allocate(pb, FMT(self.annotation_prefix, " alpha_packed"));
+        not_all_zeros.allocate(pb, FMT(self.annotation_prefix, " not_all_zeros"));
 
         pack_alpha.reset(new packing_gadget<FieldT>(pb, alpha, alpha_packed,
-                                                    FMT(this->annotation_prefix, " pack_alpha")));
+                                                    FMT(self.annotation_prefix, " pack_alpha")));
 
         all_zeros_test.reset(new disjunction_gadget<FieldT>(pb,
                                                             pb_variable_array<FieldT>(alpha.begin(), alpha.begin() + n),
                                                             not_all_zeros,
-                                                            FMT(this->annotation_prefix, " all_zeros_test")));
+                                                            FMT(self.annotation_prefix, " all_zeros_test")));
     };
 
     void generate_r1cs_constraints();
@@ -282,10 +282,10 @@ public:
                          const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), A(A), B(B), result(result)
     {
-        assert(A.size() >= 1);
-        assert(A.size() == B.size());
+        assert!(A.size() >= 1);
+        assert!(A.size() == B.size());
 
-        S.allocate(pb, A.size()-1, FMT(this->annotation_prefix, " S"));
+        S.allocate(pb, A.size()-1, FMT(self.annotation_prefix, " S"));
     }
 
     void generate_r1cs_constraints();
@@ -321,8 +321,8 @@ public:
                               const std::string &annotation_prefix="") :
         gadget<FieldT>(pb, annotation_prefix), arr(arr), index(index), result(result), success_flag(success_flag)
     {
-        alpha.allocate(pb, arr.size(), FMT(this->annotation_prefix, " alpha"));
-        compute_result.reset(new inner_product_gadget<FieldT>(pb, alpha, arr, result, FMT(this->annotation_prefix, " compute_result")));
+        alpha.allocate(pb, arr.size(), FMT(self.annotation_prefix, " alpha"));
+        compute_result.reset(new inner_product_gadget<FieldT>(pb, alpha, arr, result, FMT(self.annotation_prefix, " compute_result")));
     };
 
     void generate_r1cs_constraints();
@@ -345,10 +345,10 @@ void create_linear_combination_witness(protoboard<FieldT> &pb,
                                        const std::vector<std::pair<VarT, FieldT> > &v,
                                        const VarT &target);
 
-} // libsnark
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.tcc>
 
-#endif // BASIC_GADGETS_HPP_
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+
+//#endif // BASIC_GADGETS_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -356,13 +356,13 @@ use  <libsnark/gadgetlib1/gadgets/basic_gadgets.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_GADGETS_TCC_
-#define BASIC_GADGETS_TCC_
+//#ifndef BASIC_GADGETS_TCC_
+// #define BASIC_GADGETS_TCC_
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 void generate_boolean_r1cs_constraint(protoboard<FieldT> &pb, const pb_linear_combination<FieldT> &lc, const std::string &annotation_prefix)
@@ -383,13 +383,13 @@ template<typename FieldT>
 void packing_gadget<FieldT>::generate_r1cs_constraints(const bool enforce_bitness)
 /* adds constraint result = \sum  bits[i] * 2^i */
 {
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_packing_sum<FieldT>(bits), packed), FMT(this->annotation_prefix, " packing_constraint"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_packing_sum<FieldT>(bits), packed), FMT(self.annotation_prefix, " packing_constraint"));
 
     if (enforce_bitness)
     {
         for (size_t i = 0; i < bits.size(); ++i)
         {
-            generate_boolean_r1cs_constraint<FieldT>(this->pb, bits[i], FMT(this->annotation_prefix, " bitness_%zu", i));
+            generate_boolean_r1cs_constraint<FieldT>(self.pb, bits[i], FMT(self.annotation_prefix, " bitness_{}", i));
         }
     }
 }
@@ -397,16 +397,16 @@ void packing_gadget<FieldT>::generate_r1cs_constraints(const bool enforce_bitnes
 template<typename FieldT>
 void packing_gadget<FieldT>::generate_r1cs_witness_from_packed()
 {
-    packed.evaluate(this->pb);
-    assert(this->pb.lc_val(packed).as_bigint().num_bits() <= bits.size()); // `bits` is large enough to represent this packed value
-    bits.fill_with_bits_of_field_element(this->pb, this->pb.lc_val(packed));
+    packed.evaluate(self.pb);
+    assert!(self.pb.lc_val(packed).as_bigint().num_bits() <= bits.size()); // `bits` is large enough to represent this packed value
+    bits.fill_with_bits_of_field_element(self.pb, self.pb.lc_val(packed));
 }
 
 template<typename FieldT>
 void packing_gadget<FieldT>::generate_r1cs_witness_from_bits()
 {
-    bits.evaluate(this->pb);
-    this->pb.lc_val(packed) = bits.get_field_element_from_bits(this->pb);
+    bits.evaluate(self.pb);
+    self.pb.lc_val(packed) = bits.get_field_element_from_bits(self.pb);
 }
 
 template<typename FieldT>
@@ -417,15 +417,15 @@ multipacking_gadget<FieldT>::multipacking_gadget(protoboard<FieldT> &pb,
                                                  const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix), bits(bits), packed_vars(packed_vars),
     chunk_size(chunk_size),
-    num_chunks(libff::div_ceil(bits.size(), chunk_size))
+    num_chunks(ffec::div_ceil(bits.size(), chunk_size))
     // last_chunk_size(bits.size() - (num_chunks-1) * chunk_size)
 {
-    assert(packed_vars.size() == num_chunks);
+    assert!(packed_vars.size() == num_chunks);
     for (size_t i = 0; i < num_chunks; ++i)
     {
-        packers.emplace_back(packing_gadget<FieldT>(this->pb, pb_linear_combination_array<FieldT>(bits.begin() + i * chunk_size,
+        packers.push(packing_gadget<FieldT>(self.pb, pb_linear_combination_array<FieldT>(bits.begin() + i * chunk_size,
                                                                                                   bits.begin() + std::min((i+1) * chunk_size, bits.size())),
-                                                    packed_vars[i], FMT(this->annotation_prefix, " packers_%zu", i)));
+                                                    packed_vars[i], FMT(self.annotation_prefix, " packers_{}", i)));
     }
 }
 
@@ -459,7 +459,7 @@ void multipacking_gadget<FieldT>::generate_r1cs_witness_from_bits()
 template<typename FieldT>
 size_t multipacking_num_chunks(const size_t num_bits)
 {
-    return libff::div_ceil(num_bits, FieldT::capacity());
+    return ffec::div_ceil(num_bits, FieldT::capacity());
 }
 
 template<typename FieldT>
@@ -470,7 +470,7 @@ field_vector_copy_gadget<FieldT>::field_vector_copy_gadget(protoboard<FieldT> &p
                                                            const std::string &annotation_prefix) :
 gadget<FieldT>(pb, annotation_prefix), source(source), target(target), do_copy(do_copy)
 {
-    assert(source.size() == target.size());
+    assert!(source.size() == target.size());
 }
 
 template<typename FieldT>
@@ -478,21 +478,21 @@ void field_vector_copy_gadget<FieldT>::generate_r1cs_constraints()
 {
     for (size_t i = 0; i < source.size(); ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(do_copy, source[i] - target[i], 0),
-                                     FMT(this->annotation_prefix, " copying_check_%zu", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(do_copy, source[i] - target[i], 0),
+                                     FMT(self.annotation_prefix, " copying_check_{}", i));
     }
 }
 
 template<typename FieldT>
 void field_vector_copy_gadget<FieldT>::generate_r1cs_witness()
 {
-    do_copy.evaluate(this->pb);
-    assert(this->pb.lc_val(do_copy) == FieldT::one() || this->pb.lc_val(do_copy) == FieldT::zero());
-    if (this->pb.lc_val(do_copy) != FieldT::zero())
+    do_copy.evaluate(self.pb);
+    assert!(self.pb.lc_val(do_copy) == FieldT::one() || self.pb.lc_val(do_copy) == FieldT::zero());
+    if (self.pb.lc_val(do_copy) != FieldT::zero())
     {
         for (size_t i = 0; i < source.size(); ++i)
         {
-            this->pb.val(target[i]) = this->pb.val(source[i]);
+            self.pb.val(target[i]) = self.pb.val(source[i]);
         }
     }
 }
@@ -505,9 +505,9 @@ bit_vector_copy_gadget<FieldT>::bit_vector_copy_gadget(protoboard<FieldT> &pb,
                                                        const size_t chunk_size,
                                                        const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix), source_bits(source_bits), target_bits(target_bits), do_copy(do_copy),
-    chunk_size(chunk_size), num_chunks(libff::div_ceil(source_bits.size(), chunk_size))
+    chunk_size(chunk_size), num_chunks(ffec::div_ceil(source_bits.size(), chunk_size))
 {
-    assert(source_bits.size() == target_bits.size());
+    assert!(source_bits.size() == target_bits.size());
 
     packed_source.allocate(pb, num_chunks, FMT(annotation_prefix, " packed_source"));
     pack_source.reset(new multipacking_gadget<FieldT>(pb, source_bits, packed_source, chunk_size, FMT(annotation_prefix, " pack_source")));
@@ -530,13 +530,13 @@ void bit_vector_copy_gadget<FieldT>::generate_r1cs_constraints(const bool enforc
 template<typename FieldT>
 void bit_vector_copy_gadget<FieldT>::generate_r1cs_witness()
 {
-    do_copy.evaluate(this->pb);
-    assert(this->pb.lc_val(do_copy) == FieldT::zero() || this->pb.lc_val(do_copy) == FieldT::one());
-    if (this->pb.lc_val(do_copy) == FieldT::one())
+    do_copy.evaluate(self.pb);
+    assert!(self.pb.lc_val(do_copy) == FieldT::zero() || self.pb.lc_val(do_copy) == FieldT::one());
+    if (self.pb.lc_val(do_copy) == FieldT::one())
     {
         for (size_t i = 0; i < source_bits.size(); ++i)
         {
-            this->pb.val(target_bits[i]) = this->pb.val(source_bits[i]);
+            self.pb.val(target_bits[i]) = self.pb.val(source_bits[i]);
         }
     }
 
@@ -574,7 +574,7 @@ void disjunction_gadget<FieldT>::generate_r1cs_constraints()
     }
     c1.add_term(output);
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a1, b1, c1), FMT(this->annotation_prefix, " inv*sum=output"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a1, b1, c1), FMT(self.annotation_prefix, " inv*sum=output"));
 
     /* (1-output) * sum = 0 */
     linear_combination<FieldT> a2, b2, c2;
@@ -586,7 +586,7 @@ void disjunction_gadget<FieldT>::generate_r1cs_constraints()
     }
     c2.add_term(ONE, 0);
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a2, b2, c2), FMT(this->annotation_prefix, " (1-output)*sum=0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a2, b2, c2), FMT(self.annotation_prefix, " (1-output)*sum=0"));
 }
 
 template<typename FieldT>
@@ -596,25 +596,25 @@ void disjunction_gadget<FieldT>::generate_r1cs_witness()
 
     for (size_t i = 0; i < inputs.size(); ++i)
     {
-        sum += this->pb.val(inputs[i]);
+        sum += self.pb.val(inputs[i]);
     }
 
     if (sum.is_zero())
     {
-        this->pb.val(inv) = FieldT::zero();
-        this->pb.val(output) = FieldT::zero();
+        self.pb.val(inv) = FieldT::zero();
+        self.pb.val(output) = FieldT::zero();
     }
     else
     {
-        this->pb.val(inv) = sum.inverse();
-        this->pb.val(output) = FieldT::one();
+        self.pb.val(inv) = sum.inverse();
+        self.pb.val(output) = FieldT::one();
     }
 }
 
 template<typename FieldT>
 void test_disjunction_gadget(const size_t n)
 {
-    printf("testing disjunction_gadget on all %zu bit strings\n", n);
+    print!("testing disjunction_gadget on all {} bit strings\n", n);
 
     protoboard<FieldT> pb;
     pb_variable_array<FieldT> inputs;
@@ -635,20 +635,20 @@ void test_disjunction_gadget(const size_t n)
 
         d.generate_r1cs_witness();
 
-#ifdef DEBUG
-        printf("positive test for %zu\n", w);
-#endif
-        assert(pb.val(output) == (w ? FieldT::one() : FieldT::zero()));
-        assert(pb.is_satisfied());
+// #ifdef DEBUG
+        print!("positive test for {}\n", w);
+//#endif
+        assert!(pb.val(output) == (w ? FieldT::one() : FieldT::zero()));
+        assert!(pb.is_satisfied());
 
-#ifdef DEBUG
-        printf("negative test for %zu\n", w);
-#endif
+// #ifdef DEBUG
+        print!("negative test for {}\n", w);
+//#endif
         pb.val(output) = (w ? FieldT::zero() : FieldT::one());
-        assert(!pb.is_satisfied());
+        assert!(!pb.is_satisfied());
     }
 
-    libff::print_time("disjunction tests successful");
+    ffec::print_time("disjunction tests successful");
 }
 
 template<typename FieldT>
@@ -665,7 +665,7 @@ void conjunction_gadget<FieldT>::generate_r1cs_constraints()
     c1.add_term(ONE);
     c1.add_term(output, -1);
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a1, b1, c1), FMT(this->annotation_prefix, " inv*(n-sum)=(1-output)"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a1, b1, c1), FMT(self.annotation_prefix, " inv*(n-sum)=(1-output)"));
 
     /* output * (n-sum) = 0 */
     linear_combination<FieldT> a2, b2, c2;
@@ -677,7 +677,7 @@ void conjunction_gadget<FieldT>::generate_r1cs_constraints()
     }
     c2.add_term(ONE, 0);
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a2, b2, c2), FMT(this->annotation_prefix, " output*(n-sum)=0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a2, b2, c2), FMT(self.annotation_prefix, " output*(n-sum)=0"));
 }
 
 template<typename FieldT>
@@ -687,25 +687,25 @@ void conjunction_gadget<FieldT>::generate_r1cs_witness()
 
     for (size_t i = 0; i < inputs.size(); ++i)
     {
-        sum -= this->pb.val(inputs[i]);
+        sum -= self.pb.val(inputs[i]);
     }
 
     if (sum.is_zero())
     {
-        this->pb.val(inv) = FieldT::zero();
-        this->pb.val(output) = FieldT::one();
+        self.pb.val(inv) = FieldT::zero();
+        self.pb.val(output) = FieldT::one();
     }
     else
     {
-        this->pb.val(inv) = sum.inverse();
-        this->pb.val(output) = FieldT::zero();
+        self.pb.val(inv) = sum.inverse();
+        self.pb.val(output) = FieldT::zero();
     }
 }
 
 template<typename FieldT>
 void test_conjunction_gadget(const size_t n)
 {
-    printf("testing conjunction_gadget on all %zu bit strings\n", n);
+    print!("testing conjunction_gadget on all {} bit strings\n", n);
 
     protoboard<FieldT> pb;
     pb_variable_array<FieldT> inputs;
@@ -726,20 +726,20 @@ void test_conjunction_gadget(const size_t n)
 
         c.generate_r1cs_witness();
 
-#ifdef DEBUG
-        printf("positive test for %zu\n", w);
-#endif
-        assert(pb.val(output) == (w == (1ul<<n) - 1 ? FieldT::one() : FieldT::zero()));
-        assert(pb.is_satisfied());
+// #ifdef DEBUG
+        print!("positive test for {}\n", w);
+//#endif
+        assert!(pb.val(output) == (w == (1ul<<n) - 1 ? FieldT::one() : FieldT::zero()));
+        assert!(pb.is_satisfied());
 
-#ifdef DEBUG
-        printf("negative test for %zu\n", w);
-#endif
+// #ifdef DEBUG
+        print!("negative test for {}\n", w);
+//#endif
         pb.val(output) = (w == (1ul<<n) - 1 ? FieldT::zero() : FieldT::one());
-        assert(!pb.is_satisfied());
+        assert!(!pb.is_satisfied());
     }
 
-    libff::print_time("conjunction tests successful");
+    ffec::print_time("conjunction tests successful");
 }
 
 template<typename FieldT>
@@ -761,38 +761,38 @@ void comparison_gadget<FieldT>::generate_r1cs_constraints()
      */
 
     /* not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget */
-    generate_boolean_r1cs_constraint<FieldT>(this->pb, not_all_zeros,
-                                     FMT(this->annotation_prefix, " not_all_zeros"));
+    generate_boolean_r1cs_constraint<FieldT>(self.pb, not_all_zeros,
+                                     FMT(self.annotation_prefix, " not_all_zeros"));
 
     /* constraints for packed(alpha) = 2^n + B - A */
     pack_alpha->generate_r1cs_constraints(true);
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, (FieldT(2)^n) + B - A, alpha_packed), FMT(this->annotation_prefix, " main_constraint"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, (FieldT(2)^n) + B - A, alpha_packed), FMT(self.annotation_prefix, " main_constraint"));
 
     /* compute result */
     all_zeros_test->generate_r1cs_constraints();
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(less_or_eq, not_all_zeros, less),
-                                 FMT(this->annotation_prefix, " less"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(less_or_eq, not_all_zeros, less),
+                                 FMT(self.annotation_prefix, " less"));
 }
 
 template<typename FieldT>
 void comparison_gadget<FieldT>::generate_r1cs_witness()
 {
-    A.evaluate(this->pb);
-    B.evaluate(this->pb);
+    A.evaluate(self.pb);
+    B.evaluate(self.pb);
 
     /* unpack 2^n + B - A into alpha_packed */
-    this->pb.val(alpha_packed) = (FieldT(2)^n) + this->pb.lc_val(B) - this->pb.lc_val(A);
+    self.pb.val(alpha_packed) = (FieldT(2)^n) + self.pb.lc_val(B) - self.pb.lc_val(A);
     pack_alpha->generate_r1cs_witness_from_packed();
 
     /* compute result */
     all_zeros_test->generate_r1cs_witness();
-    this->pb.val(less) = this->pb.val(less_or_eq) * this->pb.val(not_all_zeros);
+    self.pb.val(less) = self.pb.val(less_or_eq) * self.pb.val(not_all_zeros);
 }
 
 template<typename FieldT>
 void test_comparison_gadget(const size_t n)
 {
-    printf("testing comparison_gadget on all %zu bit inputs\n", n);
+    print!("testing comparison_gadget on all {} bit inputs\n", n);
 
     protoboard<FieldT> pb;
 
@@ -814,16 +814,16 @@ void test_comparison_gadget(const size_t n)
 
             cmp.generate_r1cs_witness();
 
-#ifdef DEBUG
-            printf("positive test for %zu < %zu\n", a, b);
-#endif
-            assert(pb.val(less) == (a < b ? FieldT::one() : FieldT::zero()));
-            assert(pb.val(less_or_eq) == (a <= b ? FieldT::one() : FieldT::zero()));
-            assert(pb.is_satisfied());
+// #ifdef DEBUG
+            print!("positive test for {} < {}\n", a, b);
+//#endif
+            assert!(pb.val(less) == (a < b ? FieldT::one() : FieldT::zero()));
+            assert!(pb.val(less_or_eq) == (a <= b ? FieldT::one() : FieldT::zero()));
+            assert!(pb.is_satisfied());
         }
     }
 
-    libff::print_time("comparison tests successful");
+    ffec::print_time("comparison tests successful");
 }
 
 template<typename FieldT>
@@ -836,10 +836,10 @@ void inner_product_gadget<FieldT>::generate_r1cs_constraints()
     */
     for (size_t i = 0; i < A.size(); ++i)
     {
-        this->pb.add_r1cs_constraint(
+        self.pb.add_r1cs_constraint(
             r1cs_constraint<FieldT>(A[i], B[i],
                                     (i == A.size()-1 ? result : S[i]) + (i == 0 ? 0 * ONE : -S[i-1])),
-            FMT(this->annotation_prefix, " S_%zu", i));
+            FMT(self.annotation_prefix, " S_{}", i));
     }
 }
 
@@ -849,18 +849,18 @@ void inner_product_gadget<FieldT>::generate_r1cs_witness()
     FieldT total = FieldT::zero();
     for (size_t i = 0; i < A.size(); ++i)
     {
-        A[i].evaluate(this->pb);
-        B[i].evaluate(this->pb);
+        A[i].evaluate(self.pb);
+        B[i].evaluate(self.pb);
 
-        total += this->pb.lc_val(A[i]) * this->pb.lc_val(B[i]);
-        this->pb.val(i == A.size()-1 ? result : S[i]) = total;
+        total += self.pb.lc_val(A[i]) * self.pb.lc_val(B[i]);
+        self.pb.val(i == A.size()-1 ? result : S[i]) = total;
     }
 }
 
 template<typename FieldT>
 void test_inner_product_gadget(const size_t n)
 {
-    printf("testing inner_product_gadget on all %zu bit strings\n", n);
+    print!("testing inner_product_gadget on all {} bit strings\n", n);
 
     protoboard<FieldT> pb;
     pb_variable_array<FieldT> A;
@@ -887,21 +887,21 @@ void test_inner_product_gadget(const size_t n)
             }
 
             g.generate_r1cs_witness();
-#ifdef DEBUG
-            printf("positive test for (%zu, %zu)\n", i, j);
-#endif
-            assert(pb.val(result) == FieldT(correct));
-            assert(pb.is_satisfied());
+// #ifdef DEBUG
+            print!("positive test for ({}, {})\n", i, j);
+//#endif
+            assert!(pb.val(result) == FieldT(correct));
+            assert!(pb.is_satisfied());
 
-#ifdef DEBUG
-            printf("negative test for (%zu, %zu)\n", i, j);
-#endif
+// #ifdef DEBUG
+            print!("negative test for ({}, {})\n", i, j);
+//#endif
             pb.val(result) = FieldT(100*n+19);
-            assert(!pb.is_satisfied());
+            assert!(!pb.is_satisfied());
         }
     }
 
-    libff::print_time("inner_product_gadget tests successful");
+    ffec::print_time("inner_product_gadget tests successful");
 }
 
 template<typename FieldT>
@@ -910,9 +910,9 @@ void loose_multiplexing_gadget<FieldT>::generate_r1cs_constraints()
     /* \alpha_i (index - i) = 0 */
     for (size_t i = 0; i < arr.size(); ++i)
     {
-        this->pb.add_r1cs_constraint(
+        self.pb.add_r1cs_constraint(
             r1cs_constraint<FieldT>(alpha[i], index - i, 0),
-            FMT(this->annotation_prefix, " alpha_%zu", i));
+            FMT(self.annotation_prefix, " alpha_{}", i));
     }
 
     /* 1 * (\sum \alpha_i) = success_flag */
@@ -923,11 +923,11 @@ void loose_multiplexing_gadget<FieldT>::generate_r1cs_constraints()
         b.add_term(alpha[i]);
     }
     c.add_term(success_flag);
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), FMT(this->annotation_prefix, " main_constraint"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), FMT(self.annotation_prefix, " main_constraint"));
 
     /* now success_flag is constrained to either 0 (if index is out of
        range) or \alpha_i. constrain it and \alpha_i to zero */
-    generate_boolean_r1cs_constraint<FieldT>(this->pb, success_flag, FMT(this->annotation_prefix, " success_flag"));
+    generate_boolean_r1cs_constraint<FieldT>(self.pb, success_flag, FMT(self.annotation_prefix, " success_flag"));
 
     /* compute result */
     compute_result->generate_r1cs_constraints();
@@ -937,27 +937,27 @@ template<typename FieldT>
 void loose_multiplexing_gadget<FieldT>::generate_r1cs_witness()
 {
     /* assumes that idx can be fit in ulong; true for our purposes for now */
-    const libff::bigint<FieldT::num_limbs> valint = this->pb.val(index).as_bigint();
+    const ffec::bigint<FieldT::num_limbs> valint = self.pb.val(index).as_bigint();
     unsigned long idx = valint.as_ulong();
-    const libff::bigint<FieldT::num_limbs> arrsize(arr.size());
+    const ffec::bigint<FieldT::num_limbs> arrsize(arr.size());
 
     if (idx >= arr.size() || mpn_cmp(valint.data, arrsize.data, FieldT::num_limbs) >= 0)
     {
         for (size_t i = 0; i < arr.size(); ++i)
         {
-            this->pb.val(alpha[i]) = FieldT::zero();
+            self.pb.val(alpha[i]) = FieldT::zero();
         }
 
-        this->pb.val(success_flag) = FieldT::zero();
+        self.pb.val(success_flag) = FieldT::zero();
     }
     else
     {
         for (size_t i = 0; i < arr.size(); ++i)
         {
-            this->pb.val(alpha[i]) = (i == idx ? FieldT::one() : FieldT::zero());
+            self.pb.val(alpha[i]) = (i == idx ? FieldT::one() : FieldT::zero());
         }
 
-        this->pb.val(success_flag) = FieldT::one();
+        self.pb.val(success_flag) = FieldT::one();
     }
 
     compute_result->generate_r1cs_witness();
@@ -966,7 +966,7 @@ void loose_multiplexing_gadget<FieldT>::generate_r1cs_witness()
 template<typename FieldT>
 void test_loose_multiplexing_gadget(const size_t n)
 {
-    printf("testing loose_multiplexing_gadget on 2**%zu pb_variable<FieldT> array inputs\n", n);
+    print!("testing loose_multiplexing_gadget on 2**{} pb_variable<FieldT> array inputs\n", n);
     protoboard<FieldT> pb;
 
     pb_variable_array<FieldT> arr;
@@ -991,23 +991,23 @@ void test_loose_multiplexing_gadget(const size_t n)
 
         if (0 <= idx && idx <= (int)(1ul<<n) - 1)
         {
-            printf("demuxing element %d (in bounds)\n", idx);
-            assert(pb.val(result) == FieldT((19*idx) % (1ul<<n)));
-            assert(pb.val(success_flag) == FieldT::one());
-            assert(pb.is_satisfied());
+            print!("demuxing element %d (in bounds)\n", idx);
+            assert!(pb.val(result) == FieldT((19*idx) % (1ul<<n)));
+            assert!(pb.val(success_flag) == FieldT::one());
+            assert!(pb.is_satisfied());
             pb.val(result) -= FieldT::one();
-            assert(!pb.is_satisfied());
+            assert!(!pb.is_satisfied());
         }
         else
         {
-            printf("demuxing element %d (out of bounds)\n", idx);
-            assert(pb.val(success_flag) == FieldT::zero());
-            assert(pb.is_satisfied());
+            print!("demuxing element %d (out of bounds)\n", idx);
+            assert!(pb.val(success_flag) == FieldT::zero());
+            assert!(pb.is_satisfied());
             pb.val(success_flag) = FieldT::one();
-            assert(!pb.is_satisfied());
+            assert!(!pb.is_satisfied());
         }
     }
-    printf("loose_multiplexing_gadget tests successful\n");
+    print!("loose_multiplexing_gadget tests successful\n");
 }
 
 template<typename FieldT, typename VarT>
@@ -1031,7 +1031,7 @@ void create_linear_combination_constraints(protoboard<FieldT> &pb,
 
         c.add_term(target.all_vars[i]);
 
-        pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), FMT(annotation_prefix, " linear_combination_%zu", i));
+        pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), FMT(annotation_prefix, " linear_combination_{}", i));
     }
 }
 
@@ -1052,5 +1052,5 @@ void create_linear_combination_witness(protoboard<FieldT> &pb,
     }
 }
 
-} // libsnark
-#endif // BASIC_GADGETS_TCC_
+
+//#endif // BASIC_GADGETS_TCC_

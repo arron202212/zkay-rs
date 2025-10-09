@@ -5,16 +5,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BN128_G1_HPP_
-#define BN128_G1_HPP_
-#include <vector>
+//#ifndef BN128_G1_HPP_
+// #define BN128_G1_HPP_
+//#include <vector>
 
 #include "depends/ate-pairing/include/bn.h"
 
-#include <libff/algebra/curves/bn128/bn128_init.hpp>
-#include <libff/algebra/curves/curve_utils.hpp>
+use libff/algebra/curves/bn128/bn128_init;
+use libff/algebra/curves/curve_utils;
 
-namespace libff {
+// namespace libff {
 
 class bn128_G1;
 std::ostream& operator<<(std::ostream &, const bn128_G1&);
@@ -24,10 +24,10 @@ class bn128_G1 {
 private:
     static bn::Fp sqrt(const bn::Fp &el);
 public:
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
-#endif
+//#endif
     static std::vector<std::size_t> wnaf_window_table;
     static std::vector<std::size_t> fixed_base_exp_window_table;
     static bn128_G1 G1_zero;
@@ -101,8 +101,8 @@ std::ostream& operator<<(std::ostream& out, const std::vector<bn128_G1> &v);
 std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v);
 
 
-} // namespace libff
-#endif // BN128_G1_HPP_
+// } // namespace libff
+//#endif // BN128_G1_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -110,17 +110,17 @@ std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/bn128/bn128_g1.hpp>
-#include <libff/algebra/curves/bn128/bn_utils.hpp>
+use libff/algebra/curves/bn128/bn128_g1;
+use libff/algebra/curves/bn128/bn_utils;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long bn128_G1::add_cnt = 0;
 long long bn128_G1::dbl_cnt = 0;
-#endif
+//#endif
 
 std::vector<size_t> bn128_G1::wnaf_window_table;
 std::vector<size_t> bn128_G1::fixed_base_exp_window_table;
@@ -145,8 +145,8 @@ bn::Fp bn128_G1::sqrt(const bn::Fp &el)
         bn::Fp::square(check, check);
     }
 
-    assert(check == bn::Fp(1));
-#endif
+    assert!(check == bn::Fp(1));
+//#endif
 
     // compute square root with Tonelli--Shanks
     // (does not terminate if not a square!)
@@ -193,7 +193,7 @@ void bn128_G1::print() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
@@ -207,7 +207,7 @@ void bn128_G1::print_coordinates() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
@@ -328,9 +328,9 @@ bn128_G1 bn128_G1::operator-(const bn128_G1 &other) const
 
 bn128_G1 bn128_G1::add(const bn128_G1 &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
 
     bn::Fp this_coord[3], other_coord[3], result_coord[3];
     this->fill_coord(this_coord);
@@ -356,9 +356,9 @@ bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
     // no need to handle points of order 2,4
     // (they cannot exist in a prime-order subgroup)
 
-#ifdef DEBUG
-    assert(other.is_special());
-#endif
+// #ifdef DEBUG
+    assert!(other.is_special());
+//#endif
 
     // check for doubling case
 
@@ -389,9 +389,9 @@ bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
         return this->dbl();
     }
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
 
     bn128_G1 result;
     bn::Fp H, HH, I, J, r, V, tmp;
@@ -430,9 +430,9 @@ bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
 
 bn128_G1 bn128_G1::dbl() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-#endif
+//#endif
 
     bn::Fp this_coord[3], result_coord[3];
     this->fill_coord(this_coord);
@@ -470,24 +470,24 @@ std::ostream& operator<<(std::ostream &out, const bn128_G1 &g)
 
     out << (gcopy.is_zero() ? '1' : '0') << OUTPUT_SEPARATOR;
 
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     /* no point compression case */
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
     out << gcopy.X << OUTPUT_SEPARATOR << gcopy.Y;
 #else
     out.write((char*) &gcopy.X, sizeof(gcopy.X));
     out.write((char*) &gcopy.Y, sizeof(gcopy.Y));
-#endif
+//#endif
 
 #else
     /* point compression case */
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
     out << gcopy.X;
 #else
     out.write((char*) &gcopy.X, sizeof(gcopy.X));
-#endif
+//#endif
     out << OUTPUT_SEPARATOR << ((((unsigned char*)&gcopy.Y)[0] & 1) != 0 ? '1' : '0');
-#endif
+//#endif
 
     return out;
 }
@@ -527,25 +527,25 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
     is_zero -= '0';
     consume_OUTPUT_SEPARATOR(in);
 
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     /* no point compression case */
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
     in >> g.X;
     consume_OUTPUT_SEPARATOR(in);
     in >> g.Y;
 #else
     in.read((char*) &g.X, sizeof(g.X));
     in.read((char*) &g.Y, sizeof(g.Y));
-#endif
+//#endif
 
 #else
     /* point compression case */
     bn::Fp tX;
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
     in >> tX;
 #else
     in.read((char*)&tX, sizeof(tX));
-#endif
+//#endif
     consume_OUTPUT_SEPARATOR(in);
     unsigned char Y_lsb;
     in.read((char*)&Y_lsb, 1);
@@ -566,7 +566,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
             bn::Fp::neg(g.Y, g.Y);
         }
     }
-#endif
+//#endif
 
     /* finalize */
     if (is_zero == 0)
@@ -635,4 +635,4 @@ void bn128_G1::batch_to_special_all_non_zeros(std::vector<bn128_G1> &vec)
     }
 }
 
-} // namespace libff
+// } // namespace libff

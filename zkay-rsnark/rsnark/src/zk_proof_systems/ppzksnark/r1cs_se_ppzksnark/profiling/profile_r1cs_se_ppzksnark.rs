@@ -25,48 +25,48 @@
 use  <cassert>
 use  <cstdio>
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-use  <libsnark/common/default_types/r1cs_se_ppzksnark_pp.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/examples/run_r1cs_se_ppzksnark.hpp>
+use crate::common::default_types::r1cs_se_ppzksnark_pp;
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
+use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples/run_r1cs_se_ppzksnark;
 
-using namespace libsnark;
+
 
 int main(int argc, const char * argv[])
 {
     default_r1cs_se_ppzksnark_pp::init_public_params();
-    libff::start_profiling();
+    ffec::start_profiling();
 
     if (argc == 2 && strcmp(argv[1], "-v") == 0)
     {
-        libff::print_compilation_info();
+        ffec::print_compilation_info();
         return 0;
     }
 
     if (argc != 3 && argc != 4)
     {
-        printf("usage: %s num_constraints input_size [Fr|bytes]\n", argv[0]);
+        print!("usage: %s num_constraints input_size [Fr|bytes]\n", argv[0]);
         return 1;
     }
     const int num_constraints = atoi(argv[1]);
     int input_size = atoi(argv[2]);
     if (argc == 4)
     {
-        assert(strcmp(argv[3], "Fr") == 0 || strcmp(argv[3], "bytes") == 0);
+        assert!(strcmp(argv[3], "Fr") == 0 || strcmp(argv[3], "bytes") == 0);
         if (strcmp(argv[3], "bytes") == 0)
         {
-            input_size = libff::div_ceil(8 * input_size, libff::Fr<libff::default_ec_pp>::capacity());
+            input_size = ffec::div_ceil(8 * input_size, ffec::Fr<ffec::default_ec_pp>::capacity());
         }
     }
 
-    libff::enter_block("Generate R1CS example");
-    r1cs_example<libff::Fr<default_r1cs_se_ppzksnark_pp> > example = generate_r1cs_example_with_field_input<libff::Fr<default_r1cs_se_ppzksnark_pp> >(num_constraints, input_size);
-    libff::leave_block("Generate R1CS example");
+    ffec::enter_block("Generate R1CS example");
+    r1cs_example<ffec::Fr<default_r1cs_se_ppzksnark_pp> > example = generate_r1cs_example_with_field_input<ffec::Fr<default_r1cs_se_ppzksnark_pp> >(num_constraints, input_size);
+    ffec::leave_block("Generate R1CS example");
 
-    libff::print_header("(enter) Profile R1CS SEppzkSNARK");
+    ffec::print_header("(enter) Profile R1CS SEppzkSNARK");
     const bool test_serialization = true;
     run_r1cs_se_ppzksnark<default_r1cs_se_ppzksnark_pp>(example, test_serialization);
-    libff::print_header("(leave) Profile R1CS SEppzkSNARK");
+    ffec::print_header("(leave) Profile R1CS SEppzkSNARK");
 }

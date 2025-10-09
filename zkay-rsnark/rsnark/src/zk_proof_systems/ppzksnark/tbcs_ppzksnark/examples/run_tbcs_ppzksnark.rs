@@ -10,12 +10,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_TBCS_PPZKSNARK_HPP_
-#define RUN_TBCS_PPZKSNARK_HPP_
+//#ifndef RUN_TBCS_PPZKSNARK_HPP_
+// #define RUN_TBCS_PPZKSNARK_HPP_
 
-use  <libsnark/relations/circuit_satisfaction_problems/tbcs/examples/tbcs_examples.hpp>
+use libsnark/relations/circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
 
-namespace libsnark {
+
 
 /**
  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
@@ -28,11 +28,11 @@ template<typename ppT>
 bool run_tbcs_ppzksnark(const tbcs_example &example,
                         const bool test_serialization);
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/examples/run_tbcs_ppzksnark.tcc>
 
-#endif // RUN_TBCS_PPZKSNARK_HPP_
+use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/examples/run_tbcs_ppzksnark;
+
+//#endif // RUN_TBCS_PPZKSNARK_HPP_
 /** @file
  *****************************************************************************
 
@@ -47,16 +47,16 @@ use  <libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/examples/run_tbcs_ppzks
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_TBCS_PPZKSNARK_TCC_
-#define RUN_TBCS_PPZKSNARK_TCC_
+//#ifndef RUN_TBCS_PPZKSNARK_TCC_
+// #define RUN_TBCS_PPZKSNARK_TCC_
 
 use  <sstream>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark.hpp>
+use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark;
 
-namespace libsnark {
+
 
 /**
  * The code below provides an example of all stages of running a TBCS ppzkSNARK.
@@ -74,49 +74,49 @@ template<typename ppT>
 bool run_tbcs_ppzksnark(const tbcs_example &example,
                         const bool test_serialization)
 {
-    libff::enter_block("Call to run_tbcs_ppzksnark");
+    ffec::enter_block("Call to run_tbcs_ppzksnark");
 
-    libff::print_header("TBCS ppzkSNARK Generator");
+    ffec::print_header("TBCS ppzkSNARK Generator");
     tbcs_ppzksnark_keypair<ppT> keypair = tbcs_ppzksnark_generator<ppT>(example.circuit);
-    printf("\n"); libff::print_indent(); libff::print_mem("after generator");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
 
-    libff::print_header("Preprocess verification key");
+    ffec::print_header("Preprocess verification key");
     tbcs_ppzksnark_processed_verification_key<ppT> pvk = tbcs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of keys");
-        keypair.pk = libff::reserialize<tbcs_ppzksnark_proving_key<ppT> >(keypair.pk);
-        keypair.vk = libff::reserialize<tbcs_ppzksnark_verification_key<ppT> >(keypair.vk);
-        pvk = libff::reserialize<tbcs_ppzksnark_processed_verification_key<ppT> >(pvk);
-        libff::leave_block("Test serialization of keys");
+        ffec::enter_block("Test serialization of keys");
+        keypair.pk = ffec::reserialize<tbcs_ppzksnark_proving_key<ppT> >(keypair.pk);
+        keypair.vk = ffec::reserialize<tbcs_ppzksnark_verification_key<ppT> >(keypair.vk);
+        pvk = ffec::reserialize<tbcs_ppzksnark_processed_verification_key<ppT> >(pvk);
+        ffec::leave_block("Test serialization of keys");
     }
 
-    libff::print_header("TBCS ppzkSNARK Prover");
+    ffec::print_header("TBCS ppzkSNARK Prover");
     tbcs_ppzksnark_proof<ppT> proof = tbcs_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
-    printf("\n"); libff::print_indent(); libff::print_mem("after prover");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of proof");
-        proof = libff::reserialize<tbcs_ppzksnark_proof<ppT> >(proof);
-        libff::leave_block("Test serialization of proof");
+        ffec::enter_block("Test serialization of proof");
+        proof = ffec::reserialize<tbcs_ppzksnark_proof<ppT> >(proof);
+        ffec::leave_block("Test serialization of proof");
     }
 
-    libff::print_header("TBCS ppzkSNARK Verifier");
+    ffec::print_header("TBCS ppzkSNARK Verifier");
     bool ans = tbcs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
-    printf("\n"); libff::print_indent(); libff::print_mem("after verifier");
-    printf("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
+    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
 
-    libff::print_header("TBCS ppzkSNARK Online Verifier");
+    ffec::print_header("TBCS ppzkSNARK Online Verifier");
     bool ans2 = tbcs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
-    assert(ans == ans2);
+    assert!(ans == ans2);
 
-    libff::leave_block("Call to run_tbcs_ppzksnark");
+    ffec::leave_block("Call to run_tbcs_ppzksnark");
 
     return ans;
 }
 
-} // libsnark
 
-#endif // RUN_TBCS_PPZKSNARK_TCC_
+
+//#endif // RUN_TBCS_PPZKSNARK_TCC_

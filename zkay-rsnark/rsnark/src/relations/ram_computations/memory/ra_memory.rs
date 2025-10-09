@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RA_MEMORY_HPP_
-#define RA_MEMORY_HPP_
+//#ifndef RA_MEMORY_HPP_
+// #define RA_MEMORY_HPP_
 
-use  <libsnark/relations/ram_computations/memory/memory_interface.hpp>
+use libsnark/relations/ram_computations/memory/memory_interface;
 
-namespace libsnark {
+
 
 /**
  * A random-access memory maintains the memory's contents via a map (from addresses to values).
@@ -33,9 +33,9 @@ public:
 
 };
 
-} // libsnark
 
-#endif // RA_MEMORY_HPP_
+
+//#endif // RA_MEMORY_HPP_
 /** @file
  *****************************************************************************
 
@@ -51,9 +51,9 @@ public:
 
 use  <cassert>
 
-use  <libsnark/relations/ram_computations/memory/ra_memory.hpp>
+use libsnark/relations/ram_computations/memory/ra_memory;
 
-namespace libsnark {
+
 
 ra_memory::ra_memory(const size_t num_addresses, const size_t value_size) :
     memory_interface(num_addresses, value_size)
@@ -82,7 +82,7 @@ ra_memory::ra_memory(const size_t num_addresses,
 
 size_t ra_memory::get_value(const size_t address) const
 {
-    assert(address < num_addresses);
+    assert!(address < num_addresses);
     auto it = contents.find(address);
     return (it == contents.end() ? 0 : it->second);
 }
@@ -92,4 +92,4 @@ void ra_memory::set_value(const size_t address, const size_t value)
     contents[address] = value;
 }
 
-} // libsnark
+

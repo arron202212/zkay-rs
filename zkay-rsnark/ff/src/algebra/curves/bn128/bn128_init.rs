@@ -5,14 +5,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BN128_INIT_HPP_
-#define BN128_INIT_HPP_
+//#ifndef BN128_INIT_HPP_
+// #define BN128_INIT_HPP_
 #include "depends/ate-pairing/include/bn.h"
 
-#include <libff/algebra/curves/public_params.hpp>
-#include <libff/algebra/curves/bn128/bn128_fields.hpp>
+use libff/algebra/curves/public_params;
+use libff/algebra/curves/bn128/bn128_fields;
 
-namespace libff {
+// namespace libff {
 
 extern bn::Fp bn128_coeff_b;
 extern std::size_t bn128_Fq_s;
@@ -31,8 +31,8 @@ class bn128_G2;
 class bn128_GT;
 typedef bn128_GT bn128_Fq12;
 
-} // namespace libff
-#endif // BN128_INIT_HPP_
+// } // namespace libff
+//#endif // BN128_INIT_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -40,12 +40,12 @@ typedef bn128_GT bn128_Fq12;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/bn128/bn128_g1.hpp>
-#include <libff/algebra/curves/bn128/bn128_g2.hpp>
-#include <libff/algebra/curves/bn128/bn128_gt.hpp>
-#include <libff/algebra/curves/bn128/bn128_init.hpp>
+use libff/algebra/curves/bn128/bn128_g1;
+use libff/algebra/curves/bn128/bn128_g2;
+use libff/algebra/curves/bn128/bn128_gt;
+use libff/algebra/curves/bn128/bn128_init;
 
-namespace libff {
+// namespace libff {
 
 bn::Fp bn128_coeff_b;
 size_t bn128_Fq_s;
@@ -210,4 +210,4 @@ void init_bn128_params()
 
     bn128_GT::GT_one.elem = bn::Fp12(1);
 }
-} // namespace libff
+// } // namespace libff

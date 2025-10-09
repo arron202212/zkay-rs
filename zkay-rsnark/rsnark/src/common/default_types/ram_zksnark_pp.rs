@@ -10,15 +10,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_ZKSNARK_PP_HPP_
-#define RAM_ZKSNARK_PP_HPP_
+//#ifndef RAM_ZKSNARK_PP_HPP_
+// #define RAM_ZKSNARK_PP_HPP_
 
-use  <libsnark/common/default_types/tinyram_zksnark_pp.hpp>
+use crate::common::default_types::tinyram_zksnark_pp;
 
-namespace libsnark {
+
 
 type default_tinyram_zksnark_pp default_ram_zksnark_pp;
 
-} // libsnark
 
-#endif // RAM_ZKSNARK_PP_HPP_
+
+//#endif // RAM_ZKSNARK_PP_HPP_

@@ -79,7 +79,8 @@ zkay-derive-core={path="zkay-derive-core"}
  zkay_ast={path="zkay_rs/zkay_ast"}
  ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
-lisff={path="zkay-rsnark/ff"}
+ffec={path="zkay-rsnark/ff"}
+fqfft={path="zkay-rsnark/fqfft"}
 rsnark={path="zkay-rsnark/rsnark"}
 zkay-rsnark={path="zkay-rsnark"}
 
@@ -102,7 +103,7 @@ zkp-u256 = { git = "https://github.com/patractlabs/OpenZKP", branch = "master" }
 # forge = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="forge" }
 trait-variant = "0.1.2"
 ethnum="1"
-textwrap="0.16.0"
+textwrap="0.16.2"
 eyre = "0.6.8"
 nohash-hasher="0.2.0"
 num_cpus="1.16.0"
@@ -302,7 +303,8 @@ rand_core="0.9.3"
 rand_pcg="0.9.0"
 rip_shuffle="0.2"
 bytebuffer = "2.3.0"
-sscanf="0.4.3"
+# sscanf="0.4.3"
+scan_fmt="0.2.6"
 cfg-if = "1.*"
 [workspace.dependencies.uuid]
 version = "1.6.1"

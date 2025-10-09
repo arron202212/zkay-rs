@@ -6,15 +6,15 @@
  *****************************************************************************/
 use  <fstream>
 use  <iostream>
-#ifndef MINDEPS
-use  <boost/program_options.hpp>
-#endif
+//#ifndef MINDEPS
+use boost/program_options;
+//#endif
 
-use  <libsnark/common/default_types/ram_ppzksnark_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark.hpp>
+use crate::common::default_types::ram_ppzksnark_pp;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
+use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark;
 
-#ifndef MINDEPS
+//#ifndef MINDEPS
 namespace po = boost::program_options;
 
 bool process_generator_command_line(const int argc, const char** argv,
@@ -52,14 +52,14 @@ bool process_generator_command_line(const int argc, const char** argv,
 
     return true;
 }
-#endif
+//#endif
 
-using namespace libsnark;
+
 
 int main(int argc, const char * argv[])
 {
     ram_ppzksnark_snark_pp<default_ram_ppzksnark_pp>::init_public_params();
-#ifdef MINDEPS
+// #ifdef MINDEPS
     std::string architecture_params_fn = "architecture_params.txt";
     std::string computation_bounds_fn = "computation_bounds.txt";
     std::string proving_key_fn = "proving_key.txt";
@@ -75,8 +75,8 @@ int main(int argc, const char * argv[])
     {
         return 1;
     }
-#endif
-    libff::start_profiling();
+//#endif
+    ffec::start_profiling();
 
     /* load everything */
     ram_ppzksnark_architecture_params<default_ram_ppzksnark_pp> ap;

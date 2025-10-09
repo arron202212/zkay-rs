@@ -11,33 +11,33 @@
 use  <cassert>
 use  <cstdio>
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-use  <libsnark/common/default_types/uscs_ppzksnark_pp.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark.hpp>
+use crate::common::default_types::uscs_ppzksnark_pp;
+use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
 
-using namespace libsnark;
+
 
 template<typename ppT>
 void test_uscs_ppzksnark(size_t num_constraints,
                          size_t input_size)
 {
-    libff::print_header("(enter) Test USCS ppzkSNARK");
+    ffec::print_header("(enter) Test USCS ppzkSNARK");
 
     const bool test_serialization = true;
-    uscs_example<libff::Fr<ppT> > example = generate_uscs_example_with_binary_input<libff::Fr<ppT> >(num_constraints, input_size);
+    uscs_example<ffec::Fr<ppT> > example = generate_uscs_example_with_binary_input<ffec::Fr<ppT> >(num_constraints, input_size);
     const bool bit = run_uscs_ppzksnark<ppT>(example, test_serialization);
-    assert(bit);
+    assert!(bit);
 
-    libff::print_header("(leave) Test USCS ppzkSNARK");
+    ffec::print_header("(leave) Test USCS ppzkSNARK");
 }
 
 int main()
 {
     default_uscs_ppzksnark_pp::init_public_params();
-    libff::start_profiling();
+    ffec::start_profiling();
 
     test_uscs_ppzksnark<default_uscs_ppzksnark_pp>(1000, 100);
 }

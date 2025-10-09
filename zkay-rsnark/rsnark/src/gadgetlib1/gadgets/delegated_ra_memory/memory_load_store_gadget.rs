@@ -12,16 +12,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MEMORY_LOAD_STORE_GADGET_HPP_
-#define MEMORY_LOAD_STORE_GADGET_HPP_
+//#ifndef MEMORY_LOAD_STORE_GADGET_HPP_
+// #define MEMORY_LOAD_STORE_GADGET_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_update_gadget.hpp>
+use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_update_gadget;
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 using memory_load_store_gadget = merkle_tree_check_update_gadget<FieldT, HashT>;
 
-} // libsnark
 
-#endif // MEMORY_LOAD_STORE_GADGET_HPP_
+
+//#endif // MEMORY_LOAD_STORE_GADGET_HPP_

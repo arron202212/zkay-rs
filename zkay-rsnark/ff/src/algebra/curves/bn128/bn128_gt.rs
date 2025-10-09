@@ -5,16 +5,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BN128_GT_HPP_
-#define BN128_GT_HPP_
-#include <iostream>
+//#ifndef BN128_GT_HPP_
+// #define BN128_GT_HPP_
+//#include <iostream>
 
 #include "depends/ate-pairing/include/bn.h"
 
-#include <libff/algebra/field_utils/field_utils.hpp>
-#include <libff/algebra/fields/prime_base/fp.hpp>
+use crate::algebra::field_utils::field_utils;
+use libff/algebra/fields/prime_base/fp;
 
-namespace libff {
+// namespace libff {
 
 class bn128_GT;
 std::ostream& operator<<(std::ostream &, const bn128_GT&);
@@ -53,8 +53,8 @@ bn128_GT operator^(const bn128_GT &rhs, const Fp_model<m,modulus_p> &lhs)
     return power<bn128_GT, m>(rhs, lhs.as_bigint());
 }
 
-} // namespace libff
-#endif // BN128_GT_HPP_
+// } // namespace libff
+//#endif // BN128_GT_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -62,9 +62,9 @@ bn128_GT operator^(const bn128_GT &rhs, const Fp_model<m,modulus_p> &lhs)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/bn128/bn128_gt.hpp>
+use libff/algebra/curves/bn128/bn128_gt;
 
-namespace libff {
+// namespace libff {
 
 bn128_GT bn128_GT::GT_one;
 bn128_GT::bn128_GT()
@@ -103,25 +103,25 @@ bn128_GT bn128_GT::one()
 
 std::ostream& operator<<(std::ostream &out, const bn128_GT &g)
 {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
     out << g.elem.a_ << OUTPUT_SEPARATOR << g.elem.b_;
 #else
     out.write((char*) &g.elem.a_, sizeof(g.elem.a_));
     out.write((char*) &g.elem.b_, sizeof(g.elem.b_));
-#endif
+//#endif
     return out;
 }
 
 std::istream& operator>>(std::istream &in, bn128_GT &g)
 {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
     in >> g.elem.a_;
     consume_OUTPUT_SEPARATOR(in);
     in >> g.elem.b_;
 #else
     in.read((char*) &g.elem.a_, sizeof(g.elem.a_));
     in.read((char*) &g.elem.b_, sizeof(g.elem.b_));
-#endif
+//#endif
     return in;
 }
-} // namespace libff
+// } // namespace libff

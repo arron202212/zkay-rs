@@ -4,48 +4,48 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-use  <libff/algebra/curves/mnt/mnt4/mnt4_pp.hpp>
-use  <libff/algebra/curves/mnt/mnt6/mnt6_pp.hpp>
-use  <libff/algebra/fields/field_utils.hpp>
+use ffec::algebra::curves::mnt/mnt4/mnt4_pp;
+use ffec::algebra::curves::mnt/mnt6/mnt6_pp;
+use ffec::algebra::fields::field_utils;
 
-use  <libsnark/gadgetlib1/gadgets/fields/fp2_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/fields/fp3_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/fields/fp4_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/fields/fp6_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
+use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
+use libsnark/gadgetlib1/gadgets/fields/fp4_gadgets;
+use libsnark/gadgetlib1/gadgets/fields/fp6_gadgets;
+use libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
-using namespace libsnark;
+
 
 template<typename FieldT>
 void dump_constraints(const protoboard<FieldT> &pb)
 {
-#ifdef DEBUG
+// #ifdef DEBUG
     for (auto s : pb.constraint_system.constraint_annotations)
     {
-        printf("constraint: %s\n", s.second.c_str());
+        print!("constraint: %s\n", s.second.c_str());
     }
-#endif
+//#endif
 }
 
 template<typename ppT_A, typename ppT_B>
 void test_verifier(const std::string &annotation_A, const std::string &annotation_B)
 {
-    type libff::Fr<ppT_A> FieldT_A;
-    type libff::Fr<ppT_B> FieldT_B;
+    type ffec::Fr<ppT_A> FieldT_A;
+    type ffec::Fr<ppT_B> FieldT_B;
 
     const size_t num_constraints = 50;
     const size_t primary_input_size = 3;
 
     r1cs_example<FieldT_A> example = generate_r1cs_example_with_field_input<FieldT_A>(num_constraints, primary_input_size);
-    assert(example.primary_input.size() == primary_input_size);
+    assert!(example.primary_input.size() == primary_input_size);
 
-    assert(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
+    assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
     const r1cs_ppzksnark_keypair<ppT_A> keypair = r1cs_ppzksnark_generator<ppT_A>(example.constraint_system);
     const r1cs_ppzksnark_proof<ppT_A> pi = r1cs_ppzksnark_prover<ppT_A>(keypair.pk, example.primary_input, example.auxiliary_input);
     bool bit = r1cs_ppzksnark_verifier_strong_IC<ppT_A>(keypair.vk, example.primary_input, pi);
-    assert(bit);
+    assert!(bit);
 
     const size_t elt_size = FieldT_A::size_in_bits();
     const size_t primary_input_size_in_bits = elt_size * primary_input_size;
@@ -73,10 +73,10 @@ void test_verifier(const std::string &annotation_A, const std::string &annotatio
     }
     verifier.generate_r1cs_constraints();
 
-    libff::bit_vector input_as_bits;
+    ffec::bit_vector input_as_bits;
     for (const FieldT_A &el : example.primary_input)
     {
-        libff::bit_vector v = libff::convert_field_element_to_bit_vector<FieldT_A>(el, elt_size);
+        ffec::bit_vector v = ffec::convert_field_element_to_bit_vector<FieldT_A>(el, elt_size);
         input_as_bits.insert(input_as_bits.end(), v.begin(), v.end());
     }
 
@@ -87,37 +87,37 @@ void test_verifier(const std::string &annotation_A, const std::string &annotatio
     verifier.generate_r1cs_witness();
     pb.val(result) = FieldT_B::one();
 
-    printf("positive test:\n");
-    assert(pb.is_satisfied());
+    print!("positive test:\n");
+    assert!(pb.is_satisfied());
 
     pb.val(primary_input_bits[0]) = FieldT_B::one() - pb.val(primary_input_bits[0]);
     verifier.generate_r1cs_witness();
     pb.val(result) = FieldT_B::one();
 
-    printf("negative test:\n");
-    assert(!pb.is_satisfied());
+    print!("negative test:\n");
+    assert!(!pb.is_satisfied());
     PRINT_CONSTRAINT_PROFILING();
-    printf("number of constraints for verifier: %zu (verifier is implemented in %s constraints and verifies %s proofs))\n",
+    print!("number of constraints for verifier: {} (verifier is implemented in %s constraints and verifies %s proofs))\n",
            pb.num_constraints(), annotation_B.c_str(), annotation_A.c_str());
 }
 
 template<typename ppT_A, typename ppT_B>
 void test_hardcoded_verifier(const std::string &annotation_A, const std::string &annotation_B)
 {
-    type libff::Fr<ppT_A> FieldT_A;
-    type libff::Fr<ppT_B> FieldT_B;
+    type ffec::Fr<ppT_A> FieldT_A;
+    type ffec::Fr<ppT_B> FieldT_B;
 
     const size_t num_constraints = 50;
     const size_t primary_input_size = 3;
 
     r1cs_example<FieldT_A> example = generate_r1cs_example_with_field_input<FieldT_A>(num_constraints, primary_input_size);
-    assert(example.primary_input.size() == primary_input_size);
+    assert!(example.primary_input.size() == primary_input_size);
 
-    assert(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
+    assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
     const r1cs_ppzksnark_keypair<ppT_A> keypair = r1cs_ppzksnark_generator<ppT_A>(example.constraint_system);
     const r1cs_ppzksnark_proof<ppT_A> pi = r1cs_ppzksnark_prover<ppT_A>(keypair.pk, example.primary_input, example.auxiliary_input);
     bool bit = r1cs_ppzksnark_verifier_strong_IC<ppT_A>(keypair.vk, example.primary_input, pi);
-    assert(bit);
+    assert!(bit);
 
     const size_t elt_size = FieldT_A::size_in_bits();
     const size_t primary_input_size_in_bits = elt_size * primary_input_size;
@@ -140,10 +140,10 @@ void test_hardcoded_verifier(const std::string &annotation_A, const std::string 
     }
     online_verifier.generate_r1cs_constraints();
 
-    libff::bit_vector input_as_bits;
+    ffec::bit_vector input_as_bits;
     for (const FieldT_A &el : example.primary_input)
     {
-        libff::bit_vector v = libff::convert_field_element_to_bit_vector<FieldT_A>(el, elt_size);
+        ffec::bit_vector v = ffec::convert_field_element_to_bit_vector<FieldT_A>(el, elt_size);
         input_as_bits.insert(input_as_bits.end(), v.begin(), v.end());
     }
 
@@ -153,17 +153,17 @@ void test_hardcoded_verifier(const std::string &annotation_A, const std::string 
     online_verifier.generate_r1cs_witness();
     pb.val(result) = FieldT_B::one();
 
-    printf("positive test:\n");
-    assert(pb.is_satisfied());
+    print!("positive test:\n");
+    assert!(pb.is_satisfied());
 
     pb.val(primary_input_bits[0]) = FieldT_B::one() - pb.val(primary_input_bits[0]);
     online_verifier.generate_r1cs_witness();
     pb.val(result) = FieldT_B::one();
 
-    printf("negative test:\n");
-    assert(!pb.is_satisfied());
+    print!("negative test:\n");
+    assert!(!pb.is_satisfied());
     PRINT_CONSTRAINT_PROFILING();
-    printf("number of constraints for verifier: %zu (verifier is implemented in %s constraints and verifies %s proofs))\n",
+    print!("number of constraints for verifier: {} (verifier is implemented in %s constraints and verifies %s proofs))\n",
            pb.num_constraints(), annotation_B.c_str(), annotation_A.c_str());
 }
 
@@ -187,10 +187,10 @@ void test_mul(const std::string &annotation)
         y.generate_r1cs_witness(y_val);
         mul.generate_r1cs_witness();
         const FpExtT res = xy.get_element();
-        assert(res == x_val*y_val);
-        assert(pb.is_satisfied());
+        assert!(res == x_val*y_val);
+        assert!(pb.is_satisfied());
     }
-    printf("number of constraints for %s_mul = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for %s_mul = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename FpExtT, template<class> class VarT, template<class> class SqrT>
@@ -210,16 +210,16 @@ void test_sqr(const std::string &annotation)
         x.generate_r1cs_witness(x_val);
         sqr.generate_r1cs_witness();
         const FpExtT res = xsq.get_element();
-        assert(res == x_val.squared());
-        assert(pb.is_satisfied());
+        assert!(res == x_val.squared());
+        assert!(pb.is_satisfied());
     }
-    printf("number of constraints for %s_sqr = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for %s_sqr = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename ppT, template<class> class VarT, template<class> class CycloSqrT>
 void test_cyclotomic_sqr(const std::string &annotation)
 {
-    type libff::Fqk<ppT> FpExtT;
+    type ffec::Fqk<ppT> FpExtT;
     type typename FpExtT::my_Fp FieldT;
 
 
@@ -237,10 +237,10 @@ void test_cyclotomic_sqr(const std::string &annotation)
         x.generate_r1cs_witness(x_val);
         sqr.generate_r1cs_witness();
         const FpExtT res = xsq.get_element();
-        assert(res == x_val.squared());
-        assert(pb.is_satisfied());
+        assert!(res == x_val.squared());
+        assert!(pb.is_satisfied());
     }
-    printf("number of constraints for %s_cyclotomic_sqr = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for %s_cyclotomic_sqr = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename FpExtT, template<class> class VarT>
@@ -258,21 +258,21 @@ void test_Frobenius(const std::string &annotation)
         x.generate_r1cs_witness(x_val);
         x_frob.evaluate();
         const FpExtT res = x_frob.get_element();
-        assert(res == x_val.Frobenius_map(i));
-        assert(pb.is_satisfied());
+        assert!(res == x_val.Frobenius_map(i));
+        assert!(pb.is_satisfied());
     }
 
-    printf("Frobenius map for %s correct\n", annotation.c_str());
+    print!("Frobenius map for %s correct\n", annotation.c_str());
 }
 
 template<typename ppT>
 void test_full_pairing(const std::string &annotation)
 {
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     protoboard<FieldT> pb;
-    libff::G1<other_curve<ppT> > P_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    ffec::G1<other_curve<ppT> > P_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
     G1_variable<ppT> P(pb, "P");
     G2_variable<ppT> Q(pb, "Q");
@@ -312,30 +312,30 @@ void test_full_pairing(const std::string &annotation)
     compute_prec_Q.generate_r1cs_witness();
     miller.generate_r1cs_witness();
     finexp.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P = other_curve<ppT>::affine_ate_precompute_G1(P_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
-    libff::Fqk<other_curve<ppT> > native_miller_result = other_curve<ppT>::affine_ate_miller_loop(native_prec_P, native_prec_Q);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P = other_curve<ppT>::affine_ate_precompute_G1(P_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
+    ffec::Fqk<other_curve<ppT> > native_miller_result = other_curve<ppT>::affine_ate_miller_loop(native_prec_P, native_prec_Q);
 
-    libff::Fqk<other_curve<ppT> > native_finexp_result = other_curve<ppT>::final_exponentiation(native_miller_result);
-    printf("Must match:\n");
+    ffec::Fqk<other_curve<ppT> > native_finexp_result = other_curve<ppT>::final_exponentiation(native_miller_result);
+    print!("Must match:\n");
     finexp.result->get_element().print();
     native_finexp_result.print();
 
-    assert(finexp.result->get_element() == native_finexp_result);
+    assert!(finexp.result->get_element() == native_finexp_result);
 
-    printf("number of constraints for full pairing (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for full pairing (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename ppT>
 void test_full_precomputed_pairing(const std::string &annotation)
 {
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     protoboard<FieldT> pb;
-    libff::G1<other_curve<ppT> > P_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    ffec::G1<other_curve<ppT> > P_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
     G1_precomputation<ppT> prec_P(pb, P_val, "prec_P");
     G2_precomputation<ppT> prec_Q(pb, Q_val, "prec_Q");
@@ -358,73 +358,73 @@ void test_full_precomputed_pairing(const std::string &annotation)
 
     miller.generate_r1cs_witness();
     finexp.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P = other_curve<ppT>::affine_ate_precompute_G1(P_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
-    libff::Fqk<other_curve<ppT> > native_miller_result = other_curve<ppT>::affine_ate_miller_loop(native_prec_P, native_prec_Q);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P = other_curve<ppT>::affine_ate_precompute_G1(P_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
+    ffec::Fqk<other_curve<ppT> > native_miller_result = other_curve<ppT>::affine_ate_miller_loop(native_prec_P, native_prec_Q);
 
-    libff::Fqk<other_curve<ppT> > native_finexp_result = other_curve<ppT>::final_exponentiation(native_miller_result);
-    printf("Must match:\n");
+    ffec::Fqk<other_curve<ppT> > native_finexp_result = other_curve<ppT>::final_exponentiation(native_miller_result);
+    print!("Must match:\n");
     finexp.result->get_element().print();
     native_finexp_result.print();
 
-    assert(finexp.result->get_element() == native_finexp_result);
+    assert!(finexp.result->get_element() == native_finexp_result);
 
-    printf("number of constraints for full precomputed pairing (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for full precomputed pairing (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 int main(void)
 {
-    libff::start_profiling();
-    libff::mnt4_pp::init_public_params();
-    libff::mnt6_pp::init_public_params();
+    ffec::start_profiling();
+    ffec::mnt4_pp::init_public_params();
+    ffec::mnt6_pp::init_public_params();
 
-    test_mul<libff::mnt4_Fq2, Fp2_variable, Fp2_mul_gadget>("mnt4_Fp2");
-    test_sqr<libff::mnt4_Fq2, Fp2_variable, Fp2_sqr_gadget>("mnt4_Fp2");
+    test_mul<ffec::mnt4_Fq2, Fp2_variable, Fp2_mul_gadget>("mnt4_Fp2");
+    test_sqr<ffec::mnt4_Fq2, Fp2_variable, Fp2_sqr_gadget>("mnt4_Fp2");
 
-    test_mul<libff::mnt4_Fq4, Fp4_variable, Fp4_mul_gadget>("mnt4_Fp4");
-    test_sqr<libff::mnt4_Fq4, Fp4_variable, Fp4_sqr_gadget>("mnt4_Fp4");
-    test_cyclotomic_sqr<libff::mnt4_pp, Fp4_variable, Fp4_cyclotomic_sqr_gadget>("mnt4_Fp4");
-    test_exponentiation_gadget<libff::mnt4_Fq4, Fp4_variable, Fp4_mul_gadget, Fp4_sqr_gadget, libff::mnt4_q_limbs>(libff::mnt4_final_exponent_last_chunk_abs_of_w0, "mnt4_Fq4");
-    test_Frobenius<libff::mnt4_Fq4, Fp4_variable>("mnt4_Fq4");
+    test_mul<ffec::mnt4_Fq4, Fp4_variable, Fp4_mul_gadget>("mnt4_Fp4");
+    test_sqr<ffec::mnt4_Fq4, Fp4_variable, Fp4_sqr_gadget>("mnt4_Fp4");
+    test_cyclotomic_sqr<ffec::mnt4_pp, Fp4_variable, Fp4_cyclotomic_sqr_gadget>("mnt4_Fp4");
+    test_exponentiation_gadget<ffec::mnt4_Fq4, Fp4_variable, Fp4_mul_gadget, Fp4_sqr_gadget, ffec::mnt4_q_limbs>(ffec::mnt4_final_exponent_last_chunk_abs_of_w0, "mnt4_Fq4");
+    test_Frobenius<ffec::mnt4_Fq4, Fp4_variable>("mnt4_Fq4");
 
-    test_mul<libff::mnt6_Fq3, Fp3_variable, Fp3_mul_gadget>("mnt6_Fp3");
-    test_sqr<libff::mnt6_Fq3, Fp3_variable, Fp3_sqr_gadget>("mnt6_Fp3");
+    test_mul<ffec::mnt6_Fq3, Fp3_variable, Fp3_mul_gadget>("mnt6_Fp3");
+    test_sqr<ffec::mnt6_Fq3, Fp3_variable, Fp3_sqr_gadget>("mnt6_Fp3");
 
-    test_mul<libff::mnt6_Fq6, Fp6_variable, Fp6_mul_gadget>("mnt6_Fp6");
-    test_sqr<libff::mnt6_Fq6, Fp6_variable, Fp6_sqr_gadget>("mnt6_Fp6");
-    test_cyclotomic_sqr<libff::mnt6_pp, Fp6_variable, Fp6_cyclotomic_sqr_gadget>("mnt6_Fp6");
-    test_exponentiation_gadget<libff::mnt6_Fq6, Fp6_variable, Fp6_mul_gadget, Fp6_sqr_gadget, libff::mnt6_q_limbs>(libff::mnt6_final_exponent_last_chunk_abs_of_w0, "mnt6_Fq6");
-    test_Frobenius<libff::mnt6_Fq6, Fp6_variable>("mnt6_Fq6");
+    test_mul<ffec::mnt6_Fq6, Fp6_variable, Fp6_mul_gadget>("mnt6_Fp6");
+    test_sqr<ffec::mnt6_Fq6, Fp6_variable, Fp6_sqr_gadget>("mnt6_Fp6");
+    test_cyclotomic_sqr<ffec::mnt6_pp, Fp6_variable, Fp6_cyclotomic_sqr_gadget>("mnt6_Fp6");
+    test_exponentiation_gadget<ffec::mnt6_Fq6, Fp6_variable, Fp6_mul_gadget, Fp6_sqr_gadget, ffec::mnt6_q_limbs>(ffec::mnt6_final_exponent_last_chunk_abs_of_w0, "mnt6_Fq6");
+    test_Frobenius<ffec::mnt6_Fq6, Fp6_variable>("mnt6_Fq6");
 
-    test_G2_checker_gadget<libff::mnt4_pp>("mnt4");
-    test_G2_checker_gadget<libff::mnt6_pp>("mnt6");
+    test_G2_checker_gadget<ffec::mnt4_pp>("mnt4");
+    test_G2_checker_gadget<ffec::mnt6_pp>("mnt6");
 
-    test_G1_variable_precomp<libff::mnt4_pp>("mnt4");
-    test_G1_variable_precomp<libff::mnt6_pp>("mnt6");
+    test_G1_variable_precomp<ffec::mnt4_pp>("mnt4");
+    test_G1_variable_precomp<ffec::mnt6_pp>("mnt6");
 
-    test_G2_variable_precomp<libff::mnt4_pp>("mnt4");
-    test_G2_variable_precomp<libff::mnt6_pp>("mnt6");
+    test_G2_variable_precomp<ffec::mnt4_pp>("mnt4");
+    test_G2_variable_precomp<ffec::mnt6_pp>("mnt6");
 
-    test_mnt_miller_loop<libff::mnt4_pp>("mnt4");
-    test_mnt_miller_loop<libff::mnt6_pp>("mnt6");
+    test_mnt_miller_loop<ffec::mnt4_pp>("mnt4");
+    test_mnt_miller_loop<ffec::mnt6_pp>("mnt6");
 
-    test_mnt_e_over_e_miller_loop<libff::mnt4_pp>("mnt4");
-    test_mnt_e_over_e_miller_loop<libff::mnt6_pp>("mnt6");
+    test_mnt_e_over_e_miller_loop<ffec::mnt4_pp>("mnt4");
+    test_mnt_e_over_e_miller_loop<ffec::mnt6_pp>("mnt6");
 
-    test_mnt_e_times_e_over_e_miller_loop<libff::mnt4_pp>("mnt4");
-    test_mnt_e_times_e_over_e_miller_loop<libff::mnt6_pp>("mnt6");
+    test_mnt_e_times_e_over_e_miller_loop<ffec::mnt4_pp>("mnt4");
+    test_mnt_e_times_e_over_e_miller_loop<ffec::mnt6_pp>("mnt6");
 
-    test_full_pairing<libff::mnt4_pp>("mnt4");
-    test_full_pairing<libff::mnt6_pp>("mnt6");
+    test_full_pairing<ffec::mnt4_pp>("mnt4");
+    test_full_pairing<ffec::mnt6_pp>("mnt6");
 
-    test_full_precomputed_pairing<libff::mnt4_pp>("mnt4");
-    test_full_precomputed_pairing<libff::mnt6_pp>("mnt6");
+    test_full_precomputed_pairing<ffec::mnt4_pp>("mnt4");
+    test_full_precomputed_pairing<ffec::mnt6_pp>("mnt6");
 
-    test_verifier<libff::mnt4_pp, libff::mnt6_pp>("mnt4", "mnt6");
-    test_verifier<libff::mnt6_pp, libff::mnt4_pp>("mnt6", "mnt4");
+    test_verifier<ffec::mnt4_pp, ffec::mnt6_pp>("mnt4", "mnt6");
+    test_verifier<ffec::mnt6_pp, ffec::mnt4_pp>("mnt6", "mnt4");
 
-    test_hardcoded_verifier<libff::mnt4_pp, libff::mnt6_pp>("mnt4", "mnt6");
-    test_hardcoded_verifier<libff::mnt6_pp, libff::mnt4_pp>("mnt6", "mnt4");
+    test_hardcoded_verifier<ffec::mnt4_pp, ffec::mnt6_pp>("mnt4", "mnt6");
+    test_hardcoded_verifier<ffec::mnt6_pp, ffec::mnt4_pp>("mnt6", "mnt4");
 }

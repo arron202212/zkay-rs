@@ -7,13 +7,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP_HPP_
-#define FP_HPP_
+//#ifndef FP_HPP_
+// #define FP_HPP_
 
-#include <libff/algebra/field_utils/algorithms.hpp>
-#include <libff/algebra/field_utils/bigint.hpp>
+use crate::algebra::field_utils::algorithms;
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t n, const bigint<n>& modulus>
 class Fp_model;
@@ -43,13 +43,13 @@ class Fp_model {
 
     static const mp_size_t num_limbs = n;
     static const constexpr bigint<n>& mod = modulus;
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
     static std::size_t num_bits;
     static bigint<n> euler; // (modulus-1)/2
     static std::size_t s; // modulus = 2^s * t + 1
@@ -146,7 +146,7 @@ private:
     bigint<n> bigint_repr() const;
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp_model<n, modulus>::add_cnt = 0;
 
@@ -161,7 +161,7 @@ long long Fp_model<n, modulus>::sqr_cnt = 0;
 
 template<mp_size_t n, const bigint<n>& modulus>
 long long Fp_model<n, modulus>::inv_cnt = 0;
-#endif
+//#endif
 
 template<mp_size_t n, const bigint<n>& modulus>
 size_t Fp_model<n, modulus>::num_bits;
@@ -199,10 +199,10 @@ bigint<n> Fp_model<n, modulus>::Rsquared;
 template<mp_size_t n, const bigint<n>& modulus>
 bigint<n> Fp_model<n, modulus>::Rcubed;
 
-} // namespace libff
-#include <libff/algebra/fields/prime_base/fp.tcc>
+// } // namespace libff
+use libff/algebra/fields/prime_base/fp.tcc;
 
-#endif // FP_HPP_
+//#endif // FP_HPP_
 
 
 
@@ -216,18 +216,18 @@ bigint<n> Fp_model<n, modulus>::Rcubed;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP_TCC_
-#define FP_TCC_
-#include <cassert>
-#include <cmath>
-#include <cstdlib>
-#include <limits>
-#include <vector>
+//#ifndef FP_TCC_
+// #define FP_TCC_
+//#include <cassert>
+//#include <cmath>
+//#include <cstdlib>
+//#include <limits>
+//#include <vector>
 
-#include <libff/algebra/field_utils/field_utils.hpp>
-#include <libff/algebra/field_utils/fp_aux.tcc>
+use crate::algebra::field_utils::field_utils;
+use libff/algebra/field_utils/fp_aux.tcc;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -369,7 +369,7 @@ void Fp_model<n,modulus>::mul_reduce(const bigint<n> &other)
         mpn_copyi(this->mont_repr.data, tmp, n);
     }
     else
-#endif
+//#endif
     {
         mp_limb_t res[2*n];
         mpn_mul_n(res, this->mont_repr.data, other.data, n);
@@ -385,17 +385,17 @@ void Fp_model<n,modulus>::mul_reduce(const bigint<n> &other)
             /* calculate res = res + k * mod * b^i */
             mp_limb_t carryout = mpn_addmul_1(res+i, modulus.data, n, k);
             carryout = mpn_add_1(res+n+i, res+n+i, n-i, carryout);
-            assert(carryout == 0);
+            assert!(carryout == 0);
         }
 
         if mpn_cmp(res+n, modulus.data, n) >= 0
         {
             const mp_limb_t borrow = mpn_sub(res+n, res+n, n, modulus.data, n);
-#ifndef NDEBUG
-            assert(borrow == 0);
+//#ifndef NDEBUG
+            assert!(borrow == 0);
 #else
             UNUSED(borrow);
-#endif
+//#endif
         }
 
         mpn_copyi(this->mont_repr.data, res+n, n);
@@ -412,7 +412,7 @@ Fp_model<n,modulus>::Fp_model(const bigint<n> &b)
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus>::Fp_model(const long x, const bool is_unsigned)
 {
-    static_assert(std::numeric_limits<mp_limb_t>::max() >= static_cast<unsigned long>(std::numeric_limits<long>::max()), "long won't fit in mp_limb_t");
+    assert!(std::numeric_limits<mp_limb_t>::max() >= static_cast<unsigned long>(std::numeric_limits<long>::max()), "long won't fit in mp_limb_t");
     if is_unsigned || x >= 0
     {
         this->mont_repr.data[0] = (mp_limb_t)x;
@@ -420,11 +420,11 @@ Fp_model<n,modulus>::Fp_model(const long x, const bool is_unsigned)
     else
     {
         const mp_limb_t borrow = mpn_sub_1(this->mont_repr.data, modulus.data, n, (mp_limb_t)-x);
-#ifndef NDEBUG
-            assert(borrow == 0);
+//#ifndef NDEBUG
+            assert!(borrow == 0);
 #else
             UNUSED(borrow);
-#endif
+//#endif
     }
 
     mul_reduce(Rsquared);
@@ -532,9 +532,9 @@ Fp_model<n,modulus> Fp_model<n,modulus>::arithmetic_generator()
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus>& Fp_model<n,modulus>::operator+=(const Fp_model<n,modulus>& other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
 #if defined(__x86_64__) && defined(USE_ASM)
     if n == 3
     {
@@ -624,7 +624,7 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::operator+=(const Fp_model<n,modulus>& 
              : "cc", "memory", "%rax");
     }
     else
-#endif
+//#endif
     {
         mp_limb_t scratch[n+1];
         const mp_limb_t carry = mpn_add_n(scratch, this->mont_repr.data, other.mont_repr.data, n);
@@ -633,11 +633,11 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::operator+=(const Fp_model<n,modulus>& 
         if carry || mpn_cmp(scratch, modulus.data, n) >= 0
         {
             const mp_limb_t borrow = mpn_sub(scratch, scratch, n+1, modulus.data, n);
-#ifndef NDEBUG
-            assert(borrow == 0);
+//#ifndef NDEBUG
+            assert!(borrow == 0);
 #else
             UNUSED(borrow);
-#endif
+//#endif
         }
 
         mpn_copyi(this->mont_repr.data, scratch, n);
@@ -649,9 +649,9 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::operator+=(const Fp_model<n,modulus>& 
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus>& Fp_model<n,modulus>::operator-=(const Fp_model<n,modulus>& other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
 #if defined(__x86_64__) && defined(USE_ASM)
     if n == 3
     {
@@ -714,7 +714,7 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::operator-=(const Fp_model<n,modulus>& 
              : "cc", "memory", "%rax");
     }
     else
-#endif
+//#endif
     {
         mp_limb_t scratch[n+1];
         if mpn_cmp(this->mont_repr.data, other.mont_repr.data, n) < 0
@@ -729,11 +729,11 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::operator-=(const Fp_model<n,modulus>& 
         }
 
         const mp_limb_t borrow = mpn_sub(scratch, scratch, n+1, other.mont_repr.data, n);
-#ifndef NDEBUG
-        assert(borrow == 0);
+//#ifndef NDEBUG
+        assert!(borrow == 0);
 #else
         UNUSED(borrow);
-#endif
+//#endif
 
         mpn_copyi(this->mont_repr.data, scratch, n);
     }
@@ -743,9 +743,9 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::operator-=(const Fp_model<n,modulus>& 
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus>& Fp_model<n,modulus>::operator*=(const Fp_model<n,modulus>& other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
 
     mul_reduce(other.mont_repr);
     return *this;
@@ -805,9 +805,9 @@ Fp_model<n,modulus> Fp_model<n,modulus>::operator^(const bigint<m> &pow) const
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus> Fp_model<n,modulus>::operator-() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
 
     if this->is_zero()
     {
@@ -824,10 +824,10 @@ Fp_model<n,modulus> Fp_model<n,modulus>::operator-() const
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus> Fp_model<n,modulus>::squared() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
     this->mul_cnt--; // zero out the upcoming mul
-#endif
+//#endif
     /* stupid pre-processor tricks; beware */
 #if defined(__x86_64__) && defined(USE_ASM)
     if n == 3
@@ -862,7 +862,7 @@ Fp_model<n,modulus> Fp_model<n,modulus>::squared() const
         return r;
     }
     else
-#endif
+//#endif
     {
         Fp_model<n, modulus> r(*this);
         return (r *= r);
@@ -879,11 +879,11 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::square()
 template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n,modulus>& Fp_model<n,modulus>::invert()
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
-#endif
+//#endif
 
-    assert(!this->is_zero());
+    assert!(!this->is_zero());
 
     bigint<n> g; /* gp should have room for vn = n limbs */
 
@@ -894,11 +894,11 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::invert()
 
     /* computes gcd(u, v) = g = u*s + v*t, so s*u will be 1 (mod v) */
     const mp_size_t gn = mpn_gcdext(g.data, s, &sn, this->mont_repr.data, n, v.data, n);
-#ifndef NDEBUG
-    assert(gn == 1 && g.data[0] == 1); /* inverse exists */
+//#ifndef NDEBUG
+    assert!(gn == 1 && g.data[0] == 1); /* inverse exists */
 #else
     UNUSED(gn);
-#endif
+//#endif
 
     mp_limb_t q; /* division result fits into q, as sn <= n+1 */
     /* sn < 0 indicates negative sn; will fix up later */
@@ -919,11 +919,11 @@ Fp_model<n,modulus>& Fp_model<n,modulus>::invert()
     if sn < 0
     {
         const mp_limb_t borrow = mpn_sub_n(this->mont_repr.data, modulus.data, this->mont_repr.data, n);
-#ifndef NDEBUG
-        assert(borrow == 0);
+//#ifndef NDEBUG
+        assert!(borrow == 0);
 #else
         UNUSED(borrow);
-#endif
+//#endif
     }
 
     mul_reduce(Rcubed);
@@ -985,7 +985,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 std::vector<uint64_t> Fp_model<n,modulus>::to_words() const
 {
     // TODO: implement for other bit architectures
-    static_assert(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
+    assert!(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
 
     bigint<n> repr = this->bigint_repr();
     std::vector<uint64_t> words;
@@ -997,11 +997,11 @@ template<mp_size_t n, const bigint<n>& modulus>
 bool Fp_model<n,modulus>::from_words(std::vector<uint64_t> words)
 {
     // TODO: implement for other bit architectures
-    static_assert(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
+    assert!(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
 
     typedef Fp_model<n, modulus> FieldT; // Without the typedef C++ doesn't compile.
     long start_bit = words.size() * 64 - FieldT::ceil_size_in_bits();
-    assert(start_bit >= 0); // Check the vector is big enough.
+    assert!(start_bit >= 0); // Check the vector is big enough.
     long start_word = start_bit / 64;
     long bit_offset = start_bit % 64;
 
@@ -1009,9 +1009,9 @@ bool Fp_model<n,modulus>::from_words(std::vector<uint64_t> words)
     std::copy(words.begin() + start_word, words.end(), this->mont_repr.data);
     // Zero out the left-most bit_offset bits.
     this->mont_repr.data[n - 1] = mp_limb_t((uint64_t(this->mont_repr.data[n - 1]) << bit_offset) >> bit_offset);
-#ifndef MONTGOMERY_OUTPUT
+//#ifndef MONTGOMERY_OUTPUT
     this->mul_reduce(Rsquared);
-#endif
+//#endif
     return this->mont_repr < modulus;
 }
 
@@ -1026,9 +1026,9 @@ template<mp_size_t n, const bigint<n>& modulus>
 std::istream& operator>>(std::istream &in, Fp_model<n, modulus> &p)
 {
     in >> p.mont_repr;
-#ifndef MONTGOMERY_OUTPUT
+//#ifndef MONTGOMERY_OUTPUT
     p.mul_reduce(Fp_model<n,modulus>::Rsquared);
-#endif
+//#endif
     return in;
 }
 
@@ -1037,12 +1037,12 @@ bigint<n> Fp_model<n,modulus>::bigint_repr() const
 {
     // If the flag is defined, serialization and words output use the montgomery representation
     // instead of the human-readable value.
-#ifdef MONTGOMERY_OUTPUT
+// #ifdef MONTGOMERY_OUTPUT
     return this->mont_repr;
 #else
     return this->as_bigint();
-#endif
+//#endif
 }
 
-} // namespace libff
-#endif // FP_TCC_
+// } // namespace libff
+//#endif // FP_TCC_

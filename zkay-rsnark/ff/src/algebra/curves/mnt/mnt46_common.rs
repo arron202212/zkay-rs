@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT46_COMMON_HPP_
-#define MNT46_COMMON_HPP_
+//#ifndef MNT46_COMMON_HPP_
+// #define MNT46_COMMON_HPP_
 
-#include <libff/algebra/field_utils/bigint.hpp>
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 const mp_size_t mnt46_A_bitcount = 298;
 const mp_size_t mnt46_B_bitcount = 298;
@@ -25,9 +25,9 @@ const mp_size_t mnt46_B_limbs = (mnt46_B_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS
 extern bigint<mnt46_A_limbs> mnt46_modulus_A;
 extern bigint<mnt46_B_limbs> mnt46_modulus_B;
 
-} // namespace libff
+// } // namespace libff
 
-#endif
+//#endif
 /** @file
  *****************************************************************************
 
@@ -41,11 +41,11 @@ extern bigint<mnt46_B_limbs> mnt46_modulus_B;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt46_common.hpp>
+use libff/algebra/curves/mnt/mnt46_common;
 
-namespace libff {
+// namespace libff {
 
 bigint<mnt46_A_limbs> mnt46_modulus_A;
 bigint<mnt46_B_limbs> mnt46_modulus_B;
 
-} // namespace libff
+// } // namespace libff

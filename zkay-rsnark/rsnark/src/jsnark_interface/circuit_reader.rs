@@ -6,10 +6,11 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+
 // use  Util;
-// use  libsnark::gadgetlib2::integration;
-// use  libsnark::gadgetlib2::adapters;
-// use  lisff::common::profiling;
+// use  crate::gadgetlib2::integration;
+// use  crate::gadgetlib2::adapters;
+// use  ffec::common::profiling;
 use std::{
 process,
     fmt::Debug,
@@ -35,20 +36,21 @@ process,
 // use  <stdio.h>
 
 
-// #ifndef NO_PROCPS
+// //#ifndef NO_PROCPS
 // use  <proc/readproc.h>
-// #endif
+// //#endif
 
 
-// using namespace libsnark;
+// 
 // using namespace gadgetlib2;
 // using namespace std;
 use std::collections::HashMap;
-type u32 Wire;
 
-type lisff::Fr<lisff::default_ec_pp> FieldT;
+type Wire=u32;
+
+type FieldT=ffec::Fr<ffec::default_ec_pp> ;
 // type ::std::shared_ptr<LinearCombination> LinearCombinationPtr;
-type HashMap<Wire, u32> WireMap;
+type WireMap=HashMap<Wire, u32> ;
 
 const  ADD_OPCODE:u32=1;
 const  MUL_OPCODE:u32=2;
@@ -70,31 +72,31 @@ pub struct CircuitReader {
 // 	std::vector<Wire> getOutputWireIds() const { return outputWireIds; }
 
 // private:
-pb:ProtoboardPtr;
+pb:ProtoboardPtr,
 
-variables:	Vec<VariablePtr>;
-wireLinearCombinations:	Vec<LinearCombinationPtr>;
-zeroPwires:	Vec<LinearCombinationPtr>;
+variables:	Vec<VariablePtr>,
+wireLinearCombinations:	Vec<LinearCombinationPtr>,
+zeroPwires:	Vec<LinearCombinationPtr>,
 
-variableMap:	WireMap;
-zeropMap:	WireMap;
+variableMap:	WireMap,
+zeropMap:	WireMap,
 
-wireUseCounters:	Vec<u32>;
-wireValues:	Vec<FieldT>;
+wireUseCounters:	Vec<u32>,
+wireValues:	Vec<FieldT>,
 
-toClean:	Vec<Wire>;
+toClean:	Vec<Wire>,
 
-inputWireIds:	Vec<Wire>;
-nizkWireIds:	Vec<Wire>;
-outputWireIds:	Vec<Wire>;
+inputWireIds:	Vec<Wire>,
+nizkWireIds:	Vec<Wire>,
+outputWireIds:	Vec<Wire>,
 
-numWires:	u32;
-numOutputs:	u32 ;
-numInputs:u32;
-numNizkInputs:u32;
+numWires:	u32,
+numOutputs:	u32 ,
+numInputs:u32,
+numNizkInputs:u32,
 
-currentLinearCombinationIdx:	u32 ;
-currentVariableIdx:u32;
+currentLinearCombinationIdx:	u32 ,
+currentVariableIdx:u32,
 
 	// void parseAndEval(arithFilepath:&str, inputsFilepath:&str);
 	// void constructCircuit(const char*);  // Second Pass:
@@ -125,7 +127,7 @@ currentVariableIdx:u32;
 impl CircuitReader{
     pub fn new(arithFilepath:&str, inputsFilepath:&str,
 		 pb:ProtoboardPtr)->Self {
-    let mut _self={
+    let mut _self=Self{
 pb,
 variables:	vec![],
 wireLinearCombinations:	vec![],
@@ -144,7 +146,7 @@ numInputs:0,
 numNizkInputs:0,
 currentLinearCombinationIdx:	0 ,
 currentVariableIdx:0,
-    }
+    };
 
 	_self.parseAndEval(arithFilepath, inputsFilepath);
 	_self.constructCircuit(arithFilepath);
@@ -161,31 +163,31 @@ currentVariableIdx:0,
 
 pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
 
-	lisff::enter_block("Parsing and Evaluating the circuit");
+	ffec::enter_block("Parsing and Evaluating the circuit");
     let mut arithfs = fs::read_to_string(arithFilepath);
     let mut inputfs = fs::read_to_string(inputsFilepath);
 
 	let mut  line;
 
 	if arithfs.is_err() {
-		println!("Unable to open circuit file %s \n", arithFilepath);
+		println!("Unable to open circuit file {} \n", arithFilepath);
 		process::process::exit(-1);
 	}
     let arithfs=arithfs.unwrap().lines();
 	line=arithfs.next().unwrap();
-	let ret = sscanf::sscanf!(line, "total {u32}");
+	let ret = scan_fmt!(line, "total {d}",u32);
 
 	if ret.is_err() {
 		println!("File Format Does not Match\n");
 		process::exit(-1);
 	}
-    let self.numWires=ret.unwrap().0;
+    self.numWires=ret.unwrap().0;
 	self.wireValues.resize(self.numWires);
 	self.wireUseCounters.resize(self.numWires);
 	self.wireLinearCombinations.resize(self.numWires);
 
 	if inputfs.is_err() {
-		println!("Unable to open input file %s \n", inputsFilepath);
+		println!("Unable to open input file {} \n", inputsFilepath);
 		process::exit(-1);
 	} 
      let inputfs=inputfs.unwrap().lines();
@@ -195,7 +197,7 @@ pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
 				continue;
 			}
 			let mut  wireId;
-			if let Ok((wireId, inputStr))=sscanf::sscanf!(line, "{u32} {str}") {
+			if let Ok((wireId, inputStr))=scan_fmt!(line, "{} {}",u32,String) {
 				wireValues[wireId] = Util::readFieldElementFromHex(inputStr);
 			} else {
 				println!("Error in Input\n");
@@ -236,18 +238,18 @@ pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
 		if line[0] == '#' {
 			continue;
 		}
-        if let Ok((wireId))= sscanf::sscanf!(line, "input {u32}") {
+        if let Ok((wireId))= scan_fmt!(line, "input {}",u32) {
 			self.numInputs+=1;
 			self.inputWireIds.push(wireId);
-		} else if let Ok((wireId))= sscanf::sscanf!(line, "nizkinput {u32}") {
+		} else if let Ok((wireId))= scan_fmt!(line, "nizkinput {}",u32) {
 			self.numNizkInputs+=1;
 			self.nizkWireIds.push(wireId);
-		} else if let Ok((wireId))= sscanf::sscanf!(line, "output {u32}") {
+		} else if let Ok((wireId))= scan_fmt!(line, "output {}",u32) {
 			self.numOutputs+=1;
 			self.outputWireIds.push(wireId);
 			self.wireUseCounters[wireId]+=1;
 		} else if let Ok((types,
-						numGateInputs, inputStr, &numGateOutputs, outputStr))= sscanf::sscanf!(line, "{str} in {u32} <{str:/[^>]+/}> out {u32} <{str:/[^>]+/}>") {
+						numGateInputs, inputStr, &numGateOutputs, outputStr))= scan_fmt!(line, "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",String,u32,String,u32,String) {
 
 			let mut  iss_i=inputStr.lines();
 			let mut inValues=vec![];
@@ -286,26 +288,27 @@ pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
              "split"=> {
 				opcode = SPLIT_OPCODE;
 			} 
-                _ if types.contains("const-mul-neg-") {
+            _ if types.contains("const-mul-neg-") =>{
 				opcode = MULCONST_OPCODE;
 				let constStr = &types["const-mul-neg-".len() - 1..];
 				constant = Util::readFieldElementFromHex(constStr) * negOneElement;
-			}  _ if types.contains("const-mul-") {
+			}  
+            _ if types.contains("const-mul-") =>{
 				opcode = MULCONST_OPCODE;
 				let constStr =  &types["const-mul-".len() - 1..];
 				constant = Util::readFieldElementFromHex(constStr);
-			} else {
+			} _ =>{
 				println!("Error: unrecognized line: {line}\n");
 				panic!("0");
 			}
-
+            }
 			// TODO: separate evaluation from parsing completely to get accurate evaluation cost
-			//	 Calling  lisff::get_nsec_time(); repetitively as in the old version adds much overhead 
+			//	 Calling  ffec::get_nsec_time(); repetitively as in the old version adds much overhead 
 			// TODO 2: change circuit format to enable skipping some lines during evaluation
 			//       Not all intermediate wire values need to be computed in this phase
 			// TODO 3: change circuit format to make common constants defined once			
 	
-			//begin = lisff::get_nsec_time();
+			//begin = ffec::get_nsec_time();
 			if opcode == ADD_OPCODE {
 				wireValues[outWires[0]] = inValues.iter().sum();
 			} else if opcode == MUL_OPCODE {
@@ -338,7 +341,7 @@ pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
 			} else if opcode == MULCONST_OPCODE {
 				wireValues[outWires[0]] = constant * inValues[0];
 			}
-			//end =  lisff::get_nsec_time();
+			//end =  ffec::get_nsec_time();
 			//evalTime += (end - begin);
 		} else {
 			println!("Error: unrecognized line: {line}\n");
@@ -349,7 +352,7 @@ pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
 	
 
 	// println!("\t Evaluation Done in %lf seconds \n", (double) (evalTime) * 1e-9);
-	 lisff::leave_block("Parsing and Evaluating the circuit");
+	 ffec::leave_block("Parsing and Evaluating the circuit");
 }
 
 pub fn constructCircuit(arithFilepath:&str) {
@@ -359,10 +362,10 @@ pub fn constructCircuit(arithFilepath:&str) {
 	println!("Translating Constraints ... ");
 
 	
-	// #ifndef NO_PROCPS
+	// //#ifndef NO_PROCPS
 	// struct proc_t usage1, usage2;
 	// look_up_our_self(&usage1);
-    //     #endif
+    //     //#endif
 	
 
 	
@@ -378,7 +381,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 		variableMap[outputWireIds[i]] = currentVariableIdx;
 		currentVariableIdx+=1;
 	}
-	for (i = 0; i < numNizkInputs; i++) {
+	for i in  0.. numNizkInputs {
 		variables.push(Variable::new("nizk input"));
 		variableMap[nizkWireIds[i]] = currentVariableIdx;
 		currentVariableIdx+=1;
@@ -388,7 +391,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 	// inputStr:&str;
 	// outputStr:&str;
 	// string line;
-	unsigned int numGateInputs, numGateOutputs;
+	let (mut  numGateInputs, mut numGateOutputs);
 
 	let  mut ifs2=fs::read_to_string(arithFilepath);
 
@@ -400,7 +403,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 	// Parse the circuit: few lines were imported from Pinocchio's code.
     let ifs2=ifs2.unwrap().lines();
 	let mut line=ifs2.next().unwrap();
-	let Ok((numWires))=sscanf::sscanf(line.c, "total {i32}") else{
+	let Ok((numWires))=scan_fmt(line.c, "total {i32}") else{
         eprintln!("=======================");
     return };
 
@@ -418,7 +421,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 
 		if let Ok((types,
 						numGateInputs, inputStr, numGateOutputs, outputStr))
-				== sscanf::sscanf!(line.c_str(), "{str} in {i32} <{str:/[^>]+/}> out {i32} <{str:/[^>]+/}>" ) {
+				= scan_fmt!(line.c_str(), "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",String,i32,String,i32,String ) {
             match types{
 			 "add"=> {
 				assert!(numGateOutputs == 1);
@@ -435,19 +438,19 @@ pub fn constructCircuit(arithFilepath:&str) {
 			}  "assert"=> {
 				assert!(numGateInputs == 2 && numGateOutputs == 1);
 				self.addAssertionConstraint(inputStr, outputStr);
-			} _ if types.contains( "const-mul-neg-") {
+			} _ if types.contains( "const-mul-neg-") =>{
 				assert!(numGateInputs == 1 && numGateOutputs == 1);
-				self.handleMulNegConst(type, inputStr, outputStr);
-			} _ if types.contains("const-mul-") {
+				self.handleMulNegConst(types, inputStr, outputStr);
+			} _ if types.contains("const-mul-")=> {
 				assert!(numGateInputs == 1 && numGateOutputs == 1);
-				self.handleMulConst(type, inputStr, outputStr);
+				self.handleMulConst(types, inputStr, outputStr);
 			}  "zerop"=> {
 				assert!(numGateInputs == 1 && numGateOutputs == 2);
 				self.addNonzeroCheckConstraint(inputStr, outputStr);
-			} _ if types.contains( "split") {
+			} _ if types.contains( "split") =>{
 				assert!(numGateInputs == 1);
 				self.addSplitConstraint(inputStr, outputStr, numGateOutputs);
-			} _ if types.contains( "pack") {
+			} _ if types.contains( "pack") =>{
 				assert!(numGateOutputs == 1);
 				// addPackConstraint(inputStr, outputStr, numGateInputs);
 				self.handlePackOperation(inputStr, outputStr, numGateInputs);
@@ -467,11 +470,11 @@ pub fn constructCircuit(arithFilepath:&str) {
 
 
 	
-	// #ifndef NO_PROCPS
+	// //#ifndef NO_PROCPS
 	// look_up_our_self(&usage2);
 	// unsigned long diff = usage2.vsize - usage1.vsize;
 	// println!("\tMemory usage for constraint translation: %lu MB\n", diff >> 20);
-    //     #endif
+    //     //#endif
         
 }
 
@@ -479,19 +482,19 @@ pub fn mapValuesToProtoboard(&self) {
 
 	let mut  zeropGateIndex = 0;
 	for (wireId,v) in variableMap.keys() {
-		pb->val(variables[v]) = wireValues[wireId];
+		pb.val(variables[v]) = wireValues[wireId];
 		if let Some(z)=zeropMap.get(wireId) {
 			let  l = zeroPwires[zeropGateIndex];
             zeropGateIndex+=1;
-			if pb->val(l) == FieldT::zero() {
-				pb->val(variables[z]) = FieldT::zero();
+			if pb.val(l) == FieldT::zero() {
+				pb.val(variables[z]) = FieldT::zero();
 			} else {
-				pb->val(variables[z]) = pb->val(l).inverse(
-						pb->fieldType_);
+				pb.val(variables[z]) = pb.val(l).inverse(
+						pb.fieldType_);
 			}
 		}
 	}
-	if !pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED) {
+	if !pb.isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED) {
 		println!("Note: Protoboard Not Satisfied .. \n");
 		// assert!(false);
 	}
@@ -543,12 +546,12 @@ pub fn addMulConstraint(&self,inputStr:&str, outputStr:&str) {
 	self.find(inWireId2, l2);
 
 	if let Some(v)=variableMap.get(outputWireId) {
-		pb->addRank1Constraint(l1, l2, variables[v],
+		pb.addRank1Constraint(l1, l2, variables[v],
 				"Mul ..");
 	}else {
 		variables.push(Variable::new("mul out"));
 		variableMap[outputWireId] = currentVariableIdx;
-		pb->addRank1Constraint(l1, l2, variables[currentVariableIdx],
+		pb.addRank1Constraint(l1, l2, variables[currentVariableIdx],
 				"Mul ..");
 		currentVariableIdx+=1;
 	} 
@@ -570,12 +573,12 @@ pub fn addXorConstraint(&self,inputStr:&str, outputStr:&str) {
 	let  (l1, l2)=(lp1.clone(),lp2.clone());
 
 	if let Some(v)=variableMap.get(outputWireId) {
-		pb->addRank1Constraint(2 * l1, l2,
+		pb.addRank1Constraint(2 * l1, l2,
 				l1 + l2 - *variables[variableMap[outputWireId]], "XOR ..");
 	}else{
 		variables.push(Variable::new("xor out"));
 		variableMap[outputWireId] = currentVariableIdx;
-		pb->addRank1Constraint(2 * l1, l2,
+		pb.addRank1Constraint(2 * l1, l2,
 				l1 + l2 - *variables[currentVariableIdx], "XOR ..");
 		currentVariableIdx+=1;
 	} 
@@ -597,12 +600,12 @@ pub fn addOrConstraint(&self,inputStr:&str, outputStr:&str) {
 	let  (l1, l2)=(lp1,lp2);
 
 	if let Some(v)=variableMap.get(outputWireId) {
-		pb->addRank1Constraint(l1, l2,
+		pb.addRank1Constraint(l1, l2,
 				l1 + l2 - *variables[v], "OR ..");
 	}else{
 		variables.push(Variable::new("or out"));
 		variableMap[outputWireId] = currentVariableIdx;
-		pb->addRank1Constraint(l1, l2, l1 + l2 - *variables[currentVariableIdx],
+		pb.addRank1Constraint(l1, l2, l1 + l2 - *variables[currentVariableIdx],
 				"OR ..");
 		currentVariableIdx+=1;
 	}  
@@ -624,7 +627,7 @@ pub fn addAssertionConstraint(&self,inputStr:&str, outputStr:&str) {
 	find(outputWireId, lp3);
 
 	let  (l1, l2, l3)=(lp1,lp2,lp3);
-	pb->addRank1Constraint(l1, l2, l3, "Assertion ..");
+	pb.addRank1Constraint(l1, l2, l3, "Assertion ..");
 
 }
 
@@ -641,7 +644,7 @@ pub fn addSplitConstraint(&self,inputStr:&str, outputStr:&str,
 	let mut  iss_o=outputStr.lines();
 
 	let mut  sum;
-	let mut  two_i = lisff::Fr<lisff::default_ec_pp> ("1");
+	let mut  two_i = ffec::Fr::<ffec::default_ec_pp> ("1");
 
 
 
@@ -656,13 +659,13 @@ pub fn addSplitConstraint(&self,inputStr:&str, outputStr:&str,
 			vptr = variables[currentVariableIdx];
 			currentVariableIdx+=1;
 		}  
-		pb->enforceBooleanity(*vptr);
+		pb.enforceBooleanity(*vptr);
 		sum += LinearTerm(*vptr, two_i);
 		two_i += two_i;
 	}
 
 
-	pb->addRank1Constraint(*l, 1, sum, "Split Constraint");
+	pb.addRank1Constraint(*l, 1, sum, "Split Constraint");
 }
 
 pub fn addNonzeroCheckConstraint(&self,inputStr:&str, outputStr:&str) {
@@ -688,8 +691,8 @@ pub fn addNonzeroCheckConstraint(&self,inputStr:&str, outputStr:&str) {
 		currentVariableIdx+=1;
 	}  
 	variables.push(Variable::new("zerop aux"));
-	pb->addRank1Constraint(*l, 1 - *vptr, 0, "condition * not(output) = 0");
-	pb->addRank1Constraint(*l, *variables[currentVariableIdx], *vptr,
+	pb.addRank1Constraint(*l, 1 - *vptr, 0, "condition * not(output) = 0");
+	pb.addRank1Constraint(*l, *variables[currentVariableIdx], *vptr,
 			"condition * auxConditionInverse = output");
 
 	zeroPwires.push(LinearCombination::new(*l));
@@ -717,7 +720,7 @@ pub fn handlePackOperation(&self,inputStr:&str, outputStr:&str, n:u16){
 	let  mut bitWireId=iss_i.next().unwrap();
 
 	find(bitWireId, sum, true);	       
-	let mut  two_i = lisff::Fr<lisff::default_ec_pp> ("1");
+	let mut  two_i = ffec::Fr::<ffec::default_ec_pp> ("1");
 	for i in 1..n {
 		bitWireId=iss_i.next().unwrap();
 		let mut  l;
@@ -803,3 +806,4 @@ pub fn handleMulNegConst(&self,types:&str, inputStr:&str,
 
 }
 }
+

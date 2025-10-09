@@ -9,18 +9,18 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT4_FIELDS_HPP_
-#define MNT4_FIELDS_HPP_
+//#ifndef MNT4_FIELDS_HPP_
+// #define MNT4_FIELDS_HPP_
 
-#include <libff/algebra/curves/mnt/mnt46_common.hpp>
-#include <libff/algebra/fields/prime_base/fp.hpp>
-#include <libff/algebra/fields/prime_extension/fp2.hpp>
-#include <libff/algebra/fields/prime_extension/fp4.hpp>
+use libff/algebra/curves/mnt/mnt46_common;
+use libff/algebra/fields/prime_base/fp;
+use libff/algebra/fields/prime_extension/fp2;
+use libff/algebra/fields/prime_extension/fp4;
 
-namespace libff {
+// namespace libff {
 
-#define mnt4_modulus_r mnt46_modulus_A
-#define mnt4_modulus_q mnt46_modulus_B
+// #define mnt4_modulus_r mnt46_modulus_A
+// #define mnt4_modulus_q mnt46_modulus_B
 
 const mp_size_t mnt4_r_bitcount = mnt46_A_bitcount;
 const mp_size_t mnt4_q_bitcount = mnt46_B_bitcount;
@@ -39,9 +39,9 @@ typedef mnt4_Fq4 mnt4_GT;
 
 void init_mnt4_fields();
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT4_FIELDS_HPP_
+//#endif // MNT4_FIELDS_HPP_
 /** @file
  *****************************************************************************
 
@@ -55,21 +55,21 @@ void init_mnt4_fields();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt4/mnt4_fields.hpp>
+use libff/algebra/curves/mnt/mnt4/mnt4_fields;
 
-namespace libff {
+// namespace libff {
 
 void init_mnt4_fields()
 {
     using bigint_r = bigint<mnt4_r_limbs>;
     using bigint_q = bigint<mnt4_q_limbs>;
 
-    assert(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
+    assert!(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
 
     /* parameters for scalar field Fr */
 
     mnt4_modulus_r = bigint_r("475922286169261325753349249653048451545124878552823515553267735739164647307408490559963137");
-    assert(mnt4_Fr::modulus_is_valid());
+    assert!(mnt4_Fr::modulus_is_valid());
     if (sizeof(mp_limb_t) == 8)
     {
         mnt4_Fr::Rsquared = bigint_r("163983144722506446826715124368972380525894397127205577781234305496325861831001705438796139");
@@ -95,7 +95,7 @@ void init_mnt4_fields()
     /* parameters for base field Fq */
 
     mnt4_modulus_q = bigint_q("475922286169261325753349249653048451545124879242694725395555128576210262817955800483758081");
-    assert(mnt4_Fq::modulus_is_valid());
+    assert!(mnt4_Fq::modulus_is_valid());
     if (sizeof(mp_limb_t) == 8)
     {
         mnt4_Fq::Rsquared = bigint_q("273000478523237720910981655601160860640083126627235719712980612296263966512828033847775776");
@@ -148,4 +148,4 @@ void init_mnt4_fields()
     mnt4_Fq4::Frobenius_coeffs_c1[3] = mnt4_Fq("468238122923807824137727898100575114475823797181717920390930116882062371863914936316755773");
 }
 
-} // namespace libff
+// } // namespace libff

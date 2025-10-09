@@ -7,19 +7,19 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
 
 use  <string>
 
-use  <libsnark/gadgetlib2/constraint.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/constraint;
+use libsnark/gadgetlib2/pp;
+use libsnark/gadgetlib2/variable;
 
-#define ASSERT_CONSTRAINTS_SATISFIED(pb) \
+// #define ASSERT_CONSTRAINTS_SATISFIED(pb) \
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED))
 
-#define ASSERT_CONSTRAINTS_NOT_SATISFIED(pb) \
+// #define ASSERT_CONSTRAINTS_NOT_SATISFIED(pb) \
     ASSERT_FALSE(pb->isSatisfied(PrintOptions::NO_DBG_PRINT))
 
 namespace gadgetlib2 {
@@ -117,7 +117,7 @@ public:
 
 } // namespace gadgetlib2
 
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
 /** @file
  *****************************************************************************
  Implementation of Protoboard, a "memory manager" for building arithmetic constraints
@@ -129,7 +129,7 @@ public:
 
 use  <cstdio>
 
-use  <libsnark/gadgetlib2/protoboard.hpp>
+use libsnark/gadgetlib2/protoboard;
 
 using ::std::string;
 using ::std::cout;

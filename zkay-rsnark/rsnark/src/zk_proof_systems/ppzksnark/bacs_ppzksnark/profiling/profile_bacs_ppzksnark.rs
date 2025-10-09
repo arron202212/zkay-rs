@@ -19,28 +19,28 @@
 
 use  <cstdio>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/common/default_types/bacs_ppzksnark_pp.hpp>
-use  <libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark.hpp>
+use crate::common::default_types::bacs_ppzksnark_pp;
+use libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples;
+use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark;
 
-using namespace libsnark;
+
 
 int main(int argc, const char * argv[])
 {
     default_bacs_ppzksnark_pp::init_public_params();
-    libff::start_profiling();
+    ffec::start_profiling();
 
     if (argc == 2 && strcmp(argv[1], "-v") == 0)
     {
-        libff::print_compilation_info();
+        ffec::print_compilation_info();
         return 0;
     }
 
     if (argc != 3)
     {
-        printf("usage: %s num_gates primary_input_size\n", argv[0]);
+        print!("usage: %s num_gates primary_input_size\n", argv[0]);
         return 1;
     }
     const int num_gates = atoi(argv[1]);
@@ -49,12 +49,12 @@ int main(int argc, const char * argv[])
     const size_t auxiliary_input_size = 0;
     const size_t num_outputs = num_gates / 2;
 
-    libff::enter_block("Generate BACS example");
-    bacs_example<libff::Fr<default_bacs_ppzksnark_pp> > example = generate_bacs_example<libff::Fr<default_bacs_ppzksnark_pp> >(primary_input_size, auxiliary_input_size, num_gates, num_outputs);
-    libff::leave_block("Generate BACS example");
+    ffec::enter_block("Generate BACS example");
+    bacs_example<ffec::Fr<default_bacs_ppzksnark_pp> > example = generate_bacs_example<ffec::Fr<default_bacs_ppzksnark_pp> >(primary_input_size, auxiliary_input_size, num_gates, num_outputs);
+    ffec::leave_block("Generate BACS example");
 
-    libff::print_header("(enter) Profile BACS ppzkSNARK");
+    ffec::print_header("(enter) Profile BACS ppzkSNARK");
     const bool test_serialization = true;
     run_bacs_ppzksnark<default_bacs_ppzksnark_pp>(example, test_serialization);
-    libff::print_header("(leave) Profile BACS ppzkSNARK");
+    ffec::print_header("(leave) Profile BACS ppzkSNARK");
 }

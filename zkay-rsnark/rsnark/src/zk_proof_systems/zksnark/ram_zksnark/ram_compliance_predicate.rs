@@ -34,19 +34,19 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_COMPLIANCE_PREDICATE_HPP_
-#define RAM_COMPLIANCE_PREDICATE_HPP_
+//#ifndef RAM_COMPLIANCE_PREDICATE_HPP_
+// #define RAM_COMPLIANCE_PREDICATE_HPP_
 
 use  <numeric>
 
-use  <libsnark/gadgetlib1/gadgets/delegated_ra_memory/memory_load_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/delegated_ra_memory/memory_load_store_gadget.hpp>
-use  <libsnark/relations/ram_computations/memory/delegated_ra_memory.hpp>
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler.hpp>
+use libsnark/gadgetlib1/gadgets/delegated_ra_memory/memory_load_gadget;
+use libsnark/gadgetlib1/gadgets/delegated_ra_memory/memory_load_store_gadget;
+use libsnark/relations/ram_computations/memory/delegated_ra_memory;
+use libsnark/relations/ram_computations/rams/ram_params;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
 
-namespace libsnark {
+
 
 /**
  * A RAM message specializes the generic PCD message, in order to
@@ -55,7 +55,7 @@ namespace libsnark {
 template<typename ramT>
 class ram_pcd_message : public r1cs_pcd_message<ram_base_field<ramT> > {
 private:
-    void print_bits(const libff::bit_vector &bv) const;
+    void print_bits(const ffec::bit_vector &bv) const;
 
 public:
     type ram_base_field<ramT> FieldT;
@@ -63,26 +63,26 @@ public:
     ram_architecture_params<ramT> ap;
 
     size_t timestamp;
-    libff::bit_vector root_initial;
-    libff::bit_vector root;
+    ffec::bit_vector root_initial;
+    ffec::bit_vector root;
     size_t pc_addr;
-    libff::bit_vector cpu_state;
+    ffec::bit_vector cpu_state;
     size_t pc_addr_initial;
-    libff::bit_vector cpu_state_initial;
+    ffec::bit_vector cpu_state_initial;
     bool has_accepted;
 
     ram_pcd_message(const size_t type,
                     const ram_architecture_params<ramT> &ap,
                     const size_t timestamp,
-                    const libff::bit_vector root_initial,
-                    const libff::bit_vector root,
+                    const ffec::bit_vector root_initial,
+                    const ffec::bit_vector root,
                     const size_t pc_addr,
-                    const libff::bit_vector cpu_state,
+                    const ffec::bit_vector cpu_state,
                     const size_t pc_addr_initial,
-                    const libff::bit_vector cpu_state_initial,
+                    const ffec::bit_vector cpu_state_initial,
                     const bool has_accepted);
 
-    libff::bit_vector unpacked_payload_as_bits() const;
+    ffec::bit_vector unpacked_payload_as_bits() const;
     r1cs_variable_assignment<FieldT> payload_as_r1cs_variable_assignment() const;
     void print() const;
 
@@ -243,11 +243,11 @@ public:
                                                                          const size_t time_bound);
 };
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/zksnark/ram_zksnark/ram_compliance_predicate.tcc>
 
-#endif // RAM_COMPLIANCE_PREDICATE_HPP_
+use libsnark/zk_proof_systems/zksnark/ram_zksnark/ram_compliance_predicate;
+
+//#endif // RAM_COMPLIANCE_PREDICATE_HPP_
 /** @file
  *****************************************************************************
 
@@ -261,23 +261,23 @@ use  <libsnark/zk_proof_systems/zksnark/ram_zksnark/ram_compliance_predicate.tcc
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_COMPLIANCE_PREDICATE_TCC_
-#define RAM_COMPLIANCE_PREDICATE_TCC_
+//#ifndef RAM_COMPLIANCE_PREDICATE_TCC_
+// #define RAM_COMPLIANCE_PREDICATE_TCC_
 
-use  <libsnark/gadgetlib1/constraint_profiling.hpp>
+use libsnark/gadgetlib1/constraint_profiling;
 
-namespace libsnark {
+
 
 template<typename ramT>
 ram_pcd_message<ramT>::ram_pcd_message(const size_t type,
                                        const ram_architecture_params<ramT> &ap,
                                        const size_t timestamp,
-                                       const libff::bit_vector root_initial,
-                                       const libff::bit_vector root,
+                                       const ffec::bit_vector root_initial,
+                                       const ffec::bit_vector root,
                                        const size_t pc_addr,
-                                       const libff::bit_vector cpu_state,
+                                       const ffec::bit_vector cpu_state,
                                        const size_t pc_addr_initial,
-                                       const libff::bit_vector cpu_state_initial,
+                                       const ffec::bit_vector cpu_state_initial,
                                        const bool has_accepted) :
     r1cs_pcd_message<FieldT>(type),
     ap(ap),
@@ -291,23 +291,23 @@ ram_pcd_message<ramT>::ram_pcd_message(const size_t type,
     has_accepted(has_accepted)
 {
     const size_t digest_size = CRH_with_bit_out_gadget<FieldT>::get_digest_len();
-    assert(libff::log2(timestamp) < ramT::timestamp_length);
-    assert(root_initial.size() == digest_size);
-    assert(root.size() == digest_size);
-    assert(libff::log2(pc_addr) < ap.address_size());
-    assert(cpu_state.size() == ap.cpu_state_size());
-    assert(libff::log2(pc_addr_initial) < ap.address_size());
-    assert(cpu_state_initial.size() == ap.cpu_state_size());
+    assert!(ffec::log2(timestamp) < ramT::timestamp_length);
+    assert!(root_initial.size() == digest_size);
+    assert!(root.size() == digest_size);
+    assert!(ffec::log2(pc_addr) < ap.address_size());
+    assert!(cpu_state.size() == ap.cpu_state_size());
+    assert!(ffec::log2(pc_addr_initial) < ap.address_size());
+    assert!(cpu_state_initial.size() == ap.cpu_state_size());
 }
 
 template<typename ramT>
-libff::bit_vector ram_pcd_message<ramT>::unpacked_payload_as_bits() const
+ffec::bit_vector ram_pcd_message<ramT>::unpacked_payload_as_bits() const
 {
-    libff::bit_vector result;
+    ffec::bit_vector result;
 
-    const libff::bit_vector timestamp_bits = libff::convert_field_element_to_bit_vector<FieldT>(FieldT(timestamp), ramT::timestamp_length);
-    const libff::bit_vector pc_addr_bits = libff::convert_field_element_to_bit_vector<FieldT>(FieldT(pc_addr), ap.address_size());
-    const libff::bit_vector pc_addr_initial_bits = libff::convert_field_element_to_bit_vector<FieldT>(FieldT(pc_addr_initial), ap.address_size());
+    const ffec::bit_vector timestamp_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(timestamp), ramT::timestamp_length);
+    const ffec::bit_vector pc_addr_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(pc_addr), ap.address_size());
+    const ffec::bit_vector pc_addr_initial_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(pc_addr_initial), ap.address_size());
 
     result.insert(result.end(), timestamp_bits.begin(), timestamp_bits.end());
     result.insert(result.end(), root_initial.begin(), root_initial.end());
@@ -318,45 +318,45 @@ libff::bit_vector ram_pcd_message<ramT>::unpacked_payload_as_bits() const
     result.insert(result.end(), cpu_state_initial.begin(), cpu_state_initial.end());
     result.insert(result.end(), has_accepted);
 
-    assert(result.size() == unpacked_payload_size_in_bits(ap));
+    assert!(result.size() == unpacked_payload_size_in_bits(ap));
     return result;
 }
 
 template<typename ramT>
 r1cs_variable_assignment<ram_base_field<ramT> > ram_pcd_message<ramT>::payload_as_r1cs_variable_assignment() const
 {
-    const libff::bit_vector payload_bits = unpacked_payload_as_bits();
-    const r1cs_variable_assignment<FieldT> result = libff::pack_bit_vector_into_field_element_vector<FieldT>(payload_bits);
+    const ffec::bit_vector payload_bits = unpacked_payload_as_bits();
+    const r1cs_variable_assignment<FieldT> result = ffec::pack_bit_vector_into_field_element_vector<FieldT>(payload_bits);
     return result;
 }
 
 template<typename ramT>
-void ram_pcd_message<ramT>::print_bits(const libff::bit_vector &bv) const
+void ram_pcd_message<ramT>::print_bits(const ffec::bit_vector &bv) const
 {
     for (bool b : bv)
     {
-        printf("%d", b ? 1 : 0);
+        print!("%d", b ? 1 : 0);
     }
-    printf("\n");
+    print!("\n");
 }
 
 template<typename ramT>
 void ram_pcd_message<ramT>::print() const
 {
-    printf("ram_pcd_message:\n");
-    printf("  type: %zu\n", this->type);
-    printf("  timestamp: %zu\n", timestamp);
-    printf("  root_initial: ");
+    print!("ram_pcd_message:\n");
+    print!("  type: {}\n", self.type);
+    print!("  timestamp: {}\n", timestamp);
+    print!("  root_initial: ");
     print_bits(root_initial);
-    printf("  root: ");
+    print!("  root: ");
     print_bits(root);
-    printf("  pc_addr: %zu\n", pc_addr);
-    printf("  cpu_state: ");
+    print!("  pc_addr: {}\n", pc_addr);
+    print!("  cpu_state: ");
     print_bits(cpu_state);
-    printf("  pc_addr_initial: %zu\n", pc_addr_initial);
-    printf("  cpu_state_initial: ");
+    print!("  pc_addr_initial: {}\n", pc_addr_initial);
+    print!("  cpu_state_initial: ");
     print_bits(cpu_state_initial);
-    printf("  has_accepted: %s\n", has_accepted ? "YES" : "no");
+    print!("  has_accepted: %s\n", has_accepted ? "YES" : "no");
 }
 
 template<typename ramT>
@@ -378,10 +378,10 @@ ram_pcd_message_variable<ramT>::ram_pcd_message_variable(protoboard<FieldT> &pb,
     r1cs_pcd_message_variable<ram_base_field<ramT> >(pb, annotation_prefix), ap(ap)
 {
     const size_t unpacked_payload_size_in_bits = ram_pcd_message<ramT>::unpacked_payload_size_in_bits(ap);
-    const size_t packed_payload_size = libff::div_ceil(unpacked_payload_size_in_bits, FieldT::capacity());
+    const size_t packed_payload_size = ffec::div_ceil(unpacked_payload_size_in_bits, FieldT::capacity());
     packed_payload.allocate(pb, packed_payload_size, FMT(annotation_prefix, " packed_payload"));
 
-    this->update_all_vars();
+    self.update_all_vars();
 }
 
 template<typename ramT>
@@ -389,14 +389,14 @@ void ram_pcd_message_variable<ramT>::allocate_unpacked_part()
 {
     const size_t digest_size = CRH_with_bit_out_gadget<FieldT>::get_digest_len();
 
-    timestamp.allocate(this->pb, ramT::timestamp_length, FMT(this->annotation_prefix, " timestamp"));
-    root_initial.allocate(this->pb, digest_size, FMT(this->annotation_prefix, " root_initial"));
-    root.allocate(this->pb, digest_size, FMT(this->annotation_prefix, " root"));
-    pc_addr.allocate(this->pb, ap.address_size(), FMT(this->annotation_prefix, " pc_addr"));
-    cpu_state.allocate(this->pb, ap.cpu_state_size(), FMT(this->annotation_prefix, " cpu_state"));
-    pc_addr_initial.allocate(this->pb, ap.address_size(), FMT(this->annotation_prefix, " pc_addr_initial"));
-    cpu_state_initial.allocate(this->pb, ap.cpu_state_size(), FMT(this->annotation_prefix, " cpu_state_initial"));
-    has_accepted.allocate(this->pb, FMT(this->annotation_prefix, " has_accepted"));
+    timestamp.allocate(self.pb, ramT::timestamp_length, FMT(self.annotation_prefix, " timestamp"));
+    root_initial.allocate(self.pb, digest_size, FMT(self.annotation_prefix, " root_initial"));
+    root.allocate(self.pb, digest_size, FMT(self.annotation_prefix, " root"));
+    pc_addr.allocate(self.pb, ap.address_size(), FMT(self.annotation_prefix, " pc_addr"));
+    cpu_state.allocate(self.pb, ap.cpu_state_size(), FMT(self.annotation_prefix, " cpu_state"));
+    pc_addr_initial.allocate(self.pb, ap.address_size(), FMT(self.annotation_prefix, " pc_addr_initial"));
+    cpu_state_initial.allocate(self.pb, ap.cpu_state_size(), FMT(self.annotation_prefix, " cpu_state_initial"));
+    has_accepted.allocate(self.pb, FMT(self.annotation_prefix, " has_accepted"));
 
     all_unpacked_vars.insert(all_unpacked_vars.end(), timestamp.begin(), timestamp.end());
     all_unpacked_vars.insert(all_unpacked_vars.end(), root_initial.begin(), root_initial.end());
@@ -407,7 +407,7 @@ void ram_pcd_message_variable<ramT>::allocate_unpacked_part()
     all_unpacked_vars.insert(all_unpacked_vars.end(), cpu_state_initial.begin(), cpu_state_initial.end());
     all_unpacked_vars.insert(all_unpacked_vars.end(), has_accepted);
 
-    unpack_payload.reset(new multipacking_gadget<FieldT>(this->pb, all_unpacked_vars, packed_payload, FieldT::capacity(), FMT(this->annotation_prefix, " unpack_payload")));
+    unpack_payload.reset(new multipacking_gadget<FieldT>(self.pb, all_unpacked_vars, packed_payload, FieldT::capacity(), FMT(self.annotation_prefix, " unpack_payload")));
 }
 
 template<typename ramT>
@@ -431,15 +431,15 @@ void ram_pcd_message_variable<ramT>::generate_r1cs_constraints()
 template<typename ramT>
 std::shared_ptr<r1cs_pcd_message<ram_base_field<ramT> > > ram_pcd_message_variable<ramT>::get_message() const
 {
-    const size_t type_val = this->pb.val(this->type).as_ulong();
-    const size_t timestamp_val = timestamp.get_field_element_from_bits(this->pb).as_ulong();
-    const libff::bit_vector root_initial_val = root_initial.get_bits(this->pb);
-    const libff::bit_vector root_val = root.get_bits(this->pb);
-    const size_t pc_addr_val = pc_addr.get_field_element_from_bits(this->pb).as_ulong();
-    const libff::bit_vector cpu_state_val = cpu_state.get_bits(this->pb);
-    const size_t pc_addr_initial_val = pc_addr_initial.get_field_element_from_bits(this->pb).as_ulong();
-    const libff::bit_vector cpu_state_initial_val = cpu_state_initial.get_bits(this->pb);
-    const bool has_accepted_val = (this->pb.val(has_accepted) == FieldT::one());
+    const size_t type_val = self.pb.val(self.type).as_ulong();
+    const size_t timestamp_val = timestamp.get_field_element_from_bits(self.pb).as_ulong();
+    const ffec::bit_vector root_initial_val = root_initial.get_bits(self.pb);
+    const ffec::bit_vector root_val = root.get_bits(self.pb);
+    const size_t pc_addr_val = pc_addr.get_field_element_from_bits(self.pb).as_ulong();
+    const ffec::bit_vector cpu_state_val = cpu_state.get_bits(self.pb);
+    const size_t pc_addr_initial_val = pc_addr_initial.get_field_element_from_bits(self.pb).as_ulong();
+    const ffec::bit_vector cpu_state_initial_val = cpu_state_initial.get_bits(self.pb);
+    const bool has_accepted_val = (self.pb.val(has_accepted) == FieldT::one());
 
     std::shared_ptr<r1cs_pcd_message<FieldT> > result;
     result.reset(new ram_pcd_message<ramT>(type_val,
@@ -468,7 +468,7 @@ template<typename ramT>
 r1cs_variable_assignment<ram_base_field<ramT> > ram_pcd_local_data<ramT>::as_r1cs_variable_assignment() const
 {
     r1cs_variable_assignment<FieldT> result;
-    result.emplace_back(is_halt_case ? FieldT::one() : FieldT::zero());
+    result.push(is_halt_case ? FieldT::one() : FieldT::zero());
     return result;
 }
 
@@ -479,7 +479,7 @@ ram_pcd_local_data_variable<ramT>::ram_pcd_local_data_variable(protoboard<FieldT
 {
     is_halt_case.allocate(pb, FMT(annotation_prefix, " is_halt_case"));
 
-    this->update_all_vars();
+    self.update_all_vars();
 }
 
 /*
@@ -527,24 +527,24 @@ ram_compliance_predicate_handler<ramT>::ram_compliance_predicate_handler(const r
 
     // the variables allocated are: next, cur, local data (nil for us), is_base_case, witness
 
-    this->outgoing_message.reset(new ram_pcd_message_variable<ramT>(this->pb, ap, "outgoing_message"));
-    this->arity.allocate(this->pb, "arity");
-    this->incoming_messages[0].reset(new ram_pcd_message_variable<ramT>(this->pb, ap, "incoming_message"));
-    this->local_data.reset(new ram_pcd_local_data_variable<ramT>(this->pb, "local_data"));
+    self.outgoing_message.reset(new ram_pcd_message_variable<ramT>(self.pb, ap, "outgoing_message"));
+    self.arity.allocate(self.pb, "arity");
+    self.incoming_messages[0].reset(new ram_pcd_message_variable<ramT>(self.pb, ap, "incoming_message"));
+    self.local_data.reset(new ram_pcd_local_data_variable<ramT>(self.pb, "local_data"));
 
-    is_base_case.allocate(this->pb, "is_base_case");
+    is_base_case.allocate(self.pb, "is_base_case");
 
-    next = std::dynamic_pointer_cast<ram_pcd_message_variable<ramT> >(this->outgoing_message);
-    cur = std::dynamic_pointer_cast<ram_pcd_message_variable<ramT> >(this->incoming_messages[0]);
+    next = std::dynamic_pointer_cast<ram_pcd_message_variable<ramT> >(self.outgoing_message);
+    cur = std::dynamic_pointer_cast<ram_pcd_message_variable<ramT> >(self.incoming_messages[0]);
 
     next->allocate_unpacked_part();
     cur->allocate_unpacked_part();
 
     // work-around for bad linear combination handling
-    zero.allocate(this->pb, "zero"); // will go away when we properly support linear terms
+    zero.allocate(self.pb, "zero"); // will go away when we properly support linear terms
 
-    temp_next_pc_addr.allocate(this->pb, addr_size, "temp_next_pc_addr");
-    temp_next_cpu_state.allocate(this->pb, ap.cpu_state_size(), "temp_next_cpu_state");
+    temp_next_pc_addr.allocate(self.pb, addr_size, "temp_next_pc_addr");
+    temp_next_cpu_state.allocate(self.pb, ap.cpu_state_size(), "temp_next_cpu_state");
 
     const size_t chunk_size = FieldT::capacity();
 
@@ -554,25 +554,25 @@ ram_compliance_predicate_handler<ramT>::ram_compliance_predicate_handler(const r
       next.pc_addr_init = cur.pc_addr_initial
       next.cpu_state_initial = cur.cpu_state_initial
     */
-    copy_root_initial.reset(new bit_vector_copy_gadget<FieldT>(this->pb, cur->root_initial, next->root_initial, ONE, chunk_size, "copy_root_initial"));
-    copy_pc_addr_initial.reset(new bit_vector_copy_gadget<FieldT>(this->pb, cur->pc_addr_initial, next->pc_addr_initial, ONE, chunk_size, "copy_pc_addr_initial"));
-    copy_cpu_state_initial.reset(new bit_vector_copy_gadget<FieldT>(this->pb, cur->cpu_state_initial, next->cpu_state_initial, ONE, chunk_size, "copy_cpu_state_initial"));
+    copy_root_initial.reset(new bit_vector_copy_gadget<FieldT>(self.pb, cur->root_initial, next->root_initial, ONE, chunk_size, "copy_root_initial"));
+    copy_pc_addr_initial.reset(new bit_vector_copy_gadget<FieldT>(self.pb, cur->pc_addr_initial, next->pc_addr_initial, ONE, chunk_size, "copy_pc_addr_initial"));
+    copy_cpu_state_initial.reset(new bit_vector_copy_gadget<FieldT>(self.pb, cur->cpu_state_initial, next->cpu_state_initial, ONE, chunk_size, "copy_cpu_state_initial"));
 
     /*
       If is_base_case = 1: (base case)
       that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
       that cur.root = cur.root_initial
     */
-    packed_cur_timestamp.allocate(this->pb, "packed_cur_timestamp");
-    pack_cur_timestamp.reset(new packing_gadget<FieldT>(this->pb, cur->timestamp, packed_cur_timestamp, "pack_cur_timestamp"));
+    packed_cur_timestamp.allocate(self.pb, "packed_cur_timestamp");
+    pack_cur_timestamp.reset(new packing_gadget<FieldT>(self.pb, cur->timestamp, packed_cur_timestamp, "pack_cur_timestamp"));
 
     zero_cpu_state = pb_variable_array<FieldT>(cur->cpu_state.size(), zero);
     zero_pc_addr = pb_variable_array<FieldT>(cur->pc_addr.size(), zero);
 
-    initialize_cur_cpu_state.reset(new bit_vector_copy_gadget<FieldT>(this->pb, cur->cpu_state_initial, cur->cpu_state, is_base_case, chunk_size, "initialize_cur_cpu_state"));
-    initialize_prev_pc_addr.reset(new bit_vector_copy_gadget<FieldT>(this->pb, cur->pc_addr_initial, cur->pc_addr, is_base_case, chunk_size, "initialize_prev_pc_addr"));
+    initialize_cur_cpu_state.reset(new bit_vector_copy_gadget<FieldT>(self.pb, cur->cpu_state_initial, cur->cpu_state, is_base_case, chunk_size, "initialize_cur_cpu_state"));
+    initialize_prev_pc_addr.reset(new bit_vector_copy_gadget<FieldT>(self.pb, cur->pc_addr_initial, cur->pc_addr, is_base_case, chunk_size, "initialize_prev_pc_addr"));
 
-    initialize_root.reset(new bit_vector_copy_gadget<FieldT>(this->pb, cur->root_initial, cur->root, is_base_case, chunk_size, "initialize_root"));
+    initialize_root.reset(new bit_vector_copy_gadget<FieldT>(self.pb, cur->root_initial, cur->root, is_base_case, chunk_size, "initialize_root"));
     /*
       If do_halt = 0: (regular case)
       that instruction fetch was correctly executed
@@ -580,13 +580,13 @@ ram_compliance_predicate_handler<ramT>::ram_compliance_predicate_handler(const r
       that CPU accepted on (cur, next)
       that load-then-store was correctly handled
     */
-    is_not_halt_case.allocate(this->pb, "is_not_halt_case");
+    is_not_halt_case.allocate(self.pb, "is_not_halt_case");
     // for performing instruction fetch
-    prev_pc_val.allocate(this->pb, value_size, "prev_pc_val");
-    prev_pc_val_digest.reset(new digest_variable<FieldT>(this->pb, digest_size, prev_pc_val, zero, "prev_pc_val_digest"));
-    cur_root_digest.reset(new digest_variable<FieldT>(this->pb, digest_size, cur->root, zero, "cur_root_digest"));
-    instruction_fetch_merkle_proof.reset(new merkle_authentication_path_variable<FieldT, HashT>(this->pb, addr_size, "instruction_fetch_merkle_proof"));
-    instruction_fetch.reset(new memory_load_gadget<FieldT, HashT>(this->pb, addr_size,
+    prev_pc_val.allocate(self.pb, value_size, "prev_pc_val");
+    prev_pc_val_digest.reset(new digest_variable<FieldT>(self.pb, digest_size, prev_pc_val, zero, "prev_pc_val_digest"));
+    cur_root_digest.reset(new digest_variable<FieldT>(self.pb, digest_size, cur->root, zero, "cur_root_digest"));
+    instruction_fetch_merkle_proof.reset(new merkle_authentication_path_variable<FieldT, HashT>(self.pb, addr_size, "instruction_fetch_merkle_proof"));
+    instruction_fetch.reset(new memory_load_gadget<FieldT, HashT>(self.pb, addr_size,
                                                                   cur->pc_addr,
                                                                   *prev_pc_val_digest,
                                                                   *cur_root_digest,
@@ -595,25 +595,25 @@ ram_compliance_predicate_handler<ramT>::ram_compliance_predicate_handler(const r
                                                                   "instruction_fetch"));
 
     // for next.timestamp = cur.timestamp + 1
-    packed_next_timestamp.allocate(this->pb, "packed_next_timestamp");
-    pack_next_timestamp.reset(new packing_gadget<FieldT>(this->pb, next->timestamp, packed_next_timestamp, "pack_next_timestamp"));
+    packed_next_timestamp.allocate(self.pb, "packed_next_timestamp");
+    pack_next_timestamp.reset(new packing_gadget<FieldT>(self.pb, next->timestamp, packed_next_timestamp, "pack_next_timestamp"));
 
     // that CPU accepted on (cur, temp)
-    ls_addr.allocate(this->pb, addr_size, "ls_addr");
-    ls_prev_val.allocate(this->pb, value_size, "ls_prev_val");
-    ls_next_val.allocate(this->pb, value_size, "ls_next_val");
-    cpu_checker.reset(new ram_cpu_checker<ramT>(this->pb, cur->pc_addr, prev_pc_val, cur->cpu_state,
+    ls_addr.allocate(self.pb, addr_size, "ls_addr");
+    ls_prev_val.allocate(self.pb, value_size, "ls_prev_val");
+    ls_next_val.allocate(self.pb, value_size, "ls_next_val");
+    cpu_checker.reset(new ram_cpu_checker<ramT>(self.pb, cur->pc_addr, prev_pc_val, cur->cpu_state,
                                                 ls_addr, ls_prev_val, ls_next_val,
                                                 temp_next_cpu_state, temp_next_pc_addr, next->has_accepted,
                                                 "cpu_checker"));
 
     // that load-then-store was correctly handled
-    ls_prev_val_digest.reset(new digest_variable<FieldT>(this->pb, digest_size, ls_prev_val, zero, "ls_prev_val_digest"));
-    ls_next_val_digest.reset(new digest_variable<FieldT>(this->pb, digest_size, ls_next_val, zero, "ls_next_val_digest"));
-    next_root_digest.reset(new digest_variable<FieldT>(this->pb, digest_size, next->root, zero, "next_root_digest"));
-    load_merkle_proof.reset(new merkle_authentication_path_variable<FieldT, HashT>(this->pb, addr_size, "load_merkle_proof"));
-    store_merkle_proof.reset(new merkle_authentication_path_variable<FieldT, HashT>(this->pb, addr_size, "store_merkle_proof"));
-    load_store_checker.reset(new memory_load_store_gadget<FieldT, HashT>(this->pb, addr_size, ls_addr,
+    ls_prev_val_digest.reset(new digest_variable<FieldT>(self.pb, digest_size, ls_prev_val, zero, "ls_prev_val_digest"));
+    ls_next_val_digest.reset(new digest_variable<FieldT>(self.pb, digest_size, ls_next_val, zero, "ls_next_val_digest"));
+    next_root_digest.reset(new digest_variable<FieldT>(self.pb, digest_size, next->root, zero, "next_root_digest"));
+    load_merkle_proof.reset(new merkle_authentication_path_variable<FieldT, HashT>(self.pb, addr_size, "load_merkle_proof"));
+    store_merkle_proof.reset(new merkle_authentication_path_variable<FieldT, HashT>(self.pb, addr_size, "store_merkle_proof"));
+    load_store_checker.reset(new memory_load_store_gadget<FieldT, HashT>(self.pb, addr_size, ls_addr,
                                                                          *ls_prev_val_digest, *cur_root_digest, *load_merkle_proof,
                                                                          *ls_next_val_digest, *next_root_digest, *store_merkle_proof, is_not_halt_case,
                                                                          "load_store_checker"));
@@ -623,41 +623,41 @@ ram_compliance_predicate_handler<ramT>::ram_compliance_predicate_handler(const r
       that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
       that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
     */
-    do_halt.allocate(this->pb, "do_halt");
+    do_halt.allocate(self.pb, "do_halt");
     zero_root = pb_variable_array<FieldT>(next->root.size(), zero);
-    clear_next_root.reset(new bit_vector_copy_gadget<FieldT>(this->pb, zero_root, next->root, do_halt, chunk_size, "clear_next_root"));
-    clear_next_pc_addr.reset(new bit_vector_copy_gadget<FieldT>(this->pb, zero_pc_addr, next->pc_addr, do_halt, chunk_size, "clear_next_pc_addr"));
-    clear_next_cpu_state.reset(new bit_vector_copy_gadget<FieldT>(this->pb, zero_cpu_state, next->cpu_state, do_halt, chunk_size, "clear_cpu_state"));
+    clear_next_root.reset(new bit_vector_copy_gadget<FieldT>(self.pb, zero_root, next->root, do_halt, chunk_size, "clear_next_root"));
+    clear_next_pc_addr.reset(new bit_vector_copy_gadget<FieldT>(self.pb, zero_pc_addr, next->pc_addr, do_halt, chunk_size, "clear_next_pc_addr"));
+    clear_next_cpu_state.reset(new bit_vector_copy_gadget<FieldT>(self.pb, zero_cpu_state, next->cpu_state, do_halt, chunk_size, "clear_cpu_state"));
 
-    copy_temp_next_pc_addr.reset(new bit_vector_copy_gadget<FieldT>(this->pb, temp_next_pc_addr, next->pc_addr, is_not_halt_case, chunk_size, "copy_temp_next_pc_addr"));
-    copy_temp_next_cpu_state.reset(new bit_vector_copy_gadget<FieldT>(this->pb, temp_next_cpu_state, next->cpu_state, is_not_halt_case, chunk_size, "copy_temp_next_cpu_state"));
+    copy_temp_next_pc_addr.reset(new bit_vector_copy_gadget<FieldT>(self.pb, temp_next_pc_addr, next->pc_addr, is_not_halt_case, chunk_size, "copy_temp_next_pc_addr"));
+    copy_temp_next_cpu_state.reset(new bit_vector_copy_gadget<FieldT>(self.pb, temp_next_cpu_state, next->cpu_state, is_not_halt_case, chunk_size, "copy_temp_next_cpu_state"));
 }
 
 template<typename ramT>
 void ram_compliance_predicate_handler<ramT>::generate_r1cs_constraints()
 {
-    libff::print_indent(); printf("* Message size: %zu\n", next->all_vars.size());
-    libff::print_indent(); printf("* Address size: %zu\n", addr_size);
-    libff::print_indent(); printf("* CPU state size: %zu\n", ap.cpu_state_size());
-    libff::print_indent(); printf("* Digest size: %zu\n", digest_size);
+    ffec::print_indent(); print!("* Message size: {}\n", next->all_vars.size());
+    ffec::print_indent(); print!("* Address size: {}\n", addr_size);
+    ffec::print_indent(); print!("* CPU state size: {}\n", ap.cpu_state_size());
+    ffec::print_indent(); print!("* Digest size: {}\n", digest_size);
 
-    PROFILE_CONSTRAINTS(this->pb, "handle next_type, arity and cur_type")
+    PROFILE_CONSTRAINTS(self.pb, "handle next_type, arity and cur_type")
     {
-        generate_r1cs_equals_const_constraint<FieldT>(this->pb, next->type, FieldT::one(), "next_type");
-        generate_r1cs_equals_const_constraint<FieldT>(this->pb, this->arity, FieldT::one(), "arity");
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_base_case, cur->type, 0), "nonzero_cur_type_implies_base_case_0");
-        generate_boolean_r1cs_constraint<FieldT>(this->pb, cur->type, "cur_type_boolean");
-        generate_boolean_r1cs_constraint<FieldT>(this->pb, is_base_case, "is_base_case_boolean");
+        generate_r1cs_equals_const_constraint<FieldT>(self.pb, next->type, FieldT::one(), "next_type");
+        generate_r1cs_equals_const_constraint<FieldT>(self.pb, self.arity, FieldT::one(), "arity");
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_base_case, cur->type, 0), "nonzero_cur_type_implies_base_case_0");
+        generate_boolean_r1cs_constraint<FieldT>(self.pb, cur->type, "cur_type_boolean");
+        generate_boolean_r1cs_constraint<FieldT>(self.pb, is_base_case, "is_base_case_boolean");
     }
 
-    PROFILE_CONSTRAINTS(this->pb, "unpack messages")
+    PROFILE_CONSTRAINTS(self.pb, "unpack messages")
     {
         next->generate_r1cs_constraints();
         cur->generate_r1cs_constraints();
     }
 
     // work-around for bad linear combination handling
-    generate_r1cs_equals_const_constraint<FieldT>(this->pb, zero, FieldT::zero(), " zero");
+    generate_r1cs_equals_const_constraint<FieldT>(self.pb, zero, FieldT::zero(), " zero");
 
     /* recall that Booleanity of PCD messages has already been enforced by the PCD machine, which is explains the absence of Booleanity checks */
     /*
@@ -668,12 +668,12 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_constraints()
       next.pc_addr_init = cur.pc_addr_initial
       next.cpu_state_initial = cur.cpu_state_initial
     */
-    PROFILE_CONSTRAINTS(this->pb, "copy root_initial")
+    PROFILE_CONSTRAINTS(self.pb, "copy root_initial")
     {
         copy_root_initial->generate_r1cs_constraints(false, false);
     }
 
-    PROFILE_CONSTRAINTS(this->pb, "copy pc_addr_initial and cpu_state_initial")
+    PROFILE_CONSTRAINTS(self.pb, "copy pc_addr_initial and cpu_state_initial")
     {
         copy_pc_addr_initial->generate_r1cs_constraints(false, false);
         copy_cpu_state_initial->generate_r1cs_constraints(false, false);
@@ -685,14 +685,14 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_constraints()
       that cur.root = cur.root_initial
     */
     pack_cur_timestamp->generate_r1cs_constraints(false);
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_base_case, packed_cur_timestamp, 0), "clear_ts_on_is_base_case");
-    PROFILE_CONSTRAINTS(this->pb, "copy cur_cpu_state and prev_pc_addr")
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_base_case, packed_cur_timestamp, 0), "clear_ts_on_is_base_case");
+    PROFILE_CONSTRAINTS(self.pb, "copy cur_cpu_state and prev_pc_addr")
     {
         initialize_cur_cpu_state->generate_r1cs_constraints(false, false);
         initialize_prev_pc_addr->generate_r1cs_constraints(false, false);
     }
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_base_case, cur->has_accepted, 0), "is_base_case_is_not_accepting");
-    PROFILE_CONSTRAINTS(this->pb, "initialize root")
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_base_case, cur->has_accepted, 0), "is_base_case_is_not_accepting");
+    PROFILE_CONSTRAINTS(self.pb, "initialize root")
     {
         initialize_root->generate_r1cs_constraints(false, false);
     }
@@ -705,26 +705,26 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_constraints()
       that load-then-store was correctly handled
       that next.root = temp.root, next.cpu_state = temp.cpu_state, next.pc_addr = temp.pc_addr
     */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, 1 - do_halt, is_not_halt_case), "is_not_halt_case");
-    PROFILE_CONSTRAINTS(this->pb, "instruction fetch")
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, 1 - do_halt, is_not_halt_case), "is_not_halt_case");
+    PROFILE_CONSTRAINTS(self.pb, "instruction fetch")
     {
         instruction_fetch_merkle_proof->generate_r1cs_constraints();
         instruction_fetch->generate_r1cs_constraints();
     }
     pack_next_timestamp->generate_r1cs_constraints(false);
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_not_halt_case, (packed_cur_timestamp + 1) - packed_next_timestamp, 0), "increment_timestamp");
-    PROFILE_CONSTRAINTS(this->pb, "CPU checker")
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_not_halt_case, (packed_cur_timestamp + 1) - packed_next_timestamp, 0), "increment_timestamp");
+    PROFILE_CONSTRAINTS(self.pb, "CPU checker")
     {
         cpu_checker->generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(this->pb, "load/store checker")
+    PROFILE_CONSTRAINTS(self.pb, "load/store checker")
     {
         // See comment in merkle_tree_check_update_gadget::generate_r1cs_witness() for why we don't need to call store_merkle_proof->generate_r1cs_constraints()
         load_merkle_proof->generate_r1cs_constraints();
         load_store_checker->generate_r1cs_constraints();
     }
 
-    PROFILE_CONSTRAINTS(this->pb, "copy temp_next_pc_addr and temp_next_cpu_state")
+    PROFILE_CONSTRAINTS(self.pb, "copy temp_next_pc_addr and temp_next_cpu_state")
     {
         copy_temp_next_pc_addr->generate_r1cs_constraints(true, false);
         copy_temp_next_cpu_state->generate_r1cs_constraints(true, false);
@@ -736,25 +736,25 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_constraints()
       that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
       that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
     */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(do_halt, 1 - cur->has_accepted, 0), "final_case_must_be_accepting");
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(do_halt, 1 - cur->has_accepted, 0), "final_case_must_be_accepting");
 
-    PROFILE_CONSTRAINTS(this->pb, "clear next root")
+    PROFILE_CONSTRAINTS(self.pb, "clear next root")
     {
         clear_next_root->generate_r1cs_constraints(false, false);
     }
 
-    PROFILE_CONSTRAINTS(this->pb, "clear next_pc_addr and next_cpu_state")
+    PROFILE_CONSTRAINTS(self.pb, "clear next_pc_addr and next_cpu_state")
     {
         clear_next_pc_addr->generate_r1cs_constraints(false, false);
         clear_next_cpu_state->generate_r1cs_constraints(false, false);
     }
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(do_halt,  packed_cur_timestamp - packed_next_timestamp, 0), "equal_ts_on_halt");
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(do_halt,  packed_cur_timestamp - packed_next_timestamp, 0), "equal_ts_on_halt");
 
     const size_t accounted = PRINT_CONSTRAINT_PROFILING();
-    const size_t total = this->pb.num_constraints();
-    libff::print_indent(); printf("* Unaccounted constraints: %zu\n", total - accounted);
-    libff::print_indent(); printf("* Number of constraints in ram_compliance_predicate: %zu\n", total);
+    const size_t total = self.pb.num_constraints();
+    ffec::print_indent(); print!("* Unaccounted constraints: {}\n", total - accounted);
+    ffec::print_indent(); print!("* Number of constraints in ram_compliance_predicate: {}\n", total);
 }
 
 template<typename ramT>
@@ -762,16 +762,16 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
                                                                    const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data_value)
 {
     const std::shared_ptr<ram_pcd_local_data<ramT> > ram_local_data_value = std::dynamic_pointer_cast<ram_pcd_local_data<ramT> >(local_data_value);
-    assert(ram_local_data_value->mem.num_addresses == 1ul << addr_size); // check value_size and num_addresses too
+    assert!(ram_local_data_value->mem.num_addresses == 1ul << addr_size); // check value_size and num_addresses too
 
     base_handler::generate_r1cs_witness(incoming_message_values, local_data_value);
     cur->generate_r1cs_witness_from_packed();
 
-    this->pb.val(next->type) = FieldT::one();
-    this->pb.val(this->arity) = FieldT::one();
-    this->pb.val(is_base_case) = (this->pb.val(cur->type) == FieldT::zero() ? FieldT::one() : FieldT::zero());
+    self.pb.val(next->type) = FieldT::one();
+    self.pb.val(self.arity) = FieldT::one();
+    self.pb.val(is_base_case) = (self.pb.val(cur->type) == FieldT::zero() ? FieldT::one() : FieldT::zero());
 
-    this->pb.val(zero) = FieldT::zero();
+    self.pb.val(zero) = FieldT::zero();
     /*
       Always:
       next.root_initial = cur.root_initial
@@ -781,9 +781,9 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
     copy_root_initial->generate_r1cs_witness();
     for (size_t i = 0 ; i < next->root_initial.size(); ++i)
     {
-        this->pb.val(cur->root_initial[i]).print();
-        this->pb.val(next->root_initial[i]).print();
-        assert(this->pb.val(cur->root_initial[i]) == this->pb.val(next->root_initial[i]));
+        self.pb.val(cur->root_initial[i]).print();
+        self.pb.val(next->root_initial[i]).print();
+        assert!(self.pb.val(cur->root_initial[i]) == self.pb.val(next->root_initial[i]));
     }
 
     copy_pc_addr_initial->generate_r1cs_witness();
@@ -795,15 +795,15 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
       that cur.root = cur.root_initial
     */
     const bool base_case = (incoming_message_values[0]->type == 0);
-    this->pb.val(is_base_case) = base_case ? FieldT::one() : FieldT::zero();
+    self.pb.val(is_base_case) = base_case ? FieldT::one() : FieldT::zero();
 
     initialize_cur_cpu_state->generate_r1cs_witness();
     initialize_prev_pc_addr->generate_r1cs_witness();
 
     if (base_case)
     {
-        this->pb.val(packed_cur_timestamp) = FieldT::zero();
-        this->pb.val(cur->has_accepted) = FieldT::zero();
+        self.pb.val(packed_cur_timestamp) = FieldT::zero();
+        self.pb.val(cur->has_accepted) = FieldT::zero();
         pack_cur_timestamp->generate_r1cs_witness_from_packed();
     }
     else
@@ -820,46 +820,46 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
       that CPU accepted on (cur, temp)
       that load-then-store was correctly handled
     */
-    this->pb.val(do_halt) = ram_local_data_value->is_halt_case ? FieldT::one() : FieldT::zero();
-    this->pb.val(is_not_halt_case) = FieldT::one() - this->pb.val(do_halt);
+    self.pb.val(do_halt) = ram_local_data_value->is_halt_case ? FieldT::one() : FieldT::zero();
+    self.pb.val(is_not_halt_case) = FieldT::one() - self.pb.val(do_halt);
 
     // that instruction fetch was correctly executed
-    const size_t int_pc_addr = libff::convert_bit_vector_to_field_element<FieldT>(cur->pc_addr.get_bits(this->pb)).as_ulong();
+    const size_t int_pc_addr = ffec::convert_bit_vector_to_field_element<FieldT>(cur->pc_addr.get_bits(self.pb)).as_ulong();
     const size_t int_pc_val = ram_local_data_value->mem.get_value(int_pc_addr);
-#ifdef DEBUG
-    printf("pc_addr (in units) = %zu, pc_val = %zu (0x%08zx)\n", int_pc_addr, int_pc_val, int_pc_val);
-#endif
-    libff::bit_vector pc_val_bv = libff::int_list_to_bits({ int_pc_val }, value_size);
+// #ifdef DEBUG
+    print!("pc_addr (in units) = {}, pc_val = {} (0x%08zx)\n", int_pc_addr, int_pc_val, int_pc_val);
+//#endif
+    ffec::bit_vector pc_val_bv = ffec::int_list_to_bits({ int_pc_val }, value_size);
     std::reverse(pc_val_bv.begin(), pc_val_bv.end());
 
-    prev_pc_val.fill_with_bits(this->pb, pc_val_bv);
+    prev_pc_val.fill_with_bits(self.pb, pc_val_bv);
     const merkle_authentication_path pc_path = ram_local_data_value->mem.get_path(int_pc_addr);
     instruction_fetch_merkle_proof->generate_r1cs_witness(int_pc_addr, pc_path);
     instruction_fetch->generate_r1cs_witness();
 
     // next.timestamp = cur.timestamp + 1 (or cur.timestamp if do_halt)
-    this->pb.val(packed_next_timestamp) = this->pb.val(packed_cur_timestamp) + this->pb.val(is_not_halt_case);
+    self.pb.val(packed_next_timestamp) = self.pb.val(packed_cur_timestamp) + self.pb.val(is_not_halt_case);
     pack_next_timestamp->generate_r1cs_witness_from_packed();
 
     // that CPU accepted on (cur, temp)
     // Step 1: Get address and old witnesses for delegated memory.
     cpu_checker->generate_r1cs_witness_address();
-    const size_t int_ls_addr = ls_addr.get_field_element_from_bits(this->pb).as_ulong();
+    const size_t int_ls_addr = ls_addr.get_field_element_from_bits(self.pb).as_ulong();
     const size_t int_ls_prev_val = ram_local_data_value->mem.get_value(int_ls_addr);
     const merkle_authentication_path prev_path = ram_local_data_value->mem.get_path(int_ls_addr);
-    ls_prev_val.fill_with_bits_of_ulong(this->pb, int_ls_prev_val);
-    assert(ls_prev_val.get_field_element_from_bits(this->pb) == FieldT(int_ls_prev_val, true));
+    ls_prev_val.fill_with_bits_of_ulong(self.pb, int_ls_prev_val);
+    assert!(ls_prev_val.get_field_element_from_bits(self.pb) == FieldT(int_ls_prev_val, true));
     // Step 2: Execute CPU checker and delegated memory
     cpu_checker->generate_r1cs_witness_other(ram_local_data_value->aux_it, ram_local_data_value->aux_end);
-#ifdef DEBUG
-    printf("Debugging information from transition function:\n");
+// #ifdef DEBUG
+    print!("Debugging information from transition function:\n");
     cpu_checker->dump();
-#endif
-    const size_t int_ls_next_val = ls_next_val.get_field_element_from_bits(this->pb).as_ulong();
+//#endif
+    const size_t int_ls_next_val = ls_next_val.get_field_element_from_bits(self.pb).as_ulong();
     ram_local_data_value->mem.set_value(int_ls_addr, int_ls_next_val);
-#ifdef DEBUG
-    printf("Memory location %zu changed from %zu (0x%08zx) to %zu (0x%08zx)\n", int_ls_addr, int_ls_prev_val, int_ls_prev_val, int_ls_next_val, int_ls_next_val);
-#endif
+// #ifdef DEBUG
+    print!("Memory location {} changed from {} (0x%08zx) to {} (0x%08zx)\n", int_ls_addr, int_ls_prev_val, int_ls_prev_val, int_ls_next_val, int_ls_next_val);
+//#endif
     // Step 4: Use both to satisfy load_store_checker
     load_merkle_proof->generate_r1cs_witness(int_ls_addr, prev_path);
     load_store_checker->generate_r1cs_witness();
@@ -875,7 +875,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
     // one that does not set values must be executed the last, so its
     // auxiliary variables are filled in correctly according to values
     // actually set by the other witness map.
-    if (this->pb.val(do_halt).is_zero())
+    if (self.pb.val(do_halt).is_zero())
     {
         copy_temp_next_pc_addr->generate_r1cs_witness();
         copy_temp_next_cpu_state->generate_r1cs_witness();
@@ -894,10 +894,10 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
         copy_temp_next_cpu_state->generate_r1cs_witness();
     }
 
-#ifdef DEBUG
-    printf("next.has_accepted: ");
-    this->pb.val(next->has_accepted).print();
-#endif
+// #ifdef DEBUG
+    print!("next.has_accepted: ");
+    self.pb.val(next->has_accepted).print();
+//#endif
 
     next->generate_r1cs_witness_from_bits();
 }
@@ -906,7 +906,7 @@ template<typename ramT>
 std::shared_ptr<r1cs_pcd_message<ram_base_field<ramT> > > ram_compliance_predicate_handler<ramT>::get_base_case_message(const ram_architecture_params<ramT> &ap,
                                                                                                                         const ram_boot_trace<ramT> &primary_input)
 {
-    libff::enter_block("Call to ram_compliance_predicate_handler::get_base_case_message");
+    ffec::enter_block("Call to ram_compliance_predicate_handler::get_base_case_message");
     const size_t num_addresses = 1ul << ap.address_size();
     const size_t value_size = ap.value_size();
     delegated_ra_memory<CRH_with_bit_out_gadget<FieldT> > mem(num_addresses, value_size, primary_input.as_memory_contents());
@@ -915,19 +915,19 @@ std::shared_ptr<r1cs_pcd_message<ram_base_field<ramT> > > ram_compliance_predica
 
     const size_t timestamp = 0;
 
-    const libff::bit_vector root_initial = mem.get_root();
+    const ffec::bit_vector root_initial = mem.get_root();
     const size_t pc_addr_initial = ap.initial_pc_addr();
-    const libff::bit_vector cpu_state_initial(ap.cpu_state_size(), false);
+    const ffec::bit_vector cpu_state_initial(ap.cpu_state_size(), false);
 
-    const libff::bit_vector root = root_initial;
+    const ffec::bit_vector root = root_initial;
     const size_t pc_addr = pc_addr_initial;
-    const libff::bit_vector cpu_state = cpu_state_initial;
+    const ffec::bit_vector cpu_state = cpu_state_initial;
 
     const bool has_accepted = false;
 
     std::shared_ptr<r1cs_pcd_message<FieldT> > result;
     result.reset(new ram_pcd_message<ramT>(type, ap, timestamp, root_initial, root, pc_addr, cpu_state, pc_addr_initial, cpu_state_initial, has_accepted));
-    libff::leave_block("Call to ram_compliance_predicate_handler::get_base_case_message");
+    ffec::leave_block("Call to ram_compliance_predicate_handler::get_base_case_message");
     return result;
 }
 
@@ -936,7 +936,7 @@ std::shared_ptr<r1cs_pcd_message<ram_base_field<ramT> > > ram_compliance_predica
                                                                                                                      const ram_boot_trace<ramT> &primary_input,
                                                                                                                      const size_t time_bound)
 {
-    libff::enter_block("Call to ram_compliance_predicate_handler::get_final_case_msg");
+    ffec::enter_block("Call to ram_compliance_predicate_handler::get_final_case_msg");
     const size_t num_addresses = 1ul << ap.address_size();
     const size_t value_size = ap.value_size();
     delegated_ra_memory<CRH_with_bit_out_gadget<FieldT> > mem(num_addresses, value_size, primary_input.as_memory_contents());
@@ -945,23 +945,23 @@ std::shared_ptr<r1cs_pcd_message<ram_base_field<ramT> > > ram_compliance_predica
 
     const size_t timestamp = time_bound;
 
-    const libff::bit_vector root_initial = mem.get_root();
+    const ffec::bit_vector root_initial = mem.get_root();
     const size_t pc_addr_initial = ap.initial_pc_addr();
-    const libff::bit_vector cpu_state_initial(ap.cpu_state_size(), false);
+    const ffec::bit_vector cpu_state_initial(ap.cpu_state_size(), false);
 
-    const libff::bit_vector root(root_initial.size(), false);
+    const ffec::bit_vector root(root_initial.size(), false);
     const size_t pc_addr = 0;
-    const libff::bit_vector cpu_state = cpu_state_initial;
+    const ffec::bit_vector cpu_state = cpu_state_initial;
 
     const bool has_accepted = true;
 
     std::shared_ptr<r1cs_pcd_message<FieldT> > result;
     result.reset(new ram_pcd_message<ramT>(type, ap, timestamp, root_initial, root, pc_addr, cpu_state, pc_addr_initial, cpu_state_initial, has_accepted));
-    libff::leave_block("Call to ram_compliance_predicate_handler::get_final_case_msg");
+    ffec::leave_block("Call to ram_compliance_predicate_handler::get_final_case_msg");
 
     return result;
 }
 
-} // libsnark
 
-#endif // RAM_COMPLIANCE_PREDICATE_TCC_
+
+//#endif // RAM_COMPLIANCE_PREDICATE_TCC_

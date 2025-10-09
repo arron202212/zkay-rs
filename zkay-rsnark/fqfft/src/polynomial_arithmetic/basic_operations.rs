@@ -10,10 +10,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_OPERATIONS_HPP_
-#define BASIC_OPERATIONS_HPP_
+//#ifndef BASIC_OPERATIONS_HPP_
+// #define BASIC_OPERATIONS_HPP_
 
-#include <vector>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -87,9 +87,9 @@ void _polynomial_division(std::vector<FieldT> &q, std::vector<FieldT> &r, const 
 
 } // libfqfft
 
-#include <libfqfft/polynomial_arithmetic/basic_operations.tcc>
+use libfqfft/polynomial_arithmetic/basic_operations.tcc;
 
-#endif // BASIC_OPERATIONS_HPP_
+//#endif // BASIC_OPERATIONS_HPP_
 
 
 /** @file
@@ -105,19 +105,19 @@ void _polynomial_division(std::vector<FieldT> &q, std::vector<FieldT> &r, const 
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_OPERATIONS_TCC_
-#define BASIC_OPERATIONS_TCC_
+//#ifndef BASIC_OPERATIONS_TCC_
+// #define BASIC_OPERATIONS_TCC_
 
-#include <algorithm>
-#include <functional>
+//#include <algorithm>
+//#include <functional>
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
-#include <libfqfft/kronecker_substitution/kronecker_substitution.hpp>
-#include <libfqfft/tools/exceptions.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
+use libfqfft/kronecker_substitution/kronecker_substitution;
+use libfqfft/tools/exceptions;
 
-#ifdef MULTICORE
-#include <omp.h>
-#endif
+// #ifdef MULTICORE
+//#include <omp.h>
+//#endif
 
 namespace libfqfft {
 
@@ -226,21 +226,21 @@ void _polynomial_multiplication_on_fft(std::vector<FieldT> &c, const std::vector
     v.resize(n, FieldT::zero());
     c.resize(n, FieldT::zero());
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     _basic_parallel_radix2_FFT(u, omega);
     _basic_parallel_radix2_FFT(v, omega);
 #else
     _basic_serial_radix2_FFT(u, omega);
     _basic_serial_radix2_FFT(v, omega);
-#endif
+//#endif
 
     std::transform(u.begin(), u.end(), v.begin(), c.begin(), std::multiplies<FieldT>());
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     _basic_parallel_radix2_FFT(c, omega.inverse());
 #else
     _basic_serial_radix2_FFT(c, omega.inverse());
-#endif
+//#endif
 
     const FieldT sconst = FieldT(n).inverse();
     std::transform(c.begin(), c.end(), c.begin(), std::bind(std::multiplies<FieldT>(), sconst, std::placeholders::_1));
@@ -305,4 +305,4 @@ void _polynomial_division(std::vector<FieldT> &q, std::vector<FieldT> &r, const 
 
 } // libfqfft
 
-#endif // BASIC_OPERATIONS_TCC_
+//#endif // BASIC_OPERATIONS_TCC_

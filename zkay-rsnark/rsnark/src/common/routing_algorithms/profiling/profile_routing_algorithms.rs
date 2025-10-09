@@ -11,46 +11,46 @@
 
 use  <algorithm>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/common/routing_algorithms/as_waksman_routing_algorithm.hpp>
-use  <libsnark/common/routing_algorithms/benes_routing_algorithm.hpp>
+use libsnark/common/routing_algorithms/as_waksman_routing_algorithm;
+use libsnark/common/routing_algorithms/benes_routing_algorithm;
 
-using namespace libsnark;
+
 
 void profile_benes_algorithm(const size_t n)
 {
-    printf("* Size: %zu\n", n);
+    print!("* Size: {}\n", n);
 
-    assert(n == 1ul<<libff::log2(n));
+    assert!(n == 1ul<<ffec::log2(n));
 
-    libff::enter_block("Generate permutation");
+    ffec::enter_block("Generate permutation");
     integer_permutation permutation(n);
     permutation.random_shuffle();
-    libff::leave_block("Generate permutation");
+    ffec::leave_block("Generate permutation");
 
-    libff::enter_block("Generate Benes routing assignment");
+    ffec::enter_block("Generate Benes routing assignment");
     const benes_routing routing = get_benes_routing(permutation);
-    libff::leave_block("Generate Benes routing assignment");
+    ffec::leave_block("Generate Benes routing assignment");
 }
 
 void profile_as_waksman_algorithm(const size_t n)
 {
-    printf("* Size: %zu\n", n);
+    print!("* Size: {}\n", n);
 
-    libff::enter_block("Generate permutation");
+    ffec::enter_block("Generate permutation");
     integer_permutation permutation(n);
     permutation.random_shuffle();
-    libff::leave_block("Generate permutation");
+    ffec::leave_block("Generate permutation");
 
-    libff::enter_block("Generate AS-Waksman routing assignment");
+    ffec::enter_block("Generate AS-Waksman routing assignment");
     const as_waksman_routing routing = get_as_waksman_routing(permutation);
-    libff::leave_block("Generate AS-Waksman routing assignment");
+    ffec::leave_block("Generate AS-Waksman routing assignment");
 }
 
 int main()
 {
-    libff::start_profiling();
+    ffec::start_profiling();
 
     for (size_t n = 1ul<<10; n <= 1ul<<20; n <<= 1)
     {

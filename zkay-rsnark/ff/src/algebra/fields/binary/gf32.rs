@@ -6,27 +6,27 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBFF_ALGEBRA_GF32_HPP_
-#define LIBFF_ALGEBRA_GF32_HPP_
+//#ifndef LIBFF_ALGEBRA_GF32_HPP_
+// #define LIBFF_ALGEBRA_GF32_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <libff/algebra/field_utils/bigint.hpp>
-#include <vector>
+//#include <cstddef>
+//#include <cstdint>
+use crate::algebra::field_utils::bigint;
+//#include <vector>
 
-namespace libff {
+// namespace libff {
 
 /* gf32 implements the field GF(2)/[x^32 + x^22 + x^2 + x^1 + 1].
    Elements are represented internally with a single uint32 */
 class gf32 {
 public:
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
     // x^32 + x^22 + x^2 + x^1 + 1
     static const constexpr uint64_t modulus_ = 0b10000000000000000000111;
     static const constexpr uint64_t num_bits = 32;
@@ -95,35 +95,35 @@ private:
     uint32_t value_;
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long gf32::add_cnt = 0;
 long long gf32::sub_cnt = 0;
 long long gf32::mul_cnt = 0;
 long long gf32::sqr_cnt = 0;
 long long gf32::inv_cnt = 0;
-#endif
+//#endif
 
-} // namespace libff
-#include <libff/algebra/fields/binary/gf32.tcc>
+// } // namespace libff
+use libff/algebra/fields/binary/gf32.tcc;
 
-#endif // #ifndef LIBFF_ALGEBRA_GF32_HPP_
-#include <cstdio>
+//#endif // //#ifndef LIBFF_ALGEBRA_GF32_HPP_
+//#include <cstdio>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+// #define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
 
-#include <sodium/randombytes.h>
+//#include <sodium/randombytes.h>
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 #include "libff/algebra/fields/binary/gf32.hpp"
 
-#ifdef USE_ASM
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#endif
+// #ifdef USE_ASM
+//#include <emmintrin.h>
+//#include <immintrin.h>
+//#include <smmintrin.h>
+//#endif
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -151,18 +151,18 @@ bool gf32::from_words(std::vector<uint64_t> words)
 
 gf32& gf32::operator+=(const gf32 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     this->value_ ^= other.value_;
     return (*this);
 }
 
 gf32& gf32::operator-=(const gf32 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     this->value_ ^= other.value_;
     return (*this);
 }
@@ -170,9 +170,9 @@ gf32& gf32::operator-=(const gf32 &other)
 // multiplication over GF(2^k) is carryless multiplication
 gf32& gf32::operator*=(const gf32 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Does not require *this and other to be different, and therefore
        also works for squaring, implemented below. */
 
@@ -210,10 +210,10 @@ gf32& gf32::operator^=(const unsigned long pow)
 
 gf32& gf32::square()
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
     this->mul_cnt--;
-#endif
+//#endif
     this->operator*=(*this);
     return *this;
 }
@@ -272,12 +272,12 @@ void square_multi(gf32* pt, int8_t num_times)
 /* calculate el^{-1} as el^{2^{32}-2}. */
 gf32 gf32::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
     this->mul_cnt -= 9;
     this->sqr_cnt -= 31;
-#endif
-    assert(!this->is_zero());
+//#endif
+    assert!(!this->is_zero());
     gf32 a(*this);
 
     gf32 result(0);
@@ -333,7 +333,7 @@ bool gf32::operator!=(const gf32 &other) const
 
 void gf32::print() const
 {
-    printf("%u\n", this->value_);
+    print!("%u\n", this->value_);
 }
 
 bool gf32::is_zero() const
@@ -370,10 +370,10 @@ std::istream& operator>>(std::istream &in, gf32 &el)
     return in;
 }
 
-} // namespace libff
+// } // namespace libff
 #include "libff/algebra/field_utils/algorithms.hpp"
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t m>
 gf32& gf32::operator^=(const bigint<m> &pow)
@@ -388,4 +388,4 @@ gf32 gf32::operator^(const bigint<m> &pow) const
     return power<gf32>(*this, pow);
 }
 
-} // namespace libff
+// } // namespace libff

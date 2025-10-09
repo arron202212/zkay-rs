@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef USCS_EXAMPLES_HPP_
-#define USCS_EXAMPLES_HPP_
+//#ifndef USCS_EXAMPLES_HPP_
+// #define USCS_EXAMPLES_HPP_
 
-use  <libsnark/relations/constraint_satisfaction_problems/uscs/uscs.hpp>
+use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
 
-namespace libsnark {
+
 
 /**
  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
@@ -37,9 +37,9 @@ struct uscs_example {
     uscs_example<FieldT>(uscs_constraint_system<FieldT> &&constraint_system,
                          uscs_primary_input<FieldT> &&primary_input,
                          uscs_auxiliary_input<FieldT> &&auxiliary_input) :
-        constraint_system(std::move(constraint_system)),
-        primary_input(std::move(primary_input)),
-        auxiliary_input(std::move(auxiliary_input))
+        constraint_system((constraint_system)),
+        primary_input((primary_input)),
+        auxiliary_input((auxiliary_input))
     {};
 };
 
@@ -65,11 +65,11 @@ template<typename FieldT>
 uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_constraints,
                                                              const size_t num_inputs);
 
-} // libsnark
 
-use  <libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples.tcc>
 
-#endif // USCS_EXAMPLES_HPP_
+use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+
+//#endif // USCS_EXAMPLES_HPP_
 /** @file
  *****************************************************************************
 
@@ -84,23 +84,23 @@ use  <libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_exa
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef USCS_EXAMPLES_TCC_
-#define USCS_EXAMPLES_TCC_
+//#ifndef USCS_EXAMPLES_TCC_
+// #define USCS_EXAMPLES_TCC_
 
 use  <cassert>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_constraints,
                                                             const size_t num_inputs)
 {
-    libff::enter_block("Call to generate_uscs_example_with_field_input");
+    ffec::enter_block("Call to generate_uscs_example_with_field_input");
 
-    assert(num_inputs >= 1);
-    assert(num_constraints >= num_inputs);
+    assert!(num_inputs >= 1);
+    assert!(num_constraints >= num_inputs);
 
     uscs_constraint_system<FieldT> cs;
     cs.primary_input_size = num_inputs;
@@ -109,7 +109,7 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
     uscs_variable_assignment<FieldT> full_variable_assignment;
     for (size_t i = 0; i < num_constraints; ++i)
     {
-        full_variable_assignment.emplace_back(FieldT(std::rand()));
+        full_variable_assignment.push(FieldT(std::rand()));
     }
 
     for (size_t i = 0; i < num_constraints; ++i)
@@ -141,24 +141,24 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
     uscs_primary_input<FieldT> auxiliary_input(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert(cs.num_variables() == full_variable_assignment.size());
-    assert(cs.num_variables() >= num_inputs);
-    assert(cs.num_inputs() == num_inputs);
-    assert(cs.num_constraints() == num_constraints);
-    assert(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() >= num_inputs);
+    assert!(cs.num_inputs() == num_inputs);
+    assert!(cs.num_constraints() == num_constraints);
+    assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    libff::leave_block("Call to generate_uscs_example_with_field_input");
+    ffec::leave_block("Call to generate_uscs_example_with_field_input");
 
-    return uscs_example<FieldT>(std::move(cs), std::move(primary_input), std::move(auxiliary_input));
+    return uscs_example<FieldT>((cs), (primary_input), (auxiliary_input));
 }
 
 template<typename FieldT>
 uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_constraints,
                                                              const size_t num_inputs)
 {
-    libff::enter_block("Call to generate_uscs_example_with_binary_input");
+    ffec::enter_block("Call to generate_uscs_example_with_binary_input");
 
-    assert(num_inputs >= 1);
+    assert!(num_inputs >= 1);
 
     uscs_constraint_system<FieldT> cs;
     cs.primary_input_size = num_inputs;
@@ -173,7 +173,7 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
     size_t lastvar = num_inputs-1;
     for (size_t i = 0; i < num_constraints; ++i)
     {
-        ++lastvar;
+        lastvar+=1;
 
         /* chose two random bits and XOR them together */
         const size_t u = (i == 0 ? std::rand() % num_inputs : std::rand() % i);
@@ -194,16 +194,16 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
     uscs_primary_input<FieldT> auxiliary_input(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert(cs.num_variables() == full_variable_assignment.size());
-    assert(cs.num_variables() >= num_inputs);
-    assert(cs.num_inputs() == num_inputs);
-    assert(cs.num_constraints() == num_constraints);
-    assert(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() >= num_inputs);
+    assert!(cs.num_inputs() == num_inputs);
+    assert!(cs.num_constraints() == num_constraints);
+    assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    libff::leave_block("Call to generate_uscs_example_with_binary_input");
+    ffec::leave_block("Call to generate_uscs_example_with_binary_input");
 
-    return uscs_example<FieldT>(std::move(cs), std::move(primary_input), std::move(auxiliary_input));
+    return uscs_example<FieldT>((cs), (primary_input), (auxiliary_input));
 }
 
-} // libsnark
-#endif // USCS_EXAMPLES_TCC
+
+//#endif // USCS_EXAMPLES_TCC

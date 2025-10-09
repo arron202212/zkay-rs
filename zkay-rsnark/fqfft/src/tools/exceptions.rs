@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EXCEPTIONS_HPP_
-#define EXCEPTIONS_HPP_
+//#ifndef EXCEPTIONS_HPP_
+// #define EXCEPTIONS_HPP_
 
-#include <exception>
-#include <iostream>
-#include <string>
+//#include <exception>
+//#include <iostream>
+//#include <string>
 
 namespace libfqfft {
 
@@ -44,4 +44,4 @@ private:
 
 } //libfqfft
 
-#endif // EXCEPTIONS_HPP_
+//#endif // EXCEPTIONS_HPP_

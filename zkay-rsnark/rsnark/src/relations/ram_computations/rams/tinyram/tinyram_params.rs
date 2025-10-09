@@ -9,14 +9,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_PARAMS_HPP_
-#define TINYRAM_PARAMS_HPP_
+//#ifndef TINYRAM_PARAMS_HPP_
+// #define TINYRAM_PARAMS_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker.hpp>
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_aux.hpp>
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
+use libsnark/relations/ram_computations/rams/ram_params;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_aux;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class ram_tinyram {
@@ -33,6 +33,6 @@ public:
 template<typename FieldT>
 size_t ram_tinyram<FieldT>::timestamp_length = 300;
 
-} // libsnark
 
-#endif // TINYRAM_PARAMS_HPP_
+
+//#endif // TINYRAM_PARAMS_HPP_

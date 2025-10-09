@@ -9,31 +9,31 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_SP_PPZKPCD_PARAMS_HPP_
-#define R1CS_SP_PPZKPCD_PARAMS_HPP_
+//#ifndef R1CS_SP_PPZKPCD_PARAMS_HPP_
+// #define R1CS_SP_PPZKPCD_PARAMS_HPP_
 
-use  <libff/algebra/curves/public_params.hpp>
+use ffec::algebra::curves::public_params;
 
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_pcd_params.hpp>
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_pcd_params;
 
-namespace libsnark {
 
-template<typename PCD_ppT>
-using r1cs_sp_ppzkpcd_compliance_predicate = r1cs_pcd_compliance_predicate<libff::Fr<typename PCD_ppT::curve_A_pp> >;
 
 template<typename PCD_ppT>
-using r1cs_sp_ppzkpcd_message = r1cs_pcd_message<libff::Fr<typename PCD_ppT::curve_A_pp> >;
+using r1cs_sp_ppzkpcd_compliance_predicate = r1cs_pcd_compliance_predicate<ffec::Fr<typename PCD_ppT::curve_A_pp> >;
 
 template<typename PCD_ppT>
-using r1cs_sp_ppzkpcd_local_data = r1cs_pcd_local_data<libff::Fr<typename PCD_ppT::curve_A_pp> >;
+using r1cs_sp_ppzkpcd_message = r1cs_pcd_message<ffec::Fr<typename PCD_ppT::curve_A_pp> >;
 
 template<typename PCD_ppT>
-using r1cs_sp_ppzkpcd_primary_input = r1cs_pcd_compliance_predicate_primary_input<libff::Fr<typename PCD_ppT::curve_A_pp> >;
+using r1cs_sp_ppzkpcd_local_data = r1cs_pcd_local_data<ffec::Fr<typename PCD_ppT::curve_A_pp> >;
 
 template<typename PCD_ppT>
-using r1cs_sp_ppzkpcd_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input<libff::Fr<typename PCD_ppT::curve_A_pp> >;
+using r1cs_sp_ppzkpcd_primary_input = r1cs_pcd_compliance_predicate_primary_input<ffec::Fr<typename PCD_ppT::curve_A_pp> >;
 
-} // libsnark
+template<typename PCD_ppT>
+using r1cs_sp_ppzkpcd_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input<ffec::Fr<typename PCD_ppT::curve_A_pp> >;
 
-#endif // R1CS_SP_PPZKPCD_PARAMS_HPP_
+
+
+//#endif // R1CS_SP_PPZKPCD_PARAMS_HPP_

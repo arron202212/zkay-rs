@@ -9,31 +9,31 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef PROFILE_OP_COUNTS
-#error PROFILE_OP_COUNTS must be defined to build this profiler.
-#endif
+// //#ifndef PROFILE_OP_COUNTS
+// #error PROFILE_OP_COUNTS must be defined to build this profiler.
+// //#endif
 
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <vector>
-#include <sys/resource.h>
-#include <unistd.h>
+// //#include <cstdint>
+// //#include <cstdio>
+// //#include <cstdlib>
+// //#include <cstring>
+// //#include <ctime>
+// //#include <fstream>
+// //#include <iostream>
+// //#include <sstream>
+// //#include <vector>
+// //#include <sys/resource.h>
+// //#include <unistd.h>
 
-#include <libff/algebra/curves/edwards/edwards_pp.hpp>
-#include <libff/common/double.hpp>
-#include <omp.h>
+use libff/algebra/curves/edwards/edwards_pp;
+use ffec::common::double;
+// //#include <omp.h>
 
-#include <libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/extended_radix2_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/geometric_sequence_domain.hpp>
-#include <libfqfft/evaluation_domain/domains/step_radix2_domain.hpp>
+use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain;
+use libfqfft/evaluation_domain/domains/basic_radix2_domain;
+use libfqfft/evaluation_domain/domains/extended_radix2_domain;
+use libfqfft/evaluation_domain/domains/geometric_sequence_domain;
+use libfqfft/evaluation_domain/domains/step_radix2_domain;
 
 using namespace libfqfft;
 
@@ -99,7 +99,7 @@ void profile(const std::string domain_sizes,
     operators_file << "size, addition, subtraction, multiplication, inverse \n";
   }
 
-  printf("\n%s-%d\n", type[key].c_str(), num_threads);
+  print!("\n%s-%d\n", type[key].c_str(), num_threads);
 
   /* Assess on varying domain sizes */
   for (size_t s = 0; s < domain.size(); s++) {
@@ -142,7 +142,7 @@ void profile(const std::string domain_sizes,
                      << FieldT::mul_cnt << ","
                      << FieldT::inv_cnt << "\n";
 
-    printf("%ld: %f seconds, %ld kilobytes\n", n, runtime, r_usage.ru_maxrss);
+    print!("%ld: %f seconds, %ld kilobytes\n", n, runtime, r_usage.ru_maxrss);
   }
 
   /* Close files */
@@ -155,9 +155,9 @@ int main(int argc, char* argv[])
 {
   if (argc < 6)
   {
-    printf("./perform {key} {num_threads} {datetime} {profile_type} {domain_sizes}\n");
-    printf("{key}: 0 - 5 \n{num_threads}: 1, 2, 4, 8 \n{datetime}: datetime\n");
-    printf("{profile_type}: 0, 1, 2 \n{domain_sizes}: '32768 65536 131072 262144'\n");
+    print!("./perform {key} {num_threads} {datetime} {profile_type} {domain_sizes}\n");
+    print!("{key}: 0 - 5 \n{num_threads}: 1, 2, 4, 8 \n{datetime}: datetime\n");
+    print!("{profile_type}: 0, 1, 2 \n{domain_sizes}: '32768 65536 131072 262144'\n");
     exit(0);
   }
 
@@ -202,12 +202,12 @@ int main(int argc, char* argv[])
     omp_set_dynamic(0);
     omp_set_num_threads(num_threads);
 
-#ifdef PROF_DOUBLE
+// #ifdef PROF_DOUBLE
     profile<libff::Double>(domain_sizes, profiling_type, path, type, num_threads, key);
 #else
     libff::edwards_pp::init_public_params();
     profile<libff::Fr<libff::edwards_pp> >(domain_sizes, profiling_type, path, type, num_threads, key);
-#endif
+//#endif
   }
 
   return 0;

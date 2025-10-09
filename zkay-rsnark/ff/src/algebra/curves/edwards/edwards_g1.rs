@@ -5,14 +5,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EDWARDS_G1_HPP_
-#define EDWARDS_G1_HPP_
-#include <vector>
+//#ifndef EDWARDS_G1_HPP_
+// #define EDWARDS_G1_HPP_
+//#include <vector>
 
-#include <libff/algebra/curves/curve_utils.hpp>
-#include <libff/algebra/curves/edwards/edwards_init.hpp>
+use libff/algebra/curves/curve_utils;
+use libff/algebra/curves/edwards/edwards_init;
 
-namespace libff {
+// namespace libff {
 
 class edwards_G1;
 std::ostream& operator<<(std::ostream &, const edwards_G1&);
@@ -20,10 +20,10 @@ std::istream& operator>>(std::istream &, edwards_G1&);
 
 class edwards_G1 {
 public:
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
-#endif
+//#endif
     static std::vector<std::size_t> wnaf_window_table;
     static std::vector<std::size_t> fixed_base_exp_window_table;
     static edwards_G1 G1_zero;
@@ -92,8 +92,8 @@ edwards_G1 operator*(const Fp_model<m,modulus_p> &lhs, const edwards_G1 &rhs)
 std::ostream& operator<<(std::ostream& out, const std::vector<edwards_G1> &v);
 std::istream& operator>>(std::istream& in, std::vector<edwards_G1> &v);
 
-} // namespace libff
-#endif // EDWARDS_G1_HPP_
+// } // namespace libff
+//#endif // EDWARDS_G1_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -101,16 +101,16 @@ std::istream& operator>>(std::istream& in, std::vector<edwards_G1> &v);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/edwards/edwards_g1.hpp>
+use libff/algebra/curves/edwards/edwards_g1;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long edwards_G1::add_cnt = 0;
 long long edwards_G1::dbl_cnt = 0;
-#endif
+//#endif
 
 std::vector<size_t> edwards_G1::wnaf_window_table;
 std::vector<size_t> edwards_G1::fixed_base_exp_window_table;
@@ -132,13 +132,13 @@ void edwards_G1::print() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
         edwards_G1 copy(*this);
         copy.to_affine_coordinates();
-        gmp_printf("(%Nd , %Nd)\n",
+        print!("(%Nd , %Nd)\n",
                    copy.X.as_bigint().data, edwards_Fq::num_limbs,
                    copy.Y.as_bigint().data, edwards_Fq::num_limbs);
     }
@@ -148,11 +148,11 @@ void edwards_G1::print_coordinates() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
-        gmp_printf("(%Nd : %Nd : %Nd)\n",
+        print!("(%Nd : %Nd : %Nd)\n",
                    this->X.as_bigint().data, edwards_Fq::num_limbs,
                    this->Y.as_bigint().data, edwards_Fq::num_limbs,
                    this->Z.as_bigint().data, edwards_Fq::num_limbs);
@@ -188,18 +188,18 @@ void edwards_G1::to_special()
         return;
     }
 
-#ifdef DEBUG
+// #ifdef DEBUG
     const edwards_G1 copy(*this);
-#endif
+//#endif
 
     edwards_Fq Z_inv = this->Z.inverse();
     this->X = this->X * Z_inv;
     this->Y = this->Y * Z_inv;
     this->Z = edwards_Fq::one();
 
-#ifdef DEBUG
-    assert((*this) == copy);
-#endif
+// #ifdef DEBUG
+    assert!((*this) == copy);
+//#endif
 }
 
 bool edwards_G1::is_special() const
@@ -275,9 +275,9 @@ edwards_G1 edwards_G1::operator-(const edwards_G1 &other) const
 
 edwards_G1 edwards_G1::add(const edwards_G1 &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-add-2007-bl
 
@@ -297,9 +297,9 @@ edwards_G1 edwards_G1::add(const edwards_G1 &other) const
 
 edwards_G1 edwards_G1::mixed_add(const edwards_G1 &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     // handle special cases having to do with O
     if (this->is_zero())
     {
@@ -311,9 +311,9 @@ edwards_G1 edwards_G1::mixed_add(const edwards_G1 &other) const
         return *this;
     }
 
-#ifdef DEBUG
-    assert(other.is_special());
-#endif
+// #ifdef DEBUG
+    assert!(other.is_special());
+//#endif
 
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-madd-2007-lb
@@ -334,9 +334,9 @@ edwards_G1 edwards_G1::mixed_add(const edwards_G1 &other) const
 
 edwards_G1 edwards_G1::dbl() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-#endif
+//#endif
     if (this->is_zero())
     {
         return (*this);
@@ -400,12 +400,12 @@ std::ostream& operator<<(std::ostream &out, const edwards_G1 &g)
 {
     edwards_G1 copy(g);
     copy.to_affine_coordinates();
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
-#endif
+//#endif
 
     return out;
 }
@@ -414,7 +414,7 @@ std::istream& operator>>(std::istream &in, edwards_G1 &g)
 {
     edwards_Fq tX, tY;
 
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     in >> tX;
     consume_OUTPUT_SEPARATOR(in);
     in >> tY;
@@ -439,16 +439,16 @@ std::istream& operator>>(std::istream &in, edwards_G1 &g)
     {
         tY = -tY;
     }
-#endif
+//#endif
 
     // using inverted coordinates
     g.X = tY;
     g.Y = tX;
     g.Z = tX * tY;
 
-#ifdef USE_MIXED_ADDITION
+// #ifdef USE_MIXED_ADDITION
     g.to_special();
-#endif
+//#endif
 
     return in;
 }
@@ -505,4 +505,4 @@ void edwards_G1::batch_to_special_all_non_zeros(std::vector<edwards_G1> &vec)
     }
 }
 
-} // namespace libff
+// } // namespace libff

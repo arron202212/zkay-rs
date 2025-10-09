@@ -5,14 +5,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BLS12_381_FIELDS_HPP_
-#define BLS12_381_FIELDS_HPP_
-#include <libff/algebra/fields/prime_base/fp.hpp>
-#include <libff/algebra/fields/prime_extension/fp2.hpp>
-#include <libff/algebra/fields/prime_extension/fp6_3over2.hpp>
-#include <libff/algebra/fields/prime_extension/fp12_2over3over2.hpp>
+//#ifndef BLS12_381_FIELDS_HPP_
+// #define BLS12_381_FIELDS_HPP_
+use libff/algebra/fields/prime_base/fp;
+use libff/algebra/fields/prime_extension/fp2;
+use libff/algebra/fields/prime_extension/fp6_3over2;
+use libff/algebra/fields/prime_extension/fp12_2over3over2;
 
-namespace libff {
+// namespace libff {
 
 const mp_size_t bls12_381_r_bitcount = 255;
 const mp_size_t bls12_381_q_bitcount = 381;
@@ -32,8 +32,8 @@ typedef bls12_381_Fq12 bls12_381_GT;
 
 void init_bls12_381_fields();
 
-} // namespace libff
-#endif // BLS12_381_FIELDS_HPP_
+// } // namespace libff
+//#endif // BLS12_381_FIELDS_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -41,9 +41,9 @@ void init_bls12_381_fields();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/bls12_381/bls12_381_fields.hpp>
+use libff/algebra/curves/bls12_381/bls12_381_fields;
 
-namespace libff {
+// namespace libff {
 
 bigint<bls12_381_r_limbs> bls12_381_modulus_r;
 bigint<bls12_381_q_limbs> bls12_381_modulus_q;
@@ -53,12 +53,12 @@ void init_bls12_381_fields()
     using bigint_r = bigint<bls12_381_r_limbs>;
     using bigint_q = bigint<bls12_381_q_limbs>;
 
-    assert(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
+    assert!(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
 
     /* parameters for scalar field Fr */
 
     bls12_381_modulus_r = bigint_r("52435875175126190479447740508185965837690552500527637822603658699938581184513");
-    assert(bls12_381_Fr::modulus_is_valid());
+    assert!(bls12_381_Fr::modulus_is_valid());
     if (sizeof(mp_limb_t) == 8)
     {
         bls12_381_Fr::Rsquared = bigint_r("3294906474794265442129797520630710739278575682199800681788903916070560242797");
@@ -83,7 +83,7 @@ void init_bls12_381_fields()
 
     /* parameters for base field Fq */
     bls12_381_modulus_q = bigint_q("4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787");
-    assert(bls12_381_Fq::modulus_is_valid());
+    assert!(bls12_381_Fq::modulus_is_valid());
     if (sizeof(mp_limb_t) == 8)
     {
         bls12_381_Fq::Rsquared = bigint_q("2708263910654730174793787626328176511836455197166317677006154293982164122222515399004018013397331347120527951271750"); // k=6
@@ -186,4 +186,4 @@ void init_bls12_381_fields()
     bls12_381_Fq12::Frobenius_coeffs_c1[11] = bls12_381_Fq2(bls12_381_Fq("877076961050607968509681729531255177986764537961432449499635504522207616027455086505066378536590128544573588734230"),bls12_381_Fq("3125332594171059424908108096204648978570118281977575435832422631601824034463382777937621250592425535493320683825557"));
 }
 
-} // namespace libff
+// } // namespace libff

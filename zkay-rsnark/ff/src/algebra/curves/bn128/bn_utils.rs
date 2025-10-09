@@ -5,19 +5,19 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BN_UTILS_HPP_
-#define BN_UTILS_HPP_
-#include <vector>
+//#ifndef BN_UTILS_HPP_
+// #define BN_UTILS_HPP_
+//#include <vector>
 
 #include "depends/ate-pairing/include/bn.h"
 
-namespace libff {
+// namespace libff {
 
 template<typename FieldT>
 void bn_batch_invert(std::vector<FieldT> &vec);
 
-} // namespace libff
+// } // namespace libff
 
-#include <libff/algebra/curves/bn128/bn_utils.tcc>
+use libff/algebra/curves/bn128/bn_utils.tcc;
 
-#endif // BN_UTILS_HPP_
+//#endif // BN_UTILS_HPP_

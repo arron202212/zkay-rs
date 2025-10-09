@@ -31,14 +31,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TBCS_PPZKSNARK_HPP_
-#define TBCS_PPZKSNARK_HPP_
+//#ifndef TBCS_PPZKSNARK_HPP_
+// #define TBCS_PPZKSNARK_HPP_
 
-use  <libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark.hpp>
+use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
+use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark_params;
+use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark;
 
-namespace libsnark {
+
 
 /******************************** Proving key ********************************/
 
@@ -57,7 +57,7 @@ std::istream& operator>>(std::istream &in, tbcs_ppzksnark_proving_key<ppT> &pk);
 template<typename ppT>
 class tbcs_ppzksnark_proving_key {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     tbcs_ppzksnark_circuit circuit;
     uscs_ppzksnark_proving_key<ppT> uscs_pk;
@@ -71,7 +71,7 @@ public:
     {}
     tbcs_ppzksnark_proving_key(tbcs_ppzksnark_circuit &&circuit,
                                uscs_ppzksnark_proving_key<ppT> &&uscs_pk) :
-        circuit(std::move(circuit)), uscs_pk(std::move(uscs_pk))
+        circuit((circuit)), uscs_pk((uscs_pk))
     {}
 
     tbcs_ppzksnark_proving_key<ppT>& operator=(const tbcs_ppzksnark_proving_key<ppT> &other) = default;
@@ -155,8 +155,8 @@ public:
 
     tbcs_ppzksnark_keypair(tbcs_ppzksnark_proving_key<ppT> &&pk,
                            tbcs_ppzksnark_verification_key<ppT> &&vk) :
-        pk(std::move(pk)),
-        vk(std::move(vk))
+        pk((pk)),
+        vk((vk))
     {}
 };
 
@@ -253,11 +253,11 @@ bool tbcs_ppzksnark_online_verifier_strong_IC(const tbcs_ppzksnark_processed_ver
                                               const tbcs_ppzksnark_primary_input &primary_input,
                                               const tbcs_ppzksnark_proof<ppT> &proof);
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark.tcc>
 
-#endif // TBCS_PPZKSNARK_HPP_
+use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark;
+
+//#endif // TBCS_PPZKSNARK_HPP_
 /** @file
  *****************************************************************************
 
@@ -271,19 +271,19 @@ use  <libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TBCS_PPZKSNARK_TCC_
-#define TBCS_PPZKSNARK_TCC_
+//#ifndef TBCS_PPZKSNARK_TCC_
+// #define TBCS_PPZKSNARK_TCC_
 
-use  <libsnark/reductions/tbcs_to_uscs/tbcs_to_uscs.hpp>
+use libsnark/reductions/tbcs_to_uscs/tbcs_to_uscs;
 
-namespace libsnark {
+
 
 
 template<typename ppT>
 bool tbcs_ppzksnark_proving_key<ppT>::operator==(const tbcs_ppzksnark_proving_key<ppT> &other) const
 {
-    return (this->circuit == other.circuit &&
-            this->uscs_pk == other.uscs_pk);
+    return (self.circuit == other.circuit &&
+            self.uscs_pk == other.uscs_pk);
 }
 
 template<typename ppT>
@@ -299,9 +299,9 @@ template<typename ppT>
 std::istream& operator>>(std::istream &in, tbcs_ppzksnark_proving_key<ppT> &pk)
 {
     in >> pk.circuit;
-    libff::consume_OUTPUT_NEWLINE(in);
+    ffec::consume_OUTPUT_NEWLINE(in);
     in >> pk.uscs_pk;
-    libff::consume_OUTPUT_NEWLINE(in);
+    ffec::consume_OUTPUT_NEWLINE(in);
 
     return in;
 }
@@ -310,12 +310,12 @@ std::istream& operator>>(std::istream &in, tbcs_ppzksnark_proving_key<ppT> &pk)
 template<typename ppT>
 tbcs_ppzksnark_keypair<ppT> tbcs_ppzksnark_generator(const tbcs_ppzksnark_circuit &circuit)
 {
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
-    libff::enter_block("Call to tbcs_ppzksnark_generator");
+    ffec::enter_block("Call to tbcs_ppzksnark_generator");
     const uscs_constraint_system<FieldT> uscs_cs = tbcs_to_uscs_instance_map<FieldT>(circuit);
     const uscs_ppzksnark_keypair<ppT> uscs_keypair = uscs_ppzksnark_generator<ppT>(uscs_cs);
-    libff::leave_block("Call to tbcs_ppzksnark_generator");
+    ffec::leave_block("Call to tbcs_ppzksnark_generator");
 
     return tbcs_ppzksnark_keypair<ppT>(tbcs_ppzksnark_proving_key<ppT>(circuit, uscs_keypair.pk),
                                        uscs_keypair.vk);
@@ -326,14 +326,14 @@ tbcs_ppzksnark_proof<ppT> tbcs_ppzksnark_prover(const tbcs_ppzksnark_proving_key
                                                 const tbcs_ppzksnark_primary_input &primary_input,
                                                 const tbcs_ppzksnark_auxiliary_input &auxiliary_input)
 {
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
-    libff::enter_block("Call to tbcs_ppzksnark_prover");
+    ffec::enter_block("Call to tbcs_ppzksnark_prover");
     const uscs_variable_assignment<FieldT> uscs_va = tbcs_to_uscs_witness_map<FieldT>(pk.circuit, primary_input, auxiliary_input);
-    const uscs_primary_input<FieldT> uscs_pi = libff::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
+    const uscs_primary_input<FieldT> uscs_pi = ffec::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
     const uscs_auxiliary_input<FieldT> uscs_ai(uscs_va.begin() + primary_input.size(), uscs_va.end()); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
     const uscs_ppzksnark_proof<ppT> uscs_proof = uscs_ppzksnark_prover<ppT>(pk.uscs_pk, uscs_pi, uscs_ai);
-    libff::leave_block("Call to tbcs_ppzksnark_prover");
+    ffec::leave_block("Call to tbcs_ppzksnark_prover");
 
     return uscs_proof;
 }
@@ -341,9 +341,9 @@ tbcs_ppzksnark_proof<ppT> tbcs_ppzksnark_prover(const tbcs_ppzksnark_proving_key
 template<typename ppT>
 tbcs_ppzksnark_processed_verification_key<ppT> tbcs_ppzksnark_verifier_process_vk(const tbcs_ppzksnark_verification_key<ppT> &vk)
 {
-    libff::enter_block("Call to tbcs_ppzksnark_verifier_process_vk");
+    ffec::enter_block("Call to tbcs_ppzksnark_verifier_process_vk");
     const tbcs_ppzksnark_processed_verification_key<ppT> pvk = uscs_ppzksnark_verifier_process_vk<ppT>(vk);
-    libff::leave_block("Call to tbcs_ppzksnark_verifier_process_vk");
+    ffec::leave_block("Call to tbcs_ppzksnark_verifier_process_vk");
 
     return pvk;
 }
@@ -353,12 +353,12 @@ bool tbcs_ppzksnark_verifier_weak_IC(const tbcs_ppzksnark_verification_key<ppT> 
                                      const tbcs_ppzksnark_primary_input &primary_input,
                                      const tbcs_ppzksnark_proof<ppT> &proof)
 {
-    type libff::Fr<ppT> FieldT;
-    libff::enter_block("Call to tbcs_ppzksnark_verifier_weak_IC");
-    const uscs_primary_input<FieldT> uscs_input = libff::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
+    type ffec::Fr<ppT> FieldT;
+    ffec::enter_block("Call to tbcs_ppzksnark_verifier_weak_IC");
+    const uscs_primary_input<FieldT> uscs_input = ffec::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
     const tbcs_ppzksnark_processed_verification_key<ppT> pvk = tbcs_ppzksnark_verifier_process_vk<ppT>(vk);
     const bool bit = uscs_ppzksnark_online_verifier_weak_IC<ppT>(pvk, uscs_input, proof);
-    libff::leave_block("Call to tbcs_ppzksnark_verifier_weak_IC");
+    ffec::leave_block("Call to tbcs_ppzksnark_verifier_weak_IC");
 
     return bit;
 }
@@ -368,12 +368,12 @@ bool tbcs_ppzksnark_verifier_strong_IC(const tbcs_ppzksnark_verification_key<ppT
                                        const tbcs_ppzksnark_primary_input &primary_input,
                                        const tbcs_ppzksnark_proof<ppT> &proof)
 {
-    type libff::Fr<ppT> FieldT;
-    libff::enter_block("Call to tbcs_ppzksnark_verifier_strong_IC");
+    type ffec::Fr<ppT> FieldT;
+    ffec::enter_block("Call to tbcs_ppzksnark_verifier_strong_IC");
     const tbcs_ppzksnark_processed_verification_key<ppT> pvk = tbcs_ppzksnark_verifier_process_vk<ppT>(vk);
-    const uscs_primary_input<FieldT> uscs_input = libff::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
+    const uscs_primary_input<FieldT> uscs_input = ffec::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
     const bool bit = uscs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, uscs_input, proof);
-    libff::leave_block("Call to tbcs_ppzksnark_verifier_strong_IC");
+    ffec::leave_block("Call to tbcs_ppzksnark_verifier_strong_IC");
 
     return bit;
 }
@@ -383,11 +383,11 @@ bool tbcs_ppzksnark_online_verifier_weak_IC(const tbcs_ppzksnark_processed_verif
                                             const tbcs_ppzksnark_primary_input &primary_input,
                                             const tbcs_ppzksnark_proof<ppT> &proof)
 {
-    type libff::Fr<ppT> FieldT;
-    libff::enter_block("Call to tbcs_ppzksnark_online_verifier_weak_IC");
-    const uscs_primary_input<FieldT> uscs_input = libff::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
+    type ffec::Fr<ppT> FieldT;
+    ffec::enter_block("Call to tbcs_ppzksnark_online_verifier_weak_IC");
+    const uscs_primary_input<FieldT> uscs_input = ffec::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
     const bool bit = uscs_ppzksnark_online_verifier_weak_IC<ppT>(pvk, uscs_input, proof);
-    libff::leave_block("Call to tbcs_ppzksnark_online_verifier_weak_IC");
+    ffec::leave_block("Call to tbcs_ppzksnark_online_verifier_weak_IC");
 
     return bit;
 }
@@ -397,15 +397,15 @@ bool tbcs_ppzksnark_online_verifier_strong_IC(const tbcs_ppzksnark_processed_ver
                                               const tbcs_ppzksnark_primary_input &primary_input,
                                               const tbcs_ppzksnark_proof<ppT> &proof)
 {
-    type libff::Fr<ppT> FieldT;
-    libff::enter_block("Call to tbcs_ppzksnark_online_verifier_strong_IC");
-    const uscs_primary_input<FieldT> uscs_input = libff::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
+    type ffec::Fr<ppT> FieldT;
+    ffec::enter_block("Call to tbcs_ppzksnark_online_verifier_strong_IC");
+    const uscs_primary_input<FieldT> uscs_input = ffec::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
     const bool bit = uscs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, uscs_input, proof);
-    libff::leave_block("Call to tbcs_ppzksnark_online_verifier_strong_IC");
+    ffec::leave_block("Call to tbcs_ppzksnark_online_verifier_strong_IC");
 
     return bit;
 }
 
-} // libsnark
 
-#endif // TBCS_PPZKSNARK_TCC_
+
+//#endif // TBCS_PPZKSNARK_TCC_

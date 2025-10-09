@@ -5,12 +5,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BLS12_381_INIT_HPP_
-#define BLS12_381_INIT_HPP_
-#include <libff/algebra/curves/public_params.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_fields.hpp>
+//#ifndef BLS12_381_INIT_HPP_
+// #define BLS12_381_INIT_HPP_
+use libff/algebra/curves/public_params;
+use libff/algebra/curves/bls12_381/bls12_381_fields;
 
-namespace libff {
+// namespace libff {
 
 // parameters for the curve E/Fq : y^2 = x^3 + b
 extern bls12_381_Fq bls12_381_coeff_b;
@@ -34,13 +34,13 @@ void init_bls12_381_params();
 class bls12_381_G1;
 class bls12_381_G2;
 
-} // namespace libff
-#endif // BLS12_381_INIT_HPP_
-#include <libff/algebra/curves/bls12_381/bls12_381_g1.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_g2.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_init.hpp>
+// } // namespace libff
+//#endif // BLS12_381_INIT_HPP_
+use libff/algebra/curves/bls12_381/bls12_381_g1;
+use libff/algebra/curves/bls12_381/bls12_381_g2;
+use libff/algebra/curves/bls12_381/bls12_381_init;
 
-namespace libff {
+// namespace libff {
 
 bls12_381_Fq bls12_381_coeff_b;
 bls12_381_Fq2 bls12_381_twist;
@@ -219,4 +219,4 @@ void init_bls12_381_params()
     bls12_381_final_exponent_is_z_neg = true;
 }
 
-} // namespace libff
+// } // namespace libff

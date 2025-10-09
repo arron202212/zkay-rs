@@ -33,14 +33,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGET_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGET_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGET_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGET_HPP_
 
 use  <vector>
 
-use  <libsnark/gadgetlib2/gadgetMacros.hpp>
-use  <libsnark/gadgetlib2/protoboard.hpp>
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/gadgetMacros;
+use libsnark/gadgetlib2/protoboard;
+use libsnark/gadgetlib2/variable;
 
 namespace gadgetlib2 {
 
@@ -745,7 +745,7 @@ CREATE_GADGET_FACTORY_CLASS_5(Comparison_Gadget, // TODO uncomment this
 
 } // namespace gadgetlib2
 
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGET_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGET_HPP_
 /** @file
  *****************************************************************************
  Declarations of the interfaces and basic gadgets for R1P (Rank 1 prime characteristic)
@@ -761,7 +761,7 @@ CREATE_GADGET_FACTORY_CLASS_5(Comparison_Gadget, // TODO uncomment this
 use  <cmath>
 use  <memory>
 
-use  <libsnark/gadgetlib2/gadget.hpp>
+use libsnark/gadgetlib2/gadget;
 
 using ::std::shared_ptr;
 using ::std::string;
@@ -1649,7 +1649,7 @@ R1P_Comparison_Gadget::R1P_Comparison_Gadget(ProtoboardPtr pb,
 
 void R1P_Comparison_Gadget::init() {
     allZeroesTest_ = OR_Gadget::create(pb_, alpha_u_, notAllZeroes_);
-	alpha_u_.emplace_back(lessOrEqual_);
+	alpha_u_.push(lessOrEqual_);
 	alphaDualVariablePacker_ = CompressionPacking_Gadget::create(pb_, alpha_u_,VariableArray(1,alpha_p_), PackingMode::UNPACK);
 }
 /*

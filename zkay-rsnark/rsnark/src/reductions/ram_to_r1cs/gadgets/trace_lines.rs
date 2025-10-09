@@ -9,17 +9,17 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TRACE_LINES_HPP_
-#define TRACE_LINES_HPP_
+//#ifndef TRACE_LINES_HPP_
+// #define TRACE_LINES_HPP_
 
 use  <memory>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/relations/ram_computations/rams/ram_params;
 
-namespace libsnark {
+
 
 /**
  * A memory line contains variables for the following:
@@ -76,11 +76,11 @@ public:
                                    const std::string &annotation_prefix="");
 };
 
-} // libsnark
 
-use  <libsnark/reductions/ram_to_r1cs/gadgets/trace_lines.tcc>
 
-#endif // TRACE_LINES_HPP_
+use libsnark/reductions/ram_to_r1cs/gadgets/trace_lines;
+
+//#endif // TRACE_LINES_HPP_
 /** @file
  *****************************************************************************
 
@@ -94,10 +94,10 @@ use  <libsnark/reductions/ram_to_r1cs/gadgets/trace_lines.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TRACE_LINES_TCC_
-#define TRACE_LINES_TCC_
+//#ifndef TRACE_LINES_TCC_
+// #define TRACE_LINES_TCC_
 
-namespace libsnark {
+
 
 template<typename ramT>
 memory_line_variable_gadget<ramT>::memory_line_variable_gadget(ram_protoboard<ramT> &pb,
@@ -109,10 +109,10 @@ memory_line_variable_gadget<ramT>::memory_line_variable_gadget(ram_protoboard<ra
     const size_t address_size = ap.address_size();
     const size_t value_size = ap.value_size();
 
-    timestamp.reset(new dual_variable_gadget<FieldT>(pb, timestamp_size, FMT(this->annotation_prefix, " timestamp")));
-    address.reset(new dual_variable_gadget<FieldT>(pb, address_size, FMT(this->annotation_prefix, " address")));
-    contents_before.reset(new dual_variable_gadget<FieldT>(pb, value_size, FMT(this->annotation_prefix, " contents_before")));
-    contents_after.reset(new dual_variable_gadget<FieldT>(pb, value_size, FMT(this->annotation_prefix, " contents_after")));
+    timestamp.reset(new dual_variable_gadget<FieldT>(pb, timestamp_size, FMT(self.annotation_prefix, " timestamp")));
+    address.reset(new dual_variable_gadget<FieldT>(pb, address_size, FMT(self.annotation_prefix, " address")));
+    contents_before.reset(new dual_variable_gadget<FieldT>(pb, value_size, FMT(self.annotation_prefix, " contents_before")));
+    contents_after.reset(new dual_variable_gadget<FieldT>(pb, value_size, FMT(self.annotation_prefix, " contents_after")));
 }
 
 template<typename ramT>
@@ -168,6 +168,6 @@ execution_line_variable_gadget<ramT>::execution_line_variable_gadget(ram_protobo
 }
 
 
-} // libsnark
 
-#endif // TRACE_LINES_TCC_
+
+//#endif // TRACE_LINES_TCC_

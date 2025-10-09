@@ -9,28 +9,28 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BACS_PPZKSNARK_PARAMS_HPP_
-#define BACS_PPZKSNARK_PARAMS_HPP_
+//#ifndef BACS_PPZKSNARK_PARAMS_HPP_
+// #define BACS_PPZKSNARK_PARAMS_HPP_
 
-use  <libff/algebra/curves/public_params.hpp>
+use ffec::algebra::curves::public_params;
 
-use  <libsnark/relations/circuit_satisfaction_problems/bacs/bacs.hpp>
+use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
 
-namespace libsnark {
+
 
 /**
  * Below are various template aliases (used for convenience).
  */
 
 template<typename ppT>
-using bacs_ppzksnark_circuit = bacs_circuit<libff::Fr<ppT> >;
+using bacs_ppzksnark_circuit = bacs_circuit<ffec::Fr<ppT> >;
 
 template<typename ppT>
-using bacs_ppzksnark_primary_input = bacs_primary_input<libff::Fr<ppT> >;
+using bacs_ppzksnark_primary_input = bacs_primary_input<ffec::Fr<ppT> >;
 
 template<typename ppT>
-using bacs_ppzksnark_auxiliary_input = bacs_auxiliary_input<libff::Fr<ppT> >;
+using bacs_ppzksnark_auxiliary_input = bacs_auxiliary_input<ffec::Fr<ppT> >;
 
-} // libsnark
 
-#endif // BACS_PPZKSNARK_PARAMS_HPP_
+
+//#endif // BACS_PPZKSNARK_PARAMS_HPP_

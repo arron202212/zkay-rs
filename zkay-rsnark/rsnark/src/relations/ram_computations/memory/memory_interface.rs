@@ -9,14 +9,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MEMORY_INTERFACE_HPP_
-#define MEMORY_INTERFACE_HPP_
+//#ifndef MEMORY_INTERFACE_HPP_
+// #define MEMORY_INTERFACE_HPP_
 
 use  <cstddef>
 use  <map>
 use  <vector>
 
-namespace libsnark {
+
 
 /**
  * A function from addresses to values that represents a memory's contents.
@@ -49,9 +49,9 @@ public:
     virtual void set_value(const size_t address, const size_t value) = 0;
 };
 
-} // libsnark
 
-#endif // MEMORY_INTERFACE_HPP_
+
+//#endif // MEMORY_INTERFACE_HPP_
 /** @file
  *****************************************************************************
 
@@ -65,9 +65,9 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libsnark/relations/ram_computations/memory/memory_store_trace.hpp>
+use libsnark/relations/ram_computations/memory/memory_store_trace;
 
-namespace libsnark {
+
 
 memory_store_trace::memory_store_trace()
 {
@@ -101,4 +101,4 @@ memory_contents memory_store_trace::as_memory_contents() const
     return result;
 }
 
-} // libsnark
+

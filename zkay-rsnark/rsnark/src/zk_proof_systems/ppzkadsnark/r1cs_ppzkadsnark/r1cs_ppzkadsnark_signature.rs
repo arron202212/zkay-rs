@@ -15,12 +15,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SIGNATURE_HPP_
-#define SIGNATURE_HPP_
+//#ifndef SIGNATURE_HPP_
+// #define SIGNATURE_HPP_
 
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params.hpp>
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params;
 
-namespace libsnark {
+
 
 template<typename ppT>
 class kpT {
@@ -33,14 +33,14 @@ template<typename ppT>
 kpT<ppT> sigGen(void);
 
 template<typename ppT>
-r1cs_ppzkadsnark_sigT<ppT> sigSign(const r1cs_ppzkadsnark_skT<ppT> &sk, const labelT &label, const libff::G2<snark_pp<ppT>> &Lambda);
+r1cs_ppzkadsnark_sigT<ppT> sigSign(const r1cs_ppzkadsnark_skT<ppT> &sk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda);
 
 template<typename ppT>
-bool sigVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const labelT &label, const libff::G2<snark_pp<ppT>> &Lambda, const r1cs_ppzkadsnark_sigT<ppT> &sig);
+bool sigVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda, const r1cs_ppzkadsnark_sigT<ppT> &sig);
 
 template<typename ppT>
-bool sigBatchVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const std::vector<labelT> &labels, const std::vector<libff::G2<snark_pp<ppT>>> &Lambdas, const std::vector<r1cs_ppzkadsnark_sigT<ppT>> &sigs);
+bool sigBatchVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const std::vector<labelT> &labels, const std::vector<ffec::G2<snark_pp<ppT>>> &Lambdas, const std::vector<r1cs_ppzkadsnark_sigT<ppT>> &sigs);
 
-} // libsnark
 
-#endif // SIGNATURE_HPP_
+
+//#endif // SIGNATURE_HPP_

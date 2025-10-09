@@ -12,10 +12,10 @@ This file is meant to be read top-down as a tutorial for gadget writing.
 
 use  "depends/gtest/googletest/include/gtest/gtest.h"
 
-use  <libsnark/gadgetlib2/examples/simple_example.hpp>
-use  <libsnark/gadgetlib2/gadget.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/examples/run_r1cs_ppzksnark.hpp>
+use libsnark/gadgetlib2/examples/simple_example;
+use libsnark/gadgetlib2/gadget;
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
 
 namespace gadgetExamples {
 
@@ -491,10 +491,10 @@ TEST(Examples, R1P_VerifyTransactionAmounts_Gadget) {
 TEST(gadgetLib2,Integration) {
     initPublicParamsFromDefaultPp();
     // Create an example constraint system and translate to libsnark format
-    const libsnark::r1cs_example<libff::Fr<libff::default_ec_pp> > example = libsnark::gen_r1cs_example_from_gadgetlib2_protoboard(100);
+    const crate::r1cs_example<ffec::Fr<ffec::default_ec_pp> > example = crate::gen_r1cs_example_from_gadgetlib2_protoboard(100);
     const bool test_serialization = false;
     // Run ppzksnark. Jump into function for breakdown
-    const bool bit = libsnark::run_r1cs_ppzksnark<libff::default_ec_pp>(example, test_serialization);
+    const bool bit = crate::run_r1cs_ppzksnark<ffec::default_ec_pp>(example, test_serialization);
     EXPECT_TRUE(bit);
 };
 

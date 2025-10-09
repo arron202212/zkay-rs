@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef NAIVE_EVALUATE_HPP_
-#define NAIVE_EVALUATE_HPP_
+//#ifndef NAIVE_EVALUATE_HPP_
+// #define NAIVE_EVALUATE_HPP_
 
-#include <vector>
+//#include <vector>
 
-#include <libfqfft/tools/exceptions.hpp>
+use libfqfft/tools/exceptions;
 
 namespace libfqfft {
 
@@ -45,9 +45,9 @@ FieldT evaluate_lagrange_polynomial(const size_t &m, const std::vector<FieldT> &
 
 } // libfqfft
 
-#include <libfqfft/polynomial_arithmetic/naive_evaluate.tcc>
+use libfqfft/polynomial_arithmetic/naive_evaluate.tcc;
 
-#endif // NAIVE_EVALUATE_HPP_
+//#endif // NAIVE_EVALUATE_HPP_
 /** @file
  *****************************************************************************
 
@@ -61,10 +61,10 @@ FieldT evaluate_lagrange_polynomial(const size_t &m, const std::vector<FieldT> &
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef NAIVE_EVALUATE_TCC_
-#define NAIVE_EVALUATE_TCC_
+//#ifndef NAIVE_EVALUATE_TCC_
+// #define NAIVE_EVALUATE_TCC_
 
-#include <algorithm>
+//#include <algorithm>
 
 namespace libfqfft {
 
@@ -110,4 +110,4 @@ FieldT evaluate_lagrange_polynomial(const size_t &m, const std::vector<FieldT> &
 
 } // libfqfft
 
-#endif // NAIVE_EVALUATE_TCC_
+//#endif // NAIVE_EVALUATE_TCC_

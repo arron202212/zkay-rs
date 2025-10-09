@@ -13,17 +13,17 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MERKLE_TREE_CHECK_READ_GADGET_HPP_
-#define MERKLE_TREE_CHECK_READ_GADGET_HPP_
+//#ifndef MERKLE_TREE_CHECK_READ_GADGET_HPP_
+// #define MERKLE_TREE_CHECK_READ_GADGET_HPP_
 
-use  <libsnark/common/data_structures/merkle_tree.hpp>
-use  <libsnark/gadgetlib1/gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/crh_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/digest_selector_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/hash_io.hpp>
-use  <libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable.hpp>
+use crate::common::data_structures::merkle_tree;
+use libsnark/gadgetlib1/gadget;
+use libsnark/gadgetlib1/gadgets/hashes/crh_gadget;
+use libsnark/gadgetlib1/gadgets/hashes/digest_selector_gadget;
+use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable;
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 class merkle_tree_check_read_gadget : public gadget<FieldT> {
@@ -67,11 +67,11 @@ public:
 template<typename FieldT, typename HashT>
 void test_merkle_tree_check_read_gadget();
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget.tcc>
 
-#endif // MERKLE_TREE_CHECK_READ_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget;
+
+//#endif // MERKLE_TREE_CHECK_READ_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -85,10 +85,10 @@ use  <libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MERKLE_TREE_CHECK_READ_GADGET_TCC_
-#define MERKLE_TREE_CHECK_READ_GADGET_TCC_
+//#ifndef MERKLE_TREE_CHECK_READ_GADGET_TCC_
+// #define MERKLE_TREE_CHECK_READ_GADGET_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT, typename HashT>
 merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(protoboard<FieldT> &pb,
@@ -117,22 +117,22 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
        leaf, and address_bits[tree_depth-1] is MSB, and corresponds to
        the subtree directly under the root.
     */
-    assert(tree_depth > 0);
-    assert(tree_depth == address_bits.size());
+    assert!(tree_depth > 0);
+    assert!(tree_depth == address_bits.size());
 
     for (size_t i = 0; i < tree_depth-1; ++i)
     {
-        internal_output.emplace_back(digest_variable<FieldT>(pb, digest_size, FMT(this->annotation_prefix, " internal_output_%zu", i)));
+        internal_output.push(digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " internal_output_{}", i)));
     }
 
-    computed_root.reset(new digest_variable<FieldT>(pb, digest_size, FMT(this->annotation_prefix, " computed_root")));
+    computed_root.reset(new digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
 
     for (size_t i = 0; i < tree_depth; ++i)
     {
-        block_variable<FieldT> inp(pb, path.left_digests[i], path.right_digests[i], FMT(this->annotation_prefix, " inp_%zu", i));
-        hasher_inputs.emplace_back(inp);
-        hashers.emplace_back(HashT(pb, 2*digest_size, inp, (i == 0 ? *computed_root : internal_output[i-1]),
-                                   FMT(this->annotation_prefix, " load_hashers_%zu", i)));
+        block_variable<FieldT> inp(pb, path.left_digests[i], path.right_digests[i], FMT(self.annotation_prefix, " inp_{}", i));
+        hasher_inputs.push(inp);
+        hashers.push(HashT(pb, 2*digest_size, inp, (i == 0 ? *computed_root : internal_output[i-1]),
+                                   FMT(self.annotation_prefix, " load_hashers_{}", i)));
     }
 
     for (size_t i = 0; i < tree_depth; ++i)
@@ -142,9 +142,9 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
           base case) and propagate it one layer up, either in the left
           or the right slot of authentication_path_variable.
         */
-        propagators.emplace_back(digest_selector_gadget<FieldT>(pb, digest_size, i < tree_depth - 1 ? internal_output[i] : leaf,
+        propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, i < tree_depth - 1 ? internal_output[i] : leaf,
                                                                 address_bits[tree_depth-1-i], path.left_digests[i], path.right_digests[i],
-                                                                FMT(this->annotation_prefix, " digest_selector_%zu", i)));
+                                                                FMT(self.annotation_prefix, " digest_selector_{}", i)));
     }
 
     check_root.reset(new bit_vector_copy_gadget<FieldT>(pb, computed_root->bits, root.bits, read_successful, FieldT::capacity(), FMT(annotation_prefix, " check_root")));
@@ -198,7 +198,7 @@ size_t merkle_tree_check_read_gadget<FieldT, HashT>::expected_constraints(const 
     const size_t hasher_constraints = tree_depth * HashT::expected_constraints(false);
     const size_t propagator_constraints = tree_depth * HashT::get_digest_len();
     const size_t authentication_path_constraints = 2 * tree_depth * HashT::get_digest_len();
-    const size_t check_root_constraints = 3 * libff::div_ceil(HashT::get_digest_len(), FieldT::capacity());
+    const size_t check_root_constraints = 3 * ffec::div_ceil(HashT::get_digest_len(), FieldT::capacity());
 
     return hasher_constraints + propagator_constraints + authentication_path_constraints + check_root_constraints;
 }
@@ -211,11 +211,11 @@ void test_merkle_tree_check_read_gadget()
     const size_t tree_depth = 16;
     std::vector<merkle_authentication_node> path(tree_depth);
 
-    libff::bit_vector prev_hash(digest_len);
+    ffec::bit_vector prev_hash(digest_len);
     std::generate(prev_hash.begin(), prev_hash.end(), [&]() { return std::rand() % 2; });
-    libff::bit_vector leaf = prev_hash;
+    ffec::bit_vector leaf = prev_hash;
 
-    libff::bit_vector address_bits;
+    ffec::bit_vector address_bits;
 
     size_t address = 0;
     for (long level = tree_depth-1; level >= 0; --level)
@@ -223,18 +223,18 @@ void test_merkle_tree_check_read_gadget()
         const bool computed_is_right = (std::rand() % 2);
         address |= (computed_is_right ? 1ul << (tree_depth-1-level) : 0);
         address_bits.push_back(computed_is_right);
-        libff::bit_vector other(digest_len);
+        ffec::bit_vector other(digest_len);
         std::generate(other.begin(), other.end(), [&]() { return std::rand() % 2; });
 
-        libff::bit_vector block = prev_hash;
+        ffec::bit_vector block = prev_hash;
         block.insert(computed_is_right ? block.begin() : block.end(), other.begin(), other.end());
-        libff::bit_vector h = HashT::get_hash(block);
+        ffec::bit_vector h = HashT::get_hash(block);
 
         path[level] = other;
 
         prev_hash = h;
     }
-    libff::bit_vector root = prev_hash;
+    ffec::bit_vector root = prev_hash;
 
     /* execute test */
     protoboard<FieldT> pb;
@@ -249,7 +249,7 @@ void test_merkle_tree_check_read_gadget()
     ml.generate_r1cs_constraints();
 
     address_bits_va.fill_with_bits(pb, address_bits);
-    assert(address_bits_va.get_field_element_from_bits(pb).as_ulong() == address);
+    assert!(address_bits_va.get_field_element_from_bits(pb).as_ulong() == address);
     leaf_digest.generate_r1cs_witness(leaf);
     path_var.generate_r1cs_witness(address, path);
     ml.generate_r1cs_witness();
@@ -258,13 +258,13 @@ void test_merkle_tree_check_read_gadget()
     address_bits_va.fill_with_bits(pb, address_bits);
     leaf_digest.generate_r1cs_witness(leaf);
     root_digest.generate_r1cs_witness(root);
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
     const size_t num_constraints = pb.num_constraints();
     const size_t expected_constraints = merkle_tree_check_read_gadget<FieldT, HashT>::expected_constraints(tree_depth);
-    assert(num_constraints == expected_constraints);
+    assert!(num_constraints == expected_constraints);
 }
 
-} // libsnark
 
-#endif // MERKLE_TREE_CHECK_READ_GADGET_TCC_
+
+//#endif // MERKLE_TREE_CHECK_READ_GADGET_TCC_

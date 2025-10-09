@@ -7,13 +7,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 
 use  <memory>
 use  <vector>
 
-use  <libff/common/default_types/ec_pp.hpp>
+use ffec::common::default_types::ec_pp;
 
 namespace gadgetlib2 {
 
@@ -26,7 +26,7 @@ namespace gadgetlib2 {
 /*************************************************************************************************/
 
 /* curve-specific public parameters */
-type libff::Fr<libff::default_ec_pp> Fp;
+type ffec::Fr<ffec::default_ec_pp> Fp;
 
 type std::vector<Fp> FpVector;
 
@@ -41,7 +41,7 @@ public:
 PublicParams initPublicParamsFromDefaultPp();
 
 } // namespace gadgetlib2
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 /** @file
  *****************************************************************************
  Implementation of PublicParams for Fp field arithmetic
@@ -54,7 +54,7 @@ PublicParams initPublicParamsFromDefaultPp();
 use  <cassert>
 use  <vector>
 
-use  <libsnark/gadgetlib2/pp.hpp>
+use libsnark/gadgetlib2/pp;
 
 namespace gadgetlib2 {
 
@@ -67,8 +67,8 @@ Fp PublicParams::getFp(long x) const {
 PublicParams::~PublicParams() {}
 
 PublicParams initPublicParamsFromDefaultPp() {
-    libff::default_ec_pp::init_public_params();
-    const std::size_t log_p = libff::Fr<libff::default_ec_pp>::size_in_bits();
+    ffec::default_ec_pp::init_public_params();
+    const std::size_t log_p = ffec::Fr<ffec::default_ec_pp>::size_in_bits();
     return PublicParams(log_p);
 }
 

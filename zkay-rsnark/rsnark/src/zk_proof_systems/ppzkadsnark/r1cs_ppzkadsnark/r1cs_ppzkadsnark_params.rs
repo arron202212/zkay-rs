@@ -9,14 +9,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_PPZKADSNARK_PARAMS_HPP_
-#define R1CS_PPZKADSNARK_PARAMS_HPP_
+//#ifndef R1CS_PPZKADSNARK_PARAMS_HPP_
+// #define R1CS_PPZKADSNARK_PARAMS_HPP_
 
-use  <libff/algebra/curves/public_params.hpp>
+use ffec::algebra::curves::public_params;
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
-namespace libsnark {
+
 
 class labelT {
 public:
@@ -32,13 +32,13 @@ template<typename r1cs_ppzkadsnark_ppT>
 using snark_pp = typename r1cs_ppzkadsnark_ppT::snark_pp;
 
 template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_constraint_system = r1cs_constraint_system<libff::Fr<snark_pp<r1cs_ppzkadsnark_ppT>>>;
+using r1cs_ppzkadsnark_constraint_system = r1cs_constraint_system<ffec::Fr<snark_pp<r1cs_ppzkadsnark_ppT>>>;
 
 template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_primary_input = r1cs_primary_input<libff::Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
+using r1cs_ppzkadsnark_primary_input = r1cs_primary_input<ffec::Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
 
 template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_auxiliary_input = r1cs_auxiliary_input<libff::Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
+using r1cs_ppzkadsnark_auxiliary_input = r1cs_auxiliary_input<ffec::Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
 
 template<typename r1cs_ppzkadsnark_ppT>
 using r1cs_ppzkadsnark_skT = typename r1cs_ppzkadsnark_ppT::skT;
@@ -53,7 +53,7 @@ template<typename r1cs_ppzkadsnark_ppT>
 using r1cs_ppzkadsnark_prfKeyT = typename r1cs_ppzkadsnark_ppT::prfKeyT;
 
 
-} // libsnark
 
-#endif // R1CS_PPZKADSNARK_PARAMS_HPP_
+
+//#endif // R1CS_PPZKADSNARK_PARAMS_HPP_
 

@@ -8,8 +8,8 @@
 
 use  <gtest/gtest.h>
 
-use  <libsnark/gadgetlib2/adapters.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
+use libsnark/gadgetlib2/adapters;
+use libsnark/gadgetlib2/pp;
 
 using namespace gadgetlib2;
 

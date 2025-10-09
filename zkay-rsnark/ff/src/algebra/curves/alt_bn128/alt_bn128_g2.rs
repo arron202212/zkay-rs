@@ -5,14 +5,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALT_BN128_G2_HPP_
-#define ALT_BN128_G2_HPP_
-#include <vector>
+//#ifndef ALT_BN128_G2_HPP_
+// #define ALT_BN128_G2_HPP_
+//#include <vector>
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_init.hpp>
-#include <libff/algebra/curves/curve_utils.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_init;
+use libff/algebra/curves/curve_utils;
 
-namespace libff {
+// namespace libff {
 
 class alt_bn128_G2;
 std::ostream& operator<<(std::ostream &, const alt_bn128_G2&);
@@ -20,10 +20,10 @@ std::istream& operator>>(std::istream &, alt_bn128_G2&);
 
 class alt_bn128_G2 {
 public:
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
-#endif
+//#endif
     static std::vector<std::size_t> wnaf_window_table;
     static std::vector<std::size_t> fixed_base_exp_window_table;
     static alt_bn128_G2 G2_zero;
@@ -98,8 +98,8 @@ alt_bn128_G2 operator*(const Fp_model<m,modulus_p> &lhs, const alt_bn128_G2 &rhs
 }
 
 
-} // namespace libff
-#endif // ALT_BN128_G2_HPP_
+// } // namespace libff
+//#endif // ALT_BN128_G2_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -107,16 +107,16 @@ alt_bn128_G2 operator*(const Fp_model<m,modulus_p> &lhs, const alt_bn128_G2 &rhs
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g2.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_g2;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long alt_bn128_G2::add_cnt = 0;
 long long alt_bn128_G2::dbl_cnt = 0;
-#endif
+//#endif
 
 std::vector<size_t> alt_bn128_G2::wnaf_window_table;
 std::vector<size_t> alt_bn128_G2::fixed_base_exp_window_table;
@@ -144,13 +144,13 @@ void alt_bn128_G2::print() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
         alt_bn128_G2 copy(*this);
         copy.to_affine_coordinates();
-        gmp_printf("(%Nd*z + %Nd , %Nd*z + %Nd)\n",
+        print!("(%Nd*z + %Nd , %Nd*z + %Nd)\n",
                    copy.X.c1.as_bigint().data, alt_bn128_Fq::num_limbs,
                    copy.X.c0.as_bigint().data, alt_bn128_Fq::num_limbs,
                    copy.Y.c1.as_bigint().data, alt_bn128_Fq::num_limbs,
@@ -162,11 +162,11 @@ void alt_bn128_G2::print_coordinates() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
-        gmp_printf("(%Nd*z + %Nd : %Nd*z + %Nd : %Nd*z + %Nd)\n",
+        print!("(%Nd*z + %Nd : %Nd*z + %Nd : %Nd*z + %Nd)\n",
                    this->X.c1.as_bigint().data, alt_bn128_Fq::num_limbs,
                    this->X.c0.as_bigint().data, alt_bn128_Fq::num_limbs,
                    this->Y.c1.as_bigint().data, alt_bn128_Fq::num_limbs,
@@ -293,9 +293,9 @@ alt_bn128_G2 alt_bn128_G2::operator+(const alt_bn128_G2 &other) const
         return this->dbl();
     }
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
 
     // rest of add case
     alt_bn128_Fq2 H = U2 - U1;                            // H = U2-U1
@@ -330,9 +330,9 @@ alt_bn128_G2 alt_bn128_G2::add(const alt_bn128_G2 &other) const
 
 alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
 {
-#ifdef DEBUG
-    assert(other.is_special());
-#endif
+// #ifdef DEBUG
+    assert!(other.is_special());
+//#endif
 
     // handle special cases having to do with O
     if (this->is_zero())
@@ -374,9 +374,9 @@ alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
         return this->dbl();
     }
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
 
     alt_bn128_Fq2 H = U2-(this->X);                         // H = U2-X1
     alt_bn128_Fq2 HH = H.squared() ;                        // HH = H^2
@@ -396,9 +396,9 @@ alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
 
 alt_bn128_G2 alt_bn128_G2::dbl() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-#endif
+//#endif
     // handle point at infinity
     if (this->is_zero())
     {
@@ -487,12 +487,12 @@ std::ostream& operator<<(std::ostream &out, const alt_bn128_G2 &g)
     alt_bn128_G2 copy(g);
     copy.to_affine_coordinates();
     out << (copy.is_zero() ? 1 : 0) << OUTPUT_SEPARATOR;
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().data[0] & 1);
-#endif
+//#endif
 
     return out;
 }
@@ -502,7 +502,7 @@ std::istream& operator>>(std::istream &in, alt_bn128_G2 &g)
     char is_zero;
     alt_bn128_Fq2 tX, tY;
 
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     in >> is_zero >> tX >> tY;
     is_zero -= '0';
 #else
@@ -528,7 +528,7 @@ std::istream& operator>>(std::istream &in, alt_bn128_G2 &g)
             tY = -tY;
         }
     }
-#endif
+//#endif
     // using projective coordinates
     if (is_zero == 0)
     {
@@ -568,4 +568,4 @@ void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec
     }
 }
 
-} // namespace libff
+// } // namespace libff

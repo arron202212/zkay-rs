@@ -5,13 +5,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BLS12_381_PAIRING_HPP_
-#define BLS12_381_PAIRING_HPP_
-#include <vector>
+//#ifndef BLS12_381_PAIRING_HPP_
+// #define BLS12_381_PAIRING_HPP_
+//#include <vector>
 
-#include <libff/algebra/curves/bls12_381/bls12_381_init.hpp>
+use libff/algebra/curves/bls12_381/bls12_381_init;
 
-namespace libff {
+// namespace libff {
 
 /* final exponentiation */
 
@@ -89,8 +89,8 @@ bls12_381_GT bls12_381_reduced_pairing(const bls12_381_G1 &P,
 bls12_381_GT bls12_381_affine_reduced_pairing(const bls12_381_G1 &P,
                                     const bls12_381_G2 &Q);
 
-} // namespace libff
-#endif // BLS12_381_PAIRING_HPP_
+// } // namespace libff
+//#endif // BLS12_381_PAIRING_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -98,15 +98,15 @@ bls12_381_GT bls12_381_affine_reduced_pairing(const bls12_381_G1 &P,
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <cassert>
+//#include <cassert>
 
-#include <libff/algebra/curves/bls12_381/bls12_381_g1.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_g2.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_init.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_pairing.hpp>
-#include <libff/common/profiling.hpp>
+use libff/algebra/curves/bls12_381/bls12_381_g1;
+use libff/algebra/curves/bls12_381/bls12_381_g2;
+use libff/algebra/curves/bls12_381/bls12_381_init;
+use libff/algebra/curves/bls12_381/bls12_381_pairing;
+use crate::common::profiling;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -564,4 +564,4 @@ bls12_381_GT bls12_381_reduced_pairing(const bls12_381_G1 &P,
 {
     return bls12_381_ate_reduced_pairing(P, Q);
 }
-} // namespace libff
+// } // namespace libff

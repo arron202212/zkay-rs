@@ -6,28 +6,28 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBFF_ALGEBRA_GF256_HPP_
-#define LIBFF_ALGEBRA_GF256_HPP_
+//#ifndef LIBFF_ALGEBRA_GF256_HPP_
+// #define LIBFF_ALGEBRA_GF256_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <vector>
-#include <libff/algebra/field_utils/bigint.hpp>
+//#include <cstddef>
+//#include <cstdint>
+//#include <vector>
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 /* x^256 + x^10 + x^5 + x^2 + 1 */
 /* gf256 implements the field GF(2)/(x^256 + x^10 + x^5 + x^2 + 1).
    Elements are represented internally with four uint64s */
 class gf256 {
 
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
     // x^256 + x^10 + x^5 + x^2 + 1
     static const constexpr uint64_t modulus_ = 0b10000100101;
     static const constexpr uint64_t num_bits = 256;
@@ -101,35 +101,35 @@ private:
     uint64_t value_[4];
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long gf256::add_cnt = 0;
 long long gf256::sub_cnt = 0;
 long long gf256::mul_cnt = 0;
 long long gf256::sqr_cnt = 0;
 long long gf256::inv_cnt = 0;
-#endif
+//#endif
 
-} // namespace libff
-#include <libff/algebra/fields/binary/gf256.tcc>
+// } // namespace libff
+use libff/algebra/fields/binary/gf256.tcc;
 
-#endif // namespace libff_ALGEBRA_GF256_HPP_
-#include <cstdio>
+//#endif // namespace libff_ALGEBRA_GF256_HPP_
+//#include <cstdio>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+// #define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
 
-#include <sodium/randombytes.h>
+//#include <sodium/randombytes.h>
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 #include "libff/algebra/fields/binary/gf256.hpp"
 
-#ifdef USE_ASM
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#endif
+// #ifdef USE_ASM
+//#include <emmintrin.h>
+//#include <immintrin.h>
+//#include <smmintrin.h>
+//#endif
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -166,9 +166,9 @@ bool gf256::from_words(std::vector<uint64_t> words)
 
 gf256& gf256::operator+=(const gf256 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     this->value_[0] ^= other.value_[0];
     this->value_[1] ^= other.value_[1];
     this->value_[2] ^= other.value_[2];
@@ -178,9 +178,9 @@ gf256& gf256::operator+=(const gf256 &other)
 
 gf256& gf256::operator-=(const gf256 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     this->value_[0] ^= other.value_[0];
     this->value_[1] ^= other.value_[1];
     this->value_[2] ^= other.value_[2];
@@ -190,12 +190,12 @@ gf256& gf256::operator-=(const gf256 &other)
 
 gf256& gf256::operator*=(const gf256 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Does not require *this and other to be different, and therefore
        also works for squaring, implemented below. */
-#ifdef USE_ASM
+// #ifdef USE_ASM
     /* depending on the manufacturer and generation of a CPU, the PCLMUL
        instruction might take different amounts of time.
        empirically, it appears that on recent Intel CPUs, PCLMUL is so fast that
@@ -206,7 +206,7 @@ gf256& gf256::operator*=(const gf256 &other)
 
        thus we use a preprocessor flag to choose between a naive and a Karatsuba
        multiplicator. */
-#ifdef ASM_MINIMIZE_CLMULS
+// #ifdef ASM_MINIMIZE_CLMULS
     /* here we implement a Karatsuba-like approach for multiplying 4-limb numbers.
 
        given
@@ -300,7 +300,7 @@ gf256& gf256::operator*=(const gf256 &other)
     __m128i c5 = _mm_xor_si128(m23, m32);
     __m128i c6 = m33;
 
-#endif // ASM_MINIMIZE_CLMULS
+//#endif // ASM_MINIMIZE_CLMULS
 
     /* this part is common to both multiplication algorithms:
        given the 6 overlapping 128-bit limbs such that
@@ -374,7 +374,7 @@ gf256& gf256::operator*=(const gf256 &other)
     this->value_[1] = result[1];
     this->value_[2] = result[2];
     this->value_[3] = result[3];
-#endif
+//#endif
 
     return (*this);
 }
@@ -387,10 +387,10 @@ gf256& gf256::operator^=(const unsigned long pow)
 
 gf256& gf256::square()
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
     this->mul_cnt--;
-#endif
+//#endif
     this->operator*=(*this);
     return *this;
 }
@@ -440,12 +440,12 @@ gf256 gf256::squared() const
    requires 270 mul/sqr operations total. */
 gf256 gf256::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
     this->mul_cnt -= 15;
     this->sqr_cnt -= 255;
-#endif
-    assert(!this->is_zero());
+//#endif
+    assert!(!this->is_zero());
     gf256 a(*this);
 
     gf256 result(0);
@@ -513,7 +513,7 @@ bool gf256::is_zero() const
 
 void gf256::print() const
 {
-    printf("%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "\n",
+    print!("%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "\n",
            this->value_[3], this->value_[2],
            this->value_[1], this->value_[0]);
 }
@@ -547,10 +547,10 @@ std::istream& operator>>(std::istream &in, gf256 &el)
     return in;
 }
 
-} // namespace libff
+// } // namespace libff
 #include "libff/algebra/field_utils/algorithms.hpp"
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t m>
 gf256& gf256::operator^=(const bigint<m> &pow)
@@ -565,4 +565,4 @@ gf256 gf256::operator^(const bigint<m> &pow) const
     return power<gf256>(*this, pow);
 }
 
-} // namespace libff
+// } // namespace libff

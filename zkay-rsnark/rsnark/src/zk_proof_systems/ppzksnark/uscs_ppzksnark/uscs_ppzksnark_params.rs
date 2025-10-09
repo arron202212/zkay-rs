@@ -9,28 +9,28 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef USCS_PPZKSNARK_PARAMS_HPP_
-#define USCS_PPZKSNARK_PARAMS_HPP_
+//#ifndef USCS_PPZKSNARK_PARAMS_HPP_
+// #define USCS_PPZKSNARK_PARAMS_HPP_
 
-use  <libff/algebra/curves/public_params.hpp>
+use ffec::algebra::curves::public_params;
 
-use  <libsnark/relations/constraint_satisfaction_problems/uscs/uscs.hpp>
+use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
 
-namespace libsnark {
+
 
 /**
  * Below are various template aliases (used for convenience).
  */
 
 template<typename ppT>
-using uscs_ppzksnark_constraint_system = uscs_constraint_system<libff::Fr<ppT> >;
+using uscs_ppzksnark_constraint_system = uscs_constraint_system<ffec::Fr<ppT> >;
 
 template<typename ppT>
-using uscs_ppzksnark_primary_input = uscs_primary_input<libff::Fr<ppT> >;
+using uscs_ppzksnark_primary_input = uscs_primary_input<ffec::Fr<ppT> >;
 
 template<typename ppT>
-using uscs_ppzksnark_auxiliary_input = uscs_auxiliary_input<libff::Fr<ppT> >;
+using uscs_ppzksnark_auxiliary_input = uscs_auxiliary_input<ffec::Fr<ppT> >;
 
-} // libsnark
 
-#endif // USCS_PPZKSNARK_PARAMS_HPP_
+
+//#endif // USCS_PPZKSNARK_PARAMS_HPP_

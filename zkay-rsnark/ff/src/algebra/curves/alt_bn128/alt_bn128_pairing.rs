@@ -5,13 +5,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALT_BN128_PAIRING_HPP_
-#define ALT_BN128_PAIRING_HPP_
-#include <vector>
+//#ifndef ALT_BN128_PAIRING_HPP_
+// #define ALT_BN128_PAIRING_HPP_
+//#include <vector>
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_init.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_init;
 
-namespace libff {
+// namespace libff {
 
 /* final exponentiation */
 
@@ -89,8 +89,8 @@ alt_bn128_GT alt_bn128_reduced_pairing(const alt_bn128_G1 &P,
 alt_bn128_GT alt_bn128_affine_reduced_pairing(const alt_bn128_G1 &P,
                                     const alt_bn128_G2 &Q);
 
-} // namespace libff
-#endif // ALT_BN128_PAIRING_HPP_
+// } // namespace libff
+//#endif // ALT_BN128_PAIRING_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -98,15 +98,15 @@ alt_bn128_GT alt_bn128_affine_reduced_pairing(const alt_bn128_G1 &P,
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <cassert>
+//#include <cassert>
 
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g1.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_g2.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_init.hpp>
-#include <libff/algebra/curves/alt_bn128/alt_bn128_pairing.hpp>
-#include <libff/common/profiling.hpp>
+use libff/algebra/curves/alt_bn128/alt_bn128_g1;
+use libff/algebra/curves/alt_bn128/alt_bn128_g2;
+use libff/algebra/curves/alt_bn128/alt_bn128_init;
+use libff/algebra/curves/alt_bn128/alt_bn128_pairing;
+use crate::common::profiling;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -437,9 +437,9 @@ alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
     }
 
     alt_bn128_G2 Q1 = Qcopy.mul_by_q();
-    assert(Q1.Z == alt_bn128_Fq2::one());
+    assert!(Q1.Z == alt_bn128_Fq2::one());
     alt_bn128_G2 Q2 = Q1.mul_by_q();
-    assert(Q2.Z == alt_bn128_Fq2::one());
+    assert!(Q2.Z == alt_bn128_Fq2::one());
 
     if (alt_bn128_ate_is_loop_count_neg)
     {
@@ -636,4 +636,4 @@ alt_bn128_GT alt_bn128_reduced_pairing(const alt_bn128_G1 &P,
 {
     return alt_bn128_ate_reduced_pairing(P, Q);
 }
-} // namespace libff
+// } // namespace libff

@@ -9,14 +9,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FOORAM_PARAMS_HPP_
-#define FOORAM_PARAMS_HPP_
+//#ifndef FOORAM_PARAMS_HPP_
+// #define FOORAM_PARAMS_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/fooram_cpu_checker.hpp>
-use  <libsnark/relations/ram_computations/rams/fooram/fooram_aux.hpp>
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
+use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/fooram_cpu_checker;
+use libsnark/relations/ram_computations/rams/fooram/fooram_aux;
+use libsnark/relations/ram_computations/rams/ram_params;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class ram_fooram {
@@ -33,6 +33,6 @@ public:
 template<typename FieldT>
 size_t ram_fooram<FieldT>::timestamp_length = 300;
 
-} // libsnark
 
-#endif // FOORAM_PARAMS_HPP_
+
+//#endif // FOORAM_PARAMS_HPP_

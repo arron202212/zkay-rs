@@ -11,15 +11,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef WEIERSTRASS_MILLER_LOOP_HPP_
-#define WEIERSTRASS_MILLER_LOOP_HPP_
+//#ifndef WEIERSTRASS_MILLER_LOOP_HPP_
+// #define WEIERSTRASS_MILLER_LOOP_HPP_
 
 use  <memory>
 
-use  <libsnark/gadgetlib1/gadgets/pairing/pairing_params.hpp>
-use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation.hpp>
+use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation;
 
-namespace libsnark {
+
 
 /**
  * Gadget for doubling step in the Miller loop.
@@ -34,11 +34,11 @@ namespace libsnark {
  * Note the slight interface change: this gadget allocates g_RR_at_P inside itself (!)
  */
 template<typename ppT>
-class mnt_miller_loop_dbl_line_eval : public gadget<libff::Fr<ppT> > {
+class mnt_miller_loop_dbl_line_eval : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     G1_precomputation<ppT> prec_P;
     precompute_G2_gadget_coeffs<ppT> c;
@@ -70,11 +70,11 @@ public:
  * Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!)
  */
 template<typename ppT>
-class mnt_miller_loop_add_line_eval : public gadget<libff::Fr<ppT> > {
+class mnt_miller_loop_add_line_eval : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     bool invert_Q;
     G1_precomputation<ppT> prec_P;
@@ -101,11 +101,11 @@ public:
  * Gadget for verifying a single Miller loop.
  */
 template<typename ppT>
-class mnt_miller_loop_gadget : public gadget<libff::Fr<ppT> > {
+class mnt_miller_loop_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::vector<std::shared_ptr<Fqk_variable<ppT> > > g_RR_at_Ps;
     std::vector<std::shared_ptr<Fqk_variable<ppT> > > g_RQ_at_Ps;
@@ -142,11 +142,11 @@ void test_mnt_miller_loop(const std::string &annotation);
  * Gadget for verifying a double Miller loop (where the second is inverted).
  */
 template<typename ppT>
-class mnt_e_over_e_miller_loop_gadget : public gadget<libff::Fr<ppT> > {
+class mnt_e_over_e_miller_loop_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::vector<std::shared_ptr<Fqk_variable<ppT> > > g_RR_at_P1s;
     std::vector<std::shared_ptr<Fqk_variable<ppT> > > g_RQ_at_P1s;
@@ -193,11 +193,11 @@ void test_mnt_e_over_e_miller_loop(const std::string &annotation);
  * Gadget for verifying a triple Miller loop (where the third is inverted).
  */
 template<typename ppT>
-class mnt_e_times_e_over_e_miller_loop_gadget : public gadget<libff::Fr<ppT> > {
+class mnt_e_times_e_over_e_miller_loop_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
-    type libff::Fqe<other_curve<ppT> > FqeT;
-    type libff::Fqk<other_curve<ppT> > FqkT;
+    type ffec::Fr<ppT> FieldT;
+    type ffec::Fqe<other_curve<ppT> > FqeT;
+    type ffec::Fqk<other_curve<ppT> > FqkT;
 
     std::vector<std::shared_ptr<Fqk_variable<ppT> > > g_RR_at_P1s;
     std::vector<std::shared_ptr<Fqk_variable<ppT> > > g_RQ_at_P1s;
@@ -250,11 +250,11 @@ public:
 template<typename ppT>
 void test_mnt_e_times_e_over_e_miller_loop(const std::string &annotation);
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop.tcc>
 
-#endif // WEIERSTRASS_MILLER_LOOP_HPP_
+use libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop;
+
+//#endif // WEIERSTRASS_MILLER_LOOP_HPP_
 /** @file
  *****************************************************************************
 
@@ -268,15 +268,15 @@ use  <libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef WEIERSTRASS_MILLER_LOOP_TCC_
-#define WEIERSTRASS_MILLER_LOOP_TCC_
+//#ifndef WEIERSTRASS_MILLER_LOOP_TCC_
+// #define WEIERSTRASS_MILLER_LOOP_TCC_
 
-use  <libff/algebra/scalar_multiplication/wnaf.hpp>
+ use ffec::algebra::scalar_multiplication::wnaf;
 
-use  <libsnark/gadgetlib1/constraint_profiling.hpp>
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
+use libsnark/gadgetlib1/constraint_profiling;
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
 
-namespace libsnark {
+
 
 /*
   performs
@@ -302,7 +302,7 @@ mnt_miller_loop_dbl_line_eval<ppT>::mnt_miller_loop_dbl_line_eval(protoboard<Fie
     {
         gamma_twist->evaluate();
         const FqeT gamma_twist_const = gamma_twist->get_element();
-        g_RR_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(this->pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
+        g_RR_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(self.pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
                                                  *(c.gamma_X) + *(c.RY) * (-FieldT::one())));
     }
     else if (prec_P.P->X.is_constant())
@@ -335,7 +335,7 @@ void mnt_miller_loop_dbl_line_eval<ppT>::generate_r1cs_witness()
 {
     gamma_twist->evaluate();
     const FqeT gamma_twist_val = gamma_twist->get_element();
-    const FieldT PX_val = this->pb.lc_val(prec_P.P->X);
+    const FieldT PX_val = self.pb.lc_val(prec_P.P->X);
     const FqeT gamma_X_val = c.gamma_X->get_element();
     const FqeT RY_val = c.RY->get_element();
     const FqeT g_RR_at_P_c1_val = -PX_val * gamma_twist_val + gamma_X_val - RY_val;
@@ -375,7 +375,7 @@ gadget<FieldT>(pb, annotation_prefix), invert_Q(invert_Q), prec_P(prec_P), c(c),
     {
         gamma_twist->evaluate();
         const FqeT gamma_twist_const = gamma_twist->get_element();
-        g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(this->pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
+        g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(self.pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
                                                  *(c.gamma_X) + *(Q.Y) * (!invert_Q ? -FieldT::one() : FieldT::one())));
     }
     else if (prec_P.P->X.is_constant())
@@ -408,7 +408,7 @@ void mnt_miller_loop_add_line_eval<ppT>::generate_r1cs_witness()
 {
     gamma_twist->evaluate();
     const FqeT gamma_twist_val = gamma_twist->get_element();
-    const FieldT PX_val = this->pb.lc_val(prec_P.P->X);
+    const FieldT PX_val = self.pb.lc_val(prec_P.P->X);
     const FqeT gamma_X_val = c.gamma_X->get_element();
     const FqeT QY_val = Q.Y->get_element();
     const FqeT g_RQ_at_P_c1_val = -PX_val * gamma_twist_val + gamma_X_val + (!invert_Q ? -QY_val : QY_val);
@@ -444,12 +444,12 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
             continue;
         }
 
-        ++dbl_count;
+        dbl_count+=1;
         f_count += 2;
 
         if (NAF[i] != 0)
         {
-            ++add_count;
+            add_count+=1;
             f_count += 1;
         }
     }
@@ -462,7 +462,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
 
     for (size_t i = 0; i < f_count; ++i)
     {
-        fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_%zu", i)));
+        fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
 
     dbl_sqrs.resize(dbl_count);
@@ -487,13 +487,13 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
         doubling_steps[dbl_id].reset(new mnt_miller_loop_dbl_line_eval<ppT>(pb,
                                                                             prec_P, *prec_Q.coeffs[prec_id],
                                                                             g_RR_at_Ps[dbl_id],
-                                                                            FMT(annotation_prefix, " doubling_steps_%zu", dbl_id)));
-        ++prec_id;
-        dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_%zu", dbl_id)));
-        ++f_id;
-        dbl_muls[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_Ps[dbl_id], (f_id + 1 == f_count ? result : *fs[f_id+1]), FMT(annotation_prefix, " dbl_muls_%zu", dbl_id)));
-        ++f_id;
-        ++dbl_id;
+                                                                            FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
+        prec_id+=1;
+        dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
+        f_id+=1;
+        dbl_muls[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_Ps[dbl_id], (f_id + 1 == f_count ? result : *fs[f_id+1]), FMT(annotation_prefix, " dbl_muls_{}", dbl_id)));
+        f_id+=1;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
@@ -501,11 +501,11 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
                                                                                 NAF[i] < 0,
                                                                                 prec_P, *prec_Q.coeffs[prec_id], *prec_Q.Q,
                                                                                 g_RQ_at_Ps[add_id],
-                                                                                FMT(annotation_prefix, " addition_steps_%zu", add_id)));
-            ++prec_id;
-            add_muls[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_Ps[add_id], (f_id + 1 == f_count ? result : *fs[f_id+1]), FMT(annotation_prefix, " add_muls_%zu", add_id)));
-            ++f_id;
-            ++add_id;
+                                                                                FMT(annotation_prefix, " addition_steps_{}", add_id)));
+            prec_id+=1;
+            add_muls[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_Ps[add_id], (f_id + 1 == f_count ? result : *fs[f_id+1]), FMT(annotation_prefix, " add_muls_{}", add_id)));
+            f_id+=1;
+            add_id+=1;
         }
     }
 }
@@ -553,13 +553,13 @@ void mnt_miller_loop_gadget<ppT>::generate_r1cs_witness()
         doubling_steps[dbl_id]->generate_r1cs_witness();
         dbl_sqrs[dbl_id]->generate_r1cs_witness();
         dbl_muls[dbl_id]->generate_r1cs_witness();
-        ++dbl_id;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
             addition_steps[add_id]->generate_r1cs_witness();
             add_muls[add_id]->generate_r1cs_witness();
-            ++add_id;
+            add_id+=1;
         }
     }
 }
@@ -567,9 +567,9 @@ void mnt_miller_loop_gadget<ppT>::generate_r1cs_witness()
 template<typename ppT>
 void test_mnt_miller_loop(const std::string &annotation)
 {
-    protoboard<libff::Fr<ppT> > pb;
-    libff::G1<other_curve<ppT> > P_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    protoboard<ffec::Fr<ppT> > pb;
+    ffec::G1<other_curve<ppT> > P_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
     G1_variable<ppT> P(pb, "P");
     G2_variable<ppT> Q(pb, "Q");
@@ -602,14 +602,14 @@ void test_mnt_miller_loop(const std::string &annotation)
     Q.generate_r1cs_witness(Q_val);
     compute_prec_Q.generate_r1cs_witness();
     miller.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P = other_curve<ppT>::affine_ate_precompute_G1(P_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
-    libff::Fqk<other_curve<ppT> > native_result = other_curve<ppT>::affine_ate_miller_loop(native_prec_P, native_prec_Q);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P = other_curve<ppT>::affine_ate_precompute_G1(P_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
+    ffec::Fqk<other_curve<ppT> > native_result = other_curve<ppT>::affine_ate_miller_loop(native_prec_P, native_prec_Q);
 
-    assert(result.get_element() == native_result);
-    printf("number of constraints for Miller loop (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    assert!(result.get_element() == native_result);
+    print!("number of constraints for Miller loop (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename ppT>
@@ -637,12 +637,12 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
             continue;
         }
 
-        ++dbl_count;
+        dbl_count+=1;
         f_count += 3;
 
         if (NAF[i] != 0)
         {
-            ++add_count;
+            add_count+=1;
             f_count += 2;
         }
     }
@@ -659,7 +659,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
 
     for (size_t i = 0; i < f_count; ++i)
     {
-        fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_%zu", i)));
+        fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
 
     dbl_sqrs.resize(dbl_count);
@@ -686,20 +686,20 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         doubling_steps1[dbl_id].reset(new mnt_miller_loop_dbl_line_eval<ppT>(pb,
                                                                              prec_P1, *prec_Q1.coeffs[prec_id],
                                                                              g_RR_at_P1s[dbl_id],
-                                                                             FMT(annotation_prefix, " doubling_steps1_%zu", dbl_id)));
+                                                                             FMT(annotation_prefix, " doubling_steps1_{}", dbl_id)));
         doubling_steps2[dbl_id].reset(new mnt_miller_loop_dbl_line_eval<ppT>(pb,
                                                                              prec_P2, *prec_Q2.coeffs[prec_id],
                                                                              g_RR_at_P2s[dbl_id],
-                                                                             FMT(annotation_prefix, " doubling_steps2_%zu", dbl_id)));
-        ++prec_id;
+                                                                             FMT(annotation_prefix, " doubling_steps2_{}", dbl_id)));
+        prec_id+=1;
 
-        dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_%zu", dbl_id)));
-        ++f_id;
-        dbl_muls1[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_mul1s_%zu", dbl_id)));
-        ++f_id;
-        dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RR_at_P2s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_mul2s_%zu", dbl_id)));
-        ++f_id;
-        ++dbl_id;
+        dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
+        f_id+=1;
+        dbl_muls1[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_mul1s_{}", dbl_id)));
+        f_id+=1;
+        dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RR_at_P2s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_mul2s_{}", dbl_id)));
+        f_id+=1;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
@@ -707,18 +707,18 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
                                                                                  NAF[i] < 0,
                                                                                  prec_P1, *prec_Q1.coeffs[prec_id], *prec_Q1.Q,
                                                                                  g_RQ_at_P1s[add_id],
-                                                                                 FMT(annotation_prefix, " addition_steps1_%zu", add_id)));
+                                                                                 FMT(annotation_prefix, " addition_steps1_{}", add_id)));
             addition_steps2[add_id].reset(new mnt_miller_loop_add_line_eval<ppT>(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P2, *prec_Q2.coeffs[prec_id], *prec_Q2.Q,
                                                                                  g_RQ_at_P2s[add_id],
-                                                                                 FMT(annotation_prefix, " addition_steps2_%zu", add_id)));
-            ++prec_id;
-            add_muls1[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_mul1s_%zu", add_id)));
-            ++f_id;
-            add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RQ_at_P2s[add_id], *fs[f_id], FMT(annotation_prefix, " add_mul2s_%zu", add_id)));
-            ++f_id;
-            ++add_id;
+                                                                                 FMT(annotation_prefix, " addition_steps2_{}", add_id)));
+            prec_id+=1;
+            add_muls1[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_mul1s_{}", add_id)));
+            f_id+=1;
+            add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RQ_at_P2s[add_id], *fs[f_id], FMT(annotation_prefix, " add_mul2s_{}", add_id)));
+            f_id+=1;
+            add_id+=1;
         }
     }
 }
@@ -771,24 +771,24 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
         doubling_steps1[dbl_id]->generate_r1cs_witness();
         doubling_steps2[dbl_id]->generate_r1cs_witness();
         dbl_sqrs[dbl_id]->generate_r1cs_witness();
-        ++f_id;
+        f_id+=1;
         dbl_muls1[dbl_id]->generate_r1cs_witness();
-        ++f_id;
+        f_id+=1;
         (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RR_at_P2s[dbl_id]->get_element().inverse());
         dbl_muls2[dbl_id]->generate_r1cs_witness();
-        ++f_id;
-        ++dbl_id;
+        f_id+=1;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
             addition_steps1[add_id]->generate_r1cs_witness();
             addition_steps2[add_id]->generate_r1cs_witness();
             add_muls1[add_id]->generate_r1cs_witness();
-            ++f_id;
+            f_id+=1;
             (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RQ_at_P2s[add_id]->get_element().inverse());
             add_muls2[add_id]->generate_r1cs_witness();
-            ++f_id;
-            ++add_id;
+            f_id+=1;
+            add_id+=1;
         }
     }
 }
@@ -796,12 +796,12 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
 template<typename ppT>
 void test_mnt_e_over_e_miller_loop(const std::string &annotation)
 {
-    protoboard<libff::Fr<ppT> > pb;
-    libff::G1<other_curve<ppT> > P1_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q1_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    protoboard<ffec::Fr<ppT> > pb;
+    ffec::G1<other_curve<ppT> > P1_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q1_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
-    libff::G1<other_curve<ppT> > P2_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q2_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    ffec::G1<other_curve<ppT> > P2_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q2_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
     G1_variable<ppT> P1(pb, "P1");
     G2_variable<ppT> Q1(pb, "Q1");
@@ -845,17 +845,17 @@ void test_mnt_e_over_e_miller_loop(const std::string &annotation)
     Q2.generate_r1cs_witness(Q2_val);
     compute_prec_Q2.generate_r1cs_witness();
     miller.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P1 = other_curve<ppT>::affine_ate_precompute_G1(P1_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q1 = other_curve<ppT>::affine_ate_precompute_G2(Q1_val);
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P2 = other_curve<ppT>::affine_ate_precompute_G1(P2_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q2 = other_curve<ppT>::affine_ate_precompute_G2(Q2_val);
-    libff::Fqk<other_curve<ppT> > native_result = (other_curve<ppT>::affine_ate_miller_loop(native_prec_P1, native_prec_Q1) *
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P1 = other_curve<ppT>::affine_ate_precompute_G1(P1_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q1 = other_curve<ppT>::affine_ate_precompute_G2(Q1_val);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P2 = other_curve<ppT>::affine_ate_precompute_G1(P2_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q2 = other_curve<ppT>::affine_ate_precompute_G2(Q2_val);
+    ffec::Fqk<other_curve<ppT> > native_result = (other_curve<ppT>::affine_ate_miller_loop(native_prec_P1, native_prec_Q1) *
                                             other_curve<ppT>::affine_ate_miller_loop(native_prec_P2, native_prec_Q2).inverse());
 
-    assert(result.get_element() == native_result);
-    printf("number of constraints for e over e Miller loop (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    assert!(result.get_element() == native_result);
+    print!("number of constraints for e over e Miller loop (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
 template<typename ppT>
@@ -885,12 +885,12 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
             continue;
         }
 
-        ++dbl_count;
+        dbl_count+=1;
         f_count += 4;
 
         if (NAF[i] != 0)
         {
-            ++add_count;
+            add_count+=1;
             f_count += 3;
         }
     }
@@ -911,7 +911,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
 
     for (size_t i = 0; i < f_count; ++i)
     {
-        fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_%zu", i)));
+        fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
 
     dbl_sqrs.resize(dbl_count);
@@ -940,26 +940,26 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         doubling_steps1[dbl_id].reset(new mnt_miller_loop_dbl_line_eval<ppT>(pb,
                                                                              prec_P1, *prec_Q1.coeffs[prec_id],
                                                                              g_RR_at_P1s[dbl_id],
-                                                                             FMT(annotation_prefix, " doubling_steps1_%zu", dbl_id)));
+                                                                             FMT(annotation_prefix, " doubling_steps1_{}", dbl_id)));
         doubling_steps2[dbl_id].reset(new mnt_miller_loop_dbl_line_eval<ppT>(pb,
                                                                              prec_P2, *prec_Q2.coeffs[prec_id],
                                                                              g_RR_at_P2s[dbl_id],
-                                                                             FMT(annotation_prefix, " doubling_steps2_%zu", dbl_id)));
+                                                                             FMT(annotation_prefix, " doubling_steps2_{}", dbl_id)));
         doubling_steps3[dbl_id].reset(new mnt_miller_loop_dbl_line_eval<ppT>(pb,
                                                                              prec_P3, *prec_Q3.coeffs[prec_id],
                                                                              g_RR_at_P3s[dbl_id],
-                                                                             FMT(annotation_prefix, " doubling_steps3_%zu", dbl_id)));
-        ++prec_id;
+                                                                             FMT(annotation_prefix, " doubling_steps3_{}", dbl_id)));
+        prec_id+=1;
 
-        dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_%zu", dbl_id)));
-        ++f_id;
-        dbl_muls1[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls1_%zu", dbl_id)));
-        ++f_id;
-        dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P2s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls2_%zu", dbl_id)));
-        ++f_id;
-        dbl_muls3[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RR_at_P3s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_muls3_%zu", dbl_id)));
-        ++f_id;
-        ++dbl_id;
+        dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
+        f_id+=1;
+        dbl_muls1[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls1_{}", dbl_id)));
+        f_id+=1;
+        dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P2s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls2_{}", dbl_id)));
+        f_id+=1;
+        dbl_muls3[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RR_at_P3s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_muls3_{}", dbl_id)));
+        f_id+=1;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
@@ -967,25 +967,25 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
                                                                                  NAF[i] < 0,
                                                                                  prec_P1, *prec_Q1.coeffs[prec_id], *prec_Q1.Q,
                                                                                  g_RQ_at_P1s[add_id],
-                                                                                 FMT(annotation_prefix, " addition_steps1_%zu", add_id)));
+                                                                                 FMT(annotation_prefix, " addition_steps1_{}", add_id)));
             addition_steps2[add_id].reset(new mnt_miller_loop_add_line_eval<ppT>(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P2, *prec_Q2.coeffs[prec_id], *prec_Q2.Q,
                                                                                  g_RQ_at_P2s[add_id],
-                                                                                 FMT(annotation_prefix, " addition_steps2_%zu", add_id)));
+                                                                                 FMT(annotation_prefix, " addition_steps2_{}", add_id)));
             addition_steps3[add_id].reset(new mnt_miller_loop_add_line_eval<ppT>(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P3, *prec_Q3.coeffs[prec_id], *prec_Q3.Q,
                                                                                  g_RQ_at_P3s[add_id],
-                                                                                 FMT(annotation_prefix, " addition_steps3_%zu", add_id)));
-            ++prec_id;
-            add_muls1[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls1_%zu", add_id)));
-            ++f_id;
-            add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P2s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls2_%zu", add_id)));
-            ++f_id;
-            add_muls3[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RQ_at_P3s[add_id], *fs[f_id], FMT(annotation_prefix, " add_muls3_%zu", add_id)));
-            ++f_id;
-            ++add_id;
+                                                                                 FMT(annotation_prefix, " addition_steps3_{}", add_id)));
+            prec_id+=1;
+            add_muls1[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls1_{}", add_id)));
+            f_id+=1;
+            add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P2s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls2_{}", add_id)));
+            f_id+=1;
+            add_muls3[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RQ_at_P3s[add_id], *fs[f_id], FMT(annotation_prefix, " add_muls3_{}", add_id)));
+            f_id+=1;
+            add_id+=1;
         }
     }
 }
@@ -1043,15 +1043,15 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
         doubling_steps2[dbl_id]->generate_r1cs_witness();
         doubling_steps3[dbl_id]->generate_r1cs_witness();
         dbl_sqrs[dbl_id]->generate_r1cs_witness();
-        ++f_id;
+        f_id+=1;
         dbl_muls1[dbl_id]->generate_r1cs_witness();
-        ++f_id;
+        f_id+=1;
         dbl_muls2[dbl_id]->generate_r1cs_witness();
-        ++f_id;
+        f_id+=1;
         (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RR_at_P3s[dbl_id]->get_element().inverse());
         dbl_muls3[dbl_id]->generate_r1cs_witness();
-        ++f_id;
-        ++dbl_id;
+        f_id+=1;
+        dbl_id+=1;
 
         if (NAF[i] != 0)
         {
@@ -1059,13 +1059,13 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
             addition_steps2[add_id]->generate_r1cs_witness();
             addition_steps3[add_id]->generate_r1cs_witness();
             add_muls1[add_id]->generate_r1cs_witness();
-            ++f_id;
+            f_id+=1;
             add_muls2[add_id]->generate_r1cs_witness();
-            ++f_id;
+            f_id+=1;
             (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RQ_at_P3s[add_id]->get_element().inverse());
             add_muls3[add_id]->generate_r1cs_witness();
-            ++f_id;
-            ++add_id;
+            f_id+=1;
+            add_id+=1;
         }
     }
 }
@@ -1073,15 +1073,15 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
 template<typename ppT>
 void test_mnt_e_times_e_over_e_miller_loop(const std::string &annotation)
 {
-    protoboard<libff::Fr<ppT> > pb;
-    libff::G1<other_curve<ppT> > P1_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q1_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    protoboard<ffec::Fr<ppT> > pb;
+    ffec::G1<other_curve<ppT> > P1_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q1_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
-    libff::G1<other_curve<ppT> > P2_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q2_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    ffec::G1<other_curve<ppT> > P2_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q2_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
-    libff::G1<other_curve<ppT> > P3_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G1<other_curve<ppT> >::one();
-    libff::G2<other_curve<ppT> > Q3_val = libff::Fr<other_curve<ppT> >::random_element() * libff::G2<other_curve<ppT> >::one();
+    ffec::G1<other_curve<ppT> > P3_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    ffec::G2<other_curve<ppT> > Q3_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
 
     G1_variable<ppT> P1(pb, "P1");
     G2_variable<ppT> Q1(pb, "Q1");
@@ -1137,22 +1137,22 @@ void test_mnt_e_times_e_over_e_miller_loop(const std::string &annotation)
     Q3.generate_r1cs_witness(Q3_val);
     compute_prec_Q3.generate_r1cs_witness();
     miller.generate_r1cs_witness();
-    assert(pb.is_satisfied());
+    assert!(pb.is_satisfied());
 
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P1 = other_curve<ppT>::affine_ate_precompute_G1(P1_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q1 = other_curve<ppT>::affine_ate_precompute_G2(Q1_val);
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P2 = other_curve<ppT>::affine_ate_precompute_G1(P2_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q2 = other_curve<ppT>::affine_ate_precompute_G2(Q2_val);
-    libff::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P3 = other_curve<ppT>::affine_ate_precompute_G1(P3_val);
-    libff::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q3 = other_curve<ppT>::affine_ate_precompute_G2(Q3_val);
-    libff::Fqk<other_curve<ppT> > native_result = (other_curve<ppT>::affine_ate_miller_loop(native_prec_P1, native_prec_Q1) *
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P1 = other_curve<ppT>::affine_ate_precompute_G1(P1_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q1 = other_curve<ppT>::affine_ate_precompute_G2(Q1_val);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P2 = other_curve<ppT>::affine_ate_precompute_G1(P2_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q2 = other_curve<ppT>::affine_ate_precompute_G2(Q2_val);
+    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_prec_P3 = other_curve<ppT>::affine_ate_precompute_G1(P3_val);
+    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_prec_Q3 = other_curve<ppT>::affine_ate_precompute_G2(Q3_val);
+    ffec::Fqk<other_curve<ppT> > native_result = (other_curve<ppT>::affine_ate_miller_loop(native_prec_P1, native_prec_Q1) *
                                             other_curve<ppT>::affine_ate_miller_loop(native_prec_P2, native_prec_Q2) *
                                             other_curve<ppT>::affine_ate_miller_loop(native_prec_P3, native_prec_Q3).inverse());
 
-    assert(result.get_element() == native_result);
-    printf("number of constraints for e times e over e Miller loop (Fr is %s)  = %zu\n", annotation.c_str(), pb.num_constraints());
+    assert!(result.get_element() == native_result);
+    print!("number of constraints for e times e over e Miller loop (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
 }
 
-} // libsnark
 
-#endif // WEIERSTRASS_MILLER_LOOP_TCC_
+
+//#endif // WEIERSTRASS_MILLER_LOOP_TCC_

@@ -21,8 +21,8 @@
 #include "libff/algebra/fields/binary/gf64.hpp"
 #include "libff/common/utils.hpp"
 
-#include <gtest/gtest.h>
-#include <set>
+//#include <gtest/gtest.h>
+//#include <set>
 
 using namespace libff;
 
@@ -379,7 +379,7 @@ TEST_F(AllFieldsTest, AllFieldsApiTest)
     test_field<gf256>();
 }
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 TEST_F(AllFieldsTest, AllFieldsOpCountTest)
 {
     test_op_profiling<AllFieldsTest::Fp>();
@@ -398,7 +398,7 @@ TEST_F(AllFieldsTest, AllFieldsOpCountTest)
     test_op_profiling<gf192>();
     test_op_profiling<gf256>();
 }
-#endif
+//#endif
 
 TEST_F(AllFieldsTest, FpnFieldsApiTest)
 {

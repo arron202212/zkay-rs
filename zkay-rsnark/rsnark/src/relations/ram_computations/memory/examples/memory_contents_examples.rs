@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MEMORY_CONTENTS_EXAMPLES_HPP_
-#define MEMORY_CONTENTS_EXAMPLES_HPP_
+//#ifndef MEMORY_CONTENTS_EXAMPLES_HPP_
+// #define MEMORY_CONTENTS_EXAMPLES_HPP_
 
-use  <libsnark/relations/ram_computations/memory/memory_interface.hpp>
+use libsnark/relations/ram_computations/memory/memory_interface;
 
-namespace libsnark {
+
 
 /**
  * Sample memory contents consisting of two blocks of random values;
@@ -34,9 +34,9 @@ memory_contents random_memory_contents(const size_t num_addresses,
                                        const size_t value_size,
                                        const size_t num_filled);
 
-} // libsnark
 
-#endif // MEMORY_CONTENTS_EXAMPLES_HPP_
+
+//#endif // MEMORY_CONTENTS_EXAMPLES_HPP_
 /** @file
  *****************************************************************************
 
@@ -54,9 +54,9 @@ use  <cstdlib>
 use  <map>
 use  <set>
 
-use  <libsnark/relations/ram_computations/memory/examples/memory_contents_examples.hpp>
+use libsnark/relations/ram_computations/memory/examples/memory_contents_examples;
 
-namespace libsnark {
+
 
 memory_contents block_memory_contents(const size_t num_addresses,
                                       const size_t value_size,
@@ -103,4 +103,4 @@ memory_contents random_memory_contents(const size_t num_addresses,
     return result;
 }
 
-} // libsnark
+

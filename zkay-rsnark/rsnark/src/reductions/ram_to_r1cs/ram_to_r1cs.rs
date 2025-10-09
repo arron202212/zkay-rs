@@ -13,12 +13,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_TO_R1CS_HPP_
-#define RAM_TO_R1CS_HPP_
+//#ifndef RAM_TO_R1CS_HPP_
+// #define RAM_TO_R1CS_HPP_
 
-use  <libsnark/reductions/ram_to_r1cs/gadgets/ram_universal_gadget.hpp>
+use libsnark/reductions/ram_to_r1cs/gadgets/ram_universal_gadget;
 
-namespace libsnark {
+
 
 template<typename ramT>
 class ram_to_r1cs {
@@ -52,11 +52,11 @@ public:
                                                                        const ram_boot_trace<ramT>& boot_trace);
 };
 
-} // libsnark
 
-use  <libsnark/reductions/ram_to_r1cs/ram_to_r1cs.tcc>
 
-#endif // RAM_TO_R1CS_HPP_
+use libsnark/reductions/ram_to_r1cs/ram_to_r1cs;
+
+//#endif // RAM_TO_R1CS_HPP_
 /** @file
  *****************************************************************************
 
@@ -71,12 +71,12 @@ use  <libsnark/reductions/ram_to_r1cs/ram_to_r1cs.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_TO_R1CS_TCC_
-#define RAM_TO_R1CS_TCC_
+//#ifndef RAM_TO_R1CS_TCC_
+// #define RAM_TO_R1CS_TCC_
 
 use  <set>
 
-namespace libsnark {
+
 
 template<typename ramT>
 ram_to_r1cs<ramT>::ram_to_r1cs(const ram_architecture_params<ramT> &ap,
@@ -98,9 +98,9 @@ ram_to_r1cs<ramT>::ram_to_r1cs(const ram_architecture_params<ramT> &ap,
 template<typename ramT>
 void ram_to_r1cs<ramT>::instance_map()
 {
-    libff::enter_block("Call to instance_map of ram_to_r1cs");
+    ffec::enter_block("Call to instance_map of ram_to_r1cs");
     universal_gadget->generate_r1cs_constraints();
-    libff::leave_block("Call to instance_map of ram_to_r1cs");
+    ffec::leave_block("Call to instance_map of ram_to_r1cs");
 }
 
 template<typename ramT>
@@ -113,14 +113,14 @@ template<typename ramT>
 r1cs_primary_input<ram_base_field<ramT> > ram_to_r1cs<ramT>::auxiliary_input_map(const ram_boot_trace<ramT> &boot_trace,
                                                                                  const ram_input_tape<ramT> &auxiliary_input)
 {
-    libff::enter_block("Call to witness_map of ram_to_r1cs");
+    ffec::enter_block("Call to witness_map of ram_to_r1cs");
     universal_gadget->generate_r1cs_witness(boot_trace, auxiliary_input);
-#ifdef DEBUG
+// #ifdef DEBUG
     const r1cs_primary_input<FieldT> primary_input_from_input_map = ram_to_r1cs<ramT>::primary_input_map(main_protoboard.ap, boot_trace_size_bound, boot_trace);
     const r1cs_primary_input<FieldT> primary_input_from_witness_map = main_protoboard.primary_input();
-    assert(primary_input_from_input_map == primary_input_from_witness_map);
-#endif
-    libff::leave_block("Call to witness_map of ram_to_r1cs");
+    assert!(primary_input_from_input_map == primary_input_from_witness_map);
+//#endif
+    ffec::leave_block("Call to witness_map of ram_to_r1cs");
     return main_protoboard.auxiliary_input();
 }
 
@@ -145,14 +145,14 @@ std::vector<ram_base_field<ramT> > ram_to_r1cs<ramT>::pack_primary_input_address
     const size_t address = av.first;
     const size_t contents = av.second;
 
-    const libff::bit_vector address_bits = libff::convert_field_element_to_bit_vector<FieldT>(FieldT(address, true), ap.address_size());
-    const libff::bit_vector contents_bits = libff::convert_field_element_to_bit_vector<FieldT>(FieldT(contents, true), ap.value_size());
+    const ffec::bit_vector address_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(address, true), ap.address_size());
+    const ffec::bit_vector contents_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(contents, true), ap.value_size());
 
-    libff::bit_vector trace_element_bits;
+    ffec::bit_vector trace_element_bits;
     trace_element_bits.insert(trace_element_bits.end(), address_bits.begin(), address_bits.end());
     trace_element_bits.insert(trace_element_bits.end(), contents_bits.begin(), contents_bits.end());
 
-    const std::vector<FieldT> trace_element = libff::pack_bit_vector_into_field_element_vector<FieldT>(trace_element_bits);
+    const std::vector<FieldT> trace_element = ffec::pack_bit_vector_into_field_element_vector<FieldT>(trace_element_bits);
 
     return trace_element;
 }
@@ -175,8 +175,8 @@ r1cs_primary_input<ram_base_field<ramT> > ram_to_r1cs<ramT>::primary_input_map(c
         const size_t input_pos = it.first;
         const address_and_value av = it.second;
 
-        assert(input_pos < boot_trace_size_bound);
-        assert(bound_input_locations.find(input_pos) == bound_input_locations.end());
+        assert!(input_pos < boot_trace_size_bound);
+        assert!(bound_input_locations.find(input_pos) == bound_input_locations.end());
 
         const std::vector<FieldT> packed_input_element = ram_to_r1cs<ramT>::pack_primary_input_address_and_value(ap, av);
         std::copy(packed_input_element.begin(), packed_input_element.end(), result.begin() + packed_input_element_size * (boot_trace_size_bound - 1 - input_pos));
@@ -187,6 +187,6 @@ r1cs_primary_input<ram_base_field<ramT> > ram_to_r1cs<ramT>::primary_input_map(c
     return result;
 }
 
-} // libsnark
 
-#endif // RAM_TO_R1CS_TCC_
+
+//#endif // RAM_TO_R1CS_TCC_

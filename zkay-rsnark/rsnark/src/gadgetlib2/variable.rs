@@ -7,8 +7,8 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
-#define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
+//#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
+// #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
 
 use  <cstddef>
 use  <iostream>
@@ -19,8 +19,8 @@ use  <unordered_set>
 use  <utility>
 use  <vector>
 
-use  <libsnark/gadgetlib2/infrastructure.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
+use libsnark/gadgetlib2/infrastructure;
+use libsnark/gadgetlib2/pp;
 
 namespace gadgetlib2 {
 
@@ -195,7 +195,7 @@ public:
     /// @return a unique_ptr to a new copy of the element's multiplicative inverse
     virtual FElemInterfacePtr inverse() const;
     long asLong() const {return contents_;}
-    int getBit(unsigned int i) const { libff::UNUSED(i); GADGETLIB_FATAL("Cannot get bit from FConst."); }
+    int getBit(unsigned int i) const { ffec::UNUSED(i); GADGETLIB_FATAL("Cannot get bit from FConst."); }
     virtual FElemInterface& power(long exponent);
 
     friend class FElem; // allow constructor call
@@ -271,9 +271,9 @@ class Variable {
 private:
     VarIndex_t index_;  ///< This index differentiates and identifies Variable instances.
     static VarIndex_t nextFreeIndex_; ///< Monotonically-increasing counter to allocate disinct indices.
-#ifdef DEBUG
+// #ifdef DEBUG
     ::std::string name_;
-#endif
+//#endif
 
    /**
     * @brief allocates the variable
@@ -580,9 +580,9 @@ inline Polynomial operator-(const Polynomial& src) {return Polynomial(FElem(0)) 
 
 } // namespace gadgetlib2
 
-use  <libsnark/gadgetlib2/variable_operators.hpp>
+use libsnark/gadgetlib2/variable_operators;
 
-#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
+//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
 /** @file
  *****************************************************************************
  Implementation of the low level objects needed for field arithmetization.
@@ -598,9 +598,9 @@ use  <set>
 use  <stdexcept>
 use  <vector>
 
-use  <libsnark/gadgetlib2/infrastructure.hpp>
-use  <libsnark/gadgetlib2/pp.hpp>
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/infrastructure;
+use libsnark/gadgetlib2/pp;
+use libsnark/gadgetlib2/variable;
 
 using ::std::string;
 using ::std::stringstream;
@@ -660,7 +660,7 @@ FElem& FElem::operator=(const FElem& other) {
 
 FElem& FElem::operator=(FElem&& other) {
 	if (fieldType() == other.fieldType() || fieldType() == AGNOSTIC) {
-		elem_ = ::std::move(other.elem_);
+		elem_ = ::(other.elem_);
 	} else if (other.elem_->fieldType() != AGNOSTIC) {
 		GADGETLIB_FATAL(
 				"Attempted to move assign field element of incorrect type");
@@ -680,7 +680,7 @@ bool fieldMustBePromotedForArithmetic(const FieldType& lhsField,
 }
 
 void FElem::promoteToFieldType(FieldType type) {
-	if (!fieldMustBePromotedForArithmetic(this->fieldType(), type)) {
+	if (!fieldMustBePromotedForArithmetic(self.fieldType(), type)) {
 		return;
 	}
 	if (type == R1P) {
@@ -718,7 +718,7 @@ FElem FElem::inverse(const FieldType& fieldType) {
 
 int FElem::getBit(unsigned int i, const FieldType& fieldType) {
     promoteToFieldType(fieldType);
-    if (this->fieldType() == fieldType) {
+    if (self.fieldType() == fieldType) {
         return elem_->getBit(i);
     } else {
         GADGETLIB_FATAL("Attempted to extract bits from incompatible field type.");
@@ -846,18 +846,18 @@ long R1P_Elem::asLong() const {
 /*************************************************************************************************/
 VarIndex_t Variable::nextFreeIndex_ = 0;
 
-#ifdef DEBUG
+// #ifdef DEBUG
 Variable::Variable(const string& name) : index_(nextFreeIndex_++), name_(name) {
 	GADGETLIB_ASSERT(nextFreeIndex_ > 0, GADGETLIB2_FMT("Variable index overflow has occured, maximum number of "
 					"Variables is %lu", ULONG_MAX));
 }
 #else
 Variable::Variable(const string& name) : index_(nextFreeIndex_++) {
-    libff::UNUSED(name);
+    ffec::UNUSED(name);
     GADGETLIB_ASSERT(nextFreeIndex_ > 0, GADGETLIB2_FMT("Variable index overflow has occured, maximum number of "
                                          "Variables is %lu", ULONG_MAX));
 }
-#endif
+//#endif
 
 Variable::~Variable() {
 }
@@ -894,7 +894,7 @@ FElem Variable::eval(const VariableAssignment& assignment) const {
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-#ifdef DEBUG
+// #ifdef DEBUG
 VariableArray::VariableArray(const string& name) : VariableArrayContents(), name_(name) {}
 VariableArray::VariableArray(const int size, const ::std::string& name) : VariableArrayContents() {
     for (int i = 0; i < size; ++i) {
@@ -917,12 +917,12 @@ VariableArray::VariableArray(const size_t size, const ::std::string& name) : Var
 }
 
 
-VariableArray::VariableArray(const string& name) : VariableArrayContents() { libff::UNUSED(name); }
+VariableArray::VariableArray(const string& name) : VariableArrayContents() { ffec::UNUSED(name); }
 VariableArray::VariableArray(const int size, const ::std::string& name)
-    : VariableArrayContents(size) { libff::UNUSED(name); }
+    : VariableArrayContents(size) { ffec::UNUSED(name); }
 VariableArray::VariableArray(const size_t size, const ::std::string& name)
-    : VariableArrayContents(size) { libff::UNUSED(name); }
-#endif
+    : VariableArrayContents(size) { ffec::UNUSED(name); }
+//#endif
 
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
@@ -1017,7 +1017,7 @@ PackedWordArray DualWordArray::packed() const {
 void DualWordArray::push_back(const DualWord& dualWord) {
 	multipackedContents_.push_back(dualWord.multipacked());
 	unpackedContents_.push_back(dualWord.unpacked());
-	++numElements_;
+	numElements_+=1;
 }
 
 DualWord DualWordArray::at(size_t i) const {
@@ -1111,7 +1111,7 @@ LinearCombination& LinearCombination::operator+=(
 				indexMap_[lt->variable().getIndex()] = i++;
 
 			}
-			++lt;
+			lt+=1;
 		}
 		linearTerms_ = newVec;
 	}
@@ -1157,7 +1157,7 @@ LinearCombination& LinearCombination::operator-=(
 				newVec.push_back(*lt);
 				indexMap_[lt->variable().getIndex()] = i++;
 			}
-			++lt;
+			lt+=1;
 		}
 		linearTerms_ = newVec;
 	}
@@ -1183,7 +1183,7 @@ FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 }
 
 ::std::string LinearCombination::asString() const {
-#ifdef DEBUG
+// #ifdef DEBUG
 	::std::string retval;
 	auto it = linearTerms_.begin();
 	if (it == linearTerms_.end()) {
@@ -1191,7 +1191,7 @@ FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 	} else {
 		retval += it->asString();
 	}
-	for(++it; it != linearTerms_.end(); ++it) {
+	for(it+=1; it != linearTerms_.end(); ++it) {
 		retval += " + " + it->asString();
 	}
 	if (constant_ != 0) {
@@ -1200,7 +1200,7 @@ FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 	return retval;
 #else // ifdef DEBUG
 	return "";
-#endif // ifdef DEBUG
+//#endif // ifdef DEBUG
 }
 
 const Variable::set LinearCombination::getUsedVariables() const {
@@ -1257,7 +1257,7 @@ const FElem Monomial::getCoefficient() const {
 }
 
 ::std::string Monomial::asString() const {
-#ifdef DEBUG
+// #ifdef DEBUG
 	if (variables_.size() == 0) {
 		return coeff_.asString();
 	}
@@ -1267,13 +1267,13 @@ const FElem Monomial::getCoefficient() const {
 	}
 	auto iter = variables_.begin();
 	retval += iter->name();
-	for(++iter; iter != variables_.end(); ++iter) {
+	for(iter+=1; iter != variables_.end(); ++iter) {
 		retval += "*" + iter->name();
 	}
 	return retval;
 #else // ifdef DEBUG
 	return "";
-#endif // ifdef DEBUG
+//#endif // ifdef DEBUG
 }
 
 Monomial Monomial::operator-() const {
@@ -1342,7 +1342,7 @@ const FElem Polynomial::getConstant() const {
 	string retval;
 	auto iter = monomials_.begin();
 	retval += iter->asString();
-	for (++iter; iter != monomials_.end(); ++iter) {
+	for (iter+=1; iter != monomials_.end(); ++iter) {
 		retval += " + " + iter->asString();
 	}
 	if (constant_ != 0) {
@@ -1367,10 +1367,10 @@ Polynomial& Polynomial::operator*=(const Polynomial& other) {
 		newMonomials.push_back(thisMonomial * other.constant_);
 	}
 	for (const Monomial& otherMonomial : other.monomials_) {
-		newMonomials.push_back(otherMonomial * this->constant_);
+		newMonomials.push_back(otherMonomial * self.constant_);
 	}
 	constant_ *= other.constant_;
-	monomials_ = ::std::move(newMonomials);
+	monomials_ = ::(newMonomials);
 	return *this;
 }
 

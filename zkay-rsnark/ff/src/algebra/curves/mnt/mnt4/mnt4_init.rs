@@ -9,13 +9,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT4_INIT_HPP_
-#define MNT4_INIT_HPP_
+//#ifndef MNT4_INIT_HPP_
+// #define MNT4_INIT_HPP_
 
-#include <libff/algebra/curves/public_params.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_fields.hpp>
+use libff/algebra/curves/public_params;
+use libff/algebra/curves/mnt/mnt4/mnt4_fields;
 
-namespace libff {
+// namespace libff {
 
 // parameters for twisted short Weierstrass curve E'/Fq2 : y^2 = x^3 + (a * twist^2) * x + (b * twist^3)
 extern mnt4_Fq2 mnt4_twist;
@@ -41,9 +41,9 @@ void init_mnt4_params();
 class mnt4_G1;
 class mnt4_G2;
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT4_INIT_HPP_
+//#endif // MNT4_INIT_HPP_
 /** @file
  *****************************************************************************
 
@@ -57,11 +57,11 @@ class mnt4_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt4/mnt4_g1.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_g2.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_init.hpp>
+use libff/algebra/curves/mnt/mnt4/mnt4_g1;
+use libff/algebra/curves/mnt/mnt4/mnt4_g2;
+use libff/algebra/curves/mnt/mnt4/mnt4_init;
 
-namespace libff {
+// namespace libff {
 
 mnt4_Fq2 mnt4_twist;
 mnt4_Fq2 mnt4_twist_coeff_a;
@@ -242,4 +242,4 @@ void init_mnt4_params()
     mnt4_final_exponent_last_chunk_w1 = bigint<mnt4_q_limbs>("1");
 }
 
-} // namespace libff
+// } // namespace libff

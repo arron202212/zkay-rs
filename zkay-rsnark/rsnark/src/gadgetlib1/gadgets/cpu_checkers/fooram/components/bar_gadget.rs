@@ -9,13 +9,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BAR_GADGET_HPP_
-#define BAR_GADGET_HPP_
+//#ifndef BAR_GADGET_HPP_
+// #define BAR_GADGET_HPP_
 
-use  <libsnark/gadgetlib1/gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
+use libsnark/gadgetlib1/gadget;
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
 
-namespace libsnark {
+
 
 /**
  * The bar gadget checks linear combination
@@ -57,11 +57,11 @@ public:
     void generate_r1cs_witness();
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/bar_gadget.tcc>
 
-#endif // BAR_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/bar_gadget;
+
+//#endif // BAR_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -75,10 +75,10 @@ use  <libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/bar_gadget.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BAR_GADGET_TCC_
-#define BAR_GADGET_TCC_
+//#ifndef BAR_GADGET_TCC_
+// #define BAR_GADGET_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT>
 bar_gadget<FieldT>::bar_gadget(protoboard<FieldT> &pb,
@@ -95,7 +95,7 @@ bar_gadget<FieldT>::bar_gadget(protoboard<FieldT> &pb,
     b(b),
     Z_packed(Z_packed)
 {
-    assert(X.size() == Y.size());
+    assert!(X.size() == Y.size());
     width = X.size();
 
     result.allocate(pb, FMT(annotation_prefix, " result"));
@@ -115,18 +115,18 @@ void bar_gadget<FieldT>::generate_r1cs_constraints()
     unpack_result->generate_r1cs_constraints(true);
     pack_Z->generate_r1cs_constraints(false);
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, a * pb_packing_sum<FieldT>(X) + b * pb_packing_sum<FieldT>(Y), result), FMT(this->annotation_prefix, " compute_result"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, a * pb_packing_sum<FieldT>(X) + b * pb_packing_sum<FieldT>(Y), result), FMT(self.annotation_prefix, " compute_result"));
 }
 
 template<typename FieldT>
 void bar_gadget<FieldT>::generate_r1cs_witness()
 {
-    this->pb.val(result) = X.get_field_element_from_bits(this->pb) * a + Y.get_field_element_from_bits(this->pb) * b;
+    self.pb.val(result) = X.get_field_element_from_bits(self.pb) * a + Y.get_field_element_from_bits(self.pb) * b;
     unpack_result->generate_r1cs_witness_from_packed();
 
     pack_Z->generate_r1cs_witness_from_bits();
 }
 
-} // libsnark
 
-#endif // BAR_GADGET_TCC_
+
+//#endif // BAR_GADGET_TCC_

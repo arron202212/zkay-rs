@@ -10,26 +10,26 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_PPZKSNARK_PP_HPP_
-#define TINYRAM_PPZKSNARK_PP_HPP_
+//#ifndef TINYRAM_PPZKSNARK_PP_HPP_
+// #define TINYRAM_PPZKSNARK_PP_HPP_
 
-use  <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_params.hpp>
+use crate::common::default_types::r1cs_ppzksnark_pp;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
 
-namespace libsnark {
+
 
 class default_tinyram_ppzksnark_pp {
 public:
     type default_r1cs_ppzksnark_pp snark_pp;
-    type libff::Fr<default_r1cs_ppzksnark_pp> FieldT;
+    type ffec::Fr<default_r1cs_ppzksnark_pp> FieldT;
     type ram_tinyram<FieldT> machine_pp;
 
     static void init_public_params();
 };
 
-} // libsnark
 
-#endif // TINYRAM_PPZKSNARK_PP_HPP_
+
+//#endif // TINYRAM_PPZKSNARK_PP_HPP_
 /** @file
  *****************************************************************************
 
@@ -41,13 +41,13 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libsnark/common/default_types/tinyram_ppzksnark_pp.hpp>
+use crate::common::default_types::tinyram_ppzksnark_pp;
 
-namespace libsnark {
+
 
 void default_tinyram_ppzksnark_pp::init_public_params()
 {
     snark_pp::init_public_params();
 }
 
-} // libsnark
+

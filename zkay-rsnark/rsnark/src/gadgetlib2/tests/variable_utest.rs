@@ -11,8 +11,8 @@ use  <set>
 
 use  "depends/gtest/googletest/include/gtest/gtest.h"
 
-use  <libsnark/gadgetlib2/pp.hpp>
-use  <libsnark/gadgetlib2/variable.hpp>
+use libsnark/gadgetlib2/pp;
+use libsnark/gadgetlib2/variable;
 
 using ::std::set;
 using namespace gadgetlib2;
@@ -130,11 +130,11 @@ TEST(gadgetLib2, FElem_FConst_assignment) {
 TEST(gadgetLib2, FElem_FConst_asString) {
     initPublicParamsFromDefaultPp();
     FElem e0(42);
-    #ifdef DEBUG
+    // #ifdef DEBUG
         EXPECT_EQ(e0.asString(), "42");
     #else
         EXPECT_EQ(e0.asString(), "");
-    #endif
+    //#endif
 }
 
 TEST(gadgetLib2, FElem_FConst_fieldType) {
@@ -275,11 +275,11 @@ TEST(gadgetLib2, FElem_R1P_Elem_assignFromLong) {
 TEST(gadgetLib2, FElem_R1P_Elem_asString) {
     initPublicParamsFromDefaultPp();
     FElem e1 = long(42);
-    #ifdef DEBUG
+    // #ifdef DEBUG
         EXPECT_EQ(e1.asString(), "42");
     #else
         EXPECT_EQ(e1.asString(), "");
-    #endif
+    //#endif
 }
 
 TEST(gadgetLib2, FElem_R1P_Elem_fieldType) {
@@ -421,7 +421,7 @@ TEST(gadgetLib2, LinearTermAsString) {
     initPublicParamsFromDefaultPp();
     VariableArray x(10, "x");
     VariableAssignment ass;
-    #ifdef DEBUG
+    // #ifdef DEBUG
         // R1P
         LinearTerm lt10(x[0], Fp(-1));
         EXPECT_EQ(lt10.asString(), "-1 * x[0]");
@@ -440,7 +440,7 @@ TEST(gadgetLib2, LinearTermAsString) {
         EXPECT_EQ(lt32.asString(), "x[0]");
         LinearTerm lt33(x[0], Fp(2));
         EXPECT_EQ(lt33.asString(), "2 * x[0]");
-    #endif // DEBUG
+    //#endif // DEBUG
 }
 
 TEST(gadgetLib2, LinearTermOperatorTimes) {

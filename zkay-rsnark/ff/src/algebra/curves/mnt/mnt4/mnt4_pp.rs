@@ -9,16 +9,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT4_PP_HPP_
-#define MNT4_PP_HPP_
+//#ifndef MNT4_PP_HPP_
+// #define MNT4_PP_HPP_
 
-#include <libff/algebra/curves/mnt/mnt4/mnt4_g1.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_g2.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_init.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_pairing.hpp>
-#include <libff/algebra/curves/public_params.hpp>
+use libff/algebra/curves/mnt/mnt4/mnt4_g1;
+use libff/algebra/curves/mnt/mnt4/mnt4_g2;
+use libff/algebra/curves/mnt/mnt4/mnt4_init;
+use libff/algebra/curves/mnt/mnt4/mnt4_pairing;
+use libff/algebra/curves/public_params;
 
-namespace libff {
+// namespace libff {
 
 class mnt4_pp {
 public:
@@ -75,9 +75,9 @@ public:
                                            const mnt4_G2 &Q);
 };
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT4_PP_HPP_
+//#endif // MNT4_PP_HPP_
 /** @file
  *****************************************************************************
 
@@ -91,9 +91,9 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt4/mnt4_pp.hpp>
+use libff/algebra/curves/mnt/mnt4/mnt4_pp;
 
-namespace libff {
+// namespace libff {
 
 void mnt4_pp::init_public_params()
 {
@@ -182,4 +182,4 @@ mnt4_Fq4 mnt4_pp::affine_reduced_pairing(const mnt4_G1 &P,
     return mnt4_affine_reduced_pairing(P, Q);
 }
 
-} // namespace libff
+// } // namespace libff

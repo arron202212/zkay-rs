@@ -16,7 +16,7 @@
 #include "libff/algebra/fields/binary/gf32.hpp"
 #include "libff/algebra/fields/binary/gf64.hpp"
 
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
 using namespace libff;
 

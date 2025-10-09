@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ARGUMENT_DECODER_GADGET_HPP_
-#define ARGUMENT_DECODER_GADGET_HPP_
+//#ifndef ARGUMENT_DECODER_GADGET_HPP_
+// #define ARGUMENT_DECODER_GADGET_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard.hpp>
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 class argument_decoder_gadget : public tinyram_standard_gadget<FieldT> {
@@ -61,11 +61,11 @@ public:
 template<typename FieldT>
 void test_argument_decoder_gadget();
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget.tcc>
 
-#endif // ARGUMENT_DECODER_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget;
+
+//#endif // ARGUMENT_DECODER_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -79,10 +79,10 @@ use  <libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decod
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ARGUMENT_DECODER_GADGET_TCC_
-#define ARGUMENT_DECODER_GADGET_TCC_
+//#ifndef ARGUMENT_DECODER_GADGET_TCC_
+// #define ARGUMENT_DECODER_GADGET_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT>
 argument_decoder_gadget<FieldT>::argument_decoder_gadget(tinyram_protoboard<FieldT> &pb,
@@ -105,31 +105,31 @@ argument_decoder_gadget<FieldT>::argument_decoder_gadget(tinyram_protoboard<Fiel
     packed_arg1val(packed_arg1val),
     packed_arg2val(packed_arg2val)
 {
-    assert(desidx.size() == pb.ap.reg_arg_width());
-    assert(arg1idx.size() == pb.ap.reg_arg_width());
-    assert(arg2idx.size() == pb.ap.reg_arg_or_imm_width());
+    assert!(desidx.size() == pb.ap.reg_arg_width());
+    assert!(arg1idx.size() == pb.ap.reg_arg_width());
+    assert!(arg2idx.size() == pb.ap.reg_arg_or_imm_width());
 
     /* decode accordingly */
-    packed_desidx.allocate(pb, FMT(this->annotation_prefix, " packed_desidx"));
-    packed_arg1idx.allocate(pb, FMT(this->annotation_prefix, " packed_arg1idx"));
-    packed_arg2idx.allocate(pb, FMT(this->annotation_prefix, " packed_arg2idx"));
+    packed_desidx.allocate(pb, FMT(self.annotation_prefix, " packed_desidx"));
+    packed_arg1idx.allocate(pb, FMT(self.annotation_prefix, " packed_arg1idx"));
+    packed_arg2idx.allocate(pb, FMT(self.annotation_prefix, " packed_arg2idx"));
 
-    pack_desidx.reset(new packing_gadget<FieldT>(pb, desidx, packed_desidx, FMT(this->annotation_prefix, "pack_desidx")));
-    pack_arg1idx.reset(new packing_gadget<FieldT>(pb, arg1idx, packed_arg1idx, FMT(this->annotation_prefix, "pack_arg1idx")));
-    pack_arg2idx.reset(new packing_gadget<FieldT>(pb, arg2idx, packed_arg2idx, FMT(this->annotation_prefix, "pack_arg2idx")));
+    pack_desidx.reset(new packing_gadget<FieldT>(pb, desidx, packed_desidx, FMT(self.annotation_prefix, "pack_desidx")));
+    pack_arg1idx.reset(new packing_gadget<FieldT>(pb, arg1idx, packed_arg1idx, FMT(self.annotation_prefix, "pack_arg1idx")));
+    pack_arg2idx.reset(new packing_gadget<FieldT>(pb, arg2idx, packed_arg2idx, FMT(self.annotation_prefix, "pack_arg2idx")));
 
-    arg2_demux_result.allocate(pb, FMT(this->annotation_prefix, " arg2_demux_result"));
-    arg2_demux_success.allocate(pb, FMT(this->annotation_prefix, " arg2_demux_success"));
+    arg2_demux_result.allocate(pb, FMT(self.annotation_prefix, " arg2_demux_result"));
+    arg2_demux_success.allocate(pb, FMT(self.annotation_prefix, " arg2_demux_success"));
 
     demux_des.reset(
         new loose_multiplexing_gadget<FieldT>(pb, packed_registers, packed_desidx, packed_desval, ONE,
-                                              FMT(this->annotation_prefix, " demux_des")));
+                                              FMT(self.annotation_prefix, " demux_des")));
     demux_arg1.reset(
         new loose_multiplexing_gadget<FieldT>(pb, packed_registers, packed_arg1idx, packed_arg1val, ONE,
-                                              FMT(this->annotation_prefix, " demux_arg1")));
+                                              FMT(self.annotation_prefix, " demux_arg1")));
     demux_arg2.reset(
         new loose_multiplexing_gadget<FieldT>(pb, packed_registers, packed_arg2idx, arg2_demux_result, arg2_demux_success,
-                                              FMT(this->annotation_prefix, " demux_arg2")));
+                                              FMT(self.annotation_prefix, " demux_arg2")));
 }
 
 template<typename FieldT>
@@ -149,11 +149,11 @@ void argument_decoder_gadget<FieldT>::generate_r1cs_constraints()
 
     /* it is false that arg2 is reg and demux failed:
        (1 - arg2_is_imm) * (1 - arg2_demux_success) = 0 */
-    this->pb.add_r1cs_constraint(
+    self.pb.add_r1cs_constraint(
         r1cs_constraint<FieldT>({ ONE, arg2_is_imm * (-1) },
             { ONE, arg2_demux_success * (-1) },
             { ONE * 0 }),
-        FMT(this->annotation_prefix, " ensure_correc_demux"));
+        FMT(self.annotation_prefix, " ensure_correc_demux"));
 
     /*
       arg2val = arg2_is_imm * packed_arg2idx +
@@ -161,11 +161,11 @@ void argument_decoder_gadget<FieldT>::generate_r1cs_constraints()
 
       arg2val - arg2_demux_result = arg2_is_imm * (packed_arg2idx - arg2_demux_result)
     */
-    this->pb.add_r1cs_constraint(
+    self.pb.add_r1cs_constraint(
         r1cs_constraint<FieldT>({ arg2_is_imm },
             { packed_arg2idx, arg2_demux_result * (-1) },
             { packed_arg2val, arg2_demux_result * (-1) }),
-        FMT(this->annotation_prefix, " compute_arg2val"));
+        FMT(self.annotation_prefix, " compute_arg2val"));
 }
 
 template<typename FieldT>
@@ -182,15 +182,15 @@ void argument_decoder_gadget<FieldT>::generate_r1cs_witness()
     demux_arg2->generate_r1cs_witness();
 
     /* handle arg2val */
-    this->pb.val(packed_arg2val) =
-        (this->pb.val(arg2_is_imm) == FieldT::one() ?
-         this->pb.val(packed_arg2idx) : this->pb.val(arg2_demux_result));
+    self.pb.val(packed_arg2val) =
+        (self.pb.val(arg2_is_imm) == FieldT::one() ?
+         self.pb.val(packed_arg2idx) : self.pb.val(arg2_demux_result));
 }
 
 template<typename FieldT>
 void test_argument_decoder_gadget()
 {
-    libff::print_time("starting argument_decoder_gadget test");
+    ffec::print_time("starting argument_decoder_gadget test");
 
     tinyram_architecture_params ap(16, 16);
     tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
@@ -232,24 +232,24 @@ void test_argument_decoder_gadget()
 
     g.generate_r1cs_witness();
 
-    assert(pb.val(packed_desval) == FieldT(1002));
-    assert(pb.val(packed_arg1val) == FieldT(1005));
-    assert(pb.val(packed_arg2val) == FieldT(1007));
-    assert(pb.is_satisfied());
-    printf("positive test (get reg) successful\n");
+    assert!(pb.val(packed_desval) == FieldT(1002));
+    assert!(pb.val(packed_arg1val) == FieldT(1005));
+    assert!(pb.val(packed_arg2val) == FieldT(1007));
+    assert!(pb.is_satisfied());
+    print!("positive test (get reg) successful\n");
 
     pb.val(arg2_is_imm) = FieldT::one();
     g.generate_r1cs_witness();
 
-    assert(pb.val(packed_desval) == FieldT(1002));
-    assert(pb.val(packed_arg1val) == FieldT(1005));
-    assert(pb.val(packed_arg2val) == FieldT(7));
-    assert(pb.is_satisfied());
-    printf("positive test (get imm) successful\n");
+    assert!(pb.val(packed_desval) == FieldT(1002));
+    assert!(pb.val(packed_arg1val) == FieldT(1005));
+    assert!(pb.val(packed_arg2val) == FieldT(7));
+    assert!(pb.is_satisfied());
+    print!("positive test (get imm) successful\n");
 
-    libff::print_time("argument_decoder_gadget tests successful");
+    ffec::print_time("argument_decoder_gadget tests successful");
 }
 
-} // libsnark
 
-#endif // ARGUMENT_DECODER_GADGET_TCC_
+
+//#endif // ARGUMENT_DECODER_GADGET_TCC_

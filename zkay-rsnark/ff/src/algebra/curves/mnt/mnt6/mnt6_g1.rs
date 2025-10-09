@@ -9,15 +9,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MNT6_G1_HPP_
-#define MNT6_G1_HPP_
+//#ifndef MNT6_G1_HPP_
+// #define MNT6_G1_HPP_
 
-#include <vector>
+//#include <vector>
 
-#include <libff/algebra/curves/curve_utils.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_init.hpp>
+use libff/algebra/curves/curve_utils;
+use libff/algebra/curves/mnt/mnt6/mnt6_init;
 
-namespace libff {
+// namespace libff {
 
 class mnt6_G1;
 std::ostream& operator<<(std::ostream &, const mnt6_G1&);
@@ -25,10 +25,10 @@ std::istream& operator>>(std::istream &, mnt6_G1&);
 
 class mnt6_G1 {
 public:
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
-#endif
+//#endif
     static std::vector<std::size_t> wnaf_window_table;
     static std::vector<std::size_t> fixed_base_exp_window_table;
     static mnt6_G1 G1_zero;
@@ -104,9 +104,9 @@ mnt6_G1 operator*(const Fp_model<m,modulus_p> &lhs, const mnt6_G1 &rhs)
 std::ostream& operator<<(std::ostream& out, const std::vector<mnt6_G1> &v);
 std::istream& operator>>(std::istream& in, std::vector<mnt6_G1> &v);
 
-} // namespace libff
+// } // namespace libff
 
-#endif // MNT6_G1_HPP_
+//#endif // MNT6_G1_HPP_
 /** @file
  *****************************************************************************
 
@@ -120,16 +120,16 @@ std::istream& operator>>(std::istream& in, std::vector<mnt6_G1> &v);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/mnt/mnt6/mnt6_g1.hpp>
+use libff/algebra/curves/mnt/mnt6/mnt6_g1;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long mnt6_G1::add_cnt = 0;
 long long mnt6_G1::dbl_cnt = 0;
-#endif
+//#endif
 
 std::vector<size_t> mnt6_G1::wnaf_window_table;
 std::vector<size_t> mnt6_G1::fixed_base_exp_window_table;
@@ -154,13 +154,13 @@ void mnt6_G1::print() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
         mnt6_G1 copy(*this);
         copy.to_affine_coordinates();
-        gmp_printf("(%Nd , %Nd)\n",
+        print!("(%Nd , %Nd)\n",
                    copy.X.as_bigint().data, mnt6_Fq::num_limbs,
                    copy.Y.as_bigint().data, mnt6_Fq::num_limbs);
     }
@@ -170,11 +170,11 @@ void mnt6_G1::print_coordinates() const
 {
     if (this->is_zero())
     {
-        printf("O\n");
+        print!("O\n");
     }
     else
     {
-        gmp_printf("(%Nd : %Nd : %Nd)\n",
+        print!("(%Nd : %Nd : %Nd)\n",
                    this->X.as_bigint().data, mnt6_Fq::num_limbs,
                    this->Y.as_bigint().data, mnt6_Fq::num_limbs,
                    this->Z.as_bigint().data, mnt6_Fq::num_limbs);
@@ -355,9 +355,9 @@ mnt6_G1 mnt6_G1::add(const mnt6_G1 &other) const
         return this->dbl();
     }
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
 
@@ -380,12 +380,12 @@ mnt6_G1 mnt6_G1::add(const mnt6_G1 &other) const
 
 mnt6_G1 mnt6_G1::mixed_add(const mnt6_G1 &other) const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
-    //assert(other.Z == mnt6_Fq::one());
+    //assert!(other.Z == mnt6_Fq::one());
 
     if (this->is_zero())
     {
@@ -397,9 +397,9 @@ mnt6_G1 mnt6_G1::mixed_add(const mnt6_G1 &other) const
         return (*this);
     }
 
-#ifdef DEBUG
-    assert(other.is_special());
-#endif
+// #ifdef DEBUG
+    assert!(other.is_special());
+//#endif
 
     const mnt6_Fq &X1Z2 = (this->X);                    // X1Z2 = X1*Z2 (but other is special and not zero)
     const mnt6_Fq X2Z1 = (this->Z) * (other.X);        // X2Z1 = X2*Z1
@@ -430,9 +430,9 @@ mnt6_G1 mnt6_G1::mixed_add(const mnt6_G1 &other) const
 
 mnt6_G1 mnt6_G1::dbl() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-#endif
+//#endif
     if (this->is_zero())
     {
         return (*this);
@@ -508,12 +508,12 @@ std::ostream& operator<<(std::ostream &out, const mnt6_G1 &g)
     copy.to_affine_coordinates();
 
     out << (copy.is_zero() ? 1 : 0) << OUTPUT_SEPARATOR;
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
-#endif
+//#endif
 
     return out;
 }
@@ -523,7 +523,7 @@ std::istream& operator>>(std::istream &in, mnt6_G1 &g)
     char is_zero;
     mnt6_Fq tX, tY;
 
-#ifdef NO_PT_COMPRESSION
+// #ifdef NO_PT_COMPRESSION
     in >> is_zero >> tX >> tY;
     is_zero -= '0';
 #else
@@ -549,7 +549,7 @@ std::istream& operator>>(std::istream &in, mnt6_G1 &g)
             tY = -tY;
         }
     }
-#endif
+//#endif
     // using projective coordinates
     if (is_zero == 0)
     {
@@ -616,4 +616,4 @@ void mnt6_G1::batch_to_special_all_non_zeros(std::vector<mnt6_G1> &vec)
     }
 }
 
-} // namespace libff
+// } // namespace libff

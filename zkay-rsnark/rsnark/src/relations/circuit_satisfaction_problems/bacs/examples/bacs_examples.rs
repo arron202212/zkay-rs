@@ -10,12 +10,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BACS_EXAMPLES_HPP_
-#define BACS_EXAMPLES_HPP_
+//#ifndef BACS_EXAMPLES_HPP_
+// #define BACS_EXAMPLES_HPP_
 
-use  <libsnark/relations/circuit_satisfaction_problems/bacs/bacs.hpp>
+use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
 
-namespace libsnark {
+
 
 /**
  * A BACS example comprises a BACS circuit, BACS primary input, and BACS auxiliary input.
@@ -40,9 +40,9 @@ struct bacs_example {
     bacs_example<FieldT>(bacs_circuit<FieldT> &&circuit,
                          bacs_primary_input<FieldT> &&primary_input,
                          bacs_auxiliary_input<FieldT> &&auxiliary_input) :
-        circuit(std::move(circuit)),
-        primary_input(std::move(primary_input)),
-        auxiliary_input(std::move(auxiliary_input))
+        circuit((circuit)),
+        primary_input((primary_input)),
+        auxiliary_input((auxiliary_input))
     {}
 };
 
@@ -64,11 +64,11 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
                                            const size_t num_gates,
                                            const size_t num_outputs);
 
-} // libsnark
 
-use  <libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples.tcc>
 
-#endif // BACS_EXAMPLES_HPP_
+use libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples;
+
+//#endif // BACS_EXAMPLES_HPP_
 /** @file
  *****************************************************************************
 
@@ -83,14 +83,14 @@ use  <libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_exampl
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BACS_EXAMPLES_TCC_
-#define BACS_EXAMPLES_TCC_
+//#ifndef BACS_EXAMPLES_TCC_
+// #define BACS_EXAMPLES_TCC_
 
 use  <cassert>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 linear_combination<FieldT> random_linear_combination(const size_t num_variables)
@@ -116,12 +116,12 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
     bacs_example<FieldT> example;
     for (size_t i = 0; i < primary_input_size; ++i)
     {
-        example.primary_input.emplace_back(FieldT::random_element());
+        example.primary_input.push(FieldT::random_element());
     }
 
     for (size_t i = 0; i < auxiliary_input_size; ++i)
     {
-        example.auxiliary_input.emplace_back(FieldT::random_element());
+        example.auxiliary_input.push(FieldT::random_element());
     }
 
     example.circuit.primary_input_size = primary_input_size;
@@ -159,7 +159,7 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
                 gate.rhs = gate.rhs + coeff * variable<FieldT>(var_idx);
             }
 
-            assert(gate.evaluate(all_vals).is_zero());
+            assert!(gate.evaluate(all_vals).is_zero());
         }
         else
         {
@@ -167,14 +167,14 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
         }
 
         example.circuit.add_gate(gate);
-        all_vals.emplace_back(gate.evaluate(all_vals));
+        all_vals.push(gate.evaluate(all_vals));
     }
 
-    assert(example.circuit.is_satisfied(example.primary_input, example.auxiliary_input));
+    assert!(example.circuit.is_satisfied(example.primary_input, example.auxiliary_input));
 
     return example;
 }
 
-} // libsnark
 
-#endif // BACS_EXAMPLES_TCC
+
+//#endif // BACS_EXAMPLES_TCC

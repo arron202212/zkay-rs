@@ -9,14 +9,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SERIALIZATION_HPP_
-#define SERIALIZATION_HPP_
+//#ifndef SERIALIZATION_HPP_
+// #define SERIALIZATION_HPP_
 
-#include <istream>
-#include <map>
-#include <ostream>
-#include <set>
-#include <vector>
+//#include <istream>
+//#include <map>
+//#include <ostream>
+//#include <set>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -60,13 +60,13 @@ namespace libfqfft {
  * portable between machines of different word sizes.
  */
 
-#ifdef BINARY_OUTPUT
-#define OUTPUT_NEWLINE ""
-#define OUTPUT_SEPARATOR ""
+// #ifdef BINARY_OUTPUT
+// #define OUTPUT_NEWLINE ""
+// #define OUTPUT_SEPARATOR ""
 #else
-#define OUTPUT_NEWLINE "\n"
-#define OUTPUT_SEPARATOR " "
-#endif
+// #define OUTPUT_NEWLINE "\n"
+// #define OUTPUT_SEPARATOR " "
+//#endif
 
 inline void consume_newline(std::istream &in);
 inline void consume_OUTPUT_NEWLINE(std::istream &in);
@@ -102,9 +102,9 @@ std::istream& operator>>(std::istream& in, std::set<T> &s);
 } // libfqfft
 
 // #include "common/serialization.tcc"
-#include <libfqfft/tools/serialization.tcc>
+use libfqfft/tools/serialization.tcc;
 
-#endif // SERIALIZATION_HPP_
+//#endif // SERIALIZATION_HPP_
 /** @file
  *****************************************************************************
 
@@ -118,11 +118,11 @@ std::istream& operator>>(std::istream& in, std::set<T> &s);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SERIALIZATION_TCC_
-#define SERIALIZATION_TCC_
+//#ifndef SERIALIZATION_TCC_
+// #define SERIALIZATION_TCC_
 
-#include <cassert>
-#include <sstream>
+//#include <cassert>
+//#include <sstream>
 
 namespace libfqfft {
 
@@ -134,22 +134,22 @@ inline void consume_newline(std::istream &in)
 
 inline void consume_OUTPUT_NEWLINE(std::istream &in)
 {
-#ifdef BINARY_OUTPUT
+// #ifdef BINARY_OUTPUT
     // nothing to consume
 #else
     char c;
     in.read(&c, 1);
-#endif
+//#endif
 }
 
 inline void consume_OUTPUT_SEPARATOR(std::istream &in)
 {
-#ifdef BINARY_OUTPUT
+// #ifdef BINARY_OUTPUT
     // nothing to consume
 #else
     char c;
     in.read(&c, 1);
-#endif
+//#endif
 }
 
 inline void output_bool(std::ostream &out, const bool b)
@@ -162,7 +162,7 @@ inline void input_bool(std::istream &in, bool &b)
     size_t tmp;
     in >> tmp;
     consume_newline(in);
-    assert(tmp == 0 || tmp == 1);
+    assert!(tmp == 0 || tmp == 1);
 
     b = (tmp == 1 ? true : false);
 }
@@ -197,14 +197,14 @@ T reserialize(const T &obj)
     ss << obj;
     T tmp;
     ss >> tmp;
-    assert(obj == tmp);
+    assert!(obj == tmp);
     return tmp;
 }
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
 {
-    static_assert(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
+    assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
     out << v.size() << "\n";
     for (const T& t : v)
     {
@@ -217,7 +217,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
 template<typename T>
 std::istream& operator>>(std::istream& in, std::vector<T> &v)
 {
-    static_assert(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
+    assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
     size_t size;
     in >> size;
     consume_newline(in);
@@ -305,4 +305,4 @@ std::istream& operator>>(std::istream& in, std::set<T> &s)
 
 }
 
-#endif // SERIALIZATION_TCC_
+//#endif // SERIALIZATION_TCC_

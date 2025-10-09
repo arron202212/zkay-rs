@@ -11,10 +11,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ARITHMETIC_SEQUENCE_DOMAIN_HPP
-#define ARITHMETIC_SEQUENCE_DOMAIN_HPP
+//#ifndef ARITHMETIC_SEQUENCE_DOMAIN_HPP
+// #define ARITHMETIC_SEQUENCE_DOMAIN_HPP
 
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use libfqfft/evaluation_domain/evaluation_domain;
 
 namespace libfqfft {
 
@@ -44,9 +44,9 @@ namespace libfqfft {
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.tcc>
+use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.tcc;
 
-#endif // ARITHMETIC_SEQUENCE_DOMAIN_HPP
+//#endif // ARITHMETIC_SEQUENCE_DOMAIN_HPP
 
 
 /** @file
@@ -62,15 +62,15 @@ namespace libfqfft {
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ARITHMETIC_SEQUENCE_DOMAIN_TCC_
-#define ARITHMETIC_SEQUENCE_DOMAIN_TCC_
+//#ifndef ARITHMETIC_SEQUENCE_DOMAIN_TCC_
+// #define ARITHMETIC_SEQUENCE_DOMAIN_TCC_
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
-#include <libfqfft/polynomial_arithmetic/basis_change.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
+use libfqfft/polynomial_arithmetic/basis_change;
 
-#ifdef MULTICORE
-#include <omp.h>
-#endif
+// #ifdef MULTICORE
+//#include <omp.h>
+//#endif
 
 namespace libfqfft {
 
@@ -108,9 +108,9 @@ void arithmetic_sequence_domain<FieldT>::FFT(std::vector<FieldT> &a)
   _polynomial_multiplication(a, a, S);
   a.resize(this->m);
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
   #pragma omp parallel for
-#endif
+//#endif
   for i in 0..this->m
   {
     a[i] *= S[i].inverse();
@@ -258,9 +258,9 @@ void arithmetic_sequence_domain<FieldT>::add_poly_Z(const FieldT &coeff, std::ve
     _polynomial_multiplication(x, x, t);
   }
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
   #pragma omp parallel for
-#endif
+//#endif
   for i in 0..this->m+1
   {
     H[i] += (x[i] * coeff);
@@ -296,4 +296,4 @@ void arithmetic_sequence_domain<FieldT>::do_precomputation()
 
 } // libfqfft
 
-#endif // ARITHMETIC_SEQUENCE_DOMAIN_TCC_
+//#endif // ARITHMETIC_SEQUENCE_DOMAIN_TCC_

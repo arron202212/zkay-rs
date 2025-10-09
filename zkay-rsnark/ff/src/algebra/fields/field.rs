@@ -16,10 +16,10 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include <libff/algebra/field_utils/bigint.hpp>
-#include <vector>
+use crate::algebra::field_utils::bigint;
+//#include <vector>
 
-namespace libff {
+// namespace libff {
 
 template<typename T>
 class Field;
@@ -30,13 +30,13 @@ class Field;
 template<typename T>
 class Field {
 public:
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
 
     virtual T& operator+=(const T& other) = 0;
     virtual T& operator-=(const T& other) = 0;
@@ -99,4 +99,4 @@ public:
 
 };
 
-} // namespace libff
+// } // namespace libff

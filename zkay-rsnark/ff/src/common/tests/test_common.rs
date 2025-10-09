@@ -7,8 +7,8 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <cstdint>
-#include <gtest/gtest.h>
+//#include <cstdint>
+//#include <gtest/gtest.h>
 
 #include "libff/common/utils.hpp"
 #include "libff/algebra/fields/binary/gf32.hpp"

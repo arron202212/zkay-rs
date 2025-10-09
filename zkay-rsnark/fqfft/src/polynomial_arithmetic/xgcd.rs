@@ -9,10 +9,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef XGCD_HPP_
-#define XGCD_HPP_
+//#ifndef XGCD_HPP_
+// #define XGCD_HPP_
 
-#include <vector>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -26,9 +26,9 @@ void _polynomial_xgcd(const std::vector<FieldT> &a, const std::vector<FieldT> &b
 
 } // libfqfft
 
-#include <libfqfft/polynomial_arithmetic/xgcd.tcc>
+use libfqfft/polynomial_arithmetic/xgcd.tcc;
 
-#endif // XGCD_HPP_
+//#endif // XGCD_HPP_
 
 
 
@@ -45,13 +45,13 @@ void _polynomial_xgcd(const std::vector<FieldT> &a, const std::vector<FieldT> &b
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef XGCD_TCC_
-#define XGCD_TCC_
+//#ifndef XGCD_TCC_
+// #define XGCD_TCC_
 
-#include <algorithm>
+//#include <algorithm>
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
-#include <libfqfft/polynomial_arithmetic/basic_operations.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
+use libfqfft/polynomial_arithmetic/basic_operations;
 
 namespace libfqfft {
 
@@ -103,4 +103,4 @@ void _polynomial_xgcd(const std::vector<FieldT> &a, const std::vector<FieldT> &b
 
 } // libfqfft
 
-#endif // XGCD_TCC_
+//#endif // XGCD_TCC_

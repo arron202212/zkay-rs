@@ -8,16 +8,16 @@
  * @copyright  MIT license (see LICENSE file)
  *******************************************************************************/
 
-#include <sstream>
+//#include <sstream>
 
-#include <libff/algebra/curves/bn128/bn128_g1.hpp>
-#include <libff/algebra/curves/bn128/bn128_g2.hpp>
-#include <libff/algebra/curves/bn128/bn128_gt.hpp>
-#include <libff/algebra/curves/bn128/bn128_init.hpp>
-#include <libff/algebra/curves/bn128/bn128_pairing.hpp>
-#include <libff/common/profiling.hpp>
+use libff/algebra/curves/bn128/bn128_g1;
+use libff/algebra/curves/bn128/bn128_g2;
+use libff/algebra/curves/bn128/bn128_gt;
+use libff/algebra/curves/bn128/bn128_init;
+use libff/algebra/curves/bn128/bn128_pairing;
+use crate::common::profiling;
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -32,11 +32,11 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G1_precomp &prec_P)
 {
     for (auto p : prec_P.P)
     {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
         out << p << "\n";
 #else
         out.write((char*) &p, sizeof(p));
-#endif
+//#endif
     }
     return out;
 }
@@ -45,12 +45,12 @@ std::istream& operator>>(std::istream &in, bn128_ate_G1_precomp &prec_P)
 {
     for (auto p : prec_P.P)
     {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
         in >> p;
         consume_newline(in);
 #else
         in.read((char*) &p, sizeof(p));
-#endif
+//#endif
     }
     return in;
 }
@@ -84,20 +84,20 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
 {
     for (auto q : prec_Q.Q)
     {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
         out << q.a_ << "\n";
         out << q.b_ << "\n";
 #else
         out.write((char*) &q.a_, sizeof(q.a_));
         out.write((char*) &q.b_, sizeof(q.b_));
-#endif
+//#endif
     }
 
     out << prec_Q.coeffs.size() << "\n";
 
     for (auto c : prec_Q.coeffs)
     {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
         out << c.a_.a_ << "\n";
         out << c.a_.b_ << "\n";
         out << c.b_.a_ << "\n";
@@ -111,7 +111,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
         out.write((char*) &c.b_.b_, sizeof(c.b_.b_));
         out.write((char*) &c.c_.a_, sizeof(c.c_.a_));
         out.write((char*) &c.c_.b_, sizeof(c.c_.b_));
-#endif
+//#endif
     }
 
     return out;
@@ -121,7 +121,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
 {
     for (auto q : prec_Q.Q)
     {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
         in >> q.a_;
         consume_newline(in);
         in >> q.b_;
@@ -129,7 +129,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
 #else
         in.read((char*) &q.a_, sizeof(q.a_));
         in.read((char*) &q.b_, sizeof(q.b_));
-#endif
+//#endif
     }
 
     size_t count;
@@ -138,7 +138,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
     prec_Q.coeffs.resize(count);
     for (size_t i = 0; i < count; ++i)
     {
-#ifndef BINARY_OUTPUT
+//#ifndef BINARY_OUTPUT
         in >> prec_Q.coeffs[i].a_.a_;
         consume_newline(in);
         in >> prec_Q.coeffs[i].a_.b_;
@@ -158,7 +158,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
         in.read((char*) &prec_Q.coeffs[i].b_.b_, sizeof(prec_Q.coeffs[i].b_.b_));
         in.read((char*) &prec_Q.coeffs[i].c_.a_, sizeof(prec_Q.coeffs[i].c_.a_));
         in.read((char*) &prec_Q.coeffs[i].c_.b_, sizeof(prec_Q.coeffs[i].c_.b_));
-#endif
+//#endif
     }
     return in;
 }
@@ -215,4 +215,4 @@ bn128_GT bn128_final_exponentiation(const bn128_Fq12 &elt)
     leave_block("Call to bn128_final_exponentiation");
     return eltcopy;
 }
-} // namespace libff
+// } // namespace libff

@@ -6,27 +6,27 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBFF_ALGEBRA_GF128_HPP_
-#define LIBFF_ALGEBRA_GF128_HPP_
+//#ifndef LIBFF_ALGEBRA_GF128_HPP_
+// #define LIBFF_ALGEBRA_GF128_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <vector>
-#include <libff/algebra/field_utils/bigint.hpp>
+//#include <cstddef>
+//#include <cstdint>
+//#include <vector>
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 /* gf128 implements the field GF(2)/(x^128 + x^7 + x^2 + x + 1).
    Elements are represented internally with two uint64s */
 class gf128 {
 
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
     // x^128 + x^7 + x^2 + x + 1
     static const constexpr uint64_t modulus_ = 0b10000111;
     static const constexpr uint64_t num_bits = 128;
@@ -99,35 +99,35 @@ private:
     uint64_t value_[2];
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long gf128::add_cnt = 0;
 long long gf128::sub_cnt = 0;
 long long gf128::mul_cnt = 0;
 long long gf128::sqr_cnt = 0;
 long long gf128::inv_cnt = 0;
-#endif
+//#endif
 
-} // namespace libff
-#include <libff/algebra/fields/binary/gf128.tcc>
+// } // namespace libff
+use libff/algebra/fields/binary/gf128.tcc;
 
-#endif // namespace libff_ALGEBRA_GF128_HPP_
-#include <cstdio>
+//#endif // namespace libff_ALGEBRA_GF128_HPP_
+//#include <cstdio>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+// #define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
 
-#include <sodium/randombytes.h>
+//#include <sodium/randombytes.h>
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 #include "libff/algebra/fields/binary/gf128.hpp"
 
-#ifdef USE_ASM
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#endif
+// #ifdef USE_ASM
+//#include <emmintrin.h>
+//#include <immintrin.h>
+//#include <smmintrin.h>
+//#endif
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -161,9 +161,9 @@ bool gf128::from_words(std::vector<uint64_t> words)
 
 gf128& gf128::operator+=(const gf128 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     this->value_[0] ^= other.value_[0];
     this->value_[1] ^= other.value_[1];
     return (*this);
@@ -171,9 +171,9 @@ gf128& gf128::operator+=(const gf128 &other)
 
 gf128& gf128::operator-=(const gf128 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     this->value_[0] ^= other.value_[0];
     this->value_[1] ^= other.value_[1];
     return (*this);
@@ -181,12 +181,12 @@ gf128& gf128::operator-=(const gf128 &other)
 
 gf128& gf128::operator*=(const gf128 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Does not require *this and other to be different, and therefore
        also works for squaring, implemented below. */
-#ifdef USE_ASM
+// #ifdef USE_ASM
     /* load the two operands and the modulus into 128-bit registers */
     const __m128i a = _mm_loadu_si128((const __m128i*) &(this->value_));
     const __m128i b = _mm_loadu_si128((const __m128i*) &(other.value_));
@@ -251,7 +251,7 @@ gf128& gf128::operator*=(const gf128 &other)
     this->value_[1] = result[1];
 
     return (*this);
-#endif
+//#endif
 }
 
 gf128& gf128::operator^=(const unsigned long pow)
@@ -262,10 +262,10 @@ gf128& gf128::operator^=(const unsigned long pow)
 
 gf128& gf128::square()
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
     this->mul_cnt--;
-#endif
+//#endif
     this->operator*=(*this);
     return *this;
 }
@@ -315,12 +315,12 @@ gf128 gf128::squared() const
    requires 142 mul/sqr operations total. */
 gf128 gf128::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
     this->mul_cnt -= 13;
     this->sqr_cnt -= 127;
-#endif
-    assert(!this->is_zero());
+//#endif
+    assert!(!this->is_zero());
     gf128 a(*this);
 
     gf128 result(0);
@@ -382,7 +382,7 @@ bool gf128::is_zero() const
 
 void gf128::print() const
 {
-    printf("%016" PRIx64 "%016" PRIx64 "\n", this->value_[1], this->value_[0]);
+    print!("%016" PRIx64 "%016" PRIx64 "\n", this->value_[1], this->value_[0]);
 }
 
 gf128 gf128::random_element()
@@ -414,10 +414,10 @@ std::istream& operator>>(std::istream &in, gf128 &el)
     return in;
 }
 
-} // namespace libff
+// } // namespace libff
 #include "libff/algebra/field_utils/algorithms.hpp"
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t m>
 gf128& gf128::operator^=(const bigint<m> &pow)
@@ -432,4 +432,4 @@ gf128 gf128::operator^(const bigint<m> &pow) const
     return power<gf128>(*this, pow);
 }
 
-} // namespace libff
+// } // namespace libff

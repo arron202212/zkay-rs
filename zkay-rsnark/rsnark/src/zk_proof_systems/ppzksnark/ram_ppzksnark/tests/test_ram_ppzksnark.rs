@@ -10,13 +10,13 @@ use  <iostream>
 use  <sstream>
 use  <string>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/common/default_types/ram_ppzksnark_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/examples/ram_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark.hpp>
+use crate::common::default_types::ram_ppzksnark_pp;
+use libsnark/relations/ram_computations/rams/examples/ram_examples;
+use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark;
 
-using namespace libsnark;
+
 
 template<typename ppT>
 void test_ram_ppzksnark(const size_t w,
@@ -25,7 +25,7 @@ void test_ram_ppzksnark(const size_t w,
                         const size_t input_size,
                         const size_t time_bound)
 {
-    libff::print_header("(enter) Test RAM ppzkSNARK");
+    ffec::print_header("(enter) Test RAM ppzkSNARK");
 
     type ram_ppzksnark_machine_pp<ppT> machine_ppT;
     const size_t boot_trace_size_bound = program_size + input_size;
@@ -36,15 +36,15 @@ void test_ram_ppzksnark(const size_t w,
 
     const bool test_serialization = true;
     const bool bit = run_ram_ppzksnark<ppT>(example, test_serialization);
-    assert(bit);
+    assert!(bit);
 
-    libff::print_header("(leave) Test RAM ppzkSNARK");
+    ffec::print_header("(leave) Test RAM ppzkSNARK");
 }
 
 int main()
 {
     ram_ppzksnark_snark_pp<default_ram_ppzksnark_pp>::init_public_params();
-    libff::start_profiling();
+    ffec::start_profiling();
 
     const size_t program_size = 100;
     const size_t input_size = 2;

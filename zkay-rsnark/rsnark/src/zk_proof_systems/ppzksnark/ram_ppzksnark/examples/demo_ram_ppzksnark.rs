@@ -9,18 +9,18 @@ use  <fstream>
 use  <iostream>
 use  <sstream>
 use  <string>
-#ifndef MINDEPS
-use  <boost/program_options.hpp>
-#endif
+//#ifndef MINDEPS
+use boost/program_options;
+//#endif
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/common/default_types/tinyram_ppzksnark_pp.hpp>
-use  <libsnark/reductions/ram_to_r1cs/ram_to_r1cs.hpp>
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark.hpp>
+use crate::common::default_types::tinyram_ppzksnark_pp;
+use libsnark/reductions/ram_to_r1cs/ram_to_r1cs;
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
+use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark;
 
-#ifndef MINDEPS
+//#ifndef MINDEPS
 namespace po = boost::program_options;
 
 bool process_demo_command_line(const int argc, const char** argv,
@@ -62,14 +62,14 @@ bool process_demo_command_line(const int argc, const char** argv,
 
     return true;
 }
-#endif
+//#endif
 
-using namespace libsnark;
+
 
 int main(int argc, const char * argv[])
 {
     default_tinyram_ppzksnark_pp::init_public_params();
-#ifdef MINDEPS
+// #ifdef MINDEPS
     std::string assembly_fn = "assembly.s";
     std::string processed_assembly_fn = "processed.txt";
     std::string architecture_params_fn = "architecture_params.txt";
@@ -89,19 +89,19 @@ int main(int argc, const char * argv[])
     {
         return 1;
     }
-#endif
-    libff::start_profiling();
+//#endif
+    ffec::start_profiling();
 
-    printf("================================================================================\n");
-    printf("TinyRAM example loader\n");
-    printf("================================================================================\n\n");
+    print!("================================================================================\n");
+    print!("TinyRAM example loader\n");
+    print!("================================================================================\n\n");
 
     /* load everything */
     ram_ppzksnark_architecture_params<default_tinyram_ppzksnark_pp> ap;
     std::ifstream f_ap(architecture_params_fn);
     f_ap >> ap;
 
-    printf("Will run on %zu register machine (word size = %zu)\n", ap.k, ap.w);
+    print!("Will run on {} register machine (word size = {})\n", ap.k, ap.w);
 
     std::ifstream f_rp(computation_bounds_fn);
     size_t tinyram_input_size_bound, tinyram_program_size_bound, time_bound;
@@ -111,29 +111,29 @@ int main(int argc, const char * argv[])
     std::ifstream raw(assembly_fn);
     tinyram_program program = load_preprocessed_program(ap, processed);
 
-    printf("Program:\n%s\n", std::string((std::istreambuf_iterator<char>(raw)),
+    print!("Program:\n%s\n", std::string((std::istreambuf_iterator<char>(raw)),
                                          std::istreambuf_iterator<char>()).c_str());
 
     std::ifstream f_primary_input(primary_input_fn);
     std::ifstream f_auxiliary_input(auxiliary_input_fn);
 
-    libff::enter_block("Loading primary input");
+    ffec::enter_block("Loading primary input");
     tinyram_input_tape primary_input = load_tape(f_primary_input);
-    libff::leave_block("Loading primary input");
+    ffec::leave_block("Loading primary input");
 
-    libff::enter_block("Loading auxiliary input");
+    ffec::enter_block("Loading auxiliary input");
     tinyram_input_tape auxiliary_input = load_tape(f_auxiliary_input);
-    libff::leave_block("Loading auxiliary input");
+    ffec::leave_block("Loading auxiliary input");
 
-    printf("\nPress enter to continue.\n");
+    print!("\nPress enter to continue.\n");
     std::cin.get();
 
     const size_t boot_trace_size_bound = tinyram_program_size_bound + tinyram_input_size_bound;
     const ram_boot_trace<default_tinyram_ppzksnark_pp> boot_trace = tinyram_boot_trace_from_program_and_input(ap, boot_trace_size_bound, program, primary_input);
 
-    printf("================================================================================\n");
-    printf("TinyRAM arithmetization test for T = %zu time steps\n", time_bound);
-    printf("================================================================================\n\n");
+    print!("================================================================================\n");
+    print!("TinyRAM arithmetization test for T = {} time steps\n", time_bound);
+    print!("================================================================================\n\n");
 
     type ram_ppzksnark_machine_pp<default_tinyram_ppzksnark_pp> default_ram;
     type ram_base_field<default_ram> FieldT;
@@ -146,35 +146,35 @@ int main(int argc, const char * argv[])
     const r1cs_constraint_system<FieldT> constraint_system = r.get_constraint_system();
 
     r.print_execution_trace();
-    assert(constraint_system.is_satisfied(r1cs_primary_input, r1cs_auxiliary_input));
+    assert!(constraint_system.is_satisfied(r1cs_primary_input, r1cs_auxiliary_input));
 
-    printf("\nPress enter to continue.\n");
+    print!("\nPress enter to continue.\n");
     std::cin.get();
 
-    printf("================================================================================\n");
-    printf("TinyRAM ppzkSNARK Key Pair Generator\n");
-    printf("================================================================================\n\n");
+    print!("================================================================================\n");
+    print!("TinyRAM ppzkSNARK Key Pair Generator\n");
+    print!("================================================================================\n\n");
     const ram_ppzksnark_keypair<default_tinyram_ppzksnark_pp> keypair = ram_ppzksnark_generator<default_tinyram_ppzksnark_pp>(ap, boot_trace_size_bound, time_bound);
 
-    printf("\nPress enter to continue.\n");
+    print!("\nPress enter to continue.\n");
     std::cin.get();
 
-    printf("================================================================================\n");
-    printf("TinyRAM ppzkSNARK Prover\n");
-    printf("================================================================================\n\n");
+    print!("================================================================================\n");
+    print!("TinyRAM ppzkSNARK Prover\n");
+    print!("================================================================================\n\n");
     const ram_ppzksnark_proof<default_tinyram_ppzksnark_pp> proof = ram_ppzksnark_prover<default_tinyram_ppzksnark_pp>(keypair.pk, boot_trace,  auxiliary_input);
 
-    printf("\nPress enter to continue.\n");
+    print!("\nPress enter to continue.\n");
     std::cin.get();
 
-    printf("================================================================================\n");
-    printf("TinyRAM ppzkSNARK Verifier\n");
-    printf("================================================================================\n\n");
+    print!("================================================================================\n");
+    print!("TinyRAM ppzkSNARK Verifier\n");
+    print!("================================================================================\n\n");
     bool bit = ram_ppzksnark_verifier<default_tinyram_ppzksnark_pp>(keypair.vk, boot_trace, proof);
 
-    printf("================================================================================\n");
-    printf("The verification result is: %s\n", (bit ? "PASS" : "FAIL"));
-    printf("================================================================================\n");
-    libff::print_mem();
-    printf("================================================================================\n");
+    print!("================================================================================\n");
+    print!("The verification result is: %s\n", (bit ? "PASS" : "FAIL"));
+    print!("================================================================================\n");
+    ffec::print_mem();
+    print!("================================================================================\n");
 }

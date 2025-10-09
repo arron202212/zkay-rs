@@ -9,16 +9,16 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RAM_PARAMS_HPP_
-#define RAM_PARAMS_HPP_
+//#ifndef RAM_PARAMS_HPP_
+// #define RAM_PARAMS_HPP_
 
 use  <vector>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/relations/ram_computations/memory/memory_store_trace.hpp>
+use libsnark/relations/ram_computations/memory/memory_store_trace;
 
-namespace libsnark {
+
 
 /*
   When declaring a new ramT one should do a make it a class that declares typedefs for:
@@ -41,7 +41,7 @@ template<typename ramT>
 using ram_base_field = typename ramT::base_field_type;
 
 template<typename ramT>
-using ram_cpu_state = libff::bit_vector;
+using ram_cpu_state = ffec::bit_vector;
 
 template<typename ramT>
 using ram_boot_trace = memory_store_trace;
@@ -73,9 +73,9 @@ using ram_input_tape = std::vector<size_t>;
   size_t value_size();
   size_t cpu_state_size();
   size_t initial_pc_addr();
-  libff::bit_vector initial_cpu_state();
+  ffec::bit_vector initial_cpu_state();
 */
 
-} // libsnark
 
-#endif // RAM_PARAMS_HPP_
+
+//#endif // RAM_PARAMS_HPP_

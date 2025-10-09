@@ -5,18 +5,18 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef PB_VARIABLE_HPP_
-#define PB_VARIABLE_HPP_
+//#ifndef PB_VARIABLE_HPP_
+// #define PB_VARIABLE_HPP_
 
 use  <cstddef>
 use  <string>
 use  <vector>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/relations/variable.hpp>
+use libsnark/relations/variable;
 
-namespace libsnark {
+
 
 type size_t lc_index_t;
 
@@ -45,7 +45,7 @@ public:
     using contents::end;
     using contents::rbegin;
     using contents::rend;
-    using contents::emplace_back;
+    using contents::push;
     using contents::insert;
     using contents::reserve;
     using contents::size;
@@ -60,18 +60,18 @@ public:
     void allocate(protoboard<FieldT> &pb, const size_t n, const std::string &annotation_prefix="");
 
     void fill_with_field_elements(protoboard<FieldT> &pb, const std::vector<FieldT>& vals) const;
-    void fill_with_bits(protoboard<FieldT> &pb, const libff::bit_vector& bits) const;
+    void fill_with_bits(protoboard<FieldT> &pb, const ffec::bit_vector& bits) const;
     void fill_with_bits_of_ulong(protoboard<FieldT> &pb, const unsigned long i) const;
     void fill_with_bits_of_field_element(protoboard<FieldT> &pb, const FieldT &r) const;
 
     std::vector<FieldT> get_vals(const protoboard<FieldT> &pb) const;
-    libff::bit_vector get_bits(const protoboard<FieldT> &pb) const;
+    ffec::bit_vector get_bits(const protoboard<FieldT> &pb) const;
 
     FieldT get_field_element_from_bits(const protoboard<FieldT> &pb) const;
 };
 
 /* index 0 corresponds to the constant term (used in legacy code) */
-#define ONE pb_variable<FieldT>(0)
+// #define ONE pb_variable<FieldT>(0)
 
 template<typename FieldT>
 class pb_linear_combination : public linear_combination<FieldT> {
@@ -103,7 +103,7 @@ public:
     using contents::end;
     using contents::rbegin;
     using contents::rend;
-    using contents::emplace_back;
+    using contents::push;
     using contents::insert;
     using contents::reserve;
     using contents::size;
@@ -112,7 +112,7 @@ public:
     using contents::resize;
 
     pb_linear_combination_array() : contents() {};
-    pb_linear_combination_array(const pb_variable_array<FieldT> &arr) { for (auto &v : arr) this->emplace_back(pb_linear_combination<FieldT>(v)); };
+    pb_linear_combination_array(const pb_variable_array<FieldT> &arr) { for (auto &v : arr) self.push(pb_linear_combination<FieldT>(v)); };
     pb_linear_combination_array(size_t count) : contents(count) {};
     pb_linear_combination_array(size_t count, const pb_linear_combination<FieldT> &value) : contents(count, value) {};
     pb_linear_combination_array(typename contents::const_iterator first, typename contents::const_iterator last) : contents(first, last) {};
@@ -121,12 +121,12 @@ public:
     void evaluate(protoboard<FieldT> &pb) const;
 
     void fill_with_field_elements(protoboard<FieldT> &pb, const std::vector<FieldT>& vals) const;
-    void fill_with_bits(protoboard<FieldT> &pb, const libff::bit_vector& bits) const;
+    void fill_with_bits(protoboard<FieldT> &pb, const ffec::bit_vector& bits) const;
     void fill_with_bits_of_ulong(protoboard<FieldT> &pb, const unsigned long i) const;
     void fill_with_bits_of_field_element(protoboard<FieldT> &pb, const FieldT &r) const;
 
     std::vector<FieldT> get_vals(const protoboard<FieldT> &pb) const;
-    libff::bit_vector get_bits(const protoboard<FieldT> &pb) const;
+    ffec::bit_vector get_bits(const protoboard<FieldT> &pb) const;
 
     FieldT get_field_element_from_bits(const protoboard<FieldT> &pb) const;
 };
@@ -140,10 +140,10 @@ linear_combination<FieldT> pb_packing_sum(const pb_linear_combination_array<Fiel
 template<typename FieldT>
 linear_combination<FieldT> pb_coeff_sum(const pb_linear_combination_array<FieldT> &v, const std::vector<FieldT> &coeffs);
 
-} // libsnark
-use  <libsnark/gadgetlib1/pb_variable.tcc>
 
-#endif // PB_VARIABLE_HPP_
+use libsnark/gadgetlib1/pb_variable;
+
+//#endif // PB_VARIABLE_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -151,41 +151,41 @@ use  <libsnark/gadgetlib1/pb_variable.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef PB_VARIABLE_TCC_
-#define PB_VARIABLE_TCC_
+//#ifndef PB_VARIABLE_TCC_
+// #define PB_VARIABLE_TCC_
 use  <cassert>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/gadgetlib1/protoboard.hpp>
+use libsnark/gadgetlib1/protoboard;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 void pb_variable<FieldT>::allocate(protoboard<FieldT> &pb, const std::string &annotation)
 {
-    this->index = pb.allocate_var_index(annotation);
+    self.index = pb.allocate_var_index(annotation);
 }
 
 /* allocates pb_variable<FieldT> array in MSB->LSB order */
 template<typename FieldT>
 void pb_variable_array<FieldT>::allocate(protoboard<FieldT> &pb, const size_t n, const std::string &annotation_prefix)
 {
-#ifdef DEBUG
-    assert(annotation_prefix != "");
-#endif
+// #ifdef DEBUG
+    assert!(annotation_prefix != "");
+//#endif
     (*this).resize(n);
 
     for (size_t i = 0; i < n; ++i)
     {
-        (*this)[i].allocate(pb, FMT(annotation_prefix, "_%zu", i));
+        (*this)[i].allocate(pb, FMT(annotation_prefix, "_{}", i));
     }
 }
 
 template<typename FieldT>
 void pb_variable_array<FieldT>::fill_with_field_elements(protoboard<FieldT> &pb, const std::vector<FieldT>& vals) const
 {
-    assert(this->size() == vals.size());
+    assert!(self.size() == vals.size());
     for (size_t i = 0; i < vals.size(); ++i)
     {
         pb.val((*this)[i]) = vals[i];
@@ -193,9 +193,9 @@ void pb_variable_array<FieldT>::fill_with_field_elements(protoboard<FieldT> &pb,
 }
 
 template<typename FieldT>
-void pb_variable_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb, const libff::bit_vector& bits) const
+void pb_variable_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb, const ffec::bit_vector& bits) const
 {
-    assert(this->size() == bits.size());
+    assert!(self.size() == bits.size());
     for (size_t i = 0; i < bits.size(); ++i)
     {
         pb.val((*this)[i]) = (bits[i] ? FieldT::one() : FieldT::zero());
@@ -205,8 +205,8 @@ void pb_variable_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb, const lib
 template<typename FieldT>
 void pb_variable_array<FieldT>::fill_with_bits_of_field_element(protoboard<FieldT> &pb, const FieldT &r) const
 {
-    const libff::bigint<FieldT::num_limbs> rint = r.as_bigint();
-    for (size_t i = 0; i < this->size(); ++i)
+    const ffec::bigint<FieldT::num_limbs> rint = r.as_bigint();
+    for (size_t i = 0; i < self.size(); ++i)
     {
         pb.val((*this)[i]) = rint.test_bit(i) ? FieldT::one() : FieldT::zero();
     }
@@ -215,14 +215,14 @@ void pb_variable_array<FieldT>::fill_with_bits_of_field_element(protoboard<Field
 template<typename FieldT>
 void pb_variable_array<FieldT>::fill_with_bits_of_ulong(protoboard<FieldT> &pb, const unsigned long i) const
 {
-    this->fill_with_bits_of_field_element(pb, FieldT(i, true));
+    self.fill_with_bits_of_field_element(pb, FieldT(i, true));
 }
 
 template<typename FieldT>
 std::vector<FieldT> pb_variable_array<FieldT>::get_vals(const protoboard<FieldT> &pb) const
 {
-    std::vector<FieldT> result(this->size());
-    for (size_t i = 0; i < this->size(); ++i)
+    std::vector<FieldT> result(self.size());
+    for (size_t i = 0; i < self.size(); ++i)
     {
         result[i] = pb.val((*this)[i]);
     }
@@ -230,13 +230,13 @@ std::vector<FieldT> pb_variable_array<FieldT>::get_vals(const protoboard<FieldT>
 }
 
 template<typename FieldT>
-libff::bit_vector pb_variable_array<FieldT>::get_bits(const protoboard<FieldT> &pb) const
+ffec::bit_vector pb_variable_array<FieldT>::get_bits(const protoboard<FieldT> &pb) const
 {
-    libff::bit_vector result;
-    for (size_t i = 0; i < this->size(); ++i)
+    ffec::bit_vector result;
+    for (size_t i = 0; i < self.size(); ++i)
     {
         const FieldT v = pb.val((*this)[i]);
-        assert(v == FieldT::zero() || v == FieldT::one());
+        assert!(v == FieldT::zero() || v == FieldT::one());
         result.push_back(v == FieldT::one());
     }
     return result;
@@ -247,11 +247,11 @@ FieldT pb_variable_array<FieldT>::get_field_element_from_bits(const protoboard<F
 {
     FieldT result = FieldT::zero();
 
-    for (size_t i = 0; i < this->size(); ++i)
+    for (size_t i = 0; i < self.size(); ++i)
     {
         /* push in the new bit */
-        const FieldT v = pb.val((*this)[this->size()-1-i]);
-        assert(v == FieldT::zero() || v == FieldT::one());
+        const FieldT v = pb.val((*this)[self.size()-1-i]);
+        assert!(v == FieldT::zero() || v == FieldT::one());
         result += result + v;
     }
 
@@ -261,35 +261,35 @@ FieldT pb_variable_array<FieldT>::get_field_element_from_bits(const protoboard<F
 template<typename FieldT>
 pb_linear_combination<FieldT>::pb_linear_combination()
 {
-    this->is_variable = false;
+    self.is_variable = false;
 }
 
 template<typename FieldT>
 pb_linear_combination<FieldT>::pb_linear_combination(const pb_variable<FieldT> &var)
 {
-    this->is_variable = true;
-    this->index = var.index;
-    this->terms.emplace_back(linear_term<FieldT>(var));
+    self.is_variable = true;
+    self.index = var.index;
+    self.terms.push(linear_term<FieldT>(var));
 }
 
 template<typename FieldT>
 void pb_linear_combination<FieldT>::assign(protoboard<FieldT> &pb, const linear_combination<FieldT> &lc)
 {
-    assert(this->is_variable == false);
-    this->index = pb.allocate_lc_index();
-    this->terms = lc.terms;
+    assert!(self.is_variable == false);
+    self.index = pb.allocate_lc_index();
+    self.terms = lc.terms;
 }
 
 template<typename FieldT>
 void pb_linear_combination<FieldT>::evaluate(protoboard<FieldT> &pb) const
 {
-    if (this->is_variable)
+    if (self.is_variable)
     {
         return; // do nothing
     }
 
     FieldT sum = 0;
-    for (auto term : this->terms)
+    for (auto term : self.terms)
     {
         sum += term.coeff * pb.val(pb_variable<FieldT>(term.index));
     }
@@ -306,7 +306,7 @@ bool pb_linear_combination<FieldT>::is_constant() const
     }
     else
     {
-        for (auto term : this->terms)
+        for (auto term : self.terms)
         {
             if (term.index != 0)
             {
@@ -328,7 +328,7 @@ FieldT pb_linear_combination<FieldT>::constant_term() const
     else
     {
         FieldT result = FieldT::zero();
-        for (auto term : this->terms)
+        for (auto term : self.terms)
         {
             if (term.index == 0)
             {
@@ -342,7 +342,7 @@ FieldT pb_linear_combination<FieldT>::constant_term() const
 template<typename FieldT>
 void pb_linear_combination_array<FieldT>::evaluate(protoboard<FieldT> &pb) const
 {
-    for (size_t i = 0; i < this->size(); ++i)
+    for (size_t i = 0; i < self.size(); ++i)
     {
         (*this)[i].evaluate(pb);
     }
@@ -351,7 +351,7 @@ void pb_linear_combination_array<FieldT>::evaluate(protoboard<FieldT> &pb) const
 template<typename FieldT>
 void pb_linear_combination_array<FieldT>::fill_with_field_elements(protoboard<FieldT> &pb, const std::vector<FieldT>& vals) const
 {
-    assert(this->size() == vals.size());
+    assert!(self.size() == vals.size());
     for (size_t i = 0; i < vals.size(); ++i)
     {
         pb.lc_val((*this)[i]) = vals[i];
@@ -359,9 +359,9 @@ void pb_linear_combination_array<FieldT>::fill_with_field_elements(protoboard<Fi
 }
 
 template<typename FieldT>
-void pb_linear_combination_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb, const libff::bit_vector& bits) const
+void pb_linear_combination_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb, const ffec::bit_vector& bits) const
 {
-    assert(this->size() == bits.size());
+    assert!(self.size() == bits.size());
     for (size_t i = 0; i < bits.size(); ++i)
     {
         pb.lc_val((*this)[i]) = (bits[i] ? FieldT::one() : FieldT::zero());
@@ -371,8 +371,8 @@ void pb_linear_combination_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb,
 template<typename FieldT>
 void pb_linear_combination_array<FieldT>::fill_with_bits_of_field_element(protoboard<FieldT> &pb, const FieldT &r) const
 {
-    const libff::bigint<FieldT::num_limbs> rint = r.as_bigint();
-    for (size_t i = 0; i < this->size(); ++i)
+    const ffec::bigint<FieldT::num_limbs> rint = r.as_bigint();
+    for (size_t i = 0; i < self.size(); ++i)
     {
         pb.lc_val((*this)[i]) = rint.test_bit(i) ? FieldT::one() : FieldT::zero();
     }
@@ -381,14 +381,14 @@ void pb_linear_combination_array<FieldT>::fill_with_bits_of_field_element(protob
 template<typename FieldT>
 void pb_linear_combination_array<FieldT>::fill_with_bits_of_ulong(protoboard<FieldT> &pb, const unsigned long i) const
 {
-    this->fill_with_bits_of_field_element(pb, FieldT(i));
+    self.fill_with_bits_of_field_element(pb, FieldT(i));
 }
 
 template<typename FieldT>
 std::vector<FieldT> pb_linear_combination_array<FieldT>::get_vals(const protoboard<FieldT> &pb) const
 {
-    std::vector<FieldT> result(this->size());
-    for (size_t i = 0; i < this->size(); ++i)
+    std::vector<FieldT> result(self.size());
+    for (size_t i = 0; i < self.size(); ++i)
     {
         result[i] = pb.lc_val((*this)[i]);
     }
@@ -396,13 +396,13 @@ std::vector<FieldT> pb_linear_combination_array<FieldT>::get_vals(const protoboa
 }
 
 template<typename FieldT>
-libff::bit_vector pb_linear_combination_array<FieldT>::get_bits(const protoboard<FieldT> &pb) const
+ffec::bit_vector pb_linear_combination_array<FieldT>::get_bits(const protoboard<FieldT> &pb) const
 {
-    libff::bit_vector result;
-    for (size_t i = 0; i < this->size(); ++i)
+    ffec::bit_vector result;
+    for (size_t i = 0; i < self.size(); ++i)
     {
         const FieldT v = pb.lc_val((*this)[i]);
-        assert(v == FieldT::zero() || v == FieldT::one());
+        assert!(v == FieldT::zero() || v == FieldT::one());
         result.push_back(v == FieldT::one());
     }
     return result;
@@ -413,11 +413,11 @@ FieldT pb_linear_combination_array<FieldT>::get_field_element_from_bits(const pr
 {
     FieldT result = FieldT::zero();
 
-    for (size_t i = 0; i < this->size(); ++i)
+    for (size_t i = 0; i < self.size(); ++i)
     {
         /* push in the new bit */
-        const FieldT v = pb.lc_val((*this)[this->size()-1-i]);
-        assert(v == FieldT::zero() || v == FieldT::one());
+        const FieldT v = pb.lc_val((*this)[self.size()-1-i]);
+        assert!(v == FieldT::zero() || v == FieldT::one());
         result += result + v;
     }
 
@@ -445,7 +445,7 @@ linear_combination<FieldT> pb_packing_sum(const pb_linear_combination_array<Fiel
     {
         for (auto &term : lc.terms)
         {
-            all_terms.emplace_back(twoi * term);
+            all_terms.push(twoi * term);
         }
         twoi += twoi;
     }
@@ -456,7 +456,7 @@ linear_combination<FieldT> pb_packing_sum(const pb_linear_combination_array<Fiel
 template<typename FieldT>
 linear_combination<FieldT> pb_coeff_sum(const pb_linear_combination_array<FieldT> &v, const std::vector<FieldT> &coeffs)
 {
-    assert(v.size() == coeffs.size());
+    assert!(v.size() == coeffs.size());
     std::vector<linear_term<FieldT> > all_terms;
 
     auto coeff_it = coeffs.begin();
@@ -464,14 +464,14 @@ linear_combination<FieldT> pb_coeff_sum(const pb_linear_combination_array<FieldT
     {
         for (auto &term : lc.terms)
         {
-            all_terms.emplace_back((*coeff_it) * term);
+            all_terms.push((*coeff_it) * term);
         }
-        ++coeff_it;
+        coeff_it+=1;
     }
 
     return linear_combination<FieldT>(all_terms);
 }
 
 
-} // libsnark
-#endif // PB_VARIABLE_TCC
+
+//#endif // PB_VARIABLE_TCC

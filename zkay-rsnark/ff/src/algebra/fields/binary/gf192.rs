@@ -6,27 +6,27 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBFF_ALGEBRA_GF192_HPP_
-#define LIBFF_ALGEBRA_GF192_HPP_
+//#ifndef LIBFF_ALGEBRA_GF192_HPP_
+// #define LIBFF_ALGEBRA_GF192_HPP_
 
-#include <cstddef>
-#include <cstdint>
-#include <vector>
-#include <libff/algebra/field_utils/bigint.hpp>
+//#include <cstddef>
+//#include <cstdint>
+//#include <vector>
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 /* gf192 implements the field GF(2)/(x^192 + x^7 + x^2 + x + 1).
    Elements are represented internally with three uint64s */
 class gf192 {
 
-#ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
     static long long sub_cnt;
     static long long mul_cnt;
     static long long sqr_cnt;
     static long long inv_cnt;
-#endif
+//#endif
     // x^192 + x^7 + x^2 + x + 1
     static const constexpr uint64_t modulus_ = 0b10000111;
     static const constexpr uint64_t num_bits = 192;
@@ -99,35 +99,35 @@ private:
     uint64_t value_[3];
 };
 
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
 long long gf192::add_cnt = 0;
 long long gf192::sub_cnt = 0;
 long long gf192::mul_cnt = 0;
 long long gf192::sqr_cnt = 0;
 long long gf192::inv_cnt = 0;
-#endif
+//#endif
 
-} // namespace libff
-#include <libff/algebra/fields/binary/gf192.tcc>
+// } // namespace libff
+use libff/algebra/fields/binary/gf192.tcc;
 
-#endif // namespace libff_ALGEBRA_GF192_HPP_
-#include <cstdio>
+//#endif // namespace libff_ALGEBRA_GF192_HPP_
+//#include <cstdio>
 
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+// #define __STDC_FORMAT_MACROS
+//#include <inttypes.h>
 
-#include <sodium/randombytes.h>
+//#include <sodium/randombytes.h>
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 #include "libff/algebra/fields/binary/gf192.hpp"
 
-#ifdef USE_ASM
-#include <emmintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#endif
+// #ifdef USE_ASM
+//#include <emmintrin.h>
+//#include <immintrin.h>
+//#include <smmintrin.h>
+//#endif
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -162,9 +162,9 @@ bool gf192::from_words(std::vector<uint64_t> words)
 
 gf192& gf192::operator+=(const gf192 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-#endif
+//#endif
     this->value_[0] ^= other.value_[0];
     this->value_[1] ^= other.value_[1];
     this->value_[2] ^= other.value_[2];
@@ -173,9 +173,9 @@ gf192& gf192::operator+=(const gf192 &other)
 
 gf192& gf192::operator-=(const gf192 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sub_cnt++;
-#endif
+//#endif
     this->value_[0] ^= other.value_[0];
     this->value_[1] ^= other.value_[1];
     this->value_[2] ^= other.value_[2];
@@ -184,12 +184,12 @@ gf192& gf192::operator-=(const gf192 &other)
 
 gf192& gf192::operator*=(const gf192 &other)
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->mul_cnt++;
-#endif
+//#endif
     /* Does not require *this and other to be different, and therefore
        also works for squaring, implemented below. */
-#ifdef USE_ASM
+// #ifdef USE_ASM
     /* load the two operands and the modulus into 128-bit registers.
        we load corresponding limbs of both operands into a single register,
        because it lets us implement Karatsuba (see below) with fewer 128-bit
@@ -293,7 +293,7 @@ gf192& gf192::operator*=(const gf192 &other)
     this->value_[2] = result[2];
 
     return (*this);
-#endif
+//#endif
 }
 
 gf192& gf192::operator^=(const unsigned long pow)
@@ -304,10 +304,10 @@ gf192& gf192::operator^=(const unsigned long pow)
 
 gf192& gf192::square()
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->sqr_cnt++;
     this->mul_cnt--;
-#endif
+//#endif
     this->operator*=(*this);
     return *this;
 }
@@ -357,12 +357,12 @@ gf192 gf192::squared() const
    requires 210 mul/sqr operations total. */
 gf192 gf192::inverse() const
 {
-#ifdef PROFILE_OP_COUNTS
+// #ifdef PROFILE_OP_COUNTS
     this->inv_cnt++;
     this->mul_cnt -= 15;
     this->sqr_cnt -= 193;
-#endif
-    assert(!this->is_zero());
+//#endif
+    assert!(!this->is_zero());
     gf192 a(*this);
 
     gf192 result(0);
@@ -436,7 +436,7 @@ bool gf192::is_zero() const
 
 void gf192::print() const
 {
-    printf("%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "\n", this->value_[2], this->value_[1], this->value_[0]);
+    print!("%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "\n", this->value_[2], this->value_[1], this->value_[0]);
 }
 
 gf192 gf192::random_element()
@@ -468,12 +468,12 @@ std::istream& operator>>(std::istream &in, gf192 &el)
     return in;
 }
 
-} // namespace libff
+// } // namespace libff
 
 
 #include "libff/algebra/field_utils/algorithms.hpp"
 
-namespace libff {
+// namespace libff {
 
 template<mp_size_t m>
 gf192& gf192::operator^=(const bigint<m> &pow)
@@ -488,4 +488,4 @@ gf192 gf192::operator^(const bigint<m> &pow) const
     return power<gf192>(*this, pow);
 }
 
-} // namespace libff
+// } // namespace libff

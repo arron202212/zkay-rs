@@ -5,21 +5,21 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef CURVE_UTILS_HPP_
-#define CURVE_UTILS_HPP_
-#include <cstdint>
+//#ifndef CURVE_UTILS_HPP_
+// #define CURVE_UTILS_HPP_
+//#include <cstdint>
 
-#include <libff/algebra/field_utils/bigint.hpp>
+use crate::algebra::field_utils::bigint;
 
-namespace libff {
+// namespace libff {
 
 template<typename GroupT, mp_size_t m>
 GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar);
 
-} // namespace libff
-#include <libff/algebra/curves/curve_utils.tcc>
+// } // namespace libff
+use libff/algebra/curves/curve_utils.tcc;
 
-#endif // CURVE_UTILS_HPP_
+//#endif // CURVE_UTILS_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -27,10 +27,10 @@ GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef CURVE_UTILS_TCC_
-#define CURVE_UTILS_TCC_
+//#ifndef CURVE_UTILS_TCC_
+// #define CURVE_UTILS_TCC_
 
-namespace libff {
+// namespace libff {
 
 template<typename GroupT, mp_size_t m>
 GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar)
@@ -55,5 +55,5 @@ GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar)
     return result;
 }
 
-} // namespace libff
-#endif // CURVE_UTILS_TCC_
+// } // namespace libff
+//#endif // CURVE_UTILS_TCC_

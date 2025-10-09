@@ -5,12 +5,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef EDWARDS_INIT_HPP_
-#define EDWARDS_INIT_HPP_
-#include <libff/algebra/curves/public_params.hpp>
-#include <libff/algebra/curves/edwards/edwards_fields.hpp>
+//#ifndef EDWARDS_INIT_HPP_
+// #define EDWARDS_INIT_HPP_
+use libff/algebra/curves/public_params;
+use libff/algebra/curves/edwards/edwards_fields;
 
-namespace libff {
+// namespace libff {
 
 // parameters for Edwards curve E_{1,d}(F_q)
 extern edwards_Fq edwards_coeff_a;
@@ -39,8 +39,8 @@ void init_edwards_params();
 class edwards_G1;
 class edwards_G2;
 
-} // namespace libff
-#endif // EDWARDS_INIT_HPP_
+// } // namespace libff
+//#endif // EDWARDS_INIT_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
@@ -48,11 +48,11 @@ class edwards_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include <libff/algebra/curves/edwards/edwards_g1.hpp>
-#include <libff/algebra/curves/edwards/edwards_g2.hpp>
-#include <libff/algebra/curves/edwards/edwards_init.hpp>
+use libff/algebra/curves/edwards/edwards_g1;
+use libff/algebra/curves/edwards/edwards_g2;
+use libff/algebra/curves/edwards/edwards_init;
 
-namespace libff {
+// namespace libff {
 
 edwards_Fq edwards_coeff_a;
 edwards_Fq edwards_coeff_d;
@@ -224,4 +224,4 @@ void init_edwards_params()
     edwards_final_exponent_last_chunk_w1 = bigint<edwards_q_limbs>("4");
 
 }
-} // namespace libff
+// } // namespace libff

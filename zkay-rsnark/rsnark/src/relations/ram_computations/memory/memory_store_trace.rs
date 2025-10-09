@@ -9,12 +9,12 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef MEMORY_STORE_TRACE_HPP_
-#define MEMORY_STORE_TRACE_HPP_
+//#ifndef MEMORY_STORE_TRACE_HPP_
+// #define MEMORY_STORE_TRACE_HPP_
 
-use  <libsnark/relations/ram_computations/memory/memory_interface.hpp>
+use libsnark/relations/ram_computations/memory/memory_interface;
 
-namespace libsnark {
+
 
 /**
  * A pair consisting of an address and a value.
@@ -38,6 +38,6 @@ public:
     memory_contents as_memory_contents() const;
 };
 
-} // libsnark
 
-#endif // MEMORY_STORE_TRACE_HPP_
+
+//#endif // MEMORY_STORE_TRACE_HPP_

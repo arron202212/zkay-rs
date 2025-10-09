@@ -9,23 +9,23 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef LIBSNARK_SERIALIZATION_HPP_
-#define LIBSNARK_SERIALIZATION_HPP_
+//#ifndef LIBSNARK_SERIALIZATION_HPP_
+// #define LIBSNARK_SERIALIZATION_HPP_
 
-use  <libff/common/serialization.hpp>
+use ffec::common::serialization;
 
-namespace libsnark {
-    using libff::consume_newline;
-    using libff::consume_OUTPUT_NEWLINE;
-    using libff::consume_OUTPUT_SEPARATOR;
 
-    using libff::output_bool;
-    using libff::input_bool;
+    using ffec::consume_newline;
+    using ffec::consume_OUTPUT_NEWLINE;
+    using ffec::consume_OUTPUT_SEPARATOR;
 
-    using libff::input_bool_vector;
-    using libff::output_bool_vector;
-    using libff::operator<<;
-    using libff::operator>>;
+    using ffec::output_bool;
+    using ffec::input_bool;
+
+    using ffec::input_bool_vector;
+    using ffec::output_bool_vector;
+    using ffec::operator<<;
+    using ffec::operator>>;
 }
 
-#endif // LIBSNARK_SERIALIZATION_HPP_
+//#endif // LIBSNARK_SERIALIZATION_HPP_

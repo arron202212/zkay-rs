@@ -9,67 +9,67 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SPARSE_VECTOR_HPP_
-#define SPARSE_VECTOR_HPP_
+// //#ifndef SPARSE_VECTOR_HPP_
+// // #define SPARSE_VECTOR_HPP_
 
-use  <iostream>
-use  <vector>
+// use  <iostream>
+// use  <vector>
 
-namespace libsnark {
 
-template<typename T>
-struct sparse_vector;
+
+// pub fn 
+// pub struct sparse_vector<T>;
 
 
 /**
  * A sparse vector is a list of indices along with corresponding values.
  * The indices are selected from the set {0,1,...,domain_size-1}.
  */
-template<typename T>
-struct sparse_vector {
 
-    std::vector<size_t> indices;
-    std::vector<T> values;
-    size_t domain_size_;
+pub struct sparse_vector<T> {
 
-    sparse_vector() = default;
-    sparse_vector(&other:sparse_vector<T>) = default;
-    sparse_vector(sparse_vector<T> &&other) = default;
-    sparse_vector(std::vector<T> &&v); /* constructor from std::vector */
+indices:    Vec<usize>,
+values:    Vec<T>,
+domain_size_:    usize,
 
-    sparse_vector<T>& operator=(&other:sparse_vector<T>) = default;
-    sparse_vector<T>& operator=(sparse_vector<T> &&other) = default;
+    // sparse_vector() = default;
+    // sparse_vector(&other:sparse_vector<T>) = default;
+    // sparse_vector(sparse_vector<T> &&other) = default;
+    // pub fn new(v:Vec<T>); /* constructor from std::vector */
 
-    T operator[](idx:size_t) const;
+    // sparse_vector<T>& operator=(&other:sparse_vector<T>) = default;
+    // sparse_vector<T>& operator=(sparse_vector<T> &&other) = default;
 
-    bool operator==(&other:sparse_vector<T>) const;
-    bool operator==(&other:std::vector<T>) const;
+    // T operator[](idx:size_t) const;
 
-    bool is_valid() const;
-    bool empty() const;
+    // bool operator==(&other:sparse_vector<T>) const;
+    // bool operator==(&other:std::vector<T>) const;
 
-    size_t domain_size() const; // return domain_size_
-    size_t size() const; // return the number of indices (representing the number of non-zero entries)
-     pub fn size_in_bits(&self)->usize; // return the number bits needed to store the sparse vector
+    // bool is_valid() const;
+    // bool empty() const;
 
-    /* return a pair consisting of the accumulated value and the sparse vector of non-accumulated values */
-    template<typename FieldT>
-    std::pair<T, sparse_vector<T> > accumulate(it_begin:&typename std::vector<FieldT>::const_iterator
-                                               it_end:&typename std::vector<FieldT>::const_iterator
-                                               offset:size_t) const;
+    // size_t domain_size() const; // return domain_size_
+    // size_t size() const; // return the number of indices (representing the number of non-zero entries)
+    //  pub fn size_in_bits(&self)->usize; // return the number bits needed to store the sparse vector
 
-};
+    // /* return a pair consisting of the accumulated value and the sparse vector of non-accumulated values */
+    // template<typename FieldT>
+    // std::pair<T, sparse_vector<T> > accumulate(it_begin:&typename std::vector<FieldT>::const_iterator
+    //                                            it_end:&typename std::vector<FieldT>::const_iterator
+    //                                            offset:size_t) const;
+
+}
 
 
 
-template<typename T>
-std::istream& operator>>(std::istream& in, sparse_vector<T> &v);
+// pub fn 
+// std::istream& operator>>(std::istream& in, sparse_vector<T> &v);
 
-} // libsnark
 
-use  <libsnark/common/data_structures/sparse_vector.tcc>
 
-#endif // SPARSE_VECTOR_HPP_
+// use libsnark::common::data_structures::sparse_vector;
+
+// //#endif // SPARSE_VECTOR_HPP_
 
 
 /** @file
@@ -85,160 +85,28 @@ use  <libsnark/common/data_structures/sparse_vector.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SPARSE_VECTOR_TCC_
-#define SPARSE_VECTOR_TCC_
+// //#ifndef SPARSE_VECTOR_TCC_
+// // #define SPARSE_VECTOR_TCC_
 
-use  <numeric>
+// use  <numeric>
 
-#ifdef MULTICORE
-use  <omp.h>
-#endif
+// // #ifdef MULTICORE
+// use  <omp.h>
+// //#endif
 
-use  <libff/algebra/scalar_multiplication/multiexp.hpp>
+ use ffec::algebra::scalar_multiplication::multiexp;
 
-namespace libsnark {
 
-template<typename T>
-sparse_vector<T>::sparse_vector(std::vector<T> &&v) :
-    values(std::move(v)), domain_size_(values.size())
-{
-    indices.resize(domain_size_);
-    std::iota(indices.begin(), indices.end(), 0);
+impl<T> sparse_vector<T>{
+
+pub fn new(v:Vec<T>) ->Self
+{   
+    let domain_size_=v.len();
+    Self{values:v, domain_size_,indices:(0..domain_size_).collect()}
 }
 
-template<typename T>
-T sparse_vector<T>::operator[](idx:size_t) const
-{
-    auto it = std::lower_bound(indices.begin(), indices.end(), idx);
-    return (it != indices.end() && *it == idx) ? values[it - indices.begin()] : T();
-}
-
-impl<ppT> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.A_query == other.A_query &&
-            self.B_query == other.B_query &&
-            self.C_query_1 == other.C_query_1 &&
-            self.C_query_2 == other.C_query_2 &&
-            self.G_gamma_Z == other.G_gamma_Z &&
-            self.H_gamma_Z == other.H_gamma_Z &&
-            self.G_ab_gamma_Z == other.G_ab_gamma_Z &&
-            self.G_gamma2_Z2 == other.G_gamma2_Z2 &&
-            self.G_gamma2_Z_t == other.G_gamma2_Z_t &&
-            self.constraint_system == other.constraint_system
-    }
-}
-
-template<typename T>
-bool sparse_vector<T>::operator==(&other:sparse_vector<T>) const
-{
-    if this->domain_size_ != other.domain_size_
-    {
-        return false;
-    }
-
-    size_t this_pos = 0, other_pos = 0;
-    while (this_pos < this->indices.size() && other_pos < other.indices.size())
-    {
-        if this->indices[this_pos] == other.indices[other_pos]
-        {
-            if this->values[this_pos] != other.values[other_pos]
-            {
-                return false;
-            }
-            ++this_pos;
-            ++other_pos;
-        }
-        else if this->indices[this_pos] < other.indices[other_pos]
-        {
-            if !this->values[this_pos].is_zero()
-            {
-                return false;
-            }
-            ++this_pos;
-        }
-        else
-        {
-            if !other.values[other_pos].is_zero()
-            {
-                return false;
-            }
-            ++other_pos;
-        }
-    }
-
-    /* at least one of the vectors has been exhausted, so other must be empty */
-    while (this_pos < this->indices.size())
-    {
-        if !this->values[this_pos].is_zero()
-        {
-            return false;
-        }
-        ++this_pos;
-    }
-
-    while (other_pos < other.indices.size())
-    {
-        if !other.values[other_pos].is_zero()
-        {
-            return false;
-        }
-        ++other_pos;
-    }
-
-    return true;
-}
-
-
-impl<ppT> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.A_query == other.A_query &&
-            self.B_query == other.B_query &&
-            self.C_query_1 == other.C_query_1 &&
-            self.C_query_2 == other.C_query_2 &&
-            self.G_gamma_Z == other.G_gamma_Z &&
-            self.H_gamma_Z == other.H_gamma_Z &&
-            self.G_ab_gamma_Z == other.G_ab_gamma_Z &&
-            self.G_gamma2_Z2 == other.G_gamma2_Z2 &&
-            self.G_gamma2_Z_t == other.G_gamma2_Z_t &&
-            self.constraint_system == other.constraint_system
-    }
-}
-
-template<typename T>
-bool sparse_vector<T>::operator==(&other:std::vector<T>) const
-{
-    if this->domain_size_ < other.size()
-    {
-        return false;
-    }
-
-    size_t j = 0;
-    for i in 0..other.size()
-    {
-        if this->indices[j] == i
-        {
-            if this->values[j] != other[j]
-            {
-                return false;
-            }
-            ++j;
-        }
-        else
-        {
-            if !other[j].is_zero()
-            {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-template<typename T>
-bool sparse_vector<T>::is_valid() const
+pub fn 
+ is_valid(&self)->bool
 {
     if values.size() == indices.size() && values.size() <= domain_size_
     {
@@ -261,55 +129,53 @@ bool sparse_vector<T>::is_valid() const
     return true;
 }
 
-template<typename T>
-bool sparse_vector<T>::empty() const
+pub fn 
+ sparse_vector<T>::empty() ->bool
 {
     return indices.empty();
 }
 
-template<typename T>
-size_t sparse_vector<T>::domain_size() const
+pub fn 
+domain_size(&self) ->usize
 {
     return domain_size_;
 }
 
-template<typename T>
-size_t sparse_vector<T>::size() const
+pub fn 
+size(&self) ->usize
 {
     return indices.size();
 }
 
-template<typename T>
-size_t sparse_vector<T>::size_in_bits() const
+pub fn 
+ size_in_bits(&self)  ->usize
 {
     return indices.size() * (sizeof(size_t) * 8 + T::size_in_bits());
 }
 
-template<typename T>
-template<typename FieldT>
-std::pair<T, sparse_vector<T> > sparse_vector<T>::accumulate(it_begin:&typename std::vector<FieldT>::const_iterator
-                                                             it_end:&typename std::vector<FieldT>::const_iterator
-                                                             offset:size_t) const
+pub fn accumulate<FieldT>(it_begin:& std::vector<FieldT>::const_iterator
+                                                             it_end:& std::vector<FieldT>::const_iterator
+                                                             offset:size_t) ->(T, sparse_vector<T>)
 {
-#ifdef MULTICORE
-    override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
-#else
-    const size_t chunks = 1;
-#endif
+// // #ifdef MULTICORE
+//     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
+// #else
+//     const size_t chunks = 1;
+// //#endif
 
-    T accumulated_value = T::zero();
-    sparse_vector<T> resulting_vector;
+    let mut accumulated_value = T::zero();
+    let  resulting_vector=sparse_vector<T>::new();
     resulting_vector.domain_size_ = domain_size_;
 
-    const size_t range_len = it_end - it_begin;
-    bool in_block = false;
-    size_t first_pos = -1, last_pos = -1; // g++ -flto emits unitialized warning, even though in_block guards for such cases.
+    let  range_len = it_end - it_begin;
+    let in_block = false;
+    let  first_pos = -1; let last_pos = -1; // g++ -flto emits unitialized warning, even though in_block guards for such cases.
 
     for i in 0..indices.size()
     {
-        range_len:bool matching_pos = (offset <= indices[i] && indices[i] < offset +);
-        // printf!("i = %zu, pos[i] = %zu, offset = %zu, w_size = %zu\n", i, indices[i], offset, w_size);
-        bool copy_over;
+        let  matching_pos = (offset <= indices[i] && indices[i] < offset +range_len);
+        // print!("i = {}, pos[i] = {}, offset = {}, w_size = {}\n", i, indices[i], offset, w_size);
+        let mut  copy_over;
 
         if in_block
         {
@@ -325,10 +191,10 @@ std::pair<T, sparse_vector<T> > sparse_vector<T>::accumulate(it_begin:&typename 
                 in_block = false;
                 copy_over = true;
 
-#ifdef DEBUG
-                libff::print_indent(); printf!("doing multiexp for w_%zu ... w_%zu\n", indices[first_pos], indices[last_pos]);
-#endif
-                accumulated_value = accumulated_value + libff::multi_exp<T, FieldT, libff::multi_exp_method_bos_coster>(
+// // #ifdef DEBUG
+//                 ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
+// //#endif
+                accumulated_value = accumulated_value + ffec::multi_exp::<T, FieldT, ffec::multi_exp_method_bos_coster>(
                     values.begin() + first_pos,
                     values.begin() + last_pos + 1,
                     it_begin + (indices[first_pos] - offset),
@@ -354,17 +220,17 @@ std::pair<T, sparse_vector<T> > sparse_vector<T>::accumulate(it_begin:&typename 
 
         if copy_over
         {
-            resulting_vector.indices.emplace_back(indices[i]);
-            resulting_vector.values.emplace_back(values[i]);
+            resulting_vector.indices.push(indices[i]);
+            resulting_vector.values.push(values[i]);
         }
     }
 
     if in_block
     {
-#ifdef DEBUG
-        libff::print_indent(); printf!("doing multiexp for w_%zu ... w_%zu\n", indices[first_pos], indices[last_pos]);
-#endif
-        accumulated_value = accumulated_value + libff::multi_exp<T, FieldT, libff::multi_exp_method_bos_coster>(
+// // #ifdef DEBUG
+//         ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
+// //#endif
+        accumulated_value = accumulated_value + ffec::multi_exp::<T, FieldT, ffec::multi_exp_method_bos_coster>(
             values.begin() + first_pos,
             values.begin() + last_pos + 1,
             it_begin + (indices[first_pos] - offset),
@@ -372,74 +238,200 @@ std::pair<T, sparse_vector<T> > sparse_vector<T>::accumulate(it_begin:&typename 
             chunks);
     }
 
-    return std::make_pair(accumulated_value, resulting_vector);
+    return (accumulated_value, resulting_vector);
 }
+
+}
+
+// //#endif // SPARSE_VECTOR_TCC_
+
+use std::ops::Index;
+impl<T> Index<usize> for sparse_vector<T> {
+type Output = T;
+
+fn index(&self, idx: usize) -> &Self::Output {
+    let it = std::lower_bound(indices.begin(), indices.end(), idx);
+     if it != indices.end() && *it == idx  {values[it - indices.begin()]} else {T{}}
+}
+}
+
+
+// pub fn 
+// T sparse_vector<T>::operator[](idx:size_t) const
+// {
+//     auto it = std::lower_bound(indices.begin(), indices.end(), idx);
+//     return (it != indices.end() && *it == idx) ? values[it - indices.begin()] : T();
+// }
+
+impl<T> PartialEq for sparse_vector<T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        if self.domain_size_ != other.domain_size_
+    {
+        return false;
+    }
+
+    let this_pos = 0;let other_pos = 0;
+    while this_pos < self.indices.size() && other_pos < other.indices.size()
+    {
+        if self.indices[this_pos] == other.indices[other_pos]
+        {
+            if self.values[this_pos] != other.values[other_pos]
+            {
+                return false;
+            }
+            this_pos+=1;
+            other_pos+=1;
+        }
+        else if self.indices[this_pos] < other.indices[other_pos]
+        {
+            if !self.values[this_pos].is_zero()
+            {
+                return false;
+            }
+            this_pos+=1;
+        }
+        else
+        {
+            if !other.values[other_pos].is_zero()
+            {
+                return false;
+            }
+            other_pos+=1;
+        }
+    }
+
+    /* at least one of the vectors has been exhausted, so other must be empty */
+    while this_pos < self.indices.size()
+    {
+        if !self.values[this_pos].is_zero()
+        {
+            return false;
+        }
+        this_pos+=1;
+    }
+
+    while other_pos < other.indices.size()
+    {
+        if !other.values[other_pos].is_zero()
+        {
+            return false;
+        }
+        other_pos+=1;
+    }
+
+    return true;
+    }
+}
+
+
+impl<T> PartialEq<&Vec<T>> for sparse_vector<T>{
+    #[inline]
+    fn eq(&self, other: &Vec<T>) -> bool {
+        if self.domain_size_ < other.size()
+    {
+        return false;
+    }
+
+    let mut j = 0;
+    for i in 0..other.size()
+    {
+        if self.indices[j] == i
+        {
+            if self.values[j] != other[j]
+            {
+                return false;
+            }
+            j+=1;
+        }
+        else
+        {
+            if !other[j].is_zero()
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+    }
+}
+
+// pub fn 
+// bool sparse_vector<T>::operator==(&other:std::vector<T>) const
+// {
+//     if self.domain_size_ < other.size()
+//     {
+//         return false;
+//     }
+
+//     size_t j = 0;
+//     for i in 0..other.size()
+//     {
+//         if self.indices[j] == i
+//         {
+//             if self.values[j] != other[j]
+//             {
+//                 return false;
+//             }
+//             j+=1;
+//         }
+//         else
+//         {
+//             if !other[j].is_zero()
+//             {
+//                 return false;
+//             }
+//         }
+//     }
+
+//     return true;
+// }
+
+
+
+
 impl<ppT> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}{}{}{}{}{}",  
-pk.A_query,
-pk.B_query,
-pk.C_query_1,
-pk.C_query_2,
-pk.G_gamma_Z,
-pk.H_gamma_Z,
-pk.G_ab_gamma_Z,
-pk.G_gamma2_Z2,
-pk.G_gamma2_Z_t,
-pk.constraint_system,)
+        write!(f, "{}\n{}\n{}{}\n{}",  
+v.domain_size_ ,
+v.indices.size(),
+v.indices.iter().map(|i|format!("{i}\n")).collect::<String>(),
+v.values.size(),
+v.values.iter().map(|i|format!("{i}{OUTPUT_NEWLINE}")).collect::<String>(),
+)
     }
 }
-template<typename T>
-std::ostream& operator<<(std::ostream& out, &v:sparse_vector<T>)
-{
-    out << v.domain_size_ << "\n";
-    out << v.indices.size() << "\n";
-    for (v.indices:size_t& i :)
-    {
-        out << i << "\n";
-    }
 
-    out << v.values.size() << "\n";
-    for (v.values:T& t :)
-    {
-        out << t << OUTPUT_NEWLINE;
-    }
 
-    return out;
-}
+// pub fn 
+// std::istream& operator>>(std::istream& in, sparse_vector<T> &v)
+// {
+//     in >> v.domain_size_;
+//     ffec::consume_newline(in);
 
-template<typename T>
-std::istream& operator>>(std::istream& in, sparse_vector<T> &v)
-{
-    in >> v.domain_size_;
-    libff::consume_newline(in);
+//     size_t s;
+//     in >> s;
+//     ffec::consume_newline(in);
+//     v.indices.resize(s);
+//     for i in 0..s
+//     {
+//         in >> v.indices[i];
+//         ffec::consume_newline(in);
+//     }
 
-    size_t s;
-    in >> s;
-    libff::consume_newline(in);
-    v.indices.resize(s);
-    for i in 0..s
-    {
-        in >> v.indices[i];
-        libff::consume_newline(in);
-    }
+//     v.values.clear();
+//     in >> s;
+//     ffec::consume_newline(in);
+//     v.values.reserve(s);
 
-    v.values.clear();
-    in >> s;
-    libff::consume_newline(in);
-    v.values.reserve(s);
+//     for i in 0..s
+//     {
+//         T t;
+//         in >> t;
+//         ffec::consume_OUTPUT_NEWLINE(in);
+//         v.values.push(t);
+//     }
 
-    for i in 0..s
-    {
-        T t;
-        in >> t;
-        libff::consume_OUTPUT_NEWLINE(in);
-        v.values.emplace_back(t);
-    }
-
-    return in;
-}
-
-} // libsnark
-
-#endif // SPARSE_VECTOR_TCC_
+//     return in;
+// }

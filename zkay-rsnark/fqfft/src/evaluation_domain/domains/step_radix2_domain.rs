@@ -12,10 +12,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef STEP_RADIX2_DOMAIN_HPP_
-#define STEP_RADIX2_DOMAIN_HPP_
+//#ifndef STEP_RADIX2_DOMAIN_HPP_
+// #define STEP_RADIX2_DOMAIN_HPP_
 
-#include <libfqfft/evaluation_domain/evaluation_domain.hpp>
+use libfqfft/evaluation_domain/evaluation_domain;
 
 namespace libfqfft {
 
@@ -45,9 +45,9 @@ class step_radix2_domain : public evaluation_domain<FieldT> {
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/domains/step_radix2_domain.tcc>
+use libfqfft/evaluation_domain/domains/step_radix2_domain.tcc;
 
-#endif // STEP_RADIX2_DOMAIN_HPP_
+//#endif // STEP_RADIX2_DOMAIN_HPP_
 
 
 /** @file
@@ -63,9 +63,9 @@ class step_radix2_domain : public evaluation_domain<FieldT> {
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef STEP_RADIX2_DOMAIN_TCC_
+//#ifndef STEP_RADIX2_DOMAIN_TCC_
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.hpp>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
 
 namespace libfqfft {
 
@@ -301,4 +301,4 @@ void step_radix2_domain<FieldT>::divide_by_Z_on_coset(std::vector<FieldT> &P)
 
 } // libfqfft
 
-#endif // STEP_RADIX2_DOMAIN_TCC_
+//#endif // STEP_RADIX2_DOMAIN_TCC_

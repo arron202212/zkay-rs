@@ -5,22 +5,22 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef INTEGRATION_HPP_
-#define INTEGRATION_HPP_
+//#ifndef INTEGRATION_HPP_
+// #define INTEGRATION_HPP_
 
-use  <libff/common/default_types/ec_pp.hpp>
+use ffec::common::default_types::ec_pp;
 
-use  <libsnark/gadgetlib2/protoboard.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
+use libsnark/gadgetlib2/protoboard;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
-namespace libsnark {
 
-r1cs_constraint_system<libff::Fr<libff::default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
-r1cs_variable_assignment<libff::Fr<libff::default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
 
-} // libsnark
+r1cs_constraint_system<ffec::Fr<ffec::default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
+r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
 
-#endif // INTEGRATION_HPP_
+
+
+//#endif // INTEGRATION_HPP_
 /** @file
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -28,14 +28,14 @@ r1cs_variable_assignment<libff::Fr<libff::default_ec_pp> > get_variable_assignme
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <libsnark/gadgetlib2/adapters.hpp>
-use  <libsnark/gadgetlib2/integration.hpp>
+use libsnark/gadgetlib2/adapters;
+use libsnark/gadgetlib2/integration;
 
-namespace libsnark {
 
-linear_combination<libff::Fr<libff::default_ec_pp> > convert_gadgetlib2_linear_combination(const gadgetlib2::GadgetLibAdapter::linear_combination_t &lc)
+
+linear_combination<ffec::Fr<ffec::default_ec_pp> > convert_gadgetlib2_linear_combination(const gadgetlib2::GadgetLibAdapter::linear_combination_t &lc)
 {
-    type libff::Fr<libff::default_ec_pp> FieldT;
+    type ffec::Fr<ffec::default_ec_pp> FieldT;
     type gadgetlib2::GadgetLibAdapter GLA;
 
     linear_combination<FieldT> result = lc.second * variable<FieldT>(0);
@@ -47,9 +47,9 @@ linear_combination<libff::Fr<libff::default_ec_pp> > convert_gadgetlib2_linear_c
     return result;
 }
 
-r1cs_constraint_system<libff::Fr<libff::default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb)
+r1cs_constraint_system<ffec::Fr<ffec::default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb)
 {
-    type libff::Fr<libff::default_ec_pp> FieldT;
+    type ffec::Fr<ffec::default_ec_pp> FieldT;
     type gadgetlib2::GadgetLibAdapter GLA;
 
     r1cs_constraint_system<FieldT> result;
@@ -58,30 +58,30 @@ r1cs_constraint_system<libff::Fr<libff::default_ec_pp> > get_constraint_system_f
     GLA::protoboard_t converted_pb = adapter.convert(pb);
     const int num_constraints = converted_pb.first.size();
     result.constraints.resize(num_constraints);
-    printf("Num constraints: %d\n", num_constraints);
+    print!("Num constraints: %d\n", num_constraints);
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
 #pragma omp parallel default(none) shared(converted_pb, result), firstprivate(num_constraints)
   {
 #pragma omp single nowait
     {
-#endif
+//#endif
       for (int i = 0; i < num_constraints; ++i) {
         const auto& constr = converted_pb.first[i];
-#ifdef MULTICORE
+// #ifdef MULTICORE
 #pragma omp task default(none) shared(result, constr, i)
         {
-#endif
+//#endif
           result.constraints[i].a = convert_gadgetlib2_linear_combination(std::get<0>(constr));
           result.constraints[i].b = convert_gadgetlib2_linear_combination(std::get<1>(constr));
           result.constraints[i].c = convert_gadgetlib2_linear_combination(std::get<2>(constr));
         }
-#ifdef MULTICORE
+// #ifdef MULTICORE
       }
     }
 #pragma omp taskwait
   }
-#endif
+//#endif
 
     //The number of variables is the highest index created.
     //TODO: If there are multiple protoboards, or variables not assigned to a protoboard, then getNextFreeIndex() is *not* the number of variables! See also in get_variable_assignment_from_gadgetlib2.
@@ -91,9 +91,9 @@ r1cs_constraint_system<libff::Fr<libff::default_ec_pp> > get_constraint_system_f
     return result;
 }
 
-r1cs_variable_assignment<libff::Fr<libff::default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb)
+r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb)
 {
-    type libff::Fr<libff::default_ec_pp> FieldT;
+    type ffec::Fr<ffec::default_ec_pp> FieldT;
     type gadgetlib2::GadgetLibAdapter GLA;
 
     //The number of variables is the highest index created. This is also the required size for the assignment vector.

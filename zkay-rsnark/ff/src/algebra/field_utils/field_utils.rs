@@ -5,9 +5,9 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FIELD_UTILS_HPP_
-#define FIELD_UTILS_HPP_
-#include <cstdint>
+//#ifndef FIELD_UTILS_HPP_
+// #define FIELD_UTILS_HPP_
+//#include <cstdint>
 
 #include "libff/algebra/field_utils/bigint.hpp"
 #include "libff/common/double.hpp"
@@ -19,7 +19,7 @@
 #include "libff/algebra/fields/binary/gf256.hpp"
 #include "libff/algebra/fields/prime_base/fp.hpp"
 
-namespace libff {
+// namespace libff {
 
 template<typename FieldT>
 struct is_additive {
@@ -130,10 +130,10 @@ FieldT convert_bit_vector_to_field_element(const bit_vector &v);
 template<typename FieldT>
 void batch_invert(std::vector<FieldT> &vec);
 
-} // namespace libff
-#include <libff/algebra/field_utils/field_utils.tcc>
+// } // namespace libff
+use libff/algebra/field_utils/field_utils.tcc;
 
-#endif // FIELD_UTILS_HPP_
+//#endif // FIELD_UTILS_HPP_
 
 
 /** @file
@@ -145,13 +145,13 @@ void batch_invert(std::vector<FieldT> &vec);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FIELD_UTILS_TCC_
-#define FIELD_UTILS_TCC_
+//#ifndef FIELD_UTILS_TCC_
+// #define FIELD_UTILS_TCC_
 
-#include <complex>
-#include <stdexcept>
+//#include <complex>
+//#include <stdexcept>
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -279,7 +279,7 @@ std::vector<FieldT> pack_int_vector_into_field_element_vector(const std::vector<
 template<typename FieldT>
 std::vector<FieldT> pack_bit_vector_into_field_element_vector(const bit_vector &v, const size_t chunk_bits)
 {
-    assert(chunk_bits <= FieldT::floor_size_in_bits());
+    assert!(chunk_bits <= FieldT::floor_size_in_bits());
 
     const size_t repacked_size = div_ceil(v.size(), chunk_bits);
     std::vector<FieldT> result(repacked_size);
@@ -357,7 +357,7 @@ bit_vector convert_field_element_to_bit_vector(const FieldT &el, const size_t bi
 template<typename FieldT>
 FieldT convert_bit_vector_to_field_element(const bit_vector &v)
 {
-    assert(v.size() <= FieldT::ceil_size_in_bits());
+    assert!(v.size() <= FieldT::ceil_size_in_bits());
 
     FieldT res = FieldT::zero();
     FieldT c = FieldT::one();
@@ -379,7 +379,7 @@ void batch_invert(std::vector<FieldT> &vec)
 
     for (auto el : vec)
     {
-        assert(!el.is_zero());
+        assert!(!el.is_zero());
         prod.emplace_back(acc);
         acc = acc * el;
     }
@@ -394,5 +394,5 @@ void batch_invert(std::vector<FieldT> &vec)
     }
 }
 
-} // namespace libff
-#endif // FIELD_UTILS_TCC_
+// } // namespace libff
+//#endif // FIELD_UTILS_TCC_

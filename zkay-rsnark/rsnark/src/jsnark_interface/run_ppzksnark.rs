@@ -1,19 +1,19 @@
 
 use  CircuitReader;
-use  libsnark::gadgetlib2::integration;
-use  libsnark::gadgetlib2::adapters;
-use  libsnark::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
-use  libsnark::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
-use  libsnark::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark;
-use  libsnark::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark;
-use  libsnark::common::default_types::r1cs_gg_ppzksnark_pp;
+use  crate::gadgetlib2::integration;
+use  crate::gadgetlib2::adapters;
+use  crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
+use  crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
+use  crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark;
+use  crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark;
+use  crate::common::default_types::r1cs_gg_ppzksnark_pp;
 
 fn main(argc:i32, argv:Vec<String>)->i32 {
 
-	libff::start_profiling();
+	ffec::start_profiling();
 	gadgetlib2::initPublicParamsFromDefaultPp();
 	gadgetlib2::GadgetLibAdapter::resetVariableIndex();
-	ProtoboardPtr pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
+	let  pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
 
 	let mut  inputStartIndex = 0;
 	if argc == 4 {
@@ -42,19 +42,19 @@ fn main(argc:i32, argv:Vec<String>)->i32 {
 
 	// only print the circuit output values if both flags MONTGOMERY and BINARY outputs are off (see CMakeLists file)
 	// In the default case, these flags should be ON for faster performance.
-
-if false//!defined(MONTGOMERY_OUTPUT) && !defined(OUTPUT_BINARY)
+    // !defined(MONTGOMERY_OUTPUT) && !defined(OUTPUT_BINARY)
+if false  
 {	println!("\nPrinting output assignment in readable format:: \n");
 	let  outputList = reader.getOutputWireIds();
 	let  start = reader.getNumInputs();
 	let  end = reader.getNumInputs() +reader.getNumOutputs();	
 	for i in  start..end {
-        println!("[output]"," Value of Wire # {} :: {} \n",outputList[i-reader.getNumInputs()],primary_input[i])
+        println!("[output] Value of Wire # {} :: {} \n",outputList[i-reader.getNumInputs()],primary_input[i])
 	}
 	println!("");
 }
 
-	//assert(cs.is_valid());
+	//assert!(cs.is_valid());
 
 	// removed cs.is_valid() check due to a suspected (off by 1) issue in a newly added check in their method.
         // A follow-up will be added.
@@ -64,17 +64,17 @@ if false//!defined(MONTGOMERY_OUTPUT) && !defined(OUTPUT_BINARY)
 	}
 
 
-	let  example=r1cs_example::<FieldT>::(cs, primary_input, auxiliary_input);
+	let  example=r1cs_example::<FieldT>(cs, primary_input, auxiliary_input);
 	
 	let test_serialization = false;
 	let mut  successBit = false;
 	if argc == 3 {
-		successBit = libsnark::run_r1cs_ppzksnark::<libff::default_ec_pp>(example, test_serialization);
+		successBit = crate::run_r1cs_ppzksnark::<ffec::default_ec_pp>(example, test_serialization);
 	} else {
 		// The following code makes use of the observation that 
-		// libsnark::default_r1cs_gg_ppzksnark_pp is the same as libff::default_ec_pp (see r1cs_gg_ppzksnark_pp.hpp)
-		// otherwise, the following code won't work properly, as GadgetLib2 is hardcoded to use libff::default_ec_pp.
-		successBit = libsnark::run_r1cs_gg_ppzksnark::<libsnark::default_r1cs_gg_ppzksnark_pp>(
+		// crate::default_r1cs_gg_ppzksnark_pp is the same as ffec::default_ec_pp (see r1cs_gg_ppzksnark_pp.hpp)
+		// otherwise, the following code won't work properly, as GadgetLib2 is hardcoded to use ffec::default_ec_pp.
+		successBit = crate::run_r1cs_gg_ppzksnark::<crate::default_r1cs_gg_ppzksnark_pp>(
 			example, test_serialization);
 	}
 

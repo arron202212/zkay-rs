@@ -4,15 +4,15 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/common/default_types/r1cs_ppzkpcd_pp.hpp>
-use  <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
-use  <libsnark/relations/ram_computations/rams/fooram/fooram_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark.hpp>
-use  <libsnark/zk_proof_systems/zksnark/ram_zksnark/examples/run_ram_zksnark.hpp>
+use crate::common::default_types::r1cs_ppzkpcd_pp;
+use crate::common::default_types::r1cs_ppzksnark_pp;
+use libsnark/relations/ram_computations/rams/fooram/fooram_params;
+use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark;
+use libsnark/zk_proof_systems/zksnark/ram_zksnark/examples/run_ram_zksnark;
 
-namespace libsnark {
+
 
 class default_fooram_zksnark_pp {
 public:
@@ -26,15 +26,15 @@ public:
 class default_fooram_ppzksnark_pp {
 public:
     type default_r1cs_ppzksnark_pp snark_pp;
-    type libff::Fr<default_r1cs_ppzksnark_pp> FieldT;
+    type ffec::Fr<default_r1cs_ppzksnark_pp> FieldT;
     type ram_fooram<FieldT> machine_pp;
 
     static void init_public_params() { snark_pp::init_public_params(); }
 };
 
-} // libsnark
 
-using namespace libsnark;
+
+
 
 template<typename ppT>
 void profile_ram_zksnark(const size_t w)
@@ -47,7 +47,7 @@ void profile_ram_zksnark(const size_t w)
     example.time_bound = 10;
     const bool test_serialization = true;
     const bool bit = run_ram_zksnark<ppT>(example, test_serialization);
-    assert(bit);
+    assert!(bit);
 }
 
 template<typename ppT>
@@ -61,13 +61,13 @@ void profile_ram_ppzksnark(const size_t w)
     example.time_bound = 100;
     const bool test_serialization = true;
     const bool bit = run_ram_ppzksnark<ppT>(example, test_serialization);
-    assert(bit);
+    assert!(bit);
 }
 
 int main(int argc, const char* argv[])
 {
-    libff::UNUSED(argv);
-    libff::start_profiling();
+    ffec::UNUSED(argv);
+    ffec::start_profiling();
     default_fooram_ppzksnark_pp::init_public_params();
     default_fooram_zksnark_pp::init_public_params();
 

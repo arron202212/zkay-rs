@@ -12,10 +12,10 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_RADIX2_DOMAIN_AUX_HPP_
-#define BASIC_RADIX2_DOMAIN_AUX_HPP_
+//#ifndef BASIC_RADIX2_DOMAIN_AUX_HPP_
+// #define BASIC_RADIX2_DOMAIN_AUX_HPP_
 
-#include <vector>
+//#include <vector>
 
 namespace libfqfft {
 
@@ -45,9 +45,9 @@ std::vector<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t
 
 } // libfqfft
 
-#include <libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.tcc>
+use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.tcc;
 
-#endif // BASIC_RADIX2_DOMAIN_AUX_HPP_
+//#endif // BASIC_RADIX2_DOMAIN_AUX_HPP_
 /** @file
  *****************************************************************************
 
@@ -61,31 +61,31 @@ std::vector<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef BASIC_RADIX2_DOMAIN_AUX_TCC_
-#define BASIC_RADIX2_DOMAIN_AUX_TCC_
+//#ifndef BASIC_RADIX2_DOMAIN_AUX_TCC_
+// #define BASIC_RADIX2_DOMAIN_AUX_TCC_
 
-#include <algorithm>
-#include <vector>
+//#include <algorithm>
+//#include <vector>
 
-#ifdef MULTICORE
-#include <omp.h>
-#endif
+// #ifdef MULTICORE
+//#include <omp.h>
+//#endif
 
-#include <libff/algebra/fields/field_utils.hpp>
+use libff/algebra/fields/field_utils;
 
-#include <libfqfft/tools/exceptions.hpp>
+use libfqfft/tools/exceptions;
 
-#ifdef DEBUG
-#include <libff/common/profiling.hpp>
-#endif
+// #ifdef DEBUG
+use ffec::common::profiling;
+//#endif
 
 namespace libfqfft {
 
-#ifdef MULTICORE
-#define _basic_radix2_FFT _basic_parallel_radix2_FFT
+// #ifdef MULTICORE
+// #define _basic_radix2_FFT _basic_parallel_radix2_FFT
 #else
-#define _basic_radix2_FFT _basic_serial_radix2_FFT
-#endif
+// #define _basic_radix2_FFT _basic_serial_radix2_FFT
+//#endif
 
 /*
  Below we make use of pseudocode from [CLRS 2n Ed, pp. 864].
@@ -149,9 +149,9 @@ void _basic_parallel_radix2_FFT_inner(std::vector<FieldT> &a, const FieldT &omeg
         tmp[j].resize(1ul<<(log_m-log_cpus), FieldT::zero());
     }
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     #pragma omp parallel for
-#endif
+//#endif
     for j in 0..num_cpus
     {
         const FieldT omega_j = omega^j;
@@ -173,17 +173,17 @@ void _basic_parallel_radix2_FFT_inner(std::vector<FieldT> &a, const FieldT &omeg
 
     const FieldT omega_num_cpus = omega^num_cpus;
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     #pragma omp parallel for
-#endif
+//#endif
     for j in 0..num_cpus
     {
         _basic_serial_radix2_FFT(tmp[j], omega_num_cpus);
     }
 
-#ifdef MULTICORE
+// #ifdef MULTICORE
     #pragma omp parallel for
-#endif
+//#endif
     for i in 0..num_cpus
     {
         for j in 0..1ul<<(log_m - log_cpus)
@@ -197,16 +197,16 @@ void _basic_parallel_radix2_FFT_inner(std::vector<FieldT> &a, const FieldT &omeg
 template<typename FieldT>
 void _basic_parallel_radix2_FFT(std::vector<FieldT> &a, const FieldT &omega)
 {
-#ifdef MULTICORE
+// #ifdef MULTICORE
     const size_t num_cpus = omp_get_max_threads();
 #else
     const size_t num_cpus = 1;
-#endif
+//#endif
     const size_t log_cpus = ((num_cpus & (num_cpus - 1)) == 0 ? log2(num_cpus) : log2(num_cpus) - 1);
 
-#ifdef DEBUG
-    libff::print_indent(); printf("* Invoking parallel FFT on 2^%zu CPUs (omp_get_max_threads = %zu)\n", log_cpus, num_cpus);
-#endif
+// #ifdef DEBUG
+    libff::print_indent(); print!("* Invoking parallel FFT on 2^{} CPUs (omp_get_max_threads = {})\n", log_cpus, num_cpus);
+//#endif
 
     if log_cpus == 0
     {
@@ -287,4 +287,4 @@ std::vector<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t
 
 } // libfqfft
 
-#endif // BASIC_RADIX2_DOMAIN_AUX_TCC_
+//#endif // BASIC_RADIX2_DOMAIN_AUX_TCC_

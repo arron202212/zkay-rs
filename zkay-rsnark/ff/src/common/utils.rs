@@ -1,3 +1,12 @@
+
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 /** @file
  *****************************************************************************
  Declaration of miscellaneous math, serialization, and other common utility
@@ -7,120 +16,109 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef UTILS_HPP_
-#define UTILS_HPP_
+// //#ifndef UTILS_HPP_
+// // #define UTILS_HPP_
 
-#include <cassert>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
+//#include <cassert>
+//#include <iostream>
+//#include <sstream>
+//#include <string>
+//#include <vector>
 
-namespace libff {
+// namespace libff {
 
-typedef std::vector<bool> bit_vector;
+type bit_vector=Vec<bool> ;
 
-template<bool B, class T = void>
-struct enable_if { typedef void* type; };
+// template<bool B, class T = void>
+// struct enable_if { typedef void* type; };
 
-template<class T>
-struct enable_if<true, T> { typedef T type; };
+// template<class T>
+// struct enable_if<true, T> { typedef T type; };
 
-std::size_t get_power_of_two(std::size_t n);
+// std::usize get_power_of_two(std::usize n);
 
-std::size_t round_to_next_power_of_2(const std::size_t n);
-bool is_power_of_2(const std::size_t n);
+// std::usize round_to_next_power_of_2(n:std::usize);
+// bool is_power_of_2(n:std::usize);
 
-/// returns ceil(log2(n)), so 1ul<<log2(n) is the smallest power of 2, that is not less than n
-std::size_t log2(std::size_t n);
+// /// returns ceil(log2(n)), so 1ul<<log2(n) is the smallest power of 2, that is not less than n
+// std::usize log2(std::usize n);
 
-inline std::size_t exp2(std::size_t k) { return std::size_t(1) << k; }
+// inline std::usize exp2(std::usize k) { return std::usize(1) << k; }
 
-std::size_t to_twos_complement(int i, std::size_t w);
-int from_twos_complement(std::size_t i, std::size_t w);
+// std::usize to_twos_complement(i32 i, std::usize w);
+// i32 from_twos_complement(std::usize i, std::usize w);
 
-std::size_t bitreverse(std::size_t n, const std::size_t l);
-bit_vector int_list_to_bits(const std::initializer_list<unsigned long> &l, const std::size_t wordsize);
-/* throws error if y = 0 */
-long long div_ceil(long long x, long long y);
+// std::usize bitreverse(std::usize n, const std::usize l);
+// bit_vector int_list_to_bits(l:&const std::initializer_list<unsigned long>, const std::usize wordsize);
+// /* throws error if y = 0 */
+// long long div_ceil(long long x, long long y);
 
-bool is_little_endian();
+// bool is_little_endian();
 
-std::string FORMAT(const std::string &prefix, const char* format, ...);
+// std::string FORMAT(prefix:&const std::string, const char* format, ...);
 
 /* A variadic template to suppress unused argument warnings */
-template<typename ... Types>
-void UNUSED(Types&&...) {}
+// template<typename ... Types>
+// void UNUSED(Types&&...) {}
 
-#ifdef DEBUG
-#define FMT libff::FORMAT
-#else
-#define FMT(...) (libff::UNUSED(__VA_ARGS__), "")
-#endif
+// #ifdef DEBUG
+// #define FMT libff::FORMAT
+// #else
+// #define FMT(...) (libff::UNUSED(__VA_ARGS__), "")
+//#endif
 
-void serialize_bit_vector(std::ostream &out, const bit_vector &v);
-void deserialize_bit_vector(std::istream &in, bit_vector &v);
+// void serialize_bit_vector(out:&String,v:& const bit_vector);
+// void deserialize_bit_vector(in:&mut String,v:& bit_vector);
 
-/** Should not be used for fields, because the field function is named ceil_size_in_bits instead. */
-template<typename CurveT>
-std::size_t curve_size_in_bits(const std::vector<CurveT> &v);
+// /** Should not be used for fields, because the field function is named ceil_size_in_bits instead. */
+// template<typename CurveT>
+// std::usize curve_size_in_bits(const Vec <CurveT> &v);
 
 /* Print a vector in the form { elem0 elem1 elem2 ... }, with a newline at the end
 template<typename T>
-void print_vector(std::vector<T> &vec);
+void print_vector(Vec <T> &vec);
 template<typename T>
-void print_vector(std::vector<T> vec);*/
+void print_vector(Vec <T> vec);*/
 
-template<typename T>
-void print_vector(std::vector<T> &vec)
+pub fn  print_vector<T>(vec:&Vec <T>)
 {
-    printf("{ ");
-    for (auto const& elem : vec)
+    print!("{{ ");
+    for  elem in  vec
     {
-        std::cout << elem << " ";
+        print!("{elem} ");
     }
-    printf("}\n");
+    print!("}}\n");
 }
 
-template<typename T>
-void print_vector(std::vector<T> vec)
-{
-    printf("{ ");
-    for (auto const& elem : vec)
-    {
-        std::cout << elem << " ";
-    }
-    printf("}\n");
-}
 
-/**
- * Returns a random element of T that is not zero or one.
- * T can be a field or elliptic curve group.
- * Used for testing to generate a test example that doesn't error.
- */
-template<typename T>
-T random_element_non_zero_one();
-/**
- * Returns a random element of T that is not zero.
- * T can be a field or elliptic curve group.
- * Used for testing to generate a test example that doesn't error.
- */
-template<typename T>
-T random_element_non_zero();
-/**
- * Returns a random element of T that is not equal to y.
- * T can be a field or elliptic curve group.
- * Used for testing to generate a test example that doesn't error.
- */
-template<typename T>
-T random_element_exclude(T y);
+// /**
+//  * Returns a random element of T that is not zero or one.
+//  * T can be a field or elliptic curve group.
+//  * Used for testing to generate a test example that doesn't error.
+//  */
+// template<typename T>
+// T random_element_non_zero_one();
+// /**
+//  * Returns a random element of T that is not zero.
+//  * T can be a field or elliptic curve group.
+//  * Used for testing to generate a test example that doesn't error.
+//  */
+// template<typename T>
+// T random_element_non_zero();
+// /**
+//  * Returns a random element of T that is not equal to y.
+//  * T can be a field or elliptic curve group.
+//  * Used for testing to generate a test example that doesn't error.
+//  */
+// template<typename T>
+// T random_element_exclude(T y);
 
-#define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
+// #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 
-} // namespace libff
+// } // namespace libff
 
-#include <libff/common/utils.tcc> /* note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) */
-#endif // UTILS_HPP_
+// use libff/common/utils.tcc; /* note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) */
+//#endif // UTILS_HPP_
 /** @file
  *****************************************************************************
  Implementation of misc math and serialization utility functions.
@@ -129,77 +127,71 @@ T random_element_exclude(T y);
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include <algorithm>
-#include <cassert>
-#include <cstdarg>
-#include <cstdint>
+//#include <algorithm>
+//#include <cassert>
+//#include <cstdarg>
+//#include <cstdint>
 
-#include <libff/common/utils.hpp>
+// use crate::common::utils;
 
-namespace libff {
+// namespace libff {
 
-using std::size_t;
+// using std::usize;
 
 /**
  * Round n to the next power of two.
  * If n is a power of two, return n
  */
-size_t get_power_of_two(size_t n)
-{
-    n--;
+pub fn get_power_of_two(n:usize)->usize{
+    n-=1;
     n |= n >> 1;
     n |= n >> 2;
     n |= n >> 4;
     n |= n >> 8;
     n |= n >> 16;
     n |= n >> 32;
-    n++;
+    n+=1;
 
     return n;
 }
 
 /* If n is a power of 2, returns n */
-size_t round_to_next_power_of_2(const size_t n)
-{
-    return (1ULL << log2(n));
+pub fn round_to_next_power_of_2(n:usize)->usize{
+    1u64 << log2(n)
 }
 
-bool is_power_of_2(const size_t n)
-{
-    return ((n != 0) && ((n & (n-1)) == 0));
+pub fn is_power_of_2(n:usize)->bool{
+    return (n != 0) && ((n & (n-1)) == 0);
 }
 
-size_t log2(size_t n)
 /* returns ceil(log2(n)), so 1ul<<log2(n) is the smallest power of 2,
    that is not less than n. */
+pub fn log2(n:usize)->usize
 {
-    size_t r = ((n & (n-1)) == 0 ? 0 : 1); // add 1 if n is not power of 2
+    let  r = if n & (n-1) == 0  {0 }else {1}; // add 1 if n is not power of 2
 
-    while (n > 1)
+    while n > 1
     {
         n >>= 1;
-        r++;
+        r+=1;
     }
 
     return r;
 }
 
-size_t to_twos_complement(int i, size_t w)
-{
-    assert(i >= -(1l<<(w-1)));
-    assert(i < (1l<<(w-1)));
-    return (i >= 0) ? i : i + (1L<<w);
+pub fn to_twos_complement(i:i32, w:usize)->usize{
+    assert!(i >= -(1i64<<(w-1)));
+    assert!(i < (1i64<<(w-1)));
+    return if i >= 0 {i} else {i + (1i64<<w)};
 }
 
-int from_twos_complement(size_t i, size_t w)
-{
-    assert(i < (1UL<<w));
-    return (i < (1UL<<(w-1))) ? i : i - (1UL<<w);
+pub fn from_twos_complement(i:usize, w:usize)->i32{
+    assert!(i < (1u64<<w));
+    return if i < (1u64<<(w-1)) {i }else {i - (1u64<<w)};
 }
 
-size_t bitreverse(size_t n, const size_t l)
-{
-    size_t r = 0;
+pub fn bitreverse(n:usize, l:usize)->usize{
+    let mut  r = 0;
     for k in 0..l
     {
         r = (r << 1) | (n & 1);
@@ -208,70 +200,62 @@ size_t bitreverse(size_t n, const size_t l)
     return r;
 }
 
-bit_vector int_list_to_bits(const std::initializer_list<unsigned long> &l, const size_t wordsize)
-{
-    bit_vector res(wordsize*l.size());
-    for i in 0..l.size()
+pub fn int_list_to_bits(l:&Vec<u64>, wordsize:usize)->bit_vector{
+     let mut res=Vec::with_capacity(wordsize*l.len());
+    for i in 0..l.len()
     {
         for j in 0..wordsize
         {
-            res[i*wordsize + j] = (*(l.begin()+i) & (1UL<<(wordsize-1-j))) != 0U;
+            res[i*wordsize + j] = (l[i] & (1u64<<(wordsize-1-j))) != 0u32;
         }
     }
     return res;
 }
 
-long long div_ceil(long long x, long long y)
-{
+pub fn div_ceil( x:i64,  y:i64)->eyre::Result<i64>{
     if y == 0
     {
-        throw std::invalid_argument("libff::div_ceil: division by zero, second argument must be non-zero");
+        eyre::bail!("libff::div_ceil: division by zero, second argument must be non-zero");
     }
     return (x + (y-1)) / y;
 }
 
-bool is_little_endian()
-{
-    uint64_t a = 0x12345678;
-    unsigned char *c = (unsigned char*)(&a);
-    return (*c == 0x78);
+pub fn is_little_endian()->bool{
+    if cfg!(target_endian = "little") { true } else { false}
+    // let  a:u64 = 0x12345678;
+    // a.to_le()==a.to_ne()
 }
 
-std::string FORMAT(const std::string &prefix, const char* format, ...)
-{
-    const static size_t MAX_FMT = 256;
-    char buf[MAX_FMT];
-    va_list args;
-    va_start(args, format);
-    vsnprintf(buf, MAX_FMT, format, args);
-    va_end(args);
+// pub fn FORMAT(prefix:&const std::string, const char* format, ...)->string{
+//     const static usize MAX_FMT = 256;
+//     char buf[MAX_FMT];
+//     va_list args;
+//     va_start(args, format);
+//     vsnprintf(buf, MAX_FMT, format, args);
+//     va_end(args);
 
-    return prefix + std::string(buf);
-}
+//     return prefix + std::string(buf);
+// }
 
-void serialize_bit_vector(std::ostream &out, const bit_vector &v)
-{
-    out << v.size() << "\n";
-    for (auto b : v)
+pub fn serialize_bit_vector(out:&String,v:& bit_vector){
+    write!(out,"{}\n",v.len());
+    for  b in  v
     {
-        out << b << "\n";
+         write!(out,"{}\n",b);
     }
 }
 
-void deserialize_bit_vector(std::istream &in, bit_vector &v)
-{
-    size_t size;
-    in >> size;
+pub fn deserialize_bit_vector(ins:&String,v:&mut  bit_vector){
+    let mut buf_read=ins.split_ascii_whitespace();
+    let  size=buf_read.next().unwrap().parse::<i32>().unwrap();
     v.resize(size);
     for i in 0..size
     {
-        bool b;
-        in >> b;
-        v[i] = b;
+        v[i] =buf_read.next().unwrap().parse::<bool>().unwrap();
     }
 }
 
-} // namespace libff
+// } // namespace libff
 /** @file
  *****************************************************************************
  Implementation of templatized utility functions.
@@ -280,46 +264,41 @@ void deserialize_bit_vector(std::istream &in, bit_vector &v)
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#ifndef UTILS_TCC_
-#define UTILS_TCC_
+//#ifndef UTILS_TCC_
+// #define UTILS_TCC_
 
-namespace libff {
+// namespace libff {
 
-using std::size_t;
+// using std::usize;
 
-template<typename CurveT>
-size_t curve_size_in_bits(const std::vector<CurveT> &v)
-{
-    return v.size() * CurveT::size_in_bits();
+
+pub fn curve_size_in_bits<CurveT>(v:&Vec<CurveT>)->usize{
+    return v.len() * CurveT::size_in_bits();
 }
 
-template<typename T>
-T random_element_non_zero_one()
-{
-    T x = T::random_element();
-    while (x.is_zero() || x == T::one())
-        x = T::random_element();
+
+pub fn random_element_non_zero_one<T>()->T{
+    let mut  x = T::random_element();
+    while x.is_zero() || x == T::one()
+     {   x = T::random_element();}
     return x;
 }
 
-template<typename T>
-T random_element_non_zero()
-{
-    T x = T::random_element();
-    while (x.is_zero())
-        x = T::random_element();
+pub fn random_element_non_zero<T>()->T{
+    let mut  x = T::random_element();
+    while x.is_zero()
+       { x = T::random_element();}
     return x;
 }
 
-template<typename T>
-T random_element_exclude(T y)
-{
-    T x = T::random_element();
-    while (x == y)
-        x = T::random_element();
+
+pub fn random_element_exclude<T>(y:T)->T{
+    let mut  x = T::random_element();
+    while x == y
+       { x = T::random_element();}
     return x;
 }
 
-} // namespace libff
+// } // namespace libff
 
-#endif // UTILS_TCC_
+//#endif // UTILS_TCC_

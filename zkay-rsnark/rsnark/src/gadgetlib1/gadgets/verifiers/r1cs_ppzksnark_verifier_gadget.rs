@@ -15,22 +15,22 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
-#define R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
+//#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
+// #define R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget.hpp>
-use  <libsnark/gadgetlib1/gadgets/pairing/pairing_checks.hpp>
-use  <libsnark/gadgetlib1/gadgets/pairing/pairing_params.hpp>
-use  <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget;
+use libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget;
+use libsnark/gadgetlib1/gadgets/pairing/pairing_checks;
+use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
-namespace libsnark {
+
 
 template<typename ppT>
-class r1cs_ppzksnark_proof_variable : public gadget<libff::Fr<ppT> > {
+class r1cs_ppzksnark_proof_variable : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<G1_variable<ppT> > g_A_g;
     std::shared_ptr<G1_variable<ppT> > g_A_h;
@@ -57,9 +57,9 @@ public:
 };
 
 template<typename ppT>
-class r1cs_ppzksnark_verification_key_variable : public gadget<libff::Fr<ppT> > {
+class r1cs_ppzksnark_verification_key_variable : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<G2_variable<ppT> > alphaA_g2;
     std::shared_ptr<G1_variable<ppT> > alphaB_g1;
@@ -96,16 +96,16 @@ public:
                                                                        const std::string &annotation_prefix);
     void generate_r1cs_constraints(const bool enforce_bitness);
     void generate_r1cs_witness(const r1cs_ppzksnark_verification_key<other_curve<ppT> > &vk);
-    void generate_r1cs_witness(const libff::bit_vector &vk_bits);
-    libff::bit_vector get_bits() const;
+    void generate_r1cs_witness(const ffec::bit_vector &vk_bits);
+    ffec::bit_vector get_bits() const;
     static size_t __attribute__((noinline)) size_in_bits(const size_t input_size);
-    static libff::bit_vector get_verification_key_bits(const r1cs_ppzksnark_verification_key<other_curve<ppT> > &r1cs_vk);
+    static ffec::bit_vector get_verification_key_bits(const r1cs_ppzksnark_verification_key<other_curve<ppT> > &r1cs_vk);
 };
 
 template<typename ppT>
 class r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<G1_variable<ppT> > encoded_IC_base;
     std::vector<std::shared_ptr<G1_variable<ppT> > > encoded_IC_query;
@@ -127,9 +127,9 @@ public:
 };
 
 template<typename ppT>
-class r1cs_ppzksnark_verifier_process_vk_gadget : public gadget<libff::Fr<ppT> > {
+class r1cs_ppzksnark_verifier_process_vk_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<precompute_G1_gadget<ppT> > compute_vk_alphaB_g1_precomp;
     std::shared_ptr<precompute_G1_gadget<ppT> > compute_vk_gamma_beta_g1_precomp;
@@ -152,9 +152,9 @@ public:
 };
 
 template<typename ppT>
-class r1cs_ppzksnark_online_verifier_gadget : public gadget<libff::Fr<ppT> > {
+class r1cs_ppzksnark_online_verifier_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> pvk;
 
@@ -223,9 +223,9 @@ public:
 };
 
 template<typename ppT>
-class r1cs_ppzksnark_verifier_gadget : public gadget<libff::Fr<ppT> > {
+class r1cs_ppzksnark_verifier_gadget : public gadget<ffec::Fr<ppT> > {
 public:
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> > pvk;
     std::shared_ptr<r1cs_ppzksnark_verifier_process_vk_gadget<ppT> > compute_pvk;
@@ -243,11 +243,11 @@ public:
     void generate_r1cs_witness();
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget.tcc>
 
-#endif // R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
+
+//#endif // R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -261,12 +261,12 @@ use  <libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
-#define R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
+//#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
+// #define R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
 
-use  <libsnark/gadgetlib1/constraint_profiling.hpp>
+use libsnark/gadgetlib1/constraint_profiling;
 
-namespace libsnark {
+
 
 template<typename ppT>
 r1cs_ppzksnark_proof_variable<ppT>::r1cs_ppzksnark_proof_variable(protoboard<FieldT> &pb,
@@ -292,12 +292,12 @@ r1cs_ppzksnark_proof_variable<ppT>::r1cs_ppzksnark_proof_variable(protoboard<Fie
 
     for (size_t i = 0; i < all_G1_vars.size(); ++i)
     {
-        all_G1_checkers[i].reset(new G1_checker_gadget<ppT>(pb, *all_G1_vars[i], FMT(annotation_prefix, " all_G1_checkers_%zu", i)));
+        all_G1_checkers[i].reset(new G1_checker_gadget<ppT>(pb, *all_G1_vars[i], FMT(annotation_prefix, " all_G1_checkers_{}", i)));
     }
     G2_checker.reset(new G2_checker_gadget<ppT>(pb, *g_B_g, FMT(annotation_prefix, " G2_checker")));
 
-    assert(all_G1_vars.size() == num_G1);
-    assert(all_G2_vars.size() == num_G2);
+    assert!(all_G1_vars.size() == num_G1);
+    assert!(all_G2_vars.size() == num_G2);
 }
 
 template<typename ppT>
@@ -314,14 +314,14 @@ void r1cs_ppzksnark_proof_variable<ppT>::generate_r1cs_constraints()
 template<typename ppT>
 void r1cs_ppzksnark_proof_variable<ppT>::generate_r1cs_witness(const r1cs_ppzksnark_proof<other_curve<ppT> > &proof)
 {
-    std::vector<libff::G1<other_curve<ppT> > > G1_elems;
-    std::vector<libff::G2<other_curve<ppT> > > G2_elems;
+    std::vector<ffec::G1<other_curve<ppT> > > G1_elems;
+    std::vector<ffec::G2<other_curve<ppT> > > G2_elems;
 
     G1_elems = { proof.g_A.g, proof.g_A.h, proof.g_B.h, proof.g_C.g, proof.g_C.h, proof.g_H, proof.g_K };
     G2_elems = { proof.g_B.g };
 
-    assert(G1_elems.size() == all_G1_vars.size());
-    assert(G2_elems.size() == all_G2_vars.size());
+    assert!(G1_elems.size() == all_G1_vars.size());
+    assert!(G2_elems.size() == all_G2_vars.size());
 
     for (size_t i = 0; i < G1_elems.size(); ++i)
     {
@@ -361,27 +361,27 @@ r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_ppzksnark_verification_key_v
     const size_t num_G1 = 2 + (input_size + 1);
     const size_t num_G2 = 5;
 
-    assert(all_bits.size() == (G1_variable<ppT>::size_in_bits() * num_G1 + G2_variable<ppT>::size_in_bits() * num_G2));
+    assert!(all_bits.size() == (G1_variable<ppT>::size_in_bits() * num_G1 + G2_variable<ppT>::size_in_bits() * num_G2));
 
-    this->alphaA_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " alphaA_g2")));
-    this->alphaB_g1.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " alphaB_g1")));
-    this->alphaC_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " alphaC_g2")));
-    this->gamma_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " gamma_g2")));
-    this->gamma_beta_g1.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " gamma_beta_g1")));
-    this->gamma_beta_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " gamma_beta_g2")));
-    this->rC_Z_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " rC_Z_g2")));
+    self.alphaA_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " alphaA_g2")));
+    self.alphaB_g1.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " alphaB_g1")));
+    self.alphaC_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " alphaC_g2")));
+    self.gamma_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " gamma_g2")));
+    self.gamma_beta_g1.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " gamma_beta_g1")));
+    self.gamma_beta_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " gamma_beta_g2")));
+    self.rC_Z_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " rC_Z_g2")));
 
-    all_G1_vars = { this->alphaB_g1, this->gamma_beta_g1 };
-    all_G2_vars = { this->alphaA_g2, this->alphaC_g2, this->gamma_g2, this->gamma_beta_g2, this->rC_Z_g2 };
+    all_G1_vars = { self.alphaB_g1, self.gamma_beta_g1 };
+    all_G2_vars = { self.alphaA_g2, self.alphaC_g2, self.gamma_g2, self.gamma_beta_g2, self.rC_Z_g2 };
 
-    this->encoded_IC_query.resize(input_size);
-    this->encoded_IC_base.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " encoded_IC_base")));
-    this->all_G1_vars.emplace_back(this->encoded_IC_base);
+    self.encoded_IC_query.resize(input_size);
+    self.encoded_IC_base.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " encoded_IC_base")));
+    self.all_G1_vars.push(self.encoded_IC_base);
 
     for (size_t i = 0; i < input_size; ++i)
     {
-        this->encoded_IC_query[i].reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " encoded_IC_query_%zu", i)));
-        all_G1_vars.emplace_back(this->encoded_IC_query[i]);
+        self.encoded_IC_query[i].reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " encoded_IC_query_{}", i)));
+        all_G1_vars.push(self.encoded_IC_query[i]);
     }
 
     for (auto &G1_var : all_G1_vars)
@@ -394,9 +394,9 @@ r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_ppzksnark_verification_key_v
         all_vars.insert(all_vars.end(), G2_var->all_vars.begin(), G2_var->all_vars.end());
     }
 
-    assert(all_G1_vars.size() == num_G1);
-    assert(all_G2_vars.size() == num_G2);
-    assert(all_vars.size() == (num_G1 * G1_variable<ppT>::num_variables() + num_G2 * G2_variable<ppT>::num_variables()));
+    assert!(all_G1_vars.size() == num_G1);
+    assert!(all_G2_vars.size() == num_G2);
+    assert!(all_vars.size() == (num_G1 * G1_variable<ppT>::num_variables() + num_G2 * G2_variable<ppT>::num_variables()));
 
     packer.reset(new multipacking_gadget<FieldT>(pb, all_bits, all_vars, FieldT::size_in_bits(), FMT(annotation_prefix, " packer")));
 }
@@ -410,22 +410,22 @@ void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_constraints(co
 template<typename ppT>
 void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const r1cs_ppzksnark_verification_key<other_curve<ppT> > &vk)
 {
-    std::vector<libff::G1<other_curve<ppT> > > G1_elems;
-    std::vector<libff::G2<other_curve<ppT> > > G2_elems;
+    std::vector<ffec::G1<other_curve<ppT> > > G1_elems;
+    std::vector<ffec::G2<other_curve<ppT> > > G2_elems;
 
     G1_elems = { vk.alphaB_g1, vk.gamma_beta_g1 };
     G2_elems = { vk.alphaA_g2, vk.alphaC_g2, vk.gamma_g2, vk.gamma_beta_g2, vk.rC_Z_g2 };
 
-    assert(vk.encoded_IC_query.rest.indices.size() == input_size);
-    G1_elems.emplace_back(vk.encoded_IC_query.first);
+    assert!(vk.encoded_IC_query.rest.indices.size() == input_size);
+    G1_elems.push(vk.encoded_IC_query.first);
     for (size_t i = 0; i < input_size; ++i)
     {
-        assert(vk.encoded_IC_query.rest.indices[i] == i);
-        G1_elems.emplace_back(vk.encoded_IC_query.rest.values[i]);
+        assert!(vk.encoded_IC_query.rest.indices[i] == i);
+        G1_elems.push(vk.encoded_IC_query.rest.values[i]);
     }
 
-    assert(G1_elems.size() == all_G1_vars.size());
-    assert(G2_elems.size() == all_G2_vars.size());
+    assert!(G1_elems.size() == all_G1_vars.size());
+    assert!(G2_elems.size() == all_G2_vars.size());
 
     for (size_t i = 0; i < G1_elems.size(); ++i)
     {
@@ -441,16 +441,16 @@ void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const 
 }
 
 template<typename ppT>
-void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const libff::bit_vector &vk_bits)
+void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const ffec::bit_vector &vk_bits)
 {
-    all_bits.fill_with_bits(this->pb, vk_bits);
+    all_bits.fill_with_bits(self.pb, vk_bits);
     packer->generate_r1cs_witness_from_bits();
 }
 
 template<typename ppT>
-libff::bit_vector r1cs_ppzksnark_verification_key_variable<ppT>::get_bits() const
+ffec::bit_vector r1cs_ppzksnark_verification_key_variable<ppT>::get_bits() const
 {
-    return all_bits.get_bits(this->pb);
+    return all_bits.get_bits(self.pb);
 }
 
 template<typename ppT>
@@ -459,15 +459,15 @@ size_t r1cs_ppzksnark_verification_key_variable<ppT>::size_in_bits(const size_t 
     const size_t num_G1 = 2 + (input_size + 1);
     const size_t num_G2 = 5;
     const size_t result = G1_variable<ppT>::size_in_bits() * num_G1 + G2_variable<ppT>::size_in_bits() * num_G2;
-    printf("G1_size_in_bits = %zu, G2_size_in_bits = %zu\n", G1_variable<ppT>::size_in_bits(), G2_variable<ppT>::size_in_bits());
-    printf("r1cs_ppzksnark_verification_key_variable<ppT>::size_in_bits(%zu) = %zu\n", input_size, result);
+    print!("G1_size_in_bits = {}, G2_size_in_bits = {}\n", G1_variable<ppT>::size_in_bits(), G2_variable<ppT>::size_in_bits());
+    print!("r1cs_ppzksnark_verification_key_variable<ppT>::size_in_bits({}) = {}\n", input_size, result);
     return result;
 }
 
 template<typename ppT>
-libff::bit_vector r1cs_ppzksnark_verification_key_variable<ppT>::get_verification_key_bits(const r1cs_ppzksnark_verification_key<other_curve<ppT> > &r1cs_vk)
+ffec::bit_vector r1cs_ppzksnark_verification_key_variable<ppT>::get_verification_key_bits(const r1cs_ppzksnark_verification_key<other_curve<ppT> > &r1cs_vk)
 {
-    type libff::Fr<ppT> FieldT;
+    type ffec::Fr<ppT> FieldT;
 
     const size_t input_size_in_elts = r1cs_vk.encoded_IC_query.rest.indices.size(); // this might be approximate for bound verification keys, however they are not supported by r1cs_ppzksnark_verification_key_variable
     const size_t vk_size_in_bits = r1cs_ppzksnark_verification_key_variable<ppT>::size_in_bits(input_size_in_elts);
@@ -496,14 +496,14 @@ r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_
     encoded_IC_query.resize(r1cs_vk.encoded_IC_query.rest.indices.size());
     for (size_t i = 0; i < r1cs_vk.encoded_IC_query.rest.indices.size(); ++i)
     {
-        assert(r1cs_vk.encoded_IC_query.rest.indices[i] == i);
+        assert!(r1cs_vk.encoded_IC_query.rest.indices[i] == i);
         encoded_IC_query[i].reset(new G1_variable<ppT>(pb, r1cs_vk.encoded_IC_query.rest.values[i], FMT(annotation_prefix, " encoded_IC_query")));
     }
 
     vk_alphaB_g1_precomp.reset(new G1_precomputation<ppT>(pb, r1cs_vk.alphaB_g1, FMT(annotation_prefix, " vk_alphaB_g1_precomp")));
     vk_gamma_beta_g1_precomp.reset(new G1_precomputation<ppT>(pb, r1cs_vk.gamma_beta_g1, FMT(annotation_prefix, " vk_gamma_beta_g1_precomp")));
 
-    pp_G2_one_precomp.reset(new G2_precomputation<ppT>(pb, libff::G2<other_curve<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
+    pp_G2_one_precomp.reset(new G2_precomputation<ppT>(pb, ffec::G2<other_curve<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
     vk_alphaA_g2_precomp.reset(new G2_precomputation<ppT>(pb, r1cs_vk.alphaA_g2, FMT(annotation_prefix, " vk_alphaA_g2_precomp")));
     vk_alphaC_g2_precomp.reset(new G2_precomputation<ppT>(pb, r1cs_vk.alphaC_g2, FMT(annotation_prefix, " vk_alphaC_g2_precomp")));
     vk_gamma_beta_g2_precomp.reset(new G2_precomputation<ppT>(pb, r1cs_vk.gamma_beta_g2, FMT(annotation_prefix, " vk_gamma_beta_g2_precomp")));
@@ -536,7 +536,7 @@ r1cs_ppzksnark_verifier_process_vk_gadget<ppT>::r1cs_ppzksnark_verifier_process_
     compute_vk_alphaB_g1_precomp.reset(new precompute_G1_gadget<ppT>(pb, *vk.alphaB_g1, *pvk.vk_alphaB_g1_precomp, FMT(annotation_prefix, " compute_vk_alphaB_g1_precomp")));
     compute_vk_gamma_beta_g1_precomp.reset(new precompute_G1_gadget<ppT>(pb, *vk.gamma_beta_g1, *pvk.vk_gamma_beta_g1_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g1_precomp")));
 
-    pvk.pp_G2_one_precomp.reset(new G2_precomputation<ppT>(pb, libff::G2<other_curve<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
+    pvk.pp_G2_one_precomp.reset(new G2_precomputation<ppT>(pb, ffec::G2<other_curve<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
     compute_vk_alphaA_g2_precomp.reset(new precompute_G2_gadget<ppT>(pb, *vk.alphaA_g2, *pvk.vk_alphaA_g2_precomp, FMT(annotation_prefix, " compute_vk_alphaA_g2_precomp")));
     compute_vk_alphaC_g2_precomp.reset(new precompute_G2_gadget<ppT>(pb, *vk.alphaC_g2, *pvk.vk_alphaC_g2_precomp, FMT(annotation_prefix, " compute_vk_alphaC_g2_precomp")));
     compute_vk_gamma_beta_g2_precomp.reset(new precompute_G2_gadget<ppT>(pb, *vk.gamma_beta_g2, *pvk.vk_gamma_beta_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g2_precomp")));
@@ -591,7 +591,7 @@ r1cs_ppzksnark_online_verifier_gadget<ppT>::r1cs_ppzksnark_online_verifier_gadge
     std::vector<G1_variable<ppT> > IC_terms;
     for (size_t i = 0; i < pvk.encoded_IC_query.size(); ++i)
     {
-        IC_terms.emplace_back(*(pvk.encoded_IC_query[i]));
+        IC_terms.push(*(pvk.encoded_IC_query[i]));
     }
     accumulate_input.reset(new G1_multiscalar_mul_gadget<ppT>(pb, *(pvk.encoded_IC_base), input, elt_size, IC_terms, *acc, FMT(annotation_prefix, " accumulate_input")));
 
@@ -649,11 +649,11 @@ r1cs_ppzksnark_online_verifier_gadget<ppT>::r1cs_ppzksnark_online_verifier_gadge
     check_CC_valid.reset(new check_e_equals_ee_gadget<ppT>(pb, *proof_g_K_precomp, *(pvk.vk_gamma_g2_precomp), *proof_g_A_g_acc_C_precomp, *(pvk.vk_gamma_beta_g2_precomp), *(pvk.vk_gamma_beta_g1_precomp), *proof_g_B_g_precomp, CC_valid, FMT(annotation_prefix, " check_CC_valid")));
 
     // final constraint
-    all_test_results.emplace_back(kc_A_valid);
-    all_test_results.emplace_back(kc_B_valid);
-    all_test_results.emplace_back(kc_C_valid);
-    all_test_results.emplace_back(QAP_valid);
-    all_test_results.emplace_back(CC_valid);
+    all_test_results.push(kc_A_valid);
+    all_test_results.push(kc_B_valid);
+    all_test_results.push(kc_C_valid);
+    all_test_results.push(QAP_valid);
+    all_test_results.push(CC_valid);
 
     all_tests_pass.reset(new conjunction_gadget<FieldT>(pb, all_test_results, result, FMT(annotation_prefix, " all_tests_pass")));
 }
@@ -661,13 +661,13 @@ r1cs_ppzksnark_online_verifier_gadget<ppT>::r1cs_ppzksnark_online_verifier_gadge
 template<typename ppT>
 void r1cs_ppzksnark_online_verifier_gadget<ppT>::generate_r1cs_constraints()
 {
-    PROFILE_CONSTRAINTS(this->pb, "accumulate verifier input")
+    PROFILE_CONSTRAINTS(self.pb, "accumulate verifier input")
     {
-        libff::print_indent(); printf("* Number of bits as an input to verifier gadget: %zu\n", input.size());
+        ffec::print_indent(); print!("* Number of bits as an input to verifier gadget: {}\n", input.size());
         accumulate_input->generate_r1cs_constraints();
     }
 
-    PROFILE_CONSTRAINTS(this->pb, "rest of the verifier")
+    PROFILE_CONSTRAINTS(self.pb, "rest of the verifier")
     {
         compute_proof_g_A_g_acc->generate_r1cs_constraints();
         compute_proof_g_A_g_acc_C->generate_r1cs_constraints();
@@ -741,12 +741,12 @@ r1cs_ppzksnark_verifier_gadget<ppT>::r1cs_ppzksnark_verifier_gadget(protoboard<F
 template<typename ppT>
 void r1cs_ppzksnark_verifier_gadget<ppT>::generate_r1cs_constraints()
 {
-    PROFILE_CONSTRAINTS(this->pb, "precompute pvk")
+    PROFILE_CONSTRAINTS(self.pb, "precompute pvk")
     {
         compute_pvk->generate_r1cs_constraints();
     }
 
-    PROFILE_CONSTRAINTS(this->pb, "online verifier")
+    PROFILE_CONSTRAINTS(self.pb, "online verifier")
     {
         online_verifier->generate_r1cs_constraints();
     }
@@ -759,6 +759,6 @@ void r1cs_ppzksnark_verifier_gadget<ppT>::generate_r1cs_witness()
     online_verifier->generate_r1cs_witness();
 }
 
-} // libsnark
 
-#endif // R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
+
+//#endif // R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_

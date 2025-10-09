@@ -14,14 +14,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TBCS_HPP_
-#define TBCS_HPP_
+//#ifndef TBCS_HPP_
+// #define TBCS_HPP_
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/relations/variable.hpp>
+use libsnark/relations/variable;
 
-namespace libsnark {
+
 
 /*********************** BACS variable assignment ****************************/
 
@@ -145,10 +145,10 @@ public:
     std::vector<size_t> wire_depths() const;
     size_t depth() const;
 
-#ifdef DEBUG
+// #ifdef DEBUG
     std::map<size_t, std::string> gate_annotations;
     std::map<size_t, std::string> variable_annotations;
-#endif
+//#endif
 
     bool is_valid() const;
     bool is_satisfied(const tbcs_primary_input &primary_input,
@@ -171,9 +171,9 @@ public:
     friend std::istream& operator>>(std::istream &in, tbcs_circuit &circuit);
 };
 
-} // libsnark
 
-#endif // TBCS_HPP_
+
+//#endif // TBCS_HPP_
 /** @file
  *****************************************************************************
 
@@ -192,11 +192,11 @@ public:
 
 use  <algorithm>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs.hpp>
+use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
 
-namespace libsnark {
+
 
 bool tbcs_gate::evaluate(const tbcs_variable_assignment &input) const
 {
@@ -221,12 +221,12 @@ void print_tbcs_wire(const tbcs_wire_t wire, const std::map<size_t, std::string>
      */
     if (wire == 0)
     {
-        printf("  1");
+        print!("  1");
     }
     else
     {
         auto it = variable_annotations.find(wire);
-        printf("    x_%zu (%s)",
+        print!("    x_{} (%s)",
                wire,
                (it == variable_annotations.end() ? "no annotation" : it->second.c_str()));
     }
@@ -234,76 +234,76 @@ void print_tbcs_wire(const tbcs_wire_t wire, const std::map<size_t, std::string>
 
 void tbcs_gate::print(const std::map<size_t, std::string> &variable_annotations) const
 {
-    switch (this->type)
+    switch (self.type)
     {
     case TBCS_GATE_CONSTANT_0:
-        printf("CONSTANT_0");
+        print!("CONSTANT_0");
         break;
     case TBCS_GATE_AND:
-        printf("AND");
+        print!("AND");
         break;
     case TBCS_GATE_X_AND_NOT_Y:
-        printf("X_AND_NOT_Y");
+        print!("X_AND_NOT_Y");
         break;
     case TBCS_GATE_X:
-        printf("X");
+        print!("X");
         break;
     case TBCS_GATE_NOT_X_AND_Y:
-        printf("NOT_X_AND_Y");
+        print!("NOT_X_AND_Y");
         break;
     case TBCS_GATE_Y:
-        printf("Y");
+        print!("Y");
         break;
     case TBCS_GATE_XOR:
-        printf("XOR");
+        print!("XOR");
         break;
     case TBCS_GATE_OR:
-        printf("OR");
+        print!("OR");
         break;
     case TBCS_GATE_NOR:
-        printf("NOR");
+        print!("NOR");
         break;
     case TBCS_GATE_EQUIVALENCE:
-        printf("EQUIVALENCE");
+        print!("EQUIVALENCE");
         break;
     case TBCS_GATE_NOT_Y:
-        printf("NOT_Y");
+        print!("NOT_Y");
         break;
     case TBCS_GATE_IF_Y_THEN_X:
-        printf("IF_Y_THEN_X");
+        print!("IF_Y_THEN_X");
         break;
     case TBCS_GATE_NOT_X:
-        printf("NOT_X");
+        print!("NOT_X");
         break;
     case TBCS_GATE_IF_X_THEN_Y:
-        printf("IF_X_THEN_Y");
+        print!("IF_X_THEN_Y");
         break;
     case TBCS_GATE_NAND:
-        printf("NAND");
+        print!("NAND");
         break;
     case TBCS_GATE_CONSTANT_1:
-        printf("CONSTANT_1");
+        print!("CONSTANT_1");
         break;
     default:
-        printf("Invalid type");
+        print!("Invalid type");
     }
 
-    printf("\n(\n");
+    print!("\n(\n");
     print_tbcs_wire(left_wire, variable_annotations);
-    printf(",\n");
+    print!(",\n");
     print_tbcs_wire(right_wire, variable_annotations);
-    printf("\n) ->\n");
+    print!("\n) ->\n");
     print_tbcs_wire(output, variable_annotations);
-    printf(" (%s)\n", is_circuit_output ? "circuit output" : "internal wire");
+    print!(" (%s)\n", is_circuit_output ? "circuit output" : "internal wire");
 }
 
 bool tbcs_gate::operator==(const tbcs_gate &other) const
 {
-    return (this->left_wire == other.left_wire &&
-            this->right_wire == other.right_wire &&
-            this->type == other.type &&
-            this->output == other.output &&
-            this->is_circuit_output == other.is_circuit_output);
+    return (self.left_wire == other.left_wire &&
+            self.right_wire == other.right_wire &&
+            self.type == other.type &&
+            self.output == other.output &&
+            self.is_circuit_output == other.is_circuit_output);
 }
 
 std::ostream& operator<<(std::ostream &out, const tbcs_gate &g)
@@ -312,7 +312,7 @@ std::ostream& operator<<(std::ostream &out, const tbcs_gate &g)
     out << g.right_wire << "\n";
     out << (int)g.type << "\n";
     out << g.output << "\n";
-    libff::output_bool(out, g.is_circuit_output);
+    ffec::output_bool(out, g.is_circuit_output);
 
     return out;
 }
@@ -320,15 +320,15 @@ std::ostream& operator<<(std::ostream &out, const tbcs_gate &g)
 std::istream& operator>>(std::istream &in, tbcs_gate &g)
 {
     in >> g.left_wire;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     in >> g.right_wire;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     int tmp;
     in >> tmp;
     g.type = (tbcs_gate_type)tmp;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     in >> g.output;
-    libff::input_bool(in, g.is_circuit_output);
+    ffec::input_bool(in, g.is_circuit_output);
 
     return in;
 }
@@ -339,7 +339,7 @@ std::vector<size_t> tbcs_circuit::wire_depths() const
 
     for (auto &g: gates)
     {
-        depths.emplace_back(std::max(depths[g.left_wire], depths[g.right_wire]) + 1);
+        depths.push(std::max(depths[g.left_wire], depths[g.right_wire]) + 1);
     }
 
     return depths;
@@ -362,7 +362,7 @@ size_t tbcs_circuit::num_wires() const
 
 size_t tbcs_circuit::depth() const
 {
-    std::vector<size_t> all_depths = this->wire_depths();
+    std::vector<size_t> all_depths = self.wire_depths();
     return *(std::max_element(all_depths.begin(), all_depths.end()));
 }
 
@@ -394,14 +394,14 @@ bool tbcs_circuit::is_valid() const
 tbcs_variable_assignment tbcs_circuit::get_all_wires(const tbcs_primary_input &primary_input,
                                                      const tbcs_auxiliary_input &auxiliary_input) const
 {
-    assert(primary_input.size() == primary_input_size);
-    assert(auxiliary_input.size() == auxiliary_input_size);
+    assert!(primary_input.size() == primary_input_size);
+    assert!(auxiliary_input.size() == auxiliary_input_size);
 
     tbcs_variable_assignment result;
     result.insert(result.end(), primary_input.begin(), primary_input.end());
     result.insert(result.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    assert(result.size() == num_inputs());
+    assert!(result.size() == num_inputs());
 
     for (auto &g : gates)
     {
@@ -447,33 +447,33 @@ bool tbcs_circuit::is_satisfied(const tbcs_primary_input &primary_input,
 
 void tbcs_circuit::add_gate(const tbcs_gate &g)
 {
-    assert(g.output == num_wires()+1);
-    gates.emplace_back(g);
+    assert!(g.output == num_wires()+1);
+    gates.push(g);
 }
 
 void tbcs_circuit::add_gate(const tbcs_gate &g, const std::string &annotation)
 {
-    assert(g.output == num_wires()+1);
-    gates.emplace_back(g);
-#ifdef DEBUG
+    assert!(g.output == num_wires()+1);
+    gates.push(g);
+// #ifdef DEBUG
     gate_annotations[g.output] = annotation;
 #else
-    libff::UNUSED(annotation);
-#endif
+    ffec::UNUSED(annotation);
+//#endif
 }
 
 bool tbcs_circuit::operator==(const tbcs_circuit &other) const
 {
-    return (this->primary_input_size == other.primary_input_size &&
-            this->auxiliary_input_size == other.auxiliary_input_size &&
-            this->gates == other.gates);
+    return (self.primary_input_size == other.primary_input_size &&
+            self.auxiliary_input_size == other.auxiliary_input_size &&
+            self.gates == other.gates);
 }
 
 std::ostream& operator<<(std::ostream &out, const tbcs_circuit &circuit)
 {
     out << circuit.primary_input_size << "\n";
     out << circuit.auxiliary_input_size << "\n";
-    libff::operator<<(out, circuit.gates); out << OUTPUT_NEWLINE;
+    ffec::operator<<(out, circuit.gates); out << OUTPUT_NEWLINE;
 
     return out;
 }
@@ -481,45 +481,45 @@ std::ostream& operator<<(std::ostream &out, const tbcs_circuit &circuit)
 std::istream& operator>>(std::istream &in, tbcs_circuit &circuit)
 {
     in >> circuit.primary_input_size;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     in >> circuit.auxiliary_input_size;
-    libff::consume_newline(in);
-    libff::operator>>(in, circuit.gates);
-    libff::consume_OUTPUT_NEWLINE(in);
+    ffec::consume_newline(in);
+    ffec::operator>>(in, circuit.gates);
+    ffec::consume_OUTPUT_NEWLINE(in);
 
     return in;
 }
 
 void tbcs_circuit::print() const
 {
-    libff::print_indent(); printf("General information about the circuit:\n");
-    this->print_info();
-    libff::print_indent(); printf("All gates:\n");
+    ffec::print_indent(); print!("General information about the circuit:\n");
+    self.print_info();
+    ffec::print_indent(); print!("All gates:\n");
     for (size_t i = 0; i < gates.size(); ++i)
     {
         std::string annotation = "no annotation";
-#ifdef DEBUG
+// #ifdef DEBUG
         auto it = gate_annotations.find(i);
         if (it != gate_annotations.end())
         {
             annotation = it->second;
         }
-#endif
-        printf("Gate %zu (%s):\n", i, annotation.c_str());
-#ifdef DEBUG
+//#endif
+        print!("Gate {} (%s):\n", i, annotation.c_str());
+// #ifdef DEBUG
         gates[i].print(variable_annotations);
 #else
         gates[i].print();
-#endif
+//#endif
     }
 }
 
 void tbcs_circuit::print_info() const
 {
-    libff::print_indent(); printf("* Number of inputs: %zu\n", this->num_inputs());
-    libff::print_indent(); printf("* Number of gates: %zu\n", this->num_gates());
-    libff::print_indent(); printf("* Number of wires: %zu\n", this->num_wires());
-    libff::print_indent(); printf("* Depth: %zu\n", this->depth());
+    ffec::print_indent(); print!("* Number of inputs: {}\n", self.num_inputs());
+    ffec::print_indent(); print!("* Number of gates: {}\n", self.num_gates());
+    ffec::print_indent(); print!("* Number of wires: {}\n", self.num_wires());
+    ffec::print_indent(); print!("* Depth: {}\n", self.depth());
 }
 
-} // libsnark
+

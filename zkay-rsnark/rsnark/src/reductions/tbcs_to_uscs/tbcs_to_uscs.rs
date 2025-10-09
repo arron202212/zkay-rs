@@ -26,13 +26,13 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TBCS_TO_USCS_HPP_
-#define TBCS_TO_USCS_HPP_
+//#ifndef TBCS_TO_USCS_HPP_
+// #define TBCS_TO_USCS_HPP_
 
-use  <libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs.hpp>
-use  <libsnark/relations/constraint_satisfaction_problems/uscs/uscs.hpp>
+use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
+use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
 
-namespace libsnark {
+
 
 /**
  * Instance map for the TBCS-to-USCS reduction.
@@ -48,11 +48,11 @@ uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(const tbcs_circuit &ci
                                                                const tbcs_primary_input &primary_input,
                                                                const tbcs_auxiliary_input &auxiliary_input);
 
-} // libsnark
 
-use  <libsnark/reductions/tbcs_to_uscs/tbcs_to_uscs.tcc>
 
-#endif // TBCS_TO_USCS_HPP_
+use libsnark/reductions/tbcs_to_uscs/tbcs_to_uscs;
+
+//#endif // TBCS_TO_USCS_HPP_
 /** @file
 *****************************************************************************
 
@@ -66,22 +66,22 @@ See tbcs_to_uscs.hpp .
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
 
-#ifndef TBCS_TO_USCS_TCC_
-#define TBCS_TO_USCS_TCC_
+//#ifndef TBCS_TO_USCS_TCC_
+// #define TBCS_TO_USCS_TCC_
 
-use  <libff/algebra/fields/field_utils.hpp>
+use ffec::algebra::fields::field_utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &circuit)
 {
-    assert(circuit.is_valid());
+    assert!(circuit.is_valid());
     uscs_constraint_system<FieldT> result;
 
-#ifdef DEBUG
+// #ifdef DEBUG
     result.variable_annotations = circuit.variable_annotations;
-#endif
+//#endif
 
     result.primary_input_size = circuit.primary_input_size;
     result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.size();
@@ -92,12 +92,12 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
         const variable<FieldT> y(g.right_wire);
         const variable<FieldT> z(g.output);
 
-#ifdef DEBUG
+// #ifdef DEBUG
         auto it = circuit.gate_annotations.find(g.output);
-        const std::string annotation = (it != circuit.gate_annotations.end() ? it->second : FMT("", "compute_wire_%zu", g.output));
+        const std::string annotation = (it != circuit.gate_annotations.end() ? it->second : FMT("", "compute_wire_{}", g.output));
 #else
         const std::string annotation = "";
-#endif
+//#endif
 
         switch (g.type)
         {
@@ -182,14 +182,14 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
             result.add_constraint(0 * x + 0 * y + 1 * z + 0, annotation);
             break;
         default:
-            assert(0);
+            assert!(0);
         }
     }
 
     for (size_t i = 0; i < circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.size(); ++i)
     {
         /* require that 2 * wire - 1 \in {-1,1}, that is wire \in {0,1} */
-        result.add_constraint(2 * variable<FieldT>(i) - 1, FMT("", "wire_%zu", i));
+        result.add_constraint(2 * variable<FieldT>(i) - 1, FMT("", "wire_{}", i));
     }
 
     for (auto &g : circuit.gates)
@@ -197,7 +197,7 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
         if (g.is_circuit_output)
         {
             /* require that output + 1 \in {-1,1}, this together with output binary (above) enforces output = 0 */
-            result.add_constraint(variable<FieldT>(g.output) + 1, FMT("", "output_%zu", g.output));
+            result.add_constraint(variable<FieldT>(g.output) + 1, FMT("", "output_{}", g.output));
         }
     }
 
@@ -210,11 +210,11 @@ uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(const tbcs_circuit &ci
                                                                const tbcs_auxiliary_input &auxiliary_input)
 {
     const tbcs_variable_assignment all_wires = circuit.get_all_wires(primary_input, auxiliary_input);
-    const uscs_variable_assignment<FieldT> result = libff::convert_bit_vector_to_field_element_vector<FieldT>(all_wires);
+    const uscs_variable_assignment<FieldT> result = ffec::convert_bit_vector_to_field_element_vector<FieldT>(all_wires);
     return result;
 }
 
-} // libsnark
 
 
-#endif // TBCS_TO_USCS_TCC_
+
+//#endif // TBCS_TO_USCS_TCC_

@@ -12,14 +12,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP2_GADGETS_HPP_
-#define FP2_GADGETS_HPP_
+//#ifndef FP2_GADGETS_HPP_
+// #define FP2_GADGETS_HPP_
 
 use  <memory>
 
-use  <libsnark/gadgetlib1/gadget.hpp>
+use libsnark/gadgetlib1/gadget;
 
-namespace libsnark {
+
 
 /**
  * Gadget that represents an Fp2 variable.
@@ -126,11 +126,11 @@ public:
     void generate_r1cs_witness();
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/fields/fp2_gadgets.tcc>
 
-#endif // FP2_GADGETS_HPP_
+use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
+
+//#endif // FP2_GADGETS_HPP_
 /** @file
  *****************************************************************************
 
@@ -144,10 +144,10 @@ use  <libsnark/gadgetlib1/gadgets/fields/fp2_gadgets.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef FP2_GADGETS_TCC_
-#define FP2_GADGETS_TCC_
+//#ifndef FP2_GADGETS_TCC_
+// #define FP2_GADGETS_TCC_
 
-namespace libsnark {
+
 
 template<typename Fp2T>
 Fp2_variable<Fp2T>::Fp2_variable(protoboard<FieldT> &pb,
@@ -161,8 +161,8 @@ Fp2_variable<Fp2T>::Fp2_variable(protoboard<FieldT> &pb,
     c0 = pb_linear_combination<FieldT>(c0_var);
     c1 = pb_linear_combination<FieldT>(c1_var);
 
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
+    all_vars.push(c0);
+    all_vars.push(c1);
 }
 
 template<typename Fp2T>
@@ -177,8 +177,8 @@ Fp2_variable<Fp2T>::Fp2_variable(protoboard<FieldT> &pb,
     c0.evaluate(pb);
     c1.evaluate(pb);
 
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
+    all_vars.push(c0);
+    all_vars.push(c1);
 }
 
 template<typename Fp2T>
@@ -191,8 +191,8 @@ Fp2_variable<Fp2T>::Fp2_variable(protoboard<FieldT> &pb,
     c0.assign(pb, el.c0 * coeff);
     c1.assign(pb, el.c1 * coeff);
 
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
+    all_vars.push(c0);
+    all_vars.push(c1);
 }
 
 template<typename Fp2T>
@@ -202,32 +202,32 @@ Fp2_variable<Fp2T>::Fp2_variable(protoboard<FieldT> &pb,
                                  const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix), c0(c0), c1(c1)
 {
-    all_vars.emplace_back(c0);
-    all_vars.emplace_back(c1);
+    all_vars.push(c0);
+    all_vars.push(c1);
 }
 
 template<typename Fp2T>
 void Fp2_variable<Fp2T>::generate_r1cs_equals_const_constraints(const Fp2T &el)
 {
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c0, c0),
-                                 FMT(this->annotation_prefix, " c0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c1, c1),
-                                 FMT(this->annotation_prefix, " c1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c0, c0),
+                                 FMT(self.annotation_prefix, " c0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, el.c1, c1),
+                                 FMT(self.annotation_prefix, " c1"));
 }
 
 template<typename Fp2T>
 void Fp2_variable<Fp2T>::generate_r1cs_witness(const Fp2T &el)
 {
-    this->pb.lc_val(c0) = el.c0;
-    this->pb.lc_val(c1) = el.c1;
+    self.pb.lc_val(c0) = el.c0;
+    self.pb.lc_val(c1) = el.c1;
 }
 
 template<typename Fp2T>
 Fp2T Fp2_variable<Fp2T>::get_element()
 {
     Fp2T el;
-    el.c0 = this->pb.lc_val(c0);
-    el.c1 = this->pb.lc_val(c1);
+    el.c0 = self.pb.lc_val(c0);
+    el.c1 = self.pb.lc_val(c1);
     return el;
 }
 
@@ -235,43 +235,43 @@ template<typename Fp2T>
 Fp2_variable<Fp2T> Fp2_variable<Fp2T>::operator*(const FieldT &coeff) const
 {
     pb_linear_combination<FieldT> new_c0, new_c1;
-    new_c0.assign(this->pb, this->c0 * coeff);
-    new_c1.assign(this->pb, this->c1 * coeff);
-    return Fp2_variable<Fp2T>(this->pb, new_c0, new_c1, FMT(this->annotation_prefix, " operator*"));
+    new_c0.assign(self.pb, self.c0 * coeff);
+    new_c1.assign(self.pb, self.c1 * coeff);
+    return Fp2_variable<Fp2T>(self.pb, new_c0, new_c1, FMT(self.annotation_prefix, " operator*"));
 }
 
 template<typename Fp2T>
 Fp2_variable<Fp2T> Fp2_variable<Fp2T>::operator+(const Fp2_variable<Fp2T> &other) const
 {
     pb_linear_combination<FieldT> new_c0, new_c1;
-    new_c0.assign(this->pb, this->c0 + other.c0);
-    new_c1.assign(this->pb, this->c1 + other.c1);
-    return Fp2_variable<Fp2T>(this->pb, new_c0, new_c1, FMT(this->annotation_prefix, " operator+"));
+    new_c0.assign(self.pb, self.c0 + other.c0);
+    new_c1.assign(self.pb, self.c1 + other.c1);
+    return Fp2_variable<Fp2T>(self.pb, new_c0, new_c1, FMT(self.annotation_prefix, " operator+"));
 }
 
 template<typename Fp2T>
 Fp2_variable<Fp2T> Fp2_variable<Fp2T>::operator+(const Fp2T &other) const
 {
     pb_linear_combination<FieldT> new_c0, new_c1;
-    new_c0.assign(this->pb, this->c0 + other.c0);
-    new_c1.assign(this->pb, this->c1 + other.c1);
-    return Fp2_variable<Fp2T>(this->pb, new_c0, new_c1, FMT(this->annotation_prefix, " operator+"));
+    new_c0.assign(self.pb, self.c0 + other.c0);
+    new_c1.assign(self.pb, self.c1 + other.c1);
+    return Fp2_variable<Fp2T>(self.pb, new_c0, new_c1, FMT(self.annotation_prefix, " operator+"));
 }
 
 template<typename Fp2T>
 Fp2_variable<Fp2T> Fp2_variable<Fp2T>::mul_by_X() const
 {
     pb_linear_combination<FieldT> new_c0, new_c1;
-    new_c0.assign(this->pb, this->c1 * Fp2T::non_residue);
-    new_c1.assign(this->pb, this->c0);
-    return Fp2_variable<Fp2T>(this->pb, new_c0, new_c1, FMT(this->annotation_prefix, " mul_by_X"));
+    new_c0.assign(self.pb, self.c1 * Fp2T::non_residue);
+    new_c1.assign(self.pb, self.c0);
+    return Fp2_variable<Fp2T>(self.pb, new_c0, new_c1, FMT(self.annotation_prefix, " mul_by_X"));
 }
 
 template<typename Fp2T>
 void Fp2_variable<Fp2T>::evaluate() const
 {
-    c0.evaluate(this->pb);
-    c1.evaluate(this->pb);
+    c0.evaluate(self.pb);
+    c1.evaluate(self.pb);
 }
 
 template<typename Fp2T>
@@ -322,22 +322,22 @@ void Fp2_mul_gadget<Fp2T>::generate_r1cs_constraints()
         "Multiplication and Squaring on Pairing-Friendly Fields"
         Devegili, OhEigeartaigh, Scott, Dahab
 */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c1, B.c1, v1),
-                                 FMT(this->annotation_prefix, " v1"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, B.c0, result.c0 + v1 * (-Fp2T::non_residue)),
-                                 FMT(this->annotation_prefix, " result.c0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + A.c1, B.c0 + B.c1,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c1, B.c1, v1),
+                                 FMT(self.annotation_prefix, " v1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, B.c0, result.c0 + v1 * (-Fp2T::non_residue)),
+                                 FMT(self.annotation_prefix, " result.c0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + A.c1, B.c0 + B.c1,
                                                          result.c1 + result.c0 + v1 * (FieldT::one() - Fp2T::non_residue)),
-                                 FMT(this->annotation_prefix, " result.c1"));
+                                 FMT(self.annotation_prefix, " result.c1"));
 }
 
 template<typename Fp2T>
 void Fp2_mul_gadget<Fp2T>::generate_r1cs_witness()
 {
-    const FieldT aA = this->pb.lc_val(A.c0) * this->pb.lc_val(B.c0);
-    this->pb.val(v1) = this->pb.lc_val(A.c1) * this->pb.lc_val(B.c1);
-    this->pb.lc_val(result.c0) = aA + Fp2T::non_residue * this->pb.val(v1);
-    this->pb.lc_val(result.c1) = (this->pb.lc_val(A.c0) + this->pb.lc_val(A.c1)) * (this->pb.lc_val(B.c0) + this->pb.lc_val(B.c1)) - aA - this->pb.lc_val(v1);
+    const FieldT aA = self.pb.lc_val(A.c0) * self.pb.lc_val(B.c0);
+    self.pb.val(v1) = self.pb.lc_val(A.c1) * self.pb.lc_val(B.c1);
+    self.pb.lc_val(result.c0) = aA + Fp2T::non_residue * self.pb.val(v1);
+    self.pb.lc_val(result.c1) = (self.pb.lc_val(A.c0) + self.pb.lc_val(A.c1)) * (self.pb.lc_val(B.c0) + self.pb.lc_val(B.c1)) - aA - self.pb.lc_val(v1);
 }
 
 template<typename Fp2T>
@@ -353,17 +353,17 @@ Fp2_mul_by_lc_gadget<Fp2T>::Fp2_mul_by_lc_gadget(protoboard<FieldT> &pb,
 template<typename Fp2T>
 void Fp2_mul_by_lc_gadget<Fp2T>::generate_r1cs_constraints()
 {
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, lc, result.c0),
-                                 FMT(this->annotation_prefix, " result.c0"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c1, lc, result.c1),
-                                 FMT(this->annotation_prefix, " result.c1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0, lc, result.c0),
+                                 FMT(self.annotation_prefix, " result.c0"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c1, lc, result.c1),
+                                 FMT(self.annotation_prefix, " result.c1"));
 }
 
 template<typename Fp2T>
 void Fp2_mul_by_lc_gadget<Fp2T>::generate_r1cs_witness()
 {
-    this->pb.lc_val(result.c0) = this->pb.lc_val(A.c0) * this->pb.lc_val(lc);
-    this->pb.lc_val(result.c1) = this->pb.lc_val(A.c1) * this->pb.lc_val(lc);
+    self.pb.lc_val(result.c0) = self.pb.lc_val(A.c0) * self.pb.lc_val(lc);
+    self.pb.lc_val(result.c1) = self.pb.lc_val(A.c1) * self.pb.lc_val(lc);
 }
 
 template<typename Fp2T>
@@ -392,23 +392,23 @@ void Fp2_sqr_gadget<Fp2T>::generate_r1cs_constraints()
         "Multiplication and Squaring on Pairing-Friendly Fields"
         Devegili, OhEigeartaigh, Scott, Dahab
 */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2 * A.c0, A.c1, result.c1),
-                                 FMT(this->annotation_prefix, " result.c1"));
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + A.c1,
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2 * A.c0, A.c1, result.c1),
+                                 FMT(self.annotation_prefix, " result.c1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(A.c0 + A.c1,
                                                          A.c0 + Fp2T::non_residue * A.c1,
                                                          result.c0 + result.c1 * (FieldT::one() + Fp2T::non_residue) * FieldT(2).inverse()),
-                                 FMT(this->annotation_prefix, " result.c0"));
+                                 FMT(self.annotation_prefix, " result.c0"));
 }
 
 template<typename Fp2T>
 void Fp2_sqr_gadget<Fp2T>::generate_r1cs_witness()
 {
-    const FieldT a = this->pb.lc_val(A.c0);
-    const FieldT b = this->pb.lc_val(A.c1);
-    this->pb.lc_val(result.c1) = FieldT(2) * a * b;
-    this->pb.lc_val(result.c0) = (a + b) * (a + Fp2T::non_residue * b) - a*b - Fp2T::non_residue * a* b;
+    const FieldT a = self.pb.lc_val(A.c0);
+    const FieldT b = self.pb.lc_val(A.c1);
+    self.pb.lc_val(result.c1) = FieldT(2) * a * b;
+    self.pb.lc_val(result.c0) = (a + b) * (a + Fp2T::non_residue * b) - a*b - Fp2T::non_residue * a* b;
 }
 
-} // libsnark
 
-#endif // FP2_GADGETS_TCC_
+
+//#endif // FP2_GADGETS_TCC_

@@ -18,14 +18,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TALLY_CP_HPP_
-#define TALLY_CP_HPP_
+//#ifndef TALLY_CP_HPP_
+// #define TALLY_CP_HPP_
 
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate.hpp>
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler.hpp>
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
 
-namespace libsnark {
+
 
 /**
  * Subclasses a R1CS PCD message to the tally compliance predicate.
@@ -103,11 +103,11 @@ public:
     std::shared_ptr<r1cs_pcd_message<FieldT> > get_base_case_message() const;
 };
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/examples/tally_cp.tcc>
 
-#endif // TALLY_CP_HPP_
+use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/examples/tally_cp;
+
+//#endif // TALLY_CP_HPP_
 /** @file
  *****************************************************************************
 
@@ -121,15 +121,15 @@ use  <libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/examples/tally
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TALLY_CP_TCC_
-#define TALLY_CP_TCC_
+//#ifndef TALLY_CP_TCC_
+// #define TALLY_CP_TCC_
 
 use  <algorithm>
 use  <functional>
 
-use  <libff/algebra/fields/field_utils.hpp>
+use ffec::algebra::fields::field_utils;
 
-namespace libsnark {
+
 
 template<typename FieldT>
 tally_pcd_message<FieldT>::tally_pcd_message(const size_t type,
@@ -145,8 +145,8 @@ r1cs_variable_assignment<FieldT> tally_pcd_message<FieldT>::payload_as_r1cs_vari
 {
     std::function<FieldT(bool)> bit_to_FieldT = [] (const bool bit) { return bit ? FieldT::one() : FieldT::zero(); };
 
-    const libff::bit_vector sum_bits = libff::convert_field_element_to_bit_vector<FieldT>(sum, wordsize);
-    const libff::bit_vector count_bits = libff::convert_field_element_to_bit_vector<FieldT>(count, wordsize);
+    const ffec::bit_vector sum_bits = ffec::convert_field_element_to_bit_vector<FieldT>(sum, wordsize);
+    const ffec::bit_vector count_bits = ffec::convert_field_element_to_bit_vector<FieldT>(count, wordsize);
 
     r1cs_variable_assignment<FieldT> result(2 * wordsize);
     std::transform(sum_bits.begin(), sum_bits.end(), result.begin() , bit_to_FieldT);
@@ -158,10 +158,10 @@ r1cs_variable_assignment<FieldT> tally_pcd_message<FieldT>::payload_as_r1cs_vari
 template<typename FieldT>
 void tally_pcd_message<FieldT>::print() const
 {
-    printf("Tally message of type %zu:\n", this->type);
-    printf("  wordsize: %zu\n", wordsize);
-    printf("  sum: %zu\n", sum);
-    printf("  count: %zu\n", count);
+    print!("Tally message of type {}:\n", self.type);
+    print!("  wordsize: {}\n", wordsize);
+    print!("  sum: {}\n", sum);
+    print!("  count: {}\n", count);
 }
 
 template<typename FieldT>
@@ -180,8 +180,8 @@ r1cs_variable_assignment<FieldT> tally_pcd_local_data<FieldT>::as_r1cs_variable_
 template<typename FieldT>
 void tally_pcd_local_data<FieldT>::print() const
 {
-    printf("Tally PCD local data:\n");
-    printf("  summand: %zu\n", summand);
+    print!("Tally PCD local data:\n");
+    print!("  summand: {}\n", summand);
 }
 
 template<typename FieldT>
@@ -199,14 +199,14 @@ public:
         sum_bits.allocate(pb, wordsize, FMT(annotation_prefix, " sum_bits"));
         count_bits.allocate(pb, wordsize, FMT(annotation_prefix, " count_bits"));
 
-        this->update_all_vars();
+        self.update_all_vars();
     }
 
     std::shared_ptr<r1cs_pcd_message<FieldT> > get_message() const
     {
-        const size_t type_val = this->pb.val(this->type).as_ulong();
-        const size_t sum_val = sum_bits.get_field_element_from_bits(this->pb).as_ulong();
-        const size_t count_val = count_bits.get_field_element_from_bits(this->pb).as_ulong();
+        const size_t type_val = self.pb.val(self.type).as_ulong();
+        const size_t sum_val = sum_bits.get_field_element_from_bits(self.pb).as_ulong();
+        const size_t count_val = count_bits.get_field_element_from_bits(self.pb).as_ulong();
 
         std::shared_ptr<r1cs_pcd_message<FieldT> > result;
         result.reset(new tally_pcd_message<FieldT>(type_val, wordsize, sum_val, count_val));
@@ -228,12 +228,12 @@ public:
     {
         summand.allocate(pb, FMT(annotation_prefix, " summand"));
 
-        this->update_all_vars();
+        self.update_all_vars();
     }
 
     std::shared_ptr<r1cs_pcd_local_data<FieldT> > get_local_data() const
     {
-        const size_t summand_val = this->pb.val(summand).as_ulong();
+        const size_t summand_val = self.pb.val(summand).as_ulong();
 
         std::shared_ptr<r1cs_pcd_local_data<FieldT> > result;
         result.reset(new tally_pcd_local_data<FieldT>(summand_val));
@@ -255,43 +255,43 @@ tally_cp_handler<FieldT>::tally_cp_handler(const size_t type, const size_t max_a
                                                               accepted_input_types),
     wordsize(wordsize)
 {
-    this->outgoing_message.reset(new tally_pcd_message_variable<FieldT>(this->pb, wordsize, "outgoing_message"));
-    this->arity.allocate(this->pb, "arity");
+    self.outgoing_message.reset(new tally_pcd_message_variable<FieldT>(self.pb, wordsize, "outgoing_message"));
+    self.arity.allocate(self.pb, "arity");
 
     for (size_t i = 0; i < max_arity; ++i)
     {
-        this->incoming_messages[i].reset(new tally_pcd_message_variable<FieldT>(this->pb, wordsize, FMT("", "incoming_messages_%zu", i)));
+        self.incoming_messages[i].reset(new tally_pcd_message_variable<FieldT>(self.pb, wordsize, FMT("", "incoming_messages_{}", i)));
     }
 
-    this->local_data.reset(new tally_pcd_local_data_variable<FieldT>(this->pb, "local_data"));
+    self.local_data.reset(new tally_pcd_local_data_variable<FieldT>(self.pb, "local_data"));
 
-    sum_out_packed.allocate(this->pb, "sum_out_packed");
-    count_out_packed.allocate(this->pb, "count_out_packed");
+    sum_out_packed.allocate(self.pb, "sum_out_packed");
+    count_out_packed.allocate(self.pb, "count_out_packed");
 
-    sum_in_packed.allocate(this->pb, max_arity, "sum_in_packed");
-    count_in_packed.allocate(this->pb, max_arity, "count_in_packed");
+    sum_in_packed.allocate(self.pb, max_arity, "sum_in_packed");
+    count_in_packed.allocate(self.pb, max_arity, "count_in_packed");
 
-    sum_in_packed_aux.allocate(this->pb, max_arity, "sum_in_packed_aux");
-    count_in_packed_aux.allocate(this->pb, max_arity, "count_in_packed_aux");
+    sum_in_packed_aux.allocate(self.pb, max_arity, "sum_in_packed_aux");
+    count_in_packed_aux.allocate(self.pb, max_arity, "count_in_packed_aux");
 
-    type_val_inner_product.allocate(this->pb, "type_val_inner_product");
-    for (auto &msg : this->incoming_messages)
+    type_val_inner_product.allocate(self.pb, "type_val_inner_product");
+    for (auto &msg : self.incoming_messages)
     {
-        incoming_types.emplace_back(msg->type);
+        incoming_types.push(msg->type);
     }
 
-    compute_type_val_inner_product.reset(new inner_product_gadget<FieldT>(this->pb, incoming_types, sum_in_packed, type_val_inner_product, "compute_type_val_inner_product"));
+    compute_type_val_inner_product.reset(new inner_product_gadget<FieldT>(self.pb, incoming_types, sum_in_packed, type_val_inner_product, "compute_type_val_inner_product"));
 
-    unpack_sum_out.reset(new packing_gadget<FieldT>(this->pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(this->outgoing_message)->sum_bits, sum_out_packed, "pack_sum_out"));
-    unpack_count_out.reset(new packing_gadget<FieldT>(this->pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(this->outgoing_message)->count_bits, count_out_packed, "pack_count_out"));
+    unpack_sum_out.reset(new packing_gadget<FieldT>(self.pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(self.outgoing_message)->sum_bits, sum_out_packed, "pack_sum_out"));
+    unpack_count_out.reset(new packing_gadget<FieldT>(self.pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(self.outgoing_message)->count_bits, count_out_packed, "pack_count_out"));
 
     for (size_t i = 0; i < max_arity; ++i)
     {
-        pack_sum_in.emplace_back(packing_gadget<FieldT>(this->pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(this->incoming_messages[i])->sum_bits, sum_in_packed[i], FMT("", "pack_sum_in_%zu", i)));
-        pack_count_in.emplace_back(packing_gadget<FieldT>(this->pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(this->incoming_messages[i])->sum_bits, count_in_packed[i], FMT("", "pack_count_in_%zu", i)));
+        pack_sum_in.push(packing_gadget<FieldT>(self.pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(self.incoming_messages[i])->sum_bits, sum_in_packed[i], FMT("", "pack_sum_in_{}", i)));
+        pack_count_in.push(packing_gadget<FieldT>(self.pb, std::dynamic_pointer_cast<tally_pcd_message_variable<FieldT> >(self.incoming_messages[i])->sum_bits, count_in_packed[i], FMT("", "pack_count_in_{}", i)));
     }
 
-    arity_indicators.allocate(this->pb, max_arity+1, "arity_indicators");
+    arity_indicators.allocate(self.pb, max_arity+1, "arity_indicators");
 }
 
 template<typename FieldT>
@@ -300,38 +300,38 @@ void tally_cp_handler<FieldT>::generate_r1cs_constraints()
     unpack_sum_out->generate_r1cs_constraints(true);
     unpack_count_out->generate_r1cs_constraints(true);
 
-    for (size_t i = 0; i < this->max_arity; ++i)
+    for (size_t i = 0; i < self.max_arity; ++i)
     {
         pack_sum_in[i].generate_r1cs_constraints(true);
         pack_count_in[i].generate_r1cs_constraints(true);
     }
 
-    for (size_t i = 0; i < this->max_arity; ++i)
+    for (size_t i = 0; i < self.max_arity; ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(incoming_types[i], sum_in_packed_aux[i], sum_in_packed[i]), FMT("", "initial_sum_%zu_is_zero", i));
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(incoming_types[i], count_in_packed_aux[i], count_in_packed[i]), FMT("", "initial_sum_%zu_is_zero", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(incoming_types[i], sum_in_packed_aux[i], sum_in_packed[i]), FMT("", "initial_sum_%zu_is_zero", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(incoming_types[i], count_in_packed_aux[i], count_in_packed[i]), FMT("", "initial_sum_%zu_is_zero", i));
     }
 
     /* constrain arity indicator variables so that arity_indicators[arity] = 1 and arity_indicators[i] = 0 for any other i */
-    for (size_t i = 0; i < this->max_arity; ++i)
+    for (size_t i = 0; i < self.max_arity; ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(this->arity - FieldT(i), arity_indicators[i], 0), FMT("", "arity_indicators_%zu", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(self.arity - FieldT(i), arity_indicators[i], 0), FMT("", "arity_indicators_{}", i));
     }
 
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_sum<FieldT>(arity_indicators), 1), "arity_indicators");
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_sum<FieldT>(arity_indicators), 1), "arity_indicators");
 
     /* require that types of messages that are past arity (i.e. unbound wires) carry 0 */
-    for (size_t i = 0; i < this->max_arity; ++i)
+    for (size_t i = 0; i < self.max_arity; ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(0 + pb_sum<FieldT>(pb_variable_array<FieldT>(arity_indicators.begin(), arity_indicators.begin() + i)), incoming_types[i], 0), FMT("", "unbound_types_%zu", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(0 + pb_sum<FieldT>(pb_variable_array<FieldT>(arity_indicators.begin(), arity_indicators.begin() + i)), incoming_types[i], 0), FMT("", "unbound_types_{}", i));
     }
 
     /* sum_out = local_data + \sum_i type[i] * sum_in[i] */
     compute_type_val_inner_product->generate_r1cs_constraints();
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, type_val_inner_product + std::dynamic_pointer_cast<tally_pcd_local_data_variable<FieldT> >(this->local_data)->summand, sum_out_packed), "update_sum");
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, type_val_inner_product + std::dynamic_pointer_cast<tally_pcd_local_data_variable<FieldT> >(self.local_data)->summand, sum_out_packed), "update_sum");
 
     /* count_out = 1 + \sum_i count_in[i] */
-    this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, 1 + pb_sum<FieldT>(count_in_packed), count_out_packed), "update_count");
+    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, 1 + pb_sum<FieldT>(count_in_packed), count_out_packed), "update_count");
 }
 
 template<typename FieldT>
@@ -340,30 +340,30 @@ void tally_cp_handler<FieldT>::generate_r1cs_witness(const std::vector<std::shar
 {
     base_handler::generate_r1cs_witness(incoming_messages, local_data);
 
-    for (size_t i = 0; i < this->max_arity; ++i)
+    for (size_t i = 0; i < self.max_arity; ++i)
     {
         pack_sum_in[i].generate_r1cs_witness_from_bits();
         pack_count_in[i].generate_r1cs_witness_from_bits();
 
-        if (!this->pb.val(incoming_types[i]).is_zero())
+        if (!self.pb.val(incoming_types[i]).is_zero())
         {
-            this->pb.val(sum_in_packed_aux[i]) = this->pb.val(sum_in_packed[i]) * this->pb.val(incoming_types[i]).inverse();
-            this->pb.val(count_in_packed_aux[i]) = this->pb.val(count_in_packed[i]) * this->pb.val(incoming_types[i]).inverse();
+            self.pb.val(sum_in_packed_aux[i]) = self.pb.val(sum_in_packed[i]) * self.pb.val(incoming_types[i]).inverse();
+            self.pb.val(count_in_packed_aux[i]) = self.pb.val(count_in_packed[i]) * self.pb.val(incoming_types[i]).inverse();
         }
     }
 
-    for (size_t i = 0; i < this->max_arity + 1; ++i)
+    for (size_t i = 0; i < self.max_arity + 1; ++i)
     {
-        this->pb.val(arity_indicators[i]) = (incoming_messages.size() == i ? FieldT::one() : FieldT::zero());
+        self.pb.val(arity_indicators[i]) = (incoming_messages.size() == i ? FieldT::one() : FieldT::zero());
     }
 
     compute_type_val_inner_product->generate_r1cs_witness();
-    this->pb.val(sum_out_packed) = this->pb.val(std::dynamic_pointer_cast<tally_pcd_local_data_variable<FieldT> >(this->local_data)->summand) + this->pb.val(type_val_inner_product);
+    self.pb.val(sum_out_packed) = self.pb.val(std::dynamic_pointer_cast<tally_pcd_local_data_variable<FieldT> >(self.local_data)->summand) + self.pb.val(type_val_inner_product);
 
-    this->pb.val(count_out_packed) = FieldT::one();
-    for (size_t i = 0; i < this->max_arity; ++i)
+    self.pb.val(count_out_packed) = FieldT::one();
+    for (size_t i = 0; i < self.max_arity; ++i)
     {
-        this->pb.val(count_out_packed) += this->pb.val(count_in_packed[i]);
+        self.pb.val(count_out_packed) += self.pb.val(count_in_packed[i]);
     }
 
     unpack_sum_out->generate_r1cs_witness_from_packed();
@@ -383,6 +383,6 @@ std::shared_ptr<r1cs_pcd_message<FieldT> > tally_cp_handler<FieldT>::get_base_ca
     return result;
 }
 
-} // libsnark
 
-#endif // TALLY_CP_TCC_
+
+//#endif // TALLY_CP_TCC_

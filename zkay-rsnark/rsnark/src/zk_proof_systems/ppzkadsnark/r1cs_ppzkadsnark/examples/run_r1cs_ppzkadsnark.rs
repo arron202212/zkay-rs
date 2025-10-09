@@ -10,15 +10,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_R1CS_PPZKADSNARK_HPP_
-#define RUN_R1CS_PPZKADSNARK_HPP_
+//#ifndef RUN_R1CS_PPZKADSNARK_HPP_
+// #define RUN_R1CS_PPZKADSNARK_HPP_
 
-use  <libff/algebra/curves/public_params.hpp>
+use ffec::algebra::curves::public_params;
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples.hpp>
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params;
 
-namespace libsnark {
+
 
 /**
  * Runs the ppzkADSNARK (generator, prover, and verifier) for a given
@@ -28,14 +28,14 @@ namespace libsnark {
  * (This takes additional time.)
  */
 template<typename ppT>
-bool run_r1cs_ppzkadsnark(const r1cs_example<libff::Fr<snark_pp<ppT>> > &example,
+bool run_r1cs_ppzkadsnark(const r1cs_example<ffec::Fr<snark_pp<ppT>> > &example,
                           const bool test_serialization);
 
-} // libsnark
 
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/run_r1cs_ppzkadsnark.tcc>
 
-#endif // RUN_R1CS_PPZKADSNARK_HPP_
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/run_r1cs_ppzkadsnark;
+
+//#endif // RUN_R1CS_PPZKADSNARK_HPP_
 /** @file
  *****************************************************************************
 
@@ -50,19 +50,19 @@ use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/run_r1cs_p
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef RUN_R1CS_PPZKADSNARK_TCC_
-#define RUN_R1CS_PPZKADSNARK_TCC_
+//#ifndef RUN_R1CS_PPZKADSNARK_TCC_
+// #define RUN_R1CS_PPZKADSNARK_TCC_
 
 use  <sstream>
 use  <type_traits>
 
-use  <libff/common/profiling.hpp>
+use ffec::common::profiling;
 
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/prf/aes_ctr_prf.tcc>
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/signature/ed25519_signature.tcc>
-use  <libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark.hpp>
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/prf/aes_ctr_prf;
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/signature/ed25519_signature;
+use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark;
 
-namespace libsnark {
+
 
 /**
  * The code below provides an example of all stages of running a R1CS ppzkADSNARK.
@@ -77,85 +77,85 @@ namespace libsnark {
  *     a primary input for CS, and a proof.
  */
 template<typename ppT>
-bool run_r1cs_ppzkadsnark(const r1cs_example<libff::Fr<snark_pp<ppT>> > &example,
+bool run_r1cs_ppzkadsnark(const r1cs_example<ffec::Fr<snark_pp<ppT>> > &example,
                           const bool test_serialization)
 {
-    libff::enter_block("Call to run_r1cs_ppzkadsnark");
+    ffec::enter_block("Call to run_r1cs_ppzkadsnark");
 
     r1cs_ppzkadsnark_auth_keys<ppT> auth_keys = r1cs_ppzkadsnark_auth_generator<ppT>();
 
-    libff::print_header("R1CS ppzkADSNARK Generator");
+    ffec::print_header("R1CS ppzkADSNARK Generator");
     r1cs_ppzkadsnark_keypair<ppT> keypair = r1cs_ppzkadsnark_generator<ppT>(example.constraint_system,auth_keys.pap);
-    printf("\n"); libff::print_indent(); libff::print_mem("after generator");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
 
-    libff::print_header("Preprocess verification key");
+    ffec::print_header("Preprocess verification key");
     r1cs_ppzkadsnark_processed_verification_key<ppT> pvk = r1cs_ppzkadsnark_verifier_process_vk<ppT>(keypair.vk);
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of keys");
-        keypair.pk = libff::reserialize<r1cs_ppzkadsnark_proving_key<ppT> >(keypair.pk);
-        keypair.vk = libff::reserialize<r1cs_ppzkadsnark_verification_key<ppT> >(keypair.vk);
-        pvk = libff::reserialize<r1cs_ppzkadsnark_processed_verification_key<ppT> >(pvk);
-        libff::leave_block("Test serialization of keys");
+        ffec::enter_block("Test serialization of keys");
+        keypair.pk = ffec::reserialize<r1cs_ppzkadsnark_proving_key<ppT> >(keypair.pk);
+        keypair.vk = ffec::reserialize<r1cs_ppzkadsnark_verification_key<ppT> >(keypair.vk);
+        pvk = ffec::reserialize<r1cs_ppzkadsnark_processed_verification_key<ppT> >(pvk);
+        ffec::leave_block("Test serialization of keys");
     }
 
-    libff::print_header("R1CS ppzkADSNARK Authenticate");
-    std::vector<libff::Fr<snark_pp<ppT>>> data;
+    ffec::print_header("R1CS ppzkADSNARK Authenticate");
+    std::vector<ffec::Fr<snark_pp<ppT>>> data;
     data.reserve(example.constraint_system.num_inputs());
     std::vector<labelT> labels;
     labels.reserve(example.constraint_system.num_inputs());
     for (size_t i = 0; i < example.constraint_system.num_inputs(); i++) {
-        labels.emplace_back(labelT());
-        data.emplace_back(example.primary_input[i]);
+        labels.push(labelT());
+        data.push(example.primary_input[i]);
     }
     std::vector<r1cs_ppzkadsnark_auth_data<ppT>> auth_data =
         r1cs_ppzkadsnark_auth_sign<ppT>(data,auth_keys.sak,labels);
 
-    libff::print_header("R1CS ppzkADSNARK Verify Symmetric");
+    ffec::print_header("R1CS ppzkADSNARK Verify Symmetric");
     bool auth_res =
         r1cs_ppzkadsnark_auth_verify<ppT>(data,auth_data,auth_keys.sak,labels);
-    printf("* The verification result is: %s\n", (auth_res ? "PASS" : "FAIL"));
+    print!("* The verification result is: %s\n", (auth_res ? "PASS" : "FAIL"));
 
-    libff::print_header("R1CS ppzkADSNARK Verify Public");
+    ffec::print_header("R1CS ppzkADSNARK Verify Public");
     bool auth_resp =
         r1cs_ppzkadsnark_auth_verify<ppT>(data,auth_data,auth_keys.pak,labels);
     assert (auth_res == auth_resp);
 
-    libff::print_header("R1CS ppzkADSNARK Prover");
+    ffec::print_header("R1CS ppzkADSNARK Prover");
     r1cs_ppzkadsnark_proof<ppT> proof = r1cs_ppzkadsnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input,auth_data);
-    printf("\n"); libff::print_indent(); libff::print_mem("after prover");
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
     if (test_serialization)
     {
-        libff::enter_block("Test serialization of proof");
-        proof = libff::reserialize<r1cs_ppzkadsnark_proof<ppT> >(proof);
-        libff::leave_block("Test serialization of proof");
+        ffec::enter_block("Test serialization of proof");
+        proof = ffec::reserialize<r1cs_ppzkadsnark_proof<ppT> >(proof);
+        ffec::leave_block("Test serialization of proof");
     }
 
-    libff::print_header("R1CS ppzkADSNARK Symmetric Verifier");
+    ffec::print_header("R1CS ppzkADSNARK Symmetric Verifier");
     bool ans = r1cs_ppzkadsnark_verifier<ppT>(keypair.vk, proof,auth_keys.sak,labels);
-    printf("\n"); libff::print_indent(); libff::print_mem("after verifier");
-    printf("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
+    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
 
-    libff::print_header("R1CS ppzkADSNARK Symmetric Online Verifier");
+    ffec::print_header("R1CS ppzkADSNARK Symmetric Online Verifier");
     bool ans2 = r1cs_ppzkadsnark_online_verifier<ppT>(pvk, proof,auth_keys.sak,labels);
-    assert(ans == ans2);
+    assert!(ans == ans2);
 
-    libff::print_header("R1CS ppzkADSNARK Public Verifier");
+    ffec::print_header("R1CS ppzkADSNARK Public Verifier");
     ans = r1cs_ppzkadsnark_verifier<ppT>(keypair.vk, auth_data, proof,auth_keys.pak,labels);
-    printf("\n"); libff::print_indent(); libff::print_mem("after verifier");
-    printf("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
+    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
 
-    libff::print_header("R1CS ppzkADSNARK Public Online Verifier");
+    ffec::print_header("R1CS ppzkADSNARK Public Online Verifier");
     ans2 = r1cs_ppzkadsnark_online_verifier<ppT>(pvk, auth_data, proof,auth_keys.pak,labels);
-    assert(ans == ans2);
+    assert!(ans == ans2);
 
-    libff::leave_block("Call to run_r1cs_ppzkadsnark");
+    ffec::leave_block("Call to run_r1cs_ppzkadsnark");
 
     return ans;
 }
 
-} // libsnark
 
-#endif // RUN_R1CS_PPZKADSNARK_TCC_
+
+//#endif // RUN_R1CS_PPZKADSNARK_TCC_

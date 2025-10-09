@@ -9,15 +9,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SHA256_GADGET_HPP_
-#define SHA256_GADGET_HPP_
+//#ifndef SHA256_GADGET_HPP_
+// #define SHA256_GADGET_HPP_
 
-use  <libsnark/common/data_structures/merkle_tree.hpp>
-use  <libsnark/gadgetlib1/gadgets/basic_gadgets.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/hash_io.hpp>
-use  <libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_components.hpp>
+use crate::common::data_structures::merkle_tree;
+use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_components;
 
-namespace libsnark {
+
 
 /**
  * Gadget for the SHA256 compression function.
@@ -65,7 +65,7 @@ public:
 template<typename FieldT>
 class sha256_two_to_one_hash_gadget : public gadget<FieldT> {
 public:
-    type libff::bit_vector hash_value_type;
+    type ffec::bit_vector hash_value_type;
     type merkle_authentication_path merkle_authentication_path_type;
 
     std::shared_ptr<sha256_compression_function_gadget<FieldT> > f;
@@ -86,16 +86,16 @@ public:
 
     static size_t get_block_len();
     static size_t get_digest_len();
-    static libff::bit_vector get_hash(const libff::bit_vector &input);
+    static ffec::bit_vector get_hash(const ffec::bit_vector &input);
 
     static size_t expected_constraints(const bool ensure_output_bitness=true); // TODO: ignored for now
 };
 
-} // libsnark
 
-use  <libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_gadget.tcc>
 
-#endif // SHA256_GADGET_HPP_
+use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_gadget;
+
+//#endif // SHA256_GADGET_HPP_
 /** @file
  *****************************************************************************
 
@@ -109,10 +109,10 @@ use  <libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_gadget.tcc>
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef SHA256_GADGET_TCC_
-#define SHA256_GADGET_TCC_
+//#ifndef SHA256_GADGET_TCC_
+// #define SHA256_GADGET_TCC_
 
-namespace libsnark {
+
 
 template<typename FieldT>
 sha256_compression_function_gadget<FieldT>::sha256_compression_function_gadget(protoboard<FieldT> &pb,
@@ -126,8 +126,8 @@ sha256_compression_function_gadget<FieldT>::sha256_compression_function_gadget(p
     output(output)
 {
     /* message schedule and inputs for it */
-    packed_W.allocate(pb, 64, FMT(this->annotation_prefix, " packed_W"));
-    message_schedule.reset(new sha256_message_schedule_gadget<FieldT>(pb, new_block, packed_W, FMT(this->annotation_prefix, " message_schedule")));
+    packed_W.allocate(pb, 64, FMT(self.annotation_prefix, " packed_W"));
+    message_schedule.reset(new sha256_message_schedule_gadget<FieldT>(pb, new_block, packed_W, FMT(self.annotation_prefix, " message_schedule")));
 
     /* initalize */
     round_a.push_back(pb_linear_combination_array<FieldT>(prev_output.rbegin() + 7*32, prev_output.rbegin() + 8*32));
@@ -150,23 +150,23 @@ sha256_compression_function_gadget<FieldT>::sha256_compression_function_gadget(p
         round_b.push_back(round_a[i]);
 
         pb_variable_array<FieldT> new_round_a_variables;
-        new_round_a_variables.allocate(pb, 32, FMT(this->annotation_prefix, " new_round_a_variables_%zu", i+1));
-        round_a.emplace_back(new_round_a_variables);
+        new_round_a_variables.allocate(pb, 32, FMT(self.annotation_prefix, " new_round_a_variables_{}", i+1));
+        round_a.push(new_round_a_variables);
 
         pb_variable_array<FieldT> new_round_e_variables;
-        new_round_e_variables.allocate(pb, 32, FMT(this->annotation_prefix, " new_round_e_variables_%zu", i+1));
-        round_e.emplace_back(new_round_e_variables);
+        new_round_e_variables.allocate(pb, 32, FMT(self.annotation_prefix, " new_round_e_variables_{}", i+1));
+        round_e.push(new_round_e_variables);
 
         round_functions.push_back(sha256_round_function_gadget<FieldT>(pb,
                                                                        round_a[i], round_b[i], round_c[i], round_d[i],
                                                                        round_e[i], round_f[i], round_g[i], round_h[i],
                                                                        packed_W[i], SHA256_K[i], round_a[i+1], round_e[i+1],
-                                                                       FMT(this->annotation_prefix, " round_functions_%zu", i)));
+                                                                       FMT(self.annotation_prefix, " round_functions_{}", i)));
     }
 
     /* finalize */
-    unreduced_output.allocate(pb, 8, FMT(this->annotation_prefix, " unreduced_output"));
-    reduced_output.allocate(pb, 8, FMT(this->annotation_prefix, " reduced_output"));
+    unreduced_output.allocate(pb, 8, FMT(self.annotation_prefix, " unreduced_output"));
+    reduced_output.allocate(pb, 8, FMT(self.annotation_prefix, " reduced_output"));
     for (size_t i = 0; i < 8; ++i)
     {
         reduce_output.push_back(lastbits_gadget<FieldT>(pb,
@@ -174,7 +174,7 @@ sha256_compression_function_gadget<FieldT>::sha256_compression_function_gadget(p
                                                         32+1,
                                                         reduced_output[i],
                                                         pb_variable_array<FieldT>(output.bits.rbegin() + (7-i) * 32, output.bits.rbegin() + (8-i) * 32),
-                                                        FMT(this->annotation_prefix, " reduce_output_%zu", i)));
+                                                        FMT(self.annotation_prefix, " reduce_output_{}", i)));
     }
 }
 
@@ -189,15 +189,15 @@ void sha256_compression_function_gadget<FieldT>::generate_r1cs_constraints()
 
     for (size_t i = 0; i < 4; ++i)
     {
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
                                                              round_functions[3-i].packed_d + round_functions[63-i].packed_new_a,
                                                              unreduced_output[i]),
-            FMT(this->annotation_prefix, " unreduced_output_%zu", i));
+            FMT(self.annotation_prefix, " unreduced_output_{}", i));
 
-        this->pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
+        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
                                                              round_functions[3-i].packed_h + round_functions[63-i].packed_new_e,
                                                              unreduced_output[4+i]),
-            FMT(this->annotation_prefix, " unreduced_output_%zu", 4+i));
+            FMT(self.annotation_prefix, " unreduced_output_{}", 4+i));
     }
 
     for (size_t i = 0; i < 8; ++i)
@@ -211,14 +211,14 @@ void sha256_compression_function_gadget<FieldT>::generate_r1cs_witness()
 {
     message_schedule->generate_r1cs_witness();
 
-#ifdef DEBUG
-    printf("Input:\n");
+// #ifdef DEBUG
+    print!("Input:\n");
     for (size_t j = 0; j < 16; ++j)
     {
-        printf("%lx ", this->pb.val(packed_W[j]).as_ulong());
+        print!("%lx ", self.pb.val(packed_W[j]).as_ulong());
     }
-    printf("\n");
-#endif
+    print!("\n");
+//#endif
 
     for (size_t i = 0; i < 64; ++i)
     {
@@ -227,8 +227,8 @@ void sha256_compression_function_gadget<FieldT>::generate_r1cs_witness()
 
     for (size_t i = 0; i < 4; ++i)
     {
-        this->pb.val(unreduced_output[i]) = this->pb.val(round_functions[3-i].packed_d) + this->pb.val(round_functions[63-i].packed_new_a);
-        this->pb.val(unreduced_output[4+i]) = this->pb.val(round_functions[3-i].packed_h) + this->pb.val(round_functions[63-i].packed_new_e);
+        self.pb.val(unreduced_output[i]) = self.pb.val(round_functions[3-i].packed_d) + self.pb.val(round_functions[63-i].packed_new_a);
+        self.pb.val(unreduced_output[4+i]) = self.pb.val(round_functions[3-i].packed_h) + self.pb.val(round_functions[63-i].packed_new_e);
     }
 
     for (size_t i = 0; i < 8; ++i)
@@ -236,14 +236,14 @@ void sha256_compression_function_gadget<FieldT>::generate_r1cs_witness()
         reduce_output[i].generate_r1cs_witness();
     }
 
-#ifdef DEBUG
-    printf("Output:\n");
+// #ifdef DEBUG
+    print!("Output:\n");
     for (size_t j = 0; j < 8; ++j)
     {
-        printf("%lx ", this->pb.val(reduced_output[j]).as_ulong());
+        print!("%lx ", self.pb.val(reduced_output[j]).as_ulong());
     }
-    printf("\n");
-#endif
+    print!("\n");
+//#endif
 }
 
 template<typename FieldT>
@@ -260,7 +260,7 @@ sha256_two_to_one_hash_gadget<FieldT>::sha256_two_to_one_hash_gadget(protoboard<
     block.insert(block.end(), right.bits.begin(), right.bits.end());
 
     /* compute the hash itself */
-    f.reset(new sha256_compression_function_gadget<FieldT>(pb, SHA256_default_IV<FieldT>(pb), block, output, FMT(this->annotation_prefix, " f")));
+    f.reset(new sha256_compression_function_gadget<FieldT>(pb, SHA256_default_IV<FieldT>(pb), block, output, FMT(self.annotation_prefix, " f")));
 }
 
 template<typename FieldT>
@@ -271,15 +271,15 @@ sha256_two_to_one_hash_gadget<FieldT>::sha256_two_to_one_hash_gadget(protoboard<
                                                                      const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix)
 {
-    assert(block_length == SHA256_block_size);
-    assert(input_block.bits.size() == block_length);
-    f.reset(new sha256_compression_function_gadget<FieldT>(pb, SHA256_default_IV<FieldT>(pb), input_block.bits, output, FMT(this->annotation_prefix, " f")));
+    assert!(block_length == SHA256_block_size);
+    assert!(input_block.bits.size() == block_length);
+    f.reset(new sha256_compression_function_gadget<FieldT>(pb, SHA256_default_IV<FieldT>(pb), input_block.bits, output, FMT(self.annotation_prefix, " f")));
 }
 
 template<typename FieldT>
 void sha256_two_to_one_hash_gadget<FieldT>::generate_r1cs_constraints(const bool ensure_output_bitness)
 {
-    libff::UNUSED(ensure_output_bitness);
+    ffec::UNUSED(ensure_output_bitness);
     f->generate_r1cs_constraints();
 }
 
@@ -302,7 +302,7 @@ size_t sha256_two_to_one_hash_gadget<FieldT>::get_digest_len()
 }
 
 template<typename FieldT>
-libff::bit_vector sha256_two_to_one_hash_gadget<FieldT>::get_hash(const libff::bit_vector &input)
+ffec::bit_vector sha256_two_to_one_hash_gadget<FieldT>::get_hash(const ffec::bit_vector &input)
 {
     protoboard<FieldT> pb;
 
@@ -319,10 +319,10 @@ libff::bit_vector sha256_two_to_one_hash_gadget<FieldT>::get_hash(const libff::b
 template<typename FieldT>
 size_t sha256_two_to_one_hash_gadget<FieldT>::expected_constraints(const bool ensure_output_bitness)
 {
-    libff::UNUSED(ensure_output_bitness);
+    ffec::UNUSED(ensure_output_bitness);
     return 27280; /* hardcoded for now */
 }
 
-} // libsnark
 
-#endif // SHA256_GADGET_TCC_
+
+//#endif // SHA256_GADGET_TCC_

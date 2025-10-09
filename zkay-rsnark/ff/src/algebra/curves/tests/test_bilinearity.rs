@@ -4,18 +4,18 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include <gtest/gtest.h>
+//#include <gtest/gtest.h>
 
-#include <libff/algebra/curves/edwards/edwards_pp.hpp>
-#include <libff/common/profiling.hpp>
-#ifdef CURVE_BN128
-#include <libff/algebra/curves/bn128/bn128_pp.hpp>
-#include <libff/algebra/curves/bn128/bn128_pp.hpp>
-#endif
-#include <libff/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
-#include <libff/algebra/curves/bls12_381/bls12_381_pp.hpp>
-#include <libff/algebra/curves/mnt/mnt4/mnt4_pp.hpp>
-#include <libff/algebra/curves/mnt/mnt6/mnt6_pp.hpp>
+use libff/algebra/curves/edwards/edwards_pp;
+use crate::common::profiling;
+// #ifdef CURVE_BN128
+use libff/algebra/curves/bn128/bn128_pp;
+use libff/algebra/curves/bn128/bn128_pp;
+//#endif
+use libff/algebra/curves/alt_bn128/alt_bn128_pp;
+use libff/algebra/curves/bls12_381/bls12_381_pp;
+use libff/algebra/curves/mnt/mnt4/mnt4_pp;
+use libff/algebra/curves/mnt/mnt6/mnt6_pp;
 
 using namespace libff;
 
@@ -29,9 +29,9 @@ public:
         mnt6_pp::init_public_params();
         alt_bn128_pp::init_public_params();
         bls12_381_pp::init_public_params();
-#ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled
+// #ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled
         bn128_pp::init_public_params();
-#endif
+//#endif
     }
 };
 
@@ -40,26 +40,26 @@ void pairing_test()
 {
     GT<ppT> GT_one = GT<ppT>::one();
 
-    printf("Running bilinearity tests:\n");
+    print!("Running bilinearity tests:\n");
     G1<ppT> P = (Fr<ppT>::random_element()) * G1<ppT>::one();
     //G1<ppT> P = Fr<ppT>("2") * G1<ppT>::one();
     G2<ppT> Q = (Fr<ppT>::random_element()) * G2<ppT>::one();
     //G2<ppT> Q = Fr<ppT>("3") * G2<ppT>::one();
 
-    printf("P:\n");
+    print!("P:\n");
     P.print();
     P.print_coordinates();
-    printf("Q:\n");
+    print!("Q:\n");
     Q.print();
     Q.print_coordinates();
-    printf("\n\n");
+    print!("\n\n");
 
     Fr<ppT> s = Fr<ppT>::random_element();
     //Fr<ppT> s = Fr<ppT>("2");
     G1<ppT> sP = s * P;
     G2<ppT> sQ = s * Q;
 
-    printf("Pairing bilinearity tests (three must match):\n");
+    print!("Pairing bilinearity tests (three must match):\n");
     GT<ppT> ans1 = ppT::reduced_pairing(sP, Q);
     GT<ppT> ans2 = ppT::reduced_pairing(P, sQ);
     GT<ppT> ans3 = ppT::reduced_pairing(P, Q)^s;
@@ -71,7 +71,7 @@ void pairing_test()
 
     EXPECT_NE(ans1, GT_one);
     EXPECT_EQ(ans1^Fr<ppT>::field_char(), GT_one);
-    printf("\n\n");
+    print!("\n\n");
 }
 
 template<typename ppT>
@@ -98,21 +98,21 @@ void affine_pairing_test()
 {
     GT<ppT> GT_one = GT<ppT>::one();
 
-    printf("Running bilinearity tests:\n");
+    print!("Running bilinearity tests:\n");
     G1<ppT> P = (Fr<ppT>::random_element()) * G1<ppT>::one();
     G2<ppT> Q = (Fr<ppT>::random_element()) * G2<ppT>::one();
 
-    printf("P:\n");
+    print!("P:\n");
     P.print();
-    printf("Q:\n");
+    print!("Q:\n");
     Q.print();
-    printf("\n\n");
+    print!("\n\n");
 
     Fr<ppT> s = Fr<ppT>::random_element();
     G1<ppT> sP = s * P;
     G2<ppT> sQ = s * Q;
 
-    printf("Pairing bilinearity tests (three must match):\n");
+    print!("Pairing bilinearity tests (three must match):\n");
     GT<ppT> ans1 = ppT::affine_reduced_pairing(sP, Q);
     GT<ppT> ans2 = ppT::affine_reduced_pairing(P, sQ);
     GT<ppT> ans3 = ppT::affine_reduced_pairing(P, Q)^s;
@@ -124,7 +124,7 @@ void affine_pairing_test()
 
     EXPECT_NE(ans1, GT_one);
     EXPECT_EQ(ans1^Fr<ppT>::field_char(), GT_one);
-    printf("\n\n");
+    print!("\n\n");
 }
 
 TEST_F(CurveBilinearityTest, PairingTest)
@@ -134,9 +134,9 @@ TEST_F(CurveBilinearityTest, PairingTest)
     pairing_test<mnt4_pp>();
     pairing_test<alt_bn128_pp>();
     pairing_test<bls12_381_pp>();
-#ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
+// #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     pairing_test<bn128_pp>();
-#endif
+//#endif
 }
 
 TEST_F(CurveBilinearityTest, DoubleMillerLoopTest)
@@ -146,9 +146,9 @@ TEST_F(CurveBilinearityTest, DoubleMillerLoopTest)
     double_miller_loop_test<mnt4_pp>();
     double_miller_loop_test<alt_bn128_pp>();
     double_miller_loop_test<bls12_381_pp>();
-#ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
+// #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     double_miller_loop_test<bn128_pp>();
-#endif
+//#endif
 }
 
 TEST_F(CurveBilinearityTest, AffinePairingTest)

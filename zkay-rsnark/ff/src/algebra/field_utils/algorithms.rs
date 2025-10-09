@@ -8,14 +8,14 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALGORITHMS_HPP_
-#define ALGORITHMS_HPP_
+//#ifndef ALGORITHMS_HPP_
+// #define ALGORITHMS_HPP_
 
-#include <cstdint>
+//#include <cstdint>
 
 #include "libff/algebra/field_utils/bigint.hpp"
 
-namespace libff {
+// namespace libff {
 
 /** Repeated squaring. */
 template<typename FieldT, mp_size_t m>
@@ -43,11 +43,11 @@ FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent)
 template<typename FieldT>
 FieldT tonelli_shanks_sqrt(const FieldT &value);
 
-} // namespace libff
+// } // namespace libff
 
-#include <libff/algebra/field_utils/algorithms.tcc>
+use libff/algebra/field_utils/algorithms.tcc;
 
-#endif // ALGORITHMS_HPP_
+//#endif // ALGORITHMS_HPP_
 /** @file
  *****************************************************************************
  Declaration of interfaces for (square-and-multiply) exponentiation and
@@ -58,13 +58,13 @@ FieldT tonelli_shanks_sqrt(const FieldT &value);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef ALGORITHMS_TCC_
-#define ALGORITHMS_TCC_
+//#ifndef ALGORITHMS_TCC_
+// #define ALGORITHMS_TCC_
 
 #include "libff/common/utils.hpp"
 #include "libff/common/profiling.hpp"
 
-namespace libff {
+// namespace libff {
 
 using std::size_t;
 
@@ -153,9 +153,9 @@ template<typename FieldT>
 FieldT tonelli_shanks_sqrt(const FieldT &value)
 {
     // A few assertions to make sure s, t, and nqr are initialized.
-    assert(FieldT::s != 0);
-    assert(!FieldT::t.is_even()); // Check that t is odd.
-    assert(!FieldT::nqr.is_zero());
+    assert!(FieldT::s != 0);
+    assert!(!FieldT::t.is_even()); // Check that t is odd.
+    assert!(!FieldT::nqr.is_zero());
 
     if value.is_zero()
     {
@@ -177,8 +177,8 @@ FieldT tonelli_shanks_sqrt(const FieldT &value)
     {
         check = check.squared();
     }
-    assert(check == one);
-#endif
+    assert!(check == one);
+//#endif
 
     // compute square root with Tonelli--Shanks
     // (does not terminate if not a square!)
@@ -211,6 +211,6 @@ FieldT tonelli_shanks_sqrt(const FieldT &value)
     return x;
 }
 
-} // namespace libff
+// } // namespace libff
 
-#endif // ALGORITHMS_TCC_
+//#endif // ALGORITHMS_TCC_

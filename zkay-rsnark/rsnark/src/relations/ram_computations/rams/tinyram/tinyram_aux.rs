@@ -9,20 +9,20 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#ifndef TINYRAM_AUX_HPP_
-#define TINYRAM_AUX_HPP_
+//#ifndef TINYRAM_AUX_HPP_
+// #define TINYRAM_AUX_HPP_
 
 use  <cassert>
 use  <iostream>
 use  <map>
 
-use  <libff/common/utils.hpp>
+use ffec::common::utils;
 
-use  <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
-use  <libsnark/relations/ram_computations/memory/memory_interface.hpp>
-use  <libsnark/relations/ram_computations/rams/ram_params.hpp>
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
+use libsnark/relations/ram_computations/memory/memory_interface;
+use libsnark/relations/ram_computations/rams/ram_params;
 
-namespace libsnark {
+
 
 enum tinyram_opcode {
     tinyram_opcode_AND    = 0b00000,
@@ -149,14 +149,14 @@ public:
     reg_count_t k; /* number of registers */
 
     tinyram_architecture_params() {};
-    tinyram_architecture_params(const reg_width_t w, const reg_count_t k) : w(w), k(k) { assert(w == 1ul << libff::log2(w)); };
+    tinyram_architecture_params(const reg_width_t w, const reg_count_t k) : w(w), k(k) { assert!(w == 1ul << ffec::log2(w)); };
 
     size_t address_size() const;
     size_t value_size() const;
     size_t cpu_state_size() const;
     size_t initial_pc_addr() const;
 
-    libff::bit_vector initial_cpu_state() const;
+    ffec::bit_vector initial_cpu_state() const;
     memory_contents initial_memory_contents(const tinyram_program &program,
                                             const tinyram_input_tape &primary_input) const;
 
@@ -222,9 +222,9 @@ memory_store_trace tinyram_boot_trace_from_program_and_input(const tinyram_archi
 
 tinyram_input_tape load_tape(std::istream &tape);
 
-} // libsnark
 
-#endif // TINYRAM_AUX_HPP_
+
+//#endif // TINYRAM_AUX_HPP_
 /** @file
  *****************************************************************************
 
@@ -242,12 +242,12 @@ use  <cassert>
 use  <fstream>
 use  <string>
 
-use  <libff/common/profiling.hpp>
-use  <libff/common/utils.hpp>
+use ffec::common::profiling;
+use ffec::common::utils;
 
-use  <libsnark/relations/ram_computations/rams/tinyram/tinyram_aux.hpp>
+use libsnark/relations/ram_computations/rams/tinyram/tinyram_aux;
 
-namespace libsnark {
+
 
 tinyram_instruction tinyram_default_instruction = tinyram_instruction(tinyram_opcode_ANSWER, true, 0, 0, 1);
 
@@ -344,16 +344,16 @@ void ensure_tinyram_opcode_value_map()
 std::vector<tinyram_instruction> generate_tinyram_prelude(const tinyram_architecture_params &ap)
 {
     std::vector<tinyram_instruction> result;
-    const size_t increment = libff::log2(ap.w)/8;
+    const size_t increment = ffec::log2(ap.w)/8;
     const size_t mem_start = 1ul<<(ap.w-1);
-    result.emplace_back(tinyram_instruction(tinyram_opcode_STOREW,  true, 0, 0, 0));         // 0: store.w 0, r0
-    result.emplace_back(tinyram_instruction(tinyram_opcode_MOV,     true, 0, 0, mem_start)); // 1: mov r0, 2^{W-1}
-    result.emplace_back(tinyram_instruction(tinyram_opcode_READ,    true, 1, 0, 0));         // 2: read r1, 0
-    result.emplace_back(tinyram_instruction(tinyram_opcode_CJMP,    true, 0, 0, 7));         // 3: cjmp 7
-    result.emplace_back(tinyram_instruction(tinyram_opcode_ADD,     true, 0, 0, increment)); // 4: add r0, r0, INCREMENT
-    result.emplace_back(tinyram_instruction(tinyram_opcode_STOREW, false, 1, 0, 0));         // 5: store.w r0, r1
-    result.emplace_back(tinyram_instruction(tinyram_opcode_JMP,     true, 0, 0, 2));         // 6: jmp 2
-    result.emplace_back(tinyram_instruction(tinyram_opcode_STOREW,  true, 0, 0, mem_start)); // 7: store.w 2^{W-1}, r0
+    result.push(tinyram_instruction(tinyram_opcode_STOREW,  true, 0, 0, 0));         // 0: store.w 0, r0
+    result.push(tinyram_instruction(tinyram_opcode_MOV,     true, 0, 0, mem_start)); // 1: mov r0, 2^{W-1}
+    result.push(tinyram_instruction(tinyram_opcode_READ,    true, 1, 0, 0));         // 2: read r1, 0
+    result.push(tinyram_instruction(tinyram_opcode_CJMP,    true, 0, 0, 7));         // 3: cjmp 7
+    result.push(tinyram_instruction(tinyram_opcode_ADD,     true, 0, 0, increment)); // 4: add r0, r0, INCREMENT
+    result.push(tinyram_instruction(tinyram_opcode_STOREW, false, 1, 0, 0));         // 5: store.w r0, r1
+    result.push(tinyram_instruction(tinyram_opcode_JMP,     true, 0, 0, 2));         // 6: jmp 2
+    result.push(tinyram_instruction(tinyram_opcode_STOREW,  true, 0, 0, mem_start)); // 7: store.w 2^{W-1}, r0
     return result;
 }
 
@@ -379,9 +379,9 @@ size_t tinyram_architecture_params::initial_pc_addr() const
     return initial_pc_addr;
 }
 
-libff::bit_vector tinyram_architecture_params::initial_cpu_state() const
+ffec::bit_vector tinyram_architecture_params::initial_cpu_state() const
 {
-    libff::bit_vector result(this->cpu_state_size(), false);
+    ffec::bit_vector result(self.cpu_state_size(), false);
     return result;
 }
 
@@ -419,12 +419,12 @@ memory_contents tinyram_architecture_params::initial_memory_contents(const tinyr
 
 size_t tinyram_architecture_params::opcode_width() const
 {
-    return libff::log2(static_cast<size_t>(tinyram_opcode_ANSWER)); /* assumption: answer is the last */
+    return ffec::log2(static_cast<size_t>(tinyram_opcode_ANSWER)); /* assumption: answer is the last */
 }
 
 size_t tinyram_architecture_params::reg_arg_width() const
 {
-    return libff::log2(k);
+    return ffec::log2(k);
 }
 
 size_t tinyram_architecture_params::instruction_padding_width() const
@@ -439,12 +439,12 @@ size_t tinyram_architecture_params::reg_arg_or_imm_width() const
 
 size_t tinyram_architecture_params::dwaddr_len() const
 {
-    return w-(libff::log2(w)-2);
+    return w-(ffec::log2(w)-2);
 }
 
 size_t tinyram_architecture_params::subaddr_len() const
 {
-    return libff::log2(w)-2;
+    return ffec::log2(w)-2;
 }
 
 size_t tinyram_architecture_params::bytes_in_word() const
@@ -459,8 +459,8 @@ size_t tinyram_architecture_params::instr_size() const
 
 bool tinyram_architecture_params::operator==(const tinyram_architecture_params &other) const
 {
-    return (this->w == other.w &&
-            this->k == other.k);
+    return (self.w == other.w &&
+            self.k == other.k);
 }
 
 std::ostream& operator<<(std::ostream &out, const tinyram_architecture_params &ap)
@@ -473,9 +473,9 @@ std::ostream& operator<<(std::ostream &out, const tinyram_architecture_params &a
 std::istream& operator>>(std::istream &in, tinyram_architecture_params &ap)
 {
     in >> ap.w;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     in >> ap.k;
-    libff::consume_newline(in);
+    ffec::consume_newline(in);
     return in;
 }
 
@@ -496,17 +496,17 @@ size_t tinyram_instruction::as_dword(const tinyram_architecture_params &ap) cons
 {
     size_t result = static_cast<size_t>(opcode);
     result = (result << 1) | (arg2_is_imm ? 1 : 0);
-    result = (result << libff::log2(ap.k)) | desidx;
-    result = (result << libff::log2(ap.k)) | arg1idx;
-    result = (result << (2*ap.w - ap.opcode_width() - 1 - 2 * libff::log2(ap.k))) | arg2idx_or_imm;
+    result = (result << ffec::log2(ap.k)) | desidx;
+    result = (result << ffec::log2(ap.k)) | arg1idx;
+    result = (result << (2*ap.w - ap.opcode_width() - 1 - 2 * ffec::log2(ap.k))) | arg2idx_or_imm;
 
     return result;
 }
 
 void tinyram_architecture_params::print() const
 {
-    printf("* Number of registers (k): %zu\n", k);
-    printf("* Word size (w): %zu\n", w);
+    print!("* Number of registers (k): {}\n", k);
+    print!("* Word size (w): {}\n", w);
 }
 
 tinyram_instruction random_tinyram_instruction(const tinyram_architecture_params &ap)
@@ -521,7 +521,7 @@ tinyram_instruction random_tinyram_instruction(const tinyram_architecture_params
 
 void tinyram_program::add_instruction(const tinyram_instruction &instr)
 {
-    instructions.emplace_back(instr);
+    instructions.push(instr);
 }
 
 tinyram_program load_preprocessed_program(const tinyram_architecture_params &ap,
@@ -531,12 +531,12 @@ tinyram_program load_preprocessed_program(const tinyram_architecture_params &ap,
 
     tinyram_program program;
 
-    libff::enter_block("Loading program");
+    ffec::enter_block("Loading program");
     std::string instr, line;
 
     while (preprocessed >> instr)
     {
-        libff::print_indent();
+        ffec::print_indent();
         size_t immflag, des, a1;
         long long int a2;
         if (preprocessed.good())
@@ -546,7 +546,7 @@ tinyram_program load_preprocessed_program(const tinyram_architecture_params &ap,
             program.add_instruction(tinyram_instruction(opcode_values[instr], immflag, des, a1, a2));
         }
     }
-    libff::leave_block("Loading program");
+    ffec::leave_block("Loading program");
 
     return program;
 }
@@ -579,21 +579,21 @@ memory_store_trace tinyram_boot_trace_from_program_and_input(const tinyram_archi
 
 tinyram_input_tape load_tape(std::istream &tape)
 {
-    libff::enter_block("Loading tape");
+    ffec::enter_block("Loading tape");
     tinyram_input_tape result;
 
-    libff::print_indent();
-    printf("Tape contents:");
+    ffec::print_indent();
+    print!("Tape contents:");
     size_t cell;
     while (tape >> cell)
     {
-        printf("\t%zu", cell);
-        result.emplace_back(cell);
+        print!("\t{}", cell);
+        result.push(cell);
     }
-    printf("\n");
+    print!("\n");
 
-    libff::leave_block("Loading tape");
+    ffec::leave_block("Loading tape");
     return result;
 }
 
-} // libsnark
+
