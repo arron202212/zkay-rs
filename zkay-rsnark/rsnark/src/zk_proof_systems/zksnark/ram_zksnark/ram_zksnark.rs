@@ -377,7 +377,7 @@ ram_zksnark_proof<ram_zksnark_ppT> ram_zksnark_prover(const ram_zksnark_proving_
 
     ffec::enter_block("Execute and prove the computation");
     bool want_halt = false;
-    for (size_t step = 1; step <= time_bound; ++step)
+    for step in 1..=time_bound
     {
         ffec::enter_block(FMT("", "Prove step {} out of {}", step, time_bound));
 

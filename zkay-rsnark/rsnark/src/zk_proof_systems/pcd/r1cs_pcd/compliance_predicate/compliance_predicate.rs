@@ -207,7 +207,7 @@ void r1cs_pcd_message<FieldT>::print() const
 
     print!("  Payload\n");
     const r1cs_variable_assignment<FieldT> payload = self.payload_as_r1cs_variable_assignment();
-    for (auto &elt: payload)
+    for elt in &payload
     {
         elt.print();
     }
@@ -245,7 +245,7 @@ bool r1cs_pcd_compliance_predicate<FieldT>::is_well_formed() const
     const bool incoming_message_payload_lengths_well_specified = (incoming_message_payload_lengths.size() == max_arity);
 
     size_t all_message_payload_lengths = outgoing_message_payload_length;
-    for (size_t i = 0; i < incoming_message_payload_lengths.size(); ++i)
+    for i in 0..incoming_message_payload_lengths.size()
     {
         all_message_payload_lengths += incoming_message_payload_lengths[i];
     }
@@ -258,7 +258,7 @@ bool r1cs_pcd_compliance_predicate<FieldT>::is_well_formed() const
 // #ifdef DEBUG
     print!("outgoing_message_payload_length: {}\n", outgoing_message_payload_length);
     print!("incoming_message_payload_lengths:");
-    for (auto l : incoming_message_payload_lengths)
+    for l in &incoming_message_payload_lengths
     {
         print!(" {}", l);
     }
@@ -279,9 +279,9 @@ bool r1cs_pcd_compliance_predicate<FieldT>::is_well_formed() const
 template<typename FieldT>
 bool r1cs_pcd_compliance_predicate<FieldT>::has_equal_input_and_output_lengths() const
 {
-    for (size_t i = 0; i < incoming_message_payload_lengths.size(); ++i)
+    for i in 0..incoming_message_payload_lengths.size()
     {
-        if (incoming_message_payload_lengths[i] != outgoing_message_payload_length)
+        if incoming_message_payload_lengths[i] != outgoing_message_payload_length
         {
             return false;
         }
@@ -293,9 +293,9 @@ bool r1cs_pcd_compliance_predicate<FieldT>::has_equal_input_and_output_lengths()
 template<typename FieldT>
 bool r1cs_pcd_compliance_predicate<FieldT>::has_equal_input_lengths() const
 {
-    for (size_t i = 1; i < incoming_message_payload_lengths.size(); ++i)
+    for i in 1..incoming_message_payload_lengths.size()
     {
-        if (incoming_message_payload_lengths[i] != incoming_message_payload_lengths[0])
+        if incoming_message_payload_lengths[i] != incoming_message_payload_lengths[0]
         {
             return false;
         }
@@ -326,7 +326,7 @@ std::ostream& operator<<(std::ostream &out, const r1cs_pcd_compliance_predicate<
     out << cp.type << "\n";
     out << cp.max_arity << "\n";
     assert!(cp.max_arity == cp.incoming_message_payload_lengths.size());
-    for (size_t i = 0; i < cp.max_arity; ++i)
+    for i in 0..cp.max_arity
     {
         out << cp.incoming_message_payload_lengths[i] << "\n";
     }
@@ -350,7 +350,7 @@ std::istream& operator>>(std::istream &in, r1cs_pcd_compliance_predicate<FieldT>
     in >> cp.max_arity;
     ffec::consume_newline(in);
     cp.incoming_message_payload_lengths.resize(cp.max_arity);
-    for (size_t i = 0; i < cp.max_arity; ++i)
+    for i in 0..cp.max_arity
     {
         in >> cp.incoming_message_payload_lengths[i];
         ffec::consume_newline(in);
@@ -378,7 +378,7 @@ bool r1cs_pcd_compliance_predicate<FieldT>::is_satisfied(const std::shared_ptr<r
 {
     assert!(outgoing_message.payload_as_r1cs_variable_assignment().size() == outgoing_message_payload_length);
     assert!(incoming_messages.size() <= max_arity);
-    for (size_t i = 0; i < incoming_messages.size(); ++i)
+    for i in 0..incoming_messages.size()
     {
         assert!(incoming_messages[i].payload_as_r1cs_variable_assignment().size() == incoming_message_payload_lengths[i]);
     }

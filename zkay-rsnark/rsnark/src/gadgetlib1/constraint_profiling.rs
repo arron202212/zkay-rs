@@ -12,10 +12,10 @@
 //#ifndef CONSTRAINT_PROFILING_HPP_
 // #define CONSTRAINT_PROFILING_HPP_
 
-use  <cstddef>
-use  <map>
-use  <string>
-use  <vector>
+// use  <cstddef>
+// use  <map>
+// use  <string>
+// use  <vector>
 
 
 
@@ -55,7 +55,7 @@ size_t PRINT_CONSTRAINT_PROFILING(); // returns # of top level constraints
 
 use ffec::common::profiling;
 
-use libsnark/gadgetlib1/constraint_profiling;
+use crate::gadgetlib1::constraint_profiling;
 
 
 
@@ -67,15 +67,15 @@ size_t PRINT_CONSTRAINT_PROFILING()
     size_t accounted = 0;
     ffec::print_indent();
     print!("Constraint profiling:\n");
-    for (constraint_profiling_entry &ent : constraint_profiling_table)
+    for ent in &constraint_profiling_table
     {
-        if (ent.indent == 0)
+        if ent.indent == 0
         {
             accounted += ent.count;
         }
 
         ffec::print_indent();
-        for (size_t i = 0; i < ent.indent; ++i)
+        for i in 0..ent.indent
         {
             print!("  ");
         }

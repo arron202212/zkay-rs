@@ -14,37 +14,38 @@
 //#ifndef ARITHMETIC_SEQUENCE_DOMAIN_HPP
 // #define ARITHMETIC_SEQUENCE_DOMAIN_HPP
 
-use libfqfft/evaluation_domain/evaluation_domain;
+use crate::evaluation_domain::evaluation_domain;
 
-namespace libfqfft {
+// //namespace libfqfft {
 
-  template<typename FieldT>
-  class arithmetic_sequence_domain : public evaluation_domain<FieldT> {
-  
-    
-    bool precomputation_sentinel;
-    std::vector<std::vector<std::vector<FieldT> > > subproduct_tree;
-    std::vector<FieldT> arithmetic_sequence;
-    FieldT arithmetic_generator;
-    void do_precomputation();
+//   
+  pub struct arithmetic_sequence_domain<FieldT>  {
+//   : public evaluation_domain<FieldT>
+precomputation_sentinel:    bool,
+subproduct_tree:    Vec<Vec<Vec<FieldT> > >,
+arithmetic_sequence:    Vec<FieldT>,
+arithmetic_generator:    FieldT,
+m:usize,
+  }
+//     void do_precomputation();
 
-    arithmetic_sequence_domain(const size_t m);
+//     arithmetic_sequence_domain(const size_t m);
 
-    void FFT(std::vector<FieldT> &a);
-    void iFFT(std::vector<FieldT> &a);
-    void cosetFFT(std::vector<FieldT> &a, const FieldT &g);
-    void icosetFFT(std::vector<FieldT> &a, const FieldT &g);
-    std::vector<FieldT> evaluate_all_lagrange_polynomials(const FieldT &t);
-    FieldT get_domain_element(const size_t idx);
-    FieldT compute_vanishing_polynomial(const FieldT &t);
-    void add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H);
-    void divide_by_Z_on_coset(std::vector<FieldT> &P);
+//     void FFT(a:&Vec<FieldT>);
+//     void iFFT(a:&Vec<FieldT>);
+//     void cosetFFT(a:&Vec<FieldT>, g:&FieldT);
+//     void icosetFFT(a:&Vec<FieldT>, g:&FieldT);
+//     Vec<FieldT> evaluate_all_lagrange_polynomials(t:&FieldT);
+//     FieldT get_domain_element(const size_t idx);
+//     FieldT compute_vanishing_polynomial(t:&FieldT);
+//     void add_poly_Z(coeff:&FieldT, H:&Vec<FieldT>);
+//     void divide_by_Z_on_coset(P:&Vec<FieldT>);
 
-  };
+//   };
 
-} // libfqfft
+// //} // libfqfft
 
-use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.tcc;
+// use crate::evaluation_domain::domains::arithmetic_sequence_domain.tcc;
 
 //#endif // ARITHMETIC_SEQUENCE_DOMAIN_HPP
 
@@ -65,120 +66,134 @@ use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain.tcc;
 //#ifndef ARITHMETIC_SEQUENCE_DOMAIN_TCC_
 // #define ARITHMETIC_SEQUENCE_DOMAIN_TCC_
 
-use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
-use libfqfft/polynomial_arithmetic/basis_change;
+use crate::evaluation_domain::domains::basic_radix2_domain_aux::_multiply_by_coset;
+use crate::polynomial_arithmetic::basis_change::{monomial_to_newton_basis,compute_subproduct_tree,newton_to_monomial_basis};
 
+use crate::polynomial_arithmetic::basic_operations::_polynomial_multiplication;
+
+use ffec::common::utils::log2;
+ use num_traits::One;
+use std::ops::Sub;
 // #ifdef MULTICORE
 //#include <omp.h>
 //#endif
 
-namespace libfqfft {
-
-template<typename FieldT>
-arithmetic_sequence_domain<FieldT>::arithmetic_sequence_domain(const size_t m) : evaluation_domain<FieldT>(m)
+// //namespace libfqfft {
+impl<FieldT:num_traits::Zero+Clone+ std::ops::SubAssign+ std::default::Default+std::convert::From<i32>+ std::ops::Sub<Output = FieldT>+std::convert::From<usize>+ std::ops::AddAssign+One+std::ops::Neg<Output = FieldT>+  std::ops::MulAssign+ std::ops::BitXor<usize>+ std::ops::Mul<Output = FieldT>+ std::cmp::PartialEq> arithmetic_sequence_domain<FieldT>
 {
-  if m <= 1) throw InvalidSizeException("arithmetic(): expected m > 1";
-  if FieldT::arithmetic_generator() == FieldT::zero()
-    throw InvalidSizeException("arithmetic(): expected FieldT::arithmetic_generator() != FieldT::zero()");
+pub fn new(m:usize)->eyre::Result<Self>
+{// : evaluation_domain<FieldT>(m)
+  if m <= 1{ eyre::bail!("arithmetic(): expected m > 1");}
+//   if FieldT::arithmetic_generator() == FieldT::zero()
+//     {eyre::bail!("arithmetic(): expected FieldT::arithmetic_generator() != FieldT::zero()");}
 
-  precomputation_sentinel = 0;
+ Ok( Self{precomputation_sentinel : false,
+        subproduct_tree:    vec![],
+arithmetic_sequence:   vec![],
+arithmetic_generator:    FieldT::zero(),
+    m,
+    })
+
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::FFT(std::vector<FieldT> &a)
+// 
+pub fn FFT(&mut self,a:&mut Vec<FieldT>)->eyre::Result<()>
 {
-  if a.size() != this->m) throw DomainSizeException("arithmetic: expected a.size() == this->m";
+  if a.len() != self.m{ eyre::bail!("arithmetic: expected a.len() == self.m");}
 
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel { self.do_precomputation();}
 
   /* Monomial to Newton */
-  monomial_to_newton_basis(a, this->subproduct_tree, this->m);
+  monomial_to_newton_basis(a, &self.subproduct_tree, self.m);
   
   /* Newton to Evaluation */
-  std::vector<FieldT> S(this->m); /* i! * arithmetic_generator */
+  let mut  S=vec![FieldT::zero();self.m]; /* i! * arithmetic_generator */
   S[0] = FieldT::one();
 
-  FieldT factorial = FieldT::one();
-  for i in 1..this->m
+  let mut  factorial = FieldT::one();
+  for i in 1..self.m
   {
-    factorial *= FieldT(i);
-    S[i] = (factorial * this->arithmetic_generator).inverse();
+    // factorial *= FieldT::from(i);
+    // S[i] = (factorial * self.arithmetic_generator).inverse();
   }
 
-  _polynomial_multiplication(a, a, S);
-  a.resize(this->m);
+  _polynomial_multiplication(&mut a.clone(), a, &S);
+  a.resize(self.m,FieldT::zero());
 
 // #ifdef MULTICORE
-  #pragma omp parallel for
+//   //#pragma omp parallel for
 //#endif
-  for i in 0..this->m
-  {
-    a[i] *= S[i].inverse();
-  }
+//   for i in 0..self.m
+//   {
+//     a[i] *= S[i].inverse();
+//   }
+    Ok(())
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::iFFT(std::vector<FieldT> &a)
+
+pub fn iFFT(&mut self,a:&mut Vec<FieldT>)->eyre::Result<()>
 {
-  if a.size() != this->m) throw DomainSizeException("arithmetic: expected a.size() == this->m";
+  if a.len() != self.m {eyre::bail!("arithmetic: expected a.len() == self.m");}
   
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
   /* Interpolation to Newton */
-  std::vector<FieldT> S(this->m); /* i! * arithmetic_generator */
+  let mut  S=vec![FieldT::zero();self.m]; /* i! * arithmetic_generator */
   S[0] = FieldT::one();
 
-  std::vector<FieldT> W(this->m);
-  W[0] = a[0] * S[0];
+  let mut  W=vec![FieldT::zero();self.m];
+  W[0] = a[0].clone() * S[0].clone();
 
-  FieldT factorial = FieldT::one();
-  for i in 1..this->m
+  let mut  factorial = FieldT::one();
+  for i in 1..self.m
   {
-    factorial *= FieldT(i);
-    S[i] = (factorial * this->arithmetic_generator).inverse();
-    W[i] = a[i] * S[i];
-    if i % 2 == 1 S[i] = -S[i];
+    // factorial *= FieldT(i);
+    // S[i] = (factorial * self.arithmetic_generator).inverse();
+    W[i] = a[i].clone() * S[i].clone();
+    if i % 2 == 1 {S[i] = -S[i].clone();}
   }
 
-  _polynomial_multiplication(a, W, S);
-  a.resize(this->m);
+  _polynomial_multiplication(a, &W, &S);
+  a.resize(self.m,FieldT::zero());
 
   /* Newton to Monomial */
-  newton_to_monomial_basis(a, this->subproduct_tree, this->m);
+  newton_to_monomial_basis(a, &self.subproduct_tree, self.m);
+    Ok(())
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::cosetFFT(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn cosetFFT(&mut self,a:&mut Vec<FieldT>, g:&FieldT)->eyre::Result<()>
 {
   _multiply_by_coset(a, g);
-  FFT(a);
+  self.FFT(a)
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::icosetFFT(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn icosetFFT(&mut self,a:&mut Vec<FieldT>, g:&FieldT)->eyre::Result<()>
 {
-  iFFT(a);
-  _multiply_by_coset(a, g.inverse());
+  self.iFFT(a);
+//   _multiply_by_coset(a, g.inverse());
+    Ok(())
 }
 
-template<typename FieldT>
-std::vector<FieldT> arithmetic_sequence_domain<FieldT>::evaluate_all_lagrange_polynomials(const FieldT &t)
+
+pub fn evaluate_all_lagrange_polynomials(&mut self,t:&FieldT)->Vec<FieldT>
 {
   /* Compute Lagrange polynomial of size m, with m+1 points (x_0, y_0), ... ,(x_m, y_m) */
   /* Evaluate for x = t */
   /* Return coeffs for each l_j(x) = (l / l_i[j]) * w[j] */
 
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
   /**
    * If t equals one of the arithmetic progression values,
    * then output 1 at the right place, and 0 elsewhere.
    */
-  for i in 0..this->m
+  for i in 0..self.m
   {
-    if this->arithmetic_sequence[i] == t // i.e., t equals this->arithmetic_sequence[i]
+    if &self.arithmetic_sequence[i] == t // i.e., t equals self.arithmetic_sequence[i]
     {
-      std::vector<FieldT> res(this->m, FieldT::zero());
+      let mut  res=vec![FieldT::zero();self.m];
       res[i] = FieldT::one();
       return res;
     }
@@ -188,112 +203,115 @@ std::vector<FieldT> arithmetic_sequence_domain<FieldT>::evaluate_all_lagrange_po
    * Otherwise, if t does not equal any of the arithmetic progression values,
    * then compute each Lagrange coefficient.
    */
-  std::vector<FieldT> l(this->m);
-  l[0] = t - this->arithmetic_sequence[0];
+  let mut  l=vec![FieldT::zero();self.m];
+  let l0:FieldT = t.clone() - self.arithmetic_sequence[0].clone();
+l[0] =l0;
+  let mut  l_vanish = l[0].clone();
+  let mut  g_vanish = FieldT::one();
 
-  FieldT l_vanish = l[0];
-  FieldT g_vanish = FieldT::one();
-
-  for i in 1..this->m
+  for i in 1..self.m
   {
-    l[i] = t - this->arithmetic_sequence[i];
-    l_vanish *= l[i];
-    g_vanish *= -this->arithmetic_sequence[i];
+    // l[i] = t - self.arithmetic_sequence[i];
+    // l_vanish *= l[i];
+    // g_vanish *= -self.arithmetic_sequence[i];
   }
 
-  std::vector<FieldT> w(this->m);
-  w[0] = g_vanish.inverse() * (this->arithmetic_generator^(this->m-1));
+  let mut  w=vec![FieldT::zero();self.m];
+//   w[0] = g_vanish.inverse() * (self.arithmetic_generator^(self.m-1));
   
-  l[0] = l_vanish * l[0].inverse() * w[0];
-  for i in 1..this->m
+//   l[0] = l_vanish * l[0].inverse() * w[0];
+  for i in 1..self.m
   {
-    FieldT num = this->arithmetic_sequence[i-1] - this->arithmetic_sequence[this->m-1];
-    w[i] = w[i-1] * num * this->arithmetic_sequence[i].inverse();
-    l[i] = l_vanish * l[i].inverse() * w[i];
+    let mut  num = self.arithmetic_sequence[i-1].clone() - self.arithmetic_sequence[self.m-1].clone();
+    // w[i] = w[i-1] * num * self.arithmetic_sequence[i].inverse();
+    // l[i] = l_vanish * l[i].inverse() * w[i];
   }
 
   return l;
 }
 
-template<typename FieldT>
-FieldT arithmetic_sequence_domain<FieldT>::get_domain_element(const size_t idx)
-{
-  if !this->precomputation_sentinel) do_precomputation(;
 
-  return this->arithmetic_sequence[idx];
+pub fn get_domain_element(&mut self,idx:usize)->FieldT
+{
+  if !self.precomputation_sentinel {self.do_precomputation();}
+
+  return self.arithmetic_sequence[idx].clone();
 }
 
-template<typename FieldT>
-FieldT arithmetic_sequence_domain<FieldT>::compute_vanishing_polynomial(const FieldT &t)
+
+pub fn compute_vanishing_polynomial(&mut self,t:&FieldT)->FieldT
 {
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel{self.do_precomputation();}
 
   /* Notes: Z = prod_{i = 0 to m} (t - a[i]) */
-  FieldT Z = FieldT::one();
-  for i in 0..this->m
+  let mut  Z = FieldT::one();
+  for i in 0..self.m
   {
-    Z *= (t - this->arithmetic_sequence[i]);
+    let tt:FieldT= t.clone() - self.arithmetic_sequence[i].clone();
+    Z *= tt;
   }
   return Z;
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H)
+
+pub fn add_poly_Z(&mut self,coeff:&FieldT, H:&mut Vec<FieldT>)->eyre::Result<()>
 {
-  if H.size() != this->m+1) throw DomainSizeException("arithmetic: expected H.size() == this->m+1";
+  if H.len() != self.m+1{ eyre::bail!("arithmetic: expected H.len() == self.m+1");}
 
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel{self.do_precomputation();}
 
-  std::vector<FieldT> x(2, FieldT::zero());
-  x[0] = -this->arithmetic_sequence[0];
+  let mut  x=vec![FieldT::zero();2];
+  x[0] = -self.arithmetic_sequence[0].clone();
   x[1] = FieldT::one();
 
-  std::vector<FieldT> t(2, FieldT::zero());
+  let mut  t=vec![FieldT::zero();2];
 
-  for i in 1..this->m+1
+  for i in 1..self.m+1
   {
-    t[0] = -this->arithmetic_sequence[i];
+    t[0] = -self.arithmetic_sequence[i].clone();
     t[1] = FieldT::one();
+    let xx=x.clone();
+    _polynomial_multiplication(&mut x, &xx, &t);
 
-    _polynomial_multiplication(x, x, t);
   }
 
 // #ifdef MULTICORE
-  #pragma omp parallel for
+//   //#pragma omp parallel for
 //#endif
-  for i in 0..this->m+1
+  for i in 0..self.m+1
   {
-    H[i] += (x[i] * coeff);
+    H[i] += (x[i].clone() * coeff.clone());
   }
+    Ok(())
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::divide_by_Z_on_coset(std::vector<FieldT> &P)
+
+pub fn divide_by_Z_on_coset(&self,P:&Vec<FieldT>)
 {
-  const FieldT coset = this->arithmetic_generator; /* coset in arithmetic sequence? */
-  const FieldT Z_inverse_at_coset = this->compute_vanishing_polynomial(coset).inverse();
-  for i in 0..this->m
-  {
-    P[i] *= Z_inverse_at_coset;
-  }
+  let coset = self.arithmetic_generator.clone(); /* coset in arithmetic sequence? */
+//   let  Z_inverse_at_coset = self.compute_vanishing_polynomial(&coset).inverse();
+//   for i in 0..self.m
+//   {
+//     P[i] *= Z_inverse_at_coset.clone();
+//   }
 }
 
-template<typename FieldT>
-void arithmetic_sequence_domain<FieldT>::do_precomputation()
+
+pub fn do_precomputation(&mut self,)
 {
-  compute_subproduct_tree(log2(this->m), this->subproduct_tree);
+  compute_subproduct_tree(log2(self.m), &mut self.subproduct_tree);
 
-  this->arithmetic_generator = FieldT::arithmetic_generator();
+//   self.arithmetic_generator = FieldT::arithmetic_generator();
 
-  this->arithmetic_sequence = std::vector<FieldT>(this->m);
-  for i in 0..this->m
+  self.arithmetic_sequence = vec![FieldT::zero();self.m];
+  for i in 0..self.m
   {
-    this->arithmetic_sequence[i] = this->arithmetic_generator * FieldT(i);
+    self.arithmetic_sequence[i] = self.arithmetic_generator.clone() * FieldT::from(i);
   }
 
-  this->precomputation_sentinel = 1;
+  self.precomputation_sentinel = true;
 }
-
-} // libfqfft
+}
+// //} // libfqfft
 
 //#endif // ARITHMETIC_SEQUENCE_DOMAIN_TCC_

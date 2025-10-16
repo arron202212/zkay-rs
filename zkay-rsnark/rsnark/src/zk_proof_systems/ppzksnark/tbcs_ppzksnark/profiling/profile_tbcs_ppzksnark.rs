@@ -21,7 +21,7 @@ use ffec::common::profiling;
 use ffec::common::utils;
 
 use crate::common::default_types::tbcs_ppzksnark_pp;
-use libsnark/relations/circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
+use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
 use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/examples/run_tbcs_ppzksnark;
 
 
@@ -31,13 +31,13 @@ int main(int argc, const char * argv[])
     default_tbcs_ppzksnark_pp::init_public_params();
     ffec::start_profiling();
 
-    if (argc == 2 && strcmp(argv[1], "-v") == 0)
+    if argc == 2 && strcmp(argv[1], "-v") == 0
     {
         ffec::print_compilation_info();
         return 0;
     }
 
-    if (argc != 3)
+    if argc != 3
     {
         print!("usage: %s num_gates primary_input_size\n", argv[0]);
         return 1;

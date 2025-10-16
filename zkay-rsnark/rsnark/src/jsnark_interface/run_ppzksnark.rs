@@ -1,5 +1,5 @@
 
-use  CircuitReader;
+use  crate::jsnark_interface::circuit_reader::CircuitReader;
 use  crate::gadgetlib2::integration;
 use  crate::gadgetlib2::adapters;
 use  crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;

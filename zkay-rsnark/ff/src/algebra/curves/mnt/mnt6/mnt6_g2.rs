@@ -14,8 +14,8 @@
 
 //#include <vector>
 
-use libff/algebra/curves/curve_utils;
-use libff/algebra/curves/mnt/mnt6/mnt6_init;
+use crate::algebra::curves::curve_utils;
+use crate::algebra::curves::mnt::mnt6::mnt6_init;
 
 // namespace libff {
 
@@ -122,7 +122,7 @@ mnt6_G2 operator*(const Fp_model<m,modulus_p> &lhs, const mnt6_G2 &rhs)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/mnt/mnt6/mnt6_g2;
+use crate::algebra::curves::mnt::mnt6::mnt6_g2;
 
 // namespace libff {
 
@@ -145,7 +145,7 @@ bigint<mnt6_G2::h_limbs> mnt6_G2::h;
 
 mnt6_G2::mnt6_G2()
 {
-    if (mnt6_G2::initialized)
+    if mnt6_G2::initialized
     {
         this->X = G2_zero.X;
         this->Y = G2_zero.Y;
@@ -165,7 +165,7 @@ mnt6_Fq3 mnt6_G2::mul_by_b(const mnt6_Fq3 &elt)
 
 void mnt6_G2::print() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -185,7 +185,7 @@ void mnt6_G2::print() const
 
 void mnt6_G2::print_coordinates() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -206,7 +206,7 @@ void mnt6_G2::print_coordinates() const
 
 void mnt6_G2::to_affine_coordinates()
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         this->X = mnt6_Fq3::zero();
         this->Y = mnt6_Fq3::one();
@@ -239,12 +239,12 @@ bool mnt6_G2::is_zero() const
 
 bool mnt6_G2::operator==(const mnt6_G2 &other) const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other.is_zero();
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return false;
     }
@@ -252,13 +252,13 @@ bool mnt6_G2::operator==(const mnt6_G2 &other) const
     /* now neither is O */
 
     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
-    if ((this->X * other.Z) != (other.X * this->Z))
+    if (this->X * other.Z) != (other.X * this->Z)
     {
         return false;
     }
 
     // Y1/Z1 = Y2/Z2 <=> Y1*Z2 = Y2*Z1
-    if ((this->Y * other.Z) != (other.Y * this->Z))
+    if (this->Y * other.Z) != (other.Y * this->Z)
     {
         return false;
     }
@@ -274,12 +274,12 @@ bool mnt6_G2::operator!=(const mnt6_G2& other) const
 mnt6_G2 mnt6_G2::operator+(const mnt6_G2 &other) const
 {
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -291,7 +291,7 @@ mnt6_G2 mnt6_G2::operator+(const mnt6_G2 &other) const
     /*
       The code below is equivalent to (but faster than) the snippet below:
 
-      if (this->operator==(other))
+      if this->operator==(other)
       {
       return this->dbl();
       }
@@ -309,7 +309,7 @@ mnt6_G2 mnt6_G2::operator+(const mnt6_G2 &other) const
     const mnt6_Fq3 Y1Z2 = (this->Y) * (other.Z);        // Y1Z2 = Y1*Z2
     const mnt6_Fq3 Y2Z1 = (this->Z) * (other.Y);        // Y2Z1 = Y2*Z1
 
-    if (X1Z2 == X2Z1 && Y1Z2 == Y2Z1)
+    if X1Z2 == X2Z1 && Y1Z2 == Y2Z1
     {
         // perform dbl case
         const mnt6_Fq3 XX   = (this->X).squared();                   // XX  = X1^2
@@ -360,12 +360,12 @@ mnt6_G2 mnt6_G2::operator-(const mnt6_G2 &other) const
 mnt6_G2 mnt6_G2::add(const mnt6_G2 &other) const
 {
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return (*this);
     }
@@ -374,7 +374,7 @@ mnt6_G2 mnt6_G2::add(const mnt6_G2 &other) const
     // (they cannot exist in a prime-order subgroup)
 
     // handle double case
-    if (this->operator==(other))
+    if this->operator==(other)
     {
         return this->dbl();
     }
@@ -411,12 +411,12 @@ mnt6_G2 mnt6_G2::mixed_add(const mnt6_G2 &other) const
     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
     //assert!(other.Z == mnt6_Fq3::one());
 
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return (*this);
     }
@@ -433,7 +433,7 @@ mnt6_G2 mnt6_G2::mixed_add(const mnt6_G2 &other) const
     const mnt6_Fq3 &Y1Z2 = (this->Y);                   // Y1Z2 = Y1*Z2 (but other is special and not zero)
     const mnt6_Fq3 Y2Z1 = (this->Z) * (other.Y);       // Y2Z1 = Y2*Z1
 
-    if (X1Z2 == X2Z1 && Y1Z2 == Y2Z1)
+    if X1Z2 == X2Z1 && Y1Z2 == Y2Z1
     {
         return this->dbl();
     }
@@ -457,7 +457,7 @@ mnt6_G2 mnt6_G2::dbl() const
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
 //#endif
-    if (this->is_zero())
+    if this->is_zero()
     {
         return (*this);
     }
@@ -496,7 +496,7 @@ mnt6_G2 mnt6_G2::mul_by_cofactor() const
 
 bool mnt6_G2::is_well_formed() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return true;
     }
@@ -569,20 +569,20 @@ std::istream& operator>>(std::istream &in, mnt6_G2 &g)
     Y_lsb -= '0';
 
     // y = +/- sqrt(x^3 + a*x + b)
-    if (is_zero == 0)
+    if is_zero == 0
     {
         const mnt6_Fq3 tX2 = tX.squared();
         const mnt6_Fq3 tY2 = (tX2 + mnt6_twist_coeff_a) * tX + mnt6_twist_coeff_b;
         tY = tY2.sqrt();
 
-        if ((tY.c0.as_bigint().data[0] & 1) != Y_lsb)
+        if (tY.c0.as_bigint().data[0] & 1) != Y_lsb
         {
             tY = -tY;
         }
     }
 //#endif
     // using projective coordinates
-    if (is_zero == 0)
+    if is_zero == 0
     {
         g.X = tX;
         g.Y = tY;
@@ -601,7 +601,7 @@ void mnt6_G2::batch_to_special_all_non_zeros(std::vector<mnt6_G2> &vec)
     std::vector<mnt6_Fq3> Z_vec;
     Z_vec.reserve(vec.size());
 
-    for (auto &el: vec)
+    for el in &vec
     {
         Z_vec.emplace_back(el.Z);
     }
@@ -609,7 +609,7 @@ void mnt6_G2::batch_to_special_all_non_zeros(std::vector<mnt6_G2> &vec)
 
     const mnt6_Fq3 one = mnt6_Fq3::one();
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for i in 0..vec.size()
     {
         vec[i] = mnt6_G2(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
     }

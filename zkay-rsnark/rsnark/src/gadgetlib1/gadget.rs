@@ -8,7 +8,7 @@
 //#ifndef GADGET_HPP_
 // #define GADGET_HPP_
 
-use libsnark/gadgetlib1/protoboard;
+use crate::gadgetlib1::protoboard;
 
 
 
@@ -22,7 +22,7 @@ public:
 };
 
 
-use libsnark/gadgetlib1/gadget;
+use crate::gadgetlib1::gadget;
 
 //#endif // GADGET_HPP_
 /** @file

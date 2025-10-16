@@ -9,8 +9,8 @@
 // #define BN128_INIT_HPP_
 #include "depends/ate-pairing/include/bn.h"
 
-use libff/algebra/curves/public_params;
-use libff/algebra/curves/bn128/bn128_fields;
+use crate::algebra::curves::public_params;
+use crate::algebra::curves::bn128::bn128_fields;
 
 // namespace libff {
 
@@ -40,10 +40,10 @@ typedef bn128_GT bn128_Fq12;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/bn128/bn128_g1;
-use libff/algebra/curves/bn128/bn128_g2;
-use libff/algebra/curves/bn128/bn128_gt;
-use libff/algebra/curves/bn128/bn128_init;
+use crate::algebra::curves::bn128::bn128_g1;
+use crate::algebra::curves::bn128::bn128_g2;
+use crate::algebra::curves::bn128::bn128_gt;
+use crate::algebra::curves::bn128::bn128_init;
 
 // namespace libff {
 

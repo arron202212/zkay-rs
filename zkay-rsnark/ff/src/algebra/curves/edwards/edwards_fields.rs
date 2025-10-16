@@ -7,9 +7,9 @@
 
 //#ifndef EDWARDS_FIELDS_HPP_
 // #define EDWARDS_FIELDS_HPP_
-use libff/algebra/fields/prime_base/fp;
-use libff/algebra/fields/prime_extension/fp3;
-use libff/algebra/fields/prime_extension/fp6_2over3;
+use crate::algebra::fields::prime_base::fp;
+use crate::algebra::fields::prime_extension::fp3;
+use crate::algebra::fields::prime_extension::fp6_2over3;
 
 // namespace libff {
 
@@ -39,7 +39,7 @@ void init_edwards_fields();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/edwards/edwards_fields;
+use crate::algebra::curves::edwards/edwards_fields;
 
 // namespace libff {
 
@@ -57,13 +57,13 @@ void init_edwards_fields()
 
     edwards_modulus_r = bigint_r("1552511030102430251236801561344621993261920897571225601");
     assert!(edwards_Fr::modulus_is_valid());
-    if (sizeof(mp_limb_t) == 8)
+    if sizeof(mp_limb_t) == 8
     {
         edwards_Fr::Rsquared = bigint_r("621738487827897760168419760282818735947979812540885779");
         edwards_Fr::Rcubed = bigint_r("899968968216802386013510389846941393831065658679774050");
         edwards_Fr::inv = 0xdde553277fffffff;
     }
-    if (sizeof(mp_limb_t) == 4)
+    if sizeof(mp_limb_t) == 4
     {
         edwards_Fr::Rsquared = bigint_r("621738487827897760168419760282818735947979812540885779");
         edwards_Fr::Rcubed = bigint_r("899968968216802386013510389846941393831065658679774050");
@@ -83,13 +83,13 @@ void init_edwards_fields()
 
     edwards_modulus_q = bigint_q("6210044120409721004947206240885978274523751269793792001");
     assert!(edwards_Fq::modulus_is_valid());
-    if (sizeof(mp_limb_t) == 8)
+    if sizeof(mp_limb_t) == 8
     {
         edwards_Fq::Rsquared = bigint_q("5943559676554581037560514598978484097352477055348195432");
         edwards_Fq::Rcubed = bigint_q("1081560488703514202058739223469726982199727506489234349");
         edwards_Fq::inv = 0x76eb690b7fffffff;
     }
-    if (sizeof(mp_limb_t) == 4)
+    if sizeof(mp_limb_t) == 4
     {
         edwards_Fq::Rsquared = bigint_q("5943559676554581037560514598978484097352477055348195432");
         edwards_Fq::Rcubed = bigint_q("1081560488703514202058739223469726982199727506489234349");

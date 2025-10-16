@@ -7,7 +7,7 @@
 //#ifndef CRH_GADGET_HPP_
 // #define CRH_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget;
+use crate::gadgetlib1::gadgets::hashes::knapsack/knapsack_gadget;
 
 
 

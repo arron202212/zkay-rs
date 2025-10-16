@@ -12,9 +12,9 @@ use  <sstream>
 
 use  <gtest/gtest.h>
 
-use libsnark/gadgetlib2/gadget;
-use libsnark/gadgetlib2/pp;
-use libsnark/gadgetlib2/protoboard;
+use crate::gadgetlib2::gadget;
+use crate::gadgetlib2::pp;
+use crate::gadgetlib2::protoboard;
 
 using ::std::cerr;
 using ::std::cout;
@@ -161,10 +161,10 @@ TEST(gadgetLib2,R1P_InnerProductGadget_Exhaustive) {
     Variable result("result");
     auto g = InnerProduct_Gadget::create(pb, A, B, result);
     g->generateConstraints();
-    for (size_t i = 0; i < 1u<<n; ++i) {
-        for (size_t j = 0; j < 1u<<n; ++j) {
+    for i in 0..1u<<n {
+        for j in 0..1u<<n {
             size_t correct = 0;
-            for (size_t k = 0; k < n; ++k) {
+            for k in 0..n {
                 pb->val(A[k]) = i & (1u<<k) ? 1 : 0;
                 pb->val(B[k]) = j & (1u<<k) ? 1 : 0;
                 correct += (i & (1u<<k)) && (j & (1u<<k)) ? 1 : 0;
@@ -190,13 +190,13 @@ const size_t n = EXHAUSTIVE_N;
     Variable success_flag("success_flag");
     auto g = LooseMUX_Gadget::create(pb, arr, index, result, success_flag);
     g->generateConstraints();
-    for (size_t i = 0; i < 1u<<n; ++i) {
+    for i in 0..1u<<n {
         pb->val(arr[i]) = (19*i) % (1u<<n);
     }
-    for (int idx = -1; idx <= (1<<n); ++idx) {
+    for idx in -1..=(1<<n) {
         pb->val(index) = idx;
         g->generateWitness();
-        if (0 <= idx && idx <= (1<<n) - 1) {
+        if 0 <= idx && idx <= (1<<n) - 1 {
             EXPECT_EQ(pb->val(result) , (19*idx) % (1u<<n));
             EXPECT_EQ(pb->val(success_flag) , 1);
             EXPECT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
@@ -343,7 +343,7 @@ void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr 
             packingPB->val(unpacked[j]) = unpackingPB->val(unpacked[j]) = bits[j]; // restore bit
             // special case to test booleanity checks. Cause arithmetic constraints to stay
             // satisfied while ruining Booleanity
-            if (j > 0 && bits[j]==1 && bits[j-1]==0 ) {
+            if j > 0 && bits[j]==1 && bits[j-1]==0  {
                 packingPB->val(unpacked[j-1]) = unpackingPB->val(unpacked[j-1]) = 2;
                 packingPB->val(unpacked[j]) = unpackingPB->val(unpacked[j]) = 0;
                 ASSERT_FALSE(unpackingPB->isSatisfied());
@@ -358,7 +358,7 @@ void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr 
 
 
 void LogicGadgetExhaustiveTester::setInputValsTo(const size_t val) {
-    for (size_t maskBit = 0; maskBit < numInputs; ++maskBit) {
+    for maskBit in 0..numInputs {
         pb->val(inputs[maskBit]) = (val & (1u << maskBit)) ? 1 : 0;
     }
 }

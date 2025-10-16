@@ -72,13 +72,13 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
     ffec::enter_block("Generate all messages");
     size_t tree_size = 0;
     size_t nodes_in_layer = 1;
-    for (size_t layer = 0; layer <= depth; ++layer)
+    for layer in 0..=depth
     {
         tree_size += nodes_in_layer;
         nodes_in_layer *= arity;
     }
     std::vector<size_t> tree_elems(tree_size);
-    for (size_t i = 0; i < tree_size; ++i)
+    for i in 0..tree_size
     {
         tree_elems[i] = std::rand() % 10;
         print!("tree_elems[{}] = {}\n", i, tree_elems[i]);
@@ -101,7 +101,7 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
     ffec::print_header("Process verification key");
     r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> pvk = r1cs_sp_ppzkpcd_process_vk<PCD_ppT>(keypair.vk);
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<r1cs_sp_ppzkpcd_proving_key<PCD_ppT> >(keypair.pk);
@@ -114,7 +114,7 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
     nodes_in_layer /= arity;
     for (long layer = depth; layer >= 0; --layer, nodes_in_layer /= arity)
     {
-        for (size_t i = 0; i < nodes_in_layer; ++i)
+        for i in 0..nodes_in_layer
         {
             const size_t cur_idx = (nodes_in_layer - 1) / (arity - 1) + i;
 
@@ -123,9 +123,9 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
 
             const bool base_case = (arity * cur_idx + arity >= tree_size);
 
-            if (!base_case)
+            if !base_case
             {
-                for (size_t i = 0; i < arity; ++i)
+                for i in 0..arity
                 {
                     msgs[i] = tree_messages[arity*cur_idx + i + 1];
                     proofs[i] = tree_proofs[arity*cur_idx + i + 1];
@@ -142,7 +142,7 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
             ffec::print_header("R1CS ppzkPCD Prover");
             r1cs_sp_ppzkpcd_proof<PCD_ppT> proof = r1cs_sp_ppzkpcd_prover<PCD_ppT>(keypair.pk, tally_primary_input, tally_auxiliary_input, proofs);
 
-            if (test_serialization)
+            if test_serialization
             {
                 ffec::enter_block("Test serialization of proof");
                 proof = ffec::reserialize<r1cs_sp_ppzkpcd_proof<PCD_ppT> >(proof);
@@ -163,7 +163,7 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
             all_accept = all_accept && ans;
 
             print!("\n");
-            for (size_t i = 0; i < arity; ++i)
+            for i in 0..arity
             {
                 print!("Message {} was:\n", i);
                 msgs[i]->print();

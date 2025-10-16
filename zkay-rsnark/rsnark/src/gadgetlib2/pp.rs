@@ -54,7 +54,7 @@ PublicParams initPublicParamsFromDefaultPp();
 use  <cassert>
 use  <vector>
 
-use libsnark/gadgetlib2/pp;
+use crate::gadgetlib2::pp;
 
 namespace gadgetlib2 {
 

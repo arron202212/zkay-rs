@@ -34,7 +34,7 @@
 //#ifndef BACS_PPZKSNARK_HPP_
 // #define BACS_PPZKSNARK_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems/bacs/bacs;
 use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/bacs_ppzksnark_params;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
@@ -272,7 +272,7 @@ use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/bacs_ppzksnark;
 //#ifndef BACS_PPZKSNARK_TCC_
 // #define BACS_PPZKSNARK_TCC_
 
-use libsnark/reductions/bacs_to_r1cs/bacs_to_r1cs;
+use crate::reductions::bacs_to_r1cs::bacs_to_r1cs;
 
 
 

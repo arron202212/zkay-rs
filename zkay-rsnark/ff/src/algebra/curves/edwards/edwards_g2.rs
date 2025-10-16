@@ -10,8 +10,8 @@
 //#include <iostream>
 //#include <vector>
 
-use libff/algebra/curves/curve_utils;
-use libff/algebra/curves/edwards/edwards_init;
+use crate::algebra::curves::curve_utils;
+use crate::algebra::curves::edwards/edwards_init;
 
 // namespace libff {
 
@@ -104,7 +104,7 @@ edwards_G2 operator*(const Fp_model<m, modulus_p> &lhs, const edwards_G2 &rhs)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/edwards/edwards_g2;
+use crate::algebra::curves::edwards/edwards_g2;
 
 // namespace libff {
 
@@ -122,7 +122,7 @@ bool edwards_G2::initialized = false;
 
 edwards_G2::edwards_G2()
 {
-    if (initialized)
+    if initialized
     {
         this->X = G2_zero.X;
         this->Y = G2_zero.Y;
@@ -145,7 +145,7 @@ edwards_Fq3 edwards_G2::mul_by_d(const edwards_Fq3 &elt)
 
 void edwards_G2::print() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -165,7 +165,7 @@ void edwards_G2::print() const
 
 void edwards_G2::print_coordinates() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -186,7 +186,7 @@ void edwards_G2::print_coordinates() const
 
 void edwards_G2::to_affine_coordinates()
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         this->X = edwards_Fq3::zero();
         this->Y = edwards_Fq3::one();
@@ -208,7 +208,7 @@ void edwards_G2::to_affine_coordinates()
 
 void edwards_G2::to_special()
 {
-    if (this->Z.is_zero())
+    if this->Z.is_zero()
     {
         return;
     }
@@ -239,12 +239,12 @@ bool edwards_G2::is_zero() const
 
 bool edwards_G2::operator==(const edwards_G2 &other) const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other.is_zero();
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return false;
     }
@@ -252,13 +252,13 @@ bool edwards_G2::operator==(const edwards_G2 &other) const
     /* now neither is O */
 
     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
-    if ((this->X * other.Z) != (other.X * this->Z))
+    if (this->X * other.Z) != (other.X * this->Z)
     {
         return false;
     }
 
     // Y1/Z1 = Y2/Z2 <=> Y1*Z2 = Y2*Z1
-    if ((this->Y * other.Z) != (other.Y * this->Z))
+    if (this->Y * other.Z) != (other.Y * this->Z)
     {
         return false;
     }
@@ -274,12 +274,12 @@ bool edwards_G2::operator!=(const edwards_G2& other) const
 edwards_G2 edwards_G2::operator+(const edwards_G2 &other) const
 {
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return (*this);
     }
@@ -326,12 +326,12 @@ edwards_G2 edwards_G2::mixed_add(const edwards_G2 &other) const
     this->add_cnt++;
 //#endif
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -362,7 +362,7 @@ edwards_G2 edwards_G2::dbl() const
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
 //#endif
-    if (this->is_zero())
+    if this->is_zero()
     {
         return (*this);
     }
@@ -394,7 +394,7 @@ bool edwards_G2::is_well_formed() const
 {
     /* Note that point at infinity is the only special case we must check as
        inverted representation does no cover points (0, +-c) and (+-c, 0). */
-    if (this->is_zero())
+    if this->is_zero()
     {
         return true;
     }
@@ -468,7 +468,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
         (edwards_Fq3::one() - edwards_G2::mul_by_d(tX2)).inverse();
     tY = tY2.sqrt();
 
-    if ((tY.c0.as_bigint().data[0] & 1) != Y_lsb)
+    if (tY.c0.as_bigint().data[0] & 1) != Y_lsb
     {
         tY = -tY;
     }
@@ -491,7 +491,7 @@ void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
     std::vector<edwards_Fq3> Z_vec;
     Z_vec.reserve(vec.size());
 
-    for (auto &el: vec)
+    for el in &vec
     {
         Z_vec.emplace_back(el.Z);
     }
@@ -499,7 +499,7 @@ void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
 
     const edwards_Fq3 one = edwards_Fq3::one();
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for i in 0..vec.size()
     {
         vec[i].X = vec[i].X * Z_vec[i];
         vec[i].Y = vec[i].Y * Z_vec[i];

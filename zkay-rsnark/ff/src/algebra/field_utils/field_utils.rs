@@ -1,137 +1,146 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+#![allow(incomplete_features, dead_code, non_upper_case_globals)]
+// #![feature(generic_const_exprs, generic_const_items)]
+// /** @file
+//  *****************************************************************************
+//  * @author     This file is part of libff, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
 //#ifndef FIELD_UTILS_HPP_
 // #define FIELD_UTILS_HPP_
 //#include <cstdint>
 
-#include "libff/algebra/field_utils/bigint.hpp"
-#include "libff/common/double.hpp"
-#include "libff/common/utils.hpp"
-
-#include "libff/algebra/fields/binary/gf64.hpp"
-#include "libff/algebra/fields/binary/gf128.hpp"
-#include "libff/algebra/fields/binary/gf192.hpp"
-#include "libff/algebra/fields/binary/gf256.hpp"
-#include "libff/algebra/fields/prime_base/fp.hpp"
+use crate::algebra::field_utils::bigint::bigint;
+use crate::common::double;
+use crate::algebra::field_utils::bigint::GMP_NUMB_BITS;
+use num_traits::{One,Zero};
+ use crate::common::utils::{log2,div_ceil,bit_vector};
+use crate::algebra::fields::binary::gf64;
+use crate::algebra::fields::binary::gf128;
+use crate::algebra::fields::binary::gf192;
+use crate::algebra::fields::binary::gf256;
+use crate::algebra::fields::prime_base::fp;
 
 // namespace libff {
 
-template<typename FieldT>
-struct is_additive {
-    static const bool value = false;
-};
+pub trait is_additive{
+    const  value:bool = false;
+}
 
-template<>
-struct is_additive<gf64> {
-    static const bool value = true;
-};
+// struct is_additive {
+//     static const bool value = false;
+// };
 
-template<>
-struct is_additive<gf128> {
-    static const bool value = true;
-};
+// template<>
+// struct is_additive<gf64> {
+//     static const bool value = true;
+// };
 
-template<>
-struct is_additive<gf192> {
-    static const bool value = true;
-};
+// template<>
+// struct is_additive<gf128> {
+//     static const bool value = true;
+// };
 
-template<>
-struct is_additive<gf256> {
-    static const bool value = true;
-};
+// template<>
+// struct is_additive<gf192> {
+//     static const bool value = true;
+// };
 
-template<typename FieldT>
-struct is_multiplicative {
-    static const bool value = false;
-};
+// template<>
+// struct is_additive<gf256> {
+//     static const bool value = true;
+// };
 
-template<mp_size_t n, const bigint<n>& modulus>
-struct is_multiplicative<Fp_model<n, modulus>> {
-    static const bool value = true;
-};
+pub trait is_multiplicative{
+    const  value:bool = false;
+}
+
+// struct is_multiplicative {
+//     static const bool value = false;
+// };
+
+// template<mp_size_t n, const bigint<n>& modulus>
+// struct is_multiplicative<Fp_model<n, modulus>> {
+//     static const bool value = true;
+// };
 
 enum field_type {
     multiplicative_field_type = 1,
     additive_field_type = 2
-};
+}
 
-template<typename FieldT>
-field_type get_field_type(const typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type elem);
+// 
+// field_type get_field_type(const typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type elem);
 
-template<typename FieldT>
-field_type get_field_type(const typename enable_if<is_additive<FieldT>::value, FieldT>::type elem);
+// 
+// field_type get_field_type(const typename enable_if<is_additive<FieldT>::value, FieldT>::type elem);
 
-template<typename FieldT>
-std::size_t log_of_field_size_helper(
-    typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
+// 
+// std::size_t log_of_field_size_helper(
+//     typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
 
-template<typename FieldT>
-std::size_t log_of_field_size_helper(
-    typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
+// 
+// std::size_t log_of_field_size_helper(
+//     typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
 
-template<typename FieldT>
-std::size_t soundness_log_of_field_size_helper(
-    typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
+// 
+// std::size_t soundness_log_of_field_size_helper(
+//     typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
 
-template<typename FieldT>
-std::size_t soundness_log_of_field_size_helper(
-    typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
+// 
+// std::size_t soundness_log_of_field_size_helper(
+//     typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
 
-template<typename FieldT>
-std::size_t get_word_of_field_elem(
-    typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem, size_t word);
+// 
+// std::size_t get_word_of_field_elem(
+//     typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem, size_t word);
 
-template<typename FieldT>
-std::size_t get_word_of_field_elem(
-    typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem, size_t word);
+// 
+// std::size_t get_word_of_field_elem(
+//     typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem, size_t word);
 
-template<typename FieldT>
-FieldT coset_shift();
+// 
+// FieldT coset_shift();
 
-// returns root of unity of order n (for n a power of 2), if one exists
-template<typename FieldT>
-typename std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
-get_root_of_unity(const std::size_t n);
+// // returns root of unity of order n (for n a power of 2), if one exists
+// 
+// typename std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
+// get_root_of_unity(const std::size_t n);
 
-template<typename FieldT>
-typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
-get_root_of_unity(const std::size_t n);
+// 
+// typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
+// get_root_of_unity(const std::size_t n);
 
-template<typename FieldT>
-std::vector<FieldT> pack_int_vector_into_field_element_vector(const std::vector<std::size_t> &v, const std::size_t w);
+// 
+// std::vector<FieldT> pack_int_vector_into_field_element_vector(const std::vector<std::size_t> &v, const std::size_t w);
 
-template<typename FieldT>
-std::vector<FieldT> pack_bit_vector_into_field_element_vector(const bit_vector &v, const std::size_t chunk_bits);
+// 
+// std::vector<FieldT> pack_bit_vector_into_field_element_vector(v:&bit_vector, const std::size_t chunk_bits);
 
-template<typename FieldT>
-std::vector<FieldT> pack_bit_vector_into_field_element_vector(const bit_vector &v);
+// 
+// std::vector<FieldT> pack_bit_vector_into_field_element_vector(v:&bit_vector);
 
-template<typename FieldT>
-std::vector<FieldT> convert_bit_vector_to_field_element_vector(const bit_vector &v);
+// 
+// std::vector<FieldT> convert_bit_vector_to_field_element_vector(v:&bit_vector);
 
-template<typename FieldT>
-bit_vector convert_field_element_vector_to_bit_vector(const std::vector<FieldT> &v);
+// 
+// bit_vector convert_field_element_vector_to_bit_vector(const std::vector<FieldT> &v);
 
-template<typename FieldT>
-bit_vector convert_field_element_to_bit_vector(const FieldT &el);
+// 
+// bit_vector convert_field_element_to_bit_vector(el:FieldT);
 
-template<typename FieldT>
-bit_vector convert_field_element_to_bit_vector(const FieldT &el, const std::size_t bitcount);
+// 
+// bit_vector convert_field_element_to_bit_vector(el:FieldT, const std::size_t bitcount);
 
-template<typename FieldT>
-FieldT convert_bit_vector_to_field_element(const bit_vector &v);
+// 
+// FieldT convert_bit_vector_to_field_element(v:&bit_vector);
 
-template<typename FieldT>
-void batch_invert(std::vector<FieldT> &vec);
+// 
+// void batch_invert(std::vector<FieldT> &vec);
 
 // } // namespace libff
-use libff/algebra/field_utils/field_utils.tcc;
+// use ffec::algebra::field_utils::/field_utils.tcc;
 
 //#endif // FIELD_UTILS_HPP_
 
@@ -153,243 +162,242 @@ use libff/algebra/field_utils/field_utils.tcc;
 
 // namespace libff {
 
-using std::size_t;
+// using std::size_t;
 
-template<typename FieldT>
-field_type get_field_type(const typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type elem)
-{
-    UNUSED(elem); // only to identify field type
-    return multiplicative_field_type;
+trait FTConfig{
+    const NUM_LIMBS:usize;
+
 }
 
-template<typename FieldT>
-field_type get_field_type(const typename enable_if<is_additive<FieldT>::value, FieldT>::type elem)
+ pub fn get_field_type_is_multiplicative<FieldT>( elem:FieldT)->field_type
 {
-    UNUSED(elem); // only to identify field type
-    return additive_field_type;
+    //UNUSED(elem); // only to identify field type
+    return field_type::multiplicative_field_type;
 }
 
-template<typename FieldT>
-std::size_t log_of_field_size_helper(
-    typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem)
+
+ pub fn get_field_type_is_additive<FieldT>( elem:FieldT)->field_type
 {
-    UNUSED(field_elem);
-    return FieldT::ceil_size_in_bits();
+    //UNUSED(elem); // only to identify field type
+    return field_type::additive_field_type;
 }
 
-template<typename FieldT>
-std::size_t log_of_field_size_helper(
-    typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem)
+pub fn log_of_field_size_helper_is_multiplicative<FieldT>( field_elem:FieldT)->usize
 {
-    UNUSED(field_elem);
-    return FieldT::extension_degree();
+    //UNUSED(field_elem);
+    // return FieldT::ceil_size_in_bits();
+    0
 }
 
-template<typename FieldT>
-std::size_t soundness_log_of_field_size_helper(
-    typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem)
+pub fn  log_of_field_size_helper_is_additive<FieldT>(field_elem:FieldT)->usize
 {
-    UNUSED(field_elem);
+    //UNUSED(field_elem);
+    // return FieldT::extension_degree();
+0
+}
+
+pub fn soundness_log_of_field_size_helper<FieldT>(field_elem:FieldT)->usize
+{
+    //UNUSED(field_elem);
     /** size in bits is the number of bits needed to represent a field element.
      *  However there isn't perfect alignment between the number of bits and the number of field elements,
      *  there could be a factor of two difference.
      *  For calculating soundness, we use the log of field size as number of bits - 1,
      *  as (2 << returned) size lower bounds the actual size.
     */
-    return FieldT::ceil_size_in_bits() - 1;
+    // return FieldT::ceil_size_in_bits() - 1;
+    0
 }
 
-template<typename FieldT>
-std::size_t soundness_log_of_field_size_helper(
-    typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem)
+pub fn soundness_log_of_field_size_helper_is_additive<FieldT>( field_elem:FieldT)->usize
 {
-    UNUSED(field_elem);
-    return FieldT::extension_degree();
+    //UNUSED(field_elem);
+    // return FieldT::extension_degree();
+    0
 }
 
-template<typename FieldT>
-std::size_t get_word_of_field_elem(
-    typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem, size_t word)
+pub fn  get_word_of_field_elem_is_additive<FieldT>( field_elem:FieldT,  word:usize)->usize
 {
-    return field_elem.to_words()[word];
+    // return field_elem.to_words()[word];
+    0
 }
 
-template<typename FieldT>
-std::size_t get_word_of_field_elem(
-    typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem, size_t word)
+pub fn  get_word_of_field_elem_is_multiplicative<FieldT>(field_elem:FieldT,  word:usize)->usize
 {
-    return field_elem.as_bigint().data[word];
+    // return field_elem.as_bigint().data[word];
+    0
 }
 
-template<typename FieldT>
-FieldT coset_shift()
+ pub fn coset_shift<FieldT:Default>()->FieldT
 {
-    return FieldT::multiplicative_generator.squared();
+    // return FieldT::multiplicative_generator.squared();
+    FieldT::default()
 }
 
-template<typename FieldT>
-typename std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
-get_root_of_unity(const size_t n)
+
+// typename std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
+pub fn get_root_of_unity_is_same_double<FieldT:Default>(n:usize)->FieldT
 {
-    return FieldT(cos(2 * PI / n), sin(2 * PI / n));
+    const  PI:f64 = 3.141592653589793238460264338328;
+    // return FieldT((2.0 * PI / n).cos(), (2.0 * PI / n).sin());
+    FieldT::default()
 }
 
-template<typename FieldT>
-typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
-get_root_of_unity(const size_t n)
+// 
+// typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
+pub fn get_root_of_unity_is_not_same_double<FieldT:Default>(n:usize)->eyre::Result<FieldT>
 {
-    const size_t logn = log2(n);
-    if n != (1u << logn)) throw std::invalid_argument("libff::get_root_of_unity: expected n == (1u << logn)";
-    if logn > FieldT::s) throw std::invalid_argument("libff::get_root_of_unity: expected logn <= FieldT::s";
+    let logn = log2(n);
+    if n != (1<< logn){ eyre::bail!("get_root_of_unity: expected n == (1<< logn)");}
+    // if logn > FieldT::s{ eyre::bail!("get_root_of_unity: expected logn <= FieldT::s");}
 
-    FieldT omega = FieldT::root_of_unity;
-    for (size_t i = FieldT::s; i > logn; --i)
-    {
-        omega *= omega;
-    }
+    let mut  omega = FieldT::default();//root_of_unity;
+    // for _ in (logn+1..=FieldT::s).rev()
+    // {
+    //     omega *= omega;
+    // }
 
-    return omega;
+     Ok(omega)
 }
 
-template<typename FieldT>
-std::vector<FieldT> pack_int_vector_into_field_element_vector(const std::vector<size_t> &v, const size_t w)
+pub fn pack_int_vector_into_field_element_vector<FieldT:FTConfig+Default>(v:&Vec<usize>, w:usize)->Vec<FieldT>
+where [(); FieldT::NUM_LIMBS]: 
 {
-    const size_t chunk_bits = FieldT::floor_size_in_bits();
-    const size_t repacked_size = div_ceil(v.size() * w, chunk_bits);
-    std::vector<FieldT> result(repacked_size);
+    let  chunk_bits = 0usize;//FieldT::floor_size_in_bits();
+    let repacked_size = div_ceil((v.len() * w) as i64, chunk_bits as i64).unwrap() as usize;
+    let  mut result=Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size
     {
-        bigint<FieldT::num_limbs> b;
-        for j in 0..chunk_bits
+        let mut b=bigint::<{FieldT::NUM_LIMBS}>::new(0);
+        for j in 0..chunk_bits 
         {
-            const size_t word_index = (i * chunk_bits + j) / w;
-            const size_t pos_in_word = (i * chunk_bits + j) % w;
-            const size_t word_or_0 = (word_index < v.size() ? v[word_index] : 0);
-            const size_t bit = (word_or_0 >> pos_in_word) & 1;
+            let  word_index = (i * chunk_bits + j) / w ;
+            let  pos_in_word = (i * chunk_bits + j) % w;
+            let  word_or_0 = if word_index < v.len()  {v[word_index]} else {0};
+            let  bit = (word_or_0 >> pos_in_word) & 1;
 
-            b.data[j / GMP_NUMB_BITS] |= bit << (j % GMP_NUMB_BITS);
+            b.data[j / GMP_NUMB_BITS] |= (bit << (j % GMP_NUMB_BITS)) as u64;
         }
-        result[i] = FieldT(b);
+        result[i] = FieldT::default();//(b);
     }
 
     return result;
 }
 
-template<typename FieldT>
-std::vector<FieldT> pack_bit_vector_into_field_element_vector(const bit_vector &v, const size_t chunk_bits)
+pub fn  pack_bit_vector_into_field_element_vector<FieldT:FTConfig+Default>(v:&bit_vector,  chunk_bits:usize)->Vec<FieldT>
+ where [(); {FieldT::NUM_LIMBS}]:
 {
-    assert!(chunk_bits <= FieldT::floor_size_in_bits());
+    // assert!(chunk_bits <= FieldT::floor_size_in_bits());
 
-    const size_t repacked_size = div_ceil(v.size(), chunk_bits);
-    std::vector<FieldT> result(repacked_size);
+    let repacked_size = div_ceil(v.len() as i64, chunk_bits as i64).unwrap() as usize;
+   let mut result=Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size
     {
-        bigint<FieldT::num_limbs> b;
+       let mut b= bigint::<{FieldT::NUM_LIMBS}> ::new(0);
         for j in 0..chunk_bits
         {
-            b.data[j / GMP_NUMB_BITS] |= ((i * chunk_bits + j) < v.size() && v[i * chunk_bits + j] ? 1ll : 0ll) << (j % GMP_NUMB_BITS);
+            b.data[j / GMP_NUMB_BITS] |= ( if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j] { 1} else {0}) << (j % GMP_NUMB_BITS);
         }
-        result[i] = FieldT(b);
+        result[i] = FieldT::default();//(b);
     }
 
     return result;
 }
 
-template<typename FieldT>
-std::vector<FieldT> pack_bit_vector_into_field_element_vector(const bit_vector &v)
+
+pub fn  pack_bit_vector_into_field_element_vector1<FieldT>(v:&bit_vector)->Vec<FieldT>
 {
-    return pack_bit_vector_into_field_element_vector<FieldT>(v, FieldT::floor_size_in_bits());
+    // return pack_bit_vector_into_field_element_vector::<FieldT>(v, FieldT::floor_size_in_bits());
+    vec![]
 }
 
-template<typename FieldT>
-std::vector<FieldT> convert_bit_vector_to_field_element_vector(const bit_vector &v)
-{
-    std::vector<FieldT> result;
-    result.reserve(v.size());
 
-    for (const bool b : v)
+pub fn  convert_bit_vector_to_field_element_vector<FieldT:One+Zero>(v:&bit_vector)->Vec<FieldT>
+{
+    let mut result=Vec::with_capacity(v.len());
+    
+
+    for  &b in  v
     {
-        result.emplace_back(b ? FieldT::one() : FieldT::zero());
+        result.push( if b  {FieldT::one()} else {FieldT::zero()});
     }
 
     return result;
 }
 
-template<typename FieldT>
-bit_vector convert_field_element_vector_to_bit_vector(const std::vector<FieldT> &v)
-{
-    bit_vector result;
 
-    for (const FieldT &el : v)
+pub fn  convert_field_element_vector_to_bit_vector<FieldT>(v:&Vec<FieldT>)->bit_vector
+{
+     let mut result=bit_vector::new();
+
+    for el in  v
     {
-        const bit_vector el_bits = convert_field_element_to_bit_vector<FieldT>(el);
-        result.insert(result.end(), el_bits.begin(), el_bits.end());
+        let mut  el_bits = convert_field_element_to_bit_vector::<FieldT>(el);
+        result.append(&mut el_bits);
     }
 
     return result;
 }
 
-template<typename FieldT>
-bit_vector convert_field_element_to_bit_vector(const FieldT &el)
-{
-    bit_vector result;
 
-    bigint<FieldT::num_limbs> b = el.as_bigint();
-    for i in 0..FieldT::ceil_size_in_bits()
-    {
-        result.push_back(b.test_bit(i));
-    }
+pub fn  convert_field_element_to_bit_vector<FieldT>(el:&FieldT)->bit_vector
+{
+     let mut result=bit_vector::new();
+
+    // let b = el.as_bigint();//bigint<FieldT::num_limbs>
+    // for i in 0..0//FieldT::ceil_size_in_bits()
+    // {
+    //     result.push(b.test_bit(i));
+    // }
 
     return result;
 }
 
-template<typename FieldT>
-bit_vector convert_field_element_to_bit_vector(const FieldT &el, const size_t bitcount)
+
+pub fn  convert_field_element_to_bit_vector1<FieldT>(el:FieldT,  bitcount:usize)->bit_vector
 {
-    bit_vector result = convert_field_element_to_bit_vector(el);
-    result.resize(bitcount);
+    let mut  result = convert_field_element_to_bit_vector(&el);
+    result.resize(bitcount,false);
 
     return result;
 }
 
-template<typename FieldT>
-FieldT convert_bit_vector_to_field_element(const bit_vector &v)
+pub fn  convert_bit_vector_to_field_element<FieldT:One+Zero+ Clone+std::ops::AddAssign>(v:&bit_vector)->FieldT
 {
-    assert!(v.size() <= FieldT::ceil_size_in_bits());
+    // assert!(v.len() <= FieldT::ceil_size_in_bits());
 
-    FieldT res = FieldT::zero();
-    FieldT c = FieldT::one();
-    for (bool b : v)
+    let mut  res = FieldT::zero();
+    let mut  c = FieldT::one();
+    for  &b in  v
     {
-        res += b ? c : FieldT::zero();
-        c += c;
+        res += if b {c.clone()} else {FieldT::zero()};
+        c += c.clone();
     }
     return res;
 }
 
-template<typename FieldT>
-void batch_invert(std::vector<FieldT> &vec)
+
+pub fn  batch_invert<FieldT:One+Clone>(vec:&mut Vec<FieldT>)
 {
-    std::vector<FieldT> prod;
-    prod.reserve(vec.size());
+    let mut  prod=Vec::with_capacity(vec.len());
+   
+    let mut  acc = FieldT::one();
 
-    FieldT acc = FieldT::one();
-
-    for (auto el : vec)
+    for el in  &*vec
     {
-        assert!(!el.is_zero());
-        prod.emplace_back(acc);
-        acc = acc * el;
+        // assert!(!el.is_zero());
+        prod.push(acc.clone());
+        // acc = acc * el;
     }
 
-    FieldT acc_inverse = acc.inverse();
+    let mut  acc_inverse = acc.clone();//.inverse();
 
-    for (long i = static_cast<long>(vec.size()-1); i >= 0; --i)
+    for  i in (0..vec.len()).rev()
     {
-        const FieldT old_el = vec[i];
-        vec[i] = acc_inverse * prod[i];
+        let  old_el = vec[i].clone();
+        vec[i] = acc_inverse.clone() * prod[i].clone();
         acc_inverse = acc_inverse * old_el;
     }
 }

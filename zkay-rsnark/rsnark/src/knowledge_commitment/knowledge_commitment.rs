@@ -14,10 +14,10 @@
 // //#ifndef KNOWLEDGE_COMMITMENT_HPP_
 // // #define KNOWLEDGE_COMMITMENT_HPP_
 
-use ffec::algebra::fields::fp;
-
-use crate::common::data_structures::sparse_vector;
-
+use ffec::algebra::field::prime_base::fp;
+use ffec::common::serialization::OUTPUT_NEWLINE;
+use crate::common::data_structures::sparse_vector::sparse_vector;
+use std::ops::{Add,Mul};
 
 
 /********************** Knowledge commitment *********************************/
@@ -93,7 +93,7 @@ type knowledge_commitment_vector<T1, T2>  = sparse_vector<knowledge_commitment<T
 
 
 
-// use libsnark/knowledge_commitment/knowledge_commitment;
+// use crate::knowledge_commitment::knowledge_commitment;
 
 // //#endif // KNOWLEDGE_COMMITMENT_HPP_
 
@@ -137,13 +137,13 @@ pub fn zero()->Self
 
 
 
-pub fn mixed_add(&other:knowledge_commitment<T1,T2>) ->Self
+pub fn mixed_add(&self,&other:knowledge_commitment<T1,T2>) ->Self
 {
     return Self::new(self.g.mixed_add(other.g),
                                        self.h.mixed_add(other.h));
 }
 
- pub fn dbl() ->Self
+ pub fn dbl(&self) ->Self
 {
     return Self::new(self.g.dbl(),
                                        self.h.dbl());
@@ -164,15 +164,15 @@ pub fn mixed_add(&other:knowledge_commitment<T1,T2>) ->Self
 
  pub fn is_zero(&self)  ->bool
 {
-    return (g.is_zero() && h.is_zero());
+    return (self.g.is_zero() && self.h.is_zero());
 }
 
  pub fn print(&self) 
 {
     print!("knowledge_commitment.g:\n");
-    g.print();
+    self.g.print();
     print!("knowledge_commitment.h:\n");
-    h.print();
+    self.h.print();
 }
 
  pub fn size_in_bits(&self)->usize
@@ -266,11 +266,11 @@ impl<T1,T2> PartialEq for knowledge_commitment<T1,T2> {
 }
 
 
-
+use std::fmt;
 impl<T1,T2> fmt::Display for knowledge_commitment<T1,T2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{OUTPUT_SEPARATOR}{}",  
-kc.g , kc.h)
+        self.g , self.h)
     }
 }
 
@@ -299,19 +299,19 @@ impl<T1,T2> Add for knowledge_commitment<T1,T2> {
 }
 
 
-impl<T1,T2,const M:usize>  Mul<&libff::bigint<M>> for knowledge_commitment<T1,T2,M>  {
+impl<T1,T2,const M:usize>  Mul<&bigint<M>> for knowledge_commitment<T1,T2,M>  {
     type Output = Self;
 
-    fn mul(self, rhs: &libff::bigint<M>) -> Self {
+    fn mul(self, rhs: &bigint<M>) -> Self {
         Self::new(self.g * rhs,
                                        self.h * rhs)
     }
 }
 
-impl<T1,T2,const M:usize,const MODULUS_P:libff::bigint<M>>  Mul<&libff::Fp_model<M, MODULUS_P>> for knowledge_commitment<T1,T2,M>  {
+impl<T1,T2,const M:usize,const MODULUS_P:bigint<M>>  Mul<&Fp_model<M, MODULUS_P>> for knowledge_commitment<T1,T2,M>  {
     type Output = Self;
 
-    fn mul(self, rhs: &libff::Fp_model<M, MODULUS_P>) -> Self {
+    fn mul(self, rhs: &Fp_model<M, MODULUS_P>) -> Self {
         self*rhs.as_bigint()
     }
 }

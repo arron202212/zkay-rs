@@ -14,8 +14,8 @@ use  <algorithm>
 use ffec::common::default_types::ec_pp;
 use ffec::common::profiling;
 
-use libsnark/gadgetlib1/gadgets/routing/as_waksman_routing_gadget;
-use libsnark/gadgetlib1/gadgets/routing/benes_routing_gadget;
+use crate::gadgetlib1::gadgets/routing/as_waksman_routing_gadget;
+use crate::gadgetlib1::gadgets/routing/benes_routing_gadget;
 
 
 
@@ -25,7 +25,7 @@ void get_as_waksman_size(const size_t n, const size_t l, size_t &num_constraints
     protoboard<FieldT> pb;
 
     std::vector<pb_variable_array<FieldT> > randbits(n), outbits(n);
-    for (size_t y = 0; y < n; ++y)
+    for y in 0..n
     {
         randbits[y].allocate(pb, l, FMT("", "randbits_{}", y));
         outbits[y].allocate(pb, l, FMT("", "outbits_{}", y));
@@ -47,7 +47,7 @@ void get_benes_size(const size_t n, const size_t l, size_t &num_constraints, siz
     protoboard<FieldT> pb;
 
     std::vector<pb_variable_array<FieldT> > randbits(1ul<<t), outbits(1ul<<t);
-    for (size_t y = 0; y < 1ul<<t; ++y)
+    for y in 0..1ul<<t
     {
         randbits[y].allocate(pb, l, FMT("", "randbits_{}", y));
         outbits[y].allocate(pb, l, FMT("", "outbits_{}", y));
@@ -64,7 +64,7 @@ template<typename FieldT>
 void profile_routing_gadgets(const size_t l)
 {
     print!("profiling number of constraints for powers-of-2\n");
-    for (size_t n = 2; n <= 65; ++n)
+    for n in 2..=65
     {
         size_t as_waksman_constr, as_waksman_vars;
         get_as_waksman_size<FieldT>(n, l, as_waksman_constr, as_waksman_vars);
@@ -82,7 +82,7 @@ template<typename FieldT>
 void profile_num_switches(const size_t l)
 {
     print!("profiling number of switches in arbitrary size networks (and rounded-up for Benes)\n");
-    for (size_t n = 2; n <= 65; ++n)
+    for n in 2..=65
     {
         size_t as_waksman_constr, as_waksman_vars;
         get_as_waksman_size<FieldT>(n, l, as_waksman_constr, as_waksman_vars);

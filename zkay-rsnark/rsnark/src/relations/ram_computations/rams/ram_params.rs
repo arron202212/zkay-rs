@@ -16,7 +16,7 @@ use  <vector>
 
 use ffec::common::utils;
 
-use libsnark/relations/ram_computations/memory/memory_store_trace;
+use crate::relations::ram_computations/memory/memory_store_trace;
 
 
 

@@ -18,7 +18,7 @@
 //#ifndef BACS_TO_R1CS_HPP_
 // #define BACS_TO_R1CS_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems/bacs/bacs;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
@@ -39,7 +39,7 @@ r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(const bacs_circuit<Fie
 
 
 
-use libsnark/reductions/bacs_to_r1cs/bacs_to_r1cs;
+use crate::reductions::bacs_to_r1cs::bacs_to_r1cs;
 
 //#endif // BACS_TO_R1CS_HPP_
 /** @file
@@ -58,7 +58,7 @@ See bacs_to_r1cs.hpp .
 //#ifndef BACS_TO_R1CS_TCC_
 // #define BACS_TO_R1CS_TCC_
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems/bacs/bacs;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
@@ -77,21 +77,21 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
     result.primary_input_size = circuit.primary_input_size;
     result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.size();
 
-    for (auto &g : circuit.gates)
+    for g in &circuit.gates
     {
         result.constraints.push(r1cs_constraint<FieldT>(g.lhs, g.rhs, g.output));
 // #ifdef DEBUG
         auto it = circuit.gate_annotations.find(g.output.index);
-        if (it != circuit.gate_annotations.end())
+        if it != circuit.gate_annotations.end()
         {
             result.constraint_annotations[result.constraints.size()-1] = it->second;
         }
 //#endif
     }
 
-    for (auto &g : circuit.gates)
+    for g in &circuit.gates
     {
-        if (g.is_circuit_output)
+        if g.is_circuit_output
         {
             result.constraints.push(r1cs_constraint<FieldT>(1, g.output, 0));
 

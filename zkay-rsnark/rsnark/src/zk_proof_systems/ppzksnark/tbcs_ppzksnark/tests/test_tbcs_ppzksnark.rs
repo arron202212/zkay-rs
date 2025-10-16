@@ -14,7 +14,7 @@ use  <cstdio>
 use ffec::common::profiling;
 
 use crate::common::default_types::tbcs_ppzksnark_pp;
-use libsnark/relations/circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
+use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
 use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/examples/run_tbcs_ppzksnark;
 
 

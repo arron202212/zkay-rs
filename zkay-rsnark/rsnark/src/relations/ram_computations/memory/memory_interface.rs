@@ -65,7 +65,7 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libsnark/relations/ram_computations/memory/memory_store_trace;
+use crate::relations::ram_computations/memory/memory_store_trace;
 
 
 
@@ -93,7 +93,7 @@ memory_contents memory_store_trace::as_memory_contents() const
 {
     memory_contents result;
 
-    for (auto &ts_and_addrval : entries)
+    for ts_and_addrval in &entries
     {
         result[ts_and_addrval.second.first] = ts_and_addrval.second.second;
     }

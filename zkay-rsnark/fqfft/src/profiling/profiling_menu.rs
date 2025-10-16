@@ -46,13 +46,13 @@ void profile()
     std::stringstream stream(profile_type);
     while (stream >> n)
     {
-      if (n < 1 || n > 4) valid_input = 0;
-      if (n == 4) valid_input = 2;
+      if n < 1 || n > 4 valid_input = 0;
+      if n == 4 valid_input = 2;
     }
   } while (!valid_input);
 
   /* Level 3: Choose Domain Type */
-  if (valid_input == 1)
+  if valid_input == 1
   {
     std::cout << "\n\033[1;32mChoose Domain Type:\033[0m\n\n";
     std::cout << "\033[1;36m 1: All\033[0m\n";
@@ -71,14 +71,14 @@ void profile()
       std::stringstream stream(domain);
       while (stream >> n)
       {
-        if (n < 1 || n > 4) valid_input = 0;
-        if (n == 4) valid_input = 2;
+        if n < 1 || n > 4 valid_input = 0;
+        if n == 4 valid_input = 2;
       }
     } while (!valid_input);
     int domain_type = atoi(domain.c_str());
 
     /* Level 4: Choose Domain Sizes */
-    if (valid_input == 1)
+    if valid_input == 1
     {
       /* Built-in domain size choices */
       std::vector<std::string> domains(3);
@@ -100,10 +100,10 @@ void profile()
             && strcmp(domain.c_str(), "4"));
       int domain_choice = atoi(domain.c_str()) - 1;
 
-      if (domain_choice >= 0 && domain_choice < 3)
+      if domain_choice >= 0 && domain_choice < 3
       {
         /* Level 5: Custom Domain Choice */
-        if (domain_choice == 2)
+        if domain_choice == 2
         {
           std::cout << "\n\033[1;32mEnter Custom Domain:\033[0m\n";
           std::cout << "\033[1;32m(i.e. \"32768 65536 131072 262144\")\033[0m\n\n";
@@ -114,12 +114,12 @@ void profile()
             getline(std::cin, custom_dom);
 
             /* Check Input Validity */
-            if (strcmp(custom_dom.c_str(), "") && strcmp(custom_dom.c_str(), " "))
+            if strcmp(custom_dom.c_str(), "") && strcmp(custom_dom.c_str(), " ")
             {
               std::stringstream stream(custom_dom);
               custom_input = 1;
               int n;
-              while (stream >> n) if (n < 1) custom_input = 0;
+              while (stream >> n) if n < 1 custom_input = 0;
             }
           } while (!custom_input);
           domains[2] = custom_dom;
@@ -144,8 +144,8 @@ void profile()
         {
           for (int key = 0; key < 4; key++) /* Change key to 5 for arithmetic domain */
           {
-            if (key > 2 && domain_type == 2) continue;
-            if (key < 3 && domain_type == 3) continue;
+            if key > 2 && domain_type == 2 continue;
+            if key < 3 && domain_type == 3 continue;
             if (system(("./profiler "
                         + std::to_string(key) + " "
                         + std::to_string(1u << threads) + " "
@@ -179,7 +179,7 @@ void plot()
   } while (type < 1 || type > 4);
 
   /* If not (back) option */
-  if (type > 0 && type < 4)
+  if type > 0 && type < 4
   {
     /* Source Directory */
     std::vector< std::string > path (3);
@@ -194,7 +194,7 @@ void plot()
 
     /* Level 3: File to Plot */
     DIR *dir;
-    if ((dir = opendir(path[type - 1].c_str())) != NULL)
+    if (dir = opendir(path[type - 1].c_str())) != NULL
     {
       std::cout << "\n\033[1;32mSelect File to Plot:\033[0m\n\n";
 
@@ -203,7 +203,7 @@ void plot()
       std::vector<char*> files;
       while ((pDirent = readdir(dir)) != NULL)
       {
-        if (pDirent->d_name[0] != '.')
+        if pDirent->d_name[0] != '.'
         {
           files.push_back(pDirent->d_name);
           std::cout << "\033[1;36m "<< count++ << ": " << pDirent->d_name << "\033[0m\n";
@@ -221,13 +221,13 @@ void plot()
         file_number = atoi(file.c_str());
       } while ((file_number > 0 && file_number <= ((int) files.size()) + 1) ? 0 : 1);
 
-      if (file_number < count)
+      if file_number < count
       {
         /* Log Files Path */
         std::string log_path = path[type - 1] + files[file_number - 1];
         /* System Call */
         std::string cmd = "gnuplot -e \"input_directory=\'" + log_path + "\'\" " + gnufile[type - 1];
-        if (system(cmd.c_str()) == 0) print!("Plotted in %s\n", log_path.c_str());
+        if system(cmd.c_str()) == 0) print!("Plotted in %s\n", log_path.c_str();
       }
     }
   }
@@ -252,9 +252,9 @@ int main()
           && strcmp(res.c_str(), "2")
           && strcmp(res.c_str(), "3"));
 
-    if (strcmp(res.c_str(), "1") == 0) profile();
-    else if (strcmp(res.c_str(), "2") == 0) plot();
-    else if (strcmp(res.c_str(), "3") == 0) resume = 0;
+    if strcmp(res.c_str(), "1") == 0) profile(;
+    else if strcmp(res.c_str(), "2") == 0) plot(;
+    else if strcmp(res.c_str(), "3") == 0 resume = 0;
   }
 
   return 0;

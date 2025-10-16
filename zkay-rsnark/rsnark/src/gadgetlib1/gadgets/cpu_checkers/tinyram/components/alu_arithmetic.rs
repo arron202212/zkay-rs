@@ -15,9 +15,9 @@
 // #define ALU_ARITHMETIC_HPP_
 use  <memory>
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
 
 
 
@@ -644,7 +644,7 @@ public:
         barrel_right_internal.allocate(pb, logw+1, FMT(self.annotation_prefix, " barrel_right_internal"));
 
         shifted_out_bits.resize(logw);
-        for (size_t i = 0; i < logw; ++i)
+        for i in 0..logw
         {
             shifted_out_bits[i].allocate(pb, 1ul<<i, FMT(self.annotation_prefix, " shifted_out_bits_{}", i));
         }
@@ -680,7 +680,7 @@ void test_ALU_shl_gadget(const size_t w);
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_arithmetic;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_arithmetic;
 
 //#endif // ALU_ARITHMETIC_HPP_
 /** @file
@@ -740,7 +740,7 @@ void brute_force_arithmetic_gadget(const size_t w,
 
     pb_variable_array<FieldT> opcode_indicators;
     opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
-    for (size_t i = 0; i < 1ul<<ap.opcode_width(); ++i)
+    for i in 0..1ul<<ap.opcode_width()
     {
         pb.val(opcode_indicators[i]) = (i == opcode ? FieldT::one() : FieldT::zero());
     }
@@ -759,21 +759,21 @@ void brute_force_arithmetic_gadget(const size_t w,
     g.reset(initializer(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag));
     g->generate_r1cs_constraints();
 
-    for (size_t des = 0; des < (1u << w); ++des)
+    for des in 0..(1u << w)
     {
         pb.val(desval.packed) = FieldT(des);
         desval.generate_r1cs_witness_from_packed();
 
-        for (char f = 0; f <= 1; ++f)
+        for f in 0..=1
         {
             pb.val(flag) = (f ? FieldT::one() : FieldT::zero());
 
-            for (size_t arg1 = 0; arg1 < (1u << w); ++arg1)
+            for arg1 in 0..(1u << w)
             {
                 pb.val(arg1val.packed) = FieldT(arg1);
                 arg1val.generate_r1cs_witness_from_packed();
 
-                for (size_t arg2 = 0; arg2 < (1u << w); ++arg2)
+                for arg2 in 0..(1u << w)
                 {
                     pb.val(arg2val.packed) = FieldT(arg2);
                     arg2val.generate_r1cs_witness_from_packed();
@@ -812,7 +812,7 @@ void brute_force_arithmetic_gadget(const size_t w,
 template<typename FieldT>
 void ALU_and_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint<FieldT>(
@@ -838,7 +838,7 @@ void ALU_and_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void ALU_and_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         bool b1 = self.pb.val(self.arg1val.bits[i]) == FieldT::one();
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
@@ -877,7 +877,7 @@ void test_ALU_and_gadget(const size_t w)
 template<typename FieldT>
 void ALU_or_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint<FieldT>(
@@ -903,7 +903,7 @@ void ALU_or_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void ALU_or_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         bool b1 = self.pb.val(self.arg1val.bits[i]) == FieldT::one();
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
@@ -942,7 +942,7 @@ void test_ALU_or_gadget(const size_t w)
 template<typename FieldT>
 void ALU_xor_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         /* a = b ^ c <=> a = b + c - 2*b*c, (2*b)*c = b+c - a */
         self.pb.add_r1cs_constraint(
@@ -969,7 +969,7 @@ void ALU_xor_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void ALU_xor_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         bool b1 = self.pb.val(self.arg1val.bits[i]) == FieldT::one();
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
@@ -1008,7 +1008,7 @@ void test_ALU_xor_gadget(const size_t w)
 template<typename FieldT>
 void ALU_not_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint<FieldT>(
@@ -1034,7 +1034,7 @@ void ALU_not_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void ALU_not_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
 
@@ -1127,7 +1127,7 @@ void ALU_sub_gadget<FieldT>::generate_r1cs_constraints()
     linear_combination<FieldT> a, b, c;
 
     a.add_term(0, 1);
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         twoi = twoi + twoi;
     }
@@ -1155,7 +1155,7 @@ template<typename FieldT>
 void ALU_sub_gadget<FieldT>::generate_r1cs_witness()
 {
     FieldT twoi = FieldT::one();
-    for (size_t i = 0; i < self.pb.ap.w; ++i)
+    for i in 0..self.pb.ap.w
     {
         twoi = twoi + twoi;
     }
@@ -1754,7 +1754,7 @@ void ALU_smul_gadget<FieldT>::generate_r1cs_witness()
     pack_top->generate_r1cs_witness_from_bits();
     size_t topval = self.pb.val(top).as_ulong();
 
-    if (topval == 0)
+    if topval == 0
     {
         self.pb.val(is_top_empty) = FieldT::one();
         self.pb.val(is_top_empty_aux) = FieldT::zero();
@@ -1765,7 +1765,7 @@ void ALU_smul_gadget<FieldT>::generate_r1cs_witness()
         self.pb.val(is_top_empty_aux) = self.pb.val(top).inverse();
     }
 
-    if (topval == ((1ul<<(self.pb.ap.w+1))-1))
+    if topval == ((1ul<<(self.pb.ap.w+1))-1)
     {
         self.pb.val(is_top_full) = FieldT::one();
         self.pb.val(is_top_full_aux) = FieldT::zero();
@@ -1863,7 +1863,7 @@ void ALU_divmod_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void ALU_divmod_gadget<FieldT>::generate_r1cs_witness()
 {
-    if (self.pb.val(self.arg2val.packed) == FieldT::zero())
+    if self.pb.val(self.arg2val.packed) == FieldT::zero()
     {
         self.pb.val(B_inv) = FieldT::zero();
         self.pb.val(B_nonzero) = FieldT::zero();
@@ -1979,10 +1979,10 @@ void ALU_shr_shl_gadget<FieldT>::generate_r1cs_constraints()
     /*
       do logw iterations of barrel shifts
     */
-    for (size_t i = 0; i < logw; ++i)
+    for i in 0..logw
     {
         /* assert that shifted out part is bits */
-        for (size_t j = 0; j < 1ul<<i; ++j)
+        for j in 0..1ul<<i
         {
             generate_boolean_r1cs_constraint<FieldT>(self.pb, shifted_out_bits[i][j], FMT(self.annotation_prefix, " shifted_out_bits_%zu_{}", i, j));
         }
@@ -2000,7 +2000,7 @@ void ALU_shr_shl_gadget<FieldT>::generate_r1cs_constraints()
         linear_combination<FieldT> a, b, c;
 
         a.add_term(barrel_right_internal[i+1], (FieldT(2)^(i+1)) - FieldT::one());
-        for (size_t j = 0; j < 1ul<<i; ++j)
+        for j in 0..1ul<<i
         {
             a.add_term(shifted_out_bits[i][j], (FieldT(2)^j));
         }
@@ -2084,7 +2084,7 @@ void ALU_shr_shl_gadget<FieldT>::generate_r1cs_witness()
       (shfited_result) * (1-need_to_shift)
     */
 
-    for (size_t i = 0; i < logw; ++i)
+    for i in 0..logw
     {
         self.pb.val(barrel_right_internal[i+1]) =
             (self.pb.val(self.arg2val.bits[i]) == FieldT::zero()) ? self.pb.val(barrel_right_internal[i]) :

@@ -10,8 +10,8 @@ use  <cstdio>
 use  <cstring>
 use  <vector>
 
-use ffec::algebra::curves::mnt/mnt6/mnt6_pp;
-use ffec::algebra::fields::field_utils;
+use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
+use ffec::algebra::field_utils::field_utils;
 use ffec::common::profiling;
 use ffec::common::utils;
 
@@ -41,7 +41,7 @@ void test_qap(const size_t qap_degree, const size_t num_inputs, const bool binar
 
     ffec::enter_block("Generate constraint system and assignment");
     r1cs_example<FieldT> example;
-    if (binary_input)
+    if binary_input
     {
         example = generate_r1cs_example_with_binary_input<FieldT>(num_constraints, num_inputs);
     }

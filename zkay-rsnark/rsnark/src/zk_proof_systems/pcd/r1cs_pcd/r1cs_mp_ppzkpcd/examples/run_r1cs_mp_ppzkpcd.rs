@@ -78,7 +78,7 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
     ffec::enter_block("Generate all messages");
     size_t tree_size = 0;
     size_t nodes_in_layer = 1;
-    for (size_t layer = 0; layer <= depth; ++layer)
+    for layer in 0..=depth
     {
         tree_size += nodes_in_layer;
         nodes_in_layer *= max_arity;
@@ -90,17 +90,17 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
 
     nodes_in_layer = 1;
     size_t node_idx = 0;
-    for (size_t layer = 0; layer <= depth; ++layer)
+    for layer in 0..=depth
     {
         for (size_t id_in_layer = 0; id_in_layer < nodes_in_layer; ++id_in_layer, ++node_idx)
         {
-            if (!test_multi_type)
+            if !test_multi_type
             {
                 tree_types[node_idx] = 1;
             }
             else
             {
-                if (test_same_type_optimization)
+                if test_same_type_optimization
                 {
                     tree_types[node_idx] = 1 + ((depth-layer) & 1);
                 }
@@ -127,9 +127,9 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
 
     ffec::enter_block("Generate compliance predicates");
     std::set<size_t> tally_1_accepted_types, tally_2_accepted_types;
-    if (test_same_type_optimization)
+    if test_same_type_optimization
     {
-        if (!test_multi_type)
+        if !test_multi_type
         {
             /* only tally 1 is going to be used */
             tally_1_accepted_types.insert(1);
@@ -155,7 +155,7 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
     ffec::print_header("Process verification key");
     r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> pvk = r1cs_mp_ppzkpcd_process_vk<PCD_ppT>(keypair.vk);
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<r1cs_mp_ppzkpcd_proving_key<PCD_ppT> >(keypair.pk);
@@ -168,7 +168,7 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
     nodes_in_layer /= max_arity;
     for (long layer = depth; layer >= 0; --layer, nodes_in_layer /= max_arity)
     {
-        for (size_t i = 0; i < nodes_in_layer; ++i)
+        for i in 0..nodes_in_layer
         {
             const size_t cur_idx = (nodes_in_layer - 1) / (max_arity - 1) + i;
 
@@ -180,9 +180,9 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
             std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > > msgs(max_arity, base_msg);
             std::vector<r1cs_mp_ppzkpcd_proof<PCD_ppT> > proofs(max_arity);
 
-            if (!base_case)
+            if !base_case
             {
-                for (size_t i = 0; i < max_arity; ++i)
+                for i in 0..max_arity
                 {
                     msgs[i] = tree_messages[max_arity*cur_idx + i + 1];
                     proofs[i] = tree_proofs[max_arity*cur_idx + i + 1];
@@ -201,7 +201,7 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
             ffec::print_header("R1CS ppzkPCD Prover");
             r1cs_mp_ppzkpcd_proof<PCD_ppT> proof = r1cs_mp_ppzkpcd_prover<PCD_ppT>(keypair.pk, cur_cp.name, tally_primary_input, tally_auxiliary_input, proofs);
 
-            if (test_serialization)
+            if test_serialization
             {
                 ffec::enter_block("Test serialization of proof");
                 proof = ffec::reserialize<r1cs_mp_ppzkpcd_proof<PCD_ppT> >(proof);
@@ -222,7 +222,7 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
             all_accept = all_accept && ans;
 
             print!("\n");
-            for (size_t i = 0; i < msgs.size(); ++i)
+            for i in 0..msgs.size()
             {
                 print!("Message {} was:\n", i);
                 msgs[i]->print();

@@ -15,37 +15,39 @@
 //#ifndef STEP_RADIX2_DOMAIN_HPP_
 // #define STEP_RADIX2_DOMAIN_HPP_
 
-use libfqfft/evaluation_domain/evaluation_domain;
+use crate::evaluation_domain::evaluation_domain;
 
-namespace libfqfft {
+//namespace libfqfft {
 
-template<typename FieldT>
-class step_radix2_domain : public evaluation_domain<FieldT> {
+// 
+pub struct  step_radix2_domain<FieldT>  {
+//: public evaluation_domain<FieldT> 
 
+     big_m:usize,
+     small_m:usize,
+     omega:FieldT,
+     big_omega:FieldT,
+     small_omega:FieldT,
+    m:usize,
+}
 
-    size_t big_m;
-    size_t small_m;
-    FieldT omega;
-    FieldT big_omega;
-    FieldT small_omega;
+//     step_radix2_domain(const usize m);
 
-    step_radix2_domain(const size_t m);
+//     void FFT(a:Vec<FieldT>);
+//     void iFFT(a:Vec<FieldT>);
+//     void cosetFFT(a:Vec<FieldT>, g:&FieldT);
+//     void icosetFFT(a:Vec<FieldT>, g:&FieldT);
+//     Vec<FieldT> evaluate_all_lagrange_polynomials(t:&FieldT);
+//     FieldT get_domain_element(const usize idx);
+//     FieldT compute_vanishing_polynomial(t:&FieldT);
+//     void add_poly_Z(coeff:&FieldT, H:Vec<FieldT>);
+//     void divide_by_Z_on_coset(P:Vec<FieldT>);
 
-    void FFT(std::vector<FieldT> &a);
-    void iFFT(std::vector<FieldT> &a);
-    void cosetFFT(std::vector<FieldT> &a, const FieldT &g);
-    void icosetFFT(std::vector<FieldT> &a, const FieldT &g);
-    std::vector<FieldT> evaluate_all_lagrange_polynomials(const FieldT &t);
-    FieldT get_domain_element(const size_t idx);
-    FieldT compute_vanishing_polynomial(const FieldT &t);
-    void add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H);
-    void divide_by_Z_on_coset(std::vector<FieldT> &P);
+// };
 
-};
+//} // libfqfft
 
-} // libfqfft
-
-use libfqfft/evaluation_domain/domains/step_radix2_domain.tcc;
+// use crate::evaluation_domain::domains::step_radix2_domain.tcc;
 
 //#endif // STEP_RADIX2_DOMAIN_HPP_
 
@@ -64,241 +66,257 @@ use libfqfft/evaluation_domain/domains/step_radix2_domain.tcc;
  *****************************************************************************/
 
 //#ifndef STEP_RADIX2_DOMAIN_TCC_
-
-use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
-
-namespace libfqfft {
-
-template<typename FieldT>
-step_radix2_domain<FieldT>::step_radix2_domain(const size_t m) : evaluation_domain<FieldT>(m)
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+use crate::evaluation_domain::domains::basic_radix2_domain_aux::{_basic_radix2_FFT,_multiply_by_coset,_basic_radix2_evaluate_all_lagrange_polynomials};
+use ffec::common::utils::log2;
+//namespace libfqfft {
+impl<FieldT: std::default::Default+std::cmp::PartialEq+ std::convert::From<usize>+ std::ops::SubAssign + std::ops::BitXor<Output = FieldT>+ std::ops::AddAssign+ std::ops::MulAssign+ std::ops::Add<Output = FieldT>+std::ops::Sub<Output = FieldT>+ num_traits::Zero+ num_traits::One+Clone>  step_radix2_domain<FieldT>
 {
-    if m <= 1) throw InvalidSizeException("step_radix2(): expected m > 1";
 
-    big_m = 1ul<<(libff::log2(m)-1);
-    small_m = m - big_m;
+pub fn new( m:usize) ->eyre::Result<Self>
+{//: evaluation_domain<FieldT>(m)
+    if m <= 1{eyre::bail!("step_radix2(): expected m > 1");}
 
-    if small_m != 1ul<<libff::log2(small_m)
-        throw DomainSizeException("step_radix2(): expected small_m == 1ul<<log2(small_m)");
+    let big_m = 1usize<<(log2(m)-1);
+    let small_m = m - big_m;
 
-    try { omega = libff::get_root_of_unity<FieldT>(1ul<<libff::log2(m)); }
-    catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
+    if small_m != 1usize<<log2(small_m)
+       { eyre::bail!("step_radix2(): expected small_m == 1u64<<log2(small_m)");}
+       let omega = get_root_of_unity_is_same_double::<FieldT>(1usize<<log2(m));
+        let big_omega = FieldT::one();//omega.squared();
+    Ok(Self { 
+        big_m:0,small_m:0,m:0,
+        omega,
+big_omega,
+    small_omega : get_root_of_unity_is_same_double::<FieldT>(small_m),
+        })
+    // catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
     
-    big_omega = omega.squared();
-    small_omega = libff::get_root_of_unity<FieldT>(small_m);
+    
 }
 
-template<typename FieldT>
-void step_radix2_domain<FieldT>::FFT(std::vector<FieldT> &a)
+
+pub fn FFT(&self,a:&mut Vec<FieldT>)->eyre::Result<()>
 {
-    if a.size() != this->m) throw DomainSizeException("step_radix2: expected a.size() == this->m";
+    if a.len() != self.m{eyre::bail!("step_radix2: expected a.len() == self.m");}
 
-    std::vector<FieldT> c(big_m, FieldT::zero());
-    std::vector<FieldT> d(big_m, FieldT::zero());
+    let mut  c=vec![FieldT::zero();self.big_m];
+    let mut  d=vec![FieldT::zero();self.big_m];
 
-    FieldT omega_i = FieldT::one();
-    for i in 0..big_m
+    let mut  omega_i = FieldT::one();
+    for i in 0..self.big_m
     {
-        c[i] = (i < small_m ? a[i] + a[i+big_m] : a[i]);
-        d[i] = omega_i * (i < small_m ? a[i] - a[i+big_m] : a[i]);
-        omega_i *= omega;
+        c[i] = if i < self.small_m  {a[i].clone() + a[i+self.big_m].clone()} else {a[i].clone()};
+        d[i] = omega_i.clone() * (if i < self.small_m { a[i].clone() - a[i+self.big_m].clone()} else  {a[i].clone()});
+        omega_i *= self.omega.clone();
     }
 
-    std::vector<FieldT> e(small_m, FieldT::zero());
-    const size_t compr = 1ul<<(libff::log2(big_m) - libff::log2(small_m));
-    for i in 0..small_m
+    let mut  e=vec![FieldT::zero();self.small_m];
+    let  compr = 1usize<<(log2(self.big_m) - log2(self.small_m));
+    for i in 0..self.small_m
     {
         for j in 0..compr
         {
-            e[i] += d[i + j * small_m];
+            e[i] += d[i + j * self.small_m].clone();
         }
     }
 
-    _basic_radix2_FFT(c, omega.squared());
-    _basic_radix2_FFT(e, libff::get_root_of_unity<FieldT>(small_m));
+    _basic_radix2_FFT(&mut c, &self.omega);//self.omega.squared()
+    let sm:FieldT=get_root_of_unity_is_same_double::<FieldT>(self.small_m);
+    _basic_radix2_FFT(&mut e, &sm);
 
-    for i in 0..big_m
+    for i in 0..self.big_m
     {
-        a[i] = c[i];
+        a[i] = c[i].clone();
     }
 
-    for i in 0..small_m
+    for i in 0..self.small_m
     {
-        a[i+big_m] = e[i];
+        a[i+self.big_m] = e[i].clone();
     }
+    Ok(())
 }
 
-template<typename FieldT>
-void step_radix2_domain<FieldT>::iFFT(std::vector<FieldT> &a)
+
+pub fn iFFT(&self,a:&mut Vec<FieldT>)->eyre::Result<()>
 {
-    if a.size() != this->m) throw DomainSizeException("step_radix2: expected a.size() == this->m";
+    if a.len() != self.m{eyre::bail!("step_radix2: expected a.len() == self.m");}
 
-    std::vector<FieldT> U0(a.begin(), a.begin() + big_m);
-    std::vector<FieldT> U1(a.begin() + big_m, a.end());
+    let mut  U0=a[..self.big_m].to_vec();
+    let mut U1=a[..self.big_m].to_vec();
 
-    _basic_radix2_FFT(U0, omega.squared().inverse());
-    _basic_radix2_FFT(U1, libff::get_root_of_unity<FieldT>(small_m).inverse());
+    // _basic_radix2_FFT(U0, self.omega.squared().inverse());
+    // _basic_radix2_FFT(U1, get_root_of_unity_is_same_double::<FieldT>(self.small_m).inverse());
 
-    const FieldT U0_size_inv = FieldT(big_m).inverse();
-    for i in 0..big_m
+    // let  U0_size_inv = FieldT::from(self.big_m).inverse();
+    for i in 0..self.big_m
     {
-        U0[i] *= U0_size_inv;
+        // U0[i] *= U0_size_inv;
     }
 
-    const FieldT U1_size_inv = FieldT(small_m).inverse();
-    for i in 0..small_m
+    // let  U1_size_inv = FieldT::from(self.small_m).inverse();
+    for i in 0..self.small_m
     {
-        U1[i] *= U1_size_inv;
+        // U1[i] *= U1_size_inv;
     }
 
-    std::vector<FieldT> tmp = U0;
-    FieldT omega_i = FieldT::one();
-    for i in 0..big_m
+   let  mut tmp = U0.clone();
+    let mut  omega_i = FieldT::one();
+    for i in 0..self.big_m
     {
-        tmp[i] *= omega_i;
-        omega_i *= omega;
+        tmp[i] *= omega_i.clone();
+        omega_i *= self.omega.clone();
     }
 
     // save A_suffix
-    for i in small_m..big_m
+    for i in self.small_m..self.big_m
     {
-        a[i] = U0[i];
+        a[i] = U0[i].clone();
     }
 
-    const size_t compr = 1ul<<(libff::log2(big_m) - libff::log2(small_m));
-    for i in 0..small_m
+    let  compr = 1usize<<(log2(self.big_m) - log2(self.small_m));
+    for i in 0..self.small_m
     {
         for j in 1..compr
         {
-            U1[i] -= tmp[i + j * small_m];
+            U1[i] -= tmp[i + j * self.small_m].clone();
         }
     }
 
-    const FieldT omega_inv = omega.inverse();
-    FieldT omega_inv_i = FieldT::one();
-    for i in 0..small_m
+    // let  omega_inv = self.omega.inverse();
+    let mut  omega_inv_i = FieldT::one();
+    for i in 0..self.small_m
     {
-        U1[i] *= omega_inv_i;
-        omega_inv_i *= omega_inv;
+        U1[i] *= omega_inv_i.clone();
+        // omega_inv_i *= omega_inv.clone();
     }
 
     // compute A_prefix
-    const FieldT over_two = FieldT(2).inverse();
-    for i in 0..small_m
+    // let  over_two = FieldT::from(2).inverse();
+    for i in 0..self.small_m
     {
-        a[i] = (U0[i]+U1[i]) * over_two;
+        // a[i] = (U0[i]+U1[i]) * over_two;
     }
 
     // compute B2
-    for i in 0..small_m
+    for i in 0..self.small_m
     {
-        a[big_m + i] = (U0[i]-U1[i]) * over_two;
+        // a[self.big_m + i] = (U0[i]-U1[i]) * over_two;
     }
+    Ok(())
 }
 
-template<typename FieldT>
-void step_radix2_domain<FieldT>::cosetFFT(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn cosetFFT(& self,a:&mut Vec<FieldT>, g:&FieldT)->eyre::Result<()>
 {
     _multiply_by_coset(a, g);
-    FFT(a);
+    self.FFT(a)
 }
 
-template<typename FieldT>
-void step_radix2_domain<FieldT>::icosetFFT(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn icosetFFT(&self,a:&mut Vec<FieldT>, g:&FieldT)->eyre::Result<()>
 {
-    iFFT(a);
-    _multiply_by_coset(a, g.inverse());
+    self.iFFT(a);
+    // _multiply_by_coset(a, g.inverse());
+    Ok(())
 }
 
-template<typename FieldT>
-std::vector<FieldT> step_radix2_domain<FieldT>::evaluate_all_lagrange_polynomials(const FieldT &t)
+
+ pub fn evaluate_all_lagrange_polynomials(&self,t:&FieldT)->Vec<FieldT>
 {
-    std::vector<FieldT> inner_big = _basic_radix2_evaluate_all_lagrange_polynomials(big_m, t);
-    std::vector<FieldT> inner_small = _basic_radix2_evaluate_all_lagrange_polynomials(small_m, t * omega.inverse());
+    let  inner_big = _basic_radix2_evaluate_all_lagrange_polynomials(self.big_m, t).unwrap();
+    // let inner_small = _basic_radix2_evaluate_all_lagrange_polynomials(self.small_m, t * self.omega.inverse());
 
-    std::vector<FieldT> result(this->m, FieldT::zero());
-
-    const FieldT L0 = (t^small_m)-(omega^small_m);
-    const FieldT omega_to_small_m = omega^small_m;
-    const FieldT big_omega_to_small_m = big_omega ^ small_m;
-    FieldT elt = FieldT::one();
-    for i in 0..big_m
+    let mut  result=vec![FieldT::zero();self.m];
+    let tt:FieldT=t.clone();
+    let sm:FieldT=FieldT::from(self.small_m);
+    let  L0 = (tt.clone()^sm.clone())-(self.omega.clone()^sm.clone());
+    let  omega_to_small_m = self.omega.clone()^sm.clone();
+    let  big_omega_to_small_m = self.big_omega.clone() ^ sm.clone();
+    let  mut elt = FieldT::one();
+    for i in 0..self.big_m
     {
-        result[i] = inner_big[i] * L0 * (elt - omega_to_small_m).inverse();
-        elt *= big_omega_to_small_m;
+        // result[i] = inner_big[i] * L0 * (elt - omega_to_small_m).inverse();
+        elt *= big_omega_to_small_m.clone();
     }
 
-    const FieldT L1 = ((t^big_m)-FieldT::one()) * ((omega^big_m) - FieldT::one()).inverse();
+    // let  L1 = ((t^self.big_m)-FieldT::one()) * ((self.omega^self.big_m) - FieldT::one()).inverse();
 
-    for i in 0..small_m
+    for i in 0..self.small_m
     {
-        result[big_m + i] = L1 * inner_small[i];
+        // result[self.big_m + i] = L1 * inner_small[i];
     }
 
     return result;
 }
 
-template<typename FieldT>
-FieldT step_radix2_domain<FieldT>::get_domain_element(const size_t idx)
+
+ pub fn get_domain_element(&self,idx:usize)->FieldT
 {
-    if idx < big_m
+    if idx < self.big_m
     {
-        return big_omega^idx;
+        return self.big_omega.clone()^idx.into();
     }
     else
     {
-        return omega * (small_omega^(idx-big_m));
+        return self.omega.clone() * (self.small_omega.clone()^(idx-self.big_m).into());
     }
 }
 
-template<typename FieldT>
-FieldT step_radix2_domain<FieldT>::compute_vanishing_polynomial(const FieldT &t)
+
+ pub fn compute_vanishing_polynomial(&self,t:&FieldT)->FieldT
 {
-    return ((t^big_m) - FieldT::one()) * ((t^small_m) - (omega^small_m));
+    let tt:FieldT=t.clone();
+    let bm:FieldT=FieldT::from(self.big_m);
+    let sm:FieldT=FieldT::from(self.small_m);
+    return ((tt.clone()^bm.clone()) - FieldT::one()) * ((tt.clone()^sm.clone()) - (self.omega.clone()^sm.clone()));
 }
 
-template<typename FieldT>
-void step_radix2_domain<FieldT>::add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H)
+
+pub fn add_poly_Z(&self,coeff:&FieldT, H:&mut Vec<FieldT>)->eyre::Result<()>
 {
-    if H.size() != this->m+1) throw DomainSizeException("step_radix2: expected H.size() == this->m+1";
+    if H.len() != self.m+1{eyre::bail!("step_radix2: expected H.len() == self.m+1");}
 
-    const FieldT omega_to_small_m = omega^small_m;
-
-    H[this->m] += coeff;
-    H[big_m] -= coeff * omega_to_small_m;
-    H[small_m] -= coeff;
-    H[0] += coeff * omega_to_small_m;
+    let  omega_to_small_m = self.omega.clone()^FieldT::from(self.small_m);
+    let coeff_clone:FieldT=coeff.clone();
+    H[self.m] += coeff_clone.clone();
+    H[self.big_m] -= coeff_clone.clone() * omega_to_small_m.clone();
+    H[self.small_m] -= coeff_clone.clone();
+    H[0] += coeff_clone.clone() * omega_to_small_m;
+    Ok(())
 }
 
-template<typename FieldT>
-void step_radix2_domain<FieldT>::divide_by_Z_on_coset(std::vector<FieldT> &P)
+
+pub fn divide_by_Z_on_coset(&self,P:Vec<FieldT>)
 {
     // (c^{2^k}-1) * (c^{2^r} * w^{2^{r+1}*i) - w^{2^r})
-    const FieldT coset = FieldT::multiplicative_generator;
+    let  coset = FieldT::one();//multiplicative_generator;
+    let sm:FieldT=FieldT::from(self.small_m);
+    let bm:FieldT=FieldT::from(self.big_m);
+    let  Z0 = (coset.clone()^bm.clone()) - FieldT::one();
+    let  coset_to_small_m_times_Z0 = (coset.clone()^sm.clone()) * Z0.clone();
+    let  omega_to_small_m_times_Z0 = (self.omega.clone()^sm.clone()) * Z0.clone();
+    let  omega_to_2small_m = self.omega.clone()^FieldT::from(2*self.small_m);
+    let  mut elt = FieldT::one();
 
-    const FieldT Z0 = (coset^big_m) - FieldT::one();
-    const FieldT coset_to_small_m_times_Z0 = (coset^small_m) * Z0;
-    const FieldT omega_to_small_m_times_Z0 = (omega^small_m) * Z0;
-    const FieldT omega_to_2small_m = omega^(2*small_m);
-    FieldT elt = FieldT::one();
-
-    for i in 0..big_m
+    for i in 0..self.big_m
     {
-        P[i] *= (coset_to_small_m_times_Z0 * elt - omega_to_small_m_times_Z0).inverse();
-        elt *= omega_to_2small_m;
+        // P[i] *= (coset_to_small_m_times_Z0 * elt - omega_to_small_m_times_Z0).inverse();
+        elt *= omega_to_2small_m.clone();
     }
 
     // (c^{2^k}*w^{2^k}-1) * (c^{2^k} * w^{2^r} - w^{2^r})
 
-    const FieldT Z1 = ((((coset*omega)^big_m) - FieldT::one()) * (((coset * omega)^small_m) - (omega^small_m)));
-    const FieldT Z1_inverse = Z1.inverse();
+    let  Z1 = ((((coset.clone()*self.omega.clone())^bm.clone()) - FieldT::one()) * (((coset.clone() * self.omega.clone())^sm.clone()) - (self.omega.clone()^sm.clone())));
+    // let  Z1_inverse = Z1.inverse();
 
-    for i in 0..small_m
+    for i in 0..self.small_m
     {
-        P[big_m + i] *= Z1_inverse;
+        // P[self.big_m + i] *= Z1_inverse;
     }
 
 }
-
-} // libfqfft
+}
+//} // libfqfft
 
 //#endif // STEP_RADIX2_DOMAIN_TCC_

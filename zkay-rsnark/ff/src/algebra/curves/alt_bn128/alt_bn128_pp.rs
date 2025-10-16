@@ -7,11 +7,11 @@
 
 //#ifndef ALT_BN128_PP_HPP_
 // #define ALT_BN128_PP_HPP_
-use libff/algebra/curves/alt_bn128/alt_bn128_g1;
-use libff/algebra/curves/alt_bn128/alt_bn128_g2;
-use libff/algebra/curves/alt_bn128/alt_bn128_init;
-use libff/algebra/curves/alt_bn128/alt_bn128_pairing;
-use libff/algebra/curves/public_params;
+use crate::algebra::curves::alt_bn128::alt_bn128_g1;
+use crate::algebra::curves::alt_bn128::alt_bn128_g2;
+use crate::algebra::curves::alt_bn128::alt_bn128_init;
+use crate::algebra::curves::alt_bn128::alt_bn128_pairing;
+use crate::algebra::curves::public_params;
 
 // namespace libff {
 
@@ -55,7 +55,7 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/alt_bn128/alt_bn128_pp;
+use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 
 // namespace libff {
 

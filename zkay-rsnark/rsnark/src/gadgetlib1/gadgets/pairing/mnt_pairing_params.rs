@@ -16,14 +16,14 @@
 //#ifndef MNT_PAIRING_PARAMS_HPP_
 // #define MNT_PAIRING_PARAMS_HPP_
 
-use ffec::algebra::curves::mnt/mnt4/mnt4_pp;
-use ffec::algebra::curves::mnt/mnt6/mnt6_pp;
+use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
+use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
-use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp4_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp6_gadgets;
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp4_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
 
 
 

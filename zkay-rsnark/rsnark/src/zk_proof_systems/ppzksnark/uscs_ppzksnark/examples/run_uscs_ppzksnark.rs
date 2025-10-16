@@ -15,7 +15,7 @@
 
 use ffec::algebra::curves::public_params;
 
-use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
 
 
 
@@ -85,7 +85,7 @@ bool run_uscs_ppzksnark(const uscs_example<ffec::Fr<ppT> > &example,
     ffec::print_header("Preprocess verification key");
     uscs_ppzksnark_processed_verification_key<ppT> pvk = uscs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<uscs_ppzksnark_proving_key<ppT> >(keypair.pk);
@@ -98,7 +98,7 @@ bool run_uscs_ppzksnark(const uscs_example<ffec::Fr<ppT> > &example,
     uscs_ppzksnark_proof<ppT> proof = uscs_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of proof");
         proof = ffec::reserialize<uscs_ppzksnark_proof<ppT> >(proof);

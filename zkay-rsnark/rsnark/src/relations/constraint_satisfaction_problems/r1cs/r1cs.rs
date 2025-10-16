@@ -17,13 +17,13 @@
 //#ifndef R1CS_HPP_
 // #define R1CS_HPP_
 
-use  <cstdlib>
-use  <iostream>
-use  <map>
-use  <string>
-use  <vector>
+// use  <cstdlib>
+// use  <iostream>
+// use  <map>
+// use  <string>
+// use  <vector>
 
-use libsnark/relations/variable;
+use crate::relations::variable;
 
 
 
@@ -40,23 +40,24 @@ use libsnark/relations/variable;
  *
  * A R1CS constraint is used to construct a R1CS constraint system (see below).
  */
-template<typename FieldT>
-class r1cs_constraint {
+// template<typename FieldT>
+pub struct r1cs_constraint<FieldT> {
 
 
     linear_combination<FieldT> a, b, c;
+}
 
-    r1cs_constraint() {};
-    r1cs_constraint(a:&linear_combination<FieldT>
-                    b:&linear_combination<FieldT>
-                    &c:linear_combination<FieldT>);
+//     r1cs_constraint() {};
+//     r1cs_constraint(a:&linear_combination<FieldT>
+//                     b:&linear_combination<FieldT>
+//                     &c:linear_combination<FieldT>);
 
-    r1cs_constraint(A:&std::initializer_list<linear_combination<FieldT> >
-                    B:&std::initializer_list<linear_combination<FieldT> >
-                    &C:std::initializer_list<linear_combination<FieldT> >);
+//     r1cs_constraint(A:&std::initializer_list<linear_combination<FieldT> >
+//                     B:&std::initializer_list<linear_combination<FieldT> >
+//                     &C:std::initializer_list<linear_combination<FieldT> >);
 
    
-};
+// };
 
 /************************* R1CS variable assignment **************************/
 
@@ -125,7 +126,7 @@ class r1cs_constraint_system {
 
 
 
-use libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs;
+use crate::relations::constraint_satisfaction_problems/r1cs/r1cs;
 
 //#endif // R1CS_HPP_
 
@@ -173,15 +174,15 @@ r1cs_constraint<FieldT>::r1cs_constraint(A:&std::initializer_list<linear_combina
                                          B:&std::initializer_list<linear_combination<FieldT> >
                                          &C:std::initializer_list<linear_combination<FieldT> >)
 {
-    for (auto lc_A : A)
+    for lc_A in &A
     {
         a.terms.insert(a.terms.end(), lc_A.terms.begin(), lc_A.terms.end());
     }
-    for (auto lc_B : B)
+    for lc_B in &B
     {
         b.terms.insert(b.terms.end(), lc_B.terms.begin(), lc_B.terms.end());
     }
-    for (auto lc_C : C)
+    for lc_C in &C
     {
         c.terms.insert(c.terms.end(), lc_C.terms.begin(), lc_C.terms.end());
     }
@@ -465,13 +466,13 @@ void r1cs_constraint_system<FieldT>::report_linear_constraint_statistics() const
     {
         auto &constr = constraints[i];
         bool a_is_const = true;
-        for (auto &t : constr.a.terms)
+        for t in &constr.a.terms
         {
             a_is_const = a_is_const && (t.index == 0);
         }
 
         bool b_is_const = true;
-        for (auto &t : constr.b.terms)
+        for t in &constr.b.terms
         {
             b_is_const = b_is_const && (t.index == 0);
         }

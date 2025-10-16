@@ -7,8 +7,8 @@
 
 //#ifndef ALT_BN128_INIT_HPP_
 // #define ALT_BN128_INIT_HPP_
-use libff/algebra/curves/public_params;
-use libff/algebra/curves/alt_bn128/alt_bn128_fields;
+use crate::algebra::curves::public_params;
+use crate::algebra::curves::alt_bn128::alt_bn128_fields;
 
 // namespace libff {
 
@@ -42,9 +42,9 @@ class alt_bn128_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/alt_bn128/alt_bn128_g1;
-use libff/algebra/curves/alt_bn128/alt_bn128_g2;
-use libff/algebra/curves/alt_bn128/alt_bn128_init;
+use crate::algebra::curves::alt_bn128::alt_bn128_g1;
+use crate::algebra::curves::alt_bn128::alt_bn128_g2;
+use crate::algebra::curves::alt_bn128::alt_bn128_init;
 
 // namespace libff {
 

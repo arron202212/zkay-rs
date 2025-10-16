@@ -16,7 +16,7 @@
 //#ifndef RAM_TO_R1CS_HPP_
 // #define RAM_TO_R1CS_HPP_
 
-use libsnark/reductions/ram_to_r1cs/gadgets/ram_universal_gadget;
+ram_universal_gadget;
 
 
 
@@ -170,7 +170,7 @@ r1cs_primary_input<ram_base_field<ramT> > ram_to_r1cs<ramT>::primary_input_map(c
 
     std::set<size_t> bound_input_locations;
 
-    for (auto it : boot_trace.get_all_trace_entries())
+    for it in &boot_trace.get_all_trace_entries()
     {
         const size_t input_pos = it.first;
         const address_and_value av = it.second;

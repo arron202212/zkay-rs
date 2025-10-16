@@ -12,7 +12,7 @@
 //#ifndef USCS_EXAMPLES_HPP_
 // #define USCS_EXAMPLES_HPP_
 
-use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
+use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 
 
@@ -67,7 +67,7 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
 
 
 
-use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
 
 //#endif // USCS_EXAMPLES_HPP_
 /** @file
@@ -107,12 +107,12 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
     cs.auxiliary_input_size = num_constraints - num_inputs;
 
     uscs_variable_assignment<FieldT> full_variable_assignment;
-    for (size_t i = 0; i < num_constraints; ++i)
+    for i in 0..num_constraints
     {
         full_variable_assignment.push(FieldT(std::rand()));
     }
 
-    for (size_t i = 0; i < num_constraints; ++i)
+    for i in 0..num_constraints
     {
         size_t x, y, z;
 
@@ -165,13 +165,13 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
     cs.auxiliary_input_size = num_constraints;
 
     uscs_variable_assignment<FieldT> full_variable_assignment;
-    for (size_t i = 0; i < num_inputs; ++i)
+    for i in 0..num_inputs
     {
         full_variable_assignment.push_back(FieldT(std::rand() % 2));
     }
 
     size_t lastvar = num_inputs-1;
-    for (size_t i = 0; i < num_constraints; ++i)
+    for i in 0..num_constraints
     {
         lastvar+=1;
 

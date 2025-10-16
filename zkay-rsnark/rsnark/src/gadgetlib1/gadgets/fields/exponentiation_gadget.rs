@@ -18,7 +18,7 @@ use  <vector>
 use ffec::algebra::fields::bigint;
  use ffec::algebra::scalar_multiplication::wnaf;
 
-use libsnark/gadgetlib1/gadget;
+use crate::gadgetlib1::gadget;
 
 
 
@@ -61,7 +61,7 @@ void test_exponentiation_gadget(const ffec::bigint<m> &power, const std::string 
 
 
 
-use libsnark/gadgetlib1/gadgets/fields/exponentiation_gadget;
+use crate::gadgetlib1::gadgets/fields/exponentiation_gadget;
 
 //#endif // EXPONENTIATION_GADGET_HPP_
 /** @file
@@ -98,19 +98,19 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
     dbl_count = 0;
 
     bool found_nonzero = false;
-    for (long i = NAF.size() - 1; i >= 0; --i)
+    for i in ( 0..=NAF.size() - 1).rev()
     {
-        if (found_nonzero)
+        if found_nonzero
         {
             dbl_count+=1;
             intermed_count+=1;
         }
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             found_nonzero = true;
 
-            if (NAF[i] > 0)
+            if NAF[i] > 0
             {
                 add_count+=1;
                 intermed_count+=1;
@@ -125,7 +125,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
 
     intermediate.resize(intermed_count);
     intermediate[0].reset(new Fpk_variableT<FpkT>(pb, FpkT::one(), FMT(annotation_prefix, " intermediate_0")));
-    for (size_t i = 1; i < intermed_count; ++i)
+    for i in 1..intermed_count
     {
         intermediate[i].reset(new Fpk_variableT<FpkT>(pb, FMT(annotation_prefix, " intermediate_{}", i)));
     }
@@ -137,9 +137,9 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
 
     size_t dbl_id = 0, add_id = 0, sub_id = 0, intermed_id = 0;
 
-    for (long i = NAF.size() - 1; i >= 0; --i)
+    for i in ( 0..=NAF.size() - 1).rev()
     {
-        if (found_nonzero)
+        if found_nonzero
         {
             doubling_steps[dbl_id].reset(new Fpk_sqr_gadgetT<FpkT>(pb,
                                                                    *intermediate[intermed_id],
@@ -149,11 +149,11 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
             dbl_id+=1;
         }
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             found_nonzero = true;
 
-            if (NAF[i] > 0)
+            if NAF[i] > 0
             {
                 /* next = cur * elt */
                 addition_steps[add_id].reset(new Fpk_mul_gadgetT<FpkT>(pb,
@@ -182,17 +182,17 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
 template<typename FpkT, template<class> class Fpk_variableT, template<class> class Fpk_mul_gadgetT, template<class> class Fpk_sqr_gadgetT, mp_size_t m>
 void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < add_count; ++i)
+    for i in 0..add_count
     {
         addition_steps[i]->generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < sub_count; ++i)
+    for i in 0..sub_count
     {
         subtraction_steps[i]->generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < dbl_count; ++i)
+    for i in 0..dbl_count
     {
         doubling_steps[i]->generate_r1cs_constraints();
     }
@@ -206,20 +206,20 @@ void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT
     bool found_nonzero = false;
     size_t dbl_id = 0, add_id = 0, sub_id = 0, intermed_id = 0;
 
-    for (long i = NAF.size() - 1; i >= 0; --i)
+    for i in ( 0..=NAF.size() - 1).rev()
     {
-        if (found_nonzero)
+        if found_nonzero
         {
             doubling_steps[dbl_id]->generate_r1cs_witness();
             intermed_id+=1;
             dbl_id+=1;
         }
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             found_nonzero = true;
 
-            if (NAF[i] > 0)
+            if NAF[i] > 0
             {
                 addition_steps[add_id]->generate_r1cs_witness();
                 intermed_id+=1;
@@ -253,7 +253,7 @@ void test_exponentiation_gadget(const ffec::bigint<m> &power, const std::string 
     exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m> exp_gadget(pb, x, power, x_to_power, "exp_gadget");
     exp_gadget.generate_r1cs_constraints();
 
-    for (size_t i = 0; i < 10; ++i)
+    for i in 0..10
     {
         const FpkT x_val = FpkT::random_element();
         x.generate_r1cs_witness(x_val);

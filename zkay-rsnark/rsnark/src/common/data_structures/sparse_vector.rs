@@ -67,7 +67,7 @@ domain_size_:    usize,
 
 
 
-// use libsnark::common::data_structures::sparse_vector;
+// use crate::common::data_structures::sparse_vector;
 
 // //#endif // SPARSE_VECTOR_HPP_
 
@@ -101,7 +101,7 @@ impl<T> sparse_vector<T>{
 
 pub fn new(v:Vec<T>) ->Self
 {   
-    let domain_size_=v.len();
+    let domain_size_=self.len();
     Self{values:v, domain_size_,indices:(0..domain_size_).collect()}
 }
 
@@ -130,7 +130,7 @@ pub fn
 }
 
 pub fn 
- sparse_vector<T>::empty() ->bool
+ empty() ->bool
 {
     return indices.empty();
 }
@@ -153,8 +153,7 @@ pub fn
     return indices.size() * (sizeof(size_t) * 8 + T::size_in_bits());
 }
 
-pub fn accumulate<FieldT>(it_begin:& std::vector<FieldT>::const_iterator
-                                                             it_end:& std::vector<FieldT>::const_iterator
+pub fn accumulate<FieldT>(it:&[FieldT],
                                                              offset:size_t) ->(T, sparse_vector<T>)
 {
 // // #ifdef MULTICORE
@@ -164,7 +163,7 @@ pub fn accumulate<FieldT>(it_begin:& std::vector<FieldT>::const_iterator
 // //#endif
 
     let mut accumulated_value = T::zero();
-    let  resulting_vector=sparse_vector<T>::new();
+    let  resulting_vector=sparse_vector::<T>::new();
     resulting_vector.domain_size_ = domain_size_;
 
     let  range_len = it_end - it_begin;
@@ -389,16 +388,16 @@ impl<T> PartialEq<&Vec<T>> for sparse_vector<T>{
 // }
 
 
-
+ use std::fmt;
 
 impl<ppT> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n{}\n{}{}\n{}",  
-v.domain_size_ ,
-v.indices.size(),
-v.indices.iter().map(|i|format!("{i}\n")).collect::<String>(),
-v.values.size(),
-v.values.iter().map(|i|format!("{i}{OUTPUT_NEWLINE}")).collect::<String>(),
+self.domain_size_ ,
+self.indices.size(),
+self.indices.iter().map(|i|format!("{i}\n")).collect::<String>(),
+self.values.size(),
+self.values.iter().map(|i|format!("{i}{OUTPUT_NEWLINE}")).collect::<String>(),
 )
     }
 }
@@ -407,30 +406,30 @@ v.values.iter().map(|i|format!("{i}{OUTPUT_NEWLINE}")).collect::<String>(),
 // pub fn 
 // std::istream& operator>>(std::istream& in, sparse_vector<T> &v)
 // {
-//     in >> v.domain_size_;
+//     in >> self.domain_size_;
 //     ffec::consume_newline(in);
 
 //     size_t s;
 //     in >> s;
 //     ffec::consume_newline(in);
-//     v.indices.resize(s);
+//     self.indices.resize(s);
 //     for i in 0..s
 //     {
-//         in >> v.indices[i];
+//         in >> self.indices[i];
 //         ffec::consume_newline(in);
 //     }
 
-//     v.values.clear();
+//     self.values.clear();
 //     in >> s;
 //     ffec::consume_newline(in);
-//     v.values.reserve(s);
+//     self.values.reserve(s);
 
 //     for i in 0..s
 //     {
 //         T t;
 //         in >> t;
 //         ffec::consume_OUTPUT_NEWLINE(in);
-//         v.values.push(t);
+//         self.values.push(t);
 //     }
 
 //     return in;

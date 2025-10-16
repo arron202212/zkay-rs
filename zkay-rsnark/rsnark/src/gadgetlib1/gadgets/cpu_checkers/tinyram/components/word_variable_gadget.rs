@@ -12,7 +12,7 @@
 //#ifndef WORD_VARIABLE_GADGET_HPP_
 // #define WORD_VARIABLE_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
 
 
 

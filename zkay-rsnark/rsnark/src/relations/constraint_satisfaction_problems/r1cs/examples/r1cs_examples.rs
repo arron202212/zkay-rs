@@ -68,7 +68,7 @@ r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_co
 
 
 
-use libsnark/relations/constraint_satisfaction_problems/r1cs/examples/r1cs_examples;
+use crate::relations::constraint_satisfaction_problems/r1cs/examples/r1cs_examples;
 
 //#endif // R1CS_EXAMPLES_HPP_
 /** @file
@@ -112,11 +112,11 @@ r1cs_example<FieldT> generate_r1cs_example_with_field_input(const size_t num_con
     full_variable_assignment.push_back(a);
     full_variable_assignment.push_back(b);
 
-    for (size_t i = 0; i < num_constraints-1; ++i)
+    for i in 0..num_constraints-1
     {
         linear_combination<FieldT> A, B, C;
 
-        if (i % 2)
+        if i % 2
         {
             // a * b = c
             A.add_term(i+1, 1);
@@ -143,7 +143,7 @@ r1cs_example<FieldT> generate_r1cs_example_with_field_input(const size_t num_con
 
     linear_combination<FieldT> A, B, C;
     FieldT fin = FieldT::zero();
-    for (size_t i = 1; i < cs.num_variables(); ++i)
+    for i in 1..cs.num_variables()
     {
         A.add_term(i, 1);
         B.add_term(i, 1);
@@ -182,13 +182,13 @@ r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_co
     cs.auxiliary_input_size = num_constraints; /* we will add one auxiliary variable per constraint */
 
     r1cs_variable_assignment<FieldT> full_variable_assignment;
-    for (size_t i = 0; i < num_inputs; ++i)
+    for i in 0..num_inputs
     {
         full_variable_assignment.push_back(FieldT(std::rand() % 2));
     }
 
     size_t lastvar = num_inputs-1;
-    for (size_t i = 0; i < num_constraints; ++i)
+    for i in 0..num_constraints
     {
         lastvar+=1;
         const size_t u = (i == 0 ? std::rand() % num_inputs : std::rand() % i);
@@ -201,7 +201,7 @@ r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_co
         linear_combination<FieldT> A, B, C;
         A.add_term(u+1, 2);
         B.add_term(v+1, 1);
-        if (u == v)
+        if u == v
         {
             C.add_term(u+1, 2);
         }

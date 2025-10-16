@@ -8,10 +8,10 @@ use boost/program_options;
 use ffec::common::profiling;
 
 use crate::common::default_types::ram_zksnark_pp;
-use libsnark/relations/ram_computations/memory/examples/memory_contents_examples;
-use libsnark/relations/ram_computations/rams/examples/ram_examples;
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
-use libsnark/zk_proof_systems/zksnark/ram_zksnark/examples/run_ram_zksnark;
+use crate::relations::ram_computations/memory/examples/memory_contents_examples;
+use crate::relations::ram_computations/rams/examples/ram_examples;
+use crate::relations::ram_computations::rams::tinyram::tinyram_params;
+use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;
 use libsnark/zk_proof_systems/zksnark/ram_zksnark/ram_zksnark;
 
 
@@ -49,11 +49,11 @@ template<typename ppT>
 void print_ram_zksnark_verifier_profiling()
 {
     ffec::inhibit_profiling_info = true;
-    for (size_t w : { 16, 32 })
+    for w in &{ 16, 32 }
     {
         const size_t k = 16;
 
-        for (size_t input_size : { 0, 10, 100 })
+        for input_size in &{ 0, 10, 100 }
         {
             for (size_t program_size = 10; program_size <= 10000; program_size *= 10)
             {
@@ -117,13 +117,13 @@ bool process_command_line(const int argc, const char** argv,
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
 
-        if (vm.count("v"))
+        if vm.count("v")
         {
             ffec::print_compilation_info();
             exit(0);
         }
 
-        if (vm.count("help"))
+        if vm.count("help")
         {
             std::cout << desc << "\n";
             return false;
@@ -132,7 +132,7 @@ bool process_command_line(const int argc, const char** argv,
         profile_gp = vm.count("profile_gp");
         profile_v = vm.count("profile_v");
 
-        if (!(vm.count("profile_gp") ^ vm.count("profile_v")))
+        if !(vm.count("profile_gp") ^ vm.count("profile_v"))
         {
             std::cout << "Must choose between profiling generator/prover and profiling verifier (see --help)\n";
             return false;
@@ -160,19 +160,19 @@ int main(int argc, const char* argv[])
     bool profile_v;
     size_t l;
 
-    if (!process_command_line(argc, argv, profile_gp, w, k, profile_v, l))
+    if !process_command_line(argc, argv, profile_gp, w, k, profile_v, l)
     {
         return 1;
     }
 
     tinyram_architecture_params ap(w, k);
 
-    if (profile_gp)
+    if profile_gp
     {
         profile_ram_zksnark<default_ram_zksnark_pp>(ap, 100, 100, 10); // w, k, l, n, T
     }
 
-    if (profile_v)
+    if profile_v
     {
         profile_ram_zksnark_verifier<default_ram_zksnark_pp>(ap, l/2, l/2);
     }

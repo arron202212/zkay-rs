@@ -14,23 +14,24 @@
 // #define R1CS_PPZKADSNARK_PP_HPP_
 
 use crate::common::default_types::r1cs_ppzksnark_pp;
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/prf/aes_ctr_prf;
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/signature/ed25519_signature;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::prf::aes_ctr_prf;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::signature::ed25519_signature;
 
 
 
-	class default_r1cs_ppzkadsnark_pp {
-	public:
-		type default_r1cs_ppzksnark_pp snark_pp;
-		type ed25519_skT skT;
-		type ed25519_vkT vkT;
-    	type ed25519_sigT sigT;
-    	type aesPrfKeyT prfKeyT;
+	pub struct default_r1cs_ppzkadsnark_pp;
+    //  {
+	// public:
+	// 	type default_r1cs_ppzksnark_pp snark_pp;
+	// 	type ed25519_skT skT;
+	// 	type ed25519_vkT vkT;
+    // 	type ed25519_sigT sigT;
+    // 	type aesPrfKeyT prfKeyT;
 
-    	static void init_public_params();
-	};
+    // 	static void init_public_params();
+	// };
 
-};  // libsnark
+// };  // libsnark
 
 //#endif // R1CS_PPZKADSNARK_PP_HPP_
 /** @file
@@ -48,9 +49,9 @@ use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
 
 
-void default_r1cs_ppzkadsnark_pp::init_public_params()
-{
-    snark_pp::init_public_params();
-}
+// void default_r1cs_ppzkadsnark_pp::init_public_params()
+// {
+//     snark_pp::init_public_params();
+// }
 
 

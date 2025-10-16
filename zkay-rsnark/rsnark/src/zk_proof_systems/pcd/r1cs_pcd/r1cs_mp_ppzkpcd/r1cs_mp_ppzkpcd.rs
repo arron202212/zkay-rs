@@ -360,7 +360,7 @@ size_t r1cs_mp_ppzkpcd_proving_key<PCD_ppT>::size_in_bits() const
     const size_t num_predicates = compliance_predicates.size();
 
     size_t result = 0;
-    for (size_t i = 0; i < num_predicates; ++i)
+    for i in 0..num_predicates
     {
         result += (compliance_predicates[i].size_in_bits() +
                    compliance_step_r1cs_pks[i].size_in_bits() +
@@ -438,7 +438,7 @@ size_t r1cs_mp_ppzkpcd_verification_key<PCD_ppT>::size_in_bits() const
     const size_t num_predicates = compliance_step_r1cs_vks.size();
 
     size_t result = 0;
-    for (size_t i = 0; i < num_predicates; ++i)
+    for i in 0..num_predicates
     {
         result += (compliance_step_r1cs_vks[i].size_in_bits() +
                    translation_step_r1cs_vks[i].size_in_bits());
@@ -483,7 +483,7 @@ size_t r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>::size_in_bits() const
     const size_t num_predicates = compliance_step_r1cs_pvks.size();
 
     size_t result = 0;
-    for (size_t i = 0; i < num_predicates; ++i)
+    for i in 0..num_predicates
     {
         result += (compliance_step_r1cs_pvks[i].size_in_bits() +
                    translation_step_r1cs_pvks[i].size_in_bits());
@@ -572,16 +572,16 @@ r1cs_mp_ppzkpcd_keypair<PCD_ppT> r1cs_mp_ppzkpcd_generator(const std::vector<r1c
     ffec::enter_block("Perform type checks");
     std::map<size_t, size_t> type_counts;
 
-    for (auto &cp : compliance_predicates)
+    for cp in &compliance_predicates
     {
         type_counts[cp.type] += 1;
     }
 
-    for (auto &cp : compliance_predicates)
+    for cp in &compliance_predicates
     {
-        if (cp.relies_on_same_type_inputs)
+        if cp.relies_on_same_type_inputs
         {
-            for (size_t type : cp.accepted_input_types)
+            for type in &cp.accepted_input_types
             {
                 assert!(type_counts[type] == 1); /* each of accepted_input_types must be unique */
             }
@@ -593,7 +593,7 @@ r1cs_mp_ppzkpcd_keypair<PCD_ppT> r1cs_mp_ppzkpcd_generator(const std::vector<r1c
     }
     ffec::leave_block("Perform type checks");
 
-    for (size_t i = 0; i < compliance_predicates.size(); ++i)
+    for i in 0..compliance_predicates.size()
     {
         ffec::enter_block(FMT("", "Process predicate {} (with name {} and type {})", i, compliance_predicates[i].name, compliance_predicates[i].type));
         assert!(compliance_predicates[i].is_well_formed());
@@ -644,7 +644,7 @@ r1cs_mp_ppzkpcd_keypair<PCD_ppT> r1cs_mp_ppzkpcd_generator(const std::vector<r1c
     const set_commitment cm = all_translation_vks.get_commitment();
     keypair.pk.commitment_to_translation_step_r1cs_vks = cm;
     keypair.vk.commitment_to_translation_step_r1cs_vks = cm;
-    for (size_t i = 0; i < compliance_predicates.size(); ++i)
+    for i in 0..compliance_predicates.size()
     {
         const ffec::bit_vector vk_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::get_verification_key_bits(keypair.vk.translation_step_r1cs_vks[i]);
         const set_membership_proof proof = all_translation_vks.get_membership_proof(vk_bits);
@@ -693,17 +693,17 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
     const size_t arity = prev_proofs.size();
     const size_t max_arity = pk.compliance_predicates[compliance_predicate_idx].max_arity;
 
-    if (pk.compliance_predicates[compliance_predicate_idx].relies_on_same_type_inputs)
+    if pk.compliance_predicates[compliance_predicate_idx].relies_on_same_type_inputs
     {
         const size_t input_predicate_idx = prev_proofs[0].compliance_predicate_idx;
-        for (size_t i = 1; i < arity; ++i)
+        for i in 1..arity
         {
             assert!(prev_proofs[i].compliance_predicate_idx == input_predicate_idx);
         }
     }
 
     std::vector<r1cs_ppzksnark_proof<curve_B_pp> > padded_proofs(max_arity);
-    for (size_t i = 0; i < arity; ++i)
+    for i in 0..arity
     {
         padded_proofs[i] = prev_proofs[i].r1cs_proof;
     }
@@ -711,14 +711,14 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
     std::vector<r1cs_ppzksnark_verification_key<curve_B_pp> > translation_step_vks;
     std::vector<set_membership_proof> membership_proofs;
 
-    for (size_t i = 0; i < arity; ++i)
+    for i in 0..arity
     {
         const size_t input_predicate_idx = prev_proofs[i].compliance_predicate_idx;
         translation_step_vks.push(pk.translation_step_r1cs_vks[input_predicate_idx]);
         membership_proofs.push(pk.compliance_step_r1cs_vk_membership_proofs[input_predicate_idx]);
 
 // #ifdef DEBUG
-        if (auxiliary_input.incoming_messages[i]->type != 0)
+        if auxiliary_input.incoming_messages[i]->type != 0
         {
             print!("check proof for message {}\n", i);
             const r1cs_primary_input<FieldT_B> translated_msg = get_mp_translation_step_pcd_circuit_input<curve_B_pp>(pk.commitment_to_translation_step_r1cs_vks,
@@ -734,7 +734,7 @@ r1cs_mp_ppzkpcd_proof<PCD_ppT> r1cs_mp_ppzkpcd_prover(const r1cs_mp_ppzkpcd_prov
     }
 
     /* pad with dummy vks/membership proofs */
-    for (size_t i = arity; i < max_arity; ++i)
+    for i in arity..max_arity
     {
         print!("proof {} will be a dummy\n", arity);
         translation_step_vks.push(pk.translation_step_r1cs_vks[0]);
@@ -813,7 +813,7 @@ r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> r1cs_mp_ppzkpcd_process_vk(c
     r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> result;
     result.commitment_to_translation_step_r1cs_vks = vk.commitment_to_translation_step_r1cs_vks;
 
-    for (size_t i = 0; i < vk.compliance_step_r1cs_vks.size(); ++i)
+    for i in 0..vk.compliance_step_r1cs_vks.size()
     {
         const r1cs_ppzksnark_processed_verification_key<curve_A_pp> compliance_step_r1cs_pvk = r1cs_ppzksnark_verifier_process_vk<curve_A_pp>(vk.compliance_step_r1cs_vks[i]);
         const r1cs_ppzksnark_processed_verification_key<curve_B_pp> translation_step_r1cs_pvk = r1cs_ppzksnark_verifier_process_vk<curve_B_pp>(vk.translation_step_r1cs_vks[i]);

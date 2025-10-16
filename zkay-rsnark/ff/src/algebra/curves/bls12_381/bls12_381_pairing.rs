@@ -9,7 +9,7 @@
 // #define BLS12_381_PAIRING_HPP_
 //#include <vector>
 
-use libff/algebra/curves/bls12_381/bls12_381_init;
+use crate::algebra::curves::bls12_381/bls12_381_init;
 
 // namespace libff {
 
@@ -100,10 +100,10 @@ bls12_381_GT bls12_381_affine_reduced_pairing(const bls12_381_G1 &P,
 
 //#include <cassert>
 
-use libff/algebra/curves/bls12_381/bls12_381_g1;
-use libff/algebra/curves/bls12_381/bls12_381_g2;
-use libff/algebra/curves/bls12_381/bls12_381_init;
-use libff/algebra/curves/bls12_381/bls12_381_pairing;
+use crate::algebra::curves::bls12_381/bls12_381_g1;
+use crate::algebra::curves::bls12_381/bls12_381_g2;
+use crate::algebra::curves::bls12_381/bls12_381_init;
+use crate::algebra::curves::bls12_381/bls12_381_pairing;
 use crate::common::profiling;
 
 // namespace libff {
@@ -167,7 +167,7 @@ std::ostream& operator<<(std::ostream& out, const bls12_381_ate_G2_precomp &prec
 {
     out << prec_Q.QX << OUTPUT_SEPARATOR << prec_Q.QY << "\n";
     out << prec_Q.coeffs.size() << "\n";
-    for (const bls12_381_ate_ell_coeffs &c : prec_Q.coeffs)
+    for c in &prec_Q.coeffs
     {
         out << c << OUTPUT_NEWLINE;
     }
@@ -190,7 +190,7 @@ std::istream& operator>>(std::istream& in, bls12_381_ate_G2_precomp &prec_Q)
 
     prec_Q.coeffs.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         bls12_381_ate_ell_coeffs c;
         in >> c;
@@ -235,7 +235,7 @@ bls12_381_Fq12 bls12_381_exp_by_z(const bls12_381_Fq12 &elt)
     enter_block("Call to bls12_381_exp_by_z");
 
     bls12_381_Fq12 result = elt.cyclotomic_exp(bls12_381_final_exponent_z);
-    if (bls12_381_final_exponent_is_z_neg)
+    if bls12_381_final_exponent_is_z_neg
     {
         result = result.unitary_inverse();
     }
@@ -379,10 +379,10 @@ bls12_381_ate_G2_precomp bls12_381_ate_precompute_G2(const bls12_381_G2& Q)
     bool found_one = false;
     bls12_381_ate_ell_coeffs c;
 
-    for (long i = loop_count.max_bits(); i >= 0; --i)
+    for i in ( 0..=loop_count.max_bits()).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -392,7 +392,7 @@ bls12_381_ate_G2_precomp bls12_381_ate_precompute_G2(const bls12_381_G2& Q)
         doubling_step_for_miller_loop(two_inv, R, c);
         result.coeffs.push_back(c);
 
-        if (bit)
+        if bit
         {
             mixed_addition_step_for_miller_loop(Qcopy, R, c);
             result.coeffs.push_back(c);
@@ -416,10 +416,10 @@ bls12_381_Fq12 bls12_381_ate_miller_loop(const bls12_381_ate_G1_precomp &prec_P,
     const bigint<bls12_381_Fq::num_limbs> &loop_count = bls12_381_ate_loop_count;
     bls12_381_ate_ell_coeffs c;
 
-    for (long i = loop_count.max_bits(); i >= 0; --i)
+    for i in ( 0..=loop_count.max_bits()).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -434,7 +434,7 @@ bls12_381_Fq12 bls12_381_ate_miller_loop(const bls12_381_ate_G1_precomp &prec_P,
         f = f.squared();
         f = f.mul_by_045(c.ell_0, prec_P.PY * c.ell_VW, prec_P.PX * c.ell_VV);
 
-        if (bit)
+        if bit
         {
             c = prec_Q.coeffs[idx++];
             f = f.mul_by_045(c.ell_0, prec_P.PY * c.ell_VW, prec_P.PX * c.ell_VV);
@@ -442,7 +442,7 @@ bls12_381_Fq12 bls12_381_ate_miller_loop(const bls12_381_ate_G1_precomp &prec_P,
 
     }
 
-    if (bls12_381_ate_is_loop_count_neg)
+    if bls12_381_ate_is_loop_count_neg
     {
     	f = f.inverse();
     }
@@ -464,10 +464,10 @@ bls12_381_Fq12 bls12_381_ate_double_miller_loop(const bls12_381_ate_G1_precomp &
     size_t idx = 0;
 
     const bigint<bls12_381_Fq::num_limbs> &loop_count = bls12_381_ate_loop_count;
-    for (long i = loop_count.max_bits(); i >= 0; --i)
+    for i in ( 0..=loop_count.max_bits()).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -487,7 +487,7 @@ bls12_381_Fq12 bls12_381_ate_double_miller_loop(const bls12_381_ate_G1_precomp &
         f = f.mul_by_045(c1.ell_0, prec_P1.PY * c1.ell_VW, prec_P1.PX * c1.ell_VV);
         f = f.mul_by_045(c2.ell_0, prec_P2.PY * c2.ell_VW, prec_P2.PX * c2.ell_VV);
 
-        if (bit)
+        if bit
         {
             bls12_381_ate_ell_coeffs c1 = prec_Q1.coeffs[idx];
             bls12_381_ate_ell_coeffs c2 = prec_Q2.coeffs[idx];
@@ -498,7 +498,7 @@ bls12_381_Fq12 bls12_381_ate_double_miller_loop(const bls12_381_ate_G1_precomp &
         }
     }
 
-    if (bls12_381_ate_is_loop_count_neg)
+    if bls12_381_ate_is_loop_count_neg
     {
     	f = f.inverse();
     }

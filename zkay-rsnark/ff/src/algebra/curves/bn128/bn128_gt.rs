@@ -12,7 +12,7 @@
 #include "depends/ate-pairing/include/bn.h"
 
 use crate::algebra::field_utils::field_utils;
-use libff/algebra/fields/prime_base/fp;
+use crate::algebra::fields::prime_base::fp;
 
 // namespace libff {
 
@@ -62,7 +62,7 @@ bn128_GT operator^(const bn128_GT &rhs, const Fp_model<m,modulus_p> &lhs)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/bn128/bn128_gt;
+use crate::algebra::curves::bn128::bn128_gt;
 
 // namespace libff {
 

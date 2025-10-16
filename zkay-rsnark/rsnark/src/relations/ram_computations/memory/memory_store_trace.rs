@@ -12,7 +12,7 @@
 //#ifndef MEMORY_STORE_TRACE_HPP_
 // #define MEMORY_STORE_TRACE_HPP_
 
-use libsnark/relations/ram_computations/memory/memory_interface;
+use crate::relations::ram_computations/memory/memory_interface;
 
 
 

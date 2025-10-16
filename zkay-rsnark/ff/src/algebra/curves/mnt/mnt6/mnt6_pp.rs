@@ -12,11 +12,11 @@
 //#ifndef MNT6_PP_HPP_
 // #define MNT6_PP_HPP_
 
-use libff/algebra/curves/mnt/mnt6/mnt6_g1;
-use libff/algebra/curves/mnt/mnt6/mnt6_g2;
-use libff/algebra/curves/mnt/mnt6/mnt6_init;
-use libff/algebra/curves/mnt/mnt6/mnt6_pairing;
-use libff/algebra/curves/public_params;
+use crate::algebra::curves::mnt::mnt6::mnt6_g1;
+use crate::algebra::curves::mnt::mnt6::mnt6_g2;
+use crate::algebra::curves::mnt::mnt6::mnt6_init;
+use crate::algebra::curves::mnt::mnt6::mnt6_pairing;
+use crate::algebra::curves::public_params;
 
 // namespace libff {
 
@@ -86,7 +86,7 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/mnt/mnt6/mnt6_pp;
+use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
 // namespace libff {
 

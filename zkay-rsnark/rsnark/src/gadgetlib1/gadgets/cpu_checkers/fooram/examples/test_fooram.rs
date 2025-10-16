@@ -8,9 +8,9 @@ use ffec::common::utils;
 
 use crate::common::default_types::r1cs_ppzkpcd_pp;
 use crate::common::default_types::r1cs_ppzksnark_pp;
-use libsnark/relations/ram_computations/rams/fooram/fooram_params;
-use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark;
-use libsnark/zk_proof_systems/zksnark/ram_zksnark/examples/run_ram_zksnark;
+use crate::relations::ram_computations::rams::fooram::fooram_params;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
+use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;
 
 
 
@@ -71,7 +71,7 @@ int main(int argc, const char* argv[])
     default_fooram_ppzksnark_pp::init_public_params();
     default_fooram_zksnark_pp::init_public_params();
 
-    if (argc == 1)
+    if argc == 1
     {
         profile_ram_zksnark<default_fooram_zksnark_pp>(32);
     }

@@ -21,7 +21,7 @@
 
 use  <vector>
 
-use libsnark/relations/variable;
+use crate::relations::variable;
 
 
 
@@ -150,7 +150,7 @@ public:
 
 
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems/bacs/bacs;
 
 //#endif // BACS_HPP_
 /** @file
@@ -264,15 +264,15 @@ std::vector<size_t> bacs_circuit<FieldT>::wire_depths() const
     depths.push(0);
     depths.resize(num_inputs() + 1, 1);
 
-    for (auto &g: gates)
+    for g in &gates
     {
         size_t max_depth = 0;
-        for (auto &t : g.lhs)
+        for t in &g.lhs
         {
             max_depth = std::max(max_depth, depths[t.index]);
         }
 
-        for (auto &t : g.rhs)
+        for t in &g.rhs
         {
             max_depth = std::max(max_depth, depths[t.index]);
         }
@@ -293,13 +293,13 @@ size_t bacs_circuit<FieldT>::depth() const
 template<typename FieldT>
 bool bacs_circuit<FieldT>::is_valid() const
 {
-    for (size_t i = 0; i < num_gates(); ++i)
+    for i in 0..num_gates()
     {
         /**
          * The output wire of gates[i] must have index 1+num_inputs+i.
          * (The '1+' accounts for the the index of the constant wire.)
          */
-        if (gates[i].output.index != 1+num_inputs()+i)
+        if gates[i].output.index != 1+num_inputs()+i
         {
             return false;
         }
@@ -307,7 +307,7 @@ bool bacs_circuit<FieldT>::is_valid() const
         /**
          * Gates must be topologically sorted.
          */
-        if (!gates[i].lhs.is_valid(gates[i].output.index) || !gates[i].rhs.is_valid(gates[i].output.index))
+        if !gates[i].lhs.is_valid(gates[i].output.index) || !gates[i].rhs.is_valid(gates[i].output.index)
         {
             return false;
         }
@@ -329,7 +329,7 @@ bacs_variable_assignment<FieldT> bacs_circuit<FieldT>::get_all_wires(const bacs_
 
     assert!(result.size() == num_inputs());
 
-    for (auto &g : gates)
+    for g in &gates
     {
         const FieldT gate_output = g.evaluate(result);
         result.push(gate_output);
@@ -346,9 +346,9 @@ bacs_variable_assignment<FieldT> bacs_circuit<FieldT>::get_all_outputs(const bac
 
     bacs_variable_assignment<FieldT> all_outputs;
 
-    for (auto &g: gates)
+    for g in &gates
     {
-        if (g.is_circuit_output)
+        if g.is_circuit_output
         {
             all_outputs.push(all_wires[g.output.index-1]);
         }
@@ -363,9 +363,9 @@ bool bacs_circuit<FieldT>::is_satisfied(const bacs_primary_input<FieldT> &primar
 {
     const bacs_variable_assignment<FieldT> all_outputs = get_all_outputs(primary_input, auxiliary_input);
 
-    for (size_t i = 0; i < all_outputs.size(); ++i)
+    for i in 0..all_outputs.size()
     {
-        if (!all_outputs[i].is_zero())
+        if !all_outputs[i].is_zero()
         {
             return false;
         }
@@ -428,12 +428,12 @@ void bacs_circuit<FieldT>::print() const
     ffec::print_indent(); print!("General information about the circuit:\n");
     self.print_info();
     ffec::print_indent(); print!("All gates:\n");
-    for (size_t i = 0; i < gates.size(); ++i)
+    for i in 0..gates.size()
     {
         std::string annotation = "no annotation";
 // #ifdef DEBUG
         auto it = gate_annotations.find(i);
-        if (it != gate_annotations.end())
+        if it != gate_annotations.end()
         {
             annotation = it->second;
         }

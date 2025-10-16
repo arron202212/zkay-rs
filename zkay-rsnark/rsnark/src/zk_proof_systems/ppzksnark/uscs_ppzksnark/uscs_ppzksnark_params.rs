@@ -14,7 +14,7 @@
 
 use ffec::algebra::curves::public_params;
 
-use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
+use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 
 

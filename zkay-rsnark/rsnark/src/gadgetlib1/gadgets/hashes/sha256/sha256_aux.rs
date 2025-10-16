@@ -12,7 +12,7 @@
 //#ifndef SHA256_AUX_HPP_
 // #define SHA256_AUX_HPP_
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/basic_gadgets;
 
 
 
@@ -155,7 +155,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_aux;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_aux;
 
 //#endif // SHA256_AUX_HPP_
 /** @file
@@ -190,7 +190,7 @@ lastbits_gadget<FieldT>::lastbits_gadget(protoboard<FieldT> &pb,
     result_bits(result_bits)
 {
     full_bits = result_bits;
-    for (size_t i = result_bits.size(); i < X_bits; ++i)
+    for i in result_bits.size()..X_bits
     {
         pb_variable<FieldT> full_bits_overflow;
         full_bits_overflow.allocate(pb, FMT(self.annotation_prefix, " full_bits_{}", i));
@@ -230,7 +230,7 @@ XOR3_gadget<FieldT>::XOR3_gadget(protoboard<FieldT> &pb,
     assume_C_is_zero(assume_C_is_zero),
     out(out)
 {
-    if (!assume_C_is_zero)
+    if !assume_C_is_zero
     {
         tmp.allocate(pb, FMT(self.annotation_prefix, " tmp"));
     }
@@ -243,7 +243,7 @@ void XOR3_gadget<FieldT>::generate_r1cs_constraints()
       tmp = A + B - 2AB i.e. tmp = A xor B
       out = tmp + C - 2tmp C i.e. out = tmp xor C
     */
-    if (assume_C_is_zero)
+    if assume_C_is_zero
     {
         self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(2*A, B, A + B - out), FMT(self.annotation_prefix, " implicit_tmp_equals_out"));
     }
@@ -257,7 +257,7 @@ void XOR3_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void XOR3_gadget<FieldT>::generate_r1cs_witness()
 {
-    if (assume_C_is_zero)
+    if assume_C_is_zero
     {
         self.pb.lc_val(out) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
     }
@@ -285,7 +285,7 @@ small_sigma_gadget<FieldT>::small_sigma_gadget(protoboard<FieldT> &pb,
 {
     result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
     compute_bits.resize(32);
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         compute_bits[i].reset(new XOR3_gadget<FieldT>(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2),
                                               (i + shift < 32 ? W[i+shift] : ONE),
@@ -298,7 +298,7 @@ small_sigma_gadget<FieldT>::small_sigma_gadget(protoboard<FieldT> &pb,
 template<typename FieldT>
 void small_sigma_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         compute_bits[i]->generate_r1cs_constraints();
     }
@@ -309,7 +309,7 @@ void small_sigma_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void small_sigma_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         compute_bits[i]->generate_r1cs_witness();
     }
@@ -331,7 +331,7 @@ big_sigma_gadget<FieldT>::big_sigma_gadget(protoboard<FieldT> &pb,
 {
     result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
     compute_bits.resize(32);
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         compute_bits[i].reset(new XOR3_gadget<FieldT>(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2), SHA256_GADGET_ROTR(W, i, rot3), false, result_bits[i],
                                                       FMT(self.annotation_prefix, " compute_bits_{}", i)));
@@ -343,7 +343,7 @@ big_sigma_gadget<FieldT>::big_sigma_gadget(protoboard<FieldT> &pb,
 template<typename FieldT>
 void big_sigma_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         compute_bits[i]->generate_r1cs_constraints();
     }
@@ -354,7 +354,7 @@ void big_sigma_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void big_sigma_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         compute_bits[i]->generate_r1cs_witness();
     }
@@ -382,7 +382,7 @@ choice_gadget<FieldT>::choice_gadget(protoboard<FieldT> &pb,
 template<typename FieldT>
 void choice_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         /*
           result = x * y + (1-x) * z
@@ -396,7 +396,7 @@ void choice_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void choice_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         self.pb.val(result_bits[i]) = self.pb.lc_val(X[i]) * self.pb.lc_val(Y[i]) + (FieldT::one() - self.pb.lc_val(X[i])) * self.pb.lc_val(Z[i]);
     }
@@ -424,7 +424,7 @@ majority_gadget<FieldT>::majority_gadget(protoboard<FieldT> &pb,
 template<typename FieldT>
 void majority_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         /*
           2*result + aux = x + y + z
@@ -443,7 +443,7 @@ void majority_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void majority_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < 32; ++i)
+    for i in 0..32
     {
         const long v = (self.pb.lc_val(X[i]) + self.pb.lc_val(Y[i]) + self.pb.lc_val(Z[i])).as_ulong();
         self.pb.val(result_bits[i]) = FieldT(v / 2);

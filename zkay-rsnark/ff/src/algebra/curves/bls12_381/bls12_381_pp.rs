@@ -7,11 +7,11 @@
 
 //#ifndef BLS12_381_PP_HPP_
 // #define BLS12_381_PP_HPP_
-use libff/algebra/curves/bls12_381/bls12_381_g1;
-use libff/algebra/curves/bls12_381/bls12_381_g2;
-use libff/algebra/curves/bls12_381/bls12_381_init;
-use libff/algebra/curves/bls12_381/bls12_381_pairing;
-use libff/algebra/curves/public_params;
+use crate::algebra::curves::bls12_381/bls12_381_g1;
+use crate::algebra::curves::bls12_381/bls12_381_g2;
+use crate::algebra::curves::bls12_381/bls12_381_init;
+use crate::algebra::curves::bls12_381/bls12_381_pairing;
+use crate::algebra::curves::public_params;
 
 // namespace libff {
 
@@ -48,7 +48,7 @@ public:
 // } // namespace libff
 
 //#endif // BLS12_381_PP_HPP_
-use libff/algebra/curves/bls12_381/bls12_381_pp;
+use crate::algebra::curves::bls12_381/bls12_381_pp;
 
 // namespace libff {
 

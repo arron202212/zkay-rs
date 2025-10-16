@@ -17,7 +17,7 @@ use  <vector>
 
 use ffec::common::utils;
 
-use libsnark/relations/ram_computations/memory/memory_interface;
+use crate::relations::ram_computations/memory/memory_interface;
 
 
 
@@ -65,7 +65,7 @@ public:
 
 use ffec::common::serialization;
 
-use libsnark/relations/ram_computations/rams/fooram/fooram_aux;
+use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 
 

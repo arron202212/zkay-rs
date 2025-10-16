@@ -11,8 +11,8 @@
 // #define FP6_3OVER2_HPP_
 //#include <vector>
 
-use libff/algebra/fields/prime_base/fp;
-use libff/algebra/fields/prime_extension/fp2;
+use crate::algebra::fields::prime_base::fp;
+use crate::algebra::fields::prime_extension::fp2;
 
 // namespace libff {
 
@@ -175,7 +175,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 Fp2_model<n, modulus> Fp6_3over2_model<n, modulus>::Frobenius_coeffs_c2[6];
 
 // } // namespace libff
-use libff/algebra/fields/prime_extension/fp6_3over2.tcc;
+use crate::algebra::fields::prime_extension::fp6_3over2.tcc;
 
 //#endif // FP6_3OVER2_HPP_
 /** @file
@@ -477,7 +477,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp6_3over2_model<n, modulus> > &v)
 {
     out << v.size() << "\n";
-    for (const Fp6_3over2_model<n, modulus>& t : v)
+    for t in &v
     {
         out << t << OUTPUT_NEWLINE;
     }
@@ -498,7 +498,7 @@ std::istream& operator>>(std::istream& in, std::vector<Fp6_3over2_model<n, modul
 
     v.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         Fp6_3over2_model<n, modulus> el;
         in >> el;

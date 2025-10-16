@@ -7,11 +7,11 @@
 //#ifndef SET_COMMITMENT_GADGET_HPP_
 // #define SET_COMMITMENT_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget;
-use libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets/set_commitment/set_membership_proof_variable;
 
 
 
@@ -52,7 +52,7 @@ void test_set_commitment_gadget();
 
 
 
-use libsnark/gadgetlib1/gadgets/set_commitment/set_commitment_gadget;
+use crate::gadgetlib1::gadgets/set_commitment/set_commitment_gadget;
 
 //#endif // SET_COMMITMENT_GADGET_HPP_
 /** @file
@@ -81,7 +81,7 @@ set_commitment_gadget<FieldT, HashT>::set_commitment_gadget(protoboard<FieldT> &
 {
     element_block.reset(new block_variable<FieldT>(pb, { element_bits }, FMT(annotation_prefix, " element_block")));
 
-    if (tree_depth == 0)
+    if tree_depth == 0
     {
         hash_element.reset(new HashT(pb, element_bits.size(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
     }
@@ -106,7 +106,7 @@ void set_commitment_gadget<FieldT, HashT>::generate_r1cs_constraints()
 {
     hash_element->generate_r1cs_constraints();
 
-    if (tree_depth > 0)
+    if tree_depth > 0
     {
         check_membership->generate_r1cs_constraints();
     }
@@ -117,7 +117,7 @@ void set_commitment_gadget<FieldT, HashT>::generate_r1cs_witness()
 {
     hash_element->generate_r1cs_witness();
 
-    if (tree_depth > 0)
+    if tree_depth > 0
     {
         check_membership->generate_r1cs_witness();
     }
@@ -139,7 +139,7 @@ void test_set_commitment_gadget()
     set_commitment_accumulator<HashT> accumulator(max_set_size, value_size);
 
     std::vector<ffec::bit_vector> set_elems;
-    for (size_t i = 0; i < max_set_size; ++i)
+    for i in 0..max_set_size
     {
         ffec::bit_vector elem(value_size);
         std::generate(elem.begin(), elem.end(), [&]() { return std::rand() % 2; });
@@ -162,7 +162,7 @@ void test_set_commitment_gadget()
     sc.generate_r1cs_constraints();
 
     /* test all elements from set */
-    for (size_t i = 0; i < max_set_size; ++i)
+    for i in 0..max_set_size
     {
         element_bits.fill_with_bits(pb, set_elems[i]);
         pb.val(check_succesful) = FieldT::one();
@@ -174,7 +174,7 @@ void test_set_commitment_gadget()
     print!("membership tests OK\n");
 
     /* test an element not in set */
-    for (size_t i = 0; i < value_size; ++i)
+    for i in 0..value_size
     {
         pb.val(element_bits[i]) = FieldT(std::rand() % 2);
     }

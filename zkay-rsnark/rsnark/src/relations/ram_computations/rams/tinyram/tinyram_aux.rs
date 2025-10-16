@@ -19,8 +19,8 @@ use  <map>
 use ffec::common::utils;
 
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-use libsnark/relations/ram_computations/memory/memory_interface;
-use libsnark/relations/ram_computations/rams/ram_params;
+use crate::relations::ram_computations/memory/memory_interface;
+use crate::relations::ram_computations/rams/ram_params;
 
 
 
@@ -245,7 +245,7 @@ use  <string>
 use ffec::common::profiling;
 use ffec::common::utils;
 
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_aux;
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 
 
@@ -332,9 +332,9 @@ std::map<std::string, tinyram_opcode> opcode_values;
 
 void ensure_tinyram_opcode_value_map()
 {
-    if (opcode_values.empty())
+    if opcode_values.empty()
     {
-        for (auto it : tinyram_opcode_names)
+        for it in &tinyram_opcode_names
         {
             opcode_values[it.second] = it.first;
         }
@@ -391,7 +391,7 @@ memory_contents tinyram_architecture_params::initial_memory_contents(const tinyr
     // remember that memory consists of 1ul<<dwaddr_len() double words (!)
     memory_contents m;
 
-    for (size_t i = 0; i < program.instructions.size(); ++i)
+    for i in 0..program.instructions.size()
     {
         m[i] = program.instructions[i].as_dword(*this);
     }
@@ -399,16 +399,16 @@ memory_contents tinyram_architecture_params::initial_memory_contents(const tinyr
     const size_t input_addr = 1ul << (dwaddr_len() - 1);
     size_t latest_double_word = (1ull<<(w-1)) + primary_input.size(); // the first word will contain 2^{w-1} + input_size (the location where the last input word was stored)
 
-    for (size_t i = 0; i < primary_input.size()/2 + 1; ++i)
+    for i in 0..primary_input.size()/2 + 1
     {
-        if (2*i < primary_input.size())
+        if 2*i < primary_input.size()
         {
             latest_double_word += (primary_input[2*i] << w);
         }
 
         m[input_addr + i] = latest_double_word;
 
-        if (2*i + 1 < primary_input.size())
+        if 2*i + 1 < primary_input.size()
         {
             latest_double_word = primary_input[2*i+1];
         }
@@ -539,7 +539,7 @@ tinyram_program load_preprocessed_program(const tinyram_architecture_params &ap,
         ffec::print_indent();
         size_t immflag, des, a1;
         long long int a2;
-        if (preprocessed.good())
+        if preprocessed.good()
         {
             preprocessed >> immflag >> des >> a1 >> a2;
             a2 = ((1ul<<ap.w)+(a2 % (1ul<<ap.w))) % (1ul<<ap.w);
@@ -561,7 +561,7 @@ memory_store_trace tinyram_boot_trace_from_program_and_input(const tinyram_archi
     memory_store_trace result;
 
     size_t boot_pos = boot_trace_size_bound-1;
-    for (size_t i = 0; i < program.instructions.size(); ++i)
+    for i in 0..program.instructions.size()
     {
         result.set_trace_entry(boot_pos--, std::make_pair(i, program.instructions[i].as_dword(ap)));
     }

@@ -11,8 +11,8 @@
 
 #include "depends/ate-pairing/include/bn.h"
 
-use libff/algebra/curves/bn128/bn128_init;
-use libff/algebra/curves/curve_utils;
+use crate::algebra::curves::bn128::bn128_init;
+use crate::algebra::curves::curve_utils;
 
 // namespace libff {
 
@@ -110,8 +110,8 @@ std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/bn128/bn128_g1;
-use libff/algebra/curves/bn128/bn_utils;
+use crate::algebra::curves::bn128::bn128_g1;
+use crate::algebra::curves::bn128::bn_utils;
 
 // namespace libff {
 
@@ -140,7 +140,7 @@ bn::Fp bn128_G1::sqrt(const bn::Fp &el)
 #if DEBUG
     // check if square with Euler's criterion
     bn::Fp check = b;
-    for (size_t i = 0; i < v-1; ++i)
+    for i in 0..v-1
     {
         bn::Fp::square(check, check);
     }
@@ -181,7 +181,7 @@ bn::Fp bn128_G1::sqrt(const bn::Fp &el)
 
 bn128_G1::bn128_G1()
 {
-    if (bn128_G1::initialized)
+    if bn128_G1::initialized
     {
         this->X = G1_zero.X;
         this->Y = G1_zero.Y;
@@ -191,7 +191,7 @@ bn128_G1::bn128_G1()
 
 void bn128_G1::print() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -205,7 +205,7 @@ void bn128_G1::print() const
 
 void bn128_G1::print_coordinates() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -217,7 +217,7 @@ void bn128_G1::print_coordinates() const
 
 void bn128_G1::to_affine_coordinates()
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         X = 0;
         Y = 1;
@@ -253,12 +253,12 @@ bool bn128_G1::is_zero() const
 
 bool bn128_G1::operator==(const bn128_G1 &other) const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other.is_zero();
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return false;
     }
@@ -271,7 +271,7 @@ bool bn128_G1::operator==(const bn128_G1 &other) const
     bn::Fp::mul(lhs, Z2sq, this->X);
     bn::Fp::mul(rhs, Z1sq, other.X);
 
-    if (lhs != rhs)
+    if lhs != rhs
     {
         return false;
     }
@@ -293,12 +293,12 @@ bool bn128_G1::operator!=(const bn128_G1& other) const
 bn128_G1 bn128_G1::operator+(const bn128_G1 &other) const
 {
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -307,7 +307,7 @@ bn128_G1 bn128_G1::operator+(const bn128_G1 &other) const
     // (they cannot exist in a prime-order subgroup)
 
     // handle double case, and then all the rest
-    if (this->operator==(other))
+    if this->operator==(other)
     {
         return this->dbl();
     }
@@ -343,12 +343,12 @@ bn128_G1 bn128_G1::add(const bn128_G1 &other) const
 
 bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -383,7 +383,7 @@ bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
     bn::Fp S2;
     bn::Fp::mul(S2, other.Y, Z1_cubed); // S2 = Y2*Z1*Z1Z1
 
-    if (U1 == U2 && S1 == S2)
+    if U1 == U2 && S1 == S2
     {
         // dbl case; nothing of above can be reused
         return this->dbl();
@@ -494,7 +494,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_G1 &g)
 
 bool bn128_G1::is_well_formed() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return true;
     }
@@ -552,7 +552,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
     Y_lsb -= '0';
 
     // y = +/- sqrt(x^3 + b)
-    if (is_zero == 0)
+    if is_zero == 0
     {
         g.X = tX;
         bn::Fp tX2, tY2;
@@ -561,7 +561,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
         bn::Fp::add(tY2, tY2, bn128_coeff_b);
 
         g.Y = bn128_G1::sqrt(tY2);
-        if ((((unsigned char*)&g.Y)[0] & 1) != Y_lsb)
+        if (((unsigned char*)&g.Y)[0] & 1) != Y_lsb
         {
             bn::Fp::neg(g.Y, g.Y);
         }
@@ -569,7 +569,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
 //#endif
 
     /* finalize */
-    if (is_zero == 0)
+    if is_zero == 0
     {
         g.Z = bn::Fp(1);
     }
@@ -584,7 +584,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
 std::ostream& operator<<(std::ostream& out, const std::vector<bn128_G1> &v)
 {
     out << v.size() << "\n";
-    for (const bn128_G1& t : v)
+    for t in &v
     {
         out << t << OUTPUT_NEWLINE;
     }
@@ -600,7 +600,7 @@ std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v)
     consume_newline(in);
     v.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         bn128_G1 g;
         in >> g;
@@ -615,7 +615,7 @@ void bn128_G1::batch_to_special_all_non_zeros(std::vector<bn128_G1> &vec)
     std::vector<bn::Fp> Z_vec;
     Z_vec.reserve(vec.size());
 
-    for (auto &el: vec)
+    for el in &vec
     {
         Z_vec.emplace_back(el.Z);
     }
@@ -623,7 +623,7 @@ void bn128_G1::batch_to_special_all_non_zeros(std::vector<bn128_G1> &vec)
 
     const bn::Fp one = 1;
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for i in 0..vec.size()
     {
         bn::Fp Z2, Z3;
         bn::Fp::square(Z2, Z_vec[i]);

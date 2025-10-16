@@ -9,7 +9,7 @@
 // #define EDWARDS_PAIRING_HPP_
 //#include <vector>
 
-use libff/algebra/curves/edwards/edwards_init;
+use crate::algebra::curves::edwards/edwards_init;
 
 // namespace libff {
 
@@ -130,10 +130,10 @@ edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
 
 //#include <cassert>
 
-use libff/algebra/curves/edwards/edwards_g1;
-use libff/algebra/curves/edwards/edwards_g2;
-use libff/algebra/curves/edwards/edwards_init;
-use libff/algebra/curves/edwards/edwards_pairing;
+use crate::algebra::curves::edwards/edwards_g1;
+use crate::algebra::curves::edwards/edwards_g2;
+use crate::algebra::curves::edwards/edwards_init;
+use crate::algebra::curves::edwards/edwards_pairing;
 use crate::common::profiling;
 
 // namespace libff {
@@ -166,7 +166,7 @@ std::istream& operator>>(std::istream &in, edwards_Fq_conic_coefficients &cc)
 std::ostream& operator<<(std::ostream& out, const edwards_tate_G1_precomp &prec_P)
 {
     out << prec_P.size() << "\n";
-    for (const edwards_Fq_conic_coefficients &cc : prec_P)
+    for cc in &prec_P
     {
         out << cc << OUTPUT_NEWLINE;
     }
@@ -184,7 +184,7 @@ std::istream& operator>>(std::istream& in, edwards_tate_G1_precomp &prec_P)
     consume_newline(in);
     prec_P.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         edwards_Fq_conic_coefficients cc;
         in >> cc;
@@ -241,7 +241,7 @@ std::istream& operator>>(std::istream &in, edwards_Fq3_conic_coefficients &cc)
 std::ostream& operator<<(std::ostream& out, const edwards_ate_G2_precomp &prec_Q)
 {
     out << prec_Q.size() << "\n";
-    for (const edwards_Fq3_conic_coefficients &cc : prec_Q)
+    for cc in &prec_Q
     {
         out << cc << OUTPUT_NEWLINE;
     }
@@ -260,7 +260,7 @@ std::istream& operator>>(std::istream& in, edwards_ate_G2_precomp &prec_Q)
 
     prec_Q.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         edwards_Fq3_conic_coefficients cc;
         in >> cc;
@@ -299,7 +299,7 @@ edwards_Fq6 edwards_final_exponentiation_last_chunk(const edwards_Fq6 &elt, cons
     const edwards_Fq6 elt_q = elt.Frobenius_map(1);
     edwards_Fq6 w1_part = elt_q.cyclotomic_exp(edwards_final_exponent_last_chunk_w1);
     edwards_Fq6 w0_part;
-    if (edwards_final_exponent_last_chunk_is_w0_neg)
+    if edwards_final_exponent_last_chunk_is_w0_neg
     {
     	w0_part = elt_inv.cyclotomic_exp(edwards_final_exponent_last_chunk_abs_of_w0);
     } else {
@@ -485,10 +485,10 @@ edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P)
     extended_edwards_G1_projective R = P_ext;
 
     bool found_one = false;
-    for (long i = edwards_modulus_r.max_bits(); i >= 0; --i)
+    for i in ( 0..=edwards_modulus_r.max_bits()).rev()
     {
         const bool bit = edwards_modulus_r.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -502,7 +502,7 @@ edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P)
         doubling_step_for_miller_loop(R, cc);
         result.push_back(cc);
 
-        if (bit)
+        if bit
         {
             mixed_addition_step_for_miller_loop(P_ext, R, cc);
             result.push_back(cc);
@@ -522,10 +522,10 @@ edwards_Fq6 edwards_tate_miller_loop(const edwards_tate_G1_precomp &prec_P,
 
     bool found_one = false;
     size_t idx = 0;
-    for (long i = (long) edwards_modulus_r.max_bits()-1; i >= 0; --i)
+    for i in ( 0..=(long) edwards_modulus_r.max_bits()-1).rev()
     {
         const bool bit = edwards_modulus_r.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -539,7 +539,7 @@ edwards_Fq6 edwards_tate_miller_loop(const edwards_tate_G1_precomp &prec_P,
         edwards_Fq6 g_RR_at_Q = edwards_Fq6(edwards_Fq3(cc.c_XZ, edwards_Fq(0L), edwards_Fq(0L)) + cc.c_XY * prec_Q.y0,
                                             cc.c_ZZ * prec_Q.eta);
         f = f.squared() * g_RR_at_Q;
-        if (bit)
+        if bit
         {
             cc = prec_P[idx++];
 
@@ -726,10 +726,10 @@ edwards_ate_G2_precomp edwards_ate_precompute_G2(const edwards_G2& Q)
     extended_edwards_G2_projective R = Q_ext;
 
     bool found_one = false;
-    for (long i = (long) loop_count.max_bits()-1; i >= 0; --i)
+    for i in ( 0..=(long) loop_count.max_bits()-1).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -739,7 +739,7 @@ edwards_ate_G2_precomp edwards_ate_precompute_G2(const edwards_G2& Q)
         edwards_Fq3_conic_coefficients cc;
         doubling_step_for_flipped_miller_loop(R, cc);
         result.push_back(cc);
-        if (bit)
+        if bit
         {
             mixed_addition_step_for_flipped_miller_loop(Q_ext, R, cc);
             result.push_back(cc);
@@ -760,10 +760,10 @@ edwards_Fq6 edwards_ate_miller_loop(const edwards_ate_G1_precomp &prec_P,
 
     bool found_one = false;
     size_t idx = 0;
-    for (long i = (long) loop_count.max_bits()-1; i >= 0; --i)
+    for i in ( 0..=(long) loop_count.max_bits()-1).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -778,7 +778,7 @@ edwards_Fq6 edwards_ate_miller_loop(const edwards_ate_G1_precomp &prec_P,
         edwards_Fq6 g_RR_at_P = edwards_Fq6(prec_P.P_XY * cc.c_XY + prec_P.P_XZ * cc.c_XZ,
                                             prec_P.P_ZZplusYZ * cc.c_ZZ);
         f = f.squared() * g_RR_at_P;
-        if (bit)
+        if bit
         {
             cc = prec_Q[idx++];
             edwards_Fq6 g_RQ_at_P = edwards_Fq6(prec_P.P_ZZplusYZ * cc.c_ZZ,
@@ -803,10 +803,10 @@ edwards_Fq6 edwards_ate_double_miller_loop(const edwards_ate_G1_precomp &prec_P1
 
     bool found_one = false;
     size_t idx = 0;
-    for (long i = (long) loop_count.max_bits()-1; i >= 0; --i)
+    for i in ( 0..=(long) loop_count.max_bits()-1).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -827,7 +827,7 @@ edwards_Fq6 edwards_ate_double_miller_loop(const edwards_ate_G1_precomp &prec_P1
                                              prec_P2.P_ZZplusYZ * cc2.c_ZZ);
         f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
 
-        if (bit)
+        if bit
         {
             cc1 = prec_Q1[idx];
             cc2 = prec_Q2[idx];

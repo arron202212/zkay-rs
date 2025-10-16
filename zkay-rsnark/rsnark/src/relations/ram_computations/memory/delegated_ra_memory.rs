@@ -17,7 +17,7 @@ use  <memory>
 use  <vector>
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/relations/ram_computations/memory/memory_interface;
+use crate::relations::ram_computations/memory/memory_interface;
 
 
 
@@ -45,7 +45,7 @@ public:
 
 
 
-use libsnark/relations/ram_computations/memory/delegated_ra_memory;
+use crate::relations::ram_computations/memory/delegated_ra_memory;
 
 //#endif // DELEGATED_RA_MEMORY_HPP_
 /** @file
@@ -75,7 +75,7 @@ template<typename HashT>
 ffec::bit_vector delegated_ra_memory<HashT>::int_to_tree_elem(const size_t i) const
 {
     ffec::bit_vector v(value_size, false);
-    for (size_t k = 0; k < value_size; ++k)
+    for k in 0..value_size
     {
         v[k] = ((i & (1ul << k)) != 0);
     }
@@ -86,7 +86,7 @@ template<typename HashT>
 size_t delegated_ra_memory<HashT>::int_from_tree_elem(const ffec::bit_vector &v) const
 {
     size_t result = 0;
-    for (size_t i = 0; i < value_size; ++i)
+    for i in 0..value_size
     {
         result |= (v[i] ? 1ul : 0ul) << i;
     }
@@ -120,7 +120,7 @@ delegated_ra_memory<HashT>::delegated_ra_memory(const size_t num_addresses,
     memory_interface(num_addresses, value_size)
 {
     std::map<size_t, ffec::bit_vector> contents_as_bit_vector_map;
-    for (auto &it : contents_as_map)
+    for it in &contents_as_map
     {
         contents_as_bit_vector_map[it.first] = int_to_tree_elem(it.second);
     }

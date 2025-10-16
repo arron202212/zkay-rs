@@ -18,9 +18,9 @@
 
 use  <memory>
 
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
-use libsnark/gadgetlib1/gadgets/pairing/weierstrass_final_exponentiation;
-use libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets/pairing/weierstrass_final_exponentiation;
+use crate::gadgetlib1::gadgets/pairing/weierstrass_miller_loop;
 
 
 
@@ -90,7 +90,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/pairing/pairing_checks;
+use crate::gadgetlib1::gadgets/pairing/pairing_checks;
 
 //#endif // PAIRING_CHECKS_HPP_
 /** @file

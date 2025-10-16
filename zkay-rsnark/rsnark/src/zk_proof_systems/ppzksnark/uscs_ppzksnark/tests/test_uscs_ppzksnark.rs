@@ -15,7 +15,7 @@ use ffec::common::profiling;
 use ffec::common::utils;
 
 use crate::common::default_types::uscs_ppzksnark_pp;
-use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
 use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
 
 

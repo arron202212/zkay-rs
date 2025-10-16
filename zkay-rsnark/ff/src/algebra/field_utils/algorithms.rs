@@ -1,3 +1,4 @@
+// #![feature(generic_const_exprs)]
 /** @file
  *****************************************************************************
  Declaration of interfaces for (square-and-multiply) exponentiation and
@@ -12,40 +13,48 @@
 // #define ALGORITHMS_HPP_
 
 //#include <cstdint>
+ use num_traits::One;
+use crate::algebra::field_utils::bigint::bigint;
+// #![feature(generic_const_exprs)]
+trait FTConfig{
+    const num_limbs:usize;
+    const s:usize; // modulus^4 = 2^s * t + 1
+    // const  t:bigint<4>; // with t odd
+    // static bigint<4*n> t_minus_1_over_2; // (t-1)/2
+    // const  nqr:Fp4_model<n, modulus>; // a quadratic nonresidue in Fp4
+    // static Fp4_model<n, modulus> nqr_to_t; // nqr^t
+}
+// // namespace libff {
 
-#include "libff/algebra/field_utils/bigint.hpp"
+// /** Repeated squaring. */
+// template<typename FieldT, mp_size_t m>
+// FieldT power(const FieldT &base, const bigint<m> &exponent);
 
-// namespace libff {
+// /** Repeated squaring. */
+// template<typename FieldT>
+// FieldT power(const FieldT &base, const unsigned long exponent);
 
-/** Repeated squaring. */
-template<typename FieldT, mp_size_t m>
-FieldT power(const FieldT &base, const bigint<m> &exponent);
+// /**
+//  * The unsigned long long versions exist because libiop tends to use size_t instead
+//  * of unsigned long, and size_t may be the same size as ul or ull.
+//  */
+// template<typename FieldT>
+// FieldT power(const FieldT &base, const unsigned long long exponent);
 
-/** Repeated squaring. */
-template<typename FieldT>
-FieldT power(const FieldT &base, const unsigned long exponent);
+// template<typename FieldT>
+// FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent);
 
-/**
- * The unsigned long long versions exist because libiop tends to use size_t instead
- * of unsigned long, and size_t may be the same size as ul or ull.
- */
-template<typename FieldT>
-FieldT power(const FieldT &base, const unsigned long long exponent);
-
-template<typename FieldT>
-FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent);
-
-/**
- * Tonelli-Shanks square root with given s, t, and quadratic non-residue.
- * Only terminates if there is a square root. Only works if required parameters
- * are set in the field class.
- */
-template<typename FieldT>
-FieldT tonelli_shanks_sqrt(const FieldT &value);
+// /**
+//  * Tonelli-Shanks square root with given s, t, and quadratic non-residue.
+//  * Only terminates if there is a square root. Only works if required parameters
+//  * are set in the field class.
+//  */
+// template<typename FieldT>
+// FieldT tonelli_shanks_sqrt<(const FieldT &value);
 
 // } // namespace libff
 
-use libff/algebra/field_utils/algorithms.tcc;
+// use crate::algebra::field_utils::/algorithms.tcc;
 
 //#endif // ALGORITHMS_HPP_
 /** @file
@@ -61,57 +70,69 @@ use libff/algebra/field_utils/algorithms.tcc;
 //#ifndef ALGORITHMS_TCC_
 // #define ALGORITHMS_TCC_
 
-#include "libff/common/utils.hpp"
-#include "libff/common/profiling.hpp"
+use crate::common::utils;
+use crate::common::profiling;
 
 // namespace libff {
+pub struct Powers;
+// using std::size_t;
+pub trait PowerConfig<T=Self>{
+   fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:T)->FieldT;
+}
 
-using std::size_t;
-
-template<typename FieldT, mp_size_t m>
-FieldT power(const FieldT &base, const bigint<m> &exponent)
+impl<const M:usize> PowerConfig<&bigint<M>> for Powers{
+// template<typename FieldT, mp_size_t m>
+fn power<FieldT:One+Clone>(base:&FieldT, exponent:&bigint<M>)->FieldT
 {
-    FieldT result = FieldT::one();
-    bool found_one = false;
+    let mut  result = FieldT::one();
+    let mut  found_one = false;
 
-    for (long i = exponent.max_bits() - 1; i >= 0; --i)
+    for  i in (0.. exponent.max_bits()).rev()
     {
-        if found_one
-        {
-            result = result * result;
-        }
+        // if found_one
+        // {
+        //     result = result * result;
+        // }
 
         if exponent.test_bit(i)
         {
             found_one = true;
-            result = result * base;
+            result = result * base.clone();
         }
     }
 
     return result;
 }
-
-template<typename FieldT>
-FieldT power(const FieldT &base, const unsigned long exponent)
-{
-    return power<FieldT>(base, bigint<1>(exponent));
 }
 
-template<typename FieldT>
-FieldT power(const FieldT &base, const unsigned long long exponent)
+
+// template<typename FieldT>
+// FieldT power(const FieldT &base, const unsigned long exponent)
+impl PowerConfig<u64> for Powers{
+fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:u64)->FieldT
 {
-    FieldT result = FieldT::one();
+    return Self::power::<FieldT>(base, &bigint::<1>::new(exponent));
+}
+}
 
-    bool found_one = false;
 
-    for (long i = 8 * sizeof(exponent) - 1; i >= 0; --i)
+// template<typename FieldT>
+// FieldT power(const FieldT &base, const unsigned long long exponent)
+impl PowerConfig<u128> for Powers{
+fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:u128)->FieldT
+{
+    let mut  result = FieldT::one();
+
+    let mut  found_one = false;
+
+    for  i  in (0..8 * std::mem::size_of_val(&exponent)).rev()
     {
-        if found_one
-        {
-            result = result.squared();
-        }
+        // if found_one
+        // {
+        //     result = result.squared();
+        // }
 
-        if exponent & (1ull << i)
+        if exponent & (1 << i)!=0
         {
             found_one = true;
             result *= base;
@@ -120,25 +141,28 @@ FieldT power(const FieldT &base, const unsigned long long exponent)
 
     return result;
 }
+}
 
-template<typename FieldT>
-FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent)
+// template<typename FieldT>
+// FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent)
+impl PowerConfig<Vec<u128>> for Powers{
+fn power<FieldT:One + for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:Vec<u128>)->FieldT
 {
-    FieldT result = FieldT::one();
+    let mut  result = FieldT::one();
 
-    bool found_one = false;
+    let mut  found_one = false;
 
-    for (unsigned long long j = 0; j < exponent.size(); j++)
+    for j in  0.. exponent.len()
     {
-        unsigned long long cur_exp = exponent[j];
-        for (long i = 8 * sizeof(cur_exp) - 1; i >= 0; --i)
+        let mut cur_exp = exponent[j];
+        for   i in (0..8 * std::mem::size_of_val(&cur_exp)).rev()
         {
-            if found_one
-            {
-                result = result.squared();
-            }
+            // if found_one
+            // {
+            //     result = result.squared();
+            // }
 
-            if cur_exp & (1ull << i)
+            if cur_exp & (1 << i)!=0
             {
                 found_one = true;
                 result *= base;
@@ -148,67 +172,69 @@ FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent)
 
     return result;
 }
+}
 
-template<typename FieldT>
-FieldT tonelli_shanks_sqrt(const FieldT &value)
+// template<typename FieldT>
+ pub fn tonelli_shanks_sqrt<FieldT:FTConfig+Clone>(value:&FieldT)->FieldT
 {
     // A few assertions to make sure s, t, and nqr are initialized.
-    assert!(FieldT::s != 0);
-    assert!(!FieldT::t.is_even()); // Check that t is odd.
-    assert!(!FieldT::nqr.is_zero());
+    // assert!(FieldT::s != 0);
+    // assert!(!FieldT::t.is_even()); // Check that t is odd.
+    // assert!(!FieldT::nqr.is_zero());
 
-    if value.is_zero()
-    {
-        return FieldT::zero();
-    }
+//     if value.is_zero()
+//     {
+//         return FieldT::zero();
+//     }
 
-    FieldT one = FieldT::one();
+//     let  one = FieldT::one();
 
-    size_t v = FieldT::s;
-    FieldT z = FieldT::nqr_to_t;
-    FieldT w = value^FieldT::t_minus_1_over_2;
-    FieldT x = value * w;
-    FieldT b = x * w; // b = value^t
+//     let v = FieldT::s;
+//     let z = FieldT::nqr_to_t;
+//     let w = value^FieldT::t_minus_1_over_2;
+//     let x = value * w;
+//     let b = x * w; // b = value^t
 
-#if DEBUG
-    // check if square with euler's criterion
-    FieldT check = b;
-    for i in 0..v-1
-    {
-        check = check.squared();
-    }
-    assert!(check == one);
-//#endif
+// // #if DEBUG
+//     // check if square with euler's criterion
+//     // FieldT check = b;
+//     // for i in 0..v-1
+//     // {
+//     //     check = check.squared();
+//     // }
+//     // assert!(check == one);
+// //#endif
 
-    // compute square root with Tonelli--Shanks
-    // (does not terminate if not a square!)
+//     // compute square root with Tonelli--Shanks
+//     // (does not terminate if not a square!)
 
-    while (b != one)
-    {
-        size_t m = 0;
-        FieldT b2m = b;
-        while (b2m != one)
-        {
-            /* invariant: b2m = b^(2^m) after entering this loop */
-            b2m = b2m.squared();
-            m += 1;
-        }
+//     while b != one
+//     {
+//         let mut  m = 0;
+//         let mut  b2m = b;
+//         while (b2m != one)
+//         {
+//             /* invariant: b2m = b^(2^m) after entering this loop */
+//             b2m = b2m.squared();
+//             m += 1;
+//         }
 
-        int j = v-m-1;
-        w = z;
-        while (j > 0)
-        {
-            w = w.squared();
-            --j;
-        } // w = z^2^(v-m-1)
+//         let mut  j = v-m-1;
+//         w = z;
+//         while j > 0
+//         {
+//             w = w.squared();
+//             j-=1;
+//         } // w = z^2^(v-m-1)
 
-        z = w.squared();
-        b = b * z;
-        x = x * w;
-        v = m;
-    }
+//         z = w.squared();
+//         b = b * z;
+//         x = x * w;
+//         v = m;
+//     }
 
-    return x;
+    // return x;
+    value.clone()
 }
 
 // } // namespace libff

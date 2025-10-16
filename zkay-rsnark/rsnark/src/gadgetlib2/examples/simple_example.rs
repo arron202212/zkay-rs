@@ -14,7 +14,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_exa
 
 
 
-r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size);
+// r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size);
 
 
 
@@ -26,17 +26,17 @@ r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_pr
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libsnark/gadgetlib2/adapters;
-use libsnark/gadgetlib2/examples/simple_example;
-use libsnark/gadgetlib2/gadget;
-use libsnark/gadgetlib2/integration;
+use crate::gadgetlib2::adapters;
+use crate::gadgetlib2::examples::simple_example;
+use crate::gadgetlib2::gadget;
+use crate::gadgetlib2::integration;
 
 
 
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
-r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size)
+pub fn  gen_r1cs_example_from_gadgetlib2_protoboard(size:usize)->r1cs_example<ffec::Fr<ffec::default_ec_pp> >
 {
-    type ffec::Fr<ffec::default_ec_pp> FieldT;
+    // type FieldT=ffec::Fr<ffec::default_ec_pp> ;
 
     gadgetlib2::initPublicParamsFromDefaultPp();
     // necessary in case a protoboard was built before,  libsnark assumes variable indices always
@@ -45,32 +45,34 @@ r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_pr
     gadgetlib2::GadgetLibAdapter::resetVariableIndex();
 
     // create a gadgetlib2 gadget. This part is done by both generator and prover.
-    auto pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
-    gadgetlib2::VariableArray A(size, "A");
-    gadgetlib2::VariableArray B(size, "B");
-    gadgetlib2::Variable result("result");
-    auto g = gadgetlib2::InnerProduct_Gadget::create(pb, A, B, result);
+    let pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
+    let  A=gadgetlib2::VariableArray::new(size, "A");
+    let  B=gadgetlib2::VariableArray::new(size, "B");
+    let result= gadgetlib2::Variable::new("result");
+    let g = gadgetlib2::InnerProduct_Gadget::create(pb, A, B, result);
     // create constraints. This part is done by generator.
-    g->generateConstraints();
+    g.generateConstraints();
     // create assignment (witness). This part is done by prover.
-    for (size_t k = 0; k < size; ++k)
+     use rand::Rng;
+    let mut rng = rand::thread_rng();
+    for  k in  0.. size
     {
-        pb->val(A[k]) = std::rand() % 2;
-        pb->val(B[k]) = std::rand() % 2;
+        pb.val(A[k]) = rng::r#gen::<i32>() % 2;
+        pb.val(B[k]) = rng::r#gen::<i32>() % 2;
     }
-    g->generateWitness();
+    g.generateWitness();
     // translate constraint system to libsnark format.
-    r1cs_constraint_system<FieldT> cs = get_constraint_system_from_gadgetlib2(*pb);
+    let   cs = get_constraint_system_from_gadgetlib2(pb);
     // translate full variable assignment to libsnark format
-    const r1cs_variable_assignment<FieldT> full_assignment = get_variable_assignment_from_gadgetlib2(*pb);
+    let  full_assignment = get_variable_assignment_from_gadgetlib2(pb);
     // extract primary and auxiliary input
-    const r1cs_primary_input<FieldT> primary_input(full_assignment.begin(), full_assignment.begin() + cs.num_inputs());
-    const r1cs_auxiliary_input<FieldT> auxiliary_input(full_assignment.begin() + cs.num_inputs(), full_assignment.end());
+    let   primary_input=r1cs_primary_input::<FieldT>::new(&full_assignment[..cs.num_inputs()]);
+    let   auxiliary_input=r1cs_auxiliary_input::<FieldT>::new(&full_assignment[cs.num_inputs()..]);
 
     assert!(cs.is_valid());
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    return r1cs_example<FieldT>(cs, primary_input, auxiliary_input);
+    return r1cs_example::<FieldT>::new(cs, primary_input, auxiliary_input);
 }
 
 

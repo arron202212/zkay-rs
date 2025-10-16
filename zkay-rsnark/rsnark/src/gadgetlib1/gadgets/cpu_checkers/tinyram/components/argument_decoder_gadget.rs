@@ -12,7 +12,7 @@
 //#ifndef ARGUMENT_DECODER_GADGET_HPP_
 // #define ARGUMENT_DECODER_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
 
 
 
@@ -63,7 +63,7 @@ void test_argument_decoder_gadget();
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget;
 
 //#endif // ARGUMENT_DECODER_GADGET_HPP_
 /** @file
@@ -216,7 +216,7 @@ void test_argument_decoder_gadget()
                                       packed_desval, packed_arg1val, packed_arg2val, "g");
 
     g.generate_r1cs_constraints();
-    for (size_t i = 0; i < ap.k; ++i)
+    for i in 0..ap.k
     {
         pb.val(packed_registers[i]) = FieldT(1000+i);
     }

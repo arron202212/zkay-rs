@@ -4,15 +4,15 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-use ffec::algebra::curves::mnt/mnt4/mnt4_pp;
-use ffec::algebra::curves::mnt/mnt6/mnt6_pp;
-use ffec::algebra::fields::field_utils;
+use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
+use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
+use ffec::algebra::field_utils::field_utils;
 
-use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp4_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp6_gadgets;
-use libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
+use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp4_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
@@ -22,7 +22,7 @@ template<typename FieldT>
 void dump_constraints(const protoboard<FieldT> &pb)
 {
 // #ifdef DEBUG
-    for (auto s : pb.constraint_system.constraint_annotations)
+    for s in &pb.constraint_system.constraint_annotations
     {
         print!("constraint: %s\n", s.second.c_str());
     }
@@ -74,7 +74,7 @@ void test_verifier(const std::string &annotation_A, const std::string &annotatio
     verifier.generate_r1cs_constraints();
 
     ffec::bit_vector input_as_bits;
-    for (const FieldT_A &el : example.primary_input)
+    for el in &example.primary_input
     {
         ffec::bit_vector v = ffec::convert_field_element_to_bit_vector<FieldT_A>(el, elt_size);
         input_as_bits.insert(input_as_bits.end(), v.begin(), v.end());
@@ -141,7 +141,7 @@ void test_hardcoded_verifier(const std::string &annotation_A, const std::string 
     online_verifier.generate_r1cs_constraints();
 
     ffec::bit_vector input_as_bits;
-    for (const FieldT_A &el : example.primary_input)
+    for el in &example.primary_input
     {
         ffec::bit_vector v = ffec::convert_field_element_to_bit_vector<FieldT_A>(el, elt_size);
         input_as_bits.insert(input_as_bits.end(), v.begin(), v.end());
@@ -179,7 +179,7 @@ void test_mul(const std::string &annotation)
     MulT<FpExtT> mul(pb, x, y, xy, "mul");
     mul.generate_r1cs_constraints();
 
-    for (size_t i = 0; i < 10; ++i)
+    for i in 0..10
     {
         const FpExtT x_val = FpExtT::random_element();
         const FpExtT y_val = FpExtT::random_element();
@@ -204,7 +204,7 @@ void test_sqr(const std::string &annotation)
     SqrT<FpExtT> sqr(pb, x, xsq, "sqr");
     sqr.generate_r1cs_constraints();
 
-    for (size_t i = 0; i < 10; ++i)
+    for i in 0..10
     {
         const FpExtT x_val = FpExtT::random_element();
         x.generate_r1cs_witness(x_val);
@@ -229,7 +229,7 @@ void test_cyclotomic_sqr(const std::string &annotation)
     CycloSqrT<FpExtT> sqr(pb, x, xsq, "sqr");
     sqr.generate_r1cs_constraints();
 
-    for (size_t i = 0; i < 10; ++i)
+    for i in 0..10
     {
         FpExtT x_val = FpExtT::random_element();
         x_val = ppT::final_exponentiation(x_val);
@@ -248,7 +248,7 @@ void test_Frobenius(const std::string &annotation)
 {
     type typename FpExtT::my_Fp FieldT;
 
-    for (size_t i = 0; i < 100; ++i)
+    for i in 0..100
     {
         protoboard<FieldT> pb;
         VarT<FpExtT> x(pb, "x");

@@ -65,7 +65,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-use libsnark::reductions::r1cs_to_qap::r1cs_to_qap;
+use crate::reductions::r1cs_to_qap::r1cs_to_qap;
 
 // //#endif // R1CS_TO_QAP_HPP_
 
@@ -88,7 +88,7 @@ use libsnark::reductions::r1cs_to_qap::r1cs_to_qap;
 
 use ffec::common::profiling;
 use ffec::common::utils;
-use libfqfft::evaluation_domain::get_evaluation_domain;
+use fqfft::evaluation_domain::get_evaluation_domain;
 
 
 
@@ -107,7 +107,7 @@ use libfqfft::evaluation_domain::get_evaluation_domain;
 pub fn
  r1cs_to_qap_instance_map(cs:&r1cs_constraint_system<FieldT>)->qap_instance<FieldT>
 {
-    ffec::enter_block("Call to r1cs_to_qap_instance_map");
+    ffec::enter_block("Call to r1cs_to_qap_instance_map",false);
 
     let domain = libfqfft::get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() +1);
 
@@ -314,7 +314,7 @@ pub fn
     ffec::enter_block("Compute ZK-patch");
     let coefficients_for_H=vec![FieldT::zero();domain.m+1];
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     /* add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z */
     for i in 0..domain.m
@@ -336,7 +336,7 @@ pub fn
     ffec::enter_block("Compute evaluation of polynomial H on set T");
     let H_tmp = &aA; // can overwrite aA because it is not used later
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..domain.m
     {
@@ -361,7 +361,7 @@ pub fn
     ffec::leave_block("Compute evaluation of polynomial C on set T");
 
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..domain.m
     {
@@ -380,7 +380,7 @@ pub fn
 
     ffec::enter_block("Compute sum of H and ZK-patch");
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..domain.m
     {

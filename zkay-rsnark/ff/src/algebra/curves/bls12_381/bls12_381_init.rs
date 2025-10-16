@@ -7,8 +7,8 @@
 
 //#ifndef BLS12_381_INIT_HPP_
 // #define BLS12_381_INIT_HPP_
-use libff/algebra/curves/public_params;
-use libff/algebra/curves/bls12_381/bls12_381_fields;
+use crate::algebra::curves::public_params;
+use crate::algebra::curves::bls12_381/bls12_381_fields;
 
 // namespace libff {
 
@@ -36,9 +36,9 @@ class bls12_381_G2;
 
 // } // namespace libff
 //#endif // BLS12_381_INIT_HPP_
-use libff/algebra/curves/bls12_381/bls12_381_g1;
-use libff/algebra/curves/bls12_381/bls12_381_g2;
-use libff/algebra/curves/bls12_381/bls12_381_init;
+use crate::algebra::curves::bls12_381/bls12_381_g1;
+use crate::algebra::curves::bls12_381/bls12_381_g2;
+use crate::algebra::curves::bls12_381/bls12_381_init;
 
 // namespace libff {
 

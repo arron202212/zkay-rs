@@ -18,16 +18,16 @@
 
 //#include <memory>
 
-use libfqfft/evaluation_domain/evaluation_domain;
+// use crate::evaluation_domain::evaluation_domain;
 
-namespace libfqfft {
+// //namespace libfqfft {
 
-template<typename FieldT>
-std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t min_size);
+// template<typename FieldT>
+// std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t min_size);
 
-} // libfqfft
+// //} // libfqfft
 
-use libfqfft/evaluation_domain/get_evaluation_domain.tcc;
+// use crate::evaluation_domain::get_evaluation_domain.tcc;
 
 //#endif // GET_EVALUATION_DOMAIN_HPP_
 
@@ -54,38 +54,40 @@ use libfqfft/evaluation_domain/get_evaluation_domain.tcc;
 //#ifndef GET_EVALUATION_DOMAIN_TCC_
 // #define GET_EVALUATION_DOMAIN_TCC_
 
-use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain;
-use libfqfft/evaluation_domain/domains/basic_radix2_domain;
-use libfqfft/evaluation_domain/domains/extended_radix2_domain;
-use libfqfft/evaluation_domain/domains/geometric_sequence_domain;
-use libfqfft/evaluation_domain/domains/step_radix2_domain;
-use libfqfft/evaluation_domain/evaluation_domain;
-use libfqfft/tools/exceptions;
+use crate::evaluation_domain::domains::arithmetic_sequence_domain::arithmetic_sequence_domain;
+use crate::evaluation_domain::domains::basic_radix2_domain::basic_radix2_domain;
+use crate::evaluation_domain::domains::extended_radix2_domain::extended_radix2_domain;
+use crate::evaluation_domain::domains::geometric_sequence_domain::geometric_sequence_domain;
+use crate::evaluation_domain::domains::step_radix2_domain::step_radix2_domain;
+use crate::evaluation_domain::evaluation_domain::evaluation_domain;
+use crate::polynomial_arithmetic::basic_operations::_polynomial_multiplication;
+ use crate::polynomial_arithmetic::basis_change::compute_subproduct_tree;
+use crate::tools::exceptions;
+use ffec::common::utils::log2;
+use rccell::RcCell;
+// //namespace libfqfft {
 
-namespace libfqfft {
-
-template<typename FieldT>
-std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t min_size)
+pub fn get_evaluation_domain<FieldT,ED:evaluation_domain<FieldT>>( min_size:usize)->eyre::Result<RcCell<ED >>
 {
-    std::shared_ptr<evaluation_domain<FieldT> > result;
+    // let mut  result; //RcCell::new( );//evaluation_domain::<FieldT>
 
-    const size_t big = 1ul<<(libff::log2(min_size)-1);
-    const size_t small = min_size - big;
-    const size_t rounded_small = (1ul<<libff::log2(small));
+    let  big = 1usize<<(log2(min_size)-1);
+    let  small = min_size - big;
+    let  rounded_small = (1usize<<log2(small));
 
-    try { result.reset(new basic_radix2_domain<FieldT>(min_size)); }
-    catch(...) { try { result.reset(new extended_radix2_domain<FieldT>(min_size)); }
-    catch(...) { try { result.reset(new step_radix2_domain<FieldT>(min_size)); }
-    catch(...) { try { result.reset(new basic_radix2_domain<FieldT>(big + rounded_small)); }
-    catch(...) { try { result.reset(new extended_radix2_domain<FieldT>(big + rounded_small)); }
-    catch(...) { try { result.reset(new step_radix2_domain<FieldT>(big + rounded_small)); }
-    catch(...) { try { result.reset(new geometric_sequence_domain<FieldT>(min_size)); }
-    catch(...) { try { result.reset(new arithmetic_sequence_domain<FieldT>(min_size)); }
-    catch(...) { throw DomainSizeException("get_evaluation_domain: no matching domain"); }}}}}}}}
-
-    return result;
+  
+//         result=basic_radix2_domain::<FieldT>::new(min_size)).map_err(||
+//         result=extended_radix2_domain::<FieldT>::new(min_size)) .map_err(||
+//         result=step_radix2_domain::<FieldT>::new(min_size)).map_err(||
+// result=basic_radix2_domain::<FieldT>::new(big + rounded_small)).map_err(||
+// result=extended_radix2_domain::<FieldT>::new(big + rounded_small)).map_err(||
+// result=step_radix2_domain::<FieldT>::new(big + rounded_small)).map_err(||
+//  result=geometric_sequence_domain::<FieldT>::new(min_size)).map_err(||
+//         result=arithmetic_sequence_domain::<FieldT>::new(min_size)).map_err(||
+//      eyre::bail!("get_evaluation_domain: no matching domain")))))))))
+ eyre::bail!("get_evaluation_domain: no matching domain")
 }
 
-} // libfqfft
+// //} // libfqfft
 
 //#endif // GET_EVALUATION_DOMAIN_TCC_

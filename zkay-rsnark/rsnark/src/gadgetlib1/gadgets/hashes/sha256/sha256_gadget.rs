@@ -13,9 +13,9 @@
 // #define SHA256_GADGET_HPP_
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_components;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_components;
 
 
 
@@ -93,7 +93,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_gadget;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_gadget;
 
 //#endif // SHA256_GADGET_HPP_
 /** @file
@@ -140,7 +140,7 @@ sha256_compression_function_gadget<FieldT>::sha256_compression_function_gadget(p
     round_h.push_back(pb_linear_combination_array<FieldT>(prev_output.rbegin() + 0*32, prev_output.rbegin() + 1*32));
 
     /* do the rounds */
-    for (size_t i = 0; i < 64; ++i)
+    for i in 0..64
     {
         round_h.push_back(round_g[i]);
         round_g.push_back(round_f[i]);
@@ -167,7 +167,7 @@ sha256_compression_function_gadget<FieldT>::sha256_compression_function_gadget(p
     /* finalize */
     unreduced_output.allocate(pb, 8, FMT(self.annotation_prefix, " unreduced_output"));
     reduced_output.allocate(pb, 8, FMT(self.annotation_prefix, " reduced_output"));
-    for (size_t i = 0; i < 8; ++i)
+    for i in 0..8
     {
         reduce_output.push_back(lastbits_gadget<FieldT>(pb,
                                                         unreduced_output[i],
@@ -182,12 +182,12 @@ template<typename FieldT>
 void sha256_compression_function_gadget<FieldT>::generate_r1cs_constraints()
 {
     message_schedule->generate_r1cs_constraints();
-    for (size_t i = 0; i < 64; ++i)
+    for i in 0..64
     {
         round_functions[i].generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < 4; ++i)
+    for i in 0..4
     {
         self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
                                                              round_functions[3-i].packed_d + round_functions[63-i].packed_new_a,
@@ -200,7 +200,7 @@ void sha256_compression_function_gadget<FieldT>::generate_r1cs_constraints()
             FMT(self.annotation_prefix, " unreduced_output_{}", 4+i));
     }
 
-    for (size_t i = 0; i < 8; ++i)
+    for i in 0..8
     {
         reduce_output[i].generate_r1cs_constraints();
     }
@@ -213,32 +213,32 @@ void sha256_compression_function_gadget<FieldT>::generate_r1cs_witness()
 
 // #ifdef DEBUG
     print!("Input:\n");
-    for (size_t j = 0; j < 16; ++j)
+    for j in 0..16
     {
         print!("%lx ", self.pb.val(packed_W[j]).as_ulong());
     }
     print!("\n");
 //#endif
 
-    for (size_t i = 0; i < 64; ++i)
+    for i in 0..64
     {
         round_functions[i].generate_r1cs_witness();
     }
 
-    for (size_t i = 0; i < 4; ++i)
+    for i in 0..4
     {
         self.pb.val(unreduced_output[i]) = self.pb.val(round_functions[3-i].packed_d) + self.pb.val(round_functions[63-i].packed_new_a);
         self.pb.val(unreduced_output[4+i]) = self.pb.val(round_functions[3-i].packed_h) + self.pb.val(round_functions[63-i].packed_new_e);
     }
 
-    for (size_t i = 0; i < 8; ++i)
+    for i in 0..8
     {
         reduce_output[i].generate_r1cs_witness();
     }
 
 // #ifdef DEBUG
     print!("Output:\n");
-    for (size_t j = 0; j < 8; ++j)
+    for j in 0..8
     {
         print!("%lx ", self.pb.val(reduced_output[j]).as_ulong());
     }

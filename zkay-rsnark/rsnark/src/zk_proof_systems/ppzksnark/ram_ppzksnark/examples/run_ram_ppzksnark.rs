@@ -13,7 +13,7 @@
 //#ifndef RUN_RAM_PPZKSNARK_HPP_
 // #define RUN_RAM_PPZKSNARK_HPP_
 
-use libsnark/relations/ram_computations/rams/examples/ram_examples;
+use crate::relations::ram_computations/rams/examples/ram_examples;
 use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark_params;
 
 
@@ -31,7 +31,7 @@ bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_
 
 
 
-use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
 
 //#endif // RUN_RAM_PPZKSNARK_HPP_
 /** @file
@@ -87,7 +87,7 @@ bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_
     ram_ppzksnark_keypair<ram_ppzksnark_ppT> keypair = ram_ppzksnark_generator<ram_ppzksnark_ppT>(example.ap, example.boot_trace_size_bound, example.time_bound);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<ram_ppzksnark_proving_key<ram_ppzksnark_ppT> >(keypair.pk);
@@ -99,7 +99,7 @@ bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_
     ram_ppzksnark_proof<ram_ppzksnark_ppT> proof = ram_ppzksnark_prover<ram_ppzksnark_ppT>(keypair.pk, example.boot_trace, example.auxiliary_input);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of proof");
         proof = ffec::reserialize<ram_ppzksnark_proof<ram_ppzksnark_ppT> >(proof);

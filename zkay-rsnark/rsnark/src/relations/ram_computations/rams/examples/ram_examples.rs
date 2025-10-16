@@ -13,7 +13,7 @@
 //#ifndef RAM_EXAMPLES_HPP_
 // #define RAM_EXAMPLES_HPP_
 
-use libsnark/relations/ram_computations/rams/ram_params;
+use crate::relations::ram_computations/rams/ram_params;
 
 
 
@@ -40,7 +40,7 @@ ram_example<ramT> gen_ram_example_complex(const ram_architecture_params<ramT> &a
 
 
 
-use libsnark/relations/ram_computations/rams/examples/ram_examples;
+use crate::relations::ram_computations/rams/examples/ram_examples;
 
 //#endif // RAM_EXAMPLES_HPP_
 /** @file
@@ -60,7 +60,7 @@ use libsnark/relations/ram_computations/rams/examples/ram_examples;
 //#ifndef RAM_EXAMPLES_TCC_
 // #define RAM_EXAMPLES_TCC_
 
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_aux;
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 
 
@@ -81,7 +81,7 @@ ram_example<ramT> gen_ram_example_simple(const ram_architecture_params<ramT> &ap
     tinyram_program prelude; prelude.instructions = generate_tinyram_prelude(ap);
 
     size_t boot_pos = 0;
-    for (size_t i = 0; i < prelude.instructions.size(); ++i)
+    for i in 0..prelude.instructions.size()
     {
         result.boot_trace.set_trace_entry(boot_pos++, std::make_pair(i, prelude.instructions[i].as_dword(ap)));
     }
@@ -93,7 +93,7 @@ ram_example<ramT> gen_ram_example_simple(const ram_architecture_params<ramT> &ap
         result.boot_trace.set_trace_entry(boot_pos++, random_tinyram_instruction(ap).as_dword(ap));
     }
 
-    for (size_t i = 0; i < input_size; ++i)
+    for i in 0..input_size
     {
         result.boot_trace.set_trace_entry(boot_pos++, std::make_pair((1ul<<(ap.dwaddr_len()-1)) + i, std::rand() % (1ul<<(2*ap.w))));
     }
@@ -124,7 +124,7 @@ ram_example<ramT> gen_ram_example_complex(const ram_architecture_params<ramT> &a
     tinyram_program prelude; prelude.instructions = generate_tinyram_prelude(ap);
 
     size_t boot_pos = 0;
-    for (size_t i = 0; i < prelude.instructions.size(); ++i)
+    for i in 0..prelude.instructions.size()
     {
         result.boot_trace.set_trace_entry(boot_pos++, std::make_pair(i, prelude.instructions[i].as_dword(ap)));
     }
@@ -152,7 +152,7 @@ ram_example<ramT> gen_ram_example_complex(const ram_architecture_params<ramT> &a
 
     result.boot_trace.set_trace_entry(boot_pos++, std::make_pair(1ul<<(ap.dwaddr_len()-1), satisfiable ? 1ul<<ap.w : 0));
 
-    for (size_t i = 1; i < input_size; ++i)
+    for i in 1..input_size
     {
         result.boot_trace.set_trace_entry(boot_pos++, std::make_pair((1ul<<(ap.dwaddr_len()-1)) + i + 1, std::rand() % (1ul<<(2*ap.w))));
     }

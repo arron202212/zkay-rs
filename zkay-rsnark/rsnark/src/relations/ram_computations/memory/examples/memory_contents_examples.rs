@@ -12,7 +12,7 @@
 //#ifndef MEMORY_CONTENTS_EXAMPLES_HPP_
 // #define MEMORY_CONTENTS_EXAMPLES_HPP_
 
-use libsnark/relations/ram_computations/memory/memory_interface;
+use crate::relations::ram_computations/memory/memory_interface;
 
 
 
@@ -54,7 +54,7 @@ use  <cstdlib>
 use  <map>
 use  <set>
 
-use libsnark/relations/ram_computations/memory/examples/memory_contents_examples;
+use crate::relations::ram_computations/memory/examples/memory_contents_examples;
 
 
 
@@ -66,12 +66,12 @@ memory_contents block_memory_contents(const size_t num_addresses,
     const size_t max_unit = 1ul<<value_size;
 
     memory_contents result;
-    for (size_t i = 0; i < block1_size; ++i)
+    for i in 0..block1_size
     {
         result[i] = std::rand() % max_unit;
     }
 
-    for (size_t i = 0; i < block2_size; ++i)
+    for i in 0..block2_size
     {
         result[num_addresses/2+i] = std::rand() % max_unit;
     }
@@ -86,13 +86,13 @@ memory_contents random_memory_contents(const size_t num_addresses,
     const size_t max_unit = 1ul<<value_size;
 
     std::set<size_t> unfilled;
-    for (size_t i = 0; i < num_addresses; ++i)
+    for i in 0..num_addresses
     {
         unfilled.insert(i);
     }
 
     memory_contents result;
-    for (size_t i = 0; i < num_filled; ++i)
+    for i in 0..num_filled
     {
         auto it = unfilled.begin();
         std::advance(it, std::rand() % unfilled.size());

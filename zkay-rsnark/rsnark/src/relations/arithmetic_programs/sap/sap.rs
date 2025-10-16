@@ -1,38 +1,38 @@
-/** @file
- *****************************************************************************
+// /** @file
+//  *****************************************************************************
 
- Declaration of interfaces for a SAP ("Square Arithmetic Program").
+//  Declaration of interfaces for a SAP ("Square Arithmetic Program").
 
- SAPs are defined in \[GM17].
+//  SAPs are defined in \[GM17].
 
- References:
+//  References:
 
- \[GM17]:
- "Snarky Signatures: Minimal Signatures of Knowledge from
-  Simulation-Extractable SNARKs",
- Jens Groth and Mary Maller,
- IACR-CRYPTO-2017,
- <https://eprint.iacr.org/2017/540>
+//  \[GM17]:
+//  "Snarky Signatures: Minimal Signatures of Knowledge from
+//   Simulation-Extractable SNARKs",
+//  Jens Groth and Mary Maller,
+//  IACR-CRYPTO-2017,
+//  <https://eprint.iacr.org/2017/540>
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of libsnark, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
 //#ifndef SAP_HPP_
 // #define SAP_HPP_
 
-use  <map>
-use  <memory>
+// use  <map>
+// use  <memory>
 
 use fqfft::evaluation_domain::evaluation_domain;
 
 
 
 /* forward declaration */
-template<typename FieldT>
-class sap_witness;
+// 
+// class sap_witness;
 
 /**
  * A SAP instance.
@@ -45,44 +45,45 @@ class sap_witness;
  * There is no need to store the Z polynomial because it is uniquely
  * determined by the domain (as Z is its vanishing polynomial).
  */
-template<typename FieldT>
-class sap_instance {
-private:
-    size_t num_variables_;
-    size_t degree_;
-    size_t num_inputs_;
+// 
+pub struct sap_instance<FieldT> {
+// //private:
+num_variables:    usize,
+degree:    usize,
+num_inputs:    usize,
 
-public:
-    std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain;
+// //public:
+domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
 
-    std::vector<std::map<size_t, FieldT> > A_in_Lagrange_basis;
-    std::vector<std::map<size_t, FieldT> > C_in_Lagrange_basis;
+A_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
+C_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
+}
 
-    sap_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                 const size_t num_variables,
-                 const size_t degree,
-                 const size_t num_inputs,
-                 const std::vector<std::map<size_t, FieldT> > &A_in_Lagrange_basis,
-                 const std::vector<std::map<size_t, FieldT> > &C_in_Lagrange_basis);
+//     sap_instance(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
+//                  const usize num_variables,
+//                  const usize degree,
+//                  const usize num_inputs,
+//                  const Vec<HashMap<usize, FieldT> > &A_in_Lagrange_basis,
+//                  const Vec<HashMap<usize, FieldT> > &C_in_Lagrange_basis);
 
-    sap_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                 const size_t num_variables,
-                 const size_t degree,
-                 const size_t num_inputs,
-                 std::vector<std::map<size_t, FieldT> > &&A_in_Lagrange_basis,
-                 std::vector<std::map<size_t, FieldT> > &&C_in_Lagrange_basis);
+//     sap_instance(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
+//                  const usize num_variables,
+//                  const usize degree,
+//                  const usize num_inputs,
+//                  Vec<HashMap<usize, FieldT> > &&A_in_Lagrange_basis,
+//                  Vec<HashMap<usize, FieldT> > &&C_in_Lagrange_basis);
 
-    sap_instance(const sap_instance<FieldT> &other) = default;
-    sap_instance(sap_instance<FieldT> &&other) = default;
-    sap_instance& operator=(const sap_instance<FieldT> &other) = default;
-    sap_instance& operator=(sap_instance<FieldT> &&other) = default;
+//     sap_instance(const sap_instance<FieldT> &other) = default;
+//     sap_instance(sap_instance<FieldT> &&other) = default;
+//     sap_instance& operator=(const sap_instance<FieldT> &other) = default;
+//     sap_instance& operator=(sap_instance<FieldT> &&other) = default;
 
-    size_t num_variables() const;
-    size_t degree() const;
-    size_t num_inputs() const;
+//     usize num_variables() const;
+//     usize degree() const;
+//     usize num_inputs() const;
 
-    bool is_satisfied(const sap_witness<FieldT> &witness) const;
-};
+//     bool is_satisfied(const sap_witness<FieldT> &witness) const;
+// };
 
 /**
  * A SAP instance evaluation is a SAP instance that is evaluated at a field element t.
@@ -95,97 +96,99 @@ public:
  * - evaluations of all monomials of t;
  * - counts about how many of the above evaluations are in fact non-zero.
  */
-template<typename FieldT>
-class sap_instance_evaluation {
-private:
-    size_t num_variables_;
-    size_t degree_;
-    size_t num_inputs_;
-public:
-    std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain;
+// 
+pub struct sap_instance_evaluation<FieldT>{
+//private:
+num_variables:    usize,
+degree:    usize,
+num_inputs:    usize,
+//public:
+domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
 
-    FieldT t;
+t:    FieldT,
 
-    std::vector<FieldT> At, Ct, Ht;
+Ht:    Vec<FieldT>, At:Vec<FieldT>, Ct:Vec<FieldT>,
 
-    FieldT Zt;
+Zt:    FieldT,
+}
 
-    sap_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                            const size_t num_variables,
-                            const size_t degree,
-                            const size_t num_inputs,
-                            const FieldT &t,
-                            const std::vector<FieldT> &At,
-                            const std::vector<FieldT> &Ct,
-                            const std::vector<FieldT> &Ht,
-                            const FieldT &Zt);
-    sap_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                            const size_t num_variables,
-                            const size_t degree,
-                            const size_t num_inputs,
-                            const FieldT &t,
-                            std::vector<FieldT> &&At,
-                            std::vector<FieldT> &&Ct,
-                            std::vector<FieldT> &&Ht,
-                            const FieldT &Zt);
+//     sap_instance_evaluation(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
+//                             const usize num_variables,
+//                             const usize degree,
+//                             const usize num_inputs,
+//                             const FieldT &t,
+//                             const Vec<FieldT> &At,
+//                             const Vec<FieldT> &Ct,
+//                             const Vec<FieldT> &Ht,
+//                             const FieldT &Zt);
+//     sap_instance_evaluation(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
+//                             const usize num_variables,
+//                             const usize degree,
+//                             const usize num_inputs,
+//                             const FieldT &t,
+//                             Vec<FieldT> &&At,
+//                             Vec<FieldT> &&Ct,
+//                             Vec<FieldT> &&Ht,
+//                             const FieldT &Zt);
 
-    sap_instance_evaluation(const sap_instance_evaluation<FieldT> &other) = default;
-    sap_instance_evaluation(sap_instance_evaluation<FieldT> &&other) = default;
-    sap_instance_evaluation& operator=(const sap_instance_evaluation<FieldT> &other) = default;
-    sap_instance_evaluation& operator=(sap_instance_evaluation<FieldT> &&other) = default;
+//     sap_instance_evaluation(const sap_instance_evaluation<FieldT> &other) = default;
+//     sap_instance_evaluation(sap_instance_evaluation<FieldT> &&other) = default;
+//     sap_instance_evaluation& operator=(const sap_instance_evaluation<FieldT> &other) = default;
+//     sap_instance_evaluation& operator=(sap_instance_evaluation<FieldT> &&other) = default;
 
-    size_t num_variables() const;
-    size_t degree() const;
-    size_t num_inputs() const;
+//     usize num_variables() const;
+//     usize degree() const;
+//     usize num_inputs() const;
 
-    bool is_satisfied(const sap_witness<FieldT> &witness) const;
-};
+//     bool is_satisfied(const sap_witness<FieldT> &witness) const;
+// };
 
 /**
  * A SAP witness.
  */
-template<typename FieldT>
-class sap_witness {
-private:
-    size_t num_variables_;
-    size_t degree_;
-    size_t num_inputs_;
+// 
+pub struct sap_witness<FieldT>{
+//private:
+num_variables:    usize,
+degree:    usize,
+num_inputs:    usize,
 
-public:
-    FieldT d1, d2;
+//public:
+d2:    FieldT,d1:FieldT,
 
-    std::vector<FieldT> coefficients_for_ACs;
-    std::vector<FieldT> coefficients_for_H;
+coefficients_for_ACs:    Vec<FieldT>,
+coefficients_for_H:    Vec<FieldT>,
+}
 
-    sap_witness(const size_t num_variables,
-                const size_t degree,
-                const size_t num_inputs,
-                const FieldT &d1,
-                const FieldT &d2,
-                const std::vector<FieldT> &coefficients_for_ACs,
-                const std::vector<FieldT> &coefficients_for_H);
+//     sap_witness(const usize num_variables,
+//                 const usize degree,
+//                 const usize num_inputs,
+//                 const FieldT &d1,
+//                 const FieldT &d2,
+//                 const Vec<FieldT> &coefficients_for_ACs,
+//                 const Vec<FieldT> &coefficients_for_H);
 
-    sap_witness(const size_t num_variables,
-                const size_t degree,
-                const size_t num_inputs,
-                const FieldT &d1,
-                const FieldT &d2,
-                const std::vector<FieldT> &coefficients_for_ACs,
-                std::vector<FieldT> &&coefficients_for_H);
+//     sap_witness(const usize num_variables,
+//                 const usize degree,
+//                 const usize num_inputs,
+//                 const FieldT &d1,
+//                 const FieldT &d2,
+//                 const Vec<FieldT> &coefficients_for_ACs,
+//                 Vec<FieldT> &&coefficients_for_H);
 
-    sap_witness(const sap_witness<FieldT> &other) = default;
-    sap_witness(sap_witness<FieldT> &&other) = default;
-    sap_witness& operator=(const sap_witness<FieldT> &other) = default;
-    sap_witness& operator=(sap_witness<FieldT> &&other) = default;
+//     sap_witness(const sap_witness<FieldT> &other) = default;
+//     sap_witness(sap_witness<FieldT> &&other) = default;
+//     sap_witness& operator=(const sap_witness<FieldT> &other) = default;
+//     sap_witness& operator=(sap_witness<FieldT> &&other) = default;
 
-    size_t num_variables() const;
-    size_t degree() const;
-    size_t num_inputs() const;
-};
+//     usize num_variables() const;
+//     usize degree() const;
+//     usize num_inputs() const;
+// };
 
 
 
-use libsnark::relations::arithmetic_programs::sap::sap;
+// use crate::relations::arithmetic_programs::sap::sap;
 
 //#endif // SAP_HPP_
 /** @file
@@ -210,288 +213,299 @@ use ffec::common::utils;
 use fqfft::evaluation_domain::evaluation_domain;
 
 
+impl<FieldT> sap_instance<FieldT>{
 
-template<typename FieldT>
-sap_instance<FieldT>::sap_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                   const size_t num_variables,
-                                   const size_t degree,
-                                   const size_t num_inputs,
-                                   const std::vector<std::map<size_t, FieldT> > &A_in_Lagrange_basis,
-                                   const std::vector<std::map<size_t, FieldT> > &C_in_Lagrange_basis) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    A_in_Lagrange_basis(A_in_Lagrange_basis),
-    C_in_Lagrange_basis(C_in_Lagrange_basis)
+pub fn new(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
+                                   num_variables:usize,
+                                   degree:usize,
+                                   num_inputs:usize,
+                                   A_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >,
+                                   C_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >) ->Self
+   
 {
+ Self{num_variables,
+    degree,
+    num_inputs,
+    domain,
+    A_in_Lagrange_basis,
+    C_in_Lagrange_basis}
 }
 
-template<typename FieldT>
-sap_instance<FieldT>::sap_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                   const size_t num_variables,
-                                   const size_t degree,
-                                   const size_t num_inputs,
-                                   std::vector<std::map<size_t, FieldT> > &&A_in_Lagrange_basis,
-                                   std::vector<std::map<size_t, FieldT> > &&C_in_Lagrange_basis) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    A_in_Lagrange_basis((A_in_Lagrange_basis)),
-    C_in_Lagrange_basis((C_in_Lagrange_basis))
+
+pub fn new2(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
+                                   num_variables:usize,
+                                   degree:usize,
+                                   num_inputs:usize,
+A_in_Lagrange_basis:                                   Vec<HashMap<usize, FieldT> >,
+C_in_Lagrange_basis:                                   Vec<HashMap<usize, FieldT> >) ->Self
+   
 {
+ Self{num_variables,
+    degree,
+    num_inputs,
+    domain,
+    A_in_Lagrange_basis,
+    C_in_Lagrange_basis}
 }
 
-template<typename FieldT>
-size_t sap_instance<FieldT>::num_variables() const
+
+pub fn num_variables()->usize
 {
-    return num_variables_;
+    return num_variables;
 }
 
-template<typename FieldT>
-size_t sap_instance<FieldT>::degree() const
+
+pub fn degree()->usize
 {
-    return degree_;
+    return degree;
 }
 
-template<typename FieldT>
-size_t sap_instance<FieldT>::num_inputs() const
+
+pub fn num_inputs()->usize
 {
-    return num_inputs_;
+    return num_inputs;
 }
 
-template<typename FieldT>
-bool sap_instance<FieldT>::is_satisfied(const sap_witness<FieldT> &witness) const
+
+ pub fn is_satisfied(witness:sap_witness<FieldT>) ->bool
 {
-    const FieldT t = FieldT::random_element();
+    let  t = FieldT::random_element();
 
-    std::vector<FieldT> At(self.num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ct(self.num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ht(self.degree()+1);
+    let At =vec![FieldT::zero();self.num_variables()+1];
+    let  Ct =vec![FieldT::zero();self.num_variables()+1];
+    let  Ht=Vec::with_capacity(self.degree()+1);
 
-    const FieldT Zt = self.domain->compute_vanishing_polynomial(t);
+    let  Zt = self.domain.compute_vanishing_polynomial(t);
 
-    const std::vector<FieldT> u = self.domain->evaluate_all_lagrange_polynomials(t);
+    let  u = self.domain.evaluate_all_lagrange_polynomials(t);
 
-    for (size_t i = 0; i < self.num_variables()+1; ++i)
+    for  i in 0.. self.num_variables()+1
     {
-        for (auto &el : A_in_Lagrange_basis[i])
+        for el in &A_in_Lagrange_basis[i]
         {
             At[i] += u[el.first] * el.second;
         }
 
-        for (auto &el : C_in_Lagrange_basis[i])
+        for el in &C_in_Lagrange_basis[i]
         {
             Ct[i] += u[el.first] * el.second;
         }
     }
 
-    FieldT ti = FieldT::one();
-    for (size_t i = 0; i < self.degree()+1; ++i)
+    let  ti = FieldT::one();
+    for i in  0.. self.degree()+1
     {
         Ht[i] = ti;
         ti *= t;
     }
 
-    const sap_instance_evaluation<FieldT> eval_sap_inst(self.domain,
+    let   eval_sap_inst=sap_instance_evaluation::<FieldT>::new(self.domain,
                                                         self.num_variables(),
                                                         self.degree(),
                                                         self.num_inputs(),
                                                         t,
-                                                        (At),
-                                                        (Ct),
-                                                        (Ht),
+                                                        At,
+                                                        Ct,
+                                                        Ht,
                                                         Zt);
     return eval_sap_inst.is_satisfied(witness);
 }
-
-template<typename FieldT>
-sap_instance_evaluation<FieldT>::sap_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                                         const size_t num_variables,
-                                                         const size_t degree,
-                                                         const size_t num_inputs,
-                                                         const FieldT &t,
-                                                         const std::vector<FieldT> &At,
-                                                         const std::vector<FieldT> &Ct,
-                                                         const std::vector<FieldT> &Ht,
-                                                         const FieldT &Zt) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    t(t),
-    At(At),
-    Ct(Ct),
-    Ht(Ht),
-    Zt(Zt)
-{
 }
 
-template<typename FieldT>
-sap_instance_evaluation<FieldT>::sap_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                                         const size_t num_variables,
-                                                         const size_t degree,
-                                                         const size_t num_inputs,
-                                                         const FieldT &t,
-                                                         std::vector<FieldT> &&At,
-                                                         std::vector<FieldT> &&Ct,
-                                                         std::vector<FieldT> &&Ht,
-                                                         const FieldT &Zt) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    t(t),
-    At((At)),
-    Ct((Ct)),
-    Ht((Ht)),
-    Zt(Zt)
+impl<FieldT> sap_instance_evaluation<FieldT>{
+
+pub fn new(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
+                                                         num_variables:usize,
+                                                         degree:usize,
+                                                         num_inputs:usize,
+                                                         t:FieldT,
+                                                         At:Vec<FieldT>,
+                                                         Ct:Vec<FieldT>,
+                                                         Ht:Vec<FieldT>,
+                                                         Zt:FieldT) ->Self
+
 {
+    Self{num_variables,
+    degree,
+    num_inputs,
+    domain,
+    t,
+    At,
+    Ct,
+    Ht,
+    Zt}
 }
 
-template<typename FieldT>
-size_t sap_instance_evaluation<FieldT>::num_variables() const
+
+pub fn new1(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
+                                                         num_variables:usize,
+                                                         degree:usize,
+                                                         num_inputs:usize,
+                                                         t:FieldT,
+At:                                                         Vec<FieldT>,
+Ct:                                                         Vec<FieldT>,
+Ht:                                                         Vec<FieldT>,
+                                                         Zt:FieldT) ->Self
+  
 {
-    return num_variables_;
+ Self{ num_variables,
+    degree,
+    num_inputs,
+    domain,
+    t,
+    At,
+    Ct,
+    Ht,
+    Zt}
 }
 
-template<typename FieldT>
-size_t sap_instance_evaluation<FieldT>::degree() const
+
+pub fn num_variables()->usize
 {
-    return degree_;
+    return num_variables;
 }
 
-template<typename FieldT>
-size_t sap_instance_evaluation<FieldT>::num_inputs() const
+
+pub fn degree()->usize
 {
-    return num_inputs_;
+    return degree;
 }
 
-template<typename FieldT>
-bool sap_instance_evaluation<FieldT>::is_satisfied(const sap_witness<FieldT> &witness) const
+
+pub fn num_inputs()->usize
 {
-    if (self.num_variables() != witness.num_variables())
+    return num_inputs;
+}
+
+
+ pub fn is_satisfied(witness:sap_witness<FieldT>) ->bool
+{
+    if self.num_variables() != witness.num_variables()
     {
         return false;
     }
 
-    if (self.degree() != witness.degree())
+    if self.degree() != witness.degree()
     {
         return false;
     }
 
-    if (self.num_inputs() != witness.num_inputs())
+    if self.num_inputs() != witness.num_inputs()
     {
         return false;
     }
 
-    if (self.num_variables() != witness.coefficients_for_ACs.size())
+    if self.num_variables() != witness.coefficients_for_ACs.size()
     {
         return false;
     }
 
-    if (self.degree()+1 != witness.coefficients_for_H.size())
+    if self.degree()+1 != witness.coefficients_for_H.size()
     {
         return false;
     }
 
-    if (self.At.size() != self.num_variables()+1 || self.Ct.size() != self.num_variables()+1)
+    if self.At.size() != self.num_variables()+1 || self.Ct.size() != self.num_variables()+1
     {
         return false;
     }
 
-    if (self.Ht.size() != self.degree()+1)
+    if self.Ht.size() != self.degree()+1
     {
         return false;
     }
 
-    if (self.Zt != self.domain->compute_vanishing_polynomial(self.t))
+    if self.Zt != self.domain.compute_vanishing_polynomial(self.t)
     {
         return false;
     }
 
-    FieldT ans_A = self.At[0] + witness.d1*self.Zt;
-    FieldT ans_C = self.Ct[0] + witness.d2*self.Zt;
-    FieldT ans_H = FieldT::zero();
+    let ans_A = self.At[0] + witness.d1*self.Zt;
+    let ans_C = self.Ct[0] + witness.d2*self.Zt;
+    let ans_H = FieldT::zero();
 
-    ans_A = ans_A + ffec::inner_product<FieldT>(self.At.begin()+1,
+    ans_A = ans_A + ffec::inner_product::<FieldT>(self.At.begin()+1,
                                                  self.At.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ACs.begin(),
                                                  witness.coefficients_for_ACs.begin()+self.num_variables());
-    ans_C = ans_C + ffec::inner_product<FieldT>(self.Ct.begin()+1,
+    ans_C = ans_C + ffec::inner_product::<FieldT>(self.Ct.begin()+1,
                                                  self.Ct.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_ACs.begin(),
                                                  witness.coefficients_for_ACs.begin()+self.num_variables());
-    ans_H = ans_H + ffec::inner_product<FieldT>(self.Ht.begin(),
+    ans_H = ans_H + ffec::inner_product::<FieldT>(self.Ht.begin(),
                                                  self.Ht.begin()+self.degree()+1,
                                                  witness.coefficients_for_H.begin(),
                                                  witness.coefficients_for_H.begin()+self.degree()+1);
 
-    if (ans_A * ans_A - ans_C != ans_H * self.Zt)
+    if ans_A * ans_A - ans_C != ans_H * self.Zt
     {
         return false;
     }
 
     return true;
 }
-
-template<typename FieldT>
-sap_witness<FieldT>::sap_witness(const size_t num_variables,
-                                 const size_t degree,
-                                 const size_t num_inputs,
-                                 const FieldT &d1,
-                                 const FieldT &d2,
-                                 const std::vector<FieldT> &coefficients_for_ACs,
-                                 const std::vector<FieldT> &coefficients_for_H) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    d1(d1),
-    d2(d2),
-    coefficients_for_ACs(coefficients_for_ACs),
-    coefficients_for_H(coefficients_for_H)
-{
 }
+impl sap_witness<FieldT>{
 
-template<typename FieldT>
-sap_witness<FieldT>::sap_witness(const size_t num_variables,
-                                 const size_t degree,
-                                 const size_t num_inputs,
-                                 const FieldT &d1,
-                                 const FieldT &d2,
-                                 const std::vector<FieldT> &coefficients_for_ACs,
-                                 std::vector<FieldT> &&coefficients_for_H) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    d1(d1),
-    d2(d2),
-    coefficients_for_ACs(coefficients_for_ACs),
-    coefficients_for_H((coefficients_for_H))
+pub fn new(num_variables:usize,
+                                 degree:usize,
+                                 num_inputs:usize,
+                                 d1:FieldT,
+                                 d2:FieldT,
+                                 coefficients_for_ACs:Vec<FieldT>,
+                                 coefficients_for_H:Vec<FieldT>) ->Self
+   
 {
+ Self{num_variables,
+    degree,
+    num_inputs,
+    d1,
+    d2,
+    coefficients_for_ACs,
+    coefficients_for_H}
 }
 
 
-template<typename FieldT>
-size_t sap_witness<FieldT>::num_variables() const
+pub fn new2(num_variables:usize,
+                                 degree:usize,
+                                 num_inputs:usize,
+                                 d1:FieldT,
+                                 d2:FieldT,
+                                 coefficients_for_ACs:Vec<FieldT>,
+coefficients_for_H:                                 Vec<FieldT>) ->Self
+ 
 {
-    return num_variables_;
-}
-
-template<typename FieldT>
-size_t sap_witness<FieldT>::degree() const
-{
-    return degree_;
-}
-
-template<typename FieldT>
-size_t sap_witness<FieldT>::num_inputs() const
-{
-    return num_inputs_;
+   Self{
+    num_variables,
+    degree,
+    num_inputs,
+    d1,
+    d2,
+    coefficients_for_ACs,
+    coefficients_for_H
+    }
 }
 
 
 
+pub fn num_variables()->usize
+{
+    return num_variables;
+}
+
+
+pub fn degree()->usize
+{
+    return degree;
+}
+
+
+pub fn num_inputs()->usize
+{
+    return num_inputs;
+}
+
+
+}
 
 //#endif // SAP_TCC_

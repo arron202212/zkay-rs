@@ -12,14 +12,14 @@
  *****************************************************************************/
 //#include <gtest/gtest.h>
 
-use libff/algebra/curves/alt_bn128/alt_bn128_pp;
-use libff/algebra/curves/bls12_381/bls12_381_pp;
+use crate::algebra::curves::alt_bn128::alt_bn128_pp;
+use crate::algebra::curves::bls12_381/bls12_381_pp;
 // #ifdef CURVE_BN128
-use libff/algebra/curves/bn128/bn128_pp;
+use crate::algebra::curves::bn128::bn128_pp;
 //#endif
-use libff/algebra/curves/edwards/edwards_pp;
-use libff/algebra/curves/mnt/mnt4/mnt4_pp;
-use libff/algebra/curves/mnt/mnt6/mnt6_pp;
+use crate::algebra::curves::edwards/edwards_pp;
+use crate::algebra::curves::mnt::mnt4::mnt4_pp;
+use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 use crate::common::profiling;
 use crate::common::utils;
 

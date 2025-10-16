@@ -9,8 +9,8 @@
 
 use  <gtest/gtest.h>
 
-use libsnark/gadgetlib2/pp;
-use libsnark/gadgetlib2/protoboard;
+use crate::gadgetlib2::pp;
+use crate::gadgetlib2::protoboard;
 
 using namespace gadgetlib2;
 

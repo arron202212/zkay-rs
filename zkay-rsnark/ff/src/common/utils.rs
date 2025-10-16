@@ -27,7 +27,7 @@
 
 // namespace libff {
 
-type bit_vector=Vec<bool> ;
+pub type bit_vector=Vec<bool> ;
 
 // template<bool B, class T = void>
 // struct enable_if { typedef void* type; };
@@ -62,9 +62,9 @@ type bit_vector=Vec<bool> ;
 // void UNUSED(Types&&...) {}
 
 // #ifdef DEBUG
-// #define FMT libff::FORMAT
+// #define FMT FORMAT
 // #else
-// #define FMT(...) (libff::UNUSED(__VA_ARGS__), "")
+// #define FMT(...) (UNUSED(__VA_ARGS__), "")
 //#endif
 
 // void serialize_bit_vector(out:&String,v:& const bit_vector);
@@ -79,8 +79,8 @@ template<typename T>
 void print_vector(Vec <T> &vec);
 template<typename T>
 void print_vector(Vec <T> vec);*/
-
-pub fn  print_vector<T>(vec:&Vec <T>)
+ use std::fmt::Write;
+pub fn  print_vector<T: std::fmt::Display>(vec:&Vec <T>)
 {
     print!("{{ ");
     for  elem in  vec
@@ -117,7 +117,7 @@ pub fn  print_vector<T>(vec:&Vec <T>)
 
 // } // namespace libff
 
-// use libff/common/utils.tcc; /* note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) */
+// use crate::common::utils.tcc; /* note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) */
 //#endif // UTILS_HPP_
 /** @file
  *****************************************************************************
@@ -142,7 +142,7 @@ pub fn  print_vector<T>(vec:&Vec <T>)
  * Round n to the next power of two.
  * If n is a power of two, return n
  */
-pub fn get_power_of_two(n:usize)->usize{
+pub fn get_power_of_two(mut n:usize)->usize{
     n-=1;
     n |= n >> 1;
     n |= n >> 2;
@@ -157,7 +157,7 @@ pub fn get_power_of_two(n:usize)->usize{
 
 /* If n is a power of 2, returns n */
 pub fn round_to_next_power_of_2(n:usize)->usize{
-    1u64 << log2(n)
+    1usize << log2(n)
 }
 
 pub fn is_power_of_2(n:usize)->bool{
@@ -166,9 +166,9 @@ pub fn is_power_of_2(n:usize)->bool{
 
 /* returns ceil(log2(n)), so 1ul<<log2(n) is the smallest power of 2,
    that is not less than n. */
-pub fn log2(n:usize)->usize
+pub fn log2(mut n:usize)->usize
 {
-    let  r = if n & (n-1) == 0  {0 }else {1}; // add 1 if n is not power of 2
+    let mut  r = if n & (n-1) == 0  {0 }else {1}; // add 1 if n is not power of 2
 
     while n > 1
     {
@@ -179,18 +179,18 @@ pub fn log2(n:usize)->usize
     return r;
 }
 
-pub fn to_twos_complement(i:i32, w:usize)->usize{
-    assert!(i >= -(1i64<<(w-1)));
-    assert!(i < (1i64<<(w-1)));
-    return if i >= 0 {i} else {i + (1i64<<w)};
+pub fn to_twos_complement(i:i64, w:usize)->usize{
+    assert!(i  >= -(1i64<<(w-1)));
+    assert!(i  < (1i64<<(w-1)));
+    (if i >= 0 {i} else {i + (1i64<<w)}) as _
 }
 
-pub fn from_twos_complement(i:usize, w:usize)->i32{
-    assert!(i < (1u64<<w));
-    return if i < (1u64<<(w-1)) {i }else {i - (1u64<<w)};
+pub fn from_twos_complement(i:usize, w:usize)->usize{
+    assert!(i < (1usize<<w));
+    if i < (1usize<<(w-1)) {i }else {i - (1usize<<w)}
 }
 
-pub fn bitreverse(n:usize, l:usize)->usize{
+pub fn bitreverse(mut n:usize, l:usize)->usize{
     let mut  r = 0;
     for k in 0..l
     {
@@ -206,7 +206,7 @@ pub fn int_list_to_bits(l:&Vec<u64>, wordsize:usize)->bit_vector{
     {
         for j in 0..wordsize
         {
-            res[i*wordsize + j] = (l[i] & (1u64<<(wordsize-1-j))) != 0u32;
+            res[i*wordsize + j] = (l[i] & (1u64<<(wordsize-1-j))) != 0;
         }
     }
     return res;
@@ -215,9 +215,9 @@ pub fn int_list_to_bits(l:&Vec<u64>, wordsize:usize)->bit_vector{
 pub fn div_ceil( x:i64,  y:i64)->eyre::Result<i64>{
     if y == 0
     {
-        eyre::bail!("libff::div_ceil: division by zero, second argument must be non-zero");
+        eyre::bail!("div_ceil: division by zero, second argument must be non-zero");
     }
-    return (x + (y-1)) / y;
+    return Ok((x + (y-1)) / y);
 }
 
 pub fn is_little_endian()->bool{
@@ -237,7 +237,7 @@ pub fn is_little_endian()->bool{
 //     return prefix + std::string(buf);
 // }
 
-pub fn serialize_bit_vector(out:&String,v:& bit_vector){
+pub fn serialize_bit_vector(out:&mut String,v:& bit_vector){
     write!(out,"{}\n",v.len());
     for  b in  v
     {
@@ -247,8 +247,8 @@ pub fn serialize_bit_vector(out:&String,v:& bit_vector){
 
 pub fn deserialize_bit_vector(ins:&String,v:&mut  bit_vector){
     let mut buf_read=ins.split_ascii_whitespace();
-    let  size=buf_read.next().unwrap().parse::<i32>().unwrap();
-    v.resize(size);
+    let  size=buf_read.next().unwrap().parse::<usize>().unwrap() ;
+    v.resize(size,false);
     for i in 0..size
     {
         v[i] =buf_read.next().unwrap().parse::<bool>().unwrap();
@@ -271,29 +271,33 @@ pub fn deserialize_bit_vector(ins:&String,v:&mut  bit_vector){
 
 // using std::usize;
 
-
-pub fn curve_size_in_bits<CurveT>(v:&Vec<CurveT>)->usize{
+trait CConfig{
+    fn size_in_bits()->usize;
+    fn random_element<T>()->T;
+    fn is_zero(&self)->bool;
+}
+pub fn curve_size_in_bits<CurveT:CConfig>(v:&Vec<CurveT>)->usize{
     return v.len() * CurveT::size_in_bits();
 }
 
 
-pub fn random_element_non_zero_one<T>()->T{
-    let mut  x = T::random_element();
+pub fn random_element_non_zero_one<T:CConfig+num_traits::One+ std::cmp::PartialEq>()->T{
+    let mut  x :T= T::random_element();
     while x.is_zero() || x == T::one()
      {   x = T::random_element();}
     return x;
 }
 
-pub fn random_element_non_zero<T>()->T{
-    let mut  x = T::random_element();
+pub fn random_element_non_zero<T:CConfig>()->T{
+    let mut  x:T = T::random_element();
     while x.is_zero()
        { x = T::random_element();}
     return x;
 }
 
 
-pub fn random_element_exclude<T>(y:T)->T{
-    let mut  x = T::random_element();
+pub fn random_element_exclude<T:CConfig+ std::cmp::PartialEq>(y:T)->T{
+    let mut  x:T = T::random_element();
     while x == y
        { x = T::random_element();}
     return x;

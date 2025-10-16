@@ -38,8 +38,9 @@ use crate::common::serialization;
  * Wrapper class around GMP's MPZ long integers. It supports arithmetic operations,
  * serialization and randomization. Serialization is fragile, see common/serialization.hpp.
  */
-const GMP_NUMB_BITS:usize = 64;
+pub const GMP_NUMB_BITS:usize = 64;
 // template<mp_size_t n>
+#[derive(Clone)]
 pub struct bigint<const N:usize> {
     pub data:[u64;N],
 }
@@ -77,7 +78,7 @@ pub struct bigint<const N:usize> {
 // }
 
 // // } // namespace libff
-// use libff/algebra/field_utils/bigint.tcc;
+// use ffec::algebra::field_utils::/bigint.tcc;
 // //#endif
 
 
@@ -101,6 +102,8 @@ pub struct bigint<const N:usize> {
 // using usize;
 use std::mem;
 impl<const N:usize> bigint<N>{
+#[inline]
+ pub fn max_bits(&self)->usize { return N * GMP_NUMB_BITS; }
  /// Initalize from a small integer
 pub fn new(x:u64)->Self
 {
@@ -135,7 +138,7 @@ pub fn new_str(s:&str) ->Self
 // Initialize from MPZ element
 pub fn new_u64(r:u64) ->Self
 {//mpz_t
-    let mut  k;
+    let mut  k=0;
     // mpz_init_set(k, r);
     let mut data=[0;N];
     for i in 0..N
@@ -167,7 +170,7 @@ pub fn print_hex(&self)
     print!("{:N$x?}\n", self.data);
 }
 
-pub fn clear(&self)
+pub fn clear(&mut self)
 {
     // mpn_zero(self.data, n);
     self.data[..N].fill(0);
@@ -194,7 +197,7 @@ pub fn is_even(&self) ->bool
 pub fn num_bits(&self) ->usize
 {
 /*
-    for (long i = max_bits(); i >= 0; --i)
+    for i in ( 0..=max_bits()).rev()
     {
         if self.test_bit(i)
         {
@@ -224,7 +227,7 @@ pub fn as_ulong(&self) ->u64
     return self.data[0];
 }
 
-pub fn to_mpz(&self, r:u64) 
+pub fn to_mpz(&self, r:&mut u64) 
 {//mpz_t
     // mpz_set_ui(r, 0);
 
@@ -252,10 +255,11 @@ pub fn  test_bit(&self,bitno:usize) ->bool
 
 pub fn randomize(&mut self)->&Self
 {
-use rand::Rng;
+
     use std::mem;
     assert!(GMP_NUMB_BITS == mem::size_of::<u64>() * 8, "Wrong GMP_NUMB_BITS value");
 	// let mut  rd=std::random_device;
+use rand::Rng;
  let mut rng = rand::thread_rng();
 	let  num_random_words = mem::size_of::<u64>()  * N / mem::size_of::<u64>() ;//std::random_device::result_type
 	let  mut random_words = &mut self.data;//reinterpret_cast<std::random_device::result_type*>
@@ -272,6 +276,44 @@ use rand::Rng;
 
 // // } // namespace libff
 //#endif // BIGINT_TCC_
+use std::ops::Mul;
+impl<const N:usize> Mul for bigint<N> {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Self::new(0)
+    }
+}
+impl<T,const N:usize> Mul<&T> for &bigint<N> {
+    type Output = bigint<N>;
+
+    fn mul(self, rhs: &T) -> bigint<N> {
+        bigint::<N>::new(0)
+    }
+}
+impl<T,const N:usize> Mul<&T> for bigint<N> {
+    type Output = Self;
+
+    fn mul(self, rhs: &T) -> Self {
+        Self::new(0)
+    }
+}
+use std::cmp::Ordering;
+
+
+impl<const N:usize> PartialEq for bigint<N> {
+     #[inline]
+    fn eq(&self, other: &Self) -> bool {
+       self.data[.. N]== other.data[.. N]
+    }
+}
+impl<const N:usize> PartialOrd for bigint<N> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.data.cmp(&other.data))
+    }
+}
+
+
 
 // template<mp_size_t n>
 // bool bigint<n>::operator==(const bigint<n>& other) const
@@ -290,6 +332,20 @@ use rand::Rng;
 // {
 //     return (mpn_cmp(self.data, other.data, n) < 0);
 // }
+
+ use std::fmt;
+impl<const N:usize> fmt::Display for bigint<N> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        cfg_if::cfg_if! {
+        if #[cfg(feature="binary_output")]
+            {write!(f, "{}",  self.data )}else{
+            let mut t=0;   
+            self.to_mpz(&mut t);
+            write!(f, "{}",  t )}
+        }
+    }
+}
+
 
 // template<mp_size_t n>
 // std::ostream& operator<<(std::ostream &out, const bigint<n> &b)

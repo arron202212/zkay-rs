@@ -58,8 +58,8 @@ use  <type_traits>
 
 use ffec::common::profiling;
 
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/prf/aes_ctr_prf;
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/examples/signature/ed25519_signature;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::prf::aes_ctr_prf;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::signature::ed25519_signature;
 use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark;
 
 
@@ -91,7 +91,7 @@ bool run_r1cs_ppzkadsnark(const r1cs_example<ffec::Fr<snark_pp<ppT>> > &example,
     ffec::print_header("Preprocess verification key");
     r1cs_ppzkadsnark_processed_verification_key<ppT> pvk = r1cs_ppzkadsnark_verifier_process_vk<ppT>(keypair.vk);
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<r1cs_ppzkadsnark_proving_key<ppT> >(keypair.pk);
@@ -126,7 +126,7 @@ bool run_r1cs_ppzkadsnark(const r1cs_example<ffec::Fr<snark_pp<ppT>> > &example,
     r1cs_ppzkadsnark_proof<ppT> proof = r1cs_ppzkadsnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input,auth_data);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of proof");
         proof = ffec::reserialize<r1cs_ppzkadsnark_proof<ppT> >(proof);

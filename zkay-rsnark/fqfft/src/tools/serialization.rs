@@ -18,7 +18,7 @@
 //#include <set>
 //#include <vector>
 
-namespace libfqfft {
+//namespace libfqfft {
 
 /*
  * @todo
@@ -63,60 +63,69 @@ namespace libfqfft {
 // #ifdef BINARY_OUTPUT
 // #define OUTPUT_NEWLINE ""
 // #define OUTPUT_SEPARATOR ""
-#else
+// #else
 // #define OUTPUT_NEWLINE "\n"
 // #define OUTPUT_SEPARATOR " "
 //#endif
+cfg_if::cfg_if!{
+ if #[cfg(feature="BINARY_OUTPUT")]
+{const OUTPUT_NEWLINE:&str= "";
+const OUTPUT_SEPARATOR:&str= "";}
+else
+{const OUTPUT_NEWLINE:&str= "\n";
+const OUTPUT_SEPARATOR:&str= " ";
+}
+}
 
-inline void consume_newline(std::istream &in);
-inline void consume_OUTPUT_NEWLINE(std::istream &in);
-inline void consume_OUTPUT_SEPARATOR(std::istream &in);
+// inline void consume_newline(std::istream &in);
+// inline void consume_OUTPUT_NEWLINE(std::istream &in);
+// inline void consume_OUTPUT_SEPARATOR(std::istream &in);
 
-inline void output_bool(std::ostream &out, const bool b);
-inline void input_bool(std::istream &in, bool &b);
+// inline void output_bool(std::ostream &out, const bool b);
+// inline void input_bool(std::istream &in, bool &b);
 
-inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v);
-inline void input_bool_vector(std::istream &in, std::vector<bool> &v);
+// inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v);
+// inline void input_bool_vector(std::istream &in, std::vector<bool> &v);
 
-template<typename T>
-T reserialize(const T &obj);
+// template<typename T>
+// T reserialize(const T &obj);
 
-template<typename T>
-std::ostream& operator<<(std::ostream& out, const std::vector<T> &v);
+// template<typename T>
+// std::ostream& operator<<(std::ostream& out, const std::vector<T> &v);
 
-template<typename T>
-std::istream& operator>>(std::ostream& out, std::vector<T> &v);
+// template<typename T>
+// std::istream& operator>>(std::ostream& out, std::vector<T> &v);
 
-template<typename T1, typename T2>
-std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m);
+// template<typename T1, typename T2>
+// std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m);
 
-template<typename T1, typename T2>
-std::istream& operator>>(std::istream& in, std::map<T1, T2> &m);
+// template<typename T1, typename T2>
+// std::istream& operator>>(std::istream& in, std::map<T1, T2> &m);
 
-template<typename T>
-std::ostream& operator<<(std::ostream& out, const std::set<T> &s);
+// template<typename T>
+// std::ostream& operator<<(std::ostream& out, const std::set<T> &s);
 
-template<typename T>
-std::istream& operator>>(std::istream& in, std::set<T> &s);
+// template<typename T>
+// std::istream& operator>>(std::istream& in, std::set<T> &s);
 
-} // libfqfft
+// //} // libfqfft
 
-// #include "common/serialization.tcc"
-use libfqfft/tools/serialization.tcc;
+// // #include "common/serialization.tcc"
+// use crate::tools::serialization.tcc;
 
 //#endif // SERIALIZATION_HPP_
-/** @file
- *****************************************************************************
+// /** @file
+//  *****************************************************************************
 
- Implementation of serialization routines.
+//  Implementation of serialization routines.
 
- See serialization.hpp .
+//  See serialization.hpp .
 
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of libfqfft, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
 //#ifndef SERIALIZATION_TCC_
 // #define SERIALIZATION_TCC_
@@ -124,185 +133,185 @@ use libfqfft/tools/serialization.tcc;
 //#include <cassert>
 //#include <sstream>
 
-namespace libfqfft {
+//namespace libfqfft {
 
-inline void consume_newline(std::istream &in)
-{
-    char c;
-    in.read(&c, 1);
-}
+// inline void consume_newline(std::istream &in)
+// {
+//     char c;
+//     in.read(&c, 1);
+// }
 
-inline void consume_OUTPUT_NEWLINE(std::istream &in)
-{
-// #ifdef BINARY_OUTPUT
-    // nothing to consume
-#else
-    char c;
-    in.read(&c, 1);
-//#endif
-}
+// inline void consume_OUTPUT_NEWLINE(std::istream &in)
+// {
+// // #ifdef BINARY_OUTPUT
+//     // nothing to consume
+// #else
+//     char c;
+//     in.read(&c, 1);
+// //#endif
+// }
 
-inline void consume_OUTPUT_SEPARATOR(std::istream &in)
-{
-// #ifdef BINARY_OUTPUT
-    // nothing to consume
-#else
-    char c;
-    in.read(&c, 1);
-//#endif
-}
+// inline void consume_OUTPUT_SEPARATOR(std::istream &in)
+// {
+// // #ifdef BINARY_OUTPUT
+//     // nothing to consume
+// #else
+//     char c;
+//     in.read(&c, 1);
+// //#endif
+// }
 
-inline void output_bool(std::ostream &out, const bool b)
-{
-    out << (b ? 1 : 0) << "\n";
-}
+// inline void output_bool(std::ostream &out, const bool b)
+// {
+//     out << (b ? 1 : 0) << "\n";
+// }
 
-inline void input_bool(std::istream &in, bool &b)
-{
-    size_t tmp;
-    in >> tmp;
-    consume_newline(in);
-    assert!(tmp == 0 || tmp == 1);
+// inline void input_bool(std::istream &in, bool &b)
+// {
+//     size_t tmp;
+//     in >> tmp;
+//     consume_newline(in);
+//     assert!(tmp == 0 || tmp == 1);
 
-    b = (tmp == 1 ? true : false);
-}
+//     b = (tmp == 1 ? true : false);
+// }
 
-inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v)
-{
-    out << v.size() << "\n";
-    for (const bool b : v)
-    {
-        output_bool(out, b);
-    }
-}
+// inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v)
+// {
+//     out << v.size() << "\n";
+//     for b in &v
+//     {
+//         output_bool(out, b);
+//     }
+// }
 
-inline void input_bool_vector(std::istream &in, std::vector<bool> &v)
-{
-    size_t size;
-    in >> size;
-    consume_newline(in);
-    v.resize(size);
-    for (size_t i = 0; i < size; ++i)
-    {
-        bool b;
-        input_bool(in, b);
-        v[i] = b;
-    }
-}
+// inline void input_bool_vector(std::istream &in, std::vector<bool> &v)
+// {
+//     size_t size;
+//     in >> size;
+//     consume_newline(in);
+//     v.resize(size);
+//     for i in 0..size
+//     {
+//         bool b;
+//         input_bool(in, b);
+//         v[i] = b;
+//     }
+// }
 
-template<typename T>
-T reserialize(const T &obj)
-{
-    std::stringstream ss;
-    ss << obj;
-    T tmp;
-    ss >> tmp;
-    assert!(obj == tmp);
-    return tmp;
-}
+// template<typename T>
+// T reserialize(const T &obj)
+// {
+//     std::stringstream ss;
+//     ss << obj;
+//     T tmp;
+//     ss >> tmp;
+//     assert!(obj == tmp);
+//     return tmp;
+// }
 
-template<typename T>
-std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
-{
-    assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
-    out << v.size() << "\n";
-    for (const T& t : v)
-    {
-        out << t << OUTPUT_NEWLINE;
-    }
+// template<typename T>
+// std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
+// {
+//     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
+//     out << v.size() << "\n";
+//     for t in &v
+//     {
+//         out << t << OUTPUT_NEWLINE;
+//     }
 
-    return out;
-}
+//     return out;
+// }
 
-template<typename T>
-std::istream& operator>>(std::istream& in, std::vector<T> &v)
-{
-    assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
-    size_t size;
-    in >> size;
-    consume_newline(in);
+// template<typename T>
+// std::istream& operator>>(std::istream& in, std::vector<T> &v)
+// {
+//     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
+//     size_t size;
+//     in >> size;
+//     consume_newline(in);
 
-    v.resize(0);
-    for (size_t i = 0; i < size; ++i)
-    {
-        T elt;
-        in >> elt;
-        consume_OUTPUT_NEWLINE(in);
-        v.push_back(elt);
-    }
+//     v.resize(0);
+//     for i in 0..size
+//     {
+//         T elt;
+//         in >> elt;
+//         consume_OUTPUT_NEWLINE(in);
+//         v.push_back(elt);
+//     }
 
-    return in;
-}
+//     return in;
+// }
 
-template<typename T1, typename T2>
-std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m)
-{
-    out << m.size() << "\n";
+// template<typename T1, typename T2>
+// std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m)
+// {
+//     out << m.size() << "\n";
 
-    for (auto &it : m)
-    {
-        out << it.first << "\n";
-        out << it.second << "\n";
-    }
+//     for it in &m
+//     {
+//         out << it.first << "\n";
+//         out << it.second << "\n";
+//     }
 
-    return out;
-}
+//     return out;
+// }
 
-template<typename T1, typename T2>
-std::istream& operator>>(std::istream& in, std::map<T1, T2> &m)
-{
-    m.clear();
-    size_t size;
-    in >> size;
-    consume_newline(in);
+// template<typename T1, typename T2>
+// std::istream& operator>>(std::istream& in, std::map<T1, T2> &m)
+// {
+//     m.clear();
+//     size_t size;
+//     in >> size;
+//     consume_newline(in);
 
-    for (size_t i = 0; i < size; ++i)
-    {
-        T1 k;
-        T2 v;
-        in >> k;
-        consume_newline(in);
-        in >> v;
-        consume_newline(in);
-        m[k] = v;
-    }
+//     for i in 0..size
+//     {
+//         T1 k;
+//         T2 v;
+//         in >> k;
+//         consume_newline(in);
+//         in >> v;
+//         consume_newline(in);
+//         m[k] = v;
+//     }
 
-    return in;
-}
+//     return in;
+// }
 
-template<typename T>
-std::ostream& operator<<(std::ostream& out, const std::set<T> &s)
-{
-    out << s.size() << "\n";
+// template<typename T>
+// std::ostream& operator<<(std::ostream& out, const std::set<T> &s)
+// {
+//     out << s.size() << "\n";
 
-    for (auto &el : s)
-    {
-        out << el << "\n";
-    }
+//     for el in &s
+//     {
+//         out << el << "\n";
+//     }
 
-    return out;
-}
+//     return out;
+// }
 
 
-template<typename T>
-std::istream& operator>>(std::istream& in, std::set<T> &s)
-{
-    s.clear();
-    size_t size;
-    in >> size;
-    consume_newline(in);
+// template<typename T>
+// std::istream& operator>>(std::istream& in, std::set<T> &s)
+// {
+//     s.clear();
+//     size_t size;
+//     in >> size;
+//     consume_newline(in);
 
-    for (size_t i = 0; i < size; ++i)
-    {
-        T el;
-        in >> el;
-        consume_newline(in);
-        s.insert(el);
-    }
+//     for i in 0..size
+//     {
+//         T el;
+//         in >> el;
+//         consume_newline(in);
+//         s.insert(el);
+//     }
 
-    return in;
-}
+//     return in;
+// }
 
-}
+// }
 
 //#endif // SERIALIZATION_TCC_

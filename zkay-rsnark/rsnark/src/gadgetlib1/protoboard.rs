@@ -16,7 +16,7 @@ use  <vector>
 
 use ffec::common::utils;
 
-use libsnark/gadgetlib1/pb_variable;
+use crate::gadgetlib1::pb_variable;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
@@ -73,7 +73,7 @@ private:
 };
 
 
-use libsnark/gadgetlib1/protoboard;
+use crate::gadgetlib1::protoboard;
 //#endif // PROTOBOARD_HPP_
 /** @file
  *****************************************************************************
@@ -149,7 +149,7 @@ FieldT protoboard<FieldT>::val(const pb_variable<FieldT> &var) const
 template<typename FieldT>
 FieldT& protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc)
 {
-    if (lc.is_variable)
+    if lc.is_variable
     {
         return self.val(pb_variable<FieldT>(lc.index));
     }
@@ -163,7 +163,7 @@ FieldT& protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc)
 template<typename FieldT>
 FieldT protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc) const
 {
-    if (lc.is_variable)
+    if lc.is_variable
     {
         return self.val(pb_variable<FieldT>(lc.index));
     }
@@ -205,7 +205,7 @@ template<typename FieldT>
 void protoboard<FieldT>::dump_variables() const
 {
 // #ifdef DEBUG
-    for (size_t i = 0; i < constraint_system.num_variables; ++i)
+    for i in 0..constraint_system.num_variables
     {
         print!("%-40s --> ", constraint_system.variable_annotations[i].c_str());
         values[i].as_bigint().print_hex();

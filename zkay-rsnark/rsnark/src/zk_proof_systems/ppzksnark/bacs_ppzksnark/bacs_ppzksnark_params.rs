@@ -14,7 +14,7 @@
 
 use ffec::algebra::curves::public_params;
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems/bacs/bacs;
 
 
 

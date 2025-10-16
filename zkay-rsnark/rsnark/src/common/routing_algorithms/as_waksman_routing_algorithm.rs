@@ -146,7 +146,7 @@ bool valid_as_waksman_routing(const integer_permutation &permutation, const as_w
 
 use  <cassert>
 
-use libsnark/common/routing_algorithms/as_waksman_routing_algorithm;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm;
 
 
 
@@ -212,7 +212,7 @@ void construct_as_waksman_inner(const size_t left,
                                 const std::vector<size_t> rhs_dests,
                                 as_waksman_topology &neighbors)
 {
-    if (left > right)
+    if left > right
     {
         return;
     }
@@ -222,27 +222,27 @@ void construct_as_waksman_inner(const size_t left,
     const size_t subnetwork_width = as_waksman_num_columns(subnetwork_size);
     assert!(right - left + 1 >= subnetwork_width);
 
-    if (right - left + 1 > subnetwork_width)
+    if right - left + 1 > subnetwork_width
     {
         /**
          * If there is more space for the routing network than needed,
          * just add straight edges. This also handles the size-1 base case.
          */
-        for (size_t packet_idx = lo; packet_idx <= hi; ++packet_idx)
+        for packet_idx in lo..=hi
         {
             neighbors[left][packet_idx].first = neighbors[left][packet_idx].second = packet_idx;
             neighbors[right][packet_idx].first = neighbors[right][packet_idx].second = rhs_dests[packet_idx - lo];
         }
 
         std::vector<size_t> new_rhs_dests(subnetwork_size, -1);
-        for (size_t packet_idx = lo; packet_idx <= hi; ++packet_idx)
+        for packet_idx in lo..=hi
         {
             new_rhs_dests[packet_idx-lo] = packet_idx;
         }
 
         construct_as_waksman_inner(left+1, right-1, lo, hi, new_rhs_dests, neighbors);
     }
-    else if (subnetwork_size == 2)
+    else if subnetwork_size == 2
     {
         /* Non-trivial base case: routing a 2-element permutation. */
         neighbors[left][lo].first = neighbors[left][hi].second = rhs_dests[0];
@@ -263,7 +263,7 @@ void construct_as_waksman_inner(const size_t left,
          * even case can be eliminated (i.e., set to a constant). We handle
          * this later.
          */
-        for (size_t row_idx = lo; row_idx < (subnetwork_size % 2 == 1 ? hi : hi + 1); row_idx += 2)
+        for hi in &hi + 1; row_idx += 2)
         {
             neighbors[left][row_idx].first = neighbors[left][row_idx+1].second = as_waksman_switch_output(subnetwork_size, lo, row_idx, true);
             neighbors[left][row_idx].second = neighbors[left][row_idx+1].first = as_waksman_switch_output(subnetwork_size, lo, row_idx, false);
@@ -275,7 +275,7 @@ void construct_as_waksman_inner(const size_t left,
             neighbors[right][row_idx].second = neighbors[right][row_idx+1].first = rhs_dests[row_idx+1-lo];
         }
 
-        if (subnetwork_size % 2 == 1)
+        if subnetwork_size % 2 == 1
         {
             /**
              * Odd special case:
@@ -314,7 +314,7 @@ as_waksman_topology generate_as_waksman_topology(const size_t num_packets)
     as_waksman_topology neighbors(width, std::vector<std::pair<size_t, size_t> >(num_packets, std::make_pair<size_t, size_t>(-1, -1)));
 
     std::vector<size_t> rhs_dests(num_packets);
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         rhs_dests[packet_idx] = packet_idx;
     }
@@ -410,7 +410,7 @@ void as_waksman_route_inner(const size_t left,
                             const integer_permutation &permutation_inv,
                             as_waksman_routing &routing)
 {
-    if (left > right)
+    if left > right
     {
         return;
     }
@@ -427,7 +427,7 @@ void as_waksman_route_inner(const size_t left,
     assert!(permutation.inverse() == permutation_inv);
 //#endif
 
-    if (right - left + 1 > subnetwork_width)
+    if right - left + 1 > subnetwork_width
     {
         /**
          * If there is more space for the routing network than required,
@@ -436,7 +436,7 @@ void as_waksman_route_inner(const size_t left,
          */
         as_waksman_route_inner(left+1, right-1, lo, hi, permutation, permutation_inv, routing);
     }
-    else if (subnetwork_size == 2)
+    else if subnetwork_size == 2
     {
         /**
          * Non-trivial base case: switch settings for a 2-element permutation
@@ -464,14 +464,14 @@ void as_waksman_route_inner(const size_t left,
         size_t max_unrouted;
         bool route_left;
 
-        if (subnetwork_size % 2 == 1)
+        if subnetwork_size % 2 == 1
         {
             /**
              * ODD CASE: we first deal with the bottom-most straight wire,
              * which is not connected to any of the switches at this level
              * of recursion and just passed into the lower subnetwork.
              */
-            if (permutation.get(hi) == hi)
+            if permutation.get(hi) == hi
             {
                 /**
                  * Easy sub-case: it is routed directly to the bottom-most
@@ -521,18 +521,18 @@ void as_waksman_route_inner(const size_t left,
              * INVARIANT: the wire `to_route' on LHS (if route_left = true),
              * resp., RHS (if route_left = false) can be routed.
              */
-            if (route_left)
+            if route_left
             {
                 /* If switch value has not been assigned, assign it arbitrarily. */
                 const size_t lhs_switch = as_waksman_get_canonical_row_idx(lo, to_route);
-                if (routing[left].find(lhs_switch) == routing[left].end())
+                if routing[left].find(lhs_switch) == routing[left].end()
                 {
                     routing[left][lhs_switch] = false;
                 }
                 const bool lhs_switch_setting = routing[left][lhs_switch];
                 const bool use_top = as_waksman_get_top_bottom_decision_from_switch_setting(lo, to_route, lhs_switch_setting);
                 const size_t t = as_waksman_switch_output(subnetwork_size, lo, lhs_switch, use_top);
-                if (permutation.get(to_route) == hi)
+                if permutation.get(to_route) == hi
                 {
                     /**
                      * We have routed to the straight wire for the odd case,
@@ -591,7 +591,7 @@ void as_waksman_route_inner(const size_t left,
             }
 
             /* If the next packet to be routed hasn't been routed before, then try routing it. */
-            if (!route_left || !lhs_routed[to_route-lo])
+            if !route_left || !lhs_routed[to_route-lo]
             {
                 continue;
             }
@@ -602,7 +602,7 @@ void as_waksman_route_inner(const size_t left,
                 max_unrouted-=1;
             }
 
-            if (max_unrouted < lo || (max_unrouted == lo && lhs_routed[0])) /* lhs_routed[0] = corresponds to lo shifted by lo */
+            if max_unrouted < lo || (max_unrouted == lo && lhs_routed[0]) /* lhs_routed[0] = corresponds to lo shifted by lo */
             {
                 /* All routed! */
                 break;
@@ -614,7 +614,7 @@ void as_waksman_route_inner(const size_t left,
             }
         }
 
-        if (subnetwork_size % 2 == 0)
+        if subnetwork_size % 2 == 0
         {
             /* Remove the AS-Waksman switch with the fixed value. */
             routing[left].erase(hi-1);
@@ -650,13 +650,13 @@ bool valid_as_waksman_routing(const integer_permutation &permutation, const as_w
 
     integer_permutation curperm(num_packets);
 
-    for (size_t column_idx = 0; column_idx < width; ++column_idx)
+    for column_idx in 0..width
     {
         integer_permutation nextperm(num_packets);
-        for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+        for packet_idx in 0..num_packets
         {
             size_t routed_packet_idx;
-            if (neighbors[column_idx][packet_idx].first == neighbors[column_idx][packet_idx].second)
+            if neighbors[column_idx][packet_idx].first == neighbors[column_idx][packet_idx].second
             {
                 routed_packet_idx = neighbors[column_idx][packet_idx].first;
             }

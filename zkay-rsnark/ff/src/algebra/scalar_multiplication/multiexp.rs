@@ -25,7 +25,7 @@
 // // namespace libff {
 const inhibit_profiling_info:bool=false;
  use std::marker::ConstParamTy;
-use std::ops::Add;
+use std::ops::{Add,Mul};
 use std::io::Write;
  #[derive(ConstParamTy, PartialEq, Eq)]
 enum multi_exp_method {
@@ -139,7 +139,7 @@ type window_table<T> =Vec<Vec<T>>;
 
 // // } // namespace libff
 // 
-// use libff::algebra::scalar_multiplication::multiexp.tcc;
+// use crate::algebra::scalar_multiplication::multiexp.tcc;
 // 
 // //#endif // MULTIEXP_HPP_
 /** @file
@@ -170,12 +170,15 @@ use crate::common::utils::log2;
 // using std::usize;
 
 // template<mp_size_t n>
+#[derive(Clone)]
 pub struct ordered_exponent<const N:usize> {
 // to use std::push_heap and friends later
 
 pub idx:    usize,
 pub r:    bigint<N>,
 }
+
+
 impl<const N:usize> ordered_exponent<N>{
     pub fn new(idx:usize, r:bigint<N>) ->Self {
         Self{idx, r }
@@ -282,8 +285,8 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
 struct MultiExpInner<const Method: multi_exp_method>;
 
 trait MultiExpInnerConfig{
-    fn  multi_exp_inner<T,FieldT>(vec:&[T],scalar:&[FieldT])->T;
-    fn fixed_base_exp_window_table(&self)->Vec<usize>;
+    fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Config+Clone+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<T,Output = T>+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T;
+
 }
 
 const fn check( method:multi_exp_method) -> u8 {
@@ -299,6 +302,10 @@ const fn check( method:multi_exp_method) -> u8 {
 trait AsBigint{
 const num_limbs:i32=0;
 fn as_bigint<const N:usize>(&self)->bigint<N>;
+    fn dbl<T>(&self)->T;
+    fn fixed_base_exp_window_table()->Vec<usize>;
+    fn batch_to_special_all_non_zeros<T>(t:Vec<T>);
+    fn to_special(&self);
 }
 
 // template<typename T, typename FieldT, multi_exp_method Method,
@@ -308,14 +315,15 @@ fn as_bigint<const N:usize>(&self)->bigint<N>;
 //     typename Vec<T>::const_iterator vec_end,
 //     typename Vec<FieldT>::const_iterator scalar_start,
 //     typename Vec<FieldT>::const_iterator scalar_end)
-impl MultiExpInnerConfig for   MultiExpInner<0>{
-fn  multi_exp_inner<T: num_traits::Zero,FieldT:AsBigint>(vec:&[T],scalar:&[FieldT])->T
+impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_naive}>{
+fn  multi_exp_inner<T: num_traits::Zero+Config+Clone+ std::ops::Sub<Output = T>,FieldT:AsBigint,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
+    // const NN:usize=const {FieldT::num_limbs};
     assert!(vec.len() == scalar.len());
     let mut  result=T::zero();
     for (v,s) in vec.iter().zip(scalar)
     {
-        let scalar_bigint: bigint<{FieldT::num_limbs}>  = s.as_bigint();
+       let scalar_bigint  = s.as_bigint::<{NN}>();
         result = result + opt_window_wnaf_exp(v, &scalar_bigint, scalar_bigint.num_bits());
     }
     // assert!(scalar_it == scalar_end);
@@ -331,14 +339,14 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT:AsBigint>(vec:&[T],scalar:&[Field
 //     typename Vec<T>::const_iterator vec_end,
 //     typename Vec<FieldT>::const_iterator scalar_start,
 //     typename Vec<FieldT>::const_iterator scalar_end)
-impl MultiExpInnerConfig for   MultiExpInner<1>{
-fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>>(vec:&[T],scalar:&[FieldT])->T
+impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_naive_plain}>{
+fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
     assert!(vec.len() == scalar.len());
     let mut  result=T::zero();
     for (v,s) in vec.iter().zip(scalar)
     {
-        result = result + (*s) * (*v);
+        result = result ;//+ s * v;
     }
     // assert!(scalar_it == scalar_end);
 
@@ -354,8 +362,8 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>>(vec
 //     typename Vec<T>::const_iterator vec_end,
 //     typename Vec<FieldT>::const_iterator scalar_start,
 //     typename Vec<FieldT>::const_iterator scalar_end)
-impl MultiExpInnerConfig for   MultiExpInner<2>{
-fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsBigint>(vec:&[T],scalar:&[FieldT])->T
+impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_bos_coster}>{
+fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub<Output = T>,FieldT: std::ops::Mul<T, Output = T>+AsBigint+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
     const  n:usize = 0;//FieldT::num_limbs;//MYTODO
 
@@ -366,7 +374,7 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
 
     if vec.len()==1
     {
-        return scalar[0]*vec[0];
+        return scalar[0].clone()*vec[0].clone();
     }
 
    
@@ -378,7 +386,7 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
     assert!(vec.len() == scalar.len());
     for (i,(v,s)) in vec.iter().zip(scalar).enumerate()
     {
-        g.push(*v);
+        g.push(v.clone());
         opt_q.push(ordered_exponent::<n>::new(i, s.as_bigint()));
     }
     // std::make_heap(opt_q.begin(),opt_q.end());
@@ -396,10 +404,10 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
 
     loop
     {
-        let a = &opt_q[0];
+        let mut a =  opt_q[0].clone();
         let  b =  if opt_q[1] < opt_q[2] { &opt_q[2]} else {&opt_q[1]};
 
-        let  abits = a.r.num_bits();
+        let  abits:usize = a.r.num_bits();
 
         if b.r.is_zero()
         {
@@ -432,7 +440,7 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
             a.r.data[..n].iter_mut().zip(& b.r.data[..n]).for_each(|(ar    ,&br)|{
                 *ar-=br;
             });
-            g[b.idx] = g[b.idx] + g[a.idx];
+            g[b.idx] = g[b.idx].clone() + g[a.idx].clone();
         }
 
         // regardless of whether a was cleared or subtracted from we push it down, then take back up
@@ -444,12 +452,12 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
             // this is a max-heap so to maintain a heap property we swap with the largest of the two
             if opt_q[2*a_pos+1] < opt_q[2*a_pos+2]
             {
-                std::mem::swap(&mut opt_q[a_pos], &mut opt_q[2*a_pos+2]);
+                opt_q.swap(a_pos,2*a_pos+2);
                 a_pos = 2*a_pos+2;
             }
             else
-            {
-                std::mem::swap(&mut opt_q[a_pos], &mut opt_q[2*a_pos+1]);
+            {   
+                opt_q.swap(a_pos,2*a_pos+1);
                 a_pos = 2*a_pos+1;
             }
         }
@@ -457,7 +465,7 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
         /* now heapify A up appropriate amount of times */
         while a_pos > 0 && opt_q[(a_pos-1)/2] < opt_q[a_pos]
         {
-            std::mem::swap(&mut opt_q[a_pos], &mut opt_q[(a_pos-1)/2]);
+            opt_q.swap(a_pos,(a_pos-1)/2);
             a_pos = (a_pos-1) / 2;
         }
     }
@@ -474,8 +482,8 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T, Output = T>+AsB
 //     typename Vec<T>::const_iterator bases_end,
 //     typename Vec<FieldT>::const_iterator exponents,
 //     typename Vec<FieldT>::const_iterator exponents_end)
-impl MultiExpInnerConfig for   MultiExpInner<3>{
-fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
+impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_BDLO12}>{
+fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Clone,FieldT: AsBigint,const NN:usize>(bases:&[T],exponents:&[FieldT])->T
 {
     // UNUSED(exponents_end);
     let  length = bases.len();
@@ -484,19 +492,19 @@ fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
     let  log2_length = log2(length);
     let  c = log2_length - (log2_length / 3 - 2);
 
-    let  exp_num_limbs =FieldT::num_limbs;
-    let mut  bn_exponents=Vec::with_capacity(length);
+    // let  exp_num_limbs =FieldT::num_limbs;
+    let mut  bn_exponents=Vec::<bigint::<{NN}>>::with_capacity(length);
     let mut  num_bits = 0;
 
     for i in 0..length
     {
-        bn_exponents[i] = exponents[i].as_bigint();
+        bn_exponents[i] = exponents[i].as_bigint::<{NN}>();
         num_bits = std::cmp::max(num_bits, bn_exponents[i].num_bits());
     }
 
     let  num_groups = (num_bits + c - 1) / c;
 
-    let mut  result=T:zero();
+    let mut  result=T::zero();
     let mut  result_nonzero = false;
 
     for k in num_groups..=num_groups
@@ -538,7 +546,7 @@ fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
             }
             else
             {
-                buckets[id] = bases[i];
+                buckets[id] = bases[i].clone();
                 bucket_nonzero[id] = true;
             }
         }
@@ -547,7 +555,7 @@ fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
         // batch_to_special(buckets);
 // //#endif
 
-        let mut running_sum;
+        let mut running_sum=T::zero();
         let mut  running_sum_nonzero = false;
 
         for i in (0.. 1usize << c).rev()
@@ -564,7 +572,7 @@ fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
                 }
                 else
                 {
-                    running_sum = buckets[i];
+                    running_sum = buckets[i].clone();
                     running_sum_nonzero = true;
                 }
             }
@@ -573,11 +581,11 @@ fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
             {
                 if result_nonzero
                 {
-                    result = result + running_sum;
+                    result = result + running_sum.clone();
                 }
                 else
                 {
-                    result = running_sum;
+                    result = running_sum.clone();
                     result_nonzero = true;
                 }
             }
@@ -588,14 +596,14 @@ fn  multi_exp_inner<T,FieldT: AsBigint>(bases:&[T],exponents:&[FieldT])->T
 }
 }
 // template<typename T, typename FieldT, multi_exp_method Method>
-pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone,FieldT,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
+pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone+Config+AsBigint+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<T,Output = T>+Clone,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
              chunks:usize)->T
 {
     let  total = vec.len();
-    if (total < chunks) || (chunks == 1)
+    if total < chunks || chunks == 1
     {
         // no need to split into "chunks", can call implementation directly
-        return MultiExpInner::<Method>::multi_exp_inner::<T, FieldT>(
+        return MultiExpInner::<{multi_exp_method::multi_exp_method_BDLO12}>::multi_exp_inner::<T, FieldT,0>(
             vec, scalar);
     }
 
@@ -604,11 +612,11 @@ pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone,FieldT,const Method:mult
    let mut  partial=vec![ T::zero();chunks];
 
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..chunks
     {
-        partial[i] =MultiExpInner::<Method>::multi_exp_inner::<T,FieldT>(
+        partial[i] =MultiExpInner::<{multi_exp_method::multi_exp_method_BDLO12}>::multi_exp_inner::<T,FieldT,0>(
             &vec[i*one..vec.len().min((i+1)*one)],&scalar[i*one..scalar.len().min((i+1)*one)]);
             //      multi_exp_inner<T, FieldT, Method>(
             //  vec_start + i*one,
@@ -621,19 +629,19 @@ pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone,FieldT,const Method:mult
 
     for i in 0..chunks
     {
-        finals = finals + partial[i];
+        finals = finals + partial[i].clone();
     }
 
     return finals;
 }
 use crate::common::profiling::print_indent;
-pub fn multi_exp_with_mixed_addition<T: num_traits::Zero+ std::clone::Clone,FieldT: num_traits::Zero+num_traits::One+ std::cmp::PartialEq,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
+pub fn multi_exp_with_mixed_addition<T: num_traits::Zero+AsBigint+ std::ops::Sub<Output = T>+Config+std::clone::Clone,FieldT: num_traits::Zero+num_traits::One+ std::cmp::PartialEq+Clone+AsBigint + std::ops::Mul<T,Output = T>,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
              chunks:usize)->T
 {
 // //#ifndef NDEBUG
     // assert!(std::distance(vec_start, vec_end) == std::distance(scalar_start, scalar_end));
 // #else
-    // libff::UNUSED(vec_end);
+    // UNUSED(vec_end);
 // //#endif
     enter_block("Process scalar vector",false);
     // auto value_it = vec_start;
@@ -641,7 +649,7 @@ pub fn multi_exp_with_mixed_addition<T: num_traits::Zero+ std::clone::Clone,Fiel
 
     let  zero = FieldT::zero();
     let  one = FieldT::one();
-    let mut  p=vec![];
+    let mut  p:Vec<FieldT>=vec![];
     let mut  g=vec![];
 
     let acc = T::zero();
@@ -668,8 +676,8 @@ pub fn multi_exp_with_mixed_addition<T: num_traits::Zero+ std::clone::Clone,Fiel
         }
         else
         {
-            p.push(*s);
-            g.push(*v);
+            p.push(s.clone());
+            g.push(v.clone());
             num_other+=1;
         }
     }
@@ -686,7 +694,7 @@ pub fn multi_exp_with_mixed_addition<T: num_traits::Zero+ std::clone::Clone,Fiel
     return acc + multi_exp::<T, FieldT, Method>(&g, &p, chunks);
 }
 
-pub fn inner_product<T: num_traits::Zero>(a:&[T],b:&[T])->T
+pub fn inner_product<T: num_traits::Zero+std::clone::Clone+Config+AsBigint+std::ops::Mul<T,Output = T>+ std::ops::Sub<Output = T>>(a:&[T],b:&[T])->T
 {
     return multi_exp::<T, T, {multi_exp_method::multi_exp_method_naive_plain}>(
         a,
@@ -695,7 +703,7 @@ pub fn inner_product<T: num_traits::Zero>(a:&[T],b:&[T])->T
 
 pub fn  get_exp_window_size<T:AsBigint+ MultiExpInnerConfig>(num_scalars: usize)->usize
 {
-    if T::fixed_base_exp_window_table.empty()
+    if T::fixed_base_exp_window_table().is_empty()
     {
 // // #ifdef LOWMEM
         // return 14;
@@ -704,7 +712,7 @@ pub fn  get_exp_window_size<T:AsBigint+ MultiExpInnerConfig>(num_scalars: usize)
 // //#endif
     }
     let mut  window = 1;
-    for i in (0..T::fixed_base_exp_window_table.len()).rev()
+    for i in (0..T::fixed_base_exp_window_table().len()).rev()
     {
 // // #ifdef DEBUG
         // if !inhibit_profiling_info
@@ -712,7 +720,7 @@ pub fn  get_exp_window_size<T:AsBigint+ MultiExpInnerConfig>(num_scalars: usize)
             // print!("%ld {} {}\n", i, num_scalars, T::fixed_base_exp_window_table[i]);
         // }
 // //#endif
-        if T::fixed_base_exp_window_table[i] != 0 && num_scalars >= T::fixed_base_exp_window_table[i]
+        if T::fixed_base_exp_window_table()[i] != 0 && num_scalars >= T::fixed_base_exp_window_table()[i]
         {
             window = i+1;
             break;
@@ -756,30 +764,30 @@ pub fn  get_exp_window_size<T:AsBigint+ MultiExpInnerConfig>(num_scalars: usize)
         let mut  cur_in_window = if outer == outerc-1  {last_in_window} else {in_window};
         for inner in 0..cur_in_window as usize
         {
-            powers_of_g[outer][inner] = ginner;
+            powers_of_g[outer][inner] = ginner.clone();
             ginner = ginner + gouter.clone();
         }
 
         for i in 0..window
         {
-            gouter = gouter + gouter;
+            gouter = gouter.clone() + gouter;
         }
     }
 
     return powers_of_g;
 }
 
-pub fn  windowed_exp<T:AsBigint+Clone,FieldT:AsBigint>(scalar_size:usize,
+pub fn  windowed_exp<T:AsBigint+Clone+ std::ops::Add,FieldT:AsBigint,const NN:usize>(scalar_size:usize,
                window:usize,
                powers_of_g: &window_table<T>,
                pow: &FieldT)->T
 where T: Add<T, Output = T>
 {
     let mut  outerc = (scalar_size+window-1)/window;
-    let  pow_val = pow.as_bigint();
+    let  pow_val = pow.as_bigint::<{NN}>();
 
     /* exp */
-    let  res = powers_of_g[0][0];
+    let  mut res = powers_of_g[0][0].clone();
 
     for outer in 0..outerc
     {
@@ -792,30 +800,31 @@ where T: Add<T, Output = T>
             }
         }
 
-        res = res + powers_of_g[outer][inner as usize];
+        res = res + powers_of_g[outer][inner as usize].clone();
     }
 
     return res;
 }
 
 
- pub fn batch_exp<T: std::clone::Clone+ std::ops::Add,FieldT>(scalar_size:usize,
+ pub fn batch_exp<T: std::clone::Clone+ std::ops::Add+AsBigint,FieldT:AsBigint,const NN:usize>(scalar_size:usize,
                          window:usize,
                          table: &window_table<T>,
                          v: &Vec<FieldT>)->Vec<T>
+where T: Add<T, Output = T>
 {
     if !inhibit_profiling_info
     {
         print_indent();
     }
-    let mut  res=vec![table[0][0];v.len()];
+    let mut  res=vec![table[0][0].clone();v.len()];
 
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..v.len()
     {
-        res[i] = windowed_exp(scalar_size, window, table, &v[i]);
+        res[i] = windowed_exp::<_,_,{NN}>(scalar_size, window, table, &v[i]);
 
         if !inhibit_profiling_info && (i % 10000 == 0)
         {
@@ -832,24 +841,25 @@ where T: Add<T, Output = T>
     return res;
 }
 
-pub fn  batch_exp_with_coeff<T,FieldT>(scalar_size:usize,
+pub fn  batch_exp_with_coeff<T: std::clone::Clone+AsBigint+ std::ops::Add,FieldT:AsBigint+Clone,const NN:usize>(scalar_size:usize,
                                     window:usize,
                                     table: &window_table<T>,
                                     coeff:&FieldT,
                                     v: &Vec<FieldT>)->Vec<T>
+where for<'a> &'a FieldT: Mul<FieldT>,for<'a> <&'a FieldT as Mul<FieldT>>::Output: AsBigint,T: Add<T, Output = T>
 {
     if !inhibit_profiling_info
     {
         print_indent();
     }
-    let mut  res=vec![table[0][0];v.len()];
+    let mut  res=vec![table[0][0].clone();v.len()];
 
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..v.len()
     {
-        res[i] = windowed_exp(scalar_size, window, table, coeff * v[i]);
+        res[i] = windowed_exp::<_,_,{NN}>(scalar_size, window, table, &(coeff * v[i].clone()));
 
         if !inhibit_profiling_info && (i % 10000 == 0)
         {
@@ -866,20 +876,20 @@ pub fn  batch_exp_with_coeff<T,FieldT>(scalar_size:usize,
     return res;
 }
 
-pub fn  batch_to_special<T: num_traits::Zero>(vec:&Vec<T>)
+pub fn  batch_to_special<T: num_traits::Zero+AsBigint+Clone>(vec:&mut Vec<T>)
 {
-    enter_block("Batch-convert elements to special form");
+    enter_block("Batch-convert elements to special form",false);
 
     let mut  non_zero_vec=vec![];
     for i in 0..vec.len()
     {
         if !vec[i].is_zero()
         {
-            non_zero_vec.push(vec[i]);
+            non_zero_vec.push(vec[i].clone());
         }
     }
 
-    T::batch_to_special_all_non_zeros(non_zero_vec);
+    T::batch_to_special_all_non_zeros(non_zero_vec.clone());
     let mut  it = non_zero_vec.iter();
     let mut  zero_special = T::zero();
     zero_special.to_special();
@@ -888,14 +898,14 @@ pub fn  batch_to_special<T: num_traits::Zero>(vec:&Vec<T>)
     {
         if !vec[i].is_zero()
         {
-            vec[i] = *it.next().unwrap();
+            vec[i] = it.next().unwrap().clone();
         }
         else
         {
-            vec[i] = zero_special;
+            vec[i] = zero_special.clone();
         }
     }
-    leave_block("Batch-convert elements to special form");
+    leave_block("Batch-convert elements to special form",false);
 }
 
 // // } // namespace libff

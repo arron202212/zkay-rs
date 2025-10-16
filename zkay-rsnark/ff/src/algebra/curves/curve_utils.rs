@@ -9,15 +9,15 @@
 // #define CURVE_UTILS_HPP_
 //#include <cstdint>
 
-use crate::algebra::field_utils::bigint;
+use crate::algebra::field_utils::bigint::bigint;
 
 // namespace libff {
 
-template<typename GroupT, mp_size_t m>
-GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar);
+// template<typename GroupT, mp_size_t m>
+// GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar);
 
 // } // namespace libff
-use libff/algebra/curves/curve_utils.tcc;
+// use crate::algebra::curves::curve_utils.tcc;
 
 //#endif // CURVE_UTILS_HPP_
 /** @file
@@ -32,24 +32,24 @@ use libff/algebra/curves/curve_utils.tcc;
 
 // namespace libff {
 
-template<typename GroupT, mp_size_t m>
-GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar)
+// template<typename GroupT, mp_size_t m>
+ pub fn scalar_mul<GroupT: num_traits::Zero,const M:usize>(base:&GroupT, scalar:&bigint<M>)->GroupT
 {
-    GroupT result = GroupT::zero();
+    let mut  result = GroupT::zero();
 
-    bool found_one = false;
-    for (long i = static_cast<long>(scalar.max_bits() - 1); i >= 0; --i)
+    let mut  found_one = false;
+    for i in ( 0..=(scalar.max_bits() - 1)).rev()
     {
-        if (found_one)
-        {
-            result = result.dbl();
-        }
+        // if found_one
+        // {
+        //     result = result.dbl();
+        // }
 
-        if (scalar.test_bit(i))
-        {
-            found_one = true;
-            result = result + base;
-        }
+        // if scalar.test_bit(i)
+        // {
+        //     found_one = true;
+        //     result = result + base;
+        // }
     }
 
     return result;

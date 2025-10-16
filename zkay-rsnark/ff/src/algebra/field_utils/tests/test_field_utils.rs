@@ -7,11 +7,11 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-#include "libff/algebra/field_utils/bigint.hpp"
-#include "libff/algebra/field_utils/field_utils.hpp"
-#include "libff/algebra/field_utils/algorithms.hpp"
-#include "libff/algebra/fields/binary/gf64.hpp"
-#include "libff/algebra/curves/edwards/edwards_fields.hpp"
+use crate::algebra::field_utils::bigint;
+use crate::algebra::field_utils::field_utils;
+use crate::algebra::field_utils::algorithms;
+use crate::algebra::fields::binary::gf64;
+use crate::algebra::curves::edwards/edwards_fields;
 //#include <gtest/gtest.h>
 
 using namespace libff;

@@ -11,7 +11,7 @@
 // #define FP3_HPP_
 //#include <vector>
 
-use libff/algebra/fields/prime_base/fp;
+use crate::algebra::fields::prime_base::fp;
 
 // namespace libff {
 
@@ -168,7 +168,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n, modulus> Fp3_model<n, modulus>::Frobenius_coeffs_c2[3];
 
 // } // namespace libff
-use libff/algebra/fields/prime_extension/fp3.tcc;
+use crate::algebra::fields::prime_extension::fp3.tcc;
 
 //#endif // FP3_HPP_
 /** @file
@@ -455,7 +455,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp3_model<n, modulus> > &v)
 {
     out << v.size() << "\n";
-    for (const Fp3_model<n, modulus>& t : v)
+    for t in &v
     {
         out << t << OUTPUT_NEWLINE;
     }
@@ -476,7 +476,7 @@ std::istream& operator>>(std::istream& in, std::vector<Fp3_model<n, modulus> > &
 
     v.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         Fp3_model<n, modulus> el;
         in >> el;

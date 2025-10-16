@@ -16,12 +16,12 @@
 
 use  <memory>
 
-use ffec::algebra::curves::mnt/mnt4/mnt4_init;
-use ffec::algebra::curves::mnt/mnt6/mnt6_init;
+use ffec::algebra::curves::mnt::mnt4::mnt4_init;
+use ffec::algebra::curves::mnt::mnt6::mnt6_init;
 
-use libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget;
-use libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget;
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
 
 
 
@@ -279,7 +279,7 @@ void test_G2_variable_precomp(const std::string &annotation);
 
 
 
-use libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation;
+use crate::gadgetlib1::gadgets/pairing/weierstrass_precomputation;
 
 //#endif // WEIERSTRASS_PRECOMPUTATION_HPP_
 /** @file
@@ -300,7 +300,7 @@ use libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation;
 
 use  <type_traits>
 
-use libsnark/gadgetlib1/gadgets/pairing/mnt_pairing_params;
+use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
 
 
 
@@ -371,7 +371,7 @@ G2_precomputation<ppT>::G2_precomputation(protoboard<FieldT> &pb,
     const ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
 
     coeffs.resize(native_precomp.coeffs.size() + 1); // the last precomp remains for convenient programming
-    for (size_t i = 0; i < native_precomp.coeffs.size(); ++i)
+    for i in 0..native_precomp.coeffs.size()
     {
         coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>());
         coeffs[i]->RX.reset(new Fqe_variable<ppT>(pb, native_precomp.coeffs[i].old_RX, FMT(annotation_prefix, " RX")));
@@ -590,9 +590,9 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -602,7 +602,7 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
         dbl_count+=1;
         coeff_count+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             add_count+=1;
             coeff_count+=1;
@@ -614,7 +614,7 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
     doubling_steps.resize(dbl_count);
 
     precomp.coeffs[0].reset(new precompute_G2_gadget_coeffs<ppT>(pb, Q, FMT(annotation_prefix, " coeffs_0")));
-    for (size_t i = 1; i < coeff_count; ++i)
+    for i in 1..coeff_count
     {
         precomp.coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>(pb, FMT(annotation_prefix, " coeffs_{}", i)));
     }
@@ -624,9 +624,9 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
     size_t coeff_id = 0;
 
     found_nonzero = false;
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -638,7 +638,7 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
         dbl_id+=1;
         coeff_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps[add_id].reset(new precompute_G2_gadget_addition_step<ppT>(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
                                                                                      FMT(annotation_prefix, " addition_steps_{}", add_id)));
@@ -651,12 +651,12 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
 template<typename ppT>
 void precompute_G2_gadget<ppT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < dbl_count; ++i)
+    for i in 0..dbl_count
     {
         doubling_steps[i]->generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < add_count; ++i)
+    for i in 0..add_count
     {
         addition_steps[i]->generate_r1cs_constraints();
     }
@@ -675,9 +675,9 @@ void precompute_G2_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -687,7 +687,7 @@ void precompute_G2_gadget<ppT>::generate_r1cs_witness()
         doubling_steps[dbl_id]->generate_r1cs_witness();
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps[add_id]->generate_r1cs_witness();
             add_id+=1;
@@ -713,7 +713,7 @@ void test_G2_variable_precomp(const std::string &annotation)
     ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(g_val);
 
     assert!(precomp.coeffs.size() - 1 == native_precomp.coeffs.size()); // the last precomp is unused, but remains for convenient programming
-    for (size_t i = 0; i < native_precomp.coeffs.size(); ++i)
+    for i in 0..native_precomp.coeffs.size()
     {
         assert!(precomp.coeffs[i]->RX->get_element() == native_precomp.coeffs[i].old_RX);
         assert!(precomp.coeffs[i]->RY->get_element() == native_precomp.coeffs[i].old_RY);

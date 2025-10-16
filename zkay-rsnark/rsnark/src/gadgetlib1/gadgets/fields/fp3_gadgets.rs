@@ -17,7 +17,7 @@
 
 use  <memory>
 
-use libsnark/gadgetlib1/gadget;
+use crate::gadgetlib1::gadget;
 
 
 
@@ -134,7 +134,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
 
 //#endif // FP3_GADGETS_HPP_
 /** @file

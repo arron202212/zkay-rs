@@ -12,8 +12,8 @@
 //#ifndef BAR_GADGET_HPP_
 // #define BAR_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/basic_gadgets;
 
 
 
@@ -59,7 +59,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/bar_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
 
 //#endif // BAR_GADGET_HPP_
 /** @file

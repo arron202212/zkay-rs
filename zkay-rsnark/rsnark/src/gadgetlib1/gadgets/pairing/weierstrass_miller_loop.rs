@@ -16,8 +16,8 @@
 
 use  <memory>
 
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
-use libsnark/gadgetlib1/gadgets/pairing/weierstrass_precomputation;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets/pairing/weierstrass_precomputation;
 
 
 
@@ -252,7 +252,7 @@ void test_mnt_e_times_e_over_e_miller_loop(const std::string &annotation);
 
 
 
-use libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop;
+use crate::gadgetlib1::gadgets/pairing/weierstrass_miller_loop;
 
 //#endif // WEIERSTRASS_MILLER_LOOP_HPP_
 /** @file
@@ -273,8 +273,8 @@ use libsnark/gadgetlib1/gadgets/pairing/weierstrass_miller_loop;
 
  use ffec::algebra::scalar_multiplication::wnaf;
 
-use libsnark/gadgetlib1/constraint_profiling;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use crate::gadgetlib1::constraint_profiling;
+use crate::gadgetlib1::gadgets/basic_gadgets;
 
 
 
@@ -298,14 +298,14 @@ mnt_miller_loop_dbl_line_eval<ppT>::mnt_miller_loop_dbl_line_eval(protoboard<Fie
 {
     gamma_twist.reset(new Fqe_variable<ppT>(c.gamma->mul_by_X()));
     // prec_P.PX * c.gamma_twist = c.gamma_X - c.old_RY - g_RR_at_P_c1
-    if (gamma_twist->is_constant())
+    if gamma_twist->is_constant()
     {
         gamma_twist->evaluate();
         const FqeT gamma_twist_const = gamma_twist->get_element();
         g_RR_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(self.pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
                                                  *(c.gamma_X) + *(c.RY) * (-FieldT::one())));
     }
-    else if (prec_P.P->X.is_constant())
+    else if prec_P.P->X.is_constant()
     {
         prec_P.P->X.evaluate(pb);
         const FieldT P_X_const = prec_P.P->X.constant_term();
@@ -324,7 +324,7 @@ mnt_miller_loop_dbl_line_eval<ppT>::mnt_miller_loop_dbl_line_eval(protoboard<Fie
 template<typename ppT>
 void mnt_miller_loop_dbl_line_eval<ppT>::generate_r1cs_constraints()
 {
-    if (!gamma_twist->is_constant() && !prec_P.P->X.is_constant())
+    if !gamma_twist->is_constant() && !prec_P.P->X.is_constant()
     {
         compute_g_RR_at_P_c1->generate_r1cs_constraints();
     }
@@ -341,7 +341,7 @@ void mnt_miller_loop_dbl_line_eval<ppT>::generate_r1cs_witness()
     const FqeT g_RR_at_P_c1_val = -PX_val * gamma_twist_val + gamma_X_val - RY_val;
     g_RR_at_P_c1->generate_r1cs_witness(g_RR_at_P_c1_val);
 
-    if (!gamma_twist->is_constant() && !prec_P.P->X.is_constant())
+    if !gamma_twist->is_constant() && !prec_P.P->X.is_constant()
     {
         compute_g_RR_at_P_c1->generate_r1cs_witness();
     }
@@ -371,14 +371,14 @@ gadget<FieldT>(pb, annotation_prefix), invert_Q(invert_Q), prec_P(prec_P), c(c),
 {
     gamma_twist.reset(new Fqe_variable<ppT>(c.gamma->mul_by_X()));
     // prec_P.PX * c.gamma_twist = c.gamma_X - prec_Q.QY - g_RQ_at_P_c1
-    if (gamma_twist->is_constant())
+    if gamma_twist->is_constant()
     {
         gamma_twist->evaluate();
         const FqeT gamma_twist_const = gamma_twist->get_element();
         g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(self.pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
                                                  *(c.gamma_X) + *(Q.Y) * (!invert_Q ? -FieldT::one() : FieldT::one())));
     }
-    else if (prec_P.P->X.is_constant())
+    else if prec_P.P->X.is_constant()
     {
         prec_P.P->X.evaluate(pb);
         const FieldT P_X_const = prec_P.P->X.constant_term();
@@ -397,7 +397,7 @@ gadget<FieldT>(pb, annotation_prefix), invert_Q(invert_Q), prec_P(prec_P), c(c),
 template<typename ppT>
 void mnt_miller_loop_add_line_eval<ppT>::generate_r1cs_constraints()
 {
-    if (!gamma_twist->is_constant() && !prec_P.P->X.is_constant())
+    if !gamma_twist->is_constant() && !prec_P.P->X.is_constant()
     {
         compute_g_RQ_at_P_c1->generate_r1cs_constraints();
     }
@@ -414,7 +414,7 @@ void mnt_miller_loop_add_line_eval<ppT>::generate_r1cs_witness()
     const FqeT g_RQ_at_P_c1_val = -PX_val * gamma_twist_val + gamma_X_val + (!invert_Q ? -QY_val : QY_val);
     g_RQ_at_P_c1->generate_r1cs_witness(g_RQ_at_P_c1_val);
 
-    if (!gamma_twist->is_constant() && !prec_P.P->X.is_constant())
+    if !gamma_twist->is_constant() && !prec_P.P->X.is_constant()
     {
         compute_g_RQ_at_P_c1->generate_r1cs_witness();
     }
@@ -435,9 +435,9 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -447,7 +447,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
         dbl_count+=1;
         f_count += 2;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             add_count+=1;
             f_count += 1;
@@ -460,7 +460,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
     g_RR_at_Ps.resize(dbl_count);
     g_RQ_at_Ps.resize(add_count);
 
-    for (size_t i = 0; i < f_count; ++i)
+    for i in 0..f_count
     {
         fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
@@ -475,9 +475,9 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
     size_t prec_id = 0;
 
     found_nonzero = false;
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -495,7 +495,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
         f_id+=1;
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps[add_id].reset(new mnt_miller_loop_add_line_eval<ppT>(pb,
                                                                                 NAF[i] < 0,
@@ -515,14 +515,14 @@ void mnt_miller_loop_gadget<ppT>::generate_r1cs_constraints()
 {
     fs[0]->generate_r1cs_equals_const_constraints(FqkT::one());
 
-    for (size_t i = 0; i < dbl_count; ++i)
+    for i in 0..dbl_count
     {
         doubling_steps[i]->generate_r1cs_constraints();
         dbl_sqrs[i]->generate_r1cs_constraints();
         dbl_muls[i]->generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < add_count; ++i)
+    for i in 0..add_count
     {
         addition_steps[i]->generate_r1cs_constraints();
         add_muls[i]->generate_r1cs_constraints();
@@ -541,9 +541,9 @@ void mnt_miller_loop_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -555,7 +555,7 @@ void mnt_miller_loop_gadget<ppT>::generate_r1cs_witness()
         dbl_muls[dbl_id]->generate_r1cs_witness();
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps[add_id]->generate_r1cs_witness();
             add_muls[add_id]->generate_r1cs_witness();
@@ -628,9 +628,9 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -640,7 +640,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         dbl_count+=1;
         f_count += 3;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             add_count+=1;
             f_count += 2;
@@ -657,7 +657,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
     g_RR_at_P2s.resize(dbl_count);
     g_RQ_at_P2s.resize(add_count);
 
-    for (size_t i = 0; i < f_count; ++i)
+    for i in 0..f_count
     {
         fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
@@ -674,9 +674,9 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
     size_t prec_id = 0;
 
     found_nonzero = false;
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -701,7 +701,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         f_id+=1;
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps1[add_id].reset(new mnt_miller_loop_add_line_eval<ppT>(pb,
                                                                                  NAF[i] < 0,
@@ -728,7 +728,7 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_constraints()
 {
     fs[0]->generate_r1cs_equals_const_constraints(FqkT::one());
 
-    for (size_t i = 0; i < dbl_count; ++i)
+    for i in 0..dbl_count
     {
         doubling_steps1[i]->generate_r1cs_constraints();
         doubling_steps2[i]->generate_r1cs_constraints();
@@ -737,7 +737,7 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_constraints()
         dbl_muls2[i]->generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < add_count; ++i)
+    for i in 0..add_count
     {
         addition_steps1[i]->generate_r1cs_constraints();
         addition_steps2[i]->generate_r1cs_constraints();
@@ -759,9 +759,9 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -779,7 +779,7 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
         f_id+=1;
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps1[add_id]->generate_r1cs_witness();
             addition_steps2[add_id]->generate_r1cs_witness();
@@ -876,9 +876,9 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -888,7 +888,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         dbl_count+=1;
         f_count += 4;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             add_count+=1;
             f_count += 3;
@@ -909,7 +909,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
     g_RR_at_P3s.resize(dbl_count);
     g_RQ_at_P3s.resize(add_count);
 
-    for (size_t i = 0; i < f_count; ++i)
+    for i in 0..f_count
     {
         fs[i].reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
@@ -928,9 +928,9 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
     size_t prec_id = 0;
 
     found_nonzero = false;
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -961,7 +961,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         f_id+=1;
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps1[add_id].reset(new mnt_miller_loop_add_line_eval<ppT>(pb,
                                                                                  NAF[i] < 0,
@@ -995,7 +995,7 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_constraints()
 {
     fs[0]->generate_r1cs_equals_const_constraints(FqkT::one());
 
-    for (size_t i = 0; i < dbl_count; ++i)
+    for i in 0..dbl_count
     {
         doubling_steps1[i]->generate_r1cs_constraints();
         doubling_steps2[i]->generate_r1cs_constraints();
@@ -1006,7 +1006,7 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_constraints()
         dbl_muls3[i]->generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < add_count; ++i)
+    for i in 0..add_count
     {
         addition_steps1[i]->generate_r1cs_constraints();
         addition_steps2[i]->generate_r1cs_constraints();
@@ -1030,9 +1030,9 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = NAF.size()-1; i >= 0; --i)
+    for i in ( 0..=NAF.size()-1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -1053,7 +1053,7 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
         f_id+=1;
         dbl_id+=1;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             addition_steps1[add_id]->generate_r1cs_witness();
             addition_steps2[add_id]->generate_r1cs_witness();

@@ -1,3 +1,4 @@
+
 /** @file
  *****************************************************************************
 
@@ -702,7 +703,7 @@ pub fn  r1cs_se_ppzksnark_online_verifier_strong_IC<ppT>(pvk:&r1cs_se_ppzksnark_
 
 
 
-// use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
+// use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
 
 // //#endif // R1CS_SE_PPZKSNARK_HPP_
 
@@ -740,7 +741,7 @@ use ffec::common::utils;
 // //#endif
 
 use crate::knowledge_commitment::kc_multiexp;
-use libsnark::reductions::r1cs_to_sap::r1cs_to_sap;
+use crate::reductions::r1cs_to_sap::r1cs_to_sap;
 
 // 
 
@@ -1115,8 +1116,8 @@ break}
         tmp_exponents.push(gamma *
             (gamma * Ct[i] + (alpha + beta) * At[i]));
     }
-    let C_query_1 = ffec::batch_exp<ffec::G1<ppT>,
-                                                       ffec::Fr<ppT> >(
+    let C_query_1 = ffec::batch_exp::<ffec::G1::<ppT>,
+                                                       ffec::Fr::<ppT> >(
         ffec::Fr::<ppT>::size_in_bits(),
         G_window,
         G_table,
@@ -1135,8 +1136,8 @@ break}
     {
         tmp_exponents.push(double_gamma2_Z * At[i]);
     }
-    let  C_query_2 = ffec::batch_exp<ffec::G1<ppT>,
-                                                       ffec::Fr<ppT> >(
+    let  C_query_2 = ffec::batch_exp::<ffec::G1::<ppT>,
+                                                       ffec::Fr::<ppT> >(
         ffec::Fr::<ppT>::size_in_bits(),
         G_window,
         G_table,
@@ -1152,12 +1153,12 @@ break}
     ffec::leave_block("Call to r1cs_se_ppzksnark_generator");
 
     let  vk =
-        r1cs_se_ppzksnark_verification_key<ppT>(H, G_alpha, H_beta, G_gamma,
+        r1cs_se_ppzksnark_verification_key::<ppT>(H, G_alpha, H_beta, G_gamma,
             H_gamma, (verifier_query));
 
    let  cs_copy=cs.clone();
 
-   let  pk = r1cs_se_ppzksnark_proving_key<ppT>(
+   let  pk = r1cs_se_ppzksnark_proving_key::<ppT>(
         (A_query), (B_query), (C_query_1),
         (C_query_2), G_gamma_Z, H_gamma_Z, G_ab_gamma_Z, G_gamma2_Z2,
         (G_gamma2_Z_t), (cs_copy));
@@ -1165,7 +1166,7 @@ break}
     pk.print_size();
     vk.print_size();
 
-    return r1cs_se_ppzksnark_keypair<ppT>((pk), (vk));
+    return r1cs_se_ppzksnark_keypair::<ppT>((pk), (vk));
 }
 
 

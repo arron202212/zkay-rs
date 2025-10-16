@@ -17,8 +17,8 @@
 
 use  <numeric>
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/protoboard;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::protoboard;
 use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
 
 
@@ -153,7 +153,7 @@ void r1cs_pcd_message_variable<FieldT>::update_all_vars()
      * only gadget allocating variables on the protoboard and needs to
      * be updated, e.g., in multicore variable allocation scenario. */
 
-    for (size_t var_idx = num_vars_at_construction + 1; var_idx <= self.pb.num_variables(); ++var_idx)
+    for var_idx in num_vars_at_construction + 1..=self.pb.num_variables()
     {
         all_vars.push(pb_variable<FieldT>(var_idx));
     }
@@ -178,7 +178,7 @@ void r1cs_pcd_local_data_variable<FieldT>::update_all_vars()
 {
     /* (the same NOTE as for r1cs_message_variable applies) */
 
-    for (size_t var_idx = num_vars_at_construction + 1; var_idx <= self.pb.num_variables(); ++var_idx)
+    for var_idx in num_vars_at_construction + 1..=self.pb.num_variables()
     {
         all_vars.push(pb_variable<FieldT>(var_idx));
     }
@@ -211,7 +211,7 @@ void compliance_predicate_handler<FieldT, protoboardT>::generate_r1cs_witness(co
     pb.val(outgoing_message->type) = FieldT(type);
     pb.val(arity) = FieldT(incoming_message_values.size());
 
-    for (size_t i = 0; i < incoming_message_values.size(); ++i)
+    for i in 0..incoming_message_values.size()
     {
         incoming_messages[i]->generate_r1cs_witness(incoming_message_values[i]);
     }

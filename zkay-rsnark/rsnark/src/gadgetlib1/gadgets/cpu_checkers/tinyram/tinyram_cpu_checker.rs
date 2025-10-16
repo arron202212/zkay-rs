@@ -14,12 +14,12 @@
 //#ifndef TINYRAM_CPU_CHECKER_HPP_
 // #define TINYRAM_CPU_CHECKER_HPP_
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_gadget;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/consistency_enforcer_gadget;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/memory_masking_gadget;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/argument_decoder_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/consistency_enforcer_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/memory_masking_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
 
 
 
@@ -96,7 +96,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
 
 //#endif // TINYRAM_CPU_CHECKER_HPP_
 /** @file
@@ -115,7 +115,7 @@ use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
 //#ifndef TINYRAM_CPU_CHECKER_TCC_
 // #define TINYRAM_CPU_CHECKER_TCC_
 
-use ffec::algebra::fields::field_utils;
+use ffec::algebra::field_utils::field_utils;
 
 
 
@@ -151,7 +151,7 @@ tinyram_standard_gadget<FieldT>(pb, annotation_prefix), prev_pc_addr(prev_pc_add
 
     /* parse state as registers + flags */
     pb_variable_array<FieldT> packed_prev_registers, packed_next_registers;
-    for (size_t i = 0; i < pb.ap.k; ++i)
+    for i in 0..pb.ap.k
     {
         prev_registers.push(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), FMT(annotation_prefix, " prev_registers_{}", i)));
         next_registers.push(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), FMT(annotation_prefix, " next_registers_{}", i)));
@@ -227,7 +227,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_constraints()
     decode_arguments->generate_r1cs_constraints();
 
     /* generate indicator variables for opcode */
-    for (size_t i = 0; i < 1ul<<self.pb.ap.opcode_width(); ++i)
+    for i in 0..1ul<<self.pb.ap.opcode_width()
     {
         self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(opcode_indicators[i], pb_packing_sum<FieldT>(opcode) - i, 0),
                                      FMT(self.annotation_prefix, " opcode_indicators_{}", i));
@@ -236,7 +236,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_constraints()
                                  FMT(self.annotation_prefix, " opcode_indicators_sum_to_1"));
 
     /* consistency checks for repacked variables */
-    for (size_t i = 0; i < self.pb.ap.k; ++i)
+    for i in 0..self.pb.ap.k
     {
         prev_registers[i].generate_r1cs_constraints(true);
         next_registers[i].generate_r1cs_constraints(true);
@@ -341,7 +341,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_address()
 {
     /* decode instruction and arguments */
     prev_pc_addr_as_word_variable->generate_r1cs_witness_from_bits();
-    for (size_t i = 0; i < self.pb.ap.k; ++i)
+    for i in 0..self.pb.ap.k
     {
         prev_registers[i].generate_r1cs_witness_from_bits();
     }
@@ -366,7 +366,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
 
     /* fill in the opcode indicators */
     const size_t opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
-    for (size_t i = 0; i < 1ul<<self.pb.ap.opcode_width(); ++i)
+    for i in 0..1ul<<self.pb.ap.opcode_width()
     {
         self.pb.val(opcode_indicators[i]) = (i == opcode_val ? FieldT::one() : FieldT::zero());
     }
@@ -387,18 +387,18 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     const size_t prev_doubleword = self.pb.val(ls_prev_val_as_doubleword_variable->packed).as_ulong();
     const size_t subaddress = self.pb.val(memory_subaddress->packed).as_ulong();
 
-    if (self.pb.val(opcode_indicators[tinyram_opcode_LOADB]) == FieldT::one())
+    if self.pb.val(opcode_indicators[tinyram_opcode_LOADB]) == FieldT::one()
     {
         const size_t loaded_byte = (prev_doubleword >> (8 * subaddress)) & 0xFF;
         self.pb.val(instruction_results[tinyram_opcode_LOADB]) = FieldT(loaded_byte);
         self.pb.val(memory_subcontents) = FieldT(loaded_byte);
     }
-    else if (self.pb.val(opcode_indicators[tinyram_opcode_STOREB]) == FieldT::one())
+    else if self.pb.val(opcode_indicators[tinyram_opcode_STOREB]) == FieldT::one()
     {
         const size_t stored_byte = (self.pb.val(desval->packed).as_ulong()) & 0xFF;
         self.pb.val(memory_subcontents) = FieldT(stored_byte);
     }
-    else if (self.pb.val(opcode_indicators[tinyram_opcode_STOREW]) == FieldT::one())
+    else if self.pb.val(opcode_indicators[tinyram_opcode_STOREW]) == FieldT::one()
     {
         const size_t stored_word = (self.pb.val(desval->packed).as_ulong());
         self.pb.val(memory_subcontents) = FieldT(stored_word);
@@ -417,7 +417,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     check_memory->generate_r1cs_witness();
 
     /* handle reads */
-    if (self.pb.val(prev_tape1_exhausted) == FieldT::one())
+    if self.pb.val(prev_tape1_exhausted) == FieldT::one()
     {
         /* if tape was exhausted before, it will always be
            exhausted. we also need to only handle reads from tape 1,
@@ -427,7 +427,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     }
 
     self.pb.val(read_not1) = self.pb.val(opcode_indicators[tinyram_opcode_READ]) * (FieldT::one() - self.pb.val(arg2val->packed));
-    if (self.pb.val(read_not1) != FieldT::one())
+    if self.pb.val(read_not1) != FieldT::one()
     {
         /* reading from tape other than 0 raises the flag */
         self.pb.val(instruction_flags[tinyram_opcode_READ]) = FieldT::one();
@@ -435,10 +435,10 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     else
     {
         /* otherwise perform the actual read */
-        if (aux_it != aux_end)
+        if aux_it != aux_end
         {
             self.pb.val(instruction_results[tinyram_opcode_READ]) = FieldT(*aux_it);
-            if (++aux_it == aux_end)
+            if ++aux_it == aux_end
             {
                 /* tape has ended! */
                 self.pb.val(next_tape1_exhausted) = FieldT::one();
@@ -451,7 +451,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     }
 
     /* flag implies result zero */
-    if (self.pb.val(instruction_flags[tinyram_opcode_READ]) == FieldT::one())
+    if self.pb.val(instruction_flags[tinyram_opcode_READ]) == FieldT::one()
     {
         self.pb.val(instruction_results[tinyram_opcode_READ]) = FieldT::zero();
     }
@@ -460,7 +460,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     consistency_enforcer->generate_r1cs_witness();
     next_pc_addr_as_word_variable->generate_r1cs_witness_from_packed();
 
-    for (size_t i = 0; i < self.pb.ap.k; ++i)
+    for i in 0..self.pb.ap.k
     {
         next_registers[i].generate_r1cs_witness_from_packed();
     }
@@ -478,7 +478,7 @@ void tinyram_cpu_checker<FieldT>::dump() const
            self.pb.val(prev_flag).as_ulong());
     print!("   ");
 
-    for (size_t j = 0; j < self.pb.ap.k; ++j)
+    for j in 0..self.pb.ap.k
     {
         print!("r{} = %2lu ", j, self.pb.val(prev_registers[j].packed).as_ulong());
     }

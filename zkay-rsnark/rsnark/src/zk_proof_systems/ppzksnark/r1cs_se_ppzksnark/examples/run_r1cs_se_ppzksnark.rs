@@ -32,7 +32,7 @@ bool run_r1cs_se_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
 
 
 
-use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples/run_r1cs_se_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples/run_r1cs_se_ppzksnark;
 
 //#endif // RUN_R1CS_SE_PPZKSNARK_HPP_
 /** @file
@@ -57,7 +57,7 @@ use  <type_traits>
 
 use ffec::common::profiling;
 
-use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
 
 
 
@@ -86,7 +86,7 @@ bool run_r1cs_se_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
     ffec::print_header("Preprocess verification key");
     r1cs_se_ppzksnark_processed_verification_key<ppT> pvk = r1cs_se_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<r1cs_se_ppzksnark_proving_key<ppT> >(keypair.pk);
@@ -99,7 +99,7 @@ bool run_r1cs_se_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
     r1cs_se_ppzksnark_proof<ppT> proof = r1cs_se_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of proof");
         proof = ffec::reserialize<r1cs_se_ppzksnark_proof<ppT> >(proof);

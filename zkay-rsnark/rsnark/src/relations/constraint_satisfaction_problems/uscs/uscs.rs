@@ -23,7 +23,7 @@ use  <map>
 use  <string>
 use  <vector>
 
-use libsnark/relations/variable;
+use crate::relations::variable;
 
 
 
@@ -119,7 +119,7 @@ public:
 
 
 
-use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
+use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 //#endif // USCS_HPP_
 /** @file
@@ -173,11 +173,11 @@ size_t uscs_constraint_system<FieldT>::num_constraints() const
 template<typename FieldT>
 bool uscs_constraint_system<FieldT>::is_valid() const
 {
-    if (self.num_inputs() > self.num_variables()) return false;
+    if self.num_inputs() > self.num_variables() return false;
 
-    for (size_t c = 0; c < constraints.size(); ++c)
+    for c in 0..constraints.size()
     {
-        if (!valid_vector(constraints[c], self.num_variables()))
+        if !valid_vector(constraints[c], self.num_variables())
         {
             return false;
         }
@@ -205,10 +205,10 @@ bool uscs_constraint_system<FieldT>::is_satisfied(const uscs_primary_input<Field
     uscs_variable_assignment<FieldT> full_variable_assignment = primary_input;
     full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    for (size_t c = 0; c < constraints.size(); ++c)
+    for c in 0..constraints.size()
     {
         FieldT res = constraints[c].evaluate(full_variable_assignment);
-        if (!(res.squared() == FieldT::one()))
+        if !(res.squared() == FieldT::one())
         {
 // #ifdef DEBUG
             auto it = constraint_annotations.find(c);
@@ -256,7 +256,7 @@ std::ostream& operator<<(std::ostream &out, const uscs_constraint_system<FieldT>
     out << cs.auxiliary_input_size << "\n";
 
     out << cs.num_constraints() << "\n";
-    for (const uscs_constraint<FieldT>& c : cs.constraints)
+    for c in &cs.constraints
     {
         out << c;
     }
@@ -280,7 +280,7 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
 
     cs.constraints.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         uscs_constraint<FieldT> c;
         in >> c;
@@ -294,16 +294,16 @@ template<typename FieldT>
 void uscs_constraint_system<FieldT>::report_linear_constraint_statistics() const
 {
 // #ifdef DEBUG
-    for (size_t i = 0; i < constraints.size(); ++i)
+    for i in 0..constraints.size()
     {
         auto &constr = constraints[i];
         bool a_is_const = true;
-        for (auto &t : constr.terms)
+        for t in &constr.terms
         {
             a_is_const = a_is_const && (t.index == 0);
         }
 
-        if (a_is_const)
+        if a_is_const
         {
             auto it = constraint_annotations.find(i);
             print!("%s\n", (it == constraint_annotations.end() ? FMT("", "constraint_{}", i) : it->second).c_str());

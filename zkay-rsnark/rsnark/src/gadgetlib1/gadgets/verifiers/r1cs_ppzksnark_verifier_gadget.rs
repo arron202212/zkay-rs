@@ -18,11 +18,11 @@
 //#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 // #define R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget;
-use libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget;
-use libsnark/gadgetlib1/gadgets/pairing/pairing_checks;
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets/pairing/pairing_checks;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
 
@@ -245,7 +245,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
+use crate::gadgetlib1::gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
 
 //#endif // R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 /** @file
@@ -264,7 +264,7 @@ use libsnark/gadgetlib1/gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
 //#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
 // #define R1CS_PPZKSNARK_VERIFIER_GADGET_TCC_
 
-use libsnark/gadgetlib1/constraint_profiling;
+use crate::gadgetlib1::constraint_profiling;
 
 
 
@@ -290,7 +290,7 @@ r1cs_ppzksnark_proof_variable<ppT>::r1cs_ppzksnark_proof_variable(protoboard<Fie
 
     all_G1_checkers.resize(all_G1_vars.size());
 
-    for (size_t i = 0; i < all_G1_vars.size(); ++i)
+    for i in 0..all_G1_vars.size()
     {
         all_G1_checkers[i].reset(new G1_checker_gadget<ppT>(pb, *all_G1_vars[i], FMT(annotation_prefix, " all_G1_checkers_{}", i)));
     }
@@ -303,7 +303,7 @@ r1cs_ppzksnark_proof_variable<ppT>::r1cs_ppzksnark_proof_variable(protoboard<Fie
 template<typename ppT>
 void r1cs_ppzksnark_proof_variable<ppT>::generate_r1cs_constraints()
 {
-    for (auto &G1_checker : all_G1_checkers)
+    for G1_checker in &all_G1_checkers
     {
         G1_checker->generate_r1cs_constraints();
     }
@@ -323,17 +323,17 @@ void r1cs_ppzksnark_proof_variable<ppT>::generate_r1cs_witness(const r1cs_ppzksn
     assert!(G1_elems.size() == all_G1_vars.size());
     assert!(G2_elems.size() == all_G2_vars.size());
 
-    for (size_t i = 0; i < G1_elems.size(); ++i)
+    for i in 0..G1_elems.size()
     {
         all_G1_vars[i]->generate_r1cs_witness(G1_elems[i]);
     }
 
-    for (size_t i = 0; i < G2_elems.size(); ++i)
+    for i in 0..G2_elems.size()
     {
         all_G2_vars[i]->generate_r1cs_witness(G2_elems[i]);
     }
 
-    for (auto &G1_checker : all_G1_checkers)
+    for G1_checker in &all_G1_checkers
     {
         G1_checker->generate_r1cs_witness();
     }
@@ -378,18 +378,18 @@ r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_ppzksnark_verification_key_v
     self.encoded_IC_base.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " encoded_IC_base")));
     self.all_G1_vars.push(self.encoded_IC_base);
 
-    for (size_t i = 0; i < input_size; ++i)
+    for i in 0..input_size
     {
         self.encoded_IC_query[i].reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " encoded_IC_query_{}", i)));
         all_G1_vars.push(self.encoded_IC_query[i]);
     }
 
-    for (auto &G1_var : all_G1_vars)
+    for G1_var in &all_G1_vars
     {
         all_vars.insert(all_vars.end(), G1_var->all_vars.begin(), G1_var->all_vars.end());
     }
 
-    for (auto &G2_var : all_G2_vars)
+    for G2_var in &all_G2_vars
     {
         all_vars.insert(all_vars.end(), G2_var->all_vars.begin(), G2_var->all_vars.end());
     }
@@ -418,7 +418,7 @@ void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const 
 
     assert!(vk.encoded_IC_query.rest.indices.size() == input_size);
     G1_elems.push(vk.encoded_IC_query.first);
-    for (size_t i = 0; i < input_size; ++i)
+    for i in 0..input_size
     {
         assert!(vk.encoded_IC_query.rest.indices[i] == i);
         G1_elems.push(vk.encoded_IC_query.rest.values[i]);
@@ -427,12 +427,12 @@ void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const 
     assert!(G1_elems.size() == all_G1_vars.size());
     assert!(G2_elems.size() == all_G2_vars.size());
 
-    for (size_t i = 0; i < G1_elems.size(); ++i)
+    for i in 0..G1_elems.size()
     {
         all_G1_vars[i]->generate_r1cs_witness(G1_elems[i]);
     }
 
-    for (size_t i = 0; i < G2_elems.size(); ++i)
+    for i in 0..G2_elems.size()
     {
         all_G2_vars[i]->generate_r1cs_witness(G2_elems[i]);
     }
@@ -494,7 +494,7 @@ r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_
 {
     encoded_IC_base.reset(new G1_variable<ppT>(pb, r1cs_vk.encoded_IC_query.first, FMT(annotation_prefix, " encoded_IC_base")));
     encoded_IC_query.resize(r1cs_vk.encoded_IC_query.rest.indices.size());
-    for (size_t i = 0; i < r1cs_vk.encoded_IC_query.rest.indices.size(); ++i)
+    for i in 0..r1cs_vk.encoded_IC_query.rest.indices.size()
     {
         assert!(r1cs_vk.encoded_IC_query.rest.indices[i] == i);
         encoded_IC_query[i].reset(new G1_variable<ppT>(pb, r1cs_vk.encoded_IC_query.rest.values[i], FMT(annotation_prefix, " encoded_IC_query")));
@@ -589,7 +589,7 @@ r1cs_ppzksnark_online_verifier_gadget<ppT>::r1cs_ppzksnark_online_verifier_gadge
     // accumulate input and store base in acc
     acc.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " acc")));
     std::vector<G1_variable<ppT> > IC_terms;
-    for (size_t i = 0; i < pvk.encoded_IC_query.size(); ++i)
+    for i in 0..pvk.encoded_IC_query.size()
     {
         IC_terms.push(*(pvk.encoded_IC_query[i]));
     }

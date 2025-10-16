@@ -14,36 +14,39 @@
 //#ifndef GEOMETRIC_SEQUENCE_DOMAIN_HPP
 // #define GEOMETRIC_SEQUENCE_DOMAIN_HPP
 
-use libfqfft/evaluation_domain/evaluation_domain;
+use crate::evaluation_domain::evaluation_domain;
 
-namespace libfqfft {
+//namespace libfqfft {
 
-  template<typename FieldT>
-  class geometric_sequence_domain : public evaluation_domain<FieldT> {
-  
+//   
+  pub struct geometric_sequence_domain<FieldT> {
+//   : public evaluation_domain<FieldT> 
     
-    bool precomputation_sentinel;
-    std::vector<FieldT> geometric_sequence;
-    std::vector<FieldT> geometric_triangular_sequence;
-    void do_precomputation();
+precomputation_sentinel:    bool,
+geometric_sequence:    Vec<FieldT>,
+geometric_triangular_sequence:    Vec<FieldT>,
+    m:usize,
+  }
 
-    geometric_sequence_domain(const size_t m);
+//     void do_precomputation();
 
-    void FFT(std::vector<FieldT> &a);
-    void iFFT(std::vector<FieldT> &a);
-    void cosetFFT(std::vector<FieldT> &a, const FieldT &g);
-    void icosetFFT(std::vector<FieldT> &a, const FieldT &g);
-    std::vector<FieldT> evaluate_all_lagrange_polynomials(const FieldT &t);
-    FieldT get_domain_element(const size_t idx);
-    FieldT compute_vanishing_polynomial(const FieldT &t);
-    void add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H);
-    void divide_by_Z_on_coset(std::vector<FieldT> &P);
+//     geometric_sequence_domain(const size_t m);
 
-  };
+//     void FFT(a:&Vec<FieldT>);
+//     void iFFT(a:&Vec<FieldT>);
+//     void cosetFFT(a:&Vec<FieldT>, g:&FieldT);
+//     void icosetFFT(a:&Vec<FieldT>, g:&FieldT);
+//     Vec<FieldT> evaluate_all_lagrange_polynomials(t:&FieldT);
+//     FieldT get_domain_element(const size_t idx);
+//     FieldT compute_vanishing_polynomial(t:&FieldT);
+//     void add_poly_Z(coeff:&FieldT, H:&Vec<FieldT>);
+//     void divide_by_Z_on_coset(P:&Vec<FieldT>);
 
-} // libfqfft
+//   };
 
-use libfqfft/evaluation_domain/domains/geometric_sequence_domain.tcc;
+//} // libfqfft
+
+// use crate::evaluation_domain::domains::geometric_sequence_domain.tcc;
 
 //#endif // GEOMETRIC_SEQUENCE_DOMAIN_HPP
 
@@ -65,113 +68,117 @@ use libfqfft/evaluation_domain/domains/geometric_sequence_domain.tcc;
 //#ifndef GEOMETRIC_SEQUENCE_DOMAIN_TCC_
 // #define GEOMETRIC_SEQUENCE_DOMAIN_TCC_
 
-use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux;
-use libfqfft/polynomial_arithmetic/basis_change;
-
+use crate::evaluation_domain::domains::basic_radix2_domain_aux::_multiply_by_coset;
+use crate::polynomial_arithmetic::basis_change;
+use crate::polynomial_arithmetic::basis_change::monomial_to_newton_basis_geometric;
+use crate::polynomial_arithmetic::basic_operations::_polynomial_multiplication;
+use crate::polynomial_arithmetic::basis_change::newton_to_monomial_basis_geometric;
 // #ifdef MULTICORE
 //#include <omp.h>
 //#endif
 
-namespace libfqfft {
-
-template<typename FieldT>
-geometric_sequence_domain<FieldT>::geometric_sequence_domain(const size_t m) : evaluation_domain<FieldT>(m)
-{
-  if m <= 1) throw InvalidSizeException("geometric(): expected m > 1";
-  if FieldT::geometric_generator() == FieldT::zero()
-    throw InvalidSizeException("geometric(): expected FieldT::geometric_generator() != FieldT::zero()");
+//namespace libfqfft {
+impl<FieldT:num_traits::Zero+Clone+num_traits::One+ std::default::Default+ std::convert::From<usize>+std::ops::MulAssign + std::ops::AddAssign+   std::ops::Sub<Output = FieldT>+ std::cmp::PartialEq+ std::ops::Neg<Output = FieldT>> geometric_sequence_domain<FieldT>{
+pub fn new(m:usize)->eyre::Result<Self>
+{//: evaluation_domain<FieldT>(m)
+  if m <= 1{eyre::bail!("geometric(): expected m > 1");}
+//   if FieldT::geometric_generator() == FieldT::zero()
+//     {eyre::bail!("geometric(): expected FieldT::geometric_generator() != FieldT::zero()");}
   
-  precomputation_sentinel = 0;
+  Ok(Self{precomputation_sentinel : false,geometric_sequence:vec![],geometric_triangular_sequence:vec![],m})
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::FFT(std::vector<FieldT> &a)
+
+pub fn FFT(&mut self,a:&mut Vec<FieldT>)->eyre::Result<()>
 { 
-  if a.size() != this->m) throw DomainSizeException("geometric: expected a.size() == this->m";
+  if a.len() != self.m{eyre::bail!("geometric: expected a.len() == self.m");}
 
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
-  monomial_to_newton_basis_geometric(a, this->geometric_sequence, this->geometric_triangular_sequence, this->m);
+  monomial_to_newton_basis_geometric(a, &self.geometric_sequence, &self.geometric_triangular_sequence, self.m);
 
   /* Newton to Evaluation */
-  std::vector<FieldT> T(this->m);
+  let mut  T=vec![FieldT::zero();self.m];
   T[0] = FieldT::one();
 
-  std::vector<FieldT> g(this->m);
-  g[0] = a[0];
+  let mut  g=vec![FieldT::zero();self.m];
+  g[0] = a[0].clone();
 
-  for i in 1..this->m
+  for i in 1..self.m
   {
-    T[i] = T[i-1] * (this->geometric_sequence[i] - FieldT::one()).inverse();
-    g[i] = this->geometric_triangular_sequence[i] * a[i];
+    // T[i] = T[i-1] * (self.geometric_sequence[i] - FieldT::one()).inverse();
+    g[i] = self.geometric_triangular_sequence[i].clone() * a[i].clone();
   }
 
-  _polynomial_multiplication(a, g, T);
-  a.resize(this->m);
+  _polynomial_multiplication(a, &g, &T);
+  a.resize(self.m,FieldT::zero());
 
 // #ifdef MULTICORE
-  #pragma omp parallel for
+  //#pragma omp parallel for
 //#endif
-  for i in 0..this->m
+  for i in 0..self.m
   {
-    a[i] *= T[i].inverse();
+    // a[i] *= T[i].inverse();
   }
+    Ok(())
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::iFFT(std::vector<FieldT> &a)
+
+pub fn iFFT(&mut self,a:&mut Vec<FieldT>)->eyre::Result<()>
 {
-  if a.size() != this->m) throw DomainSizeException("geometric: expected a.size() == this->m";
+  if a.len() != self.m{eyre::bail!("geometric: expected a.len() == self.m");}
   
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
   /* Interpolation to Newton */
-  std::vector<FieldT> T(this->m);
+  let mut  T=vec![FieldT::zero();self.m];
   T[0] = FieldT::one();
 
-  std::vector<FieldT> W(this->m);
-  W[0] = a[0] * T[0];
+  let mut  W=vec![FieldT::zero();self.m];
+  W[0] = a[0].clone() * T[0].clone();
 
-  FieldT prev_T = T[0];
-  for i in 1..this->m
+  let mut  prev_T = T[0].clone();
+  for i in 1..self.m
   {
-    prev_T *= (this->geometric_sequence[i] - FieldT::one()).inverse();
+    // prev_T *= (self.geometric_sequence[i].clone() - FieldT::one()).inverse();
 
-    W[i] = a[i] * prev_T;
-    T[i] = this->geometric_triangular_sequence[i] * prev_T;
-    if i % 2 == 1 T[i] = -T[i];
+    // W[i] = a[i].clone() * prev_T.clone();
+    T[i] = self.geometric_triangular_sequence[i].clone() * prev_T.clone();
+    if i % 2 == 1 {T[i] = -T[i].clone();}
   }
 
-  _polynomial_multiplication(a, W, T);
-  a.resize(this->m);
+  _polynomial_multiplication(a, &W, &T);
+  a.resize(self.m,FieldT::zero());
 
 // #ifdef MULTICORE
-  #pragma omp parallel for
+  //#pragma omp parallel for
 //#endif
-  for i in 0..this->m
+  for i in 0..self.m
   {
-    a[i] *= this->geometric_triangular_sequence[i].inverse();
+    // a[i] *= self.geometric_triangular_sequence[i].inverse();
   }
 
-  newton_to_monomial_basis_geometric(a, this->geometric_sequence, this->geometric_triangular_sequence, this->m);
+  newton_to_monomial_basis_geometric(a, &self.geometric_sequence, &self.geometric_triangular_sequence, self.m);
+    Ok(())
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::cosetFFT(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn cosetFFT(&mut self,a:&mut Vec<FieldT>, g:&FieldT)->eyre::Result<()>
 {
   _multiply_by_coset(a, g);
-  FFT(a);
+  self.FFT(a)
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::icosetFFT(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn icosetFFT(&mut self,a:&mut Vec<FieldT>, g:&FieldT)->eyre::Result<()>
 {
-  iFFT(a);
-  _multiply_by_coset(a, g.inverse());
+  self.iFFT(a);
+//   _multiply_by_coset(a, g.inverse());
+    Ok(())
 }
 
-template<typename FieldT>
-std::vector<FieldT> geometric_sequence_domain<FieldT>::evaluate_all_lagrange_polynomials(const FieldT &t)
+
+ pub fn evaluate_all_lagrange_polynomials(&mut self,t:&FieldT)->Vec<FieldT>
 {
   /* Compute Lagrange polynomial of size m, with m+1 points (x_0, y_0), ... ,(x_m, y_m) */
   /* Evaluate for x = t */
@@ -179,17 +186,17 @@ std::vector<FieldT> geometric_sequence_domain<FieldT>::evaluate_all_lagrange_pol
 
   /* for all i: w[i] = (1 / r) * w[i-1] * (1 - a[i]^m-i+1) / (1 - a[i]^-i) */
 
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
   /**
    * If t equals one of the geometric progression values,
    * then output 1 at the right place, and 0 elsewhere.
    */
-  for i in 0..this->m
+  for i in 0..self.m
   {
-    if this->geometric_sequence[i] == t // i.e., t equals a[i]
+    if &self.geometric_sequence[i] == t // i.e., t equals a[i]
     {
-      std::vector<FieldT> res(this->m, FieldT::zero());
+      let mut  res=vec![FieldT::zero();self.m];
       res[i] = FieldT::one();
       return res;
     }
@@ -199,122 +206,123 @@ std::vector<FieldT> geometric_sequence_domain<FieldT>::evaluate_all_lagrange_pol
    * Otherwise, if t does not equal any of the geometric progression values,
    * then compute each Lagrange coefficient.
    */
-  std::vector<FieldT> l(this->m);
-  l[0] = t - this->geometric_sequence[0];
+  let mut  l=vec![FieldT::zero();self.m];
+let tt:FieldT=t.clone();
+  l[0] = tt.clone() - self.geometric_sequence[0].clone();
 
-  std::vector<FieldT> g(this->m);
+  let mut  g=vec![FieldT::zero();self.m];
   g[0] = FieldT::zero();
 
-  FieldT l_vanish = l[0];
-  FieldT g_vanish = FieldT::one();
-  for i in 1..this->m
+  let mut  l_vanish = l[0].clone();
+  let mut  g_vanish = FieldT::one();
+  for i in 1..self.m
   {
-    l[i] = t - this->geometric_sequence[i];
-    g[i] = FieldT::one() - this->geometric_sequence[i];
+    l[i] = tt.clone() - self.geometric_sequence[i].clone();
+    g[i] = FieldT::one() - self.geometric_sequence[i].clone();
 
-    l_vanish *= l[i];
-    g_vanish *= g[i];
+    l_vanish *= l[i].clone();
+    g_vanish *= g[i].clone();
   }
 
-  FieldT r = this->geometric_sequence[this->m-1].inverse();
-  FieldT r_i = r;
+//   let mut  r = self.geometric_sequence[self.m-1].inverse();
+//   let mut  r_i = r.clone();
 
-  std::vector<FieldT> g_i(this->m);
-  g_i[0] = g_vanish.inverse();
+  let mut  g_i=vec![FieldT::zero();self.m];
+//   g_i[0] = g_vanish.inverse();
 
-  l[0] = l_vanish * l[0].inverse() * g_i[0];
-  for i in 1..this->m
+//   l[0] = l_vanish * l[0].clone().inverse() * g_i[0].clone();
+  for i in 1..self.m
   {
-    g_i[i] = g_i[i-1] * g[this->m-i] * -g[i].inverse() * this->geometric_sequence[i];
-    l[i] = l_vanish * r_i * l[i].inverse() * g_i[i];
-    r_i *= r;
+    // g_i[i] = g_i[i-1].clone() * g[self.m-i].clone() * -g[i].clone().inverse() * self.geometric_sequence[i].clone();
+    // l[i] = l_vanish * r_i * l[i].clone().inverse() * g_i[i].clone();
+    // r_i *= r;
   }
 
   return l;
 }
 
-template<typename FieldT>
-FieldT geometric_sequence_domain<FieldT>::get_domain_element(const size_t idx)
-{
-  if !this->precomputation_sentinel) do_precomputation(;
 
-  return this->geometric_sequence[idx];
+ pub fn get_domain_element(&mut self,idx:usize)->FieldT
+{
+  if !self.precomputation_sentinel {self.do_precomputation();}
+
+  return self.geometric_sequence[idx].clone();
 }
 
-template<typename FieldT>
-FieldT geometric_sequence_domain<FieldT>::compute_vanishing_polynomial(const FieldT &t)
+
+ pub fn compute_vanishing_polynomial(&mut self,t:&FieldT)->FieldT
 {
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
   /* Notes: Z = prod_{i = 0 to m} (t - a[i]) */
   /* Better approach: Montgomery Trick + Divide&Conquer/FFT */
-  FieldT Z = FieldT::one();
-  for i in 0..this->m
+  let mut  Z = FieldT::one();
+let tt:FieldT=t.clone();
+  for i in 0..self.m
   {
-    Z *= (t - this->geometric_sequence[i]);
+    Z *= (tt.clone() - self.geometric_sequence[i].clone());
   }
   return Z;
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H)
+
+pub fn add_poly_Z(&mut self,coeff:&FieldT, H:&mut Vec<FieldT>)->eyre::Result<()>
 {
-  if H.size() != this->m+1) throw DomainSizeException("geometric: expected H.size() == this->m+1";
+  if H.len() != self.m+1{eyre::bail!("geometric: expected H.len() == self.m+1");}
 
-  if !this->precomputation_sentinel) do_precomputation(;
+  if !self.precomputation_sentinel {self.do_precomputation();}
 
-  std::vector<FieldT> x(2, FieldT::zero());
-  x[0] = -this->geometric_sequence[0];
-  x[1] = FieldT::one();
+  let mut  x=vec![ -self.geometric_sequence[0].clone(),FieldT::one()];
 
-  std::vector<FieldT> t(2, FieldT::zero());
+  let mut  t=vec![FieldT::zero();2];
 
-  for i in 1..this->m+1
+  for i in 1..self.m+1
   {
-    t[0] = -this->geometric_sequence[i];
+    t[0] = -self.geometric_sequence[i].clone();
     t[1] = FieldT::one();
-
-    _polynomial_multiplication(x, x, t);
+    let xx=x.clone();
+    _polynomial_multiplication(&mut x, &xx, &t);
   }
 
 // #ifdef MULTICORE
-  #pragma omp parallel for
+  //#pragma omp parallel for
 //#endif
-  for i in 0..this->m+1
+  for i in 0..self.m+1
   {
-    H[i] += (x[i] * coeff);
+    H[i] += (x[i].clone() * coeff.clone());
   }
+    Ok(())
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::divide_by_Z_on_coset(std::vector<FieldT> &P)
+
+pub fn divide_by_Z_on_coset(&self,P:&Vec<FieldT>)
 {
-  const FieldT coset = FieldT::multiplicative_generator; /* coset in geometric sequence? */
-  const FieldT Z_inverse_at_coset = this->compute_vanishing_polynomial(coset).inverse();
-  for i in 0..this->m
+  let  coset = FieldT::one();//multiplicative_generator.clone(); /* coset in geometric sequence? */
+//   let  Z_inverse_at_coset = self.compute_vanishing_polynomial(coset).inverse();
+  for i in 0..self.m
   {
-    P[i] *= Z_inverse_at_coset;
+    // P[i] *= Z_inverse_at_coset;
   }
 }
 
-template<typename FieldT>
-void geometric_sequence_domain<FieldT>::do_precomputation()
+
+pub fn do_precomputation(&mut self)
 {
-  this->geometric_sequence = std::vector<FieldT>(this->m, FieldT::zero());
-  this->geometric_sequence[0] = FieldT::one();
+  self.geometric_sequence = vec![FieldT::zero();self.m];
+  self.geometric_sequence[0] = FieldT::one();
 
-  this->geometric_triangular_sequence = std::vector<FieldT>(this->m, FieldT::zero());
-  this->geometric_triangular_sequence[0] = FieldT::one();
+  self.geometric_triangular_sequence = vec![FieldT::zero();self.m];
+  self.geometric_triangular_sequence[0] = FieldT::one();
 
-  for i in 1..this->m
+  for i in 1..self.m
   {
-    this->geometric_sequence[i] = this->geometric_sequence[i-1] * FieldT::geometric_generator();
-    this->geometric_triangular_sequence[i] = this->geometric_triangular_sequence[i-1] * this->geometric_sequence[i-1];
+    self.geometric_sequence[i] = self.geometric_sequence[i-1].clone() * FieldT::one();//geometric_generator();
+    self.geometric_triangular_sequence[i] = self.geometric_triangular_sequence[i-1].clone() * self.geometric_sequence[i-1].clone();
   }
 
-  this->precomputation_sentinel = 1;
+  self.precomputation_sentinel = true;
 }
-
-} // libfqfft
+}
+//} // libfqfft
 
 //#endif // GEOMETRIC_SEQUENCE_DOMAIN_TCC_

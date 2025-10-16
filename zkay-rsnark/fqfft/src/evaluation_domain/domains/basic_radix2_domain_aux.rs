@@ -1,51 +1,51 @@
-/** @file
- *****************************************************************************
+// /** @file
+//  *****************************************************************************
 
- Declaration of interfaces for auxiliary functions for the "basic radix-2" evaluation domain.
+//  Declaration of interfaces for auxiliary functions for the "basic radix-2" evaluation domain.
 
- These functions compute the radix-2 FFT (in single- or multi-thread mode) and,
- also compute Lagrange coefficients.
+//  These functions compute the radix-2 FFT (in single- or multi-thread mode) and,
+//  also compute Lagrange coefficients.
 
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of libfqfft, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
 //#ifndef BASIC_RADIX2_DOMAIN_AUX_HPP_
 // #define BASIC_RADIX2_DOMAIN_AUX_HPP_
 
 //#include <vector>
 
-namespace libfqfft {
+// //namespace libfqfft {
 
-/**
- * Compute the radix-2 FFT of the vector a over the set S={omega^{0},...,omega^{m-1}}.
- */
-template<typename FieldT>
-void _basic_radix2_FFT(std::vector<FieldT> &a, const FieldT &omega);
+// /**
+//  * Compute the radix-2 FFT of the vector a over the set S={omega^{0},...,omega^{m-1}}.
+//  */
+// 
+// pub fn _basic_radix2_FFT(a:Vec<FieldT>, omega:&FieldT);
 
-/**
- * A multi-thread version of _basic_radix2_FFT.
- */
-template<typename FieldT>
-void _parallel_basic_radix2_FFT(std::vector<FieldT> &a, const FieldT &omega);
+// /**
+//  * A multi-thread version of _basic_radix2_FFT.
+//  */
+// 
+// pub fn _parallel_basic_radix2_FFT(a:Vec<FieldT>, omega:&FieldT);
 
-/**
- * Translate the vector a to a coset defined by g.
- */
-template<typename FieldT>
-void _multiply_by_coset(std::vector<FieldT> &a, const FieldT &g);
+// /**
+//  * Translate the vector a to a coset defined by g.
+//  */
+// 
+// pub fn _multiply_by_coset(a:Vec<FieldT>, g:&FieldT);
 
-/**
- * Compute the m Lagrange coefficients, relative to the set S={omega^{0},...,omega^{m-1}}, at the field element t.
- */
-template<typename FieldT>
-std::vector<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t m, const FieldT &t);
+// /**
+//  * Compute the m Lagrange coefficients, relative to the set S={omega^{0},...,omega^{m-1}}, at the field element t.
+//  */
+// 
+// Vec<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t m, t:&FieldT);
 
-} // libfqfft
+// //} // libfqfft
 
-use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.tcc;
+// use crate::evaluation_domain::domains::basic_radix2_domain_aux.tcc;
 
 //#endif // BASIC_RADIX2_DOMAIN_AUX_HPP_
 /** @file
@@ -71,146 +71,162 @@ use libfqfft/evaluation_domain/domains/basic_radix2_domain_aux.tcc;
 //#include <omp.h>
 //#endif
 
-use libff/algebra/fields/field_utils;
-
-use libfqfft/tools/exceptions;
-
+use ffec::algebra::field_utils::field_utils;
+use ffec::common::utils::bitreverse;
+ use ffec::common::utils::log2;
+use crate::tools::exceptions;
+use ffec::common::profiling::print_indent;
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+ use std::ops::BitXor;
+use std::ops::MulAssign;
+use num_traits::One;
 // #ifdef DEBUG
 use ffec::common::profiling;
 //#endif
 
-namespace libfqfft {
+// //namespace libfqfft {
 
 // #ifdef MULTICORE
 // #define _basic_radix2_FFT _basic_parallel_radix2_FFT
-#else
+// #else
 // #define _basic_radix2_FFT _basic_serial_radix2_FFT
 //#endif
+
+#[inline]
+pub fn _basic_radix2_FFT<FieldT:num_traits::One+ Clone+std::ops::BitXor<Output = FieldT> + std::convert::From<usize>+ std::ops::MulAssign + std::ops::AddAssign+ std::ops::Sub<Output = FieldT>>(a:&mut Vec<FieldT>, omega:&FieldT)->eyre::Result<()>
+ {
+    _basic_serial_radix2_FFT(a,omega)
+}
 
 /*
  Below we make use of pseudocode from [CLRS 2n Ed, pp. 864].
  Also, note that it's the caller's responsibility to multiply by 1/N.
  */
-template<typename FieldT>
-void _basic_serial_radix2_FFT(std::vector<FieldT> &a, const FieldT &omega)
+
+pub fn _basic_serial_radix2_FFT<FieldT:num_traits::One+ std::ops::MulAssign+Clone+ BitXor<Output = FieldT>+std::convert::From<usize>+std::ops::AddAssign  + std::ops::Sub<Output = FieldT>>(a:&mut Vec<FieldT>, omega:&FieldT)->eyre::Result<()>
 {
-    const size_t n = a.size(), logn = log2(n);
-    if n != (1u << logn)) throw DomainSizeException("expected n == (1u << logn)";
+    let  n = a.len();let  logn = log2(n);
+    if n != (1usize << logn){ eyre::bail!("expected n == (1usize << logn)");}
 
     /* swapping in place (from Storer's book) */
     for k in 0..n
     {
-        const size_t rk = libff::bitreverse(k, logn);
-        if k < rk
-            std::swap(a[k], a[rk]);
+        let  rk = bitreverse(k, logn);
+        if k < rk{
+            a.swap(k,rk);
+        }
+        
     }
-
-    size_t m = 1; // invariant: m = 2^{s-1}
+    let omega:FieldT=omega.clone();
+    let mut m = 1; // invariant: m = 2^{s-1}
     for s in 1..=logn
     {
+        let nm:FieldT=FieldT::from(n/(2*m));
         // w_m is 2^s-th root of unity now
-        const FieldT w_m = omega^(n/(2*m));
+        let  w_m:FieldT = omega.clone()^nm;
 
-        asm volatile  ("/* pre-inner */");
+        // asm volatile  ("/* pre-inner */");
         for k in 0..n
         {
-            FieldT w = FieldT::one();
+             let mut   w = FieldT::one();
             for j in 0..m
             {
-                const FieldT t = w * a[k+j+m];
-                a[k+j+m] = a[k+j] - t;
-                a[k+j] += t;
-                w *= w_m;
+                let  t = w.clone() * a[k+j+m].clone();
+                a[k+j+m] = a[k+j].clone() - t.clone();
+                a[k+j] += t.clone();
+                w *= w_m.clone();
             }
         }
-        asm volatile ("/* post-inner */");
+        // asm volatile ("/* post-inner */");
         m *= 2;
     }
+    Ok(())
 }
 
-template<typename FieldT>
-void _basic_parallel_radix2_FFT_inner(std::vector<FieldT> &a, const FieldT &omega, const size_t log_cpus)
-{
-    const size_t num_cpus = 1ul<<log_cpus;
 
-    const size_t m = a.size();
-    const size_t log_m = log2(m);
-    if m != 1ul<<log_m) throw DomainSizeException("expected m == 1ul<<log_m";
+pub fn _basic_parallel_radix2_FFT_inner<FieldT:num_traits::Zero+BitXor<Output = FieldT>+ std::ops::Sub+std::convert::From<usize>+ std::ops::Sub<Output = FieldT>+One+ std::ops::MulAssign+Clone+ std::ops::AddAssign>(a:&mut Vec<FieldT>, omega:&FieldT, log_cpus:usize)->eyre::Result<()>
+{
+    let  num_cpus = 1usize<<log_cpus;
+
+    let m = a.len();
+    let log_m = log2(m);
+    if m != 1usize<<log_m {eyre::bail!("expected m == 1u64<<log_m");}
 
     if log_m < log_cpus
     {
         _basic_serial_radix2_FFT(a, omega);
-        return;
+        return Ok(());
     }
 
-    std::vector<std::vector<FieldT> > tmp(num_cpus);
+    let mut tmp=vec![vec![];num_cpus];
     for j in 0..num_cpus
     {
-        tmp[j].resize(1ul<<(log_m-log_cpus), FieldT::zero());
+        tmp[j].resize(1usize<<(log_m-log_cpus), FieldT::zero());
     }
-
+    let omega_clone:FieldT=omega.clone();
 // #ifdef MULTICORE
-    #pragma omp parallel for
+    // //#pragma omp parallel for
 //#endif
     for j in 0..num_cpus
     {
-        const FieldT omega_j = omega^j;
-        const FieldT omega_step = omega^(j<<(log_m - log_cpus));
+        let  omega_j = omega_clone.clone()^FieldT::from(j);
+        let omega_step = omega_clone.clone()^FieldT::from(j<<(log_m - log_cpus));
 
-        FieldT elt = FieldT::one();
-        for i in 0..1ul<<(log_m - log_cpus)
+        let mut elt = FieldT::one();
+        for i in 0..1usize<<(log_m - log_cpus)
         {
             for s in 0..num_cpus
             {
                 // invariant: elt is omega^(j*idx)
-                const size_t idx = (i + (s<<(log_m - log_cpus))) % (1u << log_m);
-                tmp[j][i] += a[idx] * elt;
-                elt *= omega_step;
+                let idx = (i + (s<<(log_m - log_cpus))) % (1usize << log_m);
+                tmp[j][i] += a[idx].clone() * elt.clone();
+                elt *= omega_step.clone();
             }
-            elt *= omega_j;
+            elt *= omega_j.clone();
         }
     }
 
-    const FieldT omega_num_cpus = omega^num_cpus;
+    let omega_num_cpus = omega_clone^FieldT::from(num_cpus);
 
 // #ifdef MULTICORE
-    #pragma omp parallel for
+    //#pragma omp parallel for
 //#endif
     for j in 0..num_cpus
     {
-        _basic_serial_radix2_FFT(tmp[j], omega_num_cpus);
+        _basic_serial_radix2_FFT(&mut tmp[j], &omega_num_cpus);
     }
 
 // #ifdef MULTICORE
-    #pragma omp parallel for
+    //#pragma omp parallel for
 //#endif
     for i in 0..num_cpus
     {
-        for j in 0..1ul<<(log_m - log_cpus)
+        for j in 0..1usize<<(log_m - log_cpus)
         {
-            // now: i = idx >> (log_m - log_cpus) and j = idx % (1u << (log_m - log_cpus)), for idx = ((i<<(log_m-log_cpus))+j) % (1u << log_m)
-            a[(j<<log_cpus) + i] = tmp[i][j];
+            // now: i = idx >> (log_m - log_cpus) and j = idx % (1u32 << (log_m - log_cpus)), for idx = ((i<<(log_m-log_cpus))+j) % (1u32 << log_m)
+            a[(j<<log_cpus) + i] = tmp[i][j].clone();
         }
     }
+    Ok(())
 }
 
-template<typename FieldT>
-void _basic_parallel_radix2_FFT(std::vector<FieldT> &a, const FieldT &omega)
+
+pub fn _basic_parallel_radix2_FFT<FieldT: num_traits::Zero+BitXor<Output = FieldT>+ std::convert::From<usize>+ std::ops::Sub<Output = FieldT>+ std::ops::MulAssign+ Clone+num_traits::One+std::ops::AddAssign>(a:&mut Vec<FieldT>, omega:&FieldT)
 {
 // #ifdef MULTICORE
-    const size_t num_cpus = omp_get_max_threads();
-#else
-    const size_t num_cpus = 1;
+//     const size_t num_cpus = omp_get_max_threads();
+// #else
+     const num_cpus:usize = 1;
 //#endif
-    const size_t log_cpus = ((num_cpus & (num_cpus - 1)) == 0 ? log2(num_cpus) : log2(num_cpus) - 1);
+    let log_cpus = if num_cpus & (num_cpus - 1) == 0  {log2(num_cpus)} else {log2(num_cpus) - 1};
 
 // #ifdef DEBUG
-    libff::print_indent(); print!("* Invoking parallel FFT on 2^{} CPUs (omp_get_max_threads = {})\n", log_cpus, num_cpus);
+    print_indent(); print!("* Invoking parallel FFT on 2^{} CPUs (omp_get_max_threads = {})\n", log_cpus, num_cpus);
 //#endif
 
     if log_cpus == 0
     {
-        _basic_serial_radix2_FFT(a, omega);
+        _basic_serial_radix2_FFT( a, omega);
     }
     else
     {
@@ -218,48 +234,50 @@ void _basic_parallel_radix2_FFT(std::vector<FieldT> &a, const FieldT &omega)
     }
 }
 
-template<typename FieldT>
-void _multiply_by_coset(std::vector<FieldT> &a, const FieldT &g)
+
+pub fn _multiply_by_coset<FieldT: Clone+std::ops::MulAssign+std::convert::From<usize>>(a:&mut Vec<FieldT>, g:&FieldT)
 {
-    FieldT u = g;
-    for i in 1..a.size()
+    let mut  u:FieldT = g.clone();
+    for i in 1..a.len()
     {
-        a[i] *= u;
-        u *= g;
+        a[i] *= u.clone();
+        u *= g.clone();
     }
 }
 
-template<typename FieldT>
-std::vector<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t m, const FieldT &t)
+
+ pub fn _basic_radix2_evaluate_all_lagrange_polynomials<FieldT:One+Clone+ BitXor<Output =FieldT>+std::cmp::PartialEq+ std::ops::MulAssign+ std::ops::Sub<Output = FieldT>+  std::convert::From<usize>+ num_traits::Zero+std::default::Default>( m:usize, t:&FieldT)->eyre::Result<Vec<FieldT>>
 {
     if m == 1
     {
-        return std::vector<FieldT>(1, FieldT::one());
+        return  Ok(vec![FieldT::one()]);
     }
 
-    if m != (1u << libff::log2(m))) throw DomainSizeException("expected m == (1u << log2(m))";
+    if m != (1usize << log2(m)){ eyre::bail!("expected m == (1u32 << log2(m))");}
 
-    const FieldT omega = libff::get_root_of_unity<FieldT>(m);
+   let  omega = get_root_of_unity_is_same_double::<FieldT>(m);
 
-    std::vector<FieldT> u(m, FieldT::zero());
+    let mut  u=vec![FieldT::zero();m];
 
     /*
      If t equals one of the roots of unity in S={omega^{0},...,omega^{m-1}}
      then output 1 at the right place, and 0 elsewhere
      */
-
-    if (t^m) == (FieldT::one())
+    let tt:FieldT=t.clone();
+    let fm:FieldT=FieldT::from(m);
+    let tm:FieldT=tt.clone()^fm.clone();
+    if tm == FieldT::one()
     {
-        FieldT omega_i = FieldT::one();
+        let mut  omega_i = FieldT::one();
         for i in 0..m
         {
-            if omega_i == t // i.e., t equals omega^i
+            if &omega_i == t // i.e., t equals omega^i
             {
                 u[i] = FieldT::one();
-                return u;
+                return Ok(u);
             }
 
-            omega_i *= omega;
+            omega_i *= omega.clone();
         }
     }
 
@@ -272,19 +290,19 @@ std::vector<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t
      Below we use the fact that v_{0} = 1/m and v_{i+1} = \omega * v_{i}.
      */
 
-    const FieldT Z = (t^m)-FieldT::one();
-    FieldT l = Z * FieldT(m).inverse();
-    FieldT r = FieldT::one();
+    let  Z = tt.clone()^FieldT::from(m)-FieldT::one();
+    // let l = Z * FieldT::from(m).inverse();
+    let mut r = FieldT::one();
     for i in 0..m
     {
-        u[i] = l * (t - r).inverse();
-        l *= omega;
-        r *= omega;
+        // u[i] = l * (t - r).inverse();
+        // l *= omega;
+        r *= omega.clone();
     }
 
-    return u;
+    return Ok(u);
 }
 
-} // libfqfft
+// //} // libfqfft
 
 //#endif // BASIC_RADIX2_DOMAIN_AUX_TCC_

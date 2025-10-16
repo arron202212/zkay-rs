@@ -9,9 +9,9 @@
 
 //#ifndef FP6_2OVER3_HPP_
 // #define FP6_2OVER3_HPP_
-use libff/algebra/fields/prime_base/fp;
-use libff/algebra/fields/prime_extension/fp2;
-use libff/algebra/fields/prime_extension/fp3;
+use crate::algebra::fields::prime_base::fp;
+use crate::algebra::fields::prime_extension::fp2;
+use crate::algebra::fields::prime_extension::fp3;
 
 // namespace libff {
 
@@ -177,7 +177,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 Fp_model<n, modulus> Fp6_2over3_model<n, modulus>::Frobenius_coeffs_c1[6];
 
 // } // namespace libff
-use libff/algebra/fields/prime_extension/fp6_2over3.tcc;
+use crate::algebra::fields::prime_extension::fp6_2over3.tcc;
 
 //#endif // FP6_2OVER3_HPP_
 /** @file
@@ -498,18 +498,18 @@ Fp6_2over3_model<n, modulus> Fp6_2over3_model<n,modulus>::cyclotomic_exp(const b
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, exponent);
 
-    for (long i = static_cast<long>(NAF.size() - 1); i >= 0; --i)
+    for i in ( 0..=static_cast<long>(NAF.size() - 1)).rev()
     {
-        if (found_nonzero)
+        if found_nonzero
         {
             res = res.cyclotomic_squared();
         }
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             found_nonzero = true;
 
-            if (NAF[i] > 0)
+            if NAF[i] > 0
             {
                 res = res * (*this);
             }

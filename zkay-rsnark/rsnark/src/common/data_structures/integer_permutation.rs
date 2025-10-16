@@ -119,9 +119,9 @@ bool integer_permutation::is_valid() const
 {
     std::unordered_set<size_t> elems;
 
-    for (auto &el : contents)
+    for el in &contents
     {
-        if (el < min_element || el > max_element || elems.find(el) != elems.end())
+        if el < min_element || el > max_element || elems.find(el) != elems.end()
         {
             return false;
         }
@@ -136,7 +136,7 @@ integer_permutation integer_permutation::inverse() const
 {
     integer_permutation result(min_element, max_element);
 
-    for (size_t position = min_element; position <= max_element; ++position)
+    for position in min_element..=max_element
     {
         result.contents[self.contents[position - min_element] - min_element] = position;
     }

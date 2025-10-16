@@ -71,7 +71,7 @@ r1cs_auxiliary_input<FieldT> r1cs_pcd_compliance_predicate_auxiliary_input<Field
     const size_t max_arity = incoming_message_payload_lengths.size();
     assert!(arity <= max_arity);
 
-    for (size_t i = 0; i < arity; ++i)
+    for i in 0..arity
     {
         const r1cs_variable_assignment<FieldT> msg_as_r1cs_va = incoming_messages[i]->as_r1cs_variable_assignment();
         assert!(msg_as_r1cs_va.size() == (1 + incoming_message_payload_lengths[i]));
@@ -79,7 +79,7 @@ r1cs_auxiliary_input<FieldT> r1cs_pcd_compliance_predicate_auxiliary_input<Field
     }
 
     /* pad with dummy messages of appropriate size */
-    for (size_t i = arity; i < max_arity; ++i)
+    for i in arity..max_arity
     {
         result.resize(result.size() + (1 + incoming_message_payload_lengths[i]), FieldT::zero());
     }

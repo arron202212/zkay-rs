@@ -17,7 +17,7 @@
 use ffec::common::default_types::ec_pp;
 
 
-type ffec::default_ec_pp default_uscs_ppzksnark_pp;
+// type ffec::default_ec_pp default_uscs_ppzksnark_pp;
 
 
 //#endif // USCS_PPZKSNARK_PP_HPP_

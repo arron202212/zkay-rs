@@ -13,7 +13,7 @@
 //#ifndef TBCS_EXAMPLES_HPP_
 // #define TBCS_EXAMPLES_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
+use crate::relations::circuit_satisfaction_problems/tbcs/tbcs;
 
 
 
@@ -82,7 +82,7 @@ use  <cassert>
 
 use ffec::common::utils;
 
-use libsnark/relations/circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
+use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
 
 
 
@@ -92,12 +92,12 @@ tbcs_example generate_tbcs_example(const size_t primary_input_size,
                                    const size_t num_outputs)
 {
     tbcs_example example;
-    for (size_t i = 0; i < primary_input_size; ++i)
+    for i in 0..primary_input_size
     {
         example.primary_input.push_back(std::rand() % 2 == 0 ? false : true);
     }
 
-    for (size_t i = 0; i < auxiliary_input_size; ++i)
+    for i in 0..auxiliary_input_size
     {
         example.auxiliary_input.push_back(std::rand() % 2 == 0 ? false : true);
     }
@@ -109,7 +109,7 @@ tbcs_example generate_tbcs_example(const size_t primary_input_size,
     all_vals.insert(all_vals.end(), example.primary_input.begin(), example.primary_input.end());
     all_vals.insert(all_vals.end(), example.auxiliary_input.begin(), example.auxiliary_input.end());
 
-    for (size_t i = 0; i < num_gates; ++i)
+    for i in 0..num_gates
     {
         const size_t num_variables = primary_input_size + auxiliary_input_size + i;
         tbcs_gate gate;
@@ -117,7 +117,7 @@ tbcs_example generate_tbcs_example(const size_t primary_input_size,
         gate.right_wire = std::rand() % (num_variables+1);
         gate.output = num_variables+1;
 
-        if (i >= num_gates - num_outputs)
+        if i >= num_gates - num_outputs
         {
             /* make gate a circuit output and fix */
             do

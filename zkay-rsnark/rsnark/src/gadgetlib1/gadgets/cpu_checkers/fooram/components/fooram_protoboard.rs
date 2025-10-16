@@ -12,8 +12,8 @@
 //#ifndef FOORAM_PROTOBOARD_HPP_
 // #define FOORAM_PROTOBOARD_HPP_
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/relations/ram_computations/rams/fooram/fooram_aux;
+use crate::gadgetlib1::gadget;
+use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 
 
@@ -35,7 +35,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/fooram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
 
 //#endif // FOORAM_PROTOBOARD_HPP_
 /** @file

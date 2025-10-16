@@ -14,9 +14,9 @@
 //#ifndef ALU_CONTROL_FLOW_HPP_
 // #define ALU_CONTROL_FLOW_HPP_
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
 
 
 
@@ -98,7 +98,7 @@ void test_ALU_cnjmp_gadget();
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_control_flow;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_control_flow;
 
 //#endif // ALU_CONTROL_FLOW_HPP_
 /** @file

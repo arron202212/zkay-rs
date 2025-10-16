@@ -11,8 +11,8 @@ use  <set>
 
 use  "depends/gtest/googletest/include/gtest/gtest.h"
 
-use libsnark/gadgetlib2/pp;
-use libsnark/gadgetlib2/variable;
+use crate::gadgetlib2::pp;
+use crate::gadgetlib2::variable;
 
 using ::std::set;
 using namespace gadgetlib2;

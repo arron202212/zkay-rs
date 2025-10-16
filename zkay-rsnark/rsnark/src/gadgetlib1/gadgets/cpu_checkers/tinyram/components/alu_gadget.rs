@@ -14,8 +14,8 @@
 //#ifndef ALU_GADGET_HPP_
 // #define ALU_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_arithmetic;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_control_flow;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_arithmetic;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_control_flow;
 
 
 
@@ -178,7 +178,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_gadget;
 
 //#endif // ALU_GADGET_HPP_
 /** @file
@@ -202,9 +202,9 @@ use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/alu_gadget;
 template<typename FieldT>
 void ALU_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < 1ul<<self.pb.ap.opcode_width(); ++i)
+    for i in 0..1ul<<self.pb.ap.opcode_width()
     {
-        if (components[i])
+        if components[i]
         {
             components[i]->generate_r1cs_constraints();
         }
@@ -214,9 +214,9 @@ void ALU_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void ALU_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < 1ul<<self.pb.ap.opcode_width(); ++i)
+    for i in 0..1ul<<self.pb.ap.opcode_width()
     {
-        if (components[i])
+        if components[i]
         {
             components[i]->generate_r1cs_witness();
         }

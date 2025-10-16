@@ -16,9 +16,9 @@
 // #define AS_WAKSMAN_ROUTING_GADGET_HPP_
 
 use crate::common::data_structures::integer_permutation;
-use libsnark/common/routing_algorithms/as_waksman_routing_algorithm;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/protoboard;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::protoboard;
 
 
 
@@ -77,7 +77,7 @@ void test_as_waksman_routing_gadget(const size_t num_packets, const size_t packe
 
 
 
-use libsnark/gadgetlib1/gadgets/routing/as_waksman_routing_gadget;
+use crate::gadgetlib1::gadgets/routing/as_waksman_routing_gadget;
 
 //#endif // AS_WAKSMAN_ROUTING_GADGET_HPP_
 /** @file
@@ -100,7 +100,7 @@ use  <algorithm>
 
 use ffec::common::profiling;
 
-use libsnark/common/routing_algorithms/as_waksman_routing_algorithm;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm;
 
 
 
@@ -125,18 +125,18 @@ as_waksman_routing_gadget<FieldT>::as_waksman_routing_gadget(protoboard<FieldT> 
        switch either copy over the variables from previously allocated
        to allocate target packets */
     routed_packets[0].resize(num_packets);
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         routed_packets[0][packet_idx].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_0_{}", packet_idx));
     }
 
-    for (size_t column_idx = 0; column_idx < num_columns; ++column_idx)
+    for column_idx in 0..num_columns
     {
         routed_packets[column_idx+1].resize(num_packets);
 
-        for (size_t row_idx = 0; row_idx < num_packets; ++row_idx)
+        for row_idx in 0..num_packets
         {
-            if (neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second)
+            if neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second
             {
                 /* This is a straight edge, so just copy over the previously allocated subpackets */
                 routed_packets[column_idx+1][neighbors[column_idx][row_idx].first] = routed_packets[column_idx][row_idx];
@@ -154,7 +154,7 @@ as_waksman_routing_gadget<FieldT>::as_waksman_routing_gadget(protoboard<FieldT> 
 
     /* create packing/unpacking gadgets */
     pack_inputs.reserve(num_packets); unpack_outputs.reserve(num_packets);
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         pack_inputs.push(
             multipacking_gadget<FieldT>(pb,
@@ -171,15 +171,15 @@ as_waksman_routing_gadget<FieldT>::as_waksman_routing_gadget(protoboard<FieldT> 
     }
 
     /* allocate switch bits */
-    if (num_subpackets > 1)
+    if num_subpackets > 1
     {
         asw_switch_bits.resize(num_columns);
 
-        for (size_t column_idx = 0; column_idx < num_columns; ++column_idx)
+        for column_idx in 0..num_columns
         {
-            for (size_t row_idx = 0; row_idx < num_packets; ++row_idx)
+            for row_idx in 0..num_packets
             {
-                if (neighbors[column_idx][row_idx].first != neighbors[column_idx][row_idx].second)
+                if neighbors[column_idx][row_idx].first != neighbors[column_idx][row_idx].second
                 {
                     asw_switch_bits[column_idx][row_idx].allocate(pb, FMT(annotation_prefix, " asw_switch_bits_%zu_{}", column_idx, row_idx));
                     row_idx+=1; /* next row_idx corresponds to the same switch, so skip it */
@@ -193,29 +193,29 @@ template<typename FieldT>
 void as_waksman_routing_gadget<FieldT>::generate_r1cs_constraints()
 {
     /* packing/unpacking */
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         pack_inputs[packet_idx].generate_r1cs_constraints(false);
         unpack_outputs[packet_idx].generate_r1cs_constraints(true);
     }
 
     /* actual routing constraints */
-    for (size_t column_idx = 0; column_idx < num_columns; ++column_idx)
+    for column_idx in 0..num_columns
     {
-        for (size_t row_idx = 0; row_idx < num_packets; ++row_idx)
+        for row_idx in 0..num_packets
         {
-            if (neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second)
+            if neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second
             {
                 /* if there is no switch at this position, then just continue with next row_idx */
                 continue;
             }
 
-            if (num_subpackets == 1)
+            if num_subpackets == 1
             {
                 /* easy case: require that
                    (cur-straight_edge)*(cur-cross_edge) = 0 for both
                    switch inputs */
-                for (size_t switch_input : { row_idx, row_idx+1 })
+                for switch_input in &{ row_idx, row_idx+1 }
                 {
                     const size_t straight_edge = neighbors[column_idx][switch_input].first;
                     const size_t cross_edge = neighbors[column_idx][switch_input].second;
@@ -234,13 +234,13 @@ void as_waksman_routing_gadget<FieldT>::generate_r1cs_constraints()
                                                          FMT(self.annotation_prefix, " asw_switch_bits_%zu_{}", column_idx, row_idx));
 
                 /* route forward according to the switch bit */
-                for (size_t subpacket_idx = 0; subpacket_idx < num_subpackets; ++subpacket_idx)
+                for subpacket_idx in 0..num_subpackets
                 {
                     /*
                       (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
                       switch_bit * (cross_edge-straight_edge) = cur-straight_edge
                      */
-                    for (size_t switch_input : { row_idx, row_idx+1 })
+                    for switch_input in &{ row_idx, row_idx+1 }
                     {
                         const size_t straight_edge = neighbors[column_idx][switch_input].first;
                         const size_t cross_edge = neighbors[column_idx][switch_input].second;
@@ -265,7 +265,7 @@ template<typename FieldT>
 void as_waksman_routing_gadget<FieldT>::generate_r1cs_witness(const integer_permutation& permutation)
 {
     /* pack inputs */
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         pack_inputs[packet_idx].generate_r1cs_witness_from_bits();
     }
@@ -273,23 +273,23 @@ void as_waksman_routing_gadget<FieldT>::generate_r1cs_witness(const integer_perm
     /* do the routing */
     as_waksman_routing routing = get_as_waksman_routing(permutation);
 
-    for (size_t column_idx = 0; column_idx < num_columns; ++column_idx)
+    for column_idx in 0..num_columns
     {
-        for (size_t row_idx = 0; row_idx < num_packets; ++row_idx)
+        for row_idx in 0..num_packets
         {
-            if (neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second)
+            if neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second
             {
                 /* this is a straight edge, so just pass the values forward */
                 const size_t next = neighbors[column_idx][row_idx].first;
 
-                for (size_t subpacket_idx = 0; subpacket_idx < num_subpackets; ++subpacket_idx)
+                for subpacket_idx in 0..num_subpackets
                 {
                     self.pb.val(routed_packets[column_idx+1][next][subpacket_idx]) = self.pb.val(routed_packets[column_idx][row_idx][subpacket_idx]);
                 }
             }
             else
             {
-                if (num_subpackets > 1)
+                if num_subpackets > 1
                 {
                     /* update the switch bit */
                     self.pb.val(asw_switch_bits[column_idx][row_idx]) = FieldT(routing[column_idx][row_idx] ? 1 : 0);
@@ -298,14 +298,14 @@ void as_waksman_routing_gadget<FieldT>::generate_r1cs_witness(const integer_perm
                 /* route according to the switch bit */
                 const bool switch_val = routing[column_idx][row_idx];
 
-                for (size_t switch_input : { row_idx, row_idx+1 })
+                for switch_input in &{ row_idx, row_idx+1 }
                 {
                     const size_t straight_edge = neighbors[column_idx][switch_input].first;
                     const size_t cross_edge = neighbors[column_idx][switch_input].second;
 
                     const size_t switched_edge = (switch_val ? cross_edge : straight_edge);
 
-                    for (size_t subpacket_idx = 0; subpacket_idx < num_subpackets; ++subpacket_idx)
+                    for subpacket_idx in 0..num_subpackets
                     {
                         self.pb.val(routed_packets[column_idx+1][switched_edge][subpacket_idx]) = self.pb.val(routed_packets[column_idx][switch_input][subpacket_idx]);
                     }
@@ -318,7 +318,7 @@ void as_waksman_routing_gadget<FieldT>::generate_r1cs_witness(const integer_perm
     }
 
     /* unpack outputs */
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         unpack_outputs[packet_idx].generate_r1cs_witness_from_packed();
     }
@@ -334,12 +334,12 @@ void test_as_waksman_routing_gadget(const size_t num_packets, const size_t packe
     ffec::print_time("generated permutation");
 
     std::vector<pb_variable_array<FieldT> > randbits(num_packets), outbits(num_packets);
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         randbits[packet_idx].allocate(pb, packet_size, FMT("", "randbits_{}", packet_idx));
         outbits[packet_idx].allocate(pb, packet_size, FMT("", "outbits_{}", packet_idx));
 
-        for (size_t bit_idx = 0; bit_idx < packet_size; ++bit_idx)
+        for bit_idx in 0..packet_size
         {
             pb.val(randbits[packet_idx][bit_idx]) = (rand() % 2) ? FieldT::one() : FieldT::zero();
         }
@@ -355,9 +355,9 @@ void test_as_waksman_routing_gadget(const size_t num_packets, const size_t packe
 
     print!("positive test\n");
     assert!(pb.is_satisfied());
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
-        for (size_t bit_idx = 0; bit_idx < packet_size; ++bit_idx)
+        for bit_idx in 0..packet_size
         {
             assert!(pb.val(outbits[permutation.get(packet_idx)][bit_idx]) == pb.val(randbits[packet_idx][bit_idx]));
         }

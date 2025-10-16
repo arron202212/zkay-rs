@@ -11,9 +11,9 @@
 // #define FP12_2OVER3OVER2_HPP_
 //#include <vector>
 
-use libff/algebra/fields/prime_base/fp;
-use libff/algebra/fields/prime_extension/fp2;
-use libff/algebra/fields/prime_extension/fp6_3over2;
+use crate::algebra::fields::prime_base::fp;
+use crate::algebra::fields::prime_extension::fp2;
+use crate::algebra::fields::prime_extension::fp6_3over2;
 
 // namespace libff {
 
@@ -188,7 +188,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 Fp2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::Frobenius_coeffs_c1[12];
 
 // } // namespace libff
-use libff/algebra/fields/prime_extension/fp12_2over3over2.tcc;
+use crate::algebra::fields::prime_extension::fp12_2over3over2.tcc;
 //#endif // FP12_2OVER3OVER2_HPP_
 /** @file
  *****************************************************************************
@@ -663,17 +663,17 @@ Fp12_2over3over2_model<n, modulus> Fp12_2over3over2_model<n,modulus>::cyclotomic
     Fp12_2over3over2_model<n,modulus> res = Fp12_2over3over2_model<n,modulus>::one();
 
     bool found_one = false;
-    for (long i = m-1; i >= 0; --i)
+    for i in ( 0..=m-1).rev()
     {
-        for (long j = GMP_NUMB_BITS - 1; j >= 0; --j)
+        for j in ( 0..=GMP_NUMB_BITS - 1).rev()
         {
-            if (found_one)
+            if found_one
             {
                 res = res.cyclotomic_squared();
             }
 
             static const mp_limb_t one = 1;
-            if (exponent.data[i] & (one<<j))
+            if exponent.data[i] & (one<<j)
             {
                 found_one = true;
                 res = res * (*this);
@@ -729,7 +729,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp12_2over3over2_model<n, modulus> > &v)
 {
     out << v.size() << "\n";
-    for (const Fp12_2over3over2_model<n, modulus>& t : v)
+    for t in &v
     {
         out << t << OUTPUT_NEWLINE;
     }
@@ -750,7 +750,7 @@ std::istream& operator>>(std::istream& in, std::vector<Fp12_2over3over2_model<n,
 
     v.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         Fp12_2over3over2_model<n, modulus> el;
         in >> el;

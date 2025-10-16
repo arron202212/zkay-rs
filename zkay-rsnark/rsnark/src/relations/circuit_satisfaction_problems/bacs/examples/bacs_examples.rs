@@ -13,7 +13,7 @@
 //#ifndef BACS_EXAMPLES_HPP_
 // #define BACS_EXAMPLES_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems/bacs/bacs;
 
 
 
@@ -66,7 +66,7 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
 
 
 
-use libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples;
+use crate::relations::circuit_satisfaction_problems/bacs/examples/bacs_examples;
 
 //#endif // BACS_EXAMPLES_HPP_
 /** @file
@@ -98,7 +98,7 @@ linear_combination<FieldT> random_linear_combination(const size_t num_variables)
     const size_t terms = 1 + (std::rand() % 3);
     linear_combination<FieldT> result;
 
-    for (size_t i = 0; i < terms; ++i)
+    for i in 0..terms
     {
         const FieldT coeff = FieldT(std::rand()); // TODO: replace with FieldT::random_element(), when it becomes faster...
         result = result + coeff * variable<FieldT>(std::rand() % (num_variables + 1));
@@ -114,12 +114,12 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
                                            const size_t num_outputs)
 {
     bacs_example<FieldT> example;
-    for (size_t i = 0; i < primary_input_size; ++i)
+    for i in 0..primary_input_size
     {
         example.primary_input.push(FieldT::random_element());
     }
 
-    for (size_t i = 0; i < auxiliary_input_size; ++i)
+    for i in 0..auxiliary_input_size
     {
         example.auxiliary_input.push(FieldT::random_element());
     }
@@ -131,7 +131,7 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
     all_vals.insert(all_vals.end(), example.primary_input.begin(), example.primary_input.end());
     all_vals.insert(all_vals.end(), example.auxiliary_input.begin(), example.auxiliary_input.end());
 
-    for (size_t i = 0; i < num_gates; ++i)
+    for i in 0..num_gates
     {
         const size_t num_variables = primary_input_size + auxiliary_input_size + i;
         bacs_gate<FieldT> gate;
@@ -139,14 +139,14 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
         gate.rhs = random_linear_combination<FieldT>(num_variables);
         gate.output = variable<FieldT>(num_variables+1);
 
-        if (i >= num_gates - num_outputs)
+        if i >= num_gates - num_outputs
         {
             /* make gate a circuit output and fix */
             gate.is_circuit_output = true;
             const var_index_t var_idx = std::rand() % (1 + primary_input_size + std::min(num_gates-num_outputs, i));
             const FieldT var_val = (var_idx == 0 ? FieldT::one() : all_vals[var_idx-1]);
 
-            if (std::rand() % 2 == 0)
+            if std::rand() % 2 == 0
             {
                 const FieldT lhs_val = gate.lhs.evaluate(all_vals);
                 const FieldT coeff = -(lhs_val * var_val.inverse());

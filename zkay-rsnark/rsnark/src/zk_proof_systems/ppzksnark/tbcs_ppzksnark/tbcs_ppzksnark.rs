@@ -34,7 +34,7 @@
 //#ifndef TBCS_PPZKSNARK_HPP_
 // #define TBCS_PPZKSNARK_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
+use crate::relations::circuit_satisfaction_problems/tbcs/tbcs;
 use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark_params;
 use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark;
 

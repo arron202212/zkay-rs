@@ -9,8 +9,8 @@
 // #define BLS12_381_G1_HPP_
 //#include <vector>
 
-use libff/algebra/curves/bls12_381/bls12_381_init;
-use libff/algebra/curves/curve_utils;
+use crate::algebra::curves::bls12_381/bls12_381_init;
+use crate::algebra::curves::curve_utils;
 
 // namespace libff {
 
@@ -96,7 +96,7 @@ std::istream& operator>>(std::istream& in, std::vector<bls12_381_G1> &v);
 
 // } // namespace libff
 //#endif // BLS12_381_G1_HPP_
-use libff/algebra/curves/bls12_381/bls12_381_g1;
+use crate::algebra::curves::bls12_381/bls12_381_g1;
 
 // namespace libff {
 
@@ -122,7 +122,7 @@ bls12_381_G1::bls12_381_G1()
 
 void bls12_381_G1::print() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -138,7 +138,7 @@ void bls12_381_G1::print() const
 
 void bls12_381_G1::print_coordinates() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -153,7 +153,7 @@ void bls12_381_G1::print_coordinates() const
 
 void bls12_381_G1::to_affine_coordinates()
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         this->X = bls12_381_Fq::zero();
         this->Y = bls12_381_Fq::one();
@@ -187,12 +187,12 @@ bool bls12_381_G1::is_zero() const
 
 bool bls12_381_G1::operator==(const bls12_381_G1 &other) const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other.is_zero();
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return false;
     }
@@ -209,7 +209,7 @@ bool bls12_381_G1::operator==(const bls12_381_G1 &other) const
     bls12_381_Fq Z1_squared = (this->Z).squared();
     bls12_381_Fq Z2_squared = (other.Z).squared();
 
-    if ((this->X * Z2_squared) != (other.X * Z1_squared))
+    if (this->X * Z2_squared) != (other.X * Z1_squared)
     {
         return false;
     }
@@ -228,12 +228,12 @@ bool bls12_381_G1::operator!=(const bls12_381_G1& other) const
 bls12_381_G1 bls12_381_G1::operator+(const bls12_381_G1 &other) const
 {
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -263,7 +263,7 @@ bls12_381_G1 bls12_381_G1::operator+(const bls12_381_G1 &other) const
     bls12_381_Fq S1 = (this->Y) * Z2_cubed;      // S1 = Y1 * Z2 * Z2Z2
     bls12_381_Fq S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
 
-    if (U1 == U2 && S1 == S2)
+    if U1 == U2 && S1 == S2
     {
         // dbl case; nothing of above can be reused
         return this->dbl();
@@ -307,12 +307,12 @@ bls12_381_G1 bls12_381_G1::mixed_add(const bls12_381_G1 &other) const
 //#endif
 
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -341,7 +341,7 @@ bls12_381_G1 bls12_381_G1::mixed_add(const bls12_381_G1 &other) const
     const bls12_381_Fq &S1 = (this->Y);                // S1 = Y1 * Z2 * Z2Z2
     const bls12_381_Fq S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
 
-    if (U1 == U2 && S1 == S2)
+    if U1 == U2 && S1 == S2
     {
         // dbl case; nothing of above can be reused
         return this->dbl();
@@ -375,7 +375,7 @@ bls12_381_G1 bls12_381_G1::dbl() const
     this->dbl_cnt++;
 //#endif
     // handle point at infinity
-    if (this->is_zero())
+    if this->is_zero()
     {
         return (*this);
     }
@@ -411,7 +411,7 @@ bls12_381_G1 bls12_381_G1::mul_by_cofactor() const
 
 bool bls12_381_G1::is_well_formed() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return true;
     }
@@ -482,20 +482,20 @@ std::istream& operator>>(std::istream &in, bls12_381_G1 &g)
     Y_lsb -= '0';
 
     // y = +/- sqrt(x^3 + b)
-    if (is_zero == 0)
+    if is_zero == 0
     {
         bls12_381_Fq tX2 = tX.squared();
         bls12_381_Fq tY2 = tX2*tX + bls12_381_coeff_b;
         tY = tY2.sqrt();
 
-        if ((tY.as_bigint().data[0] & 1) != Y_lsb)
+        if (tY.as_bigint().data[0] & 1) != Y_lsb
         {
             tY = -tY;
         }
     }
 //#endif
     // using Jacobian coordinates
-    if (is_zero == 0)
+    if is_zero == 0
     {
         g.X = tX;
         g.Y = tY;
@@ -512,7 +512,7 @@ std::istream& operator>>(std::istream &in, bls12_381_G1 &g)
 std::ostream& operator<<(std::ostream& out, const std::vector<bls12_381_G1> &v)
 {
     out << v.size() << "\n";
-    for (const bls12_381_G1& t : v)
+    for t in &v
     {
         out << t << OUTPUT_NEWLINE;
     }
@@ -530,7 +530,7 @@ std::istream& operator>>(std::istream& in, std::vector<bls12_381_G1> &v)
 
     v.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         bls12_381_G1 g;
         in >> g;
@@ -546,7 +546,7 @@ void bls12_381_G1::batch_to_special_all_non_zeros(std::vector<bls12_381_G1> &vec
     std::vector<bls12_381_Fq> Z_vec;
     Z_vec.reserve(vec.size());
 
-    for (auto &el: vec)
+    for el in &vec
     {
         Z_vec.emplace_back(el.Z);
     }
@@ -554,7 +554,7 @@ void bls12_381_G1::batch_to_special_all_non_zeros(std::vector<bls12_381_G1> &vec
 
     const bls12_381_Fq one = bls12_381_Fq::one();
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for i in 0..vec.size()
     {
         bls12_381_Fq Z2 = Z_vec[i].squared();
         bls12_381_Fq Z3 = Z_vec[i] * Z2;

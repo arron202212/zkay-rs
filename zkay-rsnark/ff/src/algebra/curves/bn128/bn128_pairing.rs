@@ -10,11 +10,11 @@
 
 //#include <sstream>
 
-use libff/algebra/curves/bn128/bn128_g1;
-use libff/algebra/curves/bn128/bn128_g2;
-use libff/algebra/curves/bn128/bn128_gt;
-use libff/algebra/curves/bn128/bn128_init;
-use libff/algebra/curves/bn128/bn128_pairing;
+use crate::algebra::curves::bn128::bn128_g1;
+use crate::algebra::curves::bn128::bn128_g2;
+use crate::algebra::curves::bn128::bn128_gt;
+use crate::algebra::curves::bn128::bn128_init;
+use crate::algebra::curves::bn128::bn128_pairing;
 use crate::common::profiling;
 
 // namespace libff {
@@ -30,7 +30,7 @@ bool bn128_ate_G1_precomp::operator==(const bn128_ate_G1_precomp &other) const
 
 std::ostream& operator<<(std::ostream &out, const bn128_ate_G1_precomp &prec_P)
 {
-    for (auto p : prec_P.P)
+    for p in &prec_P.P
     {
 //#ifndef BINARY_OUTPUT
         out << p << "\n";
@@ -43,7 +43,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G1_precomp &prec_P)
 
 std::istream& operator>>(std::istream &in, bn128_ate_G1_precomp &prec_P)
 {
-    for (auto p : prec_P.P)
+    for p in &prec_P.P
     {
 //#ifndef BINARY_OUTPUT
         in >> p;
@@ -66,12 +66,12 @@ bool bn128_ate_G2_precomp::operator==(const bn128_ate_G2_precomp &other) const
     }
 
     /* work around for upstream serialization bug */
-    for (size_t i = 0; i < this->coeffs.size(); ++i)
+    for i in 0..this->coeffs.size()
     {
         std::stringstream this_ss, other_ss;
         this_ss << this->coeffs[i];
         other_ss << other.coeffs[i];
-        if (this_ss.str() != other_ss.str())
+        if this_ss.str() != other_ss.str()
         {
             return false;
         }
@@ -82,7 +82,7 @@ bool bn128_ate_G2_precomp::operator==(const bn128_ate_G2_precomp &other) const
 
 std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
 {
-    for (auto q : prec_Q.Q)
+    for q in &prec_Q.Q
     {
 //#ifndef BINARY_OUTPUT
         out << q.a_ << "\n";
@@ -95,7 +95,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
 
     out << prec_Q.coeffs.size() << "\n";
 
-    for (auto c : prec_Q.coeffs)
+    for c in &prec_Q.coeffs
     {
 //#ifndef BINARY_OUTPUT
         out << c.a_.a_ << "\n";
@@ -119,7 +119,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
 
 std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
 {
-    for (auto q : prec_Q.Q)
+    for q in &prec_Q.Q
     {
 //#ifndef BINARY_OUTPUT
         in >> q.a_;
@@ -136,7 +136,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
     in >> count;
     consume_newline(in);
     prec_Q.coeffs.resize(count);
-    for (size_t i = 0; i < count; ++i)
+    for i in 0..count
     {
 //#ifndef BINARY_OUTPUT
         in >> prec_Q.coeffs[i].a_.a_;

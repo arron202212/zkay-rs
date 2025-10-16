@@ -17,7 +17,7 @@
 use ffec::common::default_types::ec_pp;
 
 
-type ffec::default_ec_pp default_bacs_ppzksnark_pp;
+type default_bacs_ppzksnark_pp=ffec::default_ec_pp ;
 
 
 //#endif // BACS_PPZKSNARK_PP_HPP_

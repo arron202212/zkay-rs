@@ -33,7 +33,7 @@
 // //#ifndef R1CS_TO_SAP_HPP_
 // // #define R1CS_TO_SAP_HPP_
 
-use libsnark::relations::arithmetic_programs::sap::sap;
+use crate::relations::arithmetic_programs::sap::sap;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
@@ -72,7 +72,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-// use libsnark::reductions::r1cs_to_sap::r1cs_to_sap;
+// use crate::reductions::r1cs_to_sap::r1cs_to_sap;
 
 // //#endif // R1CS_TO_SAP_HPP_
 /** @file
@@ -449,7 +449,7 @@ pub fn
     ffec::enter_block("Compute ZK-patch");
     let coefficients_for_H=vec![FieldT::zero();domain.m+1];
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     /* add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z */
     for i in 0..domain.m
@@ -467,7 +467,7 @@ pub fn
     ffec::enter_block("Compute evaluation of polynomial H on set T");
     let mut H_tmp = &aA; // can overwrite aA because it is not used later
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..domain.m
     {
@@ -512,7 +512,7 @@ pub fn
     ffec::leave_block("Compute evaluation of polynomial C on set T");
 
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..domain.m
     {
@@ -531,7 +531,7 @@ pub fn
 
     ffec::enter_block("Compute sum of H and ZK-patch");
 // // #ifdef MULTICORE
-// #pragma omp parallel for
+// //#pragma omp parallel for
 // //#endif
     for i in 0..domain.m
     {

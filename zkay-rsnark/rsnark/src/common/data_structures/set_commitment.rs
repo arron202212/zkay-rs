@@ -15,7 +15,7 @@
 use ffec::common::utils;
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io; // TODO: the current structure is suboptimal
+use crate::gadgetlib1::gadgets::hashes::hash_io; // TODO: the current structure is suboptimal
 
 
 
@@ -56,7 +56,7 @@ public:
 /* note that set_commitment has both .cpp, for implementation of
    non-templatized code (methods of set_membership_proof) and .tcc
    (implementation of set_commitment_accumulator<HashT> */
-use libsnark::common::data_structures::set_commitment;
+use crate::common::data_structures::set_commitment;
 
 //#endif // SET_COMMITMENT_HPP_
 /**
@@ -80,7 +80,7 @@ bool set_membership_proof::operator==(const set_membership_proof &other) const
 
 size_t set_membership_proof::size_in_bits() const
 {
-    if (merkle_path.empty())
+    if merkle_path.empty()
     {
         return (8 * sizeof(address));
     }
@@ -94,7 +94,7 @@ std::ostream& operator<<(std::ostream &out, const set_membership_proof &proof)
 {
     out << proof.address << "\n";
     out << proof.merkle_path.size() << "\n";
-    for (size_t i = 0; i < proof.merkle_path.size(); ++i)
+    for i in 0..proof.merkle_path.size()
     {
         ffec::output_bool_vector(out, proof.merkle_path[i]);
     }
@@ -111,7 +111,7 @@ std::istream& operator>>(std::istream &in, set_membership_proof &proof)
     ffec::consume_newline(in);
     proof.merkle_path.resize(tree_depth);
 
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         ffec::input_bool_vector(in, proof.merkle_path[i]);
     }
@@ -151,7 +151,7 @@ void set_commitment_accumulator<HashT>::add(const ffec::bit_vector &value)
 {
     assert!(value_size == 0 || value.size() == value_size);
     const ffec::bit_vector hash = HashT::get_hash(value);
-    if (hash_to_pos.find(hash) == hash_to_pos.end())
+    if hash_to_pos.find(hash) == hash_to_pos.end()
     {
         const size_t pos = hash_to_pos.size();
         tree->set_value(pos, hash);

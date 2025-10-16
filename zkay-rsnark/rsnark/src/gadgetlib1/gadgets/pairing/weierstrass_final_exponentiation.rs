@@ -17,8 +17,8 @@
 
 use  <memory>
 
-use libsnark/gadgetlib1/gadgets/fields/exponentiation_gadget;
-use libsnark/gadgetlib1/gadgets/pairing/mnt_pairing_params;
+use crate::gadgetlib1::gadgets/fields/exponentiation_gadget;
+use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
 
 
 
@@ -106,7 +106,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/pairing/weierstrass_final_exponentiation;
+use crate::gadgetlib1::gadgets/pairing/weierstrass_final_exponentiation;
 
 //#endif // WEIERSTRASS_FINAL_EXPONENTIATION_HPP_
 /** @file
@@ -125,8 +125,8 @@ use libsnark/gadgetlib1/gadgets/pairing/weierstrass_final_exponentiation;
 //#ifndef WEIERSTRASS_FINAL_EXPONENTIATION_TCC_
 // #define WEIERSTRASS_FINAL_EXPONENTIATION_TCC_
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/pairing/mnt_pairing_params;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
 
 
 

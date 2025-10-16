@@ -19,8 +19,8 @@ use  <memory>
 
 use ffec::algebra::curves::public_params;
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
 
 
 
@@ -83,7 +83,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
 
 //#endif // WEIERSTRASS_G2_GADGET_HPP_
 /** @file

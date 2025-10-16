@@ -6,18 +6,18 @@
  *****************************************************************************/
 //#include <gtest/gtest.h>
 
-use libff/algebra/curves/edwards/edwards_pp;
-use libff/algebra/curves/mnt/mnt4/mnt4_pp;
-use libff/algebra/curves/mnt/mnt6/mnt6_pp;
+use crate::algebra::curves::edwards/edwards_pp;
+use crate::algebra::curves::mnt::mnt4::mnt4_pp;
+use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 use crate::common::profiling;
 use crate::common::utils;
 // #ifdef CURVE_BN128
-use libff/algebra/curves/bn128/bn128_pp;
+use crate::algebra::curves::bn128::bn128_pp;
 //#endif
 //#include <sstream>
 
-use libff/algebra/curves/alt_bn128/alt_bn128_pp;
-use libff/algebra/curves/bls12_381/bls12_381_pp;
+use crate::algebra::curves::alt_bn128::alt_bn128_pp;
+use crate::algebra::curves::bls12_381/bls12_381_pp;
 
 using namespace libff;
 
@@ -148,7 +148,7 @@ void test_output()
        point addition with extremely small probability, so this code was run for 1000 times
        in case there was a missing carry. Since no problems were found, this is now reduced
        to only 10 times for quick testing. */
-    for (size_t i = 0; i < 10; ++i)
+    for i in 0..10
     {
         GroupT g_ser = reserialize(g);
         EXPECT_EQ(g, g_ser);

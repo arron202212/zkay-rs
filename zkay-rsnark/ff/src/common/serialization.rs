@@ -65,14 +65,15 @@
  * portable between machines of different word sizes.
  */
 
-// #ifdef BINARY_OUTPUT
-// #define OUTPUT_NEWLINE ""
-// #define OUTPUT_SEPARATOR ""
-// #else
-// #define OUTPUT_NEWLINE "\n"
-// #define OUTPUT_SEPARATOR " "
-//#endif
-
+cfg_if::cfg_if!{
+ if #[cfg(feature="BINARY_OUTPUT")]
+{const OUTPUT_NEWLINE:&str= "";
+const OUTPUT_SEPARATOR:&str= "";}
+else
+{const OUTPUT_NEWLINE:&str= "\n";
+const OUTPUT_SEPARATOR:&str= " ";
+}
+}
 // inline void consume_newline(ins:&impl BufRead);
 // inline void consume_OUTPUT_NEWLINE(ins:&impl BufRead);
 // inline void consume_OUTPUT_SEPARATOR(ins:&impl BufRead);
@@ -106,7 +107,7 @@
 
 // } // namespace libff
 
-// use libff/common/serialization.tcc;
+// use crate::common::serialization.tcc;
 
 //#endif // SERIALIZATION_HPP_
 
@@ -167,7 +168,7 @@ pub fn  consume_OUTPUT_SEPARATOR(ins:&impl BufRead)
 }
 
 #[inline]
-pub fn  output_bool<W: ?Sized + Write> (out:& BufWriter<W>, b:bool)
+pub fn  output_bool<W: ?Sized + Write> (out:&mut  BufWriter<W>, b:bool)
 {
     write!(out,"{}\n", b as u8);
     // out << (b ? 1 : 0) << "\n";
@@ -188,7 +189,7 @@ pub fn input_bool(ins:&impl BufRead, b:bool)
 pub fn  output_bool_vector<W: ?Sized + Write> (out:& BufWriter<W>, v:&Vec<bool>)
 {
     // out << v.size() << "\n";
-    // for (b:bool : v)
+    // for bool in &v
     // {
     //     output_bool(out, b);
     // }
@@ -209,13 +210,14 @@ pub fn  input_bool_vector(ins:&impl BufRead, v:&Vec<bool>)
     // }
 }
 
-pub fn  reserialize<T>(obj:&T)->T
+pub fn  reserialize<T:Clone>(obj:&T)->T
 {
     // std::stringstream ss;
     // ss << obj;
     // T tmp;
     // ss >> tmp;
     // return tmp;
+    obj.clone()
 
 }
 
@@ -231,7 +233,7 @@ pub fn  reserialize<T>(obj:&T)->T
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
 //     out << v.size() << "\n";
-//     for (const T& t : v)
+//     for t in &v
 //     {
 //         out << t << OUTPUT_NEWLINE;
 //     }
@@ -264,7 +266,7 @@ pub fn  reserialize<T>(obj:&T)->T
 // {
 //     out << m.size() << "\n";
 
-//     for (auto &it : m)
+//     for it in &m
 //     {
 //         out << it.first << "\n";
 //         out << it.second << "\n";
@@ -300,7 +302,7 @@ pub fn  reserialize<T>(obj:&T)->T
 // {
 //     out << s.size() << "\n";
 
-//     for (auto &el : s)
+//     for el in &s
 //     {
 //         out << el << "\n";
 //     }

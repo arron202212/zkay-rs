@@ -39,10 +39,10 @@
 
 use  <numeric>
 
-use libsnark/gadgetlib1/gadgets/delegated_ra_memory/memory_load_gadget;
-use libsnark/gadgetlib1/gadgets/delegated_ra_memory/memory_load_store_gadget;
-use libsnark/relations/ram_computations/memory/delegated_ra_memory;
-use libsnark/relations/ram_computations/rams/ram_params;
+use crate::gadgetlib1::gadgets/delegated_ra_memory/memory_load_gadget;
+use crate::gadgetlib1::gadgets/delegated_ra_memory/memory_load_store_gadget;
+use crate::relations::ram_computations/memory/delegated_ra_memory;
+use crate::relations::ram_computations/rams/ram_params;
 use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
 use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
 
@@ -264,7 +264,7 @@ use libsnark/zk_proof_systems/zksnark/ram_zksnark/ram_compliance_predicate;
 //#ifndef RAM_COMPLIANCE_PREDICATE_TCC_
 // #define RAM_COMPLIANCE_PREDICATE_TCC_
 
-use libsnark/gadgetlib1/constraint_profiling;
+use crate::gadgetlib1::constraint_profiling;
 
 
 
@@ -333,7 +333,7 @@ r1cs_variable_assignment<ram_base_field<ramT> > ram_pcd_message<ramT>::payload_a
 template<typename ramT>
 void ram_pcd_message<ramT>::print_bits(const ffec::bit_vector &bv) const
 {
-    for (bool b : bv)
+    for b in &bv
     {
         print!("%d", b ? 1 : 0);
     }
@@ -779,7 +779,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
       next.cpu_state_initial = cur.cpu_state_initial
     */
     copy_root_initial->generate_r1cs_witness();
-    for (size_t i = 0 ; i < next->root_initial.size(); ++i)
+    for i in 0 ..next->root_initial.size()
     {
         self.pb.val(cur->root_initial[i]).print();
         self.pb.val(next->root_initial[i]).print();
@@ -800,7 +800,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
     initialize_cur_cpu_state->generate_r1cs_witness();
     initialize_prev_pc_addr->generate_r1cs_witness();
 
-    if (base_case)
+    if base_case
     {
         self.pb.val(packed_cur_timestamp) = FieldT::zero();
         self.pb.val(cur->has_accepted) = FieldT::zero();
@@ -875,7 +875,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
     // one that does not set values must be executed the last, so its
     // auxiliary variables are filled in correctly according to values
     // actually set by the other witness map.
-    if (self.pb.val(do_halt).is_zero())
+    if self.pb.val(do_halt).is_zero()
     {
         copy_temp_next_pc_addr->generate_r1cs_witness();
         copy_temp_next_cpu_state->generate_r1cs_witness();

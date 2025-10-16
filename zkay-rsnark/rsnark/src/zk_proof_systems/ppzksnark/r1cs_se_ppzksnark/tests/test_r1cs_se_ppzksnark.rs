@@ -16,7 +16,7 @@ use ffec::common::utils;
 
 use crate::common::default_types::r1cs_se_ppzksnark_pp;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
-use libsnark::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples/run_r1cs_se_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples/run_r1cs_se_ppzksnark;
 
 
 

@@ -44,8 +44,8 @@
 // #define KNAPSACK_GADGET_HPP_
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 
 
@@ -129,7 +129,7 @@ void test_knapsack_CRH_with_bit_out_gadget();
 
 
 
-use libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget;
+use crate::gadgetlib1::gadgets::hashes::knapsack/knapsack_gadget;
 
 //#endif // KNAPSACK_GADGET_HPP_
 /** @file
@@ -148,7 +148,7 @@ use libsnark/gadgetlib1/gadgets/hashes/knapsack/knapsack_gadget;
 //#ifndef KNAPSACK_GADGET_TCC_
 // #define KNAPSACK_GADGET_TCC_
 
-use ffec::algebra::fields::field_utils;
+use ffec::algebra::field_utils::field_utils;
 use ffec::common::rng;
 
 
@@ -171,7 +171,7 @@ knapsack_CRH_with_field_out_gadget<FieldT>::knapsack_CRH_with_field_out_gadget(p
     output(output)
 {
     assert!(input_block.bits.size() == input_len);
-    if (num_cached_coefficients < dimension * input_len)
+    if num_cached_coefficients < dimension * input_len
     {
         sample_randomness(input_len);
     }
@@ -181,7 +181,7 @@ knapsack_CRH_with_field_out_gadget<FieldT>::knapsack_CRH_with_field_out_gadget(p
 template<typename FieldT>
 void knapsack_CRH_with_field_out_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < dimension; ++i)
+    for i in 0..dimension
     {
         self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1,
                                                              pb_coeff_sum<FieldT>(input_block.bits,
@@ -196,12 +196,12 @@ void knapsack_CRH_with_field_out_gadget<FieldT>::generate_r1cs_witness()
 {
     const ffec::bit_vector input = input_block.get_block();
 
-    for (size_t i = 0; i < dimension; ++i)
+    for i in 0..dimension
     {
         FieldT sum = FieldT::zero();
-        for (size_t k = 0; k < input_len; ++k)
+        for k in 0..input_len
         {
-            if (input[k])
+            if input[k]
             {
                 sum += knapsack_coefficients[input_len*i + k];
             }
@@ -227,18 +227,18 @@ template<typename FieldT>
 std::vector<FieldT> knapsack_CRH_with_field_out_gadget<FieldT>::get_hash(const ffec::bit_vector &input)
 {
     const size_t dimension = knapsack_dimension<FieldT>::dimension;
-    if (num_cached_coefficients < dimension * input.size())
+    if num_cached_coefficients < dimension * input.size()
     {
         sample_randomness(input.size());
     }
 
     std::vector<FieldT> result(dimension, FieldT::zero());
 
-    for (size_t i = 0; i < dimension; ++i)
+    for i in 0..dimension
     {
-        for (size_t k = 0; k < input.size(); ++k)
+        for k in 0..input.size()
         {
-            if (input[k])
+            if input[k]
             {
                 result[i] += knapsack_coefficients[input.size()*i + k];
             }
@@ -258,10 +258,10 @@ template<typename FieldT>
 void knapsack_CRH_with_field_out_gadget<FieldT>::sample_randomness(const size_t input_len)
 {
     const size_t num_coefficients = knapsack_dimension<FieldT>::dimension * input_len;
-    if (num_coefficients > num_cached_coefficients)
+    if num_coefficients > num_cached_coefficients
     {
         knapsack_coefficients.resize(num_coefficients);
-        for (size_t i = num_cached_coefficients; i < num_coefficients; ++i)
+        for i in num_cached_coefficients..num_coefficients
         {
             knapsack_coefficients[i] = ffec::SHA512_rng<FieldT>(i);
         }
@@ -285,7 +285,7 @@ knapsack_CRH_with_bit_out_gadget<FieldT>::knapsack_CRH_with_bit_out_gadget(proto
 
     output.resize(dimension);
 
-    for (size_t i = 0; i < dimension; ++i)
+    for i in 0..dimension
     {
         output[i].assign(pb, pb_packing_sum<FieldT>(pb_variable_array<FieldT>(output_digest.bits.begin() + i * FieldT::size_in_bits(),
                                                                               output_digest.bits.begin() + (i + 1) * FieldT::size_in_bits())));
@@ -300,9 +300,9 @@ void knapsack_CRH_with_bit_out_gadget<FieldT>::generate_r1cs_constraints(const b
 {
     hasher->generate_r1cs_constraints();
 
-    if (enforce_bitness)
+    if enforce_bitness
     {
-        for (size_t k = 0; k < output_digest.bits.size(); ++k)
+        for k in 0..output_digest.bits.size()
         {
             generate_boolean_r1cs_constraint<FieldT>(self.pb, output_digest.bits[k], FMT(self.annotation_prefix, " output_digest_{}", k));
         }
@@ -316,7 +316,7 @@ void knapsack_CRH_with_bit_out_gadget<FieldT>::generate_r1cs_witness()
 
     /* do unpacking in place */
     const ffec::bit_vector input = input_block.bits.get_bits(self.pb);
-    for (size_t i = 0; i < dimension; ++i)
+    for i in 0..dimension
     {
         pb_variable_array<FieldT> va(output_digest.bits.begin() + i * FieldT::size_in_bits(),
                                      output_digest.bits.begin() + (i + 1) * FieldT::size_in_bits());
@@ -342,7 +342,7 @@ ffec::bit_vector knapsack_CRH_with_bit_out_gadget<FieldT>::get_hash(const ffec::
     const std::vector<FieldT> hash_elems = knapsack_CRH_with_field_out_gadget<FieldT>::get_hash(input);
     hash_value_type result;
 
-    for (const FieldT &elt : hash_elems)
+    for elt in &hash_elems
     {
         ffec::bit_vector elt_bits = ffec::convert_field_element_to_bit_vector<FieldT>(elt);
         result.insert(result.end(), elt_bits.begin(), elt_bits.end());

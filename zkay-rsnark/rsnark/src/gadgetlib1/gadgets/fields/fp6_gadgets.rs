@@ -15,9 +15,9 @@
 //#ifndef FP6_GADGETS_HPP_
 // #define FP6_GADGETS_HPP_
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
-use libsnark/gadgetlib1/gadgets/fields/fp3_gadgets;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
 
 
 
@@ -202,7 +202,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp6_gadgets;
 
 //#endif // FP6_GADGETS_HPP_
 /** @file

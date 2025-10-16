@@ -19,8 +19,8 @@ use  <unordered_set>
 use  <utility>
 use  <vector>
 
-use libsnark/gadgetlib2/infrastructure;
-use libsnark/gadgetlib2/pp;
+use crate::gadgetlib2::infrastructure;
+use crate::gadgetlib2::pp;
 
 namespace gadgetlib2 {
 
@@ -580,7 +580,7 @@ inline Polynomial operator-(const Polynomial& src) {return Polynomial(FElem(0)) 
 
 } // namespace gadgetlib2
 
-use libsnark/gadgetlib2/variable_operators;
+use crate::gadgetlib2::variable_operators;
 
 //#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
 /** @file
@@ -598,9 +598,9 @@ use  <set>
 use  <stdexcept>
 use  <vector>
 
-use libsnark/gadgetlib2/infrastructure;
-use libsnark/gadgetlib2/pp;
-use libsnark/gadgetlib2/variable;
+use crate::gadgetlib2::infrastructure;
+use crate::gadgetlib2::pp;
+use crate::gadgetlib2::variable;
 
 using ::std::string;
 using ::std::stringstream;
@@ -648,9 +648,9 @@ FElem::FElem(const FElem& src) :
 }
 
 FElem& FElem::operator=(const FElem& other) {
-	if (fieldType() == other.fieldType() || fieldType() == AGNOSTIC) {
+	if fieldType() == other.fieldType() || fieldType() == AGNOSTIC {
 		elem_ = other.elem_->clone();
-	} else if (other.fieldType() != AGNOSTIC) {
+	} else if other.fieldType() != AGNOSTIC {
 		GADGETLIB_FATAL("Attempted to assign field element of incorrect type");
 	} else {
 		*elem_ = dynamic_cast<FConst*>(other.elem_.get())->asLong();
@@ -659,9 +659,9 @@ FElem& FElem::operator=(const FElem& other) {
 }
 
 FElem& FElem::operator=(FElem&& other) {
-	if (fieldType() == other.fieldType() || fieldType() == AGNOSTIC) {
+	if fieldType() == other.fieldType() || fieldType() == AGNOSTIC {
 		elem_ = ::(other.elem_);
-	} else if (other.elem_->fieldType() != AGNOSTIC) {
+	} else if other.elem_->fieldType() != AGNOSTIC {
 		GADGETLIB_FATAL(
 				"Attempted to move assign field element of incorrect type");
 	} else {
@@ -672,18 +672,18 @@ FElem& FElem::operator=(FElem&& other) {
 
 bool fieldMustBePromotedForArithmetic(const FieldType& lhsField,
 		const FieldType& rhsField) {
-	if (lhsField == rhsField)
+	if lhsField == rhsField
 		return false;
-	if (rhsField == AGNOSTIC)
+	if rhsField == AGNOSTIC
 		return false;
 	return true;
 }
 
 void FElem::promoteToFieldType(FieldType type) {
-	if (!fieldMustBePromotedForArithmetic(self.fieldType(), type)) {
+	if !fieldMustBePromotedForArithmetic(self.fieldType(), type) {
 		return;
 	}
-	if (type == R1P) {
+	if type == R1P {
 		const FConst* fConst = dynamic_cast<FConst*>(elem_.get());
 		GADGETLIB_ASSERT(fConst != NULL,
 				"Cannot convert between specialized field types.");
@@ -718,7 +718,7 @@ FElem FElem::inverse(const FieldType& fieldType) {
 
 int FElem::getBit(unsigned int i, const FieldType& fieldType) {
     promoteToFieldType(fieldType);
-    if (self.fieldType() == fieldType) {
+    if self.fieldType() == fieldType {
         return elem_->getBit(i);
     } else {
         GADGETLIB_FATAL("Attempted to extract bits from incompatible field type.");
@@ -780,9 +780,9 @@ FElemInterface& FConst::power(long exponent) {
 /*************************************************************************************************/
 
 R1P_Elem& R1P_Elem::operator+=(const FElemInterface& other) {
-	if (other.fieldType() == R1P) {
+	if other.fieldType() == R1P {
 		elem_ += dynamic_cast<const R1P_Elem&>(other).elem_;
-	} else if (other.fieldType() == AGNOSTIC) {
+	} else if other.fieldType() == AGNOSTIC {
 		elem_ += dynamic_cast<const FConst&>(other).asLong();
 	} else {
 		GADGETLIB_FATAL("Attempted to add incompatible type to R1P_Elem.");
@@ -791,9 +791,9 @@ R1P_Elem& R1P_Elem::operator+=(const FElemInterface& other) {
 }
 
 R1P_Elem& R1P_Elem::operator-=(const FElemInterface& other) {
-	if (other.fieldType() == R1P) {
+	if other.fieldType() == R1P {
 		elem_ -= dynamic_cast<const R1P_Elem&>(other).elem_;
-	} else if (other.fieldType() == AGNOSTIC) {
+	} else if other.fieldType() == AGNOSTIC {
 		elem_ -= dynamic_cast<const FConst&>(other).asLong();
 	} else {
 		GADGETLIB_FATAL("Attempted to add incompatible type to R1P_Elem.");
@@ -802,9 +802,9 @@ R1P_Elem& R1P_Elem::operator-=(const FElemInterface& other) {
 }
 
 R1P_Elem& R1P_Elem::operator*=(const FElemInterface& other) {
-	if (other.fieldType() == R1P) {
+	if other.fieldType() == R1P {
 		elem_ *= dynamic_cast<const R1P_Elem&>(other).elem_;
-	} else if (other.fieldType() == AGNOSTIC) {
+	} else if other.fieldType() == AGNOSTIC {
 		elem_ *= dynamic_cast<const FConst&>(other).asLong();
 	} else {
 		GADGETLIB_FATAL("Attempted to add incompatible type to R1P_Elem.");
@@ -814,11 +814,11 @@ R1P_Elem& R1P_Elem::operator*=(const FElemInterface& other) {
 
 bool R1P_Elem::operator==(const FElemInterface& other) const {
 	const R1P_Elem* pOther = dynamic_cast<const R1P_Elem*>(&other);
-	if (pOther) {
+	if pOther {
 		return elem_ == pOther->elem_;
 	}
 	const FConst* pConst = dynamic_cast<const FConst*>(&other);
-	if (pConst) {
+	if pConst {
 		return *this == *pConst;
 	}
 	GADGETLIB_FATAL("Attempted to Compare R1P_Elem with incompatible type.");
@@ -897,13 +897,13 @@ FElem Variable::eval(const VariableAssignment& assignment) const {
 // #ifdef DEBUG
 VariableArray::VariableArray(const string& name) : VariableArrayContents(), name_(name) {}
 VariableArray::VariableArray(const int size, const ::std::string& name) : VariableArrayContents() {
-    for (int i = 0; i < size; ++i) {
+    for i in 0..size {
         push_back(Variable(GADGETLIB2_FMT("%s[%d]", name.c_str(), i)));
     }
 }
 
 VariableArray::VariableArray(const size_t size, const ::std::string& name) : VariableArrayContents() {
-    for (size_t i = 0; i < size; ++i) {
+    for i in 0..size {
         push_back(Variable(GADGETLIB2_FMT("%s[%d]", name.c_str(), i)));
     }
 }
@@ -956,7 +956,7 @@ void MultiPackedWord::resize(const size_t numBits) {
 
 size_t MultiPackedWord::getMultipackedSize() const {
 	size_t packedSize = 0;
-	if (fieldType_ == R1P) {
+	if fieldType_ == R1P {
 		packedSize = 1; // TODO add assertion that numBits can fit in the field characteristic
 	} else {
 		GADGETLIB_FATAL("Unknown field type for packed variable.");
@@ -1005,7 +1005,7 @@ PackedWordArray DualWordArray::packed() const {
 	GADGETLIB_ASSERT(numElements_ == multipackedContents_.size(),
 			"multipacked contents size mismatch")
 	PackedWordArray retval(numElements_);
-	for (size_t i = 0; i < numElements_; ++i) {
+	for i in 0..numElements_ {
 		const auto element = multipackedContents_[i];
 		GADGETLIB_ASSERT(element.size() == 1,
 				"Cannot convert from multipacked to packed");
@@ -1045,11 +1045,11 @@ size_t DualWordArray::size() const {
 /*************************************************************************************************/
 
 ::std::string LinearTerm::asString() const {
-	if (coeff_ == 1) {
+	if coeff_ == 1 {
 		return variable_.name();
-	} else if (coeff_ == -1) {
+	} else if coeff_ == -1 {
 		return GADGETLIB2_FMT("-1 * %s", variable_.name().c_str());
-	} else if (coeff_ == 0) {
+	} else if coeff_ == 0 {
 		return GADGETLIB2_FMT("0 * %s", variable_.name().c_str());
 	} else {
 		return GADGETLIB2_FMT("%s * %s", coeff_.asString().c_str(),
@@ -1080,13 +1080,13 @@ LinearCombination& LinearCombination::operator+=(
 	// being added to a linear combination object multiple times.
 	// This can be helpful for some of the circuits produced by the Pinocchio compiler in some cases.
 
-	if (indexMap_.size() == 0) {
+	if indexMap_.size() == 0 {
 		linearTerms_.insert(linearTerms_.end(), other.linearTerms_.cbegin(),
 				other.linearTerms_.cend());
 		constant_ += other.constant_;
 	} else {
-		for (const LinearTerm& lt : other.linearTerms_) {
-			if (indexMap_.find(lt.variable().getIndex()) != indexMap_.end()) {
+		for lt in &other.linearTerms_ {
+			if indexMap_.find(lt.variable().getIndex()) != indexMap_.end() {
 				linearTerms_[indexMap_[lt.variable().getIndex()]] += lt.coeff();
 			} else {
 				linearTerms_.push_back(lt);
@@ -1098,13 +1098,13 @@ LinearCombination& LinearCombination::operator+=(
 	}
 
 	// heuristic threshold
-	if (linearTerms_.size() > 10 && indexMap_.size() == 0) {
+	if linearTerms_.size() > 10 && indexMap_.size() == 0 {
 		int i = 0;
 		::std::vector<LinearTerm> newVec;
 		::std::vector<LinearTerm>::iterator lt = (linearTerms_.begin());
 		while (lt != linearTerms_.end()) {
 
-			if (indexMap_.find(lt->variable().getIndex()) != indexMap_.end()) {
+			if indexMap_.find(lt->variable().getIndex()) != indexMap_.end() {
 				newVec[indexMap_[lt->variable().getIndex()]] += lt->coeff();
 			} else {
 				newVec.push_back(*lt);
@@ -1125,14 +1125,14 @@ LinearCombination& LinearCombination::operator-=(
 	// jSNARK-edit: This method is rewritten in order to reduce memory consumption when the same variable is
 	// being added to a linear combination object multiple times.
 	// This can be helpful for some of the circuits produced by the Pinocchio compiler in some cases.
-	if (indexMap_.size() == 0) {
-		for (const LinearTerm& lt : other.linearTerms_) {
+	if indexMap_.size() == 0 {
+		for lt in &other.linearTerms_ {
 			linearTerms_.push_back(-lt);
 		}
 		constant_ -= other.constant_;
 	} else {
-		for (const LinearTerm& lt : other.linearTerms_) {
-			if (indexMap_.find(lt.variable().getIndex()) != indexMap_.end()) {
+		for lt in &other.linearTerms_ {
+			if indexMap_.find(lt.variable().getIndex()) != indexMap_.end() {
 				linearTerms_[indexMap_[lt.variable().getIndex()]] -= lt.coeff();
 			} else {
 				linearTerms_.push_back(-lt);
@@ -1144,14 +1144,14 @@ LinearCombination& LinearCombination::operator-=(
 	}
 
 	// heuristic threshold
-	if (linearTerms_.size() > 10 && indexMap_.size() == 0) {
+	if linearTerms_.size() > 10 && indexMap_.size() == 0 {
 		int i = 0;
 		::std::vector<LinearTerm> newVec;
 		::std::vector<LinearTerm>::iterator lt = (linearTerms_.begin());
 
 		while (lt != linearTerms_.end()) {
 
-			if (indexMap_.find(lt->variable().getIndex()) != indexMap_.end()) {
+			if indexMap_.find(lt->variable().getIndex()) != indexMap_.end() {
 				newVec[indexMap_[lt->variable().getIndex()]] += lt->coeff();
 			} else {
 				newVec.push_back(*lt);
@@ -1168,7 +1168,7 @@ LinearCombination& LinearCombination::operator-=(
 
 LinearCombination& LinearCombination::operator*=(const FElem& other) {
 	constant_ *= other;
-	for (LinearTerm& lt : linearTerms_) {
+	for lt in &linearTerms_ {
 		lt *= other;
 	}
 	return *this;
@@ -1176,7 +1176,7 @@ LinearCombination& LinearCombination::operator*=(const FElem& other) {
 
 FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 	FElem evaluation = constant_;
-	for (const LinearTerm& lt : linearTerms_) {
+	for lt in &linearTerms_ {
 		evaluation += lt.eval(assignment);
 	}
 	return evaluation;
@@ -1186,7 +1186,7 @@ FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 // #ifdef DEBUG
 	::std::string retval;
 	auto it = linearTerms_.begin();
-	if (it == linearTerms_.end()) {
+	if it == linearTerms_.end() {
 		return constant_.asString();
 	} else {
 		retval += it->asString();
@@ -1194,7 +1194,7 @@ FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 	for(it+=1; it != linearTerms_.end(); ++it) {
 		retval += " + " + it->asString();
 	}
-	if (constant_ != 0) {
+	if constant_ != 0 {
 		retval += " + " + constant_.asString();
 	}
 	return retval;
@@ -1205,7 +1205,7 @@ FElem LinearCombination::eval(const VariableAssignment& assignment) const {
 
 const Variable::set LinearCombination::getUsedVariables() const {
 	Variable::set retSet;
-	for (const LinearTerm& lt : linearTerms_) {
+	for lt in &linearTerms_ {
 		retSet.insert(lt.variable());
 	}
 	return retSet;
@@ -1217,7 +1217,7 @@ const Variable::set LinearCombination::getUsedVariables() const {
 
 LinearCombination sum(const VariableArray& inputs) {
 	LinearCombination retval(0);
-	for (const Variable& var : inputs) {
+	for var in &inputs {
 		retval += var;
 	}
 	return retval;
@@ -1242,7 +1242,7 @@ Monomial::Monomial(const LinearTerm& linearTerm) :
 
 FElem Monomial::eval(const VariableAssignment& assignment) const {
 	FElem retval = coeff_;
-	for (const Variable& var : variables_) {
+	for var in &variables_ {
 		retval *= var.eval(assignment);
 	}
 	return retval;
@@ -1258,11 +1258,11 @@ const FElem Monomial::getCoefficient() const {
 
 ::std::string Monomial::asString() const {
 // #ifdef DEBUG
-	if (variables_.size() == 0) {
+	if variables_.size() == 0 {
 		return coeff_.asString();
 	}
 	string retval;
-	if (coeff_ != 1) {
+	if coeff_ != 1 {
 		retval += coeff_.asString() + "*";
 	}
 	auto iter = variables_.begin();
@@ -1302,14 +1302,14 @@ Monomial& Monomial::operator*=(const Monomial& other) {
 
 Polynomial::Polynomial(const LinearCombination& linearCombination) :
 		monomials_(), constant_(linearCombination.constant_) {
-	for (const LinearTerm& linearTerm : linearCombination.linearTerms_) {
+	for linearTerm in &linearCombination.linearTerms_ {
 		monomials_.push_back(Monomial(linearTerm));
 	}
 }
 
 FElem Polynomial::eval(const VariableAssignment& assignment) const {
 	FElem retval = constant_;
-	for (const Monomial& monomial : monomials_) {
+	for monomial in &monomials_ {
 		retval += monomial.eval(assignment);
 	}
 	return retval;
@@ -1317,7 +1317,7 @@ FElem Polynomial::eval(const VariableAssignment& assignment) const {
 
 const Variable::set Polynomial::getUsedVariables() const {
 	Variable::set retset;
-	for (const Monomial& monomial : monomials_) {
+	for monomial in &monomials_ {
 		const Variable::set curSet = monomial.getUsedVariables();
 		retset.insert(curSet.begin(), curSet.end());
 	}
@@ -1336,7 +1336,7 @@ const FElem Polynomial::getConstant() const {
 #   ifndef DEBUG
 	return "";
 #   endif
-	if (monomials_.size() == 0) {
+	if monomials_.size() == 0 {
 		return constant_.asString();
 	}
 	string retval;
@@ -1345,7 +1345,7 @@ const FElem Polynomial::getConstant() const {
 	for (iter+=1; iter != monomials_.end(); ++iter) {
 		retval += " + " + iter->asString();
 	}
-	if (constant_ != 0) {
+	if constant_ != 0 {
 		retval += " + " + constant_.asString();
 	}
 	return retval;
@@ -1360,13 +1360,13 @@ Polynomial& Polynomial::operator+=(const Polynomial& other) {
 
 Polynomial& Polynomial::operator*=(const Polynomial& other) {
 	vector<Monomial> newMonomials;
-	for (const Monomial& thisMonomial : monomials_) {
-		for (const Monomial& otherMonomial : other.monomials_) {
+	for thisMonomial in &monomials_ {
+		for otherMonomial in &other.monomials_ {
 			newMonomials.push_back(thisMonomial * otherMonomial);
 		}
 		newMonomials.push_back(thisMonomial * other.constant_);
 	}
-	for (const Monomial& otherMonomial : other.monomials_) {
+	for otherMonomial in &other.monomials_ {
 		newMonomials.push_back(otherMonomial * self.constant_);
 	}
 	constant_ *= other.constant_;
@@ -1376,7 +1376,7 @@ Polynomial& Polynomial::operator*=(const Polynomial& other) {
 
 Polynomial& Polynomial::operator-=(const Polynomial& other) {
 	constant_ -= other.constant_;
-	for (const Monomial& otherMonomial : other.monomials_) {
+	for otherMonomial in &other.monomials_ {
 		monomials_.push_back(-otherMonomial);
 	}
 	return *this;

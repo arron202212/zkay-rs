@@ -13,8 +13,8 @@ use  <cassert>
 
 use ffec::common::profiling;
 
-use libsnark/common/routing_algorithms/as_waksman_routing_algorithm;
-use libsnark/common/routing_algorithms/benes_routing_algorithm;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm;
+use crate::common::routing_algorithms::benes_routing_algorithm;
 
 
 
@@ -59,7 +59,7 @@ int main(void)
 
     ffec::enter_block("Test AS-Waksman network routing algorithm");
     size_t asw_max_size = 9;
-    for (size_t i = 2; i <= asw_max_size; ++i)
+    for i in 2..=asw_max_size
     {
         ffec::print_indent(); print!("* for all permutations on {} elements\n", i);
         test_as_waksman(i);

@@ -9,11 +9,11 @@
 use ffec::algebra::curves::bn128/bn128_pp;
 //#endif
 use ffec::algebra::curves::edwards/edwards_pp;
-use ffec::algebra::curves::mnt/mnt4/mnt4_pp;
-use ffec::algebra::curves::mnt/mnt6/mnt6_pp;
+use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
+use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_gadget;
-use libsnark/gadgetlib1/gadgets/set_commitment/set_commitment_gadget;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_gadget;
+use crate::gadgetlib1::gadgets/set_commitment/set_commitment_gadget;
 
 
 

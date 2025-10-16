@@ -9,18 +9,18 @@
 //#include <vector>
 
 //#include <gtest/gtest.h>
-use libff/algebra/curves/mnt/mnt4/mnt4_pp;
+use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 //#include <stdint.h>
 
-use libfqfft/evaluation_domain/domains/arithmetic_sequence_domain;
-use libfqfft/evaluation_domain/domains/basic_radix2_domain;
-use libfqfft/evaluation_domain/domains/extended_radix2_domain;
-use libfqfft/evaluation_domain/domains/geometric_sequence_domain;
-use libfqfft/evaluation_domain/domains/step_radix2_domain;
-use libfqfft/polynomial_arithmetic/naive_evaluate;
-use libfqfft/tools/exceptions;
+use crate::evaluation_domain::domains::arithmetic_sequence_domain;
+use crate::evaluation_domain::domains::basic_radix2_domain;
+use crate::evaluation_domain::domains::extended_radix2_domain;
+use crate::evaluation_domain::domains::geometric_sequence_domain;
+use crate::evaluation_domain::domains::step_radix2_domain;
+use crate::polynomial_arithmetic::naive_evaluate;
+use crate::tools::exceptions;
 
-namespace libfqfft {
+//namespace libfqfft {
 
   /**
    * Note: Templatized type referenced with TypeParam (instead of canonical FieldT)
@@ -30,11 +30,11 @@ namespace libfqfft {
   class EvaluationDomainTest : public ::testing::Test {
     protected:
       virtual void SetUp() {
-        libff::mnt4_pp::init_public_params();
+        mnt4_pp::init_public_params();
       }
   };
 
-  typedef ::testing::Types<libff::Fr<libff::mnt4_pp>, libff::Double> FieldT; /* List Extend Here */
+  typedef ::testing::Types<Fr<mnt4_pp>, Double> FieldT; /* List Extend Here */
   TYPED_TEST_CASE(EvaluationDomainTest, FieldT);
 
   TYPED_TEST(EvaluationDomainTest, FFT) {
@@ -47,11 +47,11 @@ namespace libfqfft {
     {
       try
       {
-        if (key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m));
-        else if (key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m));
-        else if (key == 2) domain.reset(new step_radix2_domain<TypeParam>(m));
-        else if (key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m));
-        else if (key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m));
+        if key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m);
+        else if key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m);
+        else if key == 2) domain.reset(new step_radix2_domain<TypeParam>(m);
+        else if key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m);
+        else if key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m);
 
         std::vector<TypeParam> a(f);
         domain->FFT(a);
@@ -89,11 +89,11 @@ namespace libfqfft {
     {
       try
       {
-        if (key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m));
-        else if (key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m));
-        else if (key == 2) domain.reset(new step_radix2_domain<TypeParam>(m));
-        else if (key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m));
-        else if (key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m));
+        if key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m);
+        else if key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m);
+        else if key == 2) domain.reset(new step_radix2_domain<TypeParam>(m);
+        else if key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m);
+        else if key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m);
 
         std::vector<TypeParam> a(f);
         domain->FFT(a);
@@ -127,11 +127,11 @@ namespace libfqfft {
     {
       try
       {
-        if (key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m));
-        else if (key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m));
-        else if (key == 2) domain.reset(new step_radix2_domain<TypeParam>(m));
-        else if (key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m));
-        else if (key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m));
+        if key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m);
+        else if key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m);
+        else if key == 2) domain.reset(new step_radix2_domain<TypeParam>(m);
+        else if key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m);
+        else if key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m);
 
         std::vector<TypeParam> a(f);
         domain->cosetFFT(a, coset);
@@ -164,11 +164,11 @@ namespace libfqfft {
 
       try
       {
-        if (key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m));
-        else if (key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m));
-        else if (key == 2) domain.reset(new step_radix2_domain<TypeParam>(m));
-        else if (key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m));
-        else if (key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m));
+        if key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m);
+        else if key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m);
+        else if key == 2) domain.reset(new step_radix2_domain<TypeParam>(m);
+        else if key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m);
+        else if key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m);
 
         std::vector<TypeParam> a;
         a = domain->evaluate_all_lagrange_polynomials(t);
@@ -207,11 +207,11 @@ namespace libfqfft {
     {
       try
       {
-        if (key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m));
-        else if (key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m));
-        else if (key == 2) domain.reset(new step_radix2_domain<TypeParam>(m));
-        else if (key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m));
-        else if (key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m));
+        if key == 0) domain.reset(new basic_radix2_domain<TypeParam>(m);
+        else if key == 1) domain.reset(new extended_radix2_domain<TypeParam>(m);
+        else if key == 2) domain.reset(new step_radix2_domain<TypeParam>(m);
+        else if key == 3) domain.reset(new geometric_sequence_domain<TypeParam>(m);
+        else if key == 4) domain.reset(new arithmetic_sequence_domain<TypeParam>(m);
 
         TypeParam a;
         a = domain->compute_vanishing_polynomial(t);
@@ -235,4 +235,4 @@ namespace libfqfft {
     }
   }
 
-} // libfqfft
+//} // libfqfft

@@ -9,9 +9,9 @@
 // #define SET_MEMBERSHIP_PROOF_VARIABLE_HPP_
 
 use crate::common::data_structures::set_commitment;
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
 
 
 
@@ -38,7 +38,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/set_commitment/set_membership_proof_variable;
+use crate::gadgetlib1::gadgets/set_commitment/set_membership_proof_variable;
 
 //#endif // SET_MEMBERSHIP_PROOF_VARIABLE_HPP
 /**
@@ -61,7 +61,7 @@ set_membership_proof_variable<FieldT, HashT>::set_membership_proof_variable(prot
     max_entries(max_entries),
     tree_depth(ffec::log2(max_entries))
 {
-    if (tree_depth > 0)
+    if tree_depth > 0
     {
         address_bits.allocate(pb, tree_depth, FMT(annotation_prefix, " address_bits"));
         merkle_path.reset(new merkle_authentication_path_variable<FieldT, HashT>(pb, tree_depth, FMT(annotation_prefix, " merkle_path")));
@@ -71,9 +71,9 @@ set_membership_proof_variable<FieldT, HashT>::set_membership_proof_variable(prot
 template<typename FieldT, typename HashT>
 void set_membership_proof_variable<FieldT, HashT>::generate_r1cs_constraints()
 {
-    if (tree_depth > 0)
+    if tree_depth > 0
     {
-        for (size_t i = 0; i < tree_depth; ++i)
+        for i in 0..tree_depth
         {
             generate_boolean_r1cs_constraint<FieldT>(self.pb, address_bits[i], FMT(self.annotation_prefix, " address_bits"));
         }
@@ -84,7 +84,7 @@ void set_membership_proof_variable<FieldT, HashT>::generate_r1cs_constraints()
 template<typename FieldT, typename HashT>
 void set_membership_proof_variable<FieldT, HashT>::generate_r1cs_witness(const set_membership_proof &proof)
 {
-    if (tree_depth > 0)
+    if tree_depth > 0
     {
         address_bits.fill_with_bits_of_field_element(self.pb, FieldT(proof.address));
         merkle_path->generate_r1cs_witness(proof.address, proof.merkle_path);
@@ -96,7 +96,7 @@ set_membership_proof set_membership_proof_variable<FieldT, HashT>::get_membershi
 {
     set_membership_proof result;
 
-    if (tree_depth == 0)
+    if tree_depth == 0
     {
         result.address = 0;
     }

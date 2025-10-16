@@ -17,11 +17,11 @@
 // #define MERKLE_TREE_CHECK_READ_GADGET_HPP_
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/hashes/crh_gadget;
-use libsnark/gadgetlib1/gadgets/hashes/digest_selector_gadget;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets::hashes::crh_gadget;
+use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
 
 
 
@@ -69,7 +69,7 @@ void test_merkle_tree_check_read_gadget();
 
 
 
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_read_gadget;
 
 //#endif // MERKLE_TREE_CHECK_READ_GADGET_HPP_
 /** @file
@@ -120,14 +120,14 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
     assert!(tree_depth > 0);
     assert!(tree_depth == address_bits.size());
 
-    for (size_t i = 0; i < tree_depth-1; ++i)
+    for i in 0..tree_depth-1
     {
         internal_output.push(digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " internal_output_{}", i)));
     }
 
     computed_root.reset(new digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
 
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         block_variable<FieldT> inp(pb, path.left_digests[i], path.right_digests[i], FMT(self.annotation_prefix, " inp_{}", i));
         hasher_inputs.push(inp);
@@ -135,7 +135,7 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
                                    FMT(self.annotation_prefix, " load_hashers_{}", i)));
     }
 
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         /*
           The propagators take a computed hash value (or leaf in the
@@ -154,14 +154,14 @@ template<typename FieldT, typename HashT>
 void merkle_tree_check_read_gadget<FieldT, HashT>::generate_r1cs_constraints()
 {
     /* ensure correct hash computations */
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         // Note that we check root outside and have enforced booleanity of path.left_digests/path.right_digests outside in path.generate_r1cs_constraints
         hashers[i].generate_r1cs_constraints(false);
     }
 
     /* ensure consistency of path.left_digests/path.right_digests with internal_output */
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         propagators[i].generate_r1cs_constraints();
     }
@@ -173,7 +173,7 @@ template<typename FieldT, typename HashT>
 void merkle_tree_check_read_gadget<FieldT, HashT>::generate_r1cs_witness()
 {
     /* do the hash computations bottom-up */
-    for (int i = tree_depth-1; i >= 0; --i)
+    for i in ( 0..=tree_depth-1).rev()
     {
         /* propagate previous input */
         propagators[i].generate_r1cs_witness();
@@ -218,7 +218,7 @@ void test_merkle_tree_check_read_gadget()
     ffec::bit_vector address_bits;
 
     size_t address = 0;
-    for (long level = tree_depth-1; level >= 0; --level)
+    for level in ( 0..=tree_depth-1).rev()
     {
         const bool computed_is_right = (std::rand() % 2);
         address |= (computed_is_right ? 1ul << (tree_depth-1-level) : 0);

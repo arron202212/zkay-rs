@@ -17,7 +17,7 @@ use ffec::common::profiling;
 
 use crate::common::default_types::tinyram_ppzksnark_pp;
 use libsnark/reductions/ram_to_r1cs/ram_to_r1cs;
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
+use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark;
 
 //#ifndef MINDEPS
@@ -46,7 +46,7 @@ bool process_demo_command_line(const int argc, const char** argv,
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
 
-        if (vm.count("help"))
+        if vm.count("help")
         {
             std::cout << desc << "\n";
             return false;

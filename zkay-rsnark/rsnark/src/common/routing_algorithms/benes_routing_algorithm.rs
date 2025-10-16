@@ -105,7 +105,7 @@ bool valid_benes_routing(const integer_permutation &permutation, const benes_rou
 
 use  <cassert>
 
-use libsnark/common/routing_algorithms/benes_routing_algorithm;
+use crate::common::routing_algorithms::benes_routing_algorithm;
 
 
 
@@ -221,10 +221,10 @@ benes_topology generate_benes_topology(const size_t num_packets)
 
     benes_topology result(num_columns);
 
-    for (size_t column_idx = 0; column_idx < num_columns; ++column_idx)
+    for column_idx in 0..num_columns
     {
         result[column_idx].resize(num_packets);
-        for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+        for packet_idx in 0..num_packets
         {
             result[column_idx][packet_idx].first = packet_idx;
             result[column_idx][packet_idx].second = benes_packet_cross_destination(dimension, column_idx, packet_idx);
@@ -259,7 +259,7 @@ void route_benes_inner(const size_t dimension,
     assert!(permutation.inverse() == permutation_inv);
 //#endif
 
-    if (column_idx_start == column_idx_end)
+    if column_idx_start == column_idx_end
     {
         /* nothing to route */
         return;
@@ -307,7 +307,7 @@ void route_benes_inner(const size_t dimension,
         lhs_routed[v-subnetwork_offset] = true;
 
         /* if the other neighbor of v is not routed, route it; otherwise, find the next unrouted node  */
-        if (!lhs_routed[benes_packet_cross_destination(dimension, column_idx_start, v) - subnetwork_offset])
+        if !lhs_routed[benes_packet_cross_destination(dimension, column_idx_start, v) - subnetwork_offset]
         {
             w = benes_packet_cross_destination(dimension, column_idx_start, v);
         }
@@ -318,7 +318,7 @@ void route_benes_inner(const size_t dimension,
                 last_unrouted+=1;
             }
 
-            if (last_unrouted == subnetwork_offset + subnetwork_size)
+            if last_unrouted == subnetwork_offset + subnetwork_size
             {
                 break; /* all routed! */
             }
@@ -368,11 +368,11 @@ std::vector<std::vector<T> > route_by_benes(const benes_routing &routing, const 
     std::vector<std::vector<T> > res(num_columns+1, std::vector<T>(num_packets));
     res[0] = start;
 
-    for (size_t column_idx = 0; column_idx < num_columns; ++column_idx)
+    for column_idx in 0..num_columns
     {
         const size_t mask = benes_cross_edge_mask(dimension, column_idx);
 
-        for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+        for packet_idx in 0..num_packets
         {
             size_t next_packet_idx = (routing[column_idx][packet_idx] == false) ? packet_idx : packet_idx ^ mask;
             res[column_idx+1][next_packet_idx] = res[column_idx][packet_idx];
@@ -388,16 +388,16 @@ bool valid_benes_routing(const integer_permutation &permutation, const benes_rou
     const size_t num_columns = benes_num_columns(num_packets);
 
     std::vector<size_t> input_packets(num_packets);
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
         input_packets[packet_idx] = packet_idx;
     }
 
     const std::vector<std::vector<size_t> > routed_packets = route_by_benes(routing, input_packets);
 
-    for (size_t packet_idx = 0; packet_idx < num_packets; ++packet_idx)
+    for packet_idx in 0..num_packets
     {
-        if (routed_packets[num_columns][permutation.get(packet_idx)] != input_packets[packet_idx])
+        if routed_packets[num_columns][permutation.get(packet_idx)] != input_packets[packet_idx]
         {
             return false;
         }

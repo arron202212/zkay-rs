@@ -12,9 +12,9 @@
 //#ifndef SHA256_COMPONENTS_HPP_
 // #define SHA256_COMPONENTS_HPP_
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_aux;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_aux;
 
 
 
@@ -103,7 +103,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_components;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_components;
 
 //#endif // SHA256_COMPONENTS_HPP_
 /** @file
@@ -145,7 +145,7 @@ pb_linear_combination_array<FieldT> SHA256_default_IV(protoboard<FieldT> &pb)
     pb_linear_combination_array<FieldT> result;
     result.reserve(SHA256_digest_size);
 
-    for (size_t i = 0; i < SHA256_digest_size; ++i)
+    for i in 0..SHA256_digest_size
     {
         int iv_val = (SHA256_H[i / 32] >> (31-(i % 32))) & 1;
 
@@ -171,7 +171,7 @@ sha256_message_schedule_gadget<FieldT>::sha256_message_schedule_gadget(protoboar
     W_bits.resize(64);
 
     pack_W.resize(16);
-    for (size_t i = 0; i < 16; ++i)
+    for i in 0..16
     {
         W_bits[i] = pb_variable_array<FieldT>(M.rbegin() + (15-i) * 32, M.rbegin() + (16-i) * 32);
         pack_W[i].reset(new packing_gadget<FieldT>(pb, W_bits[i], packed_W[i], FMT(self.annotation_prefix, " pack_W_{}", i)));
@@ -185,7 +185,7 @@ sha256_message_schedule_gadget<FieldT>::sha256_message_schedule_gadget(protoboar
     unreduced_W.resize(64);
     mod_reduce_W.resize(64);
 
-    for (size_t i = 16; i < 64; ++i)
+    for i in 16..64
     {
         /* allocate result variables for sigma0/sigma1 invocations */
         sigma0[i].allocate(pb, FMT(self.annotation_prefix, " sigma0_{}", i));
@@ -209,12 +209,12 @@ sha256_message_schedule_gadget<FieldT>::sha256_message_schedule_gadget(protoboar
 template<typename FieldT>
 void sha256_message_schedule_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < 16; ++i)
+    for i in 0..16
     {
         pack_W[i]->generate_r1cs_constraints(false); // do not enforce bitness here; caller be aware.
     }
 
-    for (size_t i = 16; i < 64; ++i)
+    for i in 16..64
     {
         compute_sigma0[i]->generate_r1cs_constraints();
         compute_sigma1[i]->generate_r1cs_constraints();
@@ -231,12 +231,12 @@ void sha256_message_schedule_gadget<FieldT>::generate_r1cs_constraints()
 template<typename FieldT>
 void sha256_message_schedule_gadget<FieldT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < 16; ++i)
+    for i in 0..16
     {
         pack_W[i]->generate_r1cs_witness_from_bits();
     }
 
-    for (size_t i = 16; i < 64; ++i)
+    for i in 16..64
     {
         compute_sigma0[i]->generate_r1cs_witness();
         compute_sigma1[i]->generate_r1cs_witness();

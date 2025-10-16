@@ -11,7 +11,7 @@
 //#include <cstdio>
 //#include <vector>
 
-use libff/algebra/curves/bn128/bn128_pp;
+use crate::algebra::curves::bn128::bn128_pp;
 use crate::algebra::scalar_multiplication::multiexp;
 use crate::common::profiling;
 use crate::common::rng;
@@ -106,17 +106,17 @@ void print_performance_csv(
                 group_elements, scalars);
         print!("\t%lld", result_djb.first); fflush(stdout);
 
-        if (compare_answers && (result_bos_coster.second != result_djb.second)) {
+        if compare_answers && (result_bos_coster.second != result_djb.second) {
             fprintf(stderr, "Answers NOT MATCHING (bos coster != djb)\n");
         }
 
-        if (expn <= expn_end_naive) {
+        if expn <= expn_end_naive {
             run_result_t<GroupT> result_naive =
                 profile_multiexp<GroupT, FieldT, multi_exp_method_naive>(
                     group_elements, scalars);
             print!("\t%lld", result_naive.first); fflush(stdout);
 
-            if (compare_answers && (result_bos_coster.second != result_naive.second)) {
+            if compare_answers && (result_bos_coster.second != result_naive.second) {
                 fprintf(stderr, "Answers NOT MATCHING (bos coster != naive)\n");
             }
         }

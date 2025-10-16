@@ -17,8 +17,8 @@
 
 use ffec::algebra::curves::public_params;
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/pairing/pairing_params;
 
 
 
@@ -150,7 +150,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/curves/weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
 
 //#endif // WEIERSTRASS_G1_GADGET_TCC_
 /** @file
@@ -401,10 +401,10 @@ G1_multiscalar_mul_gadget<ppT>::G1_multiscalar_mul_gadget(protoboard<FieldT> &pb
     assert!(num_points >= 1);
     assert!(num_points * elt_size == scalar_size);
 
-    for (size_t i = 0; i < num_points; ++i)
+    for i in 0..num_points
     {
         points_and_powers.push(points[i]);
-        for (size_t j = 0; j < elt_size - 1; ++j)
+        for j in 0..elt_size - 1
         {
             points_and_powers.push(G1_variable<ppT>(pb, FMT(annotation_prefix, " points_%zu_times_2_to_{}", i, j+1)));
             doublers.push(G1_dbl_gadget<ppT>(pb, points_and_powers[i*elt_size + j], points_and_powers[i*elt_size + j + 1], FMT(annotation_prefix, " double_%zu_to_2_to_{}", i, j+1)));
@@ -412,10 +412,10 @@ G1_multiscalar_mul_gadget<ppT>::G1_multiscalar_mul_gadget(protoboard<FieldT> &pb
     }
 
     chosen_results.push(base);
-    for (size_t i = 0; i < scalar_size; ++i)
+    for i in 0..scalar_size
     {
         computed_results.push(G1_variable<ppT>(pb, FMT(annotation_prefix, " computed_results_{}")));
-        if (i < scalar_size-1)
+        if i < scalar_size-1
         {
             chosen_results.push(G1_variable<ppT>(pb, FMT(annotation_prefix, " chosen_results_{}")));
         }
@@ -433,12 +433,12 @@ void G1_multiscalar_mul_gadget<ppT>::generate_r1cs_constraints()
 {
     const size_t num_constraints_before = self.pb.num_constraints();
 
-    for (size_t i = 0; i < scalar_size - num_points; ++i)
+    for i in 0..scalar_size - num_points
     {
         doublers[i].generate_r1cs_constraints();
     }
 
-    for (size_t i = 0; i < scalar_size; ++i)
+    for i in 0..scalar_size
     {
         adders[i].generate_r1cs_constraints();
 
@@ -463,12 +463,12 @@ void G1_multiscalar_mul_gadget<ppT>::generate_r1cs_constraints()
 template<typename ppT>
 void G1_multiscalar_mul_gadget<ppT>::generate_r1cs_witness()
 {
-    for (size_t i = 0; i < scalar_size - num_points; ++i)
+    for i in 0..scalar_size - num_points
     {
         doublers[i].generate_r1cs_witness();
     }
 
-    for (size_t i = 0; i < scalar_size; ++i)
+    for i in 0..scalar_size
     {
         adders[i].generate_r1cs_witness();
         self.pb.lc_val(chosen_results[i+1].X) = (self.pb.val(scalars[i]) == ffec::Fr<ppT>::zero() ? self.pb.lc_val(chosen_results[i].X) : self.pb.lc_val(computed_results[i].X));

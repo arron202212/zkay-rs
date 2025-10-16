@@ -8,8 +8,8 @@
 
 use  <gtest/gtest.h>
 
-use libsnark/gadgetlib2/adapters;
-use libsnark/gadgetlib2/pp;
+use crate::gadgetlib2::adapters;
+use crate::gadgetlib2::pp;
 
 using namespace gadgetlib2;
 
@@ -74,12 +74,12 @@ TEST(GadgetLibAdapter, VariableAssignment) {
     adapter.resetVariableIndex();
     const VariableArray varArray(10, "x");
     VariableAssignment assignment;
-    for (size_t i = 0; i < varArray.size(); ++i) {
+    for i in 0..varArray.size() {
         assignment[varArray[i]] = i;
     }
     const auto new_assignment = adapter.convert(assignment);
     ASSERT_EQ(assignment.size(), new_assignment.size());
-    for (size_t i = 0; i < new_assignment.size(); ++i) {
+    for i in 0..new_assignment.size() {
         const GadgetLibAdapter::variable_index_t var = i;
         EXPECT_EQ(new_assignment.at(var), Fp(i));
     }

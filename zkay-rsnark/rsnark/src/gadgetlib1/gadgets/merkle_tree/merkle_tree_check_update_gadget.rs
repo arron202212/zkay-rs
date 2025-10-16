@@ -18,11 +18,11 @@
 // #define MERKLE_TREE_CHECK_UPDATE_GADGET_HPP_
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/hashes/crh_gadget;
-use libsnark/gadgetlib1/gadgets/hashes/digest_selector_gadget;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets::hashes::crh_gadget;
+use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
 
 
 
@@ -86,7 +86,7 @@ void test_merkle_tree_check_update_gadget();
 
 
 
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_update_gadget;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_update_gadget;
 
 //#endif // MERKLE_TREE_CHECK_UPDATE_GADGET_HPP_
 /** @file
@@ -134,7 +134,7 @@ merkle_tree_check_update_gadget<FieldT, HashT>::merkle_tree_check_update_gadget(
     assert!(tree_depth > 0);
     assert!(tree_depth == address_bits.size());
 
-    for (size_t i = 0; i < tree_depth-1; ++i)
+    for i in 0..tree_depth-1
     {
         prev_internal_output.push(digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " prev_internal_output_{}", i)));
         next_internal_output.push(digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " next_internal_output_{}", i)));
@@ -142,7 +142,7 @@ merkle_tree_check_update_gadget<FieldT, HashT>::merkle_tree_check_update_gadget(
 
     computed_next_root.reset(new digest_variable<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
 
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         block_variable<FieldT> prev_inp(pb, prev_path.left_digests[i], prev_path.right_digests[i], FMT(self.annotation_prefix, " prev_inp_{}", i));
         prev_hasher_inputs.push(prev_inp);
@@ -155,7 +155,7 @@ merkle_tree_check_update_gadget<FieldT, HashT>::merkle_tree_check_update_gadget(
                                                                   FMT(self.annotation_prefix, " next_hashers_{}", i)));
     }
 
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         prev_propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, i < tree_depth -1 ? prev_internal_output[i] : prev_leaf_digest,
                                                                      address_bits[tree_depth-1-i], prev_path.left_digests[i], prev_path.right_digests[i],
@@ -172,23 +172,23 @@ template<typename FieldT, typename HashT>
 void merkle_tree_check_update_gadget<FieldT, HashT>::generate_r1cs_constraints()
 {
     /* ensure correct hash computations */
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         prev_hashers[i].generate_r1cs_constraints(false); // we check root outside and prev_left/prev_right above
         next_hashers[i].generate_r1cs_constraints(true); // however we must check right side hashes
     }
 
     /* ensure consistency of internal_left/internal_right with internal_output */
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         prev_propagators[i].generate_r1cs_constraints();
         next_propagators[i].generate_r1cs_constraints();
     }
 
     /* ensure that prev auxiliary input and next auxiliary input match */
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
-        for (size_t j = 0; j < digest_size; ++j)
+        for j in 0..digest_size
         {
             /*
               addr * (prev_left - next_left) + (1 - addr) * (prev_right - next_right) = 0
@@ -221,10 +221,10 @@ template<typename FieldT, typename HashT>
 void merkle_tree_check_update_gadget<FieldT, HashT>::generate_r1cs_witness()
 {
     /* do the hash computations bottom-up */
-    for (int i = tree_depth-1; i >= 0; --i)
+    for i in ( 0..=tree_depth-1).rev()
     {
         /* ensure consistency of prev_path and next_path */
-        if (self.pb.val(address_bits[tree_depth-1-i]) == FieldT::one())
+        if self.pb.val(address_bits[tree_depth-1-i]) == FieldT::one()
         {
             next_path.left_digests[i].generate_r1cs_witness(prev_path.left_digests[i].get_digest());
         }
@@ -288,7 +288,7 @@ void test_merkle_tree_check_update_gadget()
     ffec::bit_vector address_bits;
 
     size_t address = 0;
-    for (long level = tree_depth-1; level >= 0; --level)
+    for level in ( 0..=tree_depth-1).rev()
     {
         const bool computed_is_right = (std::rand() % 2);
         address |= (computed_is_right ? 1ul << (tree_depth-1-level) : 0);

@@ -12,8 +12,8 @@
 //#ifndef MNT6_INIT_HPP_
 // #define MNT6_INIT_HPP_
 
-use libff/algebra/curves/public_params;
-use libff/algebra/curves/mnt/mnt6/mnt6_fields;
+use crate::algebra::curves::public_params;
+use crate::algebra::curves::mnt::mnt6::mnt6_fields;
 
 // namespace libff {
 
@@ -65,9 +65,9 @@ class mnt6_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/mnt/mnt6/mnt6_g1;
-use libff/algebra/curves/mnt/mnt6/mnt6_g2;
-use libff/algebra/curves/mnt/mnt6/mnt6_init;
+use crate::algebra::curves::mnt::mnt6::mnt6_g1;
+use crate::algebra::curves::mnt::mnt6::mnt6_g2;
+use crate::algebra::curves::mnt::mnt6::mnt6_init;
 
 // namespace libff {
 

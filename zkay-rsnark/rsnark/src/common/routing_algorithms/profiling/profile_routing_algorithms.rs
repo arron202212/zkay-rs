@@ -13,8 +13,8 @@ use  <algorithm>
 
 use ffec::common::profiling;
 
-use libsnark/common/routing_algorithms/as_waksman_routing_algorithm;
-use libsnark/common/routing_algorithms/benes_routing_algorithm;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm;
+use crate::common::routing_algorithms::benes_routing_algorithm;
 
 
 

@@ -18,7 +18,7 @@ FieldT SHA512_rng(const uint64_t idx);
 
 // } // namespace libff
 
-use libff/common/rng.tcc;
+use crate::common::rng.tcc;
 
 //#endif // RNG_HPP_
 /** @file
@@ -65,7 +65,7 @@ FieldT SHA512_rng(const uint64_t idx)
         SHA512_Update(&sha512, &iter, sizeof(iter));
         SHA512_Final((unsigned char*)hash, &sha512);
 
-        for (mp_size_t i = 0; i < FieldT::num_limbs; ++i)
+        for i in 0..FieldT::num_limbs
         {
             rval.data[i] = hash[i];
         }

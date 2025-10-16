@@ -13,7 +13,7 @@
 //#ifndef RUN_TBCS_PPZKSNARK_HPP_
 // #define RUN_TBCS_PPZKSNARK_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
+use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
 
 
 
@@ -83,7 +83,7 @@ bool run_tbcs_ppzksnark(const tbcs_example &example,
     ffec::print_header("Preprocess verification key");
     tbcs_ppzksnark_processed_verification_key<ppT> pvk = tbcs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
         keypair.pk = ffec::reserialize<tbcs_ppzksnark_proving_key<ppT> >(keypair.pk);
@@ -96,7 +96,7 @@ bool run_tbcs_ppzksnark(const tbcs_example &example,
     tbcs_ppzksnark_proof<ppT> proof = tbcs_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
-    if (test_serialization)
+    if test_serialization
     {
         ffec::enter_block("Test serialization of proof");
         proof = ffec::reserialize<tbcs_ppzksnark_proof<ppT> >(proof);

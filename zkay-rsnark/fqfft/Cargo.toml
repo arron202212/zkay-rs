@@ -12,6 +12,8 @@ rust-version.workspace = true
 [lib]
 
 [dependencies]
+cfg-if={workspace = true}
+ffec={workspace = true}
 num-bigint={workspace = true}
 num-traits={workspace = true}
 num-derive={workspace = true}

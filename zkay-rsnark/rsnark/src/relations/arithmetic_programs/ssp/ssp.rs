@@ -176,7 +176,7 @@ public:
 
 
 
-use libsnark/relations/arithmetic_programs/ssp/ssp;
+use crate::relations::arithmetic_programs/ssp/ssp;
 
 //#endif // SSP_HPP_
 /** @file
@@ -259,16 +259,16 @@ bool ssp_instance<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) cons
 
     const std::vector<FieldT> u = self.domain->evaluate_all_lagrange_polynomials(t);
 
-    for (size_t i = 0; i < self.num_variables()+1; ++i)
+    for i in 0..self.num_variables()+1
     {
-        for (auto &el : V_in_Lagrange_basis[i])
+        for el in &V_in_Lagrange_basis[i]
         {
             Vt[i] += u[el.first] * el.second;
         }
     }
 
     FieldT ti = FieldT::one();
-    for (size_t i = 0; i < self.degree()+1; ++i)
+    for i in 0..self.degree()+1
     {
         Ht[i] = ti;
         ti *= t;
@@ -347,42 +347,42 @@ template<typename FieldT>
 bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) const
 {
 
-    if (self.num_variables() != witness.num_variables())
+    if self.num_variables() != witness.num_variables()
     {
         return false;
     }
 
-    if (self.degree() != witness.degree())
+    if self.degree() != witness.degree()
     {
         return false;
     }
 
-    if (self.num_inputs() != witness.num_inputs())
+    if self.num_inputs() != witness.num_inputs()
     {
         return false;
     }
 
-    if (self.num_variables() != witness.coefficients_for_Vs.size())
+    if self.num_variables() != witness.coefficients_for_Vs.size()
     {
         return false;
     }
 
-    if (self.degree()+1 != witness.coefficients_for_H.size())
+    if self.degree()+1 != witness.coefficients_for_H.size()
     {
         return false;
     }
 
-    if (self.Vt.size() != self.num_variables()+1)
+    if self.Vt.size() != self.num_variables()+1
     {
         return false;
     }
 
-    if (self.Ht.size() != self.degree()+1)
+    if self.Ht.size() != self.degree()+1
     {
         return false;
     }
 
-    if (self.Zt != self.domain->compute_vanishing_polynomial(self.t))
+    if self.Zt != self.domain->compute_vanishing_polynomial(self.t)
     {
         return false;
     }
@@ -399,7 +399,7 @@ bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &wi
                                                  witness.coefficients_for_H.begin(),
                                                  witness.coefficients_for_H.begin()+self.degree()+1);
 
-    if (ans_V.squared() - FieldT::one() != ans_H * self.Zt)
+    if ans_V.squared() - FieldT::one() != ans_H * self.Zt
     {
         return false;
     }

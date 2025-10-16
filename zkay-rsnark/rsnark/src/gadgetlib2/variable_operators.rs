@@ -13,7 +13,7 @@
 //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
 // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLEOPERATORS_HPP_
 
-use libsnark/gadgetlib2/variable;
+use crate::gadgetlib2::variable;
 
 namespace gadgetlib2 {
 

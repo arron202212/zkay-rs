@@ -9,7 +9,7 @@ use ffec::common::default_types::ec_pp;
 use ffec::common::profiling;
 use ffec::common::utils;
 
-use libsnark/gadgetlib1/gadgets/hashes/sha256/sha256_gadget;
+use crate::gadgetlib1::gadgets::hashes::sha256/sha256_gadget;
 
 
 

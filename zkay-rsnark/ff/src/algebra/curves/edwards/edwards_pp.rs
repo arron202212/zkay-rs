@@ -7,11 +7,11 @@
 
 //#ifndef EDWARDS_PP_HPP_
 // #define EDWARDS_PP_HPP_
-use libff/algebra/curves/edwards/edwards_g1;
-use libff/algebra/curves/edwards/edwards_g2;
-use libff/algebra/curves/edwards/edwards_init;
-use libff/algebra/curves/edwards/edwards_pairing;
-use libff/algebra/curves/public_params;
+use crate::algebra::curves::edwards/edwards_g1;
+use crate::algebra::curves::edwards/edwards_g2;
+use crate::algebra::curves::edwards/edwards_init;
+use crate::algebra::curves::edwards/edwards_pairing;
+use crate::algebra::curves::public_params;
 
 // namespace libff {
 
@@ -55,7 +55,7 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/edwards/edwards_pp;
+use crate::algebra::curves::edwards/edwards_pp;
 
 // namespace libff {
 

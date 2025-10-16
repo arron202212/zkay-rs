@@ -14,7 +14,7 @@
 
 //#include <vector>
 
-use libff/algebra/curves/mnt/mnt6/mnt6_init;
+use crate::algebra::curves::mnt::mnt6::mnt6_init;
 
 // namespace libff {
 
@@ -161,10 +161,10 @@ mnt6_GT mnt6_affine_reduced_pairing(const mnt6_G1 &P,
 
 //#include <cassert>
 
-use libff/algebra/curves/mnt/mnt6/mnt6_g1;
-use libff/algebra/curves/mnt/mnt6/mnt6_g2;
-use libff/algebra/curves/mnt/mnt6/mnt6_init;
-use libff/algebra/curves/mnt/mnt6/mnt6_pairing;
+use crate::algebra::curves::mnt::mnt6::mnt6_g1;
+use crate::algebra::curves::mnt::mnt6::mnt6_g2;
+use crate::algebra::curves::mnt::mnt6::mnt6_init;
+use crate::algebra::curves::mnt::mnt6::mnt6_pairing;
 use crate::algebra::scalar_multiplication::wnaf;
 use crate::common::profiling;
 
@@ -268,12 +268,12 @@ std::ostream& operator<<(std::ostream& out, const mnt6_ate_G2_precomp &prec_Q)
         << prec_Q.QX_over_twist << OUTPUT_SEPARATOR
         << prec_Q.QY_over_twist << "\n";
     out << prec_Q.dbl_coeffs.size() << "\n";
-    for (const mnt6_ate_dbl_coeffs &dc : prec_Q.dbl_coeffs)
+    for dc in &prec_Q.dbl_coeffs
     {
         out << dc << OUTPUT_NEWLINE;
     }
     out << prec_Q.add_coeffs.size() << "\n";
-    for (const mnt6_ate_add_coeffs &ac : prec_Q.add_coeffs)
+    for ac in &prec_Q.add_coeffs
     {
         out << ac << OUTPUT_NEWLINE;
     }
@@ -301,7 +301,7 @@ std::istream& operator>>(std::istream& in, mnt6_ate_G2_precomp &prec_Q)
 
     prec_Q.dbl_coeffs.reserve(dbl_s);
 
-    for (size_t i = 0; i < dbl_s; ++i)
+    for i in 0..dbl_s
     {
         mnt6_ate_dbl_coeffs dc;
         in >> dc;
@@ -316,7 +316,7 @@ std::istream& operator>>(std::istream& in, mnt6_ate_G2_precomp &prec_Q)
 
     prec_Q.add_coeffs.reserve(add_s);
 
-    for (size_t i = 0; i < add_s; ++i)
+    for i in 0..add_s
     {
         mnt6_ate_add_coeffs ac;
         in >> ac;
@@ -335,7 +335,7 @@ mnt6_Fq6 mnt6_final_exponentiation_last_chunk(const mnt6_Fq6 &elt, const mnt6_Fq
     const mnt6_Fq6 elt_q = elt.Frobenius_map(1);
     mnt6_Fq6 w1_part = elt_q.cyclotomic_exp(mnt6_final_exponent_last_chunk_w1);
     mnt6_Fq6 w0_part;
-    if (mnt6_final_exponent_last_chunk_is_w0_neg)
+    if mnt6_final_exponent_last_chunk_is_w0_neg
     {
     	w0_part = elt_inv.cyclotomic_exp(mnt6_final_exponent_last_chunk_abs_of_w0);
     } else {
@@ -413,9 +413,9 @@ mnt6_affine_ate_G2_precomputation mnt6_affine_ate_precompute_G2(const mnt6_G2& Q
     bool found_nonzero = false;
 
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = (long) NAF.size() - 1; i >= 0; --i)
+    for i in ( 0..=(long) NAF.size() - 1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -434,12 +434,12 @@ mnt6_affine_ate_G2_precomputation mnt6_affine_ate_precompute_G2(const mnt6_G2& Q
         RX = c.gamma.squared() - (c.old_RX+c.old_RX);
         RY = c.gamma * (c.old_RX - RX) - c.old_RY;
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             mnt6_affine_ate_coeffs c;
             c.old_RX = RX;
             c.old_RY = RY;
-            if (NAF[i] > 0)
+            if NAF[i] > 0
             {
                 c.gamma = (c.old_RY - result.QY) * (c.old_RX - result.QX).inverse();
             }
@@ -457,7 +457,7 @@ mnt6_affine_ate_G2_precomputation mnt6_affine_ate_precompute_G2(const mnt6_G2& Q
     }
 
     /* TODO: maybe handle neg
-    if (mnt6_ate_is_loop_count_neg)
+    if mnt6_ate_is_loop_count_neg
     {
     	mnt6_ate_add_coeffs ac;
 		mnt6_affine_ate_dbl_coeffs c;
@@ -487,9 +487,9 @@ mnt6_Fq6 mnt6_affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &pr
     size_t idx = 0;
 
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for (long i = (long) NAF.size() - 1; i >= 0; --i)
+    for i in ( 0..=(long) NAF.size() - 1).rev()
     {
-        if (!found_nonzero)
+        if !found_nonzero
         {
             /* this skips the MSB itself */
             found_nonzero |= (NAF[i] != 0);
@@ -505,11 +505,11 @@ mnt6_Fq6 mnt6_affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &pr
                                       - prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY);
         f = f.squared().mul_by_2345(g_RR_at_P);
 
-        if (NAF[i] != 0)
+        if NAF[i] != 0
         {
             mnt6_affine_ate_coeffs c = prec_Q.coeffs[idx++];
             mnt6_Fq6 g_RQ_at_P;
-            if (NAF[i] > 0)
+            if NAF[i] > 0
             {
                 g_RQ_at_P = mnt6_Fq6(prec_P.PY_twist_squared,
                                      - prec_P.PX * c.gamma_twist + c.gamma_X - prec_Q.QY);
@@ -525,7 +525,7 @@ mnt6_Fq6 mnt6_affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &pr
     }
 
     /* TODO: maybe handle neg
-    if (mnt6_ate_is_loop_count_neg)
+    if mnt6_ate_is_loop_count_neg
     {
     	// TODO:
     	mnt6_affine_ate_coeffs ac = prec_Q.coeffs[idx++];
@@ -660,11 +660,11 @@ mnt6_ate_G2_precomp mnt6_ate_precompute_G2(const mnt6_G2& Q)
 
     const bigint<mnt6_Fr::num_limbs> &loop_count = mnt6_ate_loop_count;
     bool found_one = false;
-    for (long i = (long) loop_count.max_bits() - 1; i >= 0; --i)
+    for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
     {
         const bool bit = loop_count.test_bit(i);
 
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -675,7 +675,7 @@ mnt6_ate_G2_precomp mnt6_ate_precompute_G2(const mnt6_G2& Q)
         doubling_step_for_flipped_miller_loop(R, dc);
         result.dbl_coeffs.push_back(dc);
 
-        if (bit)
+        if bit
         {
             mnt6_ate_add_coeffs ac;
             mixed_addition_step_for_flipped_miller_loop(result.QX, result.QY, result.QY2, R, ac);
@@ -683,7 +683,7 @@ mnt6_ate_G2_precomp mnt6_ate_precompute_G2(const mnt6_G2& Q)
         }
     }
 
-    if (mnt6_ate_is_loop_count_neg)
+    if mnt6_ate_is_loop_count_neg
     {
     	mnt6_Fq3 RZ_inv = R.Z.inverse();
     	mnt6_Fq3 RZ2_inv = RZ_inv.squared();
@@ -715,11 +715,11 @@ mnt6_Fq6 mnt6_ate_miller_loop(const mnt6_ate_G1_precomp &prec_P,
 
     const bigint<mnt6_Fr::num_limbs> &loop_count = mnt6_ate_loop_count;
 
-    for (long i = (long) loop_count.max_bits() - 1; i >= 0; --i)
+    for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
     {
         const bool bit = loop_count.test_bit(i);
 
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -735,7 +735,7 @@ mnt6_Fq6 mnt6_ate_miller_loop(const mnt6_ate_G1_precomp &prec_P,
                                       dc.c_H * prec_P.PY_twist);
         f = f.squared() * g_RR_at_P;
 
-        if (bit)
+        if bit
         {
             mnt6_ate_add_coeffs ac = prec_Q.add_coeffs[add_idx++];
             mnt6_Fq6 g_RQ_at_P = mnt6_Fq6(ac.c_RZ * prec_P.PY_twist,
@@ -745,7 +745,7 @@ mnt6_Fq6 mnt6_ate_miller_loop(const mnt6_ate_G1_precomp &prec_P,
 
     }
 
-    if (mnt6_ate_is_loop_count_neg)
+    if mnt6_ate_is_loop_count_neg
     {
     	mnt6_ate_add_coeffs ac = prec_Q.add_coeffs[add_idx++];
     	mnt6_Fq6 g_RnegR_at_P = mnt6_Fq6(ac.c_RZ * prec_P.PY_twist,
@@ -776,11 +776,11 @@ mnt6_Fq6 mnt6_ate_double_miller_loop(const mnt6_ate_G1_precomp &prec_P1,
 
     const bigint<mnt6_Fr::num_limbs> &loop_count = mnt6_ate_loop_count;
 
-    for (long i = (long) loop_count.max_bits() - 1; i >= 0; --i)
+    for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
     {
         const bool bit = loop_count.test_bit(i);
 
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -802,7 +802,7 @@ mnt6_Fq6 mnt6_ate_double_miller_loop(const mnt6_ate_G1_precomp &prec_P1,
 
         f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
 
-        if (bit)
+        if bit
         {
             mnt6_ate_add_coeffs ac1 = prec_Q1.add_coeffs[add_idx];
             mnt6_ate_add_coeffs ac2 = prec_Q2.add_coeffs[add_idx];
@@ -817,7 +817,7 @@ mnt6_Fq6 mnt6_ate_double_miller_loop(const mnt6_ate_G1_precomp &prec_P1,
         }
     }
 
-    if (mnt6_ate_is_loop_count_neg)
+    if mnt6_ate_is_loop_count_neg
     {
     	mnt6_ate_add_coeffs ac1 = prec_Q1.add_coeffs[add_idx];
         mnt6_ate_add_coeffs ac2 = prec_Q2.add_coeffs[add_idx];

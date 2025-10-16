@@ -12,8 +12,8 @@
 //#ifndef MEMORY_MASKING_GADGET_HPP_
 // #define MEMORY_MASKING_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
 
 
 
@@ -92,7 +92,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/memory_masking_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/memory_masking_gadget;
 
 //#endif // MEMORY_MASKING_GADGET_HPP_
 /** @file
@@ -156,7 +156,7 @@ memory_masking_gadget<FieldT>::memory_masking_gadget(tinyram_protoboard<FieldT> 
                                                           dw_contents_prev.bits.begin() + pb.ap.w)));
     masked_out_bytes.resize(2 * pb.ap.bytes_in_word());
 
-    for (size_t i = 0; i < 2 * pb.ap.bytes_in_word(); ++i)
+    for i in 0..2 * pb.ap.bytes_in_word()
     {
         /* just subtract out the byte to be masked */
         masked_out_bytes[i].assign(pb, (dw_contents_prev.packed -
@@ -188,7 +188,7 @@ memory_masking_gadget<FieldT>::memory_masking_gadget(tinyram_protoboard<FieldT> 
       Define shift so that masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
      */
     linear_combination<FieldT> shift_lc = is_word0 * 1 + is_word1 * (FieldT(2)^self.pb.ap.w);
-    for (size_t i = 0; i < 2 * self.pb.ap.bytes_in_word(); ++i)
+    for i in 0..2 * self.pb.ap.bytes_in_word()
     {
         shift_lc = shift_lc + is_byte[i] * (FieldT(2)^(8*i));
     }
@@ -200,7 +200,7 @@ void memory_masking_gadget<FieldT>::generate_r1cs_constraints()
 {
     /* get indicator variables for is_subaddress[i] by adding constraints
        is_subaddress[i] * (subaddress - i) = 0 and \sum_i is_subaddress[i] = 1 */
-    for (size_t i = 0; i < 2 * self.pb.ap.bytes_in_word(); ++i)
+    for i in 0..2 * self.pb.ap.bytes_in_word()
     {
         self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_subaddress[i], subaddress.packed - i, 0),
                                      FMT(self.annotation_prefix, " is_subaddress_{}", i));
@@ -208,7 +208,7 @@ void memory_masking_gadget<FieldT>::generate_r1cs_constraints()
     self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_sum<FieldT>(is_subaddress), 1), FMT(self.annotation_prefix, " is_subaddress"));
 
     /* get indicator variables is_byte_X */
-    for (size_t i = 0; i < 2 * self.pb.ap.bytes_in_word(); ++i)
+    for i in 0..2 * self.pb.ap.bytes_in_word()
     {
         self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(access_is_byte, is_subaddress[i], is_byte[i]),
                                      FMT(self.annotation_prefix, " is_byte_{}", i));
@@ -234,13 +234,13 @@ template<typename FieldT>
 void memory_masking_gadget<FieldT>::generate_r1cs_witness()
 {
     /* get indicator variables is_subaddress */
-    for (size_t i = 0; i < 2 * self.pb.ap.bytes_in_word(); ++i)
+    for i in 0..2 * self.pb.ap.bytes_in_word()
     {
         self.pb.val(is_subaddress[i]) = (self.pb.val(subaddress.packed) == FieldT(i)) ? FieldT::one() : FieldT::zero();
     }
 
     /* get indicator variables is_byte_X */
-    for (size_t i = 0; i < 2 * self.pb.ap.bytes_in_word(); ++i)
+    for i in 0..2 * self.pb.ap.bytes_in_word()
     {
         self.pb.val(is_byte[i]) = self.pb.val(is_subaddress[i]) * self.pb.lc_val(access_is_byte);
     }

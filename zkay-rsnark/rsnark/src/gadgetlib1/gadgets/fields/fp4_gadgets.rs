@@ -15,8 +15,8 @@
 //#ifndef FP4_GADGETS_HPP_
 // #define FP4_GADGETS_HPP_
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/fields/fp2_gadgets;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
 
 
 
@@ -198,7 +198,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/fields/fp4_gadgets;
+use crate::gadgetlib1::gadgets/fields/fp4_gadgets;
 
 //#endif // FP4_GADGETS_HPP_
 /** @file

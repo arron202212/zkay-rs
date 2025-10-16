@@ -923,7 +923,7 @@ bool r1cs_ppzkadsnark_processed_verification_key<ppT>::operator==(
                    self.A0 == other.A0 &&
                    self.Ain == other.Ain &&
                    self.proof_g_vki_precomp.size() == other.proof_g_vki_precomp.size());
-    if (result) {
+    if result {
         for(size_t i=0;i<self.proof_g_vki_precomp.size();i++)
             result &= self.proof_g_vki_precomp[i] == other.proof_g_vki_precomp[i];
     }
@@ -1040,7 +1040,7 @@ r1cs_ppzkadsnark_verification_key<ppT> r1cs_ppzkadsnark_verification_key<ppT>::d
     result.rC_Z_g2 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G2<snark_pp<ppT>>::one();
 
     result.A0 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G1<snark_pp<ppT>>::one();
-    for (size_t i = 0; i < input_size; ++i)
+    for i in 0..input_size
     {
         result.Ain.push(ffec::Fr<snark_pp<ppT>>::random_element() *
                                 ffec::G1<snark_pp<ppT>>::one());
@@ -1144,24 +1144,24 @@ r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_
 
     ffec::enter_block("Compute query densities");
     size_t non_zero_At = 0, non_zero_Bt = 0, non_zero_Ct = 0, non_zero_Ht = 0;
-    for (size_t i = 0; i < qap_inst.num_variables()+1; ++i)
+    for i in 0..qap_inst.num_variables()+1
     {
-        if (!qap_inst.At[i].is_zero())
+        if !qap_inst.At[i].is_zero()
         {
             non_zero_At+=1;
         }
-        if (!qap_inst.Bt[i].is_zero())
+        if !qap_inst.Bt[i].is_zero()
         {
             non_zero_Bt+=1;
         }
-        if (!qap_inst.Ct[i].is_zero())
+        if !qap_inst.Ct[i].is_zero()
         {
             non_zero_Ct+=1;
         }
     }
-    for (size_t i = 0; i < qap_inst.degree()+1; ++i)
+    for i in 0..qap_inst.degree()+1
     {
-        if (!qap_inst.Ht[i].is_zero())
+        if !qap_inst.Ht[i].is_zero()
         {
             non_zero_Ht+=1;
         }
@@ -1190,7 +1190,7 @@ r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_
     // construct the same-coefficient-check query (must happen before zeroing out the prefix of At)
     ffec::Fr_vector<snark_pp<ppT>> Kt;
     Kt.reserve(qap_inst.num_variables()+4);
-    for (size_t i = 0; i < qap_inst.num_variables()+1; ++i)
+    for i in 0..qap_inst.num_variables()+1
     {
         Kt.push( beta * (rA * At[i] + rB * Bt[i] + rC * Ct[i] ) );
     }
@@ -1280,7 +1280,7 @@ r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_
     ffec::G1<snark_pp<ppT>> A0 = A_query[0].g;
     ffec::G1_vector<snark_pp<ppT>> Ain;
     Ain.reserve(qap_inst.num_inputs());
-    for (size_t i = 0; i < qap_inst.num_inputs(); ++i)
+    for i in 0..qap_inst.num_inputs()
     {
         Ain.push(A_query[1+i].g);
     }
@@ -1358,7 +1358,7 @@ r1cs_ppzkadsnark_proof<ppT> r1cs_ppzkadsnark_prover(const r1cs_ppzkadsnark_provi
                              qap_wit.d3*pk.K_query[qap_wit.num_variables()+3]);
 
 // #ifdef DEBUG
-    for (size_t i = 0; i < qap_wit.num_inputs() + 1; ++i)
+    for i in 0..qap_wit.num_inputs() + 1
     {
         assert!(pk.A_query[i].g == ffec::G1<snark_pp<ppT>>::zero());
     }
@@ -1529,9 +1529,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::enter_block("Call to r1cs_ppzkadsnark_online_verifier");
 
     ffec::enter_block("Check if the proof is well-formed");
-    if (!proof.is_well_formed())
+    if !proof.is_well_formed()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("At least one of the proof elements does not lie on the curve.\n");
         }
@@ -1561,8 +1561,8 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
 
     bool result_auth = true;
 
-    if (!(prodA == proof.muA)) {
-        if (!ffec::inhibit_profiling_info)
+    if !(prodA == proof.muA) {
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Authentication check failed.\n");
         }
@@ -1577,9 +1577,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_Aau_1 = snark_pp<ppT>::miller_loop(proof_g_Aau_g_precomp, pvk.vk_alphaA_g2_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_Aau_2 = snark_pp<ppT>::miller_loop(proof_g_Aau_h_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_Aau = snark_pp<ppT>::final_exponentiation(kc_Aau_1 * kc_Aau_2.unitary_inverse());
-    if (kc_Aau != ffec::GT<snark_pp<ppT>>::one())
+    if kc_Aau != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for Aau query incorrect.\n");
         }
@@ -1598,9 +1598,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_A_1 = snark_pp<ppT>::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_A_2 = snark_pp<ppT>::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_A = snark_pp<ppT>::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
-    if (kc_A != ffec::GT<snark_pp<ppT>>::one())
+    if kc_A != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for A query incorrect.\n");
         }
@@ -1614,9 +1614,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_B_1 = snark_pp<ppT>::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_B_2 = snark_pp<ppT>::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_B = snark_pp<ppT>::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
-    if (kc_B != ffec::GT<snark_pp<ppT>>::one())
+    if kc_B != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for B query incorrect.\n");
         }
@@ -1630,9 +1630,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_C_1 = snark_pp<ppT>::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_C_2 = snark_pp<ppT>::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_C = snark_pp<ppT>::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
-    if (kc_C != ffec::GT<snark_pp<ppT>>::one())
+    if kc_C != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for C query incorrect.\n");
         }
@@ -1649,9 +1649,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> QAP_23  = snark_pp<ppT>::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp,
                                                                    proof_g_C_g_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> QAP = snark_pp<ppT>::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
-    if (QAP != ffec::GT<snark_pp<ppT>>::one())
+    if QAP != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("QAP divisibility check failed.\n");
         }
@@ -1666,9 +1666,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> K_23 = snark_pp<ppT>::double_miller_loop(proof_g_Aacc_C_precomp, pvk.vk_gamma_beta_g2_precomp,
                                                                 pvk.vk_gamma_beta_g1_precomp, proof_g_B_g_precomp);
     ffec::GT<snark_pp<ppT>> K = snark_pp<ppT>::final_exponentiation(K_1 * K_23.unitary_inverse());
-    if (K != ffec::GT<snark_pp<ppT>>::one())
+    if K != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Same-coefficient check failed.\n");
         }
@@ -1707,9 +1707,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::enter_block("Call to r1cs_ppzkadsnark_online_verifier");
 
     ffec::enter_block("Check if the proof is well-formed");
-    if (!proof.is_well_formed())
+    if !proof.is_well_formed()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("At least one of the proof elements does not lie on the curve.\n");
         }
@@ -1732,9 +1732,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
         sigs.push(auth_data[i].sigma);
     }
     bool result_auth = sigBatchVerif<ppT>(pak.vkp,labels,Lambdas,sigs);
-    if (! result_auth)
+    if ! result_auth
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Auth sig check failed.\n");
         }
@@ -1767,9 +1767,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> accum2 = snark_pp<ppT>::double_miller_loop(proof_g_muA_precomp, pvk.pp_G2_one_precomp,
                                                                   proof_g_Aau_precomp, g_minusi_precomp);
     ffec::GT<snark_pp<ppT>> authPair = snark_pp<ppT>::final_exponentiation(accum * accum2.unitary_inverse());
-    if (authPair != ffec::GT<snark_pp<ppT>>::one())
+    if authPair != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Auth pairing check failed.\n");
         }
@@ -1779,8 +1779,8 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::leave_block("Checking pairings");
 
 
-    if (!(result_auth)) {
-        if (!ffec::inhibit_profiling_info)
+    if !(result_auth) {
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Authentication check failed.\n");
         }
@@ -1794,9 +1794,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_Aau_1 = snark_pp<ppT>::miller_loop(proof_g_Aau_g_precomp, pvk.vk_alphaA_g2_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_Aau_2 = snark_pp<ppT>::miller_loop(proof_g_Aau_h_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_Aau = snark_pp<ppT>::final_exponentiation(kc_Aau_1 * kc_Aau_2.unitary_inverse());
-    if (kc_Aau != ffec::GT<snark_pp<ppT>>::one())
+    if kc_Aau != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for Aau query incorrect.\n");
         }
@@ -1815,9 +1815,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_A_1 = snark_pp<ppT>::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_A_2 = snark_pp<ppT>::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_A = snark_pp<ppT>::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
-    if (kc_A != ffec::GT<snark_pp<ppT>>::one())
+    if kc_A != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for A query incorrect.\n");
         }
@@ -1831,9 +1831,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_B_1 = snark_pp<ppT>::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_B_2 = snark_pp<ppT>::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_B = snark_pp<ppT>::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
-    if (kc_B != ffec::GT<snark_pp<ppT>>::one())
+    if kc_B != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for B query incorrect.\n");
         }
@@ -1847,9 +1847,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> kc_C_1 = snark_pp<ppT>::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
     ffec::Fqk<snark_pp<ppT>> kc_C_2 = snark_pp<ppT>::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> kc_C = snark_pp<ppT>::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
-    if (kc_C != ffec::GT<snark_pp<ppT>>::one())
+    if kc_C != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for C query incorrect.\n");
         }
@@ -1866,9 +1866,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> QAP_23  = snark_pp<ppT>::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp,
                                                                    proof_g_C_g_precomp, pvk.pp_G2_one_precomp);
     ffec::GT<snark_pp<ppT>> QAP = snark_pp<ppT>::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
-    if (QAP != ffec::GT<snark_pp<ppT>>::one())
+    if QAP != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("QAP divisibility check failed.\n");
         }
@@ -1883,9 +1883,9 @@ bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verificat
     ffec::Fqk<snark_pp<ppT>> K_23 = snark_pp<ppT>::double_miller_loop(proof_g_Aacc_C_precomp, pvk.vk_gamma_beta_g2_precomp,
                                                                 pvk.vk_gamma_beta_g1_precomp, proof_g_B_g_precomp);
     ffec::GT<snark_pp<ppT>> K = snark_pp<ppT>::final_exponentiation(K_1 * K_23.unitary_inverse());
-    if (K != ffec::GT<snark_pp<ppT>>::one())
+    if K != ffec::GT<snark_pp<ppT>>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Same-coefficient check failed.\n");
         }

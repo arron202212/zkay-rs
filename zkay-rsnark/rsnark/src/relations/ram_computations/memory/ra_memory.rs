@@ -12,7 +12,7 @@
 //#ifndef RA_MEMORY_HPP_
 // #define RA_MEMORY_HPP_
 
-use libsnark/relations/ram_computations/memory/memory_interface;
+use crate::relations::ram_computations/memory/memory_interface;
 
 
 
@@ -51,7 +51,7 @@ public:
 
 use  <cassert>
 
-use libsnark/relations/ram_computations/memory/ra_memory;
+use crate::relations::ram_computations/memory/ra_memory;
 
 
 
@@ -66,7 +66,7 @@ ra_memory::ra_memory(const size_t num_addresses,
     memory_interface(num_addresses, value_size)
 {
     /* copy std::vector into std::map */
-    for (size_t i = 0; i < contents_as_vector.size(); ++i)
+    for i in 0..contents_as_vector.size()
     {
         contents[i] = contents_as_vector[i];
     }

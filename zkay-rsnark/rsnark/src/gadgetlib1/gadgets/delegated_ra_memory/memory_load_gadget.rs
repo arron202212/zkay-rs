@@ -13,7 +13,7 @@
 //#ifndef MEMORY_LOAD_GADGET_HPP_
 // #define MEMORY_LOAD_GADGET_HPP_
 
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_read_gadget;
 
 
 

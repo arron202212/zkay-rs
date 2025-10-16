@@ -9,7 +9,7 @@
 // #define ALT_BN128_PAIRING_HPP_
 //#include <vector>
 
-use libff/algebra/curves/alt_bn128/alt_bn128_init;
+use crate::algebra::curves::alt_bn128::alt_bn128_init;
 
 // namespace libff {
 
@@ -100,10 +100,10 @@ alt_bn128_GT alt_bn128_affine_reduced_pairing(const alt_bn128_G1 &P,
 
 //#include <cassert>
 
-use libff/algebra/curves/alt_bn128/alt_bn128_g1;
-use libff/algebra/curves/alt_bn128/alt_bn128_g2;
-use libff/algebra/curves/alt_bn128/alt_bn128_init;
-use libff/algebra/curves/alt_bn128/alt_bn128_pairing;
+use crate::algebra::curves::alt_bn128::alt_bn128_g1;
+use crate::algebra::curves::alt_bn128::alt_bn128_g2;
+use crate::algebra::curves::alt_bn128::alt_bn128_init;
+use crate::algebra::curves::alt_bn128::alt_bn128_pairing;
 use crate::common::profiling;
 
 // namespace libff {
@@ -167,7 +167,7 @@ std::ostream& operator<<(std::ostream& out, const alt_bn128_ate_G2_precomp &prec
 {
     out << prec_Q.QX << OUTPUT_SEPARATOR << prec_Q.QY << "\n";
     out << prec_Q.coeffs.size() << "\n";
-    for (const alt_bn128_ate_ell_coeffs &c : prec_Q.coeffs)
+    for c in &prec_Q.coeffs
     {
         out << c << OUTPUT_NEWLINE;
     }
@@ -189,7 +189,7 @@ std::istream& operator>>(std::istream& in, alt_bn128_ate_G2_precomp &prec_Q)
 
     prec_Q.coeffs.reserve(s);
 
-    for (size_t i = 0; i < s; ++i)
+    for i in 0..s
     {
         alt_bn128_ate_ell_coeffs c;
         in >> c;
@@ -234,7 +234,7 @@ alt_bn128_Fq12 alt_bn128_exp_by_neg_z(const alt_bn128_Fq12 &elt)
     enter_block("Call to alt_bn128_exp_by_neg_z");
 
     alt_bn128_Fq12 result = elt.cyclotomic_exp(alt_bn128_final_exponent_z);
-    if (!alt_bn128_final_exponent_is_z_neg)
+    if !alt_bn128_final_exponent_is_z_neg
     {
         result = result.unitary_inverse();
     }
@@ -416,10 +416,10 @@ alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
     bool found_one = false;
     alt_bn128_ate_ell_coeffs c;
 
-    for (long i = loop_count.max_bits(); i >= 0; --i)
+    for i in ( 0..=loop_count.max_bits()).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -429,7 +429,7 @@ alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
         doubling_step_for_flipped_miller_loop(two_inv, R, c);
         result.coeffs.push_back(c);
 
-        if (bit)
+        if bit
         {
             mixed_addition_step_for_flipped_miller_loop(Qcopy, R, c);
             result.coeffs.push_back(c);
@@ -441,7 +441,7 @@ alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
     alt_bn128_G2 Q2 = Q1.mul_by_q();
     assert!(Q2.Z == alt_bn128_Fq2::one());
 
-    if (alt_bn128_ate_is_loop_count_neg)
+    if alt_bn128_ate_is_loop_count_neg
     {
         R.Y = - R.Y;
     }
@@ -470,10 +470,10 @@ alt_bn128_Fq12 alt_bn128_ate_miller_loop(const alt_bn128_ate_G1_precomp &prec_P,
     const bigint<alt_bn128_Fr::num_limbs> &loop_count = alt_bn128_ate_loop_count;
     alt_bn128_ate_ell_coeffs c;
 
-    for (long i = loop_count.max_bits(); i >= 0; --i)
+    for i in ( 0..=loop_count.max_bits()).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -488,7 +488,7 @@ alt_bn128_Fq12 alt_bn128_ate_miller_loop(const alt_bn128_ate_G1_precomp &prec_P,
         f = f.squared();
         f = f.mul_by_024(c.ell_0, prec_P.PY * c.ell_VW, prec_P.PX * c.ell_VV);
 
-        if (bit)
+        if bit
         {
             c = prec_Q.coeffs[idx++];
             f = f.mul_by_024(c.ell_0, prec_P.PY * c.ell_VW, prec_P.PX * c.ell_VV);
@@ -496,7 +496,7 @@ alt_bn128_Fq12 alt_bn128_ate_miller_loop(const alt_bn128_ate_G1_precomp &prec_P,
 
     }
 
-    if (alt_bn128_ate_is_loop_count_neg)
+    if alt_bn128_ate_is_loop_count_neg
     {
     	f = f.inverse();
     }
@@ -524,10 +524,10 @@ alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(const alt_bn128_ate_G1_precomp &
     size_t idx = 0;
 
     const bigint<alt_bn128_Fr::num_limbs> &loop_count = alt_bn128_ate_loop_count;
-    for (long i = loop_count.max_bits(); i >= 0; --i)
+    for i in ( 0..=loop_count.max_bits()).rev()
     {
         const bool bit = loop_count.test_bit(i);
-        if (!found_one)
+        if !found_one
         {
             /* this skips the MSB itself */
             found_one |= bit;
@@ -547,7 +547,7 @@ alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(const alt_bn128_ate_G1_precomp &
         f = f.mul_by_024(c1.ell_0, prec_P1.PY * c1.ell_VW, prec_P1.PX * c1.ell_VV);
         f = f.mul_by_024(c2.ell_0, prec_P2.PY * c2.ell_VW, prec_P2.PX * c2.ell_VV);
 
-        if (bit)
+        if bit
         {
             alt_bn128_ate_ell_coeffs c1 = prec_Q1.coeffs[idx];
             alt_bn128_ate_ell_coeffs c2 = prec_Q2.coeffs[idx];
@@ -558,7 +558,7 @@ alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(const alt_bn128_ate_G1_precomp &
         }
     }
 
-    if (alt_bn128_ate_is_loop_count_neg)
+    if alt_bn128_ate_is_loop_count_neg
     {
     	f = f.inverse();
     }

@@ -12,9 +12,9 @@
 
 use  <string>
 
-use libsnark/gadgetlib2/constraint;
-use libsnark/gadgetlib2/pp;
-use libsnark/gadgetlib2/variable;
+use crate::gadgetlib2::constraint;
+use crate::gadgetlib2::pp;
+use crate::gadgetlib2::variable;
 
 // #define ASSERT_CONSTRAINTS_SATISFIED(pb) \
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED))
@@ -129,7 +129,7 @@ public:
 
 use  <cstdio>
 
-use libsnark/gadgetlib2/protoboard;
+use crate::gadgetlib2::protoboard;
 
 using ::std::string;
 using ::std::cout;
@@ -181,7 +181,7 @@ void Protoboard::setDualWordValue(const DualWord& dualWord, const size_t srcValu
 
 void Protoboard::setMultipackedWordValue(const MultiPackedWord& multipackedWord,
                                          const size_t srcValue) {
-    if (fieldType_ == R1P) {
+    if fieldType_ == R1P {
         GADGETLIB_ASSERT(multipackedWord.size() == 1, "Multipacked word size mismatch in R1P");
         val(multipackedWord[0]) = srcValue;
     } else {
@@ -243,7 +243,7 @@ bool multipackedAndUnpackedValuesDisagree(const bool multipackedEqualsValue,
 
 void printInformativeNoticeMessage(const bool multipackedEqualsValue,
                                    const bool unpackedEqualsValue) {
-    if (multipackedEqualsValue == true && unpackedEqualsValue == false) {
+    if multipackedEqualsValue == true && unpackedEqualsValue == false {
         cout << "NOTE: multipacked value equals expected value but unpacked value does not!"
              << endl;
     } else {
@@ -263,7 +263,7 @@ bool Protoboard::dualWordAssignmentEqualsValue(const DualWord& dualWord,
     bool unpackedEqualsValue = unpackedWordAssignmentEqualsValue(dualWord.unpacked(),
                                                                  expectedValue,
                                                                  printOption);
-    if (multipackedAndUnpackedValuesDisagree(multipackedEqualsValue, unpackedEqualsValue)) {
+    if multipackedAndUnpackedValuesDisagree(multipackedEqualsValue, unpackedEqualsValue) {
         printInformativeNoticeMessage(multipackedEqualsValue, unpackedEqualsValue);
     }
     return multipackedEqualsValue && unpackedEqualsValue;
@@ -278,14 +278,14 @@ bool Protoboard::multipackedWordAssignmentEqualsValue(const MultiPackedWord& mul
                                                       const size_t expectedValue,
                                                       const PrintOptions& printOption) const {
     bool retval = true;
-    if (fieldType_ == R1P) {
+    if fieldType_ == R1P {
         GADGETLIB_ASSERT(multipackedWord.size() == 1, "R1P multipacked size mismatch");
-        if (val(multipackedWord[0]) == expectedValue) {
+        if val(multipackedWord[0]) == expectedValue {
             retval = true;
         } else {
             retval = false;
         }
-        if (expectedToPrintValues(retval, printOption)) {
+        if expectedToPrintValues(retval, printOption) {
             cout << "Expected value for multipacked word \"" << multipackedWord.name()
                  << "\" is: " << expectedValue << endl;
             cout << "Actual value is: " << val(multipackedWord[0]) << endl;
@@ -302,16 +302,16 @@ bool Protoboard::unpackedWordAssignmentEqualsValue(const UnpackedWord& unpackedW
     bool retval = true;
     size_t expectedValueCopy = expectedValue;
     for(size_t i = 0; i < unpackedWord.size(); ++i) {
-        if (val(unpackedWord[i]) != (expectedValueCopy & 1u)) {
+        if val(unpackedWord[i]) != (expectedValueCopy & 1u) {
             retval = false;
             break;
         }
         expectedValueCopy >>= 1;
     }
-    if (expectedValueCopy != 0) {
+    if expectedValueCopy != 0 {
         retval = false;
     }
-    if (expectedToPrintValues(retval, printOption)) {
+    if expectedToPrintValues(retval, printOption) {
         cout << "Expected value for unpacked word \"" << unpackedWord.name()
              << "\" is: " << expectedValue << endl;
         cout << "Actual values are: " << endl;

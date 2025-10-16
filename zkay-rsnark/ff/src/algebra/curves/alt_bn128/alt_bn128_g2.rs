@@ -9,8 +9,8 @@
 // #define ALT_BN128_G2_HPP_
 //#include <vector>
 
-use libff/algebra/curves/alt_bn128/alt_bn128_init;
-use libff/algebra/curves/curve_utils;
+use crate::algebra::curves::alt_bn128::alt_bn128_init;
+use crate::algebra::curves::curve_utils;
 
 // namespace libff {
 
@@ -107,7 +107,7 @@ alt_bn128_G2 operator*(const Fp_model<m,modulus_p> &lhs, const alt_bn128_G2 &rhs
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/alt_bn128/alt_bn128_g2;
+use crate::algebra::curves::alt_bn128::alt_bn128_g2;
 
 // namespace libff {
 
@@ -127,7 +127,7 @@ bigint<alt_bn128_G2::h_limbs> alt_bn128_G2::h;
 
 alt_bn128_G2::alt_bn128_G2()
 {
-    if (initialized)
+    if initialized
     {
         this->X = G2_zero.X;
         this->Y = G2_zero.Y;
@@ -142,7 +142,7 @@ alt_bn128_Fq2 alt_bn128_G2::mul_by_b(const alt_bn128_Fq2 &elt)
 
 void alt_bn128_G2::print() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -160,7 +160,7 @@ void alt_bn128_G2::print() const
 
 void alt_bn128_G2::print_coordinates() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         print!("O\n");
     }
@@ -178,7 +178,7 @@ void alt_bn128_G2::print_coordinates() const
 
 void alt_bn128_G2::to_affine_coordinates()
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         this->X = alt_bn128_Fq2::zero();
         this->Y = alt_bn128_Fq2::one();
@@ -212,12 +212,12 @@ bool alt_bn128_G2::is_zero() const
 
 bool alt_bn128_G2::operator==(const alt_bn128_G2 &other) const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other.is_zero();
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return false;
     }
@@ -234,7 +234,7 @@ bool alt_bn128_G2::operator==(const alt_bn128_G2 &other) const
     alt_bn128_Fq2 Z1_squared = (this->Z).squared();
     alt_bn128_Fq2 Z2_squared = (other.Z).squared();
 
-    if ((this->X * Z2_squared) != (other.X * Z1_squared))
+    if (this->X * Z2_squared) != (other.X * Z1_squared)
     {
         return false;
     }
@@ -253,12 +253,12 @@ bool alt_bn128_G2::operator!=(const alt_bn128_G2& other) const
 alt_bn128_G2 alt_bn128_G2::operator+(const alt_bn128_G2 &other) const
 {
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -287,7 +287,7 @@ alt_bn128_G2 alt_bn128_G2::operator+(const alt_bn128_G2 &other) const
     alt_bn128_Fq2 S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
 
     // check for doubling case
-    if (U1 == U2 && S1 == S2)
+    if U1 == U2 && S1 == S2
     {
         // dbl case; nothing of above can be reused
         return this->dbl();
@@ -335,12 +335,12 @@ alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
 //#endif
 
     // handle special cases having to do with O
-    if (this->is_zero())
+    if this->is_zero()
     {
         return other;
     }
 
-    if (other.is_zero())
+    if other.is_zero()
     {
         return *this;
     }
@@ -368,7 +368,7 @@ alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
     const alt_bn128_Fq2 S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
 
     // check for doubling case
-    if (U1 == U2 && S1 == S2)
+    if U1 == U2 && S1 == S2
     {
         // dbl case; nothing of above can be reused
         return this->dbl();
@@ -400,7 +400,7 @@ alt_bn128_G2 alt_bn128_G2::dbl() const
     this->dbl_cnt++;
 //#endif
     // handle point at infinity
-    if (this->is_zero())
+    if this->is_zero()
     {
         return (*this);
     }
@@ -443,7 +443,7 @@ alt_bn128_G2 alt_bn128_G2::mul_by_cofactor() const
 
 bool alt_bn128_G2::is_well_formed() const
 {
-    if (this->is_zero())
+    if this->is_zero()
     {
         return true;
     }
@@ -517,20 +517,20 @@ std::istream& operator>>(std::istream &in, alt_bn128_G2 &g)
     Y_lsb -= '0';
 
     // y = +/- sqrt(x^3 + b)
-    if (is_zero == 0)
+    if is_zero == 0
     {
         alt_bn128_Fq2 tX2 = tX.squared();
         alt_bn128_Fq2 tY2 = tX2 * tX + alt_bn128_twist_coeff_b;
         tY = tY2.sqrt();
 
-        if ((tY.c0.as_bigint().data[0] & 1) != Y_lsb)
+        if (tY.c0.as_bigint().data[0] & 1) != Y_lsb
         {
             tY = -tY;
         }
     }
 //#endif
     // using projective coordinates
-    if (is_zero == 0)
+    if is_zero == 0
     {
         g.X = tX;
         g.Y = tY;
@@ -549,7 +549,7 @@ void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec
     std::vector<alt_bn128_Fq2> Z_vec;
     Z_vec.reserve(vec.size());
 
-    for (auto &el: vec)
+    for el in &vec
     {
         Z_vec.emplace_back(el.Z);
     }
@@ -557,7 +557,7 @@ void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec
 
     const alt_bn128_Fq2 one = alt_bn128_Fq2::one();
 
-    for (size_t i = 0; i < vec.size(); ++i)
+    for i in 0..vec.size()
     {
         alt_bn128_Fq2 Z2 = Z_vec[i].squared();
         alt_bn128_Fq2 Z3 = Z_vec[i] * Z2;

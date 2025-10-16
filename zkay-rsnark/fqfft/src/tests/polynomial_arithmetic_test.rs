@@ -10,14 +10,14 @@
 //#include <gtest/gtest.h>
 //#include <stdint.h>
 
-use libfqfft/polynomial_arithmetic/basic_operations;
-use libfqfft/polynomial_arithmetic/xgcd;
+use crate::polynomial_arithmetic::basic_operations;
+use crate::polynomial_arithmetic::xgcd;
 
-namespace libfqfft {
+//namespace libfqfft {
 
   template <typename T>
   class PolynomialArithmeticTest : public ::testing::Test {};
-  typedef ::testing::Types<libff::Double> FieldT; /* List Extend Here */
+  typedef ::testing::Types<Double> FieldT; /* List Extend Here */
   TYPED_TEST_CASE(PolynomialArithmeticTest, FieldT);
 
   TYPED_TEST(PolynomialArithmeticTest, PolynomialAdditionSame) {
@@ -254,4 +254,4 @@ namespace libfqfft {
     }
   }
 
-} // libfqfft
+//} // libfqfft

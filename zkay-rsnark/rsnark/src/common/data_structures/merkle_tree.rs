@@ -67,6 +67,6 @@ public:
 
 
 
-use libsnark::common::data_structures::merkle_tree;
+use crate::common::data_structures::merkle_tree;
 
 //#endif // MERKLE_TREE_HPP_

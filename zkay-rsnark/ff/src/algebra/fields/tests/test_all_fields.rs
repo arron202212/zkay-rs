@@ -11,15 +11,15 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include "libff/algebra/curves/alt_bn128/alt_bn128_fields.hpp"
-#include "libff/algebra/curves/mnt/mnt4/mnt4_fields.hpp"
-#include "libff/algebra/curves/mnt/mnt6/mnt6_fields.hpp"
-#include "libff/algebra/fields/binary/gf128.hpp"
-#include "libff/algebra/fields/binary/gf192.hpp"
-#include "libff/algebra/fields/binary/gf256.hpp"
-#include "libff/algebra/fields/binary/gf32.hpp"
-#include "libff/algebra/fields/binary/gf64.hpp"
-#include "libff/common/utils.hpp"
+use crate::algebra::curves::alt_bn128::alt_bn128_fields;
+use crate::algebra::curves::mnt::mnt4::mnt4_fields;
+use crate::algebra::curves::mnt::mnt6::mnt6_fields;
+use crate::algebra::fields::binary::gf128;
+use crate::algebra::fields::binary::gf192;
+use crate::algebra::fields::binary::gf256;
+use crate::algebra::fields::binary::gf32;
+use crate::algebra::fields::binary::gf64;
+use crate::common::utils;
 
 //#include <gtest/gtest.h>
 //#include <set>
@@ -115,7 +115,7 @@ void test_field()
     x = random_element_non_zero<FieldT>();
     y = random_element_non_zero<FieldT>();
     z = random_element_exclude(one);
-    if (two == zero) {
+    if two == zero {
         EXPECT_EQ(x, -x);
     } else {
         EXPECT_NE(x, -x);
@@ -244,7 +244,7 @@ void test_field()
     EXPECT_EQ(x.to_words(), z.to_words());
 
     std::vector<uint64_t> zero_words = zero.to_words();
-    for (uint64_t word : zero_words) {
+    for word in &zero_words {
         EXPECT_EQ(word, 0);
     }
     EXPECT_TRUE(y.from_words(zero_words));
@@ -351,7 +351,7 @@ void test_binary_field()
     std::set<std::vector<uint64_t> > values;
     for (uint16_t i = 0; i < 10000; i++)
     {
-        if (x == one) {
+        if x == one {
             break;
         }
         EXPECT_EQ(values.find(x.to_words()), values.end()); // generator^n never repeats.

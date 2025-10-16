@@ -29,8 +29,8 @@
 //#ifndef TBCS_TO_USCS_HPP_
 // #define TBCS_TO_USCS_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
-use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
+use crate::relations::circuit_satisfaction_problems/tbcs/tbcs;
+use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 
 
@@ -69,7 +69,7 @@ See tbcs_to_uscs.hpp .
 //#ifndef TBCS_TO_USCS_TCC_
 // #define TBCS_TO_USCS_TCC_
 
-use ffec::algebra::fields::field_utils;
+use ffec::algebra::field_utils::field_utils;
 
 
 
@@ -86,7 +86,7 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
     result.primary_input_size = circuit.primary_input_size;
     result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.size();
 
-    for (auto &g : circuit.gates)
+    for g in &circuit.gates
     {
         const variable<FieldT> x(g.left_wire);
         const variable<FieldT> y(g.right_wire);
@@ -186,15 +186,15 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
         }
     }
 
-    for (size_t i = 0; i < circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.size(); ++i)
+    for i in 0..circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.size()
     {
         /* require that 2 * wire - 1 \in {-1,1}, that is wire \in {0,1} */
         result.add_constraint(2 * variable<FieldT>(i) - 1, FMT("", "wire_{}", i));
     }
 
-    for (auto &g : circuit.gates)
+    for g in &circuit.gates
     {
-        if (g.is_circuit_output)
+        if g.is_circuit_output
         {
             /* require that output + 1 \in {-1,1}, this together with output binary (above) enforces output = 0 */
             result.add_constraint(variable<FieldT>(g.output) + 1, FMT("", "output_{}", g.output));

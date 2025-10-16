@@ -12,11 +12,11 @@
 //#ifndef MNT6_FIELDS_HPP_
 // #define MNT6_FIELDS_HPP_
 
-use libff/algebra/curves/mnt/mnt46_common;
-use libff/algebra/curves/public_params;
-use libff/algebra/fields/prime_base/fp;
-use libff/algebra/fields/prime_extension/fp3;
-use libff/algebra/fields/prime_extension/fp6_2over3;
+use crate::algebra::curves::mnt::mnt46_common;
+use crate::algebra::curves::public_params;
+use crate::algebra::fields::prime_base::fp;
+use crate::algebra::fields::prime_extension::fp3;
+use crate::algebra::fields::prime_extension::fp6_2over3;
 
 // namespace libff {
 
@@ -56,7 +56,7 @@ void init_mnt6_fields();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/mnt/mnt6/mnt6_fields;
+use crate::algebra::curves::mnt::mnt6::mnt6_fields;
 
 // namespace libff {
 
@@ -71,13 +71,13 @@ void init_mnt6_fields()
 
     mnt6_modulus_r = bigint_r("475922286169261325753349249653048451545124879242694725395555128576210262817955800483758081");
     assert!(mnt6_Fr::modulus_is_valid());
-    if (sizeof(mp_limb_t) == 8)
+    if sizeof(mp_limb_t) == 8
     {
         mnt6_Fr::Rsquared = bigint_r("273000478523237720910981655601160860640083126627235719712980612296263966512828033847775776");
         mnt6_Fr::Rcubed = bigint_r("427298980065529822574935274648041073124704261331681436071990730954930769758106792920349077");
         mnt6_Fr::inv = 0xb071a1b67165ffff;
     }
-    if (sizeof(mp_limb_t) == 4)
+    if sizeof(mp_limb_t) == 4
     {
         mnt6_Fr::Rsquared = bigint_r("273000478523237720910981655601160860640083126627235719712980612296263966512828033847775776");
         mnt6_Fr::Rcubed = bigint_r("427298980065529822574935274648041073124704261331681436071990730954930769758106792920349077");
@@ -97,13 +97,13 @@ void init_mnt6_fields()
 
     mnt6_modulus_q = bigint_q("475922286169261325753349249653048451545124878552823515553267735739164647307408490559963137");
     assert!(mnt6_Fq::modulus_is_valid());
-    if (sizeof(mp_limb_t) == 8)
+    if sizeof(mp_limb_t) == 8
     {
         mnt6_Fq::Rsquared = bigint_q("163983144722506446826715124368972380525894397127205577781234305496325861831001705438796139");
         mnt6_Fq::Rcubed = bigint_q("207236281459091063710247635236340312578688659363066707916716212805695955118593239854980171");
         mnt6_Fq::inv = 0xbb4334a3ffffffff;
     }
-    if (sizeof(mp_limb_t) == 4)
+    if sizeof(mp_limb_t) == 4
     {
         mnt6_Fq::Rsquared = bigint_q("163983144722506446826715124368972380525894397127205577781234305496325861831001705438796139");
         mnt6_Fq::Rcubed = bigint_q("207236281459091063710247635236340312578688659363066707916716212805695955118593239854980171");

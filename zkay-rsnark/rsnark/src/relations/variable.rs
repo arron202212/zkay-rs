@@ -200,7 +200,7 @@ linear_combination<FieldT> operator-(field_coeff:&FieldT &lc:linear_combination<
 
 
 
-use libsnark/relations/variable;
+use crate::relations::variable;
 
 //#endif // VARIABLE_HPP_
 
@@ -502,7 +502,7 @@ template<typename FieldT>
 FieldT linear_combination<FieldT>::evaluate(&assignment:std::vector<FieldT>) const
 {
     FieldT acc = FieldT::zero();
-    for (auto &lt : terms)
+    for lt in &terms
     {
         acc += (lt.index == 0 ? FieldT::one() : assignment[lt.index-1]) * lt.coeff;
     }
@@ -596,7 +596,7 @@ bool linear_combination<FieldT>::is_valid(num_variables:size_t) const
 
     /* check that the variables are in proper range. as the variables
        are sorted, it suffices to check the last term */
-    if (--terms.end())->index >= num_variables
+    if --terms.end()->index >= num_variables
     {
         return false;
     }
@@ -607,7 +607,7 @@ bool linear_combination<FieldT>::is_valid(num_variables:size_t) const
 template<typename FieldT>
 void linear_combination<FieldT>::print(&variable_annotations:std::map<size_t, std::string>) const
 {
-    for (auto &lt : terms)
+    for lt in &terms
     {
         if lt.index == 0
         {
@@ -626,7 +626,7 @@ void linear_combination<FieldT>::print(&variable_annotations:std::map<size_t, st
 template<typename FieldT>
 void linear_combination<FieldT>::print_with_assignment(full_assignment, &variable_annotations:std::map<size_t:&std::vector<FieldT> std::string>) const
 {
-    for (auto &lt : terms)
+    for lt in &terms
     {
         if lt.index == 0
         {

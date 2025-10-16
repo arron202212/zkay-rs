@@ -13,8 +13,8 @@ use  <string>
 use ffec::common::profiling;
 
 use crate::common::default_types::ram_ppzksnark_pp;
-use libsnark/relations/ram_computations/rams/examples/ram_examples;
-use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark;
+use crate::relations::ram_computations/rams/examples/ram_examples;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
 
 
 

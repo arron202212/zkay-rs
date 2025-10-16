@@ -10,11 +10,11 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-#include "libff/algebra/fields/binary/gf128.hpp"
-#include "libff/algebra/fields/binary/gf192.hpp"
-#include "libff/algebra/fields/binary/gf256.hpp"
-#include "libff/algebra/fields/binary/gf32.hpp"
-#include "libff/algebra/fields/binary/gf64.hpp"
+use crate::algebra::fields::binary::gf128;
+use crate::algebra::fields::binary::gf192;
+use crate::algebra::fields::binary::gf256;
+use crate::algebra::fields::binary::gf32;
+use crate::algebra::fields::binary::gf64;
 
 //#include <gtest/gtest.h>
 

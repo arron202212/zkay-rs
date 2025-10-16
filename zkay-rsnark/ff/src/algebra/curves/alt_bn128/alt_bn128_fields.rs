@@ -7,10 +7,10 @@
 
 //#ifndef ALT_BN128_FIELDS_HPP_
 // #define ALT_BN128_FIELDS_HPP_
-use libff/algebra/fields/prime_base/fp;
-use libff/algebra/fields/prime_extension/fp12_2over3over2;
-use libff/algebra/fields/prime_extension/fp2;
-use libff/algebra/fields/prime_extension/fp6_3over2;
+use crate::algebra::fields::prime_base::fp;
+use crate::algebra::fields::prime_extension::fp12_2over3over2;
+use crate::algebra::fields::prime_extension::fp2;
+use crate::algebra::fields::prime_extension::fp6_3over2;
 
 // namespace libff {
 
@@ -42,7 +42,7 @@ void init_alt_bn128_fields();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/alt_bn128/alt_bn128_fields;
+use crate::algebra::curves::alt_bn128::alt_bn128_fields;
 
 // namespace libff {
 
@@ -60,13 +60,13 @@ void init_alt_bn128_fields()
 
     alt_bn128_modulus_r = bigint_r("21888242871839275222246405745257275088548364400416034343698204186575808495617");
     assert!(alt_bn128_Fr::modulus_is_valid());
-    if (sizeof(mp_limb_t) == 8)
+    if sizeof(mp_limb_t) == 8
     {
         alt_bn128_Fr::Rsquared = bigint_r("944936681149208446651664254269745548490766851729442924617792859073125903783");
         alt_bn128_Fr::Rcubed = bigint_r("5866548545943845227489894872040244720403868105578784105281690076696998248512");
         alt_bn128_Fr::inv = 0xc2e1f593efffffff;
     }
-    if (sizeof(mp_limb_t) == 4)
+    if sizeof(mp_limb_t) == 4
     {
         alt_bn128_Fr::Rsquared = bigint_r("944936681149208446651664254269745548490766851729442924617792859073125903783");
         alt_bn128_Fr::Rcubed = bigint_r("5866548545943845227489894872040244720403868105578784105281690076696998248512");
@@ -86,13 +86,13 @@ void init_alt_bn128_fields()
 
     alt_bn128_modulus_q = bigint_q("21888242871839275222246405745257275088696311157297823662689037894645226208583");
     assert!(alt_bn128_Fq::modulus_is_valid());
-    if (sizeof(mp_limb_t) == 8)
+    if sizeof(mp_limb_t) == 8
     {
         alt_bn128_Fq::Rsquared = bigint_q("3096616502983703923843567936837374451735540968419076528771170197431451843209");
         alt_bn128_Fq::Rcubed = bigint_q("14921786541159648185948152738563080959093619838510245177710943249661917737183");
         alt_bn128_Fq::inv = 0x87d20782e4866389;
     }
-    if (sizeof(mp_limb_t) == 4)
+    if sizeof(mp_limb_t) == 4
     {
         alt_bn128_Fq::Rsquared = bigint_q("3096616502983703923843567936837374451735540968419076528771170197431451843209");
         alt_bn128_Fq::Rcubed = bigint_q("14921786541159648185948152738563080959093619838510245177710943249661917737183");

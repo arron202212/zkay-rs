@@ -9,7 +9,7 @@
 
 use  <gtest/gtest.h>
 
-use libsnark/gadgetlib1/examples/simple_example;
+use crate::gadgetlib1::examples/simple_example;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
 
 namespace {

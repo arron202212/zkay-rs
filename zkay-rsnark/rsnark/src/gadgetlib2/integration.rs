@@ -10,7 +10,7 @@
 
 use ffec::common::default_types::ec_pp;
 
-use libsnark/gadgetlib2/protoboard;
+use crate::gadgetlib2::protoboard;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
@@ -28,8 +28,8 @@ r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libsnark/gadgetlib2/adapters;
-use libsnark/gadgetlib2/integration;
+use crate::gadgetlib2::adapters;
+use crate::gadgetlib2::integration;
 
 
 
@@ -39,7 +39,7 @@ linear_combination<ffec::Fr<ffec::default_ec_pp> > convert_gadgetlib2_linear_com
     type gadgetlib2::GadgetLibAdapter GLA;
 
     linear_combination<FieldT> result = lc.second * variable<FieldT>(0);
-    for (const GLA::linear_term_t &lt : lc.first)
+    for lt in &lc.first
     {
         result = result + lt.second * variable<FieldT>(lt.first+1);
     }
@@ -66,7 +66,7 @@ r1cs_constraint_system<ffec::Fr<ffec::default_ec_pp> > get_constraint_system_fro
 #pragma omp single nowait
     {
 //#endif
-      for (int i = 0; i < num_constraints; ++i) {
+      for i in 0..num_constraints {
         const auto& constr = converted_pb.first[i];
 // #ifdef MULTICORE
 #pragma omp task default(none) shared(result, constr, i)
@@ -111,4 +111,4 @@ r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment
     return result;
 }
 
-}
+

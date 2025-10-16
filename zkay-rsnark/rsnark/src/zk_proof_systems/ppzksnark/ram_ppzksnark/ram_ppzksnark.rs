@@ -291,7 +291,7 @@ ram_ppzksnark_verification_key<ram_ppzksnark_ppT> ram_ppzksnark_verification_key
 
     const size_t packed_input_element_size = ram_universal_gadget<ram_ppT>::packed_input_element_size(ap);
 
-    for (auto it : primary_input.get_all_trace_entries())
+    for it in &primary_input.get_all_trace_entries()
     {
         const size_t input_pos = it.first;
         const address_and_value av = it.second;

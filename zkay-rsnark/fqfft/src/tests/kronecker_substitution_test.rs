@@ -10,13 +10,13 @@
 //#include <gtest/gtest.h>
 //#include <stdint.h>
 
-use libfqfft/polynomial_arithmetic/basic_operations;
+use crate::polynomial_arithmetic::basic_operations;
 
-namespace libfqfft {
+//namespace libfqfft {
 
   template <typename T>
   class KroneckerSubstitutionTest : public ::testing::Test {};
-  typedef ::testing::Types<libff::Double> FieldT; /* List Extend Here */
+  typedef ::testing::Types<Double> FieldT; /* List Extend Here */
   TYPED_TEST_CASE(KroneckerSubstitutionTest, FieldT);
 
   TYPED_TEST(KroneckerSubstitutionTest, StandardPolynomialMultiplication) {
@@ -53,4 +53,4 @@ namespace libfqfft {
     }
   }
 
-} // libfqfft
+//} // libfqfft

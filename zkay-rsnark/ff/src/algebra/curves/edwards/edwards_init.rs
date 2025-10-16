@@ -7,8 +7,8 @@
 
 //#ifndef EDWARDS_INIT_HPP_
 // #define EDWARDS_INIT_HPP_
-use libff/algebra/curves/public_params;
-use libff/algebra/curves/edwards/edwards_fields;
+use crate::algebra::curves::public_params;
+use crate::algebra::curves::edwards/edwards_fields;
 
 // namespace libff {
 
@@ -48,9 +48,9 @@ class edwards_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use libff/algebra/curves/edwards/edwards_g1;
-use libff/algebra/curves/edwards/edwards_g2;
-use libff/algebra/curves/edwards/edwards_init;
+use crate::algebra::curves::edwards/edwards_g1;
+use crate::algebra::curves::edwards/edwards_g2;
+use crate::algebra::curves::edwards/edwards_init;
 
 // namespace libff {
 

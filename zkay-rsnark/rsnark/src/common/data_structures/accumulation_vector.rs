@@ -14,9 +14,9 @@
 
 // use  <iostream>
 
-use crate::common::data_structures::sparse_vector;
 
-
+ use crate::common::data_structures::sparse_vector::sparse_vector;
+use ffec::common::serialization::OUTPUT_NEWLINE;
 
 // template<typename T>
 // class accumulation_vector;
@@ -89,42 +89,41 @@ impl<T> PartialEq for accumulation_vector<T> {
 impl<T> accumulation_vector<T>{
 pub fn is_fully_accumulated(&self) ->bool
 {
-    return rest.empty();
+    return self.rest.empty();
 }
 
 pub fn domain_size(&self) ->usize
 {
-    return rest.domain_size();
+    return self.rest.domain_size();
 }
 
 pub fn size(&self) ->usize
 {
-    return rest.domain_size();
+    return self.rest.domain_size();
 }
 
 pub fn size_in_bits(&self) ->usize
 {
     let first_size_in_bits =T::size_in_bits( );
-    let  rest_size_in_bits =rest.size_in_bits();
+    let  rest_size_in_bits =self.rest.size_in_bits();
      first_size_in_bits + rest_size_in_bits
 }
 
-pub fn accumulate_chunk<FieldT>(it_begin: Vec<FieldT>::const_iterator,
-                                                                it_end:Vec<FieldT>::const_iterator,
+pub fn accumulate_chunk<FieldT>(&self,it: &[FieldT],
                                                                 offset:usize) ->Self
 {
-    let  acc_result = rest.accumulate::<FieldT>(it_begin, it_end, offset);
-    let  new_first = first + acc_result.first;
-    return accumulation_vector::<T>::new(new_first, acc_result.second);
+    let  acc_result = self.rest.accumulate::<FieldT>(it, offset);
+    let  new_first = self.0 + acc_result.0;
+    return accumulation_vector::<T>::new(new_first, acc_result.1);
 }
 }
 
-
+use std::fmt;
 impl<T> fmt::Display for accumulation_vector<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}",  
-    v.first ,
-     v.rest ,
+    self.first ,
+     self.rest ,
 )
     }
 }

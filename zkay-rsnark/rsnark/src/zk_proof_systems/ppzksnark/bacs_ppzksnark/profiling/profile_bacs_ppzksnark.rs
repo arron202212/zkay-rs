@@ -22,7 +22,7 @@ use  <cstdio>
 use ffec::common::profiling;
 
 use crate::common::default_types::bacs_ppzksnark_pp;
-use libsnark/relations/circuit_satisfaction_problems/bacs/examples/bacs_examples;
+use crate::relations::circuit_satisfaction_problems/bacs/examples/bacs_examples;
 use libsnark/zk_proof_systems/ppzksnark/bacs_ppzksnark/examples/run_bacs_ppzksnark;
 
 
@@ -32,13 +32,13 @@ int main(int argc, const char * argv[])
     default_bacs_ppzksnark_pp::init_public_params();
     ffec::start_profiling();
 
-    if (argc == 2 && strcmp(argv[1], "-v") == 0)
+    if argc == 2 && strcmp(argv[1], "-v") == 0
     {
         ffec::print_compilation_info();
         return 0;
     }
 
-    if (argc != 3)
+    if argc != 3
     {
         print!("usage: %s num_gates primary_input_size\n", argv[0]);
         return 1;

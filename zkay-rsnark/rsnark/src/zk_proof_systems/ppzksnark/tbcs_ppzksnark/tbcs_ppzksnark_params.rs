@@ -12,7 +12,7 @@
 //#ifndef TBCS_PPZKSNARK_PARAMS_HPP_
 // #define TBCS_PPZKSNARK_PARAMS_HPP_
 
-use libsnark/relations/circuit_satisfaction_problems/tbcs/tbcs;
+use crate::relations::circuit_satisfaction_problems/tbcs/tbcs;
 
 
 

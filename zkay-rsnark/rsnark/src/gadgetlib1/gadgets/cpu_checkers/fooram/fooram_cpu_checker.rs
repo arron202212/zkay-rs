@@ -30,11 +30,11 @@ use  <memory>
 
 use ffec::common::serialization;
 
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/bar_gadget;
-use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/components/fooram_protoboard;
-use libsnark/relations/ram_computations/memory/memory_interface;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
+use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
+use crate::relations::ram_computations/memory/memory_interface;
 
 
 
@@ -103,7 +103,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/fooram/fooram_cpu_checker;
+use crate::gadgetlib1::gadgets/cpu_checkers/fooram/fooram_cpu_checker;
 
 //#endif // FORAM_CPU_CHECKER_HPP_
 /** @file
@@ -153,7 +153,7 @@ fooram_cpu_checker<FieldT>::fooram_cpu_checker(fooram_protoboard<FieldT> &pb,
 
     one_as_addr.resize(next_pc_addr.size());
     one_as_addr[0].assign(self.pb, 1);
-    for (size_t i = 1; i < next_pc_addr.size(); ++i)
+    for i in 1..next_pc_addr.size()
     {
         one_as_addr[i].assign(self.pb, 0);
     }

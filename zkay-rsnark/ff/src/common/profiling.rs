@@ -1,5 +1,12 @@
 
-
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 //  *****************************************************************************
 //  Declaration of functions for profiling code blocks.
 
@@ -158,7 +165,7 @@ const  indentation:usize = 0;
 // void print_cumulative_times(const long long factor)
 // {
 //     print!("Dumping times:\n");
-//     for (auto& kv : cumulative_times)
+//     for kv in &cumulative_times
 //     {
 //         print_cumulative_time_entry(kv.first, factor);
 //     }
@@ -168,11 +175,11 @@ const  indentation:usize = 0;
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     print!("Dumping operation counts:\n");
-//     for (auto& msg : invocation_counts)
+//     for msg in &invocation_counts
 //     {
 //         print!("  %-45s: ", msg.first.c_str());
 //         bool first = true;
-//         for (auto& data_point : op_data_points)
+//         for data_point in &op_data_points
 //         {
 //             if only_fq && data_point.first.compare(0, 2, "Fq") != 0
 //             {
@@ -204,7 +211,7 @@ const  indentation:usize = 0;
 
 //     print!("(opcounts) = (");
 //     bool first = true;
-//     for (std::pair<std::string, long long*> p : op_data_points)
+//     for p in &op_data_points
 //     {
 //         if !first
 //         {
@@ -285,7 +292,7 @@ pub fn print_indent()
 
 // void op_profiling_enter(const std::string &msg)
 // {
-//     for (std::pair<std::string, const long long*> p : op_data_points)
+//     for p in &op_data_points
 //     {
 //         op_counts[std::make_pair(msg, p.first)] = *(p.second);
 //     }
@@ -349,7 +356,7 @@ pub fn leave_block(msg:&str,  indent:bool)
 //     last_cpu_times[msg] = (cpu_t - enter_cpu_times[msg]);
 
 // // #ifdef PROFILE_OP_COUNTS
-//     for (std::pair<std::string, long long*> p : op_data_points)
+//     for p in &op_data_points
 //     {
 //         cumulative_op_counts[std::make_pair(msg, p.first)] += *(p.second)-op_counts[std::make_pair(msg, p.first)];
 //     }

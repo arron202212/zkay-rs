@@ -12,10 +12,10 @@
 //#ifndef TINYRAM_PROTOBOARD_HPP_
 // #define TINYRAM_PROTOBOARD_HPP_
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/protoboard;
-use libsnark/relations/ram_computations/rams/ram_params;
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_aux;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::protoboard;
+use crate::relations::ram_computations/rams/ram_params;
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 
 
@@ -47,7 +47,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
 
 //#endif // TINYRAM_PROTOBOARD_HPP_
 /** @file

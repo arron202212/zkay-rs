@@ -1,3 +1,11 @@
+#![allow(dead_code)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
+#![allow(nonstandard_style)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(unused_braces)]
+#![allow(warnings, unused)]
 /** @file
  *****************************************************************************
 
@@ -28,48 +36,48 @@
 
 //#include <vector>
 
-namespace libfqfft {
+// //namespace libfqfft {
 
 /**
  * An evaluation domain.
  */
-template<typename FieldT>
-class evaluation_domain {
+// template<typename FieldT>
+pub trait evaluation_domain<FieldT> {
 
 
-    const size_t m;
+    const M:usize;
 
     /**
      * Construct an evaluation domain S of size m, if possible.
      *
      * (See the function get_evaluation_domain below.)
      */
-    evaluation_domain(const size_t m) : m(m) {};
+    // evaluation_domain(const size_t m) : m(m) {};
 
     /**
      * Get the idx-th element in S.
      */
-    virtual FieldT get_domain_element(const size_t idx) = 0;
+    fn   get_domain_element( idx:usize) ->FieldT;
 
     /**
      * Compute the FFT, over the domain S, of the vector a.
      */
-    virtual void FFT(std::vector<FieldT> &a) = 0;
+    fn   FFT(a:&Vec<FieldT>) ;
 
     /**
      * Compute the inverse FFT, over the domain S, of the vector a.
      */
-    virtual void iFFT(std::vector<FieldT> &a) = 0;
+    fn   iFFT(a:&Vec<FieldT>) ;
 
     /**
      * Compute the FFT, over the domain g*S, of the vector a.
      */
-    virtual void cosetFFT(std::vector<FieldT> &a, const FieldT &g) = 0;
+    fn   cosetFFT(a:&Vec<FieldT>, g:&FieldT) ;
 
     /**
      * Compute the inverse FFT, over the domain g*S, of the vector a.
      */
-    virtual void icosetFFT(std::vector<FieldT> &a, const FieldT &g) = 0;
+    fn   icosetFFT(a:&Vec<FieldT>, g:&FieldT) ;
 
     /**
      * Evaluate all Lagrange polynomials.
@@ -80,24 +88,24 @@ class evaluation_domain {
      * The output is a vector (b_{0},...,b_{m-1})
      * where b_{i} is the evaluation of L_{i,S}(z) at z = t.
      */
-    virtual std::vector<FieldT> evaluate_all_lagrange_polynomials(const FieldT &t) = 0;
+    fn  evaluate_all_lagrange_polynomials(t:&FieldT)->Vec<FieldT>  ;
 
     /**
      * Evaluate the vanishing polynomial of S at the field element t.
      */
-    virtual FieldT compute_vanishing_polynomial(const FieldT &t) = 0;
+    fn   compute_vanishing_polynomial(t:&FieldT)->FieldT ;
 
     /**
      * Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.
      */
-    virtual void add_poly_Z(const FieldT &coeff, std::vector<FieldT> &H) = 0;
+    fn   add_poly_Z(coeff:&FieldT, H:&Vec<FieldT>) ;
 
     /**
      * Multiply by the evaluation, on a coset of S, of the inverse of the vanishing polynomial of S.
      */
-    virtual void divide_by_Z_on_coset(std::vector<FieldT> &P) = 0;
-};
+    fn   divide_by_Z_on_coset(P:&Vec<FieldT>) ;
+}
 
-} // libfqfft
+// //} // libfqfft
 
 //#endif // EVALUATION_DOMAIN_HPP_

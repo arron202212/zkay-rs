@@ -9,7 +9,7 @@
 use  <cstddef>
 use  <vector>
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets/basic_gadgets;
 
 
 
@@ -59,7 +59,7 @@ public:
 };
 
 
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 //#endif // HASH_IO_HPP_
 /**
@@ -101,7 +101,7 @@ digest_variable<FieldT>::digest_variable(protoboard<FieldT> &pb,
 template<typename FieldT>
 void digest_variable<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < digest_size; ++i)
+    for i in 0..digest_size
     {
         generate_boolean_r1cs_constraint<FieldT>(self.pb, bits[i], FMT(self.annotation_prefix, " bits_{}", i));
     }
@@ -134,7 +134,7 @@ block_variable<FieldT>::block_variable(protoboard<FieldT> &pb,
                                        const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix)
 {
-    for (auto &part : parts)
+    for part in &parts
     {
         bits.insert(bits.end(), part.begin(), part.end());
     }

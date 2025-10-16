@@ -9,8 +9,8 @@
 
 use  <vector>
 
-use libsnark/gadgetlib1/gadgets/basic_gadgets;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 
 
@@ -37,7 +37,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/hashes/digest_selector_gadget;
+use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
 
 //#endif // DIGEST_SELECTOR_GADGET_HPP_
 /**
@@ -66,7 +66,7 @@ gadget<FieldT>(pb, annotation_prefix), digest_size(digest_size), input(input), i
 template<typename FieldT>
 void digest_selector_gadget<FieldT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < digest_size; ++i)
+    for i in 0..digest_size
     {
         /*
           input = is_right * right + (1-is_right) * left
@@ -83,16 +83,16 @@ void digest_selector_gadget<FieldT>::generate_r1cs_witness()
     is_right.evaluate(self.pb);
 
     assert!(self.pb.lc_val(is_right) == FieldT::one() || self.pb.lc_val(is_right) == FieldT::zero());
-    if (self.pb.lc_val(is_right) == FieldT::one())
+    if self.pb.lc_val(is_right) == FieldT::one()
     {
-        for (size_t i = 0; i < digest_size; ++i)
+        for i in 0..digest_size
         {
             self.pb.val(right.bits[i]) = self.pb.val(input.bits[i]);
         }
     }
     else
     {
-        for (size_t i = 0; i < digest_size; ++i)
+        for i in 0..digest_size
         {
             self.pb.val(left.bits[i]) = self.pb.val(input.bits[i]);
         }

@@ -14,9 +14,9 @@ use  <string>
 use ffec::common::profiling;
 
 use crate::common::default_types::ram_ppzksnark_pp;
-use libsnark/relations/ram_computations/rams/examples/ram_examples;
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
-use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/examples/run_ram_ppzksnark;
+use crate::relations::ram_computations/rams/examples/ram_examples;
+use crate::relations::ram_computations::rams::tinyram::tinyram_params;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
 
 
 
@@ -25,13 +25,13 @@ int main(int argc, const char * argv[])
     ram_ppzksnark_snark_pp<default_ram_ppzksnark_pp>::init_public_params();
     ffec::start_profiling();
 
-    if (argc == 2 && strcmp(argv[1], "-v") == 0)
+    if argc == 2 && strcmp(argv[1], "-v") == 0
     {
         ffec::print_compilation_info();
         return 0;
     }
 
-    if (argc != 6)
+    if argc != 6
     {
         print!("usage: %s word_size reg_count program_size input_size time_bound\n", argv[0]);
         return 1;

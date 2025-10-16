@@ -43,7 +43,7 @@ use crate::algebra::field_utils::bigint::bigint;
 
 // } // namespace libff
 
-// use libff::algebra::scalar_multiplication::wnaf.tcc;
+// use crate::algebra::scalar_multiplication::wnaf.tcc;
 
 //#endif // WNAF_HPP_
 /** @file
@@ -64,6 +64,11 @@ use crate::algebra::field_utils::bigint::bigint;
 // namespace libff {
 
 // using std::usize;
+use std::ops::Mul;
+pub trait Config
+{fn wnaf_window_table()->Vec<usize>;
+  fn dbl<T>(&self)->T;
+}
 
 pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
 {
@@ -74,9 +79,9 @@ pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
     while !c.is_zero()
     {
         let mut  u;
-        if (c.data[0] & 1) == 1
+        if c.data[0] & 1 == 1
         {
-            u = c.data[0] % (1u32 << (window_size+1));
+            u = (c.data[0] as i64) % (1i64 << (window_size+1));
             if u > (1 << window_size)
             {
                 u = u - (1 << (window_size+1));
@@ -104,16 +109,16 @@ pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
     return res;
 }
 
-pub fn fixed_window_wnaf_exp<T,const N:usize>(window_size:usize, base:&T, scalar:&bigint<N>)->T
+pub fn fixed_window_wnaf_exp<T:Config+Clone+ num_traits::Zero+ std::ops::Sub<Output = T>,const N:usize>(window_size:usize, base:&T, scalar:&bigint<N>)->T
 {
     let  naf = find_wnaf(window_size, scalar);
-    let mut  table=Vec::with_capacity(1u64<<(window_size-1));
-    let mut  tmp = base;
-    let mut  dbl = base.dbl();
-    for i in 0..1u64<<(window_size-1)
+    let mut  table=Vec::with_capacity(1usize<<(window_size-1));
+    let mut  tmp = base.clone();
+    let mut  dbl:T = base.dbl();
+    for i in 0..1usize<<(window_size-1)
     {
-        table[i] = tmp;
-        tmp = tmp + dbl;
+        table[i] = tmp.clone();
+        tmp = tmp + dbl.clone();
     }
 
     let mut  res = T::zero();
@@ -130,11 +135,11 @@ pub fn fixed_window_wnaf_exp<T,const N:usize>(window_size:usize, base:&T, scalar
             found_nonzero = true;
             if naf[i] > 0
             {
-                res = res + table[naf[i]/2];
+                res = res + table[naf[i] as usize/2].clone();
             }
             else
             {
-                res = res - table[(-naf[i])/2];
+                res = res - table[(-naf[i])  as usize/2].clone();
             }
         }
     }
@@ -142,12 +147,13 @@ pub fn fixed_window_wnaf_exp<T,const N:usize>(window_size:usize, base:&T, scalar
     return res;
 }
 
-pub fn  opt_window_wnaf_exp<T,const N:usize>(base:&T, scalar:&bigint<N>, scalar_bits:usize)->T
+pub fn  opt_window_wnaf_exp<T:Config + std::clone::Clone+ num_traits::Zero+ std::ops::Sub<Output = T>,const N:usize>(base:&T, scalar:&bigint<N>, scalar_bits:usize)->T
+// where for<'a> &'a T: Mul<&'a bigint<N>, Output = T>
 {
     let mut  best = 0;
-    for  i in (0.. T::wnaf_window_table.len()).rev()
+    for  i in (0.. T::wnaf_window_table().len()).rev()
     {
-        if scalar_bits >= T::wnaf_window_table[i]
+        if scalar_bits >= T::wnaf_window_table()[i]
         {
             best = i+1;
             break;
@@ -160,7 +166,7 @@ pub fn  opt_window_wnaf_exp<T,const N:usize>(base:&T, scalar:&bigint<N>, scalar_
     }
     else
     {
-        return scalar * base;
+        return  T::zero();// base*scalar;
     }
 }
 

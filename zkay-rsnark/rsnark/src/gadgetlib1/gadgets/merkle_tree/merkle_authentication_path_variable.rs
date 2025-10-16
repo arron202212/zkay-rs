@@ -9,8 +9,8 @@
 // #define MERKLE_AUTHENTICATION_PATH_VARIABLE_HPP_
 
 use crate::common::data_structures::merkle_tree;
-use libsnark/gadgetlib1/gadget;
-use libsnark/gadgetlib1/gadgets/hashes/hash_io;
+use crate::gadgetlib1::gadget;
+use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 
 
@@ -33,7 +33,7 @@ public:
 
 
 
-use libsnark/gadgetlib1/gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
 
 //#endif // MERKLE_AUTHENTICATION_PATH_VARIABLE_HPP
 /**
@@ -55,7 +55,7 @@ merkle_authentication_path_variable<FieldT, HashT>::merkle_authentication_path_v
     gadget<FieldT>(pb, annotation_prefix),
     tree_depth(tree_depth)
 {
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         left_digests.push(digest_variable<FieldT>(pb, HashT::get_digest_len(), FMT(annotation_prefix, " left_digests_{}", i)));
         right_digests.push(digest_variable<FieldT>(pb, HashT::get_digest_len(), FMT(annotation_prefix, " right_digests_{}", i)));
@@ -65,7 +65,7 @@ merkle_authentication_path_variable<FieldT, HashT>::merkle_authentication_path_v
 template<typename FieldT, typename HashT>
 void merkle_authentication_path_variable<FieldT, HashT>::generate_r1cs_constraints()
 {
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
         left_digests[i].generate_r1cs_constraints();
         right_digests[i].generate_r1cs_constraints();
@@ -77,9 +77,9 @@ void merkle_authentication_path_variable<FieldT, HashT>::generate_r1cs_witness(c
 {
     assert!(path.size() == tree_depth);
 
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
-        if (address & (1ul << (tree_depth-1-i)))
+        if address & (1ul << (tree_depth-1-i))
         {
             left_digests[i].generate_r1cs_witness(path[i]);
         }
@@ -94,9 +94,9 @@ template<typename FieldT, typename HashT>
 merkle_authentication_path merkle_authentication_path_variable<FieldT, HashT>::get_authentication_path(const size_t address) const
 {
     merkle_authentication_path result;
-    for (size_t i = 0; i < tree_depth; ++i)
+    for i in 0..tree_depth
     {
-        if (address & (1ul << (tree_depth-1-i)))
+        if address & (1ul << (tree_depth-1-i))
         {
             result.push(left_digests[i].get_digest());
         }

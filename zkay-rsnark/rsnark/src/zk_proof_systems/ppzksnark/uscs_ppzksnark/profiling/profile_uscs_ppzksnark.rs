@@ -30,7 +30,7 @@ use ffec::common::profiling;
 use ffec::common::utils;
 
 use crate::common::default_types::uscs_ppzksnark_pp;
-use libsnark/relations/constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
 use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
 
 
@@ -40,13 +40,13 @@ int main(int argc, const char * argv[])
     default_uscs_ppzksnark_pp::init_public_params();
     ffec::start_profiling();
 
-    if (argc == 2 && strcmp(argv[1], "-v") == 0)
+    if argc == 2 && strcmp(argv[1], "-v") == 0
     {
         ffec::print_compilation_info();
         return 0;
     }
 
-    if (argc != 3)
+    if argc != 3
     {
         print!("usage: %s num_constraints input_size\n", argv[0]);
         return 1;

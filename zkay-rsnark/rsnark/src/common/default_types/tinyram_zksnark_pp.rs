@@ -13,18 +13,18 @@
 // #define TINYRAM_PPZKSNARK_PP_HPP_
 
 use crate::common::default_types::r1cs_ppzkpcd_pp;
-use libsnark/relations/ram_computations/rams/tinyram/tinyram_params;
+use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 
 
 
-class default_tinyram_zksnark_pp {
-public:
-    type default_r1cs_ppzkpcd_pp PCD_pp;
-    type typename PCD_pp::scalar_field_A FieldT;
-    type ram_tinyram<FieldT> machine_pp;
+// class default_tinyram_zksnark_pp {
+// public:
+//     type default_r1cs_ppzkpcd_pp PCD_pp;
+//     type typename PCD_pp::scalar_field_A FieldT;
+//     type ram_tinyram<FieldT> machine_pp;
 
-    static void init_public_params();
-};
+//     static void init_public_params();
+// };
 
 
 
@@ -42,8 +42,8 @@ use crate::common::default_types::tinyram_zksnark_pp;
 
 
 
-void default_tinyram_zksnark_pp::init_public_params()
-{
-    PCD_pp::init_public_params();
-}
+// void default_tinyram_zksnark_pp::init_public_params()
+// {
+//     PCD_pp::init_public_params();
+// }
 

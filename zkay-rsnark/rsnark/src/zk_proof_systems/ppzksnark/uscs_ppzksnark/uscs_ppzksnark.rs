@@ -52,7 +52,7 @@ use ffec::algebra::curves::public_params;
 
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
-use libsnark/relations/constraint_satisfaction_problems/uscs/uscs;
+use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark_params;
 
 
@@ -456,7 +456,7 @@ use  <omp.h>
 //#endif
 
 use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
-use libsnark/relations/arithmetic_programs/ssp/ssp;
+use crate::relations::arithmetic_programs/ssp/ssp;
 
 
 
@@ -621,7 +621,7 @@ uscs_ppzksnark_verification_key<ppT> uscs_ppzksnark_verification_key<ppT>::dummy
 
     ffec::G1<ppT> base = ffec::Fr<ppT>::random_element() * ffec::G1<ppT>::one();
     ffec::G1_vector<ppT> v;
-    for (size_t i = 0; i < input_size; ++i)
+    for i in 0..input_size
     {
         v.push(ffec::Fr<ppT>::random_element() * ffec::G1<ppT>::one());
     }
@@ -666,7 +666,7 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constr
     assert!(Ht_table.size() == ssp_inst.degree() + 1);
     assert!(Xt_table.size() == ssp_inst.num_inputs() + 1);
     assert!(Vt_table_minus_Xt_table.size() == ssp_inst.num_variables() + 2 - ssp_inst.num_inputs() - 1);
-    for (size_t i = 0; i < ssp_inst.num_inputs()+1; ++i)
+    for i in 0..ssp_inst.num_inputs()+1
     {
         assert!(!Xt_table[i].is_zero());
     }
@@ -890,9 +890,9 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
     bool result = true;
 
     ffec::enter_block("Check if the proof is well-formed");
-    if (!proof.is_well_formed())
+    if !proof.is_well_formed()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("At least one of the proof components is not well-formed.\n");
         }
@@ -908,9 +908,9 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
     ffec::Fqk<ppT> V_1 = ppT::miller_loop(proof_V_g1_with_acc_precomp,    pvk.pp_G2_one_precomp);
     ffec::Fqk<ppT> V_2 = ppT::miller_loop(pvk.pp_G1_one_precomp, proof_V_g2_precomp);
     ffec::GT<ppT> V = ppT::final_exponentiation(V_1 * V_2.unitary_inverse());
-    if (V != ffec::GT::<ppT>::one())
+    if V != ffec::GT::<ppT>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Knowledge commitment for V invalid.\n");
         }
@@ -923,9 +923,9 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
     ffec::Fqk<ppT> SSP_1  = ppT::miller_loop(proof_V_g1_with_acc_precomp,  proof_V_g2_precomp);
     ffec::Fqk<ppT> SSP_2  = ppT::miller_loop(proof_H_g1_precomp, pvk.vk_Z_g2_precomp);
     ffec::GT<ppT> SSP = ppT::final_exponentiation(SSP_1.unitary_inverse() * SSP_2 * pvk.pairing_of_g1_and_g2);
-    if (SSP != ffec::GT::<ppT>::one())
+    if SSP != ffec::GT::<ppT>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("SSP divisibility check failed.\n");
         }
@@ -939,9 +939,9 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
     ffec::Fqk<ppT> alpha_V_1 = ppT::miller_loop(proof_V_g1_precomp, pvk.vk_alpha_tilde_g2_precomp);
     ffec::Fqk<ppT> alpha_V_2 = ppT::miller_loop(proof_alpha_V_g1_precomp, pvk.vk_tilde_g2_precomp);
     ffec::GT<ppT> alpha_V = ppT::final_exponentiation(alpha_V_1 * alpha_V_2.unitary_inverse());
-    if (alpha_V != ffec::GT::<ppT>::one())
+    if alpha_V != ffec::GT::<ppT>::one()
     {
-        if (!ffec::inhibit_profiling_info)
+        if !ffec::inhibit_profiling_info
         {
             ffec::print_indent(); print!("Same-coefficient check failed.\n");
         }
@@ -976,7 +976,7 @@ bool uscs_ppzksnark_online_verifier_strong_IC(const uscs_ppzksnark_processed_ver
     bool result = true;
     ffec::enter_block("Call to uscs_ppzksnark_online_verifier_strong_IC");
 
-    if (pvk.encoded_IC_query.domain_size() != primary_input.size())
+    if pvk.encoded_IC_query.domain_size() != primary_input.size()
     {
         ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.size(), pvk.encoded_IC_query.domain_size());
         result = false;

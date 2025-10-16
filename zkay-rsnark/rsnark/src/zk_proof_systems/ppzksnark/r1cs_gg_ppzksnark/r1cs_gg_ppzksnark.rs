@@ -44,7 +44,7 @@ References:
 // use  <memory>
 
 use ffec::algebra::curves::public_params;
-
+use ffec::common::serialization::OUTPUT_NEWLINE;
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
