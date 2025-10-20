@@ -171,7 +171,7 @@ pub fn  consume_OUTPUT_SEPARATOR(ins:&impl BufRead)
 pub fn  output_bool<W: ?Sized + Write> (out:&mut  BufWriter<W>, b:bool)
 {
     write!(out,"{}\n", b as u8);
-    // out << (b ? 1 : 0) << "\n";
+    // out << (if b { 1} else {0}) << "\n";
 }
 
 #[inline]
@@ -182,7 +182,7 @@ pub fn input_bool(ins:&impl BufRead, b:bool)
     // consume_newline(in);
     // assert!(tmp == 0 || tmp == 1);
 
-    // b = (tmp == 1 ? true : false);
+    // b = (tmp == 1) ;
 }
 
 #[inline]

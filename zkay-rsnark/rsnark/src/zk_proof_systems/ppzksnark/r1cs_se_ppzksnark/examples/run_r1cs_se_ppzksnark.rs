@@ -109,7 +109,7 @@ bool run_r1cs_se_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
     ffec::print_header("R1CS SEppzkSNARK Verifier");
     const bool ans = r1cs_se_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("* The verification result is: %s\n", if ans {"PASS"} else{"FAIL"});
 
     ffec::print_header("R1CS SEppzkSNARK Online Verifier");
     const bool ans2 = r1cs_se_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);

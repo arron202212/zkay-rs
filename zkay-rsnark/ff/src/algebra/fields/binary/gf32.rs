@@ -175,7 +175,7 @@
 // // repeatedly square pt, num_times. For use in inverse.
 // void square_multi(gf32* pt, int8_t num_times)
 // {
-//     for (int8_t i = 0; i < num_times; i++)
+//     for i in 0..num_times
 //     {
 //         (*pt).square();
 //     }

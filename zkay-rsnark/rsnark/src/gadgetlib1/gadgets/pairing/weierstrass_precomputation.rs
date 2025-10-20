@@ -519,7 +519,7 @@ precompute_G2_gadget_addition_step<ppT>::precompute_G2_gadget_addition_step(prot
     next(next),
     Q(Q)
 {
-    RY_minus_QY.reset(new Fqe_variable<ppT>(*(cur.RY) + *(Q.Y) * (!invert_Q ? -FieldT::one() : FieldT::one())));
+    RY_minus_QY.reset(new Fqe_variable<ppT>(*(cur.RY) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()})));
 
     RX_minus_QX.reset(new Fqe_variable<ppT>(*(cur.RX) + *(Q.X) * (-FieldT::one())));
     compute_gamma.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *RX_minus_QX, *RY_minus_QY, FMT(annotation_prefix, " compute_gamma")));

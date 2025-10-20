@@ -42,7 +42,7 @@ use  <numeric>
 use crate::gadgetlib1::gadgets/delegated_ra_memory/memory_load_gadget;
 use crate::gadgetlib1::gadgets/delegated_ra_memory/memory_load_store_gadget;
 use crate::relations::ram_computations/memory/delegated_ra_memory;
-use crate::relations::ram_computations/rams/ram_params;
+use crate::relations::ram_computations::rams::ram_params;
 use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
 use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
 
@@ -335,7 +335,7 @@ void ram_pcd_message<ramT>::print_bits(const ffec::bit_vector &bv) const
 {
     for b in &bv
     {
-        print!("%d", b ? 1 : 0);
+        print!("{}", b as u8);
     }
     print!("\n");
 }
@@ -356,7 +356,7 @@ void ram_pcd_message<ramT>::print() const
     print!("  pc_addr_initial: {}\n", pc_addr_initial);
     print!("  cpu_state_initial: ");
     print_bits(cpu_state_initial);
-    print!("  has_accepted: %s\n", has_accepted ? "YES" : "no");
+    print!("  has_accepted: %s\n", if has_accepted  {"YES" }else{ "no"});
 }
 
 template<typename ramT>
@@ -468,7 +468,7 @@ template<typename ramT>
 r1cs_variable_assignment<ram_base_field<ramT> > ram_pcd_local_data<ramT>::as_r1cs_variable_assignment() const
 {
     r1cs_variable_assignment<FieldT> result;
-    result.push(is_halt_case ? FieldT::one() : FieldT::zero());
+    result.push(if is_halt_case  {FieldT::one()} else {FieldT::zero()});
     return result;
 }
 
@@ -769,7 +769,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
 
     self.pb.val(next->type) = FieldT::one();
     self.pb.val(self.arity) = FieldT::one();
-    self.pb.val(is_base_case) = (self.pb.val(cur->type) == FieldT::zero() ? FieldT::one() : FieldT::zero());
+    self.pb.val(is_base_case)=  if (self.pb.val(cur->type) == FieldT::zero() {FieldT::one()} else{FieldT::zero())};
 
     self.pb.val(zero) = FieldT::zero();
     /*
@@ -795,7 +795,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
       that cur.root = cur.root_initial
     */
     const bool base_case = (incoming_message_values[0]->type == 0);
-    self.pb.val(is_base_case) = base_case ? FieldT::one() : FieldT::zero();
+    self.pb.val(is_base_case)=  if base_case {FieldT::one()} else{FieldT::zero()};
 
     initialize_cur_cpu_state->generate_r1cs_witness();
     initialize_prev_pc_addr->generate_r1cs_witness();
@@ -820,7 +820,7 @@ void ram_compliance_predicate_handler<ramT>::generate_r1cs_witness(const std::ve
       that CPU accepted on (cur, temp)
       that load-then-store was correctly handled
     */
-    self.pb.val(do_halt) = ram_local_data_value->is_halt_case ? FieldT::one() : FieldT::zero();
+    self.pb.val(do_halt)=  if ram_local_data_value->is_halt_case {FieldT::one()} else{FieldT::zero()};
     self.pb.val(is_not_halt_case) = FieldT::one() - self.pb.val(do_halt);
 
     // that instruction fetch was correctly executed

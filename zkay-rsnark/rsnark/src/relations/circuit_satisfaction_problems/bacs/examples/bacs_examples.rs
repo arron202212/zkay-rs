@@ -144,7 +144,7 @@ bacs_example<FieldT> generate_bacs_example(const size_t primary_input_size,
             /* make gate a circuit output and fix */
             gate.is_circuit_output = true;
             const var_index_t var_idx = std::rand() % (1 + primary_input_size + std::min(num_gates-num_outputs, i));
-            const FieldT var_val = (var_idx == 0 ? FieldT::one() : all_vals[var_idx-1]);
+            const FieldT var_val = if var_idx == 0 {FieldT::one()} else{all_vals[var_idx-1]};
 
             if std::rand() % 2 == 0
             {

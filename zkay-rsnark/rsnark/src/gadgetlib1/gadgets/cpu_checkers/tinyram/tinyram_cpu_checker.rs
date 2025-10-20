@@ -96,7 +96,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
+// use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
 
 //#endif // TINYRAM_CPU_CHECKER_HPP_
 /** @file
@@ -368,7 +368,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     const size_t opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
     for i in 0..1ul<<self.pb.ap.opcode_width()
     {
-        self.pb.val(opcode_indicators[i]) = (i == opcode_val ? FieldT::one() : FieldT::zero());
+        self.pb.val(opcode_indicators[i]) = if i == opcode_val {FieldT::one()} else{FieldT::zero()};
     }
 
     /* execute the ALU */
@@ -406,7 +406,7 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     else
     {
         const bool access_is_word0 = (self.pb.val(*memory_subaddress->bits.rbegin()) == FieldT::zero());
-        const size_t loaded_word = (prev_doubleword >> (access_is_word0 ? 0 : self.pb.ap.w)) & ((1ul << self.pb.ap.w) - 1);
+        const size_t loaded_word = if prev_doubleword >> (access_is_word0 {0} else{self.pb.ap.w}) & ((1ul << self.pb.ap.w) - 1);
         self.pb.val(instruction_results[tinyram_opcode_LOADW]) = FieldT(loaded_word); /* does not hurt even for non-memory instructions */
         self.pb.val(memory_subcontents) = FieldT(loaded_word);
     }
@@ -466,8 +466,8 @@ void tinyram_cpu_checker<FieldT>::generate_r1cs_witness_other(tinyram_input_tape
     }
 
     /* finally set has_accepted to 1 if both the opcode is ANSWER and arg2val is 0 */
-    self.pb.val(next_has_accepted) = (self.pb.val(opcode_indicators[tinyram_opcode_ANSWER]) == FieldT::one() &&
-                                       self.pb.val(arg2val->packed) == FieldT::zero()) ? FieldT::one() : FieldT::zero();
+    self.pb.val(next_has_accepted) = if (self.pb.val(opcode_indicators[tinyram_opcode_ANSWER]) == FieldT::one() &&
+                                       self.pb.val(arg2val->packed) == FieldT::zero())  {FieldT::one() }else {FieldT::zero()};
 }
 
 template<typename FieldT>
@@ -489,7 +489,7 @@ void tinyram_cpu_checker<FieldT>::dump() const
            tinyram_opcode_names[static_cast<tinyram_opcode>(opcode_val)].c_str(),
            desidx.get_field_element_from_bits(self.pb).as_ulong(),
            arg1idx.get_field_element_from_bits(self.pb).as_ulong(),
-           (self.pb.val(arg2_is_imm) == FieldT::one() ? "" : "r"),
+           if self.pb.val(arg2_is_imm) == FieldT::one() {""} else{"r"},
            arg2idx.get_field_element_from_bits(self.pb).as_ulong());
 }
 

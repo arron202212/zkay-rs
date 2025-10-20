@@ -134,7 +134,7 @@ void test_set_commitment_gadget()
 {
     const size_t digest_len = HashT::get_digest_len();
     const size_t max_set_size = 16;
-    const size_t value_size = (HashT::get_block_len() > 0 ? HashT::get_block_len() : 10);
+    const size_t value_size =  (if HashT::get_block_len() > 0 {HashT::get_block_len()} else{10});
 
     set_commitment_accumulator<HashT> accumulator(max_set_size, value_size);
 

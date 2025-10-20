@@ -45,7 +45,7 @@
 use crate::gadgetlib1::gadgets/routing/as_waksman_routing_gadget;
 use libsnark/reductions/ram_to_r1cs/gadgets/memory_checker_gadget;
 use libsnark/reductions/ram_to_r1cs/gadgets/trace_lines;
-use crate::relations::ram_computations/rams/ram_params;
+use crate::relations::ram_computations::rams::ram_params;
 
 
 
@@ -468,7 +468,7 @@ void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT
         const size_t address = self.pb.val(unrouted_memory_lines[i]->address->packed).as_ulong();
 
         const auto it = std::upper_bound(mem_pairs.begin(), mem_pairs.end(), std::make_pair(address, timestamp));
-        const size_t prev = (it == mem_pairs.end() ? 0 : it->second);
+        const size_t prev = if it == mem_pairs.end() {0} else{it->second};
         pi.set(prev, i);
     }
 
@@ -496,7 +496,7 @@ void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT
     if !ffec::inhibit_profiling_info
     {
         ffec::print_indent();
-        print!("* Protoboard satisfied: %s\n", (self.pb.is_satisfied() ? "YES" : "no"));
+        print!("* Protoboard satisfied: %s\n",  (if self.pb.is_satisfied() {"YES"} else{"no"}));
     }
 }
 

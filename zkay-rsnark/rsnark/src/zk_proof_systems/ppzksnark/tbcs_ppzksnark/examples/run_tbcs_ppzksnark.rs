@@ -106,7 +106,7 @@ bool run_tbcs_ppzksnark(const tbcs_example &example,
     ffec::print_header("TBCS ppzkSNARK Verifier");
     bool ans = tbcs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("* The verification result is: %s\n", if ans {"PASS"} else{"FAIL"});
 
     ffec::print_header("TBCS ppzkSNARK Online Verifier");
     bool ans2 = tbcs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);

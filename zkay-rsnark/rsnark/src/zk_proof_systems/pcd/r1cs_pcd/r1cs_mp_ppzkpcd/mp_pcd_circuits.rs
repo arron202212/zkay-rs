@@ -291,7 +291,7 @@ mp_compliance_step_pcd_circuit_maker<ppT>::mp_compliance_step_pcd_circuit_maker(
     commitment.reset(new set_commitment_variable<FieldT, CRH_with_bit_out_gadget<FieldT> >(pb, commitment_size, "commitment"));
 
     ffec::print_indent(); print!("* %s perform same type optimization for compliance predicate with type {}\n",
-                           (compliance_predicate.relies_on_same_type_inputs ? "Will" : "Will NOT"),
+                           if compliance_predicate.relies_on_same_type_inputs {"Will"} else{"Will NOT"},
                            compliance_predicate.type);
     if compliance_predicate.relies_on_same_type_inputs
     {
@@ -388,7 +388,7 @@ mp_compliance_step_pcd_circuit_maker<ppT>::mp_compliance_step_pcd_circuit_maker(
         }
 
         proof.push(r1cs_ppzksnark_proof_variable<ppT>(pb, FMT("", "proof_{}", i)));
-        const r1cs_ppzksnark_verification_key_variable<ppT> &vk_to_be_used = (compliance_predicate.relies_on_same_type_inputs ? translation_step_vks[0] : translation_step_vks[i]);
+        const r1cs_ppzksnark_verification_key_variable<ppT> &vk_to_be_used = if compliance_predicate.relies_on_same_type_inputs {translation_step_vks[0]} else{translation_step_vks[i]};
         verifier.push(r1cs_ppzksnark_verifier_gadget<ppT>(pb,
                                                                   vk_to_be_used,
                                                                   verifier_input[i],
@@ -531,9 +531,9 @@ void mp_compliance_step_pcd_circuit_maker<ppT>::generate_r1cs_constraints()
                 auto it = compliance_predicate.accepted_input_types.begin();
                 for (size_t i = 0; i < compliance_predicate.accepted_input_types.size(); ++i, ++it)
                 {
-                    pb.add_r1cs_constraint(r1cs_constraint<FieldT>((i == 0 ? common_type : common_type_check_aux[i-1]),
+                    pb.add_r1cs_constraint(r1cs_constraint<FieldT>(( if i == 0  {common_type} else{ common_type_check_aux[i-1]}),
                                                                    common_type - FieldT(*it),
-                                                                   (i == compliance_predicate.accepted_input_types.size() - 1 ? 0 * ONE : common_type_check_aux[i])),
+                                                                   (if i == compliance_predicate.accepted_input_types.size() - 1  {0 * ONE }else {common_type_check_aux[i]})),
                                            FMT("", "common_type_in_prescribed_set_%zu_must_equal_{}", i, *it));
                 }
             }
@@ -623,14 +623,14 @@ void mp_compliance_step_pcd_circuit_maker<ppT>::generate_r1cs_witness(const set_
             }
         }
 
-        self.pb.val(membership_check_results[0]) = (self.pb.val(common_type).is_zero() ? FieldT::zero() : FieldT::one());
+        self.pb.val(membership_check_results[0]) = if self.pb.val(common_type).is_zero() {FieldT::zero()} else{FieldT::one()};
         membership_proofs[0].generate_r1cs_witness(vk_membership_proofs[nonzero_type_idx]);
         membership_checkers[0].generate_r1cs_witness();
 
         auto it = compliance_predicate.accepted_input_types.begin();
         for (size_t i = 0; i < compliance_predicate.accepted_input_types.size(); ++i, ++it)
         {
-            pb.val(common_type_check_aux[i]) = ((i == 0 ? pb.val(common_type) : pb.val(common_type_check_aux[i-1])) *
+            pb.val(common_type_check_aux[i]) = ((if i == 0 ? {pb.val(common_type)} else {pb.val(common_type_check_aux[i-1])}) *
                                                 (pb.val(common_type) - FieldT(*it)));
         }
     }
@@ -638,7 +638,7 @@ void mp_compliance_step_pcd_circuit_maker<ppT>::generate_r1cs_witness(const set_
     {
         for i in 0..membership_checkers.size()
         {
-            self.pb.val(membership_check_results[i]) = (self.pb.val(incoming_message_types[i]).is_zero() ? FieldT::zero() : FieldT::one());
+            self.pb.val(membership_check_results[i])=  if (self.pb.val(incoming_message_types[i]).is_zero() {FieldT::zero()} else{FieldT::one())};
             membership_proofs[i].generate_r1cs_witness(vk_membership_proofs[i]);
             membership_checkers[i].generate_r1cs_witness();
         }

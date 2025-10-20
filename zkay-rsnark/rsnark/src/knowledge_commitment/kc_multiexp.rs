@@ -191,7 +191,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     size_t nonzero = 0;
 //     for i in 0..v.size()
 //     {
-//         nonzero += (v[i].is_zero() ? 0 : 1);
+//         nonzero += if v[i].is_zero() {0} else{1};
 //     }
 
 //     std::min(nonzero:size_t num_chunks = std::max((size_t)1, suggested_num_chunks));
@@ -214,7 +214,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 
 //     for i in 0..v.size()
 //     {
-//         cnt += (v[i].is_zero() ? 0 : 1);
+//         cnt += if v[i].is_zero() {0} else{1};
 //         if cnt == chunk_size && chunkno < num_chunks
 //         {
 //             chunk_pos[chunkno] = i;
@@ -231,7 +231,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     for i in 0..num_chunks
 //     {
 //         tmp[i] = kc_batch_exp_internal<T1, T2, FieldT>(scalar_size, T1_window, T2_window, T1_table, T2_table, T1_coeff, T2_coeff, v,
-//                                                        chunk_pos[i], chunk_pos[i+1], i == num_chunks - 1 ? last_chunk : chunk_size);
+//                                                        chunk_pos[i], chunk_pos[i+1], if i == num_chunks - 1  {last_chunk} else {chunk_size});
 // // #ifdef USE_MIXED_ADDITION
 //         ffec::batch_to_special<knowledge_commitment<T1, T2>>(tmp[i].values);
 // //#endif

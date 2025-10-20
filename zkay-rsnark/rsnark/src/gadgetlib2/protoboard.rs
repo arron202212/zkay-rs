@@ -10,90 +10,92 @@
 //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
 // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
 
-use  <string>
+// use  <string>
 
 use crate::gadgetlib2::constraint;
 use crate::gadgetlib2::pp;
 use crate::gadgetlib2::variable;
 
 // #define ASSERT_CONSTRAINTS_SATISFIED(pb) \
-    ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED))
+    // ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED))
 
 // #define ASSERT_CONSTRAINTS_NOT_SATISFIED(pb) \
-    ASSERT_FALSE(pb->isSatisfied(PrintOptions::NO_DBG_PRINT))
+    // ASSERT_FALSE(pb->isSatisfied(PrintOptions::NO_DBG_PRINT))
 
-namespace gadgetlib2 {
+// namespace gadgetlib2 {
 
-class ProtoboardParams; // Forward declaration
-type ::std::shared_ptr<const ProtoboardParams> ParamsCPtr;
+// class ProtoboardParams; // Forward declaration
+// type ::std::shared_ptr<const ProtoboardParams> ParamsCPtr;
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                       class Protoboard                     ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
-class Protoboard {
-protected:
-    VariableAssignment assignment_;
-    ConstraintSystem constraintSystem_;
-    size_t numInputs_;
-    ParamsCPtr pParams_; // TODO try to refactor this out and use inheritance for different types
+// /*************************************************************************************************/
+// /*************************************************************************************************/
+// /*******************                                                            ******************/
+// /*******************                       class Protoboard                     ******************/
+// /*******************                                                            ******************/
+// /*************************************************************************************************/
+// /*************************************************************************************************/
+pub struct Protoboard {
+// protected:
+    assignment_:VariableAssignment,
+    constraintSystem_:ConstraintSystem,
+    numInputs_:size_t,
+    pParams_:ParamsCPtr, 
+fieldType_:FieldType,
+    // TODO try to refactor this out and use inheritance for different types
                          // of protoboards, for instance TinyRAMProtoboard : public Protoboard
                          // This may not be trivial because of Gadget multiple inheritance scheme
+}
+//     Protoboard(const FieldType& fieldType, ParamsCPtr pParams);
+// public:
+//    
+//     static ProtoboardPtr create(const FieldType& fieldType, ParamsCPtr pParams = NULL) {
+//         return ProtoboardPtr(new Protoboard(fieldType, pParams));
+//     }
+//     size_t numVars() const {return assignment_.size();} // TODO change to take num from constraintSys_
+//     //size_t numVars() const {return constraintSystem_.getUsedVariables().size();} // TODO change to take num from constraintSys_
 
-    Protoboard(const FieldType& fieldType, ParamsCPtr pParams);
-public:
-    const FieldType fieldType_;
-    static ProtoboardPtr create(const FieldType& fieldType, ParamsCPtr pParams = NULL) {
-        return ProtoboardPtr(new Protoboard(fieldType, pParams));
-    }
-    size_t numVars() const {return assignment_.size();} // TODO change to take num from constraintSys_
-    //size_t numVars() const {return constraintSystem_.getUsedVariables().size();} // TODO change to take num from constraintSys_
+//     size_t numInputs() const {return numInputs_;} // TODO Madars How do we book keep this?
+//     ParamsCPtr params() const {return pParams_;}
+//     FElem& val(var:&Variable);
+//     FElem val(lc:&LinearCombination) const;
+//     void setValuesAsBitArray(varArray:&VariableArray, srcValue:usize);
+//     void setDualWordValue(dualWord:&DualWord, srcValue:usize);
+//     void setMultipackedWordValue(multipackedWord:&MultiPackedWord, srcValue:usize);
 
-    size_t numInputs() const {return numInputs_;} // TODO Madars How do we book keep this?
-    ParamsCPtr params() const {return pParams_;}
-    FElem& val(const Variable& var);
-    FElem val(const LinearCombination& lc) const;
-    void setValuesAsBitArray(const VariableArray& varArray, const size_t srcValue);
-    void setDualWordValue(const DualWord& dualWord, const size_t srcValue);
-    void setMultipackedWordValue(const MultiPackedWord& multipackedWord, const size_t srcValue);
-
-    // The following 3 methods are purposely not overloaded to the same name in order to reduce
-    // programmer error. We want the programmer to explicitly code what type of constraint
-    // she wants.
-    void addRank1Constraint(const LinearCombination& a,
-                            const LinearCombination& b,
-                            const LinearCombination& c,
-                            const ::std::string& name);
-    void addGeneralConstraint(const Polynomial& a,
-                              const Polynomial& b,
-                              const ::std::string& name);
-    /// adds a constraint of the form (a == 0)
-    void addUnaryConstraint(const LinearCombination& a, const ::std::string& name);
-    bool isSatisfied(const PrintOptions& printOnFail = PrintOptions::NO_DBG_PRINT);
-    bool flagIsSet(const FlagVariable& flag) const {return val(flag) == 1;}
-    void setFlag(const FlagVariable& flag, bool newFlagState = true);
-    void clearFlag(const FlagVariable& flag) {val(flag) = 0;}
-    void flipFlag(const FlagVariable& flag) {val(flag) = 1 - val(flag);}
-    void enforceBooleanity(const Variable& var);
-    ::std::string annotation() const;
-    ConstraintSystem constraintSystem() const {return constraintSystem_;}
-    VariableAssignment assignment() const {return assignment_;}
-    bool dualWordAssignmentEqualsValue(
-            const DualWord& dualWord,
-            const size_t expectedValue,
-            const PrintOptions& printOption = PrintOptions::NO_DBG_PRINT) const;
-    bool multipackedWordAssignmentEqualsValue(
-            const MultiPackedWord& multipackedWord,
-            const size_t expectedValue,
-            const PrintOptions& printOption = PrintOptions::NO_DBG_PRINT) const;
-    bool unpackedWordAssignmentEqualsValue(
-            const UnpackedWord& unpackedWord,
-            const size_t expectedValue,
-            const PrintOptions& printOption = PrintOptions::NO_DBG_PRINT) const;
-};
+//     // The following 3 methods are purposely not overloaded to the same name in order to reduce
+//     // programmer error. We want the programmer to explicitly code what type of constraint
+//     // she wants.
+//     void addRank1Constraint(a:&LinearCombination,
+//                             b:&LinearCombination,
+//                             c:&LinearCombination,
+//                             name:&String);
+//     void addGeneralConstraint(a:&Polynomial,
+//                               b:&Polynomial,
+//                               name:&String);
+//     /// adds a constraint of the form (a == 0)
+//     void addUnaryConstraint(a:&LinearCombination, name:&String);
+//     bool isSatisfied(printOnFail:PrintOptions = PrintOptions::NO_DBG_PRINT);
+//     bool flagIsSet(flag:&FlagVariable) const {return val(flag) == 1;}
+//     void setFlag(flag:&FlagVariable, bool newFlagState = true);
+//     void clearFlag(flag:&FlagVariable) {val(flag) = 0;}
+//     void flipFlag(flag:&FlagVariable) {val(flag) = 1 - val(flag);}
+//     void enforceBooleanity(var:&Variable);
+//     ::std::string annotation() const;
+//     ConstraintSystem constraintSystem() const {return constraintSystem_;}
+//     VariableAssignment assignment() const {return assignment_;}
+//     bool dualWordAssignmentEqualsValue(
+//             dualWord:&DualWord,
+//             expectedValue:usize,
+//             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+//     bool multipackedWordAssignmentEqualsValue(
+//             multipackedWord:&MultiPackedWord,
+//             expectedValue:usize,
+//             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+//     bool unpackedWordAssignmentEqualsValue(
+//             unpackedWord:&UnpackedWord,
+//             expectedValue:usize,
+//             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+// };
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
@@ -110,12 +112,12 @@ public:
     example a Protoboard specific to TinyRAM will have a class ArchParams which will inherit from
     this class.
 */
-class ProtoboardParams {
-public:
-    virtual ~ProtoboardParams() = 0;
-};
+// class ProtoboardParams {
+// public:
+//     virtual ~ProtoboardParams() = 0;
+// };
 
-} // namespace gadgetlib2
+// } // namespace gadgetlib2
 
 //#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
 /** @file
@@ -127,15 +129,15 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <cstdio>
+// use  <cstdio>
 
-use crate::gadgetlib2::protoboard;
+// use crate::gadgetlib2::protoboard;
 
-using ::std::string;
-using ::std::cout;
-using ::std::endl;
+// using ::std::string;
+// using ::std::cout;
+// using ::std::endl;
 
-namespace gadgetlib2 {
+// namespace gadgetlib2 {
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -144,123 +146,108 @@ namespace gadgetlib2 {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+impl Protoboard
+{
+pub fn new(fieldType:&FieldType,  pParams:ParamsCPtr)
+    ->Self {
+Self{numInputs_:0, pParams_:pParams, fieldType_:fieldType}
+}
 
-Protoboard::Protoboard(const FieldType& fieldType, ParamsCPtr pParams)
-    : numInputs_(0), pParams_(pParams), fieldType_(fieldType) {}
 
-
-FElem& Protoboard::val(const Variable &var) {
-    FElem& retval = assignment_[var];
-    GADGETLIB_ASSERT(retval.fieldType() == fieldType_ || retval.fieldType() == AGNOSTIC,
-                    GADGETLIB2_FMT("Assigned field element of incorrect field type in Variable \"%s\"",
-                        var.name().c_str()));
+ pub fn val(&mut self,var:&Variable)->&mut FElem{
+    let retval = &assignment_[var];
+    assert!(retval.fieldType() == fieldType_ || retval.fieldType() == AGNOSTIC,
+                    "Assigned field element of incorrect field type in Variable \"{}\"",
+                        var.name());
     return retval;
 }
 
-FElem Protoboard::val(const LinearCombination& lc) const {
+ pub fn val(lc:&LinearCombination) ->FElem {
     return lc.eval(assignment_);
 }
 
-void Protoboard::setValuesAsBitArray(const VariableArray& varArray, const size_t srcValue) {
-    GADGETLIB_ASSERT(varArray.size() >= Log2ceil(srcValue),
-                 GADGETLIB2_FMT("Variable array of size %u too small to hold value %u. Array must be of size "
-                     "at least %u", varArray.size(), srcValue, Log2ceil(srcValue)));
-    size_t i = 0;
-    for(i = 0; i < Log2ceil(srcValue); ++i) {
-        val(varArray[i]) = srcValue & (1u<<i) ? 1 : 0 ;
+pub fn  setValuesAsBitArray(varArray:&VariableArray, srcValue:usize) {
+    assert!(varArray.size() >= Log2ceil(srcValue),
+                 "Variable array of size {} too small to hold value {}. Array must be of size at least {}", varArray.size(), srcValue, Log2ceil(srcValue));
+    let  i = 0;
+    for i in 0.. Log2ceil(srcValue) {
+        val(varArray[i]) = if srcValue & (1usize<<i)  {1} else{ 0} ;
     }
-    for(; i < varArray.size(); ++i) {
-        val(varArray[i]) = 0 ;
+    for j in i.. varArray.size() {
+        val(varArray[j]) = 0 ;
     }
 }
 
-void Protoboard::setDualWordValue(const DualWord& dualWord, const size_t srcValue) {
+pub fn  setDualWordValue(dualWord:&DualWord, srcValue:usize) {
     setMultipackedWordValue(dualWord.multipacked(), srcValue);
     setValuesAsBitArray(dualWord.unpacked(), srcValue);
 }
 
-void Protoboard::setMultipackedWordValue(const MultiPackedWord& multipackedWord,
-                                         const size_t srcValue) {
+pub fn  setMultipackedWordValue(multipackedWord:&MultiPackedWord,
+                                         srcValue:usize)->eyre::Result<()> {
     if fieldType_ == R1P {
-        GADGETLIB_ASSERT(multipackedWord.size() == 1, "Multipacked word size mismatch in R1P");
+        assert!(multipackedWord.size() == 1, "Multipacked word size mismatch in R1P");
         val(multipackedWord[0]) = srcValue;
     } else {
-        GADGETLIB_FATAL("Unknown protoboard type in Protoboard::setMultipackedWordValue");
+        eyre::bail!("Unknown protoboard type in pub fn setMultipackedWordValue");
     }
+    Ok(())
 }
 
 // The following 3 methods are purposely not overloaded to the same name in order to reduce
 // programmer error. We want the programmer to explicitly code what type of constraint
 // she wants.
-void Protoboard::addRank1Constraint(const LinearCombination& a,
-                                    const LinearCombination& b,
-                                    const LinearCombination& c,
-                                    const ::std::string& name) {
+pub fn  addRank1Constraint(a:&LinearCombination,
+                                    b:&LinearCombination,
+                                    c:&LinearCombination,
+                                    name:&String) {
     constraintSystem_.addConstraint(Rank1Constraint(a,b,c,name));
 }
 
-void Protoboard::addGeneralConstraint(const Polynomial& a,
-                                      const Polynomial& b,
-                                      const ::std::string& name) {
+pub fn  addGeneralConstraint(a:&Polynomial,
+                                      b:&Polynomial,
+                                      name:&String) {
     constraintSystem_.addConstraint(PolynomialConstraint(a,b,name));
 }
 
-void Protoboard::addUnaryConstraint(const LinearCombination& a, const ::std::string& name) {
+pub fn  addUnaryConstraint(a:&LinearCombination, name:&String) {
     addRank1Constraint(a, 1, 0, name);
 }
 
-bool Protoboard::isSatisfied(const PrintOptions& printOnFail) {
+ pub fn isSatisfied(printOnFail:PrintOptions)->bool {
     return constraintSystem_.isSatisfied(assignment_, printOnFail);
 }
 
-void Protoboard::setFlag(const FlagVariable& flag, bool newFlagState) {
-    val(flag) = newFlagState ? 1 : 0;
+pub fn  setFlag(flag:&FlagVariable,  newFlagState:bool) {
+    val(flag) = if newFlagState { 1} else {0};
 }
 
-void Protoboard::enforceBooleanity(const Variable& var) {
-    addRank1Constraint(var , var - 1, 0 , GADGETLIB2_FMT("enforceBooleanity(%s)",var.name().c_str()));
+pub fn  enforceBooleanity(var:&Variable) {
+    addRank1Constraint(var , var - 1, 0 , format!("enforceBooleanity({})",var.name()));
 }
 
-string Protoboard::annotation() const {
-#   ifdef DEBUG
-        string retVal = constraintSystem_.annotation();
-        retVal += "Variable Assignments:\n";
-        for(const auto& assignmentPair : assignment_) {
-            const string varName = assignmentPair.first.name();
-            const string varAssignedValue = assignmentPair.second.asString();
-            retVal +=  varName + ": " + varAssignedValue + "\n";
-        }
-        return retVal;
-#   else // not DEBUG
-        return "";
-#   endif
+ pub fn annotation() ->String {
+// #   ifdef DEBUG
+//         string retVal = constraintSystem_.annotation();
+//         retVal += "Variable Assignments:\n";
+//         for(const auto& assignmentPair : assignment_) {
+//             const string varName = assignmentPair.first.name();
+//             const string varAssignedValue = assignmentPair.second.asString();
+//             retVal +=  varName + ": " + varAssignedValue + "\n";
+//         }
+//         return retVal;
+// #   else // not DEBUG
+        return "".to_owned();
+// #   endif
 }
 
-bool multipackedAndUnpackedValuesDisagree(const bool multipackedEqualsValue,
-                                          const bool unpackedEqualsValue) {
-    return multipackedEqualsValue != unpackedEqualsValue;
-}
-
-void printInformativeNoticeMessage(const bool multipackedEqualsValue,
-                                   const bool unpackedEqualsValue) {
-    if multipackedEqualsValue == true && unpackedEqualsValue == false {
-        cout << "NOTE: multipacked value equals expected value but unpacked value does not!"
-             << endl;
-    } else {
-        GADGETLIB_ASSERT(multipackedEqualsValue == false && unpackedEqualsValue == true,
-                     "printInformativeNoticeMessage(...) has been called incorrectly");
-        cout << "NOTE: unpacked value equals expected value but multipacked value does not!"
-             << endl;
-    }
-}
-
-bool Protoboard::dualWordAssignmentEqualsValue(const DualWord& dualWord,
-                                               const size_t expectedValue,
-                                               const PrintOptions& printOption) const {
-    bool multipackedEqualsValue = multipackedWordAssignmentEqualsValue(dualWord.multipacked(),
+ pub fn dualWordAssignmentEqualsValue(dualWord:&DualWord,
+                                               expectedValue:usize,
+                                               printOption:PrintOptions) ->bool {
+    let  multipackedEqualsValue = multipackedWordAssignmentEqualsValue(dualWord.multipacked(),
                                                                        expectedValue,
                                                                        printOption);
-    bool unpackedEqualsValue = unpackedWordAssignmentEqualsValue(dualWord.unpacked(),
+    let unpackedEqualsValue = unpackedWordAssignmentEqualsValue(dualWord.unpacked(),
                                                                  expectedValue,
                                                                  printOption);
     if multipackedAndUnpackedValuesDisagree(multipackedEqualsValue, unpackedEqualsValue) {
@@ -269,17 +256,12 @@ bool Protoboard::dualWordAssignmentEqualsValue(const DualWord& dualWord,
     return multipackedEqualsValue && unpackedEqualsValue;
 }
 
-bool expectedToPrintValues(const bool boolValue, const PrintOptions& printOption) {
-    return ((boolValue == true && printOption == PrintOptions::DBG_PRINT_IF_TRUE) ||
-            (boolValue == false && printOption == PrintOptions::DBG_PRINT_IF_FALSE));
-}
-
-bool Protoboard::multipackedWordAssignmentEqualsValue(const MultiPackedWord& multipackedWord,
-                                                      const size_t expectedValue,
-                                                      const PrintOptions& printOption) const {
-    bool retval = true;
+ pub fn multipackedWordAssignmentEqualsValue(multipackedWord:&MultiPackedWord,
+                                                      expectedValue:usize,
+                                                      printOption:PrintOptions) ->eyre::Result<bool> {
+    let mut  retval = true;
     if fieldType_ == R1P {
-        GADGETLIB_ASSERT(multipackedWord.size() == 1, "R1P multipacked size mismatch");
+        assert!(multipackedWord.size() == 1, "R1P multipacked size mismatch");
         if val(multipackedWord[0]) == expectedValue {
             retval = true;
         } else {
@@ -291,18 +273,18 @@ bool Protoboard::multipackedWordAssignmentEqualsValue(const MultiPackedWord& mul
             cout << "Actual value is: " << val(multipackedWord[0]) << endl;
         }
     } else {
-        GADGETLIB_FATAL("Unknown field type in Protoboard::multipackedWordAssignmentEqualsValue(...)");
+        eyre::bail!("Unknown field type in pub fn multipackedWordAssignmentEqualsValue(...)");
     }
-    return retval;
+    return Ok(retval);
 }
 
-bool Protoboard::unpackedWordAssignmentEqualsValue(const UnpackedWord& unpackedWord,
-                                                   const size_t expectedValue,
-                                                   const PrintOptions& printOption) const {
-    bool retval = true;
-    size_t expectedValueCopy = expectedValue;
-    for(size_t i = 0; i < unpackedWord.size(); ++i) {
-        if val(unpackedWord[i]) != (expectedValueCopy & 1u) {
+ pub fn unpackedWordAssignmentEqualsValue(unpackedWord:&UnpackedWord,
+                                                   expectedValue:usize,
+                                                   printOption:PrintOptions) ->bool {
+    let  retval = true;
+    let  expectedValueCopy = expectedValue;
+    for  i in  0.. unpackedWord.size() {
+        if val(unpackedWord[i]) != (expectedValueCopy & 1usize) {
             retval = false;
             break;
         }
@@ -312,21 +294,42 @@ bool Protoboard::unpackedWordAssignmentEqualsValue(const UnpackedWord& unpackedW
         retval = false;
     }
     if expectedToPrintValues(retval, printOption) {
-        cout << "Expected value for unpacked word \"" << unpackedWord.name()
-             << "\" is: " << expectedValue << endl;
-        cout << "Actual values are: " << endl;
-        for(size_t i = 0; i < unpackedWord.size(); ++i) {
-            cout << "bit " << i << ": " << val(unpackedWord[i]) << endl;
+        println!("Expected value for unpacked word \"{}\" {expectedValue}",unpackedWord.name() );
+        println!("Actual values are: ");
+        for i in  0..unpackedWord.size() {
+           println!("bit {i} : {}" , val(unpackedWord[i]));
         }
     }
     return retval;
 }
-
+}
 
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
 
-ProtoboardParams::~ProtoboardParams() {}
+// ProtoboardParams::~ProtoboardParams() {}
 
-} // namespace gadgetlib2
+// } // namespace gadgetlib2
+
+ pub fn multipackedAndUnpackedValuesDisagree(multipackedEqualsValue:bool,
+                                          unpackedEqualsValue:bool)->bool {
+    return multipackedEqualsValue != unpackedEqualsValue;
+}
+
+ pub fn printInformativeNoticeMessage(multipackedEqualsValue:bool,
+                                   unpackedEqualsValue:bool) {
+    if multipackedEqualsValue  && !unpackedEqualsValue  {
+        println!("NOTE: multipacked value equals expected value but unpacked value does not!");
+    } else {
+        assert!(!multipackedEqualsValue  && unpackedEqualsValue ,
+                     "printInformativeNoticeMessage(...) has been called incorrectly");
+       println!( "NOTE: unpacked value equals expected value but multipacked value does not!");
+            
+    }
+}
+
+pub fn  expectedToPrintValues(boolValue:bool, printOption:PrintOptions)->bool {
+    return ((boolValue  && printOption == PrintOptions::DBG_PRINT_IF_TRUE) ||
+            (!boolValue  && printOption == PrintOptions::DBG_PRINT_IF_FALSE));
+}

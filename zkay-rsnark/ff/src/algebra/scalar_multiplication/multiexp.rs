@@ -620,9 +620,9 @@ pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone+Config+AsBigint+ std::op
             &vec[i*one..vec.len().min((i+1)*one)],&scalar[i*one..scalar.len().min((i+1)*one)]);
             //      multi_exp_inner<T, FieldT, Method>(
             //  vec_start + i*one,
-            //  (i == chunks-1 ? vec_end : vec_start + (i+1)*one),
+            //  if i == chunks-1 {vec_end} else{vec_start + (i+1)*one},
             //  scalar_start + i*one,
-            //  (i == chunks-1 ? scalar_end : scalar_start + (i+1)*one));
+            //  if i == chunks-1 {scalar_end} else{scalar_start + (i+1)*one)};
     }
 
     let mut  finals = T::zero();

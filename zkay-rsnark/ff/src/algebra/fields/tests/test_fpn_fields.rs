@@ -46,7 +46,7 @@ void test_Frobenius()
     FieldT a = FieldT::random_element();
     EXPECT_EQ(a.Frobenius_map(0), a);
     FieldT a_q = a ^ FieldT::field_char();
-    for (size_t power = 1; power < 10; power++)
+    for power in 1..10
     {
         const FieldT a_qi = a.Frobenius_map(power);
         EXPECT_EQ(a_qi, a_q);
@@ -59,7 +59,7 @@ template<typename FieldT>
 void test_sqrt()
 {
     // sqrt() is very slow for bls12_381 fields, so this is only run 2 times.
-    for (size_t i = 0; i < 2; i++)
+    for i in 0..2
     {
         FieldT a = FieldT::random_element();
         FieldT a_sq = a.squared();
@@ -186,7 +186,7 @@ template<typename Fp4T>
 void test_Fp4_toom_cook()
 {
     using FieldT = typename Fp4T::my_Fp;
-    for (size_t i = 0; i < 100; i++)
+    for i in 0..100
     {
         const Fp4T a = Fp4T::random_element();
         const Fp4T b = Fp4T::random_element();

@@ -742,7 +742,7 @@ void brute_force_arithmetic_gadget(const size_t w,
     opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
     for i in 0..1ul<<ap.opcode_width()
     {
-        pb.val(opcode_indicators[i]) = (i == opcode ? FieldT::one() : FieldT::zero());
+        pb.val(opcode_indicators[i]) = if i == opcode {FieldT::one()} else{FieldT::zero()};
     }
 
     word_variable_gadget<FieldT> desval(pb, "desval");
@@ -766,7 +766,7 @@ void brute_force_arithmetic_gadget(const size_t w,
 
         for f in 0..=1
         {
-            pb.val(flag) = (f ? FieldT::one() : FieldT::zero());
+            pb.val(flag) = if f {FieldT::one()} else{FieldT::zero()};
 
             for arg1 in 0..(1u << w)
             {
@@ -801,7 +801,7 @@ void brute_force_arithmetic_gadget(const size_t w,
 //#endif
                     assert!(pb.is_satisfied());
                     assert!(pb.val(result) == FieldT(res));
-                    assert!(pb.val(result_flag) == (res_f ? FieldT::one() : FieldT::zero()));
+                    assert!(pb.val(result_flag) == (if res_f  {FieldT::one()} else {FieldT::zero()}));
                 }
             }
         }
@@ -843,7 +843,7 @@ void ALU_and_gadget<FieldT>::generate_r1cs_witness()
         bool b1 = self.pb.val(self.arg1val.bits[i]) == FieldT::one();
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
 
-        self.pb.val(self.res_word[i]) = (b1 && b2 ? FieldT::one() : FieldT::zero());
+        self.pb.val(self.res_word[i]) = if b1 && b2 {FieldT::one()} else{FieldT::zero()};
     }
 
     pack_result->generate_r1cs_witness_from_bits();
@@ -908,7 +908,7 @@ void ALU_or_gadget<FieldT>::generate_r1cs_witness()
         bool b1 = self.pb.val(self.arg1val.bits[i]) == FieldT::one();
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
 
-        self.pb.val(self.res_word[i]) = (b1 || b2 ? FieldT::one() : FieldT::zero());
+        self.pb.val(self.res_word[i]) = if b1 || b2 {FieldT::one()} else{FieldT::zero()};
     }
 
     pack_result->generate_r1cs_witness_from_bits();
@@ -974,7 +974,7 @@ void ALU_xor_gadget<FieldT>::generate_r1cs_witness()
         bool b1 = self.pb.val(self.arg1val.bits[i]) == FieldT::one();
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
 
-        self.pb.val(self.res_word[i]) = (b1 ^ b2 ? FieldT::one() : FieldT::zero());
+        self.pb.val(self.res_word[i]) = if b1 ^ b2 {FieldT::one()} else{FieldT::zero()};
     }
 
     pack_result->generate_r1cs_witness_from_bits();
@@ -1038,7 +1038,7 @@ void ALU_not_gadget<FieldT>::generate_r1cs_witness()
     {
         bool b2 = self.pb.val(self.arg2val.bits[i]) == FieldT::one();
 
-        self.pb.val(self.res_word[i]) = (!b2 ? FieldT::one() : FieldT::zero());
+        self.pb.val(self.res_word[i]) = if !b2 {FieldT::one()} else{FieldT::zero()};
     }
 
     pack_result->generate_r1cs_witness_from_bits();
@@ -1291,7 +1291,7 @@ void test_ALU_cmov_gadget(const size_t w)
                                                                    ALU_cmov_gadget<FieldT>* {
                                                                        return new ALU_cmov_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_cmov_gadget");
                                                                    },
-                                                                   [w] (size_t des, bool f, size_t x, size_t y) -> size_t { return f ? y : des; },
+                                                                   [w] (size_t des, bool f, size_t x, size_t y) -> size_t { return if f  {y} else {des}; },
                                                                    [w] (size_t des, bool f, size_t x, size_t y) -> bool { return f; });
     ffec::print_time("cmov tests successful");
 }
@@ -1919,7 +1919,7 @@ void test_ALU_udiv_gadget(const size_t w)
                                                                                                               "ALU_divmod_gadget");
                                                                      },
                                                                      [w] (size_t des, bool f, size_t x, size_t y) -> size_t {
-                                                                         return (y == 0 ? 0 : x / y);
+                                                                         return if y == 0 {0} else{x / y};
                                                                      },
                                                                      [w] (size_t des, bool f, size_t x, size_t y) -> bool {
                                                                          return (y == 0);
@@ -1950,7 +1950,7 @@ void test_ALU_umod_gadget(const size_t w)
                                                                                                               "ALU_divmod_gadget");
                                                                      },
                                                                      [w] (size_t des, bool f, size_t x, size_t y) -> size_t {
-                                                                         return (y == 0 ? 0 : x % y);
+                                                                         return if y == 0 {0} else{x % y};
                                                                      },
                                                                      [w] (size_t des, bool f, size_t x, size_t y) -> bool {
                                                                          return (y == 0);

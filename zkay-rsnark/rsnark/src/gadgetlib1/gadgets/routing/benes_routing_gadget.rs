@@ -251,7 +251,7 @@ void benes_routing_gadget<FieldT>::generate_r1cs_witness(const integer_permutati
 
             if num_subpackets > 1
             {
-                self.pb.val(benes_switch_bits[column_idx][packet_idx]) = FieldT(routing[column_idx][packet_idx] ? 1 : 0);
+                self.pb.val(benes_switch_bits[column_idx][packet_idx]) = FieldT( if routing[column_idx][packet_idx] {1} else {0});
             }
 
             for subpacket_idx in 0..num_subpackets
@@ -292,7 +292,7 @@ void test_benes_routing_gadget(const size_t num_packets, const size_t packet_siz
 
         for bit_idx in 0..packet_size
         {
-            pb.val(randbits[packet_idx][bit_idx]) = (rand() % 2) ? FieldT::one() : FieldT::zero();
+            pb.val(randbits[packet_idx][bit_idx])=  if (rand() % 2) {FieldT::one()} else{FieldT::zero()};
         }
     }
     ffec::print_time("generated bits to be routed");

@@ -15,8 +15,8 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-r1cs_constraint_system<ffec::Fr<ffec::default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
-r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
+// r1cs_constraint_system<Fr<default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
+// r1cs_variable_assignment<Fr<default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
 
 
 
@@ -30,82 +30,83 @@ r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment
 
 use crate::gadgetlib2::adapters;
 use crate::gadgetlib2::integration;
-
-
-
-linear_combination<ffec::Fr<ffec::default_ec_pp> > convert_gadgetlib2_linear_combination(const gadgetlib2::GadgetLibAdapter::linear_combination_t &lc)
+use crate::gadgetlib2::adapters::GadgetLibAdapter::linear_combination_t;
+use crate::relations::linear_combination;
+use crate::gadgetlib2::Protoboard;
+use crate::gadgetlib2::adapters::GadgetLibAdapter;
+ type FieldT=Fr<default_ec_pp> ;
+    type GLA=GadgetLibAdapter ;
+pub fn convert_gadgetlib2_linear_combination(lc:&linear_combination_t)->linear_combination<Fr<default_ec_pp> > 
 {
-    type ffec::Fr<ffec::default_ec_pp> FieldT;
-    type gadgetlib2::GadgetLibAdapter GLA;
 
-    linear_combination<FieldT> result = lc.second * variable<FieldT>(0);
-    for lt in &lc.first
+
+    let mut  result = lc.2 * variable::<FieldT>(0);
+    for lt in &lc.0
     {
-        result = result + lt.second * variable<FieldT>(lt.first+1);
+        result = result + lt.2 * variable::<FieldT>(lt.0+1);
     }
 
     return result;
 }
 
-r1cs_constraint_system<ffec::Fr<ffec::default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb)
+pub fn get_constraint_system_from_gadgetlib2(pb:&Protoboard)->r1cs_constraint_system<Fr<default_ec_pp> > 
 {
-    type ffec::Fr<ffec::default_ec_pp> FieldT;
-    type gadgetlib2::GadgetLibAdapter GLA;
 
-    r1cs_constraint_system<FieldT> result;
-    const GLA adapter;
 
-    GLA::protoboard_t converted_pb = adapter.convert(pb);
-    const int num_constraints = converted_pb.first.size();
-    result.constraints.resize(num_constraints);
-    print!("Num constraints: %d\n", num_constraints);
+    let mut  result=r1cs_constraint_system::<FieldT>();
+    let   adapter=GLA();
+
+    let  converted_pb = adapter.convert(pb);
+    let num_constraints = converted_pb.0.len();
+    result.constraints.resize(num_constraints,FieldT::zero());
+    print!("Num constraints: {}\n", num_constraints);
 
 // #ifdef MULTICORE
-#pragma omp parallel default(none) shared(converted_pb, result), firstprivate(num_constraints)
-  {
-#pragma omp single nowait
-    {
+// #pragma omp parallel default(none) shared(converted_pb, result), firstprivate(num_constraints)
+//   {
+// #pragma omp single nowait
+//     {
 //#endif
       for i in 0..num_constraints {
-        const auto& constr = converted_pb.first[i];
+        let  constr = converted_pb.0[i];
 // #ifdef MULTICORE
-#pragma omp task default(none) shared(result, constr, i)
-        {
+// #pragma omp task default(none) shared(result, constr, i)
+//         {
 //#endif
-          result.constraints[i].a = convert_gadgetlib2_linear_combination(std::get<0>(constr));
-          result.constraints[i].b = convert_gadgetlib2_linear_combination(std::get<1>(constr));
-          result.constraints[i].c = convert_gadgetlib2_linear_combination(std::get<2>(constr));
+          result.constraints[i].a = convert_gadgetlib2_linear_combination(constr[0]);
+          result.constraints[i].b = convert_gadgetlib2_linear_combination(constr[1]);
+          result.constraints[i].c = convert_gadgetlib2_linear_combination(constr[2]);
         }
 // #ifdef MULTICORE
-      }
-    }
-#pragma omp taskwait
-  }
+//       }
+//     }
+// #pragma omp taskwait
+//   }
 //#endif
 
     //The number of variables is the highest index created.
     //TODO: If there are multiple protoboards, or variables not assigned to a protoboard, then getNextFreeIndex() is *not* the number of variables! See also in get_variable_assignment_from_gadgetlib2.
-    const size_t num_variables = GLA::getNextFreeIndex();
+    let  num_variables = GLA::getNextFreeIndex();
     result.primary_input_size = pb.numInputs();
     result.auxiliary_input_size = num_variables - pb.numInputs();
     return result;
 }
 
-r1cs_variable_assignment<ffec::Fr<ffec::default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb)
+pub fn  get_variable_assignment_from_gadgetlib2(pb:&Protoboard)->r1cs_variable_assignment<Fr<default_ec_pp> >
 {
-    type ffec::Fr<ffec::default_ec_pp> FieldT;
-    type gadgetlib2::GadgetLibAdapter GLA;
+    // type Fr<default_ec_pp> FieldT;
+    // type gadgetlib2::GadgetLibAdapter GLA;
 
     //The number of variables is the highest index created. This is also the required size for the assignment vector.
     //TODO: If there are multiple protoboards, or variables not assigned to a protoboard, then getNextFreeIndex() is *not* the number of variables! See also in get_constraint_system_from_gadgetlib2.
-    const size_t num_vars = GLA::getNextFreeIndex();
-    const GLA adapter;
-    r1cs_variable_assignment<FieldT> result(num_vars, FieldT::zero());
-    VariableAssignment assignment = pb.assignment();
+    let  num_vars = GLA::getNextFreeIndex();
+    let   adapter=GLA;
+    let result=r1cs_variable_assignment::<FieldT> ::new(num_vars, FieldT::zero());
+    let  assignment = pb.assignment();
 
     //Go over all assigned values of the protoboard, from every variable-value pair, put the value in the variable.index place of the new assignment.
-    for(VariableAssignment::iterator iter = assignment.begin(); iter != assignment.end(); ++iter){
-    	result[GLA::getVariableIndex(iter->first)] = adapter.convert(iter->second);
+    for  iter in  &assignment{
+    	result[GLA::getVariableIndex(iter.0)] = adapter.convert(iter.1);
     }
 
     return result;

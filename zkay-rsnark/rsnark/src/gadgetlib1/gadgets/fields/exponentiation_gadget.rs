@@ -143,7 +143,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
         {
             doubling_steps[dbl_id].reset(new Fpk_sqr_gadgetT<FpkT>(pb,
                                                                    *intermediate[intermed_id],
-                                                                   (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]),
+                                                                   if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
                                                                    FMT(annotation_prefix, " doubling_steps_{}", dbl_count)));
             intermed_id+=1;
             dbl_id+=1;
@@ -159,7 +159,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
                 addition_steps[add_id].reset(new Fpk_mul_gadgetT<FpkT>(pb,
                                                                        *intermediate[intermed_id],
                                                                        elt,
-                                                                       (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]),
+                                                                       if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
                                                                        FMT(annotation_prefix, " addition_steps_{}", dbl_count)));
                 add_id+=1;
                 intermed_id+=1;
@@ -168,7 +168,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
             {
                 /* next = cur / elt, i.e. next * elt = cur */
                 subtraction_steps[sub_id].reset(new Fpk_mul_gadgetT<FpkT>(pb,
-                                                                          (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]),
+                                                                          if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
                                                                           elt,
                                                                           *intermediate[intermed_id],
                                                                           FMT(annotation_prefix, " subtraction_steps_{}", dbl_count)));
@@ -231,7 +231,7 @@ void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT
                 const FpkT elt_val = elt.get_element();
                 const FpkT next_val = cur_val * elt_val.inverse();
 
-                (intermed_id + 1 == intermed_count ? result : *intermediate[intermed_id+1]).generate_r1cs_witness(next_val);
+                 (if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]}).generate_r1cs_witness(next_val);
 
                 subtraction_steps[sub_id]->generate_r1cs_witness();
 

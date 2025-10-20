@@ -198,7 +198,7 @@ void pb_variable_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb, const ffe
     assert!(self.size() == bits.size());
     for i in 0..bits.size()
     {
-        pb.val((*this)[i]) = (bits[i] ? FieldT::one() : FieldT::zero());
+        pb.val((*this)[i]) = if bits[i] {FieldT::one()} else{FieldT::zero()};
     }
 }
 
@@ -208,7 +208,7 @@ void pb_variable_array<FieldT>::fill_with_bits_of_field_element(protoboard<Field
     const ffec::bigint<FieldT::num_limbs> rint = r.as_bigint();
     for i in 0..self.size()
     {
-        pb.val((*this)[i]) = rint.test_bit(i) ? FieldT::one() : FieldT::zero();
+        pb.val((*this)[i])=  if rint.test_bit(i) {FieldT::one()} else{FieldT::zero()};
     }
 }
 
@@ -323,7 +323,7 @@ FieldT pb_linear_combination<FieldT>::constant_term() const
 {
     if is_variable
     {
-        return (index == 0 ? FieldT::one() : FieldT::zero());
+        return if index == 0 {FieldT::one()} else{FieldT::zero()};
     }
     else
     {
@@ -364,7 +364,7 @@ void pb_linear_combination_array<FieldT>::fill_with_bits(protoboard<FieldT> &pb,
     assert!(self.size() == bits.size());
     for i in 0..bits.size()
     {
-        pb.lc_val((*this)[i]) = (bits[i] ? FieldT::one() : FieldT::zero());
+        pb.lc_val((*this)[i]) = if bits[i] {FieldT::one()} else{FieldT::zero()};
     }
 }
 
@@ -374,7 +374,7 @@ void pb_linear_combination_array<FieldT>::fill_with_bits_of_field_element(protob
     const ffec::bigint<FieldT::num_limbs> rint = r.as_bigint();
     for i in 0..self.size()
     {
-        pb.lc_val((*this)[i]) = rint.test_bit(i) ? FieldT::one() : FieldT::zero();
+        pb.lc_val((*this)[i])=  if rint.test_bit(i) {FieldT::one()} else{FieldT::zero()};
     }
 }
 

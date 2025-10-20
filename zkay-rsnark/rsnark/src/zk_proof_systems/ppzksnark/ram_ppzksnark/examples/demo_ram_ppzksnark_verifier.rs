@@ -102,7 +102,7 @@ int main(int argc, const char * argv[])
     const bool bit = ram_ppzksnark_verifier<default_tinyram_ppzksnark_pp>(vk, boot_trace, pi);
 
     print!("================================================================================\n");
-    print!("The verification result is: %s\n", (bit ? "PASS" : "FAIL"));
+    print!("The verification result is: %s\n", if bit {"PASS"} else{"FAIL"});
     print!("================================================================================\n");
     std::ofstream vr_file(verification_result_fn);
     vr_file << bit << "\n";

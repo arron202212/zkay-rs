@@ -125,7 +125,7 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
 
         const FieldT x_coeff = FieldT(std::rand());
         const FieldT y_coeff = FieldT(std::rand());
-        const FieldT val = (std::rand() % 2 == 0 ? FieldT::one() : -FieldT::one());
+        const FieldT val = if std::rand() % 2 == 0 {FieldT::one()} else{-FieldT::one()};
         const FieldT z_coeff = (val - x_coeff * full_variable_assignment[x] - y_coeff * full_variable_assignment[y]) * full_variable_assignment[z].inverse();
 
         uscs_constraint<FieldT> constr;
@@ -176,8 +176,8 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
         lastvar+=1;
 
         /* chose two random bits and XOR them together */
-        const size_t u = (i == 0 ? std::rand() % num_inputs : std::rand() % i);
-        const size_t v = (i == 0 ? std::rand() % num_inputs : std::rand() % i);
+        const size_t u = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
+        const size_t v = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
 
         uscs_constraint<FieldT> constr;
         constr.add_term(u+1, 1);

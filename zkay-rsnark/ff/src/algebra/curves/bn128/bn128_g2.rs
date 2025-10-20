@@ -492,7 +492,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_G2 &g)
     bn128_G2 gcopy(g);
     gcopy.to_affine_coordinates();
 
-    out << (gcopy.is_zero() ? '1' : '0') << OUTPUT_SEPARATOR;
+    out << if gcopy.is_zero() {'1'} else{'0'} << OUTPUT_SEPARATOR;
 
 // #ifdef NO_PT_COMPRESSION
     /* no point compression case */
@@ -514,7 +514,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_G2 &g)
     out.write((char*) &gcopy.X.a_, sizeof(gcopy.X.a_));
     out.write((char*) &gcopy.X.b_, sizeof(gcopy.X.b_));
 //#endif
-    out << OUTPUT_SEPARATOR << ((((unsigned char*)&gcopy.Y.a_)[0] & 1) != 0 ? '1' : '0');
+    out << OUTPUT_SEPARATOR << if (((unsigned char*)&gcopy.Y.a_)[0] & 1) != 0 {'1'} else{'0'};
 //#endif
 
     return out;

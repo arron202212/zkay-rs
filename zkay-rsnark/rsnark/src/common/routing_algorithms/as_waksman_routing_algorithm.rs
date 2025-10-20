@@ -173,7 +173,7 @@ size_t as_waksman_switch_output(const size_t num_packets, const size_t row_offse
 {
     size_t relpos = row_idx - row_offset;
     assert!(relpos % 2 == 0 && relpos + 1 < num_packets);
-    return row_offset + (relpos / 2) + (use_top ? 0 : as_waksman_top_height(num_packets));
+    return row_offset + (relpos / 2) + (if use_top { 0 }else {as_waksman_top_height(num_packets)});
 }
 
 /**
@@ -190,7 +190,7 @@ size_t as_waksman_switch_input(const size_t num_packets, const size_t row_offset
 
 size_t as_waksman_num_columns(const size_t num_packets)
 {
-    return (num_packets > 1 ? 2*ffec::log2(num_packets)-1 : 0);
+    return if num_packets > 1 {2*ffec::log2(num_packets)-1} else{0};
 }
 
 /**
@@ -665,9 +665,9 @@ bool valid_as_waksman_routing(const integer_permutation &permutation, const as_w
                 auto it = routing[column_idx].find(packet_idx);
                 auto it2 = routing[column_idx].find(packet_idx-1);
                 assert!((it != routing[column_idx].end()) ^ (it2 != routing[column_idx].end()));
-                const bool switch_setting = (it != routing[column_idx].end() ? it->second : it2->second);
+                const bool switch_setting = if it != routing[column_idx].end() {it->second} else{it2->second};
 
-                routed_packet_idx = (switch_setting ? neighbors[column_idx][packet_idx].second : neighbors[column_idx][packet_idx].first);
+                routed_packet_idx = if switch_setting {neighbors[column_idx][packet_idx].second} else{neighbors[column_idx][packet_idx].first};
             }
 
             nextperm.set(routed_packet_idx, curperm.get(packet_idx));

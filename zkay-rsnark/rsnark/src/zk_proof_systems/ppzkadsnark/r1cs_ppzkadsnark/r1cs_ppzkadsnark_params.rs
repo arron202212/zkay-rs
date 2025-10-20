@@ -12,45 +12,45 @@
 //#ifndef R1CS_PPZKADSNARK_PARAMS_HPP_
 // #define R1CS_PPZKADSNARK_PARAMS_HPP_
 
-use ffec::algebra::curves::public_params;
+use algebra::curves::public_params;
 
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-class labelT {
-public:
-    unsigned char label_bytes[16];
-    labelT() {};
-};
+pub struct labelT {
+// public:
+    label_bytes:[u8;16],
+    // labelT() {};
+}
 
 /**
  * Below are various template aliases (used for convenience).
  */
 
-template<typename r1cs_ppzkadsnark_ppT>
-using snark_pp = typename r1cs_ppzkadsnark_ppT::snark_pp;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_constraint_system = r1cs_constraint_system<ffec::Fr<snark_pp<r1cs_ppzkadsnark_ppT>>>;
+type snark_pp<r1cs_ppzkadsnark_ppT> =  r1cs_ppzkadsnark_ppT::snark_pp;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_primary_input = r1cs_primary_input<ffec::Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_auxiliary_input = r1cs_auxiliary_input<ffec::Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
+type r1cs_ppzkadsnark_constraint_system<r1cs_ppzkadsnark_ppT> = r1cs_constraint_system<Fr<snark_pp<r1cs_ppzkadsnark_ppT>>>;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_skT = typename r1cs_ppzkadsnark_ppT::skT;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_vkT = typename r1cs_ppzkadsnark_ppT::vkT;
+type r1cs_ppzkadsnark_primary_input<r1cs_ppzkadsnark_ppT> = r1cs_primary_input<Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_sigT = typename r1cs_ppzkadsnark_ppT::sigT;
 
-template<typename r1cs_ppzkadsnark_ppT>
-using r1cs_ppzkadsnark_prfKeyT = typename r1cs_ppzkadsnark_ppT::prfKeyT;
+type r1cs_ppzkadsnark_auxiliary_input<r1cs_ppzkadsnark_ppT> = r1cs_auxiliary_input<Fr<snark_pp<r1cs_ppzkadsnark_ppT>> >;
+
+
+type r1cs_ppzkadsnark_skT<r1cs_ppzkadsnark_ppT> =  r1cs_ppzkadsnark_ppT::skT;
+
+
+type r1cs_ppzkadsnark_vkT<r1cs_ppzkadsnark_ppT> =  r1cs_ppzkadsnark_ppT::vkT;
+
+
+type r1cs_ppzkadsnark_sigT<r1cs_ppzkadsnark_ppT> =  r1cs_ppzkadsnark_ppT::sigT;
+
+
+type r1cs_ppzkadsnark_prfKeyT<r1cs_ppzkadsnark_ppT> =  r1cs_ppzkadsnark_ppT::prfKeyT;
 
 
 

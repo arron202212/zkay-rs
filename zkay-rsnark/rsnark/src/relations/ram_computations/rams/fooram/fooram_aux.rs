@@ -12,40 +12,41 @@
 //#ifndef FOORAM_AUX_HPP_
 // #define FOORAM_AUX_HPP_
 
-use  <iostream>
-use  <vector>
+// use  <iostream>
+// use  <vector>
 
 use ffec::common::utils;
 
-use crate::relations::ram_computations/memory/memory_interface;
+use crate::relations::ram_computations::memory::memory_interface;
 
 
 
-type std::vector<size_t> fooram_program;
-type std::vector<size_t> fooram_input_tape;
-type typename std::vector<size_t>::const_iterator fooram_input_tape_iterator;
+type fooram_program=std::vector<usize> ;
+type fooram_input_tape=std::vector<usize> ;
+type fooram_input_tape_iterator = std::vector<usize>::const_iterator ;
 
-class fooram_architecture_params {
-public:
-    size_t w;
-    fooram_architecture_params(const size_t w=16);
+pub struct  fooram_architecture_params {
+// public:
+     w:usize,
 
-    size_t num_addresses() const;
-    size_t address_size() const;
-    size_t value_size() const;
-    size_t cpu_state_size() const;
-    size_t initial_pc_addr() const;
+    // fooram_architecture_params(const usize w=16);
 
-    memory_contents initial_memory_contents(const fooram_program &program,
-                                            const fooram_input_tape &primary_input) const;
+    // usize num_addresses() const;
+    // usize address_size() const;
+    // usize value_size() const;
+    // usize cpu_state_size() const;
+    // usize initial_pc_addr() const;
 
-    ffec::bit_vector initial_cpu_state() const;
-    void print() const;
-    bool operator==(const fooram_architecture_params &other) const;
+    // memory_contents initial_memory_contents(program:&fooram_program,
+    //                                         primary_input:&fooram_input_tape) const;
 
-    friend std::ostream& operator<<(std::ostream &out, const fooram_architecture_params &ap);
-    friend std::istream& operator>>(std::istream &in, fooram_architecture_params &ap);
-};
+    // ffec::bit_vector initial_cpu_state() const;
+    // void print() const;
+    // bool operator==(other:&fooram_architecture_params) const;
+
+    // friend std::ostream& operator<<(std::ostream &out, ap:&fooram_architecture_params);
+    // friend std::istream& operator>>(std::istream &in, fooram_architecture_params &ap);
+}
 
 
 
@@ -65,77 +66,79 @@ public:
 
 use ffec::common::serialization;
 
-use crate::relations::ram_computations::rams::fooram::fooram_aux;
+// use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 
-
-fooram_architecture_params::fooram_architecture_params(const size_t w) : w(w)
+impl fooram_architecture_params{
+pub fn new( w:usize)->Self
 {
+    Self{w}
 }
 
-size_t fooram_architecture_params::num_addresses() const
+pub fn num_addresses(&self)->usize
 {
-    return 1ul<<w;
+    return 1usize<<w;
 }
 
-size_t fooram_architecture_params::address_size() const
-{
-    return w;
-}
-
-size_t fooram_architecture_params::value_size() const
+pub fn address_size(&self)->usize
 {
     return w;
 }
 
-size_t fooram_architecture_params::cpu_state_size() const
+pub fn value_size(&self)->usize
 {
     return w;
 }
 
-size_t fooram_architecture_params::initial_pc_addr() const
+pub fn cpu_state_size(&self)->usize
+{
+    return w;
+}
+
+pub fn initial_pc_addr(&self)->usize
 {
     return 0;
 }
 
-memory_contents fooram_architecture_params::initial_memory_contents(const fooram_program &program,
-                                                                    const fooram_input_tape &primary_input) const
+pub fn initial_memory_contents(program:&fooram_program,
+                                                                    primary_input:&fooram_input_tape) ->memory_contents
 {
-    memory_contents m;
+    let  m=memory_contents::new();
     /* fooram memory contents do not depend on program/input. */
-    ffec::UNUSED(program, primary_input);
+    // ffec::UNUSED(program, primary_input);
     return m;
 }
 
-ffec::bit_vector fooram_architecture_params::initial_cpu_state() const
+pub fn initial_cpu_state(&self)->bit_vector
 {
-    ffec::bit_vector state;
-    state.resize(w, false);
+    let  state=vec![false;w];
+    // state.resize(w, false);
     return state;
 }
 
-void fooram_architecture_params::print() const
+pub fn print(&self)
 {
     print!("w = {}\n", w);
 }
-
-bool fooram_architecture_params::operator==(const fooram_architecture_params &other) const
-{
-    return (self.w == other.w);
 }
 
-std::ostream& operator<<(std::ostream &out, const fooram_architecture_params &ap)
-{
-    out << ap.w << "\n";
-    return out;
-}
+// bool fooram_architecture_params::operator==(other:&fooram_architecture_params) const
+// {
+//     return (self.w == other.w);
+// }
 
-std::istream& operator>>(std::istream &in, fooram_architecture_params &ap)
-{
-    in >> ap.w;
-    ffec::consume_newline(in);
-    return in;
-}
+// std::ostream& operator<<(std::ostream &out, ap:&fooram_architecture_params)
+// {
+//     out << ap.w << "\n";
+//     return out;
+// }
+
+// std::istream& operator>>(std::istream &in, fooram_architecture_params &ap)
+// {
+//     in >> ap.w;
+//     ffec::consume_newline(in);
+//     return in;
+// }
 
 
 

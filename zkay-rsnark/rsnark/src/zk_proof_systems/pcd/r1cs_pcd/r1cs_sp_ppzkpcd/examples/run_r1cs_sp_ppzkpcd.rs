@@ -172,7 +172,7 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
             print!("Outgoing message is:\n");
             tree_messages[cur_idx]->print();
             print!("\n");
-            print!("Current node = {}. Current proof verifies = %s\n", cur_idx, ans ? "YES" : "NO");
+            print!("Current node = {}. Current proof verifies = %s\n", cur_idx, if ans  {"YES" }else {"NO"});
             print!("\n\n\n ================================================================================\n\n\n");
         }
     }

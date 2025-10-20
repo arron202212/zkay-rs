@@ -471,8 +471,8 @@ void G1_multiscalar_mul_gadget<ppT>::generate_r1cs_witness()
     for i in 0..scalar_size
     {
         adders[i].generate_r1cs_witness();
-        self.pb.lc_val(chosen_results[i+1].X) = (self.pb.val(scalars[i]) == ffec::Fr<ppT>::zero() ? self.pb.lc_val(chosen_results[i].X) : self.pb.lc_val(computed_results[i].X));
-        self.pb.lc_val(chosen_results[i+1].Y) = (self.pb.val(scalars[i]) == ffec::Fr<ppT>::zero() ? self.pb.lc_val(chosen_results[i].Y) : self.pb.lc_val(computed_results[i].Y));
+        self.pb.lc_val(chosen_results[i+1].X) = if self.pb.val(scalars[i]) == ffec::Fr<ppT>::zero() {self.pb.lc_val(chosen_results[i].X)} else{self.pb.lc_val(computed_results[i].X)};
+        self.pb.lc_val(chosen_results[i+1].Y) = if self.pb.val(scalars[i]) == ffec::Fr<ppT>::zero() {self.pb.lc_val(chosen_results[i].Y)} else{self.pb.lc_val(computed_results[i].Y)};
     }
 }
 

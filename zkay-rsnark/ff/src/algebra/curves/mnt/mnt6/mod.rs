@@ -3,4 +3,4 @@
 //  pub mod mnt6_g2;
 //  pub mod mnt6_init;
 //  pub mod mnt6_pairing;
-//  pub mod mnt6_pp;
+ pub mod mnt6_pp;

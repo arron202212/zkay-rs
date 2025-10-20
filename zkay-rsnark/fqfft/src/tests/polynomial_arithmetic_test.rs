@@ -30,7 +30,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 10, 6, 15, 39, 13, 8, 12, 10 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -46,7 +46,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 10, 6, 15, 39, 13, 7, 7, 2 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -62,7 +62,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 10, 6, 15, 39, 13, 1, 5, 8 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -78,7 +78,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 1, 3, 4, 25, 6, 7, 7, 2 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -94,7 +94,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 1, 3, 4, 25, 6, 7, 7, 2 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -110,7 +110,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { -8, 0, -7, 11, -1, 6, 2, -6 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -126,7 +126,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { -8, 0, -7, 11, -1, 7, 7, 2 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -142,7 +142,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { -8, 0, -7, 11, -1, -1, -5, -8 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -158,7 +158,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { -1, -3, -4, -25, -6, -7, -7, -2 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -174,7 +174,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 1, 3, 4, 25, 6, 7, 7, 2 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -190,7 +190,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 65, 0, 5, 169, 0, 26, 0, 1 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -206,7 +206,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> c_ans = { 0 };
 
-    for (size_t i = 0; i < c.size(); i++)
+    for i in 0..c.size()
     {
       EXPECT_TRUE(c_ans[i] == c[i]);
     }
@@ -225,11 +225,11 @@ use crate::polynomial_arithmetic::xgcd;
     std::vector<TypeParam> Q_ans = { 0, 0, 0, 1 };
     std::vector<TypeParam> R_ans = { 5 };
 
-    for (size_t i = 0; i < Q.size(); i++)
+    for i in 0..Q.size()
     {
       EXPECT_TRUE(Q_ans[i] == Q[i]);
     }
-    for (size_t i = 0; i < R.size(); i++)
+    for i in 0..R.size()
     {
       EXPECT_TRUE(R_ans[i] == R[i]);
     }
@@ -248,7 +248,7 @@ use crate::polynomial_arithmetic::xgcd;
 
     std::vector<TypeParam> pv_ans = { 1, 6, 25, 90 };
 
-    for (size_t i = 0; i < pv.size(); i++)
+    for i in 0..pv.size()
     {
       EXPECT_TRUE(pv_ans[i] == pv[i]);
     }

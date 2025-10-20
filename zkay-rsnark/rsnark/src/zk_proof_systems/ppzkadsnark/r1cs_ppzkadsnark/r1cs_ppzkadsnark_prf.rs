@@ -12,15 +12,15 @@
 //#ifndef PRF_HPP_
 // #define PRF_HPP_
 
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params;
+use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
 
 
 
-template <typename ppT>
-r1cs_ppzkadsnark_prfKeyT<ppT> prfGen();
+// template <typename ppT>
+//  pub fn prfGen<ppT>()->r1cs_ppzkadsnark_prfKeyT<ppT>;
 
-template<typename ppT>
-ffec::Fr<snark_pp<ppT>> prfCompute(const r1cs_ppzkadsnark_prfKeyT<ppT> &key, const labelT &label);
+// template<typename ppT>
+// prfCompute(const r1cs_ppzkadsnark_prfKeyT<ppT> &key, const labelT &label)->ffec::Fr<snark_pp<ppT>> ;
 
 
 

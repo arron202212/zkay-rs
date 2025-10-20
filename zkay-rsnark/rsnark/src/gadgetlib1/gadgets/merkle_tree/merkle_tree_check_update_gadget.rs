@@ -146,21 +146,21 @@ merkle_tree_check_update_gadget<FieldT, HashT>::merkle_tree_check_update_gadget(
     {
         block_variable<FieldT> prev_inp(pb, prev_path.left_digests[i], prev_path.right_digests[i], FMT(self.annotation_prefix, " prev_inp_{}", i));
         prev_hasher_inputs.push(prev_inp);
-        prev_hashers.push(HashT(pb, 2*digest_size, prev_inp, (i == 0 ? prev_root_digest : prev_internal_output[i-1]),
+        prev_hashers.push(HashT(pb, 2*digest_size, prev_inp, if i == 0 {prev_root_digest} else{prev_internal_output[i-1]},
                                                                   FMT(self.annotation_prefix, " prev_hashers_{}", i)));
 
         block_variable<FieldT> next_inp(pb, next_path.left_digests[i], next_path.right_digests[i], FMT(self.annotation_prefix, " next_inp_{}", i));
         next_hasher_inputs.push(next_inp);
-        next_hashers.push(HashT(pb, 2*digest_size, next_inp, (i == 0 ? *computed_next_root : next_internal_output[i-1]),
+        next_hashers.push(HashT(pb, 2*digest_size, next_inp, if i == 0 {*computed_next_root} else{next_internal_output[i-1]},
                                                                   FMT(self.annotation_prefix, " next_hashers_{}", i)));
     }
 
     for i in 0..tree_depth
     {
-        prev_propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, i < tree_depth -1 ? prev_internal_output[i] : prev_leaf_digest,
+        prev_propagators.push(digest_selector_gadget<FieldT>(pb, if digest_size, i < tree_depth -1 {prev_internal_output[i]} else {prev_leaf_digest},
                                                                      address_bits[tree_depth-1-i], prev_path.left_digests[i], prev_path.right_digests[i],
                                                                      FMT(self.annotation_prefix, " prev_propagators_{}", i)));
-        next_propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, i < tree_depth -1 ? next_internal_output[i] : next_leaf_digest,
+        next_propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, if i < tree_depth -1 { next_internal_output[i]} else {next_leaf_digest},
                                                                      address_bits[tree_depth-1-i], next_path.left_digests[i], next_path.right_digests[i],
                                                                      FMT(self.annotation_prefix, " next_propagators_{}", i)));
     }
@@ -291,15 +291,15 @@ void test_merkle_tree_check_update_gadget()
     for level in ( 0..=tree_depth-1).rev()
     {
         const bool computed_is_right = (std::rand() % 2);
-        address |= (computed_is_right ? 1ul << (tree_depth-1-level) : 0);
+        address |= if computed_is_right {1ul << (tree_depth-1-level)} else{0};
         address_bits.push_back(computed_is_right);
         ffec::bit_vector other(digest_len);
         std::generate(other.begin(), other.end(), [&]() { return std::rand() % 2; });
 
         ffec::bit_vector load_block = prev_load_hash;
-        load_block.insert(computed_is_right ? load_block.begin() : load_block.end(), other.begin(), other.end());
+        load_block.insert( if computed_is_right  {load_block.begin()} else {load_block.end()}, other.begin(), other.end());
         ffec::bit_vector store_block = prev_store_hash;
-        store_block.insert(computed_is_right ? store_block.begin() : store_block.end(), other.begin(), other.end());
+        store_block.insert(if computed_is_right  {store_block.begin() }else {store_block.end()}, other.begin(), other.end());
 
         ffec::bit_vector load_h = HashT::get_hash(load_block);
         ffec::bit_vector store_h = HashT::get_hash(store_block);

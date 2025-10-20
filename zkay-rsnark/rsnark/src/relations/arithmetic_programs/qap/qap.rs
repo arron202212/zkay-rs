@@ -216,7 +216,6 @@ See qap.hpp .
  use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::common::profiling;
 use ffec::common::utils;
-use fqfft::evaluation_domain::evaluation_domain;
 
 
 impl<FieldT> qap_instance<FieldT>{

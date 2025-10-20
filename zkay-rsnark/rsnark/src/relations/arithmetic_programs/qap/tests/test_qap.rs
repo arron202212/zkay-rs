@@ -37,7 +37,7 @@ void test_qap(const size_t qap_degree, const size_t num_inputs, const bool binar
     ffec::print_indent(); print!("* QAP degree: {}\n", qap_degree);
     ffec::print_indent(); print!("* Number of inputs: {}\n", num_inputs);
     ffec::print_indent(); print!("* Number of R1CS constraints: {}\n", num_constraints);
-    ffec::print_indent(); print!("* Input type: %s\n", binary_input ? "binary" : "field");
+    ffec::print_indent(); print!("* Input type: %s\n", if binary_input  {"binary" }else {"field"});
 
     ffec::enter_block("Generate constraint system and assignment");
     r1cs_example<FieldT> example;

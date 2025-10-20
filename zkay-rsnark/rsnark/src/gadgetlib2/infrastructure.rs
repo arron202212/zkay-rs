@@ -232,7 +232,7 @@
 // /// Returns an upper bound on ffec::log2(i). Namely, returns the number of binary digits needed to store
 // /// the value 'i'. When i == 0 returns 0.
 // unsigned int Log2ceil(uint64_t i) {
-//     int retval = i ? 1 : 0 ;
+//     int retval=  if i {1} else{0 };
 //     while (i >>= 1) {retval+=1;}
 //     return retval;
 // }

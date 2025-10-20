@@ -34,7 +34,7 @@ use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets/basic_gadgets;
 use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
 use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
-use crate::relations::ram_computations/memory/memory_interface;
+use crate::relations::ram_computations::memory::memory_interface;
 
 
 
@@ -103,7 +103,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/fooram/fooram_cpu_checker;
+// use crate::gadgetlib1::gadgets/cpu_checkers/fooram/fooram_cpu_checker;
 
 //#endif // FORAM_CPU_CHECKER_HPP_
 /** @file

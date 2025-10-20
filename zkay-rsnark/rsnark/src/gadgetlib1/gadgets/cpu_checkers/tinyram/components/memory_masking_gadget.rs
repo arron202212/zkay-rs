@@ -236,7 +236,7 @@ void memory_masking_gadget<FieldT>::generate_r1cs_witness()
     /* get indicator variables is_subaddress */
     for i in 0..2 * self.pb.ap.bytes_in_word()
     {
-        self.pb.val(is_subaddress[i]) = (self.pb.val(subaddress.packed) == FieldT(i)) ? FieldT::one() : FieldT::zero();
+        self.pb.val(is_subaddress[i])=  if (self.pb.val(subaddress.packed) == FieldT(i)) {FieldT::one()} else{FieldT::zero()};
     }
 
     /* get indicator variables is_byte_X */

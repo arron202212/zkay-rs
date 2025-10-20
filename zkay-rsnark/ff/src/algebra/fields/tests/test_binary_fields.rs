@@ -66,7 +66,7 @@ TEST(GF32Test, MultiplicationTest) {
 }
 
 TEST(GF32Test, InverseTest) {
-    for (std::size_t i = 0; i < 10; i++) {
+    for i in 0..10{
         const gf32 a = gf32::random_element();
         const gf32 a_inv = a.inverse();
 
@@ -90,7 +90,7 @@ TEST(GF64Test, MultiplicationTest) {
 }
 
 TEST(GF64Test, InverseTest) {
-    for (std::size_t i = 0; i < 10; i++) {
+    for i in 0..10{
         const gf64 a = gf64::random_element();
         const gf64 a_inv = a.inverse();
 

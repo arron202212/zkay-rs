@@ -23,7 +23,7 @@ FieldT power_naive(const FieldT &base, const std::size_t exponent)
 {
     FieldT result = FieldT::one();
 
-    for (std::size_t i = 1; i <= exponent; ++i)
+    for i in 1..=exponent{
     {
         result *= base;
     }
@@ -39,7 +39,7 @@ TEST(ExponentiationTest, SimpleTest) {
     FieldT X = FieldT::random_element();
 
     FieldT X_i = FieldT::one();
-    for (unsigned long i = 0 ; i < max_power; ++i)
+    for i in 0 ..max_power{
     {
         const FieldT X_i_naive = power_naive<FieldT>(X, i);
         const FieldT X_i_square_and_multiply_ul = power<FieldT>(X, i);
@@ -110,7 +110,7 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
     // pack_bit_vector_into_field_element_vector
 
     bit_vector vec;
-    for (size_t i = 0; i < 12 + edwards_Fq::ceil_size_in_bits(); i++)
+    for i in 0..12 + edwards_Fq::ceil_size_in_bits()
         vec.push_back(0);
     vec.push_back(1);
     vec.push_back(0);
@@ -152,6 +152,6 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
     EXPECT_EQ(vec3[0], 1);
     EXPECT_EQ(vec3[1], 0);
     EXPECT_EQ(vec3[2], 1);
-    for (size_t i = 3; i < vec3.size(); i++)
+    for i in 3..vec3.size()
         EXPECT_EQ(vec3[i], 0);
 }

@@ -292,7 +292,7 @@ void as_waksman_routing_gadget<FieldT>::generate_r1cs_witness(const integer_perm
                 if num_subpackets > 1
                 {
                     /* update the switch bit */
-                    self.pb.val(asw_switch_bits[column_idx][row_idx]) = FieldT(routing[column_idx][row_idx] ? 1 : 0);
+                    self.pb.val(asw_switch_bits[column_idx][row_idx]) = FieldT(if routing[column_idx][row_idx]  {1 }else {0});
                 }
 
                 /* route according to the switch bit */
@@ -303,7 +303,7 @@ void as_waksman_routing_gadget<FieldT>::generate_r1cs_witness(const integer_perm
                     const size_t straight_edge = neighbors[column_idx][switch_input].first;
                     const size_t cross_edge = neighbors[column_idx][switch_input].second;
 
-                    const size_t switched_edge = (switch_val ? cross_edge : straight_edge);
+                    const size_t switched_edge = if switch_val {cross_edge} else{straight_edge};
 
                     for subpacket_idx in 0..num_subpackets
                     {
@@ -341,7 +341,7 @@ void test_as_waksman_routing_gadget(const size_t num_packets, const size_t packe
 
         for bit_idx in 0..packet_size
         {
-            pb.val(randbits[packet_idx][bit_idx]) = (rand() % 2) ? FieldT::one() : FieldT::zero();
+            pb.val(randbits[packet_idx][bit_idx])=  if (rand() % 2) {FieldT::one()} else{FieldT::zero()};
         }
     }
     ffec::print_time("generated bits to be routed");

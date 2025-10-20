@@ -182,9 +182,9 @@ void memory_checker_gadget<ramT>::generate_r1cs_witness()
       - loose_contents_before2_equals_zero;
       - loose_timestamp2_is_zero.
      */
-    self.pb.val(loose_contents_after1_equals_contents_before2) = (self.pb.val(line1.contents_after->packed) == self.pb.val(line2.contents_before->packed)) ? FieldT::one() : FieldT::zero();
-    self.pb.val(loose_contents_before2_equals_zero) = self.pb.val(line2.contents_before->packed).is_zero() ? FieldT::one() : FieldT::zero();
-    self.pb.val(loose_timestamp2_is_zero) = (self.pb.val(line2.timestamp->packed) == FieldT::zero() ? FieldT::one() : FieldT::zero());
+    self.pb.val(loose_contents_after1_equals_contents_before2) = if (self.pb.val(line1.contents_after->packed) == self.pb.val(line2.contents_before->packed))  {FieldT::one() }else  {FieldT::zero()};
+    self.pb.val(loose_contents_before2_equals_zero) = if self.pb.val(line2.contents_before->packed).is_zero()  {FieldT::one()} else {FieldT::zero()};
+    self.pb.val(loose_timestamp2_is_zero) =  (if self.pb.val(line2.timestamp->packed) == FieldT::zero()  {FieldT::one() }else {FieldT::zero()});
 }
 
 

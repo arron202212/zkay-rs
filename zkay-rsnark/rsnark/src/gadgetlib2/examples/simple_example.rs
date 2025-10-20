@@ -27,7 +27,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_exa
  *****************************************************************************/
 
 use crate::gadgetlib2::adapters;
-use crate::gadgetlib2::examples::simple_example;
+// use crate::gadgetlib2::examples::simple_example;
 use crate::gadgetlib2::gadget;
 use crate::gadgetlib2::integration;
 
@@ -38,18 +38,18 @@ pub fn  gen_r1cs_example_from_gadgetlib2_protoboard(size:usize)->r1cs_example<ff
 {
     // type FieldT=ffec::Fr<ffec::default_ec_pp> ;
 
-    gadgetlib2::initPublicParamsFromDefaultPp();
+    initPublicParamsFromDefaultPp();
     // necessary in case a protoboard was built before,  libsnark assumes variable indices always
     // begin with 0 so we must reset the index before creating constraints which will be used by
     // libsnark
-    gadgetlib2::GadgetLibAdapter::resetVariableIndex();
+    GadgetLibAdapter::resetVariableIndex();
 
     // create a gadgetlib2 gadget. This part is done by both generator and prover.
-    let pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
-    let  A=gadgetlib2::VariableArray::new(size, "A");
-    let  B=gadgetlib2::VariableArray::new(size, "B");
-    let result= gadgetlib2::Variable::new("result");
-    let g = gadgetlib2::InnerProduct_Gadget::create(pb, A, B, result);
+    let pb = Protoboard::create(R1P);
+    let  A=VariableArray::new(size, "A");
+    let  B=VariableArray::new(size, "B");
+    let result= Variable::new("result");
+    let g = InnerProduct_Gadget::create(pb, A, B, result);
     // create constraints. This part is done by generator.
     g.generateConstraints();
     // create assignment (witness). This part is done by prover.

@@ -451,7 +451,7 @@ std::ostream& operator<<(std::ostream &out, const bls12_381_G1 &g)
     bls12_381_G1 copy(g);
     copy.to_affine_coordinates();
 
-    out << (copy.is_zero() ? 1 : 0) << OUTPUT_SEPARATOR;
+    out << if copy.is_zero() {1} else{0} << OUTPUT_SEPARATOR;
 // #ifdef NO_PT_COMPRESSION
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else

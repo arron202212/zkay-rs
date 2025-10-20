@@ -27,7 +27,7 @@ void test_ssp(const size_t num_constraints, const size_t num_inputs, const bool 
 
     ffec::print_indent(); print!("* Number of constraints: {}\n", num_constraints);
     ffec::print_indent(); print!("* Number of inputs: {}\n", num_inputs);
-    ffec::print_indent(); print!("* Input type: %s\n", binary_input ? "binary" : "field");
+    ffec::print_indent(); print!("* Input type: %s\n",if  binary_input  {"binary" }else {"field"});
 
     ffec::enter_block("Generate constraint system and assignment");
     uscs_example<FieldT> example;

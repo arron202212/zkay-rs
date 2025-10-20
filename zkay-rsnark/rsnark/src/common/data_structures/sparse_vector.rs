@@ -259,7 +259,7 @@ fn index(&self, idx: usize) -> &Self::Output {
 // T sparse_vector<T>::operator[](idx:size_t) const
 // {
 //     auto it = std::lower_bound(indices.begin(), indices.end(), idx);
-//     return (it != indices.end() && *it == idx) ? values[it - indices.begin()] : T();
+//     return if (it != indices.end() && *it == idx) {values[it - indices.begin()]} else{T()};
 // }
 
 impl<T> PartialEq for sparse_vector<T> {

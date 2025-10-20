@@ -887,7 +887,7 @@
 
 // void R1P_AND_Gadget::generateWitness() {
 //     FElem sum = 0;
-//     for(size_t i = 0; i < input_.size(); ++i) {
+//     for i in 0..input_.size() {
 //         sum += val(input_[i]);
 //     }
 //     sum -= input_.size(); // sum(input[i]) - n ==> sum
@@ -994,7 +994,7 @@
 
 // void R1P_OR_Gadget::generateWitness() {
 //     FElem sum = 0;
-//     for(size_t i = 0; i < input_.size(); ++i) { // sum(input[i]) ==> sum
+//     for i in 0..input_.size() { // sum(input[i]) ==> sum
 //         sum += val(input_[i]);
 //     }
 //     if sum == 0) { // OR(input[0], input[1], ... == 0
@@ -1071,7 +1071,7 @@
 //     }
 //     // else (n > 1)
 //     addRank1Constraint(A_[0], B_[0], partialSums_[0], "A[0] * B[0] = partialSums[0]");
-//     for(int i = 1; i <= n-2; ++i) {
+//     for i in 1..=n-2 {
 //         addRank1Constraint(A_[i], B_[i], partialSums_[i] - partialSums_[i-1],
 //             GADGETLIB2_FMT("A[%u] * B[%u] = partialSums[%u] - partialSums[%u]", i, i, i, i-1));
 //     }
@@ -1087,7 +1087,7 @@
 //     }
 //     // else (n > 1)
 //     val(partialSums_[0]) = val(A_[0]) * val(B_[0]);
-//     for(int i = 1; i <= n-2; ++i) {
+//     for i in 1..=n-2 {
 //         val(partialSums_[i]) = val(partialSums_[i-1]) + val(A_[i]) * val(B_[i]);
 //     }
 //     val(result_) = val(partialSums_[n-2]) + val(A_[n-1]) * val(B_[n-1]);
@@ -1127,7 +1127,7 @@
 //     GADGETLIB_ASSERT(inputs.size() <= Fp(-1).as_ulong(), "Attempted to create R1P_LooseMUX_Gadget "
 //                                                       "with too many inputs. May cause overflow!");
 // //    for(const VariableArray& inpArr : inputs) {
-//     for(size_t i = 0; i < inputs.size(); ++i) {
+//     for i in 0..inputs.size() {
 //         GADGETLIB_ASSERT(inputs[i].size() == output.size(), "Input VariableArray is of incorrect size.");
 //     }
 //     ::std::copy(inputs.begin(), inputs.end(), inputs_.begin()); // change type to R1P_VariableArray
@@ -1136,9 +1136,9 @@
 // void R1P_LooseMUX_Gadget::init() {
 //     // create inputs for the inner products and initialize them. Each iteration creates a
 //     // VariableArray for the i'th elements from each of the vector's VariableArrays.
-//     for(size_t i = 0; i < output_.size(); ++i) {
+//     for i in 0..output_.size() {
 //         VariableArray curInput;
-//         for(size_t j = 0; j < inputs_.size(); ++j) {
+//         for j in 0..inputs_.size() {
 //             curInput.push_back(inputs_[j][i]);
 //         }
 //         computeResult_.push_back(InnerProduct_Gadget::create(pb_, indicators_, curInput,
@@ -1148,7 +1148,7 @@
 
 // void R1P_LooseMUX_Gadget::generateConstraints() {
 //     const size_t n = inputs_.size();
-//     for(size_t i = 0; i < n; ++i) {
+//     for i in 0..n {
 //         addRank1Constraint(indicators_[i], (index_-i), 0,
 //             GADGETLIB2_FMT("indicators[%u] * (index - %u) = 0", i, i));
 //     }
@@ -1164,7 +1164,7 @@
 //     /* assumes that idx can be fit in ulong; true for our purposes for now */
 //     const size_t index = val(index_).asLong();
 //     const FElem arraySize = n;
-//     for(size_t i = 0; i < n; ++i) {
+//     for i in 0..n {
 //         val(indicators_[i]) = 0; // Redundant, but just in case.
 //     }
 //     if index >= n { //  || index < 0
@@ -1205,7 +1205,7 @@
 //                                   const Variable& output,
 //                                   const Variable& successFlag) {
 //     MultiPackedWordArray inpVec;
-//     for(size_t i = 0; i < inputs.size(); ++i) {
+//     for i in 0..inputs.size() {
 //         MultiPackedWord cur(pb->fieldType_);
 //         cur.push_back(inputs[i]);
 //         inpVec.push_back(cur);
@@ -1277,7 +1277,7 @@
 //     if packingMode_ == PackingMode::PACK {
 //         FElem packedVal = 0;
 //         FElem two_i(R1P_Elem(1)); // will hold 2^i
-//         for(int i = 0; i < n; ++i) {
+//         for i in 0..n {
 //             GADGETLIB_ASSERT(val(unpacked_[i]).asLong() == 0 || val(unpacked_[i]).asLong() == 1,
 //                          GADGETLIB2_FMT("unpacked[%u]  = %u. Expected a Boolean value.", i,
 //                              val(unpacked_[i]).asLong()));
@@ -1289,7 +1289,7 @@
 //     }
 //     // else (UNPACK)
 //     GADGETLIB_ASSERT(packingMode_ == PackingMode::UNPACK, "Packing gadget created with unknown packing mode.");
-//     for(int i = 0; i < n; ++i) {
+//     for i in 0..n {
 //         val(unpacked_[i]) = val(packed_[0]).getBit(i, R1P);
 //     }
 // }
@@ -1387,8 +1387,8 @@
 // }
 
 // void R1P_EqualsConst_Gadget::generateWitness() {
-//     val(aux_) = val(input_) == n_ ? 0 : (val(input_) - n_).inverse(R1P) ;
-//     val(result_) = val(input_) == n_ ? 1 : 0 ;
+//     val(aux_) = if  val(input_) ==  n_  {0} else{ (val(input_) - n_).inverse(R1P)} ;
+//     val(result_) = if val(input_) == n_ { 1} else {0} ;
 // }
 
 // /***********************************/
@@ -1447,7 +1447,7 @@
 // void DualWordArray_Gadget::init() {
 //     const UnpackedWordArray unpacked = vars_.unpacked();
 //     const MultiPackedWordArray packed = vars_.multipacked();
-//     for(size_t i = 0; i < vars_.size(); ++i) {
+//     for i in 0..vars_.size() {
 //         const auto curGadget = CompressionPacking_Gadget::create(pb_, unpacked[i], packed[i],
 //                                                                  packingMode_);
 //         packingGadgets_.push_back(curGadget);

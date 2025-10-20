@@ -355,7 +355,7 @@ template<typename FieldT>
 size_t knapsack_CRH_with_bit_out_gadget<FieldT>::expected_constraints(const bool enforce_bitness)
 {
     const size_t hasher_constraints = knapsack_CRH_with_field_out_gadget<FieldT>::expected_constraints();
-    const size_t bitness_constraints = (enforce_bitness ? get_digest_len() : 0);
+    const size_t bitness_constraints = if enforce_bitness {get_digest_len()} else{0};
     return hasher_constraints + bitness_constraints;
 }
 

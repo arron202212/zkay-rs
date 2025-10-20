@@ -212,7 +212,7 @@ bool uscs_constraint_system<FieldT>::is_satisfied(const uscs_primary_input<Field
         {
 // #ifdef DEBUG
             auto it = constraint_annotations.find(c);
-            print!("constraint {} (%s) unsatisfied\n", c, (it == constraint_annotations.end() ? "no annotation" : it->second.c_str()));
+            print!("constraint {} (%s) unsatisfied\n", c, ( if let Some(it) =constraint_annotations.find(c) {it.1.to_string()} else {"no annotation" }));
             print!("<a,(1,x)> = "); res.print();
             print!("constraint was:\n");
             dump_uscs_constraint(constraints[c], full_variable_assignment, variable_annotations);
@@ -305,8 +305,7 @@ void uscs_constraint_system<FieldT>::report_linear_constraint_statistics() const
 
         if a_is_const
         {
-            auto it = constraint_annotations.find(i);
-            print!("%s\n", (it == constraint_annotations.end() ? FMT("", "constraint_{}", i) : it->second).c_str());
+            print!("%s\n", (if let Some(it) = constraint_annotations.find(i){it.1.to_string()} else{FMT("", "constraint_{}", i)} );
         }
     }
 //#endif

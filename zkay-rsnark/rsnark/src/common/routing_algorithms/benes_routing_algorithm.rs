@@ -128,7 +128,7 @@ use crate::common::routing_algorithms::benes_routing_algorithm;
  */
 size_t benes_cross_edge_mask(const size_t dimension, const size_t column_idx)
 {
-    return (column_idx < dimension ? 1ul<<(dimension-1-column_idx) : 1ul<<(column_idx-dimension));
+    return if column_idx < dimension {1ul<<(dimension-1-column_idx)} else{1ul<<(column_idx-dimension});
 }
 
 /**
@@ -149,7 +149,7 @@ size_t benes_cross_edge_mask(const size_t dimension, const size_t column_idx)
 size_t benes_lhs_packet_destination(const size_t dimension, const size_t column_idx, const size_t row_idx, const bool use_top)
 {
     const size_t mask = benes_cross_edge_mask(dimension, column_idx);
-    return (use_top ? row_idx & ~mask : row_idx | mask);
+    return if use_top {row_idx & ~mask} else{row_idx | mask};
 }
 
 /**
@@ -374,7 +374,7 @@ std::vector<std::vector<T> > route_by_benes(const benes_routing &routing, const 
 
         for packet_idx in 0..num_packets
         {
-            size_t next_packet_idx = (routing[column_idx][packet_idx] == false) ? packet_idx : packet_idx ^ mask;
+            size_t next_packet_idx=  if (routing[column_idx][packet_idx] == false) {packet_idx} else{packet_idx ^ mask};
             res[column_idx+1][next_packet_idx] = res[column_idx][packet_idx];
         }
     }

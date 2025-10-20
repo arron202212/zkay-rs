@@ -205,10 +205,10 @@ bool tbcs_gate::evaluate(const tbcs_variable_assignment &input) const
      * See comment in tbcs.hpp .
      */
 
-    const bool X = (left_wire == 0 ? true : input[left_wire - 1]);
-    const bool Y = (right_wire == 0 ? true : input[right_wire - 1]);
+    const bool X = if left_wire == 0 {true} else{input[left_wire - 1]};
+    const bool Y = if right_wire == 0 {true} else{input[right_wire - 1]};
 
-    const size_t pos = 3 - ((X ? 2 : 0) + (Y ? 1 : 0)); /* 3 - ... inverts position */
+    const size_t pos = 3 -   ( (if X {2} else{0}) + (if Y {1} else{0})); /* 3 - ... inverts position */
 
     return (((int)type) & (1u << pos));
 }
@@ -228,7 +228,7 @@ void print_tbcs_wire(const tbcs_wire_t wire, const std::map<size_t, std::string>
         auto it = variable_annotations.find(wire);
         print!("    x_{} (%s)",
                wire,
-               (it == variable_annotations.end() ? "no annotation" : it->second.c_str()));
+               (if it == variable_annotations.end()  {"no annotation" }else {it->second.c_str()}));
     }
 }
 
@@ -294,7 +294,7 @@ void tbcs_gate::print(const std::map<size_t, std::string> &variable_annotations)
     print_tbcs_wire(right_wire, variable_annotations);
     print!("\n) ->\n");
     print_tbcs_wire(output, variable_annotations);
-    print!(" (%s)\n", is_circuit_output ? "circuit output" : "internal wire");
+    print!(" (%s)\n", if is_circuit_output  {"circuit output" }else {"internal wire"});
 }
 
 bool tbcs_gate::operator==(const tbcs_gate &other) const

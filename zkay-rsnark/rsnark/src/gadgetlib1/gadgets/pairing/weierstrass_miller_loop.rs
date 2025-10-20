@@ -376,19 +376,19 @@ gadget<FieldT>(pb, annotation_prefix), invert_Q(invert_Q), prec_P(prec_P), c(c),
         gamma_twist->evaluate();
         const FqeT gamma_twist_const = gamma_twist->get_element();
         g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(Fqe_variable<ppT>(self.pb, -gamma_twist_const, prec_P.P->X, FMT(annotation_prefix, " tmp")) +
-                                                 *(c.gamma_X) + *(Q.Y) * (!invert_Q ? -FieldT::one() : FieldT::one())));
+                                                 *(c.gamma_X) + *(Q.Y) * (if !invert_Q  {-FieldT::one()} else {FieldT::one()})));
     }
     else if prec_P.P->X.is_constant()
     {
         prec_P.P->X.evaluate(pb);
         const FieldT P_X_const = prec_P.P->X.constant_term();
-        g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(*gamma_twist * (-P_X_const) + *(c.gamma_X) + *(Q.Y) * (!invert_Q ? -FieldT::one() : FieldT::one())));
+        g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(*gamma_twist * (-P_X_const) + *(c.gamma_X) + *(Q.Y) * (if !invert_Q {-FieldT::one() }else {FieldT::one()})));
     }
     else
     {
         g_RQ_at_P_c1.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " g_RQ_at_Q_c1")));
         compute_g_RQ_at_P_c1.reset(new Fqe_mul_by_lc_gadget<ppT>(pb, *gamma_twist, prec_P.P->X,
-                                                                 *(c.gamma_X) + *(Q.Y) * (!invert_Q ? -FieldT::one() : FieldT::one()) + (*g_RQ_at_P_c1) * (-FieldT::one()),
+                                                                 *(c.gamma_X) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()}) + (*g_RQ_at_P_c1) * (-FieldT::one()),
                                                                  FMT(annotation_prefix, " compute_g_RQ_at_P_c1")));
     }
     g_RQ_at_P.reset(new Fqk_variable<ppT>(pb, *(prec_P.PY_twist_squared), *g_RQ_at_P_c1, FMT(annotation_prefix, " g_RQ_at_P")));
@@ -411,7 +411,7 @@ void mnt_miller_loop_add_line_eval<ppT>::generate_r1cs_witness()
     const FieldT PX_val = self.pb.lc_val(prec_P.P->X);
     const FqeT gamma_X_val = c.gamma_X->get_element();
     const FqeT QY_val = Q.Y->get_element();
-    const FqeT g_RQ_at_P_c1_val = -PX_val * gamma_twist_val + gamma_X_val + (!invert_Q ? -QY_val : QY_val);
+    const FqeT g_RQ_at_P_c1_val = -PX_val * gamma_twist_val + gamma_X_val +  (if !invert_Q {-QY_val} else{QY_val});
     g_RQ_at_P_c1->generate_r1cs_witness(g_RQ_at_P_c1_val);
 
     if !gamma_twist->is_constant() && !prec_P.P->X.is_constant()
@@ -491,7 +491,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
         prec_id+=1;
         dbl_sqrs[dbl_id].reset(new Fqk_sqr_gadget<ppT>(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
         f_id+=1;
-        dbl_muls[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_Ps[dbl_id], (f_id + 1 == f_count ? result : *fs[f_id+1]), FMT(annotation_prefix, " dbl_muls_{}", dbl_id)));
+        dbl_muls[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_Ps[dbl_id],  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), FMT(annotation_prefix, " dbl_muls_{}", dbl_id)));
         f_id+=1;
         dbl_id+=1;
 
@@ -503,7 +503,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
                                                                                 g_RQ_at_Ps[add_id],
                                                                                 FMT(annotation_prefix, " addition_steps_{}", add_id)));
             prec_id+=1;
-            add_muls[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_Ps[add_id], (f_id + 1 == f_count ? result : *fs[f_id+1]), FMT(annotation_prefix, " add_muls_{}", add_id)));
+            add_muls[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_Ps[add_id],  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), FMT(annotation_prefix, " add_muls_{}", add_id)));
             f_id+=1;
             add_id+=1;
         }
@@ -697,7 +697,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         f_id+=1;
         dbl_muls1[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_mul1s_{}", dbl_id)));
         f_id+=1;
-        dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RR_at_P2s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_mul2s_{}", dbl_id)));
+        dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RR_at_P2s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_mul2s_{}", dbl_id)));
         f_id+=1;
         dbl_id+=1;
 
@@ -716,7 +716,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
             prec_id+=1;
             add_muls1[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_mul1s_{}", add_id)));
             f_id+=1;
-            add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RQ_at_P2s[add_id], *fs[f_id], FMT(annotation_prefix, " add_mul2s_{}", add_id)));
+            add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RQ_at_P2s[add_id], *fs[f_id], FMT(annotation_prefix, " add_mul2s_{}", add_id)));
             f_id+=1;
             add_id+=1;
         }
@@ -774,7 +774,7 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
         f_id+=1;
         dbl_muls1[dbl_id]->generate_r1cs_witness();
         f_id+=1;
-        (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RR_at_P2s[dbl_id]->get_element().inverse());
+         (if f_id+1 == f_count {result} else{*fs[f_id+1]}).generate_r1cs_witness(fs[f_id]->get_element() * g_RR_at_P2s[dbl_id]->get_element().inverse());
         dbl_muls2[dbl_id]->generate_r1cs_witness();
         f_id+=1;
         dbl_id+=1;
@@ -785,7 +785,7 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
             addition_steps2[add_id]->generate_r1cs_witness();
             add_muls1[add_id]->generate_r1cs_witness();
             f_id+=1;
-            (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RQ_at_P2s[add_id]->get_element().inverse());
+             (if f_id+1 == f_count {result} else{*fs[f_id+1]}).generate_r1cs_witness(fs[f_id]->get_element() * g_RQ_at_P2s[add_id]->get_element().inverse());
             add_muls2[add_id]->generate_r1cs_witness();
             f_id+=1;
             add_id+=1;
@@ -957,7 +957,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
         f_id+=1;
         dbl_muls2[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RR_at_P2s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls2_{}", dbl_id)));
         f_id+=1;
-        dbl_muls3[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RR_at_P3s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_muls3_{}", dbl_id)));
+        dbl_muls3[dbl_id].reset(new Fqk_special_mul_gadget<ppT>(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RR_at_P3s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_muls3_{}", dbl_id)));
         f_id+=1;
         dbl_id+=1;
 
@@ -983,7 +983,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
             f_id+=1;
             add_muls2[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, *fs[f_id], *g_RQ_at_P2s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls2_{}", add_id)));
             f_id+=1;
-            add_muls3[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb, (f_id + 1 == f_count ? result : *fs[f_id+1]), *g_RQ_at_P3s[add_id], *fs[f_id], FMT(annotation_prefix, " add_muls3_{}", add_id)));
+            add_muls3[add_id].reset(new Fqk_special_mul_gadget<ppT>(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RQ_at_P3s[add_id], *fs[f_id], FMT(annotation_prefix, " add_muls3_{}", add_id)));
             f_id+=1;
             add_id+=1;
         }
@@ -1048,7 +1048,7 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
         f_id+=1;
         dbl_muls2[dbl_id]->generate_r1cs_witness();
         f_id+=1;
-        (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RR_at_P3s[dbl_id]->get_element().inverse());
+         (if f_id+1 == f_count {result} else{*fs[f_id+1]}).generate_r1cs_witness(fs[f_id]->get_element() * g_RR_at_P3s[dbl_id]->get_element().inverse());
         dbl_muls3[dbl_id]->generate_r1cs_witness();
         f_id+=1;
         dbl_id+=1;
@@ -1062,7 +1062,7 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
             f_id+=1;
             add_muls2[add_id]->generate_r1cs_witness();
             f_id+=1;
-            (f_id+1 == f_count ? result : *fs[f_id+1]).generate_r1cs_witness(fs[f_id]->get_element() * g_RQ_at_P3s[add_id]->get_element().inverse());
+             (if f_id+1 == f_count {result} else{*fs[f_id+1]}).generate_r1cs_witness(fs[f_id]->get_element() * g_RQ_at_P3s[add_id]->get_element().inverse());
             add_muls3[add_id]->generate_r1cs_witness();
             f_id+=1;
             add_id+=1;

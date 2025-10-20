@@ -198,8 +198,8 @@ void bacs_gate<FieldT>::print(const std::map<size_t, std::string> &variable_anno
     auto it = variable_annotations.find(output.index);
     print!("    x_{} (%s) (%s)\n",
            output.index,
-           (it == variable_annotations.end() ? "no annotation" : it->second.c_str()),
-           (is_circuit_output ? "circuit output" : "internal wire"));
+           (if it == variable_annotations.end()  {"no annotation"} else{ it->second.c_str()}),
+           (if is_circuit_output  {"circuit output"} else {"internal wire"}));
 }
 
 template<typename FieldT>
@@ -214,7 +214,7 @@ bool bacs_gate<FieldT>::operator==(const bacs_gate<FieldT> &other) const
 template<typename FieldT>
 std::ostream& operator<<(std::ostream &out, const bacs_gate<FieldT> &g)
 {
-    out << (g.is_circuit_output ? 1 : 0) << "\n";
+    out <<  (if g.is_circuit_output {1} else{0}) << "\n";
     out << g.lhs << OUTPUT_NEWLINE;
     out << g.rhs << OUTPUT_NEWLINE;
     out << g.output.index << "\n";
@@ -228,7 +228,7 @@ std::istream& operator>>(std::istream &in, bacs_gate<FieldT> &g)
     size_t tmp;
     in >> tmp;
     ffec::consume_newline(in);
-    g.is_circuit_output = (tmp != 0 ? true : false);
+    g.is_circuit_output = if tmp != 0 {true} else{false};
     in >> g.lhs;
     ffec::consume_OUTPUT_NEWLINE(in);
     in >> g.rhs;

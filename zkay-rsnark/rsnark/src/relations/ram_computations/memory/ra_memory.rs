@@ -12,26 +12,26 @@
 //#ifndef RA_MEMORY_HPP_
 // #define RA_MEMORY_HPP_
 
-use crate::relations::ram_computations/memory/memory_interface;
+use crate::relations::ram_computations::memory::memory_interface;
 
 
 
 /**
  * A random-access memory maintains the memory's contents via a map (from addresses to values).
  */
-class ra_memory : public memory_interface {
-public:
+pub struct ra_memory {
+// public://: public memory_interface 
 
-    memory_contents contents;
+     contents:memory_contents,
+}
+//     ra_memory(num_addresses:size_t, value_size:size_t);
+//     ra_memory(num_addresses:size_t, value_size:size_t, contents_as_vector:&std::vector<size_t>);
+//     ra_memory(num_addresses:size_t, value_size:size_t, contents:&memory_contents);
 
-    ra_memory(const size_t num_addresses, const size_t value_size);
-    ra_memory(const size_t num_addresses, const size_t value_size, const std::vector<size_t> &contents_as_vector);
-    ra_memory(const size_t num_addresses, const size_t value_size, const memory_contents &contents);
+//     size_t get_value(address:size_t) const;
+//     void set_value(address:size_t, value:size_t);
 
-    size_t get_value(const size_t address) const;
-    void set_value(const size_t address, const size_t value);
-
-};
+// };
 
 
 
@@ -49,22 +49,24 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <cassert>
+// use  <cassert>
 
-use crate::relations::ram_computations/memory/ra_memory;
+// use crate::relations::ram_computations/memory/ra_memory;
 
 
-
-ra_memory::ra_memory(const size_t num_addresses, const size_t value_size) :
-    memory_interface(num_addresses, value_size)
+impl ra_memory{
+pub fn new(num_addresses:size_t, value_size:size_t) ->Self
 {
+// memory_interface(num_addresses, value_size)
+    Self{}
 }
 
-ra_memory::ra_memory(const size_t num_addresses,
-                     const size_t value_size,
-                     const std::vector<size_t> &contents_as_vector) :
-    memory_interface(num_addresses, value_size)
+pub fn new2(num_addresses:size_t,
+                     value_size:size_t,
+                     contents_as_vector:&std::vector<size_t>)  ->Self
+    
 {
+// memory_interface(num_addresses, value_size)
     /* copy std::vector into std::map */
     for i in 0..contents_as_vector.size()
     {
@@ -73,23 +75,26 @@ ra_memory::ra_memory(const size_t num_addresses,
 }
 
 
-ra_memory::ra_memory(const size_t num_addresses,
-                     const size_t value_size,
-                     const memory_contents &contents) :
-    memory_interface(num_addresses, value_size), contents(contents)
+pub fn new3(num_addresses:size_t,
+                     value_size:size_t,
+                     contents:&memory_contents) ->Self
+    
 {
+// memory_interface(num_addresses, value_size), contents(contents)
 }
 
-size_t ra_memory::get_value(const size_t address) const
+pub fn get_value(address:size_t) ->usize
 {
     assert!(address < num_addresses);
-    auto it = contents.find(address);
-    return (it == contents.end() ? 0 : it->second);
+    if let Some( it) = contents.find(address){
+    it.1}else{0}
+    // return if it == contents.end() {0} else{it->second};
 }
 
-void ra_memory::set_value(const size_t address, const size_t value)
+pub fn set_value(address:size_t, value:size_t)
 {
     contents[address] = value;
 }
 
 
+}

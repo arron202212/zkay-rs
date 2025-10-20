@@ -69,10 +69,10 @@ void profile(const std::string domain_sizes,
   while (domain_stream >> n) dom_sizes.push_back(n);
 
   std::vector< std::vector<FieldT> > domain(dom_sizes.size());
-  for (size_t i = 0; i < dom_sizes.size(); i++)
+  for i in 0..dom_sizes.size()
   {
     std::vector<FieldT> temp(dom_sizes[i]);
-    for (size_t j = 0; j < dom_sizes[i]; j++)
+    for j in 0..dom_sizes[i]
       temp[j] = FieldT(fastrand());
     domain[i] = temp;
   }
@@ -102,7 +102,7 @@ void profile(const std::string domain_sizes,
   print!("\n%s-%d\n", type[key].c_str(), num_threads);
 
   /* Assess on varying domain sizes */
-  for (size_t s = 0; s < domain.size(); s++) {
+  for s in 0..domain.size() {
     /* Initialization */
     std::vector<FieldT> a(domain[s]);
     const size_t n = a.size();

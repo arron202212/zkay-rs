@@ -288,7 +288,7 @@ small_sigma_gadget<FieldT>::small_sigma_gadget(protoboard<FieldT> &pb,
     for i in 0..32
     {
         compute_bits[i].reset(new XOR3_gadget<FieldT>(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2),
-                                              (i + shift < 32 ? W[i+shift] : ONE),
+                                              if i + shift < 32 {W[i+shift]} else{ONE},
                                               (i + shift >= 32), result_bits[i],
                                               FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }

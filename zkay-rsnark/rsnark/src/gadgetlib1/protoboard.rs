@@ -136,14 +136,14 @@ template<typename FieldT>
 FieldT& protoboard<FieldT>::val(const pb_variable<FieldT> &var)
 {
     assert!(var.index <= values.size());
-    return (var.index == 0 ? constant_term : values[var.index-1]);
+    return if var.index == 0 {constant_term} else{values[var.index-1]};
 }
 
 template<typename FieldT>
 FieldT protoboard<FieldT>::val(const pb_variable<FieldT> &var) const
 {
     assert!(var.index <= values.size());
-    return (var.index == 0 ? constant_term : values[var.index-1]);
+    return if var.index == 0 {constant_term} else{values[var.index-1]};
 }
 
 template<typename FieldT>
@@ -191,7 +191,7 @@ void protoboard<FieldT>::augment_variable_annotation(const pb_variable<FieldT> &
 {
 // #ifdef DEBUG
     auto it = constraint_system.variable_annotations.find(v.index);
-    constraint_system.variable_annotations[v.index] = (it == constraint_system.variable_annotations.end() ? "" : it->second + " ") + postfix;
+    constraint_system.variable_annotations[v.index] = if it == constraint_system.variable_annotations.end() {""} else{it->second + " "} + postfix;
 //#endif
 }
 

@@ -18,28 +18,28 @@
 //#ifndef SIGNATURE_HPP_
 // #define SIGNATURE_HPP_
 
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params;
+use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
 
 
 
-template<typename ppT>
-class kpT {
-public:
-    r1cs_ppzkadsnark_skT<ppT> sk;
-    r1cs_ppzkadsnark_vkT<ppT> vk;
-};
+// template<typename ppT>
+pub struct kpT<ppT> {
+// public:
+   sk: r1cs_ppzkadsnark_skT<ppT> ,
+    vk: r1cs_ppzkadsnark_vkT<ppT>,
+}
 
-template<typename ppT>
-kpT<ppT> sigGen(void);
+// template<typename ppT>
+// kpT<ppT> sigGen(void);
 
-template<typename ppT>
-r1cs_ppzkadsnark_sigT<ppT> sigSign(const r1cs_ppzkadsnark_skT<ppT> &sk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda);
+// template<typename ppT>
+// r1cs_ppzkadsnark_sigT<ppT> sigSign(const r1cs_ppzkadsnark_skT<ppT> &sk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda);
 
-template<typename ppT>
-bool sigVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda, const r1cs_ppzkadsnark_sigT<ppT> &sig);
+// template<typename ppT>
+// bool sigVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda, const r1cs_ppzkadsnark_sigT<ppT> &sig);
 
-template<typename ppT>
-bool sigBatchVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const std::vector<labelT> &labels, const std::vector<ffec::G2<snark_pp<ppT>>> &Lambdas, const std::vector<r1cs_ppzkadsnark_sigT<ppT>> &sigs);
+// template<typename ppT>
+// bool sigBatchVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const std::vector<labelT> &labels, const std::vector<ffec::G2<snark_pp<ppT>>> &Lambdas, const std::vector<r1cs_ppzkadsnark_sigT<ppT>> &sigs);
 
 
 

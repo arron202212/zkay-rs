@@ -32,7 +32,7 @@ TEST(Log2Test, SimpleTest) {
 }
 
 TEST(Log2Test, PowersOfTwo) {
-    for (std::size_t i = 10; i < 20; ++i)
+    for i in 10..20{
     {
         const std::size_t k = (1ULL<<i);
         EXPECT_EQ(log2(k-1), i);

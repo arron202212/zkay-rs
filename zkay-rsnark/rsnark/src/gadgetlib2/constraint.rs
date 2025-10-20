@@ -367,7 +367,7 @@
 
 // bool ConstraintSystem::isSatisfied(const VariableAssignment& assignment,
 //                                    const PrintOptions& printOnFail) const {
-//     for(size_t i = 0; i < constraintsPtrs_.size(); ++i) {
+//     for i in 0..constraintsPtrs_.size() {
 //         if !constraintsPtrs_[i]->isSatisfied(assignment, printOnFail){
 //             return false;
 //         }

@@ -86,7 +86,7 @@ public:     OrGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
 
 TEST(gadgetLib2,R1P_ANDGadget_ExhaustiveTest) {
     initPublicParamsFromDefaultPp();
-    for(int inputSize = 1; inputSize <= EXHAUSTIVE_N; ++inputSize) {
+    for inputSize in 1..=EXHAUSTIVE_N {
         SCOPED_TRACE(GADGETLIB2_FMT("n = %u \n", inputSize));
         auto pb = Protoboard::create(R1P);
         AndGadgetExhaustiveTester tester(pb, inputSize);
@@ -119,7 +119,7 @@ TEST(gadgetLib2,BinaryAND_Gadget) {
 
 TEST(gadgetLib2,R1P_ORGadget_Exhaustive) {
     initPublicParamsFromDefaultPp();
-    for(int n = 1; n <= EXHAUSTIVE_N; ++n) {
+    for n in 1..=EXHAUSTIVE_N {
         SCOPED_TRACE(GADGETLIB2_FMT("n = %u \n", n));
         auto pb = Protoboard::create(R1P);
         OrGadgetExhaustiveTester tester(pb, n);
@@ -165,9 +165,9 @@ TEST(gadgetLib2,R1P_InnerProductGadget_Exhaustive) {
         for j in 0..1u<<n {
             size_t correct = 0;
             for k in 0..n {
-                pb->val(A[k]) = i & (1u<<k) ? 1 : 0;
-                pb->val(B[k]) = j & (1u<<k) ? 1 : 0;
-                correct += (i & (1u<<k)) && (j & (1u<<k)) ? 1 : 0;
+                pb->val(A[k])=  if i & (1u<<k) {1} else{0};
+                pb->val(B[k])=  if j & (1u<<k) {1} else{0};
+                correct += if (i & (1u<<k)) && (j & (1u<<k)) {1} else {0};
             }
             g->generateWitness();
             EXPECT_EQ(pb->val(result) , FElem(correct));
@@ -321,10 +321,10 @@ void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr 
                                        GadgetPtr packingGadget, GadgetPtr unpackingGadget) {
     packingGadget->generateConstraints();
     unpackingGadget->generateConstraints();
-    for(int i = 0; i < 1l<<n; ++i) {
+    for i in 0..1l<<n {
         ::std::vector<int> bits(n);
-        for(int j = 0; j < n; ++j) {
-            bits[j] = i & 1u<<j ? 1 : 0 ;
+        for j in 0..n {
+            bits[j]=  if i & 1u<<j {1} else{0 };
             packingPB->val(unpacked[j]) = bits[j]; // set unpacked bits in the packing protoboard
         }
         unpackingPB->val(packed[0]) = i; // set the packed value in the unpacking protoboard
@@ -333,7 +333,7 @@ void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr 
         ASSERT_TRUE(unpackingPB->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
         ASSERT_TRUE(packingPB->isSatisfied());
         ASSERT_EQ(packingPB->val(packed[0]), i); // check packed value is correct
-        for(int j = 0; j < n; ++j) {
+        for j in 0..n {
             // Tests for unpacking gadget
             SCOPED_TRACE(GADGETLIB2_FMT("\nValue being packed/unpacked: %u, bits[%u] = %u" , i, j, bits[j]));
             ASSERT_EQ(unpackingPB->val(unpacked[j]), bits[j]); // check bit correctness
@@ -359,7 +359,7 @@ void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr 
 
 void LogicGadgetExhaustiveTester::setInputValsTo(const size_t val) {
     for maskBit in 0..numInputs {
-        pb->val(inputs[maskBit]) = (val & (1u << maskBit)) ? 1 : 0;
+        pb->val(inputs[maskBit])=  if (val & (1u << maskBit)) {1} else{0};
     }
 }
 
@@ -390,7 +390,7 @@ void LogicGadgetExhaustiveTester::runExhaustiveTest() {
 }
 
 void AndGadgetExhaustiveTester::ruinOutputVal() {
-    pb->val(output) = (currentInputValues == ((1u << numInputs) - 1)) ? 0 : 1;
+    pb->val(output)=  if (currentInputValues == ((1u << numInputs) - 1)) {0} else{1};
 }
 
 AndGadgetExhaustiveTester::AndGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs)
@@ -399,7 +399,7 @@ AndGadgetExhaustiveTester::AndGadgetExhaustiveTester(ProtoboardPtr pb, size_t nu
 }
 
 void OrGadgetExhaustiveTester::ruinOutputVal() {
-    pb->val(output) = (currentInputValues == 0) ? 1 : 0;
+    pb->val(output)=  if (currentInputValues == 0) {1} else{0};
 }
 
 OrGadgetExhaustiveTester::OrGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs)

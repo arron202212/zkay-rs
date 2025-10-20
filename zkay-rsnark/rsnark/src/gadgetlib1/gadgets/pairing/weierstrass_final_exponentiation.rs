@@ -166,7 +166,7 @@ mnt4_final_exp_gadget<ppT>::mnt4_final_exp_gadget(protoboard<FieldT> &pb,
         pb, *beta_q, ffec::mnt6_final_exponent_last_chunk_w1, *w1, FMT(annotation_prefix, " compute_w1")));
 
     compute_w0.reset(new exponentiation_gadget<FqkT<ppT>, Fp6_variable, Fp6_mul_gadget, Fp6_cyclotomic_sqr_gadget, ffec::mnt6_q_limbs>(
-        pb, (ffec::mnt6_final_exponent_last_chunk_is_w0_neg ? *inv_beta : *beta), ffec::mnt6_final_exponent_last_chunk_abs_of_w0, *w0, FMT(annotation_prefix, " compute_w0")));
+        pb,  (if ffec::mnt6_final_exponent_last_chunk_is_w0_neg {*inv_beta} else{*beta}), ffec::mnt6_final_exponent_last_chunk_abs_of_w0, *w0, FMT(annotation_prefix, " compute_w0")));
 
     compute_result.reset(new Fqk_mul_gadget<ppT>(pb, *w1, *w0, *result, FMT(annotation_prefix, " compute_result")));
 }
@@ -218,7 +218,7 @@ void mnt4_final_exp_gadget<ppT>::generate_r1cs_witness()
     compute_w1->generate_r1cs_witness();
     compute_result->generate_r1cs_witness();
 
-    self.pb.val(result_is_one) = (result->get_element() == one->get_element() ? FieldT::one() : FieldT::zero());
+    self.pb.val(result_is_one) = if result->get_element() == one->get_element() {FieldT::one()} else{FieldT::zero()};
 }
 
 template<typename ppT>
@@ -248,7 +248,7 @@ mnt6_final_exp_gadget<ppT>::mnt6_final_exp_gadget(protoboard<FieldT> &pb,
     compute_w1.reset(new exponentiation_gadget<FqkT<ppT>, Fp4_variable, Fp4_mul_gadget, Fp4_cyclotomic_sqr_gadget, ffec::mnt4_q_limbs>(
         pb, *el_q_3_minus_q, ffec::mnt4_final_exponent_last_chunk_w1, *w1, FMT(annotation_prefix, " compute_w1")));
     compute_w0.reset(new exponentiation_gadget<FqkT<ppT>, Fp4_variable, Fp4_mul_gadget, Fp4_cyclotomic_sqr_gadget, ffec::mnt4_q_limbs>(
-        pb, (ffec::mnt4_final_exponent_last_chunk_is_w0_neg ? *el_inv_q_2_minus_1 : *el_q_2_minus_1), ffec::mnt4_final_exponent_last_chunk_abs_of_w0, *w0, FMT(annotation_prefix, " compute_w0")));
+        pb,  (if ffec::mnt4_final_exponent_last_chunk_is_w0_neg {*el_inv_q_2_minus_1} else{*el_q_2_minus_1}), ffec::mnt4_final_exponent_last_chunk_abs_of_w0, *w0, FMT(annotation_prefix, " compute_w0")));
     compute_result.reset(new Fqk_mul_gadget<ppT>(pb, *w1, *w0, *result, FMT(annotation_prefix, " compute_result")));
 }
 
@@ -287,7 +287,7 @@ void mnt6_final_exp_gadget<ppT>::generate_r1cs_witness()
     compute_w0->generate_r1cs_witness();
     compute_result->generate_r1cs_witness();
 
-    self.pb.val(result_is_one) = (result->get_element() == one->get_element() ? FieldT::one() : FieldT::zero());
+    self.pb.val(result_is_one) = if result->get_element() == one->get_element() {FieldT::one()} else{FieldT::zero()};
 }
 
 

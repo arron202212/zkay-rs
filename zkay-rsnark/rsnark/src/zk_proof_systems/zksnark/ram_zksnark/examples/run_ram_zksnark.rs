@@ -107,7 +107,7 @@ bool run_ram_zksnark(const ram_example<ram_zksnark_machine_pp<ram_zksnark_ppT> >
     ffec::print_header("RAM zkSNARK Verifier");
     bool ans = ram_zksnark_verifier<ram_zksnark_ppT>(keypair.vk, example.boot_trace, example.time_bound, proof);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-    print!("* The verification result is: %s\n", (ans ? "PASS" : "FAIL"));
+    print!("* The verification result is: %s\n", if ans {"PASS"} else{"FAIL"});
 
     ffec::leave_block("Call to run_ram_zksnark");
 

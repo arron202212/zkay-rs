@@ -309,7 +309,7 @@ void test_fp()
     // The characteristic is > 2 since this our implementation is for non-binary fields.
     EXPECT_EQ((one + one).as_ulong(), 2UL);
 
-    for (size_t power = 0; power < 10; power++)
+    for power in 0..10
     {
         // The Frobenius map is just the identity for all powers.
         EXPECT_EQ(x, x.Frobenius_map(power));
@@ -323,7 +323,7 @@ void test_fpn_field()
 
     FieldT x = FieldT::random_element();
     FieldT x_q = x;
-    for (size_t power = 0; power < 10; power++)
+    for power in 0..10
     {
         const FieldT x_qi = x.Frobenius_map(power);
         EXPECT_EQ(x_qi, x_q);
@@ -349,7 +349,7 @@ void test_binary_field()
     EXPECT_NE(generator, zero);
     EXPECT_NE(generator, one);
     std::set<std::vector<uint64_t> > values;
-    for (uint16_t i = 0; i < 10000; i++)
+    for i in 0..10000
     {
         if x == one {
             break;

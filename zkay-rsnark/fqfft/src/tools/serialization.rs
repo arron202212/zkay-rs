@@ -163,7 +163,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 
 // inline void output_bool(std::ostream &out, const bool b)
 // {
-//     out << (b ? 1 : 0) << "\n";
+//     out << if b {1} else{0} << "\n";
 // }
 
 // inline void input_bool(std::istream &in, bool &b)
@@ -173,7 +173,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     consume_newline(in);
 //     assert!(tmp == 0 || tmp == 1);
 
-//     b = (tmp == 1 ? true : false);
+//     b = if tmp == 1 {true} else{false};
 // }
 
 // inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v)

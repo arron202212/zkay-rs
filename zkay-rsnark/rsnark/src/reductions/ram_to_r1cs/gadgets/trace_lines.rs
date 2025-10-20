@@ -17,7 +17,7 @@ use  <memory>
 use ffec::common::utils;
 
 use crate::gadgetlib1::gadgets/basic_gadgets;
-use crate::relations::ram_computations/rams/ram_params;
+use crate::relations::ram_computations::rams::ram_params;
 
 
 

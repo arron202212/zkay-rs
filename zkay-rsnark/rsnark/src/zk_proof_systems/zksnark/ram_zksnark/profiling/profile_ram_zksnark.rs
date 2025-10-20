@@ -8,7 +8,7 @@ use boost/program_options;
 use ffec::common::profiling;
 
 use crate::common::default_types::ram_zksnark_pp;
-use crate::relations::ram_computations/memory/examples/memory_contents_examples;
+use crate::relations::ram_computations::memory::examples::memory_contents_examples;
 use crate::relations::ram_computations/rams/examples/ram_examples;
 use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;

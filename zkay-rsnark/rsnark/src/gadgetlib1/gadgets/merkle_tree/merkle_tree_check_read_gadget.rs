@@ -131,7 +131,7 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
     {
         block_variable<FieldT> inp(pb, path.left_digests[i], path.right_digests[i], FMT(self.annotation_prefix, " inp_{}", i));
         hasher_inputs.push(inp);
-        hashers.push(HashT(pb, 2*digest_size, inp, (i == 0 ? *computed_root : internal_output[i-1]),
+        hashers.push(HashT(pb, 2*digest_size, inp, if i == 0 {*computed_root} else{internal_output[i-1]},
                                    FMT(self.annotation_prefix, " load_hashers_{}", i)));
     }
 
@@ -142,7 +142,7 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
           base case) and propagate it one layer up, either in the left
           or the right slot of authentication_path_variable.
         */
-        propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, i < tree_depth - 1 ? internal_output[i] : leaf,
+        propagators.push(digest_selector_gadget<FieldT>(pb, digest_size, if i < tree_depth - 1 { internal_output[i]} else {leaf},
                                                                 address_bits[tree_depth-1-i], path.left_digests[i], path.right_digests[i],
                                                                 FMT(self.annotation_prefix, " digest_selector_{}", i)));
     }
@@ -221,13 +221,13 @@ void test_merkle_tree_check_read_gadget()
     for level in ( 0..=tree_depth-1).rev()
     {
         const bool computed_is_right = (std::rand() % 2);
-        address |= (computed_is_right ? 1ul << (tree_depth-1-level) : 0);
+        address |= if computed_is_right {1ul << (tree_depth-1-level)} else{0};
         address_bits.push_back(computed_is_right);
         ffec::bit_vector other(digest_len);
         std::generate(other.begin(), other.end(), [&]() { return std::rand() % 2; });
 
         ffec::bit_vector block = prev_hash;
-        block.insert(computed_is_right ? block.begin() : block.end(), other.begin(), other.end());
+        block.insert(if computed_is_right  {block.begin() }else  {block.end()}, other.begin(), other.end());
         ffec::bit_vector h = HashT::get_hash(block);
 
         path[level] = other;

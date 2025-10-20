@@ -43,7 +43,7 @@ use crate::tools::exceptions;
     std::vector<TypeParam> f = { 2, 5, 3, 8 };
 
     std::shared_ptr<evaluation_domain<TypeParam> > domain;
-    for (int key = 0; key < 5; key++)
+    for key in 0..5
     {
       try
       {
@@ -57,12 +57,12 @@ use crate::tools::exceptions;
         domain->FFT(a);
 
         std::vector<TypeParam> idx(m);
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           idx[i] = domain->get_domain_element(i);
         }
 
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           TypeParam e = evaluate_polynomial(m, f, idx[i]);
           EXPECT_TRUE(e == a[i]);
@@ -85,7 +85,7 @@ use crate::tools::exceptions;
     std::vector<TypeParam> f = { 2, 5, 3, 8 };
 
     std::shared_ptr<evaluation_domain<TypeParam> > domain;
-    for (int key = 0; key < 5; key++)
+    for key in 0..5
     {
       try
       {
@@ -99,7 +99,7 @@ use crate::tools::exceptions;
         domain->FFT(a);
         domain->iFFT(a);
 
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           EXPECT_TRUE(f[i] == a[i]);
         }
@@ -123,7 +123,7 @@ use crate::tools::exceptions;
     TypeParam coset = TypeParam::multiplicative_generator;
 
     std::shared_ptr<evaluation_domain<TypeParam> > domain;
-    for (int key = 0; key < 3; key++)
+    for key in 0..3
     {
       try
       {
@@ -137,7 +137,7 @@ use crate::tools::exceptions;
         domain->cosetFFT(a, coset);
         domain->icosetFFT(a, coset);
 
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           EXPECT_TRUE(f[i] == a[i]);
         }
@@ -159,7 +159,7 @@ use crate::tools::exceptions;
     TypeParam t = TypeParam(10);
 
     std::shared_ptr<evaluation_domain<TypeParam> > domain;
-    for (int key = 0; key < 5; key++)
+    for key in 0..5
     {
 
       try
@@ -174,12 +174,12 @@ use crate::tools::exceptions;
         a = domain->evaluate_all_lagrange_polynomials(t);
 
         std::vector<TypeParam> d(m);
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           d[i] = domain->get_domain_element(i);
         }
 
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           TypeParam e = evaluate_lagrange_polynomial(m, d, t, i);
           print!("%ld == %ld\n", e.as_ulong(), a[i].as_ulong());
@@ -203,7 +203,7 @@ use crate::tools::exceptions;
     TypeParam t = TypeParam(10);
 
     std::shared_ptr<evaluation_domain<TypeParam> > domain;
-    for (int key = 0; key < 5; key++)
+    for key in 0..5
     {
       try
       {
@@ -217,7 +217,7 @@ use crate::tools::exceptions;
         a = domain->compute_vanishing_polynomial(t);
 
         TypeParam Z = TypeParam::one();
-        for (size_t i = 0; i < m; i++)
+        for i in 0..m
         {
           Z *= (t - domain->get_domain_element(i));
         }

@@ -140,9 +140,9 @@ void profile()
 #else
         print!("Profiling with Fr<edwards_pp>\n");
 //#endif
-        for (int threads = 0; threads < 4; threads++)
+        for threads in 0..4
         {
-          for (int key = 0; key < 4; key++) /* Change key to 5 for arithmetic domain */
+          for key in 0..4 /* Change key to 5 for arithmetic domain */
           {
             if key > 2 && domain_type == 2 continue;
             if key < 3 && domain_type == 3 continue;
@@ -219,7 +219,7 @@ void plot()
         std::cout << "> ";
         getline(std::cin, file);
         file_number = atoi(file.c_str());
-      } while ((file_number > 0 && file_number <= ((int) files.size()) + 1) ? 0 : 1);
+      } while if (file_number > 0 && file_number <= ((int) files.size()) + 1) {0} else{1};
 
       if file_number < count
       {

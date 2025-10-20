@@ -30,7 +30,7 @@ use crate::polynomial_arithmetic::basic_operations;
     std::vector<TypeParam> c_answer(1, TypeParam::zero());
     _polynomial_multiplication(c_answer, a, b);
 
-    for (size_t i = 0; i < c_answer.size(); i++)
+    for i in 0..c_answer.size()
     {
       EXPECT_TRUE(c_answer[i] == c[i]);
     }
@@ -47,7 +47,7 @@ use crate::polynomial_arithmetic::basic_operations;
     std::vector<TypeParam> c_answer(1, TypeParam::zero());
     _polynomial_multiplication(c_answer, a, b);
 
-    for (size_t i = 0; i < c_answer.size(); i++)
+    for i in 0..c_answer.size()
     {
       EXPECT_TRUE(c_answer[i] == c[i]);
     }

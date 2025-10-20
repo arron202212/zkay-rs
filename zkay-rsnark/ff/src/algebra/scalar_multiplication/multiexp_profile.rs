@@ -33,10 +33,10 @@ test_instances_t<GroupT> generate_group_elements(size_t count, size_t size)
     // so for now we only generate a single one and repeat it
     test_instances_t<GroupT> result(count);
 
-    for (size_t i = 0; i < count; i++) {
+    for i in 0..count {
         GroupT x = GroupT::random_element();
         x.to_special(); // djb requires input to be in special form
-        for (size_t j = 0; j < size; j++) {
+        for j in 0..size {
             result[i].push_back(x);
             // result[i].push_back(GroupT::random_element());
         }
@@ -52,8 +52,8 @@ test_instances_t<FieldT> generate_scalars(size_t count, size_t size)
     // FieldT::random_element()
     test_instances_t<FieldT> result(count);
 
-    for (size_t i = 0; i < count; i++) {
-        for (size_t j = 0; j < size; j++) {
+    for i in 0..count {
+        for j in 0..size {
             result[i].push_back(SHA512_rng<FieldT>(i * size + j));
         }
     }
@@ -69,7 +69,7 @@ run_result_t<GroupT> profile_multiexp(
     long long start_time = get_nsec_time();
 
     std::vector<GroupT> answers;
-    for (size_t i = 0; i < group_elements.size(); i++) {
+    for i in 0..group_elements.size() {
         answers.push_back(multi_exp<GroupT, FieldT, Method>(
             group_elements[i].cbegin(), group_elements[i].cend(),
             scalars[i].cbegin(), scalars[i].cend(),
@@ -88,7 +88,7 @@ void print_performance_csv(
     size_t expn_end_naive,
     bool compare_answers)
 {
-    for (size_t expn = expn_start; expn <= expn_end_fast; expn++) {
+    for expn in expn_start..=expn_end_fast {
         print!("%ld", expn); fflush(stdout);
 
         test_instances_t<GroupT> group_elements =

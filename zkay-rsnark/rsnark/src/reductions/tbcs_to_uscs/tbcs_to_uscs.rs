@@ -94,7 +94,7 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
 
 // #ifdef DEBUG
         auto it = circuit.gate_annotations.find(g.output);
-        const std::string annotation = (it != circuit.gate_annotations.end() ? it->second : FMT("", "compute_wire_{}", g.output));
+        const std::string annotation = if it != circuit.gate_annotations.end() {it->second} else{FMT("", "compute_wire_{}", g.output)};
 #else
         const std::string annotation = "";
 //#endif

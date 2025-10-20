@@ -94,12 +94,12 @@ tbcs_example generate_tbcs_example(const size_t primary_input_size,
     tbcs_example example;
     for i in 0..primary_input_size
     {
-        example.primary_input.push_back(std::rand() % 2 == 0 ? false : true);
+        example.primary_input.push_back(std::rand() % 2 != 0 );
     }
 
     for i in 0..auxiliary_input_size
     {
-        example.auxiliary_input.push_back(std::rand() % 2 == 0 ? false : true);
+        example.auxiliary_input.push_back(std::rand() % 2 != 0 );
     }
 
     example.circuit.primary_input_size = primary_input_size;

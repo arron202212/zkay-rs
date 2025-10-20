@@ -1,181 +1,181 @@
-/** @file
- *****************************************************************************
+// /** @file
+//  *****************************************************************************
 
- Declaration of interfaces for public parameters of MNT6.
+//  Declaration of interfaces for public parameters of MNT6.
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of libff, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
-//#ifndef MNT6_PP_HPP_
-// #define MNT6_PP_HPP_
+// //#ifndef MNT6_PP_HPP_
+// // #define MNT6_PP_HPP_
 
-use crate::algebra::curves::mnt::mnt6::mnt6_g1;
-use crate::algebra::curves::mnt::mnt6::mnt6_g2;
-use crate::algebra::curves::mnt::mnt6::mnt6_init;
-use crate::algebra::curves::mnt::mnt6::mnt6_pairing;
-use crate::algebra::curves::public_params;
+// use crate::algebra::curves::mnt::mnt6::mnt6_g1;
+// use crate::algebra::curves::mnt::mnt6::mnt6_g2;
+// use crate::algebra::curves::mnt::mnt6::mnt6_init;
+// use crate::algebra::curves::mnt::mnt6::mnt6_pairing;
+// use crate::algebra::curves::public_params;
 
-// namespace libff {
+// // namespace libff {
 
-class mnt6_pp {
-public:
-    typedef mnt6_Fr Fp_type;
-    typedef mnt6_G1 G1_type;
-    typedef mnt6_G2 G2_type;
-    typedef mnt6_affine_ate_G1_precomputation affine_ate_G1_precomp_type;
-    typedef mnt6_affine_ate_G2_precomputation affine_ate_G2_precomp_type;
-    typedef mnt6_G1_precomp G1_precomp_type;
-    typedef mnt6_G2_precomp G2_precomp_type;
-    typedef mnt6_Fq Fq_type;
-    typedef mnt6_Fq3 Fqe_type;
-    typedef mnt6_Fq6 Fqk_type;
-    typedef mnt6_GT GT_type;
+// class mnt6_pp {
+// public:
+//     typedef mnt6_Fr Fp_type;
+//     typedef mnt6_G1 G1_type;
+//     typedef mnt6_G2 G2_type;
+//     typedef mnt6_affine_ate_G1_precomputation affine_ate_G1_precomp_type;
+//     typedef mnt6_affine_ate_G2_precomputation affine_ate_G2_precomp_type;
+//     typedef mnt6_G1_precomp G1_precomp_type;
+//     typedef mnt6_G2_precomp G2_precomp_type;
+//     typedef mnt6_Fq Fq_type;
+//     typedef mnt6_Fq3 Fqe_type;
+//     typedef mnt6_Fq6 Fqk_type;
+//     typedef mnt6_GT GT_type;
 
-    static const bool has_affine_pairing = true;
+//     static const bool has_affine_pairing = true;
 
-    static void init_public_params();
-    static mnt6_GT final_exponentiation(const mnt6_Fq6 &elt);
-    static mnt6_G1_precomp precompute_G1(const mnt6_G1 &P);
-    static mnt6_G2_precomp precompute_G2(const mnt6_G2 &Q);
-    static mnt6_Fq6 miller_loop(const mnt6_G1_precomp &prec_P,
-                                const mnt6_G2_precomp &prec_Q);
-    static mnt6_affine_ate_G1_precomputation affine_ate_precompute_G1(const mnt6_G1 &P);
-    static mnt6_affine_ate_G2_precomputation affine_ate_precompute_G2(const mnt6_G2 &Q);
-    static mnt6_Fq6 affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P,
-                                           const mnt6_affine_ate_G2_precomputation &prec_Q);
-    static mnt6_Fq6 affine_ate_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
-                                                    const mnt6_affine_ate_G2_precomputation &prec_Q1,
-                                                    const mnt6_affine_ate_G1_precomputation &prec_P2,
-                                                    const mnt6_affine_ate_G2_precomputation &prec_Q2);
-    static mnt6_Fq6 affine_ate_e_times_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
-                                                            const mnt6_affine_ate_G2_precomputation &prec_Q1,
-                                                            const mnt6_affine_ate_G1_precomputation &prec_P2,
-                                                            const mnt6_affine_ate_G2_precomputation &prec_Q2,
-                                                            const mnt6_affine_ate_G1_precomputation &prec_P3,
-                                                            const mnt6_affine_ate_G2_precomputation &prec_Q3);
-    static mnt6_Fq6 double_miller_loop(const mnt6_G1_precomp &prec_P1,
-                                       const mnt6_G2_precomp &prec_Q1,
-                                       const mnt6_G1_precomp &prec_P2,
-                                       const mnt6_G2_precomp &prec_Q2);
+//     static void init_public_params();
+//     static mnt6_GT final_exponentiation(const mnt6_Fq6 &elt);
+//     static mnt6_G1_precomp precompute_G1(const mnt6_G1 &P);
+//     static mnt6_G2_precomp precompute_G2(const mnt6_G2 &Q);
+//     static mnt6_Fq6 miller_loop(const mnt6_G1_precomp &prec_P,
+//                                 const mnt6_G2_precomp &prec_Q);
+//     static mnt6_affine_ate_G1_precomputation affine_ate_precompute_G1(const mnt6_G1 &P);
+//     static mnt6_affine_ate_G2_precomputation affine_ate_precompute_G2(const mnt6_G2 &Q);
+//     static mnt6_Fq6 affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P,
+//                                            const mnt6_affine_ate_G2_precomputation &prec_Q);
+//     static mnt6_Fq6 affine_ate_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
+//                                                     const mnt6_affine_ate_G2_precomputation &prec_Q1,
+//                                                     const mnt6_affine_ate_G1_precomputation &prec_P2,
+//                                                     const mnt6_affine_ate_G2_precomputation &prec_Q2);
+//     static mnt6_Fq6 affine_ate_e_times_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
+//                                                             const mnt6_affine_ate_G2_precomputation &prec_Q1,
+//                                                             const mnt6_affine_ate_G1_precomputation &prec_P2,
+//                                                             const mnt6_affine_ate_G2_precomputation &prec_Q2,
+//                                                             const mnt6_affine_ate_G1_precomputation &prec_P3,
+//                                                             const mnt6_affine_ate_G2_precomputation &prec_Q3);
+//     static mnt6_Fq6 double_miller_loop(const mnt6_G1_precomp &prec_P1,
+//                                        const mnt6_G2_precomp &prec_Q1,
+//                                        const mnt6_G1_precomp &prec_P2,
+//                                        const mnt6_G2_precomp &prec_Q2);
 
-    /* the following are used in test files */
-    static mnt6_Fq6 pairing(const mnt6_G1 &P,
-                            const mnt6_G2 &Q);
-    static mnt6_Fq6 reduced_pairing(const mnt6_G1 &P,
-                                    const mnt6_G2 &Q);
-    static mnt6_Fq6 affine_reduced_pairing(const mnt6_G1 &P,
-                                           const mnt6_G2 &Q);
-};
+//     /* the following are used in test files */
+//     static mnt6_Fq6 pairing(const mnt6_G1 &P,
+//                             const mnt6_G2 &Q);
+//     static mnt6_Fq6 reduced_pairing(const mnt6_G1 &P,
+//                                     const mnt6_G2 &Q);
+//     static mnt6_Fq6 affine_reduced_pairing(const mnt6_G1 &P,
+//                                            const mnt6_G2 &Q);
+// };
 
-// } // namespace libff
+// // } // namespace libff
 
-//#endif // MNT6_PP_HPP_
-/** @file
- *****************************************************************************
+// //#endif // MNT6_PP_HPP_
+// /** @file
+//  *****************************************************************************
 
- Implementation of interfaces for public parameters of MNT6.
+//  Implementation of interfaces for public parameters of MNT6.
 
- See mnt6_pp.hpp .
+//  See mnt6_pp.hpp .
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of libff, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
-use crate::algebra::curves::mnt::mnt6::mnt6_pp;
+// use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
-// namespace libff {
+// // namespace libff {
 
-void mnt6_pp::init_public_params()
-{
-    init_mnt6_params();
-}
+// void mnt6_pp::init_public_params()
+// {
+//     init_mnt6_params();
+// }
 
-mnt6_GT mnt6_pp::final_exponentiation(const mnt6_Fq6 &elt)
-{
-    return mnt6_final_exponentiation(elt);
-}
+// mnt6_GT mnt6_pp::final_exponentiation(const mnt6_Fq6 &elt)
+// {
+//     return mnt6_final_exponentiation(elt);
+// }
 
-mnt6_G1_precomp mnt6_pp::precompute_G1(const mnt6_G1 &P)
-{
-    return mnt6_precompute_G1(P);
-}
+// mnt6_G1_precomp mnt6_pp::precompute_G1(const mnt6_G1 &P)
+// {
+//     return mnt6_precompute_G1(P);
+// }
 
-mnt6_G2_precomp mnt6_pp::precompute_G2(const mnt6_G2 &Q)
-{
-    return mnt6_precompute_G2(Q);
-}
+// mnt6_G2_precomp mnt6_pp::precompute_G2(const mnt6_G2 &Q)
+// {
+//     return mnt6_precompute_G2(Q);
+// }
 
 
-mnt6_Fq6 mnt6_pp::miller_loop(const mnt6_G1_precomp &prec_P,
-                              const mnt6_G2_precomp &prec_Q)
-{
-    return mnt6_miller_loop(prec_P, prec_Q);
-}
+// mnt6_Fq6 mnt6_pp::miller_loop(const mnt6_G1_precomp &prec_P,
+//                               const mnt6_G2_precomp &prec_Q)
+// {
+//     return mnt6_miller_loop(prec_P, prec_Q);
+// }
 
-mnt6_affine_ate_G1_precomputation mnt6_pp::affine_ate_precompute_G1(const mnt6_G1 &P)
-{
-    return mnt6_affine_ate_precompute_G1(P);
-}
+// mnt6_affine_ate_G1_precomputation mnt6_pp::affine_ate_precompute_G1(const mnt6_G1 &P)
+// {
+//     return mnt6_affine_ate_precompute_G1(P);
+// }
 
-mnt6_affine_ate_G2_precomputation mnt6_pp::affine_ate_precompute_G2(const mnt6_G2 &Q)
-{
-    return mnt6_affine_ate_precompute_G2(Q);
-}
+// mnt6_affine_ate_G2_precomputation mnt6_pp::affine_ate_precompute_G2(const mnt6_G2 &Q)
+// {
+//     return mnt6_affine_ate_precompute_G2(Q);
+// }
 
-mnt6_Fq6 mnt6_pp::affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P,
-                                         const mnt6_affine_ate_G2_precomputation &prec_Q)
-{
-    return mnt6_affine_ate_miller_loop(prec_P, prec_Q);
-}
+// mnt6_Fq6 mnt6_pp::affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P,
+//                                          const mnt6_affine_ate_G2_precomputation &prec_Q)
+// {
+//     return mnt6_affine_ate_miller_loop(prec_P, prec_Q);
+// }
 
-mnt6_Fq6 mnt6_pp::double_miller_loop(const mnt6_G1_precomp &prec_P1,
-                                     const mnt6_G2_precomp &prec_Q1,
-                                     const mnt6_G1_precomp &prec_P2,
-                                     const mnt6_G2_precomp &prec_Q2)
-{
-    return mnt6_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
-}
+// mnt6_Fq6 mnt6_pp::double_miller_loop(const mnt6_G1_precomp &prec_P1,
+//                                      const mnt6_G2_precomp &prec_Q1,
+//                                      const mnt6_G1_precomp &prec_P2,
+//                                      const mnt6_G2_precomp &prec_Q2)
+// {
+//     return mnt6_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
+// }
 
-mnt6_Fq6 mnt6_pp::affine_ate_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
-                                                  const mnt6_affine_ate_G2_precomputation &prec_Q1,
-                                                  const mnt6_affine_ate_G1_precomputation &prec_P2,
-                                                  const mnt6_affine_ate_G2_precomputation &prec_Q2)
-{
-    return mnt6_affine_ate_miller_loop(prec_P1, prec_Q1) * mnt6_affine_ate_miller_loop(prec_P2, prec_Q2).unitary_inverse();
-}
+// mnt6_Fq6 mnt6_pp::affine_ate_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
+//                                                   const mnt6_affine_ate_G2_precomputation &prec_Q1,
+//                                                   const mnt6_affine_ate_G1_precomputation &prec_P2,
+//                                                   const mnt6_affine_ate_G2_precomputation &prec_Q2)
+// {
+//     return mnt6_affine_ate_miller_loop(prec_P1, prec_Q1) * mnt6_affine_ate_miller_loop(prec_P2, prec_Q2).unitary_inverse();
+// }
 
-mnt6_Fq6 mnt6_pp::affine_ate_e_times_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
-                                                          const mnt6_affine_ate_G2_precomputation &prec_Q1,
-                                                          const mnt6_affine_ate_G1_precomputation &prec_P2,
-                                                          const mnt6_affine_ate_G2_precomputation &prec_Q2,
-                                                          const mnt6_affine_ate_G1_precomputation &prec_P3,
-                                                          const mnt6_affine_ate_G2_precomputation &prec_Q3)
-{
-    return ((mnt6_affine_ate_miller_loop(prec_P1, prec_Q1) * mnt6_affine_ate_miller_loop(prec_P2, prec_Q2)) *
-            mnt6_affine_ate_miller_loop(prec_P3, prec_Q3).unitary_inverse());
-}
+// mnt6_Fq6 mnt6_pp::affine_ate_e_times_e_over_e_miller_loop(const mnt6_affine_ate_G1_precomputation &prec_P1,
+//                                                           const mnt6_affine_ate_G2_precomputation &prec_Q1,
+//                                                           const mnt6_affine_ate_G1_precomputation &prec_P2,
+//                                                           const mnt6_affine_ate_G2_precomputation &prec_Q2,
+//                                                           const mnt6_affine_ate_G1_precomputation &prec_P3,
+//                                                           const mnt6_affine_ate_G2_precomputation &prec_Q3)
+// {
+//     return ((mnt6_affine_ate_miller_loop(prec_P1, prec_Q1) * mnt6_affine_ate_miller_loop(prec_P2, prec_Q2)) *
+//             mnt6_affine_ate_miller_loop(prec_P3, prec_Q3).unitary_inverse());
+// }
 
-mnt6_Fq6 mnt6_pp::pairing(const mnt6_G1 &P,
-                          const mnt6_G2 &Q)
-{
-    return mnt6_pairing(P, Q);
-}
+// mnt6_Fq6 mnt6_pp::pairing(const mnt6_G1 &P,
+//                           const mnt6_G2 &Q)
+// {
+//     return mnt6_pairing(P, Q);
+// }
 
-mnt6_Fq6 mnt6_pp::reduced_pairing(const mnt6_G1 &P,
-                                  const mnt6_G2 &Q)
-{
-    return mnt6_reduced_pairing(P, Q);
-}
+// mnt6_Fq6 mnt6_pp::reduced_pairing(const mnt6_G1 &P,
+//                                   const mnt6_G2 &Q)
+// {
+//     return mnt6_reduced_pairing(P, Q);
+// }
 
-mnt6_Fq6 mnt6_pp::affine_reduced_pairing(const mnt6_G1 &P,
-                                         const mnt6_G2 &Q)
-{
-    return mnt6_affine_reduced_pairing(P, Q);
-}
+// mnt6_Fq6 mnt6_pp::affine_reduced_pairing(const mnt6_G1 &P,
+//                                          const mnt6_G2 &Q)
+// {
+//     return mnt6_affine_reduced_pairing(P, Q);
+// }
 
-// } // namespace libff
+// // } // namespace libff

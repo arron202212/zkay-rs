@@ -10,37 +10,34 @@
 //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 
-use  <memory>
-use  <vector>
+// use  <memory>
+// use  <vector>
 
-use ffec::common::default_types::ec_pp;
+use common::default_types::ec_pp;
 
-namespace gadgetlib2 {
+// namespace gadgetlib2 {
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                        R1P World                           ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
+
+// /*******************                        R1P World                           ******************/
+
 
 /* curve-specific public parameters */
-type ffec::Fr<ffec::default_ec_pp> Fp;
+type Fp=Fr<default_ec_pp> ;
 
-type std::vector<Fp> FpVector;
+type FpVector=std::vector<Fp> ;
 
-class PublicParams {
-public:
-    size_t log_p;
-    PublicParams(const std::size_t log_p);
-    Fp getFp(long x) const; // to_support changes later
-    ~PublicParams();
-};
+pub struct PublicParams {
+// public:
+     log_p:usize,
+}
+//     PublicParams(const std::size_t log_p);
+//     Fp getFp(long x) const; // to_support changes later
+//     ~PublicParams();
+// };
 
-PublicParams initPublicParamsFromDefaultPp();
+// PublicParams initPublicParamsFromDefaultPp();
 
-} // namespace gadgetlib2
+// } // namespace gadgetlib2
 //#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 /** @file
  *****************************************************************************
@@ -51,25 +48,28 @@ PublicParams initPublicParamsFromDefaultPp();
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <cassert>
-use  <vector>
+// use  <cassert>
+// use  <vector>
 
 use crate::gadgetlib2::pp;
 
-namespace gadgetlib2 {
+impl PublicParams {
 
-PublicParams::PublicParams(const std::size_t log_p) : log_p(log_p) {}
+pub fn new(log_p:usize) ->Self  {
+Self{log_p}}
 
-Fp PublicParams::getFp(long x) const {
+ pub fn getFp( x:i64) ->Fp {
     return Fp(x);
 }
 
-PublicParams::~PublicParams() {}
 
-PublicParams initPublicParamsFromDefaultPp() {
-    ffec::default_ec_pp::init_public_params();
-    const std::size_t log_p = ffec::Fr<ffec::default_ec_pp>::size_in_bits();
-    return PublicParams(log_p);
+
+
+
+} 
+
+ pub fn initPublicParamsFromDefaultPp()->PublicParams {
+    default_ec_pp::init_public_params();
+    let  log_p = Fr::<default_ec_pp>::size_in_bits();
+    return PublicParams::new(log_p);
 }
-
-} // namespace gadgetlib2

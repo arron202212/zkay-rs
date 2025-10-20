@@ -172,8 +172,8 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
         {
             const size_t cur_idx = (nodes_in_layer - 1) / (max_arity - 1) + i;
 
-            tally_cp_handler<FieldT> &cur_tally = (tree_types[cur_idx] == 1 ? tally_1 : tally_2);
-            r1cs_pcd_compliance_predicate<FieldT> &cur_cp = (tree_types[cur_idx] == 1 ? cp_1 : cp_2);
+            tally_cp_handler<FieldT> &cur_tally = if tree_types[cur_idx] == 1 {tally_1} else{tally_2};
+            r1cs_pcd_compliance_predicate<FieldT> &cur_cp = if tree_types[cur_idx] == 1 {cp_1} else{cp_2};
 
             const bool base_case = (max_arity * cur_idx + max_arity >= tree_size);
 
@@ -231,7 +231,7 @@ bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
             print!("Outgoing message is:\n");
             tree_messages[cur_idx]->print();
             print!("\n");
-            print!("Current node = {}. Current proof verifies = %s\n", cur_idx, ans ? "YES" : "NO");
+            print!("Current node = {}. Current proof verifies = %s\n", cur_idx, if ans  {"YES" }else {"NO"});
             print!("\n\n\n ================================================================================\n\n\n");
         }
     }

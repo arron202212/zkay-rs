@@ -14,7 +14,7 @@
 
 use crate::gadgetlib1::gadgets/basic_gadgets;
 use crate::gadgetlib1::protoboard;
-use crate::relations::ram_computations/rams/ram_params;
+use crate::relations::ram_computations::rams::ram_params;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 

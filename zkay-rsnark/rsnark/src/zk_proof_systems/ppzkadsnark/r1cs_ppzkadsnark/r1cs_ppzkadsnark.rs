@@ -1,396 +1,408 @@
-/** @file
- *****************************************************************************
+// /** @file
+//  *****************************************************************************
 
- Declaration of interfaces for a ppzkADSNARK for R1CS.
+//  Declaration of interfaces for a ppzkADSNARK for R1CS.
 
- This includes:
- - class for authentication key (public and symmetric)
- - class for authentication verification key (public and symmetric)
- - class for proving key
- - class for verification key
- - class for processed verification key
- - class for key tuple (authentication key & proving key & verification key)
- - class for authenticated data
- - class for proof
- - generator algorithm
- - authentication key generator algorithm
- - prover algorithm
- - verifier algorithm (public and symmetric)
- - online verifier algorithm (public and symmetric)
+//  This includes:
+//  - pub struct  for authentication key (public and symmetric)
+//  - pub struct  for authentication verification key (public and symmetric)
+//  - pub struct  for proving key
+//  - pub struct  for verification key
+//  - pub struct  for processed verification key
+//  - pub struct  for key tuple (authentication key & proving key & verification key)
+//  - pub struct  for authenticated data
+//  - pub struct  for proof
+//  - generator algorithm
+//  - authentication key generator algorithm
+//  - prover algorithm
+//  - verifier algorithm (public and symmetric)
+//  - online verifier algorithm (public and symmetric)
 
- The implementation instantiates the construction in \[BBFR15], which in turn
- is based on the r1cs_ppzkadsnark proof system.
+//  The implementation instantiates the construction in \[BBFR15], which in turn
+//  is based on the r1cs_ppzkadsnark proof system.
 
- Acronyms:
+//  Acronyms:
 
- - R1CS = "Rank-1 Constraint Systems"
- - ppzkADSNARK = "PreProcessing Zero-Knowledge Succinct Non-interactive ARgument of Knowledge Over Authenticated Data"
+//  - R1CS = "Rank-1 Constraint Systems"
+//  - ppzkADSNARK = "PreProcessing Zero-Knowledge Succinct Non-interactive ARgument of Knowledge Over Authenticated Data"
 
- References:
+//  References:
 
-\[BBFR15]
-"ADSNARK: Nearly Practical and Privacy-Preserving Proofs on Authenticated Data",
-Michael Backes, Manuel Barbosa, Dario Fiore, Raphael M. Reischuk,
-IEEE Symposium on Security and Privacy 2015,
- <http://eprint.iacr.org/2014/617>
+// \[BBFR15]
+// "ADSNARK: Nearly Practical and Privacy-Preserving Proofs on Authenticated Data",
+// Michael Backes, Manuel Barbosa, Dario Fiore, Raphael M. Reischuk,
+// IEEE Symposium on Security and Privacy 2015,
+//  <http://eprint.iacr.org/2014/617>
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of crate, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
 //#ifndef R1CS_PPZKADSNARK_HPP_
 // #define R1CS_PPZKADSNARK_HPP_
 
-use  <memory>
+// use  <memory>
 
-use ffec::algebra::curves::public_params;
+use algebra::curves::public_params;
 
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_params;
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_prf;
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark_signature;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_signature;
 
 
 
 /******************************** Public authentication parameters ********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_pub_auth_prms;
+// 
+// pub struct  r1cs_ppzkadsnark_pub_auth_prms;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap);
+// 
+// std::ostream& operator<<(std::ostream &out, pap:&r1cs_ppzkadsnark_pub_auth_prms<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap);
 
 /**
  * Public authentication parameters for the R1CS ppzkADSNARK
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_pub_auth_prms {
-public:
-    ffec::G1<snark_pp<ppT>> I1;
+// 
+pub struct  r1cs_ppzkadsnark_pub_auth_prms<ppT>{
 
-    r1cs_ppzkadsnark_pub_auth_prms() {};
-    r1cs_ppzkadsnark_pub_auth_prms<ppT>& operator=(const r1cs_ppzkadsnark_pub_auth_prms<ppT> &other) = default;
-    r1cs_ppzkadsnark_pub_auth_prms(const r1cs_ppzkadsnark_pub_auth_prms<ppT> &other) = default;
-    r1cs_ppzkadsnark_pub_auth_prms(r1cs_ppzkadsnark_pub_auth_prms<ppT> &&other) = default;
-    r1cs_ppzkadsnark_pub_auth_prms(ffec::G1<snark_pp<ppT>> &&I1) : I1((I1)) {};
+I1:    G1::<snark_pp::<ppT>>,
+}
+impl r1cs_ppzkadsnark_pub_auth_prms<ppT>{
+    // r1cs_ppzkadsnark_pub_auth_prms() {};
+    // r1cs_ppzkadsnark_pub_auth_prms<ppT>& operator=(other:&r1cs_ppzkadsnark_pub_auth_prms<ppT>) = default;
+    // r1cs_ppzkadsnark_pub_auth_prms(other:&r1cs_ppzkadsnark_pub_auth_prms<ppT>) = default;
+    // r1cs_ppzkadsnark_pub_auth_prms(r1cs_ppzkadsnark_pub_auth_prms<ppT> &&other) = default;
+    pub fn new (I1:G1<snark_pp<ppT>>) ->Self  {Self{I1}}
 
-    bool operator==(const r1cs_ppzkadsnark_pub_auth_prms<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap);
-};
+    // bool operator==(other:&r1cs_ppzkadsnark_pub_auth_prms<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, pap:&r1cs_ppzkadsnark_pub_auth_prms<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap);
+}
 
 /******************************** Secret authentication key ********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_sec_auth_key;
+// 
+// pub struct  r1cs_ppzkadsnark_sec_auth_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_sec_auth_key<ppT> &key);
+// 
+// std::ostream& operator<<(std::ostream &out, key:&r1cs_ppzkadsnark_sec_auth_key<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<ppT> &key);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<ppT> &key);
 
 /**
  * Secret authentication key for the R1CS ppzkADSNARK
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_sec_auth_key {
-public:
-    ffec::Fr<snark_pp<ppT>> i;
-    r1cs_ppzkadsnark_skT<ppT>skp;
-    r1cs_ppzkadsnark_prfKeyT<ppT>S;
+// 
+pub struct  r1cs_ppzkadsnark_sec_auth_key<ppT> {
 
-    r1cs_ppzkadsnark_sec_auth_key() {};
-    r1cs_ppzkadsnark_sec_auth_key<ppT>& operator=(const r1cs_ppzkadsnark_sec_auth_key<ppT> &other) = default;
-    r1cs_ppzkadsnark_sec_auth_key(const r1cs_ppzkadsnark_sec_auth_key<ppT> &other) = default;
-    r1cs_ppzkadsnark_sec_auth_key(r1cs_ppzkadsnark_sec_auth_key<ppT> &&other) = default;
-    r1cs_ppzkadsnark_sec_auth_key(ffec::Fr<snark_pp<ppT>> &&i,
-                                  r1cs_ppzkadsnark_skT<ppT>&&skp, r1cs_ppzkadsnark_prfKeyT<ppT>&&S) :
-        i((i)),
-        skp((skp)),
-        S((S)) {};
+i:    Fr::<snark_pp::<ppT>>,
+skp:    r1cs_ppzkadsnark_skT<ppT>,
+S:    r1cs_ppzkadsnark_prfKeyT<ppT>,
+}
+impl r1cs_ppzkadsnark_sec_auth_key<ppT> 
+{
+    // r1cs_ppzkadsnark_sec_auth_key() {};
+    // r1cs_ppzkadsnark_sec_auth_key<ppT>& operator=(other:&r1cs_ppzkadsnark_sec_auth_key<ppT>) = default;
+    // r1cs_ppzkadsnark_sec_auth_key(other:&r1cs_ppzkadsnark_sec_auth_key<ppT>) = default;
+    // r1cs_ppzkadsnark_sec_auth_key(r1cs_ppzkadsnark_sec_auth_key<ppT> &&other) = default;
+    pub fn new(i:Fr::<snark_pp::<ppT>>,
+skp:                                  r1cs_ppzkadsnark_skT<ppT>,S: r1cs_ppzkadsnark_prfKeyT<ppT>)->Self
+      {  Self{i,
+        skp,
+        S }}
 
-    bool operator==(const r1cs_ppzkadsnark_sec_auth_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_sec_auth_key<ppT> &key);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<ppT> &key);
-};
+    // bool operator==(other:&r1cs_ppzkadsnark_sec_auth_key<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, key:&r1cs_ppzkadsnark_sec_auth_key<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<ppT> &key);
+}
 
 /******************************** Public authentication key ********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_pub_auth_key;
+// 
+// pub struct  r1cs_ppzkadsnark_pub_auth_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_pub_auth_key<ppT> &key);
+// 
+// std::ostream& operator<<(std::ostream &out, key:&r1cs_ppzkadsnark_pub_auth_key<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<ppT> &key);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<ppT> &key);
 
 /**
  * Public authentication key for the R1CS ppzkADSNARK
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_pub_auth_key {
-public:
-    ffec::G2<snark_pp<ppT>> minusI2;
-    r1cs_ppzkadsnark_vkT<ppT>vkp;
+// 
+pub struct  r1cs_ppzkadsnark_pub_auth_key<ppT> {
 
-    r1cs_ppzkadsnark_pub_auth_key() {};
-    r1cs_ppzkadsnark_pub_auth_key<ppT>& operator=(const r1cs_ppzkadsnark_pub_auth_key<ppT> &other) = default;
-    r1cs_ppzkadsnark_pub_auth_key(const r1cs_ppzkadsnark_pub_auth_key<ppT> &other) = default;
-    r1cs_ppzkadsnark_pub_auth_key(r1cs_ppzkadsnark_pub_auth_key<ppT> &&other) = default;
-    r1cs_ppzkadsnark_pub_auth_key(ffec::G2<snark_pp<ppT>> &&minusI2, r1cs_ppzkadsnark_vkT<ppT>&&vkp) :
-        minusI2((minusI2)),
-        vkp((vkp)) {};
+    minusI2: G2::<snark_pp::<ppT>>,
+     vkp:r1cs_ppzkadsnark_vkT<ppT>,
+}
+impl r1cs_ppzkadsnark_pub_auth_key<ppT> {
+    // r1cs_ppzkadsnark_pub_auth_key() {};
+    // r1cs_ppzkadsnark_pub_auth_key<ppT>& operator=(other:&r1cs_ppzkadsnark_pub_auth_key<ppT>) = default;
+    // r1cs_ppzkadsnark_pub_auth_key(other:&r1cs_ppzkadsnark_pub_auth_key<ppT>) = default;
+    // r1cs_ppzkadsnark_pub_auth_key(r1cs_ppzkadsnark_pub_auth_key<ppT> &&other) = default;
+    pub fn new(minusI2:G2::<snark_pp::<ppT>>,vkp: r1cs_ppzkadsnark_vkT<ppT>)->Self
+        { Self{minusI2,
+        vkp}}
 
-    bool operator==(const r1cs_ppzkadsnark_pub_auth_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_pub_auth_key<ppT> &key);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<ppT> &key);
-};
+    // bool operator==(other:&r1cs_ppzkadsnark_pub_auth_key<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, key:&r1cs_ppzkadsnark_pub_auth_key<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<ppT> &key);
+}
 
 /******************************** Authentication key material ********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_auth_keys {
-public:
-    r1cs_ppzkadsnark_pub_auth_prms<ppT> pap;
-    r1cs_ppzkadsnark_pub_auth_key<ppT> pak;
-    r1cs_ppzkadsnark_sec_auth_key<ppT> sak;
+// 
+pub struct  r1cs_ppzkadsnark_auth_keys<ppT> {
 
-    r1cs_ppzkadsnark_auth_keys() {};
-    r1cs_ppzkadsnark_auth_keys(r1cs_ppzkadsnark_auth_keys<ppT> &&other) = default;
-    r1cs_ppzkadsnark_auth_keys(r1cs_ppzkadsnark_pub_auth_prms<ppT> &&pap,
-                               r1cs_ppzkadsnark_pub_auth_key<ppT> &&pak,
-                               r1cs_ppzkadsnark_sec_auth_key<ppT> &&sak) :
-        pap((pap)),
-        pak((pak)),
-        sak((sak))
-    {}
-};
+pap:    r1cs_ppzkadsnark_pub_auth_prms<ppT>,
+pak:    r1cs_ppzkadsnark_pub_auth_key<ppT>,
+sak:    r1cs_ppzkadsnark_sec_auth_key<ppT>,
+}
+impl r1cs_ppzkadsnark_auth_keys<ppT> {
+    // r1cs_ppzkadsnark_auth_keys() {};
+    // r1cs_ppzkadsnark_auth_keys(r1cs_ppzkadsnark_auth_keys<ppT> &&other) = default;
+    pub fn new(pap:r1cs_ppzkadsnark_pub_auth_prms<ppT>,
+pak:                               r1cs_ppzkadsnark_pub_auth_key<ppT>,
+sak:                               r1cs_ppzkadsnark_sec_auth_key<ppT>)->Self
+      
+    {  Self{pap,
+        pak,
+        sak}}
+}
 
 /******************************** Authenticated data ********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_auth_data;
+// 
+// pub struct  r1cs_ppzkadsnark_auth_data;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_auth_data<ppT> &data);
+// 
+// std::ostream& operator<<(std::ostream &out, data:&r1cs_ppzkadsnark_auth_data<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_auth_data<ppT> &data);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_auth_data<ppT> &data);
 
 /**
  * Authenticated data for the R1CS ppzkADSNARK
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_auth_data {
-public:
-    ffec::Fr<snark_pp<ppT>> mu;
-    ffec::G2<snark_pp<ppT>> Lambda;
-    r1cs_ppzkadsnark_sigT<ppT>sigma;
+// 
+pub struct  r1cs_ppzkadsnark_auth_data<ppT> {
 
-    r1cs_ppzkadsnark_auth_data() {};
-    r1cs_ppzkadsnark_auth_data<ppT>& operator=(const r1cs_ppzkadsnark_auth_data<ppT> &other) = default;
-    r1cs_ppzkadsnark_auth_data(const r1cs_ppzkadsnark_auth_data<ppT> &other) = default;
-    r1cs_ppzkadsnark_auth_data(r1cs_ppzkadsnark_auth_data<ppT> &&other) = default;
-    r1cs_ppzkadsnark_auth_data(ffec::Fr<snark_pp<ppT>> &&mu,
-                               ffec::G2<snark_pp<ppT>> &&Lambda,
-                               r1cs_ppzkadsnark_sigT<ppT>&&sigma) :
-        mu((mu)),
-        Lambda((Lambda)),
-        sigma((sigma)) {};
+mu:    Fr::<snark_pp::<ppT>>,
+Lambda:    G2::<snark_pp::<ppT>>,
+sigma:    r1cs_ppzkadsnark_sigT<ppT>,
+}
+impl r1cs_ppzkadsnark_auth_data<ppT> {
+    // r1cs_ppzkadsnark_auth_data() {};
+    // r1cs_ppzkadsnark_auth_data<ppT>& operator=(other:&r1cs_ppzkadsnark_auth_data<ppT>) = default;
+    // r1cs_ppzkadsnark_auth_data(other:&r1cs_ppzkadsnark_auth_data<ppT>) = default;
+    // r1cs_ppzkadsnark_auth_data(r1cs_ppzkadsnark_auth_data<ppT> &&other) = default;
+    pub fn new(mu:Fr::<snark_pp::<ppT>>,
+Lambda:                               G2::<snark_pp::<ppT>>,
+                               sigma: r1cs_ppzkadsnark_sigT<ppT>)->Self
+        {Self{mu,
+        Lambda,
+        sigma} }
 
-    bool operator==(const r1cs_ppzkadsnark_auth_data<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_auth_data<ppT> &key);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_auth_data<ppT> &key);
-};
+    // bool operator==(other:&r1cs_ppzkadsnark_auth_data<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, key:&r1cs_ppzkadsnark_auth_data<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_auth_data<ppT> &key);
+}
 
 /******************************** Proving key ********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_proving_key;
+// 
+// pub struct  r1cs_ppzkadsnark_proving_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_proving_key<ppT> &pk);
+// 
+// std::ostream& operator<<(std::ostream &out, pk:&r1cs_ppzkadsnark_proving_key<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proving_key<ppT> &pk);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proving_key<ppT> &pk);
 
 /**
  * A proving key for the R1CS ppzkADSNARK.
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_proving_key {
-public:
-    knowledge_commitment_vector<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > A_query;
-    knowledge_commitment_vector<ffec::G2<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > B_query;
-    knowledge_commitment_vector<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > C_query;
-    ffec::G1_vector<snark_pp<ppT>> H_query; // t powers
-    ffec::G1_vector<snark_pp<ppT>> K_query;
+// 
+pub struct  r1cs_ppzkadsnark_proving_key<ppT> {
+
+A_query:    knowledge_commitment_vector<G1::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+B_query:    knowledge_commitment_vector<G2::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+C_query:    knowledge_commitment_vector<G1::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+H_query:    G1_vector<snark_pp<ppT>>, // t powers
+K_query:    G1_vector<snark_pp<ppT>>,
     /* Now come the additional elements for ad */
-    ffec::G1<snark_pp<ppT>> rA_i_Z_g1;
+rA_i_Z_g1:    G1::<snark_pp::<ppT>>,
 
-    r1cs_ppzkadsnark_constraint_system<ppT> constraint_system;
+constraint_system:    r1cs_ppzkadsnark_constraint_system<ppT>,
+}
 
-    r1cs_ppzkadsnark_proving_key() {};
-    r1cs_ppzkadsnark_proving_key<ppT>& operator=(const r1cs_ppzkadsnark_proving_key<ppT> &other) = default;
-    r1cs_ppzkadsnark_proving_key(const r1cs_ppzkadsnark_proving_key<ppT> &other) = default;
-    r1cs_ppzkadsnark_proving_key(r1cs_ppzkadsnark_proving_key<ppT> &&other) = default;
-    r1cs_ppzkadsnark_proving_key(knowledge_commitment_vector<ffec::G1<snark_pp<ppT>>,
-                                 ffec::G1<snark_pp<ppT>> > &&A_query,
-                                 knowledge_commitment_vector<ffec::G2<snark_pp<ppT>>,
-                                 ffec::G1<snark_pp<ppT>> > &&B_query,
-                                 knowledge_commitment_vector<ffec::G1<snark_pp<ppT>>,
-                                 ffec::G1<snark_pp<ppT>> > &&C_query,
-                                 ffec::G1_vector<snark_pp<ppT>> &&H_query,
-                                 ffec::G1_vector<snark_pp<ppT>> &&K_query,
-                                 ffec::G1<snark_pp<ppT>> &&rA_i_Z_g1,
-                                 r1cs_ppzkadsnark_constraint_system<ppT> &&constraint_system) :
-        A_query((A_query)),
-        B_query((B_query)),
-        C_query((C_query)),
-        H_query((H_query)),
-        K_query((K_query)),
-        rA_i_Z_g1((rA_i_Z_g1)),
-        constraint_system((constraint_system))
-    {};
+    // r1cs_ppzkadsnark_proving_key() {};
+    // r1cs_ppzkadsnark_proving_key<ppT>& operator=(other:&r1cs_ppzkadsnark_proving_key<ppT>) = default;
+    // r1cs_ppzkadsnark_proving_key(other:&r1cs_ppzkadsnark_proving_key<ppT>) = default;
+    // r1cs_ppzkadsnark_proving_key(r1cs_ppzkadsnark_proving_key<ppT> &&other) = default;
 
-    size_t G1_size() const
+impl r1cs_ppzkadsnark_proving_key<ppT>
+{
+    pub fn new(A_query:knowledge_commitment_vector<G1::<snark_pp::<ppT>>,
+                                 G1<snark_pp<ppT>> > ,
+                                  B_query:knowledge_commitment_vector<G2::<snark_pp::<ppT>>,
+                                 G1<snark_pp<ppT>> >,
+                                 C_query:knowledge_commitment_vector<G1::<snark_pp::<ppT>>,
+                                 G1<snark_pp<ppT>> >,
+H_query:                                 G1_vector<snark_pp<ppT>>,
+K_query:                                 G1_vector<snark_pp<ppT>>,
+rA_i_Z_g1:                                 G1::<snark_pp::<ppT>>,
+constraint_system:                                 r1cs_ppzkadsnark_constraint_system<ppT>)->Self
+        
+    {Self{A_query,
+        B_query,
+        C_query,
+        H_query,
+        K_query,
+        rA_i_Z_g1,
+        constraint_system}}
+
+    pub fn G1_size(&self)->usize
     {
-        return 2*(A_query.domain_size() + C_query.domain_size()) + B_query.domain_size() + H_query.size() + K_query.size() + 1;
+        return 2*(A_query.domain_size() + C_query.domain_size()) + B_query.domain_size() + H_query.len() + K_query.len() + 1;
     }
 
-    size_t G2_size() const
+    pub fn G2_size(&self)->usize
     {
         return B_query.domain_size();
     }
 
-    size_t G1_sparse_size() const
+    pub fn  G1_sparse_size(&self) ->usize
     {
-        return 2*(A_query.size() + C_query.size()) + B_query.size() + H_query.size() + K_query.size() + 1;
+        return 2*(A_query.len() + C_query.len()) + B_query.len() + H_query.len() + K_query.len() + 1;
     }
 
-    size_t G2_sparse_size() const
+    pub fn  G2_sparse_size(&self) ->usize
     {
-        return B_query.size();
+        return B_query.len();
     }
 
-    size_t size_in_bits() const
+    pub fn size_in_bits(&self)->usize
     {
-        return A_query.size_in_bits() + B_query.size_in_bits() + C_query.size_in_bits() + ffec::size_in_bits(H_query) + ffec::size_in_bits(K_query) + ffec::G1<snark_pp<ppT>>::size_in_bits();
+        return A_query.size_in_bits() + B_query.size_in_bits() + C_query.size_in_bits() + size_in_bits(H_query) + size_in_bits(K_query) + G1::<snark_pp::<ppT>>::size_in_bits();
     }
 
-    void print_size() const
+    pub fn print_size(&self)
     {
-        ffec::print_indent(); print!("* G1 elements in PK: {}\n", self.G1_size());
-        ffec::print_indent(); print!("* Non-zero G1 elements in PK: {}\n", self.G1_sparse_size());
-        ffec::print_indent(); print!("* G2 elements in PK: {}\n", self.G2_size());
-        ffec::print_indent(); print!("* Non-zero G2 elements in PK: {}\n", self.G2_sparse_size());
-        ffec::print_indent(); print!("* PK size in bits: {}\n", self.size_in_bits());
+        print_indent(); print!("* G1 elements in PK: {}\n", self.G1_size());
+        print_indent(); print!("* Non-zero G1 elements in PK: {}\n", self.G1_sparse_size());
+        print_indent(); print!("* G2 elements in PK: {}\n", self.G2_size());
+        print_indent(); print!("* Non-zero G2 elements in PK: {}\n", self.G2_sparse_size());
+        print_indent(); print!("* PK size in bits: {}\n", self.size_in_bits());
     }
 
-    bool operator==(const r1cs_ppzkadsnark_proving_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_proving_key<ppT> &pk);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_proving_key<ppT> &pk);
-};
+    // bool operator==(other:&r1cs_ppzkadsnark_proving_key<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, pk:&r1cs_ppzkadsnark_proving_key<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_proving_key<ppT> &pk);
+}
 
 
 /******************************* Verification key ****************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_verification_key;
+// 
+// pub struct  r1cs_ppzkadsnark_verification_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_verification_key<ppT> &vk);
+// 
+// std::ostream& operator<<(std::ostream &out, vk:&r1cs_ppzkadsnark_verification_key<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_verification_key<ppT> &vk);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_verification_key<ppT> &vk);
 
 /**
  * A verification key for the R1CS ppzkADSNARK.
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_verification_key {
-public:
-    ffec::G2<snark_pp<ppT>> alphaA_g2;
-    ffec::G1<snark_pp<ppT>> alphaB_g1;
-    ffec::G2<snark_pp<ppT>> alphaC_g2;
-    ffec::G2<snark_pp<ppT>> gamma_g2;
-    ffec::G1<snark_pp<ppT>> gamma_beta_g1;
-    ffec::G2<snark_pp<ppT>> gamma_beta_g2;
-    ffec::G2<snark_pp<ppT>> rC_Z_g2;
+// 
+pub struct  r1cs_ppzkadsnark_verification_key<ppT> {
 
-    ffec::G1<snark_pp<ppT>> A0;
-    ffec::G1_vector<snark_pp<ppT>> Ain;
+alphaA_g2:    G2::<snark_pp::<ppT>>,
+alphaB_g1:    G1::<snark_pp::<ppT>>,
+alphaC_g2:    G2::<snark_pp::<ppT>>,
+gamma_g2:    G2::<snark_pp::<ppT>>,
+gamma_beta_g1:    G1::<snark_pp::<ppT>>,
+gamma_beta_g2:    G2::<snark_pp::<ppT>>,
+rC_Z_g2:    G2::<snark_pp::<ppT>>,
 
-    r1cs_ppzkadsnark_verification_key() = default;
-    r1cs_ppzkadsnark_verification_key(const ffec::G2<snark_pp<ppT>> &alphaA_g2,
-                                      const ffec::G1<snark_pp<ppT>> &alphaB_g1,
-                                      const ffec::G2<snark_pp<ppT>> &alphaC_g2,
-                                      const ffec::G2<snark_pp<ppT>> &gamma_g2,
-                                      const ffec::G1<snark_pp<ppT>> &gamma_beta_g1,
-                                      const ffec::G2<snark_pp<ppT>> &gamma_beta_g2,
-                                      const ffec::G2<snark_pp<ppT>> &rC_Z_g2,
-                                      const ffec::G1<snark_pp<ppT>> A0,
-                                      const ffec::G1_vector<snark_pp<ppT>> Ain) :
-        alphaA_g2(alphaA_g2),
-        alphaB_g1(alphaB_g1),
-        alphaC_g2(alphaC_g2),
-        gamma_g2(gamma_g2),
-        gamma_beta_g1(gamma_beta_g1),
-        gamma_beta_g2(gamma_beta_g2),
-        rC_Z_g2(rC_Z_g2),
-        A0(A0),
-        Ain(Ain)
-    {};
+A0:    G1::<snark_pp::<ppT>>,
+Ain:    G1_vector<snark_pp<ppT>>,
+}
+ impl r1cs_ppzkadsnark_verification_key<ppT> 
+{
+    // r1cs_ppzkadsnark_verification_key() = default;
+    pub fn new(alphaA_g2:G2::<snark_pp::<ppT>>,
+                                      alphaB_g1:G1::<snark_pp::<ppT>>,
+                                      alphaC_g2:G2::<snark_pp::<ppT>>,
+                                      gamma_g2:G2::<snark_pp::<ppT>>,
+                                      gamma_beta_g1:G1::<snark_pp::<ppT>>,
+                                      gamma_beta_g2:G2::<snark_pp::<ppT>>,
+                                      rC_Z_g2:G2::<snark_pp::<ppT>>,
+                                      A0:G1::<snark_pp::<ppT>>,
+                                      Ain:G1_vector<snark_pp<ppT>>)->Self
+       
+    { Self{alphaA_g2,
+        alphaB_g1,
+        alphaC_g2,
+        gamma_g2,
+        gamma_beta_g1,
+        gamma_beta_g2,
+        rC_Z_g2,
+        A0,
+        Ain}}
 
-    size_t G1_size() const
+    pub fn G1_size(&self)->usize
     {
-        return 3 + Ain.size();
+        return 3 + Ain.len();
     }
 
-    size_t G2_size() const
+    pub fn G2_size(&self)->usize
     {
         return 5;
     }
 
-    size_t size_in_bits() const
+    pub fn size_in_bits(&self)->usize
     {
-        return G1_size() * ffec::G1<snark_pp<ppT>>::size_in_bits() + G2_size() * ffec::G2<snark_pp<ppT>>::size_in_bits(); // possible zksnark bug
+        return G1_size() * G1::<snark_pp::<ppT>>::size_in_bits() + G2_size() * G2::<snark_pp::<ppT>>::size_in_bits(); // possible zksnark bug
     }
 
-    void print_size() const
+    pub fn print_size(&self)
     {
-        ffec::print_indent(); print!("* G1 elements in VK: {}\n", self.G1_size());
-        ffec::print_indent(); print!("* G2 elements in VK: {}\n", self.G2_size());
-        ffec::print_indent(); print!("* VK size in bits: {}\n", self.size_in_bits());
+        print_indent(); print!("* G1 elements in VK: {}\n", self.G1_size());
+        print_indent(); print!("* G2 elements in VK: {}\n", self.G2_size());
+        print_indent(); print!("* VK size in bits: {}\n", self.size_in_bits());
     }
 
-    bool operator==(const r1cs_ppzkadsnark_verification_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_verification_key<ppT> &vk);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_verification_key<ppT> &vk);
+    // bool operator==(other:&r1cs_ppzkadsnark_verification_key<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, vk:&r1cs_ppzkadsnark_verification_key<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_verification_key<ppT> &vk);
 
-    static r1cs_ppzkadsnark_verification_key<ppT> dummy_verification_key(const size_t input_size);
-};
+    // static r1cs_ppzkadsnark_verification_key<ppT> dummy_verification_key(input_size:usize);
+}
 
 
 /************************ Processed verification key *************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_processed_verification_key;
+// 
+// pub struct  r1cs_ppzkadsnark_processed_verification_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk);
+// 
+// std::ostream& operator<<(std::ostream &out, pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk);
 
 /**
  * A processed verification key for the R1CS ppzkADSNARK.
@@ -399,28 +411,28 @@ std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_processed_verificati
  * contains a small constant amount of additional pre-computed information that
  * enables a faster verification time.
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_processed_verification_key {
-public:
-    ffec::G2_precomp<snark_pp<ppT>> pp_G2_one_precomp;
-    ffec::G2_precomp<snark_pp<ppT>> vk_alphaA_g2_precomp;
-    ffec::G1_precomp<snark_pp<ppT>> vk_alphaB_g1_precomp;
-    ffec::G2_precomp<snark_pp<ppT>> vk_alphaC_g2_precomp;
-    ffec::G2_precomp<snark_pp<ppT>> vk_rC_Z_g2_precomp;
-    ffec::G2_precomp<snark_pp<ppT>> vk_gamma_g2_precomp;
-    ffec::G1_precomp<snark_pp<ppT>> vk_gamma_beta_g1_precomp;
-    ffec::G2_precomp<snark_pp<ppT>> vk_gamma_beta_g2_precomp;
-    ffec::G2_precomp<snark_pp<ppT>> vk_rC_i_g2_precomp;
+// 
+pub struct  r1cs_ppzkadsnark_processed_verification_key {
 
-    ffec::G1<snark_pp<ppT>> A0;
-    ffec::G1_vector<snark_pp<ppT>> Ain;
+pp_G2_one_precomp:    G2_precomp<snark_pp<ppT>>,
+vk_alphaA_g2_precomp:    G2_precomp<snark_pp<ppT>>,
+vk_alphaB_g1_precomp:    G1_precomp<snark_pp<ppT>>,
+vk_alphaC_g2_precomp:    G2_precomp<snark_pp<ppT>>,
+vk_rC_Z_g2_precomp:    G2_precomp<snark_pp<ppT>>,
+vk_gamma_g2_precomp:    G2_precomp<snark_pp<ppT>>,
+vk_gamma_beta_g1_precomp:    G1_precomp<snark_pp<ppT>>,
+vk_gamma_beta_g2_precomp:    G2_precomp<snark_pp<ppT>>,
+vk_rC_i_g2_precomp:    G2_precomp<snark_pp<ppT>>,
 
-    std::vector<ffec::G1_precomp<snark_pp<ppT>>> proof_g_vki_precomp;
+A0:    G1::<snark_pp::<ppT>>,
+Ain:    G1_vector<snark_pp<ppT>>,
 
-    bool operator==(const r1cs_ppzkadsnark_processed_verification_key &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk);
-};
+proof_g_vki_precomp:    Vec<G1_precomp<snark_pp<ppT>>>,
+
+    // bool operator==(other:&r1cs_ppzkadsnark_processed_verification_key) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk);
+}
 
 
 /********************************** Key pair *********************************/
@@ -428,34 +440,35 @@ public:
 /**
  * A key pair for the R1CS ppzkADSNARK, which consists of a proving key and a verification key.
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_keypair {
-public:
-    r1cs_ppzkadsnark_proving_key<ppT> pk;
-    r1cs_ppzkadsnark_verification_key<ppT> vk;
+// 
+pub struct  r1cs_ppzkadsnark_keypair<ppT> {
 
-    r1cs_ppzkadsnark_keypair() = default;
-    r1cs_ppzkadsnark_keypair(const r1cs_ppzkadsnark_keypair<ppT> &other) = default;
-    r1cs_ppzkadsnark_keypair(r1cs_ppzkadsnark_proving_key<ppT> &&pk,
-                             r1cs_ppzkadsnark_verification_key<ppT> &&vk) :
-        pk((pk)),
-        vk((vk))
-    {}
+pk:    r1cs_ppzkadsnark_proving_key<ppT>,
+vk:    r1cs_ppzkadsnark_verification_key<ppT>,
+}
+impl<ppT> r1cs_ppzkadsnark_keypair<ppT> {
+    // r1cs_ppzkadsnark_keypair() = default;
+    // r1cs_ppzkadsnark_keypair(other:&r1cs_ppzkadsnark_keypair<ppT>) = default;
+    pub fn new(pk:r1cs_ppzkadsnark_proving_key<ppT>,
+vk:                             r1cs_ppzkadsnark_verification_key<ppT>)->Self
+       
+    { Self{pk,
+        vk}}
 
-    r1cs_ppzkadsnark_keypair(r1cs_ppzkadsnark_keypair<ppT> &&other) = default;
-};
+    // r1cs_ppzkadsnark_keypair(r1cs_ppzkadsnark_keypair<ppT> &&other) = default;
+}
 
 
 /*********************************** Proof ***********************************/
 
-template<typename ppT>
-class r1cs_ppzkadsnark_proof;
+// 
+// pub struct  r1cs_ppzkadsnark_proof;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_proof<ppT> &proof);
+// 
+// std::ostream& operator<<(std::ostream &out, proof:&r1cs_ppzkadsnark_proof<ppT>);
 
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof);
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof);
 
 /**
  * A proof for the R1CS ppzkADSNARK.
@@ -464,75 +477,77 @@ std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof);
  * serializes/deserializes, and verifies proofs. We only expose some information
  * about the structure for statistics purposes.
  */
-template<typename ppT>
-class r1cs_ppzkadsnark_proof {
-public:
-    knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_A;
-    knowledge_commitment<ffec::G2<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_B;
-    knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_C;
-    ffec::G1<snark_pp<ppT>> g_H;
-    ffec::G1<snark_pp<ppT>> g_K;
-    knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_Aau;
-    ffec::G1<snark_pp<ppT>> muA;
+// 
+pub struct  r1cs_ppzkadsnark_proof<ppT> {
 
-    r1cs_ppzkadsnark_proof()
+g_A:    knowledge_commitment<G1::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+g_B:    knowledge_commitment<G2::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+g_C:    knowledge_commitment<G1::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+g_H:    G1::<snark_pp::<ppT>>,
+g_K:    G1::<snark_pp::<ppT>>,
+g_Aau:    knowledge_commitment<G1::<snark_pp::<ppT>>, G1<snark_pp<ppT>> >,
+muA:    G1::<snark_pp::<ppT>>,
+}
+impl r1cs_ppzkadsnark_proof<ppT> 
+{
+    pub fn default()
     {
         // invalid proof with valid curve points
-        self.g_A.g = ffec::G1<snark_pp<ppT>> ::one();
-        self.g_A.h = ffec::G1<snark_pp<ppT>>::one();
-        self.g_B.g = ffec::G2<snark_pp<ppT>> ::one();
-        self.g_B.h = ffec::G1<snark_pp<ppT>>::one();
-        self.g_C.g = ffec::G1<snark_pp<ppT>> ::one();
-        self.g_C.h = ffec::G1<snark_pp<ppT>>::one();
-        self.g_H = ffec::G1<snark_pp<ppT>>::one();
-        self.g_K = ffec::G1<snark_pp<ppT>>::one();
-        g_Aau = knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> >
-            (ffec::G1<snark_pp<ppT>>::one(),ffec::G1<snark_pp<ppT>>::one());
-        self.muA = ffec::G1<snark_pp<ppT>>::one();
+        self.g_A.g = G1::<snark_pp::<ppT>> ::one();
+        self.g_A.h = G1::<snark_pp::<ppT>>::one();
+        self.g_B.g = G2::<snark_pp::<ppT>> ::one();
+        self.g_B.h = G1::<snark_pp::<ppT>>::one();
+        self.g_C.g = G1::<snark_pp::<ppT>> ::one();
+        self.g_C.h = G1::<snark_pp::<ppT>>::one();
+        self.g_H = G1::<snark_pp::<ppT>>::one();
+        self.g_K = G1::<snark_pp::<ppT>>::one();
+        g_Aau = knowledge_commitment::<G1::<snark_pp::<ppT>>, G1::<snark_pp::<ppT>> >
+            (G1::<snark_pp::<ppT>>::one(),G1::<snark_pp::<ppT>>::one());
+        self.muA = G1::<snark_pp::<ppT>>::one();
     }
-    r1cs_ppzkadsnark_proof(knowledge_commitment<ffec::G1<snark_pp<ppT>>,
-                           ffec::G1<snark_pp<ppT>> > &&g_A,
-                           knowledge_commitment<ffec::G2<snark_pp<ppT>>,
-                           ffec::G1<snark_pp<ppT>> > &&g_B,
-                           knowledge_commitment<ffec::G1<snark_pp<ppT>>,
-                           ffec::G1<snark_pp<ppT>> > &&g_C,
-                           ffec::G1<snark_pp<ppT>> &&g_H,
-                           ffec::G1<snark_pp<ppT>> &&g_K,
-                           knowledge_commitment<ffec::G1<snark_pp<ppT>>,
-                           ffec::G1<snark_pp<ppT>> > &&g_Aau,
-                           ffec::G1<snark_pp<ppT>> &&muA) :
-        g_A((g_A)),
-        g_B((g_B)),
-        g_C((g_C)),
-        g_H((g_H)),
-        g_K((g_K)),
-        g_Aau((g_Aau)),
-        muA((muA))
-    {};
+    pub fn new(g_A:knowledge_commitment<G1::<snark_pp::<ppT>>,
+                           G1<snark_pp<ppT>> > ,
+                            g_B:knowledge_commitment<G2::<snark_pp::<ppT>>,
+                           G1<snark_pp<ppT>> >,
+                          g_C:knowledge_commitment<G1::<snark_pp::<ppT>>,
+                           G1<snark_pp<ppT>> >,
+g_H:                           G1::<snark_pp::<ppT>>,
+g_K:                           G1::<snark_pp::<ppT>>,
+                            g_Aau:knowledge_commitment<G1::<snark_pp::<ppT>>,
+                           G1<snark_pp<ppT>> >,
+muA:                           G1<snark_pp<ppT>>) ->Self
+       
+    {Self{ g_A,
+        g_B,
+        g_C,
+        g_H,
+        g_K,
+        g_Aau,
+        muA}}
 
-    size_t G1_size() const
+    pub fn G1_size(&self)->usize
     {
         return 10;
     }
 
-    size_t G2_size() const
+    pub fn G2_size(&self)->usize
     {
         return 1;
     }
 
-    size_t size_in_bits() const
+    pub fn size_in_bits(&self)->usize
     {
-        return G1_size() * ffec::G1<snark_pp<ppT>>::size_in_bits() + G2_size() * ffec::G2<snark_pp<ppT>>::size_in_bits();
+        return G1_size() * G1::<snark_pp::<ppT>>::size_in_bits() + G2_size() * G2::<snark_pp::<ppT>>::size_in_bits();
     }
 
-    void print_size() const
+    pub fn  print_size(&self)
     {
-        ffec::print_indent(); print!("* G1 elements in proof: {}\n", self.G1_size());
-        ffec::print_indent(); print!("* G2 elements in proof: {}\n", self.G2_size());
-        ffec::print_indent(); print!("* Proof size in bits: {}\n", self.size_in_bits());
+        print_indent(); print!("* G1 elements in proof: {}\n", self.G1_size());
+        print_indent(); print!("* G2 elements in proof: {}\n", self.G2_size());
+        print_indent(); print!("* Proof size in bits: {}\n", self.size_in_bits());
     }
 
-    bool is_well_formed() const
+    pub fn  is_well_formed(&self) ->bool
     {
         return (g_A.g.is_well_formed() && g_A.h.is_well_formed() &&
                 g_B.g.is_well_formed() && g_B.h.is_well_formed() &&
@@ -543,10 +558,10 @@ public:
                 muA.is_well_formed());
     }
 
-    bool operator==(const r1cs_ppzkadsnark_proof<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const r1cs_ppzkadsnark_proof<ppT> &proof);
-    friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof);
-};
+    // bool operator==(other:&r1cs_ppzkadsnark_proof<ppT>) const;
+    // friend std::ostream& operator<< <ppT>(std::ostream &out, proof:&r1cs_ppzkadsnark_proof<ppT>);
+    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof);
+}
 
 
 /***************************** Main algorithms *******************************/
@@ -554,123 +569,123 @@ public:
 /**
  * R1CS ppZKADSNARK authentication parameters generator algorithm.
  */
-template<typename ppT>
-r1cs_ppzkadsnark_auth_keys<ppT> r1cs_ppzkadsnark_auth_generator(void);
+// 
+// r1cs_ppzkadsnark_auth_keys<ppT> r1cs_ppzkadsnark_auth_generator(void);
 
 /**
  * R1CS ppZKADSNARK authentication algorithm.
  */
-template<typename ppT>
-std::vector<r1cs_ppzkadsnark_auth_data<ppT>> r1cs_ppzkadsnark_auth_sign(
-    const std::vector<ffec::Fr<snark_pp<ppT>>> &ins,
-    const r1cs_ppzkadsnark_sec_auth_key<ppT> &sk,
-    const std::vector<labelT> labels);
+// 
+// Vec<r1cs_ppzkadsnark_auth_data<ppT>> r1cs_ppzkadsnark_auth_sign(
+//     ins:&Vec<Fr<snark_pp<ppT>>>,
+//     sk:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+//     labels:Vec<labelT>);
 
 /**
  * R1CS ppZKADSNARK authentication verification algorithms.
  */
-template<typename ppT>
-bool r1cs_ppzkadsnark_auth_verify(const std::vector<ffec::Fr<snark_pp<ppT>>> &data,
-                                  const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> & auth_data,
-                                  const r1cs_ppzkadsnark_sec_auth_key<ppT> &sak,
-                                  const std::vector<labelT> &labels);
+// 
+// bool r1cs_ppzkadsnark_auth_verify(data:&Vec<Fr<snark_pp<ppT>>>,
+//                                   auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
+//                                   sak:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+//                                   labels:&Vec<labelT>);
 
-template<typename ppT>
-bool r1cs_ppzkadsnark_auth_verify(const std::vector<ffec::Fr<snark_pp<ppT>>> &data,
-                                  const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> & auth_data,
-                                  const r1cs_ppzkadsnark_pub_auth_key<ppT> &pak,
-                                  const std::vector<labelT> &labels);
+// 
+// bool r1cs_ppzkadsnark_auth_verify(data:&Vec<Fr<snark_pp<ppT>>>,
+//                                   auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
+//                                   pak:&r1cs_ppzkadsnark_pub_auth_key<ppT>,
+//                                   labels:&Vec<labelT>);
 
 /**
  * A generator algorithm for the R1CS ppzkADSNARK.
  *
  * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
  */
-template<typename ppT>
-r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_constraint_system<ppT> &cs,
-                                                         const r1cs_ppzkadsnark_pub_auth_prms<ppT> &prms);
+// 
+// r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(cs:&r1cs_ppzkadsnark_constraint_system<ppT>,
+//                                                          prms:&r1cs_ppzkadsnark_pub_auth_prms<ppT>);
 
-/**
- * A prover algorithm for the R1CS ppzkADSNARK.
- *
- * Given a R1CS primary input X and a R1CS auxiliary input Y, this algorithm
- * produces a proof (of knowledge) that attests to the following statement:
- *               ``there exists Y such that CS(X,Y)=0''.
- * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
- */
-template<typename ppT>
-r1cs_ppzkadsnark_proof<ppT> r1cs_ppzkadsnark_prover(const r1cs_ppzkadsnark_proving_key<ppT> &pk,
-                                                    const r1cs_ppzkadsnark_primary_input<ppT> &primary_input,
-                                                    const r1cs_ppzkadsnark_auxiliary_input<ppT> &auxiliary_input,
-                                                    const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> &auth_data);
+// /**
+//  * A prover algorithm for the R1CS ppzkADSNARK.
+//  *
+//  * Given a R1CS primary input X and a R1CS auxiliary input Y, this algorithm
+//  * produces a proof (of knowledge) that attests to the following statement:
+//  *               ``there exists Y such that CS(X,Y)=0''.
+//  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
+//  */
+// 
+// r1cs_ppzkadsnark_proof<ppT> r1cs_ppzkadsnark_prover(pk:&r1cs_ppzkadsnark_proving_key<ppT>,
+//                                                     primary_input:&r1cs_ppzkadsnark_primary_input<ppT>,
+//                                                     auxiliary_input:&r1cs_ppzkadsnark_auxiliary_input<ppT>,
+//                                                     auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>);
 
-/*
- Below are two variants of verifier algorithm for the R1CS ppzkADSNARK.
+// /*
+//  Below are two variants of verifier algorithm for the R1CS ppzkADSNARK.
 
- These are the four cases that arise from the following choices:
+//  These are the four cases that arise from the following choices:
 
-1) The verifier accepts a (non-processed) verification key or, instead, a processed verification key.
-     In the latter case, we call the algorithm an "online verifier".
+// 1) The verifier accepts a (non-processed) verification key or, instead, a processed verification key.
+//      In the latter case, we call the algorithm an "online verifier".
 
-2) The verifier uses the symmetric key or the public verification key.
-     In the former case we call the algorithm a "symmetric verifier".
+// 2) The verifier uses the symmetric key or the public verification key.
+//      In the former case we call the algorithm a "symmetric verifier".
 
-*/
+// */
 
-/**
- * Convert a (non-processed) verification key into a processed verification key.
- */
-template<typename ppT>
-r1cs_ppzkadsnark_processed_verification_key<ppT> r1cs_ppzkadsnark_verifier_process_vk(
-    const r1cs_ppzkadsnark_verification_key<ppT> &vk);
+// /**
+//  * Convert a (non-processed) verification key into a processed verification key.
+//  */
+// 
+// r1cs_ppzkadsnark_processed_verification_key<ppT> r1cs_ppzkadsnark_verifier_process_vk(
+//     vk:&r1cs_ppzkadsnark_verification_key<ppT>);
 
-/**
- * A symmetric verifier algorithm for the R1CS ppzkADSNARK that
- * accepts a non-processed verification key
- */
-template<typename ppT>
-bool r1cs_ppzkadsnark_verifier(const r1cs_ppzkadsnark_verification_key<ppT> &vk,
-                               const r1cs_ppzkadsnark_proof<ppT> &proof,
-                               const r1cs_ppzkadsnark_sec_auth_key<ppT> & sak,
-                               const std::vector<labelT> &labels);
+// /**
+//  * A symmetric verifier algorithm for the R1CS ppzkADSNARK that
+//  * accepts a non-processed verification key
+//  */
+// 
+// bool r1cs_ppzkadsnark_verifier(vk:&r1cs_ppzkadsnark_verification_key<ppT>,
+//                                proof:&r1cs_ppzkadsnark_proof<ppT>,
+//                                sak:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+//                                labels:&Vec<labelT>);
 
-/**
- * A symmetric verifier algorithm for the R1CS ppzkADSNARK that
- * accepts a processed verification key.
- */
-template<typename ppT>
-bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk,
-                                      const r1cs_ppzkadsnark_proof<ppT> &proof,
-                                      const r1cs_ppzkadsnark_sec_auth_key<ppT> & sak,
-                                      const std::vector<labelT> &labels);
-
-
-/**
- * A verifier algorithm for the R1CS ppzkADSNARK that
- * accepts a non-processed verification key
- */
-template<typename ppT>
-bool r1cs_ppzkadsnark_verifier(const r1cs_ppzkadsnark_verification_key<ppT> &vk,
-                               const std::vector<r1cs_ppzkadsnark_auth_data<ppT>>  &auth_data,
-                               const r1cs_ppzkadsnark_proof<ppT> &proof,
-                               const r1cs_ppzkadsnark_pub_auth_key<ppT> & pak,
-                               const std::vector<labelT> &labels);
-
-/**
- * A verifier algorithm for the R1CS ppzkADSNARK that
- * accepts a processed verification key.
- */
-template<typename ppT>
-bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk,
-                                      const std::vector<r1cs_ppzkadsnark_auth_data<ppT>>  &auth_data,
-                                      const r1cs_ppzkadsnark_proof<ppT> &proof,
-                                      const r1cs_ppzkadsnark_pub_auth_key<ppT> & pak,
-                                      const std::vector<labelT> &labels);
+// /**
+//  * A symmetric verifier algorithm for the R1CS ppzkADSNARK that
+//  * accepts a processed verification key.
+//  */
+// 
+// bool r1cs_ppzkadsnark_online_verifier(pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>,
+//                                       proof:&r1cs_ppzkadsnark_proof<ppT>,
+//                                       sak:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+//                                       labels:&Vec<labelT>);
 
 
+// /**
+//  * A verifier algorithm for the R1CS ppzkADSNARK that
+//  * accepts a non-processed verification key
+//  */
+// 
+// bool r1cs_ppzkadsnark_verifier(vk:&r1cs_ppzkadsnark_verification_key<ppT>,
+//                                auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>> ,
+//                                proof:&r1cs_ppzkadsnark_proof<ppT>,
+//                                pak:&r1cs_ppzkadsnark_pub_auth_key<ppT>,
+//                                labels:&Vec<labelT>);
+
+// /**
+//  * A verifier algorithm for the R1CS ppzkADSNARK that
+//  * accepts a processed verification key.
+//  */
+// 
+// bool r1cs_ppzkadsnark_online_verifier(pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>,
+//                                       auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>> ,
+//                                       proof:&r1cs_ppzkadsnark_proof<ppT>,
+//                                       pak:&r1cs_ppzkadsnark_pub_auth_key<ppT>,
+//                                       labels:&Vec<labelT>);
 
 
-use libsnark/zk_proof_systems/ppzkadsnark/r1cs_ppzkadsnark/r1cs_ppzkadsnark;
+
+
+// use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark;
 
 //#endif // R1CS_PPZKSNARK_HPP_
 /** @file
@@ -681,7 +696,7 @@ Implementation of interfaces for a ppzkADSNARK for R1CS.
 See r1cs_ppzkadsnark.hpp .
 
 *****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
+* @author     This file is part of crate, developed by SCIPR Lab
 *             and contributors (see AUTHORS).
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
@@ -689,18 +704,18 @@ See r1cs_ppzkadsnark.hpp .
 //#ifndef R1CS_PPZKADSNARK_TCC_
 // #define R1CS_PPZKADSNARK_TCC_
 
-use  <algorithm>
-use  <cassert>
-use  <functional>
-use  <iostream>
-use  <sstream>
+// use  <algorithm>
+// use  <cassert>
+// use  <functional>
+// use  <iostream>
+// use  <sstream>
 
- use ffec::algebra::scalar_multiplication::multiexp;
-use ffec::common::profiling;
-use ffec::common::utils;
+ use algebra::scalar_multiplication::multiexp;
+use common::profiling;
+use common::utils;
 
 // #ifdef MULTICORE
-use  <omp.h>
+// use  <omp.h>
 //#endif
 
 use crate::knowledge_commitment::kc_multiexp;
@@ -709,441 +724,442 @@ use crate::reductions::r1cs_to_qap::r1cs_to_qap;
 
 
 
-template<typename ppT>
-bool r1cs_ppzkadsnark_pub_auth_prms<ppT>::operator==(const r1cs_ppzkadsnark_pub_auth_prms<ppT> &other) const
+// 
+// bool r1cs_ppzkadsnark_pub_auth_prms<ppT>::operator==(other:&r1cs_ppzkadsnark_pub_auth_prms<ppT>) const
+// {
+//     return (self.I1 == other.I1);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, pap:&r1cs_ppzkadsnark_pub_auth_prms<ppT>)
+// {
+//     out << pap.I1;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap)
+// {
+//     in >> pap.I1;
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_sec_auth_key<ppT>::operator==(other:&r1cs_ppzkadsnark_sec_auth_key<ppT>) const
+// {
+//     return (self.i == other.i) &&
+//         (self.skp == other.skp) &&
+//         (self.S == other.S);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, key:&r1cs_ppzkadsnark_sec_auth_key<ppT>)
+// {
+//     out << key.i;
+//     out << key.skp;
+//     out << key.S;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<ppT> &key)
+// {
+//     in >> key.i;
+//     in >> key.skp;
+//     in >> key.S;
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_pub_auth_key<ppT>::operator==(other:&r1cs_ppzkadsnark_pub_auth_key<ppT>) const
+// {
+//     return (self.minusI2 == other.minusI2) &&
+//         (self.vkp == other.vkp);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, key:&r1cs_ppzkadsnark_pub_auth_key<ppT>)
+// {
+//     out << key.minusI2;
+//     out << key.vkp;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<ppT> &key)
+// {
+//     in >> key.minusI2;
+//     in >> key.vkp;
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_auth_data<ppT>::operator==(other:&r1cs_ppzkadsnark_auth_data<ppT>) const
+// {
+//     return (self.mu == other.mu) &&
+//         (self.Lambda == other.Lambda) &&
+//         (self.sigma == other.sigma);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, data:&r1cs_ppzkadsnark_auth_data<ppT>)
+// {
+//     out << data.mu;
+//     out << data.Lambda;
+//     out << data.sigma;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_auth_data<ppT> &data)
+// {
+//     in >> data.mu;
+//     in >> data.Lambda;
+//     data.sigma;
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_proving_key<ppT>::operator==(other:&r1cs_ppzkadsnark_proving_key<ppT>) const
+// {
+//     return (self.A_query == other.A_query &&
+//             self.B_query == other.B_query &&
+//             self.C_query == other.C_query &&
+//             self.H_query == other.H_query &&
+//             self.K_query == other.K_query &&
+//             self.rA_i_Z_g1 == other.rA_i_Z_g1 &&
+//             self.constraint_system == other.constraint_system);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, pk:&r1cs_ppzkadsnark_proving_key<ppT>)
+// {
+//     out << pk.A_query;
+//     out << pk.B_query;
+//     out << pk.C_query;
+//     out << pk.H_query;
+//     out << pk.K_query;
+//     out << pk.rA_i_Z_g1;
+//     out << pk.constraint_system;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proving_key<ppT> &pk)
+// {
+//     in >> pk.A_query;
+//     in >> pk.B_query;
+//     in >> pk.C_query;
+//     in >> pk.H_query;
+//     in >> pk.K_query;
+//     in >> pk.rA_i_Z_g1;
+//     in >> pk.constraint_system;
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_verification_key<ppT>::operator==(other:&r1cs_ppzkadsnark_verification_key<ppT>) const
+// {
+//     return (self.alphaA_g2 == other.alphaA_g2 &&
+//             self.alphaB_g1 == other.alphaB_g1 &&
+//             self.alphaC_g2 == other.alphaC_g2 &&
+//             self.gamma_g2 == other.gamma_g2 &&
+//             self.gamma_beta_g1 == other.gamma_beta_g1 &&
+//             self.gamma_beta_g2 == other.gamma_beta_g2 &&
+//             self.rC_Z_g2 == other.rC_Z_g2 &&
+//             self.A0 == other.A0 &&
+//             self.Ain == other.Ain);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, vk:&r1cs_ppzkadsnark_verification_key<ppT>)
+// {
+//     out << vk.alphaA_g2 << OUTPUT_NEWLINE;
+//     out << vk.alphaB_g1 << OUTPUT_NEWLINE;
+//     out << vk.alphaC_g2 << OUTPUT_NEWLINE;
+//     out << vk.gamma_g2 << OUTPUT_NEWLINE;
+//     out << vk.gamma_beta_g1 << OUTPUT_NEWLINE;
+//     out << vk.gamma_beta_g2 << OUTPUT_NEWLINE;
+//     out << vk.rC_Z_g2 << OUTPUT_NEWLINE;
+//     out << vk.A0 << OUTPUT_NEWLINE;
+//     out << vk.Ain << OUTPUT_NEWLINE;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_verification_key<ppT> &vk)
+// {
+//     in >> vk.alphaA_g2;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.alphaB_g1;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.alphaC_g2;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.gamma_g2;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.gamma_beta_g1;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.gamma_beta_g2;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.rC_Z_g2;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.A0;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> vk.Ain;
+//     consume_OUTPUT_NEWLINE(in);
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_processed_verification_key<ppT>::operator==(
+//     other:&r1cs_ppzkadsnark_processed_verification_key<ppT>) const
+// {
+//     bool result = (self.pp_G2_one_precomp == other.pp_G2_one_precomp &&
+//                    self.vk_alphaA_g2_precomp == other.vk_alphaA_g2_precomp &&
+//                    self.vk_alphaB_g1_precomp == other.vk_alphaB_g1_precomp &&
+//                    self.vk_alphaC_g2_precomp == other.vk_alphaC_g2_precomp &&
+//                    self.vk_rC_Z_g2_precomp == other.vk_rC_Z_g2_precomp &&
+//                    self.vk_gamma_g2_precomp == other.vk_gamma_g2_precomp &&
+//                    self.vk_gamma_beta_g1_precomp == other.vk_gamma_beta_g1_precomp &&
+//                    self.vk_gamma_beta_g2_precomp == other.vk_gamma_beta_g2_precomp &&
+//                    self.vk_rC_i_g2_precomp == other.vk_rC_i_g2_precomp &&
+//                    self.A0 == other.A0 &&
+//                    self.Ain == other.Ain &&
+//                    self.proof_g_vki_precomp.len() == other.proof_g_vki_precomp.len());
+//     if result {
+//         for i in 0..self.proof_g_vki_precomp.len(){
+//             result &= self.proof_g_vki_precomp[i] == other.proof_g_vki_precomp[i];
+//     }
+//     return result;
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>)
+// {
+//     out << pvk.pp_G2_one_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_alphaA_g2_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_alphaB_g1_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_alphaC_g2_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_rC_Z_g2_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_gamma_g2_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_gamma_beta_g1_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_gamma_beta_g2_precomp << OUTPUT_NEWLINE;
+//     out << pvk.vk_rC_i_g2_precomp << OUTPUT_NEWLINE;
+//     out << pvk.A0 << OUTPUT_NEWLINE;
+//     out << pvk.Ain << OUTPUT_NEWLINE;
+//     out << pvk.proof_g_vki_precomp  << OUTPUT_NEWLINE;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk)
+// {
+//     in >> pvk.pp_G2_one_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_alphaA_g2_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_alphaB_g1_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_alphaC_g2_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_rC_Z_g2_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_gamma_g2_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_gamma_beta_g1_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_gamma_beta_g2_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.vk_rC_i_g2_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.A0;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.Ain;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> pvk.proof_g_vki_precomp;
+//     consume_OUTPUT_NEWLINE(in);
+
+//     return in;
+// }
+
+// 
+// bool r1cs_ppzkadsnark_proof<ppT>::operator==(other:&r1cs_ppzkadsnark_proof<ppT>) const
+// {
+//     return (self.g_A == other.g_A &&
+//             self.g_B == other.g_B &&
+//             self.g_C == other.g_C &&
+//             self.g_H == other.g_H &&
+//             self.g_K == other.g_K &&
+//             self.g_Aau == other.g_Aau &&
+//             self.muA == other.muA);
+// }
+
+// 
+// std::ostream& operator<<(std::ostream &out, proof:&r1cs_ppzkadsnark_proof<ppT>)
+// {
+//     out << proof.g_A << OUTPUT_NEWLINE;
+//     out << proof.g_B << OUTPUT_NEWLINE;
+//     out << proof.g_C << OUTPUT_NEWLINE;
+//     out << proof.g_H << OUTPUT_NEWLINE;
+//     out << proof.g_K << OUTPUT_NEWLINE;
+//     out << proof.g_Aau << OUTPUT_NEWLINE;
+//     out << proof.muA << OUTPUT_NEWLINE;
+
+//     return out;
+// }
+
+// 
+// std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof)
+// {
+//     in >> proof.g_A;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> proof.g_B;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> proof.g_C;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> proof.g_H;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> proof.g_K;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> proof.g_Aau;
+//     consume_OUTPUT_NEWLINE(in);
+//     in >> proof.muA;
+//     consume_OUTPUT_NEWLINE(in);
+
+//     return in;
+// }
+
+impl<ppT> r1cs_ppzkadsnark_verification_key<ppT>{
+// 
+pub fn dummy_verification_key(input_size:usize)->r1cs_ppzkadsnark_verification_key<ppT> 
 {
-    return (self.I1 == other.I1);
-}
+    let mut  result=r1cs_ppzkadsnark_verification_key::<ppT>::new();
+    result.alphaA_g2 = Fr::<snark_pp::<ppT>>::random_element() * G2::<snark_pp::<ppT>>::one();
+    result.alphaB_g1 = Fr::<snark_pp::<ppT>>::random_element() * G1::<snark_pp::<ppT>>::one();
+    result.alphaC_g2 = Fr::<snark_pp::<ppT>>::random_element() * G2::<snark_pp::<ppT>>::one();
+    result.gamma_g2 = Fr::<snark_pp::<ppT>>::random_element() * G2::<snark_pp::<ppT>>::one();
+    result.gamma_beta_g1 = Fr::<snark_pp::<ppT>>::random_element() * G1::<snark_pp::<ppT>>::one();
+    result.gamma_beta_g2 = Fr::<snark_pp::<ppT>>::random_element() * G2::<snark_pp::<ppT>>::one();
+    result.rC_Z_g2 = Fr::<snark_pp::<ppT>>::random_element() * G2::<snark_pp::<ppT>>::one();
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap)
-{
-    out << pap.I1;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<ppT> &pap)
-{
-    in >> pap.I1;
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_sec_auth_key<ppT>::operator==(const r1cs_ppzkadsnark_sec_auth_key<ppT> &other) const
-{
-    return (self.i == other.i) &&
-        (self.skp == other.skp) &&
-        (self.S == other.S);
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_sec_auth_key<ppT> &key)
-{
-    out << key.i;
-    out << key.skp;
-    out << key.S;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<ppT> &key)
-{
-    in >> key.i;
-    in >> key.skp;
-    in >> key.S;
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_pub_auth_key<ppT>::operator==(const r1cs_ppzkadsnark_pub_auth_key<ppT> &other) const
-{
-    return (self.minusI2 == other.minusI2) &&
-        (self.vkp == other.vkp);
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_pub_auth_key<ppT> &key)
-{
-    out << key.minusI2;
-    out << key.vkp;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<ppT> &key)
-{
-    in >> key.minusI2;
-    in >> key.vkp;
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_auth_data<ppT>::operator==(const r1cs_ppzkadsnark_auth_data<ppT> &other) const
-{
-    return (self.mu == other.mu) &&
-        (self.Lambda == other.Lambda) &&
-        (self.sigma == other.sigma);
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_auth_data<ppT> &data)
-{
-    out << data.mu;
-    out << data.Lambda;
-    out << data.sigma;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_auth_data<ppT> &data)
-{
-    in >> data.mu;
-    in >> data.Lambda;
-    data.sigma;
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_proving_key<ppT>::operator==(const r1cs_ppzkadsnark_proving_key<ppT> &other) const
-{
-    return (self.A_query == other.A_query &&
-            self.B_query == other.B_query &&
-            self.C_query == other.C_query &&
-            self.H_query == other.H_query &&
-            self.K_query == other.K_query &&
-            self.rA_i_Z_g1 == other.rA_i_Z_g1 &&
-            self.constraint_system == other.constraint_system);
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_proving_key<ppT> &pk)
-{
-    out << pk.A_query;
-    out << pk.B_query;
-    out << pk.C_query;
-    out << pk.H_query;
-    out << pk.K_query;
-    out << pk.rA_i_Z_g1;
-    out << pk.constraint_system;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proving_key<ppT> &pk)
-{
-    in >> pk.A_query;
-    in >> pk.B_query;
-    in >> pk.C_query;
-    in >> pk.H_query;
-    in >> pk.K_query;
-    in >> pk.rA_i_Z_g1;
-    in >> pk.constraint_system;
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_verification_key<ppT>::operator==(const r1cs_ppzkadsnark_verification_key<ppT> &other) const
-{
-    return (self.alphaA_g2 == other.alphaA_g2 &&
-            self.alphaB_g1 == other.alphaB_g1 &&
-            self.alphaC_g2 == other.alphaC_g2 &&
-            self.gamma_g2 == other.gamma_g2 &&
-            self.gamma_beta_g1 == other.gamma_beta_g1 &&
-            self.gamma_beta_g2 == other.gamma_beta_g2 &&
-            self.rC_Z_g2 == other.rC_Z_g2 &&
-            self.A0 == other.A0 &&
-            self.Ain == other.Ain);
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_verification_key<ppT> &vk)
-{
-    out << vk.alphaA_g2 << OUTPUT_NEWLINE;
-    out << vk.alphaB_g1 << OUTPUT_NEWLINE;
-    out << vk.alphaC_g2 << OUTPUT_NEWLINE;
-    out << vk.gamma_g2 << OUTPUT_NEWLINE;
-    out << vk.gamma_beta_g1 << OUTPUT_NEWLINE;
-    out << vk.gamma_beta_g2 << OUTPUT_NEWLINE;
-    out << vk.rC_Z_g2 << OUTPUT_NEWLINE;
-    out << vk.A0 << OUTPUT_NEWLINE;
-    out << vk.Ain << OUTPUT_NEWLINE;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_verification_key<ppT> &vk)
-{
-    in >> vk.alphaA_g2;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.alphaB_g1;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.alphaC_g2;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.gamma_g2;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.gamma_beta_g1;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.gamma_beta_g2;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.rC_Z_g2;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.A0;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> vk.Ain;
-    ffec::consume_OUTPUT_NEWLINE(in);
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_processed_verification_key<ppT>::operator==(
-    const r1cs_ppzkadsnark_processed_verification_key<ppT> &other) const
-{
-    bool result = (self.pp_G2_one_precomp == other.pp_G2_one_precomp &&
-                   self.vk_alphaA_g2_precomp == other.vk_alphaA_g2_precomp &&
-                   self.vk_alphaB_g1_precomp == other.vk_alphaB_g1_precomp &&
-                   self.vk_alphaC_g2_precomp == other.vk_alphaC_g2_precomp &&
-                   self.vk_rC_Z_g2_precomp == other.vk_rC_Z_g2_precomp &&
-                   self.vk_gamma_g2_precomp == other.vk_gamma_g2_precomp &&
-                   self.vk_gamma_beta_g1_precomp == other.vk_gamma_beta_g1_precomp &&
-                   self.vk_gamma_beta_g2_precomp == other.vk_gamma_beta_g2_precomp &&
-                   self.vk_rC_i_g2_precomp == other.vk_rC_i_g2_precomp &&
-                   self.A0 == other.A0 &&
-                   self.Ain == other.Ain &&
-                   self.proof_g_vki_precomp.size() == other.proof_g_vki_precomp.size());
-    if result {
-        for(size_t i=0;i<self.proof_g_vki_precomp.size();i++)
-            result &= self.proof_g_vki_precomp[i] == other.proof_g_vki_precomp[i];
-    }
-    return result;
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk)
-{
-    out << pvk.pp_G2_one_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_alphaA_g2_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_alphaB_g1_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_alphaC_g2_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_rC_Z_g2_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_gamma_g2_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_gamma_beta_g1_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_gamma_beta_g2_precomp << OUTPUT_NEWLINE;
-    out << pvk.vk_rC_i_g2_precomp << OUTPUT_NEWLINE;
-    out << pvk.A0 << OUTPUT_NEWLINE;
-    out << pvk.Ain << OUTPUT_NEWLINE;
-    out << pvk.proof_g_vki_precomp  << OUTPUT_NEWLINE;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk)
-{
-    in >> pvk.pp_G2_one_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_alphaA_g2_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_alphaB_g1_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_alphaC_g2_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_rC_Z_g2_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_gamma_g2_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_gamma_beta_g1_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_gamma_beta_g2_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.vk_rC_i_g2_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.A0;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.Ain;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> pvk.proof_g_vki_precomp;
-    ffec::consume_OUTPUT_NEWLINE(in);
-
-    return in;
-}
-
-template<typename ppT>
-bool r1cs_ppzkadsnark_proof<ppT>::operator==(const r1cs_ppzkadsnark_proof<ppT> &other) const
-{
-    return (self.g_A == other.g_A &&
-            self.g_B == other.g_B &&
-            self.g_C == other.g_C &&
-            self.g_H == other.g_H &&
-            self.g_K == other.g_K &&
-            self.g_Aau == other.g_Aau &&
-            self.muA == other.muA);
-}
-
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const r1cs_ppzkadsnark_proof<ppT> &proof)
-{
-    out << proof.g_A << OUTPUT_NEWLINE;
-    out << proof.g_B << OUTPUT_NEWLINE;
-    out << proof.g_C << OUTPUT_NEWLINE;
-    out << proof.g_H << OUTPUT_NEWLINE;
-    out << proof.g_K << OUTPUT_NEWLINE;
-    out << proof.g_Aau << OUTPUT_NEWLINE;
-    out << proof.muA << OUTPUT_NEWLINE;
-
-    return out;
-}
-
-template<typename ppT>
-std::istream& operator>>(std::istream &in, r1cs_ppzkadsnark_proof<ppT> &proof)
-{
-    in >> proof.g_A;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> proof.g_B;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> proof.g_C;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> proof.g_H;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> proof.g_K;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> proof.g_Aau;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> proof.muA;
-    ffec::consume_OUTPUT_NEWLINE(in);
-
-    return in;
-}
-
-template<typename ppT>
-r1cs_ppzkadsnark_verification_key<ppT> r1cs_ppzkadsnark_verification_key<ppT>::dummy_verification_key(const size_t input_size)
-{
-    r1cs_ppzkadsnark_verification_key<ppT> result;
-    result.alphaA_g2 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G2<snark_pp<ppT>>::one();
-    result.alphaB_g1 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G1<snark_pp<ppT>>::one();
-    result.alphaC_g2 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G2<snark_pp<ppT>>::one();
-    result.gamma_g2 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G2<snark_pp<ppT>>::one();
-    result.gamma_beta_g1 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G1<snark_pp<ppT>>::one();
-    result.gamma_beta_g2 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G2<snark_pp<ppT>>::one();
-    result.rC_Z_g2 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G2<snark_pp<ppT>>::one();
-
-    result.A0 = ffec::Fr<snark_pp<ppT>>::random_element() * ffec::G1<snark_pp<ppT>>::one();
+    result.A0 = Fr::<snark_pp::<ppT>>::random_element() * G1::<snark_pp::<ppT>>::one();
     for i in 0..input_size
     {
-        result.Ain.push(ffec::Fr<snark_pp<ppT>>::random_element() *
-                                ffec::G1<snark_pp<ppT>>::one());
+        result.Ain.push(Fr::<snark_pp::<ppT>>::random_element() *
+                                G1::<snark_pp::<ppT>>::one());
     }
 
     return result;
 }
-
-template<typename ppT>
-r1cs_ppzkadsnark_auth_keys<ppT> r1cs_ppzkadsnark_auth_generator(void) {
-    kpT<ppT> sigkp = sigGen<ppT>();
-    r1cs_ppzkadsnark_prfKeyT<ppT>prfseed = prfGen<ppT>();
-    ffec::Fr<snark_pp<ppT>> i = ffec::Fr<snark_pp<ppT>>::random_element();
-    ffec::G1<snark_pp<ppT>> I1 = i * ffec::G1<snark_pp<ppT>>::one();
-    ffec::G2<snark_pp<ppT>> minusI2 = ffec::G2<snark_pp<ppT>>::zero() -
-        i * ffec::G2<snark_pp<ppT>>::one();
-    return r1cs_ppzkadsnark_auth_keys<ppT>(
-        r1cs_ppzkadsnark_pub_auth_prms<ppT>((I1)),
-        r1cs_ppzkadsnark_pub_auth_key<ppT>((minusI2),(sigkp.vk)),
-        r1cs_ppzkadsnark_sec_auth_key<ppT>((i),(sigkp.sk),(prfseed)));
 }
 
-template<typename ppT>
-std::vector<r1cs_ppzkadsnark_auth_data<ppT>> r1cs_ppzkadsnark_auth_sign(
-    const std::vector<ffec::Fr<snark_pp<ppT>>> &ins,
-    const r1cs_ppzkadsnark_sec_auth_key<ppT> &sk,
-    const std::vector<labelT> labels) {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_auth_sign");
-    assert (labels.size()==ins.size());
-    std::vector<r1cs_ppzkadsnark_auth_data<ppT>> res;
-    res.reserve(ins.size());
-    for (size_t i = 0; i < ins.size();i++) {
-        ffec::Fr<snark_pp<ppT>> lambda = prfCompute<ppT>(sk.S,labels[i]);
-        ffec::G2<snark_pp<ppT>> Lambda = lambda * ffec::G2<snark_pp<ppT>>::one();
-        r1cs_ppzkadsnark_sigT<ppT>sig = sigSign<ppT>(sk.skp,labels[i],Lambda);
-        r1cs_ppzkadsnark_auth_data<ppT> val((lambda + sk.i * ins[i]),
-                                            (Lambda),
-                                            (sig));
+
+ pub fn r1cs_ppzkadsnark_auth_generator<ppT>()->r1cs_ppzkadsnark_auth_keys<ppT> {
+    let mut  sigkp = sigGen::<ppT>();
+    let mut  prfseed = prfGen::<ppT>();
+   let mut  i = Fr::<snark_pp::<ppT>>::random_element();
+    let mut  I1 = i * G1::<snark_pp::<ppT>>::one();
+    let mut  minusI2 = G2::<snark_pp::<ppT>>::zero() -
+        i * G2::<snark_pp::<ppT>>::one();
+    return r1cs_ppzkadsnark_auth_keys::<ppT>(
+        r1cs_ppzkadsnark_pub_auth_prms::<ppT>(I1),
+        r1cs_ppzkadsnark_pub_auth_key::<ppT>(minusI2,(sigkp.vk)),
+        r1cs_ppzkadsnark_sec_auth_key::<ppT>(i,(sigkp.sk),prfseed));
+}
+
+
+ pub fn r1cs_ppzkadsnark_auth_sign<ppT>(
+    ins:&Vec<Fr<snark_pp<ppT>>>,
+    sk:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+    labels:Vec<labelT>)->Vec<r1cs_ppzkadsnark_auth_data<ppT>>  {
+    enter_block("Call to r1cs_ppzkadsnark_auth_sign",false);
+    assert !(labels.len()==ins.len());
+    let mut  res=Vec::with_capacity(ins.len());
+    for i in 0..ins.len(){
+        let mut  lambda = prfCompute::<ppT>(sk.S,labels[i]);
+        let mut  Lambda = lambda * G2::<snark_pp::<ppT>>::one();
+        let mut sig = sigSign::<ppT>(sk.skp,labels[i],Lambda);
+        let mut val= r1cs_ppzkadsnark_auth_data::<ppT>::new((lambda + sk.i * ins[i]),
+                                            Lambda,
+                                            sig);
         res.push(val);
     }
-    ffec::leave_block("Call to r1cs_ppzkadsnark_auth_sign");
+    leave_block("Call to r1cs_ppzkadsnark_auth_sign",false);
     return (res);
 }
 
 // symmetric
-template<typename ppT>
-bool r1cs_ppzkadsnark_auth_verify(const std::vector<ffec::Fr<snark_pp<ppT>>> &data,
-                                  const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> & auth_data,
-                                  const r1cs_ppzkadsnark_sec_auth_key<ppT> &sak,
-                                  const std::vector<labelT> &labels) {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_auth_verify");
-    assert ((data.size()==labels.size()) && (auth_data.size()==labels.size()));
-    bool res = true;
-    for (size_t i = 0; i < data.size();i++) {
-        ffec::Fr<snark_pp<ppT>> lambda = prfCompute<ppT>(sak.S,labels[i]);
-        ffec::Fr<snark_pp<ppT>> mup = lambda + sak.i * data[i];
+
+  pub fn r1cs_ppzkadsnark_auth_verify<ppT>(data:&Vec<Fr<snark_pp<ppT>>>,
+                                  auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
+                                  sak:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+                                  labels:&Vec<labelT>)->bool {
+    enter_block("Call to r1cs_ppzkadsnark_auth_verify",false);
+    assert !((data.len()==labels.len()) && (auth_data.len()==labels.len()));
+    let mut  res = true;
+    for i in 0..data.len(){
+        let mut  lambda = prfCompute::<ppT>(sak.S,labels[i]);
+       let mut  mup = lambda + sak.i * data[i];
         res = res && (auth_data[i].mu == mup);
     }
-    ffec::leave_block("Call to r1cs_ppzkadsnark_auth_verify");
+    leave_block("Call to r1cs_ppzkadsnark_auth_verify",false);
     return res;
 }
 
 // public
-template<typename ppT>
-bool r1cs_ppzkadsnark_auth_verify(const std::vector<ffec::Fr<snark_pp<ppT>>> &data,
-                                  const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> & auth_data,
-                                  const r1cs_ppzkadsnark_pub_auth_key<ppT> &pak,
-                                  const std::vector<labelT> &labels) {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_auth_verify");
-    assert ((data.size()==labels.size()) && (data.size()==auth_data.size()));
-    bool res = true;
-    for (size_t i = 0; i < auth_data.size();i++) {
-        ffec::G2<snark_pp<ppT>> Mup = auth_data[i].Lambda - data[i] * pak.minusI2;
-        res = res && (auth_data[i].mu * ffec::G2<snark_pp<ppT>>::one() == Mup);
-        res = res && sigVerif<ppT>(pak.vkp,labels[i],auth_data[i].Lambda,auth_data[i].sigma);
+
+  pub fn r1cs_ppzkadsnark_auth_verify2<ppT>(data:&Vec<Fr<snark_pp<ppT>>>,
+                                  auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
+                                  pak:&r1cs_ppzkadsnark_pub_auth_key<ppT>,
+                                  labels:&Vec<labelT>) ->bool{
+    enter_block("Call to r1cs_ppzkadsnark_auth_verify",false);
+    assert !((data.len()==labels.len()) && (data.len()==auth_data.len()));
+    let mut  res = true;
+    for i in 0..auth_data.len(){
+        let mut  Mup = auth_data[i].Lambda - data[i] * pak.minusI2;
+        res = res && (auth_data[i].mu * G2::<snark_pp::<ppT>>::one() == Mup);
+        res = res && sigVerif::<ppT>(pak.vkp,labels[i],auth_data[i].Lambda,auth_data[i].sigma);
     }
-    ffec::leave_block("Call to r1cs_ppzkadsnark_auth_verify");
+    leave_block("Call to r1cs_ppzkadsnark_auth_verify",false);
     return res;
 }
 
-template <typename ppT>
-r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_constraint_system<ppT> &cs,
-                                                         const r1cs_ppzkadsnark_pub_auth_prms<ppT> &prms)
+
+pub fn r1cs_ppzkadsnark_generator<ppT>(cs:&r1cs_ppzkadsnark_constraint_system<ppT>,
+                                                         prms:&r1cs_ppzkadsnark_pub_auth_prms<ppT>)->r1cs_ppzkadsnark_keypair<ppT> 
 {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_generator");
+    enter_block("Call to r1cs_ppzkadsnark_generator",false);
 
     /* make the B_query "lighter" if possible */
-    r1cs_ppzkadsnark_constraint_system<ppT> cs_copy(cs);
+    let mut cs_copy=cs.clone();
     cs_copy.swap_AB_if_beneficial();
 
     /* draw random element at which the QAP is evaluated */
-    const  ffec::Fr<snark_pp<ppT>> t = ffec::Fr<snark_pp<ppT>>::random_element();
+    let mut  t = Fr::<snark_pp::<ppT>>::random_element();
 
-    qap_instance_evaluation<ffec::Fr<snark_pp<ppT>> > qap_inst =
+    let mut  qap_inst =
         r1cs_to_qap_instance_map_with_evaluation(cs_copy, t);
 
-    ffec::print_indent(); print!("* QAP number of variables: {}\n", qap_inst.num_variables());
-    ffec::print_indent(); print!("* QAP pre degree: {}\n", cs_copy.constraints.size());
-    ffec::print_indent(); print!("* QAP degree: {}\n", qap_inst.degree());
-    ffec::print_indent(); print!("* QAP number of input variables: {}\n", qap_inst.num_inputs());
+    print_indent(); print!("* QAP number of variables: {}\n", qap_inst.num_variables());
+    print_indent(); print!("* QAP pre degree: {}\n", cs_copy.constraints.len());
+    print_indent(); print!("* QAP degree: {}\n", qap_inst.degree());
+    print_indent(); print!("* QAP number of input variables: {}\n", qap_inst.num_inputs());
 
-    ffec::enter_block("Compute query densities");
-    size_t non_zero_At = 0, non_zero_Bt = 0, non_zero_Ct = 0, non_zero_Ht = 0;
+    enter_block("Compute query densities",false);
+    let mut  non_zero_At = 0;let mut non_zero_Bt = 0;let mut  non_zero_Ct = 0;let mut  non_zero_Ht = 0;
     for i in 0..qap_inst.num_variables()+1
     {
         if !qap_inst.At[i].is_zero()
@@ -1166,30 +1182,30 @@ r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_
             non_zero_Ht+=1;
         }
     }
-    ffec::leave_block("Compute query densities");
+    leave_block("Compute query densities",false);
 
-    ffec::Fr_vector<snark_pp<ppT>> At = (qap_inst.At); // qap_inst.At is now in unspecified state, but we do not use it later
-    ffec::Fr_vector<snark_pp<ppT>> Bt = (qap_inst.Bt); // qap_inst.Bt is now in unspecified state, but we do not use it later
-    ffec::Fr_vector<snark_pp<ppT>> Ct = (qap_inst.Ct); // qap_inst.Ct is now in unspecified state, but we do not use it later
-    ffec::Fr_vector<snark_pp<ppT>> Ht = (qap_inst.Ht); // qap_inst.Ht is now in unspecified state, but we do not use it later
+    let mut  At = (qap_inst.At); // qap_inst.At is now in unspecified state, but we do not use it later
+    let mut  Bt = (qap_inst.Bt); // qap_inst.Bt is now in unspecified state, but we do not use it later
+      let mut  Ct = (qap_inst.Ct); // qap_inst.Ct is now in unspecified state, but we do not use it later
+    let mut  Ht = (qap_inst.Ht); // qap_inst.Ht is now in unspecified state, but we do not use it later
 
     /* append Zt to At,Bt,Ct with */
     At.push(qap_inst.Zt);
     Bt.push(qap_inst.Zt);
     Ct.push(qap_inst.Zt);
 
-    const  ffec::Fr<snark_pp<ppT>> alphaA = ffec::Fr<snark_pp<ppT>>::random_element(),
-        alphaB = ffec::Fr<snark_pp<ppT>>::random_element(),
-        alphaC = ffec::Fr<snark_pp<ppT>>::random_element(),
-        rA = ffec::Fr<snark_pp<ppT>>::random_element(),
-        rB = ffec::Fr<snark_pp<ppT>>::random_element(),
-        beta = ffec::Fr<snark_pp<ppT>>::random_element(),
-        gamma = ffec::Fr<snark_pp<ppT>>::random_element();
-    const ffec::Fr<snark_pp<ppT>>      rC = rA * rB;
+     let   alphaA = Fr::<snark_pp::<ppT>>::random_element();
+      let  alphaB = Fr::<snark_pp::<ppT>>::random_element();
+       let alphaC = Fr::<snark_pp::<ppT>>::random_element();
+       let rA = Fr::<snark_pp::<ppT>>::random_element();
+       let rB = Fr::<snark_pp::<ppT>>::random_element();
+      let  beta = Fr::<snark_pp::<ppT>>::random_element();
+       let gamma = Fr::<snark_pp::<ppT>>::random_element();
+    let     rC = rA * rB;
 
     // construct the same-coefficient-check query (must happen before zeroing out the prefix of At)
-    ffec::Fr_vector<snark_pp<ppT>> Kt;
-    Kt.reserve(qap_inst.num_variables()+4);
+    let mut  Kt=Vec::with_capacity(qap_inst.num_variables()+4);
+  
     for i in 0..qap_inst.num_variables()+1
     {
         Kt.push( beta * (rA * At[i] + rB * Bt[i] + rC * Ct[i] ) );
@@ -1198,100 +1214,99 @@ r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_
     Kt.push(beta * rB * qap_inst.Zt);
     Kt.push(beta * rC * qap_inst.Zt);
 
-    const size_t g1_exp_count = 2*(non_zero_At - qap_inst.num_inputs() + non_zero_Ct) + non_zero_Bt + non_zero_Ht + Kt.size();
-    const size_t g2_exp_count = non_zero_Bt;
+    let g1_exp_count = 2*(non_zero_At - qap_inst.num_inputs() + non_zero_Ct) + non_zero_Bt + non_zero_Ht + Kt.len();
+    let g2_exp_count = non_zero_Bt;
 
-    size_t g1_window = ffec::get_exp_window_size<ffec::G1<snark_pp<ppT>> >(g1_exp_count);
-    size_t g2_window = ffec::get_exp_window_size<ffec::G2<snark_pp<ppT>> >(g2_exp_count);
-    ffec::print_indent(); print!("* G1 window: {}\n", g1_window);
-    ffec::print_indent(); print!("* G2 window: {}\n", g2_window);
+    let  g1_window = get_exp_window_size::<G1::<snark_pp::<ppT>> >(g1_exp_count);
+    let g2_window = get_exp_window_size::<G2::<snark_pp::<ppT>> >(g2_exp_count);
+    print_indent(); print!("* G1 window: {}\n", g1_window);
+    print_indent(); print!("* G2 window: {}\n", g2_window);
 
 // #ifdef MULTICORE
-    const size_t chunks = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
-#else
-    const size_t chunks = 1;
+//     chunks:usize = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
+// #else
+    let chunks:usize = 1;
 //#endif
 
-    ffec::enter_block("Generating G1 multiexp table");
-    ffec::window_table<ffec::G1<snark_pp<ppT>> > g1_table =
-        get_window_table(ffec::Fr<snark_pp<ppT>>::size_in_bits(), g1_window,
-                         ffec::G1<snark_pp<ppT>>::one());
-    ffec::leave_block("Generating G1 multiexp table");
+    enter_block("Generating G1 multiexp table",false);
+    let g1_table =
+        get_window_table(Fr::<snark_pp::<ppT>>::size_in_bits(), g1_window,
+                         G1::<snark_pp::<ppT>>::one());
+    leave_block("Generating G1 multiexp table",false);
 
-    ffec::enter_block("Generating G2 multiexp table");
-    ffec::window_table<ffec::G2<snark_pp<ppT>> > g2_table =
-        get_window_table(ffec::Fr<snark_pp<ppT>>::size_in_bits(),
-                         g2_window, ffec::G2<snark_pp<ppT>>::one());
-    ffec::leave_block("Generating G2 multiexp table");
+    enter_block("Generating G2 multiexp table",false);
+    let g2_table =
+        get_window_table(Fr::<snark_pp::<ppT>>::size_in_bits(),
+                         g2_window, G2::<snark_pp::<ppT>>::one());
+    leave_block("Generating G2 multiexp table",false);
 
-    ffec::enter_block("Generate R1CS proving key");
+    enter_block("Generate R1CS proving key",false);
 
-    ffec::enter_block("Generate knowledge commitments");
-    ffec::enter_block("Compute the A-query", false);
-    knowledge_commitment_vector<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > A_query =
-        kc_batch_exp(ffec::Fr<snark_pp<ppT>>::size_in_bits(), g1_window, g1_window, g1_table,
+    enter_block("Generate knowledge commitments",false);
+    enter_block("Compute the A-query", false,false);
+    let A_query =
+        kc_batch_exp(Fr::<snark_pp::<ppT>>::size_in_bits(), g1_window, g1_window, g1_table,
                      g1_table, rA, rA*alphaA, At, chunks);
-    ffec::leave_block("Compute the A-query", false);
+    leave_block("Compute the A-query", false,false);
 
-    ffec::enter_block("Compute the B-query", false);
-    knowledge_commitment_vector<ffec::G2<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > B_query =
-        kc_batch_exp(ffec::Fr<snark_pp<ppT>>::size_in_bits(), g2_window, g1_window, g2_table,
+    enter_block("Compute the B-query", false,false);
+   let B_query =
+        kc_batch_exp(Fr::<snark_pp::<ppT>>::size_in_bits(), g2_window, g1_window, g2_table,
                      g1_table, rB, rB*alphaB, Bt, chunks);
-    ffec::leave_block("Compute the B-query", false);
+    leave_block("Compute the B-query", false,false);
 
-    ffec::enter_block("Compute the C-query", false);
-    knowledge_commitment_vector<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > C_query =
-        kc_batch_exp(ffec::Fr<snark_pp<ppT>>::size_in_bits(), g1_window, g1_window, g1_table,
+    enter_block("Compute the C-query", false,false);
+   let C_query =
+        kc_batch_exp(Fr::<snark_pp::<ppT>>::size_in_bits(), g1_window, g1_window, g1_table,
                      g1_table, rC, rC*alphaC, Ct, chunks);
-    ffec::leave_block("Compute the C-query", false);
+    leave_block("Compute the C-query", false,false);
 
-    ffec::enter_block("Compute the H-query", false);
-    ffec::G1_vector<snark_pp<ppT>> H_query = batch_exp(ffec::Fr<snark_pp<ppT>>::size_in_bits(), g1_window, g1_table, Ht);
+    enter_block("Compute the H-query", false,false);
+    let  H_query = batch_exp(Fr::<snark_pp::<ppT>>::size_in_bits(), g1_window, g1_table, Ht);
 // #ifdef USE_MIXED_ADDITION
-    ffec::batch_to_special<ffec::G1<snark_pp<ppT>> >(H_query);
+    // batch_to_special<G1<snark_pp<ppT>> >(H_query);
 //#endif
-    ffec::leave_block("Compute the H-query", false);
+    leave_block("Compute the H-query", false,false);
 
-    ffec::enter_block("Compute the K-query", false);
-    ffec::G1_vector<snark_pp<ppT>> K_query = batch_exp(ffec::Fr<snark_pp<ppT>>::size_in_bits(), g1_window, g1_table, Kt);
+    enter_block("Compute the K-query", false,false);
+    let  K_query = batch_exp(Fr::<snark_pp::<ppT>>::size_in_bits(), g1_window, g1_table, Kt);
 // #ifdef USE_MIXED_ADDITION
-    ffec::batch_to_special<ffec::G1<snark_pp<ppT>> >(K_query);
+    // batch_to_special<G1<snark_pp<ppT>> >(K_query);
 //#endif
-    ffec::leave_block("Compute the K-query", false);
+    leave_block("Compute the K-query", false,false);
 
-    ffec::leave_block("Generate knowledge commitments");
+    leave_block("Generate knowledge commitments",false);
 
-    ffec::leave_block("Generate R1CS proving key");
+    leave_block("Generate R1CS proving key",false);
 
-    ffec::enter_block("Generate R1CS verification key");
-    ffec::G2<snark_pp<ppT>> alphaA_g2 = alphaA * ffec::G2<snark_pp<ppT>>::one();
-    ffec::G1<snark_pp<ppT>> alphaB_g1 = alphaB * ffec::G1<snark_pp<ppT>>::one();
-    ffec::G2<snark_pp<ppT>> alphaC_g2 = alphaC * ffec::G2<snark_pp<ppT>>::one();
-    ffec::G2<snark_pp<ppT>> gamma_g2 = gamma * ffec::G2<snark_pp<ppT>>::one();
-    ffec::G1<snark_pp<ppT>> gamma_beta_g1 = (gamma * beta) * ffec::G1<snark_pp<ppT>>::one();
-    ffec::G2<snark_pp<ppT>> gamma_beta_g2 = (gamma * beta) * ffec::G2<snark_pp<ppT>>::one();
-    ffec::G2<snark_pp<ppT>> rC_Z_g2 = (rC * qap_inst.Zt) * ffec::G2<snark_pp<ppT>>::one();
+    enter_block("Generate R1CS verification key",false);
+    let mut alphaA_g2 = alphaA * G2::<snark_pp::<ppT>>::one();
+    let alphaB_g1 = alphaB * G1::<snark_pp::<ppT>>::one();
+    let mut alphaC_g2 = alphaC * G2::<snark_pp::<ppT>>::one();
+    let mut gamma_g2 = gamma * G2::<snark_pp::<ppT>>::one();
+    letgamma_beta_g1 = (gamma * beta) * G1::<snark_pp::<ppT>>::one();
+    let mut gamma_beta_g2 = (gamma * beta) * G2::<snark_pp::<ppT>>::one();
+    let mut rC_Z_g2 = (rC * qap_inst.Zt) * G2::<snark_pp::<ppT>>::one();
 
-    ffec::enter_block("Generate extra authentication elements");
-    ffec::G1<snark_pp<ppT>> rA_i_Z_g1 = (rA * qap_inst.Zt) * prms.I1;
-    ffec::leave_block("Generate extra authentication elements");
+    enter_block("Generate extra authentication elements",false);
+   let rA_i_Z_g1 = (rA * qap_inst.Zt) * prms.I1;
+    leave_block("Generate extra authentication elements",false);
 
-    ffec::enter_block("Copy encoded input coefficients for R1CS verification key");
-    ffec::G1<snark_pp<ppT>> A0 = A_query[0].g;
-    ffec::G1_vector<snark_pp<ppT>> Ain;
-    Ain.reserve(qap_inst.num_inputs());
+    enter_block("Copy encoded input coefficients for R1CS verification key",false);
+   letA0 = A_query[0].g;
+    let mut  Ain=Vec::with_capacity(qap_inst.num_inputs());
     for i in 0..qap_inst.num_inputs()
     {
         Ain.push(A_query[1+i].g);
     }
 
-    ffec::leave_block("Copy encoded input coefficients for R1CS verification key");
+    leave_block("Copy encoded input coefficients for R1CS verification key",false);
 
-    ffec::leave_block("Generate R1CS verification key");
+    leave_block("Generate R1CS verification key",false);
 
-    ffec::leave_block("Call to r1cs_ppzkadsnark_generator");
+    leave_block("Call to r1cs_ppzkadsnark_generator",false);
 
-    r1cs_ppzkadsnark_verification_key<ppT> vk = r1cs_ppzkadsnark_verification_key<ppT>(alphaA_g2,
+    let mut vk = r1cs_ppzkadsnark_verification_key::<ppT>(alphaA_g2,
                                                                                        alphaB_g1,
                                                                                        alphaC_g2,
                                                                                        gamma_g2,
@@ -1300,59 +1315,59 @@ r1cs_ppzkadsnark_keypair<ppT> r1cs_ppzkadsnark_generator(const r1cs_ppzkadsnark_
                                                                                        rC_Z_g2,
                                                                                        A0,
                                                                                        Ain);
-    r1cs_ppzkadsnark_proving_key<ppT> pk = r1cs_ppzkadsnark_proving_key<ppT>((A_query),
-                                                                             (B_query),
-                                                                             (C_query),
-                                                                             (H_query),
-                                                                             (K_query),
-                                                                             (rA_i_Z_g1),
-                                                                             (cs_copy));
+    let mut  pk = r1cs_ppzkadsnark_proving_key::<ppT>(A_query,
+                                                                             B_query,
+                                                                             C_query,
+                                                                             H_query,
+                                                                             K_query,
+                                                                             rA_i_Z_g1,
+                                                                             cs_copy);
 
     pk.print_size();
     vk.print_size();
 
-    return r1cs_ppzkadsnark_keypair<ppT>((pk), (vk));
+    return r1cs_ppzkadsnark_keypair::<ppT>(pk, vk);
 }
 
-template <typename ppT>
-r1cs_ppzkadsnark_proof<ppT> r1cs_ppzkadsnark_prover(const r1cs_ppzkadsnark_proving_key<ppT> &pk,
-                                                    const r1cs_ppzkadsnark_primary_input<ppT> &primary_input,
-                                                    const r1cs_ppzkadsnark_auxiliary_input<ppT> &auxiliary_input,
-                                                    const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> &auth_data)
+
+ pub fn r1cs_ppzkadsnark_prover<ppT>(pk:&r1cs_ppzkadsnark_proving_key<ppT>,
+                                                    primary_input:&r1cs_ppzkadsnark_primary_input<ppT>,
+                                                    auxiliary_input:&r1cs_ppzkadsnark_auxiliary_input<ppT>,
+                                                    auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>)->r1cs_ppzkadsnark_proof<ppT>
 {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_prover");
+    enter_block("Call to r1cs_ppzkadsnark_prover",false);
 
 // #ifdef DEBUG
     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
 //#endif
 
-    const ffec::Fr<snark_pp<ppT>> d1 = ffec::Fr<snark_pp<ppT>>::random_element(),
-        d2 = ffec::Fr<snark_pp<ppT>>::random_element(),
-        d3 = ffec::Fr<snark_pp<ppT>>::random_element(),
-        dauth = ffec::Fr<snark_pp<ppT>>::random_element();
+   let  d1 = Fr::<snark_pp::<ppT>>::random_element();
+     let   d2 = Fr::<snark_pp::<ppT>>::random_element();
+     let   d3 = Fr::<snark_pp::<ppT>>::random_element();
+     let   dauth = Fr::<snark_pp::<ppT>>::random_element();
 
-    ffec::enter_block("Compute the polynomial H");
-    const qap_witness<ffec::Fr<snark_pp<ppT>> > qap_wit = r1cs_to_qap_witness_map(pk.constraint_system, primary_input,
+    enter_block("Compute the polynomial H",false);
+    let qap_wit = r1cs_to_qap_witness_map(pk.constraint_system, primary_input,
                                                                             auxiliary_input, d1 + dauth, d2, d3);
-    ffec::leave_block("Compute the polynomial H");
+    leave_block("Compute the polynomial H",false);
 
 // #ifdef DEBUG
-    const ffec::Fr<snark_pp<ppT>> t = ffec::Fr<snark_pp<ppT>>::random_element();
-    qap_instance_evaluation<ffec::Fr<snark_pp<ppT>> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
+    let t = Fr::<snark_pp::<ppT>>::random_element();
+   let qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
     assert!(qap_inst.is_satisfied(qap_wit));
 //#endif
 
-    knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_A =
+    let g_A =
         /* pk.A_query[0] + */ d1*pk.A_query[qap_wit.num_variables()+1];
-    knowledge_commitment<ffec::G2<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_B =
+    let  g_B =
         pk.B_query[0] + qap_wit.d2*pk.B_query[qap_wit.num_variables()+1];
-    knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_C =
+   let g_C =
         pk.C_query[0] + qap_wit.d3*pk.C_query[qap_wit.num_variables()+1];
 
-    knowledge_commitment<ffec::G1<snark_pp<ppT>>, ffec::G1<snark_pp<ppT>> > g_Ain = dauth*pk.A_query[qap_wit.num_variables()+1];
+    let  g_Ain = dauth*pk.A_query[qap_wit.num_variables()+1];
 
-    ffec::G1<snark_pp<ppT>> g_H = ffec::G1<snark_pp<ppT>>::zero();
-    ffec::G1<snark_pp<ppT>> g_K = (pk.K_query[0] +
+    let  g_H = G1::<snark_pp::<ppT>>::zero();
+    let  g_K = (pk.K_query[0] +
                              qap_wit.d1*pk.K_query[qap_wit.num_variables()+1] +
                              qap_wit.d2*pk.K_query[qap_wit.num_variables()+2] +
                              qap_wit.d3*pk.K_query[qap_wit.num_variables()+3]);
@@ -1360,557 +1375,555 @@ r1cs_ppzkadsnark_proof<ppT> r1cs_ppzkadsnark_prover(const r1cs_ppzkadsnark_provi
 // #ifdef DEBUG
     for i in 0..qap_wit.num_inputs() + 1
     {
-        assert!(pk.A_query[i].g == ffec::G1<snark_pp<ppT>>::zero());
+        assert!(pk.A_query[i].g == G1::<snark_pp::<ppT>>::zero());
     }
     assert!(pk.A_query.domain_size() == qap_wit.num_variables()+2);
     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+2);
     assert!(pk.C_query.domain_size() == qap_wit.num_variables()+2);
-    assert!(pk.H_query.size() == qap_wit.degree()+1);
-    assert!(pk.K_query.size() == qap_wit.num_variables()+4);
+    assert!(pk.H_query.len() == qap_wit.degree()+1);
+    assert!(pk.K_query.len() == qap_wit.num_variables()+4);
 //#endif
 
 // #ifdef MULTICORE
-    const size_t chunks = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
-#else
-    const size_t chunks = 1;
+    // let  chunks = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
+// #else
+    let chunks = 1;
 //#endif
 
-    ffec::enter_block("Compute the proof");
+    enter_block("Compute the proof",false);
 
-    ffec::enter_block("Compute answer to A-query", false);
-    g_A = g_A + kc_multi_exp_with_mixed_addition<ffec::G1<snark_pp<ppT>>,
-                                                 ffec::G1<snark_pp<ppT>>,
-                                                 ffec::Fr<snark_pp<ppT>>,
-                                                 ffec::multi_exp_method_bos_coster>(
+    enter_block("Compute answer to A-query", false,false);
+    g_A = g_A + kc_multi_exp_with_mixed_addition::<G1::<snark_pp::<ppT>>,
+                                                 G1::<snark_pp::<ppT>>,
+                                                 Fr::<snark_pp::<ppT>>,
+                                                 multi_exp_method_bos_coster>(
         pk.A_query,
         1+qap_wit.num_inputs(), 1+qap_wit.num_variables(),
         qap_wit.coefficients_for_ABCs.begin()+qap_wit.num_inputs(),
         qap_wit.coefficients_for_ABCs.begin()+qap_wit.num_variables(),
         chunks);
-    ffec::leave_block("Compute answer to A-query", false);
+    leave_block("Compute answer to A-query", false,false);
 
-    ffec::enter_block("Compute answer to Ain-query", false);
-    g_Ain = g_Ain + kc_multi_exp_with_mixed_addition<ffec::G1<snark_pp<ppT>>,
-                                                     ffec::G1<snark_pp<ppT>>,
-                                                     ffec::Fr<snark_pp<ppT>>,
-                                                     ffec::multi_exp_method_bos_coster>(
+    enter_block("Compute answer to Ain-query", false,false);
+    g_Ain = g_Ain + kc_multi_exp_with_mixed_addition::<G1::<snark_pp::<ppT>>,
+                                                     G1::<snark_pp::<ppT>>,
+                                                     Fr::<snark_pp::<ppT>>,
+                                                     multi_exp_method_bos_coster>(
         pk.A_query,
         1, 1+qap_wit.num_inputs(),
         qap_wit.coefficients_for_ABCs.begin(),
         qap_wit.coefficients_for_ABCs.begin()+qap_wit.num_inputs(),
         chunks);
     //std :: cout << "The input proof term: " << g_Ain << "\n";
-    ffec::leave_block("Compute answer to Ain-query", false);
+    leave_block("Compute answer to Ain-query", false,false);
 
-    ffec::enter_block("Compute answer to B-query", false);
-    g_B = g_B + kc_multi_exp_with_mixed_addition<ffec::G2<snark_pp<ppT>>,
-                                                 ffec::G1<snark_pp<ppT>>,
-                                                 ffec::Fr<snark_pp<ppT>>,
-                                                 ffec::multi_exp_method_bos_coster>(
+    enter_block("Compute answer to B-query", false,false);
+    g_B = g_B + kc_multi_exp_with_mixed_addition::<G2::<snark_pp::<ppT>>,
+                                                 G1::<snark_pp::<ppT>>,
+                                                 Fr::<snark_pp::<ppT>>,
+                                                 multi_exp_method_bos_coster>(
         pk.B_query,
         1, 1+qap_wit.num_variables(),
         qap_wit.coefficients_for_ABCs.begin(),
         qap_wit.coefficients_for_ABCs.begin()+qap_wit.num_variables(),
         chunks);
-    ffec::leave_block("Compute answer to B-query", false);
+    leave_block("Compute answer to B-query", false,false);
 
-    ffec::enter_block("Compute answer to C-query", false);
-    g_C = g_C + kc_multi_exp_with_mixed_addition<ffec::G1<snark_pp<ppT>>,
-                                                 ffec::G1<snark_pp<ppT>>,
-                                                 ffec::Fr<snark_pp<ppT>>,
-                                                 ffec::multi_exp_method_bos_coster>(
+    enter_block("Compute answer to C-query", false,false);
+    g_C = g_C + kc_multi_exp_with_mixed_addition::<G1::<snark_pp::<ppT>>,
+                                                 G1::<snark_pp::<ppT>>,
+                                                 Fr::<snark_pp::<ppT>>,
+                                                 multi_exp_method_bos_coster>(
         pk.C_query,
         1, 1+qap_wit.num_variables(),
         qap_wit.coefficients_for_ABCs.begin(),
         qap_wit.coefficients_for_ABCs.begin()+qap_wit.num_variables(),
         chunks);
-    ffec::leave_block("Compute answer to C-query", false);
+    leave_block("Compute answer to C-query", false,false);
 
-    ffec::enter_block("Compute answer to H-query", false);
-    g_H = g_H + ffec::multi_exp<ffec::G1<snark_pp<ppT>>,
-                                 ffec::Fr<snark_pp<ppT>>,
-                                 ffec::multi_exp_method_BDLO12>(
+    enter_block("Compute answer to H-query", false,false);
+    g_H = g_H + multi_exp::<G1::<snark_pp::<ppT>>,
+                                 Fr::<snark_pp::<ppT>>,
+                                 multi_exp_method_BDLO12>(
         pk.H_query.begin(),
         pk.H_query.begin()+qap_wit.degree()+1,
         qap_wit.coefficients_for_H.begin(),
         qap_wit.coefficients_for_H.begin()+qap_wit.degree()+1,
         chunks);
-    ffec::leave_block("Compute answer to H-query", false);
+    leave_block("Compute answer to H-query", false,false);
 
-    ffec::enter_block("Compute answer to K-query", false);
-    g_K = g_K + ffec::multi_exp_with_mixed_addition<ffec::G1<snark_pp<ppT>>,
-                                                     ffec::Fr<snark_pp<ppT>>,
-                                                     ffec::multi_exp_method_bos_coster>(
+    enter_block("Compute answer to K-query", false,false);
+    g_K = g_K + multi_exp_with_mixed_addition::<G1::<snark_pp::<ppT>>,
+                                                     Fr::<snark_pp::<ppT>>,
+                                                     multi_exp_method_bos_coster>(
         pk.K_query.begin()+1,
         pk.K_query.begin()+1+qap_wit.num_variables(),
         qap_wit.coefficients_for_ABCs.begin(),
         qap_wit.coefficients_for_ABCs.begin()+qap_wit.num_variables(),
         chunks);
-    ffec::leave_block("Compute answer to K-query", false);
+    leave_block("Compute answer to K-query", false,false);
 
-    ffec::enter_block("Compute extra auth terms", false);
-    std::vector<ffec::Fr<snark_pp<ppT>>> mus;
-    std::vector<ffec::G1<snark_pp<ppT>>> Ains;
-    mus.reserve(qap_wit.num_inputs());
-    Ains.reserve(qap_wit.num_inputs());
-    for (size_t i=0;i<qap_wit.num_inputs();i++) {
+    enter_block("Compute extra auth terms", false,false);
+    let mut  mus=Vec::with_capacity(qap_wit.num_inputs());
+    let mut  Ains=Vec::with_capacity(qap_wit.num_inputs());
+
+    for i in 0..qap_wit.num_inputs(){
         mus.push(auth_data[i].mu);
         Ains.push(pk.A_query[i+1].g);
     }
-    ffec::G1<snark_pp<ppT>> muA = dauth * pk.rA_i_Z_g1;
-    muA = muA + ffec::multi_exp<ffec::G1<snark_pp<ppT>>,
-                                 ffec::Fr<snark_pp<ppT>>,
-                                 ffec::multi_exp_method_bos_coster>(
+    let mut  muA = dauth * pk.rA_i_Z_g1;
+    muA = muA + multi_exp::<G1::<snark_pp::<ppT>>,
+                                 Fr::<snark_pp::<ppT>>,
+                                 multi_exp_method_bos_coster>(
         Ains.begin(), Ains.begin()+qap_wit.num_inputs(),
         mus.begin(), mus.begin()+qap_wit.num_inputs(),
         chunks);
 
     // To Do: Decide whether to include relevant parts of auth_data in proof
-    ffec::leave_block("Compute extra auth terms", false);
+    leave_block("Compute extra auth terms", false,false);
 
-    ffec::leave_block("Compute the proof");
+    leave_block("Compute the proof",false);
 
-    ffec::leave_block("Call to r1cs_ppzkadsnark_prover");
+    leave_block("Call to r1cs_ppzkadsnark_prover",false);
 
-    r1cs_ppzkadsnark_proof<ppT> proof = r1cs_ppzkadsnark_proof<ppT>((g_A),
-                                                                    (g_B),
-                                                                    (g_C),
-                                                                    (g_H),
-                                                                    (g_K),
-                                                                    (g_Ain),
-                                                                    (muA));
+    let mut  proof = r1cs_ppzkadsnark_proof::<ppT>(g_A,
+                                                                    g_B,
+                                                                    g_C,
+                                                                    g_H,
+                                                                    g_K,
+                                                                    g_Ain,
+                                                                    muA);
     proof.print_size();
 
     return proof;
 }
 
-template <typename ppT>
-r1cs_ppzkadsnark_processed_verification_key<ppT> r1cs_ppzkadsnark_verifier_process_vk(
-    const r1cs_ppzkadsnark_verification_key<ppT> &vk)
+
+pub fn r1cs_ppzkadsnark_verifier_process_vk<ppT>(
+    vk:&r1cs_ppzkadsnark_verification_key<ppT>)->r1cs_ppzkadsnark_processed_verification_key<ppT> 
 {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_verifier_process_vk");
+    enter_block("Call to r1cs_ppzkadsnark_verifier_process_vk",false);
 
-    r1cs_ppzkadsnark_processed_verification_key<ppT> pvk;
-    pvk.pp_G2_one_precomp        = snark_pp<ppT>::precompute_G2(ffec::G2<snark_pp<ppT>>::one());
-    pvk.vk_alphaA_g2_precomp     = snark_pp<ppT>::precompute_G2(vk.alphaA_g2);
-    pvk.vk_alphaB_g1_precomp     = snark_pp<ppT>::precompute_G1(vk.alphaB_g1);
-    pvk.vk_alphaC_g2_precomp     = snark_pp<ppT>::precompute_G2(vk.alphaC_g2);
-    pvk.vk_rC_Z_g2_precomp       = snark_pp<ppT>::precompute_G2(vk.rC_Z_g2);
-    pvk.vk_gamma_g2_precomp      = snark_pp<ppT>::precompute_G2(vk.gamma_g2);
-    pvk.vk_gamma_beta_g1_precomp = snark_pp<ppT>::precompute_G1(vk.gamma_beta_g1);
-    pvk.vk_gamma_beta_g2_precomp = snark_pp<ppT>::precompute_G2(vk.gamma_beta_g2);
+    let mut pvk= r1cs_ppzkadsnark_processed_verification_key::<ppT>::new();
+    pvk.pp_G2_one_precomp        = snark_pp::<ppT>::precompute_G2(G2::<snark_pp::<ppT>>::one());
+    pvk.vk_alphaA_g2_precomp     = snark_pp::<ppT>::precompute_G2(vk.alphaA_g2);
+    pvk.vk_alphaB_g1_precomp     = snark_pp::<ppT>::precompute_G1(vk.alphaB_g1);
+    pvk.vk_alphaC_g2_precomp     = snark_pp::<ppT>::precompute_G2(vk.alphaC_g2);
+    pvk.vk_rC_Z_g2_precomp       = snark_pp::<ppT>::precompute_G2(vk.rC_Z_g2);
+    pvk.vk_gamma_g2_precomp      = snark_pp::<ppT>::precompute_G2(vk.gamma_g2);
+    pvk.vk_gamma_beta_g1_precomp = snark_pp::<ppT>::precompute_G1(vk.gamma_beta_g1);
+    pvk.vk_gamma_beta_g2_precomp = snark_pp::<ppT>::precompute_G2(vk.gamma_beta_g2);
 
-    ffec::enter_block("Pre-processing for additional auth elements");
-    ffec::G2_precomp<snark_pp<ppT>> vk_rC_z_g2_precomp = snark_pp<ppT>::precompute_G2(vk.rC_Z_g2);
+    enter_block("Pre-processing for additional auth elements",false);
+    let mut  vk_rC_z_g2_precomp = snark_pp::<ppT>::precompute_G2(vk.rC_Z_g2);
 
-    pvk.A0 = ffec::G1<snark_pp<ppT>>(vk.A0);
-    pvk.Ain = ffec::G1_vector<snark_pp<ppT>>(vk.Ain);
+    pvk.A0 = G1::<snark_pp::<ppT>>(vk.A0);
+    pvk.Ain = G1_vector::<snark_pp::<ppT>>(vk.Ain);
 
-    pvk.proof_g_vki_precomp.reserve(pvk.Ain.size());
-    for(size_t i = 0; i < pvk.Ain.size();i++) {
-        pvk.proof_g_vki_precomp.push(snark_pp<ppT>::precompute_G1(pvk.Ain[i]));
+    pvk.proof_g_vki_precomp.reserve(pvk.Ain.len());
+    for i in 0..pvk.Ain.len(){
+        pvk.proof_g_vki_precomp.push(snark_pp::<ppT>::precompute_G1(pvk.Ain[i]));
     }
 
-    ffec::leave_block("Pre-processing for additional auth elements");
+    leave_block("Pre-processing for additional auth elements",false);
 
-    ffec::leave_block("Call to r1cs_ppzkadsnark_verifier_process_vk");
+    leave_block("Call to r1cs_ppzkadsnark_verifier_process_vk",false);
 
     return pvk;
 }
 
 // symmetric
-template<typename ppT>
-bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk,
-                                      const r1cs_ppzkadsnark_proof<ppT> &proof,
-                                      const r1cs_ppzkadsnark_sec_auth_key<ppT> & sak,
-                                      const std::vector<labelT> &labels)
-{
-    bool result = true;
-    ffec::enter_block("Call to r1cs_ppzkadsnark_online_verifier");
 
-    ffec::enter_block("Check if the proof is well-formed");
+pub fn  r1cs_ppzkadsnark_online_verifier<ppT>(pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>,
+                                      proof:&r1cs_ppzkadsnark_proof<ppT>,
+                                      sak:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+                                      labels:&Vec<labelT>)->bool
+{
+    let mut  result = true;
+    enter_block("Call to r1cs_ppzkadsnark_online_verifier",false);
+
+    enter_block("Check if the proof is well-formed",false);
     if !proof.is_well_formed()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("At least one of the proof elements does not lie on the curve.\n");
+            print_indent(); print!("At least one of the proof elements does not lie on the curve.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check if the proof is well-formed");
+    leave_block("Check if the proof is well-formed",false);
 
-    ffec::enter_block("Checking auth-specific elements");
+    enter_block("Checking auth-specific elements",false);
 
-    ffec::enter_block("Checking A1");
+    enter_block("Checking A1",false);
 
-    ffec::enter_block("Compute PRFs");
-    std::vector<ffec::Fr<snark_pp<ppT>>>lambdas;
-    lambdas.reserve(labels.size());
-    for (size_t i = 0; i < labels.size();i++) {
-        lambdas.push(prfCompute<ppT>(sak.S,labels[i]));
+    enter_block("Compute PRFs",false);
+    let mut  lambdas=Vec::with_capacity(labels.len());
+  
+    for i in 0..labels.len(){
+        lambdas.push(prfCompute::<ppT>(sak.S,labels[i]));
     }
-    ffec::leave_block("Compute PRFs");
-    ffec::G1<snark_pp<ppT>> prodA = sak.i * proof.g_Aau.g;
-    prodA = prodA + ffec::multi_exp<ffec::G1<snark_pp<ppT>>,
-                                     ffec::Fr<snark_pp<ppT>>,
-                                     ffec::multi_exp_method_bos_coster>(
+    leave_block("Compute PRFs",false);
+    let mut  prodA = sak.i * proof.g_Aau.g;
+    prodA = prodA + multi_exp::<G1::<snark_pp::<ppT>>,
+                                     Fr::<snark_pp::<ppT>>,
+                                     multi_exp_method_bos_coster>(
         pvk.Ain.begin(),
-        pvk.Ain.begin() + labels.size(),
+        pvk.Ain.begin() + labels.len(),
         lambdas.begin(),
-        lambdas.begin() + labels.size(), 1);
+        lambdas.begin() + labels.len(), 1);
 
-    bool result_auth = true;
+    let mut  result_auth = true;
 
     if !(prodA == proof.muA) {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Authentication check failed.\n");
+            print_indent(); print!("Authentication check failed.\n");
         }
         result_auth = false;
     }
 
-    ffec::leave_block("Checking A1");
+    leave_block("Checking A1",false);
 
-    ffec::enter_block("Checking A2");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aau_g_precomp      = snark_pp<ppT>::precompute_G1(proof.g_Aau.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aau_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_Aau.h);
-    ffec::Fqk<snark_pp<ppT>> kc_Aau_1 = snark_pp<ppT>::miller_loop(proof_g_Aau_g_precomp, pvk.vk_alphaA_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_Aau_2 = snark_pp<ppT>::miller_loop(proof_g_Aau_h_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_Aau = snark_pp<ppT>::final_exponentiation(kc_Aau_1 * kc_Aau_2.unitary_inverse());
-    if kc_Aau != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Checking A2",false);
+    let mut  proof_g_Aau_g_precomp      = snark_pp::<ppT>::precompute_G1(proof.g_Aau.g);
+    let mut  proof_g_Aau_h_precomp = snark_pp::<ppT>::precompute_G1(proof.g_Aau.h);
+    let mut  kc_Aau_1 = snark_pp::<ppT>::miller_loop(proof_g_Aau_g_precomp, pvk.vk_alphaA_g2_precomp);
+    let mut  kc_Aau_2 = snark_pp::<ppT>::miller_loop(proof_g_Aau_h_precomp, pvk.pp_G2_one_precomp);
+    let mut  kc_Aau = snark_pp::<ppT>::final_exponentiation(kc_Aau_1 * kc_Aau_2.unitary_inverse());
+    if kc_Aau != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for Aau query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for Aau query incorrect.\n");
         }
         result_auth = false;
     }
-    ffec::leave_block("Checking A2");
+    leave_block("Checking A2",false);
 
-    ffec::leave_block("Checking auth-specific elements");
+    leave_block("Checking auth-specific elements",false);
 
     result &= result_auth;
 
-    ffec::enter_block("Online pairing computations");
-    ffec::enter_block("Check knowledge commitment for A is valid");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_A_g_precomp      = snark_pp<ppT>::precompute_G1(proof.g_A.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_A_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_A.h);
-    ffec::Fqk<snark_pp<ppT>> kc_A_1 = snark_pp<ppT>::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_A_2 = snark_pp<ppT>::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_A = snark_pp<ppT>::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
-    if kc_A != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Online pairing computations",false);
+    enter_block("Check knowledge commitment for A is valid",false);
+    let mut  proof_g_A_g_precomp      = snark_pp::<ppT>::precompute_G1(proof.g_A.g);
+    let mut  proof_g_A_h_precomp = snark_pp::<ppT>::precompute_G1(proof.g_A.h);
+    let mut  kc_A_1 = snark_pp::<ppT>::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
+    let mut  kc_A_2 = snark_pp::<ppT>::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
+    let mut  kc_A = snark_pp::<ppT>::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
+    if kc_A != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for A query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for A query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for A is valid");
+    leave_block("Check knowledge commitment for A is valid",false);
 
-    ffec::enter_block("Check knowledge commitment for B is valid");
-    ffec::G2_precomp<snark_pp<ppT>> proof_g_B_g_precomp      = snark_pp<ppT>::precompute_G2(proof.g_B.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_B_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_B.h);
-    ffec::Fqk<snark_pp<ppT>> kc_B_1 = snark_pp<ppT>::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_B_2 = snark_pp<ppT>::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_B = snark_pp<ppT>::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
-    if kc_B != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Check knowledge commitment for B is valid",false);
+   let mut   proof_g_B_g_precomp      = snark_pp::<ppT>::precompute_G2(proof.g_B.g);
+    let mut  proof_g_B_h_precomp = snark_pp::<ppT>::precompute_G1(proof.g_B.h);
+    let mut  kc_B_1 = snark_pp::<ppT>::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
+    let mut  kc_B_2 = snark_pp::<ppT>::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
+    let mut  kc_B = snark_pp::<ppT>::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
+    if kc_B != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for B query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for B query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for B is valid");
+    leave_block("Check knowledge commitment for B is valid",false);
 
-    ffec::enter_block("Check knowledge commitment for C is valid");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_C_g_precomp      = snark_pp<ppT>::precompute_G1(proof.g_C.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_C_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_C.h);
-    ffec::Fqk<snark_pp<ppT>> kc_C_1 = snark_pp<ppT>::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_C_2 = snark_pp<ppT>::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_C = snark_pp<ppT>::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
-    if kc_C != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Check knowledge commitment for C is valid",false);
+    let mut  proof_g_C_g_precomp      = snark_pp::<ppT>::precompute_G1(proof.g_C.g);
+    let mut proof_g_C_h_precomp = snark_pp::<ppT>::precompute_G1(proof.g_C.h);
+    let mut  kc_C_1 = snark_pp::<ppT>::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
+   let mut  kc_C_2 = snark_pp::<ppT>::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
+    let mut  kc_C = snark_pp::<ppT>::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
+    if kc_C != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for C query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for C query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for C is valid");
+    leave_block("Check knowledge commitment for C is valid",false);
 
-    ffec::G1<snark_pp<ppT>> Aacc = pvk.A0 + proof.g_Aau.g + proof.g_A.g;
+    let mut  Aacc = pvk.A0 + proof.g_Aau.g + proof.g_A.g;
 
-    ffec::enter_block("Check QAP divisibility");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aacc_precomp = snark_pp<ppT>::precompute_G1(Aacc);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_H_precomp = snark_pp<ppT>::precompute_G1(proof.g_H);
-    ffec::Fqk<snark_pp<ppT>> QAP_1  = snark_pp<ppT>::miller_loop(proof_g_Aacc_precomp,  proof_g_B_g_precomp);
-    ffec::Fqk<snark_pp<ppT>> QAP_23  = snark_pp<ppT>::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp,
+    enter_block("Check QAP divisibility",false);
+    let mut  proof_g_Aacc_precomp = snark_pp::<ppT>::precompute_G1(Aacc);
+    let mut  proof_g_H_precomp = snark_pp::<ppT>::precompute_G1(proof.g_H);
+    let mut  QAP_1  = snark_pp::<ppT>::miller_loop(proof_g_Aacc_precomp,  proof_g_B_g_precomp);
+    let mut  QAP_23  = snark_pp::<ppT>::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp,
                                                                    proof_g_C_g_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> QAP = snark_pp<ppT>::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
-    if QAP != ffec::GT<snark_pp<ppT>>::one()
+    let mut  QAP = snark_pp::<ppT>::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
+    if QAP != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("QAP divisibility check failed.\n");
+            print_indent(); print!("QAP divisibility check failed.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check QAP divisibility");
+    leave_block("Check QAP divisibility",false);
 
-    ffec::enter_block("Check same coefficients were used");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_K_precomp = snark_pp<ppT>::precompute_G1(proof.g_K);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aacc_C_precomp = snark_pp<ppT>::precompute_G1(Aacc + proof.g_C.g);
-    ffec::Fqk<snark_pp<ppT>> K_1 = snark_pp<ppT>::miller_loop(proof_g_K_precomp, pvk.vk_gamma_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> K_23 = snark_pp<ppT>::double_miller_loop(proof_g_Aacc_C_precomp, pvk.vk_gamma_beta_g2_precomp,
+    enter_block("Check same coefficients were used",false);
+    let mut  proof_g_K_precomp = snark_pp::<ppT>::precompute_G1(proof.g_K);
+    let mut  proof_g_Aacc_C_precomp = snark_pp::<ppT>::precompute_G1(Aacc + proof.g_C.g);
+    let mut  K_1 = snark_pp::<ppT>::miller_loop(proof_g_K_precomp, pvk.vk_gamma_g2_precomp);
+    let mut  K_23 = snark_pp::<ppT>::double_miller_loop(proof_g_Aacc_C_precomp, pvk.vk_gamma_beta_g2_precomp,
                                                                 pvk.vk_gamma_beta_g1_precomp, proof_g_B_g_precomp);
-    ffec::GT<snark_pp<ppT>> K = snark_pp<ppT>::final_exponentiation(K_1 * K_23.unitary_inverse());
-    if K != ffec::GT<snark_pp<ppT>>::one()
+    let mut K = snark_pp::<ppT>::final_exponentiation(K_1 * K_23.unitary_inverse());
+    if K != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Same-coefficient check failed.\n");
+            print_indent(); print!("Same-coefficient check failed.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check same coefficients were used");
-    ffec::leave_block("Online pairing computations");
-    ffec::leave_block("Call to r1cs_ppzkadsnark_online_verifier");
+    leave_block("Check same coefficients were used",false);
+    leave_block("Online pairing computations",false);
+    leave_block("Call to r1cs_ppzkadsnark_online_verifier",false);
 
     return result;
 }
 
-template<typename ppT>
-bool r1cs_ppzkadsnark_verifier(const r1cs_ppzkadsnark_verification_key<ppT> &vk,
-                               const r1cs_ppzkadsnark_proof<ppT> &proof,
-                               const r1cs_ppzkadsnark_sec_auth_key<ppT> &sak,
-                               const std::vector<labelT> &labels)
+
+ pub fn r1cs_ppzkadsnark_verifier<ppT>(vk:&r1cs_ppzkadsnark_verification_key<ppT>,
+                               proof:&r1cs_ppzkadsnark_proof<ppT>,
+                               sak:&r1cs_ppzkadsnark_sec_auth_key<ppT>,
+                               labels:&Vec<labelT>)->bool
 {
-    ffec::enter_block("Call to r1cs_ppzkadsnark_verifier");
-    r1cs_ppzkadsnark_processed_verification_key<ppT> pvk = r1cs_ppzkadsnark_verifier_process_vk<ppT>(vk);
-    bool result = r1cs_ppzkadsnark_online_verifier<ppT>(pvk, proof, sak, labels);
-    ffec::leave_block("Call to r1cs_ppzkadsnark_verifier");
+    enter_block("Call to r1cs_ppzkadsnark_verifier",false);
+    let mut  pvk = r1cs_ppzkadsnark_verifier_process_vk::<ppT>::new(vk);
+let mut result= r1cs_ppzkadsnark_online_verifier::<ppT>(pvk, proof, sak, labels);
+    leave_block("Call to r1cs_ppzkadsnark_verifier",false);
     return result;
 }
 
 
 // public
-template<typename ppT>
-bool r1cs_ppzkadsnark_online_verifier(const r1cs_ppzkadsnark_processed_verification_key<ppT> &pvk,
-                                      const std::vector<r1cs_ppzkadsnark_auth_data<ppT>>  &auth_data,
-                                      const r1cs_ppzkadsnark_proof<ppT> &proof,
-                                      const r1cs_ppzkadsnark_pub_auth_key<ppT> & pak,
-                                      const std::vector<labelT> &labels)
-{
-    bool result = true;
-    ffec::enter_block("Call to r1cs_ppzkadsnark_online_verifier");
 
-    ffec::enter_block("Check if the proof is well-formed");
+pub fn  r1cs_ppzkadsnark_online_verifier2<ppT>(pvk:&r1cs_ppzkadsnark_processed_verification_key<ppT>,
+                                      auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>> ,
+                                      proof:&r1cs_ppzkadsnark_proof<ppT>,
+                                      pak:&r1cs_ppzkadsnark_pub_auth_key<ppT>,
+                                      labels:&Vec<labelT>)->bool
+{
+let mut result= true;
+    enter_block("Call to r1cs_ppzkadsnark_online_verifier",false);
+
+    enter_block("Check if the proof is well-formed",false);
     if !proof.is_well_formed()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("At least one of the proof elements does not lie on the curve.\n");
+            print_indent(); print!("At least one of the proof elements does not lie on the curve.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check if the proof is well-formed");
+    leave_block("Check if the proof is well-formed",false);
 
-    ffec::enter_block("Checking auth-specific elements");
-    assert (labels.size()==auth_data.size());
+    enter_block("Checking auth-specific elements",false);
+    assert !(labels.len()==auth_data.len());
 
-    ffec::enter_block("Checking A1");
+    enter_block("Checking A1",false);
 
-    ffec::enter_block("Checking signatures");
-    std::vector<ffec::G2<snark_pp<ppT>>> Lambdas;
-    std::vector<r1cs_ppzkadsnark_sigT<ppT>> sigs;
-    Lambdas.reserve(labels.size());
-    sigs.reserve(labels.size());
-    for (size_t i = 0; i < labels.size();i++) {
+    enter_block("Checking signatures",false);
+    let mut  Lambdas=Vec::with_capacity(labels.len());
+    let mut sigs=Vec::with_capacity(labels.len());
+
+    for i in 0..labels.len(){
         Lambdas.push(auth_data[i].Lambda);
         sigs.push(auth_data[i].sigma);
     }
-    bool result_auth = sigBatchVerif<ppT>(pak.vkp,labels,Lambdas,sigs);
+let mut result_auth= sigBatchVerif::<ppT>(pak.vkp,labels,Lambdas,sigs);
     if ! result_auth
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Auth sig check failed.\n");
+            print_indent(); print!("Auth sig check failed.\n");
         }
     }
 
-    ffec::leave_block("Checking signatures");
+    leave_block("Checking signatures",false);
 
-    ffec::enter_block("Checking pairings");
+    enter_block("Checking pairings",false);
     // To Do: Decide whether to move pak and lambda preprocessing to offline
-    std::vector<ffec::G2_precomp<snark_pp<ppT>>> g_Lambdas_precomp;
-    g_Lambdas_precomp.reserve(auth_data.size());
-    for(size_t i=0; i < auth_data.size(); i++)
-        g_Lambdas_precomp.push(snark_pp<ppT>::precompute_G2(auth_data[i].Lambda));
-    ffec::G2_precomp<snark_pp<ppT>> g_minusi_precomp = snark_pp<ppT>::precompute_G2(pak.minusI2);
+    let mut  g_Lambdas_precomp=Vec::with_capacity(auth_data.len());
+    for i in 0..auth_data.len(){
+        g_Lambdas_precomp.push(snark_pp::<ppT>::precompute_G2(auth_data[i].Lambda));
+    }
+let mut g_minusi_precomp= snark_pp::<ppT>::precompute_G2(pak.minusI2);
 
-    ffec::enter_block("Computation");
-    ffec::Fqk<snark_pp<ppT>> accum;
-    if(auth_data.size() % 2 == 1) {
-        accum = snark_pp<ppT>::miller_loop(pvk.proof_g_vki_precomp[0]  , g_Lambdas_precomp[0]);
+    enter_block("Computation",false);
+    let mut  accum=Fqk::<snark_pp::<ppT>>::new();
+    if auth_data.len() % 2 == 1 {
+        accum = snark_pp::<ppT>::miller_loop(pvk.proof_g_vki_precomp[0]  , g_Lambdas_precomp[0]);
     }
     else {
-        accum = ffec::Fqk<snark_pp<ppT>>::one();
+        accum = Fqk::<snark_pp::<ppT>>::one();
     }
-    for(size_t i = auth_data.size() % 2; i < labels.size();i=i+2) {
-        accum = accum * snark_pp<ppT>::double_miller_loop(pvk.proof_g_vki_precomp[i]  , g_Lambdas_precomp[i],
+    for i in (auth_data.len() % 2.. labels.len()).step_by(2) {
+        accum = accum * snark_pp::<ppT>::double_miller_loop(pvk.proof_g_vki_precomp[i]  , g_Lambdas_precomp[i],
                                                           pvk.proof_g_vki_precomp[i+1], g_Lambdas_precomp[i+1]);
     }
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_muA_precomp = snark_pp<ppT>::precompute_G1(proof.muA);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aau_precomp = snark_pp<ppT>::precompute_G1(proof.g_Aau.g);
-    ffec::Fqk<snark_pp<ppT>> accum2 = snark_pp<ppT>::double_miller_loop(proof_g_muA_precomp, pvk.pp_G2_one_precomp,
+let mut proof_g_muA_precomp=snark_pp::<ppT>::precompute_G1(proof.muA);
+let mut proof_g_Aau_precomp=snark_pp::<ppT>::precompute_G1(proof.g_Aau.g);
+let mut accum2=snark_pp::<ppT>::double_miller_loop(proof_g_muA_precomp, pvk.pp_G2_one_precomp,
                                                                   proof_g_Aau_precomp, g_minusi_precomp);
-    ffec::GT<snark_pp<ppT>> authPair = snark_pp<ppT>::final_exponentiation(accum * accum2.unitary_inverse());
-    if authPair != ffec::GT<snark_pp<ppT>>::one()
+let mut authPair=snark_pp::<ppT>::final_exponentiation(accum * accum2.unitary_inverse());
+    if authPair != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Auth pairing check failed.\n");
+            print_indent(); print!("Auth pairing check failed.\n");
         }
         result_auth = false;
     }
-    ffec::leave_block("Computation");
-    ffec::leave_block("Checking pairings");
+    leave_block("Computation",false);
+    leave_block("Checking pairings",false);
 
 
-    if !(result_auth) {
-        if !ffec::inhibit_profiling_info
+    if !result_auth {
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Authentication check failed.\n");
+            print_indent(); print!("Authentication check failed.\n");
         }
     }
 
-    ffec::leave_block("Checking A1");
+    leave_block("Checking A1",false);
 
-    ffec::enter_block("Checking A2");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aau_g_precomp = snark_pp<ppT>::precompute_G1(proof.g_Aau.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aau_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_Aau.h);
-    ffec::Fqk<snark_pp<ppT>> kc_Aau_1 = snark_pp<ppT>::miller_loop(proof_g_Aau_g_precomp, pvk.vk_alphaA_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_Aau_2 = snark_pp<ppT>::miller_loop(proof_g_Aau_h_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_Aau = snark_pp<ppT>::final_exponentiation(kc_Aau_1 * kc_Aau_2.unitary_inverse());
-    if kc_Aau != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Checking A2",false);
+let mut proof_g_Aau_g_precomp=snark_pp::<ppT>::precompute_G1(proof.g_Aau.g);
+let mut proof_g_Aau_h_precomp=snark_pp::<ppT>::precompute_G1(proof.g_Aau.h);
+let mut kc_Aau_1=snark_pp::<ppT>::miller_loop(proof_g_Aau_g_precomp, pvk.vk_alphaA_g2_precomp);
+let mut kc_Aau_2=snark_pp::<ppT>::miller_loop(proof_g_Aau_h_precomp, pvk.pp_G2_one_precomp);
+let mut kc_Aau=snark_pp::<ppT>::final_exponentiation(kc_Aau_1 * kc_Aau_2.unitary_inverse());
+    if kc_Aau != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for Aau query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for Aau query incorrect.\n");
         }
         result_auth = false;
     }
-    ffec::leave_block("Checking A2");
+    leave_block("Checking A2",false);
 
-    ffec::leave_block("Checking auth-specific elements");
+    leave_block("Checking auth-specific elements",false);
 
     result &= result_auth;
 
-    ffec::enter_block("Online pairing computations");
-    ffec::enter_block("Check knowledge commitment for A is valid");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_A_g_precomp      = snark_pp<ppT>::precompute_G1(proof.g_A.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_A_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_A.h);
-    ffec::Fqk<snark_pp<ppT>> kc_A_1 = snark_pp<ppT>::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_A_2 = snark_pp<ppT>::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_A = snark_pp<ppT>::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
-    if kc_A != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Online pairing computations",false);
+    enter_block("Check knowledge commitment for A is valid",false);
+let mut proof_g_A_g_precomp=snark_pp::<ppT>::precompute_G1(proof.g_A.g);
+let mut proof_g_A_h_precomp=snark_pp::<ppT>::precompute_G1(proof.g_A.h);
+let mut kc_A_1=snark_pp::<ppT>::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
+let mut kc_A_2=snark_pp::<ppT>::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
+let mut kc_A=snark_pp::<ppT>::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
+    if kc_A != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for A query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for A query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for A is valid");
+    leave_block("Check knowledge commitment for A is valid",false);
 
-    ffec::enter_block("Check knowledge commitment for B is valid");
-    ffec::G2_precomp<snark_pp<ppT>> proof_g_B_g_precomp      = snark_pp<ppT>::precompute_G2(proof.g_B.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_B_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_B.h);
-    ffec::Fqk<snark_pp<ppT>> kc_B_1 = snark_pp<ppT>::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_B_2 = snark_pp<ppT>::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_B = snark_pp<ppT>::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
-    if kc_B != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Check knowledge commitment for B is valid",false);
+let mut proof_g_B_g_precomp=snark_pp::<ppT>::precompute_G2(proof.g_B.g);
+let mut proof_g_B_h_precomp=snark_pp::<ppT>::precompute_G1(proof.g_B.h);
+let mut kc_B_1=snark_pp::<ppT>::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
+let mut kc_B_2=snark_pp::<ppT>::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
+let mut kc_B=snark_pp::<ppT>::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
+    if kc_B != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for B query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for B query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for B is valid");
+    leave_block("Check knowledge commitment for B is valid",false);
 
-    ffec::enter_block("Check knowledge commitment for C is valid");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_C_g_precomp      = snark_pp<ppT>::precompute_G1(proof.g_C.g);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_C_h_precomp = snark_pp<ppT>::precompute_G1(proof.g_C.h);
-    ffec::Fqk<snark_pp<ppT>> kc_C_1 = snark_pp<ppT>::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> kc_C_2 = snark_pp<ppT>::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> kc_C = snark_pp<ppT>::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
-    if kc_C != ffec::GT<snark_pp<ppT>>::one()
+    enter_block("Check knowledge commitment for C is valid",false);
+let mut proof_g_C_g_precomp=snark_pp::<ppT>::precompute_G1(proof.g_C.g);
+let mut proof_g_C_h_precomp=snark_pp::<ppT>::precompute_G1(proof.g_C.h);
+let mut kc_C_1=snark_pp::<ppT>::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
+let mut kc_C_2=snark_pp::<ppT>::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
+let mut kc_C=snark_pp::<ppT>::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
+    if kc_C != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Knowledge commitment for C query incorrect.\n");
+            print_indent(); print!("Knowledge commitment for C query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for C is valid");
+    leave_block("Check knowledge commitment for C is valid",false);
 
-    ffec::G1<snark_pp<ppT>> Aacc = pvk.A0 + proof.g_Aau.g + proof.g_A.g;
+let mut Aacc=pvk.A0 + proof.g_Aau.g + proof.g_A.g;
 
-    ffec::enter_block("Check QAP divisibility");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aacc_precomp = snark_pp<ppT>::precompute_G1(Aacc);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_H_precomp = snark_pp<ppT>::precompute_G1(proof.g_H);
-    ffec::Fqk<snark_pp<ppT>> QAP_1  = snark_pp<ppT>::miller_loop(proof_g_Aacc_precomp,  proof_g_B_g_precomp);
-    ffec::Fqk<snark_pp<ppT>> QAP_23  = snark_pp<ppT>::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp,
+    enter_block("Check QAP divisibility",false);
+let mut proof_g_Aacc_precomp=snark_pp::<ppT>::precompute_G1(Aacc);
+let mut proof_g_H_precomp=snark_pp::<ppT>::precompute_G1(proof.g_H);
+let mut QAP_1=snark_pp::<ppT>::miller_loop(proof_g_Aacc_precomp,  proof_g_B_g_precomp);
+let mut QAP_23=snark_pp::<ppT>::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp,
                                                                    proof_g_C_g_precomp, pvk.pp_G2_one_precomp);
-    ffec::GT<snark_pp<ppT>> QAP = snark_pp<ppT>::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
-    if QAP != ffec::GT<snark_pp<ppT>>::one()
+let mut QAP=snark_pp::<ppT>::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
+    if QAP != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("QAP divisibility check failed.\n");
+            print_indent(); print!("QAP divisibility check failed.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check QAP divisibility");
+    leave_block("Check QAP divisibility",false);
 
-    ffec::enter_block("Check same coefficients were used");
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_K_precomp = snark_pp<ppT>::precompute_G1(proof.g_K);
-    ffec::G1_precomp<snark_pp<ppT>> proof_g_Aacc_C_precomp = snark_pp<ppT>::precompute_G1(Aacc + proof.g_C.g);
-    ffec::Fqk<snark_pp<ppT>> K_1 = snark_pp<ppT>::miller_loop(proof_g_K_precomp, pvk.vk_gamma_g2_precomp);
-    ffec::Fqk<snark_pp<ppT>> K_23 = snark_pp<ppT>::double_miller_loop(proof_g_Aacc_C_precomp, pvk.vk_gamma_beta_g2_precomp,
+    enter_block("Check same coefficients were used",false);
+let mut proof_g_K_precomp=snark_pp::<ppT>::precompute_G1(proof.g_K);
+let mut proof_g_Aacc_C_precomp=snark_pp::<ppT>::precompute_G1(Aacc + proof.g_C.g);
+let mut K_1=snark_pp::<ppT>::miller_loop(proof_g_K_precomp, pvk.vk_gamma_g2_precomp);
+let mut K_23=snark_pp::<ppT>::double_miller_loop(proof_g_Aacc_C_precomp, pvk.vk_gamma_beta_g2_precomp,
                                                                 pvk.vk_gamma_beta_g1_precomp, proof_g_B_g_precomp);
-    ffec::GT<snark_pp<ppT>> K = snark_pp<ppT>::final_exponentiation(K_1 * K_23.unitary_inverse());
-    if K != ffec::GT<snark_pp<ppT>>::one()
+let mut K=snark_pp::<ppT>::final_exponentiation(K_1 * K_23.unitary_inverse());
+    if K != GT::<snark_pp::<ppT>>::one()
     {
-        if !ffec::inhibit_profiling_info
+        if !inhibit_profiling_info
         {
-            ffec::print_indent(); print!("Same-coefficient check failed.\n");
+            print_indent(); print!("Same-coefficient check failed.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check same coefficients were used");
-    ffec::leave_block("Online pairing computations");
-    ffec::leave_block("Call to r1cs_ppzkadsnark_online_verifier");
+    leave_block("Check same coefficients were used",false);
+    leave_block("Online pairing computations",false);
+    leave_block("Call to r1cs_ppzkadsnark_online_verifier",false);
 
     return result;
 }
 
 // public
-template<typename ppT>
-bool r1cs_ppzkadsnark_verifier(const r1cs_ppzkadsnark_verification_key<ppT> &vk,
-                               const std::vector<r1cs_ppzkadsnark_auth_data<ppT>> &auth_data,
-                               const r1cs_ppzkadsnark_proof<ppT> &proof,
-                               const r1cs_ppzkadsnark_pub_auth_key<ppT> &pak,
-                               const std::vector<labelT> &labels)
+
+ pub fn r1cs_ppzkadsnark_verifier2<ppT>(vk:&r1cs_ppzkadsnark_verification_key<ppT>,
+                               auth_data:&Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
+                               proof:&r1cs_ppzkadsnark_proof<ppT>,
+                               pak:&r1cs_ppzkadsnark_pub_auth_key<ppT>,
+                               labels:&Vec<labelT>)->bool
 {
-    assert!(labels.size() == auth_data.size());
-    ffec::enter_block("Call to r1cs_ppzkadsnark_verifier");
-    r1cs_ppzkadsnark_processed_verification_key<ppT> pvk = r1cs_ppzkadsnark_verifier_process_vk<ppT>(vk);
-    bool result = r1cs_ppzkadsnark_online_verifier<ppT>(pvk, auth_data, proof, pak,labels);
-    ffec::leave_block("Call to r1cs_ppzkadsnark_verifier");
+    assert!(labels.len() == auth_data.len());
+    enter_block("Call to r1cs_ppzkadsnark_verifier",false);
+let mut pvk=r1cs_ppzkadsnark_verifier_process_vk::<ppT>(vk);
+let mut result=r1cs_ppzkadsnark_online_verifier::<ppT>(pvk, auth_data, proof, pak,labels);
+    leave_block("Call to r1cs_ppzkadsnark_verifier",false);
     return result;
 }
 

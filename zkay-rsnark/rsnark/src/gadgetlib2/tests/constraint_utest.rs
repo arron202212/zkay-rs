@@ -23,7 +23,7 @@ TEST(gadgetLib2, Rank1Constraint) {
     initPublicParamsFromDefaultPp();
     VariableArray x(10,"x");
     VariableAssignment assignment;
-    for(int i = 0; i < 10; ++i) {
+    for i in 0..10 {
         assignment[x[i]] = Fp(i);
     }
     LinearCombination a = x[0] + x[1] + 2;     // <a,assignment> = 0+1+2=3

@@ -12,11 +12,11 @@
 //#ifndef RAM_PARAMS_HPP_
 // #define RAM_PARAMS_HPP_
 
-use  <vector>
+// use  <vector>
 
 use ffec::common::utils;
 
-use crate::relations::ram_computations/memory/memory_store_trace;
+use crate::relations::ram_computations::memory::memory_store_trace;
 
 
 
@@ -37,29 +37,29 @@ use crate::relations::ram_computations/memory/memory_store_trace;
   length.
 */
 
-template<typename ramT>
-using ram_base_field = typename ramT::base_field_type;
 
-template<typename ramT>
-using ram_cpu_state = ffec::bit_vector;
+type  ram_base_field<ramT> =  ramT::base_field_type;
 
-template<typename ramT>
-using ram_boot_trace = memory_store_trace;
 
-template<typename ramT>
-using ram_protoboard = typename ramT::protoboard_type;
+type  ram_cpu_state= ffec::bit_vector;
 
-template<typename ramT>
-using ram_gadget_base = typename ramT::gadget_base_type;
 
-template<typename ramT>
-using ram_cpu_checker = typename ramT::cpu_checker_type;
+type  ram_boot_trace = memory_store_trace;
 
-template<typename ramT>
-using ram_architecture_params = typename ramT::architecture_params_type;
 
-template<typename ramT>
-using ram_input_tape = std::vector<size_t>;
+type  ram_protoboard<ramT> =  ramT::protoboard_type;
+
+
+type  ram_gadget_base<ramT> =  ramT::gadget_base_type;
+
+
+type  ram_cpu_checker<ramT> =  ramT::cpu_checker_type;
+
+
+type  ram_architecture_params<ramT> =  ramT::architecture_params_type;
+
+
+type  ram_input_tape = std::vector<size_t>;
 
 /*
   One should also make the following methods for ram_architecture_params

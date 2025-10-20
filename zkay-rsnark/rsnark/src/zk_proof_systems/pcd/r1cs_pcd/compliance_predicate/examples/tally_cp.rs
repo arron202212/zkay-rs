@@ -143,7 +143,7 @@ tally_pcd_message<FieldT>::tally_pcd_message(const size_t type,
 template<typename FieldT>
 r1cs_variable_assignment<FieldT> tally_pcd_message<FieldT>::payload_as_r1cs_variable_assignment() const
 {
-    std::function<FieldT(bool)> bit_to_FieldT = [] (const bool bit) { return bit ? FieldT::one() : FieldT::zero(); };
+    std::function<FieldT(bool)> bit_to_FieldT = [] (const bool bit) { return if bit {FieldT::one() }else {FieldT::zero()}; };
 
     const ffec::bit_vector sum_bits = ffec::convert_field_element_to_bit_vector<FieldT>(sum, wordsize);
     const ffec::bit_vector count_bits = ffec::convert_field_element_to_bit_vector<FieldT>(count, wordsize);
@@ -354,7 +354,7 @@ void tally_cp_handler<FieldT>::generate_r1cs_witness(const std::vector<std::shar
 
     for i in 0..self.max_arity + 1
     {
-        self.pb.val(arity_indicators[i]) = (incoming_messages.size() == i ? FieldT::one() : FieldT::zero());
+        self.pb.val(arity_indicators[i]) = if incoming_messages.size() == i {FieldT::one()} else{FieldT::zero()};
     }
 
     compute_type_val_inner_product->generate_r1cs_witness();

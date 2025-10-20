@@ -173,7 +173,7 @@ int main(int argc, const char * argv[])
     bool bit = ram_ppzksnark_verifier<default_tinyram_ppzksnark_pp>(keypair.vk, boot_trace, proof);
 
     print!("================================================================================\n");
-    print!("The verification result is: %s\n", (bit ? "PASS" : "FAIL"));
+    print!("The verification result is: %s\n", if bit {"PASS"} else{"FAIL"});
     print!("================================================================================\n");
     ffec::print_mem();
     print!("================================================================================\n");
