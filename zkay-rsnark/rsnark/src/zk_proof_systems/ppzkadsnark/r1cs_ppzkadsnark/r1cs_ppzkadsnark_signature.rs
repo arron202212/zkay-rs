@@ -18,7 +18,7 @@
 //#ifndef SIGNATURE_HPP_
 // #define SIGNATURE_HPP_
 
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
 
 
 

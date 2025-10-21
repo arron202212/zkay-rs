@@ -12,7 +12,7 @@
 //#ifndef SHA256_COMPONENTS_HPP_
 // #define SHA256_COMPONENTS_HPP_
 
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
 use crate::gadgetlib1::gadgets::hashes::sha256/sha256_aux;
 

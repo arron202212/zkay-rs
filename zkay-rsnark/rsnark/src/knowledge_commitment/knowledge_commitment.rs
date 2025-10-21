@@ -14,7 +14,7 @@
 // //#ifndef KNOWLEDGE_COMMITMENT_HPP_
 // // #define KNOWLEDGE_COMMITMENT_HPP_
 
-use ffec::algebra::field::prime_base::fp;
+use ffec::algebra::fields::prime_base::fp;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 use crate::common::data_structures::sparse_vector::sparse_vector;
 use std::ops::{Add,Mul};

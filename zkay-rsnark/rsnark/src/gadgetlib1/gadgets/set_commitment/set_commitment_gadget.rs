@@ -8,7 +8,7 @@
 // #define SET_COMMITMENT_GADGET_HPP_
 
 use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
 use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_read_gadget;
 use crate::gadgetlib1::gadgets/set_commitment/set_membership_proof_variable;

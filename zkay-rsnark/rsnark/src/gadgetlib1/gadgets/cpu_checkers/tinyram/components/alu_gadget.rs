@@ -14,171 +14,177 @@
 //#ifndef ALU_GADGET_HPP_
 // #define ALU_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_arithmetic;
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_control_flow;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_arithmetic;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_control_flow;
 
 
 
-template<typename FieldT>
-class ALU_gadget : public tinyram_standard_gadget<FieldT> {
-private:
-    std::vector<std::shared_ptr<tinyram_standard_gadget<FieldT> > > components;
-public:
-    pb_variable_array<FieldT> opcode_indicators;
-    word_variable_gadget<FieldT> pc;
-    word_variable_gadget<FieldT> desval;
-    word_variable_gadget<FieldT> arg1val;
-    word_variable_gadget<FieldT> arg2val;
-    pb_variable<FieldT> flag;
-    pb_variable_array<FieldT> instruction_results;
-    pb_variable_array<FieldT> instruction_flags;
+// 
+pub struct ALU_gadget{
+// private: : public tinyram_standard_gadget<FieldT> 
+components:    std::vector<std::shared_ptr<tinyram_standard_gadget<FieldT> > >,
 
-    ALU_gadget<FieldT>(tinyram_protoboard<FieldT> &pb,
-                       const pb_variable_array<FieldT> &opcode_indicators,
-                       const word_variable_gadget<FieldT> &pc,
-                       const word_variable_gadget<FieldT> &desval,
-                       const word_variable_gadget<FieldT> &arg1val,
-                       const word_variable_gadget<FieldT> &arg2val,
-                       const pb_variable<FieldT> &flag,
-                       const pb_variable_array<FieldT> &instruction_results,
-                       const pb_variable_array<FieldT> &instruction_flags,
-                       const std::string &annotation_prefix="") :
-        tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
-        opcode_indicators(opcode_indicators),
-        pc(pc),
-        desval(desval),
-        arg1val(arg1val),
-        arg2val(arg2val),
-        flag(flag),
-        instruction_results(instruction_results),
-        instruction_flags(instruction_flags)
+
+// public:
+opcode_indicators:    pb_variable_array<FieldT>,
+pc:    word_variable_gadget<FieldT>,
+desval:    word_variable_gadget<FieldT>,
+arg1val:    word_variable_gadget<FieldT>,
+arg2val:    word_variable_gadget<FieldT>,
+flag:    pb_variable<FieldT>,
+instruction_results:    pb_variable_array<FieldT>,
+instruction_flags:    pb_variable_array<FieldT>,
+}
+impl ALU_gadget{
+    pub fn new(
+pb:tinyram_protoboard<FieldT>,
+                       opcode_indicators:pb_variable_array<FieldT>,
+                       pc:word_variable_gadget<FieldT>,
+                       desval:word_variable_gadget<FieldT>,
+                       arg1val:word_variable_gadget<FieldT>,
+                       arg2val:word_variable_gadget<FieldT>,
+                       flag:pb_variable<FieldT>,
+                       instruction_results:pb_variable_array<FieldT>,
+                       instruction_flags:pb_variable_array<FieldT>,
+                       annotation_prefix:std::string) ->Self
+        
     {
-        components.resize(1ul<<pb.ap.opcode_width());
+        components.resize(1u64<<pb.ap.opcode_width());
 
         /* arithmetic */
         components[tinyram_opcode_AND].reset(
-            new ALU_and_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_and_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_AND],
                                        instruction_flags[tinyram_opcode_AND],
-                                       FMT(self.annotation_prefix, " AND")));
+                                       format!("{} AND",self.annotation_prefix)));
 
         components[tinyram_opcode_OR].reset(
-            new ALU_or_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_or_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                       instruction_results[tinyram_opcode_OR],
                                       instruction_flags[tinyram_opcode_OR],
-                                      FMT(self.annotation_prefix, " OR")));
+                                      format!("{} OR",self.annotation_prefix)));
 
         components[tinyram_opcode_XOR].reset(
-            new ALU_xor_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_xor_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_XOR],
                                        instruction_flags[tinyram_opcode_XOR],
-                                       FMT(self.annotation_prefix, " XOR")));
+                                       format!("{} XOR",self.annotation_prefix)));
 
         components[tinyram_opcode_NOT].reset(
-            new ALU_not_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_not_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_NOT],
                                        instruction_flags[tinyram_opcode_NOT],
-                                       FMT(self.annotation_prefix, " NOT")));
+                                       format!("{} NOT",self.annotation_prefix)));
 
         components[tinyram_opcode_ADD].reset(
-            new ALU_add_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_add_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_ADD],
                                        instruction_flags[tinyram_opcode_ADD],
-                                       FMT(self.annotation_prefix, " ADD")));
+                                       format!("{} ADD",self.annotation_prefix)));
 
         components[tinyram_opcode_SUB].reset(
-            new ALU_sub_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_sub_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_SUB],
                                        instruction_flags[tinyram_opcode_SUB],
-                                       FMT(self.annotation_prefix, " SUB")));
+                                       format!("{} SUB",self.annotation_prefix)));
 
         components[tinyram_opcode_MOV].reset(
-            new ALU_mov_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_mov_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_MOV],
                                        instruction_flags[tinyram_opcode_MOV],
-                                       FMT(self.annotation_prefix, " MOV")));
+                                       format!("{} MOV",self.annotation_prefix)));
 
         components[tinyram_opcode_CMOV].reset(
-            new ALU_cmov_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_cmov_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                         instruction_results[tinyram_opcode_CMOV],
                                         instruction_flags[tinyram_opcode_CMOV],
-                                        FMT(self.annotation_prefix, " CMOV")));
+                                        format!("{} CMOV",self.annotation_prefix)));
 
         components[tinyram_opcode_CMPA].reset(
-            new ALU_cmp_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                        instruction_results[tinyram_opcode_CMPE],
                                        instruction_flags[tinyram_opcode_CMPE],
                                        instruction_results[tinyram_opcode_CMPA],
                                        instruction_flags[tinyram_opcode_CMPA],
                                        instruction_results[tinyram_opcode_CMPAE],
                                        instruction_flags[tinyram_opcode_CMPAE],
-                                       FMT(self.annotation_prefix, " CMP_unsigned")));
+                                       format!("{} CMP_unsigned",self.annotation_prefix)));
 
         components[tinyram_opcode_CMPG].reset(
-            new ALU_cmps_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_cmps_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                         instruction_results[tinyram_opcode_CMPG],
                                         instruction_flags[tinyram_opcode_CMPG],
                                         instruction_results[tinyram_opcode_CMPGE],
                                         instruction_flags[tinyram_opcode_CMPGE],
-                                        FMT(self.annotation_prefix, " CMP_signed")));
+                                        format!("{} CMP_signed",self.annotation_prefix)));
 
         components[tinyram_opcode_UMULH].reset(
-            new ALU_umul_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_umul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                         instruction_results[tinyram_opcode_MULL],
                                         instruction_flags[tinyram_opcode_MULL],
                                         instruction_results[tinyram_opcode_UMULH],
                                         instruction_flags[tinyram_opcode_UMULH],
-                                        FMT(self.annotation_prefix, " MUL_unsigned")));
+                                        format!("{} MUL_unsigned",self.annotation_prefix)));
 
         components[tinyram_opcode_SMULH].reset(
-            new ALU_smul_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_smul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                         instruction_results[tinyram_opcode_SMULH],
                                         instruction_flags[tinyram_opcode_SMULH],
-                                        FMT(self.annotation_prefix, " MUL_signed")));
+                                        format!("{} MUL_signed",self.annotation_prefix)));
 
 
         components[tinyram_opcode_UDIV].reset(
-            new ALU_divmod_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_divmod_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                           instruction_results[tinyram_opcode_UDIV],
                                           instruction_flags[tinyram_opcode_UDIV],
                                           instruction_results[tinyram_opcode_UMOD],
                                           instruction_flags[tinyram_opcode_UMOD],
-                                          FMT(self.annotation_prefix, " DIV")));
+                                          format!("{} DIV",self.annotation_prefix)));
 
         components[tinyram_opcode_SHR].reset(
-            new ALU_shr_shl_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+            ALU_shr_shl_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                            instruction_results[tinyram_opcode_SHR],
                                            instruction_flags[tinyram_opcode_SHR],
                                            instruction_results[tinyram_opcode_SHL],
                                            instruction_flags[tinyram_opcode_SHL],
-                                           FMT(self.annotation_prefix, " SHR_SHL")));
+                                           format!("{} SHR_SHL",self.annotation_prefix)));
 
         /* control flow */
         components[tinyram_opcode_JMP].reset(
-            new ALU_jmp_gadget<FieldT>(pb, pc, arg2val, flag,
+            ALU_jmp_gadget::<FieldT>::new(pb, pc, arg2val, flag,
                                        instruction_results[tinyram_opcode_JMP],
-                                       FMT(self.annotation_prefix, " JMP")));
+                                       format!("{} JMP",self.annotation_prefix)));
 
         components[tinyram_opcode_CJMP].reset(
-            new ALU_cjmp_gadget<FieldT>(pb, pc, arg2val, flag,
+            ALU_cjmp_gadget::<FieldT>::new(pb, pc, arg2val, flag,
                                         instruction_results[tinyram_opcode_CJMP],
-                                        FMT(self.annotation_prefix, " CJMP")));
+                                        format!("{} CJMP",self.annotation_prefix)));
 
         components[tinyram_opcode_CNJMP].reset(
-            new ALU_cnjmp_gadget<FieldT>(pb, pc, arg2val, flag,
+            ALU_cnjmp_gadget::<FieldT>::new(pb, pc, arg2val, flag,
                                          instruction_results[tinyram_opcode_CNJMP],
-                                         FMT(self.annotation_prefix, " CNJMP")));
+                                         format!("{} CNJMP",self.annotation_prefix)));
+
+    // tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+        Self{opcode_indicators,
+        pc,
+        desval,
+        arg1val,
+        arg2val,
+        flag,
+        instruction_results,
+        instruction_flags}
     }
 
-    void generate_r1cs_constraints();
+    // void generate_r1cs_constraints();
 
-    void generate_r1cs_witness();
+    // void generate_r1cs_witness();
 
-};
+}
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_gadget;
+// use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_gadget;
 
 //#endif // ALU_GADGET_HPP_
 /** @file
@@ -198,31 +204,31 @@ use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_gadget;
 // #define ALU_GADGET_TCC_
 
 
+impl ALU_gadget<FieldT>{
 
-template<typename FieldT>
-void ALU_gadget<FieldT>::generate_r1cs_constraints()
+pub fn generate_r1cs_constraints()
 {
-    for i in 0..1ul<<self.pb.ap.opcode_width()
+    for i in 0..1u64<<self.pb.ap.opcode_width()
     {
         if components[i]
         {
-            components[i]->generate_r1cs_constraints();
-        }
-    }
-}
-
-template<typename FieldT>
-void ALU_gadget<FieldT>::generate_r1cs_witness()
-{
-    for i in 0..1ul<<self.pb.ap.opcode_width()
-    {
-        if components[i]
-        {
-            components[i]->generate_r1cs_witness();
+            components[i].generate_r1cs_constraints();
         }
     }
 }
 
 
+pub fn generate_r1cs_witness()
+{
+    for i in 0..1u64<<self.pb.ap.opcode_width()
+    {
+        if components[i]
+        {
+            components[i].generate_r1cs_witness();
+        }
+    }
+}
+
+}
 
 //#endif // ALU_GADGET_TCC_

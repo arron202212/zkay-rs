@@ -368,7 +368,7 @@ impl loose_multiplexing_gadget {
 //                                        target:&VarT);
 
 
-// use crate::gadgetlib1::gadgets/basic_gadgets;
+// use crate::gadgetlib1::gadgets::basic_gadgets;
 
 //#endif // BASIC_GADGETS_HPP_
 /** @file
@@ -381,8 +381,8 @@ impl loose_multiplexing_gadget {
 //#ifndef BASIC_GADGETS_TCC_
 // #define BASIC_GADGETS_TCC_
 
-use common::profiling;
-use common::utils;
+use ffec::common::profiling;
+use ffec::common::utils;
 
 
 

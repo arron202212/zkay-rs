@@ -12,63 +12,65 @@
 //#ifndef CONSISTENCY_ENFORCER_GADGET_HPP_
 // #define CONSISTENCY_ENFORCER_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
 
 
 
-template<typename FieldT>
-class consistency_enforcer_gadget : public tinyram_standard_gadget<FieldT>  {
-private:
-    pb_variable<FieldT> is_register_instruction;
-    pb_variable<FieldT> is_control_flow_instruction;
-    pb_variable<FieldT> is_stall_instruction;
+// 
+pub struct consistency_enforcer_gadget {
+// private:: public tinyram_standard_gadget<FieldT>  
+is_register_instruction:    pb_variable<FieldT>,
+is_control_flow_instruction:    pb_variable<FieldT>,
+is_stall_instruction:    pb_variable<FieldT>,
 
-    pb_variable<FieldT> packed_desidx;
-    std::shared_ptr<packing_gadget<FieldT> > pack_desidx;
+packed_desidx:    pb_variable<FieldT>,
+pack_desidx:    std::shared_ptr<packing_gadget<FieldT> >,
 
-    pb_variable<FieldT> computed_result;
-    pb_variable<FieldT> computed_flag;
-    std::shared_ptr<inner_product_gadget<FieldT> > compute_computed_result;
-    std::shared_ptr<inner_product_gadget<FieldT> > compute_computed_flag;
+computed_result:    pb_variable<FieldT>,
+computed_flag:    pb_variable<FieldT>,
+compute_computed_result:    std::shared_ptr<inner_product_gadget<FieldT> >,
+compute_computed_flag:    std::shared_ptr<inner_product_gadget<FieldT> >,
 
-    pb_variable<FieldT> pc_from_cf_or_zero;
+pc_from_cf_or_zero:    pb_variable<FieldT>,
 
-    std::shared_ptr<loose_multiplexing_gadget<FieldT> > demux_packed_outgoing_desval;
-public:
-    pb_variable_array<FieldT> opcode_indicators;
-    pb_variable_array<FieldT> instruction_results;
-    pb_variable_array<FieldT> instruction_flags;
-    pb_variable_array<FieldT> desidx;
-    pb_variable<FieldT> packed_incoming_pc;
-    pb_variable_array<FieldT> packed_incoming_registers;
-    pb_variable<FieldT> packed_incoming_desval;
-    pb_variable<FieldT> incoming_flag;
-    pb_variable<FieldT> packed_outgoing_pc;
-    pb_variable_array<FieldT> packed_outgoing_registers;
-    pb_variable<FieldT> outgoing_flag;
-    pb_variable<FieldT> packed_outgoing_desval;
+demux_packed_outgoing_desval:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
+// public:
+opcode_indicators:    pb_variable_array<FieldT>,
+instruction_results:    pb_variable_array<FieldT>,
+instruction_flags:    pb_variable_array<FieldT>,
+desidx:    pb_variable_array<FieldT>,
+packed_incoming_pc:    pb_variable<FieldT>,
+packed_incoming_registers:    pb_variable_array<FieldT>,
+packed_incoming_desval:    pb_variable<FieldT>,
+incoming_flag:    pb_variable<FieldT>,
+packed_outgoing_pc:    pb_variable<FieldT>,
+packed_outgoing_registers:    pb_variable_array<FieldT>,
+outgoing_flag:    pb_variable<FieldT>,
+packed_outgoing_desval:    pb_variable<FieldT>,
+}
 
-    consistency_enforcer_gadget(tinyram_protoboard<FieldT> &pb,
-                                const pb_variable_array<FieldT> &opcode_indicators,
-                                const pb_variable_array<FieldT> &instruction_results,
-                                const pb_variable_array<FieldT> &instruction_flags,
-                                const pb_variable_array<FieldT> &desidx,
-                                const pb_variable<FieldT> &packed_incoming_pc,
-                                const pb_variable_array<FieldT> &packed_incoming_registers,
-                                const pb_variable<FieldT> &packed_incoming_desval,
-                                const pb_variable<FieldT> &incoming_flag,
-                                const pb_variable<FieldT> &packed_outgoing_pc,
-                                const pb_variable_array<FieldT> &packed_outgoing_registers,
-                                const pb_variable<FieldT> &outgoing_flag,
-                                const std::string &annotation_prefix="");
+//     consistency_enforcer_gadget(
+// tinyram_protoboard<FieldT> &pb,
+//                                 opcode_indicators:pb_variable_array<FieldT>,
+//                                 instruction_results:pb_variable_array<FieldT>,
+//                                 instruction_flags:pb_variable_array<FieldT>,
+//                                 desidx:pb_variable_array<FieldT>,
+//                                 packed_incoming_pc:pb_variable<FieldT>,
+//                                 packed_incoming_registers:pb_variable_array<FieldT>,
+//                                 packed_incoming_desval:pb_variable<FieldT>,
+//                                 incoming_flag:pb_variable<FieldT>,
+//                                 packed_outgoing_pc:pb_variable<FieldT>,
+//                                 packed_outgoing_registers:pb_variable_array<FieldT>,
+//                                 outgoing_flag:pb_variable<FieldT>,
+//                                 annotation_prefix:std::string="");
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+//     void generate_r1cs_constraints();
+//     void generate_r1cs_witness();
+// };
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/consistency_enforcer_gadget;
+// use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::consistency_enforcer_gadget;
 
 //#endif // CONSISTENCY_ENFORCER_GADGET_HPP_
 /** @file
@@ -87,105 +89,108 @@ use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/consistency_enfor
 //#ifndef CONSISTENCY_ENFORCER_GADGET_TCC_
 // #define CONSISTENCY_ENFORCER_GADGET_TCC_
 
+impl consistency_enforcer_gadget<FieldT>{
 
-
-template<typename FieldT>
-consistency_enforcer_gadget<FieldT>::consistency_enforcer_gadget(tinyram_protoboard<FieldT> &pb,
-                                                                 const pb_variable_array<FieldT> &opcode_indicators,
-                                                                 const pb_variable_array<FieldT> &instruction_results,
-                                                                 const pb_variable_array<FieldT> &instruction_flags,
-                                                                 const pb_variable_array<FieldT> &desidx,
-                                                                 const pb_variable<FieldT> &packed_incoming_pc,
-                                                                 const pb_variable_array<FieldT> &packed_incoming_registers,
-                                                                 const pb_variable<FieldT> &packed_incoming_desval,
-                                                                 const pb_variable<FieldT> &incoming_flag,
-                                                                 const pb_variable<FieldT> &packed_outgoing_pc,
-                                                                 const pb_variable_array<FieldT> &packed_outgoing_registers,
-                                                                 const pb_variable<FieldT> &outgoing_flag,
-                                                                 const std::string &annotation_prefix) :
-    tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
-    opcode_indicators(opcode_indicators),
-    instruction_results(instruction_results),
-    instruction_flags(instruction_flags),
-    desidx(desidx),
-    packed_incoming_pc(packed_incoming_pc),
-    packed_incoming_registers(packed_incoming_registers),
-    packed_incoming_desval(packed_incoming_desval),
-    incoming_flag(incoming_flag),
-    packed_outgoing_pc(packed_outgoing_pc),
-    packed_outgoing_registers(packed_outgoing_registers),
-    outgoing_flag(outgoing_flag)
+// 
+pub fn new(
+pb:tinyram_protoboard<FieldT>,
+                                                                 opcode_indicators:pb_variable_array<FieldT>,
+                                                                 instruction_results:pb_variable_array<FieldT>,
+                                                                 instruction_flags:pb_variable_array<FieldT>,
+                                                                 desidx:pb_variable_array<FieldT>,
+                                                                 packed_incoming_pc:pb_variable<FieldT>,
+                                                                 packed_incoming_registers:pb_variable_array<FieldT>,
+                                                                 packed_incoming_desval:pb_variable<FieldT>,
+                                                                 incoming_flag:pb_variable<FieldT>,
+                                                                 packed_outgoing_pc:pb_variable<FieldT>,
+                                                                 packed_outgoing_registers:pb_variable_array<FieldT>,
+                                                                 outgoing_flag:pb_variable<FieldT>,
+                                                                 annotation_prefix:std::string) ->Self
+   
 {
     assert!(desidx.size() == pb.ap.reg_arg_width());
 
-    packed_outgoing_desval.allocate(pb, FMT(self.annotation_prefix, " packed_outgoing_desval"));
-    is_register_instruction.allocate(pb, FMT(self.annotation_prefix, " is_register_instruction"));
-    is_control_flow_instruction.allocate(pb, FMT(self.annotation_prefix, " is_control_flow_instruction"));
-    is_stall_instruction.allocate(pb, FMT(self.annotation_prefix, " is_stall_instruction"));
+    packed_outgoing_desval.allocate(pb, format!("{} packed_outgoing_desval",self.annotation_prefix));
+    is_register_instruction.allocate(pb, format!("{} is_register_instruction",self.annotation_prefix));
+    is_control_flow_instruction.allocate(pb, format!("{} is_control_flow_instruction",self.annotation_prefix));
+    is_stall_instruction.allocate(pb, format!("{} is_stall_instruction",self.annotation_prefix));
 
-    packed_desidx.allocate(pb, FMT(self.annotation_prefix, " packed_desidx"));
-    pack_desidx.reset(new packing_gadget<FieldT>(pb, desidx, packed_desidx, FMT(self.annotation_prefix, "pack_desidx")));
+    packed_desidx.allocate(pb, format!("{} packed_desidx",self.annotation_prefix));
+    pack_desidx.reset(new packing_gadget<FieldT>(pb, desidx, packed_desidx, format!("{}pack_desidx",self.annotation_prefix)));
 
-    computed_result.allocate(pb,  FMT(self.annotation_prefix, " computed_result"));
-    computed_flag.allocate(pb, FMT(self.annotation_prefix, " computed_flag"));
+    computed_result.allocate(pb,  format!("{} computed_result",self.annotation_prefix));
+    computed_flag.allocate(pb, format!("{} computed_flag",self.annotation_prefix));
 
     compute_computed_result.reset(
         new inner_product_gadget<FieldT>(pb, opcode_indicators, instruction_results, computed_result,
-                                         FMT(self.annotation_prefix, " compute_computed_result")));
+                                         format!("{} compute_computed_result",self.annotation_prefix)));
     compute_computed_flag.reset(
         new inner_product_gadget<FieldT>(pb, opcode_indicators, instruction_flags, computed_flag,
-                                         FMT(self.annotation_prefix, " compute_computed_flag")));
+                                         format!("{} compute_computed_flag",self.annotation_prefix)));
 
-    pc_from_cf_or_zero.allocate(pb, FMT(self.annotation_prefix, " pc_from_cf_or_zero"));
+    pc_from_cf_or_zero.allocate(pb, format!("{} pc_from_cf_or_zero",self.annotation_prefix));
 
     demux_packed_outgoing_desval.reset(
         new loose_multiplexing_gadget<FieldT>(pb, packed_outgoing_registers, packed_desidx, packed_outgoing_desval, ONE,
-                                              FMT(self.annotation_prefix, " demux_packed_outgoing_desval")));
+                                              format!("{} demux_packed_outgoing_desval",self.annotation_prefix)));
+
+    //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+    Self{opcode_indicators,
+    instruction_results,
+    instruction_flags,
+    desidx,
+    packed_incoming_pc,
+    packed_incoming_registers,
+    packed_incoming_desval,
+    incoming_flag,
+    packed_outgoing_pc,
+    packed_outgoing_registers,
+    outgoing_flag}
 
 }
 
-template<typename FieldT>
-void consistency_enforcer_gadget<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     /* pack destination index */
-    pack_desidx->generate_r1cs_constraints(false);
+    pack_desidx.generate_r1cs_constraints(false);
 
     /* demux result register */
-    demux_packed_outgoing_desval->generate_r1cs_constraints();
+    demux_packed_outgoing_desval.generate_r1cs_constraints();
 
     /* is_register_instruction */
-    linear_combination<FieldT> reg_a, reg_b, reg_c;
+    let (mut reg_a,mut reg_b,mut reg_c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     reg_a.add_term(ONE, 1);
     for i in 0..ARRAY_SIZE(tinyram_opcodes_register)
     {
         reg_b.add_term(opcode_indicators[tinyram_opcodes_register[i]], 1);
     }
     reg_c.add_term(is_register_instruction, 1);
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(reg_a, reg_b, reg_c), FMT(self.annotation_prefix, " is_register_instruction"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>::new(reg_a, reg_b, reg_c), format!("{} is_register_instruction",self.annotation_prefix));
 
     /* is_control_flow_instruction */
-    linear_combination<FieldT> cf_a, cf_b, cf_c;
+    let (mut cf_a,mut cf_b,mut cf_c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     cf_a.add_term(ONE, 1);
     for i in 0..ARRAY_SIZE(tinyram_opcodes_control_flow)
     {
         cf_b.add_term(opcode_indicators[tinyram_opcodes_control_flow[i]], 1);
     }
     cf_c.add_term(is_control_flow_instruction, 1);
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(cf_a, cf_b, cf_c), FMT(self.annotation_prefix, " is_control_flow_instruction"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>::new(cf_a, cf_b, cf_c), format!("{} is_control_flow_instruction",self.annotation_prefix));
 
     /* is_stall_instruction */
-    linear_combination<FieldT> stall_a, stall_b, stall_c;
+    let (mut stall_a,mut stall_b,mut stall_c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     stall_a.add_term(ONE, 1);
     for i in 0..ARRAY_SIZE(tinyram_opcodes_stall)
     {
         stall_b.add_term(opcode_indicators[tinyram_opcodes_stall[i]], 1);
     }
     stall_c.add_term(is_stall_instruction, 1);
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(stall_a, stall_b, stall_c), FMT(self.annotation_prefix, " is_stall_instruction"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>::new(stall_a, stall_b, stall_c), format!("{} is_stall_instruction",self.annotation_prefix));
 
     /* compute actual result/actual flag */
-    compute_computed_result->generate_r1cs_constraints();
-    compute_computed_flag->generate_r1cs_constraints();
+    compute_computed_result.generate_r1cs_constraints();
+    compute_computed_flag.generate_r1cs_constraints();
 
     /*
       compute new PC address (in double words, not bytes!):
@@ -194,18 +199,18 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_constraints()
       PC' - pc_from_cf_or_zero - (1-is_control_flow_instruction - is_stall_instruction) = PC * (1 - is_control_flow_instruction)
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>::new(
             computed_result,
             is_control_flow_instruction,
             pc_from_cf_or_zero),
-        FMT(self.annotation_prefix, " pc_from_cf_or_zero"));
+        format!("{} pc_from_cf_or_zero",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>::new(
             packed_incoming_pc,
             1 - is_control_flow_instruction,
             packed_outgoing_pc - pc_from_cf_or_zero - (1 - is_control_flow_instruction - is_stall_instruction)),
-        FMT(self.annotation_prefix, " packed_outgoing_pc"));
+        format!("{} packed_outgoing_pc",self.annotation_prefix));
 
     /*
       enforce new flag:
@@ -214,11 +219,11 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_constraints()
       flag' - flag = (computed_flag - flag) * is_register_instruction
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>::new(
             { computed_flag, incoming_flag * (-1) },
             { is_register_instruction },
             { outgoing_flag, incoming_flag * (-1) }),
-        FMT(self.annotation_prefix, " outgoing_flag"));
+        format!("{} outgoing_flag",self.annotation_prefix));
 
     /*
       force carryover of unchanged registers
@@ -231,11 +236,11 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_constraints()
     for i in 0..self.pb.ap.k
     {
         self.pb.add_r1cs_constraint(
-            r1cs_constraint<FieldT>(
+            r1cs_constraint::<FieldT>::new(
                 { ONE, demux_packed_outgoing_desval->alpha[i] * (-1) },
                 { packed_outgoing_registers[i], packed_incoming_registers[i] * (-1) },
                 { ONE * 0 }),
-            FMT(self.annotation_prefix, " register_carryover_{}", i));
+            format!("{} register_carryover_{}",self.annotation_prefix, i));
     }
 
     /*
@@ -245,18 +250,18 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_constraints()
       next_desval - packed_incoming_desval = (computed_result - packed_incoming_desval) * is_register_instruction
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>::new(
             { computed_result, packed_incoming_desval * (-1) },
             { is_register_instruction },
             { packed_outgoing_desval, packed_incoming_desval * (-1) }),
-        FMT(self.annotation_prefix, " packed_outgoing_desval"));
+        format!("{} packed_outgoing_desval",self.annotation_prefix));
 }
 
-template<typename FieldT>
-void consistency_enforcer_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     /* pack destination index */
-    pack_desidx->generate_r1cs_witness_from_bits();
+    pack_desidx.generate_r1cs_witness_from_bits();
 
     /* is_register_instruction */
     self.pb.val(is_register_instruction) = FieldT::zero();
@@ -283,8 +288,8 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_witness()
     }
 
     /* compute actual result/actual flag */
-    compute_computed_result->generate_r1cs_witness();
-    compute_computed_flag->generate_r1cs_witness();
+    compute_computed_result.generate_r1cs_witness();
+    compute_computed_flag.generate_r1cs_witness();
 
     /*
       compute new PC address (in double words, not bytes!):
@@ -313,7 +318,7 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_witness()
 
       next_desval = computed_result * is_register_instruction + packed_incoming_desval * (1-is_register_instruction)
     */
-    FieldT changed_register_contents =
+    let  changed_register_contents =
         self.pb.val(computed_result) * self.pb.val(is_register_instruction) +
         self.pb.val(packed_incoming_desval) * (FieldT::one() - self.pb.val(is_register_instruction));
 
@@ -328,39 +333,39 @@ void consistency_enforcer_gadget<FieldT>::generate_r1cs_witness()
     /* demux result register (it is important to do witness generation
        here after all registers have been set to the correct
        values!) */
-    demux_packed_outgoing_desval->generate_r1cs_witness();
+    demux_packed_outgoing_desval.generate_r1cs_witness();
 }
 
 #if 0
-template<typename FieldT>
+
 void test_arithmetic_consistency_enforcer_gadget()
 {
     ffec::print_time("starting arithmetic_consistency_enforcer test");
 
-    tinyram_architecture_params ap(16, 16);
-    tinyram_protoboard<FieldT> pb(ap);
+    let mut  ap=tinyram_architecture_params::new(16, 16);
+     let mut pb=tinyram_protoboard::<FieldT>::new(ap);
 
-    pb_variable_array<FieldT> opcode_indicators, instruction_results, instruction_flags;
+    let ( opcode_indicators, instruction_results, instruction_flags)=(pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new());
     opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
     instruction_results.allocate(pb, 1ul<<ap.opcode_width(), "instruction_results");
     instruction_flags.allocate(pb, 1ul<<ap.opcode_width(), "instruction_flags");
 
-    dual_variable_gadget<FieldT> desidx(pb, ap.reg_arg_width(), "desidx");
+    let mut desidx=dual_variable_gadget::<FieldT> ::new(pb, ap.reg_arg_width(), "desidx");
 
-    pb_variable<FieldT>  incoming_pc;
+    let mut   incoming_pc=pb_variable<FieldT>::new();
     incoming_pc.allocate(pb, "incoming_pc");
 
-    pb_variable_array<FieldT> packed_incoming_registers;
+    let mut  packed_incoming_registers=pb_variable_array::<FieldT>::new();
     packed_incoming_registers.allocate(pb, ap.k, "packed_incoming_registers");
 
-    pb_variable<FieldT>  incoming_load_flag;
+     let mut incoming_load_flag=pb_variable::<FieldT> ::new();
     incoming_load_flag.allocate(pb, "incoming_load_flag");
 
-    pb_variable<FieldT>  outgoing_pc, outgoing_flag;
+    let  (mut outgoing_pc, mut outgoing_flag)=(pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new());
     outgoing_pc.allocate(pb, "outgoing_pc");
     outgoing_flag.allocate(pb, "outgoing_flag");
 
-    pb_variable_array<FieldT> packed_outgoing_registers;
+    let mut  packed_outgoing_registers=pb_variable_array::<FieldT>::new();
     packed_outgoing_registers.allocate(pb, ap.k, "packed_outgoing_registers");
 
     arithmetic_consistency_enforcer_gadget g(pb, opcode_indicators, instruction_results, instruction_flags,
@@ -453,30 +458,30 @@ void test_arithmetic_consistency_enforcer_gadget()
     ffec::print_time("arithmetic_consistency_enforcer tests successful");
 }
 
-template<typename FieldT>
-void test_control_flow_consistency_enforcer_gadget()
+
+pub fn  test_control_flow_consistency_enforcer_gadget()
 {
     ffec::print_time("starting control_flow_consistency_enforcer test");
 
-    tinyram_architecture_params ap(16, 16);
-    tinyram_protoboard<FieldT> pb(ap);
+    let mut ap =tinyram_architecture_params::new(16, 16);
+    let mut pb=tinyram_protoboard::<FieldT>::new();(ap);
 
-    pb_variable_array<FieldT> opcode_indicators, instruction_results;
+    let (mut opcode_indicators,mut  instruction_results)=( pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new()););
     opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
     instruction_results.allocate(pb, 1ul<<ap.opcode_width(), "instruction_results");
 
-    pb_variable<FieldT>  incoming_pc, incoming_flag;
+     let  (mut incoming_pc, mut incoming_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
     incoming_pc.allocate(pb, "incoming_pc");
     incoming_flag.allocate(pb, "incoming_flag");
 
-    pb_variable_array<FieldT> packed_incoming_registers;
+    let mut  packed_incoming_registers=pb_variable_array::<FieldT>::new();
     packed_incoming_registers.allocate(pb, ap.k, "packed_incoming_registers");
 
-    pb_variable<FieldT>  outgoing_pc, outgoing_flag;
+    let  (mut outgoing_pc,mut  outgoing_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
     outgoing_pc.allocate(pb, "outgoing_pc");
     outgoing_flag.allocate(pb, "outgoing_flag");
 
-    pb_variable_array<FieldT> packed_outgoing_registers;
+   let mut  packed_outgoing_registers=pb_variable_array::<FieldT>::new();
     packed_outgoing_registers.allocate(pb, ap.k, "packed_outgoing_registers");
 
     control_flow_consistency_enforcer_gadget g(pb, opcode_indicators, instruction_results,
@@ -521,34 +526,34 @@ void test_control_flow_consistency_enforcer_gadget()
     ffec::print_time("control_flow_consistency_enforcer tests successful");
 }
 
-template<typename FieldT>
-void test_special_consistency_enforcer_gadget()
+
+pub fn  test_special_consistency_enforcer_gadget()
 {
     ffec::print_time("starting special_consistency_enforcer_gadget test");
 
-    tinyram_architecture_params ap(16, 16);
-    tinyram_protoboard<FieldT> pb(ap);
+    let mut ap =tinyram_architecture_params::new(16, 16);
+    let mut pb=tinyram_protoboard::<FieldT>::new();(ap);
 
-    pb_variable_array<FieldT> opcode_indicators;
+    let mut opcode_indicators=pb_variable_array::<FieldT>::new();
     opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
 
-    pb_variable<FieldT>  incoming_pc, incoming_flag, incoming_load_flag;
+    let  (mut incoming_pc, mut incoming_flag,mut  incoming_load_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
     incoming_pc.allocate(pb, "incoming_pc");
     incoming_flag.allocate(pb, "incoming_flag");
     incoming_load_flag.allocate(pb, "incoming_load_flag");
 
-    pb_variable_array<FieldT> packed_incoming_registers;
+    let mut packed_incoming_registers=pb_variable_array::<FieldT>::new();
     packed_incoming_registers.allocate(pb, ap.k, "packed_incoming_registers");
 
-    pb_variable<FieldT>  outgoing_pc, outgoing_flag, outgoing_load_flag;
+    let   (mut outgoing_pc, mut outgoing_flag,mut  outgoing_load_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
     outgoing_pc.allocate(pb, "outgoing_pc");
     outgoing_flag.allocate(pb, "outgoing_flag");
     outgoing_load_flag.allocate(pb, "outgoing_load_flag");
 
-    pb_variable_array<FieldT> packed_outgoing_registers;
+    let mut packed_outgoing_registers=pb_variable_array::<FieldT>::new();
     packed_outgoing_registers.allocate(pb, ap.k, "packed_outgoing_registers");
 
-    special_consistency_enforcer_gadget g(pb, opcode_indicators,
+    let mut  g=special_consistency_enforcer_gadget::new(pb, opcode_indicators,
                                           incoming_pc, packed_incoming_registers, incoming_flag, incoming_load_flag,
                                           outgoing_pc, packed_outgoing_registers, outgoing_flag, outgoing_load_flag, "g");
     g.generate_r1cs_constraints();
@@ -672,6 +677,6 @@ void test_special_consistency_enforcer_gadget()
 }
 //#endif
 
-
+}
 
 //#endif // CONSISTENCY_ENFORCER_GADGET_TCC_

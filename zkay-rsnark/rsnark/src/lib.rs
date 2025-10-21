@@ -6,7 +6,9 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-// #![feature(generic_const_exprs)]
+
+#![feature(generic_const_items)]
+#![feature(generic_const_exprs)]
 #[macro_use] extern crate scan_fmt;
 pub mod   common;
 pub mod        gadgetlib2;

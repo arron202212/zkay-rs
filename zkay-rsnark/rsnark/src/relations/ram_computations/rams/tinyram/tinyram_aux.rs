@@ -16,7 +16,7 @@
 // use  <iostream>
 // use  <map>
 
-use common::utils;
+use ffec::common::utils;
 
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 use crate::relations::ram_computations::memory::memory_interface;
@@ -244,8 +244,8 @@ impl tinyram_program {
 // use  <fstream>
 // use  <string>
 
-use common::profiling;
-use common::utils;
+use ffec::common::profiling;
+// use ffec::common::utils;
 
 // use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 

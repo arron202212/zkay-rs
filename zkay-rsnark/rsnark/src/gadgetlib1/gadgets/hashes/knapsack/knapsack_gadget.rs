@@ -44,7 +44,7 @@
 // #define KNAPSACK_GADGET_HPP_
 
 use crate::common::data_structures::merkle_tree;
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 

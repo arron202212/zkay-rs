@@ -14,91 +14,104 @@
 //#ifndef ALU_CONTROL_FLOW_HPP_
 // #define ALU_CONTROL_FLOW_HPP_
 
-use crate::gadgetlib1::gadgets/basic_gadgets;
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget;
 
 
 
 /* control flow gadgets */
-template<typename FieldT>
-class ALU_control_flow_gadget : public tinyram_standard_gadget<FieldT> {
-public:
-    const word_variable_gadget<FieldT> pc;
-    const word_variable_gadget<FieldT> argval2;
-    const pb_variable<FieldT> flag;
-    const pb_variable<FieldT> result;
-
-    ALU_control_flow_gadget(tinyram_protoboard<FieldT> &pb,
-                            const word_variable_gadget<FieldT> &pc,
-                            const word_variable_gadget<FieldT> &argval2,
-                            const pb_variable<FieldT> &flag,
-                            const pb_variable<FieldT> &result,
-                            const std::string &annotation_prefix="") :
-        tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
-        pc(pc),
+// 
+pub struct  ALU_control_flow_gadget<FieldT>  {
+// public:: public tinyram_standard_gadget<FieldT>
+    pc:word_variable_gadget<FieldT>,
+    argval2:word_variable_gadget<FieldT>,
+    flag:pb_variable<FieldT>,
+    result:pb_variable<FieldT>,
+}
+impl ALU_control_flow_gadget<FieldT>  {
+    pub fn new(pb:tinyram_protoboard<FieldT>,
+                            pc:word_variable_gadget<FieldT>,
+                            argval2:word_variable_gadget<FieldT>,
+                            flag:pb_variable<FieldT>,
+                            result:pb_variable<FieldT>,
+                            annotation_prefix:std::string) ->Self
+         {
+// tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+        Self{pc(pc),
         argval2(argval2),
         flag(flag),
-        result(result) {};
-};
+        result(result)}
+}
+}
 
-template<typename FieldT>
-class ALU_jmp_gadget : public ALU_control_flow_gadget<FieldT> {
-public:
-    ALU_jmp_gadget(tinyram_protoboard<FieldT> &pb,
-                   const word_variable_gadget<FieldT> &pc,
-                   const word_variable_gadget<FieldT> &argval2,
-                   const pb_variable<FieldT> &flag,
-                   const pb_variable<FieldT> &result,
-                   const std::string &annotation_prefix="") :
-        ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) {}
+// 
+pub struct ALU_jmp_gadget {
+}
+impl ALU_jmp_gadget {
+    pub fn new(pb:tinyram_protoboard<FieldT>,
+                   pc:word_variable_gadget<FieldT>,
+                   argval2:word_variable_gadget<FieldT>,
+                   flag:pb_variable<FieldT>,
+                   result:pb_variable<FieldT>,
+                   annotation_prefix:std::string) ->Self
+        {
+// ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) 
+    Self{}
+}
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+   
+}
 
-template<typename FieldT>
-void test_ALU_jmp_gadget();
+// 
+// pub fn test_ALU_jmp_gadget();
 
-template<typename FieldT>
-class ALU_cjmp_gadget : public ALU_control_flow_gadget<FieldT> {
-public:
-    ALU_cjmp_gadget(tinyram_protoboard<FieldT> &pb,
-                    const word_variable_gadget<FieldT> &pc,
-                    const word_variable_gadget<FieldT> &argval2,
-                    const pb_variable<FieldT> &flag,
-                    const pb_variable<FieldT> &result,
-                    const std::string &annotation_prefix="") :
-        ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) {}
+// 
+pub struct ALU_cjmp_gadget {
+}
+impl ALU_cjmp_gadget {
+    pub fn new(pb:tinyram_protoboard<FieldT>,
+                    pc:word_variable_gadget<FieldT>,
+                    argval2:word_variable_gadget<FieldT>,
+                    flag:pb_variable<FieldT>,
+                    result:pb_variable<FieldT>,
+                    annotation_prefix:std::string) ->Self
+         {
+// ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix)
+    Self{}
+}
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+   
+}
 
-template<typename FieldT>
-void test_ALU_cjmp_gadget();
+// 
+// pub fn test_ALU_cjmp_gadget();
 
-template<typename FieldT>
-class ALU_cnjmp_gadget : public ALU_control_flow_gadget<FieldT> {
-public:
-    ALU_cnjmp_gadget(tinyram_protoboard<FieldT> &pb,
-                     const word_variable_gadget<FieldT> &pc,
-                     const word_variable_gadget<FieldT> &argval2,
-                     const pb_variable<FieldT> &flag,
-                     const pb_variable<FieldT> &result,
-                     const std::string &annotation_prefix="") :
-        ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) {}
+// 
+pub struct ALU_cnjmp_gadget {
+}
+// public:
+impl ALU_cnjmp_gadget {
+    pub fn new(pb:tinyram_protoboard<FieldT>,
+                     pc:word_variable_gadget<FieldT>,
+                     argval2:word_variable_gadget<FieldT>,
+                     flag:pb_variable<FieldT>,
+                     result:pb_variable<FieldT>,
+                     annotation_prefix:std::string) ->Self
+      {
+//   ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) 
+    Self{}
+}
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+   
+}
 
-template<typename FieldT>
-void test_ALU_cnjmp_gadget();
-
+// 
+// pub fn test_ALU_cnjmp_gadget();
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/alu_control_flow;
+
+// use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_control_flow;
 
 //#endif // ALU_CONTROL_FLOW_HPP_
 /** @file
@@ -122,41 +135,43 @@ use ffec::common::profiling;
 
 
 /* jmp */
-template<typename FieldT>
-void ALU_jmp_gadget<FieldT>::generate_r1cs_constraints()
+impl ALU_jmp_gadget<FieldT>{
+
+pub fn generate_r1cs_constraints()
 {
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>(
             { ONE },
             { self.argval2.packed },
             { self.result }),
-        FMT(self.annotation_prefix, " jmp_result"));
+        format!("{} jmp_result",self.annotation_prefix));
 }
 
-template<typename FieldT>
-void ALU_jmp_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     self.pb.val(self.result) = self.pb.val(self.argval2.packed);
 }
+}
 
-template<typename FieldT>
-void test_ALU_jmp_gadget()
+pub fn test_ALU_jmp_gadget()
 {
     ffec::print_time("starting jmp test");
 
-    tinyram_architecture_params ap(16, 16);
-    tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
-    tinyram_protoboard<FieldT> pb(ap, P.size(), 0, 10);
+    let mut ap=tinyram_architecture_params ::new(16, 16);
+    let mut  P=tinyram_program::new(); 
+    P.instructions = generate_tinyram_prelude(ap);
+    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
 
-    word_variable_gadget<FieldT> pc(pb, "pc"), argval2(pb, "argval2");
-    pb_variable<FieldT> flag, result;
+    let mut pc=word_variable_gadget::<FieldT>::new(pb, "pc"), argval2(pb, "argval2");
+   let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
     flag.allocate(pb, "flag");
     result.allocate(pb, "result");
 
-    ALU_jmp_gadget<FieldT> jmp(pb, pc, argval2, flag, result, "jmp");
+     let mut jmp=ALU_jmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "jmp");
     jmp.generate_r1cs_constraints();
 
     pb.val(argval2.packed) = FieldT(123);
@@ -174,8 +189,9 @@ void test_ALU_jmp_gadget()
 }
 
 /* cjmp */
-template<typename FieldT>
-void ALU_cjmp_gadget<FieldT>::generate_r1cs_constraints()
+impl ALU_cjmp_gadget<FieldT>{
+
+pub fn generate_r1cs_constraints()
 {
     /*
       flag1 * argval2 + (1-flag1) * (pc1 + 1) = cjmp_result
@@ -188,40 +204,41 @@ void ALU_cjmp_gadget<FieldT>::generate_r1cs_constraints()
       the byte address of the PC.
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>(
             self.flag,
-            pb_packing_sum<FieldT>(pb_variable_array<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end())) - self.pc.packed - 1,
+            pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end())) - self.pc.packed - 1,
             self.result - self.pc.packed - 1),
-        FMT(self.annotation_prefix, " cjmp_result"));
+        format!("{} cjmp_result",self.annotation_prefix));
 }
 
-template<typename FieldT>
-void ALU_cjmp_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
                                   FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()) :
                                   self.pb.val(self.pc.packed) + FieldT::one());
 }
+}
 
-template<typename FieldT>
-void test_ALU_cjmp_gadget()
+pub fn test_ALU_cjmp_gadget()
 {
     // TODO: update
     ffec::print_time("starting cjmp test");
 
-    tinyram_architecture_params ap(16, 16);
-    tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
-    tinyram_protoboard<FieldT> pb(ap, P.size(), 0, 10);
+    let mut ap=tinyram_architecture_params::new(16, 16);
+    let mut P=tinyram_program::new(); P.instructions = generate_tinyram_prelude(ap);
+     let mut pb=tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
 
-    word_variable_gadget<FieldT> pc(pb, "pc"), argval2(pb, "argval2");
-    pb_variable<FieldT> flag, result;
+    let mut  pc=word_variable_gadget::<FieldT>::new(pb, "pc");
+    let mut argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
+    let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
     flag.allocate(pb, "flag");
     result.allocate(pb, "result");
 
-    ALU_cjmp_gadget<FieldT> cjmp(pb, pc, argval2, flag, result, "cjmp");
+    let mut  cjmp=ALU_cjmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "cjmp");
     cjmp.generate_r1cs_constraints();
 
     pb.val(argval2.packed) = FieldT(123);
@@ -253,8 +270,9 @@ void test_ALU_cjmp_gadget()
 }
 
 /* cnjmp */
-template<typename FieldT>
-void ALU_cnjmp_gadget<FieldT>::generate_r1cs_constraints()
+impl ALU_cnjmp_gadget<FieldT>{
+
+pub fn generate_r1cs_constraints()
 {
     /*
       flag1 * (pc1 + inc) + (1-flag1) * argval2 = cnjmp_result
@@ -267,40 +285,42 @@ void ALU_cnjmp_gadget<FieldT>::generate_r1cs_constraints()
       the byte address of the PC.
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
+        r1cs_constraint::<FieldT>(
             self.flag,
-            self.pc.packed + 1 - pb_packing_sum<FieldT>(pb_variable_array<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end())),
-            self.result - pb_packing_sum<FieldT>(pb_variable_array<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end()))),
-        FMT(self.annotation_prefix, " cnjmp_result"));
+            self.pc.packed + 1 - pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end())),
+            self.result - pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(self.argval2.bits.begin() + self.pb.ap.subaddr_len(), self.argval2.bits.end()))),
+        format!("{} cnjmp_result",self.annotation_prefix));
 }
 
-template<typename FieldT>
-void ALU_cnjmp_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
                                   self.pb.val(self.pc.packed) + FieldT::one() :
                                   FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()));
 }
+}
 
-template<typename FieldT>
-void test_ALU_cnjmp_gadget()
+pub fn test_ALU_cnjmp_gadget()
 {
     // TODO: update
     ffec::print_time("starting cnjmp test");
 
-    tinyram_architecture_params ap(16, 16);
-    tinyram_program P; P.instructions = generate_tinyram_prelude(ap);
-    tinyram_protoboard<FieldT> pb(ap, P.size(), 0, 10);
+    let mut  ap=tinyram_architecture_params::new(16, 16);
+    let mut  P=tinyram_program::new();
+     P.instructions = generate_tinyram_prelude(ap);
+   let mut  pb= tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
 
-    word_variable_gadget<FieldT> pc(pb, "pc"), argval2(pb, "argval2");
-    pb_variable<FieldT> flag, result;
+    let mut  pc=word_variable_gadget::<FieldT>::new(pb, "pc");
+    let mut  argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
+    let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
     flag.allocate(pb, "flag");
     result.allocate(pb, "result");
 
-    ALU_cnjmp_gadget<FieldT> cnjmp(pb, pc, argval2, flag, result, "cjmp");
+    let mut cnjmp= ALU_cnjmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "cjmp");
     cnjmp.generate_r1cs_constraints();
 
     pb.val(argval2.packed) = FieldT(123);

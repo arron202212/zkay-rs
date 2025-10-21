@@ -5,4 +5,4 @@ pub mod   alu_arithmetic;
  pub mod consistency_enforcer_gadget;
  pub mod memory_masking_gadget;
  pub mod tinyram_protoboard;
- pub mod word_variable_gadget.rs
+ pub mod word_variable_gadget;

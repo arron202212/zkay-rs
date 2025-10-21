@@ -18,7 +18,7 @@
 //#ifndef R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 // #define R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
 use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
 use crate::gadgetlib1::gadgets/pairing/pairing_checks;

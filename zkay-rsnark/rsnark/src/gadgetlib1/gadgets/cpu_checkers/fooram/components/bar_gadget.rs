@@ -13,7 +13,7 @@
 // #define BAR_GADGET_HPP_
 
 use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 
 
 
@@ -28,38 +28,39 @@ use crate::gadgetlib1::gadgets/basic_gadgets;
  * - load_addr = 2 * x + PC'
  * - store_addr = x + PC
  */
-template<typename FieldT>
-class bar_gadget : public gadget<FieldT> {
-public:
-    pb_linear_combination_array<FieldT> X;
-    FieldT a;
-    pb_linear_combination_array<FieldT> Y;
-    FieldT b;
-    pb_linear_combination<FieldT> Z_packed;
-    pb_variable_array<FieldT> Z_bits;
+// 
+pub struct bar_gadget {
+// public:: public gadget<FieldT> 
+X:    pb_linear_combination_array<FieldT>,
+a:    FieldT,
+Y:    pb_linear_combination_array<FieldT>,
+b:    FieldT,
+Z_packed:    pb_linear_combination<FieldT>,
+Z_bits:    pb_variable_array<FieldT>,
 
-    pb_variable<FieldT> result;
-    pb_variable_array<FieldT> overflow;
-    pb_variable_array<FieldT> unpacked_result;
+result:    pb_variable<FieldT>,
+overflow:    pb_variable_array<FieldT>,
+unpacked_result:    pb_variable_array<FieldT>,
 
-    std::shared_ptr<packing_gadget<FieldT> > unpack_result;
-    std::shared_ptr<packing_gadget<FieldT> > pack_Z;
+unpack_result:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_Z:    std::shared_ptr<packing_gadget<FieldT> >,
 
-    size_t width;
-    bar_gadget(protoboard<FieldT> &pb,
-               const pb_linear_combination_array<FieldT> &X,
-               const FieldT &a,
-               const pb_linear_combination_array<FieldT> &Y,
-               const FieldT &b,
-               const pb_linear_combination<FieldT> &Z_packed,
-               const std::string &annotation_prefix);
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+width:    size_t,
+
+    // bar_gadget(protoboard<FieldT> &pb,
+    //            const pb_linear_combination_array<FieldT> &X,
+    //            const FieldT &a,
+    //            const pb_linear_combination_array<FieldT> &Y,
+    //            const FieldT &b,
+    //            const pb_linear_combination<FieldT> &Z_packed,
+    //            const std::string &annotation_prefix);
+    // void generate_r1cs_constraints();
+    // void generate_r1cs_witness();
+}
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
+// use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
 
 //#endif // BAR_GADGET_HPP_
 /** @file
@@ -78,25 +79,22 @@ use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
 //#ifndef BAR_GADGET_TCC_
 // #define BAR_GADGET_TCC_
 
+impl bar_gadget<FieldT>{
 
-
-template<typename FieldT>
-bar_gadget<FieldT>::bar_gadget(protoboard<FieldT> &pb,
-                               const pb_linear_combination_array<FieldT> &X,
-                               const FieldT &a,
-                               const pb_linear_combination_array<FieldT> &Y,
-                               const FieldT &b,
-                               const pb_linear_combination<FieldT> &Z_packed,
-                               const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    X(X),
-    a(a),
-    Y(Y),
-    b(b),
-    Z_packed(Z_packed)
+// 
+pub fn new(
+pb:&protoboard<FieldT>,
+X:&                                pb_linear_combination_array<FieldT>,
+a:&                                FieldT,
+Y:&                                pb_linear_combination_array<FieldT>,
+b:&                                FieldT,
+Z_packed:&                                pb_linear_combination<FieldT>,
+annotation_prefix:&                                std::string
+        ) ->Self
+    
 {
     assert!(X.size() == Y.size());
-    width = X.size();
+    let width = X.size();
 
     result.allocate(pb, FMT(annotation_prefix, " result"));
     Z_bits.allocate(pb, width, FMT(annotation_prefix, " Z_bits"));
@@ -105,28 +103,34 @@ bar_gadget<FieldT>::bar_gadget(protoboard<FieldT> &pb,
     unpacked_result.insert(unpacked_result.end(), Z_bits.begin(), Z_bits.end());
     unpacked_result.insert(unpacked_result.end(), overflow.begin(), overflow.end());
 
-    unpack_result.reset(new packing_gadget<FieldT>(pb, unpacked_result, result, FMT(annotation_prefix, " unpack_result")));
-    pack_Z.reset(new packing_gadget<FieldT>(pb, Z_bits, Z_packed, FMT(annotation_prefix, " pack_Z")));
+    unpack_result.reset( packing_gadget::<FieldT>(pb, unpacked_result, result, FMT(annotation_prefix, " unpack_result")));
+    pack_Z.reset( packing_gadget::<FieldT>::new(pb, Z_bits, Z_packed, FMT(annotation_prefix, " pack_Z")));
+    // gadget<FieldT>(pb, annotation_prefix),
+    Self{X,
+    a,
+    Y,
+    b,
+    Z_packed}
 }
 
-template<typename FieldT>
-void bar_gadget<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
-    unpack_result->generate_r1cs_constraints(true);
-    pack_Z->generate_r1cs_constraints(false);
+    unpack_result.generate_r1cs_constraints(true);
+    pack_Z.generate_r1cs_constraints(false);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, a * pb_packing_sum<FieldT>(X) + b * pb_packing_sum<FieldT>(Y), result), FMT(self.annotation_prefix, " compute_result"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>::new(1, a * pb_packing_sum::<FieldT>(X) + b * pb_packing_sum::<FieldT>(Y), result), FMT(self.annotation_prefix, " compute_result"));
 }
 
-template<typename FieldT>
-void bar_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     self.pb.val(result) = X.get_field_element_from_bits(self.pb) * a + Y.get_field_element_from_bits(self.pb) * b;
-    unpack_result->generate_r1cs_witness_from_packed();
+    unpack_result.generate_r1cs_witness_from_packed();
 
-    pack_Z->generate_r1cs_witness_from_bits();
+    pack_Z.generate_r1cs_witness_from_bits();
 }
 
-
+}
 
 //#endif // BAR_GADGET_TCC_

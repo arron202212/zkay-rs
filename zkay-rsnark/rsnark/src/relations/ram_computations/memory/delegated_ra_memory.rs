@@ -67,8 +67,8 @@ pub struct delegated_ra_memory <HashT>{
 
 // use  <algorithm>
 
-use common::profiling;
-use common::utils;
+use ffec::common::profiling;
+use ffec::common::utils;
 
 
 impl delegated_ra_memory<HashT>{

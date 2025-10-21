@@ -92,7 +92,7 @@ auxiliary_input:                         r1cs_auxiliary_input<FieldT>)->Self
 
 // use  <cassert>
 
-use common::utils;
+use ffec::common::utils;
 
   use rand::Rng;
    

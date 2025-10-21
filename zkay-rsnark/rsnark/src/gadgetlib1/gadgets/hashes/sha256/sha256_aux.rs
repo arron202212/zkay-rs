@@ -12,7 +12,7 @@
 //#ifndef SHA256_AUX_HPP_
 // #define SHA256_AUX_HPP_
 
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 
 
 

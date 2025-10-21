@@ -125,7 +125,7 @@ use crate::gadgetlib1::gadgets/pairing/weierstrass_final_exponentiation;
 //#ifndef WEIERSTRASS_FINAL_EXPONENTIATION_TCC_
 // #define WEIERSTRASS_FINAL_EXPONENTIATION_TCC_
 
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
 
 

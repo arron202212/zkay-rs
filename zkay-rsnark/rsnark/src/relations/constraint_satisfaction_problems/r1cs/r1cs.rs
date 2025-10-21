@@ -156,7 +156,7 @@ impl r1cs_constraint_system< FieldT> {
 // use  <cassert>
 // use  <set>
 
-use ffec::algebra::fields::bigint;
+use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
 use ffec::common::utils;
 

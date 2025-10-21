@@ -10,10 +10,10 @@
 // use  <cstring>
 // use  <vector>
 
-use common::profiling;
+use ffec::common::profiling;
 
 use crate::common::default_types::r1cs_ppzkadsnark_pp;
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::run_r1cs_ppzkadsnark;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::run_r1cs_ppzkadsnark;
 
 
 

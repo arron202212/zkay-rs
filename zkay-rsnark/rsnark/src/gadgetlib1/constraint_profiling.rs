@@ -19,23 +19,23 @@
 
 
 
-extern size_t constraint_profiling_indent;
+// extern size_t constraint_profiling_indent;
 
-struct constraint_profiling_entry {
-    size_t indent;
-    std::string annotation;
-    size_t count;
-};
+pub struct constraint_profiling_entry {
+    indent:size_t,
+    annotation:string,
+    count:size_t,
+}
 
-extern std::vector<constraint_profiling_entry> constraint_profiling_table;
+// extern std::vector<constraint_profiling_entry> constraint_profiling_table;
 
 // #define PROFILE_CONSTRAINTS(pb, annotation)                             \
-    for (size_t _num_constraints_before = pb.num_constraints(), _iter = (++constraint_profiling_indent, 0), _cp_pos = constraint_profiling_table.size(); \
-         _iter == 0;                                                    \
-         constraint_profiling_table.insert(constraint_profiling_table.begin() + _cp_pos, constraint_profiling_entry{--constraint_profiling_indent, annotation, pb.num_constraints() - _num_constraints_before}), \
-         _iter = 1)
+    // for (size_t _num_constraints_before = pb.num_constraints(), _iter = (++constraint_profiling_indent, 0), _cp_pos = constraint_profiling_table.size(); \
+    //      _iter == 0;                                                    \
+    //      constraint_profiling_table.insert(constraint_profiling_table.begin() + _cp_pos, constraint_profiling_entry{--constraint_profiling_indent, annotation, pb.num_constraints() - _num_constraints_before}), \
+    //      _iter = 1)
 
-size_t PRINT_CONSTRAINT_PROFILING(); // returns # of top level constraints
+// size_t PRINT_CONSTRAINT_PROFILING(); // returns # of top level constraints
 
 
 
@@ -59,13 +59,13 @@ use crate::gadgetlib1::constraint_profiling;
 
 
 
-size_t constraint_profiling_indent = 0;
-std::vector<constraint_profiling_entry> constraint_profiling_table;
+// size_t constraint_profiling_indent = 0;
+// std::vector<constraint_profiling_entry> constraint_profiling_table;
 
-size_t PRINT_CONSTRAINT_PROFILING()
+pub fn  PRINT_CONSTRAINT_PROFILING()->usize
 {
-    size_t accounted = 0;
-    ffec::print_indent();
+    let mut  accounted = 0;
+    print_indent();
     print!("Constraint profiling:\n");
     for ent in &constraint_profiling_table
     {
@@ -74,12 +74,12 @@ size_t PRINT_CONSTRAINT_PROFILING()
             accounted += ent.count;
         }
 
-        ffec::print_indent();
+        print_indent();
         for i in 0..ent.indent
         {
             print!("  ");
         }
-        print!("* Number of constraints in [%s]: {}\n", ent.annotation.c_str(), ent.count);
+        print!("* Number of constraints in [{}]: {}\n", ent.annotation.c_str(), ent.count);
     }
 
     constraint_profiling_table.clear();
@@ -88,4 +88,4 @@ size_t PRINT_CONSTRAINT_PROFILING()
     return accounted;
 }
 
-}
+// }

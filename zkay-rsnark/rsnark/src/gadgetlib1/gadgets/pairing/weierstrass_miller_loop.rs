@@ -274,7 +274,7 @@ use crate::gadgetlib1::gadgets/pairing/weierstrass_miller_loop;
  use ffec::algebra::scalar_multiplication::wnaf;
 
 use crate::gadgetlib1::constraint_profiling;
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 
 
 

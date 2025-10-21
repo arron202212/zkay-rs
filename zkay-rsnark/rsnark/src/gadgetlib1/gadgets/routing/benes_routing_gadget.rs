@@ -17,7 +17,7 @@
 
 use crate::common::data_structures::integer_permutation;
 use crate::common::routing_algorithms::benes_routing_algorithm;
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::protoboard;
 
 

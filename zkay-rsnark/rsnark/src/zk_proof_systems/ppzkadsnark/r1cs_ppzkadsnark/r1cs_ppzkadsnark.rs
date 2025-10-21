@@ -45,7 +45,7 @@
 
 // use  <memory>
 
-use algebra::curves::public_params;
+use ffec::algebra::curves::public_params;
 
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
@@ -710,9 +710,9 @@ See r1cs_ppzkadsnark.hpp .
 // use  <iostream>
 // use  <sstream>
 
- use algebra::scalar_multiplication::multiexp;
-use common::profiling;
-use common::utils;
+ use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::common::profiling;
+use ffec::common::utils;
 
 // #ifdef MULTICORE
 // use  <omp.h>

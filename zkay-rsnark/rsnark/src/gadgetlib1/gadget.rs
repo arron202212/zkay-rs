@@ -12,17 +12,17 @@ use crate::gadgetlib1::protoboard;
 
 
 
-template<typename FieldT>
-class gadget {
-protected:
-    protoboard<FieldT> &pb;
-    const std::string annotation_prefix;
-public:
-    gadget(protoboard<FieldT> &pb, const std::string &annotation_prefix="");
-};
+// template<typename FieldT>
+pub struct gadget<FieldT> {
+// protected:
+     pb:protoboard<FieldT>,
+    annotation_prefix:String,
+// public:
+//     gadget(protoboard<FieldT> &pb, const std::string &annotation_prefix="");
+}
 
 
-use crate::gadgetlib1::gadget;
+// use crate::gadgetlib1::gadget;
 
 //#endif // GADGET_HPP_
 /** @file
@@ -35,16 +35,15 @@ use crate::gadgetlib1::gadget;
 //#ifndef GADGET_TCC_
 // #define GADGET_TCC_
 
-
-
-template<typename FieldT>
-gadget<FieldT>::gadget(protoboard<FieldT> &pb, const std::string &annotation_prefix) :
-    pb(pb), annotation_prefix(annotation_prefix)
+// template<typename FieldT>
+impl<FieldT> gadget<FieldT>{
+pub fn new(pb:protoboard<FieldT> , annotation_prefix:String) ->Self
 {
 // #ifdef DEBUG
-    assert!(annotation_prefix != "");
+    // assert!(annotation_prefix != "");
 //#endif
+    Self {pb, annotation_prefix}
 }
-
+}
 
 //#endif // GADGET_TCC_

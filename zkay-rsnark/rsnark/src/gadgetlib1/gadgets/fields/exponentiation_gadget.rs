@@ -15,7 +15,7 @@
 use  <memory>
 use  <vector>
 
-use ffec::algebra::fields::bigint;
+use ffec::algebra::field_utils::bigint::bigint;
  use ffec::algebra::scalar_multiplication::wnaf;
 
 use crate::gadgetlib1::gadget;

@@ -12,8 +12,8 @@
 //#ifndef MEMORY_MASKING_GADGET_HPP_
 // #define MEMORY_MASKING_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/tinyram_protoboard;
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gadget;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget;
 
 
 
@@ -53,46 +53,46 @@ use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/word_variable_gad
  * subcontents. The caller is also required to ensure that exactly one
  * of access_is_word and access_is_byte is set to 1.
  */
-template<typename FieldT>
-class memory_masking_gadget : public tinyram_standard_gadget<FieldT> {
-private:
-    pb_linear_combination<FieldT> shift;
-    pb_variable<FieldT> is_word0;
-    pb_variable<FieldT> is_word1;
-    pb_variable_array<FieldT> is_subaddress;
-    pb_variable_array<FieldT> is_byte;
+// 
+pub struct memory_masking_gadget  {
+// private:: public tinyram_standard_gadget<FieldT>
+shift:    pb_linear_combination<FieldT>,
+is_word0:    pb_variable<FieldT>,
+is_word1:    pb_variable<FieldT>,
+is_subaddress:    pb_variable_array<FieldT>,
+is_byte:    pb_variable_array<FieldT>,
 
-    pb_linear_combination<FieldT> masked_out_word0;
-    pb_linear_combination<FieldT> masked_out_word1;
-    pb_linear_combination_array<FieldT> masked_out_bytes;
+masked_out_word0:    pb_linear_combination<FieldT>,
+masked_out_word1:    pb_linear_combination<FieldT>,
+masked_out_bytes:    pb_linear_combination_array<FieldT>,
 
-    std::shared_ptr<inner_product_gadget<FieldT> > get_masked_out_dw_contents_prev;
+get_masked_out_dw_contents_prev:    std::shared_ptr<inner_product_gadget<FieldT> >,
 
-    pb_variable<FieldT> masked_out_dw_contents_prev;
-    pb_variable<FieldT> expected_dw_contents_next;
-public:
-    doubleword_variable_gadget<FieldT> dw_contents_prev;
-    dual_variable_gadget<FieldT> subaddress;
-    pb_linear_combination<FieldT> subcontents;
-    pb_linear_combination<FieldT> access_is_word;
-    pb_linear_combination<FieldT> access_is_byte;
-    doubleword_variable_gadget<FieldT> dw_contents_next;
+masked_out_dw_contents_prev:    pb_variable<FieldT>,
+expected_dw_contents_next:    pb_variable<FieldT>,
+// public:
+dw_contents_prev:    doubleword_variable_gadget<FieldT>,
+subaddress:    dual_variable_gadget<FieldT>,
+subcontents:    pb_linear_combination<FieldT>,
+access_is_word:    pb_linear_combination<FieldT>,
+access_is_byte:    pb_linear_combination<FieldT>,
+dw_contents_next:    doubleword_variable_gadget<FieldT>,
 
-    memory_masking_gadget(tinyram_protoboard<FieldT> &pb,
-                          const doubleword_variable_gadget<FieldT> &dw_contents_prev,
-                          const dual_variable_gadget<FieldT> &subaddress,
-                          const pb_linear_combination<FieldT> &subcontents,
-                          const pb_linear_combination<FieldT> &access_is_word,
-                          const pb_linear_combination<FieldT> &access_is_byte,
-                          const doubleword_variable_gadget<FieldT> &dw_contents_next,
-                          const std::string& annotation_prefix="");
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+    // memory_masking_gadget(tinyram_protoboard<FieldT> &pb,
+    //                       dw_contents_prev:doubleword_variable_gadget<FieldT>,
+    //                       subaddress:dual_variable_gadget<FieldT>,
+    //                       subcontents:pb_linear_combination<FieldT>,
+    //                       access_is_word:pb_linear_combination<FieldT>,
+    //                       access_is_byte:pb_linear_combination<FieldT>,
+    //                       dw_contents_next:doubleword_variable_gadget<FieldT>,
+    //                       annotation_prefix:std::string="");
+    // void generate_r1cs_constraints();
+    // void generate_r1cs_witness();
+}
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/memory_masking_gadget;
+// use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::memory_masking_gadget;
 
 //#endif // MEMORY_MASKING_GADGET_HPP_
 /** @file
@@ -112,23 +112,18 @@ use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/components/memory_masking_ga
 // #define MEMORY_MASKING_GADGET_TCC_
 
 
+impl memory_masking_gadget<FieldT>{
 
-template<typename FieldT>
-memory_masking_gadget<FieldT>::memory_masking_gadget(tinyram_protoboard<FieldT> &pb,
-                                                     const doubleword_variable_gadget<FieldT> &dw_contents_prev,
-                                                     const dual_variable_gadget<FieldT> &subaddress,
-                                                     const pb_linear_combination<FieldT> &subcontents,
-                                                     const pb_linear_combination<FieldT> &access_is_word,
-                                                     const pb_linear_combination<FieldT> &access_is_byte,
-                                                     const doubleword_variable_gadget<FieldT> &dw_contents_next,
-                                                     const std::string& annotation_prefix) :
-    tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
-    dw_contents_prev(dw_contents_prev),
-    subaddress(subaddress),
-    subcontents(subcontents),
-    access_is_word(access_is_word),
-    access_is_byte(access_is_byte),
-    dw_contents_next(dw_contents_next)
+pub fn new(
+pb:tinyram_protoboard<FieldT>,
+                                                     dw_contents_prev:doubleword_variable_gadget<FieldT>,
+                                                     subaddress:dual_variable_gadget<FieldT>,
+                                                     subcontents:pb_linear_combination<FieldT>,
+                                                     access_is_word:pb_linear_combination<FieldT>,
+                                                     access_is_byte:pb_linear_combination<FieldT>,
+                                                     dw_contents_next:doubleword_variable_gadget<FieldT>,
+                                                     annotation_prefix:std::string) ->Self
+   
 {
     /*
       Indicator variables for access being to word_0, word_1, and
@@ -137,10 +132,10 @@ memory_masking_gadget<FieldT>::memory_masking_gadget(tinyram_protoboard<FieldT> 
       We use little-endian indexing here (least significant
       bit/byte/word has the smallest address).
     */
-    is_word0.allocate(pb, FMT(self.annotation_prefix, " is_word0"));
-    is_word1.allocate(pb, FMT(self.annotation_prefix, " is_word1"));
-    is_subaddress.allocate(pb, 2 * pb.ap.bytes_in_word(), FMT(self.annotation_prefix, " is_sub_address"));
-    is_byte.allocate(pb, 2 * pb.ap.bytes_in_word(), FMT(self.annotation_prefix, " is_byte"));
+    is_word0.allocate(pb, format!("{} is_word0",self.annotation_prefix));
+    is_word1.allocate(pb, format!("{} is_word1",self.annotation_prefix));
+    is_subaddress.allocate(pb, 2 * pb.ap.bytes_in_word(), format!("{} is_sub_address",self.annotation_prefix));
+    is_byte.allocate(pb, 2 * pb.ap.bytes_in_word(), format!("{} is_byte",self.annotation_prefix));
 
     /*
       Get value of the dw_contents_prev for which the specified entity
@@ -170,68 +165,75 @@ memory_masking_gadget<FieldT>::memory_masking_gadget(tinyram_protoboard<FieldT> 
       contents for the current access type.
     */
 
-    pb_linear_combination_array<FieldT> masked_out_indicators;
+    let mut masked_out_indicators=pb_linear_combination_array::<FieldT> ::new();
     masked_out_indicators.push(is_word0);
     masked_out_indicators.push(is_word1);
     masked_out_indicators.insert(masked_out_indicators.end(), is_byte.begin(), is_byte.end());
 
-    pb_linear_combination_array<FieldT> masked_out_results;
+    let mut masked_out_results=pb_linear_combination_array::<FieldT> ::new();
     masked_out_results.push(masked_out_word0);
     masked_out_results.push(masked_out_word1);
     masked_out_results.insert(masked_out_results.end(), masked_out_bytes.begin(), masked_out_bytes.end());
 
-    masked_out_dw_contents_prev.allocate(pb, FMT(self.annotation_prefix, " masked_out_dw_contents_prev"));
-    get_masked_out_dw_contents_prev.reset(new inner_product_gadget<FieldT>(pb, masked_out_indicators, masked_out_results, masked_out_dw_contents_prev,
-                                                                           FMT(self.annotation_prefix, " get_masked_out_dw_contents_prev")));
+    masked_out_dw_contents_prev.allocate(pb, format!("{} masked_out_dw_contents_prev",self.annotation_prefix));
+    get_masked_out_dw_contents_prev.reset( inner_product_gadget::<FieldT>::new(pb, masked_out_indicators, masked_out_results, masked_out_dw_contents_prev,
+                                                                           format!("{} get_masked_out_dw_contents_prev",self.annotation_prefix)));
 
     /*
       Define shift so that masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
      */
-    linear_combination<FieldT> shift_lc = is_word0 * 1 + is_word1 * (FieldT(2)^self.pb.ap.w);
+    let mut  shift_lc = is_word0 * 1 + is_word1 * (FieldT(2)^self.pb.ap.w);
     for i in 0..2 * self.pb.ap.bytes_in_word()
     {
         shift_lc = shift_lc + is_byte[i] * (FieldT(2)^(8*i));
     }
     shift.assign(pb, shift_lc);
+    //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+    Self{dw_contents_prev,
+    subaddress,
+    subcontents,
+    access_is_word,
+    access_is_byte,
+    dw_contents_next}
 }
 
-template<typename FieldT>
-void memory_masking_gadget<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     /* get indicator variables for is_subaddress[i] by adding constraints
        is_subaddress[i] * (subaddress - i) = 0 and \sum_i is_subaddress[i] = 1 */
     for i in 0..2 * self.pb.ap.bytes_in_word()
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_subaddress[i], subaddress.packed - i, 0),
-                                     FMT(self.annotation_prefix, " is_subaddress_{}", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_subaddress[i], subaddress.packed - i, 0),
+                                     format!("{} is_subaddress_{}",self.annotation_prefix, i));
     }
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, pb_sum<FieldT>(is_subaddress), 1), FMT(self.annotation_prefix, " is_subaddress"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum<FieldT>(is_subaddress), 1), format!("{} is_subaddress",self.annotation_prefix));
 
     /* get indicator variables is_byte_X */
     for i in 0..2 * self.pb.ap.bytes_in_word()
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(access_is_byte, is_subaddress[i], is_byte[i]),
-                                     FMT(self.annotation_prefix, " is_byte_{}", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(access_is_byte, is_subaddress[i], is_byte[i]),
+                                     format!("{} is_byte_{}",self.annotation_prefix, i));
     }
 
     /* get indicator variables is_word_0/is_word_1 */
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(access_is_word, 1 - subaddress.bits[self.pb.ap.subaddr_len()-1], is_word0),
-                                 FMT(self.annotation_prefix, " is_word_0"));
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(access_is_word, subaddress.bits[self.pb.ap.subaddr_len()-1], is_word1),
-                                 FMT(self.annotation_prefix, " is_word_1"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(access_is_word, 1 - subaddress.bits[self.pb.ap.subaddr_len()-1], is_word0),
+                                 format!("{} is_word_0",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(access_is_word, subaddress.bits[self.pb.ap.subaddr_len()-1], is_word1),
+                                 format!("{} is_word_1",self.annotation_prefix));
 
     /* compute masked_out_dw_contents_prev */
-    get_masked_out_dw_contents_prev->generate_r1cs_constraints();
+    get_masked_out_dw_contents_prev.generate_r1cs_constraints();
 
     /*
        masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
      */
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(shift, subcontents, dw_contents_next.packed - masked_out_dw_contents_prev),
-                                 FMT(self.annotation_prefix, " mask_difference"));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(shift, subcontents, dw_contents_next.packed - masked_out_dw_contents_prev),
+                                 format!("{} mask_difference",self.annotation_prefix));
 }
 
-template<typename FieldT>
-void memory_masking_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     /* get indicator variables is_subaddress */
     for i in 0..2 * self.pb.ap.bytes_in_word()
@@ -256,13 +258,13 @@ void memory_masking_gadget<FieldT>::generate_r1cs_witness()
     masked_out_bytes.evaluate(self.pb);
 
     /* get masked_out dw/word0/word1/bytes */
-    get_masked_out_dw_contents_prev->generate_r1cs_witness();
+    get_masked_out_dw_contents_prev.generate_r1cs_witness();
 
     /* compute dw_contents_next */
     self.pb.val(dw_contents_next.packed) = self.pb.val(masked_out_dw_contents_prev) + self.pb.lc_val(shift) * self.pb.lc_val(subcontents);
     dw_contents_next.generate_r1cs_witness_from_packed();
 }
 
-
+}
 
 //#endif // MEMORY_MASKING_GADGET_TCC_

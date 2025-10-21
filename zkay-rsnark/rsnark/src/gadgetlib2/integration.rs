@@ -30,9 +30,9 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 use crate::gadgetlib2::adapters;
 use crate::gadgetlib2::integration;
-use crate::gadgetlib2::adapters::GadgetLibAdapter::linear_combination_t;
-use crate::relations::linear_combination;
-use crate::gadgetlib2::Protoboard;
+// use crate::gadgetlib2::adapters::GadgetLibAdapter::linear_combination_t;
+use crate::relations::variable::linear_combination;
+use crate::gadgetlib2::protoboard::Protoboard;
 use crate::gadgetlib2::adapters::GadgetLibAdapter;
  type FieldT=Fr<default_ec_pp> ;
     type GLA=GadgetLibAdapter ;
@@ -54,7 +54,7 @@ pub fn get_constraint_system_from_gadgetlib2(pb:&Protoboard)->r1cs_constraint_sy
 
 
     let mut  result=r1cs_constraint_system::<FieldT>();
-    let   adapter=GLA();
+    let   adapter=GLA::new();
 
     let  converted_pb = adapter.convert(pb);
     let num_constraints = converted_pb.0.len();

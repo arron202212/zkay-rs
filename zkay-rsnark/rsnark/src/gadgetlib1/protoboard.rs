@@ -8,11 +8,11 @@
 //#ifndef PROTOBOARD_HPP_
 // #define PROTOBOARD_HPP_
 
-use  <algorithm>
-use  <cassert>
-use  <cstdio>
-use  <string>
-use  <vector>
+// use  <algorithm>
+// use  <cassert>
+// use  <cstdio>
+// use  <string>
+// use  <vector>
 
 use ffec::common::utils;
 
@@ -21,59 +21,60 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-template<typename FieldT>
-class r1cs_constraint;
+// 
+// class r1cs_constraint;
 
-template<typename FieldT>
-class r1cs_constraint_system;
+// 
+// class r1cs_constraint_system;
 
-template<typename FieldT>
-class protoboard {
-private:
-    FieldT constant_term; /* only here, because pb.val() needs to be able to return reference to the constant 1 term */
-    r1cs_variable_assignment<FieldT> values; /* values[0] will hold the value of the first allocated variable of the protoboard, *NOT* constant 1 */
-    var_index_t next_free_var;
-    lc_index_t next_free_lc;
-    std::vector<FieldT> lc_values;
-    r1cs_constraint_system<FieldT> constraint_system;
+// 
+pub struct protoboard<FieldT> {
+// private:
+constant_term:    FieldT, /* only here, because pb.val() needs to be able to return reference to the constant 1 term */
+values:    r1cs_variable_assignment<FieldT>, /* values[0] will hold the value of the first allocated variable of the protoboard, *NOT* constant 1 */
+next_free_var:    var_index_t,
+next_free_lc:    lc_index_t,
+lc_values:    std::vector<FieldT>,
+constraint_system:    r1cs_constraint_system<FieldT>,
+}
 
-public:
-    protoboard();
+// public:
+//     protoboard();
 
-    void clear_values();
+//     void clear_values();
 
-    FieldT& val(const pb_variable<FieldT> &var);
-    FieldT val(const pb_variable<FieldT> &var) const;
+//     FieldT& val(var:&pb_variable<FieldT>);
+//     FieldT val(var:&pb_variable<FieldT>) const;
 
-    FieldT& lc_val(const pb_linear_combination<FieldT> &lc);
-    FieldT lc_val(const pb_linear_combination<FieldT> &lc) const;
+//     FieldT& lc_val(lc:&pb_linear_combination<FieldT>);
+//     FieldT lc_val(lc:&pb_linear_combination<FieldT>) const;
 
-    void add_r1cs_constraint(const r1cs_constraint<FieldT> &constr, const std::string &annotation="");
-    void augment_variable_annotation(const pb_variable<FieldT> &v, const std::string &postfix);
-    bool is_satisfied() const;
-    void dump_variables() const;
+//     void add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&std::string="");
+//     void augment_variable_annotation(v:&pb_variable<FieldT>, postfix:&std::string);
+//     bool is_satisfied() const;
+//     void dump_variables() const;
 
-    size_t num_constraints() const;
-    size_t num_inputs() const;
-    size_t num_variables() const;
+//     size_t num_constraints() const;
+//     size_t num_inputs() const;
+//     size_t num_variables() const;
 
-    void set_input_sizes(const size_t primary_input_size);
+//     void set_input_sizes(primary_input_size:size_t);
 
-    r1cs_variable_assignment<FieldT> full_variable_assignment() const;
-    r1cs_primary_input<FieldT> primary_input() const;
-    r1cs_auxiliary_input<FieldT> auxiliary_input() const;
-    r1cs_constraint_system<FieldT> get_constraint_system() const;
+//     r1cs_variable_assignment<FieldT> full_variable_assignment() const;
+//     r1cs_primary_input<FieldT> primary_input() const;
+//     r1cs_auxiliary_input<FieldT> auxiliary_input() const;
+//     r1cs_constraint_system<FieldT> get_constraint_system() const;
 
-    friend class pb_variable<FieldT>;
-    friend class pb_linear_combination<FieldT>;
+//     friend class pb_variable<FieldT>;
+//     friend class pb_linear_combination<FieldT>;
 
-private:
-    var_index_t allocate_var_index(const std::string &annotation="");
-    lc_index_t allocate_lc_index();
-};
+// private:
+//     var_index_t allocate_var_index(annotation:&std::string="");
+//     lc_index_t allocate_lc_index();
+// };
 
 
-use crate::gadgetlib1::protoboard;
+// use crate::gadgetlib1::protoboard;
 //#endif // PROTOBOARD_HPP_
 /** @file
  *****************************************************************************
@@ -85,15 +86,15 @@ use crate::gadgetlib1::protoboard;
 //#ifndef PROTOBOARD_TCC_
 // #define PROTOBOARD_TCC_
 
-use  <cstdarg>
-use  <cstdio>
+// use  <cstdarg>
+// use  <cstdio>
 
 use ffec::common::profiling;
 
 
+impl protoboard<FieldT>{
 
-template<typename FieldT>
-protoboard<FieldT>::protoboard()
+pub fn new()->Self
 {
     constant_term = FieldT::one();
 
@@ -105,53 +106,55 @@ protoboard<FieldT>::protoboard()
     next_free_lc = 0;
 }
 
-template<typename FieldT>
-void protoboard<FieldT>::clear_values()
+
+pub fn clear_values()
 {
-    std::fill(values.begin(), values.end(), FieldT::zero());
+    values.fill(FieldT::zero());
 }
 
-template<typename FieldT>
-var_index_t protoboard<FieldT>::allocate_var_index(const std::string &annotation)
+
+ pub fn allocate_var_index(annotation:&std::string)->var_index_t
 {
 // #ifdef DEBUG
-    assert!(annotation != "");
-    constraint_system.variable_annotations[next_free_var] = annotation;
-#else
-    ffec::UNUSED(annotation);
+//     assert!(annotation != "");
+//     constraint_system.variable_annotations[next_free_var] = annotation;
+// #else
+    // ffec::UNUSED(annotation);
 //#endif
-    ++constraint_system.auxiliary_input_size;
+    constraint_system.auxiliary_input_size+=1;
     values.push(FieldT::zero());
-    return next_free_var++;
+     next_free_var+=1;
+    next_free_var
 }
 
-template<typename FieldT>
-lc_index_t protoboard<FieldT>::allocate_lc_index()
+
+ pub fn allocate_lc_index()->lc_index_t
 {
     lc_values.push(FieldT::zero());
-    return next_free_lc++;
+     next_free_lc+=1;
+     next_free_lc
 }
 
-template<typename FieldT>
-FieldT& protoboard<FieldT>::val(const pb_variable<FieldT> &var)
+
+ pub fn val(var:&pb_variable<FieldT>)->&FieldT
 {
     assert!(var.index <= values.size());
     return if var.index == 0 {constant_term} else{values[var.index-1]};
 }
 
-template<typename FieldT>
-FieldT protoboard<FieldT>::val(const pb_variable<FieldT> &var) const
+
+ pub fn val(var:&pb_variable<FieldT>) ->FieldT
 {
     assert!(var.index <= values.size());
     return if var.index == 0 {constant_term} else{values[var.index-1]};
 }
 
-template<typename FieldT>
-FieldT& protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc)
+
+ pub fn lc_val(lc:&pb_linear_combination<FieldT>)->&FieldT
 {
     if lc.is_variable
     {
-        return self.val(pb_variable<FieldT>(lc.index));
+        return self.val(pb_variable::<FieldT>(lc.index));
     }
     else
     {
@@ -160,12 +163,12 @@ FieldT& protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc)
     }
 }
 
-template<typename FieldT>
-FieldT protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc) const
+
+ pub fn lc_val(lc:&pb_linear_combination<FieldT>) ->FieldT
 {
     if lc.is_variable
     {
-        return self.val(pb_variable<FieldT>(lc.index));
+        return self.val(pb_variable::<FieldT>(lc.index));
     }
     else
     {
@@ -174,94 +177,94 @@ FieldT protoboard<FieldT>::lc_val(const pb_linear_combination<FieldT> &lc) const
     }
 }
 
-template<typename FieldT>
-void protoboard<FieldT>::add_r1cs_constraint(const r1cs_constraint<FieldT> &constr, const std::string &annotation)
+
+pub fn add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&std::string)
 {
 // #ifdef DEBUG
-    assert!(annotation != "");
-    constraint_system.constraint_annotations[constraint_system.constraints.size()] = annotation;
-#else
-    ffec::UNUSED(annotation);
+//     assert!(annotation != "");
+//     constraint_system.constraint_annotations[constraint_system.constraints.size()] = annotation;
+// #else
+//     ffec::UNUSED(annotation);
 //#endif
     constraint_system.constraints.push(constr);
 }
 
-template<typename FieldT>
-void protoboard<FieldT>::augment_variable_annotation(const pb_variable<FieldT> &v, const std::string &postfix)
+
+pub fn augment_variable_annotation(v:&pb_variable<FieldT>, postfix:&std::string)
 {
 // #ifdef DEBUG
-    auto it = constraint_system.variable_annotations.find(v.index);
-    constraint_system.variable_annotations[v.index] = if it == constraint_system.variable_annotations.end() {""} else{it->second + " "} + postfix;
+    constraint_system.variable_annotations[v.index] = if let Some(it) = constraint_system.variable_annotations.find(v.index){it.1.to_string()+" "} else {""}  + postfix;
 //#endif
 }
 
-template<typename FieldT>
-bool protoboard<FieldT>::is_satisfied() const
+
+ pub fn is_satisfied() ->bool
 {
     return constraint_system.is_satisfied(primary_input(), auxiliary_input());
 }
 
-template<typename FieldT>
-void protoboard<FieldT>::dump_variables() const
+
+pub fn dump_variables() 
 {
 // #ifdef DEBUG
     for i in 0..constraint_system.num_variables
     {
-        print!("%-40s --> ", constraint_system.variable_annotations[i].c_str());
+        print!("{:<40} --> ", constraint_system.variable_annotations[i].to_string());//%-40s
         values[i].as_bigint().print_hex();
     }
 //#endif
 }
 
-template<typename FieldT>
-size_t protoboard<FieldT>::num_constraints() const
+
+ pub fn num_constraints() ->usize
 {
     return constraint_system.num_constraints();
 }
 
-template<typename FieldT>
-size_t protoboard<FieldT>::num_inputs() const
+
+ pub fn num_inputs() ->usize
 {
     return constraint_system.num_inputs();
 }
 
-template<typename FieldT>
-size_t protoboard<FieldT>::num_variables() const
+
+ pub fn num_variables() ->usize
 {
     return next_free_var - 1;
 }
 
-template<typename FieldT>
-void protoboard<FieldT>::set_input_sizes(const size_t primary_input_size)
+
+pub fn set_input_sizes(primary_input_size:size_t)
 {
     assert!(primary_input_size <= num_variables());
     constraint_system.primary_input_size = primary_input_size;
     constraint_system.auxiliary_input_size = num_variables() - primary_input_size;
 }
 
-template<typename FieldT>
-r1cs_variable_assignment<FieldT> protoboard<FieldT>::full_variable_assignment() const
+
+ pub fn full_variable_assignment() ->r1cs_variable_assignment<FieldT>
 {
     return values;
 }
 
-template<typename FieldT>
-r1cs_primary_input<FieldT> protoboard<FieldT>::primary_input() const
+
+pub fn primary_input() ->r1cs_primary_input<FieldT> 
 {
-    return r1cs_primary_input<FieldT>(values.begin(), values.begin() + num_inputs());
+    return r1cs_primary_input::<FieldT>::new(values[..num_inputs()]);
 }
 
-template<typename FieldT>
-r1cs_auxiliary_input<FieldT> protoboard<FieldT>::auxiliary_input() const
+
+ pub fn auxiliary_input() ->r1cs_auxiliary_input<FieldT>
 {
-    return r1cs_auxiliary_input<FieldT>(values.begin() + num_inputs(), values.end());
+    return r1cs_auxiliary_input::<FieldT>(values[num_inputs()..]);
 }
 
-template<typename FieldT>
-r1cs_constraint_system<FieldT> protoboard<FieldT>::get_constraint_system() const
+
+pub fn get_constraint_system() ->r1cs_constraint_system<FieldT> 
 {
     return constraint_system;
 }
 
+}
 
 //#endif // PROTOBOARD_TCC_

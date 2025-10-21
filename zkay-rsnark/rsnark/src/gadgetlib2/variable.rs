@@ -1356,7 +1356,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 	return retset;
 }
 
-pub fn getMonomials() ->&Vec<Monomial>  {
+pub fn getMonomials() ->Vec<Monomial>  {
 	return monomials_;
 }
 

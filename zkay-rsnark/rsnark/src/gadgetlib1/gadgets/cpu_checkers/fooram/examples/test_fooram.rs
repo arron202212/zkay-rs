@@ -14,69 +14,69 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;
 
 
 
-class default_fooram_zksnark_pp {
-public:
-    type default_r1cs_ppzkpcd_pp PCD_pp;
-    type typename PCD_pp::scalar_field_A FieldT;
-    type ram_fooram<FieldT> machine_pp;
+pub trait  default_fooram_zksnark_pp {
+// public:
+    type PCD_pp=default_r1cs_ppzkpcd_pp;
+    type FieldT= PCD_pp::scalar_field_A;
+    type machine_pp=ram_fooram<FieldT>;
 
-    static void init_public_params() { PCD_pp::init_public_params(); }
-};
+    fn init_public_params() { PCD_pp::init_public_params(); }
+}
 
-class default_fooram_ppzksnark_pp {
-public:
-    type default_r1cs_ppzksnark_pp snark_pp;
-    type ffec::Fr<default_r1cs_ppzksnark_pp> FieldT;
-    type ram_fooram<FieldT> machine_pp;
+pub trait  default_fooram_ppzksnark_pp {
+// public:
+    type snark_pp=default_r1cs_ppzksnark_pp;
+    type FieldT=ffec::Fr<default_r1cs_ppzksnark_pp>;
+    type machine_pp=ram_fooram<FieldT>;
 
-    static void init_public_params() { snark_pp::init_public_params(); }
-};
-
-
+    fn  init_public_params() { snark_pp::init_public_params(); }
+}
 
 
 
-template<typename ppT>
-void profile_ram_zksnark(const size_t w)
+
+
+// template<typename ppT>
+pub fn  profile_ram_zksnark<ppT>(w:usize)
 {
-    type ram_zksnark_machine_pp<ppT> ramT;
+    type ramT=ram_zksnark_machine_pp<ppT>;
 
-    ram_example<ramT> example;
-    example.ap = ram_architecture_params<ramT>(w);
+    let  example=ram_example::<ramT>::new();
+    example.ap = ram_architecture_params::<ramT>(w);
     example.boot_trace_size_bound = 0;
     example.time_bound = 10;
-    const bool test_serialization = true;
-    const bool bit = run_ram_zksnark<ppT>(example, test_serialization);
+    let test_serialization = true;
+    let bit = run_ram_zksnark::<ppT>(example, test_serialization);
     assert!(bit);
 }
 
-template<typename ppT>
-void profile_ram_ppzksnark(const size_t w)
+// template<typename ppT>
+pub fn profile_ram_ppzksnark<ppT>(w:usize)
 {
-    type ram_ppzksnark_machine_pp<ppT> ramT;
+    type ramT=ram_ppzksnark_machine_pp<ppT>;
 
-    ram_example<ramT> example;
-    example.ap = ram_architecture_params<ramT>(w);
+    let  example=ram_example::<ramT>::new();
+    example.ap = ram_architecture_params::<ramT>(w);
     example.boot_trace_size_bound = 0;
     example.time_bound = 100;
-    const bool test_serialization = true;
-    const bool bit = run_ram_ppzksnark<ppT>(example, test_serialization);
+    let test_serialization = true;
+    let bit = run_ram_ppzksnark::<ppT>(example, test_serialization);
     assert!(bit);
 }
 
-int main(int argc, const char* argv[])
+fn main( argc:i32,argv:[&str])->i32
 {
-    ffec::UNUSED(argv);
-    ffec::start_profiling();
+    // ffec::UNUSED(argv);
+    start_profiling();
     default_fooram_ppzksnark_pp::init_public_params();
     default_fooram_zksnark_pp::init_public_params();
 
     if argc == 1
     {
-        profile_ram_zksnark<default_fooram_zksnark_pp>(32);
+        profile_ram_zksnark::<default_fooram_zksnark_pp>(32);
     }
     else
     {
-        profile_ram_ppzksnark<default_fooram_ppzksnark_pp>(8);
+        profile_ram_ppzksnark::<default_fooram_ppzksnark_pp>(8);
     }
 }

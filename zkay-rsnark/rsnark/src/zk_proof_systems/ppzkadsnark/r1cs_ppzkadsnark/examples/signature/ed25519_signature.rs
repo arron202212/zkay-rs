@@ -18,7 +18,7 @@
 //#ifndef ED25519SIG_HPP_
 // #define ED25519SIG_HPP_
 
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_signature;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_signature;
 
 
 
@@ -137,10 +137,10 @@ pub fn  sigBatchVerif<default_r1cs_ppzkadsnark_pp>(vk:&ed25519_vkT , labels:&Vec
     assert!(labels.len() == Lambdas.len());
     assert!(labels.len() == sigs.len());
 
-    let mut msglen=[0u64;labels.len()];
-    let mut siglen=[0u64;labels.len()];
+    let mut msglen=vec![0u64;labels.len()];
+    let mut siglen=vec![0u64;labels.len()];
      let mut messages=vec![0;labels.len()];
-    let mut signatures=[0;labels.len()];
+    let mut signatures=vec![0;labels.len()];
      let mut pks=vec![0;labels.len()];
 
      pk_copy[32];

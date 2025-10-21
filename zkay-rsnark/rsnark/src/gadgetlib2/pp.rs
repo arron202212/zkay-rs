@@ -13,7 +13,7 @@
 // use  <memory>
 // use  <vector>
 
-use common::default_types::ec_pp;
+use ffec::common::default_types::ec_pp;
 
 // namespace gadgetlib2 {
 

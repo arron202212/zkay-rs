@@ -17,7 +17,7 @@
 
 use crate::common::data_structures::integer_permutation;
 use crate::common::routing_algorithms::as_waksman_routing_algorithm;
-use crate::gadgetlib1::gadgets/basic_gadgets;
+use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::protoboard;
 
 

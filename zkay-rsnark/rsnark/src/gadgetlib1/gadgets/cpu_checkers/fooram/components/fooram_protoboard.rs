@@ -17,25 +17,25 @@ use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 
 
-template<typename FieldT>
-class fooram_protoboard : public protoboard<FieldT> {
-public:
-    const fooram_architecture_params ap;
+// template<typename FieldT>
+pub struct fooram_protoboard<FieldT>  {
+// public:: public protoboard<FieldT>
+      ap:fooram_architecture_params,
 
-    fooram_protoboard(const fooram_architecture_params &ap);
-};
+    // fooram_protoboard(const fooram_architecture_params &ap);
+}
 
-template<typename FieldT>
-class fooram_gadget : public gadget<FieldT> {
-protected:
-    fooram_protoboard<FieldT> &pb;
-public:
-    fooram_gadget(fooram_protoboard<FieldT> &pb, const std::string &annotation_prefix="");
-};
+// template<typename FieldT>
+pub struct fooram_gadget  {
+// protected:: public gadget<FieldT>
+     pb:fooram_protoboard<FieldT>,
+// public:
+//     fooram_gadget(fooram_protoboard<FieldT> &pb, const std::string &annotation_prefix="");
+}
 
 
 
-use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
+// use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
 
 //#endif // FOORAM_PROTOBOARD_HPP_
 /** @file
@@ -54,20 +54,25 @@ use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
 //#ifndef FOORAM_PROTOBOARD_TCC_
 // #define FOORAM_PROTOBOARD_TCC_
 
+impl fooram_protoboard<FieldT>{
 
-
-template<typename FieldT>
-fooram_protoboard<FieldT>::fooram_protoboard(const fooram_architecture_params &ap) :
-    protoboard<FieldT>(), ap(ap)
+// template<typename FieldT>
+pub fn new(ap:fooram_architecture_params) ->Self
+   
 {
+    // protoboard<FieldT>(), 
+    Self{ap}
+}
 }
 
-template<typename FieldT>
-fooram_gadget<FieldT>::fooram_gadget(fooram_protoboard<FieldT> &pb, const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix), pb(pb)
+impl fooram_gadget<FieldT>{
+// template<typename FieldT>
+pub fn new( pb:fooram_protoboard<FieldT>, annotation_prefix: std::string ) ->Self
 {
+// gadget<FieldT>(pb, annotation_prefix)
+Self{pb}
 }
 
-
+}
 
 //#endif // FOORAM_PROTOBOARD_HPP_

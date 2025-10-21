@@ -13,10 +13,10 @@
 //#ifndef RUN_R1CS_PPZKADSNARK_HPP_
 // #define RUN_R1CS_PPZKADSNARK_HPP_
 
-use algebra::curves::public_params;
+use ffec::algebra::curves::public_params;
 
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params;
 
 
 
@@ -33,7 +33,7 @@ use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_
 
 
 
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::run_r1cs_ppzkadsnark;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::run_r1cs_ppzkadsnark;
 
 //#endif // RUN_R1CS_PPZKADSNARK_HPP_
 /** @file
@@ -56,11 +56,11 @@ use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::run_r1c
 // use  <sstream>
 // use  <type_traits>
 
-use common::profiling;
+use ffec::common::profiling;
 
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::prf::aes_ctr_prf;
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::signature::ed25519_signature;
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark;
 
 
 

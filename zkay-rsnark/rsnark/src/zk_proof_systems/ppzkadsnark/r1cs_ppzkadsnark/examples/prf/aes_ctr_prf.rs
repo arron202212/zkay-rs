@@ -12,7 +12,7 @@
 //#ifndef AESCTRPRF_HPP_
 // #define AESCTRPRF_HPP_
 
-use libsnark::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf;
+use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf;
 
 
 
