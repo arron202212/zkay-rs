@@ -36,7 +36,7 @@ std::istream& operator>>(std::istream &, Fp12_2over3over2_model<n, modulus> &);
  */
 template<mp_size_t n, const bigint<n>& modulus>
 class Fp12_2over3over2_model {
-public:
+
     typedef Fp_model<n, modulus> my_Fp;
     typedef Fp2_model<n, modulus> my_Fp2;
     typedef Fp6_3over2_model<n, modulus> my_Fp6;
@@ -703,7 +703,7 @@ template<mp_size_t n, const bigint<n>& modulus>
 bool Fp12_2over3over2_model<n,modulus>::from_words(std::vector<uint64_t> words)
 {
     std::vector<uint64_t>::const_iterator vec_start = words.begin();
-    std::vector<uint64_t>::const_iterator vec_center = words.begin() + words.size() / 2;
+    std::vector<uint64_t>::const_iterator vec_center = words.begin() + words.len() / 2;
     std::vector<uint64_t>::const_iterator vec_end = words.end();
     std::vector<uint64_t> words0(vec_start, vec_center);
     std::vector<uint64_t> words1(vec_center, vec_end);
@@ -728,7 +728,7 @@ std::istream& operator>>(std::istream &in, Fp12_2over3over2_model<n, modulus> &e
 template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp12_2over3over2_model<n, modulus> > &v)
 {
-    out << v.size() << "\n";
+    out << v.len() << "\n";
     for t in &v
     {
         out << t << OUTPUT_NEWLINE;

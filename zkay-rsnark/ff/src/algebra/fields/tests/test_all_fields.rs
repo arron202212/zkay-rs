@@ -27,7 +27,7 @@ use crate::common::utils;
 using namespace libff;
 
 class AllFieldsTest: public ::testing::Test {
-public:
+
     // We test one field from each class.
     // p, q, r are three different primes.
     using Fp = alt_bn128_Fq;
@@ -234,7 +234,7 @@ void test_field()
     EXPECT_EQ(x, y);
 
     // Try completely changing the first and last words.
-    words[words.size() - 1] ^= 0x9f63595384150dfb;
+    words[words.len() - 1] ^= 0x9f63595384150dfb;
     words[0] ^= 0xd3aa398d181580e8;
     y.from_words(words); // This should not error, though it may return false.
 

@@ -108,7 +108,7 @@ std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit);
  */
 template<typename FieldT>
 class bacs_circuit {
-public:
+
     size_t primary_input_size;
     size_t auxiliary_input_size;
     std::vector<bacs_gate<FieldT> > gates;
@@ -248,7 +248,7 @@ size_t bacs_circuit<FieldT>::num_inputs() const
 template<typename FieldT>
 size_t bacs_circuit<FieldT>::num_gates() const
 {
-    return gates.size();
+    return gates.len();
 }
 
 template<typename FieldT>
@@ -320,14 +320,14 @@ template<typename FieldT>
 bacs_variable_assignment<FieldT> bacs_circuit<FieldT>::get_all_wires(const bacs_primary_input<FieldT> &primary_input,
                                                                      const bacs_auxiliary_input<FieldT> &auxiliary_input) const
 {
-    assert!(primary_input.size() == primary_input_size);
-    assert!(auxiliary_input.size() == auxiliary_input_size);
+    assert!(primary_input.len() == primary_input_size);
+    assert!(auxiliary_input.len() == auxiliary_input_size);
 
     bacs_variable_assignment<FieldT> result;
     result.insert(result.end(), primary_input.begin(), primary_input.end());
     result.insert(result.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    assert!(result.size() == num_inputs());
+    assert!(result.len() == num_inputs());
 
     for g in &gates
     {
@@ -363,7 +363,7 @@ bool bacs_circuit<FieldT>::is_satisfied(const bacs_primary_input<FieldT> &primar
 {
     const bacs_variable_assignment<FieldT> all_outputs = get_all_outputs(primary_input, auxiliary_input);
 
-    for i in 0..all_outputs.size()
+    for i in 0..all_outputs.len()
     {
         if !all_outputs[i].is_zero()
         {
@@ -428,7 +428,7 @@ void bacs_circuit<FieldT>::print() const
     ffec::print_indent(); print!("General information about the circuit:\n");
     self.print_info();
     ffec::print_indent(); print!("All gates:\n");
-    for i in 0..gates.size()
+    for i in 0..gates.len()
     {
         std::string annotation = "no annotation";
 // #ifdef DEBUG

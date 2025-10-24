@@ -17,8 +17,8 @@
 
 use  <memory>
 
-use crate::gadgetlib1::gadgets/fields/exponentiation_gadget;
-use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
+use crate::gadgetlib1::gadgets::fields/exponentiation_gadget;
+use crate::gadgetlib1::gadgets::pairing::mnt_pairing_params;
 
 
 
@@ -27,7 +27,7 @@ use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
  */
 template<typename ppT>
 class mnt4_final_exp_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     Fqk_variable<ppT> el;
@@ -71,7 +71,7 @@ public:
  */
 template<typename ppT>
 class mnt6_final_exp_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     Fqk_variable<ppT> el;
@@ -106,7 +106,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/pairing/weierstrass_final_exponentiation;
+use crate::gadgetlib1::gadgets::pairing::weierstrass_final_exponentiation;
 
 //#endif // WEIERSTRASS_FINAL_EXPONENTIATION_HPP_
 /** @file
@@ -126,7 +126,7 @@ use crate::gadgetlib1::gadgets/pairing/weierstrass_final_exponentiation;
 // #define WEIERSTRASS_FINAL_EXPONENTIATION_TCC_
 
 use crate::gadgetlib1::gadgets::basic_gadgets;
-use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
+use crate::gadgetlib1::gadgets::pairing::mnt_pairing_params;
 
 
 

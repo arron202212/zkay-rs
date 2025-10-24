@@ -29,7 +29,7 @@ use crate::gadgetlib1::gadget;
  */
 template<typename FpkT, template<class> class Fpk_variableT, template<class> class Fpk_mul_gadgetT, template<class> class Fpk_sqr_gadgetT, mp_size_t m>
 class exponentiation_gadget : gadget<typename FpkT::my_Fp> {
-public:
+
     type typename FpkT::my_Fp FieldT;
     std::vector<long> NAF;
 
@@ -61,7 +61,7 @@ void test_exponentiation_gadget(const ffec::bigint<m> &power, const std::string 
 
 
 
-use crate::gadgetlib1::gadgets/fields/exponentiation_gadget;
+use crate::gadgetlib1::gadgets::fields/exponentiation_gadget;
 
 //#endif // EXPONENTIATION_GADGET_HPP_
 /** @file
@@ -98,7 +98,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
     dbl_count = 0;
 
     bool found_nonzero = false;
-    for i in ( 0..=NAF.size() - 1).rev()
+    for i in ( 0..=NAF.len() - 1).rev()
     {
         if found_nonzero
         {
@@ -137,7 +137,7 @@ exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>:
 
     size_t dbl_id = 0, add_id = 0, sub_id = 0, intermed_id = 0;
 
-    for i in ( 0..=NAF.size() - 1).rev()
+    for i in ( 0..=NAF.len() - 1).rev()
     {
         if found_nonzero
         {
@@ -206,7 +206,7 @@ void exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT
     bool found_nonzero = false;
     size_t dbl_id = 0, add_id = 0, sub_id = 0, intermed_id = 0;
 
-    for i in ( 0..=NAF.size() - 1).rev()
+    for i in ( 0..=NAF.len() - 1).rev()
     {
         if found_nonzero
         {

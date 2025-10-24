@@ -165,7 +165,7 @@ std::istream& operator>>(std::istream &in, edwards_Fq_conic_coefficients &cc)
 
 std::ostream& operator<<(std::ostream& out, const edwards_tate_G1_precomp &prec_P)
 {
-    out << prec_P.size() << "\n";
+    out << prec_P.len() << "\n";
     for cc in &prec_P
     {
         out << cc << OUTPUT_NEWLINE;
@@ -240,7 +240,7 @@ std::istream& operator>>(std::istream &in, edwards_Fq3_conic_coefficients &cc)
 
 std::ostream& operator<<(std::ostream& out, const edwards_ate_G2_precomp &prec_Q)
 {
-    out << prec_Q.size() << "\n";
+    out << prec_Q.len() << "\n";
     for cc in &prec_Q
     {
         out << cc << OUTPUT_NEWLINE;

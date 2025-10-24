@@ -19,7 +19,7 @@
 // /* gf32 implements the field GF(2)/[x^32 + x^22 + x^2 + x^1 + 1].
 //    Elements are represented internally with a single uint32 */
 // // class gf32 {
-// // public:
+// // 
 // // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
 // //     static long long add_cnt;
 // //     static long long sub_cnt;

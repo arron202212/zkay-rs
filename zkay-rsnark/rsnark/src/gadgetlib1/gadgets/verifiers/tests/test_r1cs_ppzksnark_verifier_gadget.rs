@@ -8,11 +8,11 @@ use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
 use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 use ffec::algebra::field_utils::field_utils;
 
-use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp4_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp6_gadgets;
-use crate::gadgetlib1::gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
+use crate::gadgetlib1::gadgets::fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp4_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
@@ -39,7 +39,7 @@ void test_verifier(const std::string &annotation_A, const std::string &annotatio
     const size_t primary_input_size = 3;
 
     r1cs_example<FieldT_A> example = generate_r1cs_example_with_field_input<FieldT_A>(num_constraints, primary_input_size);
-    assert!(example.primary_input.size() == primary_input_size);
+    assert!(example.primary_input.len() == primary_input_size);
 
     assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
     const r1cs_ppzksnark_keypair<ppT_A> keypair = r1cs_ppzksnark_generator<ppT_A>(example.constraint_system);
@@ -67,7 +67,7 @@ void test_verifier(const std::string &annotation_A, const std::string &annotatio
 
     r1cs_ppzksnark_verifier_gadget<ppT_B> verifier(pb, vk, primary_input_bits, elt_size, proof, result, "verifier");
 
-    PROFILE_CONSTRAINTS(pb, "check that proofs lies on the curve")
+    PROFILE_CONSTRAINTS(pb, "check that proofs lies on the curve");
     {
         proof.generate_r1cs_constraints();
     }
@@ -111,7 +111,7 @@ void test_hardcoded_verifier(const std::string &annotation_A, const std::string 
     const size_t primary_input_size = 3;
 
     r1cs_example<FieldT_A> example = generate_r1cs_example_with_field_input<FieldT_A>(num_constraints, primary_input_size);
-    assert!(example.primary_input.size() == primary_input_size);
+    assert!(example.primary_input.len() == primary_input_size);
 
     assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
     const r1cs_ppzksnark_keypair<ppT_A> keypair = r1cs_ppzksnark_generator<ppT_A>(example.constraint_system);
@@ -134,7 +134,7 @@ void test_hardcoded_verifier(const std::string &annotation_A, const std::string 
 
     r1cs_ppzksnark_online_verifier_gadget<ppT_B> online_verifier(pb, hardcoded_vk, primary_input_bits, elt_size, proof, result, "online_verifier");
 
-    PROFILE_CONSTRAINTS(pb, "check that proofs lies on the curve")
+    PROFILE_CONSTRAINTS(pb, "check that proofs lies on the curve");
     {
         proof.generate_r1cs_constraints();
     }
@@ -288,19 +288,19 @@ void test_full_pairing(const std::string &annotation)
     result_is_one.allocate(pb, "result_is_one");
     final_exp_gadget<ppT> finexp(pb, miller_result, result_is_one, "finexp");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P")
+    PROFILE_CONSTRAINTS(pb, "precompute P");
     {
         compute_prec_P.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q")
+    PROFILE_CONSTRAINTS(pb, "precompute Q");
     {
         compute_prec_Q.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop")
+    PROFILE_CONSTRAINTS(pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "final exp")
+    PROFILE_CONSTRAINTS(pb, "final exp");
     {
         finexp.generate_r1cs_constraints();
     }
@@ -346,11 +346,11 @@ void test_full_precomputed_pairing(const std::string &annotation)
     result_is_one.allocate(pb, "result_is_one");
     final_exp_gadget<ppT> finexp(pb, miller_result, result_is_one, "finexp");
 
-    PROFILE_CONSTRAINTS(pb, "Miller loop")
+    PROFILE_CONSTRAINTS(pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "final exp")
+    PROFILE_CONSTRAINTS(pb, "final exp");
     {
         finexp.generate_r1cs_constraints();
     }

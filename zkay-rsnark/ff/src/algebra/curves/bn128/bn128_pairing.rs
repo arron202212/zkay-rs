@@ -60,13 +60,13 @@ bool bn128_ate_G2_precomp::operator==(const bn128_ate_G2_precomp &other) const
     if (!(this->Q[0] == other.Q[0] &&
           this->Q[1] == other.Q[1] &&
           this->Q[2] == other.Q[2] &&
-          this->coeffs.size() == other.coeffs.size()))
+          this->coeffs.len() == other.coeffs.len()))
     {
         return false;
     }
 
     /* work around for upstream serialization bug */
-    for i in 0..this->coeffs.size()
+    for i in 0..this->coeffs.len()
     {
         std::stringstream this_ss, other_ss;
         this_ss << this->coeffs[i];
@@ -93,7 +93,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
 //#endif
     }
 
-    out << prec_Q.coeffs.size() << "\n";
+    out << prec_Q.coeffs.len() << "\n";
 
     for c in &prec_Q.coeffs
     {

@@ -24,7 +24,7 @@ use crate::algebra::curves::mnt::mnt4::mnt4_init;
 // std::istream& operator>>(std::istream &, mnt4_G1&);
 
 pub struct mnt4_G1 {
-// public:
+// 
 // // #ifdef PROFILE_OP_COUNTS
 //     static long long add_cnt;
 //     static long long dbl_cnt;

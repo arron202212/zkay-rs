@@ -16,7 +16,7 @@ use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 template<typename FieldT>
 class digest_selector_gadget : public gadget<FieldT> {
-public:
+
     size_t digest_size;
     digest_variable<FieldT> input;
     pb_linear_combination<FieldT> is_right;

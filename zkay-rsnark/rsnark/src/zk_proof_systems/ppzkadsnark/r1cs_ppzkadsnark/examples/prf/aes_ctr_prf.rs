@@ -17,7 +17,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf
 
 
 pub struct  aesPrfKeyT {
-// public:
+// 
     key_bytes:[u8;32],
 }
 impl aesPrfKeyT{

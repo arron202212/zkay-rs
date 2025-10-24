@@ -33,7 +33,7 @@ fn main(argc:i32, argv:Vec<String>)->i32 {
 	let  full_assignment =
 			get_variable_assignment_from_gadgetlib2(*pb);
 	cs.primary_input_size = reader.getNumInputs() + reader.getNumOutputs();
-	cs.auxiliary_input_size = full_assignment.size() - cs.num_inputs();
+	cs.auxiliary_input_size = full_assignment.len() - cs.num_inputs();
 
 	// extract primary and auxiliary input
 	let (primary_input,auxiliary_input)=full_assignment.split_at(cs.num_inputs());

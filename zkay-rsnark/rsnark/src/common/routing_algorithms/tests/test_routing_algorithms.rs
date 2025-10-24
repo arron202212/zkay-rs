@@ -23,7 +23,7 @@ use crate::common::routing_algorithms::benes_routing_algorithm;
  */
 void test_benes(const size_t N)
 {
-    integer_permutation permutation(1ul << ffec::log2(N));
+    integer_permutation permutation(1u64 << ffec::log2(N));
 
     do {
         const benes_routing routing = get_benes_routing(permutation);

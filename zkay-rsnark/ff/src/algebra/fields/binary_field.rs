@@ -29,7 +29,7 @@ class BinaryField;
  */
 template<typename T>
 class BinaryField {
-public:
+
     /* Functions unique to binary fields */
 
     // TODO: add documentation about how moduli are represented.

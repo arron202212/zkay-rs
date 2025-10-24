@@ -15,11 +15,11 @@
 //#ifndef CP_HANDLER_HPP_
 // #define CP_HANDLER_HPP_
 
-use  <numeric>
+// use  <numeric>
 
 use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::protoboard;
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate;
 
 
 
@@ -32,7 +32,7 @@ template<typename FieldT>
 class r1cs_pcd_message_variable : public gadget<FieldT> {
 protected:
     size_t num_vars_at_construction;
-public:
+
 
     pb_variable<FieldT> type;
 
@@ -56,7 +56,7 @@ template<typename FieldT>
 class r1cs_pcd_local_data_variable : public gadget<FieldT> {
 protected:
     size_t num_vars_at_construction;
-public:
+
 
     pb_variable_array<FieldT> all_vars;
 
@@ -83,7 +83,7 @@ protected:
     pb_variable<FieldT> arity;
     std::vector<std::shared_ptr<r1cs_pcd_message_variable<FieldT> > > incoming_messages;
     std::shared_ptr<r1cs_pcd_local_data_variable<FieldT> > local_data;
-public:
+
     const size_t name;
     const size_t type;
     const size_t max_arity;
@@ -112,7 +112,7 @@ public:
 
 
 
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/cp_handler;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
 
 //#endif // CP_HANDLER_HPP_
 /** @file
@@ -209,9 +209,9 @@ void compliance_predicate_handler<FieldT, protoboardT>::generate_r1cs_witness(co
 {
     pb.clear_values();
     pb.val(outgoing_message->type) = FieldT(type);
-    pb.val(arity) = FieldT(incoming_message_values.size());
+    pb.val(arity) = FieldT(incoming_message_values.len());
 
-    for i in 0..incoming_message_values.size()
+    for i in 0..incoming_message_values.len()
     {
         incoming_messages[i]->generate_r1cs_witness(incoming_message_values[i]);
     }
@@ -223,16 +223,16 @@ void compliance_predicate_handler<FieldT, protoboardT>::generate_r1cs_witness(co
 template<typename FieldT, typename protoboardT>
 r1cs_pcd_compliance_predicate<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_compliance_predicate() const
 {
-    assert!(incoming_messages.size() == max_arity);
+    assert!(incoming_messages.len() == max_arity);
 
-    const size_t outgoing_message_payload_length = outgoing_message->all_vars.size() - 1;
+    const size_t outgoing_message_payload_length = outgoing_message->all_vars.len() - 1;
 
     std::vector<size_t> incoming_message_payload_lengths(max_arity);
     std::transform(incoming_messages.begin(), incoming_messages.end(),
                    incoming_message_payload_lengths.begin(),
-                   [] (const std::shared_ptr<r1cs_pcd_message_variable<FieldT> > &msg) { return msg->all_vars.size() - 1; });
+                   [] (const std::shared_ptr<r1cs_pcd_message_variable<FieldT> > &msg) { return msg->all_vars.len() - 1; });
 
-    const size_t local_data_length = local_data->all_vars.size();
+    const size_t local_data_length = local_data->all_vars.len();
 
     const size_t all_but_witness_length = ((1 + outgoing_message_payload_length) + 1 +
                                            (max_arity + std::accumulate(incoming_message_payload_lengths.begin(),
@@ -292,11 +292,11 @@ r1cs_pcd_witness<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_
 {
     const r1cs_variable_assignment<FieldT> va = pb.full_variable_assignment();
     // outgoing_message + arity + incoming_messages + local_data
-    const size_t witness_pos = (outgoing_message->all_vars.size() + 1 +
+    const size_t witness_pos = (outgoing_message->all_vars.len() + 1 +
                                 std::accumulate(incoming_messages.begin(), incoming_messages.end(),
                                                 0, [](size_t acc, const std::shared_ptr<r1cs_pcd_message_variable<FieldT> > &msg) {
-                                                    return acc + msg->all_vars.size(); }) +
-                                local_data->all_vars.size());
+                                                    return acc + msg->all_vars.len(); }) +
+                                local_data->all_vars.len());
 
     return r1cs_variable_assignment<FieldT>(va.begin() + witness_pos, va.end());
 }

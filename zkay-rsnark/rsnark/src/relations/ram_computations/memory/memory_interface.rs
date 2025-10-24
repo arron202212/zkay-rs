@@ -33,7 +33,7 @@ type memory_contents=std::collectons::BTreeMap<size_t, size_t> ;
  * The methods get_val and set_val can be used to load and store values.
  */
 pub struct memory_interface {
-// public:
+// 
 
     num_addresses:size_t,
     value_size:size_t,

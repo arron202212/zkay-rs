@@ -24,7 +24,7 @@ std::istream& operator>>(std::istream &, bn128_G2&);
 class bn128_G2 {
 private:
     static bn::Fp2 sqrt(const bn::Fp2 &el);
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -593,7 +593,7 @@ std::istream& operator>>(std::istream &in, bn128_G2 &g)
 void bn128_G2::batch_to_special_all_non_zeros(std::vector<bn128_G2> &vec)
 {
     std::vector<bn::Fp2> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -603,7 +603,7 @@ void bn128_G2::batch_to_special_all_non_zeros(std::vector<bn128_G2> &vec)
 
     const bn::Fp2 one = 1;
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         bn::Fp2 Z2, Z3;
         bn::Fp2::square(Z2, Z_vec[i]);

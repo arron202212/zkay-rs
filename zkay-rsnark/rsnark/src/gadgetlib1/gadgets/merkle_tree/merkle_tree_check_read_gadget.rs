@@ -21,7 +21,7 @@ use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets::hashes::crh_gadget;
 use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
-use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadgets::merkle_tree/merkle_authentication_path_variable;
 
 
 
@@ -37,7 +37,7 @@ private:
     std::shared_ptr<digest_variable<FieldT> > computed_root;
     std::shared_ptr<bit_vector_copy_gadget<FieldT> > check_root;
 
-public:
+
 
     const size_t digest_size;
     const size_t tree_depth;
@@ -69,7 +69,7 @@ void test_merkle_tree_check_read_gadget();
 
 
 
-use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_read_gadget;
 
 //#endif // MERKLE_TREE_CHECK_READ_GADGET_HPP_
 /** @file
@@ -118,7 +118,7 @@ merkle_tree_check_read_gadget<FieldT, HashT>::merkle_tree_check_read_gadget(prot
        the subtree directly under the root.
     */
     assert!(tree_depth > 0);
-    assert!(tree_depth == address_bits.size());
+    assert!(tree_depth == address_bits.len());
 
     for i in 0..tree_depth-1
     {
@@ -221,7 +221,7 @@ void test_merkle_tree_check_read_gadget()
     for level in ( 0..=tree_depth-1).rev()
     {
         const bool computed_is_right = (std::rand() % 2);
-        address |= if computed_is_right {1ul << (tree_depth-1-level)} else{0};
+        address |= if computed_is_right {1u64 << (tree_depth-1-level)} else{0};
         address_bits.push_back(computed_is_right);
         ffec::bit_vector other(digest_len);
         std::generate(other.begin(), other.end(), [&]() { return std::rand() % 2; });

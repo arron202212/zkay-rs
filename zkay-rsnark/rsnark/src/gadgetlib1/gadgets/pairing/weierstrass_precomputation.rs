@@ -19,9 +19,9 @@ use  <memory>
 use ffec::algebra::curves::mnt::mnt4::mnt4_init;
 use ffec::algebra::curves::mnt::mnt6::mnt6_init;
 
-use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
-use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets::curves/weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets::curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
 
 
 
@@ -32,7 +32,7 @@ use crate::gadgetlib1::gadgets/pairing/pairing_params;
  */
 template<typename ppT>
 class G1_precomputation {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -51,7 +51,7 @@ public:
  */
 template<typename ppT>
 class precompute_G1_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
 
@@ -108,7 +108,7 @@ void test_G1_variable_precomp(const std::string &annotation);
  */
 template<typename ppT>
 class precompute_G2_gadget_coeffs {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -131,7 +131,7 @@ public:
  */
 template<typename ppT>
 class G2_precomputation {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -167,7 +167,7 @@ public:
  */
 template<typename ppT>
 class precompute_G2_gadget_doubling_step : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -216,7 +216,7 @@ public:
  */
 template<typename ppT>
 class precompute_G2_gadget_addition_step : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -253,7 +253,7 @@ public:
  */
 template<typename ppT>
 class precompute_G2_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -279,7 +279,7 @@ void test_G2_variable_precomp(const std::string &annotation);
 
 
 
-use crate::gadgetlib1::gadgets/pairing/weierstrass_precomputation;
+use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation;
 
 //#endif // WEIERSTRASS_PRECOMPUTATION_HPP_
 /** @file
@@ -300,7 +300,7 @@ use crate::gadgetlib1::gadgets/pairing/weierstrass_precomputation;
 
 use  <type_traits>
 
-use crate::gadgetlib1::gadgets/pairing/mnt_pairing_params;
+use crate::gadgetlib1::gadgets::pairing::mnt_pairing_params;
 
 
 
@@ -370,8 +370,8 @@ G2_precomputation<ppT>::G2_precomputation(protoboard<FieldT> &pb,
     Q.reset(new G2_variable<ppT>(pb, Q_val, FMT(annotation_prefix, " Q")));
     const ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
 
-    coeffs.resize(native_precomp.coeffs.size() + 1); // the last precomp remains for convenient programming
-    for i in 0..native_precomp.coeffs.size()
+    coeffs.resize(native_precomp.coeffs.len() + 1); // the last precomp remains for convenient programming
+    for i in 0..native_precomp.coeffs.len()
     {
         coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>());
         coeffs[i]->RX.reset(new Fqe_variable<ppT>(pb, native_precomp.coeffs[i].old_RX, FMT(annotation_prefix, " RX")));
@@ -590,7 +590,7 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -624,7 +624,7 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
     size_t coeff_id = 0;
 
     found_nonzero = false;
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -675,7 +675,7 @@ void precompute_G2_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -712,8 +712,8 @@ void test_G2_variable_precomp(const std::string &annotation)
 
     ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(g_val);
 
-    assert!(precomp.coeffs.size() - 1 == native_precomp.coeffs.size()); // the last precomp is unused, but remains for convenient programming
-    for i in 0..native_precomp.coeffs.size()
+    assert!(precomp.coeffs.len() - 1 == native_precomp.coeffs.len()); // the last precomp is unused, but remains for convenient programming
+    for i in 0..native_precomp.coeffs.len()
     {
         assert!(precomp.coeffs[i]->RX->get_element() == native_precomp.coeffs[i].old_RX);
         assert!(precomp.coeffs[i]->RY->get_element() == native_precomp.coeffs[i].old_RY);

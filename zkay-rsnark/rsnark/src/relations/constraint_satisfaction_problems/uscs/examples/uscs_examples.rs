@@ -141,7 +141,7 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
     uscs_primary_input<FieldT> auxiliary_input(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
     assert!(cs.num_constraints() == num_constraints);
@@ -194,7 +194,7 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
     uscs_primary_input<FieldT> auxiliary_input(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
     assert!(cs.num_constraints() == num_constraints);

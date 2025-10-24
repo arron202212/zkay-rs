@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream &, const edwards_G1&);
 std::istream& operator>>(std::istream &, edwards_G1&);
 
 class edwards_G1 {
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -35,7 +35,7 @@ public:
 private:
     edwards_G1(const edwards_Fq& X, const edwards_Fq& Y, const edwards_Fq& Z) : X(X), Y(Y), Z(Z) {};
 
-public:
+
     typedef edwards_Fq base_field;
     typedef edwards_Fr scalar_field;
     // using inverted coordinates
@@ -455,7 +455,7 @@ std::istream& operator>>(std::istream &in, edwards_G1 &g)
 
 std::ostream& operator<<(std::ostream& out, const std::vector<edwards_G1> &v)
 {
-    out << v.size() << "\n";
+    out << v.len() << "\n";
     for t in &v
     {
         out << t << OUTPUT_NEWLINE;
@@ -487,7 +487,7 @@ std::istream& operator>>(std::istream& in, std::vector<edwards_G1> &v)
 void edwards_G1::batch_to_special_all_non_zeros(std::vector<edwards_G1> &vec)
 {
     std::vector<edwards_Fq> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -497,7 +497,7 @@ void edwards_G1::batch_to_special_all_non_zeros(std::vector<edwards_G1> &vec)
 
     const edwards_Fq one = edwards_Fq::one();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         vec[i].X = vec[i].X * Z_vec[i];
         vec[i].Y = vec[i].Y * Z_vec[i];

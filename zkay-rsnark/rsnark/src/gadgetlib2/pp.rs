@@ -27,7 +27,7 @@ type Fp=Fr<default_ec_pp> ;
 type FpVector=std::vector<Fp> ;
 
 pub struct PublicParams {
-// public:
+// 
      log_p:usize,
 }
 //     PublicParams(const std::size_t log_p);

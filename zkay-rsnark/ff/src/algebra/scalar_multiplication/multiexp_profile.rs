@@ -69,7 +69,7 @@ run_result_t<GroupT> profile_multiexp(
     long long start_time = get_nsec_time();
 
     std::vector<GroupT> answers;
-    for i in 0..group_elements.size() {
+    for i in 0..group_elements.len() {
         answers.push_back(multi_exp<GroupT, FieldT, Method>(
             group_elements[i].cbegin(), group_elements[i].cend(),
             scalars[i].cbegin(), scalars[i].cend(),

@@ -30,7 +30,7 @@ pub struct delegated_ra_memory <HashT>{
      contents:RcCell<merkle_tree<HashT> >,
 }
 
-// public:
+// 
 //     delegated_ra_memory(num_addresses:&size_t, value_size:&size_t);
 //     delegated_ra_memory(num_addresses:&size_t, value_size:&size_t, const std::vector<size_t> &contents_as_vector);
 //     delegated_ra_memory(num_addresses:&size_t, value_size:&size_t, const memory_contents &contents_as_map);
@@ -46,7 +46,7 @@ pub struct delegated_ra_memory <HashT>{
 
 
 
-// use crate::relations::ram_computations/memory/delegated_ra_memory;
+// use crate::relations::ram_computations::memory::delegated_ra_memory;
 
 //#endif // DELEGATED_RA_MEMORY_HPP_
 /** @file

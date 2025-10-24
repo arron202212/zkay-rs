@@ -18,7 +18,7 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 
 template<typename FieldT>
 class lastbits_gadget : public gadget<FieldT> {
-public:
+
     pb_variable<FieldT> X;
     size_t X_bits;
     pb_variable<FieldT> result;
@@ -43,7 +43,7 @@ template<typename FieldT>
 class XOR3_gadget : public gadget<FieldT> {
 private:
     pb_variable<FieldT> tmp;
-public:
+
     pb_linear_combination<FieldT> A;
     pb_linear_combination<FieldT> B;
     pb_linear_combination<FieldT> C;
@@ -68,7 +68,7 @@ class small_sigma_gadget : public gadget<FieldT> {
 private:
     pb_variable_array<FieldT> W;
     pb_variable<FieldT> result;
-public:
+
     pb_variable_array<FieldT> result_bits;
     std::vector<std::shared_ptr<XOR3_gadget<FieldT> > > compute_bits;
     std::shared_ptr<packing_gadget<FieldT> > pack_result;
@@ -91,7 +91,7 @@ class big_sigma_gadget : public gadget<FieldT> {
 private:
     pb_linear_combination_array<FieldT> W;
     pb_variable<FieldT> result;
-public:
+
     pb_variable_array<FieldT> result_bits;
     std::vector<std::shared_ptr<XOR3_gadget<FieldT> > > compute_bits;
     std::shared_ptr<packing_gadget<FieldT> > pack_result;
@@ -113,7 +113,7 @@ template<typename FieldT>
 class choice_gadget : public gadget<FieldT> {
 private:
     pb_variable_array<FieldT> result_bits;
-public:
+
     pb_linear_combination_array<FieldT> X;
     pb_linear_combination_array<FieldT> Y;
     pb_linear_combination_array<FieldT> Z;
@@ -136,7 +136,7 @@ class majority_gadget : public gadget<FieldT> {
 private:
     pb_variable_array<FieldT> result_bits;
     std::shared_ptr<packing_gadget<FieldT> > pack_result;
-public:
+
     pb_linear_combination_array<FieldT> X;
     pb_linear_combination_array<FieldT> Y;
     pb_linear_combination_array<FieldT> Z;
@@ -190,7 +190,7 @@ lastbits_gadget<FieldT>::lastbits_gadget(protoboard<FieldT> &pb,
     result_bits(result_bits)
 {
     full_bits = result_bits;
-    for i in result_bits.size()..X_bits
+    for i in result_bits.len()..X_bits
     {
         pb_variable<FieldT> full_bits_overflow;
         full_bits_overflow.allocate(pb, FMT(self.annotation_prefix, " full_bits_{}", i));

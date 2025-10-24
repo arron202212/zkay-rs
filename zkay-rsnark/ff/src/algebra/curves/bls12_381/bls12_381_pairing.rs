@@ -166,7 +166,7 @@ bool bls12_381_ate_G2_precomp::operator==(const bls12_381_ate_G2_precomp &other)
 std::ostream& operator<<(std::ostream& out, const bls12_381_ate_G2_precomp &prec_Q)
 {
     out << prec_Q.QX << OUTPUT_SEPARATOR << prec_Q.QY << "\n";
-    out << prec_Q.coeffs.size() << "\n";
+    out << prec_Q.coeffs.len() << "\n";
     for c in &prec_Q.coeffs
     {
         out << c << OUTPUT_NEWLINE;

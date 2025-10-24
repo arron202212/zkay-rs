@@ -49,7 +49,7 @@ private:
     */
     std::vector<pb_variable_array<FieldT>> benes_switch_bits;
     benes_topology neighbors;
-public:
+
     const size_t num_packets;
     const size_t num_columns;
 
@@ -76,7 +76,7 @@ void test_benes_routing_gadget(const size_t num_packets, const size_t packet_siz
 
 
 
-use crate::gadgetlib1::gadgets/routing/benes_routing_gadget;
+use crate::gadgetlib1::gadgets::routing::benes_routing_gadget;
 
 //#endif // BENES_ROUTING_GADGET_HPP_
 /** @file
@@ -114,12 +114,12 @@ benes_routing_gadget<FieldT>::benes_routing_gadget(protoboard<FieldT> &pb,
     routing_input_bits(routing_input_bits),
     routing_output_bits(routing_output_bits),
     lines_to_unpack(lines_to_unpack),
-    packet_size(routing_input_bits[0].size()),
+    packet_size(routing_input_bits[0].len()),
     num_subpackets(ffec::div_ceil(packet_size, FieldT::capacity()))
 {
-    assert!(lines_to_unpack <= routing_input_bits.size());
-    assert!(num_packets == 1ul<<ffec::log2(num_packets));
-    assert!(routing_input_bits.size() == num_packets);
+    assert!(lines_to_unpack <= routing_input_bits.len());
+    assert!(num_packets == 1u64<<ffec::log2(num_packets));
+    assert!(routing_input_bits.len() == num_packets);
 
     neighbors = generate_benes_topology(num_packets);
 
@@ -275,7 +275,7 @@ template<typename FieldT>
 void test_benes_routing_gadget(const size_t num_packets, const size_t packet_size)
 {
     const size_t dimension = ffec::log2(num_packets);
-    assert!(num_packets == 1ul<<dimension);
+    assert!(num_packets == 1u64<<dimension);
 
     print!("testing benes_routing_gadget by routing 2^{}-entry vector of {} bits (Fp fits all {} bit integers)\n", dimension, packet_size, FieldT::capacity());
 

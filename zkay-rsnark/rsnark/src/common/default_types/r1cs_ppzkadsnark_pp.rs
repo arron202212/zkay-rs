@@ -21,7 +21,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::signature:
 
 	pub struct default_r1cs_ppzkadsnark_pp;
     //  {
-	// public:
+	// 
 	// 	type default_r1cs_ppzksnark_pp snark_pp;
 	// 	type ed25519_skT skT;
 	// 	type ed25519_vkT vkT;

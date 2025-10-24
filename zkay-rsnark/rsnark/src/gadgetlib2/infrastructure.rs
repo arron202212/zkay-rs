@@ -30,12 +30,12 @@
 // /**************** Class Writing Helpers *****************/
 // /********************************************************/
 // // A macro to disallow any non-defined constructors
-// // This should be used in the private: declarations for a class
+// // This should be used in the declarations for a class
 // // #define DISALLOW_CONSTRUCTION(TypeName) \
 //   TypeName();
 
 // // A macro to disallow the copy constructor and operator= functions
-// // This should be used in the private: declarations for a class
+// // This should be used in the declarations for a class
 // // #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
 //   TypeName(const TypeName&);               \
 //   void operator=(const TypeName&)
@@ -73,7 +73,7 @@
 //      * messages (including content of call stack when error happened), and exiting the program.
 //      */
 //     class ErrorHandling {
-//         public:
+//         
 //             static void __noreturn fatalError(const ::std::string& msg);
 //             static void __noreturn fatalError(const std::stringstream& msg);
 //             static void printStacktrace();

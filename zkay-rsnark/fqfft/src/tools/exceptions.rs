@@ -20,7 +20,7 @@
 
 // class DomainSizeException
 // {
-// public:
+// 
 //     DomainSizeException(std::string error): _error(error) {}
 //     const char* what() const
 // 	{
@@ -32,7 +32,7 @@
 
 // class InvalidSizeException
 // {
-// public:
+// 
 //     InvalidSizeException(std::string error): _error(error) {}
 //     const char* what() const
 // 	{

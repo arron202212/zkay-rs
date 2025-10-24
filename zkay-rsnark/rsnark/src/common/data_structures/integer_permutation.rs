@@ -12,42 +12,42 @@
 //#ifndef INTEGER_PERMUTATION_HPP_
 // #define INTEGER_PERMUTATION_HPP_
 
-use  <cstddef>
-use  <vector>
+// use  <cstddef>
+// use  <vector>
 
 
 
-class integer_permutation {
-private:
-    std::vector<size_t> contents; /* offset by min_element */
+pub struct integer_permutation {
+// private:
+contents:    std::vector<size_t>, /* offset by min_element */
 
-public:
-    size_t min_element;
-    size_t max_element;
+// 
+min_element:    size_t,
+max_element:    size_t,
 
-    integer_permutation(const size_t size = 0);
-    integer_permutation(const size_t min_element, const size_t max_element);
+    // integer_permutation(size:size_t = 0);
+    // integer_permutation(min_element:size_t, max_element:size_t);
 
-    integer_permutation& operator=(const integer_permutation &other) = default;
+    // integer_permutation& operator=(const integer_permutation &other) = default;
 
-    size_t size() const;
-    bool operator==(const integer_permutation &other) const;
+    // size_t size() const;
+    // bool operator==(const integer_permutation &other) const;
 
-    void set(const size_t position, const size_t value);
-    size_t get(const size_t position) const;
+    // void set(position:size_t, value:size_t);
+    // size_t get(position:size_t) const;
 
-    bool is_valid() const;
-    integer_permutation inverse() const;
-    integer_permutation slice(const size_t slice_min_element, const size_t slice_max_element) const;
+    // bool is_valid() const;
+    // integer_permutation inverse() const;
+    // integer_permutation slice(slice_min_element:size_t, slice_max_element:size_t) const;
 
-    /* Similarly to std::next_permutation this transforms the current
-    integer permutation into the next lexicographically ordered
-    permutation; returns false if the last permutation was reached and
-    this is now the identity permutation on [min_element .. max_element] */
-    bool next_permutation();
+    // /* Similarly to std::next_permutation this transforms the current
+    // integer permutation into the next lexicographically ordered
+    // permutation; returns false if the last permutation was reached and
+    // this is now the identity permutation on [min_element .. max_element] */
+    // bool next_permutation();
 
-    void random_shuffle();
-};
+    // void random_shuffle();
+}
 
 
 
@@ -65,63 +65,58 @@ public:
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <algorithm>
-use  <cassert>
-use  <numeric>
-use  <unordered_set>
+// use  <algorithm>
+// use  <cassert>
+// use  <numeric>
+// use  <unordered_set>
 
-use crate::common::data_structures::integer_permutation;
+// use crate::common::data_structures::integer_permutation;
 
 
-
-integer_permutation::integer_permutation(const size_t size) :
-    min_element(0), max_element(size-1)
+impl integer_permutation{
+pub fn new(size:size_t) ->Self
 {
     contents.resize(size);
     std::iota(contents.begin(), contents.end(), 0);
+    Self{min_element:0, max_element:size-1}
 }
 
-integer_permutation::integer_permutation(const size_t min_element, const size_t max_element) :
-    min_element(min_element), max_element(max_element)
+pub fn new2(min_element:size_t, max_element:size_t) ->Self
+    
 {
     assert!(min_element <= max_element);
-    const size_t size = max_element - min_element + 1;
+    let size = max_element - min_element + 1;
     contents.resize(size);
     std::iota(contents.begin(), contents.end(), min_element);
+    Self{min_element, max_element}
 }
 
-size_t integer_permutation::size() const
+ pub fn size() ->size_t
 {
     return max_element - min_element + 1;
 }
 
-bool integer_permutation::operator==(const integer_permutation &other) const
-{
-    return (self.min_element == other.min_element &&
-            self.max_element == other.max_element &&
-            self.contents == other.contents);
-}
 
-void integer_permutation::set(const size_t position, const size_t value)
+pub fn set(position:size_t, value:size_t)
 {
     assert!(min_element <= position && position <= max_element);
     contents[position - min_element] = value;
 }
 
-size_t integer_permutation::get(const size_t position) const
+ pub fn get(position:size_t) ->size_t
 {
     assert!(min_element <= position && position <= max_element);
     return contents[position - min_element];
 }
 
 
-bool integer_permutation::is_valid() const
+ pub fn is_valid() ->bool
 {
-    std::unordered_set<size_t> elems;
+    let mut  elems=HashSet::new();
 
     for el in &contents
     {
-        if el < min_element || el > max_element || elems.find(el) != elems.end()
+        if el < min_element || el > max_element || elems.contains(el)
         {
             return false;
         }
@@ -132,9 +127,9 @@ bool integer_permutation::is_valid() const
     return true;
 }
 
-integer_permutation integer_permutation::inverse() const
+ pub fn inverse() ->Self
 {
-    integer_permutation result(min_element, max_element);
+     let mut result=integer_permutation::new(min_element, max_element);
 
     for position in min_element..=max_element
     {
@@ -142,34 +137,45 @@ integer_permutation integer_permutation::inverse() const
     }
 
 // #ifdef DEBUG
-    assert!(result.is_valid());
+    // assert!(result.is_valid());
 //#endif
 
     return result;
 }
 
-integer_permutation integer_permutation::slice(const size_t slice_min_element, const size_t slice_max_element) const
+ pub fn slice(slice_min_element:size_t, slice_max_element:size_t) ->Self
 {
     assert!(min_element <= slice_min_element && slice_min_element <= slice_max_element && slice_max_element <= max_element);
-    integer_permutation result(slice_min_element, slice_max_element);
-    std::copy(self.contents.begin() + (slice_min_element - min_element),
-              self.contents.begin() + (slice_max_element - min_element) + 1,
-              result.contents.begin());
+    let mut  result=integer_permutation::new(slice_min_element, slice_max_element);
+    // std::copy(self.contents.begin() + (slice_min_element - min_element),
+    //           self.contents.begin() + (slice_max_element - min_element) + 1,
+    //           result.contents.begin());
+    result.contents.insert(0,self.contents[slice_min_element - min_element]);
 // #ifdef DEBUG
-    assert!(result.is_valid());
+    // assert!(result.is_valid());
 //#endif
 
     return result;
 }
 
-bool integer_permutation::next_permutation()
+ pub fn next_permutation()->bool
 {
     return std::next_permutation(contents.begin(), contents.end());
 }
 
-void integer_permutation::random_shuffle()
+pub fn random_shuffle()
 {
     return std::random_shuffle(contents.begin(), contents.end());
 }
 
 
+}
+
+
+
+// bool pub fn operator==(const integer_permutation &other) const
+// {
+//     return (self.min_element == other.min_element &&
+//             self.max_element == other.max_element &&
+//             self.contents == other.contents);
+// }

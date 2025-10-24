@@ -20,7 +20,7 @@ use crate::relations::ram_computations::memory::memory_interface;
  * A random-access memory maintains the memory's contents via a map (from addresses to values).
  */
 pub struct ra_memory {
-// public://: public memory_interface 
+// //: public memory_interface 
 
      contents:memory_contents,
 }
@@ -51,7 +51,7 @@ pub struct ra_memory {
 
 // use  <cassert>
 
-// use crate::relations::ram_computations/memory/ra_memory;
+// use crate::relations::ram_computations::memory::ra_memory;
 
 
 impl ra_memory{
@@ -68,7 +68,7 @@ pub fn new2(num_addresses:size_t,
 {
 // memory_interface(num_addresses, value_size)
     /* copy std::vector into std::map */
-    for i in 0..contents_as_vector.size()
+    for i in 0..contents_as_vector.len()
     {
         contents[i] = contents_as_vector[i];
     }

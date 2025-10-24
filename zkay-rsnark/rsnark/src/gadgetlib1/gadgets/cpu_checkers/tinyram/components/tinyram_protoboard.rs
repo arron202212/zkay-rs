@@ -21,7 +21,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 // 
 pub struct tinyram_protoboard  {
-// public:: public protoboard<FieldT>
+// : public protoboard<FieldT>
       ap:tinyram_architecture_params,
 
     // tinyram_protoboard(ap:tinyram_architecture_params);
@@ -31,14 +31,14 @@ pub struct tinyram_protoboard  {
 pub struct tinyram_gadget {
 // protected:: public gadget<FieldT> 
     pb:tinyram_protoboard<FieldT> ,
-// public:
+// 
 //     tinyram_gadget(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string="");
 }
 
 // standard gadgets provide two methods: generate_r1cs_constraints and generate_r1cs_witness
 // 
 pub struct tinyram_standard_gadget {
-// public:: public tinyram_gadget<FieldT> 
+// : public tinyram_gadget<FieldT> 
 //     tinyram_standard_gadget(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string="");
 
 //     virtual void generate_r1cs_constraints() = 0;

@@ -32,7 +32,7 @@
 
 // template<mp_size_t n, const bigint<n>& modulus>
 // class Fp4_model {
-// public:
+// 
 //     typedef Fp_model<n, modulus> my_Fp;
 //     typedef Fp2_model<n, modulus> my_Fp2;
 //     typedef my_Fp2 my_Fpe;
@@ -467,7 +467,7 @@
 //     bool found_nonzero = false;
 //     std::vector<long> NAF = find_wnaf(1, exponent);
 
-//     for i in ( 0..=static_cast<long>(NAF.size() - 1)).rev()
+//     for i in ( 0..=static_cast<long>(NAF.len() - 1)).rev()
 //     {
 //         if found_nonzero
 //         {
@@ -511,7 +511,7 @@
 // bool Fp4_model<n,modulus>::from_words(std::vector<uint64_t> words)
 // {
 //     std::vector<uint64_t>::const_iterator vec_start = words.begin();
-//     std::vector<uint64_t>::const_iterator vec_center = words.begin() + words.size() / 2;
+//     std::vector<uint64_t>::const_iterator vec_center = words.begin() + words.len() / 2;
 //     std::vector<uint64_t>::const_iterator vec_end = words.end();
 //     std::vector<uint64_t> words0(vec_start, vec_center);
 //     std::vector<uint64_t> words1(vec_center, vec_end);

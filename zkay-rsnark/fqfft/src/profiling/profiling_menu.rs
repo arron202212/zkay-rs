@@ -219,7 +219,7 @@ void plot()
         std::cout << "> ";
         getline(std::cin, file);
         file_number = atoi(file.c_str());
-      } while if (file_number > 0 && file_number <= ((int) files.size()) + 1) {0} else{1};
+      } while if (file_number > 0 && file_number <= ((int) files.len()) + 1) {0} else{1};
 
       if file_number < count
       {

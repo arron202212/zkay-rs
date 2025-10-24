@@ -373,7 +373,7 @@ impl<const N:usize> fmt::Display for bigint<N> {
 //     std::string s;
 //     in >> s;
 
-//     size_t l = s.size();
+//     size_t l = s.len();
 //     unsigned char* s_copy = new unsigned char[l];
 
 //     for i in 0..l

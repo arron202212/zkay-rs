@@ -42,9 +42,9 @@
 //#ifndef RAM_UNIVERSAL_GADGET_HPP_
 // #define RAM_UNIVERSAL_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets/routing/as_waksman_routing_gadget;
-use libsnark/reductions/ram_to_r1cs/gadgets/memory_checker_gadget;
-use libsnark/reductions/ram_to_r1cs/gadgets/trace_lines;
+use crate::gadgetlib1::gadgets::routing::as_waksman_routing_gadget;
+use crate::reductions::ram_to_r1cs::gadgets::memory_checker_gadget;
+use crate::reductions::ram_to_r1cs::gadgets::trace_lines;
 use crate::relations::ram_computations::rams::ram_params;
 
 
@@ -81,59 +81,43 @@ use crate::relations::ram_computations::rams::ram_params;
   verifier.
 */
 
-template<typename ramT>
-class ram_universal_gadget : public ram_gadget_base<ramT> {
-public:
-    type ram_base_field<ramT> FieldT;
+type FieldT=ram_base_field<ramT> ;
+pub struct  ram_universal_gadget <ramT> {
+// : public ram_gadget_base
+    
 
-    size_t num_memory_lines;
+num_memory_lines:    size_t,
 
-    std::vector<memory_line_variable_gadget<ramT> > boot_lines;
-    std::vector<pb_variable_array<FieldT> > boot_line_bits;
-    std::vector<multipacking_gadget<FieldT> > unpack_boot_lines;
+boot_lines:    std::vector<memory_line_variable_gadget<ramT> >,
+boot_line_bits:    std::vector<pb_variable_array<FieldT> >,
+unpack_boot_lines:    std::vector<multipacking_gadget<FieldT> >,
 
-    std::vector<memory_line_variable_gadget<ramT> > load_instruction_lines;
-    std::vector<execution_line_variable_gadget<ramT> > execution_lines; /* including the initial execution line */
+load_instruction_lines:    std::vector<memory_line_variable_gadget<ramT> >,
+execution_lines:    std::vector<execution_line_variable_gadget<ramT> >, /* including the initial execution line */
 
-    std::vector<memory_line_variable_gadget<ramT>* > unrouted_memory_lines;
-    std::vector<memory_line_variable_gadget<ramT> > routed_memory_lines;
+unrouted_memory_lines:    std::vector<memory_line_variable_gadget<ramT>* >,
+routed_memory_lines:    std::vector<memory_line_variable_gadget<ramT> >,
 
-    std::vector<ram_cpu_checker<ramT> > execution_checkers;
-    std::vector<memory_checker_gadget<ramT> > memory_checkers;
+execution_checkers:    std::vector<ram_cpu_checker<ramT> >,
+memory_checkers:    std::vector<memory_checker_gadget<ramT> >,
 
-    std::vector<pb_variable_array<FieldT> > routing_inputs;
-    std::vector<pb_variable_array<FieldT> > routing_outputs;
+routing_inputs:    std::vector<pb_variable_array<FieldT> >,
+routing_outputs:    std::vector<pb_variable_array<FieldT> >,
 
-    std::shared_ptr<as_waksman_routing_gadget<FieldT> > routing_network;
-
-public:
-
-    size_t boot_trace_size_bound;
-    size_t time_bound;
-    pb_variable_array<FieldT> packed_input;
-
-    ram_universal_gadget(ram_protoboard<ramT> &pb,
-                         const size_t boot_trace_size_bound,
-                         const size_t time_bound,
-                         const pb_variable_array<FieldT> &packed_input,
-                         const std::string &annotation_prefix="");
-
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness(const ram_boot_trace<ramT> &boot_trace,
-                               const ram_input_tape<ramT> &auxiliary_input);
-
-    /* both methods assume that generate_r1cs_witness has been called */
-    void print_execution_trace() const;
-    void print_memory_trace() const;
-
-    static size_t packed_input_element_size(const ram_architecture_params<ramT> &ap);
-    static size_t packed_input_size(const ram_architecture_params<ramT> &ap,
-                                    const size_t boot_trace_size_bound);
-};
+routing_network:    std::shared_ptr<as_waksman_routing_gadget<FieldT> >,
 
 
 
-use libsnark/reductions/ram_to_r1cs/gadgets/ram_universal_gadget;
+boot_trace_size_bound:    size_t,
+time_bound:    size_t,
+packed_input:    pb_variable_array<FieldT>,
+
+    
+}
+
+
+
+// use crate::reductions::ram_to_r1cs::gadgets::ram_universal_gadget;
 
 //#endif // RAM_UNIVERSAL_GADGET_HPP_
 /** @file
@@ -157,28 +141,25 @@ use ffec::common::profiling;
 use ffec::common::utils;
 
 use crate::common::data_structures::integer_permutation;
-use crate::relations::ram_computations/memory/ra_memory;
+use crate::relations::ram_computations::memory::ra_memory;
 
 
+impl ram_universal_gadget<ramT>{
 
-template<typename ramT>
-ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
-                                                 const size_t boot_trace_size_bound,
-                                                 const size_t time_bound,
-                                                 const pb_variable_array<FieldT> &packed_input,
-                                                 const std::string &annotation_prefix) :
-    ram_gadget_base<ramT>(pb, annotation_prefix),
-    boot_trace_size_bound(boot_trace_size_bound),
-    time_bound(time_bound),
-    packed_input(packed_input)
+pub fn new(ram_protoboard<ramT> &pb,
+                                                 boot_trace_size_bound:usize,
+                                                 time_bound:usize,
+                                                 packed_input:&pb_variable_array<FieldT>,
+                                                 annotation_prefix:&std::string) ->Self
+   
 {
     num_memory_lines = boot_trace_size_bound + (time_bound + 1) + time_bound; /* boot lines, (time_bound + 1) execution lines (including initial) and time_bound load instruction lines */
-    const size_t timestamp_size = ffec::log2(num_memory_lines);
+    let  timestamp_size = ffec::log2(num_memory_lines);
 
     /* allocate all lines on the execution side of the routing network */
     ffec::enter_block("Allocate initial state line");
     execution_lines.reserve(1 + time_bound);
-    execution_lines.push(execution_line_variable_gadget<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", 0)));
+    execution_lines.push(execution_line_variable_gadget::<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", 0)));
     unrouted_memory_lines.push(&execution_lines[0]);
     ffec::leave_block("Allocate initial state line");
 
@@ -186,7 +167,7 @@ ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
     boot_lines.reserve(boot_trace_size_bound);
     for i in 0..boot_trace_size_bound
     {
-        boot_lines.push(memory_line_variable_gadget<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " boot_lines_{}", i)));
+        boot_lines.push(memory_line_variable_gadget::<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " boot_lines_{}", i)));
         unrouted_memory_lines.push(&boot_lines[i]);
     }
     ffec::leave_block("Allocate boot lines");
@@ -195,34 +176,34 @@ ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
     load_instruction_lines.reserve(time_bound+1); /* the last line is NOT a memory line, but here just for uniform coding (i.e. the (unused) result of next PC) */
     for i in 0..time_bound
     {
-        load_instruction_lines.push(memory_line_variable_gadget<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", i)));
+        load_instruction_lines.push(memory_line_variable_gadget::<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", i)));
         unrouted_memory_lines.push(&load_instruction_lines[i]);
 
-        execution_lines.push(execution_line_variable_gadget<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", i+1)));
+        execution_lines.push(execution_line_variable_gadget::<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", i+1)));
         unrouted_memory_lines.push(&execution_lines[i+1]);
     }
-    load_instruction_lines.push(memory_line_variable_gadget<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", time_bound)));
+    load_instruction_lines.push(memory_line_variable_gadget::<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", time_bound)));
     ffec::leave_block("Allocate instruction fetch and execution lines");
 
     /* deal with packing of the input */
     ffec::enter_block("Pack input");
-    const size_t line_size_bits = pb.ap.address_size() + pb.ap.value_size();
-    const size_t max_chunk_size = FieldT::capacity();
-    const size_t packed_line_size = ffec::div_ceil(line_size_bits, max_chunk_size);
-    assert!(packed_input.size() == packed_line_size * boot_trace_size_bound);
+    let  line_size_bits = pb.ap.address_size() + pb.ap.value_size();
+    let max_chunk_size = FieldT::capacity();
+    let packed_line_size = ffec::div_ceil(line_size_bits, max_chunk_size);
+    assert!(packed_input.len() == packed_line_size * boot_trace_size_bound);
 
     auto input_it = packed_input.begin();
     for i in 0..boot_trace_size_bound
     {
         /* note the reversed order */
-        pb_variable_array<FieldT> boot_line_bits;
-        boot_line_bits.insert(boot_line_bits.end(), boot_lines[boot_trace_size_bound-1-i].address->bits.begin(), boot_lines[boot_trace_size_bound-1-i].address->bits.end());
-        boot_line_bits.insert(boot_line_bits.end(), boot_lines[boot_trace_size_bound-1-i].contents_after->bits.begin(), boot_lines[boot_trace_size_bound-1-i].contents_after->bits.end());
+        let mut  boot_line_bits=pb_variable_array::<FieldT>::new();
+        boot_line_bits.insert(boot_line_bits.end(), boot_lines[boot_trace_size_bound-1-i].address.bits.begin(), boot_lines[boot_trace_size_bound-1-i].address.bits.end());
+        boot_line_bits.insert(boot_line_bits.end(), boot_lines[boot_trace_size_bound-1-i].contents_after.bits.begin(), boot_lines[boot_trace_size_bound-1-i].contents_after.bits.end());
 
-        pb_variable_array<FieldT> packed_boot_line = pb_variable_array<FieldT>(input_it, input_it + packed_line_size);
+        let mut packed_boot_line = pb_variable_array::<FieldT>(input_it, input_it + packed_line_size);
         std::advance(input_it, packed_line_size);
 
-        unpack_boot_lines.push(multipacking_gadget<FieldT>(pb, boot_line_bits, packed_boot_line, max_chunk_size, FMT(annotation_prefix, " unpack_boot_lines_{}", i)));
+        unpack_boot_lines.push(multipacking_gadget::<FieldT>(pb, boot_line_bits, packed_boot_line, max_chunk_size, FMT(annotation_prefix, " unpack_boot_lines_{}", i)));
     }
     ffec::leave_block("Pack input");
 
@@ -230,7 +211,7 @@ ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
     ffec::enter_block("Allocate routed memory lines");
     for i in 0..num_memory_lines
     {
-        routed_memory_lines.push(memory_line_variable_gadget<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " routed_memory_lines_{}", i)));
+        routed_memory_lines.push(memory_line_variable_gadget::<ramT>(pb, timestamp_size, pb.ap, FMT(annotation_prefix, " routed_memory_lines_{}", i)));
     }
     ffec::leave_block("Allocate routed memory lines");
 
@@ -240,13 +221,13 @@ ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
 
     for i in 0..num_memory_lines
     {
-        routing_inputs.push(unrouted_memory_lines[i]->all_vars());
+        routing_inputs.push(unrouted_memory_lines[i].all_vars());
         routing_outputs.push(routed_memory_lines[i].all_vars());
     }
     ffec::leave_block("Collect inputs/outputs for the routing network");
 
     ffec::enter_block("Allocate routing network");
-    routing_network.reset(new as_waksman_routing_gadget<FieldT>(pb, num_memory_lines, routing_inputs, routing_outputs, FMT(self.annotation_prefix, " routing_network")));
+    routing_network.reset( as_waksman_routing_gadget::<FieldT>::new(pb, num_memory_lines, routing_inputs, routing_outputs, FMT(self.annotation_prefix, " routing_network")));
     ffec::leave_block("Allocate routing network");
 
     /* deal with all checkers */
@@ -254,15 +235,15 @@ ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
     execution_checkers.reserve(time_bound);
     for i in 0..time_bound
     {
-        execution_checkers.push(ram_cpu_checker<ramT>(pb,
-                                                              load_instruction_lines[i].address->bits, // prev_pc_addr
-                                                              load_instruction_lines[i].contents_after->bits, // prev_pc_val
+        execution_checkers.push(ram_cpu_checker::<ramT>(pb,
+                                                              load_instruction_lines[i].address.bits, // prev_pc_addr
+                                                              load_instruction_lines[i].contents_after.bits, // prev_pc_val
                                                               execution_lines[i].cpu_state, // prev_state
-                                                              execution_lines[i+1].address->bits, // ls_addr,
-                                                              execution_lines[i+1].contents_before->bits, // ls_prev_val
-                                                              execution_lines[i+1].contents_after->bits, // ls_next_val
+                                                              execution_lines[i+1].address.bits, // ls_addr,
+                                                              execution_lines[i+1].contents_before.bits, // ls_prev_val
+                                                              execution_lines[i+1].contents_after.bits, // ls_next_val
                                                               execution_lines[i+1].cpu_state, // next_state
-                                                              load_instruction_lines[i+1].address->bits, // next_pc_addr
+                                                              load_instruction_lines[i+1].address.bits, // next_pc_addr
                                                               execution_lines[i+1].has_accepted, // next_has_accepted
                                                               FMT(annotation_prefix, " execution_checkers_{}", i)));
     }
@@ -281,10 +262,14 @@ ram_universal_gadget<ramT>::ram_universal_gadget(ram_protoboard<ramT> &pb,
     ffec::leave_block("Allocate all memory checkers");
 
     /* done */
+    //  ram_gadget_base<ramT>(pb, annotation_prefix),
+    Self{boot_trace_size_bound,
+    time_bound,
+    packed_input}
 }
 
-template<typename ramT>
-void ram_universal_gadget<ramT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     ffec::enter_block("Call to generate_r1cs_constraints of ram_universal_gadget");
     for i in 0..boot_trace_size_bound
@@ -295,13 +280,13 @@ void ram_universal_gadget<ramT>::generate_r1cs_constraints()
     /* ensure that we start with all zeros state */
     for i in 0..self.pb.ap.cpu_state_size()
     {
-        generate_r1cs_equals_const_constraint<FieldT>(self.pb, execution_lines[0].cpu_state[i], FieldT::zero());
+        generate_r1cs_equals_const_constraint::<FieldT>(self.pb, execution_lines[0].cpu_state[i], FieldT::zero());
     }
 
     /* ensure increasing timestamps */
     for i in 0..num_memory_lines
     {
-        generate_r1cs_equals_const_constraint<FieldT>(self.pb, unrouted_memory_lines[i]->timestamp->packed, FieldT(i));
+        generate_r1cs_equals_const_constraint::<FieldT>(self.pb, unrouted_memory_lines[i].timestamp.packed, FieldT(i));
     }
 
     /* ensure bitness of trace lines on the time side */
@@ -326,9 +311,9 @@ void ram_universal_gadget<ramT>::generate_r1cs_constraints()
     /* ensure that load instruction lines really do loads */
     for i in 0..time_bound
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1, load_instruction_lines[i].contents_before->packed,
-                                                             load_instruction_lines[i].contents_after->packed),
-                                     FMT(self.annotation_prefix, " load_instruction_%zu_is_a_load", i));
+        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, load_instruction_lines[i].contents_before.packed,
+                                                             load_instruction_lines[i].contents_after.packed),
+                                     FMT(self.annotation_prefix, " load_instruction_{}_is_a_load", i));
     }
 
     /* ensure correct execution */
@@ -338,7 +323,7 @@ void ram_universal_gadget<ramT>::generate_r1cs_constraints()
     }
 
     /* check memory */
-    routing_network->generate_r1cs_constraints();
+    routing_network.generate_r1cs_constraints();
 
     for i in 0..num_memory_lines
     {
@@ -346,39 +331,39 @@ void ram_universal_gadget<ramT>::generate_r1cs_constraints()
     }
 
     /* ensure that PC started at the prescribed value */
-    generate_r1cs_equals_const_constraint<FieldT>(self.pb, load_instruction_lines[0].address->packed, FieldT(self.pb.ap.initial_pc_addr()));
+    generate_r1cs_equals_const_constraint::<FieldT>(self.pb, load_instruction_lines[0].address.packed, FieldT(self.pb.ap.initial_pc_addr()));
 
     /* ensure that the last state was an accepting one */
-    generate_r1cs_equals_const_constraint<FieldT>(self.pb, execution_lines[time_bound].has_accepted, FieldT::one(), "last_state_must_be_accepting");
+    generate_r1cs_equals_const_constraint::<FieldT>(self.pb, execution_lines[time_bound].has_accepted, FieldT::one(), "last_state_must_be_accepting");
 
     /* print constraint profiling */
-    const size_t num_constraints = self.pb.num_constraints();
-    const size_t num_variables = self.pb.num_variables();
+    let num_constraints = self.pb.num_constraints();
+    let num_variables = self.pb.num_variables();
 
     if !ffec::inhibit_profiling_info
     {
         ffec::print_indent(); print!("* Number of constraints: {}\n", num_constraints);
-        ffec::print_indent(); print!("* Number of constraints / cycle: %0.1f\n", 1.*num_constraints/self.time_bound);
+        ffec::print_indent(); print!("* Number of constraints / cycle: {:.1}\n", 1.*num_constraints/self.time_bound);
 
         ffec::print_indent(); print!("* Number of variables: {}\n", num_variables);
-        ffec::print_indent(); print!("* Number of variables / cycle: %0.1f\n", 1.*num_variables/self.time_bound);
+        ffec::print_indent(); print!("* Number of variables / cycle: {:.1}\n", 1.*num_variables/self.time_bound);
     }
     ffec::leave_block("Call to generate_r1cs_constraints of ram_universal_gadget");
 }
 
-template<typename ramT>
-void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT> &boot_trace,
-                                                       const ram_input_tape<ramT> &auxiliary_input)
+
+pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
+                                                       auxiliary_input:&ram_input_tape<ramT>)
 {
     /* assign correct timestamps to all lines */
     for i in 0..num_memory_lines
     {
-        self.pb.val(unrouted_memory_lines[i]->timestamp->packed) = FieldT(i);
-        unrouted_memory_lines[i]->timestamp->generate_r1cs_witness_from_packed();
+        self.pb.val(unrouted_memory_lines[i].timestamp.packed) = FieldT(i);
+        unrouted_memory_lines[i].timestamp.generate_r1cs_witness_from_packed();
     }
 
     /* fill in the initial state */
-    const ram_cpu_state<ramT> initial_state = self.pb.ap.initial_cpu_state();
+    let initial_state = self.pb.ap.initial_cpu_state();
     execution_lines[0].cpu_state.fill_with_bits(self.pb, initial_state);
 
     /* fill in the boot section */
@@ -386,56 +371,56 @@ void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT
 
     for it in &boot_trace.get_all_trace_entries()
     {
-        const size_t boot_pos = it.first;
+        let boot_pos = it.first;
         assert!(boot_pos < boot_trace_size_bound);
-        const size_t address = it.second.first;
-        const size_t contents = it.second.second;
+        let address = it.second.first;
+        let contents = it.second.second;
 
-        self.pb.val(boot_lines[boot_pos].address->packed) = FieldT(address, true);
-        self.pb.val(boot_lines[boot_pos].contents_after->packed) = FieldT(contents, true);
+        self.pb.val(boot_lines[boot_pos].address.packed) = FieldT(address, true);
+        self.pb.val(boot_lines[boot_pos].contents_after.packed) = FieldT(contents, true);
         boot_lines[boot_pos].generate_r1cs_witness_from_packed();
 
         memory_after_boot[address] = contents;
     }
 
     /* do the actual execution */
-    ra_memory mem_backend(1ul<<(self.pb.ap.address_size()), self.pb.ap.value_size(), memory_after_boot);
+    ra_memory mem_backend(1u64<<(self.pb.ap.address_size()), self.pb.ap.value_size(), memory_after_boot);
     typename ram_input_tape<ramT>::const_iterator auxiliary_input_it = auxiliary_input.begin();
 
-    self.pb.val(load_instruction_lines[0].address->packed) = FieldT(self.pb.ap.initial_pc_addr(), true);
-    load_instruction_lines[0].address->generate_r1cs_witness_from_packed();
+    self.pb.val(load_instruction_lines[0].address.packed) = FieldT(self.pb.ap.initial_pc_addr(), true);
+    load_instruction_lines[0].address.generate_r1cs_witness_from_packed();
 
     for i in 0..time_bound
     {
         /* load instruction */
-        const size_t pc_addr = self.pb.val(load_instruction_lines[i].address->packed).as_ulong();
-        const size_t pc_val = mem_backend.get_value(pc_addr);
+        let pc_addr = self.pb.val(load_instruction_lines[i].address.packed).as_ulong();
+        let pc_val = mem_backend.get_value(pc_addr);
 
-        self.pb.val(load_instruction_lines[i].contents_before->packed) = FieldT(pc_val, true);
-        self.pb.val(load_instruction_lines[i].contents_after->packed) = FieldT(pc_val, true);
+        self.pb.val(load_instruction_lines[i].contents_before.packed) = FieldT(pc_val, true);
+        self.pb.val(load_instruction_lines[i].contents_after.packed) = FieldT(pc_val, true);
         load_instruction_lines[i].generate_r1cs_witness_from_packed();
 
         /* first fetch the address part of the memory */
         execution_checkers[i].generate_r1cs_witness_address();
-        execution_lines[i+1].address->generate_r1cs_witness_from_bits();
+        execution_lines[i+1].address.generate_r1cs_witness_from_bits();
 
         /* fill it in */
-        const size_t load_store_addr = self.pb.val(execution_lines[i+1].address->packed).as_ulong();
-        const size_t load_store_prev_val = mem_backend.get_value(load_store_addr);
+        let load_store_addr = self.pb.val(execution_lines[i+1].address.packed).as_ulong();
+        let load_store_prev_val = mem_backend.get_value(load_store_addr);
 
-        self.pb.val(execution_lines[i+1].contents_before->packed) = FieldT(load_store_prev_val, true);
-        execution_lines[i+1].contents_before->generate_r1cs_witness_from_packed();
+        self.pb.val(execution_lines[i+1].contents_before.packed) = FieldT(load_store_prev_val, true);
+        execution_lines[i+1].contents_before.generate_r1cs_witness_from_packed();
 
         /* then execute the rest of the instruction */
         execution_checkers[i].generate_r1cs_witness_other(auxiliary_input_it, auxiliary_input.end());
 
         /* update the memory possibly changed by the CPU checker */
-        execution_lines[i+1].contents_after->generate_r1cs_witness_from_bits();
-        const size_t load_store_next_val = self.pb.val(execution_lines[i+1].contents_after->packed).as_ulong();
+        execution_lines[i+1].contents_after.generate_r1cs_witness_from_bits();
+        let load_store_next_val = self.pb.val(execution_lines[i+1].contents_after.packed).as_ulong();
         mem_backend.set_value(load_store_addr, load_store_next_val);
 
         /* the next PC address was passed in a bit form, so maintain packed form as well */
-        load_instruction_lines[i+1].address->generate_r1cs_witness_from_bits();
+        load_instruction_lines[i+1].address.generate_r1cs_witness_from_bits();
     }
 
     /*
@@ -455,8 +440,8 @@ void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT
 
     for i in 0..self.num_memory_lines
     {
-        mem_pairs.push(std::make_pair(self.pb.val(unrouted_memory_lines[i]->address->packed).as_ulong(),
-                                              self.pb.val(unrouted_memory_lines[i]->timestamp->packed).as_ulong()));
+        mem_pairs.push(std::make_pair(self.pb.val(unrouted_memory_lines[i].address.packed).as_ulong(),
+                                              self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong()));
     }
 
     std::sort(mem_pairs.begin(), mem_pairs.end());
@@ -464,16 +449,16 @@ void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT
     integer_permutation pi(self.num_memory_lines);
     for i in 0..self.num_memory_lines
     {
-        const size_t timestamp = self.pb.val(unrouted_memory_lines[i]->timestamp->packed).as_ulong();
-        const size_t address = self.pb.val(unrouted_memory_lines[i]->address->packed).as_ulong();
+        let timestamp = self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong();
+        let address = self.pb.val(unrouted_memory_lines[i].address.packed).as_ulong();
 
-        const auto it = std::upper_bound(mem_pairs.begin(), mem_pairs.end(), std::make_pair(address, timestamp));
-        const size_t prev = if it == mem_pairs.end() {0} else{it->second};
+        let it = std::upper_bound(mem_pairs.begin(), mem_pairs.end(), std::make_pair(address, timestamp));
+        let prev = if it == mem_pairs.end() {0} else{it.1};
         pi.set(prev, i);
     }
 
     /* route according to the memory permutation */
-    routing_network->generate_r1cs_witness(pi);
+    routing_network.generate_r1cs_witness(pi);
 
     for i in 0..self.num_memory_lines
     {
@@ -496,77 +481,78 @@ void ram_universal_gadget<ramT>::generate_r1cs_witness(const ram_boot_trace<ramT
     if !ffec::inhibit_profiling_info
     {
         ffec::print_indent();
-        print!("* Protoboard satisfied: %s\n",  (if self.pb.is_satisfied() {"YES"} else{"no"}));
+        print!("* Protoboard satisfied: {}\n",  (if self.pb.is_satisfied() {"YES"} else{"no"}));
     }
 }
 
-template<typename ramT>
-void ram_universal_gadget<ramT>::print_execution_trace() const
+
+pub fn print_execution_trace() const
 {
     for i in 0..boot_trace_size_bound
     {
         print!("Boot process at t=#{}: store {} at {}\n",
                i,
-               self.pb.val(boot_lines[i].contents_after->packed).as_ulong(),
-               self.pb.val(boot_lines[i].address->packed).as_ulong());
+               self.pb.val(boot_lines[i].contents_after.packed).as_ulong(),
+               self.pb.val(boot_lines[i].address.packed).as_ulong());
     }
 
     for i in 0..time_bound
     {
         print!("Execution step {}:\n", i);
         print!("  Loaded instruction {} from address {} (ts = {})\n",
-               self.pb.val(load_instruction_lines[i].contents_after->packed).as_ulong(),
-               self.pb.val(load_instruction_lines[i].address->packed).as_ulong(),
-               self.pb.val(load_instruction_lines[i].timestamp->packed).as_ulong());
+               self.pb.val(load_instruction_lines[i].contents_after.packed).as_ulong(),
+               self.pb.val(load_instruction_lines[i].address.packed).as_ulong(),
+               self.pb.val(load_instruction_lines[i].timestamp.packed).as_ulong());
 
         print!("  Debugging information from the transition function:\n");
         execution_checkers[i].dump();
 
         print!("  Memory operation executed: addr = {}, contents_before = {}, contents_after = {} (ts_before = {}, ts_after = {})\n",
-               self.pb.val(execution_lines[i+1].address->packed).as_ulong(),
-               self.pb.val(execution_lines[i+1].contents_before->packed).as_ulong(),
-               self.pb.val(execution_lines[i+1].contents_after->packed).as_ulong(),
-               self.pb.val(execution_lines[i].timestamp->packed).as_ulong(),
-               self.pb.val(execution_lines[i+1].timestamp->packed).as_ulong());
+               self.pb.val(execution_lines[i+1].address.packed).as_ulong(),
+               self.pb.val(execution_lines[i+1].contents_before.packed).as_ulong(),
+               self.pb.val(execution_lines[i+1].contents_after.packed).as_ulong(),
+               self.pb.val(execution_lines[i].timestamp.packed).as_ulong(),
+               self.pb.val(execution_lines[i+1].timestamp.packed).as_ulong());
     }
 }
 
-template<typename ramT>
-void ram_universal_gadget<ramT>::print_memory_trace() const
+
+pub fn print_memory_trace() const
 {
     for i in 0..num_memory_lines
     {
         print!("Memory access #{}:\n", i);
         print!("  Time side  : ts = {}, address = {}, contents_before = {}, contents_after = {}\n",
-               self.pb.val(unrouted_memory_lines[i]->timestamp->packed).as_ulong(),
-               self.pb.val(unrouted_memory_lines[i]->address->packed).as_ulong(),
-               self.pb.val(unrouted_memory_lines[i]->contents_before->packed).as_ulong(),
-               self.pb.val(unrouted_memory_lines[i]->contents_after->packed).as_ulong());
+               self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong(),
+               self.pb.val(unrouted_memory_lines[i].address.packed).as_ulong(),
+               self.pb.val(unrouted_memory_lines[i].contents_before.packed).as_ulong(),
+               self.pb.val(unrouted_memory_lines[i].contents_after.packed).as_ulong());
         print!("  Memory side: ts = {}, address = {}, contents_before = {}, contents_after = {}\n",
-               self.pb.val(routed_memory_lines[i].timestamp->packed).as_ulong(),
-               self.pb.val(routed_memory_lines[i].address->packed).as_ulong(),
-               self.pb.val(routed_memory_lines[i].contents_before->packed).as_ulong(),
-               self.pb.val(routed_memory_lines[i].contents_after->packed).as_ulong());
+               self.pb.val(routed_memory_lines[i].timestamp.packed).as_ulong(),
+               self.pb.val(routed_memory_lines[i].address.packed).as_ulong(),
+               self.pb.val(routed_memory_lines[i].contents_before.packed).as_ulong(),
+               self.pb.val(routed_memory_lines[i].contents_after.packed).as_ulong());
     }
 }
 
-template<typename ramT>
-size_t ram_universal_gadget<ramT>::packed_input_element_size(const ram_architecture_params<ramT> &ap)
+
+pub fn packed_input_element_size(ap:&ram_architecture_params<ramT>)->usize
 {
-    const size_t line_size_bits = ap.address_size() + ap.value_size();
-    const size_t max_chunk_size = FieldT::capacity();
-    const size_t packed_line_size = ffec::div_ceil(line_size_bits, max_chunk_size);
+    let line_size_bits = ap.address_size() + ap.value_size();
+    let max_chunk_size = FieldT::capacity();
+    let packed_line_size = ffec::div_ceil(line_size_bits, max_chunk_size);
 
     return packed_line_size;
 }
 
-template<typename ramT>
-size_t ram_universal_gadget<ramT>::packed_input_size(const ram_architecture_params<ramT> &ap,
-                                                     const size_t boot_trace_size_bound)
+
+pub fn packed_input_size(ap:&ram_architecture_params<ramT>,
+                                                     boot_trace_size_bound:size_t)->usize
 {
     return packed_input_element_size(ap) * boot_trace_size_bound;
 }
 
 
+}
 
 //#endif // RAM_UNIVERSAL_GADGET_TCC_

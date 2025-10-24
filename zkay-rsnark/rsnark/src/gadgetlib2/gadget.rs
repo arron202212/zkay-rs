@@ -81,7 +81,7 @@
 //     DISALLOW_COPY_AND_ASSIGN(Gadget);
 // protected:
 //     ProtoboardPtr pb_;
-// public:
+// 
 //     Gadget(ProtoboardPtr pb);
 //     virtual void init() = 0;
 //     /* generate constraints must have this interface, however generateWitness for some gadgets
@@ -129,7 +129,7 @@
 //  */
 
 // class R1P_Gadget : virtual public Gadget {
-// public:
+// 
 //     R1P_Gadget(ProtoboardPtr pb) : Gadget(pb) {}
 //     virtual ~R1P_Gadget() = 0;
 
@@ -162,7 +162,7 @@
 //     void init();
 //     void generateConstraints();
 //     void generateWitness();
-// public:
+// 
 //     friend class AND_Gadget;
 // private:
 //     //external variables
@@ -177,7 +177,7 @@
 // private:
 //     R1P_AND_Gadget(ProtoboardPtr pb, const VariableArray& input, const Variable& result);
 //     virtual void init();
-// public:
+// 
 //     void generateConstraints();
 //     void generateWitness();
 //     friend class AND_Gadget;
@@ -194,7 +194,7 @@
 
 
 // class AND_Gadget {
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb, const VariableArray& input, const Variable& result);
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const LinearCombination& input1,
@@ -230,7 +230,7 @@
 //     void init();
 //     void generateConstraints();
 //     void generateWitness();
-// public:
+// 
 //     friend class OR_Gadget;
 // private:
 //     //external variables
@@ -247,7 +247,7 @@
 //     Variable sumInverse_;
 //     R1P_OR_Gadget(ProtoboardPtr pb, const VariableArray& input, const Variable& result);
 //     virtual void init();
-// public:
+// 
 //     const VariableArray input_;
 //     const Variable result_;
 //     void generateConstraints();
@@ -258,7 +258,7 @@
 // };
 
 // class OR_Gadget {
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb, const VariableArray& input, const Variable& result);
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const LinearCombination& input1,
@@ -291,7 +291,7 @@
 //                             const VariableArray& B,
 //                             const Variable& result);
 //     virtual void init();
-// public:
+// 
 //     const VariableArray A_, B_;
 //     const Variable result_;
 //     void generateConstraints();
@@ -328,7 +328,7 @@
 // class LooseMUX_GadgetBase : virtual public Gadget {
 // protected:
 //     LooseMUX_GadgetBase(ProtoboardPtr pb) : Gadget(pb) {}
-// public:
+// 
 //     virtual ~LooseMUX_GadgetBase() = 0;
 //     virtual VariableArray indicatorVariables() const = 0;
 // private:
@@ -347,7 +347,7 @@
 //                         const VariableArray& output,
 //                         const Variable& successFlag);
 //     virtual void init();
-// public:
+// 
 //     MultiPackedWordArray inputs_;
 //     const Variable index_;
 //     const VariableArray output_;
@@ -361,7 +361,7 @@
 // };
 
 // class LooseMUX_Gadget {
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const MultiPackedWordArray& inputs,
 //                             const Variable& index,
@@ -402,7 +402,7 @@
 //                                   const VariableArray& packed,
 //                                   PackingMode packingMode);
 //     virtual void init();
-// public:
+// 
 //     const VariableArray unpacked_;
 //     const VariableArray packed_;
 //     void generateConstraints();
@@ -441,7 +441,7 @@
 //                               const VariableArray& packed,
 //                               PackingMode packingMode);
 //     virtual void init();
-// public:
+// 
 //     const VariableArray unpacked_;
 //     const VariableArray packed_;
 //     void generateConstraints();
@@ -484,7 +484,7 @@
 //                            const LinearCombination& input,
 //                            const Variable& result);
 //     virtual void init();
-// public:
+// 
 //     const LinearCombination input_;
 //     const Variable result_;
 //     void generateConstraints();
@@ -521,7 +521,7 @@
 //     DualWord_Gadget(ProtoboardPtr pb, const DualWord& var, PackingMode packingMode);
 //     virtual void init();
 //     DISALLOW_COPY_AND_ASSIGN(DualWord_Gadget);
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb, const DualWord& var, PackingMode packingMode);
 //     void generateConstraints();
 //     void generateWitness();
@@ -553,7 +553,7 @@
 //                              PackingMode packingMode);
 //     virtual void init();
 //     DISALLOW_COPY_AND_ASSIGN(DualWordArray_Gadget);
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const DualWordArray& vars,
 //                             PackingMode packingMode);
@@ -595,7 +595,7 @@
 
 //     virtual void init() {}
 //     DISALLOW_COPY_AND_ASSIGN(Toggle_Gadget);
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const FlagVariable& toggle,
 //                             const LinearCombination& zeroValue,
@@ -636,7 +636,7 @@
 
 //     virtual void init() {}
 //     DISALLOW_COPY_AND_ASSIGN(ConditionalFlag_Gadget);
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const LinearCombination& condition,
 //                             const FlagVariable& flag);
@@ -672,7 +672,7 @@
 
 //     virtual void init() {}
 //     DISALLOW_COPY_AND_ASSIGN(LogicImplication_Gadget);
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const LinearCombination& condition,
 //                             const FlagVariable& flag);
@@ -716,7 +716,7 @@
 //                           const FlagVariable& less,
 //                           const FlagVariable& lessOrEqual);
 //     virtual void init();
-// public:
+// 
 
 // 	static GadgetPtr create(ProtoboardPtr pb,
 // 							const size_t& wordBitSize,
@@ -868,13 +868,13 @@
 //                                const Variable &result)
 //     : Gadget(pb), AND_GadgetBase(pb), R1P_Gadget(pb), input_(input), result_(result),
 //       sumInverse_("sumInverse") {
-//     GADGETLIB_ASSERT(input.size() > 0, "Attempted to create an R1P_AND_Gadget with 0 inputs.");
-//     GADGETLIB_ASSERT(input.size() <= Fp(-1).as_ulong(), "Attempted to create R1P_AND_Gadget with too "
+//     GADGETLIB_ASSERT(input.len() > 0, "Attempted to create an R1P_AND_Gadget with 0 inputs.");
+//     GADGETLIB_ASSERT(input.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_AND_Gadget with too "
 //                                                               "many inputs. Will cause overflow!");
 // }
 
 // void R1P_AND_Gadget::init() {
-//     const int numInputs = input_.size();
+//     const int numInputs = input_.len();
 //     sum_ = sum(input_) - numInputs;
 // }
 
@@ -887,10 +887,10 @@
 
 // void R1P_AND_Gadget::generateWitness() {
 //     FElem sum = 0;
-//     for i in 0..input_.size() {
+//     for i in 0..input_.len() {
 //         sum += val(input_[i]);
 //     }
-//     sum -= input_.size(); // sum(input[i]) - n ==> sum
+//     sum -= input_.len(); // sum(input[i]) - n ==> sum
 //     if sum == 0) { // AND(input[0], input[1], ... == 1
 //         val(sumInverse_) = 0;
 //         val(result_) = 1;
@@ -975,8 +975,8 @@
 //                              const Variable &result)
 //         : Gadget(pb), OR_GadgetBase(pb), R1P_Gadget(pb), sumInverse_("sumInverse"), input_(input),
 //           result_(result) {
-//     GADGETLIB_ASSERT(input.size() > 0, "Attempted to create an R1P_OR_Gadget with 0 inputs.");
-//     GADGETLIB_ASSERT(input.size() <= Fp(-1).as_ulong(), "Attempted to create R1P_OR_Gadget with too "
+//     GADGETLIB_ASSERT(input.len() > 0, "Attempted to create an R1P_OR_Gadget with 0 inputs.");
+//     GADGETLIB_ASSERT(input.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_OR_Gadget with too "
 //                                                               "many inputs. Will cause overflow!");
 
 //     }
@@ -994,7 +994,7 @@
 
 // void R1P_OR_Gadget::generateWitness() {
 //     FElem sum = 0;
-//     for i in 0..input_.size() { // sum(input[i]) ==> sum
+//     for i in 0..input_.len() { // sum(input[i]) ==> sum
 //         sum += val(input_[i]);
 //     }
 //     if sum == 0) { // OR(input[0], input[1], ... == 0
@@ -1054,17 +1054,17 @@
 //                                                  const VariableArray& A,
 //                                                  const VariableArray& B,
 //                                                  const Variable& result)
-//         : Gadget(pb), InnerProduct_GadgetBase(pb), R1P_Gadget(pb), partialSums_(A.size(),
+//         : Gadget(pb), InnerProduct_GadgetBase(pb), R1P_Gadget(pb), partialSums_(A.len(),
 //           "partialSums"), A_(A), B_(B), result_(result) {
-//     GADGETLIB_ASSERT(A.size() > 0, "Attempted to create an R1P_InnerProduct_Gadget with 0 inputs.");
-//     GADGETLIB_ASSERT(A.size() == B.size(), GADGETLIB2_FMT("Inner product vector sizes not equal. Sizes are: "
-//                                                         "(A) - %u, (B) - %u", A.size(), B.size()));
+//     GADGETLIB_ASSERT(A.len() > 0, "Attempted to create an R1P_InnerProduct_Gadget with 0 inputs.");
+//     GADGETLIB_ASSERT(A.len() == B.len(), GADGETLIB2_FMT("Inner product vector sizes not equal. Sizes are: "
+//                                                         "(A) - %u, (B) - %u", A.len(), B.len()));
 // }
 
 // void R1P_InnerProduct_Gadget::init() {}
 
 // void R1P_InnerProduct_Gadget::generateConstraints() {
-//     const int n = A_.size();
+//     const int n = A_.len();
 //     if n == 1 {
 //         addRank1Constraint(A_[0], B_[0], result_, "A[0] * B[0] = result");
 //         return;
@@ -1080,7 +1080,7 @@
 // }
 
 // void R1P_InnerProduct_Gadget::generateWitness() {
-//     const int n = A_.size();
+//     const int n = A_.len();
 //     if n == 1 {
 //         val(result_) = val(A_[0]) * val(B_[0]);
 //         return;
@@ -1111,7 +1111,7 @@
 //     (1) indicators[i] * (index - i) = 0  | i = 0..n-1 ==> only indicators[index] will be non-zero
 //     (2) sum(indicators[i]) = successFlag ==> successFlag = indicators[index]
 //     (3) successFlag is boolean
-//     (4) result[j] = <indicators> * <inputs[index][j]>  |  j = 1..output.size()   ==>
+//     (4) result[j] = <indicators> * <inputs[index][j]>  |  j = 1..output.len()   ==>
 //         result[j] = inputs[index][j]
 
 // */
@@ -1122,13 +1122,13 @@
 //                                          const VariableArray& output,
 //                                          const Variable& successFlag)
 //         : Gadget(pb), LooseMUX_GadgetBase(pb), R1P_Gadget(pb),
-//           indicators_(inputs.size(), "indicators"), inputs_(inputs.size()), index_(index),
+//           indicators_(inputs.len(), "indicators"), inputs_(inputs.len()), index_(index),
 //           output_(output), successFlag_(successFlag) {
-//     GADGETLIB_ASSERT(inputs.size() <= Fp(-1).as_ulong(), "Attempted to create R1P_LooseMUX_Gadget "
+//     GADGETLIB_ASSERT(inputs.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_LooseMUX_Gadget "
 //                                                       "with too many inputs. May cause overflow!");
 // //    for(const VariableArray& inpArr : inputs) {
-//     for i in 0..inputs.size() {
-//         GADGETLIB_ASSERT(inputs[i].size() == output.size(), "Input VariableArray is of incorrect size.");
+//     for i in 0..inputs.len() {
+//         GADGETLIB_ASSERT(inputs[i].len() == output.len(), "Input VariableArray is of incorrect size.");
 //     }
 //     ::std::copy(inputs.begin(), inputs.end(), inputs_.begin()); // change type to R1P_VariableArray
 // }
@@ -1136,9 +1136,9 @@
 // void R1P_LooseMUX_Gadget::init() {
 //     // create inputs for the inner products and initialize them. Each iteration creates a
 //     // VariableArray for the i'th elements from each of the vector's VariableArrays.
-//     for i in 0..output_.size() {
+//     for i in 0..output_.len() {
 //         VariableArray curInput;
-//         for j in 0..inputs_.size() {
+//         for j in 0..inputs_.len() {
 //             curInput.push_back(inputs_[j][i]);
 //         }
 //         computeResult_.push_back(InnerProduct_Gadget::create(pb_, indicators_, curInput,
@@ -1147,7 +1147,7 @@
 // }
 
 // void R1P_LooseMUX_Gadget::generateConstraints() {
-//     const size_t n = inputs_.size();
+//     const size_t n = inputs_.len();
 //     for i in 0..n {
 //         addRank1Constraint(indicators_[i], (index_-i), 0,
 //             GADGETLIB2_FMT("indicators[%u] * (index - %u) = 0", i, i));
@@ -1160,7 +1160,7 @@
 // }
 
 // void R1P_LooseMUX_Gadget::generateWitness() {
-//     const size_t n = inputs_.size();
+//     const size_t n = inputs_.len();
 //     /* assumes that idx can be fit in ulong; true for our purposes for now */
 //     const size_t index = val(index_).asLong();
 //     const FElem arraySize = n;
@@ -1205,7 +1205,7 @@
 //                                   const Variable& output,
 //                                   const Variable& successFlag) {
 //     MultiPackedWordArray inpVec;
-//     for i in 0..inputs.size() {
+//     for i in 0..inputs.len() {
 //         MultiPackedWord cur(pb->fieldType_);
 //         cur.push_back(inputs[i]);
 //         inpVec.push_back(cur);
@@ -1251,9 +1251,9 @@
 //                                                              PackingMode packingMode)
 //     : Gadget(pb), CompressionPacking_GadgetBase(pb), R1P_Gadget(pb), packingMode_(packingMode),
 //       unpacked_(unpacked), packed_(packed) {
-//     const int n = unpacked.size();
+//     const int n = unpacked.len();
 //     GADGETLIB_ASSERT(n > 0, "Attempted to pack 0 bits in R1P.")
-//     GADGETLIB_ASSERT(packed.size() == 1,
+//     GADGETLIB_ASSERT(packed.len() == 1,
 //                  "Attempted to pack into more than 1 Variable in R1P_CompressionPacking_Gadget.")
 //     // TODO add assertion that 'n' bits can fit in the field characteristic
 // }
@@ -1261,7 +1261,7 @@
 // void R1P_CompressionPacking_Gadget::init() {}
 
 // void R1P_CompressionPacking_Gadget::generateConstraints() {
-//     const int n = unpacked_.size();
+//     const int n = unpacked_.len();
 //     LinearCombination packed;
 //     FElem two_i(R1P_Elem(1)); // Will hold 2^i
 //     for i in 0..n {
@@ -1273,7 +1273,7 @@
 // }
 
 // void R1P_CompressionPacking_Gadget::generateWitness() {
-//     const int n = unpacked_.size();
+//     const int n = unpacked_.len();
 //     if packingMode_ == PackingMode::PACK {
 //         FElem packedVal = 0;
 //         FElem two_i(R1P_Elem(1)); // will hold 2^i
@@ -1329,9 +1329,9 @@
 //                                                            PackingMode packingMode)
 //     : Gadget(pb), IntegerPacking_GadgetBase(pb), R1P_Gadget(pb), packingMode_(packingMode),
 //       unpacked_(unpacked), packed_(packed) {
-//     const int n = unpacked.size();
+//     const int n = unpacked.len();
 //     GADGETLIB_ASSERT(n > 0, "Attempted to pack 0 bits in R1P.")
-//     GADGETLIB_ASSERT(packed.size() == 1,
+//     GADGETLIB_ASSERT(packed.len() == 1,
 //                  "Attempted to pack into more than 1 Variable in R1P_IntegerPacking_Gadget.")
 // }
 
@@ -1447,7 +1447,7 @@
 // void DualWordArray_Gadget::init() {
 //     const UnpackedWordArray unpacked = vars_.unpacked();
 //     const MultiPackedWordArray packed = vars_.multipacked();
-//     for i in 0..vars_.size() {
+//     for i in 0..vars_.len() {
 //         const auto curGadget = CompressionPacking_Gadget::create(pb_, unpacked[i], packed[i],
 //                                                                  packingMode_);
 //         packingGadgets_.push_back(curGadget);

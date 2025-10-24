@@ -20,7 +20,7 @@ use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
 
 // class default_r1cs_ppzkpcd_pp {
-// public:
+// 
 //     type ffec::mnt4_pp curve_A_pp;
 //     type ffec::mnt6_pp curve_B_pp;
 

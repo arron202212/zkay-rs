@@ -85,7 +85,7 @@ static const int num_tbcs_gate_types = 16;
  * A TBCS gate is used to construct a TBCS circuit (see below).
  */
 class tbcs_gate {
-public:
+
 
     tbcs_wire_t left_wire;
     tbcs_wire_t right_wire;
@@ -131,7 +131,7 @@ type tbcs_variable_assignment tbcs_auxiliary_input;
  * Thus, the 0-th variable is not included in num_variables.
  */
 class tbcs_circuit {
-public:
+
     size_t primary_input_size;
     size_t auxiliary_input_size;
     std::vector<tbcs_gate> gates;
@@ -352,7 +352,7 @@ size_t tbcs_circuit::num_inputs() const
 
 size_t tbcs_circuit::num_gates() const
 {
-    return gates.size();
+    return gates.len();
 }
 
 size_t tbcs_circuit::num_wires() const
@@ -394,14 +394,14 @@ bool tbcs_circuit::is_valid() const
 tbcs_variable_assignment tbcs_circuit::get_all_wires(const tbcs_primary_input &primary_input,
                                                      const tbcs_auxiliary_input &auxiliary_input) const
 {
-    assert!(primary_input.size() == primary_input_size);
-    assert!(auxiliary_input.size() == auxiliary_input_size);
+    assert!(primary_input.len() == primary_input_size);
+    assert!(auxiliary_input.len() == auxiliary_input_size);
 
     tbcs_variable_assignment result;
     result.insert(result.end(), primary_input.begin(), primary_input.end());
     result.insert(result.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    assert!(result.size() == num_inputs());
+    assert!(result.len() == num_inputs());
 
     for g in &gates
     {
@@ -434,7 +434,7 @@ bool tbcs_circuit::is_satisfied(const tbcs_primary_input &primary_input,
                                 const tbcs_auxiliary_input &auxiliary_input) const
 {
     const tbcs_variable_assignment all_outputs = get_all_outputs(primary_input, auxiliary_input);
-    for i in 0..all_outputs.size()
+    for i in 0..all_outputs.len()
     {
         if all_outputs[i]
         {
@@ -495,7 +495,7 @@ void tbcs_circuit::print() const
     ffec::print_indent(); print!("General information about the circuit:\n");
     self.print_info();
     ffec::print_indent(); print!("All gates:\n");
-    for i in 0..gates.size()
+    for i in 0..gates.len()
     {
         std::string annotation = "no annotation";
 // #ifdef DEBUG

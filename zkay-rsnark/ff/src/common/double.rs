@@ -21,7 +21,7 @@ use num_complex::{Complex,ComplexFloat};
 
   pub struct Double 
   {
-//     public:
+//     
        val:Complex<f64>,
   }
 

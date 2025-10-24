@@ -26,7 +26,7 @@ use crate::gadgetlib1::gadget;
  */
 template<typename Fp3T>
 class Fp3_variable : public gadget<typename Fp3T::my_Fp> {
-public:
+
     type typename Fp3T::my_Fp FieldT;
 
     pb_linear_combination<FieldT> c0;
@@ -70,7 +70,7 @@ public:
  */
 template<typename Fp3T>
 class Fp3_mul_gadget : public gadget<typename Fp3T::my_Fp> {
-public:
+
     type typename Fp3T::my_Fp FieldT;
 
     Fp3_variable<Fp3T> A;
@@ -94,7 +94,7 @@ public:
  */
 template<typename Fp3T>
 class Fp3_mul_by_lc_gadget : public gadget<typename Fp3T::my_Fp> {
-public:
+
     type typename Fp3T::my_Fp FieldT;
 
     Fp3_variable<Fp3T> A;
@@ -115,7 +115,7 @@ public:
  */
 template<typename Fp3T>
 class Fp3_sqr_gadget : public gadget<typename Fp3T::my_Fp> {
-public:
+
     type typename Fp3T::my_Fp FieldT;
 
     Fp3_variable<Fp3T> A;
@@ -134,7 +134,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp3_gadgets;
 
 //#endif // FP3_GADGETS_HPP_
 /** @file

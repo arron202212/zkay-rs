@@ -1,6 +1,6 @@
  pub mod cpu_checkers ;
 //  pub mod curves ;
-//  pub mod delegated_ra_memory ;
+ pub mod delegated_ra_memory ;
 //  pub mod fields ;
 //  pub mod hashes ;
 //  pub mod merkle_tree ;

@@ -84,7 +84,7 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
 //#endif
 
     result.primary_input_size = circuit.primary_input_size;
-    result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.size();
+    result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.len();
 
     for g in &circuit.gates
     {
@@ -186,7 +186,7 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
         }
     }
 
-    for i in 0..circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.size()
+    for i in 0..circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.len()
     {
         /* require that 2 * wire - 1 \in {-1,1}, that is wire \in {0,1} */
         result.add_constraint(2 * variable<FieldT>(i) - 1, FMT("", "wire_{}", i));

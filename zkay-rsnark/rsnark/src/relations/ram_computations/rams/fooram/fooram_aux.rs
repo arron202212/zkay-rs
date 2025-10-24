@@ -26,7 +26,7 @@ type fooram_input_tape=std::vector<usize> ;
 type fooram_input_tape_iterator = std::vector<usize>::const_iterator ;
 
 pub struct  fooram_architecture_params {
-// public:
+// 
      w:usize,
 
     // fooram_architecture_params(const usize w=16);

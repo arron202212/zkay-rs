@@ -69,18 +69,18 @@ protected:
     void runSoundnessCheck();
 
     DISALLOW_COPY_AND_ASSIGN(LogicGadgetExhaustiveTester);
-public:
+
     void runExhaustiveTest();
 };
 
 class AndGadgetExhaustiveTester : public LogicGadgetExhaustiveTester {
-private:    virtual void ruinOutputVal();
-public:     AndGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
+   virtual void ruinOutputVal();
+     AndGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
 };
 
 class OrGadgetExhaustiveTester : public LogicGadgetExhaustiveTester {
-private:    virtual void ruinOutputVal();
-public:     OrGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
+   virtual void ruinOutputVal();
+     OrGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
 };
 
 

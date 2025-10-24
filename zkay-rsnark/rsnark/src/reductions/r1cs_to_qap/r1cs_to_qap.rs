@@ -128,19 +128,19 @@ pub fn
     /* process all other constraints */
     for i in 0..cs.num_constraints()
     {
-        for j in 0..cs.constraints[i].a.terms.size()
+        for j in 0..cs.constraints[i].a.terms.len()
         {
             A_in_Lagrange_basis[cs.constraints[i].a.terms[j].index][i] +=
                 cs.constraints[i].a.terms[j].coeff;
         }
 
-        for j in 0..cs.constraints[i].b.terms.size()
+        for j in 0..cs.constraints[i].b.terms.len()
         {
             B_in_Lagrange_basis[cs.constraints[i].b.terms[j].index][i] +=
                 cs.constraints[i].b.terms[j].coeff;
         }
 
-        for j in 0..cs.constraints[i].c.terms.size()
+        for j in 0..cs.constraints[i].c.terms.len()
         {
             C_in_Lagrange_basis[cs.constraints[i].c.terms[j].index][i] +=
                 cs.constraints[i].c.terms[j].coeff;
@@ -199,19 +199,19 @@ pub fn
     /* process all other constraints */
     for i in 0..cs.num_constraints()
     {
-        for j in 0..cs.constraints[i].a.terms.size()
+        for j in 0..cs.constraints[i].a.terms.len()
         {
             At[cs.constraints[i].a.terms[j].index] +=
                 u[i]*cs.constraints[i].a.terms[j].coeff;
         }
 
-        for j in 0..cs.constraints[i].b.terms.size()
+        for j in 0..cs.constraints[i].b.terms.len()
         {
             Bt[cs.constraints[i].b.terms[j].index] +=
                 u[i]*cs.constraints[i].b.terms[j].coeff;
         }
 
-        for j in 0..cs.constraints[i].c.terms.size()
+        for j in 0..cs.constraints[i].c.terms.len()
         {
             Ct[cs.constraints[i].c.terms[j].index] +=
                 u[i]*cs.constraints[i].c.terms[j].coeff;

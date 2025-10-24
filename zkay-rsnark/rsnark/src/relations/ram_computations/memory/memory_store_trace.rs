@@ -29,7 +29,7 @@ pub struct  memory_store_trace {
 // private:
      entries:HashMap<size_t, address_and_value>,
 
-// public:
+// 
 //     memory_store_trace();
 //     address_and_value get_trace_entry(timestamp:size_t,) const;
 //     HashMap<size_t, address_and_value> get_all_trace_entries() const;

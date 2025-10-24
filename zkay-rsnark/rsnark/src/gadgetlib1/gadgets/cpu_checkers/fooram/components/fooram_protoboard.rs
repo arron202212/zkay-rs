@@ -19,7 +19,7 @@ use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 // template<typename FieldT>
 pub struct fooram_protoboard<FieldT>  {
-// public:: public protoboard<FieldT>
+// : public protoboard<FieldT>
       ap:fooram_architecture_params,
 
     // fooram_protoboard(const fooram_architecture_params &ap);
@@ -29,13 +29,13 @@ pub struct fooram_protoboard<FieldT>  {
 pub struct fooram_gadget  {
 // protected:: public gadget<FieldT>
      pb:fooram_protoboard<FieldT>,
-// public:
+// 
 //     fooram_gadget(fooram_protoboard<FieldT> &pb, const std::string &annotation_prefix="");
 }
 
 
 
-// use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/fooram_protoboard;
+// use crate::gadgetlib1::gadgets::cpu_checkers/fooram/components/fooram_protoboard;
 
 //#endif // FOORAM_PROTOBOARD_HPP_
 /** @file

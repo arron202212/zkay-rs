@@ -61,7 +61,7 @@ type VarIndex_t=u64 ;
              Can be used for -1 or any other constant which makes semantic sense in all fields.
  */
 pub trait FElemInterface {
-// public:
+// 
     // virtual FElemInterface& operator=(const n:u64) = 0;
     // /// FConst will be field agnostic, allowing us to hold values such as 0 and 1 without knowing
     // /// the underlying field. This assignment operator will convert to the correct field element.
@@ -110,7 +110,7 @@ pub struct FElem {
 // //private:
      elem_:FElemInterfacePtr,
 }
-// public:
+// 
 //     explicit FElem(const FElemInterface& elem);
 //     /// Helper method. When doing arithmetic between a constant and a field specific element
 //     /// we want to "promote" the constant to the same field. This function changes the unique_ptr
@@ -181,7 +181,7 @@ pub struct FConst {//: public FElemInterface
      contents_:i64,
 }
     // explicit FConst(const n:u64) : contents_(n) {}
-// public:
+// 
 //     virtual FConst& operator=(const n:u64) {contents_ = n; return self;}
 //     virtual FConst& operator=(const FConst& src) {contents_ = src.contents_; return self;}
 //     virtual String asString() const {return format!("{}",contents_);}
@@ -222,7 +222,7 @@ pub struct R1P_Elem {
 // //private:/: public FElemInterface 
          elem_:Fp,
 }
-// public:
+// 
 
 //     explicit R1P_Elem(const Fp& elem) : elem_(elem) {}
 //     virtual R1P_Elem& operator=(const FConst& src) {elem_ = src.asLong(); return self;}
@@ -284,7 +284,7 @@ pub struct Variable {
 //    /**
 //     * @brief allocates the variable
 //     */
-// public:
+// 
 //     explicit Variable(name:&String = "");
 //     virtual ~Variable();
 
@@ -329,7 +329,7 @@ pub struct VariableArray {
 // #   ifdef DEBUG
 //     String name_;
 // #   endif
-// public:
+// 
 //     explicit VariableArray(name:&String = "");
 //     explicit VariableArray(size:i32, name:&String = "");
 //     explicit VariableArray(size:usize, name:&String = "");
@@ -366,7 +366,7 @@ type PackedWordArray=VariableArray;
 
 /// Holds variables whose purpose is to be populated with the unpacked form of some word, bit by bit
 pub struct UnpackedWord {
-// public:: public VariableArray 
+// : public VariableArray 
     // UnpackedWord() : VariableArray() {}
     // UnpackedWord(numBits:usize, name:&String) : VariableArray(numBits, name) {}
 } // pub struct UnpackedWord
@@ -381,7 +381,7 @@ pub struct MultiPackedWord {
     fieldType_:FieldType,
 }
     // usize getMultipackedSize() const;
-// public:
+// 
 //     MultiPackedWord(fieldType:&FieldType = AGNOSTIC);
 //     MultiPackedWord(numBits:usize, fieldType:&FieldType, name:&String);
 //     void resize(numBits:usize);
@@ -396,7 +396,7 @@ pub struct DualWord {
     multipacked_:MultiPackedWord,
     unpacked_:UnpackedWord,
 // }
-// public:
+// 
 //     DualWord(fieldType:&FieldType) : multipacked_(fieldType), unpacked_() {}
 //     DualWord(numBits:usize, fieldType:&FieldType, name:&String);
 //     DualWord(multipacked:&MultiPackedWord, unpacked:&UnpackedWord);
@@ -414,7 +414,7 @@ pub struct DualWordArray {
     multipackedContents_:MultiPackedWordArray,
     unpackedContents_:UnpackedWordArray,
     numElements_:usize,
-// public:
+// 
 //     DualWordArray(fieldType:&FieldType);
 //     DualWordArray(const MultiPackedWordArray& multipackedContents, // TODO delete, for dev
 //                   const UnpackedWordArray& unpackedContents);
@@ -440,7 +440,7 @@ pub struct LinearTerm {
 //private:
     variable_:Variable,
     coeff_:FElem,
-// public:
+// 
 //     LinearTerm(const Variable& v) : variable_(v), coeff_(1) {}
 //     LinearTerm(const Variable& v, coeff:&FElem) : variable_(v), coeff_(coeff) {}
 //     LinearTerm(const Variable& v, n:u64) : variable_(v), coeff_(n) {}
@@ -483,7 +483,7 @@ pub struct LinearCombination {
      indexMap_:HashMap<i32,i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
      constant_:FElem,
    
-// public:
+// 
 //     LinearCombination() : linearTerms_(), constant_(0) {}
 //     LinearCombination(const Variable& var) : linearTerms_(1,var), constant_(0) {}
 //     LinearCombination(linTerm:&LinearTerm) : linearTerms_(1,linTerm), constant_(0) {}
@@ -527,7 +527,7 @@ pub struct Monomial {
                                    // but is not needed for concrete efficiency as we will
                                    // only be invoking degree 2 constraints in the near
                                    // future.
-// public:
+// 
 //     Monomial(const Variable& var) : coeff_(1), variables_() {variables_.insert(var);}
 //     Monomial(const Variable& var, coeff:&FElem) : coeff_(coeff), variables_() {variables_.insert(var);}
 //     Monomial(val:&FElem) : coeff_(val), variables_() {}
@@ -559,7 +559,7 @@ pub struct Polynomial {
      monomials_:Vec<Monomial>,
      constant_:FElem,
 }
-// public:
+// 
 //     Polynomial() : monomials_(), constant_(0) {}
 //     Polynomial(const Monomial& monomial) : monomials_(1, monomial), constant_(0) {}
 //     Polynomial(const Variable& var) : monomials_(1, Monomial(var)), constant_(0) {}

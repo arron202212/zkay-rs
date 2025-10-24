@@ -34,7 +34,7 @@ compute_computed_flag:    std::shared_ptr<inner_product_gadget<FieldT> >,
 pc_from_cf_or_zero:    pb_variable<FieldT>,
 
 demux_packed_outgoing_desval:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
-// public:
+// 
 opcode_indicators:    pb_variable_array<FieldT>,
 instruction_results:    pb_variable_array<FieldT>,
 instruction_flags:    pb_variable_array<FieldT>,
@@ -108,7 +108,7 @@ pb:tinyram_protoboard<FieldT>,
                                                                  annotation_prefix:std::string) ->Self
    
 {
-    assert!(desidx.size() == pb.ap.reg_arg_width());
+    assert!(desidx.len() == pb.ap.reg_arg_width());
 
     packed_outgoing_desval.allocate(pb, format!("{} packed_outgoing_desval",self.annotation_prefix));
     is_register_instruction.allocate(pb, format!("{} is_register_instruction",self.annotation_prefix));
@@ -116,22 +116,22 @@ pb:tinyram_protoboard<FieldT>,
     is_stall_instruction.allocate(pb, format!("{} is_stall_instruction",self.annotation_prefix));
 
     packed_desidx.allocate(pb, format!("{} packed_desidx",self.annotation_prefix));
-    pack_desidx.reset(new packing_gadget<FieldT>(pb, desidx, packed_desidx, format!("{}pack_desidx",self.annotation_prefix)));
+    pack_desidx.reset(packing_gadget::<FieldT>::new(pb, desidx, packed_desidx, format!("{}pack_desidx",self.annotation_prefix)));
 
     computed_result.allocate(pb,  format!("{} computed_result",self.annotation_prefix));
     computed_flag.allocate(pb, format!("{} computed_flag",self.annotation_prefix));
 
     compute_computed_result.reset(
-        new inner_product_gadget<FieldT>(pb, opcode_indicators, instruction_results, computed_result,
+        inner_product_gadget::<FieldT>::new(pb, opcode_indicators, instruction_results, computed_result,
                                          format!("{} compute_computed_result",self.annotation_prefix)));
     compute_computed_flag.reset(
-        new inner_product_gadget<FieldT>(pb, opcode_indicators, instruction_flags, computed_flag,
+        inner_product_gadget::<FieldT>::new(pb, opcode_indicators, instruction_flags, computed_flag,
                                          format!("{} compute_computed_flag",self.annotation_prefix)));
 
     pc_from_cf_or_zero.allocate(pb, format!("{} pc_from_cf_or_zero",self.annotation_prefix));
 
     demux_packed_outgoing_desval.reset(
-        new loose_multiplexing_gadget<FieldT>(pb, packed_outgoing_registers, packed_desidx, packed_outgoing_desval, ONE,
+        loose_multiplexing_gadget::<FieldT>::new(pb, packed_outgoing_registers, packed_desidx, packed_outgoing_desval, ONE,
                                               format!("{} demux_packed_outgoing_desval",self.annotation_prefix)));
 
     //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
@@ -220,9 +220,9 @@ pub fn generate_r1cs_constraints()
     */
     self.pb.add_r1cs_constraint(
         r1cs_constraint::<FieldT>::new(
-            { computed_flag, incoming_flag * (-1) },
-            { is_register_instruction },
-            { outgoing_flag, incoming_flag * (-1) }),
+            vec![ computed_flag, incoming_flag * (-1) ],
+            vec![ is_register_instruction ],
+            vec![ outgoing_flag, incoming_flag * (-1) ]),
         format!("{} outgoing_flag",self.annotation_prefix));
 
     /*
@@ -237,9 +237,9 @@ pub fn generate_r1cs_constraints()
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint::<FieldT>::new(
-                { ONE, demux_packed_outgoing_desval->alpha[i] * (-1) },
-                { packed_outgoing_registers[i], packed_incoming_registers[i] * (-1) },
-                { ONE * 0 }),
+                vec![ ONE, demux_packed_outgoing_desval.alpha[i] * (-1) ],
+                vec![ packed_outgoing_registers[i], packed_incoming_registers[i] * (-1) ],
+                vec![ ONE * 0 ]),
             format!("{} register_carryover_{}",self.annotation_prefix, i));
     }
 
@@ -251,9 +251,9 @@ pub fn generate_r1cs_constraints()
     */
     self.pb.add_r1cs_constraint(
         r1cs_constraint::<FieldT>::new(
-            { computed_result, packed_incoming_desval * (-1) },
-            { is_register_instruction },
-            { packed_outgoing_desval, packed_incoming_desval * (-1) }),
+            vec![ computed_result, packed_incoming_desval * (-1) ],
+            vec![ is_register_instruction ],
+            vec![ packed_outgoing_desval, packed_incoming_desval * (-1) ]),
         format!("{} packed_outgoing_desval",self.annotation_prefix));
 }
 
@@ -325,9 +325,9 @@ pub fn generate_r1cs_witness()
     for i in 0..self.pb.ap.k
     {
         self.pb.val(packed_outgoing_registers[i]) =
-            (self.pb.val(packed_desidx).as_ulong() == i) ?
-            changed_register_contents :
-            self.pb.val(packed_incoming_registers[i]);
+            if (self.pb.val(packed_desidx).as_ulong() == i) 
+            {changed_register_contents} else
+            {self.pb.val(packed_incoming_registers[i])};
     }
 
     /* demux result register (it is important to do witness generation
@@ -336,9 +336,9 @@ pub fn generate_r1cs_witness()
     demux_packed_outgoing_desval.generate_r1cs_witness();
 }
 
-#if 0
+// #if 0
 
-void test_arithmetic_consistency_enforcer_gadget()
+pub fn  test_arithmetic_consistency_enforcer_gadget()
 {
     ffec::print_time("starting arithmetic_consistency_enforcer test");
 
@@ -346,13 +346,13 @@ void test_arithmetic_consistency_enforcer_gadget()
      let mut pb=tinyram_protoboard::<FieldT>::new(ap);
 
     let ( opcode_indicators, instruction_results, instruction_flags)=(pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new());
-    opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
-    instruction_results.allocate(pb, 1ul<<ap.opcode_width(), "instruction_results");
-    instruction_flags.allocate(pb, 1ul<<ap.opcode_width(), "instruction_flags");
+    opcode_indicators.allocate(pb, 1u64<<ap.opcode_width(), "opcode_indicators");
+    instruction_results.allocate(pb, 1u64<<ap.opcode_width(), "instruction_results");
+    instruction_flags.allocate(pb, 1u64<<ap.opcode_width(), "instruction_flags");
 
     let mut desidx=dual_variable_gadget::<FieldT> ::new(pb, ap.reg_arg_width(), "desidx");
 
-    let mut   incoming_pc=pb_variable<FieldT>::new();
+    let mut   incoming_pc=pb_variable::<FieldT>::new();
     incoming_pc.allocate(pb, "incoming_pc");
 
     let mut  packed_incoming_registers=pb_variable_array::<FieldT>::new();
@@ -368,12 +368,12 @@ void test_arithmetic_consistency_enforcer_gadget()
     let mut  packed_outgoing_registers=pb_variable_array::<FieldT>::new();
     packed_outgoing_registers.allocate(pb, ap.k, "packed_outgoing_registers");
 
-    arithmetic_consistency_enforcer_gadget g(pb, opcode_indicators, instruction_results, instruction_flags,
+    let mut  g=arithmetic_consistency_enforcer_gadget::new(pb, opcode_indicators, instruction_results, instruction_flags,
                                              desidx.bits, incoming_pc, packed_incoming_registers,
                                              incoming_load_flag, outgoing_pc, packed_outgoing_registers, outgoing_flag, "g");
     g.generate_r1cs_constraints();
 
-    for i in 0..1ul<<ap.opcode_width()
+    for i in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(instruction_results[i]) = FieldT(std::rand());
         self.pb.val(instruction_flags[i]) = FieldT(std::rand() % 2);
@@ -387,7 +387,7 @@ void test_arithmetic_consistency_enforcer_gadget()
         self.pb.val(packed_incoming_registers[i]) = FieldT(1000+i);
     }
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -406,9 +406,9 @@ void test_arithmetic_consistency_enforcer_gadget()
         for j in 0..ap.k
         {
             assert!(self.pb.val(packed_outgoing_registers[j]) ==
-                   self.pb.val(i == j ?
-                                instruction_results[tinyram_opcode_AND] :
-                                packed_incoming_registers[j]));
+                   self.pb.val( if i == j 
+                                {instruction_results[tinyram_opcode_AND] }else
+                                {packed_incoming_registers[j]}));
         }
 
         assert!(self.pb.val(outgoing_flag) == self.pb.val(instruction_flags[tinyram_opcode_AND]));
@@ -416,7 +416,7 @@ void test_arithmetic_consistency_enforcer_gadget()
     }
 
     print!("arithmetic test successful\n");
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -431,7 +431,7 @@ void test_arithmetic_consistency_enforcer_gadget()
     self.pb.val(incoming_load_flag) = FieldT::zero();
     print!("test that firstload doesn't increment PC successful\n");
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -466,9 +466,9 @@ pub fn  test_control_flow_consistency_enforcer_gadget()
     let mut ap =tinyram_architecture_params::new(16, 16);
     let mut pb=tinyram_protoboard::<FieldT>::new();(ap);
 
-    let (mut opcode_indicators,mut  instruction_results)=( pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new()););
-    opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
-    instruction_results.allocate(pb, 1ul<<ap.opcode_width(), "instruction_results");
+    let (mut opcode_indicators,mut  instruction_results)=( pb_variable_array::<FieldT>::new(),pb_variable_array::<FieldT>::new());
+    opcode_indicators.allocate(pb, 1u64<<ap.opcode_width(), "opcode_indicators");
+    instruction_results.allocate(pb, 1u64<<ap.opcode_width(), "instruction_results");
 
      let  (mut incoming_pc, mut incoming_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
     incoming_pc.allocate(pb, "incoming_pc");
@@ -489,7 +489,7 @@ pub fn  test_control_flow_consistency_enforcer_gadget()
                                                outgoing_pc, packed_outgoing_registers, outgoing_flag, "g");
     g.generate_r1cs_constraints();
 
-    for i in 0..1ul<<ap.opcode_width()
+    for i in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(instruction_results[i]) = FieldT(std::rand());
     }
@@ -501,7 +501,7 @@ pub fn  test_control_flow_consistency_enforcer_gadget()
         self.pb.val(packed_incoming_registers[i]) = FieldT(1000+i);
     }
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -535,7 +535,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     let mut pb=tinyram_protoboard::<FieldT>::new();(ap);
 
     let mut opcode_indicators=pb_variable_array::<FieldT>::new();
-    opcode_indicators.allocate(pb, 1ul<<ap.opcode_width(), "opcode_indicators");
+    opcode_indicators.allocate(pb, 1u64<<ap.opcode_width(), "opcode_indicators");
 
     let  (mut incoming_pc, mut incoming_flag,mut  incoming_load_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
     incoming_pc.allocate(pb, "incoming_pc");
@@ -569,7 +569,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     /* test that accept stalls */
     print!("test that ACCEPT stalls\n");
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -593,7 +593,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     /* test that other special instructions (e.g. STORE) don't and also preserve registers */
     print!("test that others (e.g. STORE) don't stall\n");
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -623,7 +623,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     /* test that load can modify outgoing register and sets load_flag */
     print!("test that LOAD sets load_flag\n");
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -642,7 +642,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     /* test that postload clears load_flag */
     print!("test that postload clears load_flag\n");
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }
@@ -657,7 +657,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     /* test non-special instructions */
     print!("test non-special instructions\n");
 
-    for t in 0..1ul<<ap.opcode_width()
+    for t in 0..1u64<<ap.opcode_width()
     {
         self.pb.val(opcode_indicators[t]) = FieldT::zero();
     }

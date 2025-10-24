@@ -51,7 +51,7 @@ private:
     size_t degree_;
     size_t num_inputs_;
 
-public:
+
     std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain;
 
     std::vector<std::map<size_t, FieldT> > V_in_Lagrange_basis;
@@ -97,7 +97,7 @@ private:
     size_t degree_;
     size_t num_inputs_;
 
-public:
+
     std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain;
 
     FieldT t;
@@ -145,7 +145,7 @@ private:
     size_t degree_;
     size_t num_inputs_;
 
-public:
+
     FieldT d;
 
     std::vector<FieldT> coefficients_for_Vs;
@@ -362,22 +362,22 @@ bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &wi
         return false;
     }
 
-    if self.num_variables() != witness.coefficients_for_Vs.size()
+    if self.num_variables() != witness.coefficients_for_Vs.len()
     {
         return false;
     }
 
-    if self.degree()+1 != witness.coefficients_for_H.size()
+    if self.degree()+1 != witness.coefficients_for_H.len()
     {
         return false;
     }
 
-    if self.Vt.size() != self.num_variables()+1
+    if self.Vt.len() != self.num_variables()+1
     {
         return false;
     }
 
-    if self.Ht.size() != self.degree()+1
+    if self.Ht.len() != self.degree()+1
     {
         return false;
     }

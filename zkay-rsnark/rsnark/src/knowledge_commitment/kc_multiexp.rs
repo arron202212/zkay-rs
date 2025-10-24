@@ -186,10 +186,10 @@ use crate::knowledge_commitment::knowledge_commitment;
 //                                                  suggested_num_chunks:size_t)
 // {
 //     knowledge_commitment_vector<T1, T2> res;
-//     res.domain_size_ = v.size();
+//     res.domain_size_ = v.len();
 
 //     size_t nonzero = 0;
-//     for i in 0..v.size()
+//     for i in 0..v.len()
 //     {
 //         nonzero += if v[i].is_zero() {0} else{1};
 //     }
@@ -198,7 +198,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 
 //     if !ffec::inhibit_profiling_info
 //     {
-//         ffec::print_indent(); print!("Non-zero coordinate count: {}/{} {}\n", nonzero, v.size(), 100.*nonzero/v.size());
+//         ffec::print_indent(); print!("Non-zero coordinate count: {}/{} {}\n", nonzero, v.len(), 100.*nonzero/v.len());
 //     }
 
 //     std::vector<knowledge_commitment_vector<T1, T2> > tmp(num_chunks);
@@ -212,7 +212,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     size_t cnt = 0;
 //     size_t chunkno = 1;
 
-//     for i in 0..v.size()
+//     for i in 0..v.len()
 //     {
 //         cnt += if v[i].is_zero() {0} else{1};
 //         if cnt == chunk_size && chunkno < num_chunks
@@ -223,7 +223,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //         }
 //     }
 
-//     chunk_pos[num_chunks] = v.size();
+//     chunk_pos[num_chunks] = v.len();
 
 // // #ifdef MULTICORE
 // //#pragma omp parallel for
@@ -239,7 +239,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 
 //     if num_chunks == 1
 //     {
-//         tmp[0].domain_size_ = v.size();
+//         tmp[0].domain_size_ = v.len();
 //         return tmp[0];
 //     }
 //     else

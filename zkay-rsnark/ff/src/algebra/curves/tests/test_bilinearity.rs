@@ -20,7 +20,7 @@ use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 using namespace libff;
 
 class CurveBilinearityTest: public ::testing::Test {
-public:
+
     CurveBilinearityTest()
     {
         start_profiling();

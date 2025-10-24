@@ -25,7 +25,7 @@ type lc_index_t=usize ;
 
 // 
 pub struct pb_variable<FieldT>   {
-// public:public variable<FieldT> 
+// public variable<FieldT> 
     // pb_variable(const var_index_t index = 0) : variable<FieldT>(index) {};
 
     // void allocate(pb:&protoboard<FieldT>, annotation:&std::string="");
@@ -40,7 +40,7 @@ impl ContentsConfig for pb_variable_array <FieldT>
 pub struct pb_variable_array <FieldT>
 {
    
-// public:
+// 
 //     using typename contents::iterator;
 //     using typename contents::const_iterator;
 //     using typename contents::reverse_iterator;
@@ -80,7 +80,7 @@ pub struct pb_variable_array <FieldT>
 
 // 
 pub struct pb_linear_combination {
-// public:: public linear_combination<FieldT> 
+// : public linear_combination<FieldT> 
     is_variable:bool,
     index:lc_index_t,
 
@@ -102,7 +102,7 @@ pub struct pb_linear_combination_array <FieldT>
 {
 //: private std::vector<pb_linear_combination<FieldT> >
     // 
-// public:
+// 
 //     using typename contents::iterator;
 //     using typename contents::const_iterator;
 //     using typename contents::reverse_iterator;
@@ -196,8 +196,8 @@ pub fn allocate(pb:&protoboard<FieldT>,  n:usize, annotation_prefix:&std::string
 
 pub fn fill_with_field_elements(pb:&protoboard<FieldT>, vals:&std::vector<FieldT>) 
 {
-    assert!(self.size() == vals.size());
-    for i in 0..vals.size()
+    assert!(self.len() == vals.len());
+    for i in 0..vals.len()
     {
         pb.val(self[i]) = vals[i];
     }
@@ -206,8 +206,8 @@ pub fn fill_with_field_elements(pb:&protoboard<FieldT>, vals:&std::vector<FieldT
 
 pub fn fill_with_bits(pb:&protoboard<FieldT>, bits:&ffec::bit_vector) 
 {
-    assert!(self.size() == bits.size());
-    for i in 0..bits.size()
+    assert!(self.len() == bits.len());
+    for i in 0..bits.len()
     {
         pb.val(self[i]) = if bits[i] {FieldT::one()} else{FieldT::zero()};
     }
@@ -217,7 +217,7 @@ pub fn fill_with_bits(pb:&protoboard<FieldT>, bits:&ffec::bit_vector)
 pub fn fill_with_bits_of_field_element(pb:&protoboard<FieldT>, r:&FieldT) 
 {
     let  rint = r.as_bigint::<FieldT::num_limbs>();
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         pb.val(self[i])=  if rint.test_bit(i) {FieldT::one()} else{FieldT::zero()};
     }
@@ -232,8 +232,8 @@ pub fn fill_with_bits_of_ulong(pb:&protoboard<FieldT>, i:u64)
 
 pub fn get_vals(pb:&protoboard<FieldT>)->std::vector<FieldT> 
 {
-    let mut  result=Vec::with_capacity(self.size());
-    for i in 0..self.size()
+    let mut  result=Vec::with_capacity(self.len());
+    for i in 0..self.len()
     {
         result[i] = pb.val(self[i]);
     }
@@ -244,7 +244,7 @@ pub fn get_vals(pb:&protoboard<FieldT>)->std::vector<FieldT>
  pub fn get_bits(pb:&protoboard<FieldT>) ->ffec::bit_vector
 {
     let mut  result=bit_vector::new();
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         let  v = pb.val(self[i]);
         assert!(v == FieldT::zero() || v == FieldT::one());
@@ -258,10 +258,10 @@ pub fn get_vals(pb:&protoboard<FieldT>)->std::vector<FieldT>
 {
     let  result = FieldT::zero();
 
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         /* push in the new bit */
-        let  v = pb.val(self[self.size()-1-i]);
+        let  v = pb.val(self[self.len()-1-i]);
         assert!(v == FieldT::zero() || v == FieldT::one());
         result += result + v;
     }
@@ -355,7 +355,7 @@ pub fn evaluate(pb:&protoboard<FieldT>)
 
 pub fn  evaluate(pb:&protoboard<FieldT>) 
 {
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         self[i].evaluate(pb);
     }
@@ -364,8 +364,8 @@ pub fn  evaluate(pb:&protoboard<FieldT>)
 
 pub fn  fill_with_field_elements(pb:&protoboard<FieldT>, vals:&std::vector<FieldT>) 
 {
-    assert!(self.size() == vals.size());
-    for i in 0..vals.size()
+    assert!(self.len() == vals.len());
+    for i in 0..vals.len()
     {
         pb.lc_val(self[i]) = vals[i];
     }
@@ -374,8 +374,8 @@ pub fn  fill_with_field_elements(pb:&protoboard<FieldT>, vals:&std::vector<Field
 
 pub fn  fill_with_bits(pb:&protoboard<FieldT>, bits:&ffec::bit_vector) 
 {
-    assert!(self.size() == bits.size());
-    for i in 0..bits.size()
+    assert!(self.len() == bits.len());
+    for i in 0..bits.len()
     {
         pb.lc_val(self[i]) = if bits[i] {FieldT::one()} else{FieldT::zero()};
     }
@@ -385,7 +385,7 @@ pub fn  fill_with_bits(pb:&protoboard<FieldT>, bits:&ffec::bit_vector)
 pub fn  fill_with_bits_of_field_element(pb:&protoboard<FieldT>, r:&FieldT) 
 {
     let rint = r.as_bigint::<FieldT::num_limbs>();
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         pb.lc_val(self[i])=  if rint.test_bit(i) {FieldT::one()} else{FieldT::zero()};
     }
@@ -400,8 +400,8 @@ pub fn  fill_with_bits_of_ulong(pb:&protoboard<FieldT>, i:u64)
 
  pub fn get_vals(pb:&protoboard<FieldT>) ->std::vector<FieldT>
 {
-    let mut result=Vec::with_capacity(self.size());
-    for i in 0..self.size()
+    let mut result=Vec::with_capacity(self.len());
+    for i in 0..self.len()
     {
         result[i] = pb.lc_val(self[i]);
     }
@@ -412,7 +412,7 @@ pub fn  fill_with_bits_of_ulong(pb:&protoboard<FieldT>, i:u64)
  pub fn get_bits(pb:&protoboard<FieldT>) ->ffec::bit_vector
 {
     let mut  result=bit_vector::new();
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         let  v = pb.lc_val(self[i]);
         assert!(v == FieldT::zero() || v == FieldT::one());
@@ -426,10 +426,10 @@ pub fn  fill_with_bits_of_ulong(pb:&protoboard<FieldT>, i:u64)
 {
     let mut  result = FieldT::zero();
 
-    for i in 0..self.size()
+    for i in 0..self.len()
     {
         /* push in the new bit */
-        let v = pb.lc_val(self[self.size()-1-i]);
+        let v = pb.lc_val(self[self.len()-1-i]);
         assert!(v == FieldT::zero() || v == FieldT::one());
         result += result + v;
     }
@@ -470,7 +470,7 @@ pub fn pb_packing_sum<FieldT>(v:&pb_linear_combination_array<FieldT>)->linear_co
 
  pub fn pb_coeff_sum<FieldT>(v:&pb_linear_combination_array<FieldT>, coeffs:&std::vector<FieldT>)->linear_combination<FieldT>
 {
-    assert!(v.size() == coeffs.size());
+    assert!(v.len() == coeffs.len());
     let mut  all_terms=vec![];//std::vector<linear_term<FieldT> >
 
     let mut  coeff_it = coeffs.iter();

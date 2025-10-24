@@ -40,7 +40,7 @@ auxiliary_input:    ram_input_tape<ramT>,
 
 
 
-// use crate::relations::ram_computations/rams/examples/ram_examples;
+// use crate::relations::ram_computations::rams::examples::ram_examples;
 
 //#endif // RAM_EXAMPLES_HPP_
 /** @file
@@ -81,7 +81,7 @@ pub fn  gen_ram_example_simple<ramT>(ap:&ram_architecture_params<ramT>, boot_tra
     prelude.instructions = generate_tinyram_prelude(ap);
 
     let mut boot_pos = 0;
-    for i in 0..prelude.instructions.size()
+    for i in 0..prelude.instructions.len()
     {
         result.boot_trace.set_trace_entry(boot_pos, (i, prelude.instructions[i].as_dword(ap)));
         boot_pos+=1;
@@ -127,13 +127,13 @@ pub fn  gen_ram_example_complex<ramT>(ap:&ram_architecture_params<ramT>, boot_tr
     prelude.instructions = generate_tinyram_prelude(ap);
 
     let mut  boot_pos = 0;
-    for i in 0..prelude.instructions.size()
+    for i in 0..prelude.instructions.len()
     {
         result.boot_trace.set_trace_entry(boot_pos, (i, prelude.instructions[i].as_dword(ap)));
 boot_pos+=1;
     }
 
-    let prelude_len = prelude.instructions.size();
+    let prelude_len = prelude.instructions.len();
     let instr_addr = (prelude_len+4)*(2*ap.w/8);
     let input_addr = (1u64<<(ap.w-1)) + (ap.w/8); // byte address of the first input word
 

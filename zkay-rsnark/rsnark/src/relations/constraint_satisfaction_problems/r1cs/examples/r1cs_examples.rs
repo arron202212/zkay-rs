@@ -161,7 +161,7 @@ use ffec::common::utils;
      let auxiliary_input=r1cs_primary_input::<FieldT>(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
     assert!(cs.num_constraints() == num_constraints);
@@ -224,7 +224,7 @@ use ffec::common::utils;
     let  auxiliary_input=r1cs_primary_input::<FieldT>::new(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
 
     /* sanity checks */
-    assert!(cs.num_variables() == full_variable_assignment.size());
+    assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
     assert!(cs.num_constraints() == num_constraints);

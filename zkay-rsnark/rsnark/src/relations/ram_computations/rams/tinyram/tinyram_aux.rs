@@ -144,7 +144,7 @@ type tinyram_input_tape=std::vector<usize> ;
 type tinyram_input_tape_iterator= tinyram_input_tape::const_iterator ;
 
 pub struct tinyram_architecture_params {
-// public:
+// 
      w:reg_width_t, /* width of a register */
      k:reg_count_t, /* number of registers */
 }
@@ -184,7 +184,7 @@ pub struct tinyram_architecture_params {
    corresponding to the order in memory */
 
 pub struct tinyram_instruction {
-// public:
+// 
     opcode:tinyram_opcode,
     arg2_is_imm:bool,
     desidx:usize,
@@ -206,11 +206,11 @@ pub struct tinyram_instruction {
 // extern tinyram_instruction tinyram_default_instruction;
 
 pub struct tinyram_program {
-// public:
+// 
 instructions:    std::vector<tinyram_instruction>,
 }
 impl tinyram_program {
-    pub fn  size(&self) ->usize { return instructions.size(); }
+    pub fn  size(&self) ->usize { return instructions.len(); }
     // void add_instruction(instr:&tinyram_instruction);
 }
 
@@ -377,7 +377,7 @@ pub fn cpu_state_size(&self)->usize
 pub fn initial_pc_addr(&self)->usize
 {
     /* the initial PC address is memory units for the RAM reduction */
-    let initial_pc_addr = generate_tinyram_prelude(*this).size();
+    let initial_pc_addr = generate_tinyram_prelude(*this).len();
     return initial_pc_addr;
 }
 
@@ -393,24 +393,24 @@ pub fn initial_memory_contents(program:&tinyram_program,
     // remember that memory consists of 1u64<<dwaddr_len() double words (!)
      let mut m=memory_contents::new();
 
-    for i in 0..program.instructions.size()
+    for i in 0..program.instructions.len()
     {
         m[i] = program.instructions[i].as_dword(*this);
     }
 
     let  input_addr = 1u64 << (dwaddr_len() - 1);
-    let  latest_double_word = (1u64<<(w-1)) + primary_input.size(); // the first word will contain 2^{w-1} + input_size (the location where the last input word was stored)
+    let  latest_double_word = (1u64<<(w-1)) + primary_input.len(); // the first word will contain 2^{w-1} + input_size (the location where the last input word was stored)
 
-    for i in 0..primary_input.size()/2 + 1
+    for i in 0..primary_input.len()/2 + 1
     {
-        if 2*i < primary_input.size()
+        if 2*i < primary_input.len()
         {
             latest_double_word += (primary_input[2*i] << w);
         }
 
         m[input_addr + i] = latest_double_word;
 
-        if 2*i + 1 < primary_input.size()
+        if 2*i + 1 < primary_input.len()
         {
             latest_double_word = primary_input[2*i+1];
         }
@@ -574,7 +574,7 @@ pub fn add_instruction(instr:&tinyram_instruction)
      let mut result=memory_store_trace::new();
 
     let  boot_pos = boot_trace_size_bound-1;
-    for i in 0..program.instructions.size()
+    for i in 0..program.instructions.len()
     {
         result.set_trace_entry(boot_pos, std::make_pair(i, program.instructions[i].as_dword(ap)));
 boot_pos-=1;
@@ -582,9 +582,9 @@ boot_pos-=1;
 
     letprimary_input_base_addr = (1u64 << (ap.dwaddr_len()-1));
 
-    for  j in (0.. primary_input.size()).step_by(2)
+    for  j in (0.. primary_input.len()).step_by(2)
     {
-        let  memory_dword = primary_input[j] + (( if j+1 < primary_input.size() { primary_input[j+1]} else {0}) << ap.w);
+        let  memory_dword = primary_input[j] + (( if j+1 < primary_input.len() { primary_input[j+1]} else {0}) << ap.w);
         result.set_trace_entry(boot_pos, std::make_pair(primary_input_base_addr + j, memory_dword));
         boot_pos-=1;
     }

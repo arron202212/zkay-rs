@@ -38,7 +38,7 @@
 
 // /// An abstract class for a field agnostic constraint. The derived classes will be field specific.
 // class Constraint {
-// public:
+// 
 //     explicit Constraint(const ::std::string& name); // casting disallowed by 'explicit'
 //     ::std::string name() const; ///< @returns name of the constraint as a string
 //     /**
@@ -76,7 +76,7 @@
 // class Rank1Constraint : public Constraint {
 // private:
 //     LinearCombination a_, b_, c_; // <a,x> * <b,x> = <c,x>
-// public:
+// 
 //     Rank1Constraint(const LinearCombination& a,
 //                     const LinearCombination& b,
 //                     const LinearCombination& c,
@@ -109,7 +109,7 @@
 // class PolynomialConstraint : public Constraint {
 // private:
 //     Polynomial a_, b_;
-// public:
+// 
 //     PolynomialConstraint(const Polynomial& a,
 //                          const Polynomial& b,
 //                          const ::std::string& name);
@@ -138,7 +138,7 @@
 // protected:
 //     type ::std::shared_ptr<Constraint> ConstraintPtr;
 //     ::std::vector<ConstraintPtr> constraintsPtrs_;
-// public:
+// 
 //     ConstraintSystem() : constraintsPtrs_() {};
 
 //     /**
@@ -164,7 +164,7 @@
 //         }
 //         return retset;
 //     }
-//     size_t getNumberOfConstraints() { return constraintsPtrs_.size(); }
+//     size_t getNumberOfConstraints() { return constraintsPtrs_.len(); }
 //     ConstraintPtr getConstraint(size_t idx){ return constraintsPtrs_[idx];}
 //     friend class GadgetLibAdapter;
 // }; // class ConstraintSystem
@@ -367,7 +367,7 @@
 
 // bool ConstraintSystem::isSatisfied(const VariableAssignment& assignment,
 //                                    const PrintOptions& printOnFail) const {
-//     for i in 0..constraintsPtrs_.size() {
+//     for i in 0..constraintsPtrs_.len() {
 //         if !constraintsPtrs_[i]->isSatisfied(assignment, printOnFail){
 //             return false;
 //         }

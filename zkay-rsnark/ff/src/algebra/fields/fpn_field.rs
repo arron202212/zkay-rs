@@ -30,7 +30,7 @@ class FpnField;
  */
 template<typename T, mp_size_t n, const bigint<n>& modulus>
 class FpnField {
-public:
+
     /* Functions unique to Fp^n fields */
 
     /** The following parameters are used for the Tonelli-Shanks square root algorithms.

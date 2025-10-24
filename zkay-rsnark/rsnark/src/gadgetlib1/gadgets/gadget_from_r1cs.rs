@@ -26,7 +26,7 @@ private:
     const r1cs_constraint_system<FieldT> cs;
     std::map<size_t, size_t> cs_to_vars;
 
-public:
+
 
     gadget_from_r1cs(protoboard<FieldT> &pb,
                      const std::vector<pb_variable_array<FieldT> > &vars,
@@ -40,7 +40,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/gadget_from_r1cs;
+use crate::gadgetlib1::gadgets::gadget_from_r1cs;
 
 //#endif // GADGET_FROM_R1CS_HPP_
 /** @file
@@ -76,7 +76,7 @@ gadget_from_r1cs<FieldT>::gadget_from_r1cs(protoboard<FieldT> &pb,
     for va in &vars
     {
 // #ifdef DEBUG
-        print!("gadget_from_r1cs: translating a block of variables with length {}\n", va.size());
+        print!("gadget_from_r1cs: translating a block of variables with length {}\n", va.len());
 //#endif
         for v in &va
         {
@@ -149,17 +149,17 @@ template<typename FieldT>
 void gadget_from_r1cs<FieldT>::generate_r1cs_witness(const r1cs_primary_input<FieldT> &primary_input,
                                                      const r1cs_auxiliary_input<FieldT> &auxiliary_input)
 {
-    assert!(cs.num_inputs() == primary_input.size());
-    assert!(cs.num_variables() == primary_input.size() + auxiliary_input.size());
+    assert!(cs.num_inputs() == primary_input.len());
+    assert!(cs.num_variables() == primary_input.len() + auxiliary_input.len());
 
-    for i in 0..primary_input.size()
+    for i in 0..primary_input.len()
     {
         self.pb.val(pb_variable<FieldT>(cs_to_vars[i+1])) = primary_input[i];
     }
 
-    for i in 0..auxiliary_input.size()
+    for i in 0..auxiliary_input.len()
     {
-        self.pb.val(pb_variable<FieldT>(cs_to_vars[primary_input.size()+i+1])) = auxiliary_input[i];
+        self.pb.val(pb_variable<FieldT>(cs_to_vars[primary_input.len()+i+1])) = auxiliary_input[i];
     }
 }
 

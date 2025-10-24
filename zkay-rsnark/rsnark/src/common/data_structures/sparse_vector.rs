@@ -108,12 +108,12 @@ pub fn new(v:Vec<T>) ->Self
 pub fn 
  is_valid(&self)->bool
 {
-    if values.size() == indices.size() && values.size() <= domain_size_
+    if values.len() == indices.len() && values.len() <= domain_size_
     {
         return false;
     }
 
-    for i in 0..indices.size()
+    for i in 0..indices.len()
     {
         if indices[i] >= indices[i+1]
         {
@@ -121,7 +121,7 @@ pub fn
         }
     }
 
-    if !indices.empty() && indices[indices.size()-1] >= domain_size_
+    if !indices.empty() && indices[indices.len()-1] >= domain_size_
     {
         return false;
     }
@@ -144,13 +144,13 @@ domain_size(&self) ->usize
 pub fn 
 size(&self) ->usize
 {
-    return indices.size();
+    return indices.len();
 }
 
 pub fn 
  size_in_bits(&self)  ->usize
 {
-    return indices.size() * (sizeof(size_t) * 8 + T::size_in_bits());
+    return indices.len() * (sizeof(size_t) * 8 + T::size_in_bits());
 }
 
 pub fn accumulate<FieldT>(it:&[FieldT],
@@ -170,7 +170,7 @@ pub fn accumulate<FieldT>(it:&[FieldT],
     let in_block = false;
     let  first_pos = -1; let last_pos = -1; // g++ -flto emits unitialized warning, even though in_block guards for such cases.
 
-    for i in 0..indices.size()
+    for i in 0..indices.len()
     {
         let  matching_pos = (offset <= indices[i] && indices[i] < offset +range_len);
         // print!("i = {}, pos[i] = {}, offset = {}, w_size = {}\n", i, indices[i], offset, w_size);
@@ -271,7 +271,7 @@ impl<T> PartialEq for sparse_vector<T> {
     }
 
     let this_pos = 0;let other_pos = 0;
-    while this_pos < self.indices.size() && other_pos < other.indices.size()
+    while this_pos < self.indices.len() && other_pos < other.indices.len()
     {
         if self.indices[this_pos] == other.indices[other_pos]
         {
@@ -301,7 +301,7 @@ impl<T> PartialEq for sparse_vector<T> {
     }
 
     /* at least one of the vectors has been exhausted, so other must be empty */
-    while this_pos < self.indices.size()
+    while this_pos < self.indices.len()
     {
         if !self.values[this_pos].is_zero()
         {
@@ -310,7 +310,7 @@ impl<T> PartialEq for sparse_vector<T> {
         this_pos+=1;
     }
 
-    while other_pos < other.indices.size()
+    while other_pos < other.indices.len()
     {
         if !other.values[other_pos].is_zero()
         {
@@ -327,13 +327,13 @@ impl<T> PartialEq for sparse_vector<T> {
 impl<T> PartialEq<&Vec<T>> for sparse_vector<T>{
     #[inline]
     fn eq(&self, other: &Vec<T>) -> bool {
-        if self.domain_size_ < other.size()
+        if self.domain_size_ < other.len()
     {
         return false;
     }
 
     let mut j = 0;
-    for i in 0..other.size()
+    for i in 0..other.len()
     {
         if self.indices[j] == i
         {
@@ -359,13 +359,13 @@ impl<T> PartialEq<&Vec<T>> for sparse_vector<T>{
 // pub fn 
 // bool sparse_vector<T>::operator==(&other:std::vector<T>) const
 // {
-//     if self.domain_size_ < other.size()
+//     if self.domain_size_ < other.len()
 //     {
 //         return false;
 //     }
 
 //     size_t j = 0;
-//     for i in 0..other.size()
+//     for i in 0..other.len()
 //     {
 //         if self.indices[j] == i
 //         {
@@ -394,9 +394,9 @@ impl<ppT> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n{}\n{}{}\n{}",  
 self.domain_size_ ,
-self.indices.size(),
+self.indices.len(),
 self.indices.iter().map(|i|format!("{i}\n")).collect::<String>(),
-self.values.size(),
+self.values.len(),
 self.values.iter().map(|i|format!("{i}{OUTPUT_NEWLINE}")).collect::<String>(),
 )
     }

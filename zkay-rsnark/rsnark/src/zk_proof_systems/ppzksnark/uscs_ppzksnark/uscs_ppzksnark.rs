@@ -73,7 +73,7 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk);
  */
 template<typename ppT>
 class uscs_ppzksnark_proving_key {
-public:
+
     ffec::G1_vector<ppT> V_g1_query;
     ffec::G1_vector<ppT> alpha_V_g1_query;
     ffec::G1_vector<ppT> H_g1_query;
@@ -99,12 +99,12 @@ public:
 
     size_t G1_size() const
     {
-        return V_g1_query.size() + alpha_V_g1_query.size() + H_g1_query.size();
+        return V_g1_query.len() + alpha_V_g1_query.len() + H_g1_query.len();
     }
 
     size_t G2_size() const
     {
-        return V_g2_query.size();
+        return V_g2_query.len();
     }
 
     size_t G1_sparse_size() const
@@ -153,7 +153,7 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_verification_key<ppT> 
  */
 template<typename ppT>
 class uscs_ppzksnark_verification_key {
-public:
+
     ffec::G2<ppT> tilde_g2;
     ffec::G2<ppT> alpha_tilde_g2;
     ffec::G2<ppT> Z_g2;
@@ -173,7 +173,7 @@ public:
 
     size_t G1_size() const
     {
-        return encoded_IC_query.size();
+        return encoded_IC_query.len();
     }
 
     size_t G2_size() const
@@ -221,7 +221,7 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification
  */
 template<typename ppT>
 class uscs_ppzksnark_processed_verification_key {
-public:
+
     ffec::G1_precomp<ppT> pp_G1_one_precomp;
     ffec::G2_precomp<ppT> pp_G2_one_precomp;
     ffec::G2_precomp<ppT> vk_tilde_g2_precomp;
@@ -244,7 +244,7 @@ public:
  */
 template<typename ppT>
 class uscs_ppzksnark_keypair {
-public:
+
     uscs_ppzksnark_proving_key<ppT> pk;
     uscs_ppzksnark_verification_key<ppT> vk;
 
@@ -279,7 +279,7 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
  */
 template<typename ppT>
 class uscs_ppzksnark_proof {
-public:
+
     ffec::G1<ppT> V_g1;
     ffec::G1<ppT> alpha_V_g1;
     ffec::G1<ppT> H_g1;
@@ -661,11 +661,11 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constr
 
     /* sanity checks */
 
-    assert!(Vt_table.size() == ssp_inst.num_variables() + 2);
-    print!("Ht_table.size() = {}, ssp_inst.degree() + 1 = {}\n", Ht_table.size(), ssp_inst.degree() + 1);
-    assert!(Ht_table.size() == ssp_inst.degree() + 1);
-    assert!(Xt_table.size() == ssp_inst.num_inputs() + 1);
-    assert!(Vt_table_minus_Xt_table.size() == ssp_inst.num_variables() + 2 - ssp_inst.num_inputs() - 1);
+    assert!(Vt_table.len() == ssp_inst.num_variables() + 2);
+    print!("Ht_table.len() = {}, ssp_inst.degree() + 1 = {}\n", Ht_table.len(), ssp_inst.degree() + 1);
+    assert!(Ht_table.len() == ssp_inst.degree() + 1);
+    assert!(Xt_table.len() == ssp_inst.num_inputs() + 1);
+    assert!(Vt_table_minus_Xt_table.len() == ssp_inst.num_variables() + 2 - ssp_inst.num_inputs() - 1);
     for i in 0..ssp_inst.num_inputs()+1
     {
         assert!(!Xt_table[i].is_zero());
@@ -675,8 +675,8 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constr
 
     ffec::enter_block("Generate USCS proving key");
 
-    const size_t g1_exp_count = Vt_table.size() + Vt_table_minus_Xt_table.size() + Ht_table.size();
-    const size_t g2_exp_count = Vt_table_minus_Xt_table.size();
+    const size_t g1_exp_count = Vt_table.len() + Vt_table_minus_Xt_table.len() + Ht_table.len();
+    const size_t g2_exp_count = Vt_table_minus_Xt_table.len();
 
     size_t g1_window = ffec::get_exp_window_size<ffec::G1<ppT> >(g1_exp_count);
     size_t g2_window = ffec::get_exp_window_size<ffec::G2<ppT> >(g2_exp_count);
@@ -777,10 +777,10 @@ uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key
 
     /* sanity checks */
     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
-    assert!(pk.V_g1_query.size() == ssp_wit.num_variables() + 2 - ssp_wit.num_inputs() - 1);
-    assert!(pk.alpha_V_g1_query.size() == ssp_wit.num_variables() + 2 - ssp_wit.num_inputs() - 1);
-    assert!(pk.H_g1_query.size() == ssp_wit.degree() + 1);
-    assert!(pk.V_g2_query.size() == ssp_wit.num_variables() + 2);
+    assert!(pk.V_g1_query.len() == ssp_wit.num_variables() + 2 - ssp_wit.num_inputs() - 1);
+    assert!(pk.alpha_V_g1_query.len() == ssp_wit.num_variables() + 2 - ssp_wit.num_inputs() - 1);
+    assert!(pk.H_g1_query.len() == ssp_wit.degree() + 1);
+    assert!(pk.V_g2_query.len() == ssp_wit.num_variables() + 2);
 
 // #ifdef DEBUG
     const ffec::Fr<ppT> t = ffec::Fr<ppT>::random_element();
@@ -788,10 +788,10 @@ uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key
     assert!(ssp_inst.is_satisfied(ssp_wit));
 //#endif
 
-    ffec::G1<ppT> V_g1       = ssp_wit.d*pk.V_g1_query[pk.V_g1_query.size()-1];
-    ffec::G1<ppT> alpha_V_g1 = ssp_wit.d*pk.alpha_V_g1_query[pk.alpha_V_g1_query.size()-1];
+    ffec::G1<ppT> V_g1       = ssp_wit.d*pk.V_g1_query[pk.V_g1_query.len()-1];
+    ffec::G1<ppT> alpha_V_g1 = ssp_wit.d*pk.alpha_V_g1_query[pk.alpha_V_g1_query.len()-1];
     ffec::G1<ppT> H_g1       = ffec::G1<ppT>::zero();
-    ffec::G2<ppT> V_g2       = pk.V_g2_query[0]+ssp_wit.d*pk.V_g2_query[pk.V_g2_query.size()-1];
+    ffec::G2<ppT> V_g2       = pk.V_g2_query[0]+ssp_wit.d*pk.V_g2_query[pk.V_g2_query.len()-1];
 
 // #ifdef MULTICORE
     const size_t chunks = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
@@ -879,7 +879,7 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
                                             const uscs_ppzksnark_proof<ppT> &proof)
 {
     ffec::enter_block("Call to uscs_ppzksnark_online_verifier_weak_IC");
-    assert!(pvk.encoded_IC_query.domain_size() >= primary_input.size());
+    assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
     ffec::enter_block("Compute input-dependent part of V");
     const accumulation_vector<ffec::G1<ppT> > accumulated_IC = pvk.encoded_IC_query.accumulate_chunk<ffec::Fr<ppT> >(primary_input.begin(), primary_input.end(), 0);
@@ -976,9 +976,9 @@ bool uscs_ppzksnark_online_verifier_strong_IC(const uscs_ppzksnark_processed_ver
     bool result = true;
     ffec::enter_block("Call to uscs_ppzksnark_online_verifier_strong_IC");
 
-    if pvk.encoded_IC_query.domain_size() != primary_input.size()
+    if pvk.encoded_IC_query.domain_size() != primary_input.len()
     {
-        ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.size(), pvk.encoded_IC_query.domain_size());
+        ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.len(), pvk.encoded_IC_query.domain_size());
         result = false;
     }
     else

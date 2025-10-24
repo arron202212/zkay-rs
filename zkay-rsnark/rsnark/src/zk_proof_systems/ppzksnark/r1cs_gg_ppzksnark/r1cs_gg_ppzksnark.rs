@@ -115,7 +115,7 @@ constraint_system:                                  r1cs_gg_ppzksnark_constraint
 
      pub fn g1_size(&self)->usize
     {
-        return 1 + A_query.size() + B_query.domain_size() + H_query.size() + L_query.size();
+        return 1 + A_query.len() + B_query.domain_size() + H_query.len() + L_query.len();
     }
 
    pub fn g2_size(&self)->usize
@@ -125,12 +125,12 @@ constraint_system:                                  r1cs_gg_ppzksnark_constraint
 
      pub fn g1_sparse_size(&self) ->usize
     {
-        return 1 + A_query.size() + B_query.size() + H_query.size() + L_query.size();
+        return 1 + A_query.len() + B_query.len() + H_query.len() + L_query.len();
     }
 
     pub fn  g2_sparse_size(&self) ->usize
     {
-        return 1 + B_query.size();
+        return 1 + B_query.len();
     }
 
      pub fn size_in_bits(&self)->usize
@@ -196,7 +196,7 @@ impl<ppT> r1cs_gg_ppzksnark_verification_key<ppT> {
 
      pub fn g1_size(&self)->usize
     {
-        return gamma_ABC_g1.size();
+        return gamma_ABC_g1.len();
     }
 
    pub fn g2_size(&self)->usize
@@ -401,7 +401,7 @@ pub fn
     let  qap = r1cs_to_qap_instance_map_with_evaluation(r1cs_copy, t);
 
     ffec::print_indent(); print!("* QAP number of variables: {}\n", qap.num_variables());
-    ffec::print_indent(); print!("* QAP pre degree: {}\n", r1cs_copy.constraints.size());
+    ffec::print_indent(); print!("* QAP pre degree: {}\n", r1cs_copy.constraints.len());
     ffec::print_indent(); print!("* QAP degree: {}\n", qap.degree());
     ffec::print_indent(); print!("* QAP number of input variables: {}\n", qap.num_inputs());
 
@@ -456,7 +456,7 @@ let Ht=qap.Ht;
      * reduction returns coefficients for degree d polynomial H (in
      * style of PGHR-type proof systems)
      */
-    Ht.resize(Ht.size() - 2);
+    Ht.resize(Ht.len() - 2);
 
 // // #ifdef MULTICORE
 //     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
@@ -598,11 +598,11 @@ let r=    ffec::Fr::<ppT>::random_element();
 let s=    ffec::Fr::<ppT>::random_element();
 
 // // #ifdef DEBUG
-//     assert!(qap_wit.coefficients_for_ABCs.size() == qap_wit.num_variables());
-//     assert!(pk.A_query.size() == qap_wit.num_variables()+1);
+//     assert!(qap_wit.coefficients_for_ABCs.len() == qap_wit.num_variables());
+//     assert!(pk.A_query.len() == qap_wit.num_variables()+1);
 //     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+1);
-//     assert!(pk.H_query.size() == qap_wit.degree() - 1);
-//     assert!(pk.L_query.size() == qap_wit.num_variables() - qap_wit.num_inputs());
+//     assert!(pk.H_query.len() == qap_wit.degree() - 1);
+//     assert!(pk.L_query.len() == qap_wit.num_variables() - qap_wit.num_inputs());
 // //#endif
 
 // // #ifdef MULTICORE
@@ -766,7 +766,7 @@ pub fn
                                                proof:r1cs_gg_ppzksnark_proof<ppT>,)->bool
 {
     ffec::enter_block("Call to r1cs_gg_ppzksnark_online_verifier_weak_IC");
-    assert!(pvk.gamma_ABC_g1.domain_size() >= primary_input.size());
+    assert!(pvk.gamma_ABC_g1.domain_size() >= primary_input.len());
 
     ffec::enter_block("Accumulate input");
     let  accumulated_IC = pvk.gamma_ABC_g1.accumulate_chunk::<ffec::Fr<ppT> >(primary_input.begin(),primary_input.end(), 0);
@@ -828,9 +828,9 @@ pub fn
     let mut result = true;
     ffec::enter_block("Call to r1cs_gg_ppzksnark_online_verifier_strong_IC");
 
-    if pvk.gamma_ABC_g1.domain_size() != primary_input.size()
+    if pvk.gamma_ABC_g1.domain_size() != primary_input.len()
     {
-        ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.size(), pvk.gamma_ABC_g1.domain_size());
+        ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.len(), pvk.gamma_ABC_g1.domain_size());
         result = false;
     }
     else
@@ -860,7 +860,7 @@ pub fn
                                                proof:r1cs_gg_ppzksnark_proof<ppT>,)->bool
 {
     ffec::enter_block("Call to r1cs_gg_ppzksnark_affine_verifier_weak_IC");
-    assert!(vk.gamma_ABC_g1.domain_size() >= primary_input.size());
+    assert!(vk.gamma_ABC_g1.domain_size() >= primary_input.len());
 
     let pvk_vk_gamma_g2_precomp = ppT::affine_ate_precompute_G2(vk.gamma_g2);
     let pvk_vk_delta_g2_precomp = ppT::affine_ate_precompute_G2(vk.delta_g2);

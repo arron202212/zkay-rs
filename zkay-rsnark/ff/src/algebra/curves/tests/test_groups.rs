@@ -24,7 +24,7 @@ using namespace libff;
 using std::size_t;
 
 class CurveGroupsTest: public ::testing::Test {
-public:
+
     CurveGroupsTest()
     {
         edwards_pp::init_public_params();

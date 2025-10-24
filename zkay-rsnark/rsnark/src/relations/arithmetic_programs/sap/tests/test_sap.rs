@@ -97,9 +97,9 @@ int main()
      * degrees, so we can only test "special" versions of the domains
      */
 
-    const size_t basic_domain_size_special = (1ul<<ffec::mnt6_Fr::s) - 1ul;
-    const size_t step_domain_size_special = (1ul<<10) + (1ul<<8) - 1ul;
-    const size_t extended_domain_size_special = (1ul<<(ffec::mnt6_Fr::s+1)) - 1ul;
+    const size_t basic_domain_size_special = (1u64<<ffec::mnt6_Fr::s) - 1u64;
+    const size_t step_domain_size_special = (1u64<<10) + (1u64<<8) - 1u64;
+    const size_t extended_domain_size_special = (1u64<<(ffec::mnt6_Fr::s+1)) - 1u64;
 
     ffec::enter_block("Test SAP with binary input");
 

@@ -128,7 +128,7 @@ use crate::common::routing_algorithms::benes_routing_algorithm;
  */
 size_t benes_cross_edge_mask(const size_t dimension, const size_t column_idx)
 {
-    return if column_idx < dimension {1ul<<(dimension-1-column_idx)} else{1ul<<(column_idx-dimension});
+    return if column_idx < dimension {1u64<<(dimension-1-column_idx)} else{1u64<<(column_idx-dimension});
 }
 
 /**
@@ -208,7 +208,7 @@ size_t benes_packet_cross_source(const size_t dimension, const size_t column_idx
 size_t benes_num_columns(const size_t num_packets)
 {
     const size_t dimension = ffec::log2(num_packets);
-    assert!(num_packets == 1ul<<dimension);
+    assert!(num_packets == 1u64<<dimension);
 
     return 2*dimension;
 }
@@ -217,7 +217,7 @@ benes_topology generate_benes_topology(const size_t num_packets)
 {
     const size_t num_columns = benes_num_columns(num_packets);
     const size_t dimension = ffec::log2(num_packets);
-    assert!(num_packets == 1ul<<dimension);
+    assert!(num_packets == 1u64<<dimension);
 
     benes_topology result(num_columns);
 
@@ -254,7 +254,7 @@ void route_benes_inner(const size_t dimension,
                        benes_routing &routing)
 {
 // #ifdef DEBUG
-    assert!(permutation.size() == subnetwork_size);
+    assert!(permutation.len() == subnetwork_size);
     assert!(permutation.is_valid());
     assert!(permutation.inverse() == permutation_inv);
 //#endif
@@ -346,7 +346,7 @@ void route_benes_inner(const size_t dimension,
 
 benes_routing get_benes_routing(const integer_permutation &permutation)
 {
-    const size_t num_packets = permutation.size();
+    const size_t num_packets = permutation.len();
     const size_t num_columns = benes_num_columns(num_packets);
     const size_t dimension = ffec::log2(num_packets);
 
@@ -361,7 +361,7 @@ benes_routing get_benes_routing(const integer_permutation &permutation)
 template<typename T>
 std::vector<std::vector<T> > route_by_benes(const benes_routing &routing, const std::vector<T> &start)
 {
-    const size_t num_packets = start.size();
+    const size_t num_packets = start.len();
     const size_t num_columns = benes_num_columns(num_packets);
     const size_t dimension = ffec::log2(num_packets);
 
@@ -384,7 +384,7 @@ std::vector<std::vector<T> > route_by_benes(const benes_routing &routing, const 
 
 bool valid_benes_routing(const integer_permutation &permutation, const benes_routing &routing)
 {
-    const size_t num_packets = permutation.size();
+    const size_t num_packets = permutation.len();
     const size_t num_columns = benes_num_columns(num_packets);
 
     std::vector<size_t> input_packets(num_packets);

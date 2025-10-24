@@ -5,29 +5,29 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 use crate::common::default_types::r1cs_ppzkpcd_pp;
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/examples/run_r1cs_sp_ppzkpcd;
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/r1cs_sp_ppzkpcd;
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::examples::run_r1cs_sp_ppzkpcd;
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
 
 
 
-template<typename PCD_ppT>
-void profile_tally(const size_t arity, const size_t max_layer)
-{
-    const size_t wordsize = 32;
-    const bool test_serialization = true;
-    const bool bit = run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize, arity, max_layer, test_serialization);
-    assert!(bit);
-}
+// template<typename PCD_ppT>
+// void profile_tally(const size_t arity, const size_t max_layer)
+// {
+//     const size_t wordsize = 32;
+//     const bool test_serialization = true;
+//     const bool bit = run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize, arity, max_layer, test_serialization);
+//     assert!(bit);
+// }
 
-int main(void)
-{
-    type default_r1cs_ppzkpcd_pp PCD_pp;
+// int main(void)
+// {
+//     type default_r1cs_ppzkpcd_pp PCD_pp;
 
-    ffec::start_profiling();
-    PCD_pp::init_public_params();
+//     ffec::start_profiling();
+//     PCD_pp::init_public_params();
 
-    const size_t arity = 2;
-    const size_t max_layer = 2;
+//     const size_t arity = 2;
+//     const size_t max_layer = 2;
 
-    profile_tally<PCD_pp>(arity, max_layer);
-}
+//     profile_tally<PCD_pp>(arity, max_layer);
+// }

@@ -63,7 +63,7 @@ instruction_results:    pb_variable_array<FieldT>,
 instruction_flags:    pb_variable_array<FieldT>,
 
 read_not1:    pb_variable<FieldT>,
-// public:
+// 
 prev_pc_addr:    pb_variable_array<FieldT>,
 prev_pc_val:    pb_variable_array<FieldT>,
 prev_state:    pb_variable_array<FieldT>,
@@ -96,7 +96,7 @@ next_has_accepted:    pb_variable<FieldT>,
 
 
 
-// use crate::gadgetlib1::gadgets/cpu_checkers/tinyram/tinyram_cpu_checker;
+// use crate::gadgetlib1::gadgets::cpu_checkers/tinyram/tinyram_cpu_checker;
 
 //#endif // TINYRAM_CPU_CHECKER_HPP_
 /** @file
@@ -140,12 +140,12 @@ annotation_prefix:                                                  std::string
        MSB) */
     let  pc_val_it = prev_pc_val.begin();
 
-    arg2idx = pb_variable_array<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_or_imm_width()); std::advance(pc_val_it, pb.ap.reg_arg_or_imm_width());
+    arg2idx = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_or_imm_width()); std::advance(pc_val_it, pb.ap.reg_arg_or_imm_width());
     std::advance(pc_val_it, pb.ap.instruction_padding_width());
-    arg1idx = pb_variable_array<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_width()); std::advance(pc_val_it, pb.ap.reg_arg_width());
-    desidx = pb_variable_array<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_width()); std::advance(pc_val_it, pb.ap.reg_arg_width());
+    arg1idx = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_width()); std::advance(pc_val_it, pb.ap.reg_arg_width());
+    desidx = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_width()); std::advance(pc_val_it, pb.ap.reg_arg_width());
     arg2_is_imm = *pc_val_it; std::advance(pc_val_it, 1);
-    opcode = pb_variable_array<FieldT>(pc_val_it, pc_val_it + pb.ap.opcode_width()); std::advance(pc_val_it, pb.ap.opcode_width());
+    opcode = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.opcode_width()); std::advance(pc_val_it, pb.ap.opcode_width());
 
     assert!(pc_val_it == prev_pc_val.end());
 
@@ -153,25 +153,27 @@ annotation_prefix:                                                  std::string
    let ( packed_prev_registers, packed_next_registers)=( pb_variable_array::<FieldT>::new(), pb_variable_array::<FieldT>::new());
     for i in 0..pb.ap.k
     {
-        prev_registers.push(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} prev_registers_{}", i)));
-        next_registers.push(word_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} next_registers_{}", i)));
+        prev_registers.push(word_variable_gadget::<FieldT>(pb, pb_variable_array::<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} prev_registers_{}", i)));
+        next_registers.push(word_variable_gadget::<FieldT>(pb, pb_variable_array::<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} next_registers_{}", i)));
 
         packed_prev_registers.push(prev_registers[i].packed);
         packed_next_registers.push(next_registers[i].packed);
     }
-    prev_flag = *(++prev_state.rbegin());
-    next_flag = *(++next_state.rbegin());
-    prev_tape1_exhausted = *(prev_state.rbegin());
-    next_tape1_exhausted = *(next_state.rbegin());
+prev_state.next_back();
+    prev_flag = *(prev_state.next_back().unwrap());
+    next_state.next_back();
+    next_flag = *(next_state.next_back().unwrap());
+    prev_tape1_exhausted = *(prev_state.last().unwrap());
+    next_tape1_exhausted = *(next_state.lat().unwrap());
 
     /* decode arguments */
-    prev_pc_addr_as_word_variable.reset(new word_variable_gadget<FieldT>(pb, prev_pc_addr, format!("{annotation_prefix} prev_pc_addr_as_word_variable")));
-    desval.reset(new word_variable_gadget<FieldT>(pb, format!("{annotation_prefix} desval")));
-    arg1val.reset(new word_variable_gadget<FieldT>(pb, format!("{annotation_prefix} arg1val")));
-    arg2val.reset(new word_variable_gadget<FieldT>(pb, format!("{annotation_prefix} arg2val")));
+    prev_pc_addr_as_word_variable.reset(word_variable_gadget::<FieldT>::new(pb, prev_pc_addr, format!("{annotation_prefix} prev_pc_addr_as_word_variable")));
+    desval.reset(word_variable_gadget::<FieldT>::new(pb, format!("{annotation_prefix} desval")));
+    arg1val.reset(word_variable_gadget::<FieldT>::new(pb, format!("{annotation_prefix} arg1val")));
+    arg2val.reset(word_variable_gadget::<FieldT>::new(pb, format!("{annotation_prefix} arg2val")));
 
-    decode_arguments.reset(new argument_decoder_gadget<FieldT>(pb, arg2_is_imm, desidx, arg1idx, arg2idx, packed_prev_registers,
-                                                               desval->packed, arg1val->packed, arg2val->packed,
+    decode_arguments.reset(argument_decoder_gadget::<FieldT>::new(pb, arg2_is_imm, desidx, arg1idx, arg2idx, packed_prev_registers,
+                                                               desval.packed, arg1val.packed, arg2val.packed,
                                                                format!("{annotation_prefix} decode_arguments")));
 
     /* create indicator variables for opcodes */
@@ -181,21 +183,21 @@ annotation_prefix:                                                  std::string
     instruction_results.allocate(pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} instruction_results"));
     instruction_flags.allocate(pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} instruction_flags"));
 
-    ALU.reset(new ALU_gadget<FieldT>(pb, opcode_indicators, *prev_pc_addr_as_word_variable, *desval, *arg1val, *arg2val, prev_flag, instruction_results, instruction_flags,
+    ALU.reset(ALU_gadget::<FieldT>::new(pb, opcode_indicators, *prev_pc_addr_as_word_variable, *desval, *arg1val, *arg2val, prev_flag, instruction_results, instruction_flags,
                                      format!("{annotation_prefix} ALU")));
 
     /* check correctness of memory operations */
-    ls_prev_val_as_doubleword_variable.reset(new doubleword_variable_gadget<FieldT>(pb, ls_prev_val, format!("{annotation_prefix} ls_prev_val_as_doubleword_variable")))
+    ls_prev_val_as_doubleword_variable.reset(doubleword_variable_gadget::<FieldT>::new(pb, ls_prev_val, format!("{annotation_prefix} ls_prev_val_as_doubleword_variable")))
 ;
-    ls_next_val_as_doubleword_variable.reset(new doubleword_variable_gadget<FieldT>(pb, ls_next_val, format!("{annotation_prefix} ls_next_val_as_doubleword_variable")));
-    memory_subaddress.reset(new dual_variable_gadget<FieldT>(pb, pb_variable_array<FieldT>(arg2val->bits.begin(), arg2val->bits.begin() + pb.ap.subaddr_len()),
+    ls_next_val_as_doubleword_variable.reset(doubleword_variable_gadget::<FieldT>::new(pb, ls_next_val, format!("{annotation_prefix} ls_next_val_as_doubleword_variable")));
+    memory_subaddress.reset(dual_variable_gadget::<FieldT>::new(pb, pb_variable_array::<FieldT>(arg2val.bits.begin(), arg2val.bits.begin() + pb.ap.subaddr_len()),
                                                              format!("{annotation_prefix} memory_subaddress")));
 
     memory_subcontents.allocate(pb, format!("{annotation_prefix} memory_subcontents"));
     memory_access_is_word.assign(pb, 1 - (opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB]));
     memory_access_is_byte.assign(pb, opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB]);
 
-    check_memory.reset(new memory_masking_gadget<FieldT>(pb,
+    check_memory.reset( memory_masking_gadget::<FieldT>::new(pb,
                                                          *ls_prev_val_as_doubleword_variable,
                                                          *memory_subaddress,
                                                          memory_subcontents,
@@ -208,14 +210,14 @@ annotation_prefix:                                                  std::string
     read_not1.allocate(pb, format!("{annotation_prefix} read_not1"));
 
     /* check consistency of the states according to the ALU results */
-    next_pc_addr_as_word_variable.reset(new word_variable_gadget<FieldT>(pb, next_pc_addr, format!("{annotation_prefix} next_pc_addr_as_word_variable")));
+    next_pc_addr_as_word_variable.reset(word_variable_gadget::<FieldT>::new(pb, next_pc_addr, format!("{annotation_prefix} next_pc_addr_as_word_variable")));
 
-    consistency_enforcer.reset(new consistency_enforcer_gadget<FieldT>(pb, opcode_indicators, instruction_results, instruction_flags,
-                                                                       desidx, prev_pc_addr_as_word_variable->packed,
+    consistency_enforcer.reset(consistency_enforcer_gadget::<FieldT>::new(pb, opcode_indicators, instruction_results, instruction_flags,
+                                                                       desidx, prev_pc_addr_as_word_variable.packed,
                                                                        packed_prev_registers,
-                                                                       desval->packed,
+                                                                       desval.packed,
                                                                        prev_flag,
-                                                                       next_pc_addr_as_word_variable->packed,
+                                                                       next_pc_addr_as_word_variable.packed,
                                                                        packed_next_registers,
                                                                        next_flag,
                                                                        format!("{annotation_prefix} consistency_enforcer")));
@@ -233,10 +235,10 @@ pub fn generate_r1cs_constraints()
     /* generate indicator variables for opcode */
     for i in 0..1u64<<self.pb.ap.opcode_width()
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(opcode_indicators[i], pb_packing_sum<FieldT>(opcode) - i, 0),
+        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(opcode_indicators[i], pb_packing_sum::<FieldT>(opcode) - i, 0),
                                      format!("{} opcode_indicators_{}",self.annotation_prefix, i));
     }
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum<FieldT>(opcode_indicators), 1),
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum::<FieldT>(opcode_indicators), 1),
                                  format!("{} opcode_indicators_sum_to_1",self.annotation_prefix));
 
     /* consistency checks for repacked variables */
@@ -262,10 +264,10 @@ pub fn generate_r1cs_constraints()
     check_memory.generate_r1cs_constraints();
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
-                                                         pb_packing_sum<FieldT>(
-                                                             pb_variable_array<FieldT>(arg2val->bits.begin() + self.pb.ap.subaddr_len(),
-                                                                                       arg2val->bits.end())),
-                                                         pb_packing_sum<FieldT>(ls_addr)),
+                                                         pb_packing_sum::<FieldT>(
+                                                             pb_variable_array::<FieldT>(arg2val.bits.begin() + self.pb.ap.subaddr_len(),
+                                                                                       arg2val.bits.end())),
+                                                         pb_packing_sum::<FieldT>(ls_addr)),
                                  format!("{} ls_addr_is_arg2val_minus_subaddress",self.annotation_prefix));
 
     /* We require that if opcode is one of load.{b,w}, then
@@ -285,17 +287,17 @@ pub fn generate_r1cs_constraints()
                                                          0),
                                  format!("{} handle_loadw",self.annotation_prefix));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(opcode_indicators[tinyram_opcode_STOREB],
-                                                         memory_subcontents - pb_packing_sum<FieldT>(
-                                                             pb_variable_array<FieldT>(desval->bits.begin(),
-                                                                                       desval->bits.begin() + 8)),
+                                                         memory_subcontents - pb_packing_sum::<FieldT>(
+                                                             pb_variable_array::<FieldT>(desval.bits.begin(),
+                                                                                       desval.bits.begin() + 8)),
                                                          0),
                                  format!("{} handle_storeb",self.annotation_prefix));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(opcode_indicators[tinyram_opcode_STOREW],
-                                                         memory_subcontents - desval->packed,
+                                                         memory_subcontents - desval.packed,
                                                          0),
                                  format!("{} handle_storew",self.annotation_prefix));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1 - (opcode_indicators[tinyram_opcode_STOREB] + opcode_indicators[tinyram_opcode_STOREW]),
-                                                         ls_prev_val_as_doubleword_variable->packed - ls_next_val_as_doubleword_variable->packed,
+                                                         ls_prev_val_as_doubleword_variable.packed - ls_next_val_as_doubleword_variable.packed,
                                                          0),
                                  format!("{} non_store_instructions_dont_change_memory",self.annotation_prefix));
 
@@ -305,7 +307,7 @@ pub fn generate_r1cs_constraints()
                                                          0),
                                  format!("{} accepting_requires_answer",self.annotation_prefix));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(next_has_accepted,
-                                                         arg2val->packed,
+                                                         arg2val.packed,
                                                          0),
                                  format!("{} accepting_requires_arg2val_equal_zero",self.annotation_prefix));
 
@@ -327,7 +329,7 @@ pub fn generate_r1cs_constraints()
                                                          0),
                                  format!("{} prev_tape1_exhausted_implies_flag",self.annotation_prefix));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(opcode_indicators[tinyram_opcode_READ],
-                                                         1 - arg2val->packed,
+                                                         1 - arg2val.packed,
                                                          read_not1),
                                  format!("{} read_not1",self.annotation_prefix)); /* will be nonzero for read X for X != 1 */
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(read_not1,
@@ -357,7 +359,7 @@ pub fn generate_r1cs_witness_address()
     arg2val.generate_r1cs_witness_from_packed();
 
     /* clear out ls_addr and fill with everything of arg2val except the subaddress */
-    ls_addr.fill_with_bits_of_field_element(self.pb, self.pb.val(arg2val->packed).as_ulong() >> self.pb.ap.subaddr_len());
+    ls_addr.fill_with_bits_of_field_element(self.pb, self.pb.val(arg2val.packed).as_ulong() >> self.pb.ap.subaddr_len());
 }
 
 
@@ -380,8 +382,8 @@ aux_it:&tinyram_input_tape_iterator,
     ALU.generate_r1cs_witness();
 
     /* fill memory_subaddress */
-    memory_subaddress->bits.fill_with_bits(self.pb, pb_variable_array<FieldT>(arg2val->bits.begin(),
-                                                                               arg2val->bits.begin() +  + self.pb.ap.subaddr_len()).get_bits(self.pb));
+    memory_subaddress.bits.fill_with_bits(self.pb, pb_variable_array::<FieldT>(arg2val.bits.begin(),
+                                                                               arg2val.bits.begin()  + self.pb.ap.subaddr_len()).get_bits(self.pb));
     memory_subaddress.generate_r1cs_witness_from_bits();
 
     /* we distinguish four cases for memory handling:
@@ -389,8 +391,8 @@ aux_it:&tinyram_input_tape_iterator,
        b) store.b
        c) store.w
        d) load.w or any non-memory instruction */
-    let prev_doubleword = self.pb.val(ls_prev_val_as_doubleword_variable->packed).as_ulong();
-    let subaddress = self.pb.val(memory_subaddress->packed).as_ulong();
+    let prev_doubleword = self.pb.val(ls_prev_val_as_doubleword_variable.packed).as_ulong();
+    let subaddress = self.pb.val(memory_subaddress.packed).as_ulong();
 
     if self.pb.val(opcode_indicators[tinyram_opcode_LOADB]) == FieldT::one()
     {
@@ -400,18 +402,18 @@ aux_it:&tinyram_input_tape_iterator,
     }
     else if self.pb.val(opcode_indicators[tinyram_opcode_STOREB]) == FieldT::one()
     {
-        let stored_byte = (self.pb.val(desval->packed).as_ulong()) & 0xFF;
+        let stored_byte = (self.pb.val(desval.packed).as_ulong()) & 0xFF;
         self.pb.val(memory_subcontents) = FieldT(stored_byte);
     }
     else if self.pb.val(opcode_indicators[tinyram_opcode_STOREW]) == FieldT::one()
     {
-        let stored_word = (self.pb.val(desval->packed).as_ulong());
+        let stored_word = (self.pb.val(desval.packed).as_ulong());
         self.pb.val(memory_subcontents) = FieldT(stored_word);
     }
     else
     {
-        let  access_is_word0 = (self.pb.val(*memory_subaddress->bits.rbegin()) == FieldT::zero());
-        let loaded_word = if prev_doubleword >> (access_is_word0 {0} else{self.pb.ap.w}) & ((1u64 << self.pb.ap.w) - 1);
+        let  access_is_word0 = (self.pb.val(*memory_subaddress.bits.rbegin()) == FieldT::zero());
+        let loaded_word =  (prev_doubleword >> ( if access_is_word0 {0} else{self.pb.ap.w})) & ((1u64 << self.pb.ap.w) - 1);
         self.pb.val(instruction_results[tinyram_opcode_LOADW]) = FieldT(loaded_word); /* does not hurt even for non-memory instructions */
         self.pb.val(memory_subcontents) = FieldT(loaded_word);
     }
@@ -431,7 +433,7 @@ aux_it:&tinyram_input_tape_iterator,
         self.pb.val(instruction_flags[tinyram_opcode_READ]) = FieldT::one();
     }
 
-    self.pb.val(read_not1) = self.pb.val(opcode_indicators[tinyram_opcode_READ]) * (FieldT::one() - self.pb.val(arg2val->packed));
+    self.pb.val(read_not1) = self.pb.val(opcode_indicators[tinyram_opcode_READ]) * (FieldT::one() - self.pb.val(arg2val.packed));
     if self.pb.val(read_not1) != FieldT::one()
     {
         /* reading from tape other than 0 raises the flag */
@@ -443,7 +445,8 @@ aux_it:&tinyram_input_tape_iterator,
         if aux_it != aux_end
         {
             self.pb.val(instruction_results[tinyram_opcode_READ]) = FieldT(*aux_it);
-            if ++aux_it == aux_end
+            aux_it+=1;
+            if aux_it == aux_end
             {
                 /* tape has ended! */
                 self.pb.val(next_tape1_exhausted) = FieldT::one();
@@ -472,26 +475,26 @@ aux_it:&tinyram_input_tape_iterator,
 
     /* finally set has_accepted to 1 if both the opcode is ANSWER and arg2val is 0 */
     self.pb.val(next_has_accepted) = if (self.pb.val(opcode_indicators[tinyram_opcode_ANSWER]) == FieldT::one() &&
-                                       self.pb.val(arg2val->packed) == FieldT::zero())  {FieldT::one() }else {FieldT::zero()};
+                                       self.pb.val(arg2val.packed) == FieldT::zero())  {FieldT::one() }else {FieldT::zero()};
 }
 
 
-pub fn dump() const
+pub fn dump() 
 {
-    print!("   pc = %lu, flag = %lu\n",
-           self.pb.val(prev_pc_addr_as_word_variable->packed).as_ulong(),
+    print!("   pc = {}, flag = {}\n",
+           self.pb.val(prev_pc_addr_as_word_variable.packed).as_ulong(),
            self.pb.val(prev_flag).as_ulong());
     print!("   ");
 
     for j in 0..self.pb.ap.k
     {
-        print!("r{} = %2lu ", j, self.pb.val(prev_registers[j].packed).as_ulong());
+        print!("r{} = {:2} ", j, self.pb.val(prev_registers[j].packed).as_ulong());
     }
     print!("\n");
 
     let opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
-    print!("   %s r%lu, r%lu, %s%lu\n",
-           tinyram_opcode_names[static_cast<tinyram_opcode>(opcode_val)].c_str(),
+    print!("   {} r{}, r{}, {}{}\n",
+           tinyram_opcode_names[(opcode_val)].c_str(),
            desidx.get_field_element_from_bits(self.pb).as_ulong(),
            arg1idx.get_field_element_from_bits(self.pb).as_ulong(),
            if self.pb.val(arg2_is_imm) == FieldT::one() {""} else{"r"},

@@ -24,7 +24,7 @@ use crate::gadgetlib1::gadgets::hashes::sha256/sha256_components;
  */
 template<typename FieldT>
 class sha256_compression_function_gadget : public gadget<FieldT> {
-public:
+
     std::vector<pb_linear_combination_array<FieldT> > round_a;
     std::vector<pb_linear_combination_array<FieldT> > round_b;
     std::vector<pb_linear_combination_array<FieldT> > round_c;
@@ -41,7 +41,7 @@ public:
     pb_variable_array<FieldT> unreduced_output;
     pb_variable_array<FieldT> reduced_output;
     std::vector<lastbits_gadget<FieldT> > reduce_output;
-public:
+
     pb_linear_combination_array<FieldT> prev_output;
     pb_variable_array<FieldT> new_block;
     digest_variable<FieldT> output;
@@ -64,7 +64,7 @@ public:
  */
 template<typename FieldT>
 class sha256_two_to_one_hash_gadget : public gadget<FieldT> {
-public:
+
     type ffec::bit_vector hash_value_type;
     type merkle_authentication_path merkle_authentication_path_type;
 
@@ -272,7 +272,7 @@ sha256_two_to_one_hash_gadget<FieldT>::sha256_two_to_one_hash_gadget(protoboard<
     gadget<FieldT>(pb, annotation_prefix)
 {
     assert!(block_length == SHA256_block_size);
-    assert!(input_block.bits.size() == block_length);
+    assert!(input_block.bits.len() == block_length);
     f.reset(new sha256_compression_function_gadget<FieldT>(pb, SHA256_default_IV<FieldT>(pb), input_block.bits, output, FMT(self.annotation_prefix, " f")));
 }
 

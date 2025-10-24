@@ -18,15 +18,15 @@
 
 use  <memory>
 
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
-use crate::gadgetlib1::gadgets/pairing/weierstrass_final_exponentiation;
-use crate::gadgetlib1::gadgets/pairing/weierstrass_miller_loop;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
+use crate::gadgetlib1::gadgets::pairing::weierstrass_final_exponentiation;
+use crate::gadgetlib1::gadgets::pairing::weierstrass_miller_loop;
 
 
 
 template<typename ppT>
 class check_e_equals_e_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
 
     type ffec::Fr<ppT> FieldT;
 
@@ -56,7 +56,7 @@ public:
 
 template<typename ppT>
 class check_e_equals_ee_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
 
     type ffec::Fr<ppT> FieldT;
 
@@ -90,7 +90,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/pairing/pairing_checks;
+use crate::gadgetlib1::gadgets::pairing::pairing_checks;
 
 //#endif // PAIRING_CHECKS_HPP_
 /** @file

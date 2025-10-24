@@ -21,7 +21,7 @@ std::ostream& operator<<(std::ostream &, const bn128_GT&);
 std::istream& operator>>(std::istream &, bn128_GT&);
 
 class bn128_GT {
-public:
+
     static bn128_GT GT_one;
     bn::Fp12 elem;
 

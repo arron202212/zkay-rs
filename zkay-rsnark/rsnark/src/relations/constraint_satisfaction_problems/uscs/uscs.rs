@@ -84,7 +84,7 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
  */
 template<typename FieldT>
 class uscs_constraint_system {
-public:
+
     size_t primary_input_size;
     size_t auxiliary_input_size;
 
@@ -167,7 +167,7 @@ size_t uscs_constraint_system<FieldT>::num_variables() const
 template<typename FieldT>
 size_t uscs_constraint_system<FieldT>::num_constraints() const
 {
-    return constraints.size();
+    return constraints.len();
 }
 
 template<typename FieldT>
@@ -175,7 +175,7 @@ bool uscs_constraint_system<FieldT>::is_valid() const
 {
     if self.num_inputs() > self.num_variables() return false;
 
-    for c in 0..constraints.size()
+    for c in 0..constraints.len()
     {
         if !valid_vector(constraints[c], self.num_variables())
         {
@@ -199,13 +199,13 @@ template<typename FieldT>
 bool uscs_constraint_system<FieldT>::is_satisfied(const uscs_primary_input<FieldT> &primary_input,
                                                   const uscs_auxiliary_input<FieldT> &auxiliary_input) const
 {
-    assert!(primary_input.size() == num_inputs());
-    assert!(primary_input.size() + auxiliary_input.size() == num_variables());
+    assert!(primary_input.len() == num_inputs());
+    assert!(primary_input.len() + auxiliary_input.len() == num_variables());
 
     uscs_variable_assignment<FieldT> full_variable_assignment = primary_input;
     full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    for c in 0..constraints.size()
+    for c in 0..constraints.len()
     {
         FieldT res = constraints[c].evaluate(full_variable_assignment);
         if !(res.squared() == FieldT::one())
@@ -234,7 +234,7 @@ template<typename FieldT>
 void uscs_constraint_system<FieldT>::add_constraint(const uscs_constraint<FieldT> &c, const std::string &annotation)
 {
 // #ifdef DEBUG
-    constraint_annotations[constraints.size()] = annotation;
+    constraint_annotations[constraints.len()] = annotation;
 #else
     ffec::UNUSED(annotation);
 //#endif
@@ -294,7 +294,7 @@ template<typename FieldT>
 void uscs_constraint_system<FieldT>::report_linear_constraint_statistics() const
 {
 // #ifdef DEBUG
-    for i in 0..constraints.size()
+    for i in 0..constraints.len()
     {
         auto &constr = constraints[i];
         bool a_is_const = true;

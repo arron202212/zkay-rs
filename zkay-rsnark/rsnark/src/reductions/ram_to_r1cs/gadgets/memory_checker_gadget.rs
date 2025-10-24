@@ -13,47 +13,40 @@
 //#ifndef MEMORY_CHECKER_GADGET_HPP_
 // #define MEMORY_CHECKER_GADGET_HPP_
 
-use libsnark/reductions/ram_to_r1cs/gadgets/trace_lines;
+use crate::reductions::ram_to_r1cs::gadgets::trace_lines;
 
 
 
-template<typename ramT>
-class memory_checker_gadget : public ram_gadget_base<ramT> {
-private:
+  type FieldT=ram_base_field<ramT> ;
+pub struct  memory_checker_gadget<ramT> {
+// : public ram_gadget_base
 
-    type ram_base_field<ramT> FieldT;
+  
 
-    pb_variable<FieldT> timestamps_leq;
-    pb_variable<FieldT> timestamps_less;
-    std::shared_ptr<comparison_gadget<FieldT> > compare_timestamps;
+timestamps_leq:    pb_variable<FieldT>,
+timestamps_less:    pb_variable<FieldT>,
+compare_timestamps:    std::shared_ptr<comparison_gadget<FieldT> >,
 
-    pb_variable<FieldT> addresses_eq;
-    pb_variable<FieldT> addresses_leq;
-    pb_variable<FieldT> addresses_less;
-    std::shared_ptr<comparison_gadget<FieldT> > compare_addresses;
+addresses_eq:    pb_variable<FieldT>,
+addresses_leq:    pb_variable<FieldT>,
+addresses_less:    pb_variable<FieldT>,
+compare_addresses:    std::shared_ptr<comparison_gadget<FieldT> >,
 
-    pb_variable<FieldT> loose_contents_after1_equals_contents_before2;
-    pb_variable<FieldT> loose_contents_before2_equals_zero;
-    pb_variable<FieldT> loose_timestamp2_is_zero;
-
-public:
-
-    memory_line_variable_gadget<ramT> line1;
-    memory_line_variable_gadget<ramT> line2;
-
-    memory_checker_gadget(ram_protoboard<ramT> &pb,
-                          const size_t timestamp_size,
-                          const memory_line_variable_gadget<ramT> &line1,
-                          const memory_line_variable_gadget<ramT> &line2,
-                          const std::string& annotation_prefix="");
-
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+loose_contents_after1_equals_contents_before2:    pb_variable<FieldT>,
+loose_contents_before2_equals_zero:    pb_variable<FieldT>,
+loose_timestamp2_is_zero:    pb_variable<FieldT>,
 
 
 
-use libsnark/reductions/ram_to_r1cs/gadgets/memory_checker_gadget;
+line1:    memory_line_variable_gadget<ramT>,
+line2:    memory_line_variable_gadget<ramT>,
+
+
+}
+
+
+
+// use crate::reductions::ram_to_r1cs::gadgets::memory_checker_gadget;
 
 //#endif // MEMORY_CHECKER_GADGET_HPP_
 /** @file
@@ -72,29 +65,30 @@ use libsnark/reductions/ram_to_r1cs/gadgets/memory_checker_gadget;
 //#ifndef MEMORY_CHECKER_GADGET_TCC_
 // #define MEMORY_CHECKER_GADGET_TCC_
 
+impl memory_checker_gadget<ramT>{
 
 
-template<typename ramT>
-memory_checker_gadget<ramT>::memory_checker_gadget(ram_protoboard<ramT> &pb,
-                                                   const size_t timestamp_size,
-                                                   const memory_line_variable_gadget<ramT> &line1,
-                                                   const memory_line_variable_gadget<ramT> &line2,
-                                                   const std::string& annotation_prefix) :
-    ram_gadget_base<ramT>(pb, annotation_prefix), line1(line1), line2(line2)
+pub fn new(
+pb:ram_protoboard<ramT>,
+                                                   timestamp_size:size_t,
+                                                   line1:memory_line_variable_gadget<ramT>,
+                                                   line2:memory_line_variable_gadget<ramT>,
+                                                   annotation_prefix:std::string) ->Self
+    
 {
     /* compare the two timestamps */
     timestamps_leq.allocate(pb, FMT(self.annotation_prefix, " timestamps_leq"));
     timestamps_less.allocate(pb, FMT(self.annotation_prefix, " timestamps_less"));
-    compare_timestamps.reset(new comparison_gadget<FieldT>(pb, timestamp_size, line1.timestamp->packed, line2.timestamp->packed, timestamps_less, timestamps_leq,
+    compare_timestamps.reset(comparison_gadget::<$2>::new(pb, timestamp_size, line1.timestamp->packed, line2.timestamp->packed, timestamps_less, timestamps_leq,
                                                            FMT(self.annotation_prefix, " compare_ts")));
 
 
     /* compare the two addresses */
-    const size_t address_size = pb.ap.address_size();
+    let  address_size = pb.ap.address_size();
     addresses_eq.allocate(pb, FMT(self.annotation_prefix, " addresses_eq"));
     addresses_leq.allocate(pb, FMT(self.annotation_prefix, " addresses_leq"));
     addresses_less.allocate(pb, FMT(self.annotation_prefix, " addresses_less"));
-    compare_addresses.reset(new comparison_gadget<FieldT>(pb, address_size, line1.address->packed, line2.address->packed, addresses_less, addresses_leq,
+    compare_addresses.reset(comparison_gadget::<$2>::new(pb, address_size, line1.address->packed, line2.address->packed, addresses_less, addresses_leq,
                                                           FMT(self.annotation_prefix, " compare_addresses")));
 
     /*
@@ -109,17 +103,21 @@ memory_checker_gadget<ramT>::memory_checker_gadget(ram_protoboard<ramT> &pb,
     loose_contents_after1_equals_contents_before2.allocate(pb, FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
     loose_contents_before2_equals_zero.allocate(pb, FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
     loose_timestamp2_is_zero.allocate(pb, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
+    Self{
+// ram_gadget_base<ramT>(pb, annotation_prefix), 
+    line1, line2
+    }
 }
 
-template<typename ramT>
-void memory_checker_gadget<ramT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     /* compare the two timestamps */
-    compare_timestamps->generate_r1cs_constraints();
+    compare_timestamps.generate_r1cs_constraints();
 
     /* compare the two addresses */
-    compare_addresses->generate_r1cs_constraints();
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(addresses_leq, 1 - addresses_less, addresses_eq), FMT(self.annotation_prefix, " addresses_eq"));
+    compare_addresses.generate_r1cs_constraints();
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(addresses_leq, 1 - addresses_less, addresses_eq), FMT(self.annotation_prefix, " addresses_eq"));
 
     /*
       Add constraints for the following three flags:
@@ -127,20 +125,20 @@ void memory_checker_gadget<ramT>::generate_r1cs_constraints()
        - loose_contents_before2_equals_zero;
        - loose_timestamp2_is_zero.
      */
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(loose_contents_after1_equals_contents_before2,
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_contents_after1_equals_contents_before2,
                                                          line1.contents_after->packed - line2.contents_before->packed, 0),
                                  FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
-    generate_boolean_r1cs_constraint<FieldT>(self.pb, loose_contents_after1_equals_contents_before2, FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
+    generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_contents_after1_equals_contents_before2, FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(loose_contents_before2_equals_zero,
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_contents_before2_equals_zero,
                                                          line2.contents_before->packed, 0),
                                  FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
-    generate_boolean_r1cs_constraint<FieldT>(self.pb, loose_contents_before2_equals_zero, FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
+    generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_contents_before2_equals_zero, FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(loose_timestamp2_is_zero,
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_timestamp2_is_zero,
                                                          line2.timestamp->packed, 0),
                                  FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
-    generate_boolean_r1cs_constraint<FieldT>(self.pb, loose_timestamp2_is_zero, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
+    generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_timestamp2_is_zero, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
 
     /*
       The three cases that need to be checked are:
@@ -158,23 +156,23 @@ void memory_checker_gadget<ramT>::generate_r1cs_constraints()
 
       As usual, we implement "A => B" as "NOT (A AND (NOT B))".
     */
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(addresses_eq, 1 - loose_contents_after1_equals_contents_before2, 0),
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(addresses_eq, 1 - loose_contents_after1_equals_contents_before2, 0),
                                  FMT(self.annotation_prefix, " memory_retains_contents_between_accesses"));
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(addresses_less, 1 - loose_contents_before2_equals_zero, 0),
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(addresses_less, 1 - loose_contents_before2_equals_zero, 0),
                                  FMT(self.annotation_prefix, " new_address_starts_at_zero"));
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(1 - addresses_leq, 1 - loose_timestamp2_is_zero, 0),
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1 - addresses_leq, 1 - loose_timestamp2_is_zero, 0),
                                  FMT(self.annotation_prefix, " only_one_cycle"));
 }
 
-template<typename ramT>
-void memory_checker_gadget<ramT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     /* compare the two addresses */
-    compare_addresses->generate_r1cs_witness();
+    compare_addresses.generate_r1cs_witness();
     self.pb.val(addresses_eq) = self.pb.val(addresses_leq) * (FieldT::one() - self.pb.val(addresses_less));
 
     /* compare the two timestamps */
-    compare_timestamps->generate_r1cs_witness();
+    compare_timestamps.generate_r1cs_witness();
 
     /*
       compare the values of:
@@ -188,5 +186,5 @@ void memory_checker_gadget<ramT>::generate_r1cs_witness()
 }
 
 
-
+}
 //#endif // MEMORY_CHECKER_GADGET_TCC_

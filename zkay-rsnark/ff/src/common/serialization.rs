@@ -188,7 +188,7 @@ pub fn input_bool(ins:&impl BufRead, b:bool)
 #[inline]
 pub fn  output_bool_vector<W: ?Sized + Write> (out:& BufWriter<W>, v:&Vec<bool>)
 {
-    // out << v.size() << "\n";
+    // out << v.len() << "\n";
     // for bool in &v
     // {
     //     output_bool(out, b);
@@ -232,7 +232,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 // std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
-//     out << v.size() << "\n";
+//     out << v.len() << "\n";
 //     for t in &v
 //     {
 //         out << t << OUTPUT_NEWLINE;
@@ -264,7 +264,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 // template<typename T1, typename T2>
 // std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m)
 // {
-//     out << m.size() << "\n";
+//     out << m.len() << "\n";
 
 //     for it in &m
 //     {
@@ -300,7 +300,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 // template<typename T>
 // std::ostream& operator<<(std::ostream& out, const std::set<T> &s)
 // {
-//     out << s.size() << "\n";
+//     out << s.len() << "\n";
 
 //     for el in &s
 //     {

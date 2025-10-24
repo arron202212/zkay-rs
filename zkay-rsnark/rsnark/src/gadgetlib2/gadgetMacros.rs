@@ -51,9 +51,9 @@
 // class GadgetBase : virtual public Gadget {       \
 // protected:                                       \
 //     GadgetBase(ProtoboardPtr pb) : Gadget(pb) {} \
-// public:                                          \
+//                                           \
 //     virtual ~GadgetBase() = 0;                   \
-// private:                                         \
+//                                         \
 //     virtual void init() = 0;                     \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetBase);        \
 // }; // class GadgetBase
@@ -116,7 +116,7 @@
 // */
 // // #define CREATE_GADGET_FACTORY_CLASS_1(GadgetType, Type1, name1)                                   \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb, ADD_ELLIPSES_1(Type1, name1)) {                     \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
@@ -127,14 +127,14 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
 
 // // #define CREATE_GADGET_FACTORY_CLASS_2(GadgetType, Type1, name1, Type2, name2)                     \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                                     \
 //                                 ADD_ELLIPSES_2(Type1, name1, Type2, name2)) {                     \
 //         GadgetPtr pGadget;                                                                        \
@@ -146,14 +146,14 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
 
 // // #define CREATE_GADGET_FACTORY_CLASS_3(GadgetType, Type1, name1, Type2, name2, Type3, name3)       \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                 \
 //                                 ADD_ELLIPSES_3(Type1, name1, Type2, name2, Type3, name3)) {       \
 //         GadgetPtr pGadget;                                                        \
@@ -165,7 +165,7 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
@@ -173,7 +173,7 @@
 // // #define CREATE_GADGET_FACTORY_CLASS_4(GadgetType, Type1, name1, Type2, name2, Type3, name3,       \
 //                                       Type4, name4)                                               \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                 \
 //                   ADD_ELLIPSES_4(Type1, name1, Type2, name2, Type3, name3, Type4, name4)) {       \
 //         GadgetPtr pGadget;                                                        \
@@ -185,7 +185,7 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
@@ -193,7 +193,7 @@
 // // #define CREATE_GADGET_FACTORY_CLASS_5(GadgetType, Type1, name1, Type2, name2, Type3, name3,       \
 //                                       Type4, name4, Type5, name5)                                 \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                                     \
 //                   ADD_ELLIPSES_5(Type1, name1, Type2, name2, Type3, name3, Type4, name4,          \
 //                                  Type5, name5)) {                                                 \
@@ -206,7 +206,7 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
@@ -214,7 +214,7 @@
 // // #define CREATE_GADGET_FACTORY_CLASS_7(GadgetType, Type1, name1, Type2, name2, Type3, name3,       \
 //                                       Type4, name4, Type5, name5, Type6, name6, Type7, name7)     \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                                     \
 //                   ADD_ELLIPSES_7(Type1, name1, Type2, name2, Type3, name3, Type4, name4,          \
 //                                  Type5, name5, Type6, name6, Type7, name7)) {                     \
@@ -228,7 +228,7 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
@@ -238,7 +238,7 @@
 //                                       Type4, name4, Type5, name5, Type6, name6, Type7, name7,     \
 //                                       Type8, name8)                                               \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                                     \
 //                   ADD_ELLIPSES_8(Type1, name1, Type2, name2, Type3, name3, Type4, name4,          \
 //                                  Type5, name5, Type6, name6, Type7, name7, Type8, name8)) {       \
@@ -252,7 +252,7 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType
@@ -261,7 +261,7 @@
 //                                       Type4, name4, Type5, name5, Type6, name6, Type7, name7,     \
 //                                       Type8, name8, Type9, name9)                                 \
 // class GadgetType {                                                                                \
-// public:                                                                                           \
+//                                                                                            \
 //     static GadgetPtr create(ProtoboardPtr pb,                                                     \
 //                   ADD_ELLIPSES_9(Type1, name1, Type2, name2, Type3, name3, Type4, name4,          \
 //                                  Type5, name5, Type6, name6, Type7, name7, Type8, name8,          \
@@ -276,7 +276,7 @@
 //          pGadget->init();                                                                         \
 //         return pGadget;                                                                           \
 //     }                                                                                             \
-// private:                                                                                          \
+//                                                                                          \
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // class GadgetType

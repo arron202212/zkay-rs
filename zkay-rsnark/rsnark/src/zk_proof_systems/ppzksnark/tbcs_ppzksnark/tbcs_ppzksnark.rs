@@ -56,7 +56,7 @@ std::istream& operator>>(std::istream &in, tbcs_ppzksnark_proving_key<ppT> &pk);
  */
 template<typename ppT>
 class tbcs_ppzksnark_proving_key {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     tbcs_ppzksnark_circuit circuit;
@@ -141,7 +141,7 @@ using tbcs_ppzksnark_processed_verification_key = uscs_ppzksnark_processed_verif
  */
 template<typename ppT>
 class tbcs_ppzksnark_keypair {
-public:
+
     tbcs_ppzksnark_proving_key<ppT> pk;
     tbcs_ppzksnark_verification_key<ppT> vk;
 
@@ -331,7 +331,7 @@ tbcs_ppzksnark_proof<ppT> tbcs_ppzksnark_prover(const tbcs_ppzksnark_proving_key
     ffec::enter_block("Call to tbcs_ppzksnark_prover");
     const uscs_variable_assignment<FieldT> uscs_va = tbcs_to_uscs_witness_map<FieldT>(pk.circuit, primary_input, auxiliary_input);
     const uscs_primary_input<FieldT> uscs_pi = ffec::convert_bit_vector_to_field_element_vector<FieldT>(primary_input);
-    const uscs_auxiliary_input<FieldT> uscs_ai(uscs_va.begin() + primary_input.size(), uscs_va.end()); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
+    const uscs_auxiliary_input<FieldT> uscs_ai(uscs_va.begin() + primary_input.len(), uscs_va.end()); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
     const uscs_ppzksnark_proof<ppT> uscs_proof = uscs_ppzksnark_prover<ppT>(pk.uscs_pk, uscs_pi, uscs_ai);
     ffec::leave_block("Call to tbcs_ppzksnark_prover");
 

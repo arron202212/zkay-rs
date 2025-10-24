@@ -70,7 +70,7 @@ get_masked_out_dw_contents_prev:    std::shared_ptr<inner_product_gadget<FieldT>
 
 masked_out_dw_contents_prev:    pb_variable<FieldT>,
 expected_dw_contents_next:    pb_variable<FieldT>,
-// public:
+// 
 dw_contents_prev:    doubleword_variable_gadget<FieldT>,
 subaddress:    dual_variable_gadget<FieldT>,
 subcontents:    pb_linear_combination<FieldT>,
@@ -143,11 +143,11 @@ pb:tinyram_protoboard<FieldT>,
       will be the same as the value of dw_contents_prev, when 3rd
       (0-indexed) byte is set to all zeros.
     */
-    masked_out_word0.assign(pb, (FieldT(2)^pb.ap.w) * pb_packing_sum<FieldT>(
-                                pb_variable_array<FieldT>(dw_contents_prev.bits.begin() + pb.ap.w,
+    masked_out_word0.assign(pb, (FieldT(2)^pb.ap.w) * pb_packing_sum::<FieldT>(
+                                pb_variable_array::<FieldT>(dw_contents_prev.bits.begin() + pb.ap.w,
                                                           dw_contents_prev.bits.begin() + 2 * pb.ap.w)));
-    masked_out_word1.assign(pb, pb_packing_sum<FieldT>(
-                                pb_variable_array<FieldT>(dw_contents_prev.bits.begin(),
+    masked_out_word1.assign(pb, pb_packing_sum::<FieldT>(
+                                pb_variable_array::<FieldT>(dw_contents_prev.bits.begin(),
                                                           dw_contents_prev.bits.begin() + pb.ap.w)));
     masked_out_bytes.resize(2 * pb.ap.bytes_in_word());
 
@@ -155,8 +155,8 @@ pb:tinyram_protoboard<FieldT>,
     {
         /* just subtract out the byte to be masked */
         masked_out_bytes[i].assign(pb, (dw_contents_prev.packed -
-                                        (FieldT(2)^(8*i)) * pb_packing_sum<FieldT>(
-                                            pb_variable_array<FieldT>(dw_contents_prev.bits.begin() + 8*i,
+                                        (FieldT(2)^(8*i)) * pb_packing_sum::<FieldT>(
+                                            pb_variable_array::<FieldT>(dw_contents_prev.bits.begin() + 8*i,
                                                                       dw_contents_prev.bits.begin() + 8*(i+1)))));
     }
 
@@ -207,7 +207,7 @@ pub fn generate_r1cs_constraints()
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_subaddress[i], subaddress.packed - i, 0),
                                      format!("{} is_subaddress_{}",self.annotation_prefix, i));
     }
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum<FieldT>(is_subaddress), 1), format!("{} is_subaddress",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum::<FieldT>(is_subaddress), 1), format!("{} is_subaddress",self.annotation_prefix));
 
     /* get indicator variables is_byte_X */
     for i in 0..2 * self.pb.ap.bytes_in_word()

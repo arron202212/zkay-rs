@@ -34,7 +34,7 @@ use crate::algebra::fields::prime_base::fp;
  */
 // template<mp_size_t n, const bigint<n>& modulus>
 pub struct  Fp2_model {
-// public:
+// 
     // typedef Fp_model<n, modulus> my_Fp;
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
 //     static long long add_cnt;
@@ -426,7 +426,7 @@ use crate::algebra::field_utils::field_utils;
 // bool Fp2_model<n,modulus>::from_words(std::vector<uint64_t> words)
 // {
 //     std::vector<uint64_t>::const_iterator vec_start = words.begin();
-//     std::vector<uint64_t>::const_iterator vec_center = words.begin() + words.size() / 2;
+//     std::vector<uint64_t>::const_iterator vec_center = words.begin() + words.len() / 2;
 //     std::vector<uint64_t>::const_iterator vec_end = words.end();
 //     std::vector<uint64_t> words0(vec_start, vec_center);
 //     std::vector<uint64_t> words1(vec_center, vec_end);
@@ -451,7 +451,7 @@ use crate::algebra::field_utils::field_utils;
 // template<mp_size_t n, const bigint<n>& modulus>
 // std::ostream& operator<<(std::ostream& out, const std::vector<Fp2_model<n, modulus> > &v)
 // {
-//     out << v.size() << "\n";
+//     out << v.len() << "\n";
 //     for t in &v
 //     {
 //         out << t << OUTPUT_NEWLINE;

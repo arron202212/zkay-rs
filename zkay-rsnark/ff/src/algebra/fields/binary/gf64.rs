@@ -206,7 +206,7 @@
 //         {
 //             result ^= shifted;
 //         }
-//         if shifted & (1ul << 63)
+//         if shifted & (1u64 << 63)
 //         {
 //             shifted <<= 1;
 //             shifted ^= this->modulus_;

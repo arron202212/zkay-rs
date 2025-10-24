@@ -20,7 +20,7 @@ use  <memory>
 use ffec::algebra::curves::public_params;
 
 use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
 
 
 
@@ -29,7 +29,7 @@ use crate::gadgetlib1::gadgets/pairing/pairing_params;
  */
 template<typename ppT>
 class G2_variable : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -58,7 +58,7 @@ public:
  */
 template<typename ppT>
 class G2_checker_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -83,7 +83,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets::curves/weierstrass_g2_gadget;
 
 //#endif // WEIERSTRASS_G2_GADGET_HPP_
 /** @file

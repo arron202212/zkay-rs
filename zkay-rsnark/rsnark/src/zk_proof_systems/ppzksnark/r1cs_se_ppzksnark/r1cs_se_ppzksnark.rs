@@ -135,13 +135,13 @@ Self{
 
     pub fn G1_size(&self)->usize
     {
-         A_query.size() + C_query_1.size() + C_query_2.size() + 3
-               + G_gamma2_Z_t.size()
+         A_query.len() + C_query_1.len() + C_query_2.len() + 3
+               + G_gamma2_Z_t.len()
     }
 
     pub fn G2_size(&self)->usize
     {
-         B_query.size() + 1
+         B_query.len() + 1
     }
 
     pub fn size_in_bits(&self)->usize
@@ -212,7 +212,7 @@ H,
 
     pub fn G1_size(&self)->usize
     {
-        return 2 + query.size();
+        return 2 + query.len();
     }
 
     pub fn G2_size(&self)->usize
@@ -401,11 +401,11 @@ r1cs_se_ppzksnark_prover<ppT>(pk:&r1cs_se_ppzksnark_proving_key<ppT>,
 // //#endif
 
 // // #ifdef DEBUG
-//     assert!(pk.A_query.size() == sap_wit.num_variables() + 1);
-//     assert!(pk.B_query.size() == sap_wit.num_variables() + 1);
-//     assert!(pk.C_query_1.size() == sap_wit.num_variables() - sap_wit.num_inputs());
-//     assert!(pk.C_query_2.size() == sap_wit.num_variables() + 1);
-//     assert!(pk.G_gamma2_Z_t.size() >= sap_wit.degree() - 1);
+//     assert!(pk.A_query.len() == sap_wit.num_variables() + 1);
+//     assert!(pk.B_query.len() == sap_wit.num_variables() + 1);
+//     assert!(pk.C_query_1.len() == sap_wit.num_variables() - sap_wit.num_inputs());
+//     assert!(pk.C_query_2.len() == sap_wit.num_variables() + 1);
+//     assert!(pk.G_gamma2_Z_t.len() >= sap_wit.degree() - 1);
 // //#endif
 
 // // #ifdef MULTICORE
@@ -685,11 +685,11 @@ pub fn  r1cs_se_ppzksnark_online_verifier_strong_IC<ppT>(pvk:&r1cs_se_ppzksnark_
     ffec::enter_block("Call to r1cs_se_ppzksnark_online_verifier_strong_IC");
     let  result = true;
 
-    if pvk.query.size() != primary_input.size() + 1
+    if pvk.query.len() != primary_input.len() + 1
     {
         ffec::print_indent();
         print!("Input length differs from expected (got {}, expected {}).\n",
-            primary_input.size(), pvk.query.size());
+            primary_input.len(), pvk.query.len());
         result = false;
     }
     else
@@ -971,7 +971,7 @@ break}
     let  sap_inst = r1cs_to_sap_instance_map_with_evaluation(cs, t);
 
     ffec::print_indent(); print!("* SAP number of variables: {}\n", sap_inst.num_variables());
-    ffec::print_indent(); print!("* SAP pre degree: {}\n", cs.constraints.size());
+    ffec::print_indent(); print!("* SAP pre degree: {}\n", cs.constraints.len());
     ffec::print_indent(); print!("* SAP degree: {}\n", sap_inst.degree());
     ffec::print_indent(); print!("* SAP number of input variables: {}\n", sap_inst.num_inputs());
 
@@ -1052,7 +1052,7 @@ break}
 
     ffec::enter_block("Compute the A-query", false);
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
-    for  i in 0.. At.size()
+    for  i in 0.. At.len()
     {
         tmp_exponents.push(gamma * At[i]);
     }

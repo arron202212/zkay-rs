@@ -18,7 +18,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 
 
 // class default_tinyram_zksnark_pp {
-// public:
+// 
 //     type default_r1cs_ppzkpcd_pp PCD_pp;
 //     type typename PCD_pp::scalar_field_A FieldT;
 //     type ram_tinyram<FieldT> machine_pp;

@@ -10,8 +10,8 @@
 use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
-use crate::gadgetlib1::gadgets/merkle_tree/merkle_tree_check_read_gadget;
-use crate::gadgetlib1::gadgets/set_commitment/set_membership_proof_variable;
+use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets::set_commitment::set_membership_proof_variable;
 
 
 
@@ -26,7 +26,7 @@ private:
     std::shared_ptr<HashT> hash_element;
     std::shared_ptr<merkle_tree_check_read_gadget<FieldT, HashT> > check_membership;
 
-public:
+
     size_t tree_depth;
     pb_variable_array<FieldT> element_bits;
     set_commitment_variable<FieldT, HashT> root_digest;
@@ -52,7 +52,7 @@ void test_set_commitment_gadget();
 
 
 
-use crate::gadgetlib1::gadgets/set_commitment/set_commitment_gadget;
+use crate::gadgetlib1::gadgets::set_commitment::set_commitment_gadget;
 
 //#endif // SET_COMMITMENT_GADGET_HPP_
 /** @file
@@ -83,13 +83,13 @@ set_commitment_gadget<FieldT, HashT>::set_commitment_gadget(protoboard<FieldT> &
 
     if tree_depth == 0
     {
-        hash_element.reset(new HashT(pb, element_bits.size(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
+        hash_element.reset(new HashT(pb, element_bits.len(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
     }
     else
     {
         element_digest.reset(new digest_variable<FieldT>(pb, HashT::get_digest_len(),
                                                          FMT(annotation_prefix, " element_digest")));
-        hash_element.reset(new HashT(pb, element_bits.size(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
+        hash_element.reset(new HashT(pb, element_bits.len(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
         check_membership.reset(new merkle_tree_check_read_gadget<FieldT, HashT>(pb,
                                                                                 tree_depth,
                                                                                 proof.address_bits,

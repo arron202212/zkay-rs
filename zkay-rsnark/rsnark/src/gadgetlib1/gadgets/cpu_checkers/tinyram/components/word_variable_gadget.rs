@@ -22,7 +22,7 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_proto
 // template<typename FieldT>
 pub struct word_variable_gadget;
 impl word_variable_gadget {
-// public:: public dual_variable_gadget<FieldT> 
+// : public dual_variable_gadget<FieldT> 
     pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string) ->Self
         {
 //  dual_variable_gadget<FieldT>(pb, pb.ap.w, annotation_prefix)
@@ -47,7 +47,7 @@ impl word_variable_gadget {
 // template<typename FieldT>
 pub struct doubleword_variable_gadget;
 impl doubleword_variable_gadget  {
-// public:: public dual_variable_gadget<FieldT>
+// : public dual_variable_gadget<FieldT>
     pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string) ->Self
         {
 // dual_variable_gadget<FieldT>(pb, 2*pb.ap.w, annotation_prefix) 

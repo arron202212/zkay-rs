@@ -16,7 +16,7 @@ use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 template<typename FieldT, typename HashT>
 class merkle_authentication_path_variable : public gadget<FieldT> {
-public:
+
 
     const size_t tree_depth;
     std::vector<digest_variable<FieldT> > left_digests;
@@ -33,7 +33,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadgets::merkle_tree/merkle_authentication_path_variable;
 
 //#endif // MERKLE_AUTHENTICATION_PATH_VARIABLE_HPP
 /**
@@ -75,11 +75,11 @@ void merkle_authentication_path_variable<FieldT, HashT>::generate_r1cs_constrain
 template<typename FieldT, typename HashT>
 void merkle_authentication_path_variable<FieldT, HashT>::generate_r1cs_witness(const size_t address, const merkle_authentication_path &path)
 {
-    assert!(path.size() == tree_depth);
+    assert!(path.len() == tree_depth);
 
     for i in 0..tree_depth
     {
-        if address & (1ul << (tree_depth-1-i))
+        if address & (1u64 << (tree_depth-1-i))
         {
             left_digests[i].generate_r1cs_witness(path[i]);
         }
@@ -96,7 +96,7 @@ merkle_authentication_path merkle_authentication_path_variable<FieldT, HashT>::g
     merkle_authentication_path result;
     for i in 0..tree_depth
     {
-        if address & (1ul << (tree_depth-1-i))
+        if address & (1u64 << (tree_depth-1-i))
         {
             result.push(left_digests[i].get_digest());
         }

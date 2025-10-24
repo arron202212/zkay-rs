@@ -16,7 +16,7 @@ use crate::algebra::curves::public_params;
 // namespace libff {
 
 class alt_bn128_pp {
-public:
+
     typedef alt_bn128_Fr Fp_type;
     typedef alt_bn128_G1 G1_type;
     typedef alt_bn128_G2 G2_type;

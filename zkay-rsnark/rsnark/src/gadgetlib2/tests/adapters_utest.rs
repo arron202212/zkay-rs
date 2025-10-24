@@ -34,7 +34,7 @@ TEST(GadgetLibAdapter, LinearCombination) {
     const LinearCombination lc = 5*x + 3*y + 42;
     const auto new_lc = adapter.convert(lc);
     EXPECT_EQ(new_lc.second, Fp(42));
-    EXPECT_EQ(new_lc.first.size(), 2u);
+    EXPECT_EQ(new_lc.first.len(), 2u);
     EXPECT_EQ(new_lc.first[0], adapter.convert(5 * x));
     EXPECT_EQ(new_lc.first[1], adapter.convert(3 * y));
 }
@@ -63,7 +63,7 @@ TEST(GadgetLibAdapter, ConstraintSystem) {
     system.addConstraint(constraint0);
     system.addConstraint(constraint1);
     const auto new_constraint_sys = adapter.convert(system);
-    EXPECT_EQ(new_constraint_sys.size(), 2u);
+    EXPECT_EQ(new_constraint_sys.len(), 2u);
     EXPECT_EQ(new_constraint_sys.at(0), adapter.convert(constraint0));
     EXPECT_EQ(new_constraint_sys.at(1), adapter.convert(constraint1));
 }
@@ -74,12 +74,12 @@ TEST(GadgetLibAdapter, VariableAssignment) {
     adapter.resetVariableIndex();
     const VariableArray varArray(10, "x");
     VariableAssignment assignment;
-    for i in 0..varArray.size() {
+    for i in 0..varArray.len() {
         assignment[varArray[i]] = i;
     }
     const auto new_assignment = adapter.convert(assignment);
-    ASSERT_EQ(assignment.size(), new_assignment.size());
-    for i in 0..new_assignment.size() {
+    ASSERT_EQ(assignment.len(), new_assignment.len());
+    for i in 0..new_assignment.len() {
         const GadgetLibAdapter::variable_index_t var = i;
         EXPECT_EQ(new_assignment.at(var), Fp(i));
     }

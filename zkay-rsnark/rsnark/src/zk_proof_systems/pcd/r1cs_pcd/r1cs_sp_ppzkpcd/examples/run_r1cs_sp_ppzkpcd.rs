@@ -13,7 +13,7 @@
 //#ifndef RUN_R1CS_SP_PPZKPCD_HPP_
 // #define RUN_R1CS_SP_PPZKPCD_HPP_
 
-use  <cstddef>
+// use  <cstddef>
 
 
 
@@ -24,15 +24,15 @@ use  <cstddef>
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-template<typename PCD_ppT>
-bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
-                                       const size_t arity,
-                                       const size_t depth,
-                                       const bool test_serialization);
+// template<typename PCD_ppT>
+// bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
+//                                        const size_t arity,
+//                                        const size_t depth,
+//                                        const bool test_serialization);
 
 
 
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/examples/run_r1cs_sp_ppzkpcd;
+// use crate::zk_proof_systems::pcd::r1cs_sp_ppzkpcd::examples::run_r1cs_sp_ppzkpcd;
 
 //#endif // RUN_R1CS_SP_PPZKPCD_HPP_
 /** @file
@@ -52,32 +52,32 @@ use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/examples/run_r1cs_sp_
 //#ifndef RUN_R1CS_SP_PPZKPCD_TCC_
 // #define RUN_R1CS_SP_PPZKPCD_TCC_
 
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/examples/tally_cp;
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_sp_ppzkpcd/r1cs_sp_ppzkpcd;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::examples/tally_cp;
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
 
 
 
-template<typename PCD_ppT>
-bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
-                                       const size_t arity,
-                                       const size_t depth,
-                                       const bool test_serialization)
+// template<typename PCD_ppT>
+ pub fn run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize:size_t,
+                                       arity:size_t,
+                                       depth:size_t,
+                                       test_serialization:bool)->bool
 {
     ffec::enter_block("Call to run_r1cs_sp_ppzkpcd_tally_example");
 
-    type ffec::Fr<typename PCD_ppT::curve_A_pp> FieldT;
+    type FieldT=ffec::Fr<typename PCD_ppT::curve_A_pp> ;
 
-    bool all_accept = true;
+    let mut  all_accept = true;
 
     ffec::enter_block("Generate all messages");
-    size_t tree_size = 0;
-    size_t nodes_in_layer = 1;
+    let mut  tree_size = 0;
+    let mut  nodes_in_layer = 1;
     for layer in 0..=depth
     {
         tree_size += nodes_in_layer;
         nodes_in_layer *= arity;
     }
-    std::vector<size_t> tree_elems(tree_size);
+    let mut  tree_elems=vec![0;tree_size];
     for i in 0..tree_size
     {
         tree_elems[i] = std::rand() % 10;
@@ -85,43 +85,43 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
     }
     ffec::leave_block("Generate all messages");
 
-    std::vector<r1cs_sp_ppzkpcd_proof<PCD_ppT> > tree_proofs(tree_size);
-    std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > > tree_messages(tree_size);
+    let mut tree_proofs=vec![r1cs_sp_ppzkpcd_proof::<PCD_ppT> ::new();tree_size];
+    let mut  tree_messages=vec![r1cs_pcd_message::<PCD_ppT> ::new();tree_size];
 
     ffec::enter_block("Generate compliance predicate");
-    const size_t type = 1;
-    tally_cp_handler<FieldT> tally(type, arity, wordsize);
+    let types = 1;
+    let mut  tally=tally_cp_handler::<FieldT>::new(types, arity, wordsize);
     tally.generate_r1cs_constraints();
-    r1cs_pcd_compliance_predicate<FieldT> tally_cp = tally.get_compliance_predicate();
+    let mut tally_cp = tally.get_compliance_predicate();
     ffec::leave_block("Generate compliance predicate");
 
     ffec::print_header("R1CS ppzkPCD Generator");
-    r1cs_sp_ppzkpcd_keypair<PCD_ppT> keypair = r1cs_sp_ppzkpcd_generator<PCD_ppT>(tally_cp);
+    let mut keypair = r1cs_sp_ppzkpcd_generator::<PCD_ppT>(tally_cp);
 
     ffec::print_header("Process verification key");
-    r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> pvk = r1cs_sp_ppzkpcd_process_vk<PCD_ppT>(keypair.vk);
+   let mut  pvk = r1cs_sp_ppzkpcd_process_vk::<PCD_ppT>(keypair.vk);
 
     if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
-        keypair.pk = ffec::reserialize<r1cs_sp_ppzkpcd_proving_key<PCD_ppT> >(keypair.pk);
-        keypair.vk = ffec::reserialize<r1cs_sp_ppzkpcd_verification_key<PCD_ppT> >(keypair.vk);
-        pvk = ffec::reserialize<r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> >(pvk);
+        keypair.pk = ffec::reserialize::<r1cs_sp_ppzkpcd_proving_key::<PCD_ppT> >(keypair.pk);
+        keypair.vk = ffec::reserialize::<r1cs_sp_ppzkpcd_verification_key::<PCD_ppT> >(keypair.vk);
+        pvk = ffec::reserialize::<r1cs_sp_ppzkpcd_processed_verification_key::<PCD_ppT> >(pvk);
         ffec::leave_block("Test serialization of keys");
     }
 
-    std::shared_ptr<r1cs_pcd_message<FieldT> > base_msg = tally.get_base_case_message();
+    let mut  base_msg = tally.get_base_case_message();
     nodes_in_layer /= arity;
-    for (long layer = depth; layer >= 0; --layer, nodes_in_layer /= arity)
+    for  layer in  (0..=depth).rev()
     {
         for i in 0..nodes_in_layer
         {
-            const size_t cur_idx = (nodes_in_layer - 1) / (arity - 1) + i;
+            let cur_idx = (nodes_in_layer - 1) / (arity - 1) + i;
 
-            std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > > msgs(arity, base_msg);
-            std::vector<r1cs_sp_ppzkpcd_proof<PCD_ppT> > proofs(arity);
+            let mut  msgs=vec![base_msg;arity];
+            let mut  proofs=vec![r1cs_sp_ppzkpcd_proof::<PCD_ppT>::new();arity];
 
-            const bool base_case = (arity * cur_idx + arity >= tree_size);
+            let base_case = (arity * cur_idx + arity >= tree_size);
 
             if !base_case
             {
@@ -132,20 +132,20 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
                 }
             }
 
-            std::shared_ptr<r1cs_pcd_local_data<FieldT> > ld;
-            ld.reset(new tally_pcd_local_data<FieldT>(tree_elems[cur_idx]));
+            let mut ld=r1cs_pcd_local_data::<FieldT>::new();
+            ld.reset(tally_pcd_local_data::<FieldT>::new(tree_elems[cur_idx]));
             tally.generate_r1cs_witness(msgs, ld);
 
-            const r1cs_pcd_compliance_predicate_primary_input<FieldT> tally_primary_input(tally.get_outgoing_message());
-            const r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> tally_auxiliary_input(msgs, ld, tally.get_witness());
+            let mut   tally_primary_input=r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new()(tally.get_outgoing_message());
+            let mut   tally_auxiliary_input=r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT>::new()(msgs, ld, tally.get_witness());
 
             ffec::print_header("R1CS ppzkPCD Prover");
-            r1cs_sp_ppzkpcd_proof<PCD_ppT> proof = r1cs_sp_ppzkpcd_prover<PCD_ppT>(keypair.pk, tally_primary_input, tally_auxiliary_input, proofs);
+            let  proof = r1cs_sp_ppzkpcd_prover::<PCD_ppT>(keypair.pk, tally_primary_input, tally_auxiliary_input, proofs);
 
             if test_serialization
             {
                 ffec::enter_block("Test serialization of proof");
-                proof = ffec::reserialize<r1cs_sp_ppzkpcd_proof<PCD_ppT> >(proof);
+                proof = ffec::reserialize::<r1cs_sp_ppzkpcd_proof::<PCD_ppT> >(proof);
                 ffec::leave_block("Test serialization of proof");
             }
 
@@ -153,11 +153,11 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
             tree_messages[cur_idx] = tally.get_outgoing_message();
 
             ffec::print_header("R1CS ppzkPCD Verifier");
-            const r1cs_sp_ppzkpcd_primary_input<PCD_ppT> pcd_verifier_input(tree_messages[cur_idx]);
-            const bool ans = r1cs_sp_ppzkpcd_verifier<PCD_ppT>(keypair.vk, pcd_verifier_input, tree_proofs[cur_idx]);
+            let   pcd_verifier_input=r1cs_sp_ppzkpcd_primary_input::<PCD_ppT>::new(tree_messages[cur_idx]);
+            let ans = r1cs_sp_ppzkpcd_verifier::<PCD_ppT>(keypair.vk, pcd_verifier_input, tree_proofs[cur_idx]);
 
             ffec::print_header("R1CS ppzkPCD Online Verifier");
-            const bool ans2 = r1cs_sp_ppzkpcd_online_verifier<PCD_ppT>(pvk, pcd_verifier_input, tree_proofs[cur_idx]);
+            let ans2 = r1cs_sp_ppzkpcd_online_verifier::<PCD_ppT>(pvk, pcd_verifier_input, tree_proofs[cur_idx]);
             assert!(ans == ans2);
 
             all_accept = all_accept && ans;
@@ -175,6 +175,7 @@ bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
             print!("Current node = {}. Current proof verifies = %s\n", cur_idx, if ans  {"YES" }else {"NO"});
             print!("\n\n\n ================================================================================\n\n\n");
         }
+        nodes_in_layer /= arity;
     }
 
     ffec::leave_block("Call to run_r1cs_sp_ppzkpcd_tally_example");

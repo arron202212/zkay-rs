@@ -224,8 +224,10 @@ pub struct  ALU_add_gadget {
 addition_result:    pb_variable<FieldT>,
 res_word:    pb_variable_array<FieldT>,
 res_word_and_flag:    pb_variable_array<FieldT>,
-pack_result:    std::shared_ptr<packing_gadget<FieldT> > unpack_addition,,
-
+pack_result:    std::shared_ptr<packing_gadget<FieldT> >,
+ unpack_addition:std::shared_ptr<packing_gadget<FieldT> >,
+}
+impl ALU_add_gadget {
     pub fn new(pb :tinyram_protoboard<FieldT> ,
                    opcode_indicators:pb_variable_array<FieldT>,
                    desval:word_variable_gadget<FieldT>,
@@ -266,7 +268,8 @@ negated_flag:    pb_variable<FieldT>,
 res_word:    pb_variable_array<FieldT>,
 res_word_and_negated_flag:    pb_variable_array<FieldT>,
 
-pack_result:    std::shared_ptr<packing_gadget<FieldT> > unpack_intermediate,,
+pack_result:    std::shared_ptr<packing_gadget<FieldT> > ,
+unpack_intermediate:    std::shared_ptr<packing_gadget<FieldT> >,
 }
  impl ALU_sub_gadget<FieldT> {
     pub fn new(pb :tinyram_protoboard<FieldT> ,
@@ -433,10 +436,10 @@ comparator:    std::shared_ptr<comparison_gadget<FieldT> >,
         negated_arg1val_sign.allocate(pb, format!("{} negated_arg1val_sign",self.annotation_prefix));
         negated_arg2val_sign.allocate(pb, format!("{} negated_arg2val_sign",self.annotation_prefix));
 
-        modified_arg1 = pb_variable_array<FieldT>(arg1val.bits.begin(), --arg1val.bits.end());
+        modified_arg1 = pb_variable_array::<FieldT>(arg1val.bits.begin(), --arg1val.bits.end());
         modified_arg1.push(negated_arg1val_sign);
 
-        modified_arg2 = pb_variable_array<FieldT>(arg2val.bits.begin(), --arg2val.bits.end());
+        modified_arg2 = pb_variable_array::<FieldT>(arg2val.bits.begin(), --arg2val.bits.end());
         modified_arg2.push(negated_arg2val_sign);
 
         packed_modified_arg1.allocate(pb, format!("{} packed_modified_arg1",self.annotation_prefix));
@@ -523,8 +526,10 @@ smulh_bits:    pb_variable_array<FieldT>,
 top:    pb_variable<FieldT>,
 pack_top:    std::shared_ptr<packing_gadget<FieldT> >,
 
-is_top_empty_aux:    pb_variable<FieldT> is_top_empty,,
-is_top_full_aux:    pb_variable<FieldT> is_top_full,,
+is_top_empty_aux:    pb_variable<FieldT> ,
+is_top_empty:    pb_variable<FieldT> ,
+is_top_full_aux:    pb_variable<FieldT> ,
+is_top_full:    pb_variable<FieldT> ,
 
 result_flag:    pb_variable<FieldT>,
 pack_smulh_result:    std::shared_ptr<packing_gadget<FieldT> >,
@@ -549,7 +554,7 @@ pack_smulh_result:    std::shared_ptr<packing_gadget<FieldT> >,
         pack_smulh_result.reset(packing_gadget::<FieldT>::new(pb, smulh_bits, smulh_result, format!("{} pack_smulh_result",self.annotation_prefix)));
 
         top.allocate(pb, format!("{} top",self.annotation_prefix));
-        pack_top.reset(packing_gadget::<FieldT>::new(pb, pb_variable_array<FieldT>(mul_result.bits.begin() + pb.ap.w-1, mul_result.bits.begin() + 2*pb.ap.w), top,
+        pack_top.reset(packing_gadget::<FieldT>::new(pb, pb_variable_array::<FieldT>(mul_result.bits.begin() + pb.ap.w-1, mul_result.bits.begin() + 2*pb.ap.w), top,
                                                   format!("{} pack_top",self.annotation_prefix)));
 
         is_top_empty.allocate(pb, format!("{} is_top_empty",self.annotation_prefix));
@@ -667,7 +672,7 @@ logw:    usize,
 
         reversed_input.allocate(pb, format!("{} reversed_input",self.annotation_prefix));
         pack_reversed_input.reset(
-            packing_gadget::<FieldT>::new(pb, pb_variable_array<FieldT>(arg1val.bits.rbegin(), arg1val.bits.rend()),
+            packing_gadget::<FieldT>::new(pb, pb_variable_array::<FieldT>(arg1val.bits.rbegin(), arg1val.bits.rend()),
                                        reversed_input,
                                        format!("{} pack_reversed_input",self.annotation_prefix)));
 
@@ -682,7 +687,7 @@ logw:    usize,
         is_oversize_shift.allocate(pb, format!("{} is_oversize_shift",self.annotation_prefix));
         check_oversize_shift.reset(
             disjunction_gadget::<FieldT>::new(pb,
-                                           pb_variable_array<FieldT>(arg2val.bits.begin()+logw, arg2val.bits.end()),
+                                           pb_variable_array::<FieldT>(arg2val.bits.begin()+logw, arg2val.bits.end()),
                                            is_oversize_shift,
                                            format!("{} check_oversize_shift",self.annotation_prefix)));
         result.allocate(pb, format!("{} result",self.annotation_prefix));
@@ -694,7 +699,7 @@ logw:    usize,
 
         reversed_result.allocate(pb, format!("{} reversed_result",self.annotation_prefix));
         pack_reversed_result.reset(
-            packing_gadget::<FieldT>::new(pb, pb_variable_array<FieldT>(result_bits.rbegin(), result_bits.rend()),
+            packing_gadget::<FieldT>::new(pb, pb_variable_array::<FieldT>(result_bits.rbegin(), result_bits.rend()),
                                        reversed_result,
                                        format!("{} pack_reversed_result",self.annotation_prefix)));
 //  ALU_arithmetic_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, shr_result, shr_flag, annotation_prefix),
@@ -744,14 +749,14 @@ use ffec::common::utils;
 
 // template<class T, typename FieldT>
 type initializer_fn< T,  FieldT> =
-    fn(tinyram_protoboard<FieldT>&,    // pb
-                   pb_variable_array<FieldT>&,       // opcode_indicators
-                   word_variable_gadget<FieldT>&, // desval
-                   word_variable_gadget<FieldT>&, // arg1val
-                   word_variable_gadget<FieldT>&, // arg2val
-                   pb_variable<FieldT>&,             // flag
-                   pb_variable<FieldT>&,             // result
-                   pb_variable<FieldT>&              // result_flag
+    fn(&tinyram_protoboard<FieldT>,    // pb
+                   &pb_variable_array<FieldT>,       // opcode_indicators
+                   &word_variable_gadget<FieldT>, // desval
+                   &word_variable_gadget<FieldT>, // arg1val
+                   &word_variable_gadget<FieldT>, // arg2val
+                   &pb_variable<FieldT>,             // flag
+                   &pb_variable<FieldT>,             // result
+                   &pb_variable<FieldT>             // result_flag
                   )->T;
 
 // template<class T, typename FieldT>
@@ -765,10 +770,10 @@ pub fn brute_force_arithmetic_gadget< T,  FieldT>( w:usize,
 
     print!("testing on all {} bit inputs\n", w);
 
-    tinyram_architecture_params ap(w, 16);
+    let mut  ap=tinyram_architecture_params::new(w, 16);
     let mut  P=tinyram_program::new(); 
     P.instructions = generate_tinyram_prelude(ap);
-    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
+    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
     let mut  opcode_indicators=pb_variable_array::<FieldT>::new();
     opcode_indicators.allocate(pb, 1u64<<ap.opcode_width(), "opcode_indicators");
@@ -801,7 +806,7 @@ pub fn brute_force_arithmetic_gadget< T,  FieldT>( w:usize,
 
         for f in 0..=1
         {
-            pb.val(flag) = if f {FieldT::one()} else{FieldT::zero()}
+            pb.val(flag) = if f {FieldT::one()} else{FieldT::zero()};
 
             for arg1 in 0..(1u32 << w)
             {
@@ -814,13 +819,13 @@ pub fn brute_force_arithmetic_gadget< T,  FieldT>( w:usize,
                     arg2val.generate_r1cs_witness_from_packed();
 
                     let  res = res_function(des, f, arg1, arg2);
-                    booletl res_f = flag_function(des, f, arg1, arg2);
+                    let  res_f = flag_function(des, f, arg1, arg2);
 // #ifdef DEBUG
-                    print!("with the following parameters: flag = {}"
-                           ", desval = {} ({})"
-                           ", arg1val = {} ({})"
-                           ", arg2val = {} ({})"
-                           ". expected result: {} ({}), expected flag: {}\n",
+                    print!("with the following parameters: flag = {}
+                           , desval = {} ({})
+                           , arg1val = {} ({})
+                           , arg2val = {} ({})
+                           . expected result: {} ({}), expected flag: {}\n",
                            f,
                            des, ffec::from_twos_complement(des, w),
                            arg1, ffec::from_twos_complement(arg1, w),
@@ -850,10 +855,10 @@ pub fn generate_r1cs_constraints()
     for i in 0..self.pb.ap.w
     {
         self.pb.add_r1cs_constraint(
-            r1cs_constraint<FieldT>(
-                { self.arg1val.bits[i] },
-                { self.arg2val.bits[i] },
-                { self.res_word[i] }),
+            r1cs_constraint::<FieldT>(
+                vec![ self.arg1val.bits[i] ],
+                vec![ self.arg2val.bits[i] ],
+                vec![ self.res_word[i] ]),
             format!("{} res_word_{}",self.annotation_prefix, i));
     }
 
@@ -863,10 +868,10 @@ pub fn generate_r1cs_constraints()
 
     /* result_flag = 1 - not_all_zeros = result is 0^w */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, self.not_all_zeros_result * (-1) },
-            { self.result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, self.not_all_zeros_result * (-1) ],
+            vec![ self.result_flag ]),
         format!("{} result_flag",self.annotation_prefix));
 }
 
@@ -902,7 +907,7 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_and_gadget<FieldT>{
-                                                                      return new ALU_and_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_and_gadget");
+                                                                      return ALU_and_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_and_gadget");
                                                                   },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> usize { return x & y; },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> bool { return (x & y) == 0; });
@@ -916,10 +921,10 @@ pub fn generate_r1cs_constraints()
     for i in 0..self.pb.ap.w
     {
         self.pb.add_r1cs_constraint(
-            r1cs_constraint<FieldT>(
-                { ONE, self.arg1val.bits[i] * (-1) },
-                { ONE, self.arg2val.bits[i] * (-1) },
-                { ONE, self.res_word[i] * (-1) }),
+            r1cs_constraint::<FieldT>(
+                vec![ ONE, self.arg1val.bits[i] * (-1) ],
+                vec![ ONE, self.arg2val.bits[i] * (-1) ],
+                vec![ ONE, self.res_word[i] * (-1) ]),
             format!("{} res_word_{}",self.annotation_prefix, i));
     }
 
@@ -930,9 +935,9 @@ pub fn generate_r1cs_constraints()
     /* result_flag = 1 - not_all_zeros = result is 0^w */
     self.pb.add_r1cs_constraint(
         r1cs_constraint::<FieldT>(
-            { ONE },
-            { ONE, self.not_all_zeros_result * (-1) },
-            { self.result_flag }),
+            vec![ ONE ],
+            vec![ ONE, self.not_all_zeros_result * (-1) ],
+            vec![ self.result_flag ]),
         format!("{} result_flag",self.annotation_prefix));
 }
 
@@ -956,7 +961,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_or_gadget(w:usize)
 {
     ffec::print_time("starting or test");
-    brute_force_arithmetic_gadget<ALU_or_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_or_gadget::<FieldT>, FieldT>(w,
                                                                  tinyram_opcode_OR,
                                                                  |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                     pb_variable_array<FieldT>,
@@ -967,7 +972,7 @@ flag:&                                                                     pb_va
 result:&                                                                     pb_variable<FieldT>,
 result_flag:&                                                                     pb_variable<FieldT>| ->
                                                                  ALU_or_gadget<FieldT>{
-                                                                     return new ALU_or_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_or_gadget");
+                                                                     return ALU_or_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_or_gadget");
                                                                  },
                                                                  |des:usize, f:bool, x:usize, y:usize| -> usize { return x | y; },
                                                                  |des:usize, f:bool, x:usize, y:usize| -> bool { return (x | y) == 0; });
@@ -982,10 +987,10 @@ pub fn generate_r1cs_constraints()
     {
         /* a = b ^ c <=> a = b + c - 2*b*c, (2*b)*c = b+c - a */
         self.pb.add_r1cs_constraint(
-            r1cs_constraint<FieldT>(
-                { self.arg1val.bits[i] * 2},
-                { self.arg2val.bits[i] },
-                { self.arg1val.bits[i], self.arg2val.bits[i], self.res_word[i] * (-1) }),
+            r1cs_constraint::<FieldT>(
+                vec![ self.arg1val.bits[i] * 2],
+                vec![ self.arg2val.bits[i] ],
+                vec![ self.arg1val.bits[i], self.arg2val.bits[i], self.res_word[i] * (-1) ]),
             format!("{} res_word_{}",self.annotation_prefix, i));
     }
 
@@ -995,10 +1000,10 @@ pub fn generate_r1cs_constraints()
 
     /* result_flag = 1 - not_all_zeros = result is 0^w */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, self.not_all_zeros_result * (-1) },
-            { self.result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, self.not_all_zeros_result * (-1) ],
+            vec![ self.result_flag ]),
         format!("{} result_flag",self.annotation_prefix));
 }
 
@@ -1022,7 +1027,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_xor_gadget(w:usize)
 {
     ffec::print_time("starting xor test");
-    brute_force_arithmetic_gadget<ALU_xor_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_xor_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_XOR,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1033,7 +1038,7 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_xor_gadget<FieldT>{
-                                                                      return new ALU_xor_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_xor_gadget");
+                                                                      return ALU_xor_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_xor_gadget");
                                                                   },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> usize { return x ^ y; },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> bool { return (x ^ y) == 0; });
@@ -1047,10 +1052,10 @@ pub fn generate_r1cs_constraints()
     for i in 0..self.pb.ap.w
     {
         self.pb.add_r1cs_constraint(
-            r1cs_constraint<FieldT>(
-                { ONE },
-                { ONE, self.arg2val.bits[i] * (-1) },
-                { self.res_word[i] }),
+            r1cs_constraint::<FieldT>(
+                vec![ ONE ],
+                vec![ ONE, self.arg2val.bits[i] * (-1) ],
+                vec![ self.res_word[i] ]),
             format!("{} res_word_{}",self.annotation_prefix, i));
     }
 
@@ -1060,10 +1065,10 @@ pub fn generate_r1cs_constraints()
 
     /* result_flag = 1 - not_all_zeros = result is 0^w */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, self.not_all_zeros_result * (-1) },
-            { self.result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, self.not_all_zeros_result * (-1) ],
+            vec![ self.result_flag ]),
         format!("{} result_flag",self.annotation_prefix));
 }
 
@@ -1086,7 +1091,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_not_gadget(w:usize)
 {
     ffec::print_time("starting not test");
-    brute_force_arithmetic_gadget<ALU_not_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_not_gadge::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_NOT,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1095,9 +1100,9 @@ arg1val:&                                                                      w
 arg2val:&                                                                      word_variable_gadget<FieldT>,
 flag:&                                                                      pb_variable<FieldT>,
 result:&                                                                      pb_variable<FieldT>,
-                                                                      pb_variable<FieldT> &result_flag) ->
+                                                                      result_flag:&pb_variable<FieldT>| ->
                                                                   ALU_not_gadget<FieldT>{
-                                                                      return new ALU_not_gadget<FieldT>(pb, opcode_indicators,desval, arg1val, arg2val, flag, result, result_flag, "ALU_not_gadget");
+                                                                      return ALU_not_gadget::<FieldT>::new(pb, opcode_indicators,desval, arg1val, arg2val, flag, result, result_flag, "ALU_not_gadget");
                                                                   },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> usize { return (1u64<<w)-1-y; },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> bool { return ((1u64<<w)-1-y) == 0; });
@@ -1110,10 +1115,10 @@ pub fn generate_r1cs_constraints()
 {
     /* addition_result = 1 * (arg1val + arg2val) */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.arg1val.packed, self.arg2val.packed },
-            { self.addition_result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.arg1val.packed, self.arg2val.packed ],
+            vec![ self.addition_result ]),
         format!("{} addition_result",self.annotation_prefix));
 
     /* unpack into bits */
@@ -1135,7 +1140,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_add_gadget(w:usize)
 {
     ffec::print_time("starting add test");
-    brute_force_arithmetic_gadget<ALU_add_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_add_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_ADD,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1146,7 +1151,7 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_add_gadget<FieldT>{
-                                                                      return new ALU_add_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_add_gadget");
+                                                                      return ALU_add_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_add_gadget");
                                                                   },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> usize { return (x+y) % (1u64<<w); },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> bool { return (x+y) >= (1u64<<w); });
@@ -1158,7 +1163,7 @@ impl ALU_sub_gadget<FieldT>{
 pub fn generate_r1cs_constraints()
 {
     /* intermediate_result = 2^w + (arg1val - arg2val) */
-    FieldT twoi = FieldT::one();
+    let  twoi = FieldT::one();
 
     let (mut a,mut b,mut c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
 
@@ -1172,7 +1177,7 @@ pub fn generate_r1cs_constraints()
     b.add_term(self.arg2val.packed, -1);
     c.add_term(intermediate_result, 1);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), format!("{} main_constraint",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a, b, c), format!("{} main_constraint",self.annotation_prefix));
 
     /* unpack into bits */
     unpack_intermediate.generate_r1cs_constraints(true);
@@ -1180,17 +1185,17 @@ pub fn generate_r1cs_constraints()
     /* generate result */
     pack_result.generate_r1cs_constraints(false);
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, self.negated_flag * (-1) },
-            { self.result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, self.negated_flag * (-1) ],
+            vec![ self.result_flag ]),
         format!("{} result_flag",self.annotation_prefix));
 }
 
 
 pub fn generate_r1cs_witness()
 {
-    FieldT twoi = FieldT::one();
+    let mut  twoi = FieldT::one();
     for i in 0..self.pb.ap.w
     {
         twoi = twoi + twoi;
@@ -1206,7 +1211,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_sub_gadget(w:usize)
 {
     ffec::print_time("starting sub test");
-    brute_force_arithmetic_gadget<ALU_sub_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_sub_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_SUB,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1215,9 +1220,9 @@ arg1val:&                                                                      w
 arg2val:&                                                                      word_variable_gadget<FieldT>,
 flag:&                                                                      pb_variable<FieldT>,
 result:&                                                                      pb_variable<FieldT>,
-                                                                      pb_variable<FieldT> &result_flag) ->
+                                                                       result_flag:&pb_variable<FieldT>| ->
                                                                   ALU_sub_gadget<FieldT>{
-                                                                      return new ALU_sub_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_sub_gadget");
+                                                                      return ALU_sub_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_sub_gadget");
                                                                   },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> usize {
                                                                       let unsigned_result = ((1u64<<w) + x - y) % (1u64<<w);
@@ -1235,17 +1240,17 @@ impl ALU_mov_gadget<FieldT>{
 pub fn generate_r1cs_constraints()
 {
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.arg2val.packed },
-            { self.result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.arg2val.packed ],
+            vec![ self.result ]),
         format!("{} mov_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.flag },
-            { self.result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.flag ],
+            vec![ self.result_flag ]),
         format!("{} mov_result_flag",self.annotation_prefix));
 }
 
@@ -1260,7 +1265,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_mov_gadget(w:usize)
 {
     ffec::print_time("starting mov test");
-    brute_force_arithmetic_gadget<ALU_mov_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_mov_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_MOV,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1271,7 +1276,7 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_mov_gadget<FieldT>{
-                                                                      return new ALU_mov_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_mov_gadget");
+                                                                      return ALU_mov_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_mov_gadget");
                                                                   },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> usize { return y; },
                                                                   |des:usize, f:bool, x:usize, y:usize| -> bool { return f; });
@@ -1287,26 +1292,26 @@ pub fn generate_r1cs_constraints()
       flag1 * (arg2val - desval) = result - desval
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { self.flag },
-            { self.arg2val.packed, self.desval.packed * (-1) },
-            { self.result, self.desval.packed * (-1) }),
+        r1cs_constraint::<FieldT>(
+            vec![ self.flag ],
+            vec![ self.arg2val.packed, self.desval.packed * (-1) ],
+            vec![ self.result, self.desval.packed * (-1) ]),
         format!("{} cmov_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.flag },
-            { self.result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.flag ],
+            vec![ self.result_flag ]),
         format!("{} cmov_result_flag",self.annotation_prefix));
 }
 
 
 pub fn generate_r1cs_witness()
 {
-    self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
-                                  self.pb.val(self.arg2val.packed) :
-                                  self.pb.val(self.desval.packed));
+    self.pb.val(self.result) = (if (self.pb.val(self.flag) == FieldT::one()) 
+                                  {self.pb.val(self.arg2val.packed) }else
+                                  {self.pb.val(self.desval.packed)});
     self.pb.val(self.result_flag) = self.pb.val(self.flag);
 }
 }
@@ -1314,7 +1319,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_cmov_gadget(w:usize)
 {
     ffec::print_time("starting cmov test");
-    brute_force_arithmetic_gadget<ALU_cmov_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_cmov_gadget::<FieldT>, FieldT>(w,
                                                                    tinyram_opcode_CMOV,
                                                                    |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                       pb_variable_array<FieldT>,
@@ -1325,7 +1330,7 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_cmov_gadget<FieldT>{
-                                                                       return new ALU_cmov_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_cmov_gadget");
+                                                                       return ALU_cmov_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, "ALU_cmov_gadget");
                                                                    },
                                                                    |des:usize, f:bool, x:usize, y:usize| -> usize { return if f  {y} else {des} },
                                                                    |des:usize, f:bool, x:usize, y:usize| -> bool { return f; });
@@ -1341,32 +1346,32 @@ pub fn generate_r1cs_constraints()
       cmpe = cmpae * (1-cmpa)
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { cmpae_result_flag },
-            { ONE, cmpa_result_flag * (-1) },
-            { cmpe_result_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ cmpae_result_flag ],
+            vec![ ONE, cmpa_result_flag * (-1) ],
+            vec![ cmpe_result_flag ]),
         format!("{} cmpa_result_flag",self.annotation_prefix));
 
     /* copy over results */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.desval.packed },
-            { cmpe_result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.desval.packed ],
+            vec![ cmpe_result ]),
         format!("{} cmpe_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.desval.packed },
-            { cmpa_result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.desval.packed ],
+            vec![ cmpa_result ]),
         format!("{} cmpa_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.desval.packed },
-            { cmpae_result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.desval.packed ],
+            vec![ cmpae_result ]),
         format!("{} cmpae_result",self.annotation_prefix));
 }
 
@@ -1379,17 +1384,17 @@ pub fn generate_r1cs_witness()
     self.pb.val(cmpa_result) = self.pb.val(self.desval.packed);
     self.pb.val(cmpae_result) = self.pb.val(self.desval.packed);
 
-    self.pb.val(cmpe_result_flag) = ((self.pb.val(cmpae_result_flag) == FieldT::one()) &&
-                                      (self.pb.val(cmpa_result_flag) == FieldT::zero()) ?
-                                      FieldT::one() :
-                                      FieldT::zero());
+    self.pb.val(cmpe_result_flag) = (if (self.pb.val(cmpae_result_flag) == FieldT::one()) &&
+                                      (self.pb.val(cmpa_result_flag) == FieldT::zero()) 
+                                      {FieldT::one() }else
+                                      {FieldT::zero()});
 }
 }
 
 pub fn test_ALU_cmpe_gadget(w:usize)
 {
     ffec::print_time("starting cmpe test");
-    brute_force_arithmetic_gadget<ALU_cmp_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_cmp_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_CMPE,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1400,11 +1405,11 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_cmp_gadget<FieldT>{
-                                                                      pb_variable<FieldT> cmpa_result; cmpa_result.allocate(pb, "cmpa_result");
-                                                                      pb_variable<FieldT> cmpa_result_flag; cmpa_result_flag.allocate(pb, "cmpa_result_flag");
-                                                                      pb_variable<FieldT> cmpae_result; cmpae_result.allocate(pb, "cmpae_result");
-                                                                      pb_variable<FieldT> cmpae_result_flag; cmpae_result_flag.allocate(pb, "cmpae_result_flag");
-                                                                      return new ALU_cmp_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                      let mut cmpa_result=pb_variable::<FieldT>::new(); cmpa_result.allocate(pb, "cmpa_result");
+                                                                      let mut cmpa_result_flag=pb_variable::<FieldT>::new(); cmpa_result_flag.allocate(pb, "cmpa_result_flag");
+                                                                      let mut cmpae_result=pb_variable::<FieldT>::new(); cmpae_result.allocate(pb, "cmpae_result");
+                                                                      let mut cmpae_result_flag=pb_variable::<FieldT>::new(); cmpae_result_flag.allocate(pb, "cmpae_result_flag");
+                                                                      return ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                         result, result_flag,
                                                                                                         cmpa_result, cmpa_result_flag,
                                                                                                         cmpae_result, cmpae_result_flag, "ALU_cmp_gadget");
@@ -1418,7 +1423,7 @@ result_flag:&                                                                   
 pub fn test_ALU_cmpa_gadget(w:usize)
 {
     ffec::print_time("starting cmpa test");
-    brute_force_arithmetic_gadget<ALU_cmp_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_cmp_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_CMPA,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1429,11 +1434,11 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_cmp_gadget<FieldT>{
-                                                                      pb_variable<FieldT> cmpe_result; cmpe_result.allocate(pb, "cmpe_result");
-                                                                      pb_variable<FieldT> cmpe_result_flag; cmpe_result_flag.allocate(pb, "cmpe_result_flag");
-                                                                      pb_variable<FieldT> cmpae_result; cmpae_result.allocate(pb, "cmpae_result");
-                                                                      pb_variable<FieldT> cmpae_result_flag; cmpae_result_flag.allocate(pb, "cmpae_result_flag");
-                                                                      return new ALU_cmp_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                      let mut cmpe_result=pb_variable::<FieldT>::new(); cmpe_result.allocate(pb, "cmpe_result");
+                                                                      let mut cmpe_result_flag=pb_variable::<FieldT>::new(); cmpe_result_flag.allocate(pb, "cmpe_result_flag");
+                                                                      let mut cmpae_result=pb_variable::<FieldT>::new(); cmpae_result.allocate(pb, "cmpae_result");
+                                                                      let mut cmpae_result_flag=pb_variable::<FieldT>::new(); cmpae_result_flag.allocate(pb, "cmpae_result_flag");
+                                                                      return ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                         cmpe_result, cmpe_result_flag,
                                                                                                         result, result_flag,
                                                                                                         cmpae_result, cmpae_result_flag, "ALU_cmp_gadget");
@@ -1447,7 +1452,7 @@ result_flag:&                                                                   
 pub fn test_ALU_cmpae_gadget(w:usize)
 {
     ffec::print_time("starting cmpae test");
-    brute_force_arithmetic_gadget<ALU_cmp_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_cmp_gadget::<FieldT>, FieldT>(w,
                                                                   tinyram_opcode_CMPAE,
                                                                   |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                      pb_variable_array<FieldT>,
@@ -1458,11 +1463,11 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_cmp_gadget<FieldT>{
-                                                                      pb_variable<FieldT> cmpe_result; cmpe_result.allocate(pb, "cmpe_result");
-                                                                      pb_variable<FieldT> cmpe_result_flag; cmpe_result_flag.allocate(pb, "cmpe_result_flag");
-                                                                      pb_variable<FieldT> cmpa_result; cmpa_result.allocate(pb, "cmpa_result");
-                                                                      pb_variable<FieldT> cmpa_result_flag; cmpa_result_flag.allocate(pb, "cmpa_result_flag");
-                                                                      return new ALU_cmp_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                      let mut cmpe_result=pb_variable::<FieldT>::new(); cmpe_result.allocate(pb, "cmpe_result");
+                                                                      let mut cmpe_result_flag=pb_variable::<FieldT>::new(); cmpe_result_flag.allocate(pb, "cmpe_result_flag");
+                                                                      let mut cmpa_result=pb_variable::<FieldT>::new(); cmpa_result.allocate(pb, "cmpa_result");
+                                                                      let mut cmpa_result_flag=pb_variable::<FieldT>::new(); cmpa_result_flag.allocate(pb, "cmpa_result_flag");
+                                                                      return ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                         cmpe_result, cmpe_result_flag,
                                                                                                         cmpa_result, cmpa_result_flag,
                                                                                                         result, result_flag, "ALU_cmp_gadget");
@@ -1478,16 +1483,16 @@ pub fn generate_r1cs_constraints()
 {
     /* negate sign bits */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, self.arg1val.bits[self.pb.ap.w-1] * (-1) },
-            { negated_arg1val_sign }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, self.arg1val.bits[self.pb.ap.w-1] * (-1) ],
+            vec![ negated_arg1val_sign ]),
         format!("{} negated_arg1val_sign",self.annotation_prefix));
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, self.arg2val.bits[self.pb.ap.w-1] * (-1) },
-            { negated_arg2val_sign }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, self.arg2val.bits[self.pb.ap.w-1] * (-1) ],
+            vec![ negated_arg2val_sign ]),
         format!("{} negated_arg2val_sign",self.annotation_prefix));
 
     /* pack */
@@ -1499,17 +1504,17 @@ pub fn generate_r1cs_constraints()
 
     /* copy over results */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.desval.packed },
-            { cmpg_result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.desval.packed ],
+            vec![ cmpg_result ]),
         format!("{} cmpg_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.desval.packed },
-            { cmpge_result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.desval.packed ],
+            vec![ cmpge_result ]),
         format!("{} cmpge_result",self.annotation_prefix));
 }
 
@@ -1535,7 +1540,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_cmpg_gadget(w:usize)
 {
     ffec::print_time("starting cmpg test");
-    brute_force_arithmetic_gadget<ALU_cmps_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_cmps_gadget::<FieldT>, FieldT>(w,
                                                                    tinyram_opcode_CMPG,
                                                                    |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                       pb_variable_array<FieldT>,
@@ -1546,9 +1551,9 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_cmps_gadget<FieldT>{
-                                                                       pb_variable<FieldT> cmpge_result; cmpge_result.allocate(pb, "cmpge_result");
-                                                                       pb_variable<FieldT> cmpge_result_flag; cmpge_result_flag.allocate(pb, "cmpge_result_flag");
-                                                                       return new ALU_cmps_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                       let mut cmpge_result=pb_variable::<FieldT>::new(); cmpge_result.allocate(pb, "cmpge_result");
+                                                                       let mut cmpge_result_flag=pb_variable::<FieldT>::new(); cmpge_result_flag.allocate(pb, "cmpge_result_flag");
+                                                                       return ALU_cmps_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           result, result_flag,
                                                                                                           cmpge_result, cmpge_result_flag, "ALU_cmps_gadget");
                                                                    },
@@ -1564,7 +1569,7 @@ result_flag:&                                                                   
 pub fn test_ALU_cmpge_gadget(w:usize)
 {
     ffec::print_time("starting cmpge test");
-    brute_force_arithmetic_gadget<ALU_cmps_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_cmps_gadget::<FieldT>, FieldT>(w,
                                                                    tinyram_opcode_CMPGE,
                                                                    |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                       pb_variable_array<FieldT>,
@@ -1575,9 +1580,9 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_cmps_gadget<FieldT>{
-                                                                       pb_variable<FieldT> cmpg_result; cmpg_result.allocate(pb, "cmpg_result");
-                                                                       pb_variable<FieldT> cmpg_result_flag; cmpg_result_flag.allocate(pb, "cmpg_result_flag");
-                                                                       return new ALU_cmps_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                       let mut cmpg_result=pb_variable::<FieldT>::new(); cmpg_result.allocate(pb, "cmpg_result");
+                                                                       let mut cmpg_result_flag=pb_variable::<FieldT>::new(); cmpg_result_flag.allocate(pb, "cmpg_result_flag");
+                                                                       return ALU_cmps_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           cmpg_result, cmpg_result_flag,
                                                                                                           result, result_flag, "ALU_cmps_gadget");
                                                                    },
@@ -1594,10 +1599,10 @@ pub fn generate_r1cs_constraints()
 {
     /* do multiplication */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { self.arg1val.packed },
-            { self.arg2val.packed },
-            { mul_result.packed }),
+        r1cs_constraint::<FieldT>(
+            vec![ self.arg1val.packed ],
+            vec![ self.arg2val.packed ],
+            vec![ mul_result.packed ]),
         format!("{} main_constraint",self.annotation_prefix));
     mul_result.generate_r1cs_constraints(true);
 
@@ -1609,17 +1614,17 @@ pub fn generate_r1cs_constraints()
     compute_flag.generate_r1cs_constraints();
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.result_flag },
-            { mull_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.result_flag ],
+            vec![ mull_flag ]),
         format!("{} mull_flag",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.result_flag },
-            { umulh_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.result_flag ],
+            vec![ umulh_flag ]),
         format!("{} umulh_flag",self.annotation_prefix));
 }
 
@@ -1645,7 +1650,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_mull_gadget(w:usize)
 {
     ffec::print_time("starting mull test");
-    brute_force_arithmetic_gadget<ALU_umul_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_umul_gadget::<FieldT>, FieldT>(w,
                                                                    tinyram_opcode_MULL,
                                                                    |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                       pb_variable_array<FieldT>,
@@ -1656,9 +1661,9 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_umul_gadget<FieldT>{
-                                                                       pb_variable<FieldT> umulh_result; umulh_result.allocate(pb, "umulh_result");
-                                                                       pb_variable<FieldT> umulh_flag; umulh_flag.allocate(pb, "umulh_flag");
-                                                                       return new ALU_umul_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                       let mut umulh_result=pb_variable::<FieldT>::new(); umulh_result.allocate(pb, "umulh_result");
+                                                                       let mut umulh_flag=pb_variable::<FieldT>::new(); umulh_flag.allocate(pb, "umulh_flag");
+                                                                       return ALU_umul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           result, result_flag,
                                                                                                           umulh_result, umulh_flag,
                                                                                                           "ALU_umul_gadget");
@@ -1674,7 +1679,7 @@ result_flag:&                                                                   
 pub fn test_ALU_umulh_gadget(w:usize)
 {
     ffec::print_time("starting umulh test");
-    brute_force_arithmetic_gadget<ALU_umul_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_umul_gadget::<FieldT>, FieldT>(w,
                                                                    tinyram_opcode_UMULH,
                                                                    |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                       pb_variable_array<FieldT>,
@@ -1685,9 +1690,9 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_umul_gadget<FieldT>{
-                                                                       pb_variable<FieldT> mull_result; mull_result.allocate(pb, "mull_result");
-                                                                       pb_variable<FieldT> mull_flag; mull_flag.allocate(pb, "mull_flag");
-                                                                       return new ALU_umul_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                       let mut mull_result=pb_variable::<FieldT>::new(); mull_result.allocate(pb, "mull_result");
+                                                                       let mut mull_flag=pb_variable::<FieldT>::new(); mull_flag.allocate(pb, "mull_flag");
+                                                                       return ALU_umul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           mull_result, mull_flag,
                                                                                                           result, result_flag,
                                                                                                           "ALU_umul_gadget");
@@ -1715,7 +1720,7 @@ pub fn generate_r1cs_constraints()
     b.add_term(self.arg2val.bits[self.pb.ap.w-1], -(FieldT(2)^self.pb.ap.w));
     c.add_term(mul_result.packed, 1);
     c.add_term(ONE, -(FieldT(2)^(2*self.pb.ap.w)));
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), format!("{} main_constraint",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a, b, c), format!("{} main_constraint",self.annotation_prefix));
 
     mul_result.generate_r1cs_constraints(true);
 
@@ -1734,37 +1739,37 @@ pub fn generate_r1cs_constraints()
       if X != 0 then R = 0 and I = X^{-1}
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { is_top_empty_aux },
-            { top },
-            { ONE, is_top_empty * (-1) }),
+        r1cs_constraint::<FieldT>(
+            vec![ is_top_empty_aux ],
+            vec![ top ],
+            vec![ ONE, is_top_empty * (-1) ]),
         format!("{} I*X=1-R (is_top_empty)",self.annotation_prefix));
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { is_top_empty },
-            { top },
-            { ONE * 0 }),
+        r1cs_constraint::<FieldT>(
+            vec![ is_top_empty ],
+            vec![ top ],
+            vec![ ONE * 0 ]),
         format!("{} R*X=0 (is_top_full)",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { is_top_full_aux },
-            { top, ONE * (1l-(1u64<<(self.pb.ap.w+1))) },
-            { ONE, is_top_full * (-1) }),
+        r1cs_constraint::<FieldT>(
+            vec![ is_top_full_aux ],
+            vec![ top, ONE * (1l-(1u64<<(self.pb.ap.w+1))) ],
+            vec![ ONE, is_top_full * (-1) ]),
         format!("{} I*X=1-R (is_top_full)",self.annotation_prefix));
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { is_top_full },
-            { top, ONE * (1l-(1u64<<(self.pb.ap.w+1))) },
-            { ONE * 0 }),
+        r1cs_constraint::<FieldT>(
+            vec![ is_top_full ],
+            vec![ top, ONE * (1l-(1u64<<(self.pb.ap.w+1))) ],
+            vec![ ONE * 0 ]),
         format!("{} R*X=0 (is_top_full)",self.annotation_prefix));
 
     /* smulh_flag = 1 - (is_top_full + is_top_empty) */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { ONE, is_top_full * (-1), is_top_empty * (-1) },
-            { smulh_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ ONE, is_top_full * (-1), is_top_empty * (-1) ],
+            vec![ smulh_flag ]),
         format!("{} smulh_flag",self.annotation_prefix));
 }
 
@@ -1820,7 +1825,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_smulh_gadget(w:usize)
 {
     ffec::print_time("starting smulh test");
-    brute_force_arithmetic_gadget<ALU_smul_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_smul_gadget::<FieldT>, FieldT>(w,
                                                                    tinyram_opcode_SMULH,
                                                                    |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                       pb_variable_array<FieldT>,
@@ -1831,17 +1836,17 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_smul_gadget<FieldT>{
-                                                                       return new ALU_smul_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                       return ALU_smul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           result, result_flag,
                                                                                                           "ALU_smul_gadget");
                                                                    },
                                                                    |des:usize, f:bool, x:usize, y:usize| -> usize {
-                                                                       const usize res = ffec::to_twos_complement((ffec::from_twos_complement(x, w) * ffec::from_twos_complement(y, w)), 2*w);
+                                                                       let res = ffec::to_twos_complement((ffec::from_twos_complement(x, w) * ffec::from_twos_complement(y, w)), 2*w);
                                                                        return res >> w;
                                                                    },
                                                                    |des:usize, f:bool, x:usize, y:usize| -> bool {
-                                                                       const int res = ffec::from_twos_complement(x, w) * ffec::from_twos_complement(y, w);
-                                                                       const int truncated_res = ffec::from_twos_complement(ffec::to_twos_complement(res, 2*w) & ((1u64<<w)-1), w);
+                                                                       let  res = ffec::from_twos_complement(x, w) * ffec::from_twos_complement(y, w);
+                                                                       let  truncated_res = ffec::from_twos_complement(ffec::to_twos_complement(res, 2*w) & ((1u64<<w)-1), w);
                                                                        return (res != truncated_res);
                                                                    });
     ffec::print_time("smulh tests successful");
@@ -1856,7 +1861,7 @@ pub fn generate_r1cs_constraints()
     b1.add_term(self.arg2val.packed, 1);
     c1.add_term(B_nonzero, 1);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a1, b1, c1), format!("{} B_inv*B=B_nonzero",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a1, b1, c1), format!("{} B_inv*B=B_nonzero",self.annotation_prefix));
 
     /* (1-B_nonzero) * B = 0 */
     let (mut a2,mut b2,mut c2)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
@@ -1865,7 +1870,7 @@ pub fn generate_r1cs_constraints()
     b2.add_term(self.arg2val.packed, 1);
     c2.add_term(ONE, 0);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a2, b2, c2), format!("{} (1-B_nonzero)*B=0",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a2, b2, c2), format!("{} (1-B_nonzero)*B=0",self.annotation_prefix));
 
     /* B * q + r = A_aux = A * B_nonzero */
     let (mut a3,mut b3,mut c3)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
@@ -1874,14 +1879,14 @@ pub fn generate_r1cs_constraints()
     c3.add_term(A_aux, 1);
     c3.add_term(umod_result, -1);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a3, b3, c3), format!("{} B*q+r=A_aux",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a3, b3, c3), format!("{} B*q+r=A_aux",self.annotation_prefix));
 
     let (mut a4,mut b4,mut c4)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     a4.add_term(self.arg1val.packed, 1);
     b4.add_term(B_nonzero, 1);
     c4.add_term(A_aux, 1);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a4, b4, c4), format!("{} A_aux=A*B_nonzero",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a4, b4, c4), format!("{} A_aux=A*B_nonzero",self.annotation_prefix));
 
     /* q * (1-B_nonzero) = 0 */
     let (mut a5,mut b5,mut c5)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
@@ -1890,7 +1895,7 @@ pub fn generate_r1cs_constraints()
     b5.add_term(B_nonzero, -1);
     c5.add_term(ONE, 0);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a5, b5, c5), format!("{} q*B_nonzero=0",self.annotation_prefix));
+    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a5, b5, c5), format!("{} q*B_nonzero=0",self.annotation_prefix));
 
     /* A<B_gadget<FieldT>(B, r, less=B_nonzero, leq=ONE) */
     r_less_B.generate_r1cs_constraints();
@@ -1917,8 +1922,8 @@ pub fn generate_r1cs_witness()
         self.pb.val(B_inv) = self.pb.val(self.arg2val.packed).inverse();
         self.pb.val(B_nonzero) = FieldT::one();
 
-        const usize A = self.pb.val(self.arg1val.packed).as_ulong();
-        const usize B = self.pb.val(self.arg2val.packed).as_ulong();
+        let  A = self.pb.val(self.arg1val.packed).as_ulong();
+        let  B = self.pb.val(self.arg2val.packed).as_ulong();
 
         self.pb.val(A_aux) = self.pb.val(self.arg1val.packed);
 
@@ -1936,7 +1941,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_udiv_gadget(w:usize)
 {
     ffec::print_time("starting udiv test");
-    brute_force_arithmetic_gadget<ALU_divmod_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_divmod_gadget::<FieldT>, FieldT>(w,
                                                                      tinyram_opcode_UDIV,
                                                                      |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                         pb_variable_array<FieldT>,
@@ -1947,9 +1952,9 @@ flag:&                                                                         p
 result:&                                                                         pb_variable<FieldT>,
 result_flag:&                                                                         pb_variable<FieldT>| ->
                                                                      ALU_divmod_gadget<FieldT>{
-                                                                         pb_variable<FieldT> umod_result; umod_result.allocate(pb, "umod_result");
-                                                                         pb_variable<FieldT> umod_flag; umod_flag.allocate(pb, "umod_flag");
-                                                                         return new ALU_divmod_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                         let mut umod_result=pb_variable::<FieldT>::new(); umod_result.allocate(pb, "umod_result");
+                                                                         let mut umod_flag=pb_variable::<FieldT>::new(); umod_flag.allocate(pb, "umod_flag");
+                                                                         return ALU_divmod_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                               result, result_flag,
                                                                                                               umod_result, umod_flag,
                                                                                                               "ALU_divmod_gadget");
@@ -1967,7 +1972,7 @@ result_flag:&                                                                   
 pub fn test_ALU_umod_gadget(w:usize)
 {
     ffec::print_time("starting umod test");
-    brute_force_arithmetic_gadget<ALU_divmod_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_divmod_gadget::<FieldT>, FieldT>(w,
                                                                      tinyram_opcode_UMOD,
                                                                      |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                         pb_variable_array<FieldT>,
@@ -1978,9 +1983,9 @@ flag:&                                                                         p
 result:&                                                                         pb_variable<FieldT>,
 result_flag:&                                                                         pb_variable<FieldT>| ->
                                                                      ALU_divmod_gadget<FieldT>{
-                                                                         pb_variable<FieldT> udiv_result; udiv_result.allocate(pb, "udiv_result");
-                                                                         pb_variable<FieldT> udiv_flag; udiv_flag.allocate(pb, "udiv_flag");
-                                                                         return new ALU_divmod_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                         let mut udiv_result=pb_variable::<FieldT>::new(); udiv_result.allocate(pb, "udiv_result");
+                                                                         let mut udiv_flag=pb_variable::<FieldT>::new(); udiv_flag.allocate(pb, "udiv_flag");
+                                                                         return ALU_divmod_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                               udiv_result, udiv_flag,
                                                                                                               result, result_flag,
                                                                                                               "ALU_divmod_gadget");
@@ -2006,10 +2011,10 @@ pub fn generate_r1cs_constraints()
     pack_reversed_input.generate_r1cs_constraints(false);
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { self.arg1val.packed, reversed_input * (-1) },
-            { self.opcode_indicators[tinyram_opcode_SHR] },
-            { barrel_right_internal[0], reversed_input * (-1) }),
+        r1cs_constraint::<FieldT>(
+            vec![ self.arg1val.packed, reversed_input * (-1) ],
+            vec![ self.opcode_indicators[tinyram_opcode_SHR] ],
+            vec![ barrel_right_internal[0], reversed_input * (-1) ]),
         format!("{} select_arg1val_or_reversed",self.annotation_prefix));
 
     /*
@@ -2020,7 +2025,7 @@ pub fn generate_r1cs_constraints()
         /* assert that shifted out part is bits */
         for j in 0..1u64<<i
         {
-            generate_boolean_r1cs_constraint<FieldT>(self.pb, shifted_out_bits[i][j], format!("{} shifted_out_bits_%zu_{}",self.annotation_prefix, i, j));
+            generate_boolean_r1cs_constraint::<FieldT>(self.pb, shifted_out_bits[i][j], format!("{} shifted_out_bits_{}_{}",self.annotation_prefix, i, j));
         }
 
         /*
@@ -2046,7 +2051,7 @@ pub fn generate_r1cs_constraints()
         c.add_term(barrel_right_internal[i], 1);
         c.add_term(barrel_right_internal[i+1], -1);
 
-        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(a, b, c), format!("{} barrel_shift_{}",self.annotation_prefix, i));
+        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a, b, c), format!("{} barrel_shift_{}",self.annotation_prefix, i));
     }
 
     /*
@@ -2056,10 +2061,10 @@ pub fn generate_r1cs_constraints()
     */
     check_oversize_shift.generate_r1cs_constraints();
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE, is_oversize_shift * (-1) },
-            { barrel_right_internal[logw] },
-            { self.result }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE, is_oversize_shift * (-1) ],
+            vec![ barrel_right_internal[logw] ],
+            vec![ self.result ]),
         format!("{} result",self.annotation_prefix));
 
     /*
@@ -2074,31 +2079,31 @@ pub fn generate_r1cs_constraints()
       r - reverse(result) = (result - reverse(result)) * opcode_indicators[SHR]
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { self.result, reversed_result * (-1) },
-            { self.opcode_indicators[tinyram_opcode_SHR] },
-            { shr_result, reversed_result * (-1) }),
+        r1cs_constraint::<FieldT>(
+            vec![ self.result, reversed_result * (-1) ],
+            vec![ self.opcode_indicators[tinyram_opcode_SHR] ],
+            vec![ shr_result, reversed_result * (-1) ]),
         format!("{} shr_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { self.result, reversed_result * (-1) },
-            { self.opcode_indicators[tinyram_opcode_SHR] },
-            { shr_result, reversed_result * (-1) }),
+        r1cs_constraint::<FieldT>(
+            vec![ self.result, reversed_result * (-1) ],
+            vec![ self.opcode_indicators[tinyram_opcode_SHR] ],
+            vec![ shr_result, reversed_result * (-1) ]),
         format!("{} shl_result",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.arg1val.bits[0] },
-            { shr_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.arg1val.bits[0] ],
+            vec![ shr_flag ]),
         format!("{} shr_flag",self.annotation_prefix));
 
     self.pb.add_r1cs_constraint(
-        r1cs_constraint<FieldT>(
-            { ONE },
-            { self.arg1val.bits[self.pb.ap.w-1] },
-            { shl_flag }),
+        r1cs_constraint::<FieldT>(
+            vec![ ONE ],
+            vec![ self.arg1val.bits[self.pb.ap.w-1] ],
+            vec![ shl_flag ]),
         format!("{} shl_flag",self.annotation_prefix));
 }
 
@@ -2109,8 +2114,8 @@ pub fn generate_r1cs_witness()
     pack_reversed_input.generate_r1cs_witness_from_bits();
 
     self.pb.val(barrel_right_internal[0]) =
-        (self.pb.val(self.opcode_indicators[tinyram_opcode_SHR]) == FieldT::one() ?
-         self.pb.val(self.arg1val.packed) : self.pb.val(reversed_input));
+        (if self.pb.val(self.opcode_indicators[tinyram_opcode_SHR]) == FieldT::one() 
+         {self.pb.val(self.arg1val.packed)} else {self.pb.val(reversed_input)});
 
     /*
       do logw iterations of barrel shifts.
@@ -2123,8 +2128,8 @@ pub fn generate_r1cs_witness()
     for i in 0..logw
     {
         self.pb.val(barrel_right_internal[i+1]) =
-            (self.pb.val(self.arg2val.bits[i]) == FieldT::zero()) ? self.pb.val(barrel_right_internal[i]) :
-            FieldT(self.pb.val(barrel_right_internal[i]).as_ulong() >> (i+1));
+            if ( self.pb.val(self.arg2val.bits[i]) == FieldT::zero())  {self.pb.val(barrel_right_internal[i])} else
+            {FieldT(self.pb.val(barrel_right_internal[i]).as_ulong() >> (i+1))};
 
         shifted_out_bits[i].fill_with_bits_of_ulong(self.pb, self.pb.val(barrel_right_internal[i]).as_ulong() % (2u<<i));
     }
@@ -2148,8 +2153,8 @@ pub fn generate_r1cs_witness()
       r = result * opcode_indicators[SHR] + reverse(result) * (1-opcode_indicators[SHR])
       r - reverse(result) = (result - reverse(result)) * opcode_indicators[SHR]
     */
-    self.pb.val(shr_result) = (self.pb.val(self.opcode_indicators[tinyram_opcode_SHR]) == FieldT::one()) ?
-        self.pb.val(self.result) : self.pb.val(reversed_result);
+    self.pb.val(shr_result) = if ( self.pb.val(self.opcode_indicators[tinyram_opcode_SHR]) == FieldT::one()) 
+        {self.pb.val(self.result)} else {self.pb.val(reversed_result)};
 
     self.pb.val(shl_result) = self.pb.val(shr_result);
     self.pb.val(shr_flag) = self.pb.val(self.arg1val.bits[0]);
@@ -2160,7 +2165,7 @@ pub fn generate_r1cs_witness()
 pub fn test_ALU_shr_gadget(w:usize)
 {
     ffec::print_time("starting shr test");
-    brute_force_arithmetic_gadget<ALU_shr_shl_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_shr_shl_gadget::<FieldT>, FieldT>(w,
                                                                       tinyram_opcode_SHR,
                                                                       |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                          pb_variable_array<FieldT>,
@@ -2171,9 +2176,9 @@ flag:&                                                                          
 result:&                                                                          pb_variable<FieldT>,
 result_flag:&                                                                          pb_variable<FieldT>| ->
                                                                       ALU_shr_shl_gadget<FieldT>{
-                                                                          pb_variable<FieldT> shl_result; shl_result.allocate(pb, "shl_result");
-                                                                          pb_variable<FieldT> shl_flag; shl_flag.allocate(pb, "shl_flag");
-                                                                          return new ALU_shr_shl_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                          let mut shl_result=pb_variable::<FieldT>::new(); shl_result.allocate(pb, "shl_result");
+                                                                          let mut shl_flag=pb_variable::<FieldT>::new(); shl_flag.allocate(pb, "shl_flag");
+                                                                          return ALU_shr_shl_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                                 result, result_flag,
                                                                                                                 shl_result, shl_flag,
                                                                                                                 "ALU_shr_shl_gadget");
@@ -2191,7 +2196,7 @@ result_flag:&                                                                   
 pub fn test_ALU_shl_gadget(w:usize)
 {
     ffec::print_time("starting shl test");
-    brute_force_arithmetic_gadget<ALU_shr_shl_gadget<FieldT>, FieldT>(w,
+    brute_force_arithmetic_gadget::<ALU_shr_shl_gadget::<FieldT>, FieldT>(w,
                                                                       tinyram_opcode_SHL,
                                                                       |pb :tinyram_protoboard<FieldT> ,
 opcode_indicators:&                                                                          pb_variable_array<FieldT>,
@@ -2202,9 +2207,9 @@ flag:&                                                                          
 result:&                                                                          pb_variable<FieldT>,
 result_flag:&                                                                          pb_variable<FieldT>| ->
                                                                       ALU_shr_shl_gadget<FieldT>{
-                                                                          pb_variable<FieldT> shr_result; shr_result.allocate(pb, "shr_result");
-                                                                          pb_variable<FieldT> shr_flag; shr_flag.allocate(pb, "shr_flag");
-                                                                          return new ALU_shr_shl_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag,
+                                                                          let mut shr_result=pb_variable::<FieldT>::new(); shr_result.allocate(pb, "shr_result");
+                                                                          let mut shr_flag=pb_variable::<FieldT>::new(); shr_flag.allocate(pb, "shr_flag");
+                                                                          return ALU_shr_shl_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                                 shr_result, shr_flag,
                                                                                                                 result, result_flag,
                                                                                                                 "ALU_shr_shl_gadget");

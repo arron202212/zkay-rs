@@ -17,7 +17,7 @@
 //#ifndef COMPLIANCE_PREDICATE_HPP_
 // #define COMPLIANCE_PREDICATE_HPP_
 
-use  <memory>
+// use  <memory>
 
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
@@ -34,7 +34,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
  */
 template<typename FieldT>
 class r1cs_pcd_message {
-public:
+
     size_t type;
 
     r1cs_pcd_message(const size_t type);
@@ -52,7 +52,7 @@ public:
  */
 template<typename FieldT>
 class r1cs_pcd_local_data {
-public:
+
     r1cs_pcd_local_data() = default;
     virtual r1cs_variable_assignment<FieldT> as_r1cs_variable_assignment() const = 0;
     virtual ~r1cs_pcd_local_data() = default;
@@ -108,7 +108,7 @@ std::istream& operator>>(std::istream &in, r1cs_pcd_compliance_predicate<FieldT>
 
 template<typename FieldT>
 class r1cs_pcd_compliance_predicate {
-public:
+
 
     size_t name;
     size_t type;
@@ -157,7 +157,7 @@ public:
 
 
 
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/compliance_predicate/compliance_predicate;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate;
 
 //#endif // COMPLIANCE_PREDICATE_HPP_
 /** @file
@@ -235,17 +235,17 @@ r1cs_pcd_compliance_predicate<FieldT>::r1cs_pcd_compliance_predicate(const size_
     relies_on_same_type_inputs(relies_on_same_type_inputs),
     accepted_input_types(accepted_input_types)
 {
-    assert!(max_arity == incoming_message_payload_lengths.size());
+    assert!(max_arity == incoming_message_payload_lengths.len());
 }
 
 template<typename FieldT>
 bool r1cs_pcd_compliance_predicate<FieldT>::is_well_formed() const
 {
     const bool type_not_zero = (type != 0);
-    const bool incoming_message_payload_lengths_well_specified = (incoming_message_payload_lengths.size() == max_arity);
+    const bool incoming_message_payload_lengths_well_specified = (incoming_message_payload_lengths.len() == max_arity);
 
     size_t all_message_payload_lengths = outgoing_message_payload_length;
-    for i in 0..incoming_message_payload_lengths.size()
+    for i in 0..incoming_message_payload_lengths.len()
     {
         all_message_payload_lengths += incoming_message_payload_lengths[i];
     }
@@ -279,7 +279,7 @@ bool r1cs_pcd_compliance_predicate<FieldT>::is_well_formed() const
 template<typename FieldT>
 bool r1cs_pcd_compliance_predicate<FieldT>::has_equal_input_and_output_lengths() const
 {
-    for i in 0..incoming_message_payload_lengths.size()
+    for i in 0..incoming_message_payload_lengths.len()
     {
         if incoming_message_payload_lengths[i] != outgoing_message_payload_length
         {
@@ -293,7 +293,7 @@ bool r1cs_pcd_compliance_predicate<FieldT>::has_equal_input_and_output_lengths()
 template<typename FieldT>
 bool r1cs_pcd_compliance_predicate<FieldT>::has_equal_input_lengths() const
 {
-    for i in 1..incoming_message_payload_lengths.size()
+    for i in 1..incoming_message_payload_lengths.len()
     {
         if incoming_message_payload_lengths[i] != incoming_message_payload_lengths[0]
         {
@@ -325,7 +325,7 @@ std::ostream& operator<<(std::ostream &out, const r1cs_pcd_compliance_predicate<
     out << cp.name << "\n";
     out << cp.type << "\n";
     out << cp.max_arity << "\n";
-    assert!(cp.max_arity == cp.incoming_message_payload_lengths.size());
+    assert!(cp.max_arity == cp.incoming_message_payload_lengths.len());
     for i in 0..cp.max_arity
     {
         out << cp.incoming_message_payload_lengths[i] << "\n";
@@ -376,13 +376,13 @@ bool r1cs_pcd_compliance_predicate<FieldT>::is_satisfied(const std::shared_ptr<r
                                                          const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data,
                                                          const r1cs_pcd_witness<FieldT> &witness) const
 {
-    assert!(outgoing_message.payload_as_r1cs_variable_assignment().size() == outgoing_message_payload_length);
-    assert!(incoming_messages.size() <= max_arity);
-    for i in 0..incoming_messages.size()
+    assert!(outgoing_message.payload_as_r1cs_variable_assignment().len() == outgoing_message_payload_length);
+    assert!(incoming_messages.len() <= max_arity);
+    for i in 0..incoming_messages.len()
     {
-        assert!(incoming_messages[i].payload_as_r1cs_variable_assignment().size() == incoming_message_payload_lengths[i]);
+        assert!(incoming_messages[i].payload_as_r1cs_variable_assignment().len() == incoming_message_payload_lengths[i]);
     }
-    assert!(local_data.as_r1cs_variable_assignment().size() == local_data_length);
+    assert!(local_data.as_r1cs_variable_assignment().len() == local_data_length);
 
     r1cs_pcd_compliance_predicate_primary_input<FieldT> cp_primary_input(outgoing_message);
     r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> cp_auxiliary_input(incoming_messages, local_data, witness);

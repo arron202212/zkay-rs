@@ -26,7 +26,7 @@ pb_linear_combination_array<FieldT> SHA256_default_IV(protoboard<FieldT> &pb);
 
 template<typename FieldT>
 class sha256_message_schedule_gadget : public gadget<FieldT> {
-public:
+
     std::vector<pb_variable_array<FieldT> > W_bits;
     std::vector<std::shared_ptr<packing_gadget<FieldT> > > pack_W;
 
@@ -36,7 +36,7 @@ public:
     std::vector<std::shared_ptr<small_sigma_gadget<FieldT> > > compute_sigma1;
     std::vector<pb_variable<FieldT> > unreduced_W;
     std::vector<std::shared_ptr<lastbits_gadget<FieldT> > > mod_reduce_W;
-public:
+
     pb_variable_array<FieldT> M;
     pb_variable_array<FieldT> packed_W;
     sha256_message_schedule_gadget(protoboard<FieldT> &pb,
@@ -49,7 +49,7 @@ public:
 
 template<typename FieldT>
 class sha256_round_function_gadget : public gadget<FieldT> {
-public:
+
     pb_variable<FieldT> sigma0;
     pb_variable<FieldT> sigma1;
     std::shared_ptr<big_sigma_gadget<FieldT> > compute_sigma0;
@@ -68,7 +68,7 @@ public:
     std::shared_ptr<lastbits_gadget<FieldT> > mod_reduce_new_e;
     pb_variable<FieldT> packed_new_a;
     pb_variable<FieldT> packed_new_e;
-public:
+
     pb_linear_combination_array<FieldT> a;
     pb_linear_combination_array<FieldT> b;
     pb_linear_combination_array<FieldT> c;

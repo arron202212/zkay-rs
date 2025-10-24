@@ -24,7 +24,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_par
 
 // template<typename ppT>
 pub struct kpT<ppT> {
-// public:
+// 
    sk: r1cs_ppzkadsnark_skT<ppT> ,
     vk: r1cs_ppzkadsnark_vkT<ppT>,
 }

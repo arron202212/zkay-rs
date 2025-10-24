@@ -23,7 +23,7 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable
 /* control flow gadgets */
 // 
 pub struct  ALU_control_flow_gadget<FieldT>  {
-// public:: public tinyram_standard_gadget<FieldT>
+// : public tinyram_standard_gadget<FieldT>
     pc:word_variable_gadget<FieldT>,
     argval2:word_variable_gadget<FieldT>,
     flag:pb_variable<FieldT>,
@@ -38,10 +38,10 @@ impl ALU_control_flow_gadget<FieldT>  {
                             annotation_prefix:std::string) ->Self
          {
 // tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
-        Self{pc(pc),
-        argval2(argval2),
-        flag(flag),
-        result(result)}
+        Self{pc,
+        argval2,
+        flag,
+        result}
 }
 }
 
@@ -90,7 +90,7 @@ impl ALU_cjmp_gadget {
 // 
 pub struct ALU_cnjmp_gadget {
 }
-// public:
+// 
 impl ALU_cnjmp_gadget {
     pub fn new(pb:tinyram_protoboard<FieldT>,
                      pc:word_variable_gadget<FieldT>,
@@ -161,9 +161,9 @@ pub fn test_ALU_jmp_gadget()
     let mut ap=tinyram_architecture_params ::new(16, 16);
     let mut  P=tinyram_program::new(); 
     P.instructions = generate_tinyram_prelude(ap);
-    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
+    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
-    let mut pc=word_variable_gadget::<FieldT>::new(pb, "pc"), argval2(pb, "argval2");
+    let mut pc=word_variable_gadget::<FieldT>::new(pb, "pc");let mut argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
    let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
 
     pc.generate_r1cs_constraints(true);
@@ -214,9 +214,9 @@ pub fn generate_r1cs_constraints()
 
 pub fn generate_r1cs_witness()
 {
-    self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
-                                  FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()) :
-                                  self.pb.val(self.pc.packed) + FieldT::one());
+    self.pb.val(self.result) = (if (self.pb.val(self.flag) == FieldT::one()) 
+                                  {FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()) }
+                                  else {self.pb.val(self.pc.packed) + FieldT::one()});
 }
 }
 
@@ -227,7 +227,7 @@ pub fn test_ALU_cjmp_gadget()
 
     let mut ap=tinyram_architecture_params::new(16, 16);
     let mut P=tinyram_program::new(); P.instructions = generate_tinyram_prelude(ap);
-     let mut pb=tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
+     let mut pb=tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
     let mut  pc=word_variable_gadget::<FieldT>::new(pb, "pc");
     let mut argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
@@ -295,9 +295,9 @@ pub fn generate_r1cs_constraints()
 
 pub fn generate_r1cs_witness()
 {
-    self.pb.val(self.result) = ((self.pb.val(self.flag) == FieldT::one()) ?
-                                  self.pb.val(self.pc.packed) + FieldT::one() :
-                                  FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len()));
+    self.pb.val(self.result) = (if (self.pb.val(self.flag) == FieldT::one()) 
+                                  {self.pb.val(self.pc.packed) + FieldT::one()} else
+                                  {FieldT(self.pb.val(self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len())});
 }
 }
 
@@ -309,7 +309,7 @@ pub fn test_ALU_cnjmp_gadget()
     let mut  ap=tinyram_architecture_params::new(16, 16);
     let mut  P=tinyram_program::new();
      P.instructions = generate_tinyram_prelude(ap);
-   let mut  pb= tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
+   let mut  pb= tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
     let mut  pc=word_variable_gadget::<FieldT>::new(pb, "pc");
     let mut  argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");

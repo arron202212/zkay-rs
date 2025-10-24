@@ -21,11 +21,11 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_control_f
 
 // 
 pub struct ALU_gadget{
-// private: : public tinyram_standard_gadget<FieldT> 
+// : public tinyram_standard_gadget<FieldT> 
 components:    std::vector<std::shared_ptr<tinyram_standard_gadget<FieldT> > >,
 
 
-// public:
+// 
 opcode_indicators:    pb_variable_array<FieldT>,
 pc:    word_variable_gadget<FieldT>,
 desval:    word_variable_gadget<FieldT>,

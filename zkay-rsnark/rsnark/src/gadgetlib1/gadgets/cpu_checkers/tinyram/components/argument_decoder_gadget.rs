@@ -33,7 +33,7 @@ arg2_demux_success:    pb_variable<FieldT>,
 demux_des:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
 demux_arg1:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
 demux_arg2:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
-// public:
+// 
 arg2_is_imm:    pb_variable<FieldT>,
 desidx:    pb_variable_array<FieldT>,
 arg1idx:    pb_variable_array<FieldT>,
@@ -56,12 +56,9 @@ packed_arg2val:    pb_variable<FieldT>,
     //                         packed_arg2val:pb_variable<FieldT>,
     //                         annotation_prefix:std::string="");
 
-    // void generate_r1cs_constraints();
-    // void generate_r1cs_witness();
+
 // }
 
-// 
-// void test_argument_decoder_gadget();
 
 
 
@@ -97,33 +94,33 @@ pub fn new(
                                                          packed_desval:pb_variable<FieldT>,
                                                          packed_arg1val:pb_variable<FieldT>,
                                                          packed_arg2val:pb_variable<FieldT>,
-                                                         annotation_prefix:std::string) :
+                                                         annotation_prefix:std::string) ->Self
    
 {
-    assert!(desidx.size() == pb.ap.reg_arg_width());
-    assert!(arg1idx.size() == pb.ap.reg_arg_width());
-    assert!(arg2idx.size() == pb.ap.reg_arg_or_imm_width());
+    assert!(desidx.len() == pb.ap.reg_arg_width());
+    assert!(arg1idx.len() == pb.ap.reg_arg_width());
+    assert!(arg2idx.len() == pb.ap.reg_arg_or_imm_width());
 
     /* decode accordingly */
     packed_desidx.allocate(pb, format!("{} packed_desidx",self.annotation_prefix));
     packed_arg1idx.allocate(pb, format!("{} packed_arg1idx",self.annotation_prefix));
     packed_arg2idx.allocate(pb, format!("{} packed_arg2idx",self.annotation_prefix));
 
-    pack_desidx.reset(new packing_gadget<FieldT>(pb, desidx, packed_desidx, format!("{}pack_desidx",self.annotation_prefix)));
-    pack_arg1idx.reset(new packing_gadget<FieldT>(pb, arg1idx, packed_arg1idx, format!("{}pack_arg1idx",self.annotation_prefix)));
-    pack_arg2idx.reset(new packing_gadget<FieldT>(pb, arg2idx, packed_arg2idx, format!("{}pack_arg2idx",self.annotation_prefix)));
+    pack_desidx.reset(packing_gadget::<FieldT>::new(pb, desidx, packed_desidx, format!("{}pack_desidx",self.annotation_prefix)));
+    pack_arg1idx.reset(packing_gadget::<FieldT>::new(pb, arg1idx, packed_arg1idx, format!("{}pack_arg1idx",self.annotation_prefix)));
+    pack_arg2idx.reset(packing_gadget::<FieldT>::new(pb, arg2idx, packed_arg2idx, format!("{}pack_arg2idx",self.annotation_prefix)));
 
     arg2_demux_result.allocate(pb, format!("{} arg2_demux_result",self.annotation_prefix));
     arg2_demux_success.allocate(pb, format!("{} arg2_demux_success",self.annotation_prefix));
 
     demux_des.reset(
-        new loose_multiplexing_gadget<FieldT>(pb, packed_registers, packed_desidx, packed_desval, ONE,
+        loose_multiplexing_gadget::<FieldT>::new(pb, packed_registers, packed_desidx, packed_desval, ONE,
                                               format!("{} demux_des",self.annotation_prefix)));
     demux_arg1.reset(
-        new loose_multiplexing_gadget<FieldT>(pb, packed_registers, packed_arg1idx, packed_arg1val, ONE,
+        loose_multiplexing_gadget::<FieldT>::new(pb, packed_registers, packed_arg1idx, packed_arg1val, ONE,
                                               format!("{} demux_arg1",self.annotation_prefix)));
     demux_arg2.reset(
-        new loose_multiplexing_gadget<FieldT>(pb, packed_registers, packed_arg2idx, arg2_demux_result, arg2_demux_success,
+        loose_multiplexing_gadget::<FieldT>::new(pb, packed_registers, packed_arg2idx, arg2_demux_result, arg2_demux_success,
                                               format!("{} demux_arg2",self.annotation_prefix)));
     //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
     Self{arg2_is_imm,
@@ -154,9 +151,9 @@ pub fn generate_r1cs_constraints()
     /* it is false that arg2 is reg and demux failed:
        (1 - arg2_is_imm) * (1 - arg2_demux_success) = 0 */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint::<FieldT>({ ONE, arg2_is_imm * (-1) },
-            { ONE, arg2_demux_success * (-1) },
-            { ONE * 0 }),
+        r1cs_constraint::<FieldT>(vec![ ONE, arg2_is_imm * (-1) ],
+            vec![ ONE, arg2_demux_success * (-1) ],
+            vec![ ONE * 0 ]),
         format!("{} ensure_correc_demux",self.annotation_prefix));
 
     /*
@@ -166,9 +163,9 @@ pub fn generate_r1cs_constraints()
       arg2val - arg2_demux_result = arg2_is_imm * (packed_arg2idx - arg2_demux_result)
     */
     self.pb.add_r1cs_constraint(
-        r1cs_constraint::<FieldT>({ arg2_is_imm },
-            { packed_arg2idx, arg2_demux_result * (-1) },
-            { packed_arg2val, arg2_demux_result * (-1) }),
+        r1cs_constraint::<FieldT>(vec![ arg2_is_imm ],
+            vec![ packed_arg2idx, arg2_demux_result * (-1) ],
+            vec![ packed_arg2val, arg2_demux_result * (-1) ]),
         format!("{} compute_arg2val",self.annotation_prefix));
 }
 
@@ -192,13 +189,13 @@ pub fn generate_r1cs_witness()
 }
 
 
-void test_argument_decoder_gadget()
+pub fn  test_argument_decoder_gadget()
 {
     ffec::print_time("starting argument_decoder_gadget test");
 
      let mut ap=tinyram_architecture_params::new(16, 16);
     let mut  P=tinyram_program::new(); P.instructions = generate_tinyram_prelude(ap);
-    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.size(), 0, 10);
+    let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
     let mut  packed_registers=pb_variable_array::<FieldT>::new();
     packed_registers.allocate(pb, ap.k, "packed_registers");
@@ -206,9 +203,9 @@ void test_argument_decoder_gadget()
     let mut  arg2_is_imm=pb_variable::<FieldT> ::new();
     arg2_is_imm.allocate(pb, "arg_is_imm");
 
-    dual_variable_gadget<FieldT> desidx(pb, ap.reg_arg_width(), "desidx");
-    dual_variable_gadget<FieldT> arg1idx(pb, ap.reg_arg_width(), "arg1idx");
-    dual_variable_gadget<FieldT> arg2idx(pb, ap.reg_arg_or_imm_width(), "arg2idx");
+    let mut desidx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_width(), "desidx");
+    let mut arg1idx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_width(), "arg1idx");
+    let mut arg2idx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_or_imm_width(), "arg2idx");
 
      let (mut packed_desval, mut packed_arg1val, mut packed_arg2val)=(pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new(),);
     packed_desval.allocate(pb, "packed_desval");

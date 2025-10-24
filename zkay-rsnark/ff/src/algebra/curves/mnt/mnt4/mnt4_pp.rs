@@ -21,7 +21,7 @@
 // // namespace libff {
 
 // class mnt4_pp {
-// public:
+// 
 //     typedef mnt4_Fr Fp_type;
 //     typedef mnt4_G1 G1_type;
 //     typedef mnt4_G2 G2_type;

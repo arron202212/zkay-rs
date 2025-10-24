@@ -250,7 +250,7 @@ pub fn num_variables()  ->usize
 
  pub fn num_constraints() ->usize
 {
-    return constraints.size();
+    return constraints.len();
 }
 
 
@@ -258,7 +258,7 @@ pub fn num_variables()  ->usize
 {
     if self.num_inputs() > self.num_variables() {return false;}
 
-    for c in 0..constraints.size()
+    for c in 0..constraints.len()
     {
         if !(constraints[c].a.is_valid(self.num_variables() &&
               constraints[c].b.is_valid(self.num_variables()) &&
@@ -286,13 +286,13 @@ pub fn  dump_r1cs_constraint(constraint:&r1cs_constraint<FieldT>,
 pub fn is_satisfied(primary_input:&r1cs_primary_input<FieldT>,
                                                   auxiliary_input:&r1cs_auxiliary_input<FieldT>) ->bool
 {
-    assert!(primary_input.size() == num_inputs());
-    assert!(primary_input.size() + auxiliary_input.size() == num_variables());
+    assert!(primary_input.len() == num_inputs());
+    assert!(primary_input.len() + auxiliary_input.len() == num_variables());
 
     let mut  full_variable_assignment = primary_input.clone();
     full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    for c in 0..constraints.size()
+    for c in 0..constraints.len()
     {
        let  ares =constraints[c].a.evaluate(full_variable_assignment);
        let bres = constraints[c].b.evaluate(full_variable_assignment);
@@ -326,7 +326,7 @@ pub fn add_constraint(&c:r1cs_constraint<FieldT>)
 pub fn add_constraint(c:&r1cs_constraint<FieldT> ,annotation:&std::string)
 {
 // #ifdef DEBUG
-    // constraint_annotations[constraints.size()] = annotation;
+    // constraint_annotations[constraints.len()] = annotation;
 //#endif
     constraints.push(c);
 }
@@ -340,14 +340,14 @@ pub fn swap_AB_if_beneficial()
     let mut  touched_by_A=vec![false;self.num_variables() + 1];
     let mut  touched_by_B=vec![false;self.num_variables() + 1];
 
-    for i in 0..self.constraints.size()
+    for i in 0..self.constraints.len()
     {
-        for j in 0..self.constraints[i].a.terms.size()
+        for j in 0..self.constraints[i].a.terms.len()
         {
             touched_by_A[self.constraints[i].a.terms[j].index] = true;
         }
 
-        for j in 0..self.constraints[i].b.terms.size()
+        for j in 0..self.constraints[i].b.terms.len()
         {
             touched_by_B[self.constraints[i].b.terms[j].index] = true;
         }
@@ -371,7 +371,7 @@ pub fn swap_AB_if_beneficial()
     if non_zero_B_count > non_zero_A_count
     {
         ffec::enter_block("Perform the swap");
-        for i in 0..self.constraints.size()
+        for i in 0..self.constraints.len()
         {
            (self.constraints[i].b, self.constraints[i].a) =(self.constraints[i].a, self.constraints[i].b);
         }
@@ -392,7 +392,7 @@ pub fn swap_AB_if_beneficial()
 pub fn report_linear_constraint_statistics() 
 {
 // #ifdef DEBUG
-    for i in 0..constraints.size()
+    for i in 0..constraints.len()
     {
         let constr = constraints[i];
         let mut  a_is_const = true;

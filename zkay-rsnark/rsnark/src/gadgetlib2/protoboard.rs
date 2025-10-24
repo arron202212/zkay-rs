@@ -46,13 +46,13 @@ fieldType_:FieldType,
                          // This may not be trivial because of Gadget multiple inheritance scheme
 }
 //     Protoboard(const FieldType& fieldType, ParamsCPtr pParams);
-// public:
+// 
 //    
 //     static ProtoboardPtr create(const FieldType& fieldType, ParamsCPtr pParams = NULL) {
 //         return ProtoboardPtr(new Protoboard(fieldType, pParams));
 //     }
-//     size_t numVars() const {return assignment_.size();} // TODO change to take num from constraintSys_
-//     //size_t numVars() const {return constraintSystem_.getUsedVariables().size();} // TODO change to take num from constraintSys_
+//     size_t numVars() const {return assignment_.len();} // TODO change to take num from constraintSys_
+//     //size_t numVars() const {return constraintSystem_.getUsedVariables().len();} // TODO change to take num from constraintSys_
 
 //     size_t numInputs() const {return numInputs_;} // TODO Madars How do we book keep this?
 //     ParamsCPtr params() const {return pParams_;}
@@ -113,7 +113,7 @@ fieldType_:FieldType,
     this class.
 */
 // class ProtoboardParams {
-// public:
+// 
 //     virtual ~ProtoboardParams() = 0;
 // };
 
@@ -167,13 +167,13 @@ Self{numInputs_:0, pParams_:pParams, fieldType_:fieldType}
 }
 
 pub fn  setValuesAsBitArray(varArray:&VariableArray, srcValue:usize) {
-    assert!(varArray.size() >= Log2ceil(srcValue),
-                 "Variable array of size {} too small to hold value {}. Array must be of size at least {}", varArray.size(), srcValue, Log2ceil(srcValue));
+    assert!(varArray.len() >= Log2ceil(srcValue),
+                 "Variable array of size {} too small to hold value {}. Array must be of size at least {}", varArray.len(), srcValue, Log2ceil(srcValue));
     let  i = 0;
     for i in 0.. Log2ceil(srcValue) {
         val(varArray[i]) = if srcValue & (1usize<<i)  {1} else{ 0} ;
     }
-    for j in i.. varArray.size() {
+    for j in i.. varArray.len() {
         val(varArray[j]) = 0 ;
     }
 }
@@ -186,7 +186,7 @@ pub fn  setDualWordValue(dualWord:&DualWord, srcValue:usize) {
 pub fn  setMultipackedWordValue(multipackedWord:&MultiPackedWord,
                                          srcValue:usize)->eyre::Result<()> {
     if fieldType_ == R1P {
-        assert!(multipackedWord.size() == 1, "Multipacked word size mismatch in R1P");
+        assert!(multipackedWord.len() == 1, "Multipacked word size mismatch in R1P");
         val(multipackedWord[0]) = srcValue;
     } else {
         eyre::bail!("Unknown protoboard type in pub fn setMultipackedWordValue");
@@ -261,7 +261,7 @@ pub fn  enforceBooleanity(var:&Variable) {
                                                       printOption:PrintOptions) ->eyre::Result<bool> {
     let mut  retval = true;
     if fieldType_ == R1P {
-        assert!(multipackedWord.size() == 1, "R1P multipacked size mismatch");
+        assert!(multipackedWord.len() == 1, "R1P multipacked size mismatch");
         if val(multipackedWord[0]) == expectedValue {
             retval = true;
         } else {
@@ -283,7 +283,7 @@ pub fn  enforceBooleanity(var:&Variable) {
                                                    printOption:PrintOptions) ->bool {
     let  retval = true;
     let  expectedValueCopy = expectedValue;
-    for  i in  0.. unpackedWord.size() {
+    for  i in  0.. unpackedWord.len() {
         if val(unpackedWord[i]) != (expectedValueCopy & 1usize) {
             retval = false;
             break;
@@ -296,7 +296,7 @@ pub fn  enforceBooleanity(var:&Variable) {
     if expectedToPrintValues(retval, printOption) {
         println!("Expected value for unpacked word \"{}\" {expectedValue}",unpackedWord.name() );
         println!("Actual values are: ");
-        for i in  0..unpackedWord.size() {
+        for i in  0..unpackedWord.len() {
            println!("bit {i} : {}" , val(unpackedWord[i]));
         }
     }

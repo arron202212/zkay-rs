@@ -17,7 +17,7 @@ pub struct gadget<FieldT> {
 // protected:
      pb:protoboard<FieldT>,
     annotation_prefix:String,
-// public:
+// 
 //     gadget(protoboard<FieldT> &pb, const std::string &annotation_prefix="");
 }
 

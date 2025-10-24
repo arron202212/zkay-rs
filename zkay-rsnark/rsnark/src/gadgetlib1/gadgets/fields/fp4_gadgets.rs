@@ -16,7 +16,7 @@
 // #define FP4_GADGETS_HPP_
 
 use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp2_gadgets;
 
 
 
@@ -25,7 +25,7 @@ use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
  */
 template<typename Fp4T>
 class Fp4_variable : public gadget<typename Fp4T::my_Fp> {
-public:
+
     type typename Fp4T::my_Fp FieldT;
     type typename Fp4T::my_Fpe Fp2T;
 
@@ -48,7 +48,7 @@ public:
  */
 template<typename Fp4T>
 class Fp4_tower_mul_gadget : public gadget<typename Fp4T::my_Fp> {
-public:
+
     type typename Fp4T::my_Fp FieldT;
     type typename Fp4T::my_Fpe Fp2T;
 
@@ -93,7 +93,7 @@ public:
  */
 template<typename Fp4T>
 class Fp4_direct_mul_gadget : public gadget<typename Fp4T::my_Fp> {
-public:
+
     type typename Fp4T::my_Fp FieldT;
     type typename Fp4T::my_Fpe Fp2T;
 
@@ -125,7 +125,7 @@ using Fp4_mul_gadget = Fp4_direct_mul_gadget<Fp4T>;
  */
 template<typename Fp4T>
 class Fp4_sqr_gadget : public gadget<typename Fp4T::my_Fp> {
-public:
+
     type typename Fp4T::my_Fp FieldT;
     type typename Fp4T::my_Fpe Fp2T;
 
@@ -165,7 +165,7 @@ public:
  */
 template<typename Fp4T>
 class Fp4_cyclotomic_sqr_gadget : public gadget<typename Fp4T::my_Fp> {
-public:
+
 /*
 */
     type typename Fp4T::my_Fp FieldT;
@@ -198,7 +198,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/fields/fp4_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp4_gadgets;
 
 //#endif // FP4_GADGETS_HPP_
 /** @file

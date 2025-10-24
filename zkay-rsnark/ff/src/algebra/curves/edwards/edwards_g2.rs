@@ -20,7 +20,7 @@ std::ostream& operator<<(std::ostream &, const edwards_G2&);
 std::istream& operator>>(std::istream &, edwards_G2&);
 
 class edwards_G2 {
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -36,7 +36,7 @@ public:
     edwards_G2();
 private:
     edwards_G2(const edwards_Fq3& X, const edwards_Fq3& Y, const edwards_Fq3& Z) : X(X), Y(Y), Z(Z) {};
-public:
+
     static edwards_Fq3 mul_by_a(const edwards_Fq3 &elt);
     static edwards_Fq3 mul_by_d(const edwards_Fq3 &elt);
     typedef edwards_Fq base_field;
@@ -489,7 +489,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
 void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
 {
     std::vector<edwards_Fq3> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -499,7 +499,7 @@ void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
 
     const edwards_Fq3 one = edwards_Fq3::one();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         vec[i].X = vec[i].X * Z_vec[i];
         vec[i].Y = vec[i].Y * Z_vec[i];

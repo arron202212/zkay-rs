@@ -19,7 +19,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 
 
 // class default_tinyram_ppzksnark_pp {
-// public:
+// 
 //     type default_r1cs_ppzksnark_pp snark_pp;
 //     type ffec::Fr<default_r1cs_ppzksnark_pp> FieldT;
 //     type ram_tinyram<FieldT> machine_pp;

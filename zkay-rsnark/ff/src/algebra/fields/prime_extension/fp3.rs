@@ -34,7 +34,7 @@ std::istream& operator>>(std::istream &, Fp3_model<n, modulus> &);
  */
 template<mp_size_t n, const bigint<n>& modulus>
 class Fp3_model {
-public:
+
     typedef Fp_model<n, modulus> my_Fp;
 // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     static long long add_cnt;
@@ -427,8 +427,8 @@ template<mp_size_t n, const bigint<n>& modulus>
 bool Fp3_model<n,modulus>::from_words(std::vector<uint64_t> words)
 {
     std::vector<uint64_t>::const_iterator vec_start = words.begin();
-    std::vector<uint64_t>::const_iterator vec_center1 = words.begin() + words.size() / 3;
-    std::vector<uint64_t>::const_iterator vec_center2 = words.begin() + 2 * words.size() / 3;
+    std::vector<uint64_t>::const_iterator vec_center1 = words.begin() + words.len() / 3;
+    std::vector<uint64_t>::const_iterator vec_center2 = words.begin() + 2 * words.len() / 3;
     std::vector<uint64_t>::const_iterator vec_end = words.end();
     std::vector<uint64_t> words0(vec_start, vec_center1);
     std::vector<uint64_t> words1(vec_center1, vec_center2);
@@ -454,7 +454,7 @@ std::istream& operator>>(std::istream &in, Fp3_model<n, modulus> &el)
 template<mp_size_t n, const bigint<n>& modulus>
 std::ostream& operator<<(std::ostream& out, const std::vector<Fp3_model<n, modulus> > &v)
 {
-    out << v.size() << "\n";
+    out << v.len() << "\n";
     for t in &v
     {
         out << t << OUTPUT_NEWLINE;

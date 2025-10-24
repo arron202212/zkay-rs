@@ -118,7 +118,7 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
 
     std::vector<edwards_Fq> field_vec = pack_bit_vector_into_field_element_vector<edwards_Fq>(vec);
 
-    EXPECT_EQ(field_vec.size(), 2);
+    EXPECT_EQ(field_vec.len(), 2);
     EXPECT_EQ(field_vec[0], edwards_Fq::zero());
     EXPECT_EQ(field_vec[1], edwards_Fq(40960)); // 5 * 2**13
 
@@ -133,7 +133,7 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
 
     field_vec = convert_bit_vector_to_field_element_vector<edwards_Fq>(vec2);
 
-    EXPECT_EQ(field_vec.size(), 5);
+    EXPECT_EQ(field_vec.len(), 5);
     EXPECT_EQ(field_vec[0], edwards_Fq::zero());
     EXPECT_EQ(field_vec[1], edwards_Fq::zero());
     EXPECT_EQ(field_vec[2], edwards_Fq::one());
@@ -148,10 +148,10 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
 
     bit_vector vec3 = convert_field_element_vector_to_bit_vector(field_vec2);
 
-    EXPECT_EQ(vec3.size(), edwards_Fq::ceil_size_in_bits() * 2);
+    EXPECT_EQ(vec3.len(), edwards_Fq::ceil_size_in_bits() * 2);
     EXPECT_EQ(vec3[0], 1);
     EXPECT_EQ(vec3[1], 0);
     EXPECT_EQ(vec3[2], 1);
-    for i in 3..vec3.size()
+    for i in 3..vec3.len()
         EXPECT_EQ(vec3[i], 0);
 }

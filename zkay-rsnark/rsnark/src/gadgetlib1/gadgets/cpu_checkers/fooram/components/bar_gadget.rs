@@ -30,7 +30,7 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
  */
 // 
 pub struct bar_gadget {
-// public:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 X:    pb_linear_combination_array<FieldT>,
 a:    FieldT,
 Y:    pb_linear_combination_array<FieldT>,
@@ -60,7 +60,7 @@ width:    size_t,
 
 
 
-// use crate::gadgetlib1::gadgets/cpu_checkers/fooram/components/bar_gadget;
+// use crate::gadgetlib1::gadgets::cpu_checkers/fooram/components/bar_gadget;
 
 //#endif // BAR_GADGET_HPP_
 /** @file
@@ -93,8 +93,8 @@ annotation_prefix:&                                std::string
         ) ->Self
     
 {
-    assert!(X.size() == Y.size());
-    let width = X.size();
+    assert!(X.len() == Y.len());
+    let width = X.len();
 
     result.allocate(pb, FMT(annotation_prefix, " result"));
     Z_bits.allocate(pb, width, FMT(annotation_prefix, " Z_bits"));

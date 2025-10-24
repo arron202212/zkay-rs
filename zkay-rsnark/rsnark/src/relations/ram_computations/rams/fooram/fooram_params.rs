@@ -20,7 +20,7 @@ use crate::relations::ram_computations::rams::ram_params;
 
 // template<typename FieldT>
 pub trait ram_fooram<FieldT>{
-// public:
+// 
     type base_field_type=FieldT;
     type protoboard_type=fooram_protoboard<FieldT>;
     type gadget_base_type=fooram_gadget<FieldT>;

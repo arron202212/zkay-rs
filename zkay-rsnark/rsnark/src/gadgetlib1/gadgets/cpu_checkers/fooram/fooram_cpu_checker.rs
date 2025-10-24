@@ -40,7 +40,7 @@ use crate::relations::ram_computations::memory::memory_interface;
 
 // 
 pub struct fooram_cpu_checker {
-// public: : public fooram_gadget<FieldT>
+//  : public fooram_gadget<FieldT>
 prev_pc_addr:    pb_variable_array<FieldT>,
 prev_pc_val:    pb_variable_array<FieldT>,
 prev_state:    pb_variable_array<FieldT>,
@@ -104,7 +104,7 @@ pack_next_state:    std::shared_ptr<packing_gadget<FieldT> >,
 
 
 
-// use crate::gadgetlib1::gadgets/cpu_checkers/fooram/fooram_cpu_checker;
+// use crate::gadgetlib1::gadgets::cpu_checkers/fooram/fooram_cpu_checker;
 
 //#endif // FORAM_CPU_CHECKER_HPP_
 /** @file
@@ -145,9 +145,9 @@ annotation_prefix:                                                std::string,
     packed_next_pc_addr.allocate(pb, format!("{annotation_prefix} packed_next_pc_addr"));
     pack_next_pc_addr.reset( packing_gadget::<FieldT>::new(pb, next_pc_addr, packed_next_pc_addr, format!("{annotation_prefix} pack_next_pc_addr")));
 
-    one_as_addr.resize(next_pc_addr.size());
+    one_as_addr.resize(next_pc_addr.len());
     one_as_addr[0].assign(self.pb, 1);
-    for i in 1..next_pc_addr.size()
+    for i in 1..next_pc_addr.len()
     {
         one_as_addr[i].assign(self.pb, 0);
     }

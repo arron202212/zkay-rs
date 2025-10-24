@@ -79,9 +79,9 @@ int main()
 
     const size_t num_inputs = 10;
 
-    const size_t basic_domain_size = 1ul<<ffec::mnt6_Fr::s;
-    const size_t step_domain_size = (1ul<<10) + (1ul<<8);
-    const size_t extended_domain_size = 1ul<<(ffec::mnt6_Fr::s+1);
+    const size_t basic_domain_size = 1u64<<ffec::mnt6_Fr::s;
+    const size_t step_domain_size = (1u64<<10) + (1u64<<8);
+    const size_t extended_domain_size = 1u64<<(ffec::mnt6_Fr::s+1);
     const size_t extended_domain_size_special = extended_domain_size-1;
 
     ffec::enter_block("Test SSP for binary inputs");

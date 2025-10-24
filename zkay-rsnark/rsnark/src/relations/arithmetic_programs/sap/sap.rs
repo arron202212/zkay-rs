@@ -52,7 +52,7 @@ num_variables:    usize,
 degree:    usize,
 num_inputs:    usize,
 
-// //public:
+// //
 domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
 
 A_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
@@ -102,7 +102,7 @@ pub struct sap_instance_evaluation<FieldT>{
 num_variables:    usize,
 degree:    usize,
 num_inputs:    usize,
-//public:
+//
 domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
 
 t:    FieldT,
@@ -153,7 +153,7 @@ num_variables:    usize,
 degree:    usize,
 num_inputs:    usize,
 
-//public:
+//
 d2:    FieldT,d1:FieldT,
 
 coefficients_for_ACs:    Vec<FieldT>,
@@ -395,22 +395,22 @@ pub fn num_inputs()->usize
         return false;
     }
 
-    if self.num_variables() != witness.coefficients_for_ACs.size()
+    if self.num_variables() != witness.coefficients_for_ACs.len()
     {
         return false;
     }
 
-    if self.degree()+1 != witness.coefficients_for_H.size()
+    if self.degree()+1 != witness.coefficients_for_H.len()
     {
         return false;
     }
 
-    if self.At.size() != self.num_variables()+1 || self.Ct.size() != self.num_variables()+1
+    if self.At.len() != self.num_variables()+1 || self.Ct.len() != self.num_variables()+1
     {
         return false;
     }
 
-    if self.Ht.size() != self.degree()+1
+    if self.Ht.len() != self.degree()+1
     {
         return false;
     }

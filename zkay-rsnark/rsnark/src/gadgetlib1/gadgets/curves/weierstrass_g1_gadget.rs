@@ -18,7 +18,7 @@
 use ffec::algebra::curves::public_params;
 
 use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
 
 
 
@@ -27,7 +27,7 @@ use crate::gadgetlib1::gadgets/pairing/pairing_params;
  */
 template<typename ppT>
 class G1_variable : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     pb_linear_combination<FieldT> X;
@@ -54,7 +54,7 @@ public:
  */
 template<typename ppT>
 class G1_checker_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     G1_variable<ppT> P;
@@ -73,7 +73,7 @@ public:
  */
 template<typename ppT>
 class G1_add_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     pb_variable<FieldT> lambda;
@@ -97,7 +97,7 @@ public:
  */
 template<typename ppT>
 class G1_dbl_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     pb_variable<FieldT> Xsquared;
@@ -119,7 +119,7 @@ public:
  */
 template<typename ppT>
 class G1_multiscalar_mul_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     std::vector<G1_variable<ppT> > computed_results;
@@ -150,7 +150,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets::curves/weierstrass_g1_gadget;
 
 //#endif // WEIERSTRASS_G1_GADGET_TCC_
 /** @file
@@ -395,8 +395,8 @@ G1_multiscalar_mul_gadget<ppT>::G1_multiscalar_mul_gadget(protoboard<FieldT> &pb
     points(points),
     result(result),
     elt_size(elt_size),
-    num_points(points.size()),
-    scalar_size(scalars.size())
+    num_points(points.len()),
+    scalar_size(scalars.len())
 {
     assert!(num_points >= 1);
     assert!(num_points * elt_size == scalar_size);

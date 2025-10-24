@@ -55,7 +55,7 @@ private:
     */
     std::vector<std::map<size_t, pb_variable<FieldT> > > asw_switch_bits;
     as_waksman_topology neighbors;
-public:
+
     const size_t num_packets;
     const size_t num_columns;
     const std::vector<pb_variable_array<FieldT>> routing_input_bits;
@@ -77,7 +77,7 @@ void test_as_waksman_routing_gadget(const size_t num_packets, const size_t packe
 
 
 
-use crate::gadgetlib1::gadgets/routing/as_waksman_routing_gadget;
+use crate::gadgetlib1::gadgets::routing::as_waksman_routing_gadget;
 
 //#endif // AS_WAKSMAN_ROUTING_GADGET_HPP_
 /** @file
@@ -115,7 +115,7 @@ as_waksman_routing_gadget<FieldT>::as_waksman_routing_gadget(protoboard<FieldT> 
     num_columns(as_waksman_num_columns(num_packets)),
     routing_input_bits(routing_input_bits),
     routing_output_bits(routing_output_bits),
-    packet_size(routing_input_bits[0].size()),
+    packet_size(routing_input_bits[0].len()),
     num_subpackets(ffec::div_ceil(packet_size, FieldT::capacity()))
 {
     neighbors = generate_as_waksman_topology(num_packets);

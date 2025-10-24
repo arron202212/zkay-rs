@@ -96,7 +96,7 @@ pub fn  random_memory_contents(num_addresses:size_t,
     for i in 0..num_filled
     {
         let mut  it = unfilled.iter();
-        it.advance_by(rng::r#gen::<usize>() % unfilled.size());
+        it.advance_by(rng::r#gen::<usize>() % unfilled.len());
         result[it.next().unwrap()] = rng::r#gen::<usize>()% max_unit;
         unfilled.remove(it);
     }

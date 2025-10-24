@@ -38,7 +38,7 @@ lc_values:    std::vector<FieldT>,
 constraint_system:    r1cs_constraint_system<FieldT>,
 }
 
-// public:
+// 
 //     protoboard();
 
 //     void clear_values();
@@ -138,14 +138,14 @@ pub fn clear_values()
 
  pub fn val(var:&pb_variable<FieldT>)->&FieldT
 {
-    assert!(var.index <= values.size());
+    assert!(var.index <= values.len());
     return if var.index == 0 {constant_term} else{values[var.index-1]};
 }
 
 
  pub fn val(var:&pb_variable<FieldT>) ->FieldT
 {
-    assert!(var.index <= values.size());
+    assert!(var.index <= values.len());
     return if var.index == 0 {constant_term} else{values[var.index-1]};
 }
 
@@ -158,7 +158,7 @@ pub fn clear_values()
     }
     else
     {
-        assert!(lc.index < lc_values.size());
+        assert!(lc.index < lc_values.len());
         return lc_values[lc.index];
     }
 }
@@ -172,7 +172,7 @@ pub fn clear_values()
     }
     else
     {
-        assert!(lc.index < lc_values.size());
+        assert!(lc.index < lc_values.len());
         return lc_values[lc.index];
     }
 }
@@ -182,7 +182,7 @@ pub fn add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&std::str
 {
 // #ifdef DEBUG
 //     assert!(annotation != "");
-//     constraint_system.constraint_annotations[constraint_system.constraints.size()] = annotation;
+//     constraint_system.constraint_annotations[constraint_system.constraints.len()] = annotation;
 // #else
 //     ffec::UNUSED(annotation);
 //#endif

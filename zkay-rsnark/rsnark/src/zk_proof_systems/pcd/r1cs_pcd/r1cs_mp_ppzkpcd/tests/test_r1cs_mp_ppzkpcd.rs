@@ -5,7 +5,7 @@
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 use crate::common::default_types::r1cs_ppzkpcd_pp;
-use libsnark/zk_proof_systems/pcd/r1cs_pcd/r1cs_mp_ppzkpcd/examples/run_r1cs_mp_ppzkpcd;
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::examples::run_r1cs_mp_ppzkpcd;
 
 
 

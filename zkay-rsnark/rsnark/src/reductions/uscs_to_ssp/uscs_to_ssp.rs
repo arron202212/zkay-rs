@@ -109,7 +109,7 @@ ssp_instance<FieldT> uscs_to_ssp_instance_map(const uscs_constraint_system<Field
     std::vector<std::map<size_t, FieldT> > V_in_Lagrange_basis(cs.num_variables()+1);
     for i in 0..cs.num_constraints()
     {
-        for j in 0..cs.constraints[i].terms.size()
+        for j in 0..cs.constraints[i].terms.len()
         {
             V_in_Lagrange_basis[cs.constraints[i].terms[j].index][i] += cs.constraints[i].terms[j].coeff;
         }
@@ -158,7 +158,7 @@ ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(const u
     const std::vector<FieldT> u = domain->evaluate_all_lagrange_polynomials(t);
     for i in 0..cs.num_constraints()
     {
-        for j in 0..cs.constraints[i].terms.size()
+        for j in 0..cs.constraints[i].terms.len()
         {
             Vt[cs.constraints[i].terms[j].index] += u[i]*cs.constraints[i].terms[j].coeff;
         }

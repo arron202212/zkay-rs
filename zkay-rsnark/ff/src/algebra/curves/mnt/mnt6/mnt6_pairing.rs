@@ -267,12 +267,12 @@ std::ostream& operator<<(std::ostream& out, const mnt6_ate_G2_precomp &prec_Q)
         << prec_Q.QY2  << OUTPUT_SEPARATOR
         << prec_Q.QX_over_twist << OUTPUT_SEPARATOR
         << prec_Q.QY_over_twist << "\n";
-    out << prec_Q.dbl_coeffs.size() << "\n";
+    out << prec_Q.dbl_coeffs.len() << "\n";
     for dc in &prec_Q.dbl_coeffs
     {
         out << dc << OUTPUT_NEWLINE;
     }
-    out << prec_Q.add_coeffs.size() << "\n";
+    out << prec_Q.add_coeffs.len() << "\n";
     for ac in &prec_Q.add_coeffs
     {
         out << ac << OUTPUT_NEWLINE;
@@ -413,7 +413,7 @@ mnt6_affine_ate_G2_precomputation mnt6_affine_ate_precompute_G2(const mnt6_G2& Q
     bool found_nonzero = false;
 
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=(long) NAF.size() - 1).rev()
+    for i in ( 0..=(long) NAF.len() - 1).rev()
     {
         if !found_nonzero
         {
@@ -487,7 +487,7 @@ mnt6_Fq6 mnt6_affine_ate_miller_loop(const mnt6_affine_ate_G1_precomputation &pr
     size_t idx = 0;
 
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=(long) NAF.size() - 1).rev()
+    for i in ( 0..=(long) NAF.len() - 1).rev()
     {
         if !found_nonzero
         {

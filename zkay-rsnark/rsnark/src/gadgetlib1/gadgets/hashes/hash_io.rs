@@ -15,7 +15,7 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 
 template<typename FieldT>
 class digest_variable : public gadget<FieldT> {
-public:
+
     size_t digest_size;
     pb_variable_array<FieldT> bits;
 
@@ -36,7 +36,7 @@ public:
 
 template<typename FieldT>
 class block_variable : public gadget<FieldT> {
-public:
+
     size_t block_size;
     pb_variable_array<FieldT> bits;
 
@@ -90,9 +90,9 @@ digest_variable<FieldT>::digest_variable(protoboard<FieldT> &pb,
                                          const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix), digest_size(digest_size)
 {
-    assert!(bits.size() <= digest_size);
+    assert!(bits.len() <= digest_size);
     bits = partial_bits;
-    while (bits.size() != digest_size)
+    while (bits.len() != digest_size)
     {
         bits.push(padding);
     }
@@ -147,8 +147,8 @@ block_variable<FieldT>::block_variable(protoboard<FieldT> &pb,
                                        const std::string &annotation_prefix) :
     gadget<FieldT>(pb, annotation_prefix)
 {
-    assert!(left.bits.size() == right.bits.size());
-    block_size = 2 * left.bits.size();
+    assert!(left.bits.len() == right.bits.len());
+    block_size = 2 * left.bits.len();
     bits.insert(bits.end(), left.bits.begin(), left.bits.end());
     bits.insert(bits.end(), right.bits.begin(), right.bits.end());
 }

@@ -32,7 +32,7 @@ use crate::relations::ram_computations::rams::ram_params;
  * then you would declare my_ram_zksnark_pp as follows:
  *
  *   class my_ram_zksnark_pp {
- *   public:
+ *   
  *       type my_PCD_pp PCD_pp;
  *       type my_machine_pp machine_pp;
  *       static void init_public_params()
@@ -55,20 +55,20 @@ use crate::relations::ram_computations::rams::ram_params;
  * Below are various template aliases (used for convenience).
  */
 
-template<typename ram_zksnark_ppT>
-using ram_zksnark_PCD_pp = typename ram_zksnark_ppT::PCD_pp;
 
-template<typename ram_zksnark_ppT>
-using ram_zksnark_machine_pp = typename ram_zksnark_ppT::machine_pp;
+type  ram_zksnark_PCD_pp<ram_zksnark_ppT> =  ram_zksnark_ppT::PCD_pp;
 
-template<typename ram_zksnark_ppT>
-using ram_zksnark_architecture_params = ram_architecture_params<ram_zksnark_machine_pp<ram_zksnark_ppT> >;
 
-template<typename ram_zksnark_ppT>
-using ram_zksnark_primary_input = ram_boot_trace<ram_zksnark_machine_pp<ram_zksnark_ppT> >;
+type  ram_zksnark_machine_pp<ram_zksnark_ppT> =  ram_zksnark_ppT::machine_pp;
 
-template<typename ram_zksnark_ppT>
-using ram_zksnark_auxiliary_input = ram_input_tape<ram_zksnark_machine_pp<ram_zksnark_ppT> >;
+
+type  ram_zksnark_architecture_params<ram_zksnark_ppT> = ram_architecture_params<ram_zksnark_machine_pp<ram_zksnark_ppT> >;
+
+
+type  ram_zksnark_primary_input<ram_zksnark_ppT> = ram_boot_trace<ram_zksnark_machine_pp<ram_zksnark_ppT> >;
+
+
+type  ram_zksnark_auxiliary_input<ram_zksnark_ppT> = ram_input_tape<ram_zksnark_machine_pp<ram_zksnark_ppT> >;
 
 
 

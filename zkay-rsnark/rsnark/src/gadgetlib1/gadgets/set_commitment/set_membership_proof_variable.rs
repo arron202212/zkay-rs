@@ -11,13 +11,13 @@
 use crate::common::data_structures::set_commitment;
 use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
-use crate::gadgetlib1::gadgets/merkle_tree/merkle_authentication_path_variable;
+use crate::gadgetlib1::gadgets::merkle_tree/merkle_authentication_path_variable;
 
 
 
 template<typename FieldT, typename HashT>
 class set_membership_proof_variable : public gadget<FieldT> {
-public:
+
     pb_variable_array<FieldT> address_bits;
     std::shared_ptr<merkle_authentication_path_variable<FieldT, HashT> > merkle_path;
 
@@ -38,7 +38,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/set_commitment/set_membership_proof_variable;
+use crate::gadgetlib1::gadgets::set_commitment::set_membership_proof_variable;
 
 //#endif // SET_MEMBERSHIP_PROOF_VARIABLE_HPP
 /**
@@ -113,7 +113,7 @@ template<typename FieldT, typename HashT>
 r1cs_variable_assignment<FieldT> set_membership_proof_variable<FieldT, HashT>::as_r1cs_variable_assignment(const set_membership_proof &proof)
 {
     protoboard<FieldT> pb;
-    const size_t max_entries = (1ul << (proof.merkle_path.size()));
+    const size_t max_entries = (1u64 << (proof.merkle_path.len()));
     set_membership_proof_variable<FieldT, HashT> proof_variable(pb, max_entries, "proof_variable");
     proof_variable.generate_r1cs_witness(proof);
 

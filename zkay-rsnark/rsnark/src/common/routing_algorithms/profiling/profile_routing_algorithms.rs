@@ -22,7 +22,7 @@ void profile_benes_algorithm(const size_t n)
 {
     print!("* Size: {}\n", n);
 
-    assert!(n == 1ul<<ffec::log2(n));
+    assert!(n == 1u64<<ffec::log2(n));
 
     ffec::enter_block("Generate permutation");
     integer_permutation permutation(n);
@@ -52,12 +52,12 @@ int main()
 {
     ffec::start_profiling();
 
-    for (size_t n = 1ul<<10; n <= 1ul<<20; n <<= 1)
+    for (size_t n = 1u64<<10; n <= 1u64<<20; n <<= 1)
     {
         profile_benes_algorithm(n);
     }
 
-    for (size_t n = 1ul<<10; n <= 1ul<<20; n <<= 1)
+    for (size_t n = 1u64<<10; n <= 1u64<<20; n <<= 1)
     {
         profile_as_waksman_algorithm(n);
     }

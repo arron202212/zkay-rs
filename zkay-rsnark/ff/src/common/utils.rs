@@ -40,7 +40,7 @@ pub type bit_vector=Vec<bool> ;
 // std::usize round_to_next_power_of_2(n:std::usize);
 // bool is_power_of_2(n:std::usize);
 
-// /// returns ceil(log2(n)), so 1ul<<log2(n) is the smallest power of 2, that is not less than n
+// /// returns ceil(log2(n)), so 1u64<<log2(n) is the smallest power of 2, that is not less than n
 // std::usize log2(std::usize n);
 
 // inline std::usize exp2(std::usize k) { return std::usize(1) << k; }
@@ -164,7 +164,7 @@ pub fn is_power_of_2(n:usize)->bool{
     return (n != 0) && ((n & (n-1)) == 0);
 }
 
-/* returns ceil(log2(n)), so 1ul<<log2(n) is the smallest power of 2,
+/* returns ceil(log2(n)), so 1u64<<log2(n) is the smallest power of 2,
    that is not less than n. */
 pub fn log2(mut n:usize)->usize
 {

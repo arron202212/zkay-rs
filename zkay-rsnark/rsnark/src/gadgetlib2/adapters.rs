@@ -38,7 +38,7 @@ pub trait ConvertConfig<T,R>{
 //  * be refactored out in the future. --Shaul
 //  */
 pub trait GadgetLibAdapter {
-// public:
+// 
     type variable_index_t=u64;
     type Fp_elem_t=Fp;
     type linear_term_t=(variable_index_t, Fp_elem_t);
@@ -106,8 +106,8 @@ fn convert(lt:&LinearTerm )->linear_term_t {
 
 impl ConvertConfig<&LinearCombination,linear_combination_t> for GLA{
 fn convert(lc:&LinearCombination )->linear_combination_t {
-    let mut  sparse_vec=sparse_vec_t::with_capicity(lc.linearTerms_.size());
-    // sparse_vec.reserve(lc.linearTerms_.size());
+    let mut  sparse_vec=sparse_vec_t::with_capicity(lc.linearTerms_.len());
+    // sparse_vec.reserve(lc.linearTerms_.len());
     for lt in &lc.linearTerms_ {
         sparse_vec.push(convert(lt));
     }
@@ -125,8 +125,8 @@ fn convert(constraint:&Constraint )->constraint_t {
 }
 impl ConvertConfig<&ConstraintSystem,constraint_sys_t> for GLA{
 fn convert(constraint_sys:&ConstraintSystem )->constraint_sys_t {
-     let mut retval=constraint_sys_t::with_capicity(constraint_sys.constraintsPtrs_.size());
-    // retval.reserve(constraint_sys.constraintsPtrs_.size());
+     let mut retval=constraint_sys_t::with_capicity(constraint_sys.constraintsPtrs_.len());
+    // retval.reserve(constraint_sys.constraintsPtrs_.len());
     for constraintPtr in &constraint_sys.constraintsPtrs_ {
         retval.push(convert(*constraintPtr));
     }
@@ -174,7 +174,7 @@ fn convert( fElem:FElem)->Fp_elem_t {
 impl PartialEq for linear_combination_t{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-       self.0.size() == 1 &&
+       self.0.len() == 1 &&
         self.0.at(0) == rhs &&
         self.1 == Fp::from(0)
     }
@@ -183,7 +183,7 @@ impl PartialEq for linear_combination_t{
 
 // bool operator==(const linear_combination_t& lhs,
 //     const linear_term_t& rhs) {
-//     return lhs.first.size() == 1 &&
+//     return lhs.first.len() == 1 &&
 //         lhs.first.at(0) == rhs &&
 //         lhs.second == Fp(0);
 // }

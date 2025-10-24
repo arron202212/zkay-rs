@@ -20,7 +20,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 // template<typename FieldT>
 pub trait  ram_tinyram<FieldT> {
-// public:
+// 
     const  timestamp_length:usize=300;
 
     type base_field_type=FieldT;

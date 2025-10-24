@@ -13,8 +13,8 @@
 //#ifndef RUN_RAM_PPZKSNARK_HPP_
 // #define RUN_RAM_PPZKSNARK_HPP_
 
-use crate::relations::ram_computations/rams/examples/ram_examples;
-use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark_params;
+use crate::relations::ram_computations::rams::examples::ram_examples;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
 
 
 
@@ -25,9 +25,9 @@ use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark_params;
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-template<typename ram_ppzksnark_ppT>
-bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> > &example,
-                       const bool test_serialization);
+// template<typename ram_ppzksnark_ppT>
+// bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> > &example,
+//                        const bool test_serialization);
 
 
 
@@ -51,11 +51,11 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksna
 //#ifndef RUN_RAM_PPZKSNARK_TCC_
 // #define RUN_RAM_PPZKSNARK_TCC_
 
-use  <sstream>
+// use  <sstream>
 
 use ffec::common::profiling;
 
-use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 
 
 
@@ -71,9 +71,9 @@ use libsnark/zk_proof_systems/ppzksnark/ram_ppzksnark/ram_ppzksnark;
  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
  *     a boot trace, and a proof.
  */
-template<typename ram_ppzksnark_ppT>
-bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> > &example,
-                       const bool test_serialization)
+// template<typename ram_ppzksnark_ppT>
+ pub fn run_ram_ppzksnark<ram_ppzksnark_ppT>(example:&ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> > ,
+                        test_serialization:bool)->bool
 {
     ffec::enter_block("Call to run_ram_ppzksnark");
 
@@ -84,32 +84,32 @@ bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_
     print!("Hence, ffec::log2(L+2*T) equals {}\n", ffec::log2(example.boot_trace_size_bound+2*example.time_bound));
 
     ffec::print_header("RAM ppzkSNARK Generator");
-    ram_ppzksnark_keypair<ram_ppzksnark_ppT> keypair = ram_ppzksnark_generator<ram_ppzksnark_ppT>(example.ap, example.boot_trace_size_bound, example.time_bound);
+    let  keypair = ram_ppzksnark_generator::<ram_ppzksnark_ppT>(example.ap, example.boot_trace_size_bound, example.time_bound);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
 
     if test_serialization
     {
         ffec::enter_block("Test serialization of keys");
-        keypair.pk = ffec::reserialize<ram_ppzksnark_proving_key<ram_ppzksnark_ppT> >(keypair.pk);
-        keypair.vk = ffec::reserialize<ram_ppzksnark_verification_key<ram_ppzksnark_ppT> >(keypair.vk);
+        keypair.pk = ffec::reserialize::<ram_ppzksnark_proving_key::<ram_ppzksnark_ppT> >(keypair.pk);
+        keypair.vk = ffec::reserialize::<ram_ppzksnark_verification_key::<ram_ppzksnark_ppT> >(keypair.vk);
         ffec::leave_block("Test serialization of keys");
     }
 
     ffec::print_header("RAM ppzkSNARK Prover");
-    ram_ppzksnark_proof<ram_ppzksnark_ppT> proof = ram_ppzksnark_prover<ram_ppzksnark_ppT>(keypair.pk, example.boot_trace, example.auxiliary_input);
+    let  proof = ram_ppzksnark_prover::<ram_ppzksnark_ppT>(keypair.pk, example.boot_trace, example.auxiliary_input);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
 
     if test_serialization
     {
         ffec::enter_block("Test serialization of proof");
-        proof = ffec::reserialize<ram_ppzksnark_proof<ram_ppzksnark_ppT> >(proof);
+        proof = ffec::reserialize::<ram_ppzksnark_proof::<ram_ppzksnark_ppT> >(proof);
         ffec::leave_block("Test serialization of proof");
     }
 
     ffec::print_header("RAM ppzkSNARK Verifier");
-    bool ans = ram_ppzksnark_verifier<ram_ppzksnark_ppT>(keypair.vk, example.boot_trace, proof);
+    let  ans = ram_ppzksnark_verifier::<ram_ppzksnark_ppT>(keypair.vk, example.boot_trace, proof);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-    print!("* The verification result is: %s\n", if ans {"PASS"} else{"FAIL"});
+    print!("* The verification result is: {}\n", if ans {"PASS"} else{"FAIL"});
 
     ffec::leave_block("Call to run_ram_ppzksnark");
 

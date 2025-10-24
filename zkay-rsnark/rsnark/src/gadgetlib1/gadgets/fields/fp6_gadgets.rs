@@ -16,8 +16,8 @@
 // #define FP6_GADGETS_HPP_
 
 use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp3_gadgets;
 
 
 
@@ -26,7 +26,7 @@ use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
  */
 template<typename Fp6T>
 class Fp6_variable : public gadget<typename Fp6T::my_Fp> {
-public:
+
     type typename Fp6T::my_Fp FieldT;
     type typename Fp6T::my_Fpe Fp3T;
 
@@ -48,7 +48,7 @@ public:
  */
 template<typename Fp6T>
 class Fp6_mul_gadget : public gadget<typename Fp6T::my_Fp> {
-public:
+
     type typename Fp6T::my_Fp FieldT;
     type typename Fp6T::my_Fpe Fp3T;
 
@@ -96,7 +96,7 @@ public:
  */
 template<typename Fp6T>
 class Fp6_mul_by_2345_gadget : public gadget<typename Fp6T::my_Fp> {
-public:
+
     type typename Fp6T::my_Fp FieldT;
     type typename Fp6T::my_Fpe Fp3T;
 
@@ -143,7 +143,7 @@ public:
  */
 template<typename Fp6T>
 class Fp6_sqr_gadget : public gadget<typename Fp6T::my_Fp> {
-public:
+
     type typename Fp6T::my_Fp FieldT;
 
     Fp6_variable<Fp6T> A;
@@ -164,7 +164,7 @@ public:
  */
 template<typename Fp6T>
 class Fp6_cyclotomic_sqr_gadget : public gadget<typename Fp6T::my_Fp> {
-public:
+
     type typename Fp6T::my_Fp FieldT;
     type typename Fp6T::my_Fp2 Fp2T;
 
@@ -202,7 +202,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp6_gadgets;
 
 //#endif // FP6_GADGETS_HPP_
 /** @file

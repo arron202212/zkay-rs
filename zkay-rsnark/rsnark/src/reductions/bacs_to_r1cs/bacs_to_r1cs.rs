@@ -75,7 +75,7 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
 //#endif
 
     result.primary_input_size = circuit.primary_input_size;
-    result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.size();
+    result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.len();
 
     for g in &circuit.gates
     {
@@ -84,7 +84,7 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
         auto it = circuit.gate_annotations.find(g.output.index);
         if it != circuit.gate_annotations.end()
         {
-            result.constraint_annotations[result.constraints.size()-1] = it->second;
+            result.constraint_annotations[result.constraints.len()-1] = it->second;
         }
 //#endif
     }
@@ -96,7 +96,7 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
             result.constraints.push(r1cs_constraint<FieldT>(1, g.output, 0));
 
 // #ifdef DEBUG
-            result.constraint_annotations[result.constraints.size()-1] = FMT("", "output_%zu_is_circuit_output", g.output.index);
+            result.constraint_annotations[result.constraints.len()-1] = FMT("", "output_%zu_is_circuit_output", g.output.index);
 //#endif
         }
     }

@@ -218,7 +218,7 @@ void construct_as_waksman_inner(const size_t left,
     }
 
     const size_t subnetwork_size = (hi - lo + 1);
-    assert!(rhs_dests.size() == subnetwork_size);
+    assert!(rhs_dests.len() == subnetwork_size);
     const size_t subnetwork_width = as_waksman_num_columns(subnetwork_size);
     assert!(right - left + 1 >= subnetwork_width);
 
@@ -422,7 +422,7 @@ void as_waksman_route_inner(const size_t left,
 // #ifdef DEBUG
     assert!(permutation.min_element == lo);
     assert!(permutation.max_element == hi);
-    assert!(permutation.size() == subnetwork_size);
+    assert!(permutation.len() == subnetwork_size);
     assert!(permutation.is_valid());
     assert!(permutation.inverse() == permutation_inv);
 //#endif
@@ -634,7 +634,7 @@ void as_waksman_route_inner(const size_t left,
 
 as_waksman_routing get_as_waksman_routing(const integer_permutation &permutation)
 {
-    const size_t num_packets = permutation.size();
+    const size_t num_packets = permutation.len();
     const size_t width = as_waksman_num_columns(num_packets);
 
     as_waksman_routing routing(width);
@@ -644,7 +644,7 @@ as_waksman_routing get_as_waksman_routing(const integer_permutation &permutation
 
 bool valid_as_waksman_routing(const integer_permutation &permutation, const as_waksman_routing &routing)
 {
-    const size_t num_packets = permutation.size();
+    const size_t num_packets = permutation.len();
     const size_t width = as_waksman_num_columns(num_packets);
     as_waksman_topology neighbors = generate_as_waksman_topology(num_packets);
 

@@ -5,7 +5,7 @@
  a R1CS ("Rank-1 Constraint System") from a RAM ("Random-Access Machine").
 
  The implementation is a thin layer around a "RAM universal gadget", which is
- where most of the work is done. See gadgets/ram_universal_gadget.hpp for details.
+ where most of the work is done. See gadgets::ram_universal_gadget.hpp for details.
 
  *****************************************************************************
  * @author     This file is part of libsnark, developed by SCIPR Lab
@@ -16,45 +16,28 @@
 //#ifndef RAM_TO_R1CS_HPP_
 // #define RAM_TO_R1CS_HPP_
 
-ram_universal_gadget;
+// ram_universal_gadget;
 
 
 
-template<typename ramT>
-class ram_to_r1cs {
-public:
+type FieldT=ram_base_field<ramT>;
+pub struct ram_to_r1cs<ramT> {
 
-    type ram_base_field<ramT> FieldT;
 
-    size_t boot_trace_size_bound;
+    
 
-    ram_protoboard<ramT> main_protoboard;
-    pb_variable_array<FieldT> r1cs_input;
-    std::shared_ptr<ram_universal_gadget<ramT> > universal_gadget;
+boot_trace_size_bound:    size_t,
 
-    ram_to_r1cs(const ram_architecture_params<ramT> &ap,
-                const size_t boot_trace_size_bound,
-                const size_t time_bound);
-    void instance_map();
-    r1cs_constraint_system<FieldT> get_constraint_system() const;
-    r1cs_auxiliary_input<FieldT> auxiliary_input_map(const ram_boot_trace<ramT> &boot_trace,
-                                                     const ram_input_tape<ramT> &auxiliary_input);
-
-    /* both methods assume that auxiliary_input_map has been called */
-    void print_execution_trace() const;
-    void print_memory_trace() const;
-
-    static std::vector<ram_base_field<ramT> > pack_primary_input_address_and_value(const ram_architecture_params<ramT> &ap,
-                                                                                   const address_and_value &av);
-
-    static r1cs_primary_input<ram_base_field<ramT> > primary_input_map(const ram_architecture_params<ramT> &ap,
-                                                                       const size_t boot_trace_size_bound,
-                                                                       const ram_boot_trace<ramT>& boot_trace);
-};
+main_protoboard:    ram_protoboard<ramT>,
+r1cs_input:    pb_variable_array<FieldT>,
+universal_gadget:    std::shared_ptr<ram_universal_gadget<ramT> >,
+}
 
 
 
-use libsnark/reductions/ram_to_r1cs/ram_to_r1cs;
+
+
+// use crate::reductions::ram_to_r1cs::ram_to_r1cs;
 
 //#endif // RAM_TO_R1CS_HPP_
 /** @file
@@ -74,119 +57,120 @@ use libsnark/reductions/ram_to_r1cs/ram_to_r1cs;
 //#ifndef RAM_TO_R1CS_TCC_
 // #define RAM_TO_R1CS_TCC_
 
-use  <set>
+// use  <set>
 
 
+impl ram_to_r1cs<ramT>{
 
-template<typename ramT>
-ram_to_r1cs<ramT>::ram_to_r1cs(const ram_architecture_params<ramT> &ap,
-                               const size_t boot_trace_size_bound,
-                               const size_t time_bound) :
-    boot_trace_size_bound(boot_trace_size_bound),
-    main_protoboard(ap)
+pub fn new(ap:&ram_architecture_params<ramT>,
+                               boot_trace_size_bound:size_t,
+                               time_bound:size_t) ->Self
+   
 {
-    const size_t r1cs_input_size = ram_universal_gadget<ramT>::packed_input_size(ap, boot_trace_size_bound);
+    let  r1cs_input_size = ram_universal_gadget::<ramT>::packed_input_size(ap, boot_trace_size_bound);
     r1cs_input.allocate(main_protoboard, r1cs_input_size, "r1cs_input");
-    universal_gadget.reset(new ram_universal_gadget<ramT>(main_protoboard,
+    universal_gadget.reset( ram_universal_gadget::<ramT>::(main_protoboard,
                                                           boot_trace_size_bound,
                                                           time_bound,
                                                           r1cs_input,
                                                           "universal_gadget"));
     main_protoboard.set_input_sizes(r1cs_input_size);
+    Self {boot_trace_size_bound,
+    main_protoboard}
 }
 
-template<typename ramT>
-void ram_to_r1cs<ramT>::instance_map()
+
+pub fn instance_map()
 {
     ffec::enter_block("Call to instance_map of ram_to_r1cs");
-    universal_gadget->generate_r1cs_constraints();
+    universal_gadget.generate_r1cs_constraints();
     ffec::leave_block("Call to instance_map of ram_to_r1cs");
 }
 
-template<typename ramT>
-r1cs_constraint_system<ram_base_field<ramT> > ram_to_r1cs<ramT>::get_constraint_system() const
+
+ pub fn get_constraint_system() ->r1cs_constraint_system<ram_base_field<ramT> >
 {
     return main_protoboard.get_constraint_system();
 }
 
-template<typename ramT>
-r1cs_primary_input<ram_base_field<ramT> > ram_to_r1cs<ramT>::auxiliary_input_map(const ram_boot_trace<ramT> &boot_trace,
-                                                                                 const ram_input_tape<ramT> &auxiliary_input)
+
+pub fn auxiliary_input_map(boot_trace:&ram_boot_trace<ramT>,
+                                                                                 auxiliary_input:&ram_input_tape<ramT>)->r1cs_primary_input<ram_base_field<ramT> > 
 {
     ffec::enter_block("Call to witness_map of ram_to_r1cs");
-    universal_gadget->generate_r1cs_witness(boot_trace, auxiliary_input);
+    universal_gadget.generate_r1cs_witness(boot_trace, auxiliary_input);
 // #ifdef DEBUG
-    const r1cs_primary_input<FieldT> primary_input_from_input_map = ram_to_r1cs<ramT>::primary_input_map(main_protoboard.ap, boot_trace_size_bound, boot_trace);
-    const r1cs_primary_input<FieldT> primary_input_from_witness_map = main_protoboard.primary_input();
+   let  primary_input_from_input_map = Self::primary_input_map(main_protoboard.ap, boot_trace_size_bound, boot_trace);
+    let primary_input_from_witness_map = main_protoboard.primary_input();
     assert!(primary_input_from_input_map == primary_input_from_witness_map);
 //#endif
     ffec::leave_block("Call to witness_map of ram_to_r1cs");
     return main_protoboard.auxiliary_input();
 }
 
-template<typename ramT>
-void ram_to_r1cs<ramT>::print_execution_trace() const
+
+pub fn print_execution_trace() 
 {
-    universal_gadget->print_execution_trace();
+    universal_gadget.print_execution_trace();
 }
 
-template<typename ramT>
-void ram_to_r1cs<ramT>::print_memory_trace() const
+
+pub fn print_memory_trace() 
 {
-    universal_gadget->print_memory_trace();
+    universal_gadget.print_memory_trace();
 }
 
-template<typename ramT>
-std::vector<ram_base_field<ramT> > ram_to_r1cs<ramT>::pack_primary_input_address_and_value(const ram_architecture_params<ramT> &ap,
-                                                                                           const address_and_value &av)
+
+ pub fn pack_primary_input_address_and_value(ap:&ram_architecture_params<ramT>,
+                                                                                           av:&address_and_value)->std::vector<ram_base_field<ramT> >
 {
-    type ram_base_field<ramT> FieldT;
+    type FieldT=ram_base_field<ramT>;
 
-    const size_t address = av.first;
-    const size_t contents = av.second;
+    let address = av.0;
+    let contents = av.1;
 
-    const ffec::bit_vector address_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(address, true), ap.address_size());
-    const ffec::bit_vector contents_bits = ffec::convert_field_element_to_bit_vector<FieldT>(FieldT(contents, true), ap.value_size());
+    let address_bits = ffec::convert_field_element_to_bit_vector::<FieldT>(FieldT(address, true), ap.address_size());
+    let contents_bits = ffec::convert_field_element_to_bit_vector::<FieldT>(FieldT(contents, true), ap.value_size());
 
-    ffec::bit_vector trace_element_bits;
+    let mut  trace_element_bits=vec![];
     trace_element_bits.insert(trace_element_bits.end(), address_bits.begin(), address_bits.end());
     trace_element_bits.insert(trace_element_bits.end(), contents_bits.begin(), contents_bits.end());
 
-    const std::vector<FieldT> trace_element = ffec::pack_bit_vector_into_field_element_vector<FieldT>(trace_element_bits);
+    let trace_element = ffec::pack_bit_vector_into_field_element_vector::<FieldT>(trace_element_bits);
 
     return trace_element;
 }
 
 
-template<typename ramT>
-r1cs_primary_input<ram_base_field<ramT> > ram_to_r1cs<ramT>::primary_input_map(const ram_architecture_params<ramT> &ap,
-                                                                               const size_t boot_trace_size_bound,
-                                                                               const ram_boot_trace<ramT>& boot_trace)
+
+ pub fn primary_input_map(ap:&ram_architecture_params<ramT>,
+                                                                               boot_trace_size_bound:&size_t,
+                                                                               boot_trace:&ram_boot_trace<ramT>)->r1cs_primary_input<ram_base_field<ramT> >
 {
-    type ram_base_field<ramT> FieldT;
+    type FieldT=ram_base_field<ramT>;
 
-    const size_t packed_input_element_size = ram_universal_gadget<ramT>::packed_input_element_size(ap);
-    r1cs_primary_input<FieldT > result(ram_universal_gadget<ramT>::packed_input_size(ap, boot_trace_size_bound));
+    let packed_input_element_size = ram_universal_gadget::<ramT>::packed_input_element_size(ap);
+     let mut result=r1cs_primary_input::<FieldT >::new(ram_universal_gadget::<ramT>::packed_input_size(ap, boot_trace_size_bound));
 
-    std::set<size_t> bound_input_locations;
+    let mut  bound_input_locations=BTreeSet::new();
 
     for it in &boot_trace.get_all_trace_entries()
     {
-        const size_t input_pos = it.first;
-        const address_and_value av = it.second;
+        let input_pos = it.0;
+        let av = it.1;
 
         assert!(input_pos < boot_trace_size_bound);
-        assert!(bound_input_locations.find(input_pos) == bound_input_locations.end());
+        assert!(bound_input_locations.find(input_pos).is_none);
 
-        const std::vector<FieldT> packed_input_element = ram_to_r1cs<ramT>::pack_primary_input_address_and_value(ap, av);
-        std::copy(packed_input_element.begin(), packed_input_element.end(), result.begin() + packed_input_element_size * (boot_trace_size_bound - 1 - input_pos));
-
+        let packed_input_element = Self::pack_primary_input_address_and_value(ap, av);
+        // std::copy(packed_input_element.begin(), packed_input_element.end(), result.begin() + ));
+        result.splice(packed_input_element_size * (boot_trace_size_bound - 1 - input_pos,packed_input_element));
         bound_input_locations.insert(input_pos);
     }
 
     return result;
 }
 
-
+}
 
 //#endif // RAM_TO_R1CS_TCC_

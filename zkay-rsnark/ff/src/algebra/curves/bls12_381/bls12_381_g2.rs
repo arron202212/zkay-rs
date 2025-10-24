@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream &, const bls12_381_G2&);
 std::istream& operator>>(std::istream &, bls12_381_G2&);
 
 class bls12_381_G2 {
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -530,7 +530,7 @@ std::istream& operator>>(std::istream &in, bls12_381_G2 &g)
 void bls12_381_G2::batch_to_special_all_non_zeros(std::vector<bls12_381_G2> &vec)
 {
     std::vector<bls12_381_Fq2> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -540,7 +540,7 @@ void bls12_381_G2::batch_to_special_all_non_zeros(std::vector<bls12_381_G2> &vec
 
     const bls12_381_Fq2 one = bls12_381_Fq2::one();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         bls12_381_Fq2 Z2 = Z_vec[i].squared();
         bls12_381_Fq2 Z3 = Z_vec[i] * Z2;

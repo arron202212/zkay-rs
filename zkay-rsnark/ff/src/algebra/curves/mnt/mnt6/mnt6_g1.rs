@@ -24,7 +24,7 @@ use crate::algebra::curves::mnt::mnt6::mnt6_init;
 // std::istream& operator>>(std::istream &, mnt6_G1&);
 
 class mnt6_G1 {
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -567,7 +567,7 @@ std::istream& operator>>(std::istream &in, mnt6_G1 &g)
 
 std::ostream& operator<<(std::ostream& out, const std::vector<mnt6_G1> &v)
 {
-    out << v.size() << "\n";
+    out << v.len() << "\n";
     for t in &v
     {
         out << t << OUTPUT_NEWLINE;
@@ -600,7 +600,7 @@ std::istream& operator>>(std::istream& in, std::vector<mnt6_G1> &v)
 void mnt6_G1::batch_to_special_all_non_zeros(std::vector<mnt6_G1> &vec)
 {
     std::vector<mnt6_Fq> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -610,7 +610,7 @@ void mnt6_G1::batch_to_special_all_non_zeros(std::vector<mnt6_G1> &vec)
 
     const mnt6_Fq one = mnt6_Fq::one();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         vec[i] = mnt6_G1(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
     }

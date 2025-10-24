@@ -56,7 +56,7 @@ std::istream& operator>>(std::istream &in, bacs_ppzksnark_proving_key<ppT> &pk);
  */
 template<typename ppT>
 class bacs_ppzksnark_proving_key {
-public:
+
     bacs_ppzksnark_circuit<ppT> circuit;
     r1cs_ppzksnark_proving_key<ppT> r1cs_pk;
 
@@ -139,7 +139,7 @@ using bacs_ppzksnark_processed_verification_key = r1cs_ppzksnark_processed_verif
  */
 template<typename ppT>
 class bacs_ppzksnark_keypair {
-public:
+
     bacs_ppzksnark_proving_key<ppT> pk;
     bacs_ppzksnark_verification_key<ppT> vk;
 
@@ -328,7 +328,7 @@ bacs_ppzksnark_proof<ppT> bacs_ppzksnark_prover(const bacs_ppzksnark_proving_key
 
     ffec::enter_block("Call to bacs_ppzksnark_prover");
     const r1cs_variable_assignment<FieldT> r1cs_va = bacs_to_r1cs_witness_map<FieldT>(pk.circuit, primary_input, auxiliary_input);
-    const r1cs_auxiliary_input<FieldT> r1cs_ai(r1cs_va.begin() + primary_input.size(), r1cs_va.end()); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
+    const r1cs_auxiliary_input<FieldT> r1cs_ai(r1cs_va.begin() + primary_input.len(), r1cs_va.end()); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
     const r1cs_ppzksnark_proof<ppT> r1cs_proof = r1cs_ppzksnark_prover<ppT>(pk.r1cs_pk, primary_input, r1cs_ai);
     ffec::leave_block("Call to bacs_ppzksnark_prover");
 

@@ -19,7 +19,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 pub struct labelT {
-// public:
+// 
     label_bytes:[u8;16],
     // labelT() {};
 }

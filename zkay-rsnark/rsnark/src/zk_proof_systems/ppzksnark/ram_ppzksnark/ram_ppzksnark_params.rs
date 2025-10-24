@@ -21,7 +21,7 @@ use crate::relations::ram_computations::rams::ram_params;
  * ram_ppzksnark_ppT. When used, the interfaces must be invoked with
  * a particular parameter choice; let 'my_ram_ppzksnark_pp' denote this choice.
  *
- * my_ram_ppzksnark_pp needs to contain typedefs for the typenames
+ * my_ram_ppzksnark_pp needs to contain typedefs for the s
  * - snark_pp, and
  * - machine_pp.
  * as well as a method with the following signature:
@@ -31,7 +31,7 @@ use crate::relations::ram_computations::rams::ram_params;
  * then you could declare my_ram_ppzksnark_pp as follows:
  *
  *   class my_ram_ppzksnark_pp {
- *   public:
+ *   
  *       type my_snark_pp snark_pp;
  *       type my_machine_pp machine_pp;
  *       static void init_public params()
@@ -54,20 +54,20 @@ use crate::relations::ram_computations::rams::ram_params;
  * Below are various template aliases (used for convenience).
  */
 
-template<typename ram_ppzksnark_ppT>
-using ram_ppzksnark_snark_pp = typename ram_ppzksnark_ppT::snark_pp;
 
-template<typename ram_ppzksnark_ppT>
-using ram_ppzksnark_machine_pp = typename ram_ppzksnark_ppT::machine_pp;
+type  ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> =  ram_ppzksnark_ppT::snark_pp;
 
-template<typename ram_ppzksnark_ppT>
-using ram_ppzksnark_architecture_params = ram_architecture_params<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
 
-template<typename ram_ppzksnark_ppT>
-using ram_ppzksnark_primary_input = ram_boot_trace<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
+type  ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> =  ram_ppzksnark_ppT::machine_pp;
 
-template<typename ram_ppzksnark_ppT>
-using ram_ppzksnark_auxiliary_input = ram_input_tape<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
+
+type  ram_ppzksnark_architecture_params<ram_ppzksnark_ppT> = ram_architecture_params<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
+
+
+type  ram_ppzksnark_primary_input<ram_ppzksnark_ppT> = ram_boot_trace<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
+
+
+type  ram_ppzksnark_auxiliary_input<ram_ppzksnark_ppT> = ram_input_tape<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
 
 
 

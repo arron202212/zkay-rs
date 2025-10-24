@@ -108,7 +108,7 @@ K_query:                               ffec::G1_vector<ppT>,
 
      pub fn g1_size(&self)->usize
     {
-        return 2*(A_query.domain_size() + C_query.domain_size()) + B_query.domain_size() + H_query.size() + K_query.size();
+        return 2*(A_query.domain_size() + C_query.domain_size()) + B_query.domain_size() + H_query.len() + K_query.len();
     }
 
    pub fn g2_size(&self)->usize
@@ -118,12 +118,12 @@ K_query:                               ffec::G1_vector<ppT>,
 
     pub fn g1_sparse_size(&self) ->usize
     {
-        return 2*(A_query.size() + C_query.size()) + B_query.size() + H_query.size() + K_query.size();
+        return 2*(A_query.len() + C_query.len()) + B_query.len() + H_query.len() + K_query.len();
     }
 
     pub fn  g2_sparse_size(&self) ->usize
     {
-        return B_query.size();
+        return B_query.len();
     }
 
      pub fn size_in_bits(&self)->usize
@@ -199,7 +199,7 @@ alphaA_g2:ffec::G2<ppT>,
 
      pub fn g1_size(&self)->usize
     {
-        return 2 + encoded_IC_query.size();
+        return 2 + encoded_IC_query.len();
     }
 
    pub fn g2_size(&self)->usize
@@ -399,7 +399,7 @@ pub fn
     let  qap_inst = r1cs_to_qap_instance_map_with_evaluation(cs_copy, t);
 
     ffec::print_indent(); print!("* QAP number of variables: {}\n", qap_inst.num_variables());
-    ffec::print_indent(); print!("* QAP pre degree: {}\n", cs_copy.constraints.size());
+    ffec::print_indent(); print!("* QAP pre degree: {}\n", cs_copy.constraints.len());
     ffec::print_indent(); print!("* QAP degree: {}\n", qap_inst.degree());
     ffec::print_indent(); print!("* QAP number of input variables: {}\n", qap_inst.num_inputs());
 
@@ -477,7 +477,7 @@ pub fn
         At[i] = ffec::Fr::<ppT>::zero();
     }
 
-    let  g1_exp_count = 2*(non_zero_At - qap_inst.num_inputs() + non_zero_Ct) + non_zero_Bt + non_zero_Ht +Kt.size();
+    let  g1_exp_count = 2*(non_zero_At - qap_inst.num_inputs() + non_zero_Ct) + non_zero_Bt + non_zero_Ht +Kt.len();
     let  g2_exp_count = non_zero_Bt;
 
     let  g1_window = ffec::get_exp_window_size::<ffec::G1::<ppT> >(g1_exp_count);
@@ -633,8 +633,8 @@ d3)=(ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element(),ffec::F
 //     assert!(pk.A_query.domain_size() == qap_wit.num_variables()+2);
 //     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+2);
 //     assert!(pk.C_query.domain_size() == qap_wit.num_variables()+2);
-//     assert!(pk.H_query.size() == qap_wit.degree()+1);
-//     assert!(pk.K_query.size() == qap_wit.num_variables()+4);
+//     assert!(pk.H_query.len() == qap_wit.degree()+1);
+//     assert!(pk.K_query.len() == qap_wit.num_variables()+4);
 // //#endif
 
 // // #ifdef MULTICORE
@@ -794,7 +794,7 @@ pub fn
                                             proof:r1cs_ppzksnark_proof<ppT>,)->bool
 {
     ffec::enter_block("Call to r1cs_ppzksnark_online_verifier_weak_IC");
-    assert!(pvk.encoded_IC_query.domain_size() >= primary_input.size());
+    assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
     ffec::enter_block("Compute input-dependent part of A");
     let  accumulated_IC = pvk.encoded_IC_query.accumulate_chunk::<ffec::Fr::<ppT> >(primary_input.begin(),primary_input.end(), 0);
@@ -917,9 +917,9 @@ pub fn
     let  result = true;
     ffec::enter_block("Call to r1cs_ppzksnark_online_verifier_strong_IC");
 
-    if pvk.encoded_IC_query.domain_size() != primary_input.size()
+    if pvk.encoded_IC_query.domain_size() != primary_input.len()
     {
-        ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.size(), pvk.encoded_IC_query.domain_size());
+        ffec::print_indent(); print!("Input length differs from expected (got {}, expected {}).\n", primary_input.len(), pvk.encoded_IC_query.domain_size());
         result = false;
     }
     else
@@ -949,7 +949,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
                                             proof:r1cs_ppzksnark_proof<ppT>,)->bool 
 {
     ffec::enter_block("Call to r1cs_ppzksnark_affine_verifier_weak_IC");
-    assert!(vk.encoded_IC_query.domain_size() >= primary_input.size());
+    assert!(vk.encoded_IC_query.domain_size() >= primary_input.len());
 
     let pvk_pp_G2_one_precomp        = ppT::affine_ate_precompute_G2(ffec::G2::<ppT>::one());
     let pvk_vk_alphaA_g2_precomp     = ppT::affine_ate_precompute_G2(vk.alphaA_g2);

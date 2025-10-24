@@ -16,8 +16,8 @@
 
 use  <memory>
 
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
-use crate::gadgetlib1::gadgets/pairing/weierstrass_precomputation;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
+use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation;
 
 
 
@@ -35,7 +35,7 @@ use crate::gadgetlib1::gadgets/pairing/weierstrass_precomputation;
  */
 template<typename ppT>
 class mnt_miller_loop_dbl_line_eval : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -71,7 +71,7 @@ public:
  */
 template<typename ppT>
 class mnt_miller_loop_add_line_eval : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -102,7 +102,7 @@ public:
  */
 template<typename ppT>
 class mnt_miller_loop_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -143,7 +143,7 @@ void test_mnt_miller_loop(const std::string &annotation);
  */
 template<typename ppT>
 class mnt_e_over_e_miller_loop_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -194,7 +194,7 @@ void test_mnt_e_over_e_miller_loop(const std::string &annotation);
  */
 template<typename ppT>
 class mnt_e_times_e_over_e_miller_loop_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
     type ffec::Fqe<other_curve<ppT> > FqeT;
     type ffec::Fqk<other_curve<ppT> > FqkT;
@@ -252,7 +252,7 @@ void test_mnt_e_times_e_over_e_miller_loop(const std::string &annotation);
 
 
 
-use crate::gadgetlib1::gadgets/pairing/weierstrass_miller_loop;
+use crate::gadgetlib1::gadgets::pairing::weierstrass_miller_loop;
 
 //#endif // WEIERSTRASS_MILLER_LOOP_HPP_
 /** @file
@@ -435,7 +435,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -475,7 +475,7 @@ mnt_miller_loop_gadget<ppT>::mnt_miller_loop_gadget(protoboard<FieldT> &pb,
     size_t prec_id = 0;
 
     found_nonzero = false;
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -541,7 +541,7 @@ void mnt_miller_loop_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -583,15 +583,15 @@ void test_mnt_miller_loop(const std::string &annotation)
     Fqk_variable<ppT> result(pb, "result");
     mnt_miller_loop_gadget<ppT> miller(pb, prec_P, prec_Q, result, "miller");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P")
+    PROFILE_CONSTRAINTS(pb, "precompute P");
     {
         compute_prec_P.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q")
+    PROFILE_CONSTRAINTS(pb, "precompute Q");
     {
         compute_prec_Q.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop")
+    PROFILE_CONSTRAINTS(pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
@@ -628,7 +628,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -674,7 +674,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
     size_t prec_id = 0;
 
     found_nonzero = false;
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -759,7 +759,7 @@ void mnt_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -820,17 +820,17 @@ void test_mnt_e_over_e_miller_loop(const std::string &annotation)
     Fqk_variable<ppT> result(pb, "result");
     mnt_e_over_e_miller_loop_gadget<ppT> miller(pb, prec_P1, prec_Q1, prec_P2, prec_Q2, result, "miller");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P")
+    PROFILE_CONSTRAINTS(pb, "precompute P");
     {
         compute_prec_P1.generate_r1cs_constraints();
         compute_prec_P2.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q")
+    PROFILE_CONSTRAINTS(pb, "precompute Q");
     {
         compute_prec_Q1.generate_r1cs_constraints();
         compute_prec_Q2.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop")
+    PROFILE_CONSTRAINTS(pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
@@ -876,7 +876,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -928,7 +928,7 @@ gadget<FieldT>(pb, annotation_prefix), prec_P1(prec_P1), prec_Q1(prec_Q1), prec_
     size_t prec_id = 0;
 
     found_nonzero = false;
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -1030,7 +1030,7 @@ void mnt_e_times_e_over_e_miller_loop_gadget<ppT>::generate_r1cs_witness()
 
     bool found_nonzero = false;
     std::vector<long> NAF = find_wnaf(1, loop_count);
-    for i in ( 0..=NAF.size()-1).rev()
+    for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
         {
@@ -1106,19 +1106,19 @@ void test_mnt_e_times_e_over_e_miller_loop(const std::string &annotation)
     Fqk_variable<ppT> result(pb, "result");
     mnt_e_times_e_over_e_miller_loop_gadget<ppT> miller(pb, prec_P1, prec_Q1, prec_P2, prec_Q2, prec_P3, prec_Q3, result, "miller");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P")
+    PROFILE_CONSTRAINTS(pb, "precompute P");
     {
         compute_prec_P1.generate_r1cs_constraints();
         compute_prec_P2.generate_r1cs_constraints();
         compute_prec_P3.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q")
+    PROFILE_CONSTRAINTS(pb, "precompute Q");
     {
         compute_prec_Q1.generate_r1cs_constraints();
         compute_prec_Q2.generate_r1cs_constraints();
         compute_prec_Q3.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop")
+    PROFILE_CONSTRAINTS(pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }

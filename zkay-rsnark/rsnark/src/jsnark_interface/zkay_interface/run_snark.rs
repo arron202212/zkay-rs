@@ -67,9 +67,9 @@ fn serialize_vk3( vk_out:&mut String,vk:&r1cs_ppzksnark_verification_key<ppT>,
     vk_out.push_str( serialize(vk.rC_Z_g2));
 
     let IC = vk.encoded_IC_query;
-    vk_out.push_str( format!("{}\n",IC.size() + 1 ));
+    vk_out.push_str( format!("{}\n",IC.len() + 1 ));
     vk_out.push_str( serialize(IC.0));
-    for i in 0.. IC.size() {
+    for i in 0.. IC.len() {
         let  IC_N=IC.rest[i].clone();
         vk_out.push_str( serialize(IC_N));
     }
@@ -83,9 +83,9 @@ fn serialize_vk(vk_out:&mut String, vk:& r1cs_gg_ppzksnark_verification_key<ppT>
     vk_out.push_str( serialize(vk.delta_g2));
 
     let abc = vk.gamma_ABC_g1;
-    vk_out.push_str( format!("{}\n",abc.size() + 1));
+    vk_out.push_str( format!("{}\n",abc.len() + 1));
     vk_out.push_str( serialize(abc.first));
-    for i in 0.. abc.size() {
+    for i in 0.. abc.len() {
         let  abc_n=abc.rest[i].clone();
         vk_out.push_str( serialize(abc_n));
     }
@@ -99,7 +99,7 @@ fn serialize_vk2(vk_out:&mut String, vk:& r1cs_se_ppzksnark_verification_key<ppT
     vk_out.push_str( serialize(vk.G_gamma));
     vk_out.push_str( serialize(vk.H_gamma));
 
-    vk_out.push_str( format!("{}\n",vk.query.size()));
+    vk_out.push_str( format!("{}\n",vk.query.len()));
     for q in  vk.query {
         vk_out.push_str( serialize(q));
     }
@@ -276,7 +276,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
                 cs = get_constraint_system_from_gadgetlib2(*pb);
                 full_assignment = get_variable_assignment_from_gadgetlib2(*pb);
                 cs.primary_input_size = primary_input_size;
-                cs.auxiliary_input_size = full_assignment.size() - primary_input_size;
+                cs.auxiliary_input_size = full_assignment.len() - primary_input_size;
                 ffec::leave_block("CircuitReading");
             }
 

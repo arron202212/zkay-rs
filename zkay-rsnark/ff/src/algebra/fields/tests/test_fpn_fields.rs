@@ -26,7 +26,7 @@ use crate::common::utils;
 using namespace libff;
 
 class FpnFieldsTest: public ::testing::Test {
-public:
+
     FpnFieldsTest()
     {
         init_edwards_fields();

@@ -496,7 +496,7 @@ pub fn add_term4(other:linear_term<FieldT>)
  pub fn is_valid(num_variables:size_t) ->bool
 {
     /* check that all terms in linear combination are sorted */
-    for i in 1..terms.size()
+    for i in 1..terms.len()
     {
         if terms[i-1].index >= terms[i].index
         {
@@ -558,7 +558,7 @@ pub fn print_with_assignment(full_assignment:&std::vector<FieldT>,variable_annot
 impl<ppT> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}",  
-lc.terms.size(),
+lc.terms.len(),
 lc.terms.iter().map(|lt| format!("{}\n{}{OUTPUT_NEWLINE}",lt.index,lt.coeff)).collect::<String>(),
 )
     }
@@ -568,7 +568,7 @@ lc.terms.iter().map(|lt| format!("{}\n{}{OUTPUT_NEWLINE}",lt.index,lt.coeff)).co
 // 
 // std::ostream& operator<<(std::ostream &out, &lc:linear_combination<FieldT>)
 // {
-//     out << lc.terms.size() << "\n";
+//     out << lc.terms.len() << "\n";
 //     for lt in &lc.terms
 //     {
 //         out << lt.index << "\n";
@@ -675,7 +675,7 @@ pub fn new(all_terms:&std::vector<linear_term<FieldT> >)
 // linear_combination<FieldT> linear_combination<FieldT>::operator*(&field_coeff:FieldT) const
 // {
 //     linear_combination<FieldT> result;
-//     result.terms.reserve(self.terms.size());
+//     result.terms.reserve(self.terms.len());
 //     for lt in &self.terms
 //     {
 //         result.terms.push(lt * field_coeff);
@@ -687,7 +687,7 @@ pub fn new(all_terms:&std::vector<linear_term<FieldT> >)
 // linear_combination<FieldT> linear_combination<FieldT>::operator+(&other:linear_combination<FieldT>) const
 // {
 //     linear_combination<FieldT> result;
-//     result.terms.reserve(self.terms.size() + other.terms.size());
+//     result.terms.reserve(self.terms.len() + other.terms.len());
 
 //     auto it1 = self.terms.begin();
 //     auto it2 = other.terms.begin();

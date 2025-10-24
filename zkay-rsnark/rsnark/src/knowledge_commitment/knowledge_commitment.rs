@@ -190,10 +190,10 @@ pub fn mixed_add(&self,&other:knowledge_commitment<T1,T2>) ->Self
 
     // we separately process g's first, then h's
     // to lower memory consumption
-    let mut  g_vec=Vec::with_capicity(vec.size());
+    let mut  g_vec=Vec::with_capicity(vec.len());
     
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         if !vec[i].g.is_zero()
         {
@@ -206,7 +206,7 @@ pub fn mixed_add(&self,&other:knowledge_commitment<T1,T2>) ->Self
     let mut  T1_zero_special = T1::zero();
     T1_zero_special.to_special();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         if !vec[i].g.is_zero()
         {
@@ -222,10 +222,10 @@ pub fn mixed_add(&self,&other:knowledge_commitment<T1,T2>) ->Self
     g_vec.clear();
 
     // exactly the same thing, but for h:
-    let h_vec=Vec::with_capicity(vec.size());
+    let h_vec=Vec::with_capicity(vec.len());
     
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         if !vec[i].h.is_zero()
         {
@@ -238,7 +238,7 @@ pub fn mixed_add(&self,&other:knowledge_commitment<T1,T2>) ->Self
     let mut T2_zero_special = T2::zero();
     T2_zero_special.to_special();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         if !vec[i].h.is_zero()
         {

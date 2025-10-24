@@ -29,7 +29,7 @@ use crate::algebra::field_utils::bigint;
    class Fp_model : public Field<Fp_model> ... */
 // template<typename T>
 // class Field {
-// public:
+// 
 // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     // static long long add_cnt;
     // static long long sub_cnt;

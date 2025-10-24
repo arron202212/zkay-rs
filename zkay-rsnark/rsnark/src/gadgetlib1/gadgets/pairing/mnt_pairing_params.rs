@@ -19,11 +19,11 @@
 use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
 use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
-use crate::gadgetlib1::gadgets/fields/fp2_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp3_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp4_gadgets;
-use crate::gadgetlib1::gadgets/fields/fp6_gadgets;
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets::fields/fp2_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp3_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp4_gadgets;
+use crate::gadgetlib1::gadgets::fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
 
 
 
@@ -44,7 +44,7 @@ class mnt6_final_exp_gadget;
  */
 template<>
 class pairing_selector<ffec::mnt4_pp> {
-public:
+
     type ffec::Fr<ffec::mnt4_pp> FieldT;
     type ffec::Fqe<ffec::mnt6_pp> FqeT;
     type ffec::Fqk<ffec::mnt6_pp> FqkT;
@@ -73,7 +73,7 @@ public:
  */
 template<>
 class pairing_selector<ffec::mnt6_pp> {
-public:
+
     type ffec::Fr<ffec::mnt6_pp> FieldT;
 
     type ffec::Fqe<ffec::mnt4_pp> FqeT;

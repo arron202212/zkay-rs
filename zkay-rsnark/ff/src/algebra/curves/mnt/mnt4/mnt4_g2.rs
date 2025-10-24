@@ -24,7 +24,7 @@
 // // std::istream& operator>>(std::istream &, mnt4_G2&);
 
 // pub struct mnt4_G2 {
-// // public:
+// // 
 // // // #ifdef PROFILE_OP_COUNTS
 // //     static long long add_cnt;
 // //     static long long dbl_cnt;
@@ -401,7 +401,7 @@
 // void mnt4_G2::batch_to_special_all_non_zeros(std::vector<mnt4_G2> &vec)
 // {
 //     std::vector<mnt4_Fq2> Z_vec;
-//     Z_vec.reserve(vec.size());
+//     Z_vec.reserve(vec.len());
 
 //     for el in &vec
 //     {
@@ -411,7 +411,7 @@
 
 //     const mnt4_Fq2 one = mnt4_Fq2::one();
 
-//     for i in 0..vec.size()
+//     for i in 0..vec.len()
 //     {
 //         vec[i] = mnt4_G2(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
 //     }

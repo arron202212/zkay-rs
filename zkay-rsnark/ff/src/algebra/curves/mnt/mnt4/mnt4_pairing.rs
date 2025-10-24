@@ -265,12 +265,12 @@
 //         << prec_Q.QY2  << OUTPUT_SEPARATOR
 //         << prec_Q.QX_over_twist << OUTPUT_SEPARATOR
 //         << prec_Q.QY_over_twist << "\n";
-//     out << prec_Q.dbl_coeffs.size() << "\n";
+//     out << prec_Q.dbl_coeffs.len() << "\n";
 //     for dc in &prec_Q.dbl_coeffs
 //     {
 //         out << dc << OUTPUT_NEWLINE;
 //     }
-//     out << prec_Q.add_coeffs.size() << "\n";
+//     out << prec_Q.add_coeffs.len() << "\n";
 //     for ac in &prec_Q.add_coeffs
 //     {
 //         out << ac << OUTPUT_NEWLINE;
@@ -408,7 +408,7 @@
 //     bool found_nonzero = false;
 
 //     std::vector<long> NAF = find_wnaf(1, loop_count);
-//     for i in ( 0..=(long) NAF.size() - 1).rev()
+//     for i in ( 0..=(long) NAF.len() - 1).rev()
 //     {
 //         if !found_nonzero
 //         {
@@ -482,7 +482,7 @@
 //     const bigint<mnt4_Fr::num_limbs> &loop_count = mnt4_ate_loop_count;
 
 //     std::vector<long> NAF = find_wnaf(1, loop_count);
-//     for i in ( 0..=(long) NAF.size() - 1).rev()
+//     for i in ( 0..=(long) NAF.len() - 1).rev()
 //     {
 //         if !found_nonzero
 //         {

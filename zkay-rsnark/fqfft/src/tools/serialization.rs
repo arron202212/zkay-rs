@@ -178,7 +178,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 
 // inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v)
 // {
-//     out << v.size() << "\n";
+//     out << v.len() << "\n";
 //     for b in &v
 //     {
 //         output_bool(out, b);
@@ -214,7 +214,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
-//     out << v.size() << "\n";
+//     out << v.len() << "\n";
 //     for t in &v
 //     {
 //         out << t << OUTPUT_NEWLINE;
@@ -246,7 +246,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // template<typename T1, typename T2>
 // std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m)
 // {
-//     out << m.size() << "\n";
+//     out << m.len() << "\n";
 
 //     for it in &m
 //     {
@@ -282,7 +282,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // template<typename T>
 // std::ostream& operator<<(std::ostream& out, const std::set<T> &s)
 // {
-//     out << s.size() << "\n";
+//     out << s.len() << "\n";
 
 //     for el in &s
 //     {

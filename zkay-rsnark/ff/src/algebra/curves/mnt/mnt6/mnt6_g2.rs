@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream &, const mnt6_G2&);
 std::istream& operator>>(std::istream &, mnt6_G2&);
 
 class mnt6_G2 {
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -599,7 +599,7 @@ std::istream& operator>>(std::istream &in, mnt6_G2 &g)
 void mnt6_G2::batch_to_special_all_non_zeros(std::vector<mnt6_G2> &vec)
 {
     std::vector<mnt6_Fq3> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -609,7 +609,7 @@ void mnt6_G2::batch_to_special_all_non_zeros(std::vector<mnt6_G2> &vec)
 
     const mnt6_Fq3 one = mnt6_Fq3::one();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         vec[i] = mnt6_G2(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
     }

@@ -19,17 +19,17 @@
 // #define R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 
 use crate::gadgetlib1::gadgets::basic_gadgets;
-use crate::gadgetlib1::gadgets/curves/weierstrass_g1_gadget;
-use crate::gadgetlib1::gadgets/curves/weierstrass_g2_gadget;
-use crate::gadgetlib1::gadgets/pairing/pairing_checks;
-use crate::gadgetlib1::gadgets/pairing/pairing_params;
+use crate::gadgetlib1::gadgets::curves/weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets::curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets::pairing::pairing_checks;
+use crate::gadgetlib1::gadgets::pairing::pairing_params;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
 
 
 template<typename ppT>
 class r1cs_ppzksnark_proof_variable : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<G1_variable<ppT> > g_A_g;
@@ -58,7 +58,7 @@ public:
 
 template<typename ppT>
 class r1cs_ppzksnark_verification_key_variable : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<G2_variable<ppT> > alphaA_g2;
@@ -104,7 +104,7 @@ public:
 
 template<typename ppT>
 class r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<G1_variable<ppT> > encoded_IC_base;
@@ -128,7 +128,7 @@ public:
 
 template<typename ppT>
 class r1cs_ppzksnark_verifier_process_vk_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<precompute_G1_gadget<ppT> > compute_vk_alphaB_g1_precomp;
@@ -153,7 +153,7 @@ public:
 
 template<typename ppT>
 class r1cs_ppzksnark_online_verifier_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> pvk;
@@ -224,7 +224,7 @@ public:
 
 template<typename ppT>
 class r1cs_ppzksnark_verifier_gadget : public gadget<ffec::Fr<ppT> > {
-public:
+
     type ffec::Fr<ppT> FieldT;
 
     std::shared_ptr<r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> > pvk;
@@ -245,7 +245,7 @@ public:
 
 
 
-use crate::gadgetlib1::gadgets/verifiers/r1cs_ppzksnark_verifier_gadget;
+use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget;
 
 //#endif // R1CS_PPZKSNARK_VERIFIER_GADGET_HPP_
 /** @file
@@ -288,16 +288,16 @@ r1cs_ppzksnark_proof_variable<ppT>::r1cs_ppzksnark_proof_variable(protoboard<Fie
     all_G1_vars = { g_A_g, g_A_h, g_B_h, g_C_g, g_C_h, g_H,g_K };
     all_G2_vars = { g_B_g };
 
-    all_G1_checkers.resize(all_G1_vars.size());
+    all_G1_checkers.resize(all_G1_vars.len());
 
-    for i in 0..all_G1_vars.size()
+    for i in 0..all_G1_vars.len()
     {
         all_G1_checkers[i].reset(new G1_checker_gadget<ppT>(pb, *all_G1_vars[i], FMT(annotation_prefix, " all_G1_checkers_{}", i)));
     }
     G2_checker.reset(new G2_checker_gadget<ppT>(pb, *g_B_g, FMT(annotation_prefix, " G2_checker")));
 
-    assert!(all_G1_vars.size() == num_G1);
-    assert!(all_G2_vars.size() == num_G2);
+    assert!(all_G1_vars.len() == num_G1);
+    assert!(all_G2_vars.len() == num_G2);
 }
 
 template<typename ppT>
@@ -320,15 +320,15 @@ void r1cs_ppzksnark_proof_variable<ppT>::generate_r1cs_witness(const r1cs_ppzksn
     G1_elems = { proof.g_A.g, proof.g_A.h, proof.g_B.h, proof.g_C.g, proof.g_C.h, proof.g_H, proof.g_K };
     G2_elems = { proof.g_B.g };
 
-    assert!(G1_elems.size() == all_G1_vars.size());
-    assert!(G2_elems.size() == all_G2_vars.size());
+    assert!(G1_elems.len() == all_G1_vars.len());
+    assert!(G2_elems.len() == all_G2_vars.len());
 
-    for i in 0..G1_elems.size()
+    for i in 0..G1_elems.len()
     {
         all_G1_vars[i]->generate_r1cs_witness(G1_elems[i]);
     }
 
-    for i in 0..G2_elems.size()
+    for i in 0..G2_elems.len()
     {
         all_G2_vars[i]->generate_r1cs_witness(G2_elems[i]);
     }
@@ -361,7 +361,7 @@ r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_ppzksnark_verification_key_v
     const size_t num_G1 = 2 + (input_size + 1);
     const size_t num_G2 = 5;
 
-    assert!(all_bits.size() == (G1_variable<ppT>::size_in_bits() * num_G1 + G2_variable<ppT>::size_in_bits() * num_G2));
+    assert!(all_bits.len() == (G1_variable<ppT>::size_in_bits() * num_G1 + G2_variable<ppT>::size_in_bits() * num_G2));
 
     self.alphaA_g2.reset(new G2_variable<ppT>(pb, FMT(annotation_prefix, " alphaA_g2")));
     self.alphaB_g1.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " alphaB_g1")));
@@ -394,9 +394,9 @@ r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_ppzksnark_verification_key_v
         all_vars.insert(all_vars.end(), G2_var->all_vars.begin(), G2_var->all_vars.end());
     }
 
-    assert!(all_G1_vars.size() == num_G1);
-    assert!(all_G2_vars.size() == num_G2);
-    assert!(all_vars.size() == (num_G1 * G1_variable<ppT>::num_variables() + num_G2 * G2_variable<ppT>::num_variables()));
+    assert!(all_G1_vars.len() == num_G1);
+    assert!(all_G2_vars.len() == num_G2);
+    assert!(all_vars.len() == (num_G1 * G1_variable<ppT>::num_variables() + num_G2 * G2_variable<ppT>::num_variables()));
 
     packer.reset(new multipacking_gadget<FieldT>(pb, all_bits, all_vars, FieldT::size_in_bits(), FMT(annotation_prefix, " packer")));
 }
@@ -416,7 +416,7 @@ void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const 
     G1_elems = { vk.alphaB_g1, vk.gamma_beta_g1 };
     G2_elems = { vk.alphaA_g2, vk.alphaC_g2, vk.gamma_g2, vk.gamma_beta_g2, vk.rC_Z_g2 };
 
-    assert!(vk.encoded_IC_query.rest.indices.size() == input_size);
+    assert!(vk.encoded_IC_query.rest.indices.len() == input_size);
     G1_elems.push(vk.encoded_IC_query.first);
     for i in 0..input_size
     {
@@ -424,15 +424,15 @@ void r1cs_ppzksnark_verification_key_variable<ppT>::generate_r1cs_witness(const 
         G1_elems.push(vk.encoded_IC_query.rest.values[i]);
     }
 
-    assert!(G1_elems.size() == all_G1_vars.size());
-    assert!(G2_elems.size() == all_G2_vars.size());
+    assert!(G1_elems.len() == all_G1_vars.len());
+    assert!(G2_elems.len() == all_G2_vars.len());
 
-    for i in 0..G1_elems.size()
+    for i in 0..G1_elems.len()
     {
         all_G1_vars[i]->generate_r1cs_witness(G1_elems[i]);
     }
 
-    for i in 0..G2_elems.size()
+    for i in 0..G2_elems.len()
     {
         all_G2_vars[i]->generate_r1cs_witness(G2_elems[i]);
     }
@@ -469,7 +469,7 @@ ffec::bit_vector r1cs_ppzksnark_verification_key_variable<ppT>::get_verification
 {
     type ffec::Fr<ppT> FieldT;
 
-    const size_t input_size_in_elts = r1cs_vk.encoded_IC_query.rest.indices.size(); // this might be approximate for bound verification keys, however they are not supported by r1cs_ppzksnark_verification_key_variable
+    const size_t input_size_in_elts = r1cs_vk.encoded_IC_query.rest.indices.len(); // this might be approximate for bound verification keys, however they are not supported by r1cs_ppzksnark_verification_key_variable
     const size_t vk_size_in_bits = r1cs_ppzksnark_verification_key_variable<ppT>::size_in_bits(input_size_in_elts);
 
     protoboard<FieldT> pb;
@@ -493,8 +493,8 @@ r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT>::r1cs_
                                                                                                                                                 const std::string &annotation_prefix)
 {
     encoded_IC_base.reset(new G1_variable<ppT>(pb, r1cs_vk.encoded_IC_query.first, FMT(annotation_prefix, " encoded_IC_base")));
-    encoded_IC_query.resize(r1cs_vk.encoded_IC_query.rest.indices.size());
-    for i in 0..r1cs_vk.encoded_IC_query.rest.indices.size()
+    encoded_IC_query.resize(r1cs_vk.encoded_IC_query.rest.indices.len());
+    for i in 0..r1cs_vk.encoded_IC_query.rest.indices.len()
     {
         assert!(r1cs_vk.encoded_IC_query.rest.indices[i] == i);
         encoded_IC_query[i].reset(new G1_variable<ppT>(pb, r1cs_vk.encoded_IC_query.rest.values[i], FMT(annotation_prefix, " encoded_IC_query")));
@@ -584,12 +584,12 @@ r1cs_ppzksnark_online_verifier_gadget<ppT>::r1cs_ppzksnark_online_verifier_gadge
     elt_size(elt_size),
     proof(proof),
     result(result),
-    input_len(input.size())
+    input_len(input.len())
 {
     // accumulate input and store base in acc
     acc.reset(new G1_variable<ppT>(pb, FMT(annotation_prefix, " acc")));
     std::vector<G1_variable<ppT> > IC_terms;
-    for i in 0..pvk.encoded_IC_query.size()
+    for i in 0..pvk.encoded_IC_query.len()
     {
         IC_terms.push(*(pvk.encoded_IC_query[i]));
     }
@@ -661,13 +661,13 @@ r1cs_ppzksnark_online_verifier_gadget<ppT>::r1cs_ppzksnark_online_verifier_gadge
 template<typename ppT>
 void r1cs_ppzksnark_online_verifier_gadget<ppT>::generate_r1cs_constraints()
 {
-    PROFILE_CONSTRAINTS(self.pb, "accumulate verifier input")
+    PROFILE_CONSTRAINTS(self.pb, "accumulate verifier input");
     {
-        ffec::print_indent(); print!("* Number of bits as an input to verifier gadget: {}\n", input.size());
+        ffec::print_indent(); print!("* Number of bits as an input to verifier gadget: {}\n", input.len());
         accumulate_input->generate_r1cs_constraints();
     }
 
-    PROFILE_CONSTRAINTS(self.pb, "rest of the verifier")
+    PROFILE_CONSTRAINTS(self.pb, "rest of the verifier");
     {
         compute_proof_g_A_g_acc->generate_r1cs_constraints();
         compute_proof_g_A_g_acc_C->generate_r1cs_constraints();
@@ -741,12 +741,12 @@ r1cs_ppzksnark_verifier_gadget<ppT>::r1cs_ppzksnark_verifier_gadget(protoboard<F
 template<typename ppT>
 void r1cs_ppzksnark_verifier_gadget<ppT>::generate_r1cs_constraints()
 {
-    PROFILE_CONSTRAINTS(self.pb, "precompute pvk")
+    PROFILE_CONSTRAINTS(self.pb, "precompute pvk");
     {
         compute_pvk->generate_r1cs_constraints();
     }
 
-    PROFILE_CONSTRAINTS(self.pb, "online verifier")
+    PROFILE_CONSTRAINTS(self.pb, "online verifier");
     {
         online_verifier->generate_r1cs_constraints();
     }

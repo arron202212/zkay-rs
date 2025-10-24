@@ -28,7 +28,7 @@ fn FMT(s:&String,c:&str){
 pub struct packing_gadget {
 // private:: public gadget<FieldT> 
     /* no internal variables */
-// public:
+// 
       bits:pb_linear_combination_array<FieldT> ,
       packed:pb_linear_combination<FieldT>,
 }
@@ -54,7 +54,7 @@ pub struct packing_gadget {
 pub struct  multipacking_gadget {
 // private:: public gadget<FieldT> 
 packers:    Vec<packing_gadget<FieldT> >,
-// public:
+// 
 bits:     pb_linear_combination_array<FieldT>,
 packed_vars:     pb_linear_combination_array<FieldT>,
 
@@ -75,7 +75,7 @@ last_chunk_size:   usize,
 
 // 
 pub struct  field_vector_copy_gadget {
-// public:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 source:     pb_variable_array<FieldT>,
 target:     pb_variable_array<FieldT>,
 do_copy:     pb_linear_combination<FieldT>,
@@ -91,7 +91,7 @@ do_copy:     pb_linear_combination<FieldT>,
 
 // 
 pub struct  bit_vector_copy_gadget  {
-// public:: public gadget<FieldT>
+// : public gadget<FieldT>
 source_bits:     pb_variable_array<FieldT>,
 target_bits:     pb_variable_array<FieldT>,
 do_copy:     pb_linear_combination<FieldT>,
@@ -120,7 +120,7 @@ num_chunks:     usize,
 pub struct  dual_variable_gadget  {
 // private:: public gadget<FieldT>
 consistency_check:    RcCell<packing_gadget<FieldT> >,
-// public:
+// 
 packed:    pb_variable<FieldT>,
 bits:    pb_variable_array<FieldT>,
 }
@@ -185,7 +185,7 @@ impl dual_variable_gadget  {
 pub struct  disjunction_gadget {
 // private:: public gadget<FieldT> 
 inv:    pb_variable<FieldT>,
-// public:
+// 
 inputs:     pb_variable_array<FieldT>,
 output:     pb_variable<FieldT>,
 }
@@ -197,7 +197,7 @@ impl disjunction_gadget {
         
     {
 // gadget<FieldT>(pb, annotation_prefix), inputs(inputs), output(output)
-        assert!(inputs.size() >= 1);
+        assert!(inputs.len() >= 1);
         inv.allocate(pb, FMT(annotation_prefix, " inv"));
     }
 
@@ -212,7 +212,7 @@ impl disjunction_gadget {
 pub struct  conjunction_gadget {
 // private:: public gadget<FieldT> 
 inv:    pb_variable<FieldT>,
-// public:
+// 
 inputs:     pb_variable_array<FieldT>,
 output:     pb_variable<FieldT>,
 }
@@ -224,7 +224,7 @@ impl conjunction_gadget {
        
     {
 //  gadget<FieldT>(pb, annotation_prefix), inputs(inputs), output(output)
-        assert!(inputs.size() >= 1);
+        assert!(inputs.len() >= 1);
         inv.allocate(pb, FMT(annotation_prefix, " inv"));
     }
 
@@ -244,7 +244,7 @@ pack_alpha:    RcCell<packing_gadget<FieldT> >,
 
 all_zeros_test:    RcCell<disjunction_gadget<FieldT> >,
 not_all_zeros:    pb_variable<FieldT>,
-// public:
+// 
 n:     usize,
 A:     pb_linear_combination<FieldT>,
 B:     pb_linear_combination<FieldT>,
@@ -288,7 +288,7 @@ pub struct  inner_product_gadget {
 // private:: public gadget<FieldT> 
     /* S_i = \sum_{k=0}^{i+1} A[i] * B[i] */
 S:    pb_variable_array<FieldT>,
-// public:
+// 
 A:     pb_linear_combination_array<FieldT>,
 B:     pb_linear_combination_array<FieldT>,
 result:     pb_variable<FieldT>,
@@ -302,10 +302,10 @@ result:     pb_variable<FieldT>,
        
     {
 //  gadget<FieldT>(pb, annotation_prefix), A(A), B(B), result(result)
-        assert!(A.size() >= 1);
-        assert!(A.size() == B.size());
+        assert!(A.len() >= 1);
+        assert!(A.len() == B.len());
 
-        S.allocate(pb, A.size()-1, FMT(annotation_prefix, " S"));
+        S.allocate(pb, A.len()-1, FMT(annotation_prefix, " S"));
     }
 
     // pub fn generate_r1cs_constraints();
@@ -323,11 +323,11 @@ pub struct  loose_multiplexing_gadget {
   index in bounds && success_flag = 1 -> result is correct
   however if index is in bounds we can also set success_flag to 0 (and then result will be forced to be 0)
 */
-// public:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 alpha:    pb_variable_array<FieldT>,
 // private:
 compute_result:    RcCell<inner_product_gadget<FieldT> >,
-// public:
+// 
 arr:     pb_linear_combination_array<FieldT>,
 index:     pb_variable<FieldT>,
 result:     pb_variable<FieldT>,
@@ -343,7 +343,7 @@ impl loose_multiplexing_gadget {
         
     {
 // gadget<FieldT>(pb, annotation_prefix), arr(arr), index(index), result(result), success_flag(success_flag)
-        alpha.allocate(pb, arr.size(), FMT(annotation_prefix, " alpha"));
+        alpha.allocate(pb, arr.len(), FMT(annotation_prefix, " alpha"));
         compute_result.reset(inner_product_gadget::<FieldT>::new(pb, alpha, arr, result, FMT(annotation_prefix, " compute_result")));
     }
 
@@ -409,7 +409,7 @@ pub fn  generate_r1cs_constraints(enforce_bitness:bool)
 
     if enforce_bitness
     {
-        for i in 0..bits.size()
+        for i in 0..bits.len()
         {
             generate_boolean_r1cs_constraint::<FieldT>(self.pb, bits[i], FMT(annotation_prefix, " bitness_{}", i));
         }
@@ -420,7 +420,7 @@ pub fn  generate_r1cs_constraints(enforce_bitness:bool)
 pub fn  generate_r1cs_witness_from_packed()
 {
     packed.evaluate(self.pb);
-    assert!(self.pb.lc_val(packed).as_bigint().num_bits() <= bits.size()); // `bits` is large enough to represent this packed value
+    assert!(self.pb.lc_val(packed).as_bigint().num_bits() <= bits.len()); // `bits` is large enough to represent this packed value
     bits.fill_with_bits_of_field_element(self.pb, self.pb.lc_val(packed));
 }
 
@@ -443,13 +443,13 @@ pub fn new(pb:&protoboard<FieldT> ,
 {
 //   gadget<FieldT>(pb, annotation_prefix), bits(bits), packed_vars(packed_vars),
 //     chunk_size(chunk_size),
-//     num_chunks(div_ceil(bits.size(), chunk_size))
-    // last_chunk_size(bits.size() - (num_chunks-1) * chunk_size)
-    assert!(packed_vars.size() == num_chunks);
+//     num_chunks(div_ceil(bits.len(), chunk_size))
+    // last_chunk_size(bits.len() - (num_chunks-1) * chunk_size)
+    assert!(packed_vars.len() == num_chunks);
     for i in 0..num_chunks
     {
         packers.push(packing_gadget::<FieldT>(self.pb, pb_linear_combination_array::<FieldT>(bits.begin() + i * chunk_size,
-                                                                                                  bits.begin() + std::cmp::min((i+1) * chunk_size, bits.size())),
+                                                                                                  bits.begin() + std::cmp::min((i+1) * chunk_size, bits.len())),
                                                     packed_vars[i], FMT(annotation_prefix, " packers_{}", i)));
     }
 }
@@ -496,13 +496,13 @@ pub fn new(pb:protoboard<FieldT> ,
 
 {
 // gadget<FieldT>(pb, annotation_prefix), source(source), target(target), do_copy(do_copy)
-    assert!(source.size() == target.size());
+    assert!(source.len() == target.len());
 }
 
 
 pub fn  generate_r1cs_constraints()
 {
-    for i in 0..source.size()
+    for i in 0..source.len()
     {
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(do_copy, source[i] - target[i], 0),
                                      FMT(annotation_prefix, " copying_check_{}", i));
@@ -516,7 +516,7 @@ pub fn  generate_r1cs_witness()
     assert!(self.pb.lc_val(do_copy) == FieldT::one() || self.pb.lc_val(do_copy) == FieldT::zero());
     if self.pb.lc_val(do_copy) != FieldT::zero()
     {
-        for i in 0..source.size()
+        for i in 0..source.len()
         {
             self.pb.val(target[i]) = self.pb.val(source[i]);
         }
@@ -535,8 +535,8 @@ pub fn new(pb:protoboard<FieldT> ,
   
 {
 //   gadget<FieldT>(pb, annotation_prefix), source_bits(source_bits), target_bits(target_bits), do_copy(do_copy),
-//     chunk_size(chunk_size), num_chunks(div_ceil(source_bits.size(), chunk_size))
-    assert!(source_bits.size() == target_bits.size());
+//     chunk_size(chunk_size), num_chunks(div_ceil(source_bits.len(), chunk_size))
+    assert!(source_bits.len() == target_bits.len());
 
     packed_source.allocate(pb, num_chunks, FMT(annotation_prefix, " packed_source"));
     pack_source.reset(multipacking_gadget::<FieldT>::new(pb, source_bits, packed_source, chunk_size, FMT(annotation_prefix, " pack_source")));
@@ -563,7 +563,7 @@ pub fn  generate_r1cs_witness()
     assert!(self.pb.lc_val(do_copy) == FieldT::zero() || self.pb.lc_val(do_copy) == FieldT::one());
     if self.pb.lc_val(do_copy) == FieldT::one()
     {
-        for i in 0..source_bits.size()
+        for i in 0..source_bits.len()
         {
             self.pb.val(target_bits[i]) = self.pb.val(source_bits[i]);
         }
@@ -600,7 +600,7 @@ pub fn  generate_r1cs_constraints()
     /* inv * sum = output */
     let (mut  a1,mut b1,mut c1)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     a1.add_term(inv);
-    for i in 0..inputs.size()
+    for i in 0..inputs.len()
     {
         b1.add_term(inputs[i]);
     }
@@ -612,7 +612,7 @@ pub fn  generate_r1cs_constraints()
     let (mut  a2,mut b2,mut c2)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     a2.add_term(ONE);
     a2.add_term(output, -1);
-    for i in 0..inputs.size()
+    for i in 0..inputs.len()
     {
         b2.add_term(inputs[i]);
     }
@@ -626,7 +626,7 @@ pub fn  generate_r1cs_witness()
 {
     let mut  sum = FieldT::zero();
 
-    for i in 0..inputs.size()
+    for i in 0..inputs.len()
     {
         sum += self.pb.val(inputs[i]);
     }
@@ -691,8 +691,8 @@ pub fn  generate_r1cs_constraints()
     /* inv * (n-sum) = 1-output */
      let (a1, b1, c1)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     a1.add_term(inv);
-    b1.add_term(ONE, inputs.size());
-    for i in 0..inputs.size()
+    b1.add_term(ONE, inputs.len());
+    for i in 0..inputs.len()
     {
         b1.add_term(inputs[i], -1);
     }
@@ -705,8 +705,8 @@ pub fn  generate_r1cs_constraints()
          let (a2, b2, c2)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
 
     a2.add_term(output);
-    b2.add_term(ONE, inputs.size());
-    for i in 0..inputs.size()
+    b2.add_term(ONE, inputs.len());
+    for i in 0..inputs.len()
     {
         b2.add_term(inputs[i], -1);
     }
@@ -718,9 +718,9 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    let mut  sum = FieldT::from(inputs.size());
+    let mut  sum = FieldT::from(inputs.len());
 
-    for i in 0..inputs.size()
+    for i in 0..inputs.len()
     {
         sum -= self.pb.val(inputs[i]);
     }
@@ -872,11 +872,11 @@ pub fn  generate_r1cs_constraints()
       S[0] = A[0] * B[0]
       S[i+1] - S[i] = A[i] * B[i]
     */
-    for i in 0..A.size()
+    for i in 0..A.len()
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint::<FieldT>(A[i], B[i],
-                                    (if i == A.size()-1  {result} else {S[i] + ( if i == 0  {0 * ONE} else {-S[i-1]})})),
+                                    (if i == A.len()-1  {result} else {S[i] + ( if i == 0  {0 * ONE} else {-S[i-1]})})),
             FMT(annotation_prefix, " S_{}", i));
     }
 }
@@ -885,13 +885,13 @@ pub fn  generate_r1cs_constraints()
 pub fn  generate_r1cs_witness()
 {
     let mut  total = FieldT::zero();
-    for i in 0..A.size()
+    for i in 0..A.len()
     {
         A[i].evaluate(self.pb);
         B[i].evaluate(self.pb);
 
         total += self.pb.lc_val(A[i]) * self.pb.lc_val(B[i]);
-        self.pb.val(if i == A.size()-1  {result }else  {S[i]}) = total;
+        self.pb.val(if i == A.len()-1  {result }else  {S[i]}) = total;
     }
 }
 }
@@ -947,7 +947,7 @@ impl loose_multiplexing_gadget<FieldT>{
 pub fn  generate_r1cs_constraints()
 {
     /* \alpha_i (index - i) = 0 */
-    for i in 0..arr.size()
+    for i in 0..arr.len()
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint::<FieldT>(alpha[i], index - i, 0),
@@ -957,7 +957,7 @@ pub fn  generate_r1cs_constraints()
     /* 1 * (\sum \alpha_i) = success_flag */
     let ( a, b, c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
     a.add_term(ONE);
-    for i in 0..arr.size()
+    for i in 0..arr.len()
     {
         b.add_term(alpha[i]);
     }
@@ -978,11 +978,11 @@ pub fn  generate_r1cs_witness()
     /* assumes that idx can be fit in ulong; true for our purposes for now */
      let mut  valint = self.pb.val(index).as_bigint();
     let mut  idx = valint.as_ulong();
-    let  arrsize= bigint::<FieldT::num_limbs>::new(arr.size());
+    let  arrsize= bigint::<FieldT::num_limbs>::new(arr.len());
 
-    if idx >= arr.size() || mpn_cmp(valint.data, arrsize.data, FieldT::num_limbs) >= 0
+    if idx >= arr.len() || mpn_cmp(valint.data, arrsize.data, FieldT::num_limbs) >= 0
     {
-        for i in 0..arr.size()
+        for i in 0..arr.len()
         {
             self.pb.val(alpha[i]) = FieldT::zero();
         }
@@ -991,7 +991,7 @@ pub fn  generate_r1cs_witness()
     }
     else
     {
-        for i in 0..arr.size()
+        for i in 0..arr.len()
         {
             self.pb.val(alpha[i]) = if i == idx {FieldT::one()}else{FieldT::zero()};
         }
@@ -1056,7 +1056,7 @@ pub fn create_linear_combination_constraints< FieldT,  VarT>(pb:&protoboard<Fiel
                                            target:&VarT,
                                            annotation_prefix:&String)
 {
-    for i in 0..base.size()
+    for i in 0..base.len()
     {
         let ( a, b, c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
 
@@ -1080,7 +1080,7 @@ pub fn create_linear_combination_witness< FieldT,  VarT>(pb:&protoboard<FieldT> 
                                        v:&Vec<(VarT,FieldT) >,
                                        target:&VarT)
 {
-    for i in 0..base.size()
+    for i in 0..base.len()
     {
         pb.val(target.all_vars[i]) = base[i];
 

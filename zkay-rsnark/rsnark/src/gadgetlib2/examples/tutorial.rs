@@ -95,7 +95,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // */
 
 // class NAND_Gadget : public Gadget {
-// public:
+// 
 //     // This is a convention we use to always create gadgets as if from a factory class. This will
 //     // be needed later for gadgets which have different implementations in different fields.
 //     static GadgetPtr create(ProtoboardPtr pb,
@@ -242,7 +242,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // */
 
 // class HashDifficultyEnforcer_Gadget : public Gadget {
-// public:
+// 
 //     static GadgetPtr create(ProtoboardPtr pb,
 //                             const MultiPackedWord& hashValue,
 //                             const size_t difficultyBits);
@@ -276,7 +276,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // void HashDifficultyEnforcer_Gadget::init() {
 //     // because we are using a prime field with large characteristic, we can assume a 64 bit value
 //     // fits in the first element of a multipacked variable.
-//     GADGETLIB_ASSERT(hashValue_.multipacked().size() == 1, "multipacked word size too large");
+//     GADGETLIB_ASSERT(hashValue_.multipacked().len() == 1, "multipacked word size too large");
 //     // A DualWord_Gadget's constraints assert that the unpacked and packed values represent the
 //     // same integer element. The generateWitness() method has two modes, one for packing (taking the
 //     // bit representation as input) and one for unpacking (creating the bit representation from
@@ -370,7 +370,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // // Convention is: class {FieldType}_{GadgetName}_Gadget
 // class R1P_VerifyTransactionAmounts_Gadget : public VerifyTransactionAmounts_GadgetBase,
 //                                             public R1P_Gadget {
-// public:
+// 
 //     void generateConstraints();
 //     void generateWitness();
 

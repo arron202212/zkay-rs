@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream &, const alt_bn128_G2&);
 std::istream& operator>>(std::istream &, alt_bn128_G2&);
 
 class alt_bn128_G2 {
-public:
+
 // #ifdef PROFILE_OP_COUNTS
     static long long add_cnt;
     static long long dbl_cnt;
@@ -547,7 +547,7 @@ std::istream& operator>>(std::istream &in, alt_bn128_G2 &g)
 void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec)
 {
     std::vector<alt_bn128_Fq2> Z_vec;
-    Z_vec.reserve(vec.size());
+    Z_vec.reserve(vec.len());
 
     for el in &vec
     {
@@ -557,7 +557,7 @@ void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec
 
     const alt_bn128_Fq2 one = alt_bn128_Fq2::one();
 
-    for i in 0..vec.size()
+    for i in 0..vec.len()
     {
         alt_bn128_Fq2 Z2 = Z_vec[i].squared();
         alt_bn128_Fq2 Z3 = Z_vec[i] * Z2;
