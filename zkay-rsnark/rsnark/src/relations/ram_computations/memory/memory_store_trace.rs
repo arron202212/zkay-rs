@@ -20,20 +20,20 @@ use std::collections::HashMap;
  * A pair consisting of an address and a value.
  * It represents a memory store.
  */
-type address_and_value=(size_t, size_t) ;
+type address_and_value=(usize, usize) ;
 
 /**
  * A list in which each component consists of a timestamp and a memory store.
  */
 pub struct  memory_store_trace {
-// private:
-     entries:HashMap<size_t, address_and_value>,
+// 
+     entries:HashMap<usize, address_and_value>,
 
 // 
 //     memory_store_trace();
-//     address_and_value get_trace_entry(timestamp:size_t,) const;
-//     HashMap<size_t, address_and_value> get_all_trace_entries() const;
-//     void set_trace_entry(timestamp:size_t, av:&address_and_value);
+//     address_and_value get_trace_entry(timestamp:usize,) const;
+//     HashMap<usize, address_and_value> get_all_trace_entries() const;
+//     pub fn  set_trace_entry(timestamp:usize, av:&address_and_value);
 
 //     memory_contents as_memory_contents() const;
 }
@@ -63,22 +63,22 @@ pub fn new()->Self
     Self{}
 }
 
- pub fn get_trace_entry(timestamp:size_t,) ->address_and_value
+ pub fn get_trace_entry(timestamp:usize,) ->address_and_value
 {
     if let  Some(it) = entries.find(timestamp){
         it.1
     }else{
         (0,0)
     }
-    // return if it != entries.end() {it->second} else{std::make_pair<size_t, size_t>(0, 0)};
+    // return if it != entries.end() {it.1} else{std::make_pair<usize, usize>(0, 0)};
 }
 
- pub fn get_all_trace_entries() ->HashMap<size_t, address_and_value>
+ pub fn get_all_trace_entries() ->HashMap<usize, address_and_value>
 {
     return entries;
 }
 
- pub fn set_trace_entry(timestamp:size_t, av:&address_and_value)
+ pub fn set_trace_entry(timestamp:usize, av:&address_and_value)
 {
     entries[timestamp] = av;
 }

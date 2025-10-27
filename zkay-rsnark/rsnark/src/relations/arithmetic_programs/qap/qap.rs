@@ -23,7 +23,7 @@
 // #define QAP_HPP_
 
 // use  <map>
-// use  <memory>
+// 
 
 use fqfft::evaluation_domain::evaluation_domain;
 use std::collections::HashMap;
@@ -31,7 +31,7 @@ use rccell::RcCell;
 
 /* forward declaration */
 // 
-// class qap_witness;
+// pub struct qap_witness;
 
 /**
  * A QAP instance.
@@ -46,7 +46,7 @@ use rccell::RcCell;
  */
 // 
 pub struct qap_instance<FieldT> {
-// private:
+// 
     num_variables:usize,
     degree:usize,
     num_inputs:usize,
@@ -100,7 +100,7 @@ C_in_Lagrange_basis:   Vec<HashMap<usize, FieldT> >,
  */
 // 
 pub struct  qap_instance_evaluation<FieldT> {
-// private:
+// 
     num_variables:usize,
     degree:usize,
     num_inputs:usize,
@@ -152,7 +152,7 @@ domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
  */
 // 
 pub struct qap_witness<FieldT> {
-// private:
+// 
     num_variables:usize,
     degree:usize,
     num_inputs:usize,

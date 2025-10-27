@@ -42,7 +42,7 @@ TEST(gadgetLib2, Protoboard_unpackedWordAssignmentEqualsValue_R1P) {
 TEST(gadgetLib2, Protoboard_multipackedWordAssignmentEqualsValue_R1P) {
     initPublicParamsFromDefaultPp();
     auto pb = Protoboard::create(R1P);
-    const MultiPackedWord multipacked(8, R1P, "multipacked");
+    R1P:MultiPackedWord multipacked(8,, "multipacked");
     pb->val(multipacked[0]) = 42;
     ASSERT_TRUE(pb->multipackedWordAssignmentEqualsValue(multipacked, 42));
     ASSERT_FALSE(pb->multipackedWordAssignmentEqualsValue(multipacked, 43));
@@ -54,7 +54,7 @@ TEST(gadgetLib2, Protoboard_multipackedWordAssignmentEqualsValue_R1P) {
 TEST(gadgetLib2, Protoboard_dualWordAssignmentEqualsValue_R1P) {
     initPublicParamsFromDefaultPp();
     auto pb = Protoboard::create(R1P);
-    const DualWord dualword(8, R1P, "dualword");
+    R1P:DualWord dualword(8,, "dualword");
     pb->setDualWordValue(dualword, 42);
     ASSERT_TRUE(pb->dualWordAssignmentEqualsValue(dualword, 42));
     ASSERT_FALSE(pb->dualWordAssignmentEqualsValue(dualword, 43));

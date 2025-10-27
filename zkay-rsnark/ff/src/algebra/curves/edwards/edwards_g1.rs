@@ -10,87 +10,58 @@
 //#include <vector>
 
 use crate::algebra::curves::curve_utils;
-use crate::algebra::curves::edwards/edwards_init;
+use crate::algebra::curves::edwards::edwards_init;
 
 // namespace libff {
 
-class edwards_G1;
-std::ostream& operator<<(std::ostream &, const edwards_G1&);
-std::istream& operator>>(std::istream &, edwards_G1&);
 
-class edwards_G1 {
+
+pub struct  edwards_G1 {
 
 // #ifdef PROFILE_OP_COUNTS
-    static long long add_cnt;
-    static long long dbl_cnt;
+add_cnt:     i64,
+dbl_cnt:     i64,
 //#endif
-    static std::vector<std::size_t> wnaf_window_table;
-    static std::vector<std::size_t> fixed_base_exp_window_table;
-    static edwards_G1 G1_zero;
-    static edwards_G1 G1_one;
-    static bool initialized;
+wnaf_window_table:     Vec<std::usize>,
+fixed_base_exp_window_table:     Vec<std::usize>,
+G1_zero:     edwards_G1,
+G1_one:     edwards_G1,
+initialized:     bool,
 
-    edwards_Fq X, Y, Z;
-    edwards_G1();
-private:
-    edwards_G1(const edwards_Fq& X, const edwards_Fq& Y, const edwards_Fq& Z) : X(X), Y(Y), Z(Z) {};
+     X:edwards_Fq, Y:edwards_Fq, Z:edwards_Fq,
+
+}
+ type base_field=edwards_Fq;
+    type scalar_field=edwards_Fr;
+impl edwards_G1 {
+    pub fn new(X:edwards_Fq, Y:edwards_Fq, Z:edwards_Fq) ->Self  {Self{X, Y, Z}}
 
 
-    typedef edwards_Fq base_field;
-    typedef edwards_Fr scalar_field;
+   
     // using inverted coordinates
-    edwards_G1(const edwards_Fq& X, const edwards_Fq& Y) : X(Y), Y(X), Z(X*Y) {};
+    pub fn new2(X:edwards_Fq, Y:edwards_Fq) ->Self  {let Z=X*Y;Self{X, Y, Z}}
 
-    void print() const;
-    void print_coordinates() const;
+    pub fn  size_in_bits()->usize { return edwards_Fq::ceil_size_in_bits() + 1; }
+    pub fn   field_char()->bigint<base_field::num_limbs> { return base_field::field_char(); }
+    pub fn   order()->bigint<scalar_field::num_limbs> { return scalar_field::field_char(); }
 
-    void to_affine_coordinates();
-    void to_special();
-    bool is_special() const;
 
-    bool is_zero() const;
-
-    bool operator==(const edwards_G1 &other) const;
-    bool operator!=(const edwards_G1 &other) const;
-
-    edwards_G1 operator+(const edwards_G1 &other) const;
-    edwards_G1 operator-() const;
-    edwards_G1 operator-(const edwards_G1 &other) const;
-
-    edwards_G1 add(const edwards_G1 &other) const;
-    edwards_G1 mixed_add(const edwards_G1 &other) const;
-    edwards_G1 dbl() const;
-
-    bool is_well_formed() const;
-
-    static edwards_G1 zero();
-    static edwards_G1 one();
-    static edwards_G1 random_element();
-
-    static std::size_t size_in_bits() { return edwards_Fq::ceil_size_in_bits() + 1; }
-    static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
-    static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
-
-    friend std::ostream& operator<<(std::ostream &out, const edwards_G1 &g);
-    friend std::istream& operator>>(std::istream &in, edwards_G1 &g);
-
-    static void batch_to_special_all_non_zeros(std::vector<edwards_G1> &vec);
-};
-
-template<mp_size_t m>
-edwards_G1 operator*(const bigint<m> &lhs, const edwards_G1 &rhs)
-{
-    return scalar_mul<edwards_G1, m>(rhs, lhs);
 }
 
-template<mp_size_t m, const bigint<m>& modulus_p>
-edwards_G1 operator*(const Fp_model<m,modulus_p> &lhs, const edwards_G1 &rhs)
-{
-    return scalar_mul<edwards_G1, m>(rhs, lhs.as_bigint());
-}
+// 
+// edwards_G1 operator*(lhs:&bigint<m>, rhs:&edwards_G1)
+// {
+//     return scalar_mul<edwards_G1, m>(rhs, lhs);
+// }
 
-std::ostream& operator<<(std::ostream& out, const std::vector<edwards_G1> &v);
-std::istream& operator>>(std::istream& in, std::vector<edwards_G1> &v);
+// 
+// edwards_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&edwards_G1)
+// {
+//     return scalar_mul<edwards_G1, m>(rhs, lhs.as_bigint());
+// }
+
+// std::ostream& operator<<(std::ostream& out, v:&Vec<edwards_G1>);
+// std::istream& operator>>(std::istream& in, Vec<edwards_G1> &v);
 
 // } // namespace libff
 //#endif // EDWARDS_G1_HPP_
@@ -101,214 +72,156 @@ std::istream& operator>>(std::istream& in, std::vector<edwards_G1> &v);
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use crate::algebra::curves::edwards/edwards_g1;
+// use crate::algebra::curves::edwards::edwards_g1;
 
 // namespace libff {
 
-using std::size_t;
+// using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
-long long edwards_G1::add_cnt = 0;
-long long edwards_G1::dbl_cnt = 0;
+// i64 edwards_G1::add_cnt = 0;
+// i64 edwards_G1::dbl_cnt = 0;
 //#endif
 
-std::vector<size_t> edwards_G1::wnaf_window_table;
-std::vector<size_t> edwards_G1::fixed_base_exp_window_table;
-edwards_G1 edwards_G1::G1_zero = {};
-edwards_G1 edwards_G1::G1_one = {};
-bool edwards_G1::initialized = false;
+// Vec<usize> edwards_G1::wnaf_window_table;
+// Vec<usize> edwards_G1::fixed_base_exp_window_table;
+// edwards_G1 edwards_G1::G1_zero = {};
+// edwards_G1 edwards_G1::G1_one = {};
+// bool edwards_G1::initialized = false;
 
-edwards_G1::edwards_G1()
+impl edwards_G1{
+pub fn new()
 {
     if initialized
     {
-        this->X = G1_zero.X;
-        this->Y = G1_zero.Y;
-        this->Z = G1_zero.Z;
+        self.X = G1_zero.X;
+        self.Y = G1_zero.Y;
+        self.Z = G1_zero.Z;
     }
 }
 
-void edwards_G1::print() const
+pub fn print() const
 {
-    if this->is_zero()
+    if self.is_zero()
     {
         print!("O\n");
     }
     else
     {
-        edwards_G1 copy(*this);
+        let  copy=self.clone();
         copy.to_affine_coordinates();
-        print!("(%Nd , %Nd)\n",
-                   copy.X.as_bigint().data, edwards_Fq::num_limbs,
-                   copy.Y.as_bigint().data, edwards_Fq::num_limbs);
+        print!("({:N$} , {:N$}\n",
+                   copy.X.as_bigint().data, 
+                   copy.Y.as_bigint().data, N=edwards_Fq::num_limbs);
     }
 }
 
-void edwards_G1::print_coordinates() const
+pub fn print_coordinates() 
 {
-    if this->is_zero()
+    if self.is_zero()
     {
         print!("O\n");
     }
     else
     {
-        print!("(%Nd : %Nd : %Nd)\n",
-                   this->X.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Y.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Z.as_bigint().data, edwards_Fq::num_limbs);
+        print!("({:N$} : {:N$} : {:N$})\n",
+                   self.X.as_bigint().data, 
+                   self.Y.as_bigint().data, 
+                   self.Z.as_bigint().data, N=edwards_Fq::num_limbs);
     }
 }
 
-void edwards_G1::to_affine_coordinates()
+pub fn to_affine_coordinates()
 {
-    if this->is_zero()
+    if self.is_zero()
     {
-        this->X = edwards_Fq::zero();
-        this->Y = edwards_Fq::one();
-        this->Z = edwards_Fq::one();
+        self.X = edwards_Fq::zero();
+        self.Y = edwards_Fq::one();
+        self.Z = edwards_Fq::one();
     }
     else
     {
         // go from inverted coordinates to projective coordinates
-        edwards_Fq tX = this->Y * this->Z;
-        edwards_Fq tY = this->X * this->Z;
-        edwards_Fq tZ = this->X * this->Y;
+        let tX = self.Y * self.Z;
+        let tY = self.X * self.Z;
+        let tZ = self.X * self.Y;
         // go from projective coordinates to affine coordinates
-        edwards_Fq tZ_inv = tZ.inverse();
-        this->X = tX * tZ_inv;
-        this->Y = tY * tZ_inv;
-        this->Z = edwards_Fq::one();
+        let tZ_inv = tZ.inverse();
+        self.X = tX * tZ_inv;
+        self.Y = tY * tZ_inv;
+        self.Z = edwards_Fq::one();
     }
 }
 
-void edwards_G1::to_special()
+pub fn to_special()
 {
-    if this->Z.is_zero()
+    if self.Z.is_zero()
     {
         return;
     }
 
 // #ifdef DEBUG
-    const edwards_G1 copy(*this);
+    // const edwards_G1 copy(self.clone());
 //#endif
 
-    edwards_Fq Z_inv = this->Z.inverse();
-    this->X = this->X * Z_inv;
-    this->Y = this->Y * Z_inv;
-    this->Z = edwards_Fq::one();
+    let  Z_inv = self.Z.inverse();
+    self.X = self.X * Z_inv;
+    self.Y = self.Y * Z_inv;
+    self.Z = edwards_Fq::one();
 
 // #ifdef DEBUG
-    assert!((*this) == copy);
+    // assert!((self.clone()) == copy);
 //#endif
 }
 
-bool edwards_G1::is_special() const
+pub fn is_special()->bool
 {
-    return (this->is_zero() || this->Z == edwards_Fq::one());
+    return (self.is_zero() || self.Z == edwards_Fq::one());
 }
 
-bool edwards_G1::is_zero() const
+pub fn is_zero()->bool
 {
-    return (this->Y.is_zero() && this->Z.is_zero());
-}
-
-bool edwards_G1::operator==(const edwards_G1 &other) const
-{
-    if this->is_zero()
-    {
-        return other.is_zero();
-    }
-
-    if other.is_zero()
-    {
-        return false;
-    }
-
-    /* now neither is O */
-
-    // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
-    if (this->X * other.Z) != (other.X * this->Z)
-    {
-        return false;
-    }
-
-    // Y1/Z1 = Y2/Z2 <=> Y1*Z2 = Y2*Z1
-    if (this->Y * other.Z) != (other.Y * this->Z)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-bool edwards_G1::operator!=(const edwards_G1& other) const
-{
-    return !(operator==(other));
-}
-
-edwards_G1 edwards_G1::operator+(const edwards_G1 &other) const
-{
-    // handle special cases having to do with O
-    if this->is_zero()
-    {
-        return other;
-    }
-
-    if other.is_zero()
-    {
-        return (*this);
-    }
-
-    return this->add(other);
-}
-
-edwards_G1 edwards_G1::operator-() const
-{
-    return edwards_G1(-(this->X), this->Y, this->Z);
+    return (self.Y.is_zero() && self.Z.is_zero());
 }
 
 
-edwards_G1 edwards_G1::operator-(const edwards_G1 &other) const
-{
-    return (*this) + (-other);
-}
 
-edwards_G1 edwards_G1::add(const edwards_G1 &other) const
+pub fn add(other:&edwards_G1)->edwards_G1
 {
 // #ifdef PROFILE_OP_COUNTS
-    this->add_cnt++;
+    self.add_cnt+=1;
 //#endif
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-add-2007-bl
 
-    edwards_Fq A = (this->Z) * (other.Z);                   // A = Z1*Z2
-    edwards_Fq B = edwards_coeff_d * A.squared();           // B = d*A^2
-    edwards_Fq C = (this->X) * (other.X);                   // C = X1*X2
-    edwards_Fq D = (this->Y) * (other.Y);                   // D = Y1*Y2
-    edwards_Fq E = C * D;                                   // E = C*D
-    edwards_Fq H = C - D;                                   // H = C-D
-    edwards_Fq I = (this->X+this->Y)*(other.X+other.Y)-C-D; // I = (X1+Y1)*(X2+Y2)-C-D
-    edwards_Fq X3 = (E+B)*H;                                // X3 = c*(E+B)*H
-    edwards_Fq Y3 = (E-B)*I;                                // Y3 = c*(E-B)*I
-    edwards_Fq Z3 = A*H*I;                                  // Z3 = A*H*I
+    let A = (self.Z) * (other.Z);                   // A = Z1*Z2
+    let B = edwards_coeff_d * A.squared();           // B = d*A^2
+    let C = (self.X) * (other.X);                   // C = X1*X2
+    let D = (self.Y) * (other.Y);                   // D = Y1*Y2
+    let E = C * D;                                   // E = C*D
+    let H = C - D;                                   // H = C-D
+    let I = (self.X+self.Y)*(other.X+other.Y)-C-D; // I = (X1+Y1)*(X2+Y2)-C-D
+    let X3 = (E+B)*H;                                // X3 = c*(E+B)*H
+    let Y3 = (E-B)*I;                                // Y3 = c*(E-B)*I
+    let Z3 = A*H*I;                                  // Z3 = A*H*I
 
-    return edwards_G1(X3, Y3, Z3);
+    return edwards_G1::new(X3, Y3, Z3);
 }
 
-edwards_G1 edwards_G1::mixed_add(const edwards_G1 &other) const
+pub fn mixed_add(other:&edwards_G1)->edwards_G1
 {
 // #ifdef PROFILE_OP_COUNTS
-    this->add_cnt++;
+    self.add_cnt+=1;
 //#endif
     // handle special cases having to do with O
-    if this->is_zero()
+    if self.is_zero()
     {
         return other;
     }
 
     if other.is_zero()
     {
-        return *this;
+        return self.clone();
     }
 
 // #ifdef DEBUG
@@ -318,50 +231,50 @@ edwards_G1 edwards_G1::mixed_add(const edwards_G1 &other) const
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-madd-2007-lb
 
-    edwards_Fq A = this->Z;                                 // A = Z1
-    edwards_Fq B = edwards_coeff_d * A.squared();           // B = d*A^2
-    edwards_Fq C = (this->X) * (other.X);                   // C = X1*X2
-    edwards_Fq D = (this->Y) * (other.Y);                   // D = Y1*Y2
-    edwards_Fq E = C * D;                                   // E = C*D
-    edwards_Fq H = C - D;                                   // H = C-D
-    edwards_Fq I = (this->X+this->Y)*(other.X+other.Y)-C-D; // I = (X1+Y1)*(X2+Y2)-C-D
-    edwards_Fq X3 = (E+B)*H;                                // X3 = c*(E+B)*H
-    edwards_Fq Y3 = (E-B)*I;                                // Y3 = c*(E-B)*I
-    edwards_Fq Z3 = A*H*I;                                  // Z3 = A*H*I
+    let A = self.Z;                                 // A = Z1
+    let B = edwards_coeff_d * A.squared();           // B = d*A^2
+    let C = (self.X) * (other.X);                   // C = X1*X2
+    let D = (self.Y) * (other.Y);                   // D = Y1*Y2
+    let E = C * D;                                   // E = C*D
+    let H = C - D;                                   // H = C-D
+    let I = (self.X+self.Y)*(other.X+other.Y)-C-D; // I = (X1+Y1)*(X2+Y2)-C-D
+    let X3 = (E+B)*H;                                // X3 = c*(E+B)*H
+    let Y3 = (E-B)*I;                                // Y3 = c*(E-B)*I
+    let Z3 = A*H*I;                                  // Z3 = A*H*I
 
-    return edwards_G1(X3, Y3, Z3);
+    return edwards_G1::new(X3, Y3, Z3);
 }
 
-edwards_G1 edwards_G1::dbl() const
+pub fn dbl()->edwards_G1
 {
 // #ifdef PROFILE_OP_COUNTS
-    this->dbl_cnt++;
+    self.dbl_cnt+=1;
 //#endif
-    if this->is_zero()
+    if self.is_zero()
     {
-        return (*this);
+        return (self.clone());
     }
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#doubling-dbl-2007-bl
 
-    edwards_Fq A = (this->X).squared();                      // A = X1^2
-    edwards_Fq B = (this->Y).squared();                      // B = Y1^2
-    edwards_Fq C = A+B;                                      // C = A+B
-    edwards_Fq D = A-B;                                      // D = A-B
-    edwards_Fq E = (this->X+this->Y).squared()-C;            // E = (X1+Y1)^2-C
-    edwards_Fq X3 = C*D;                                     // X3 = C*D
-    edwards_Fq dZZ = edwards_coeff_d * this->Z.squared();
-    edwards_Fq Y3 = E*(C-dZZ-dZZ);                           // Y3 = E*(C-2*d*Z1^2)
-    edwards_Fq Z3 = D*E;                                     // Z3 = D*E
+    let  A = (self.X).squared();                      // A = X1^2
+    let  B = (self.Y).squared();                      // B = Y1^2
+    let  C = A+B;                                      // C = A+B
+    let  D = A-B;                                      // D = A-B
+    let  E = (self.X+self.Y).squared()-C;            // E = (X1+Y1)^2-C
+    let  X3 = C*D;                                     // X3 = C*D
+    let  dZZ = edwards_coeff_d * self.Z.squared();
+    let  Y3 = E*(C-dZZ-dZZ);                           // Y3 = E*(C-2*d*Z1^2)
+    let  Z3 = D*E;                                     // Z3 = D*E
 
-    return edwards_G1(X3, Y3, Z3);
+    return edwards_G1::new(X3, Y3, Z3);
 }
 
-bool edwards_G1::is_well_formed() const
+pub fn is_well_formed()->bool
 {
     /* Note that point at infinity is the only special case we must check as
        inverted representation does no cover points (0, +-c) and (+-c, 0). */
-    if this->is_zero()
+    if self.is_zero()
     {
         return true;
     }
@@ -373,129 +286,40 @@ bool edwards_G1::is_well_formed() const
         a (z/x)^2 + (z/y)^2 = 1 + d z^4 / (x^2 * y^2)
         z^2 (a y^2 + x^2 - dz^2) = x^2 y^2
     */
-    edwards_Fq X2 = this->X.squared();
-    edwards_Fq Y2 = this->Y.squared();
-    edwards_Fq Z2 = this->Z.squared();
+    let  X2 = self.X.squared();
+    let Y2 = self.Y.squared();
+    let Z2 = self.Z.squared();
 
     // for G1 a = 1
     return (Z2 * (Y2 + X2 - edwards_coeff_d * Z2) == X2 * Y2);
 }
 
-edwards_G1 edwards_G1::zero()
+pub fn zero()->edwards_G1
 {
     return G1_zero;
 }
 
-edwards_G1 edwards_G1::one()
+pub fn one()->edwards_G1
 {
     return G1_one;
 }
 
-edwards_G1 edwards_G1::random_element()
+pub fn random_element()->edwards_G1
 {
     return edwards_Fr::random_element().as_bigint() * G1_one;
 }
 
-std::ostream& operator<<(std::ostream &out, const edwards_G1 &g)
+pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
 {
-    edwards_G1 copy(g);
-    copy.to_affine_coordinates();
-// #ifdef NO_PT_COMPRESSION
-    out << copy.X << OUTPUT_SEPARATOR << copy.Y;
-#else
-    /* storing LSB of Y */
-    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
-//#endif
-
-    return out;
-}
-
-std::istream& operator>>(std::istream &in, edwards_G1 &g)
-{
-    edwards_Fq tX, tY;
-
-// #ifdef NO_PT_COMPRESSION
-    in >> tX;
-    consume_OUTPUT_SEPARATOR(in);
-    in >> tY;
-#else
-    /*
-      a x^2 + y^2 = 1 + d x^2 y^2
-      y = sqrt((1-ax^2)/(1-dx^2))
-    */
-    unsigned char Y_lsb;
-    in >> tX;
-
-    consume_OUTPUT_SEPARATOR(in);
-    in.read((char*)&Y_lsb, 1);
-    Y_lsb -= '0';
-
-    edwards_Fq tX2 = tX.squared();
-    edwards_Fq tY2 = (edwards_Fq::one() - tX2) * // a = 1 for G1 (not a twist)
-        (edwards_Fq::one() - edwards_coeff_d * tX2).inverse();
-    tY = tY2.sqrt();
-
-    if (tY.as_bigint().data[0] & 1) != Y_lsb
-    {
-        tY = -tY;
-    }
-//#endif
-
-    // using inverted coordinates
-    g.X = tY;
-    g.Y = tX;
-    g.Z = tX * tY;
-
-// #ifdef USE_MIXED_ADDITION
-    g.to_special();
-//#endif
-
-    return in;
-}
-
-std::ostream& operator<<(std::ostream& out, const std::vector<edwards_G1> &v)
-{
-    out << v.len() << "\n";
-    for t in &v
-    {
-        out << t << OUTPUT_NEWLINE;
-    }
-
-    return out;
-}
-
-std::istream& operator>>(std::istream& in, std::vector<edwards_G1> &v)
-{
-    v.clear();
-
-    size_t s;
-    in >> s;
-    v.reserve(s);
-    consume_newline(in);
-
-    for i in 0..s
-    {
-        edwards_G1 g;
-        in >> g;
-        v.emplace_back(g);
-        consume_OUTPUT_NEWLINE(in);
-    }
-
-    return in;
-}
-
-void edwards_G1::batch_to_special_all_non_zeros(std::vector<edwards_G1> &vec)
-{
-    std::vector<edwards_Fq> Z_vec;
-    Z_vec.reserve(vec.len());
+    let mut  Z_vec=Vec::with_capacity(vec.len());
 
     for el in &vec
     {
-        Z_vec.emplace_back(el.Z);
+        Z_vec.push(el.Z);
     }
-    batch_invert<edwards_Fq>(Z_vec);
+    batch_invert::<edwards_Fq>(Z_vec);
 
-    const edwards_Fq one = edwards_Fq::one();
+    let  one = edwards_Fq::one();
 
     for i in 0..vec.len()
     {
@@ -504,5 +328,157 @@ void edwards_G1::batch_to_special_all_non_zeros(std::vector<edwards_G1> &vec)
         vec[i].Z = one;
     }
 }
-
+}
 // } // namespace libff
+
+
+// pub fn operator==(other:&edwards_G1)->bool
+// {
+//     if self.is_zero()
+//     {
+//         return other.is_zero();
+//     }
+
+//     if other.is_zero()
+//     {
+//         return false;
+//     }
+
+//     /* now neither is O */
+
+//     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
+//     if (self.X * other.Z) != (other.X * self.Z)
+//     {
+//         return false;
+//     }
+
+//     // Y1/Z1 = Y2/Z2 <=> Y1*Z2 = Y2*Z1
+//     if (self.Y * other.Z) != (other.Y * self.Z)
+//     {
+//         return false;
+//     }
+
+//     return true;
+// }
+
+
+// std::ostream& operator<<(std::ostream &out, g:&edwards_G1)
+// {
+//     edwards_G1 copy(g);
+//     copy.to_affine_coordinates();
+// // #ifdef NO_PT_COMPRESSION
+//     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
+// #else
+//     /* storing LSB of Y */
+//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
+// //#endif
+
+//     return out;
+// }
+
+
+// bool edwards_G1::operator!=(other:&edwards_G1) const
+// {
+//     return !(operator==(other));
+// }
+
+// edwards_G1 edwards_G1::operator+(other:&edwards_G1) const
+// {
+//     // handle special cases having to do with O
+//     if self.is_zero()
+//     {
+//         return other;
+//     }
+
+//     if other.is_zero()
+//     {
+//         return (self.clone());
+//     }
+
+//     return self.add(other);
+// }
+
+// edwards_G1 edwards_G1::operator-() const
+// {
+//     return edwards_G1(-(self.X), self.Y, self.Z);
+// }
+
+
+// edwards_G1 edwards_G1::operator-(other:&edwards_G1) const
+// {
+//     return (self.clone()) + (-other);
+// }
+
+// std::istream& operator>>(std::istream &in, edwards_G1 &g)
+// {
+//     edwards_Fq tX, tY;
+
+// // #ifdef NO_PT_COMPRESSION
+//     in >> tX;
+//     consume_OUTPUT_SEPARATOR(in);
+//     in >> tY;
+// #else
+//     /*
+//       a x^2 + y^2 = 1 + d x^2 y^2
+//       y = sqrt((1-ax^2)/(1-dx^2))
+//     */
+//     unsigned char Y_lsb;
+//     in >> tX;
+
+//     consume_OUTPUT_SEPARATOR(in);
+//     in.read((char*)&Y_lsb, 1);
+//     Y_lsb -= '0';
+
+//     edwards_Fq tX2 = tX.squared();
+//     edwards_Fq tY2 = (edwards_Fq::one() - tX2) * // a = 1 for G1 (not a twist)
+//         (edwards_Fq::one() - edwards_coeff_d * tX2).inverse();
+//     tY = tY2.sqrt();
+
+//     if (tY.as_bigint().data[0] & 1) != Y_lsb
+//     {
+//         tY = -tY;
+//     }
+// //#endif
+
+//     // using inverted coordinates
+//     g.X = tY;
+//     g.Y = tX;
+//     g.Z = tX * tY;
+
+// // #ifdef USE_MIXED_ADDITION
+//     g.to_special();
+// //#endif
+
+//     return in;
+// }
+
+// std::ostream& operator<<(std::ostream& out, v:&Vec<edwards_G1>)
+// {
+//     out << v.len() << "\n";
+//     for t in &v
+//     {
+//         out << t << OUTPUT_NEWLINE;
+//     }
+
+//     return out;
+// }
+
+// std::istream& operator>>(std::istream& in, Vec<edwards_G1> &v)
+// {
+//     v.clear();
+
+//     usize s;
+//     in >> s;
+//     v.reserve(s);
+//     consume_newline(in);
+
+//     for i in 0..s
+//     {
+//         edwards_G1 g;
+//         in >> g;
+//         v.emplace_back(g);
+//         consume_OUTPUT_NEWLINE(in);
+//     }
+
+//     return in;
+// }

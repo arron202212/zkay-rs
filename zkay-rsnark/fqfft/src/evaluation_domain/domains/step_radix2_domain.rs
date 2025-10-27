@@ -31,17 +31,17 @@ pub struct  step_radix2_domain<FieldT>  {
     m:usize,
 }
 
-//     step_radix2_domain(const usize m);
+//     step_radix2_domain(m:usize);
 
-//     void FFT(a:Vec<FieldT>);
-//     void iFFT(a:Vec<FieldT>);
-//     void cosetFFT(a:Vec<FieldT>, g:&FieldT);
-//     void icosetFFT(a:Vec<FieldT>, g:&FieldT);
+//     pub fn  FFT(a:Vec<FieldT>);
+//     pub fn  iFFT(a:Vec<FieldT>);
+//     pub fn  cosetFFT(a:Vec<FieldT>, g:&FieldT);
+//     pub fn  icosetFFT(a:Vec<FieldT>, g:&FieldT);
 //     Vec<FieldT> evaluate_all_lagrange_polynomials(t:&FieldT);
-//     FieldT get_domain_element(const usize idx);
+//     FieldT get_domain_element(idx:usize);
 //     FieldT compute_vanishing_polynomial(t:&FieldT);
-//     void add_poly_Z(coeff:&FieldT, H:Vec<FieldT>);
-//     void divide_by_Z_on_coset(P:Vec<FieldT>);
+//     pub fn  add_poly_Z(coeff:&FieldT, H:Vec<FieldT>);
+//     pub fn  divide_by_Z_on_coset(P:Vec<FieldT>);
 
 // };
 

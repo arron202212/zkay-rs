@@ -29,7 +29,7 @@ use std::ops::{Add,Mul};
  * Such pairs form a group by defining:
  * - "zero" = (0,0)
  * - "one" = (1,1)
- * - a * (g,h) + b * (g',h') := ( a * g + b * g', a * h + b * h').
+ * - a * (g,h) + b * (g',h')->Self= ( a * g + b * g', a * h + b * h').
  */
 
 pub struct knowledge_commitment<T1,T2> {
@@ -63,24 +63,24 @@ pub struct knowledge_commitment<T1,T2> {
     // static knowledge_commitment<T1,T2> zero();
     // static knowledge_commitment<T1,T2> one();
 
-    // void print() const;
+    // pub fn  print() const;
 
-    // static size_t size_in_bits();
+    // static usize size_in_bits();
 
-    // static void batch_to_special_all_non_zeros(
-    //     std::vector<knowledge_commitment<T1,T2> > &vec);
+    // static pub fn  batch_to_special_all_non_zeros(
+    //     Vec<knowledge_commitment<T1,T2> > &vec);
 // }
 
-// template<typename T1, typename T2, mp_size_t m>
+// 
 // knowledge_commitment<T1,T2> operator*(lhs, &rhs:knowledge_commitment<T1:&ffec::bigint<m>T2>);
 
-// template<typename T1, typename T2, mp_size_t m, const ffec::bigint<m> &modulus_p>
+// 
 // knowledge_commitment<T1,T2> operator*(lhs, &rhs:knowledge_commitment<T1:&ffec::Fp_model<m, modulus_p>T2>);
 
-// template<typename T1,typename T2>
+// 
 // std::ostream& operator<<(std::ostream& out, &kc:knowledge_commitment<T1,T2>);
 
-// template<typename T1,typename T2>
+// 
 // std::istream& operator>>(std::istream& in, knowledge_commitment<T1,T2> &kc);
 
 /******************** Knowledge commitment vector ****************************/
@@ -274,7 +274,7 @@ impl<T1,T2> fmt::Display for knowledge_commitment<T1,T2> {
     }
 }
 
-// template<typename T1,typename T2>
+// 
 // std::istream& operator>>(std::istream& in, knowledge_commitment<T1,T2> &kc)
 // {
 //     in >> kc.g;
@@ -290,7 +290,7 @@ impl<T1,T2> fmt::Display for knowledge_commitment<T1,T2> {
 
 
 impl<T1,T2> Add for knowledge_commitment<T1,T2> {
-    type Output = Self;
+    type Output =Self;
 
     fn add(self, other: Self) -> Self {
         Self::new(self.g + other.g,
@@ -300,7 +300,7 @@ impl<T1,T2> Add for knowledge_commitment<T1,T2> {
 
 
 impl<T1,T2,const M:usize>  Mul<&bigint<M>> for knowledge_commitment<T1,T2,M>  {
-    type Output = Self;
+    type Output =Self;
 
     fn mul(self, rhs: &bigint<M>) -> Self {
         Self::new(self.g * rhs,
@@ -309,7 +309,7 @@ impl<T1,T2,const M:usize>  Mul<&bigint<M>> for knowledge_commitment<T1,T2,M>  {
 }
 
 impl<T1,T2,const M:usize,const MODULUS_P:bigint<M>>  Mul<&Fp_model<M, MODULUS_P>> for knowledge_commitment<T1,T2,M>  {
-    type Output = Self;
+    type Output =Self;
 
     fn mul(self, rhs: &Fp_model<M, MODULUS_P>) -> Self {
         self*rhs.as_bigint()

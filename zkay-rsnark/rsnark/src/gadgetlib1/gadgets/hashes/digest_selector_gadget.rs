@@ -7,37 +7,27 @@
 //#ifndef DIGEST_SELECTOR_GADGET_HPP_
 // #define DIGEST_SELECTOR_GADGET_HPP_
 
-use  <vector>
+// 
 
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 
 
-template<typename FieldT>
-class digest_selector_gadget : public gadget<FieldT> {
 
-    size_t digest_size;
-    digest_variable<FieldT> input;
-    pb_linear_combination<FieldT> is_right;
-    digest_variable<FieldT> left;
-    digest_variable<FieldT> right;
+pub struct digest_selector_gadget {//gadget<FieldT>
 
-    digest_selector_gadget(protoboard<FieldT> &pb,
-                           const size_t digest_size,
-                           const digest_variable<FieldT> &input,
-                           const pb_linear_combination<FieldT> &is_right,
-                           const digest_variable<FieldT> &left,
-                           const digest_variable<FieldT> &right,
-                           const std::string &annotation_prefix);
+digest_size:    usize,
+input:    digest_variable<FieldT>,
+is_right:    pb_linear_combination<FieldT>,
+left:    digest_variable<FieldT>,
+right:    digest_variable<FieldT>,
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+}
 
 
 
-use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
+// use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
 
 //#endif // DIGEST_SELECTOR_GADGET_HPP_
 /**
@@ -50,21 +40,23 @@ use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
 // #define DIGEST_SELECTOR_GADGET_TCC_
 
 
+impl digest_selector_gadget<FieldT>{
 
-template<typename FieldT>
-digest_selector_gadget<FieldT>::digest_selector_gadget(protoboard<FieldT> &pb,
-                                                       const size_t digest_size,
-                                                       const digest_variable<FieldT> &input,
-                                                       const pb_linear_combination<FieldT> &is_right,
-                                                       const digest_variable<FieldT> &left,
-                                                       const digest_variable<FieldT> &right,
-                                                       const std::string &annotation_prefix) :
-gadget<FieldT>(pb, annotation_prefix), digest_size(digest_size), input(input), is_right(is_right), left(left), right(right)
+pub fn new(pb:protoboard<FieldT>,
+                                                       digest_size:usize,
+                                                       input:&digest_variable<FieldT>,
+                                                       is_right:&pb_linear_combination<FieldT>,
+                                                       left:&digest_variable<FieldT>,
+                                                       right:&digest_variable<FieldT>,
+                                                       annotation_prefix:&String)->Self
+
 {
+    // gadget<FieldT>(pb, annotation_prefix),
+    Self{digest_size,input,is_right,left,right}
 }
 
-template<typename FieldT>
-void digest_selector_gadget<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     for i in 0..digest_size
     {
@@ -72,13 +64,13 @@ void digest_selector_gadget<FieldT>::generate_r1cs_constraints()
           input = is_right * right + (1-is_right) * left
           input - left = is_right(right - left)
         */
-        self.pb.add_r1cs_constraint(r1cs_constraint<FieldT>(is_right, right.bits[i] - left.bits[i], input.bits[i] - left.bits[i]),
+        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_right, right.bits[i] - left.bits[i], input.bits[i] - left.bits[i]),
                                      FMT(self.annotation_prefix, " propagate_{}", i));
     }
 }
 
-template<typename FieldT>
-void digest_selector_gadget<FieldT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
     is_right.evaluate(self.pb);
 
@@ -99,6 +91,6 @@ void digest_selector_gadget<FieldT>::generate_r1cs_witness()
     }
 }
 
-
+}
 
 //#endif // DIGEST_SELECTOR_GADGET_TCC_

@@ -9,17 +9,17 @@
 // #define EDWARDS_PAIRING_HPP_
 //#include <vector>
 
-use crate::algebra::curves::edwards/edwards_init;
+use crate::algebra::curves::edwards::edwards_init;
 
 // namespace libff {
 
 /* final exponentiation */
 
-edwards_Fq6 edwards_final_exponentiation_last_chunk(const edwards_Fq6 &elt,
-                                                    const edwards_Fq6 &elt_inv);
-edwards_Fq6 edwards_final_exponentiation_first_chunk(const edwards_Fq6 &elt,
-                                                     const edwards_Fq6 &elt_inv);
-edwards_GT edwards_final_exponentiation(const edwards_Fq6 &elt);
+edwards_Fq6 edwards_final_exponentiation_last_chunk(elt:&edwards_Fq6,
+                                                    elt_inv:&edwards_Fq6);
+edwards_Fq6 edwards_final_exponentiation_first_chunk(elt:&edwards_Fq6,
+                                                     elt_inv:&edwards_Fq6);
+edwards_GT edwards_final_exponentiation(elt:&edwards_Fq6);
 
 /* Tate pairing */
 
@@ -28,33 +28,33 @@ struct edwards_Fq_conic_coefficients {
     edwards_Fq c_XY;
     edwards_Fq c_XZ;
 
-    bool operator==(const edwards_Fq_conic_coefficients &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const edwards_Fq_conic_coefficients &cc);
+    bool operator==(other:&edwards_Fq_conic_coefficients) const;
+    friend std::ostream& operator<<(std::ostream &out, cc:&edwards_Fq_conic_coefficients);
     friend std::istream& operator>>(std::istream &in, edwards_Fq_conic_coefficients &cc);
 };
-typedef std::vector<edwards_Fq_conic_coefficients> edwards_tate_G1_precomp;
+type edwards_tate_G1_precomp=Vec<edwards_Fq_conic_coefficients>;
 
-std::ostream& operator<<(std::ostream& out, const edwards_tate_G1_precomp &prec_P);
+std::ostream& operator<<(std::ostream& out, prec_P:&edwards_tate_G1_precomp);
 std::istream& operator>>(std::istream& in, edwards_tate_G1_precomp &prec_P);
 
 struct edwards_tate_G2_precomp {
     edwards_Fq3 y0, eta;
 
-    bool operator==(const edwards_tate_G2_precomp &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const edwards_tate_G2_precomp &prec_Q);
+    bool operator==(other:&edwards_tate_G2_precomp) const;
+    friend std::ostream& operator<<(std::ostream &out, prec_Q:&edwards_tate_G2_precomp);
     friend std::istream& operator>>(std::istream &in, edwards_tate_G2_precomp &prec_Q);
 };
 
-edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P);
-edwards_tate_G2_precomp edwards_tate_precompute_G2(const edwards_G2& Q);
+edwards_tate_G1_precomp edwards_tate_precompute_G1(P:&edwards_G1);
+edwards_tate_G2_precomp edwards_tate_precompute_G2(Q:&edwards_G2);
 
-edwards_Fq6 edwards_tate_miller_loop(const edwards_tate_G1_precomp &prec_P,
-                                     const edwards_tate_G2_precomp &prec_Q);
+edwards_Fq6 edwards_tate_miller_loop(prec_P:&edwards_tate_G1_precomp,
+                                     prec_Q:&edwards_tate_G2_precomp);
 
-edwards_Fq6 edwards_tate_pairing(const edwards_G1& P,
-                                 const edwards_G2 &Q);
-edwards_GT edwards_tate_reduced_pairing(const edwards_G1 &P,
-                                        const edwards_G2 &Q);
+edwards_Fq6 edwards_tate_pairing(P:edwards_G1&,
+                                 Q:&edwards_G2);
+edwards_GT edwards_tate_reduced_pairing(P:&edwards_G1,
+                                        Q:&edwards_G2);
 
 /* ate pairing */
 
@@ -63,13 +63,13 @@ struct edwards_Fq3_conic_coefficients {
     edwards_Fq3 c_XY;
     edwards_Fq3 c_XZ;
 
-    bool operator==(const edwards_Fq3_conic_coefficients &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const edwards_Fq3_conic_coefficients &cc);
+    bool operator==(other:&edwards_Fq3_conic_coefficients) const;
+    friend std::ostream& operator<<(std::ostream &out, cc:&edwards_Fq3_conic_coefficients);
     friend std::istream& operator>>(std::istream &in, edwards_Fq3_conic_coefficients &cc);
 };
-typedef std::vector<edwards_Fq3_conic_coefficients> edwards_ate_G2_precomp;
+type edwards_ate_G2_precomp=Vec<edwards_Fq3_conic_coefficients>;
 
-std::ostream& operator<<(std::ostream& out, const edwards_ate_G2_precomp &prec_Q);
+std::ostream& operator<<(std::ostream& out, prec_Q:&edwards_ate_G2_precomp);
 std::istream& operator>>(std::istream& in, edwards_ate_G2_precomp &prec_Q);
 
 struct edwards_ate_G1_precomp {
@@ -77,47 +77,47 @@ struct edwards_ate_G1_precomp {
     edwards_Fq P_XZ;
     edwards_Fq P_ZZplusYZ;
 
-    bool operator==(const edwards_ate_G1_precomp &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const edwards_ate_G1_precomp &prec_P);
+    bool operator==(other:&edwards_ate_G1_precomp) const;
+    friend std::ostream& operator<<(std::ostream &out, prec_P:&edwards_ate_G1_precomp);
     friend std::istream& operator>>(std::istream &in, edwards_ate_G1_precomp &prec_P);
 };
 
-edwards_ate_G1_precomp edwards_ate_precompute_G1(const edwards_G1& P);
-edwards_ate_G2_precomp edwards_ate_precompute_G2(const edwards_G2& Q);
+edwards_ate_G1_precomp edwards_ate_precompute_G1(P:&edwards_G1);
+edwards_ate_G2_precomp edwards_ate_precompute_G2(Q:&edwards_G2);
 
-edwards_Fq6 edwards_ate_miller_loop(const edwards_ate_G1_precomp &prec_P,
-                                    const edwards_ate_G2_precomp &prec_Q);
-edwards_Fq6 edwards_ate_double_miller_loop(const edwards_ate_G1_precomp &prec_P1,
-                                           const edwards_ate_G2_precomp &prec_Q1,
-                                           const edwards_ate_G1_precomp &prec_P2,
-                                           const edwards_ate_G2_precomp &prec_Q2);
+edwards_Fq6 edwards_ate_miller_loop(prec_P:&edwards_ate_G1_precomp,
+                                    prec_Q:&edwards_ate_G2_precomp);
+edwards_Fq6 edwards_ate_double_miller_loop(prec_P1:&edwards_ate_G1_precomp,
+                                           prec_Q1:&edwards_ate_G2_precomp,
+                                           prec_P2:&edwards_ate_G1_precomp,
+                                           prec_Q2:&edwards_ate_G2_precomp);
 
-edwards_Fq6 edwards_ate_pairing(const edwards_G1& P,
-                                const edwards_G2 &Q);
-edwards_GT edwards_ate_reduced_pairing(const edwards_G1 &P,
-                                       const edwards_G2 &Q);
+edwards_Fq6 edwards_ate_pairing(P:edwards_G1&,
+                                Q:&edwards_G2);
+edwards_GT edwards_ate_reduced_pairing(P:&edwards_G1,
+                                       Q:&edwards_G2);
 
 /* choice of pairing */
 
-typedef edwards_ate_G1_precomp edwards_G1_precomp;
-typedef edwards_ate_G2_precomp edwards_G2_precomp;
+type edwards_G1_precomp=edwards_ate_G1_precomp;
+type edwards_G2_precomp=edwards_ate_G2_precomp;
 
-edwards_G1_precomp edwards_precompute_G1(const edwards_G1& P);
-edwards_G2_precomp edwards_precompute_G2(const edwards_G2& Q);
+edwards_G1_precomp edwards_precompute_G1(P:&edwards_G1);
+edwards_G2_precomp edwards_precompute_G2(Q:&edwards_G2);
 
-edwards_Fq6 edwards_miller_loop(const edwards_G1_precomp &prec_P,
-                                const edwards_G2_precomp &prec_Q);
+edwards_Fq6 edwards_miller_loop(prec_P:&edwards_G1_precomp,
+                                prec_Q:&edwards_G2_precomp);
 
-edwards_Fq6 edwards_double_miller_loop(const edwards_G1_precomp &prec_P1,
-                                       const edwards_G2_precomp &prec_Q1,
-                                       const edwards_G1_precomp &prec_P2,
-                                       const edwards_G2_precomp &prec_Q2);
+edwards_Fq6 edwards_double_miller_loop(prec_P1:&edwards_G1_precomp,
+                                       prec_Q1:&edwards_G2_precomp,
+                                       prec_P2:&edwards_G1_precomp,
+                                       prec_Q2:&edwards_G2_precomp);
 
-edwards_Fq6 edwards_pairing(const edwards_G1& P,
-                            const edwards_G2 &Q);
+edwards_Fq6 edwards_pairing(P:edwards_G1&,
+                            Q:&edwards_G2);
 
-edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
-                                   const edwards_G2 &Q);
+edwards_GT edwards_reduced_pairing(P:&edwards_G1,
+                                   Q:&edwards_G2);
 
 // } // namespace libff
 //#endif // EDWARDS_PAIRING_HPP_
@@ -130,24 +130,24 @@ edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
 
 //#include <cassert>
 
-use crate::algebra::curves::edwards/edwards_g1;
-use crate::algebra::curves::edwards/edwards_g2;
-use crate::algebra::curves::edwards/edwards_init;
-use crate::algebra::curves::edwards/edwards_pairing;
+use crate::algebra::curves::edwards::edwards_g1;
+use crate::algebra::curves::edwards::edwards_g2;
+use crate::algebra::curves::edwards::edwards_init;
+use crate::algebra::curves::edwards::edwards_pairing;
 use crate::common::profiling;
 
 // namespace libff {
 
-using std::size_t;
+using std::usize;
 
-bool edwards_Fq_conic_coefficients::operator==(const edwards_Fq_conic_coefficients &other) const
+bool edwards_Fq_conic_coefficients::operator==(other:&edwards_Fq_conic_coefficients) const
 {
     return (this->c_ZZ == other.c_ZZ &&
             this->c_XY == other.c_XY &&
             this->c_XZ == other.c_XZ);
 }
 
-std::ostream& operator<<(std::ostream &out, const edwards_Fq_conic_coefficients &cc)
+std::ostream& operator<<(std::ostream &out, cc:&edwards_Fq_conic_coefficients)
 {
     out << cc.c_ZZ << OUTPUT_SEPARATOR << cc.c_XY << OUTPUT_SEPARATOR << cc.c_XZ;
     return out;
@@ -163,7 +163,7 @@ std::istream& operator>>(std::istream &in, edwards_Fq_conic_coefficients &cc)
     return in;
 }
 
-std::ostream& operator<<(std::ostream& out, const edwards_tate_G1_precomp &prec_P)
+std::ostream& operator<<(std::ostream& out, prec_P:&edwards_tate_G1_precomp)
 {
     out << prec_P.len() << "\n";
     for cc in &prec_P
@@ -178,7 +178,7 @@ std::istream& operator>>(std::istream& in, edwards_tate_G1_precomp &prec_P)
 {
     prec_P.clear();
 
-    size_t s;
+    usize s;
     in >> s;
 
     consume_newline(in);
@@ -195,13 +195,13 @@ std::istream& operator>>(std::istream& in, edwards_tate_G1_precomp &prec_P)
     return in;
 }
 
-bool edwards_tate_G2_precomp::operator==(const edwards_tate_G2_precomp &other) const
+bool edwards_tate_G2_precomp::operator==(other:&edwards_tate_G2_precomp) const
 {
     return (this->y0 == other.y0 &&
             this->eta == other.eta);
 }
 
-std::ostream& operator<<(std::ostream &out, const edwards_tate_G2_precomp &prec_Q)
+std::ostream& operator<<(std::ostream &out, prec_Q:&edwards_tate_G2_precomp)
 {
     out << prec_Q.y0 << OUTPUT_SEPARATOR << prec_Q.eta;
     return out;
@@ -215,14 +215,14 @@ std::istream& operator>>(std::istream &in, edwards_tate_G2_precomp &prec_Q)
     return in;
 }
 
-bool edwards_Fq3_conic_coefficients::operator==(const edwards_Fq3_conic_coefficients &other) const
+bool edwards_Fq3_conic_coefficients::operator==(other:&edwards_Fq3_conic_coefficients) const
 {
     return (this->c_ZZ == other.c_ZZ &&
             this->c_XY == other.c_XY &&
             this->c_XZ == other.c_XZ);
 }
 
-std::ostream& operator<<(std::ostream &out, const edwards_Fq3_conic_coefficients &cc)
+std::ostream& operator<<(std::ostream &out, cc:&edwards_Fq3_conic_coefficients)
 {
     out << cc.c_ZZ << OUTPUT_SEPARATOR << cc.c_XY << OUTPUT_SEPARATOR << cc.c_XZ;
     return out;
@@ -238,7 +238,7 @@ std::istream& operator>>(std::istream &in, edwards_Fq3_conic_coefficients &cc)
     return in;
 }
 
-std::ostream& operator<<(std::ostream& out, const edwards_ate_G2_precomp &prec_Q)
+std::ostream& operator<<(std::ostream& out, prec_Q:&edwards_ate_G2_precomp)
 {
     out << prec_Q.len() << "\n";
     for cc in &prec_Q
@@ -253,7 +253,7 @@ std::istream& operator>>(std::istream& in, edwards_ate_G2_precomp &prec_Q)
 {
     prec_Q.clear();
 
-    size_t s;
+    usize s;
     in >> s;
 
     consume_newline(in);
@@ -271,14 +271,14 @@ std::istream& operator>>(std::istream& in, edwards_ate_G2_precomp &prec_Q)
     return in;
 }
 
-bool edwards_ate_G1_precomp::operator==(const edwards_ate_G1_precomp &other) const
+bool edwards_ate_G1_precomp::operator==(other:&edwards_ate_G1_precomp) const
 {
     return (this->P_XY == other.P_XY &&
             this->P_XZ == other.P_XZ &&
             this->P_ZZplusYZ == other.P_ZZplusYZ);
 }
 
-std::ostream& operator<<(std::ostream &out, const edwards_ate_G1_precomp &prec_P)
+std::ostream& operator<<(std::ostream &out, prec_P:&edwards_ate_G1_precomp)
 {
     out << prec_P.P_XY << OUTPUT_SEPARATOR << prec_P.P_XZ << OUTPUT_SEPARATOR << prec_P.P_ZZplusYZ;
 
@@ -293,10 +293,10 @@ std::istream& operator>>(std::istream &in, edwards_ate_G1_precomp &prec_P)
 }
 
 /* final exponentiations */
-edwards_Fq6 edwards_final_exponentiation_last_chunk(const edwards_Fq6 &elt, const edwards_Fq6 &elt_inv)
+edwards_Fq6 edwards_final_exponentiation_last_chunk(elt:&edwards_Fq6, elt_inv:&edwards_Fq6)
 {
     enter_block("Call to edwards_final_exponentiation_last_chunk");
-    const edwards_Fq6 elt_q = elt.Frobenius_map(1);
+    let elt_q= elt.Frobenius_map(1);
     edwards_Fq6 w1_part = elt_q.cyclotomic_exp(edwards_final_exponent_last_chunk_w1);
     edwards_Fq6 w0_part;
     if edwards_final_exponent_last_chunk_is_w0_neg
@@ -311,37 +311,37 @@ edwards_Fq6 edwards_final_exponentiation_last_chunk(const edwards_Fq6 &elt, cons
     return result;
 }
 
-edwards_Fq6 edwards_final_exponentiation_first_chunk(const edwards_Fq6 &elt, const edwards_Fq6 &elt_inv)
+edwards_Fq6 edwards_final_exponentiation_first_chunk(elt:&edwards_Fq6, elt_inv:&edwards_Fq6)
 {
     enter_block("Call to edwards_final_exponentiation_first_chunk");
 
     /* (q^3-1)*(q+1) */
 
     /* elt_q3 = elt^(q^3) */
-    const edwards_Fq6 elt_q3 = elt.Frobenius_map(3);
+    let elt_q3= elt.Frobenius_map(3);
     /* elt_q3_over_elt = elt^(q^3-1) */
-    const edwards_Fq6 elt_q3_over_elt = elt_q3 * elt_inv;
+    let elt_q3_over_elt= elt_q3 * elt_inv;
     /* alpha = elt^((q^3-1) * q) */
-    const edwards_Fq6 alpha = elt_q3_over_elt.Frobenius_map(1);
+    let alpha= elt_q3_over_elt.Frobenius_map(1);
     /* beta = elt^((q^3-1)*(q+1) */
-    const edwards_Fq6 beta = alpha * elt_q3_over_elt;
+    let beta= alpha * elt_q3_over_elt;
     leave_block("Call to edwards_final_exponentiation_first_chunk");
     return beta;
 }
 
-edwards_GT edwards_final_exponentiation(const edwards_Fq6 &elt)
+edwards_GT edwards_final_exponentiation(elt:&edwards_Fq6)
 {
     enter_block("Call to edwards_final_exponentiation");
-    const edwards_Fq6 elt_inv = elt.inverse();
-    const edwards_Fq6 elt_to_first_chunk = edwards_final_exponentiation_first_chunk(elt, elt_inv);
-    const edwards_Fq6 elt_inv_to_first_chunk = edwards_final_exponentiation_first_chunk(elt_inv, elt);
+    let elt_inv= elt.inverse();
+    let elt_to_first_chunk= edwards_final_exponentiation_first_chunk(elt, elt_inv);
+    let elt_inv_to_first_chunk= edwards_final_exponentiation_first_chunk(elt_inv, elt);
     edwards_GT result = edwards_final_exponentiation_last_chunk(elt_to_first_chunk, elt_inv_to_first_chunk);
     leave_block("Call to edwards_final_exponentiation");
 
     return result;
 }
 
-edwards_tate_G2_precomp edwards_tate_precompute_G2(const edwards_G2& Q)
+edwards_tate_G2_precomp edwards_tate_precompute_G2(Q:&edwards_G2)
 {
     enter_block("Call to edwards_tate_precompute_G2");
     edwards_G2 Qcopy = Q;
@@ -360,7 +360,7 @@ struct extended_edwards_G1_projective {
     edwards_Fq Z;
     edwards_Fq T;
 
-    void print() const
+    pub fn  print() const
     {
         print!("extended edwards_G1 projective X/Y/Z/T:\n");
         X.print();
@@ -369,27 +369,27 @@ struct extended_edwards_G1_projective {
         T.print();
     }
 
-    static void test_invariant()
+    static pub fn  test_invariant()
     {
         assert!(T*Z == X*Y);
     }
 };
 
-void doubling_step_for_miller_loop(extended_edwards_G1_projective &current,
+pub fn  doubling_step_for_miller_loop(extended_edwards_G1_projective &current,
                                    edwards_Fq_conic_coefficients &cc)
 {
-    const edwards_Fq &X = current.X, &Y = current.Y, &Z = current.Z, &T = current.T;
-    const edwards_Fq A = X.squared();     // A    = X1^2
-    const edwards_Fq B = Y.squared();     // B    = Y1^2
-    const edwards_Fq C = Z.squared();     // C    = Z1^2
-    const edwards_Fq D = (X+Y).squared(); // D    = (X1+Y1)^2
-    const edwards_Fq E = (Y+Z).squared(); // E    = (Y1+Z1)^2
-    const edwards_Fq F = D-(A+B);         // F    = D-(A+B)
-    const edwards_Fq G = E-(B+C);         // G    = E-(B+C)
-    const edwards_Fq &H = A;              // H    = A (edwards_a=1)
-    const edwards_Fq I = H+B;             // I    = H+B
-    const edwards_Fq J = C-I;             // J    = C-I
-    const edwards_Fq K = J+C;             // K    = J+C
+    X:&edwards_Fq = current.X, &Y = current.Y, &Z = current.Z, &T = current.T;
+    let A= X.squared();     // A    = X1^2
+    let B= Y.squared();     // B    = Y1^2
+    let C= Z.squared();     // C    = Z1^2
+    let D= (X+Y).squared(); // D    = (X1+Y1)^2
+    let E= (Y+Z).squared(); // E    = (Y1+Z1)^2
+    let F= D-(A+B);         // F    = D-(A+B)
+    let G= E-(B+C);         // G    = E-(B+C)
+    H:&edwards_Fq = A;              // H    = A (edwards_a=1)
+    let I= H+B;             // I    = H+B
+    let J= C-I;             // J    = C-I
+    let K= J+C;             // K    = J+C
 
     cc.c_ZZ = Y*(T-X);            // c_ZZ = 2*Y1*(T1-X1)
     cc.c_ZZ = cc.c_ZZ + cc.c_ZZ;
@@ -408,22 +408,22 @@ void doubling_step_for_miller_loop(extended_edwards_G1_projective &current,
 //#endif
 }
 
-void full_addition_step_for_miller_loop(const extended_edwards_G1_projective &base,
+pub fn  full_addition_step_for_miller_loop(base:&extended_edwards_G1_projective,
                                         extended_edwards_G1_projective &current,
                                         edwards_Fq_conic_coefficients &cc)
 {
-    const edwards_Fq &X1 = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
-    const edwards_Fq &X2 = base.X, &Y2 =  base.Y, &Z2 = base.Z, &T2 = base.T;
+    X1:&edwards_Fq = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
+    X2:&edwards_Fq = base.X, &Y2 =  base.Y, &Z2 = base.Z, &T2 = base.T;
 
-    const edwards_Fq A = X1*X2;               // A    = X1*X2
-    const edwards_Fq B = Y1*Y2;               // B    = Y1*Y2
-    const edwards_Fq C = Z1*T2;               // C    = Z1*T2
-    const edwards_Fq D = T1*Z2;               // D    = T1*Z2
-    const edwards_Fq E = D+C;                 // E    = D+C
-    const edwards_Fq F = (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
-    const edwards_Fq G = B + A;               // G    = B + A (edwards_a=1)
-    const edwards_Fq H = D-C;                 // H    = D-C
-    const edwards_Fq I = T1*T2;               // I    = T1*T2
+    let A= X1*X2;               // A    = X1*X2
+    let B= Y1*Y2;               // B    = Y1*Y2
+    let C= Z1*T2;               // C    = Z1*T2
+    let D= T1*Z2;               // D    = T1*Z2
+    let E= D+C;                 // E    = D+C
+    let F= (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
+    let G= B + A;               // G    = B + A (edwards_a=1)
+    let H= D-C;                 // H    = D-C
+    let I= T1*T2;               // I    = T1*T2
 
     cc.c_ZZ = (T1-X1)*(T2+X2)-I+A;    // c_ZZ = (T1-X1)*(T2+X2)-I+A
     cc.c_XY = X1*Z2-X2*Z1+F;          // c_XY = X1*Z2-X2*Z1+F
@@ -438,22 +438,22 @@ void full_addition_step_for_miller_loop(const extended_edwards_G1_projective &ba
 //#endif
 }
 
-void mixed_addition_step_for_miller_loop(const extended_edwards_G1_projective &base,
+pub fn  mixed_addition_step_for_miller_loop(base:&extended_edwards_G1_projective,
                                          extended_edwards_G1_projective &current,
                                          edwards_Fq_conic_coefficients &cc)
 {
-    const edwards_Fq &X1 = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
-    const edwards_Fq &X2 = base.X, &Y2 =  base.Y, &T2 = base.T;
+    X1:&edwards_Fq = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
+    X2:&edwards_Fq = base.X, &Y2 =  base.Y, &T2 = base.T;
 
-    const edwards_Fq A = X1*X2;               // A    = X1*X2
-    const edwards_Fq B = Y1*Y2;               // B    = Y1*Y2
-    const edwards_Fq C = Z1*T2;               // C    = Z1*T2
-    const edwards_Fq D = T1;                  // D    = T1*Z2
-    const edwards_Fq E = D+C;                 // E    = D+C
-    const edwards_Fq F = (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
-    const edwards_Fq G = B + A;               // G    = B + A (edwards_a=1)
-    const edwards_Fq H = D-C;                 // H    = D-C
-    const edwards_Fq I = T1*T2;               // I    = T1*T2
+    let A= X1*X2;               // A    = X1*X2
+    let B= Y1*Y2;               // B    = Y1*Y2
+    let C= Z1*T2;               // C    = Z1*T2
+    let D= T1;                  // D    = T1*Z2
+    let E= D+C;                 // E    = D+C
+    let F= (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
+    let G= B + A;               // G    = B + A (edwards_a=1)
+    let H= D-C;                 // H    = D-C
+    let I= T1*T2;               // I    = T1*T2
 
     cc.c_ZZ = (T1-X1)*(T2+X2)-I+A;    // c_ZZ = (T1-X1)*(T2+X2)-I+A
     cc.c_XY = X1-X2*Z1+F;             // c_XY = X1*Z2-X2*Z1+F
@@ -468,7 +468,7 @@ void mixed_addition_step_for_miller_loop(const extended_edwards_G1_projective &b
 //#endif
 }
 
-edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P)
+edwards_tate_G1_precomp edwards_tate_precompute_G1(P:&edwards_G1)
 {
     enter_block("Call to edwards_tate_precompute_G1");
     edwards_tate_G1_precomp result;
@@ -487,7 +487,7 @@ edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P)
     bool found_one = false;
     for i in ( 0..=edwards_modulus_r.max_bits()).rev()
     {
-        const bool bit = edwards_modulus_r.test_bit(i);
+        let mut bit = edwards_modulus_r.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -513,18 +513,18 @@ edwards_tate_G1_precomp edwards_tate_precompute_G1(const edwards_G1& P)
     return result;
 }
 
-edwards_Fq6 edwards_tate_miller_loop(const edwards_tate_G1_precomp &prec_P,
-                          const edwards_tate_G2_precomp &prec_Q)
+edwards_Fq6 edwards_tate_miller_loop(prec_P:&edwards_tate_G1_precomp,
+                          prec_Q:&edwards_tate_G2_precomp)
 {
     enter_block("Call to edwards_tate_miller_loop");
 
     edwards_Fq6 f = edwards_Fq6::one();
 
     bool found_one = false;
-    size_t idx = 0;
+    usize idx = 0;
     for i in ( 0..=(long) edwards_modulus_r.max_bits()-1).rev()
     {
-        const bool bit = edwards_modulus_r.test_bit(i);
+        let mut bit = edwards_modulus_r.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -553,7 +553,7 @@ edwards_Fq6 edwards_tate_miller_loop(const edwards_tate_G1_precomp &prec_P,
     return f;
 }
 
-edwards_Fq6 edwards_tate_pairing(const edwards_G1& P, const edwards_G2 &Q)
+edwards_Fq6 edwards_tate_pairing(Q:&edwards_G1& P, const edwards_G2)
 {
     enter_block("Call to edwards_tate_pairing");
     edwards_tate_G1_precomp prec_P = edwards_tate_precompute_G1(P);
@@ -563,11 +563,11 @@ edwards_Fq6 edwards_tate_pairing(const edwards_G1& P, const edwards_G2 &Q)
     return result;
 }
 
-edwards_GT edwards_tate_reduced_pairing(const edwards_G1 &P, const edwards_G2 &Q)
+edwards_GT edwards_tate_reduced_pairing(P:&edwards_G1, Q:&edwards_G2)
 {
     enter_block("Call to edwards_tate_reduced_pairing");
-    const edwards_Fq6 f = edwards_tate_pairing(P, Q);
-    const edwards_GT result = edwards_final_exponentiation(f);
+    let f= edwards_tate_pairing(P, Q);
+    let result= edwards_final_exponentiation(f);
     leave_block("Call to edwards_tate_reduce_pairing");
     return result;
 }
@@ -578,7 +578,7 @@ struct extended_edwards_G2_projective {
     edwards_Fq3 Z;
     edwards_Fq3 T;
 
-    void print() const
+    pub fn  print() const
         {
             print!("extended edwards_G2 projective X/Y/Z/T:\n");
             X.print();
@@ -587,28 +587,28 @@ struct extended_edwards_G2_projective {
             T.print();
         }
 
-    static void test_invariant()
+    static pub fn  test_invariant()
         {
             assert!(T*Z == X*Y);
         }
 };
 
-void doubling_step_for_flipped_miller_loop(extended_edwards_G2_projective &current,
+pub fn  doubling_step_for_flipped_miller_loop(extended_edwards_G2_projective &current,
                                            edwards_Fq3_conic_coefficients &cc)
 {
-    const edwards_Fq3 &X = current.X, &Y = current.Y, &Z = current.Z, &T = current.T;
-    const edwards_Fq3 A = X.squared();     // A    = X1^2
-    const edwards_Fq3 B = Y.squared();     // B    = Y1^2
-    const edwards_Fq3 C = Z.squared();     // C    = Z1^2
-    const edwards_Fq3 D = (X+Y).squared(); // D    = (X1+Y1)^2
-    const edwards_Fq3 E = (Y+Z).squared(); // E    = (Y1+Z1)^2
-    const edwards_Fq3 F = D-(A+B);         // F    = D-(A+B)
-    const edwards_Fq3 G = E-(B+C);         // G    = E-(B+C)
-    const edwards_Fq3 H = edwards_G2::mul_by_a(A); // edwards_param_twist_coeff_a is 1 * X for us
+    X:&edwards_Fq3 = current.X, &Y = current.Y, &Z = current.Z, &T = current.T;
+    let A= X.squared();     // A    = X1^2
+    let B= Y.squared();     // B    = Y1^2
+    let C= Z.squared();     // C    = Z1^2
+    let D= (X+Y).squared(); // D    = (X1+Y1)^2
+    let E= (Y+Z).squared(); // E    = (Y1+Z1)^2
+    let F= D-(A+B);         // F    = D-(A+B)
+    let G= E-(B+C);         // G    = E-(B+C)
+    let H= edwards_G2::mul_by_a(A); // edwards_param_twist_coeff_a is 1 * X for us
                                    // H    = twisted_a * A
-    const edwards_Fq3 I = H+B;             // I    = H+B
-    const edwards_Fq3 J = C-I;             // J    = C-I
-    const edwards_Fq3 K = J+C;             // K    = J+C
+    let I= H+B;             // I    = H+B
+    let J= C-I;             // J    = C-I
+    let K= J+C;             // K    = J+C
 
     cc.c_ZZ = Y*(T-X);            // c_ZZ = 2*Y1*(T1-X1)
     cc.c_ZZ = cc.c_ZZ + cc.c_ZZ;
@@ -630,23 +630,23 @@ void doubling_step_for_flipped_miller_loop(extended_edwards_G2_projective &curre
 //#endif
 }
 
-void full_addition_step_for_flipped_miller_loop(const extended_edwards_G2_projective &base,
+pub fn  full_addition_step_for_flipped_miller_loop(base:&extended_edwards_G2_projective,
                                                 extended_edwards_G2_projective &current,
                                                 edwards_Fq3_conic_coefficients &cc)
 {
-    const edwards_Fq3 &X1 = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
-    const edwards_Fq3 &X2 = base.X, &Y2 =  base.Y, &Z2 = base.Z, &T2 = base.T;
+    X1:&edwards_Fq3 = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
+    X2:&edwards_Fq3 = base.X, &Y2 =  base.Y, &Z2 = base.Z, &T2 = base.T;
 
-    const edwards_Fq3 A = X1*X2;               // A    = X1*X2
-    const edwards_Fq3 B = Y1*Y2;               // B    = Y1*Y2
-    const edwards_Fq3 C = Z1*T2;               // C    = Z1*T2
-    const edwards_Fq3 D = T1*Z2;               // D    = T1*Z2
-    const edwards_Fq3 E = D+C;                 // E    = D+C
-    const edwards_Fq3 F = (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
+    let A= X1*X2;               // A    = X1*X2
+    let B= Y1*Y2;               // B    = Y1*Y2
+    let C= Z1*T2;               // C    = Z1*T2
+    let D= T1*Z2;               // D    = T1*Z2
+    let E= D+C;                 // E    = D+C
+    let F= (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
     // G = B + twisted_edwards_a * A
-    const edwards_Fq3 G = B + edwards_G2::mul_by_a(A); // edwards_param_twist_coeff_a is 1*X for us
-    const edwards_Fq3 H = D-C;                 // H    = D-C
-    const edwards_Fq3 I = T1*T2;               // I    = T1*T2
+    let G= B + edwards_G2::mul_by_a(A); // edwards_param_twist_coeff_a is 1*X for us
+    let H= D-C;                 // H    = D-C
+    let I= T1*T2;               // I    = T1*T2
 
     // c_ZZ = delta_3* ((T1-X1)*(T2+X2)-I+A)
     cc.c_ZZ = edwards_G2::mul_by_a((T1-X1)*(T2+X2)-I+A); // edwards_param_twist_coeff_a is 1*X for us
@@ -663,22 +663,22 @@ void full_addition_step_for_flipped_miller_loop(const extended_edwards_G2_projec
 //#endif
 }
 
-void mixed_addition_step_for_flipped_miller_loop(const extended_edwards_G2_projective &base,
+pub fn  mixed_addition_step_for_flipped_miller_loop(base:&extended_edwards_G2_projective,
                                                  extended_edwards_G2_projective &current,
                                                  edwards_Fq3_conic_coefficients &cc)
 {
-    const edwards_Fq3 &X1 = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
-    const edwards_Fq3 &X2 = base.X, &Y2 =  base.Y, &T2 = base.T;
+    X1:&edwards_Fq3 = current.X, &Y1 = current.Y, &Z1 = current.Z, &T1 = current.T;
+    X2:&edwards_Fq3 = base.X, &Y2 =  base.Y, &T2 = base.T;
 
-    const edwards_Fq3 A = X1*X2;               // A    = X1*X2
-    const edwards_Fq3 B = Y1*Y2;               // B    = Y1*Y2
-    const edwards_Fq3 C = Z1*T2;               // C    = Z1*T2
-    const edwards_Fq3 E = T1+C;                // E    = T1+C
-    const edwards_Fq3 F = (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
+    let A= X1*X2;               // A    = X1*X2
+    let B= Y1*Y2;               // B    = Y1*Y2
+    let C= Z1*T2;               // C    = Z1*T2
+    let E= T1+C;                // E    = T1+C
+    let F= (X1-Y1)*(X2+Y2)+B-A; // F    = (X1-Y1)*(X2+Y2)+B-A
     // G = B + twisted_edwards_a * A
-    const edwards_Fq3 G = B + edwards_G2::mul_by_a(A); // edwards_param_twist_coeff_a is 1*X for us
-    const edwards_Fq3 H = T1-C;                // H    = T1-C
-    const edwards_Fq3 I = T1*T2;               // I    = T1*T2
+    let G= B + edwards_G2::mul_by_a(A); // edwards_param_twist_coeff_a is 1*X for us
+    let H= T1-C;                // H    = T1-C
+    let I= T1*T2;               // I    = T1*T2
 
     // c_ZZ = delta_3* ((T1-X1)*(T2+X2)-I+A)
     cc.c_ZZ = edwards_G2::mul_by_a((T1-X1)*(T2+X2)-I+A); // edwards_param_twist_coeff_a is 1*X for us
@@ -695,7 +695,7 @@ void mixed_addition_step_for_flipped_miller_loop(const extended_edwards_G2_proje
 //#endif
 }
 
-edwards_ate_G1_precomp edwards_ate_precompute_G1(const edwards_G1& P)
+edwards_ate_G1_precomp edwards_ate_precompute_G1(P:&edwards_G1)
 {
     enter_block("Call to edwards_ate_precompute_G1");
     edwards_G1 Pcopy = P;
@@ -708,10 +708,10 @@ edwards_ate_G1_precomp edwards_ate_precompute_G1(const edwards_G1& P)
     return result;
 }
 
-edwards_ate_G2_precomp edwards_ate_precompute_G2(const edwards_G2& Q)
+edwards_ate_G2_precomp edwards_ate_precompute_G2(Q:&edwards_G2)
 {
     enter_block("Call to edwards_ate_precompute_G2");
-    const bigint<edwards_Fr::num_limbs> &loop_count = edwards_ate_loop_count;
+    loop_count:&bigint<edwards_Fr::num_limbs> = edwards_ate_loop_count;
     edwards_ate_G2_precomp result;
 
     edwards_G2 Qcopy(Q);
@@ -728,7 +728,7 @@ edwards_ate_G2_precomp edwards_ate_precompute_G2(const edwards_G2& Q)
     bool found_one = false;
     for i in ( 0..=(long) loop_count.max_bits()-1).rev()
     {
-        const bool bit = loop_count.test_bit(i);
+        let mut bit = loop_count.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -750,19 +750,19 @@ edwards_ate_G2_precomp edwards_ate_precompute_G2(const edwards_G2& Q)
     return result;
 }
 
-edwards_Fq6 edwards_ate_miller_loop(const edwards_ate_G1_precomp &prec_P,
-                                    const edwards_ate_G2_precomp &prec_Q)
+edwards_Fq6 edwards_ate_miller_loop(prec_P:&edwards_ate_G1_precomp,
+                                    prec_Q:&edwards_ate_G2_precomp)
 {
     enter_block("Call to edwards_ate_miller_loop");
-    const bigint<edwards_Fr::num_limbs> &loop_count = edwards_ate_loop_count;
+    loop_count:&bigint<edwards_Fr::num_limbs> = edwards_ate_loop_count;
 
     edwards_Fq6 f = edwards_Fq6::one();
 
     bool found_one = false;
-    size_t idx = 0;
+    usize idx = 0;
     for i in ( 0..=(long) loop_count.max_bits()-1).rev()
     {
-        const bool bit = loop_count.test_bit(i);
+        let mut bit = loop_count.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -791,21 +791,21 @@ edwards_Fq6 edwards_ate_miller_loop(const edwards_ate_G1_precomp &prec_P,
     return f;
 }
 
-edwards_Fq6 edwards_ate_double_miller_loop(const edwards_ate_G1_precomp &prec_P1,
-                                           const edwards_ate_G2_precomp &prec_Q1,
-                                           const edwards_ate_G1_precomp &prec_P2,
-                                           const edwards_ate_G2_precomp &prec_Q2)
+edwards_Fq6 edwards_ate_double_miller_loop(prec_P1:&edwards_ate_G1_precomp,
+                                           prec_Q1:&edwards_ate_G2_precomp,
+                                           prec_P2:&edwards_ate_G1_precomp,
+                                           prec_Q2:&edwards_ate_G2_precomp)
 {
     enter_block("Call to edwards_ate_double_miller_loop");
-    const bigint<edwards_Fr::num_limbs> &loop_count = edwards_ate_loop_count;
+    loop_count:&bigint<edwards_Fr::num_limbs> = edwards_ate_loop_count;
 
     edwards_Fq6 f = edwards_Fq6::one();
 
     bool found_one = false;
-    size_t idx = 0;
+    usize idx = 0;
     for i in ( 0..=(long) loop_count.max_bits()-1).rev()
     {
-        const bool bit = loop_count.test_bit(i);
+        let mut bit = loop_count.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -844,7 +844,7 @@ edwards_Fq6 edwards_ate_double_miller_loop(const edwards_ate_G1_precomp &prec_P1
     return f;
 }
 
-edwards_Fq6 edwards_ate_pairing(const edwards_G1& P, const edwards_G2 &Q)
+edwards_Fq6 edwards_ate_pairing(Q:&edwards_G1& P, const edwards_G2)
 {
     enter_block("Call to edwards_ate_pairing");
     edwards_ate_G1_precomp prec_P = edwards_ate_precompute_G1(P);
@@ -854,47 +854,47 @@ edwards_Fq6 edwards_ate_pairing(const edwards_G1& P, const edwards_G2 &Q)
     return result;
 }
 
-edwards_GT edwards_ate_reduced_pairing(const edwards_G1 &P, const edwards_G2 &Q)
+edwards_GT edwards_ate_reduced_pairing(P:&edwards_G1, Q:&edwards_G2)
 {
     enter_block("Call to edwards_ate_reduced_pairing");
-    const edwards_Fq6 f = edwards_ate_pairing(P, Q);
-    const edwards_GT result = edwards_final_exponentiation(f);
+    let f= edwards_ate_pairing(P, Q);
+    let result= edwards_final_exponentiation(f);
     leave_block("Call to edwards_ate_reduced_pairing");
     return result;
 }
 
-edwards_G1_precomp edwards_precompute_G1(const edwards_G1& P)
+edwards_G1_precomp edwards_precompute_G1(P:&edwards_G1)
 {
     return edwards_ate_precompute_G1(P);
 }
 
-edwards_G2_precomp edwards_precompute_G2(const edwards_G2& Q)
+edwards_G2_precomp edwards_precompute_G2(Q:&edwards_G2)
 {
     return edwards_ate_precompute_G2(Q);
 }
 
-edwards_Fq6 edwards_miller_loop(const edwards_G1_precomp &prec_P,
-                                const edwards_G2_precomp &prec_Q)
+edwards_Fq6 edwards_miller_loop(prec_P:&edwards_G1_precomp,
+                                prec_Q:&edwards_G2_precomp)
 {
     return edwards_ate_miller_loop(prec_P, prec_Q);
 }
 
-edwards_Fq6 edwards_double_miller_loop(const edwards_G1_precomp &prec_P1,
-                                       const edwards_G2_precomp &prec_Q1,
-                                       const edwards_G1_precomp &prec_P2,
-                                       const edwards_G2_precomp &prec_Q2)
+edwards_Fq6 edwards_double_miller_loop(prec_P1:&edwards_G1_precomp,
+                                       prec_Q1:&edwards_G2_precomp,
+                                       prec_P2:&edwards_G1_precomp,
+                                       prec_Q2:&edwards_G2_precomp)
 {
     return edwards_ate_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
 }
 
-edwards_Fq6 edwards_pairing(const edwards_G1& P,
-                            const edwards_G2 &Q)
+edwards_Fq6 edwards_pairing(P:edwards_G1&,
+                            Q:&edwards_G2)
 {
     return edwards_ate_pairing(P, Q);
 }
 
-edwards_GT edwards_reduced_pairing(const edwards_G1 &P,
-                                   const edwards_G2 &Q)
+edwards_GT edwards_reduced_pairing(P:&edwards_G1,
+                                   Q:&edwards_G2)
 {
     return edwards_ate_reduced_pairing(P, Q);
 }

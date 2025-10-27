@@ -12,7 +12,7 @@
 // use  <cassert>
 // use  <cstdio>
 // use  <string>
-// use  <vector>
+// 
 
 use ffec::common::utils;
 
@@ -22,26 +22,26 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 // 
-// class r1cs_constraint;
+// pub struct r1cs_constraint;
 
 // 
-// class r1cs_constraint_system;
+// pub struct r1cs_constraint_system;
 
 // 
 pub struct protoboard<FieldT> {
-// private:
+// 
 constant_term:    FieldT, /* only here, because pb.val() needs to be able to return reference to the constant 1 term */
 values:    r1cs_variable_assignment<FieldT>, /* values[0] will hold the value of the first allocated variable of the protoboard, *NOT* constant 1 */
 next_free_var:    var_index_t,
 next_free_lc:    lc_index_t,
-lc_values:    std::vector<FieldT>,
+lc_values:    Vec<FieldT>,
 constraint_system:    r1cs_constraint_system<FieldT>,
 }
 
 // 
 //     protoboard();
 
-//     void clear_values();
+//     pub fn  clear_values();
 
 //     FieldT& val(var:&pb_variable<FieldT>);
 //     FieldT val(var:&pb_variable<FieldT>) const;
@@ -49,27 +49,27 @@ constraint_system:    r1cs_constraint_system<FieldT>,
 //     FieldT& lc_val(lc:&pb_linear_combination<FieldT>);
 //     FieldT lc_val(lc:&pb_linear_combination<FieldT>) const;
 
-//     void add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&std::string="");
-//     void augment_variable_annotation(v:&pb_variable<FieldT>, postfix:&std::string);
+//     pub fn  add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&String="");
+//     pub fn  augment_variable_annotation(v:&pb_variable<FieldT>, postfix:&String);
 //     bool is_satisfied() const;
-//     void dump_variables() const;
+//     pub fn  dump_variables() const;
 
-//     size_t num_constraints() const;
-//     size_t num_inputs() const;
-//     size_t num_variables() const;
+//     usize num_constraints() const;
+//     usize num_inputs() const;
+//     usize num_variables() const;
 
-//     void set_input_sizes(primary_input_size:size_t);
+//     pub fn  set_input_sizes(primary_input_size:usize);
 
 //     r1cs_variable_assignment<FieldT> full_variable_assignment() const;
 //     r1cs_primary_input<FieldT> primary_input() const;
 //     r1cs_auxiliary_input<FieldT> auxiliary_input() const;
 //     r1cs_constraint_system<FieldT> get_constraint_system() const;
 
-//     friend class pb_variable<FieldT>;
-//     friend class pb_linear_combination<FieldT>;
+//     friend pub struct pb_variable<FieldT>;
+//     friend pub struct pb_linear_combination<FieldT>;
 
-// private:
-//     var_index_t allocate_var_index(annotation:&std::string="");
+// 
+//     var_index_t allocate_var_index(annotation:&String="");
 //     lc_index_t allocate_lc_index();
 // };
 
@@ -113,13 +113,13 @@ pub fn clear_values()
 }
 
 
- pub fn allocate_var_index(annotation:&std::string)->var_index_t
+ pub fn allocate_var_index(annotation:&String)->var_index_t
 {
 // #ifdef DEBUG
 //     assert!(annotation != "");
 //     constraint_system.variable_annotations[next_free_var] = annotation;
 // #else
-    // ffec::UNUSED(annotation);
+    // //ffec::UNUSED(annotation);
 //#endif
     constraint_system.auxiliary_input_size+=1;
     values.push(FieldT::zero());
@@ -178,19 +178,19 @@ pub fn clear_values()
 }
 
 
-pub fn add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&std::string)
+pub fn add_r1cs_constraint(constr:&r1cs_constraint<FieldT>, annotation:&String)
 {
 // #ifdef DEBUG
 //     assert!(annotation != "");
 //     constraint_system.constraint_annotations[constraint_system.constraints.len()] = annotation;
 // #else
-//     ffec::UNUSED(annotation);
+//     //ffec::UNUSED(annotation);
 //#endif
     constraint_system.constraints.push(constr);
 }
 
 
-pub fn augment_variable_annotation(v:&pb_variable<FieldT>, postfix:&std::string)
+pub fn augment_variable_annotation(v:&pb_variable<FieldT>, postfix:&String)
 {
 // #ifdef DEBUG
     constraint_system.variable_annotations[v.index] = if let Some(it) = constraint_system.variable_annotations.find(v.index){it.1.to_string()+" "} else {""}  + postfix;
@@ -234,7 +234,7 @@ pub fn dump_variables()
 }
 
 
-pub fn set_input_sizes(primary_input_size:size_t)
+pub fn set_input_sizes(primary_input_size:usize)
 {
     assert!(primary_input_size <= num_variables());
     constraint_system.primary_input_size = primary_input_size;

@@ -22,24 +22,24 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_par
 
 
 
-// template<typename ppT>
+// 
 pub struct kpT<ppT> {
 // 
    sk: r1cs_ppzkadsnark_skT<ppT> ,
     vk: r1cs_ppzkadsnark_vkT<ppT>,
 }
 
-// template<typename ppT>
-// kpT<ppT> sigGen(void);
+// 
+// kpT<ppT> sigGen(pub fn );
 
-// template<typename ppT>
-// r1cs_ppzkadsnark_sigT<ppT> sigSign(const r1cs_ppzkadsnark_skT<ppT> &sk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda);
+// 
+// r1cs_ppzkadsnark_sigT<ppT> sigSign(sk:&r1cs_ppzkadsnark_skT<ppT>, label:&labelT, Lambda:&ffec::G2<snark_pp<ppT>>);
 
-// template<typename ppT>
-// bool sigVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const labelT &label, const ffec::G2<snark_pp<ppT>> &Lambda, const r1cs_ppzkadsnark_sigT<ppT> &sig);
+// 
+// bool sigVerif(vk:&r1cs_ppzkadsnark_vkT<ppT>, label:&labelT, Lambda:&ffec::G2<snark_pp<ppT>>, sig:&r1cs_ppzkadsnark_sigT<ppT>);
 
-// template<typename ppT>
-// bool sigBatchVerif(const r1cs_ppzkadsnark_vkT<ppT> &vk, const std::vector<labelT> &labels, const std::vector<ffec::G2<snark_pp<ppT>>> &Lambdas, const std::vector<r1cs_ppzkadsnark_sigT<ppT>> &sigs);
+// 
+// bool sigBatchVerif(vk:&r1cs_ppzkadsnark_vkT<ppT>, labels:&Vec<labelT>, Lambdas:&Vec<ffec::G2<snark_pp<ppT>>>, sigs:&Vec<r1cs_ppzkadsnark_sigT<ppT>>);
 
 
 

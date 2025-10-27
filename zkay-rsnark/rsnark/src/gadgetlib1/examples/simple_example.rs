@@ -12,13 +12,13 @@ use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_exa
 
 
 
-// template<typename FieldT>
-// r1cs_example<FieldT> gen_r1cs_example_from_protoboard(const size_t num_constraints,
-//                                                       const size_t num_inputs);
+// 
+// r1cs_example<FieldT> gen_r1cs_example_from_protoboard(num_constraints:usize,
+//                                                       num_inputs:usize);
 
 
 
-// use crate::gadgetlib1::examples/simple_example;
+// use crate::gadgetlib1::examples::simple_example;
 
 //#endif // SIMPLE_EXAMPLE_HPP_
 /** @file
@@ -37,13 +37,13 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
 
-// template<typename FieldT>
-// r1cs_example<FieldT> gen_r1cs_example_from_protoboard(const size_t num_constraints)
+// 
+// r1cs_example<FieldT> gen_r1cs_example_from_protoboard(num_constraints:usize)
 // {
-//     const size_t new_num_constraints = num_constraints - 1;
+//     let new_num_constraints = num_constraints - 1;
 
 //     /* construct dummy example: inner products of two vectors */
-//     protoboard<FieldT> pb;
+//     let mut  pb=protoboard::<FieldT> ::new();
 //     pb_variable_array<FieldT> A;
 //     pb_variable_array<FieldT> B;
 //     pb_variable<FieldT> res;

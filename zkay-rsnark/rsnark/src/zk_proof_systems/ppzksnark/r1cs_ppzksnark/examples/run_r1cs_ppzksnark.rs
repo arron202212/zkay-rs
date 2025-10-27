@@ -26,13 +26,13 @@ use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_exa
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-// template<typename ppT>
-// bool run_r1cs_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
-//                         const bool test_serialization);
+// 
+// bool run_r1cs_ppzksnark(example:&r1cs_example<ffec::Fr<ppT> >,
+//                         test_serialization:bool);
 
 
 
-// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples/run_r1cs_ppzksnark;
+// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
 
 //#endif // RUN_R1CS_PPZKSNARK_HPP_
 /** @file
@@ -61,26 +61,26 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
 
 
-// template<typename ppT>
-// typename std::enable_if<ppT::has_affine_pairing, void>::type
-// test_affine_verifier(const r1cs_ppzksnark_verification_key<ppT> &vk,
-//                      const r1cs_ppzksnark_primary_input<ppT> &primary_input,
-//                      const r1cs_ppzksnark_proof<ppT> &proof,
-//                      const bool expected_answer)
+// 
+// std::enable_if<ppT::has_affine_pairing, pub fn >::type
+// test_affine_verifier(vk:&r1cs_ppzksnark_verification_key<ppT>,
+//                      primary_input:&r1cs_ppzksnark_primary_input<ppT>,
+//                      proof:&r1cs_ppzksnark_proof<ppT>,
+//                      expected_answer:bool)
 // {
 //     ffec::print_header("R1CS ppzkSNARK Affine Verifier");
-//     const bool answer = r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk, primary_input, proof);
+//     primary_input:bool answer = r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk,, proof);
 //     assert!(answer == expected_answer);
 // }
 
-// template<typename ppT>
-// typename std::enable_if<!ppT::has_affine_pairing, void>::type
-// test_affine_verifier(const r1cs_ppzksnark_verification_key<ppT> &vk,
-//                      const r1cs_ppzksnark_primary_input<ppT> &primary_input,
-//                      const r1cs_ppzksnark_proof<ppT> &proof,
-//                      const bool expected_answer)
+// 
+// std::enable_if<!ppT::has_affine_pairing, pub fn >::type
+// test_affine_verifier(vk:&r1cs_ppzksnark_verification_key<ppT>,
+//                      primary_input:&r1cs_ppzksnark_primary_input<ppT>,
+//                      proof:&r1cs_ppzksnark_proof<ppT>,
+//                      expected_answer:bool)
 // {
-//     ffec::UNUSED(vk, primary_input, proof, expected_answer);
+//     //ffec::UNUSED(vk, primary_input, proof, expected_answer);
 //     ffec::print_header("R1CS ppzkSNARK Affine Verifier");
 //     print!("Affine verifier is not supported; not testing anything.\n");
 // }
@@ -97,9 +97,9 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a primary input for CS, and a proof.
 //  */
-// template<typename ppT>
-// bool run_r1cs_ppzksnark(const r1cs_example<ffec::Fr<ppT> > &example,
-//                         const bool test_serialization)
+// 
+// bool run_r1cs_ppzksnark(example:&r1cs_example<ffec::Fr<ppT> >,
+//                         test_serialization:bool)
 // {
 //     ffec::enter_block("Call to run_r1cs_ppzksnark");
 
@@ -131,12 +131,12 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 //     }
 
 //     ffec::print_header("R1CS ppzkSNARK Verifier");
-//     const bool ans = r1cs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
+//     let mut ans = r1cs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
 //     print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-//     print!("* The verification result is: %s\n", if ans {"PASS"} else{"FAIL"});
+//     print!("* The verification result is: {}\n", if ans {"PASS"} else{"FAIL"});
 
 //     ffec::print_header("R1CS ppzkSNARK Online Verifier");
-//     const bool ans2 = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
+//     let mut ans2 = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
 //     assert!(ans == ans2);
 
 //     test_affine_verifier<ppT>(keypair.vk, example.primary_input, proof, ans);

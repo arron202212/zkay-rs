@@ -11,7 +11,7 @@ use  <sstream>
 use  "depends/gtest/googletest/include/gtest/gtest.h"
 
 use crate::common::default_types::r1cs_ppzksnark_pp;
-use crate::gadgetlib2::examples/simple_example;
+use crate::gadgetlib2::examples::simple_example;
 use crate::gadgetlib2::gadget;
 use crate::gadgetlib2::pp;
 use crate::gadgetlib2::protoboard;
@@ -27,9 +27,9 @@ TEST(gadgetLib2,Integration) {
 
     initPublicParamsFromDefaultPp();
     const r1cs_example<ffec::Fr<default_r1cs_ppzksnark_pp> > example = gen_r1cs_example_from_gadgetlib2_protoboard(100);
-    const bool test_serialization = false;
+    let mut test_serialization = false;
 
-    const bool bit = run_r1cs_ppzksnark<default_r1cs_ppzksnark_pp>(example, test_serialization);
+    let mut bit = run_r1cs_ppzksnark<default_r1cs_ppzksnark_pp>(example, test_serialization);
     EXPECT_TRUE(bit);
 };
 

@@ -33,28 +33,28 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksna
 
 //     if argc != 6
 //     {
-//         print!("usage: %s word_size reg_count program_size input_size time_bound\n", argv[0]);
+//         print!("usage: {} word_size reg_count program_size input_size time_bound\n", argv[0]);
 //         return 1;
 //     }
 
-//     const size_t w = atoi(argv[1]),
+//     let w = atoi(argv[1]),
 //                  k = atoi(argv[2]),
 //                  program_size = atoi(argv[3]),
 //                  input_size = atoi(argv[4]),
 //                  time_bound = atoi(argv[5]);
 
-//     type ram_ppzksnark_machine_pp<default_ram_ppzksnark_pp> machine_ppT;
+//     type machine_ppT=ram_ppzksnark_machine_pp<default_ram_ppzksnark_pp>;
 
 //     const ram_ppzksnark_architecture_params<default_ram_ppzksnark_pp> ap(w, k);
 
 //     ffec::enter_block("Generate RAM example");
-//     const size_t boot_trace_size_bound = program_size + input_size;
-//     const bool satisfiable = true;
+//     let boot_trace_size_bound = program_size + input_size;
+//     let mut satisfiable = true;
 //     ram_example<machine_ppT> example = gen_ram_example_complex<machine_ppT>(ap, boot_trace_size_bound, time_bound, satisfiable);
 //     ffec::leave_block("Generate RAM example");
 
 //     ffec::print_header("(enter) Profile RAM ppzkSNARK");
-//     const bool test_serialization = true;
+//     let mut test_serialization = true;
 //     run_ram_ppzksnark<default_ram_ppzksnark_pp>(example, test_serialization);
 //     ffec::print_header("(leave) Profile RAM ppzkSNARK");
 // }

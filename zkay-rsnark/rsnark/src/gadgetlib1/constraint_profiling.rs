@@ -15,27 +15,27 @@
 // use  <cstddef>
 // use  <map>
 // use  <string>
-// use  <vector>
+// 
 
 
 
-// extern size_t constraint_profiling_indent;
+// extern usize constraint_profiling_indent;
 
 pub struct constraint_profiling_entry {
-    indent:size_t,
+    indent:usize,
     annotation:string,
-    count:size_t,
+    count:usize,
 }
 
-// extern std::vector<constraint_profiling_entry> constraint_profiling_table;
+// extern Vec<constraint_profiling_entry> constraint_profiling_table;
 
 // #define PROFILE_CONSTRAINTS(pb, annotation)                             \;
-    // for (size_t _num_constraints_before = pb.num_constraints(), _iter = (++constraint_profiling_indent, 0), _cp_pos = constraint_profiling_table.len(); \
+    // for (usize _num_constraints_before = pb.num_constraints(), _iter = (++constraint_profiling_indent, 0), _cp_pos = constraint_profiling_table.len(); \
     //      _iter == 0;                                                    \
     //      constraint_profiling_table.insert(constraint_profiling_table.begin() + _cp_pos, constraint_profiling_entry{--constraint_profiling_indent, annotation, pb.num_constraints() - _num_constraints_before}), \
     //      _iter = 1)
 
-// size_t PRINT_CONSTRAINT_PROFILING(); // returns # of top level constraints
+// usize PRINT_CONSTRAINT_PROFILING(); // returns # of top level constraints
 
 
 
@@ -59,8 +59,8 @@ use crate::gadgetlib1::constraint_profiling;
 
 
 
-// size_t constraint_profiling_indent = 0;
-// std::vector<constraint_profiling_entry> constraint_profiling_table;
+// usize constraint_profiling_indent = 0;
+// Vec<constraint_profiling_entry> constraint_profiling_table;
 
 pub fn  PRINT_CONSTRAINT_PROFILING()->usize
 {
@@ -79,7 +79,7 @@ pub fn  PRINT_CONSTRAINT_PROFILING()->usize
         {
             print!("  ");
         }
-        print!("* Number of constraints in [{}]: {}\n", ent.annotation.c_str(), ent.count);
+        print!("* Number of constraints in [{}]: {}\n", ent.annotation, ent.count);
     }
 
     constraint_profiling_table.clear();

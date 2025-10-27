@@ -26,19 +26,19 @@ use crate::algebra::field_utils::bigint::bigint;
 // /**
 //  * Find the wNAF representation of the given scalar relative to the given window size.
 //  */
-// template<mp_size_t N>
-// std::vector<long> find_wnaf(window_size:std::usize, scalar:&bigint<N>);
+// 
+// Vec<long> find_wnaf(window_size:std::usize, scalar:&bigint<N>);
 
 // /**
 //  * In additive notation, use wNAF exponentiation (with the given window size) to compute scalar * base.
 //  */
-// template<typename T, mp_size_t N>
+// 
 // T fixed_window_wnaf_exp(window_size:std::usize, base:&T, scalar:&bigint<N>);
 
 // /**
 //  * In additive notation, use wNAF exponentiation (with the window size determined by T) to compute scalar * base.
 //  */
-// template<typename T, mp_size_t N>
+// 
 // T opt_window_wnaf_exp(base:&T, scalar:&bigint<N>, const std::usize scalar_bits);
 
 // } // namespace libff

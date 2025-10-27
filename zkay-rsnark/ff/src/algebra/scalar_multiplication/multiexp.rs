@@ -64,11 +64,11 @@ enum multi_exp_method {
 //  * Input is split into the given number of chunks, and, when compiled with
 //  * MULTICORE, the chunks are processed in parallel.
 //  */
-// template<typename T, typename FieldT, multi_exp_method Method>
-// T multi_exp(typename Vec<T>::const_iterator vec_start,
-            // typename Vec<T>::const_iterator vec_end,
-            // typename Vec<FieldT>::const_iterator scalar_start,
-            // typename Vec<FieldT>::const_iterator scalar_end,
+// 
+// T multi_exp(Vec<T>::const_iterator vec_start,
+            // Vec<T>::const_iterator vec_end,
+            // Vec<FieldT>::const_iterator scalar_start,
+            // Vec<FieldT>::const_iterator scalar_end,
             // const std::usize chunks);
 // 
 // 
@@ -78,64 +78,64 @@ enum multi_exp_method {
 //  * Assumes input is in special form, and includes special pre-processing for
 //  * scalars equal to 0 or 1.
 //  */
-// template<typename T, typename FieldT, multi_exp_method Method>
-// T multi_exp_with_mixed_addition(typename Vec<T>::const_iterator vec_start,
-                                // typename Vec<T>::const_iterator vec_end,
-                                // typename Vec<FieldT>::const_iterator scalar_start,
-                                // typename Vec<FieldT>::const_iterator scalar_end,
+// 
+// T multi_exp_with_mixed_addition(Vec<T>::const_iterator vec_start,
+                                // Vec<T>::const_iterator vec_end,
+                                // Vec<FieldT>::const_iterator scalar_start,
+                                // Vec<FieldT>::const_iterator scalar_end,
                                 // const std::usize chunks);
 // 
 // /**
 //  * A convenience function for calculating a pure inner product, where the
 //  * more complicated methods are not required.
 //  */
-// template <typename T>
-// T inner_product(typename Vec<T>::const_iterator a_start,
-                // typename Vec<T>::const_iterator a_end,
-                // typename Vec<T>::const_iterator b_start,
-                // typename Vec<T>::const_iterator b_end);
+// template <T>
+// T inner_product(Vec<T>::const_iterator a_start,
+                // Vec<T>::const_iterator a_end,
+                // Vec<T>::const_iterator b_start,
+                // Vec<T>::const_iterator b_end);
 // 
 // /**
 //  * A window table stores window sizes for different instance sizes for fixed-base multi-scalar multiplications.
 //  */
-// template<typename T>
+// 
 type window_table<T> =Vec<Vec<T>>;
 // 
 // /**
 //  * Compute window size for the given number of scalars.
 //  */
-// template<typename T>
+// 
 // std::usize get_exp_window_size(const std::usize num_scalars);
 // 
 // /**
 //  * Compute table of window sizes.
 //  */
-// template<typename T>
-// window_table<T> get_window_table(const std::usize scalar_size,
-                                //  const std::usize window,
-                                //  const T &g);
 // 
-// template<typename T, typename FieldT>
-// T windowed_exp(const std::usize scalar_size,
-            //    const std::usize window,
-            //    const window_table<T> &powers_of_g,
-            //    const FieldT &pow);
+// window_table<T> get_window_table(scalar_size:std::usize,
+                                //  window:std::usize,
+                                //  g:&T);
 // 
-// template<typename T, typename FieldT>
-// Vec<T> batch_exp(const std::usize scalar_size,
-                        //  const std::usize window,
-                        //  const window_table<T> &table,
-                        //  const Vec<FieldT> &v);
 // 
-// template<typename T, typename FieldT>
-// Vec<T> batch_exp_with_coeff(const std::usize scalar_size,
-                                    // const std::usize window,
-                                    // const window_table<T> &table,
+// T windowed_exp(scalar_size:std::usize,
+            //    window:std::usize,
+            //    powers_of_g:&window_table<T>,
+            //    pow:&FieldT);
+// 
+// 
+// Vec<T> batch_exp(scalar_size:std::usize,
+                        //  window:std::usize,
+                        //  table:&window_table<T>,
+                        //  v:&Vec<FieldT>);
+// 
+// 
+// Vec<T> batch_exp_with_coeff(scalar_size:std::usize,
+                                    // window:std::usize,
+                                    // table:&window_table<T>,
                                     // coeff:&FieldT,
-                                    // const Vec<FieldT> &v);
+                                    // v:&Vec<FieldT>);
 // 
-// template<typename T>
-// void batch_to_special(Vec<T> &vec);
+// 
+// pub fn  batch_to_special(Vec<T> &vec);
 
 // // } // namespace libff
 // 
@@ -169,7 +169,7 @@ use crate::common::utils::log2;
 
 // using std::usize;
 
-// template<mp_size_t n>
+// 
 #[derive(Clone)]
 pub struct ordered_exponent<const N:usize> {
 // to use std::push_heap and friends later
@@ -199,7 +199,7 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
     }
 }
 
-//     bool operator<(const ordered_exponent<n> &other) const
+//     bool operator<(other:&ordered_exponent<n>) const
 //     {
 // // #if defined(__x86_64__) && defined(USE_ASM)
 //         // if n == 3
@@ -272,7 +272,7 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
  * multiexponentiation method.
  * this implementation relies on some rather arcane template magic:
  * function templates cannot be partially specialized, so we cannot just write
- *     template<typename T, typename FieldT>
+ *     
  *     T multi_exp_inner<T, FieldT, multi_exp_method_naive>
  * thus we resort to using std::enable_if. the basic idea is that *overloading*
  * is what's actually happening here, it's just that, for any given value of
@@ -299,7 +299,7 @@ const fn check( method:multi_exp_method) -> u8 {
 //          Item::<{ check(-1) }>::foo()); // C
 // }
 
-trait AsBigint{
+pub trait AsBigint{
 const num_limbs:i32=0;
 fn as_bigint<const N:usize>(&self)->bigint<N>;
     fn dbl<T>(&self)->T;
@@ -308,13 +308,13 @@ fn as_bigint<const N:usize>(&self)->bigint<N>;
     fn to_special(&self);
 }
 
-// template<typename T, typename FieldT, multi_exp_method Method,
-//     typename std::enable_if<(Method == multi_exp_method_naive), int>::type = 0>
+// template<T, FieldT, multi_exp_method Method,
+//     std::enable_if<(Method == multi_exp_method_naive), int>::type = 0>
 // T multi_exp_inner(
-//     typename Vec<T>::const_iterator vec_start,
-//     typename Vec<T>::const_iterator vec_end,
-//     typename Vec<FieldT>::const_iterator scalar_start,
-//     typename Vec<FieldT>::const_iterator scalar_end)
+//     Vec<T>::const_iterator vec_start,
+//     Vec<T>::const_iterator vec_end,
+//     Vec<FieldT>::const_iterator scalar_start,
+//     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_naive}>{
 fn  multi_exp_inner<T: num_traits::Zero+Config+Clone+ std::ops::Sub<Output = T>,FieldT:AsBigint,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
@@ -332,13 +332,13 @@ fn  multi_exp_inner<T: num_traits::Zero+Config+Clone+ std::ops::Sub<Output = T>,
 }
 }
 
-// template<typename T, typename FieldT, multi_exp_method Method,
-//     typename std::enable_if<(Method == multi_exp_method_naive_plain), int>::type = 0>
+// template<T, FieldT, multi_exp_method Method,
+//     std::enable_if<(Method == multi_exp_method_naive_plain), int>::type = 0>
 // T multi_exp_inner(
-//     typename Vec<T>::const_iterator vec_start,
-//     typename Vec<T>::const_iterator vec_end,
-//     typename Vec<FieldT>::const_iterator scalar_start,
-//     typename Vec<FieldT>::const_iterator scalar_end)
+//     Vec<T>::const_iterator vec_start,
+//     Vec<T>::const_iterator vec_end,
+//     Vec<FieldT>::const_iterator scalar_start,
+//     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_naive_plain}>{
 fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
@@ -355,17 +355,17 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>,cons
 }
 
 
-// template<typename T, typename FieldT, multi_exp_method Method,
-//     typename std::enable_if<(Method == multi_exp_method_bos_coster), int>::type = 0>
+// template<T, FieldT, multi_exp_method Method,
+//     std::enable_if<(Method == multi_exp_method_bos_coster), int>::type = 0>
 // T multi_exp_inner(
-//     typename Vec<T>::const_iterator vec_start,
-//     typename Vec<T>::const_iterator vec_end,
-//     typename Vec<FieldT>::const_iterator scalar_start,
-//     typename Vec<FieldT>::const_iterator scalar_end)
+//     Vec<T>::const_iterator vec_start,
+//     Vec<T>::const_iterator vec_end,
+//     Vec<FieldT>::const_iterator scalar_start,
+//     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_bos_coster}>{
 fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub<Output = T>,FieldT: std::ops::Mul<T, Output = T>+AsBigint+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
-    const  n:usize = 0;//FieldT::num_limbs;//MYTODO
+    const   n:usize =0;//FieldT::num_limbs;//MYTODO
 
     if vec.is_empty()
     {
@@ -475,13 +475,13 @@ fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub
 }
 
 
-// template<typename T, typename FieldT, multi_exp_method Method,
-//     typename std::enable_if<(Method == multi_exp_method_BDLO12), int>::type = 0>
+// template<T, FieldT, multi_exp_method Method,
+//     std::enable_if<(Method == multi_exp_method_BDLO12), int>::type = 0>
 // T multi_exp_inner(
-//     typename Vec<T>::const_iterator bases,
-//     typename Vec<T>::const_iterator bases_end,
-//     typename Vec<FieldT>::const_iterator exponents,
-//     typename Vec<FieldT>::const_iterator exponents_end)
+//     Vec<T>::const_iterator bases,
+//     Vec<T>::const_iterator bases_end,
+//     Vec<FieldT>::const_iterator exponents,
+//     Vec<FieldT>::const_iterator exponents_end)
 impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_BDLO12}>{
 fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Clone,FieldT: AsBigint,const NN:usize>(bases:&[T],exponents:&[FieldT])->T
 {
@@ -595,7 +595,7 @@ fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Clone,FieldT: AsBigint,const NN
     return result;
 }
 }
-// template<typename T, typename FieldT, multi_exp_method Method>
+// 
 pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone+Config+AsBigint+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<T,Output = T>+Clone,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
              chunks:usize)->T
 {

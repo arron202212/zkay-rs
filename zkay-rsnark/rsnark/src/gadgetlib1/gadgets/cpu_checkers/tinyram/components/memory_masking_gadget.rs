@@ -55,7 +55,7 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable
  */
 // 
 pub struct memory_masking_gadget  {
-// private:: public tinyram_standard_gadget<FieldT>
+// : public tinyram_standard_gadget<FieldT>
 shift:    pb_linear_combination<FieldT>,
 is_word0:    pb_variable<FieldT>,
 is_word1:    pb_variable<FieldT>,
@@ -66,7 +66,7 @@ masked_out_word0:    pb_linear_combination<FieldT>,
 masked_out_word1:    pb_linear_combination<FieldT>,
 masked_out_bytes:    pb_linear_combination_array<FieldT>,
 
-get_masked_out_dw_contents_prev:    std::shared_ptr<inner_product_gadget<FieldT> >,
+get_masked_out_dw_contents_prev:    RcCell<inner_product_gadget<FieldT> >,
 
 masked_out_dw_contents_prev:    pb_variable<FieldT>,
 expected_dw_contents_next:    pb_variable<FieldT>,
@@ -85,9 +85,9 @@ dw_contents_next:    doubleword_variable_gadget<FieldT>,
     //                       access_is_word:pb_linear_combination<FieldT>,
     //                       access_is_byte:pb_linear_combination<FieldT>,
     //                       dw_contents_next:doubleword_variable_gadget<FieldT>,
-    //                       annotation_prefix:std::string="");
-    // void generate_r1cs_constraints();
-    // void generate_r1cs_witness();
+    //                       annotation_prefix:String="");
+    // pub fn  generate_r1cs_constraints();
+    // pub fn  generate_r1cs_witness();
 }
 
 
@@ -122,7 +122,7 @@ pb:tinyram_protoboard<FieldT>,
                                                      access_is_word:pb_linear_combination<FieldT>,
                                                      access_is_byte:pb_linear_combination<FieldT>,
                                                      dw_contents_next:doubleword_variable_gadget<FieldT>,
-                                                     annotation_prefix:std::string) ->Self
+                                                     annotation_prefix:String) ->Self
    
 {
     /*

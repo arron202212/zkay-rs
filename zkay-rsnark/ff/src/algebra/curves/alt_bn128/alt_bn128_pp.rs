@@ -15,34 +15,34 @@ use crate::algebra::curves::public_params;
 
 // namespace libff {
 
-class alt_bn128_pp {
+pub struct alt_bn128_pp {
 
-    typedef alt_bn128_Fr Fp_type;
-    typedef alt_bn128_G1 G1_type;
-    typedef alt_bn128_G2 G2_type;
-    typedef alt_bn128_G1_precomp G1_precomp_type;
-    typedef alt_bn128_G2_precomp G2_precomp_type;
-    typedef alt_bn128_Fq Fq_type;
-    typedef alt_bn128_Fq2 Fqe_type;
-    typedef alt_bn128_Fq12 Fqk_type;
-    typedef alt_bn128_GT GT_type;
+    type Fp_type=alt_bn128_Fr;
+    type G1_type=alt_bn128_G1;
+    type G2_type=alt_bn128_G2;
+    type G1_precomp_type=alt_bn128_G1_precomp;
+    type G2_precomp_type=alt_bn128_G2_precomp;
+    type Fq_type=alt_bn128_Fq;
+    type Fqe_type=alt_bn128_Fq2;
+    type Fqk_type=alt_bn128_Fq12;
+    type GT_type=alt_bn128_GT;
 
-    static const bool has_affine_pairing = false;
+    static let mut has_affine_pairing = false;
 
-    static void init_public_params();
-    static alt_bn128_GT final_exponentiation(const alt_bn128_Fq12 &elt);
-    static alt_bn128_G1_precomp precompute_G1(const alt_bn128_G1 &P);
-    static alt_bn128_G2_precomp precompute_G2(const alt_bn128_G2 &Q);
-    static alt_bn128_Fq12 miller_loop(const alt_bn128_G1_precomp &prec_P,
-                                      const alt_bn128_G2_precomp &prec_Q);
-    static alt_bn128_Fq12 double_miller_loop(const alt_bn128_G1_precomp &prec_P1,
-                                             const alt_bn128_G2_precomp &prec_Q1,
-                                             const alt_bn128_G1_precomp &prec_P2,
-                                             const alt_bn128_G2_precomp &prec_Q2);
-    static alt_bn128_Fq12 pairing(const alt_bn128_G1 &P,
-                                  const alt_bn128_G2 &Q);
-    static alt_bn128_Fq12 reduced_pairing(const alt_bn128_G1 &P,
-                                          const alt_bn128_G2 &Q);
+    static pub fn  init_public_params();
+    static alt_bn128_GT final_exponentiation(elt:&alt_bn128_Fq12);
+    static alt_bn128_G1_precomp precompute_G1(P:&alt_bn128_G1);
+    static alt_bn128_G2_precomp precompute_G2(Q:&alt_bn128_G2);
+    static alt_bn128_Fq12 miller_loop(prec_P:&alt_bn128_G1_precomp,
+                                      prec_Q:&alt_bn128_G2_precomp);
+    static alt_bn128_Fq12 double_miller_loop(prec_P1:&alt_bn128_G1_precomp,
+                                             prec_Q1:&alt_bn128_G2_precomp,
+                                             prec_P2:&alt_bn128_G1_precomp,
+                                             prec_Q2:&alt_bn128_G2_precomp);
+    static alt_bn128_Fq12 pairing(P:&alt_bn128_G1,
+                                  Q:&alt_bn128_G2);
+    static alt_bn128_Fq12 reduced_pairing(P:&alt_bn128_G1,
+                                          Q:&alt_bn128_G2);
 };
 
 // } // namespace libff
@@ -59,48 +59,48 @@ use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 
 // namespace libff {
 
-void alt_bn128_pp::init_public_params()
+pub fn init_public_params()
 {
     init_alt_bn128_params();
 }
 
-alt_bn128_GT alt_bn128_pp::final_exponentiation(const alt_bn128_Fq12 &elt)
+alt_bn128_GT alt_bn128_pp::final_exponentiation(elt:&alt_bn128_Fq12)
 {
     return alt_bn128_final_exponentiation(elt);
 }
 
-alt_bn128_G1_precomp alt_bn128_pp::precompute_G1(const alt_bn128_G1 &P)
+alt_bn128_G1_precomp alt_bn128_pp::precompute_G1(P:&alt_bn128_G1)
 {
     return alt_bn128_precompute_G1(P);
 }
 
-alt_bn128_G2_precomp alt_bn128_pp::precompute_G2(const alt_bn128_G2 &Q)
+alt_bn128_G2_precomp alt_bn128_pp::precompute_G2(Q:&alt_bn128_G2)
 {
     return alt_bn128_precompute_G2(Q);
 }
 
-alt_bn128_Fq12 alt_bn128_pp::miller_loop(const alt_bn128_G1_precomp &prec_P,
-                                         const alt_bn128_G2_precomp &prec_Q)
+alt_bn128_Fq12 alt_bn128_pp::miller_loop(prec_P:&alt_bn128_G1_precomp,
+                                         prec_Q:&alt_bn128_G2_precomp)
 {
     return alt_bn128_miller_loop(prec_P, prec_Q);
 }
 
-alt_bn128_Fq12 alt_bn128_pp::double_miller_loop(const alt_bn128_G1_precomp &prec_P1,
-                                                const alt_bn128_G2_precomp &prec_Q1,
-                                                const alt_bn128_G1_precomp &prec_P2,
-                                                const alt_bn128_G2_precomp &prec_Q2)
+alt_bn128_Fq12 alt_bn128_pp::double_miller_loop(prec_P1:&alt_bn128_G1_precomp,
+                                                prec_Q1:&alt_bn128_G2_precomp,
+                                                prec_P2:&alt_bn128_G1_precomp,
+                                                prec_Q2:&alt_bn128_G2_precomp)
 {
     return alt_bn128_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
 }
 
-alt_bn128_Fq12 alt_bn128_pp::pairing(const alt_bn128_G1 &P,
-                                     const alt_bn128_G2 &Q)
+alt_bn128_Fq12 alt_bn128_pp::pairing(P:&alt_bn128_G1,
+                                     Q:&alt_bn128_G2)
 {
     return alt_bn128_pairing(P, Q);
 }
 
-alt_bn128_Fq12 alt_bn128_pp::reduced_pairing(const alt_bn128_G1 &P,
-                                             const alt_bn128_G2 &Q)
+alt_bn128_Fq12 alt_bn128_pp::reduced_pairing(P:&alt_bn128_G1,
+                                             Q:&alt_bn128_G2)
 {
     return alt_bn128_reduced_pairing(P, Q);
 }

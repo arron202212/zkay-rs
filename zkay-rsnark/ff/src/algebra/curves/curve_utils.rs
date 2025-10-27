@@ -13,8 +13,8 @@ use crate::algebra::field_utils::bigint::bigint;
 
 // namespace libff {
 
-// template<typename GroupT, mp_size_t m>
-// GroupT scalar_mul(const GroupT &base, const bigint<m> &scalar);
+// 
+// GroupT scalar_mul(base:&GroupT, scalar:&bigint<m>);
 
 // } // namespace libff
 // use crate::algebra::curves::curve_utils.tcc;
@@ -32,7 +32,7 @@ use crate::algebra::field_utils::bigint::bigint;
 
 // namespace libff {
 
-// template<typename GroupT, mp_size_t m>
+// 
  pub fn scalar_mul<GroupT: num_traits::Zero,const M:usize>(base:&GroupT, scalar:&bigint<M>)->GroupT
 {
     let mut  result = GroupT::zero();

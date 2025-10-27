@@ -21,21 +21,21 @@ use crate::relations::ram_computations::rams::ram_params;
  * ram_zksnark_ppT. When used, the interfaces must be invoked with
  * a particular parameter choice; let 'my_ram_zksnark_pp' denote this choice.
  *
- * The class my_ram_zksnark_pp must contain typedefs for the typenames
+ * The pub struct my_ram_zksnark_pp must contain typedefs for the typenames
  * - PCD_pp, and
  * - machine_pp.
  *
  * As well as a method with type signature:
- *  static void init_public_params()
+ *  static pub fn  init_public_params()
  *
  * For example, if you want to use the types my_PCD_pp and my_machine_pp,
  * then you would declare my_ram_zksnark_pp as follows:
  *
- *   class my_ram_zksnark_pp {
+ *   pub struct my_ram_zksnark_pp {
  *   
- *       type my_PCD_pp PCD_pp;
- *       type my_machine_pp machine_pp;
- *       static void init_public_params()
+ *       type PCD_pp=my_PCD_pp;
+ *       type machine_pp=my_machine_pp;
+ *       static pub fn  init_public_params()
  *       {
  *           PCD_pp::init_public_params(); // plus other necessary initialization
  *       }

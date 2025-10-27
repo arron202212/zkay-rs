@@ -14,7 +14,7 @@ use  "depends/gtest/googletest/include/gtest/gtest.h"
 use crate::gadgetlib2::constraint;
 use crate::gadgetlib2::pp;
 
-using ::std::set;
+using ::BTreeSet;
 using namespace gadgetlib2;
 
 namespace {

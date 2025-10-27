@@ -150,9 +150,9 @@ fn keygen<KeyPairT,F:Fn(&r1cs_constraint_system<FieldT>)->KeyPairT>(cs:& r1cs_co
     writeToFile(verification_key_filename + ".bin", keypair.vk);
 }
 
-// template<typename ProofT, typename ProvingKeyT,
+// template<ProofT, ProvingKeyT,
 //         ProofT (*prove)():&ProvingKeyT &, const &, const
-//         typename VerificationKeyT,
+//         VerificationKeyT,
 //         bool (*verify)(:&VerificationKeyT &, &:r1cs_primary_input<FieldT> const ProofT)>
 fn  proofgen<ProofT,  ProvingKeyT,F:Fn(&ProvingKeyT,&r1cs_primary_input<FieldT>,& r1cs_auxiliary_input<FieldT>)->ProofT,
 VerificationKeyT,F2:Fn(& VerificationKeyT , & r1cs_primary_input<FieldT> ,  ProofT  )->bool
@@ -213,7 +213,7 @@ fn  generate_keys(input_directory:&str, output_directory:&str, proving_scheme:i3
     {
         let  pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
         ffec::enter_block("CircuitReading");
-        let  reader=CircuitReader::new(arith_filename.c_str(), dummy_input_filename.c_str(), pb);
+        let  reader=CircuitReader::new(arith_filename, dummy_input_filename, pb);
         ffec::leave_block("CircuitReading");
         ffec::enter_block("Extract constraint system");
         cs = get_constraint_system_from_gadgetlib2(*pb);
@@ -270,7 +270,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
                 let mut  pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
                 let mut  primary_input_size;
                 {
-                   let   reader=CircuitReader::new(arith_filename.c_str(), in_filename.c_str(), pb);
+                   let   reader=CircuitReader::new(arith_filename, in_filename, pb);
                     primary_input_size = reader.getNumInputs() + reader.getNumOutputs();
                 }
                 cs = get_constraint_system_from_gadgetlib2(*pb);

@@ -22,31 +22,31 @@
 
 // // namespace libff {
 
-// void start_profiling();
-// long long get_nsec_time();
-// void print_time(const char* msg);
-// void print_header(const char* msg);
-// void print_separator();
+// pub fn  start_profiling();
+// i64 get_nsec_time();
+// pub fn  print_time(const char* msg);
+// pub fn  print_header(const char* msg);
+// pub fn  print_separator();
 
-// void print_indent();
+// pub fn  print_indent();
 
 // extern bool inhibit_profiling_info;
 // extern bool inhibit_profiling_counters;
-// extern std::map<std::string, std::size_t> invocation_counts;
-// extern std::map<std::string, long long> last_times;
-// extern std::map<std::string, long long> cumulative_times;
+// extern BTreeMap<String, std::usize> invocation_counts;
+// extern BTreeMap<String, i64> last_times;
+// extern BTreeMap<String, i64> cumulative_times;
 
-// void clear_profiling_counters();
+// pub fn  clear_profiling_counters();
 
-// void print_cumulative_time_entry(const std::string &key, const long long factor=1);
-// void print_cumulative_times(const long long factor=1);
-// void print_cumulative_op_counts(const bool only_fq=false);
+// pub fn  print_cumulative_time_entry(key:&String, const i64 factor=1);
+// pub fn  print_cumulative_times(const i64 factor=1);
+// pub fn  print_cumulative_op_counts(only_fq:bool=false);
 
-// void enter_block(const std::string &msg, const bool indent=true);
-// void leave_block(const std::string &msg, const bool indent=true);
+// pub fn  enter_block(msg:&String, indent:bool=true);
+// pub fn  leave_block(msg:&String, indent:bool=true);
 
-// void print_mem(const std::string &s = "");
-// void print_compilation_info();
+// pub fn  print_mem(s:&String = "");
+// pub fn  print_compilation_info();
 
 // // } // namespace libff
 
@@ -72,22 +72,22 @@
 // //#ifndef NO_PROCPS
 // //#include <proc/readproc.h>
 // //#endif
-const  indentation:usize = 0;
+const indentation:usize =0;
 
 // pub struct Profiling;
 
 // impl Profiling {
 
-// using std::size_t;
+// using std::usize;
 
-// long long get_nsec_time()
+// i64 get_nsec_time()
 // {
 //     auto timepoint = std::chrono::high_resolution_clock::now();
 //     return std::chrono::duration_cast<std::chrono::nanoseconds>(timepoint.time_since_epoch()).count();
 // }
 
 // /* Return total CPU time consumsed by all threads of the process, in nanoseconds. */
-// long long get_nsec_cpu_time()
+// i64 get_nsec_cpu_time()
 // {
 // #if _MSC_VER
 // 	return 0;
@@ -102,10 +102,10 @@ const  indentation:usize = 0;
 // //#endif
 // }
 
-// long long start_time, last_time;
-// long long start_cpu_time, last_cpu_time;
+// i64 start_time, last_time;
+// i64 start_cpu_time, last_cpu_time;
 
-// void start_profiling()
+// pub fn  start_profiling()
 // {
 //     print!("Reset time counters for profiling\n");
 
@@ -113,20 +113,20 @@ const  indentation:usize = 0;
 //     last_cpu_time = start_cpu_time = get_nsec_cpu_time();
 // }
 
-// std::map<std::string, size_t> invocation_counts;
-// std::map<std::string, long long> enter_times;
-// std::map<std::string, long long> last_times;
-// std::map<std::string, long long> cumulative_times;
+// BTreeMap<String, usize> invocation_counts;
+// BTreeMap<String, i64> enter_times;
+// BTreeMap<String, i64> last_times;
+// BTreeMap<String, i64> cumulative_times;
 // //TODO: Instead of analogous maps for time and cpu_time, use a single struct-valued map
-// std::map<std::string, long long> enter_cpu_times;
-// std::map<std::string, long long> last_cpu_times;
-// std::map<std::pair<std::string, std::string>, long long> op_counts;
-// std::map<std::pair<std::string, std::string>, long long> cumulative_op_counts; // ((msg, data_point), value)
+// BTreeMap<String, i64> enter_cpu_times;
+// BTreeMap<String, i64> last_cpu_times;
+// BTreeMap<std::pair<String, String>, i64> op_counts;
+// BTreeMap<std::pair<String, String>, i64> cumulative_op_counts; // ((msg, data_point), value)
 //     // TODO: Convert op_counts and cumulative_op_counts from pair to structs
 
-// std::vector<std::string> block_names;
+// Vec<String> block_names;
 
-// std::list<std::pair<std::string, long long*> > op_data_points = {
+// std::list<std::pair<String, i64*> > op_data_points = {
 // // #ifdef PROFILE_OP_COUNTS
 //     std::make_pair("Fradd", &Fr<default_ec_pp>::add_cnt),
 //     std::make_pair("Frsub", &Fr<default_ec_pp>::sub_cnt),
@@ -146,7 +146,7 @@ const  indentation:usize = 0;
 // bool inhibit_profiling_info = false;
 // bool inhibit_profiling_counters = false;
 
-// void clear_profiling_counters()
+// pub fn  clear_profiling_counters()
 // {
 //     invocation_counts.clear();
 //     last_times.clear();
@@ -154,15 +154,15 @@ const  indentation:usize = 0;
 //     cumulative_times.clear();
 // }
 
-// void print_cumulative_time_entry(const std::string &key, const long long factor)
+// pub fn  print_cumulative_time_entry(key:&String, const i64 factor)
 // {
-//     const double total_ms = (cumulative_times.at(key) * 1e-6);
-//     const size_t cnt = invocation_counts.at(key);
-//     const double avg_ms = total_ms / cnt;
-//     print!("   %-45s: %12.5fms = %lld * %0.5fms ({} invocations, %0.5fms = %lld * %0.5fms per invocation)\n", key.c_str(), total_ms, factor, total_ms/ (double) factor, cnt, avg_ms, factor, avg_ms/ (double) factor);
+//     let total_ms= (cumulative_times.at(key) * 1e-6);
+//     let cnt = invocation_counts.at(key);
+//     let avg_ms= total_ms / cnt;
+//     print!("   %-45s: %12.5fms = %lld * %0.5fms ({} invocations, %0.5fms = %lld * %0.5fms per invocation)\n", key, total_ms, factor, total_ms/ (double) factor, cnt, avg_ms, factor, avg_ms/ (double) factor);
 // }
 
-// void print_cumulative_times(const long long factor)
+// pub fn  print_cumulative_times(const i64 factor)
 // {
 //     print!("Dumping times:\n");
 //     for kv in &cumulative_times
@@ -171,13 +171,13 @@ const  indentation:usize = 0;
 //     }
 // }
 
-// void print_cumulative_op_counts(const bool only_fq)
+// pub fn  print_cumulative_op_counts(only_fq:bool)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     print!("Dumping operation counts:\n");
 //     for msg in &invocation_counts
 //     {
-//         print!("  %-45s: ", msg.first.c_str());
+//         print!("  %-45s: ", msg.first);
 //         bool first = true;
 //         for data_point in &op_data_points
 //         {
@@ -191,7 +191,7 @@ const  indentation:usize = 0;
 //                 print!(", ");
 //             }
 //             print!("%-5s = %7.0f (%3zu)",
-//                    data_point.first.c_str(),
+//                    data_point.first,
 //                    1. * cumulative_op_counts[std::make_pair(msg.first, data_point.first)] / msg.second,
 //                    msg.second);
 //             first = false;
@@ -203,7 +203,7 @@ const  indentation:usize = 0;
 // //#endif
 // }
 
-// void print_op_profiling(const std::string &msg)
+// pub fn  print_op_profiling(msg:&String)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     print!("\n");
@@ -218,7 +218,7 @@ const  indentation:usize = 0;
 //             print!(", ");
 //         }
 
-//         print!("%s=%lld", p.first.c_str(), *(p.second)-op_counts[std::make_pair(msg, p.first)]);
+//         print!("{}=%lld", p.first, *(p.second)-op_counts[std::make_pair(msg, p.first)]);
 //         first = false;
 //     }
 //     print!(")");
@@ -227,14 +227,14 @@ const  indentation:usize = 0;
 // //#endif
 // }
 
-// static void print_times_from_last_and_start(long long     now, long long     last,
-//                                             long long cpu_now, long long cpu_last)
+// static pub fn  print_times_from_last_and_start(i64     now, i64     last,
+//                                             i64 cpu_now, i64 cpu_last)
 // {
-//     long long time_from_start = now - start_time;
-//     long long time_from_last = now - last;
+//     i64 time_from_start = now - start_time;
+//     i64 time_from_last = now - last;
 
-//     long long cpu_time_from_start = cpu_now - start_cpu_time;
-//     long long cpu_time_from_last = cpu_now - cpu_last;
+//     i64 cpu_time_from_start = cpu_now - start_cpu_time;
+//     i64 cpu_time_from_last = cpu_now - cpu_last;
 
 //     if time_from_last != 0 {
 //         double parallelism_from_last = 1.0 * (double) cpu_time_from_last / (double) time_from_last;
@@ -248,15 +248,15 @@ const  indentation:usize = 0;
 //     }
 // }
 
-// void print_time(const char* msg)
+// pub fn  print_time(const char* msg)
 // {
 //     if inhibit_profiling_info
 //     {
 //         return;
 //     }
 
-//     long long now = get_nsec_time();
-//     long long cpu_now = get_nsec_cpu_time();
+//     i64 now = get_nsec_time();
+//     i64 cpu_now = get_nsec_cpu_time();
 
 //     print!("%-35s\t", msg);
 //     print_times_from_last_and_start(now, last_time, cpu_now, last_cpu_time);
@@ -270,14 +270,14 @@ const  indentation:usize = 0;
 //     last_cpu_time = cpu_now;
 // }
 
-// void print_header(const char *msg)
+// pub fn  print_header(const char *msg)
 // {
 //     print!("\n================================================================================\n");
-//     print!("%s\n", msg);
+//     print!("{}\n", msg);
 //     print!("================================================================================\n\n");
 // }
 
-// void print_separator()
+// pub fn  print_separator()
 // {
 //     print!("\n================================================================================\n\n");
 // }
@@ -290,7 +290,7 @@ pub fn print_indent()
     }
 }
 
-// void op_profiling_enter(const std::string &msg)
+// pub fn  op_profiling_enter(msg:&String)
 // {
 //     for p in &op_data_points
 //     {
@@ -306,9 +306,9 @@ pub fn enter_block(msg:&str,  indent:bool)
 //     }
 
 //     block_names.emplace_back(msg);
-//     long long t = get_nsec_time();
+//     i64 t = get_nsec_time();
 //     enter_times[msg] = t;
-//     long long cpu_t = get_nsec_cpu_time();
+//     i64 cpu_t = get_nsec_cpu_time();
 //     enter_cpu_times[msg] = cpu_t;
 
 //     if inhibit_profiling_info
@@ -323,7 +323,7 @@ pub fn enter_block(msg:&str,  indent:bool)
 //         op_profiling_enter(msg);
 
 //         print_indent();
-//         print!("(enter) %-35s\t", msg.c_str());
+//         print!("(enter) %-35s\t", msg);
 //         print_times_from_last_and_start(t, t, cpu_t, cpu_t);
 //         print!("\n");
 //         fflush(stdout);
@@ -348,11 +348,11 @@ pub fn leave_block(msg:&str,  indent:bool)
 
 //     ++invocation_counts[msg];
 
-//     long long t = get_nsec_time();
+//     i64 t = get_nsec_time();
 //     last_times[msg] = (t - enter_times[msg]);
 //     cumulative_times[msg] += (t - enter_times[msg]);
 
-//     long long cpu_t = get_nsec_cpu_time();
+//     i64 cpu_t = get_nsec_cpu_time();
 //     last_cpu_times[msg] = (cpu_t - enter_cpu_times[msg]);
 
 // // #ifdef PROFILE_OP_COUNTS
@@ -377,7 +377,7 @@ pub fn leave_block(msg:&str,  indent:bool)
 //         }
 
 //         print_indent();
-//         print!("(leave) %-35s\t", msg.c_str());
+//         print!("(leave) %-35s\t", msg);
 //         print_times_from_last_and_start(t, enter_times[msg], cpu_t, enter_cpu_times[msg]);
 //         print_op_profiling(msg);
 //         print!("\n");
@@ -385,7 +385,7 @@ pub fn leave_block(msg:&str,  indent:bool)
 //     }
 }
 
-// void print_mem(const std::string &s)
+// pub fn  print_mem(s:&String)
 // {
 // //#ifndef NO_PROCPS
 //     struct proc_t usage;
@@ -396,7 +396,7 @@ pub fn leave_block(msg:&str,  indent:bool)
 //     }
 //     else
 //     {
-//         print!("* Peak vsize (physical memory+swap) in mebibytes (%s): %lu\n", s.c_str(), usage.vsize >> 20);
+//         print!("* Peak vsize (physical memory+swap) in mebibytes ({}): %lu\n", s, usage.vsize >> 20);
 //     }
 // #else
 //     UNUSED(s);
@@ -404,11 +404,11 @@ pub fn leave_block(msg:&str,  indent:bool)
 // //#endif
 // }
 
-// void print_compilation_info()
+// pub fn  print_compilation_info()
 // {
 // // #ifdef __GNUC__
-//     print!("g++ version: %s\n", __VERSION__);
-//     print!("Compiled on %s %s\n", __DATE__, __TIME__);
+//     print!("g++ version: {}\n", __VERSION__);
+//     print!("Compiled on {} {}\n", __DATE__, __TIME__);
 // //#endif
 // // #ifdef STATIC
 //     print!("STATIC: yes\n");

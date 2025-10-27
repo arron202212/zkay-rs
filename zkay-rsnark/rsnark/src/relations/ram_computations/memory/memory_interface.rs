@@ -14,17 +14,17 @@
 
 // use  <cstddef>
 // use  <map>
-// use  <vector>
+// 
 
 
 
 /**
  * A function from addresses to values that represents a memory's contents.
  */
-type memory_contents=std::collectons::BTreeMap<size_t, size_t> ;
+type memory_contents=std::collectons::BTreeMap<usize, usize> ;
 
 /**
- * A memory interface is a virtual class for specifying and maintaining a memory.
+ * A memory interface is a virtual pub struct for specifying and maintaining a memory.
  *
  * A memory is parameterized by two quantities:
  * - num_addresses (which specifies the number of addresses); and
@@ -35,20 +35,20 @@ type memory_contents=std::collectons::BTreeMap<size_t, size_t> ;
 pub struct memory_interface {
 // 
 
-    num_addresses:size_t,
-    value_size:size_t,
+    num_addresses:usize,
+    value_size:usize,
 }
 impl memory_interface {
-    pub fn new(num_addresses:size_t, value_size:size_t,) ->Self
+    pub fn new(num_addresses:usize, value_size:usize,) ->Self
     {
     Self{num_addresses,
         value_size}
 }
-    // memory_interface(const size_t num_addresses, const size_t value_size, const std::vector<size_t> &contents_as_vector);
-    // memory_interface(const size_t num_addresses, const size_t value_size, const memory_contents &contents);
+    // memory_interface(contents_as_vector:&usize num_addresses, value_size:usize, const Vec<usize>);
+    // memory_interface(contents:&usize num_addresses, value_size:usize, const memory_contents);
 
-    // virtual size_t get_value(const size_t address) const = 0;
-    // virtual void set_value(const size_t address, const size_t value) = 0;
+    // virtual usize get_value(address:usize) 0:=,
+    // virtual pub fn  set_value(address:usize, value:usize) = 0;
 }
 
 

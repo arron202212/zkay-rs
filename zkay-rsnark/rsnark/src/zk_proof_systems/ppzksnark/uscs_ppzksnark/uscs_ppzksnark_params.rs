@@ -22,13 +22,13 @@ use crate::relations::constraint_satisfaction_problems/uscs/uscs;
  * Below are various template aliases (used for convenience).
  */
 
-template<typename ppT>
+
 using uscs_ppzksnark_constraint_system = uscs_constraint_system<ffec::Fr<ppT> >;
 
-template<typename ppT>
+
 using uscs_ppzksnark_primary_input = uscs_primary_input<ffec::Fr<ppT> >;
 
-template<typename ppT>
+
 using uscs_ppzksnark_auxiliary_input = uscs_auxiliary_input<ffec::Fr<ppT> >;
 
 

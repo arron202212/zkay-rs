@@ -60,14 +60,14 @@ use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
 
 
-// template<>
+// 
 pub fn sigGen<default_r1cs_ppzkadsnark_pp>()->kpT<default_r1cs_ppzkadsnark_pp>  {
    let  keys= kpT::<default_r1cs_ppzkadsnark_pp>::new();
     // crypto_sign_ed25519_amd64_51_30k_keypair(keys.vk.vk_bytes,keys.sk.sk_bytes);
     return keys;
 }
 
-// template<>
+// 
  pub fn sigSign<default_r1cs_ppzkadsnark_pp>(sk:&ed25519_skT , label:&labelT ,
                                                   Lambda:&ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> )->ed25519_sigT {
      let mut sigma=ed25519_sigT;
@@ -99,7 +99,7 @@ pub fn sigGen<default_r1cs_ppzkadsnark_pp>()->kpT<default_r1cs_ppzkadsnark_pp>  
     return sigma;
 }
 
-// template<>
+// 
  pub fn sigVerif<default_r1cs_ppzkadsnark_pp>(vk:&ed25519_vkT , label:&labelT ,
                                            Lambda:&ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>> ,
                                            sig:&ed25519_sigT )->bool{
@@ -120,7 +120,7 @@ pub fn sigGen<default_r1cs_ppzkadsnark_pp>()->kpT<default_r1cs_ppzkadsnark_pp>  
     let mut  stream=String::new();
     // stream.rdbuf()->pubsetbuf(((char*)signature)+64+16, 320);
     // stream << Lambda_copy;
-    // size_t written = stream.tellp();
+    // usize written = stream.tellp();
     // while (written<320)
     // 	signature[64+16+written++] = 0;
 
@@ -128,7 +128,7 @@ pub fn sigGen<default_r1cs_ppzkadsnark_pp>()->kpT<default_r1cs_ppzkadsnark_pp>  
     return (res==0);
 }
 
-// template<>
+// 
 pub fn  sigBatchVerif<default_r1cs_ppzkadsnark_pp>(vk:&ed25519_vkT , labels:&Vec<labelT> ,
                                                 Lambdas:&Vec<ffec::G2<snark_pp<default_r1cs_ppzkadsnark_pp>>> ,
                                                 sigs:&Vec<ed25519_sigT> )->bool {
@@ -171,7 +171,7 @@ pub fn  sigBatchVerif<default_r1cs_ppzkadsnark_pp>(vk:&ed25519_vkT , labels:&Vec
         // stream.clear();
         // stream.rdbuf()->pubsetbuf((char*)(signaturemem+i*(64+16+320)+64+16), 320);
         // stream << Lambda_copy;
-        // size_t written = stream.tellp();
+        // usize written = stream.tellp();
         // while (written<320)
         //     {signaturemem[i*(64+16+320)+64+16+written++] = 0;}
 

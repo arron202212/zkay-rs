@@ -18,42 +18,42 @@
 
 // /* gf192 implements the field GF(2)/(x^192 + x^7 + x^2 + x + 1).
 //    Elements are represented internally with three uint64s */
-// class gf192 {
+// pub struct gf192 {
 
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-//     static long long add_cnt;
-//     static long long sub_cnt;
-//     static long long mul_cnt;
-//     static long long sqr_cnt;
-//     static long long inv_cnt;
+//     static i64 add_cnt;
+//     static i64 sub_cnt;
+//     static i64 mul_cnt;
+//     static i64 sqr_cnt;
+//     static i64 inv_cnt;
 // //#endif
 //     // x^192 + x^7 + x^2 + x + 1
-//     static const constexpr uint64_t modulus_ = 0b10000111;
-//     static const constexpr uint64_t num_bits = 192;
+//     static 0b10000111:constexpr uint64_t modulus_ =,
+//     static 192:constexpr uint64_t num_bits =,
 
 //     explicit gf192();
 //     /* we need a constructor that only initializes the low half of value_ to
 //        be able to do gf192(0) and gf192(1). */
 //     explicit gf192(const uint64_t value_low);
-//     explicit gf192(const uint64_t value_high, const uint64_t value_mid, const uint64_t value_low);
+//     explicit gf192(value_high:uint64_t, value_mid:uint64_t, const uint64_t value_low);
 
-//     gf192& operator+=(const gf192 &other);
-//     gf192& operator-=(const gf192 &other);
-//     gf192& operator*=(const gf192 &other);
-//     gf192& operator^=(const unsigned long pow);
-//     template<mp_size_t m>
-//     gf192& operator^=(const bigint<m> &pow);
+//     gf192& operator+=(other:&gf192);
+//     gf192& operator-=(other:&gf192);
+//     gf192& operator*=(other:&gf192);
+//     gf192& operator^=(const u64 pow);
+//     
+//     gf192& operator^=(pow:&bigint<m>);
     
 //     gf192& square();
 //     gf192& invert();
 
-//     gf192 operator+(const gf192 &other) const;
-//     gf192 operator-(const gf192 &other) const;
+//     gf192 operator+(other:&gf192) const;
+//     gf192 operator-(other:&gf192) const;
 //     gf192 operator-() const;
-//     gf192 operator*(const gf192 &other) const;
-//     gf192 operator^(const unsigned long pow) const;
-//     template<mp_size_t m>
-//     gf192 operator^(const bigint<m> &pow) const;
+//     gf192 operator*(other:&gf192) const;
+//     gf192 operator^(const:u64 pow),
+//     
+//     gf192 operator^(pow:&bigint<m>) const;
 
 //     gf192 squared() const;
 //     gf192 inverse() const;
@@ -62,23 +62,23 @@
 //      * Returns the constituent bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 //      */
-//     std::vector<uint64_t> to_words() const;
+//     Vec<uint64_t> to_words() const;
 //     /**
 //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
 //      * Should always return true since the right-most bits are always valid.
 //      */
-//     bool from_words(std::vector<uint64_t> words);
+//     bool from_words(Vec<uint64_t> words);
 
-//     void randomize();
-//     void clear();
+//     pub fn  randomize();
+//     pub fn  clear();
 
-//     bool operator==(const gf192 &other) const;
-//     bool operator!=(const gf192 &other) const;
+//     bool operator==(other:&gf192) const;
+//     bool operator!=(other:&gf192) const;
 
 //     bool is_zero() const;
 
-//     void print() const;
+//     pub fn  print() const;
 
 //     static gf192 random_element();
 
@@ -86,25 +86,25 @@
 //     static gf192 one();
 //     static gf192 multiplicative_generator; // generator of gf192^*
 
-//     static std::size_t ceil_size_in_bits() { return num_bits; }
-//     static std::size_t floor_size_in_bits() { return num_bits; }
-//     static constexpr std::size_t extension_degree() { return 192; }
-//     template<mp_size_t n>
+//     static std::usize ceil_size_in_bits() { return num_bits; }
+//     static std::usize floor_size_in_bits() { return num_bits; }
+//     static constexpr std::usize extension_degree() { return 192; }
+//     
 //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
-//     friend std::ostream& operator<<(std::ostream &out, const gf192 &el);
+//     friend std::ostream& operator<<(std::ostream &out, el:&gf192);
 //     friend std::istream& operator>>(std::istream &in, gf192 &el);
-// private:
+// 
 //     /* little-endian */
 //     uint64_t value_[3];
 // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// long long gf192::add_cnt = 0;
-// long long gf192::sub_cnt = 0;
-// long long gf192::mul_cnt = 0;
-// long long gf192::sqr_cnt = 0;
-// long long gf192::inv_cnt = 0;
+// i64 gf192::add_cnt = 0;
+// i64 gf192::sub_cnt = 0;
+// i64 gf192::mul_cnt = 0;
+// i64 gf192::sqr_cnt = 0;
+// i64 gf192::inv_cnt = 0;
 // //#endif
 
 // // } // namespace libff
@@ -129,30 +129,30 @@
 
 // // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 
 // const uint64_t gf192::modulus_;
 // gf192 gf192::multiplicative_generator = gf192(2);
 
-// gf192::gf192() : value_{0, 0, 0}
+// pub fn new()->Self value_{0, 0, 0}
 // {
 // }
 
-// gf192::gf192(const uint64_t value_low) : value_{value_low, 0, 0}
+// pub fn new(0:uint64_t value_low)->Self value_{value_low,, 0}
 // {
 // }
 
-// gf192::gf192(const uint64_t value_high, const uint64_t value_mid, const uint64_t value_low) :
+// pub fn new(value_high:uint64_t, value_mid:uint64_t, const uint64_t value_low)->Self
 //     value_{value_low, value_mid, value_high}
 // {
 // }
 
-// std::vector<uint64_t> gf192::to_words() const
+// pub fn to_words()->Vec<uint64_t>
 // {
-//     return std::vector<uint64_t>({this->value_[0], this->value_[1], this->value_[2]});
+//     return Vec<uint64_t>({this->value_[0], this->value_[1], this->value_[2]});
 // }
 
-// bool gf192::from_words(std::vector<uint64_t> words)
+// bool gf192::from_words(Vec<uint64_t> words)
 // {
 //     this->value_[0] = words[0];
 //     this->value_[1] = words[1];
@@ -160,7 +160,7 @@
 //     return true;
 // }
 
-// gf192& gf192::operator+=(const gf192 &other)
+// gf192& gf192::operator+=(other:&gf192)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
@@ -171,7 +171,7 @@
 //     return (*this);
 // }
 
-// gf192& gf192::operator-=(const gf192 &other)
+// gf192& gf192::operator-=(other:&gf192)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
@@ -182,7 +182,7 @@
 //     return (*this);
 // }
 
-// gf192& gf192::operator*=(const gf192 &other)
+// gf192& gf192::operator*=(other:&gf192)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
@@ -194,10 +194,10 @@
 //        we load corresponding limbs of both operands into a single register,
 //        because it lets us implement Karatsuba (see below) with fewer 128-bit
 //        xors. */
-//     const __m128i ab0 = _mm_set_epi64x(this->value_[0], other.value_[0]);
-//     const __m128i ab1 = _mm_set_epi64x(this->value_[1], other.value_[1]);
-//     const __m128i ab2 = _mm_set_epi64x(this->value_[2], other.value_[2]);
-//     const __m128i modulus = _mm_loadl_epi64((const __m128i*) &(gf192::modulus_));
+//     let ab0= _mm_set_epi64x(this->value_[0], other.value_[0]);
+//     let ab1= _mm_set_epi64x(this->value_[1], other.value_[1]);
+//     let ab2= _mm_set_epi64x(this->value_[2], other.value_[2]);
+//     let modulus= _mm_loadl_epi64((const __m128i*) &(gf192::modulus_));
 
 //     /* here we implement a Karatsuba-like approach for multiplying 3-limb numbers.
 //     given
@@ -296,7 +296,7 @@
 // //#endif
 // }
 
-// gf192& gf192::operator^=(const unsigned long pow)
+// gf192& gf192::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
@@ -318,13 +318,13 @@
 //     return (*this);
 // }
 
-// gf192 gf192::operator+(const gf192 &other) const
+// gf192 gf192::operator+(other:&gf192) const
 // {
 //     gf192 result(*this);
 //     return (result+=(other));
 // }
 
-// gf192 gf192::operator-(const gf192 &other) const
+// gf192 gf192::operator-(other:&gf192) const
 // {
 //     gf192 result(*this);
 //     return (result-=(other));
@@ -335,18 +335,18 @@
 //     return gf192(*this);
 // }
 
-// gf192 gf192::operator*(const gf192 &other) const
+// gf192 gf192::operator*(other:&gf192) const
 // {
 //     gf192 result(*this);
 //     return (result*=(other));
 // }
 
-// gf192 gf192::operator^(const unsigned long pow) const
+// gf192 gf192::operator^(const u64 pow) const
 // {
 //     return power<gf192>(*this, pow);
 // }
 
-// gf192 gf192::squared() const
+// pub fn squared()->gf192
 // {
 //     gf192 result(*this);
 //     result.square();
@@ -355,7 +355,7 @@
 
 // /* calculate el^{-1} as el^{2^{192}-2}. the addition chain below
 //    requires 210 mul/sqr operations total. */
-// gf192 gf192::inverse() const
+// pub fn inverse()->gf192
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->inv_cnt++;
@@ -400,41 +400,41 @@
 //     return result * prev_result * this->squared();
 // }
 
-// gf192 gf192::sqrt() const
+// pub fn sqrt()->gf192
 // {
 //     return (*this)^bigint<3>("3138550867693340381917894711603833208051177722232017256448"); // 2^191
 // }
 
-// void gf192::randomize()
+// pub fn randomize()
 // {
 //     randombytes_buf(&this->value_, 192/8);
 // }
 
-// void gf192::clear()
+// pub fn clear()
 // {
 //     this->value_[0] = 0;
 //     this->value_[1] = 0;
 //     this->value_[2] = 0;
 // }
 
-// bool gf192::operator==(const gf192 &other) const
+// bool gf192::operator==(other:&gf192) const
 // {
 //     return ((this->value_[0] == other.value_[0]) &&
 //             (this->value_[1] == other.value_[1]) &&
 //             (this->value_[2] == other.value_[2]));
 // }
 
-// bool gf192::operator!=(const gf192 &other) const
+// bool gf192::operator!=(other:&gf192) const
 // {
 //     return !(this->operator==(other));
 // }
 
-// bool gf192::is_zero() const
+// pub fn is_zero()->bool
 // {
 //     return (this->value_[0] == 0) && (this->value_[1] == 0) && (this->value_[2] == 0);
 // }
 
-// void gf192::print() const
+// pub fn print() const
 // {
 //     print!("%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "\n", this->value_[2], this->value_[1], this->value_[0]);
 // }
@@ -456,7 +456,7 @@
 //     return gf192(1);
 // }
 
-// std::ostream& operator<<(std::ostream &out, const gf192 &el)
+// std::ostream& operator<<(std::ostream &out, el:&gf192)
 // {
 //     out << el.value_[0] << " " << el.value_[1] << " " << el.value_[2];
 //     return out;
@@ -475,15 +475,15 @@
 
 // // namespace libff {
 
-// template<mp_size_t m>
-// gf192& gf192::operator^=(const bigint<m> &pow)
+// 
+// gf192& gf192::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// template<mp_size_t m>
-// gf192 gf192::operator^(const bigint<m> &pow) const
+// 
+// gf192 gf192::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf192>(*this, pow);
 // }

@@ -18,65 +18,65 @@
 
 // /* gf64 implements the field GF(2)/[x^64 + x^4 + x^3 + x + 1].
 //    Elements are represented internally with a single uint64 */
-// // class gf64 {
+// // pub struct gf64 {
 
 // // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-// //     static long long add_cnt;
-// //     static long long sub_cnt;
-// //     static long long mul_cnt;
-// //     static long long sqr_cnt;
-// //     static long long inv_cnt;
+// //     static i64 add_cnt;
+// //     static i64 sub_cnt;
+// //     static i64 mul_cnt;
+// //     static i64 sqr_cnt;
+// //     static i64 inv_cnt;
 // // //#endif
 // //     // x^64 + x^4 + x^3 + x + 1. The assembly code assumes that no term other
 // //     // than x^64 is greater than x^31, to enable faster multiplication.
-// //     static const constexpr uint64_t modulus_ = 0b11011;
-// //     static const constexpr uint64_t num_bits = 64;
+// //     static 0b11011:constexpr uint64_t modulus_ =,
+// //     static 64:constexpr uint64_t num_bits =,
 
 // //     explicit gf64();
 // //     explicit gf64(const uint64_t value);
 
-// //     gf64& operator+=(const gf64 &other);
-// //     gf64& operator-=(const gf64 &other);
-// //     gf64& operator*=(const gf64 &other);
-// //     gf64& operator^=(const unsigned long pow);
-// //     template<mp_size_t m>
-// //     gf64& operator^=(const bigint<m> &pow);
+// //     gf64& operator+=(other:&gf64);
+// //     gf64& operator-=(other:&gf64);
+// //     gf64& operator*=(other:&gf64);
+// //     gf64& operator^=(const u64 pow);
+// //     
+// //     gf64& operator^=(pow:&bigint<m>);
 
 // //     gf64& square();
 // //     gf64& invert();
 
-// //     gf64 operator+(const gf64 &other) const;
-// //     gf64 operator-(const gf64 &other) const;
+// //     gf64 operator+(other:&gf64) const;
+// //     gf64 operator-(other:&gf64) const;
 // //     gf64 operator-() const;
-// //     gf64 operator*(const gf64 &other) const;
-// //     gf64 operator^(const unsigned long pow) const;
-// //     template<mp_size_t m>
-// //     gf64 operator^(const bigint<m> &pow) const;
+// //     gf64 operator*(other:&gf64) const;
+// //     gf64 operator^(const:u64 pow),
+// //     
+// //     gf64 operator^(pow:&bigint<m>) const;
 
 // //     gf64 squared() const;
 // //     gf64 inverse() const;
 // //     gf64 sqrt() const;
 
-// //     void randomize();
-// //     void clear();
+// //     pub fn  randomize();
+// //     pub fn  clear();
 
-// //     bool operator==(const gf64 &other) const;
-// //     bool operator!=(const gf64 &other) const;
+// //     bool operator==(other:&gf64) const;
+// //     bool operator!=(other:&gf64) const;
 
 // //     bool is_zero() const;
 
-// //     void print() const;
+// //     pub fn  print() const;
 // //     /**
 // //      * Returns the constituent bits in 64 bit words, in little-endian order.
 // //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 // //      */
-// //     std::vector<uint64_t> to_words() const;
+// //     Vec<uint64_t> to_words() const;
 // //     /**
 // //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 // //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
 // //      * Should always return true since the right-most bits are always valid.
 // //      */
-// //     bool from_words(std::vector<uint64_t> words);
+// //     bool from_words(Vec<uint64_t> words);
 
 // //     static gf64 random_element();
 
@@ -84,24 +84,24 @@
 // //     static gf64 one();
 // //     static gf64 multiplicative_generator; // generator of gf64^*
 
-// //     static std::size_t ceil_size_in_bits() { return num_bits; }
-// //     static std::size_t floor_size_in_bits() { return num_bits; }
-// //     static constexpr std::size_t extension_degree() { return 64; }
-// //     template<mp_size_t n>
+// //     static std::usize ceil_size_in_bits() { return num_bits; }
+// //     static std::usize floor_size_in_bits() { return num_bits; }
+// //     static constexpr std::usize extension_degree() { return 64; }
+// //     
 // //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
-// //     friend std::ostream& operator<<(std::ostream &out, const gf64 &el);
+// //     friend std::ostream& operator<<(std::ostream &out, el:&gf64);
 // //     friend std::istream& operator>>(std::istream &in, gf64 &el);
-// // private:
+// // 
 // //     uint64_t value_;
 // // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// // long long gf64::add_cnt = 0;
-// // long long gf64::sub_cnt = 0;
-// // long long gf64::mul_cnt = 0;
-// // long long gf64::sqr_cnt = 0;
-// // long long gf64::inv_cnt = 0;
+// // i64 gf64::add_cnt = 0;
+// // i64 gf64::sub_cnt = 0;
+// // i64 gf64::mul_cnt = 0;
+// // i64 gf64::sqr_cnt = 0;
+// // i64 gf64::inv_cnt = 0;
 // //#endif
 
 // // } // namespace libff
@@ -129,31 +129,31 @@
 
 // // namespace libff {
 
-// // using std::size_t;
+// // using std::usize;
 
 // const uint64_t gf64::modulus_;
 // gf64 gf64::multiplicative_generator = gf64(2);
 
-// gf64::gf64() : value_(0)
+// pub fn new()->Self value_(0)
 // {
 // }
 
-// gf64::gf64(const uint64_t value) : value_(value)
+// pub fn new(const uint64_t value)->Self value_(value)
 // {
 // }
 
-// std::vector<uint64_t> gf64::to_words() const
+// pub fn to_words()->Vec<uint64_t>
 // {
-//     return std::vector<uint64_t>({this->value_});
+//     return Vec<uint64_t>({this->value_});
 // }
 
-// bool gf64::from_words(std::vector<uint64_t> words)
+// bool gf64::from_words(Vec<uint64_t> words)
 // {
 //     this->value_ = words[0];
 //     return true;
 // }
 
-// gf64& gf64::operator+=(const gf64 &other)
+// gf64& gf64::operator+=(other:&gf64)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
@@ -162,7 +162,7 @@
 //     return (*this);
 // }
 
-// gf64& gf64::operator-=(const gf64 &other)
+// gf64& gf64::operator-=(other:&gf64)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
@@ -172,7 +172,7 @@
 // }
 
 // // multiplication over GF(2^k) is carryless multiplication
-// gf64& gf64::operator*=(const gf64 &other)
+// gf64& gf64::operator*=(other:&gf64)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
@@ -180,16 +180,16 @@
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
-//     const __m128i modulus = _mm_loadl_epi64((const __m128i*)&(gf64::modulus_));
-//     const __m128i mul128 = _mm_clmulepi64_si128(_mm_loadl_epi64((const __m128i*)&(this->value_)),
+//     let modulus= _mm_loadl_epi64((const __m128i*)&(gf64::modulus_));
+//     let mul128= _mm_clmulepi64_si128(_mm_loadl_epi64((const __m128i*)&(this->value_)),
 //                                                 _mm_loadl_epi64((const __m128i*)&(other.value_)), 0);
 
 //     /* reduce the 64 higher order bits of mul128. Output is 96 bits since modulus < 2^64 */
-//     const __m128i mul96 = _mm_clmulepi64_si128(modulus, mul128, 0x10); /* use high half of mul128 */
+//     mul128:__m128i mul96 = _mm_clmulepi64_si128(modulus,, 0x10); /* use high half of mul128 */
 //     __m128i rem = _mm_xor_si128(mul128, mul96);
 
 //     /* reduce the 32 higher order bits of mul96 */
-//     const __m128i mul64 = _mm_clmulepi64_si128(modulus, mul96, 0x10); /* use high half of mul96 */
+//     mul96:__m128i mul64 = _mm_clmulepi64_si128(modulus,, 0x10); /* use high half of mul96 */
 
 //     rem = _mm_xor_si128(rem, mul64);
 //     this->value_ = (uint64_t)_mm_movepi64_pi64(rem);
@@ -223,7 +223,7 @@
 // //#endif
 // }
 
-// gf64& gf64::operator^=(const unsigned long pow)
+// gf64& gf64::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
@@ -245,13 +245,13 @@
 //     return (*this);
 // }
 
-// gf64 gf64::operator+(const gf64 &other) const
+// gf64 gf64::operator+(other:&gf64) const
 // {
 //     gf64 result(*this);
 //     return (result+=(other));
 // }
 
-// gf64 gf64::operator-(const gf64 &other) const
+// gf64 gf64::operator-(other:&gf64) const
 // {
 //     gf64 result(*this);
 //     return (result-=(other));
@@ -263,18 +263,18 @@
 //     return gf64(*this);
 // }
 
-// gf64 gf64::operator*(const gf64 &other) const
+// gf64 gf64::operator*(other:&gf64) const
 // {
 //     gf64 result(*this);
 //     return (result*=(other));
 // }
 
-// gf64 gf64::operator^(const unsigned long pow) const
+// gf64 gf64::operator^(const u64 pow) const
 // {
 //     return power<gf64>(*this, pow);
 // }
 
-// gf64 gf64::squared() const
+// pub fn squared()->gf64
 // {
 //     gf64 result(*this);
 //     result.square();
@@ -282,7 +282,7 @@
 // }
 
 // // repeatedly square pt, num_times. For use in inverse.
-// void square_multi(gf64* pt, int8_t num_times)
+// pub fn  square_multi(gf64* pt, int8_t num_times)
 // {
 //     for i in 0..num_times
 //     {
@@ -294,7 +294,7 @@
 //    requires 74 mul/sqr operations total. It was found using the
 //    Bergeron-Berstel-Brlek-Duboc method implemented in
 //    https://github.com/kwantam/addchain. */
-// gf64 gf64::inverse() const
+// pub fn inverse()->gf64
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->inv_cnt++;
@@ -351,37 +351,37 @@
 //     return t0;
 // }
 
-// gf64 gf64::sqrt() const
+// pub fn sqrt()->gf64
 // {
 //     return (*this)^bigint<1>("9223372036854775808"); // 2^63
 // }
 
-// void gf64::randomize()
+// pub fn randomize()
 // {
 //     randombytes_buf(&this->value_, 64/8);
 // }
 
-// void gf64::clear()
+// pub fn clear()
 // {
 //     this->value_ = 0;
 // }
 
-// bool gf64::operator==(const gf64 &other) const
+// bool gf64::operator==(other:&gf64) const
 // {
 //     return (this->value_ == other.value_);
 // }
 
-// bool gf64::operator!=(const gf64 &other) const
+// bool gf64::operator!=(other:&gf64) const
 // {
 //     return !(this->operator==(other));
 // }
 
-// void gf64::print() const
+// pub fn print() const
 // {
 //     print!("%016" PRIx64 "\n", this->value_);
 // }
 
-// bool gf64::is_zero() const
+// pub fn is_zero()->bool
 // {
 //     return (this->value_ == 0);
 // }
@@ -403,7 +403,7 @@
 //     return result;
 // }
 
-// std::ostream& operator<<(std::ostream &out, const gf64 &el)
+// std::ostream& operator<<(std::ostream &out, el:&gf64)
 // {
 //     out << el.value_;
 //     return out;
@@ -426,15 +426,15 @@
 
 // // namespace libff {
 
-// template<mp_size_t m>
-// gf64& gf64::operator^=(const bigint<m> &pow)
+// 
+// gf64& gf64::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// template<mp_size_t m>
-// gf64 gf64::operator^(const bigint<m> &pow) const
+// 
+// gf64 gf64::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf64>(*this, pow);
 // }

@@ -10,49 +10,37 @@
 use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::hashes::hash_io;
-use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_read_gadget;
 use crate::gadgetlib1::gadgets::set_commitment::set_membership_proof_variable;
 
 
 
-template<typename FieldT, typename HashT>
-using set_commitment_variable = digest_variable<FieldT>;
 
-template<typename FieldT, typename HashT>
-class set_commitment_gadget : public gadget<FieldT> {
-private:
-    std::shared_ptr<block_variable<FieldT> > element_block;
-    std::shared_ptr<digest_variable<FieldT> > element_digest;
-    std::shared_ptr<HashT> hash_element;
-    std::shared_ptr<merkle_tree_check_read_gadget<FieldT, HashT> > check_membership;
+type set_commitment_variable = digest_variable<FieldT>;
 
 
-    size_t tree_depth;
-    pb_variable_array<FieldT> element_bits;
-    set_commitment_variable<FieldT, HashT> root_digest;
-    set_membership_proof_variable<FieldT, HashT> proof;
-    pb_linear_combination<FieldT> check_successful;
+pub struct set_commitment_gadget<FieldT> {//gadget<FieldT>
 
-    set_commitment_gadget(protoboard<FieldT> &pb,
-                          const size_t max_entries,
-                          const pb_variable_array<FieldT> &element_bits,
-                          const set_commitment_variable<FieldT, HashT> &root_digest,
-                          const set_membership_proof_variable<FieldT, HashT> &proof,
-                          const pb_linear_combination<FieldT> &check_successful,
-                          const std::string &annotation_prefix);
+element_block:    RcCell<block_variable<FieldT> >,
+element_digest:    RcCell<digest_variable<FieldT> >,
+hash_element:    RcCell<HashT>,
+check_membership:    RcCell<merkle_tree_check_read_gadget<FieldT, HashT> >,
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
 
-    static size_t root_size_in_bits();
-};
+tree_depth:    usize,
+element_bits:    pb_variable_array<FieldT>,
+root_digest:    set_commitment_variable<FieldT, HashT>,
+proof:    set_membership_proof_variable<FieldT, HashT>,
+check_successful:    pb_linear_combination<FieldT>,
 
-template<typename FieldT, typename HashT>
-void test_set_commitment_gadget();
+}
 
 
 
-use crate::gadgetlib1::gadgets::set_commitment::set_commitment_gadget;
+
+
+
+// use crate::gadgetlib1::gadgets::set_commitment::set_commitment_gadget;
 
 //#endif // SET_COMMITMENT_GADGET_HPP_
 /** @file
@@ -68,29 +56,28 @@ use crate::common::data_structures::set_commitment;
 
 
 
-template<typename FieldT, typename HashT>
-set_commitment_gadget<FieldT, HashT>::set_commitment_gadget(protoboard<FieldT> &pb,
-                                                            const size_t max_entries,
-                                                            const pb_variable_array<FieldT> &element_bits,
-                                                            const set_commitment_variable<FieldT, HashT> &root_digest,
-                                                            const set_membership_proof_variable<FieldT, HashT> &proof,
-                                                            const pb_linear_combination<FieldT> &check_successful,
-                                                            const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix), tree_depth(ffec::log2(max_entries)), element_bits(element_bits),
-    root_digest(root_digest), proof(proof), check_successful(check_successful)
+impl set_commitment_gadget<FieldT, HashT>{
+pub fn new(pb:protoboard<FieldT>,
+                                                            max_entries:usize,
+                                                            element_bits:&pb_variable_array<FieldT>,
+                                                            root_digest:&set_commitment_variable<FieldT, HashT>,
+                                                            proof:&set_membership_proof_variable<FieldT, HashT>,
+                                                            check_successful:&pb_linear_combination<FieldT>,
+                                                            annotation_prefix:&String)->Self
+   
 {
-    element_block.reset(new block_variable<FieldT>(pb, { element_bits }, FMT(annotation_prefix, " element_block")));
+    element_block.reset(block_variable::<FieldT>::new(pb, { element_bits }, FMT(annotation_prefix, " element_block")));
 
     if tree_depth == 0
     {
-        hash_element.reset(new HashT(pb, element_bits.len(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
+        hash_element.reset(HashT::new(pb, element_bits.len(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
     }
     else
     {
-        element_digest.reset(new digest_variable<FieldT>(pb, HashT::get_digest_len(),
+        element_digest.reset(digest_variable::<FieldT>::new(pb, HashT::get_digest_len(),
                                                          FMT(annotation_prefix, " element_digest")));
-        hash_element.reset(new HashT(pb, element_bits.len(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
-        check_membership.reset(new merkle_tree_check_read_gadget<FieldT, HashT>(pb,
+        hash_element.reset(HashT::new(pb, element_bits.len(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
+        check_membership.reset(merkle_tree_check_read_gadget::<FieldT, HashT>::new(pb,
                                                                                 tree_depth,
                                                                                 proof.address_bits,
                                                                                 *element_digest,
@@ -99,66 +86,69 @@ set_commitment_gadget<FieldT, HashT>::set_commitment_gadget(protoboard<FieldT> &
                                                                                 check_successful,
                                                                                 FMT(annotation_prefix, " check_membership")));
     }
+    //  gadget<FieldT>(pb, annotation_prefix), 
+    Self{tree_depth:ffec::log2(max_entries),element_bits,
+   root_digest,proof,check_successful}
 }
 
-template<typename FieldT, typename HashT>
-void set_commitment_gadget<FieldT, HashT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
-    hash_element->generate_r1cs_constraints();
+    hash_element.generate_r1cs_constraints();
 
     if tree_depth > 0
     {
-        check_membership->generate_r1cs_constraints();
+        check_membership.generate_r1cs_constraints();
     }
 }
 
-template<typename FieldT, typename HashT>
-void set_commitment_gadget<FieldT, HashT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
-    hash_element->generate_r1cs_witness();
+    hash_element.generate_r1cs_witness();
 
     if tree_depth > 0
     {
-        check_membership->generate_r1cs_witness();
+        check_membership.generate_r1cs_witness();
     }
 }
 
-template<typename FieldT, typename HashT>
-size_t set_commitment_gadget<FieldT, HashT>::root_size_in_bits()
+
+ pub fn root_size_in_bits()->usize
 {
-    return merkle_tree_check_read_gadget<FieldT, HashT>::root_size_in_bits();
+    return merkle_tree_check_read_gadget::<FieldT, HashT>::root_size_in_bits();
+}
 }
 
-template<typename FieldT, typename HashT>
-void test_set_commitment_gadget()
+pub fn  test_set_commitment_gadget()
 {
-    const size_t digest_len = HashT::get_digest_len();
-    const size_t max_set_size = 16;
-    const size_t value_size =  (if HashT::get_block_len() > 0 {HashT::get_block_len()} else{10});
+    let digest_len = HashT::get_digest_len();
+    let max_set_size = 16;
+    let value_size =  (if HashT::get_block_len() > 0 {HashT::get_block_len()} else{10});
 
-    set_commitment_accumulator<HashT> accumulator(max_set_size, value_size);
+    let mut accumulator=set_commitment_accumulator::<HashT> ::new(max_set_size, value_size);
 
-    std::vector<ffec::bit_vector> set_elems;
+    let mut set_elems=vec![];
     for i in 0..max_set_size
     {
-        ffec::bit_vector elem(value_size);
-        std::generate(elem.begin(), elem.end(), [&]() { return std::rand() % 2; });
+        let mut  elem:Vec<_>=(0..value_size).map(|_|std::rand() % 2);
+        
         set_elems.push(elem);
         accumulator.add(elem);
         assert!(accumulator.is_in_set(elem));
     }
 
-    protoboard<FieldT> pb;
-    pb_variable_array<FieldT> element_bits;
+    let mut  pb=protoboard::<FieldT> ::new();
+    let mut  element_bits=pb_variable_array::<FieldT>::new();
     element_bits.allocate(pb, value_size, "element_bits");
-    set_commitment_variable<FieldT, HashT> root_digest(pb, digest_len, "root_digest");
+    let mut  root_digest=set_commitment_variable::<FieldT, HashT>::new(pb, digest_len, "root_digest");
 
-    pb_variable<FieldT> check_succesful;
+   let mut check_succesful= pb_variable::<FieldT>::new();
     check_succesful.allocate(pb, "check_succesful");
 
-    set_membership_proof_variable<FieldT, HashT> proof(pb, max_set_size, "proof");
+    let mut proof= set_membership_proof_variable::<FieldT, HashT>::new(pb, max_set_size, "proof");
 
-    set_commitment_gadget<FieldT, HashT> sc(pb, max_set_size, element_bits, root_digest, proof, check_succesful, "sc");
+    let mut  sc=set_commitment_gadget::<FieldT, HashT>::new(pb, max_set_size, element_bits, root_digest, proof, check_succesful, "sc");
     sc.generate_r1cs_constraints();
 
     /* test all elements from set */

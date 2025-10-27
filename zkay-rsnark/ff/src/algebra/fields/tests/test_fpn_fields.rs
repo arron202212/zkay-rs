@@ -17,7 +17,7 @@ use crate::algebra::curves::bls12_381/bls12_381_pp;
 // #ifdef CURVE_BN128
 use crate::algebra::curves::bn128::bn128_pp;
 //#endif
-use crate::algebra::curves::edwards/edwards_pp;
+use crate::algebra::curves::edwards::edwards_pp;
 use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 use crate::common::profiling;
@@ -25,7 +25,7 @@ use crate::common::utils;
 
 using namespace libff;
 
-class FpnFieldsTest: public ::testing::Test {
+pub struct FpnFieldsTest{//::testing::Test
 
     FpnFieldsTest()
     {
@@ -40,23 +40,23 @@ class FpnFieldsTest: public ::testing::Test {
     }
 };
 
-template<typename FieldT>
-void test_Frobenius()
+
+pub fn  test_Frobenius()
 {
     FieldT a = FieldT::random_element();
     EXPECT_EQ(a.Frobenius_map(0), a);
     FieldT a_q = a ^ FieldT::field_char();
     for power in 1..10
     {
-        const FieldT a_qi = a.Frobenius_map(power);
+        let a_qi= a.Frobenius_map(power);
         EXPECT_EQ(a_qi, a_q);
 
         a_q = a_q ^ FieldT::field_char();
     }
 }
 
-template<typename FieldT>
-void test_sqrt()
+
+pub fn  test_sqrt()
 {
     // sqrt() is very slow for bls12_381 fields, so this is only run 2 times.
     for i in 0..2
@@ -68,8 +68,8 @@ void test_sqrt()
     }
 }
 
-template<typename FieldT>
-void test_field()
+
+pub fn  test_field()
 {
     bigint<1> rand1 = bigint<1>("76749407");
     bigint<1> rand2 = bigint<1>("44410867");
@@ -108,8 +108,8 @@ void test_field()
     test_Frobenius<FieldT>();
 }
 
-template<typename FieldT>
-void test_two_squarings()
+
+pub fn  test_two_squarings()
 {
     FieldT a = FieldT::random_element();
     FieldT a_squared = a * a;
@@ -118,8 +118,8 @@ void test_two_squarings()
     EXPECT_EQ(a_squared, a.squared_karatsuba());
 }
 
-template<typename FieldT>
-void test_unitary_inverse()
+
+pub fn  test_unitary_inverse()
 {
     ASSERT_EQ(FieldT::extension_degree() % 2, 0);
     FieldT a = random_element_non_zero<FieldT>();
@@ -129,11 +129,11 @@ void test_unitary_inverse()
     EXPECT_EQ(aqcubed_minus1.inverse(), aqcubed_minus1.unitary_inverse());
 }
 
-template<typename FieldT>
-void test_cyclotomic_squaring();
 
-template<>
-void test_cyclotomic_squaring<Fqk<edwards_pp> >()
+pub fn  test_cyclotomic_squaring();
+
+
+pub fn  test_cyclotomic_squaring<Fqk<edwards_pp> >()
 {
     using FieldT = Fqk<edwards_pp>;
     EXPECT_EQ(FieldT::extension_degree() % 2, 0);
@@ -145,8 +145,8 @@ void test_cyclotomic_squaring<Fqk<edwards_pp> >()
     EXPECT_EQ(beta.cyclotomic_squared(), beta.squared());
 }
 
-template<>
-void test_cyclotomic_squaring<Fqk<mnt4_pp> >()
+
+pub fn  test_cyclotomic_squaring<Fqk<mnt4_pp> >()
 {
     using FieldT = Fqk<mnt4_pp>;
     ASSERT_EQ(FieldT::extension_degree() % 2, 0);
@@ -158,8 +158,8 @@ void test_cyclotomic_squaring<Fqk<mnt4_pp> >()
     EXPECT_EQ(beta.cyclotomic_squared(), beta.squared());
 }
 
-template<>
-void test_cyclotomic_squaring<Fqk<mnt6_pp> >()
+
+pub fn  test_cyclotomic_squaring<Fqk<mnt6_pp> >()
 {
     using FieldT = Fqk<mnt6_pp>;
     ASSERT_EQ(FieldT::extension_degree() % 2, 0);
@@ -171,8 +171,8 @@ void test_cyclotomic_squaring<Fqk<mnt6_pp> >()
     EXPECT_EQ(beta.cyclotomic_squared(), beta.squared());
 }
 
-template<typename ppT>
-void test_all_fields()
+
+pub fn  test_all_fields()
 {
     test_field<Fr<ppT> >();
     test_field<Fq<ppT> >();
@@ -182,15 +182,15 @@ void test_all_fields()
     test_unitary_inverse<Fqk<ppT> >();
 }
 
-template<typename Fp4T>
-void test_Fp4_toom_cook()
+
+pub fn  test_Fp4_toom_cook()
 {
-    using FieldT = typename Fp4T::my_Fp;
+    using FieldT = Fp4T::my_Fp;
     for i in 0..100
     {
-        const Fp4T a = Fp4T::random_element();
-        const Fp4T b = Fp4T::random_element();
-        const Fp4T correct_res = a * b;
+        let a= Fp4T::random_element();
+        let b= Fp4T::random_element();
+        let correct_res= a * b;
 
         Fp4T res;
 
@@ -212,15 +212,15 @@ void test_Fp4_toom_cook()
             &c2 = res.c0.c1,
             &c3 = res.c1.c1;
 
-        const FieldT v0 = a0 * b0;
-        const FieldT v1 = (a0 + a1 + a2 + a3) * (b0 + b1 + b2 + b3);
-        const FieldT v2 = (a0 - a1 + a2 - a3) * (b0 - b1 + b2 - b3);
-        const FieldT v3 = (a0 + FieldT(2)*a1 + FieldT(4)*a2 + FieldT(8)*a3) * (b0 + FieldT(2)*b1 + FieldT(4)*b2 + FieldT(8)*b3);
-        const FieldT v4 = (a0 - FieldT(2)*a1 + FieldT(4)*a2 - FieldT(8)*a3) * (b0 - FieldT(2)*b1 + FieldT(4)*b2 - FieldT(8)*b3);
-        const FieldT v5 = (a0 + FieldT(3)*a1 + FieldT(9)*a2 + FieldT(27)*a3) * (b0 + FieldT(3)*b1 + FieldT(9)*b2 + FieldT(27)*b3);
-        const FieldT v6 = a3 * b3;
+        let v0= a0 * b0;
+        let v1= (a0 + a1 + a2 + a3) * (b0 + b1 + b2 + b3);
+        let v2= (a0 - a1 + a2 - a3) * (b0 - b1 + b2 - b3);
+        let v3= (a0 + FieldT(2)*a1 + FieldT(4)*a2 + FieldT(8)*a3) * (b0 + FieldT(2)*b1 + FieldT(4)*b2 + FieldT(8)*b3);
+        let v4= (a0 - FieldT(2)*a1 + FieldT(4)*a2 - FieldT(8)*a3) * (b0 - FieldT(2)*b1 + FieldT(4)*b2 - FieldT(8)*b3);
+        let v5= (a0 + FieldT(3)*a1 + FieldT(9)*a2 + FieldT(27)*a3) * (b0 + FieldT(3)*b1 + FieldT(9)*b2 + FieldT(27)*b3);
+        let v6= a3 * b3;
 
-        const FieldT beta = Fp4T::non_residue;
+        let beta= Fp4T::non_residue;
 
         c0 = v0 + beta*(FieldT(4).inverse()*v0 - FieldT(6).inverse()*(v1 + v2) + FieldT(24).inverse() * (v3 + v4) - FieldT(5) * v6);
         c1 = - FieldT(3).inverse()*v0 + v1 - FieldT(2).inverse()*v2 - FieldT(4).inverse()*v3 + FieldT(20).inverse() * v4 + FieldT(30).inverse() * v5 - FieldT(12) * v6 + beta * ( - FieldT(12).inverse() * (v0 - v1) + FieldT(24).inverse()*(v2 - v3) - FieldT(120).inverse() * (v4 - v5) - FieldT(3) * v6);
@@ -230,7 +230,7 @@ void test_Fp4_toom_cook()
         EXPECT_EQ(res, correct_res);
 
         // {v0, v3, v4, v5}
-        const FieldT u = (FieldT::one() - beta).inverse();
+        let u= (FieldT::one() - beta).inverse();
         EXPECT_EQ(v0, u * c0 + beta * u * c2 - beta * u * FieldT(2).inverse() * v1 - beta * u * FieldT(2).inverse() * v2 + beta * v6);
         EXPECT_EQ(v3, - FieldT(15) * u * c0 - FieldT(30) * u * c1 - FieldT(3) * (FieldT(4) + beta) * u * c2 - FieldT(6) * (FieldT(4) + beta) * u * c3 + (FieldT(24) - FieldT(3) * beta * FieldT(2).inverse()) * u * v1 + (-FieldT(8) + beta * FieldT(2).inverse()) * u * v2
                - FieldT(3) * (-FieldT(16) + beta) * v6);

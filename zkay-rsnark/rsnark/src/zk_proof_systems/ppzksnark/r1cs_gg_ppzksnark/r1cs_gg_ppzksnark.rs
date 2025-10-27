@@ -5,11 +5,11 @@ Declaration of interfaces for a ppzkSNARK for R1CS with a security proof
 in the generic group (GG) model.
 
 This includes:
-- class for proving key
-- class for verification key
-- class for processed verification key
-- class for key pair (proving key & verification key)
-- class for proof
+- pub struct for proving key
+- pub struct for verification key
+- pub struct for processed verification key
+- pub struct for key pair (proving key & verification key)
+- pub struct for proof
 - generator algorithm
 - prover algorithm
 - verifier algorithm (with strong or weak input consistency)
@@ -41,7 +41,7 @@ References:
 // //#ifndef R1CS_GG_PPZKSNARK_HPP_
 // // #define R1CS_GG_PPZKSNARK_HPP_
 
-// use  <memory>
+// 
 
 use ffec::algebra::curves::public_params;
 use ffec::common::serialization::OUTPUT_NEWLINE;
@@ -55,7 +55,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_par
 /******************************** Proving key ********************************/
 
 // pub fn 
-// class r1cs_gg_ppzksnark_proving_key;
+// pub struct r1cs_gg_ppzksnark_proving_key;
 
 // pub fn 
 // std::ostream& operator<<(std::ostream &out, &pk:r1cs_gg_ppzksnark_proving_key<ppT>);
@@ -158,7 +158,7 @@ constraint_system:                                  r1cs_gg_ppzksnark_constraint
 /******************************* Verification key ****************************/
 
 // pub fn 
-// class r1cs_gg_ppzksnark_verification_key;
+// pub struct r1cs_gg_ppzksnark_verification_key;
 
 // pub fn 
 // std::ostream& operator<<(std::ostream &out, &vk:r1cs_gg_ppzksnark_verification_key<ppT>);
@@ -227,7 +227,7 @@ impl<ppT> r1cs_gg_ppzksnark_verification_key<ppT> {
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &vk:r1cs_gg_ppzksnark_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_verification_key<ppT> &vk);
 
-    // static r1cs_gg_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:size_t);
+    // static r1cs_gg_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:usize);
 }
 
 
@@ -459,9 +459,9 @@ let Ht=qap.Ht;
     Ht.resize(Ht.len() - 2);
 
 // // #ifdef MULTICORE
-//     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
+//     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
 // #else
-//     const size_t chunks = 1;
+//     let chunks = 1;
 // //#endif
 
     ffec::enter_block("Generating G1 MSM window table");
@@ -606,9 +606,9 @@ let s=    ffec::Fr::<ppT>::random_element();
 // //#endif
 
 // // #ifdef MULTICORE
-//     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
+//     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
 // #else
-//     const size_t chunks = 1;
+//     let chunks = 1;
 // //#endif
 
     ffec::enter_block("Compute the proof");
@@ -1123,7 +1123,7 @@ impl<ppT> fmt::Display for r1cs_gg_ppzksnark_proof<ppT> {
 
 impl r1cs_gg_ppzksnark_verification_key<ppT>{
 pub fn 
- dummy_verification_key<ppT>(input_size:size_t)->r1cs_gg_ppzksnark_verification_key<ppT>
+ dummy_verification_key<ppT>(input_size:usize)->r1cs_gg_ppzksnark_verification_key<ppT>
 {
     let result=r1cs_gg_ppzksnark_verification_key::<ppT>() ;
     result.alpha_g1_beta_g2 = ffec::Fr::<ppT>::random_element() * ffec::GT::<ppT>::random_element();

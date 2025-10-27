@@ -35,7 +35,7 @@ impl ALU_control_flow_gadget<FieldT>  {
                             argval2:word_variable_gadget<FieldT>,
                             flag:pb_variable<FieldT>,
                             result:pb_variable<FieldT>,
-                            annotation_prefix:std::string) ->Self
+                            annotation_prefix:String) ->Self
          {
 // tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
         Self{pc,
@@ -54,7 +54,7 @@ impl ALU_jmp_gadget {
                    argval2:word_variable_gadget<FieldT>,
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
-                   annotation_prefix:std::string) ->Self
+                   annotation_prefix:String) ->Self
         {
 // ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) 
     Self{}
@@ -75,7 +75,7 @@ impl ALU_cjmp_gadget {
                     argval2:word_variable_gadget<FieldT>,
                     flag:pb_variable<FieldT>,
                     result:pb_variable<FieldT>,
-                    annotation_prefix:std::string) ->Self
+                    annotation_prefix:String) ->Self
          {
 // ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix)
     Self{}
@@ -97,7 +97,7 @@ impl ALU_cnjmp_gadget {
                      argval2:word_variable_gadget<FieldT>,
                      flag:pb_variable<FieldT>,
                      result:pb_variable<FieldT>,
-                     annotation_prefix:std::string) ->Self
+                     annotation_prefix:String) ->Self
       {
 //   ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) 
     Self{}

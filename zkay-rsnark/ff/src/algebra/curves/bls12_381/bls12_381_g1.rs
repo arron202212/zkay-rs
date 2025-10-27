@@ -14,52 +14,52 @@ use crate::algebra::curves::curve_utils;
 
 // namespace libff {
 
-class bls12_381_G1;
+pub struct bls12_381_G1;
 std::ostream& operator<<(std::ostream &, const bls12_381_G1&);
 std::istream& operator>>(std::istream &, bls12_381_G1&);
 
-class bls12_381_G1 {
+pub struct bls12_381_G1 {
 
 // #ifdef PROFILE_OP_COUNTS
-    static long long add_cnt;
-    static long long dbl_cnt;
+    static i64 add_cnt;
+    static i64 dbl_cnt;
 //#endif
-    static std::vector<std::size_t> wnaf_window_table;
-    static std::vector<std::size_t> fixed_base_exp_window_table;
+    static Vec<std::usize> wnaf_window_table;
+    static Vec<std::usize> fixed_base_exp_window_table;
     static bls12_381_G1 G1_zero;
     static bls12_381_G1 G1_one;
     // Cofactor
-    static const mp_size_t h_bitcount = 126;
-    static const mp_size_t h_limbs = (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+    static let h_bitcount= 126;
+    static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
     static bigint<h_limbs> h;
 
-    typedef bls12_381_Fq base_field;
-    typedef bls12_381_Fr scalar_field;
+    type base_field=bls12_381_Fq;
+    type scalar_field=bls12_381_Fr;
 
     bls12_381_Fq X, Y, Z;
 
     // using Jacobian coordinates
     bls12_381_G1();
-    bls12_381_G1(const bls12_381_Fq& X, const bls12_381_Fq& Y, const bls12_381_Fq& Z) : X(X), Y(Y), Z(Z) {};
+    bls12_381_G1(X:bls12_381_Fq&, Y:bls12_381_Fq&, Z:&bls12_381_Fq)->SelfX,Y,Z {};
 
-    void print() const;
-    void print_coordinates() const;
+    pub fn  print() const;
+    pub fn  print_coordinates() const;
 
-    void to_affine_coordinates();
-    void to_special();
+    pub fn  to_affine_coordinates();
+    pub fn  to_special();
     bool is_special() const;
 
     bool is_zero() const;
 
-    bool operator==(const bls12_381_G1 &other) const;
-    bool operator!=(const bls12_381_G1 &other) const;
+    bool operator==(other:&bls12_381_G1) const;
+    bool operator!=(other:&bls12_381_G1) const;
 
-    bls12_381_G1 operator+(const bls12_381_G1 &other) const;
+    bls12_381_G1 operator+(other:&bls12_381_G1) const;
     bls12_381_G1 operator-() const;
-    bls12_381_G1 operator-(const bls12_381_G1 &other) const;
+    bls12_381_G1 operator-(other:&bls12_381_G1) const;
 
-    bls12_381_G1 add(const bls12_381_G1 &other) const;
-    bls12_381_G1 mixed_add(const bls12_381_G1 &other) const;
+    bls12_381_G1 add(other:&bls12_381_G1) const;
+    bls12_381_G1 mixed_add(other:&bls12_381_G1) const;
     bls12_381_G1 dbl() const;
     bls12_381_G1 mul_by_cofactor() const;
 
@@ -69,30 +69,30 @@ class bls12_381_G1 {
     static bls12_381_G1 one();
     static bls12_381_G1 random_element();
 
-    static std::size_t size_in_bits() { return base_field::ceil_size_in_bits() + 1; }
+    static std::usize size_in_bits() { return base_field::ceil_size_in_bits() + 1; }
     static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
     static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
 
-    friend std::ostream& operator<<(std::ostream &out, const bls12_381_G1 &g);
+    friend std::ostream& operator<<(std::ostream &out, g:&bls12_381_G1);
     friend std::istream& operator>>(std::istream &in, bls12_381_G1 &g);
 
-    static void batch_to_special_all_non_zeros(std::vector<bls12_381_G1> &vec);
+    static pub fn  batch_to_special_all_non_zeros(Vec<bls12_381_G1> &vec);
 };
 
-template<mp_size_t m>
-bls12_381_G1 operator*(const bigint<m> &lhs, const bls12_381_G1 &rhs)
+
+bls12_381_G1 operator*(lhs:&bigint<m>, rhs:&bls12_381_G1)
 {
     return scalar_mul<bls12_381_G1, m>(rhs, lhs);
 }
 
-template<mp_size_t m, const bigint<m>& modulus_p>
-bls12_381_G1 operator*(const Fp_model<m,modulus_p> &lhs, const bls12_381_G1 &rhs)
+
+bls12_381_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&bls12_381_G1)
 {
     return scalar_mul<bls12_381_G1, m>(rhs, lhs.as_bigint());
 }
 
-std::ostream& operator<<(std::ostream& out, const std::vector<bls12_381_G1> &v);
-std::istream& operator>>(std::istream& in, std::vector<bls12_381_G1> &v);
+std::ostream& operator<<(std::ostream& out, v:&Vec<bls12_381_G1>);
+std::istream& operator>>(std::istream& in, Vec<bls12_381_G1> &v);
 
 // } // namespace libff
 //#endif // BLS12_381_G1_HPP_
@@ -100,27 +100,27 @@ use crate::algebra::curves::bls12_381/bls12_381_g1;
 
 // namespace libff {
 
-using std::size_t;
+using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
-long long bls12_381_G1::add_cnt = 0;
-long long bls12_381_G1::dbl_cnt = 0;
+i64 bls12_381_G1::add_cnt = 0;
+i64 bls12_381_G1::dbl_cnt = 0;
 //#endif
 
-std::vector<size_t> bls12_381_G1::wnaf_window_table;
-std::vector<size_t> bls12_381_G1::fixed_base_exp_window_table;
+Vec<usize> bls12_381_G1::wnaf_window_table;
+Vec<usize> bls12_381_G1::fixed_base_exp_window_table;
 bls12_381_G1 bls12_381_G1::G1_zero;
 bls12_381_G1 bls12_381_G1::G1_one;
 bigint<bls12_381_G1::h_limbs> bls12_381_G1::h;
 
-bls12_381_G1::bls12_381_G1()
+pub fn new()
 {
     this->X = G1_zero.X;
     this->Y = G1_zero.Y;
     this->Z = G1_zero.Z;
 }
 
-void bls12_381_G1::print() const
+pub fn print() const
 {
     if this->is_zero()
     {
@@ -136,7 +136,7 @@ void bls12_381_G1::print() const
     }
 }
 
-void bls12_381_G1::print_coordinates() const
+pub fn print_coordinates() const
 {
     if this->is_zero()
     {
@@ -151,7 +151,7 @@ void bls12_381_G1::print_coordinates() const
     }
 }
 
-void bls12_381_G1::to_affine_coordinates()
+pub fn to_affine_coordinates()
 {
     if this->is_zero()
     {
@@ -170,22 +170,22 @@ void bls12_381_G1::to_affine_coordinates()
     }
 }
 
-void bls12_381_G1::to_special()
+pub fn to_special()
 {
     this->to_affine_coordinates();
 }
 
-bool bls12_381_G1::is_special() const
+pub fn is_special()->bool
 {
     return (this->is_zero() || this->Z == bls12_381_Fq::one());
 }
 
-bool bls12_381_G1::is_zero() const
+pub fn is_zero()->bool
 {
     return (this->Z.is_zero());
 }
 
-bool bls12_381_G1::operator==(const bls12_381_G1 &other) const
+bool bls12_381_G1::operator==(other:&bls12_381_G1) const
 {
     if this->is_zero()
     {
@@ -220,12 +220,12 @@ bool bls12_381_G1::operator==(const bls12_381_G1 &other) const
     return !((this->Y * Z2_cubed) != (other.Y * Z1_cubed));
 }
 
-bool bls12_381_G1::operator!=(const bls12_381_G1& other) const
+bool bls12_381_G1::operator!=(other:&bls12_381_G1) const
 {
     return !(operator==(other));
 }
 
-bls12_381_G1 bls12_381_G1::operator+(const bls12_381_G1 &other) const
+bls12_381_G1 bls12_381_G1::operator+(other:&bls12_381_G1) const
 {
     // handle special cases having to do with O
     if this->is_zero()
@@ -290,17 +290,17 @@ bls12_381_G1 bls12_381_G1::operator-() const
 }
 
 
-bls12_381_G1 bls12_381_G1::operator-(const bls12_381_G1 &other) const
+bls12_381_G1 bls12_381_G1::operator-(other:&bls12_381_G1) const
 {
     return (*this) + (-other);
 }
 
-bls12_381_G1 bls12_381_G1::add(const bls12_381_G1 &other) const
+pub fn add(other:&bls12_381_G1)->bls12_381_G1
 {
   return (*this) + other;
 }
 
-bls12_381_G1 bls12_381_G1::mixed_add(const bls12_381_G1 &other) const
+pub fn mixed_add(other:&bls12_381_G1)->bls12_381_G1
 {
 // #ifdef DEBUG
     assert!(other.is_special());
@@ -331,15 +331,15 @@ bls12_381_G1 bls12_381_G1::mixed_add(const bls12_381_G1 &other) const
 
     // we know that Z2 = 1
 
-    const bls12_381_Fq Z1Z1 = (this->Z).squared();
+    let Z1Z1= (this->Z).squared();
 
-    const bls12_381_Fq &U1 = this->X;
-    const bls12_381_Fq U2 = other.X * Z1Z1;
+    U1:&bls12_381_Fq = this->X;
+    let U2= other.X * Z1Z1;
 
-    const bls12_381_Fq Z1_cubed = (this->Z) * Z1Z1;
+    let Z1_cubed= (this->Z) * Z1Z1;
 
-    const bls12_381_Fq &S1 = (this->Y);                // S1 = Y1 * Z2 * Z2Z2
-    const bls12_381_Fq S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
+    S1:&bls12_381_Fq = (this->Y);                // S1 = Y1 * Z2 * Z2Z2
+    let S2= (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
 
     if U1 == U2 && S1 == S2
     {
@@ -369,7 +369,7 @@ bls12_381_G1 bls12_381_G1::mixed_add(const bls12_381_G1 &other) const
     return bls12_381_G1(X3, Y3, Z3);
 }
 
-bls12_381_G1 bls12_381_G1::dbl() const
+pub fn dbl()->bls12_381_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
@@ -404,12 +404,12 @@ bls12_381_G1 bls12_381_G1::dbl() const
     return bls12_381_G1(X3, Y3, Z3);
 }
 
-bls12_381_G1 bls12_381_G1::mul_by_cofactor() const
+pub fn mul_by_cofactor()->bls12_381_G1
 {
     return bls12_381_G1::h * (*this);
 }
 
-bool bls12_381_G1::is_well_formed() const
+pub fn is_well_formed()->bool
 {
     if this->is_zero()
     {
@@ -446,7 +446,7 @@ bls12_381_G1 bls12_381_G1::random_element()
     return (scalar_field::random_element().as_bigint()) * G1_one;
 }
 
-std::ostream& operator<<(std::ostream &out, const bls12_381_G1 &g)
+std::ostream& operator<<(std::ostream &out, g:&bls12_381_G1)
 {
     bls12_381_G1 copy(g);
     copy.to_affine_coordinates();
@@ -509,7 +509,7 @@ std::istream& operator>>(std::istream &in, bls12_381_G1 &g)
     return in;
 }
 
-std::ostream& operator<<(std::ostream& out, const std::vector<bls12_381_G1> &v)
+std::ostream& operator<<(std::ostream& out, v:&Vec<bls12_381_G1>)
 {
     out << v.len() << "\n";
     for t in &v
@@ -520,11 +520,11 @@ std::ostream& operator<<(std::ostream& out, const std::vector<bls12_381_G1> &v)
     return out;
 }
 
-std::istream& operator>>(std::istream& in, std::vector<bls12_381_G1> &v)
+std::istream& operator>>(std::istream& in, Vec<bls12_381_G1> &v)
 {
     v.clear();
 
-    size_t s;
+    usize s;
     in >> s;
     consume_newline(in);
 
@@ -541,9 +541,9 @@ std::istream& operator>>(std::istream& in, std::vector<bls12_381_G1> &v)
     return in;
 }
 
-void bls12_381_G1::batch_to_special_all_non_zeros(std::vector<bls12_381_G1> &vec)
+pub fn batch_to_special_all_non_zeros(Vec<bls12_381_G1> &vec)
 {
-    std::vector<bls12_381_Fq> Z_vec;
+    Vec<bls12_381_Fq> Z_vec;
     Z_vec.reserve(vec.len());
 
     for el in &vec
@@ -552,7 +552,7 @@ void bls12_381_G1::batch_to_special_all_non_zeros(std::vector<bls12_381_G1> &vec
     }
     batch_invert<bls12_381_Fq>(Z_vec);
 
-    const bls12_381_Fq one = bls12_381_Fq::one();
+    let one= bls12_381_Fq::one();
 
     for i in 0..vec.len()
     {

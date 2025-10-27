@@ -15,7 +15,7 @@ use crate::algebra::curves::alt_bn128::alt_bn128_init;
 
 /* final exponentiation */
 
-alt_bn128_GT alt_bn128_final_exponentiation(const alt_bn128_Fq12 &elt);
+alt_bn128_GT alt_bn128_final_exponentiation(elt:&alt_bn128_Fq12);
 
 /* ate pairing */
 
@@ -23,8 +23,8 @@ struct alt_bn128_ate_G1_precomp {
     alt_bn128_Fq PX;
     alt_bn128_Fq PY;
 
-    bool operator==(const alt_bn128_ate_G1_precomp &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const alt_bn128_ate_G1_precomp &prec_P);
+    bool operator==(other:&alt_bn128_ate_G1_precomp) const;
+    friend std::ostream& operator<<(std::ostream &out, prec_P:&alt_bn128_ate_G1_precomp);
     friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P);
 };
 
@@ -33,61 +33,61 @@ struct alt_bn128_ate_ell_coeffs {
     alt_bn128_Fq2 ell_VW;
     alt_bn128_Fq2 ell_VV;
 
-    bool operator==(const alt_bn128_ate_ell_coeffs &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const alt_bn128_ate_ell_coeffs &c);
+    bool operator==(other:&alt_bn128_ate_ell_coeffs) const;
+    friend std::ostream& operator<<(std::ostream &out, c:&alt_bn128_ate_ell_coeffs);
     friend std::istream& operator>>(std::istream &in, alt_bn128_ate_ell_coeffs &c);
 };
 
 struct alt_bn128_ate_G2_precomp {
     alt_bn128_Fq2 QX;
     alt_bn128_Fq2 QY;
-    std::vector<alt_bn128_ate_ell_coeffs> coeffs;
+    Vec<alt_bn128_ate_ell_coeffs> coeffs;
 
-    bool operator==(const alt_bn128_ate_G2_precomp &other) const;
-    friend std::ostream& operator<<(std::ostream &out, const alt_bn128_ate_G2_precomp &prec_Q);
+    bool operator==(other:&alt_bn128_ate_G2_precomp) const;
+    friend std::ostream& operator<<(std::ostream &out, prec_Q:&alt_bn128_ate_G2_precomp);
     friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G2_precomp &prec_Q);
 };
 
-alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(const alt_bn128_G1& P);
-alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q);
+alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(P:&alt_bn128_G1);
+alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(Q:&alt_bn128_G2);
 
-alt_bn128_Fq12 alt_bn128_ate_miller_loop(const alt_bn128_ate_G1_precomp &prec_P,
-                              const alt_bn128_ate_G2_precomp &prec_Q);
-alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(const alt_bn128_ate_G1_precomp &prec_P1,
-                                     const alt_bn128_ate_G2_precomp &prec_Q1,
-                                     const alt_bn128_ate_G1_precomp &prec_P2,
-                                     const alt_bn128_ate_G2_precomp &prec_Q2);
+alt_bn128_Fq12 alt_bn128_ate_miller_loop(prec_P:&alt_bn128_ate_G1_precomp,
+                              prec_Q:&alt_bn128_ate_G2_precomp);
+alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(prec_P1:&alt_bn128_ate_G1_precomp,
+                                     prec_Q1:&alt_bn128_ate_G2_precomp,
+                                     prec_P2:&alt_bn128_ate_G1_precomp,
+                                     prec_Q2:&alt_bn128_ate_G2_precomp);
 
-alt_bn128_Fq12 alt_bn128_ate_pairing(const alt_bn128_G1& P,
-                          const alt_bn128_G2 &Q);
-alt_bn128_GT alt_bn128_ate_reduced_pairing(const alt_bn128_G1 &P,
-                                 const alt_bn128_G2 &Q);
+alt_bn128_Fq12 alt_bn128_ate_pairing(P:alt_bn128_G1&,
+                          Q:&alt_bn128_G2);
+alt_bn128_GT alt_bn128_ate_reduced_pairing(P:&alt_bn128_G1,
+                                 Q:&alt_bn128_G2);
 
 /* choice of pairing */
 
-typedef alt_bn128_ate_G1_precomp alt_bn128_G1_precomp;
-typedef alt_bn128_ate_G2_precomp alt_bn128_G2_precomp;
+type alt_bn128_G1_precomp=alt_bn128_ate_G1_precomp;
+type alt_bn128_G2_precomp=alt_bn128_ate_G2_precomp;
 
-alt_bn128_G1_precomp alt_bn128_precompute_G1(const alt_bn128_G1& P);
+alt_bn128_G1_precomp alt_bn128_precompute_G1(P:&alt_bn128_G1);
 
-alt_bn128_G2_precomp alt_bn128_precompute_G2(const alt_bn128_G2& Q);
+alt_bn128_G2_precomp alt_bn128_precompute_G2(Q:&alt_bn128_G2);
 
-alt_bn128_Fq12 alt_bn128_miller_loop(const alt_bn128_G1_precomp &prec_P,
-                          const alt_bn128_G2_precomp &prec_Q);
+alt_bn128_Fq12 alt_bn128_miller_loop(prec_P:&alt_bn128_G1_precomp,
+                          prec_Q:&alt_bn128_G2_precomp);
 
-alt_bn128_Fq12 alt_bn128_double_miller_loop(const alt_bn128_G1_precomp &prec_P1,
-                                 const alt_bn128_G2_precomp &prec_Q1,
-                                 const alt_bn128_G1_precomp &prec_P2,
-                                 const alt_bn128_G2_precomp &prec_Q2);
+alt_bn128_Fq12 alt_bn128_double_miller_loop(prec_P1:&alt_bn128_G1_precomp,
+                                 prec_Q1:&alt_bn128_G2_precomp,
+                                 prec_P2:&alt_bn128_G1_precomp,
+                                 prec_Q2:&alt_bn128_G2_precomp);
 
-alt_bn128_Fq12 alt_bn128_pairing(const alt_bn128_G1& P,
-                      const alt_bn128_G2 &Q);
+alt_bn128_Fq12 alt_bn128_pairing(P:alt_bn128_G1&,
+                      Q:&alt_bn128_G2);
 
-alt_bn128_GT alt_bn128_reduced_pairing(const alt_bn128_G1 &P,
-                             const alt_bn128_G2 &Q);
+alt_bn128_GT alt_bn128_reduced_pairing(P:&alt_bn128_G1,
+                             Q:&alt_bn128_G2);
 
-alt_bn128_GT alt_bn128_affine_reduced_pairing(const alt_bn128_G1 &P,
-                                    const alt_bn128_G2 &Q);
+alt_bn128_GT alt_bn128_affine_reduced_pairing(P:&alt_bn128_G1,
+                                    Q:&alt_bn128_G2);
 
 // } // namespace libff
 //#endif // ALT_BN128_PAIRING_HPP_
@@ -108,15 +108,15 @@ use crate::common::profiling;
 
 // namespace libff {
 
-using std::size_t;
+using std::usize;
 
-bool alt_bn128_ate_G1_precomp::operator==(const alt_bn128_ate_G1_precomp &other) const
+bool alt_bn128_ate_G1_precomp::operator==(other:&alt_bn128_ate_G1_precomp) const
 {
     return (this->PX == other.PX &&
             this->PY == other.PY);
 }
 
-std::ostream& operator<<(std::ostream &out, const alt_bn128_ate_G1_precomp &prec_P)
+std::ostream& operator<<(std::ostream &out, prec_P:&alt_bn128_ate_G1_precomp)
 {
     out << prec_P.PX << OUTPUT_SEPARATOR << prec_P.PY;
 
@@ -132,14 +132,14 @@ std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P)
     return in;
 }
 
-bool  alt_bn128_ate_ell_coeffs::operator==(const alt_bn128_ate_ell_coeffs &other) const
+bool  alt_bn128_ate_ell_coeffs::operator==(other:&alt_bn128_ate_ell_coeffs) const
 {
     return (this->ell_0 == other.ell_0 &&
             this->ell_VW == other.ell_VW &&
             this->ell_VV == other.ell_VV);
 }
 
-std::ostream& operator<<(std::ostream &out, const alt_bn128_ate_ell_coeffs &c)
+std::ostream& operator<<(std::ostream &out, c:&alt_bn128_ate_ell_coeffs)
 {
     out << c.ell_0 << OUTPUT_SEPARATOR << c.ell_VW << OUTPUT_SEPARATOR << c.ell_VV;
     return out;
@@ -156,14 +156,14 @@ std::istream& operator>>(std::istream &in, alt_bn128_ate_ell_coeffs &c)
     return in;
 }
 
-bool alt_bn128_ate_G2_precomp::operator==(const alt_bn128_ate_G2_precomp &other) const
+bool alt_bn128_ate_G2_precomp::operator==(other:&alt_bn128_ate_G2_precomp) const
 {
     return (this->QX == other.QX &&
             this->QY == other.QY &&
             this->coeffs == other.coeffs);
 }
 
-std::ostream& operator<<(std::ostream& out, const alt_bn128_ate_G2_precomp &prec_Q)
+std::ostream& operator<<(std::ostream& out, prec_Q:&alt_bn128_ate_G2_precomp)
 {
     out << prec_Q.QX << OUTPUT_SEPARATOR << prec_Q.QY << "\n";
     out << prec_Q.coeffs.len() << "\n";
@@ -182,7 +182,7 @@ std::istream& operator>>(std::istream& in, alt_bn128_ate_G2_precomp &prec_Q)
     consume_newline(in);
 
     prec_Q.coeffs.clear();
-    size_t s;
+    usize s;
     in >> s;
 
     consume_newline(in);
@@ -202,7 +202,7 @@ std::istream& operator>>(std::istream& in, alt_bn128_ate_G2_precomp &prec_Q)
 
 /* final exponentiations */
 
-alt_bn128_Fq12 alt_bn128_final_exponentiation_first_chunk(const alt_bn128_Fq12 &elt)
+alt_bn128_Fq12 alt_bn128_final_exponentiation_first_chunk(elt:&alt_bn128_Fq12)
 {
     enter_block("Call to alt_bn128_final_exponentiation_first_chunk");
 
@@ -218,18 +218,18 @@ alt_bn128_Fq12 alt_bn128_final_exponentiation_first_chunk(const alt_bn128_Fq12 &
       result = D * C
     */
 
-    const alt_bn128_Fq12 A = alt_bn128_Fq12(elt.c0,-elt.c1);
-    const alt_bn128_Fq12 B = elt.inverse();
-    const alt_bn128_Fq12 C = A * B;
-    const alt_bn128_Fq12 D = C.Frobenius_map(2);
-    const alt_bn128_Fq12 result = D * C;
+    let A= alt_bn128_Fq12(elt.c0,-elt.c1);
+    let B= elt.inverse();
+    let C= A * B;
+    let D= C.Frobenius_map(2);
+    let result= D * C;
 
     leave_block("Call to alt_bn128_final_exponentiation_first_chunk");
 
     return result;
 }
 
-alt_bn128_Fq12 alt_bn128_exp_by_neg_z(const alt_bn128_Fq12 &elt)
+alt_bn128_Fq12 alt_bn128_exp_by_neg_z(elt:&alt_bn128_Fq12)
 {
     enter_block("Call to alt_bn128_exp_by_neg_z");
 
@@ -244,7 +244,7 @@ alt_bn128_Fq12 alt_bn128_exp_by_neg_z(const alt_bn128_Fq12 &elt)
     return result;
 }
 
-alt_bn128_Fq12 alt_bn128_final_exponentiation_last_chunk(const alt_bn128_Fq12 &elt)
+alt_bn128_Fq12 alt_bn128_final_exponentiation_last_chunk(elt:&alt_bn128_Fq12)
 {
     enter_block("Call to alt_bn128_final_exponentiation_last_chunk");
 
@@ -288,37 +288,37 @@ alt_bn128_Fq12 alt_bn128_final_exponentiation_last_chunk(const alt_bn128_Fq12 &e
 
     */
 
-    const alt_bn128_Fq12 A = alt_bn128_exp_by_neg_z(elt);
-    const alt_bn128_Fq12 B = A.cyclotomic_squared();
-    const alt_bn128_Fq12 C = B.cyclotomic_squared();
-    const alt_bn128_Fq12 D = C * B;
-    const alt_bn128_Fq12 E = alt_bn128_exp_by_neg_z(D);
-    const alt_bn128_Fq12 F = E.cyclotomic_squared();
-    const alt_bn128_Fq12 G = alt_bn128_exp_by_neg_z(F);
-    const alt_bn128_Fq12 H = D.unitary_inverse();
-    const alt_bn128_Fq12 I = G.unitary_inverse();
-    const alt_bn128_Fq12 J = I * E;
-    const alt_bn128_Fq12 K = J * H;
-    const alt_bn128_Fq12 L = K * B;
-    const alt_bn128_Fq12 M = K * E;
-    const alt_bn128_Fq12 N = M * elt;
-    const alt_bn128_Fq12 O = L.Frobenius_map(1);
-    const alt_bn128_Fq12 P = O * N;
-    const alt_bn128_Fq12 Q = K.Frobenius_map(2);
-    const alt_bn128_Fq12 R = Q * P;
-    const alt_bn128_Fq12 S = elt.unitary_inverse();
-    const alt_bn128_Fq12 T = S * L;
-    const alt_bn128_Fq12 U = T.Frobenius_map(3);
-    const alt_bn128_Fq12 V = U * R;
+    let A= alt_bn128_exp_by_neg_z(elt);
+    let B= A.cyclotomic_squared();
+    let C= B.cyclotomic_squared();
+    let D= C * B;
+    let E= alt_bn128_exp_by_neg_z(D);
+    let F= E.cyclotomic_squared();
+    let G= alt_bn128_exp_by_neg_z(F);
+    let H= D.unitary_inverse();
+    let I= G.unitary_inverse();
+    let J= I * E;
+    let K= J * H;
+    let L= K * B;
+    let M= K * E;
+    let N= M * elt;
+    let O= L.Frobenius_map(1);
+    let P= O * N;
+    let Q= K.Frobenius_map(2);
+    let R= Q * P;
+    let S= elt.unitary_inverse();
+    let T= S * L;
+    let U= T.Frobenius_map(3);
+    let V= U * R;
 
-    const alt_bn128_Fq12 result = V;
+    let result= V;
 
     leave_block("Call to alt_bn128_final_exponentiation_last_chunk");
 
     return result;
 }
 
-alt_bn128_GT alt_bn128_final_exponentiation(const alt_bn128_Fq12 &elt)
+alt_bn128_GT alt_bn128_final_exponentiation(elt:&alt_bn128_Fq12)
 {
     enter_block("Call to alt_bn128_final_exponentiation");
     alt_bn128_Fq12 A = alt_bn128_final_exponentiation_first_chunk(elt);
@@ -330,23 +330,23 @@ alt_bn128_GT alt_bn128_final_exponentiation(const alt_bn128_Fq12 &elt)
 
 /* ate pairing */
 
-void doubling_step_for_flipped_miller_loop(const alt_bn128_Fq two_inv,
+pub fn  doubling_step_for_flipped_miller_loop(two_inv:alt_bn128_Fq,
                                            alt_bn128_G2 &current,
                                            alt_bn128_ate_ell_coeffs &c)
 {
-    const alt_bn128_Fq2 X = current.X, Y = current.Y, Z = current.Z;
+    let X= current.X, Y = current.Y, Z = current.Z;
 
-    const alt_bn128_Fq2 A = two_inv * (X * Y);                     // A = X1 * Y1 / 2
-    const alt_bn128_Fq2 B = Y.squared();                           // B = Y1^2
-    const alt_bn128_Fq2 C = Z.squared();                           // C = Z1^2
-    const alt_bn128_Fq2 D = C+C+C;                                 // D = 3 * C
-    const alt_bn128_Fq2 E = alt_bn128_twist_coeff_b * D;             // E = twist_b * D
-    const alt_bn128_Fq2 F = E+E+E;                                 // F = 3 * E
-    const alt_bn128_Fq2 G = two_inv * (B+F);                       // G = (B+F)/2
-    const alt_bn128_Fq2 H = (Y+Z).squared() - (B+C);               // H = (Y1+Z1)^2-(B+C)
-    const alt_bn128_Fq2 I = E-B;                                   // I = E-B
-    const alt_bn128_Fq2 J = X.squared();                           // J = X1^2
-    const alt_bn128_Fq2 E_squared = E.squared();                   // E_squared = E^2
+    let A= two_inv * (X * Y);                     // A = X1 * Y1 / 2
+    let B= Y.squared();                           // B = Y1^2
+    let C= Z.squared();                           // C = Z1^2
+    let D= C+C+C;                                 // D = 3 * C
+    let E= alt_bn128_twist_coeff_b * D;             // E = twist_b * D
+    let F= E+E+E;                                 // F = 3 * E
+    let G= two_inv * (B+F);                       // G = (B+F)/2
+    let H= (Y+Z).squared() - (B+C);               // H = (Y1+Z1)^2-(B+C)
+    let I= E-B;                                   // I = E-B
+    let J= X.squared();                           // J = X1^2
+    let E_squared= E.squared();                   // E_squared = E^2
 
     current.X = A * (B-F);                                       // X3 = A * (B-F)
     current.Y = G.squared() - (E_squared+E_squared+E_squared);   // Y3 = G^2 - 3*E^2
@@ -356,20 +356,20 @@ void doubling_step_for_flipped_miller_loop(const alt_bn128_Fq two_inv,
     c.ell_VV = J+J+J;                                            // ell_VV = 3*J (later: * xP)
 }
 
-void mixed_addition_step_for_flipped_miller_loop(const alt_bn128_G2 base,
+pub fn  mixed_addition_step_for_flipped_miller_loop(base:alt_bn128_G2,
                                                  alt_bn128_G2 &current,
                                                  alt_bn128_ate_ell_coeffs &c)
 {
-    const alt_bn128_Fq2 X1 = current.X, Y1 = current.Y, Z1 = current.Z;
-    const alt_bn128_Fq2 &x2 = base.X, &y2 = base.Y;
+    let X1= current.X, Y1 = current.Y, Z1 = current.Z;
+    x2:&alt_bn128_Fq2 = base.X, &y2 = base.Y;
 
-    const alt_bn128_Fq2 D = X1 - x2 * Z1;          // D = X1 - X2*Z1
-    const alt_bn128_Fq2 E = Y1 - y2 * Z1;          // E = Y1 - Y2*Z1
-    const alt_bn128_Fq2 F = D.squared();           // F = D^2
-    const alt_bn128_Fq2 G = E.squared();           // G = E^2
-    const alt_bn128_Fq2 H = D*F;                   // H = D*F
-    const alt_bn128_Fq2 I = X1 * F;                // I = X1 * F
-    const alt_bn128_Fq2 J = H + Z1*G - (I+I);      // J = H + Z1*G - (I+I)
+    let D= X1 - x2 * Z1;          // D = X1 - X2*Z1
+    let E= Y1 - y2 * Z1;          // E = Y1 - Y2*Z1
+    let F= D.squared();           // F = D^2
+    let G= E.squared();           // G = E^2
+    let H= D*F;                   // H = D*F
+    let I= X1 * F;                // I = X1 * F
+    let J= H + Z1*G - (I+I);      // J = H + Z1*G - (I+I)
 
     current.X = D * J;                           // X3 = D*J
     current.Y = E * (I-J)-(H * Y1);              // Y3 = E*(I-J)-(H*Y1)
@@ -379,7 +379,7 @@ void mixed_addition_step_for_flipped_miller_loop(const alt_bn128_G2 base,
     c.ell_VW = D;                                // ell_VW = D (later: * yP    )
 }
 
-alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(const alt_bn128_G1& P)
+alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(P:&alt_bn128_G1)
 {
     enter_block("Call to alt_bn128_ate_precompute_G1");
 
@@ -394,7 +394,7 @@ alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(const alt_bn128_G1& P)
     return result;
 }
 
-alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
+alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(Q:&alt_bn128_G2)
 {
     enter_block("Call to alt_bn128_ate_precompute_G2");
 
@@ -412,13 +412,13 @@ alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
     R.Y = Qcopy.Y;
     R.Z = alt_bn128_Fq2::one();
 
-    const bigint<alt_bn128_Fr::num_limbs> &loop_count = alt_bn128_ate_loop_count;
+    loop_count:&bigint<alt_bn128_Fr::num_limbs> = alt_bn128_ate_loop_count;
     bool found_one = false;
     alt_bn128_ate_ell_coeffs c;
 
     for i in ( 0..=loop_count.max_bits()).rev()
     {
-        const bool bit = loop_count.test_bit(i);
+        let mut bit = loop_count.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -457,22 +457,22 @@ alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(const alt_bn128_G2& Q)
     return result;
 }
 
-alt_bn128_Fq12 alt_bn128_ate_miller_loop(const alt_bn128_ate_G1_precomp &prec_P,
-                                     const alt_bn128_ate_G2_precomp &prec_Q)
+alt_bn128_Fq12 alt_bn128_ate_miller_loop(prec_P:&alt_bn128_ate_G1_precomp,
+                                     prec_Q:&alt_bn128_ate_G2_precomp)
 {
     enter_block("Call to alt_bn128_ate_miller_loop");
 
     alt_bn128_Fq12 f = alt_bn128_Fq12::one();
 
     bool found_one = false;
-    size_t idx = 0;
+    usize idx = 0;
 
-    const bigint<alt_bn128_Fr::num_limbs> &loop_count = alt_bn128_ate_loop_count;
+    loop_count:&bigint<alt_bn128_Fr::num_limbs> = alt_bn128_ate_loop_count;
     alt_bn128_ate_ell_coeffs c;
 
     for i in ( 0..=loop_count.max_bits()).rev()
     {
-        const bool bit = loop_count.test_bit(i);
+        let mut bit = loop_count.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -511,22 +511,22 @@ alt_bn128_Fq12 alt_bn128_ate_miller_loop(const alt_bn128_ate_G1_precomp &prec_P,
     return f;
 }
 
-alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(const alt_bn128_ate_G1_precomp &prec_P1,
-                                     const alt_bn128_ate_G2_precomp &prec_Q1,
-                                     const alt_bn128_ate_G1_precomp &prec_P2,
-                                     const alt_bn128_ate_G2_precomp &prec_Q2)
+alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(prec_P1:&alt_bn128_ate_G1_precomp,
+                                     prec_Q1:&alt_bn128_ate_G2_precomp,
+                                     prec_P2:&alt_bn128_ate_G1_precomp,
+                                     prec_Q2:&alt_bn128_ate_G2_precomp)
 {
     enter_block("Call to alt_bn128_ate_double_miller_loop");
 
     alt_bn128_Fq12 f = alt_bn128_Fq12::one();
 
     bool found_one = false;
-    size_t idx = 0;
+    usize idx = 0;
 
-    const bigint<alt_bn128_Fr::num_limbs> &loop_count = alt_bn128_ate_loop_count;
+    loop_count:&bigint<alt_bn128_Fr::num_limbs> = alt_bn128_ate_loop_count;
     for i in ( 0..=loop_count.max_bits()).rev()
     {
-        const bool bit = loop_count.test_bit(i);
+        let mut bit = loop_count.test_bit(i);
         if !found_one
         {
             /* this skips the MSB itself */
@@ -580,7 +580,7 @@ alt_bn128_Fq12 alt_bn128_ate_double_miller_loop(const alt_bn128_ate_G1_precomp &
     return f;
 }
 
-alt_bn128_Fq12 alt_bn128_ate_pairing(const alt_bn128_G1& P, const alt_bn128_G2 &Q)
+alt_bn128_Fq12 alt_bn128_ate_pairing(Q:&alt_bn128_G1& P, const alt_bn128_G2)
 {
     enter_block("Call to alt_bn128_ate_pairing");
     alt_bn128_ate_G1_precomp prec_P = alt_bn128_ate_precompute_G1(P);
@@ -590,49 +590,49 @@ alt_bn128_Fq12 alt_bn128_ate_pairing(const alt_bn128_G1& P, const alt_bn128_G2 &
     return result;
 }
 
-alt_bn128_GT alt_bn128_ate_reduced_pairing(const alt_bn128_G1 &P, const alt_bn128_G2 &Q)
+alt_bn128_GT alt_bn128_ate_reduced_pairing(P:&alt_bn128_G1, Q:&alt_bn128_G2)
 {
     enter_block("Call to alt_bn128_ate_reduced_pairing");
-    const alt_bn128_Fq12 f = alt_bn128_ate_pairing(P, Q);
-    const alt_bn128_GT result = alt_bn128_final_exponentiation(f);
+    let f= alt_bn128_ate_pairing(P, Q);
+    let result= alt_bn128_final_exponentiation(f);
     leave_block("Call to alt_bn128_ate_reduced_pairing");
     return result;
 }
 
 /* choice of pairing */
 
-alt_bn128_G1_precomp alt_bn128_precompute_G1(const alt_bn128_G1& P)
+alt_bn128_G1_precomp alt_bn128_precompute_G1(P:&alt_bn128_G1)
 {
     return alt_bn128_ate_precompute_G1(P);
 }
 
-alt_bn128_G2_precomp alt_bn128_precompute_G2(const alt_bn128_G2& Q)
+alt_bn128_G2_precomp alt_bn128_precompute_G2(Q:&alt_bn128_G2)
 {
     return alt_bn128_ate_precompute_G2(Q);
 }
 
-alt_bn128_Fq12 alt_bn128_miller_loop(const alt_bn128_G1_precomp &prec_P,
-                          const alt_bn128_G2_precomp &prec_Q)
+alt_bn128_Fq12 alt_bn128_miller_loop(prec_P:&alt_bn128_G1_precomp,
+                          prec_Q:&alt_bn128_G2_precomp)
 {
     return alt_bn128_ate_miller_loop(prec_P, prec_Q);
 }
 
-alt_bn128_Fq12 alt_bn128_double_miller_loop(const alt_bn128_G1_precomp &prec_P1,
-                                 const alt_bn128_G2_precomp &prec_Q1,
-                                 const alt_bn128_G1_precomp &prec_P2,
-                                 const alt_bn128_G2_precomp &prec_Q2)
+alt_bn128_Fq12 alt_bn128_double_miller_loop(prec_P1:&alt_bn128_G1_precomp,
+                                 prec_Q1:&alt_bn128_G2_precomp,
+                                 prec_P2:&alt_bn128_G1_precomp,
+                                 prec_Q2:&alt_bn128_G2_precomp)
 {
     return alt_bn128_ate_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
 }
 
-alt_bn128_Fq12 alt_bn128_pairing(const alt_bn128_G1& P,
-                      const alt_bn128_G2 &Q)
+alt_bn128_Fq12 alt_bn128_pairing(P:alt_bn128_G1&,
+                      Q:&alt_bn128_G2)
 {
     return alt_bn128_ate_pairing(P, Q);
 }
 
-alt_bn128_GT alt_bn128_reduced_pairing(const alt_bn128_G1 &P,
-                             const alt_bn128_G2 &Q)
+alt_bn128_GT alt_bn128_reduced_pairing(P:&alt_bn128_G1,
+                             Q:&alt_bn128_G2)
 {
     return alt_bn128_ate_reduced_pairing(P, Q);
 }

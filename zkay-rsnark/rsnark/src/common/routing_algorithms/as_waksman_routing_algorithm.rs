@@ -38,9 +38,9 @@
 //#ifndef AS_WAKSMAN_ROUTING_ALGORITHM_HPP_
 // #define AS_WAKSMAN_ROUTING_ALGORITHM_HPP_
 
-use  <cstddef>
-use  <map>
-use  <vector>
+// use  <cstddef>
+// use  <map>
+// 
 
 use ffec::common::utils;
 
@@ -79,7 +79,7 @@ use crate::common::data_structures::integer_permutation;
  * two indices are set to be equal and the packet is always routed to
  * the specified destination at the column_idx+1-th column.
  */
-type std::vector<std::vector<std::pair<size_t, size_t> > > as_waksman_topology;
+type as_waksman_topology=Vec<Vec<std::pair<usize, usize> > > ;
 
 /**
  * A routing assigns a bit to each switch in the AS-Waksman routing network.
@@ -98,7 +98,7 @@ type std::vector<std::vector<std::pair<size_t, size_t> > > as_waksman_topology;
  * entries for the positions associated with the bottom ports of the
  * switches, i.e. only canonical positions are present.
  */
-type std::vector<std::map<size_t, bool> > as_waksman_routing;
+type as_waksman_routing=Vec<BTreeMap<usize, bool> > ;
 
 /**
  * Return the number of (switch) columns in a AS-Waksman network for a given number of packets.
@@ -109,24 +109,24 @@ type std::vector<std::map<size_t, bool> > as_waksman_routing;
  * - as_waksman_num_columns(4) = 3,
  * and so on.
  */
-size_t as_waksman_num_columns(const size_t num_packets);
+// usize as_waksman_num_columns(num_packets:usize);
 
-/**
- * Return the topology of an AS-Waksman network for a given number of packets.
- *
- * See as_waksman_topology (above) for details.
- */
-as_waksman_topology generate_as_waksman_topology(const size_t num_packets);
+// /**
+//  * Return the topology of an AS-Waksman network for a given number of packets.
+//  *
+//  * See as_waksman_topology (above) for details.
+//  */
+// as_waksman_topology generate_as_waksman_topology(num_packets:usize);
 
-/**
- * Route the given permutation on an AS-Waksman network of suitable size.
- */
-as_waksman_routing get_as_waksman_routing(const integer_permutation &permutation);
+// /**
+//  * Route the given permutation on an AS-Waksman network of suitable size.
+//  */
+// as_waksman_routing get_as_waksman_routing(permutation:&integer_permutation);
 
-/**
- * Check if a routing "implements" the given permutation.
- */
-bool valid_as_waksman_routing(const integer_permutation &permutation, const as_waksman_routing &routing);
+// /**
+//  * Check if a routing "implements" the given permutation.
+//  */
+// bool valid_as_waksman_routing(permutation:&integer_permutation, routing:&as_waksman_routing);
 
 
 
@@ -144,16 +144,16 @@ bool valid_as_waksman_routing(const integer_permutation &permutation, const as_w
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use  <cassert>
+// use  <cassert>
 
-use crate::common::routing_algorithms::as_waksman_routing_algorithm;
+// use crate::common::routing_algorithms::as_waksman_routing_algorithm;
 
 
 
 /**
  * Return the height of the AS-Waksman network's top sub-network.
  */
-size_t as_waksman_top_height(const size_t num_packets)
+ pub fn as_waksman_top_height(num_packets:usize)->usize
 {
     return num_packets/2;
 }
@@ -169,9 +169,9 @@ size_t as_waksman_top_height(const size_t num_packets)
  *
  * If top = true, return the top wire, otherwise return bottom wire.
  */
-size_t as_waksman_switch_output(const size_t num_packets, const size_t row_offset, const size_t row_idx, const bool use_top)
+ pub fn as_waksman_switch_output(num_packets:usize, row_offset:usize, row_idx:usize, use_top:bool)->usize
 {
-    size_t relpos = row_idx - row_offset;
+    let  relpos = row_idx - row_offset;
     assert!(relpos % 2 == 0 && relpos + 1 < num_packets);
     return row_offset + (relpos / 2) + (if use_top { 0 }else {as_waksman_top_height(num_packets)});
 }
@@ -182,13 +182,13 @@ size_t as_waksman_switch_output(const size_t num_packets, const size_t row_offse
  *
  * This function is analogous to as_waksman_switch_output above.
  */
-size_t as_waksman_switch_input(const size_t num_packets, const size_t row_offset, const size_t row_idx, const bool use_top)
+ pub fn as_waksman_switch_input(num_packets:usize, row_offset:usize, row_idx:usize, use_top:bool)->usize
 {
     /* Due to symmetry, this function equals as_waksman_switch_output. */
     return as_waksman_switch_output(num_packets, row_offset, row_idx, use_top);
 }
 
-size_t as_waksman_num_columns(const size_t num_packets)
+pub fn  as_waksman_num_columns(num_packets:usize)->usize
 {
     return if num_packets > 1 {2*ffec::log2(num_packets)-1} else{0};
 }
@@ -205,21 +205,21 @@ size_t as_waksman_num_columns(const size_t num_packets)
  *
  * This function fills out neighbors[left] and neighbors[right-1].
  */
-void construct_as_waksman_inner(const size_t left,
-                                const size_t right,
-                                const size_t lo,
-                                const size_t hi,
-                                const std::vector<size_t> rhs_dests,
-                                as_waksman_topology &neighbors)
+pub fn construct_as_waksman_inner(left:usize,
+                                right:usize,
+                                lo:usize,
+                                hi:usize,
+                                rhs_dests:Vec<usize>,
+                                 neighbors:&as_waksman_topology)
 {
     if left > right
     {
         return;
     }
 
-    const size_t subnetwork_size = (hi - lo + 1);
+    let  subnetwork_size = (hi - lo + 1);
     assert!(rhs_dests.len() == subnetwork_size);
-    const size_t subnetwork_width = as_waksman_num_columns(subnetwork_size);
+    let subnetwork_width = as_waksman_num_columns(subnetwork_size);
     assert!(right - left + 1 >= subnetwork_width);
 
     if right - left + 1 > subnetwork_width
@@ -234,7 +234,7 @@ void construct_as_waksman_inner(const size_t left,
             neighbors[right][packet_idx].first = neighbors[right][packet_idx].second = rhs_dests[packet_idx - lo];
         }
 
-        std::vector<size_t> new_rhs_dests(subnetwork_size, -1);
+        let mut  new_rhs_dests=vec![-1;subnetwork_size];
         for packet_idx in lo..=hi
         {
             new_rhs_dests[packet_idx-lo] = packet_idx;
@@ -254,7 +254,7 @@ void construct_as_waksman_inner(const size_t left,
          * Networks of size sz > 2 are handled by adding two columns of
          * switches alongside the network and recursing.
          */
-        std::vector<size_t> new_rhs_dests(subnetwork_size, -1);
+        let mut new_rhs_dests=vec![-1;subnetwork_size];
 
         /**
          * This adds floor(sz/2) switches alongside the network.
@@ -263,57 +263,62 @@ void construct_as_waksman_inner(const size_t left,
          * even case can be eliminated (i.e., set to a constant). We handle
          * this later.
          */
-        for hi in &hi + 1; row_idx += 2)
+        let mut  new_rhs_dests=vec![-1;subnetwork_size];
+        for row_idx  in (lo..hi + 1-subnetwork_size%2).step_by(2)
         {
-            neighbors[left][row_idx].first = neighbors[left][row_idx+1].second = as_waksman_switch_output(subnetwork_size, lo, row_idx, true);
-            neighbors[left][row_idx].second = neighbors[left][row_idx+1].first = as_waksman_switch_output(subnetwork_size, lo, row_idx, false);
+            neighbors[left][row_idx].first = as_waksman_switch_output(subnetwork_size, lo, row_idx, true);
+            neighbors[left][row_idx+1].second = neighbors[left][row_idx].first;
+            neighbors[left][row_idx].second = as_waksman_switch_output(subnetwork_size, lo, row_idx, false);
+            neighbors[left][row_idx+1].first = neighbors[left][row_idx].second;
 
             new_rhs_dests[as_waksman_switch_input(subnetwork_size, lo, row_idx, true)-lo] = row_idx;
             new_rhs_dests[as_waksman_switch_input(subnetwork_size, lo, row_idx, false)-lo] = row_idx + 1;
 
-            neighbors[right][row_idx].first = neighbors[right][row_idx+1].second = rhs_dests[row_idx-lo];
-            neighbors[right][row_idx].second = neighbors[right][row_idx+1].first = rhs_dests[row_idx+1-lo];
+            neighbors[right][row_idx].first = rhs_dests[row_idx-lo];
+            neighbors[right][row_idx+1].second = rhs_dests[row_idx-lo];
+            neighbors[right][row_idx].second = rhs_dests[row_idx+1-lo];
+            neighbors[right][row_idx+1].first = rhs_dests[row_idx+1-lo];
         }
 
         if subnetwork_size % 2 == 1
         {
-            /**
-             * Odd special case:
-             * the last wire is not connected to any switch,
-             * and the wire is merely routed "straight".
-             */
-            neighbors[left][hi].first = neighbors[left][hi].second = hi;
-            neighbors[right][hi].first = neighbors[right][hi].second = rhs_dests[hi-lo];
+           
+            //  * Odd special case:
+            //  * the last wire is not connected to any switch,
+            //  * and the wire is merely routed "straight".
+            
+            (neighbors[left][hi].first , neighbors[left][hi].second )= (hi,hi);
+            (neighbors[right][hi].first , neighbors[right][hi].second )= (rhs_dests[hi-lo],rhs_dests[hi-lo]);
             new_rhs_dests[hi-lo] = hi;
         }
         else
         {
-            /**
-             * Even special case:
-             * fix the bottom-most left-hand-side switch
-             * to a constant "straight" setting.
-             */
+           
+            //  * Even special case:
+            //  * fix the bottom-most left-hand-side switch
+            //  * to a constant "straight" setting.
+            
             neighbors[left][hi-1].second = neighbors[left][hi-1].first;
             neighbors[left][hi].second = neighbors[left][hi].first;
         }
 
-        const size_t d = as_waksman_top_height(subnetwork_size);
-        const std::vector<size_t> new_rhs_dests_top(new_rhs_dests.begin(), new_rhs_dests.begin()+d);
-        const std::vector<size_t> new_rhs_dests_bottom(new_rhs_dests.begin()+d, new_rhs_dests.end());
+        let  d = as_waksman_top_height(subnetwork_size);
+        let  new_rhs_dests_top=&new_rhs_dests.begin()[..d];
+        let  new_rhs_dests_bottom=&new_rhs_dests[d..];
 
         construct_as_waksman_inner(left+1, right-1, lo, lo+d-1, new_rhs_dests_top, neighbors);
         construct_as_waksman_inner(left+1, right-1, lo+d, hi, new_rhs_dests_bottom, neighbors);
     }
 }
 
-as_waksman_topology generate_as_waksman_topology(const size_t num_packets)
+ pub fn generate_as_waksman_topology(num_packets:usize)->as_waksman_topology
 {
     assert!(num_packets > 1);
-    const size_t width = as_waksman_num_columns(num_packets);
+    let  width = as_waksman_num_columns(num_packets);
 
-    as_waksman_topology neighbors(width, std::vector<std::pair<size_t, size_t> >(num_packets, std::make_pair<size_t, size_t>(-1, -1)));
+    let  neighbors=as_waksman_topology(width, vec![(-1,-1);num_packets]);
 
-    std::vector<size_t> rhs_dests(num_packets);
+    let mut rhs_dests=vec![0;num_packets];
     for packet_idx in 0..num_packets
     {
         rhs_dests[packet_idx] = packet_idx;
@@ -331,10 +336,10 @@ as_waksman_topology generate_as_waksman_topology(const size_t num_packets)
  * This function is agnostic to column_idx, given row_offset, so we omit
  * column_idx.
  */
-size_t as_waksman_get_canonical_row_idx(const size_t row_offset, const size_t row_idx)
+ pub fn s_waksman_get_canonical_row_idx(row_offset:usize, row_idx:usize)->usize
 {
     /* translate back relative to row_offset, clear LSB, and then translate forward */
-    return (((row_idx - row_offset) & ~1) + row_offset);
+    return (((row_idx - row_offset) & !1) + row_offset);
 }
 
 /**
@@ -347,9 +352,9 @@ size_t as_waksman_get_canonical_row_idx(const size_t row_offset, const size_t ro
  * - the input position for the LHS switches, and
  * - the output position for the RHS switches.
  */
-bool as_waksman_get_switch_setting_from_top_bottom_decision(const size_t row_offset, const size_t packet_idx, const bool use_top)
+ pub fn as_waksman_get_switch_setting_from_top_bottom_decision(row_offset:usize, packet_idx:usize, use_top:bool)->bool
 {
-    const size_t row_idx = as_waksman_get_canonical_row_idx(row_offset, packet_idx);
+    let  row_idx = as_waksman_get_canonical_row_idx(row_offset, packet_idx);
     return (packet_idx == row_idx) ^ use_top;
 }
 
@@ -363,9 +368,9 @@ bool as_waksman_get_switch_setting_from_top_bottom_decision(const size_t row_off
  * - the input position for the RHS switches, and
  * - the output position for the LHS switches.
  */
-bool as_waksman_get_top_bottom_decision_from_switch_setting(const size_t row_offset, const size_t packet_idx, const bool switch_setting)
+ pub fn as_waksman_get_top_bottom_decision_from_switch_setting(row_offset:usize, packet_idx:usize, switch_setting:bool)->bool
 {
-    const size_t row_idx = as_waksman_get_canonical_row_idx(row_offset, packet_idx);
+    let  row_idx = as_waksman_get_canonical_row_idx(row_offset, packet_idx);
     return (row_idx == packet_idx) ^ switch_setting;
 }
 
@@ -373,9 +378,9 @@ bool as_waksman_get_top_bottom_decision_from_switch_setting(const size_t row_off
  * Given an output wire of a RHS switch, compute and return the output
  * position of the other wire also connected to this switch.
  */
-size_t as_waksman_other_output_position(const size_t row_offset, const size_t packet_idx)
+ pub fn as_waksman_other_output_position(row_offset:usize, packet_idx:usize)->usize
 {
-    const size_t row_idx = as_waksman_get_canonical_row_idx(row_offset, packet_idx);
+    let  row_idx = as_waksman_get_canonical_row_idx(row_offset, packet_idx);
     return (1 - (packet_idx - row_idx)) + row_idx;
 }
 
@@ -383,7 +388,7 @@ size_t as_waksman_other_output_position(const size_t row_offset, const size_t pa
  * Given an input wire of a LHS switch, compute and return the input
  * position of the other wire also connected to this switch.
  */
-size_t as_waksman_other_input_position(const size_t row_offset, const size_t packet_idx)
+ pub fn as_waksman_other_input_position(row_offset:usize, packet_idx:usize)->usize
 {
     /* Due to symmetry, this function equals as_waksman_other_output_position. */
     return as_waksman_other_output_position(row_offset, packet_idx);
@@ -402,21 +407,21 @@ size_t as_waksman_other_input_position(const size_t row_offset, const size_t pac
  *
  * NOTE: due to offsets, neither pi or piinv are instances of integer_permutation.
  */
-void as_waksman_route_inner(const size_t left,
-                            const size_t right,
-                            const size_t lo,
-                            const size_t hi,
-                            const integer_permutation &permutation,
-                            const integer_permutation &permutation_inv,
-                            as_waksman_routing &routing)
+pub fn as_waksman_route_inner(left:usize,
+                            right:usize,
+                            lo:usize,
+                            hi:usize,
+                            permutation:&integer_permutation,
+                            permutation_inv:&integer_permutation,
+                            routing:&as_waksman_routing)
 {
     if left > right
     {
         return;
     }
 
-    const size_t subnetwork_size = (hi - lo + 1);
-    const size_t subnetwork_width = as_waksman_num_columns(subnetwork_size);
+    let  subnetwork_size = (hi - lo + 1);
+    let  subnetwork_width = as_waksman_num_columns(subnetwork_size);
     assert!(right - left + 1 >= subnetwork_width);
 
 // #ifdef DEBUG
@@ -456,13 +461,13 @@ void as_waksman_route_inner(const size_t left,
          * If this enforces a LHS switch setting, then forward-route that;
          * otherwise we will select the next value from LHS to route.
          */
-        integer_permutation new_permutation(lo, hi);
-        integer_permutation new_permutation_inv(lo, hi);
-        std::vector<bool> lhs_routed(subnetwork_size, false); /* offset by lo, i.e. lhs_routed[packet_idx-lo] is set if packet packet_idx is routed */
+        let mut  new_permutation=integer_permutation::new(lo, hi);
+        let mut  new_permutation_inv=integer_permutation::new(lo, hi);
+        let mut  lhs_routed=vec![false;subnetwork_size]; /* offset by lo, i.e. lhs_routed[packet_idx-lo] is set if packet packet_idx is routed */
 
-        size_t to_route;
-        size_t max_unrouted;
-        bool route_left;
+        let mut  to_route;
+        let mut  max_unrouted;
+        let mut  route_left;
 
         if subnetwork_size % 2 == 1
         {
@@ -489,10 +494,10 @@ void as_waksman_route_inner(const size_t left,
                  * on RHS, so route the other value from that switch
                  * using the lower subnetwork.
                  */
-                const size_t rhs_switch = as_waksman_get_canonical_row_idx(lo, permutation.get(hi));
-                const bool rhs_switch_setting = as_waksman_get_switch_setting_from_top_bottom_decision(lo, permutation.get(hi), false);
+                let  rhs_switch = as_waksman_get_canonical_row_idx(lo, permutation.get(hi));
+                let  rhs_switch_setting = as_waksman_get_switch_setting_from_top_bottom_decision(lo, permutation.get(hi), false);
                 routing[right][rhs_switch] = rhs_switch_setting;
-                size_t tprime = as_waksman_switch_input(subnetwork_size, lo, rhs_switch, false);
+                let mut  tprime = as_waksman_switch_input(subnetwork_size, lo, rhs_switch, false);
                 new_permutation.set(hi, tprime);
                 new_permutation_inv.set(tprime, hi);
 
@@ -505,10 +510,10 @@ void as_waksman_route_inner(const size_t left,
         }
         else
         {
-            /**
-             * EVEN CASE: the bottom-most switch is fixed to a constant
-             * straight setting. So we route wire hi accordingly.
-             */
+
+            //  * EVEN CASE: the bottom-most switch is fixed to a constant
+            //  * straight setting. So we route wire hi accordingly.
+
             routing[left][hi-1] = false;
             to_route = hi;
             route_left = true;
@@ -524,14 +529,14 @@ void as_waksman_route_inner(const size_t left,
             if route_left
             {
                 /* If switch value has not been assigned, assign it arbitrarily. */
-                const size_t lhs_switch = as_waksman_get_canonical_row_idx(lo, to_route);
+                let  lhs_switch = as_waksman_get_canonical_row_idx(lo, to_route);
                 if routing[left].find(lhs_switch) == routing[left].end()
                 {
                     routing[left][lhs_switch] = false;
                 }
-                const bool lhs_switch_setting = routing[left][lhs_switch];
-                const bool use_top = as_waksman_get_top_bottom_decision_from_switch_setting(lo, to_route, lhs_switch_setting);
-                const size_t t = as_waksman_switch_output(subnetwork_size, lo, lhs_switch, use_top);
+                let  lhs_switch_setting = routing[left][lhs_switch];
+                let  use_top = as_waksman_get_top_bottom_decision_from_switch_setting(lo, to_route, lhs_switch_setting);
+                let  t = as_waksman_switch_output(subnetwork_size, lo, lhs_switch, use_top);
                 if permutation.get(to_route) == hi
                 {
                     /**
@@ -546,14 +551,14 @@ void as_waksman_route_inner(const size_t left,
                 }
                 else
                 {
-                    const size_t rhs_switch = as_waksman_get_canonical_row_idx(lo, permutation.get(to_route));
+                    let rhs_switch = as_waksman_get_canonical_row_idx(lo, permutation.get(to_route));
                     /**
                      * We know that the corresponding switch on the right-hand side
                      * cannot be set, so we set it according to the incoming wire.
                      */
                     assert!(routing[right].find(rhs_switch) == routing[right].end());
                     routing[right][rhs_switch] = as_waksman_get_switch_setting_from_top_bottom_decision(lo, permutation.get(to_route), use_top);
-                    const size_t tprime = as_waksman_switch_input(subnetwork_size, lo, rhs_switch, use_top);
+                    let tprime = as_waksman_switch_input(subnetwork_size, lo, rhs_switch, use_top);
                     new_permutation.set(t, tprime);
                     new_permutation_inv.set(tprime, t);
 
@@ -568,20 +573,20 @@ void as_waksman_route_inner(const size_t left,
                  * We have arrived on the right-hand side, so the switch setting is fixed.
                  * Next, we back route from here.
                  */
-                const size_t rhs_switch = as_waksman_get_canonical_row_idx(lo, to_route);
-                const size_t lhs_switch = as_waksman_get_canonical_row_idx(lo, permutation_inv.get(to_route));
+                let rhs_switch = as_waksman_get_canonical_row_idx(lo, to_route);
+                let lhs_switch = as_waksman_get_canonical_row_idx(lo, permutation_inv.get(to_route));
                 assert!(routing[right].find(rhs_switch) != routing[right].end());
-                const bool rhs_switch_setting = routing[right][rhs_switch];
-                const bool use_top = as_waksman_get_top_bottom_decision_from_switch_setting(lo, to_route, rhs_switch_setting);
-                const bool lhs_switch_setting = as_waksman_get_switch_setting_from_top_bottom_decision(lo, permutation_inv.get(to_route), use_top);
+                let rhs_switch_setting = routing[right][rhs_switch];
+                let use_top = as_waksman_get_top_bottom_decision_from_switch_setting(lo, to_route, rhs_switch_setting);
+                let lhs_switch_setting = as_waksman_get_switch_setting_from_top_bottom_decision(lo, permutation_inv.get(to_route), use_top);
 
                 /* The value on the left-hand side is either the same or not set. */
-                auto it = routing[left].find(lhs_switch);
-                assert!(it == routing[left].end() || it->second == lhs_switch_setting);
+                let it = routing[left].find(lhs_switch);
+                assert!(it == routing[left].end() || it.1 == lhs_switch_setting);
                 routing[left][lhs_switch] = lhs_switch_setting;
 
-                const size_t t = as_waksman_switch_input(subnetwork_size, lo, rhs_switch, use_top);
-                const size_t tprime = as_waksman_switch_output(subnetwork_size, lo, lhs_switch, use_top);
+                let t = as_waksman_switch_input(subnetwork_size, lo, rhs_switch, use_top);
+                let tprime = as_waksman_switch_output(subnetwork_size, lo, lhs_switch, use_top);
                 new_permutation.set(tprime, t);
                 new_permutation_inv.set(t, tprime);
 
@@ -620,52 +625,52 @@ void as_waksman_route_inner(const size_t left,
             routing[left].erase(hi-1);
         }
 
-        const size_t d = as_waksman_top_height(subnetwork_size);
-        const integer_permutation new_permutation_upper = new_permutation.slice(lo, lo + d - 1);
-        const integer_permutation new_permutation_lower = new_permutation.slice(lo + d, hi);
+        let d = as_waksman_top_height(subnetwork_size);
+        let new_permutation_upper = new_permutation.slice(lo, lo + d - 1);
+        let new_permutation_lower = new_permutation.slice(lo + d, hi);
 
-        const integer_permutation new_permutation_inv_upper = new_permutation_inv.slice(lo, lo + d - 1);
-        const integer_permutation new_permutation_inv_lower = new_permutation_inv.slice(lo + d, hi);
+        let new_permutation_inv_upper = new_permutation_inv.slice(lo, lo + d - 1);
+        let new_permutation_inv_lower = new_permutation_inv.slice(lo + d, hi);
 
         as_waksman_route_inner(left+1, right-1, lo, lo + d - 1, new_permutation_upper, new_permutation_inv_upper, routing);
         as_waksman_route_inner(left+1, right-1, lo + d, hi, new_permutation_lower, new_permutation_inv_lower, routing);
     }
 }
 
-as_waksman_routing get_as_waksman_routing(const integer_permutation &permutation)
+ pub fn get_as_waksman_routing(permutation:&integer_permutation)->as_waksman_routing
 {
-    const size_t num_packets = permutation.len();
-    const size_t width = as_waksman_num_columns(num_packets);
+    let num_packets = permutation.len();
+    let width = as_waksman_num_columns(num_packets);
 
-    as_waksman_routing routing(width);
+     let routing=as_waksman_routing(width);
     as_waksman_route_inner(0, width-1, 0, num_packets-1, permutation, permutation.inverse(), routing);
     return routing;
 }
 
-bool valid_as_waksman_routing(const integer_permutation &permutation, const as_waksman_routing &routing)
+ pub fn valid_as_waksman_routing(permutation:&integer_permutation, routing:&as_waksman_routing)->bool
 {
-    const size_t num_packets = permutation.len();
-    const size_t width = as_waksman_num_columns(num_packets);
-    as_waksman_topology neighbors = generate_as_waksman_topology(num_packets);
+    let num_packets = permutation.len();
+    let width = as_waksman_num_columns(num_packets);
+    let  neighbors = generate_as_waksman_topology(num_packets);
 
-    integer_permutation curperm(num_packets);
+    let mut  curperm=integer_permutation::new(num_packets);
 
     for column_idx in 0..width
     {
-        integer_permutation nextperm(num_packets);
+         let mut nextperm=integer_permutation::new(num_packets);
         for packet_idx in 0..num_packets
         {
-            size_t routed_packet_idx;
+            let mut  routed_packet_idx;
             if neighbors[column_idx][packet_idx].first == neighbors[column_idx][packet_idx].second
             {
                 routed_packet_idx = neighbors[column_idx][packet_idx].first;
             }
             else
             {
-                auto it = routing[column_idx].find(packet_idx);
-                auto it2 = routing[column_idx].find(packet_idx-1);
+                let it = routing[column_idx].find(packet_idx);
+                let it2 = routing[column_idx].find(packet_idx-1);
                 assert!((it != routing[column_idx].end()) ^ (it2 != routing[column_idx].end()));
-                const bool switch_setting = if it != routing[column_idx].end() {it->second} else{it2->second};
+                let switch_setting = if it != routing[column_idx].end() {it.1} else{it2.1};
 
                 routed_packet_idx = if switch_setting {neighbors[column_idx][packet_idx].second} else{neighbors[column_idx][packet_idx].first};
             }

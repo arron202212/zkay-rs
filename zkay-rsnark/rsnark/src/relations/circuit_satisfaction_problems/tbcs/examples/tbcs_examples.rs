@@ -27,18 +27,18 @@ struct tbcs_example {
     tbcs_auxiliary_input auxiliary_input;
 
     tbcs_example() = default;
-    tbcs_example(const tbcs_example &other) = default;
-    tbcs_example(const tbcs_circuit &circuit,
-                 const tbcs_primary_input &primary_input,
-                 const tbcs_auxiliary_input &auxiliary_input) :
-        circuit(circuit),
-        primary_input(primary_input),
+    tbcs_example(other:&tbcs_example) = default;
+    tbcs_example(circuit:&tbcs_circuit,
+                 primary_input:&tbcs_primary_input,
+                 auxiliary_input:&tbcs_auxiliary_input)->Self
+       circuit,
+       primary_input,
         auxiliary_input(auxiliary_input)
     {}
 
     tbcs_example(tbcs_circuit &&circuit,
                  tbcs_primary_input &&primary_input,
-                 tbcs_auxiliary_input &&auxiliary_input) :
+                 tbcs_auxiliary_input &&auxiliary_input)->Self
         circuit((circuit)),
         primary_input((primary_input)),
         auxiliary_input((auxiliary_input))
@@ -56,10 +56,10 @@ struct tbcs_example {
  * - selecting random left and right wires from primary inputs, auxiliary inputs, and outputs of previous gates,
  * - selecting a gate type at random (subject to the constraint "output = 0" if this is an output gate).
  */
-tbcs_example generate_tbcs_example(const size_t primary_input_size,
-                                   const size_t auxiliary_input_size,
-                                   const size_t num_gates,
-                                   const size_t num_outputs);
+tbcs_example generate_tbcs_example(primary_input_size:usize,
+                                   auxiliary_input_size:usize,
+                                   num_gates:usize,
+                                   num_outputs:usize);
 
 
 
@@ -86,10 +86,10 @@ use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
 
 
 
-tbcs_example generate_tbcs_example(const size_t primary_input_size,
-                                   const size_t auxiliary_input_size,
-                                   const size_t num_gates,
-                                   const size_t num_outputs)
+tbcs_example generate_tbcs_example(primary_input_size:usize,
+                                   auxiliary_input_size:usize,
+                                   num_gates:usize,
+                                   num_outputs:usize)
 {
     tbcs_example example;
     for i in 0..primary_input_size
@@ -111,7 +111,7 @@ tbcs_example generate_tbcs_example(const size_t primary_input_size,
 
     for i in 0..num_gates
     {
-        const size_t num_variables = primary_input_size + auxiliary_input_size + i;
+        let num_variables = primary_input_size + auxiliary_input_size + i;
         tbcs_gate gate;
         gate.left_wire = std::rand() % (num_variables+1);
         gate.right_wire = std::rand() % (num_variables+1);

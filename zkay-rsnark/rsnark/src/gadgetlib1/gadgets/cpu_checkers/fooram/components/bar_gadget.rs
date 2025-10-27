@@ -42,20 +42,20 @@ result:    pb_variable<FieldT>,
 overflow:    pb_variable_array<FieldT>,
 unpacked_result:    pb_variable_array<FieldT>,
 
-unpack_result:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_Z:    std::shared_ptr<packing_gadget<FieldT> >,
+unpack_result:    RcCell<packing_gadget<FieldT> >,
+pack_Z:    RcCell<packing_gadget<FieldT> >,
 
-width:    size_t,
+width:    usize,
 
-    // bar_gadget(protoboard<FieldT> &pb,
-    //            const pb_linear_combination_array<FieldT> &X,
-    //            const FieldT &a,
-    //            const pb_linear_combination_array<FieldT> &Y,
-    //            const FieldT &b,
-    //            const pb_linear_combination<FieldT> &Z_packed,
-    //            const std::string &annotation_prefix);
-    // void generate_r1cs_constraints();
-    // void generate_r1cs_witness();
+    // bar_gadget(pb:protoboard<FieldT>,
+    //            X:&pb_linear_combination_array<FieldT>,
+    //            a:&FieldT,
+    //            Y:&pb_linear_combination_array<FieldT>,
+    //            b:&FieldT,
+    //            Z_packed:&pb_linear_combination<FieldT>,
+    //            annotation_prefix:&String);
+    // pub fn  generate_r1cs_constraints();
+    // pub fn  generate_r1cs_witness();
 }
 
 
@@ -89,7 +89,7 @@ a:&                                FieldT,
 Y:&                                pb_linear_combination_array<FieldT>,
 b:&                                FieldT,
 Z_packed:&                                pb_linear_combination<FieldT>,
-annotation_prefix:&                                std::string
+annotation_prefix:&                                String
         ) ->Self
     
 {

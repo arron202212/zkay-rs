@@ -18,7 +18,7 @@ use crate::relations::ram_computations::rams::ram_params;
 
 
 
-// template<typename FieldT>
+// 
 pub trait ram_fooram<FieldT>{
 // 
     type base_field_type=FieldT;
@@ -30,8 +30,8 @@ pub trait ram_fooram<FieldT>{
     const timestamp_length:usize=300;
 }
 
-// template<typename FieldT>
-// size_t ram_fooram<FieldT>::timestamp_length = 300;
+// 
+// usize ram_fooram<FieldT>::timestamp_length = 300;
 
 
 

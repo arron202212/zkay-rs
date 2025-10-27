@@ -19,20 +19,20 @@ use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/examples/run_tbcs_ppzksna
 
 
 
-template<typename ppT>
-void test_tbcs_ppzksnark(const size_t primary_input_size,
-                         const size_t auxiliary_input_size,
-                         const size_t num_gates,
-                         const size_t num_outputs)
+
+pub fn  test_tbcs_ppzksnark(primary_input_size:usize,
+                         auxiliary_input_size:usize,
+                         num_gates:usize,
+                         num_outputs:usize)
 {
     ffec::print_header("(enter) Test TBCS ppzkSNARK");
 
-    const bool test_serialization = true;
-    const tbcs_example example = generate_tbcs_example(primary_input_size, auxiliary_input_size, num_gates, num_outputs);
+    let mut test_serialization = true;
+    auxiliary_input_size:tbcs_example example = generate_tbcs_example(primary_input_size,, num_gates, num_outputs);
 // #ifdef DEBUG
     example.circuit.print();
 //#endif
-    const bool bit = run_tbcs_ppzksnark<ppT>(example, test_serialization);
+    let mut bit = run_tbcs_ppzksnark<ppT>(example, test_serialization);
     assert!(bit);
 
     ffec::print_header("(leave) Test TBCS ppzkSNARK");

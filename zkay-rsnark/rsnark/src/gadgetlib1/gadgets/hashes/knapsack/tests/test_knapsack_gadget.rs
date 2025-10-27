@@ -6,13 +6,13 @@
  *****************************************************************************/
 
 // #ifdef CURVE_BN128
-use ffec::algebra::curves::bn128/bn128_pp;
+use ffec::algebra::curves::bn128::bn128_pp;
 //#endif
-use ffec::algebra::curves::edwards/edwards_pp;
+use ffec::algebra::curves::edwards::edwards_pp;
 use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
 use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
-use crate::gadgetlib1::gadgets::hashes::knapsack/knapsack_gadget;
+use crate::gadgetlib1::gadgets::hashes::knapsack::knapsack_gadget;
 
 
 
@@ -21,13 +21,13 @@ use crate::gadgetlib1::gadgets::hashes::knapsack/knapsack_gadget;
  * generate_knapsack_tests.py) and contain hard-to-read constants. */
 
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
-template<>
-void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::bn128_pp> >()
+
+pub fn  test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::bn128_pp> >()
 {
-    type ffec::Fr<ffec::bn128_pp> FieldT;
-    const size_t dimension = knapsack_dimension<FieldT>::dimension;
-    const ffec::bit_vector input_bits = {1,1,0,0,1,0,1,0,0,1};
-    ffec::bit_vector digest_bits;
+    type FieldT=ffec::Fr<ffec::bn128_pp>;
+    let dimension = knapsack_dimension<FieldT>::dimension;
+    let input_bits= {1,1,0,0,1,0,1,0,0,1};
+    bit_vector digest_bits;
 
     if dimension == 1
     {
@@ -51,13 +51,13 @@ void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::bn128_pp> >()
 }
 //#endif
 
-template<>
-void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::edwards_pp> >()
+
+pub fn  test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::edwards_pp> >()
 {
-    type ffec::Fr<ffec::edwards_pp> FieldT;
-    const size_t dimension = knapsack_dimension<FieldT>::dimension;
-    const ffec::bit_vector input_bits = {1,1,0,0,1,0,1,0,0,1};
-    ffec::bit_vector digest_bits;
+    type FieldT=ffec::Fr<ffec::edwards_pp>;
+    let dimension = knapsack_dimension<FieldT>::dimension;
+    let input_bits= {1,1,0,0,1,0,1,0,0,1};
+    bit_vector digest_bits;
 
     if dimension == 1
     {
@@ -80,13 +80,13 @@ void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::edwards_pp> >()
     test_knapsack_CRH_with_bit_out_gadget_internal<FieldT>(dimension, input_bits, digest_bits);
 }
 
-template<>
-void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::mnt4_pp> >()
+
+pub fn  test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::mnt4_pp> >()
 {
-    type ffec::Fr<ffec::mnt4_pp> FieldT;
-    const size_t dimension = knapsack_dimension<FieldT>::dimension;
-    const ffec::bit_vector input_bits = {1,1,0,0,1,0,1,0,0,1};
-    ffec::bit_vector digest_bits;
+    type FieldT=ffec::Fr<ffec::mnt4_pp>;
+    let dimension = knapsack_dimension<FieldT>::dimension;
+    let input_bits= {1,1,0,0,1,0,1,0,0,1};
+    bit_vector digest_bits;
 
     if dimension == 1
     {
@@ -109,13 +109,13 @@ digest_bits = {1,1,1,1,0,0,1,0,1,0,0,0,1,1,0,0,1,1,0,0,1,0,0,0,0,1,0,1,0,0,1,1,0
     test_knapsack_CRH_with_bit_out_gadget_internal<FieldT>(dimension, input_bits, digest_bits);
 }
 
-template<>
-void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::mnt6_pp> >()
+
+pub fn  test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::mnt6_pp> >()
 {
-    type ffec::Fr<ffec::mnt6_pp> FieldT;
-    const size_t dimension = knapsack_dimension<FieldT>::dimension;
-    const ffec::bit_vector input_bits = {1,1,0,0,1,0,1,0,0,1};
-    ffec::bit_vector digest_bits;
+    type FieldT=ffec::Fr<ffec::mnt6_pp>;
+    let dimension = knapsack_dimension<FieldT>::dimension;
+    let input_bits= {1,1,0,0,1,0,1,0,0,1};
+    bit_vector digest_bits;
 
     if dimension == 1
     {
@@ -142,7 +142,7 @@ void test_knapsack_CRH_with_bit_out_gadget<ffec::Fr<ffec::mnt6_pp> >()
 
 
 
-int main(void)
+pub fn main()->i32
 {
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     ffec::bn128_pp::init_public_params();

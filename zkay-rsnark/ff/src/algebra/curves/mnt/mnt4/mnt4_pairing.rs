@@ -20,11 +20,11 @@
 
 // /* final exponentiation */
 
-// mnt4_Fq4 mnt4_final_exponentiation_last_chunk(const mnt4_Fq4 &elt,
-//                                               const mnt4_Fq4 &elt_inv);
-// mnt4_Fq4 mnt4_final_exponentiation_first_chunk(const mnt4_Fq4 &elt,
-//                                                const mnt4_Fq4 &elt_inv);
-// mnt4_GT mnt4_final_exponentiation(const mnt4_Fq4 &elt);
+// mnt4_Fq4 mnt4_final_exponentiation_last_chunk(elt:&mnt4_Fq4,
+//                                               elt_inv:&mnt4_Fq4);
+// mnt4_Fq4 mnt4_final_exponentiation_first_chunk(elt:&mnt4_Fq4,
+//                                                elt_inv:&mnt4_Fq4);
+// mnt4_GT mnt4_final_exponentiation(elt:&mnt4_Fq4);
 
 // /* affine ate miller loop */
 
@@ -46,14 +46,14 @@
 // struct mnt4_affine_ate_G2_precomputation {
 //     mnt4_Fq2 QX;
 //     mnt4_Fq2 QY;
-//     std::vector<mnt4_affine_ate_coeffs> coeffs;
+//     Vec<mnt4_affine_ate_coeffs> coeffs;
 // };
 
-// mnt4_affine_ate_G1_precomputation mnt4_affine_ate_precompute_G1(const mnt4_G1& P);
-// mnt4_affine_ate_G2_precomputation mnt4_affine_ate_precompute_G2(const mnt4_G2& Q);
+// mnt4_affine_ate_G1_precomputation mnt4_affine_ate_precompute_G1(P:&mnt4_G1);
+// mnt4_affine_ate_G2_precomputation mnt4_affine_ate_precompute_G2(Q:&mnt4_G2);
 
-// mnt4_Fq4 mnt4_affine_ate_miller_loop(const mnt4_affine_ate_G1_precomputation &prec_P,
-//                                      const mnt4_affine_ate_G2_precomputation &prec_Q);
+// mnt4_Fq4 mnt4_affine_ate_miller_loop(prec_P:&mnt4_affine_ate_G1_precomputation,
+//                                      prec_Q:&mnt4_affine_ate_G2_precomputation);
 
 // /* ate pairing */
 
@@ -63,8 +63,8 @@
 //     mnt4_Fq2 PX_twist;
 //     mnt4_Fq2 PY_twist;
 
-//     bool operator==(const mnt4_ate_G1_precomp &other) const;
-//     friend std::ostream& operator<<(std::ostream &out, const mnt4_ate_G1_precomp &prec_P);
+//     bool operator==(other:&mnt4_ate_G1_precomp) const;
+//     friend std::ostream& operator<<(std::ostream &out, prec_P:&mnt4_ate_G1_precomp);
 //     friend std::istream& operator>>(std::istream &in, mnt4_ate_G1_precomp &prec_P);
 // };
 
@@ -74,8 +74,8 @@
 //     mnt4_Fq2 c_J;
 //     mnt4_Fq2 c_L;
 
-//     bool operator==(const mnt4_ate_dbl_coeffs &other) const;
-//     friend std::ostream& operator<<(std::ostream &out, const mnt4_ate_dbl_coeffs &dc);
+//     bool operator==(other:&mnt4_ate_dbl_coeffs) const;
+//     friend std::ostream& operator<<(std::ostream &out, dc:&mnt4_ate_dbl_coeffs);
 //     friend std::istream& operator>>(std::istream &in, mnt4_ate_dbl_coeffs &dc);
 // };
 
@@ -83,8 +83,8 @@
 //     mnt4_Fq2 c_L1;
 //     mnt4_Fq2 c_RZ;
 
-//     bool operator==(const mnt4_ate_add_coeffs &other) const;
-//     friend std::ostream& operator<<(std::ostream &out, const mnt4_ate_add_coeffs &ac);
+//     bool operator==(other:&mnt4_ate_add_coeffs) const;
+//     friend std::ostream& operator<<(std::ostream &out, ac:&mnt4_ate_add_coeffs);
 //     friend std::istream& operator>>(std::istream &in, mnt4_ate_add_coeffs &ac);
 // };
 
@@ -94,54 +94,54 @@
 //     mnt4_Fq2 QY2;
 //     mnt4_Fq2 QX_over_twist;
 //     mnt4_Fq2 QY_over_twist;
-//     std::vector<mnt4_ate_dbl_coeffs> dbl_coeffs;
-//     std::vector<mnt4_ate_add_coeffs> add_coeffs;
+//     Vec<mnt4_ate_dbl_coeffs> dbl_coeffs;
+//     Vec<mnt4_ate_add_coeffs> add_coeffs;
 
-//     bool operator==(const mnt4_ate_G2_precomp &other) const;
-//     friend std::ostream& operator<<(std::ostream &out, const mnt4_ate_G2_precomp &prec_Q);
+//     bool operator==(other:&mnt4_ate_G2_precomp) const;
+//     friend std::ostream& operator<<(std::ostream &out, prec_Q:&mnt4_ate_G2_precomp);
 //     friend std::istream& operator>>(std::istream &in, mnt4_ate_G2_precomp &prec_Q);
 // };
 
-// mnt4_ate_G1_precomp mnt4_ate_precompute_G1(const mnt4_G1& P);
-// mnt4_ate_G2_precomp mnt4_ate_precompute_G2(const mnt4_G2& Q);
+// mnt4_ate_G1_precomp mnt4_ate_precompute_G1(P:&mnt4_G1);
+// mnt4_ate_G2_precomp mnt4_ate_precompute_G2(Q:&mnt4_G2);
 
-// mnt4_Fq4 mnt4_ate_miller_loop(const mnt4_ate_G1_precomp &prec_P,
-//                                     const mnt4_ate_G2_precomp &prec_Q);
-// mnt4_Fq4 mnt4_ate_double_miller_loop(const mnt4_ate_G1_precomp &prec_P1,
-//                                            const mnt4_ate_G2_precomp &prec_Q1,
-//                                            const mnt4_ate_G1_precomp &prec_P2,
-//                                            const mnt4_ate_G2_precomp &prec_Q2);
+// mnt4_Fq4 mnt4_ate_miller_loop(prec_P:&mnt4_ate_G1_precomp,
+//                                     prec_Q:&mnt4_ate_G2_precomp);
+// mnt4_Fq4 mnt4_ate_double_miller_loop(prec_P1:&mnt4_ate_G1_precomp,
+//                                            prec_Q1:&mnt4_ate_G2_precomp,
+//                                            prec_P2:&mnt4_ate_G1_precomp,
+//                                            prec_Q2:&mnt4_ate_G2_precomp);
 
-// mnt4_Fq4 mnt4_ate_pairing(const mnt4_G1& P,
-//                           const mnt4_G2 &Q);
-// mnt4_GT mnt4_ate_reduced_pairing(const mnt4_G1 &P,
-//                                  const mnt4_G2 &Q);
+// mnt4_Fq4 mnt4_ate_pairing(P:mnt4_G1&,
+//                           Q:&mnt4_G2);
+// mnt4_GT mnt4_ate_reduced_pairing(P:&mnt4_G1,
+//                                  Q:&mnt4_G2);
 
 // /* choice of pairing */
 
-// typedef mnt4_ate_G1_precomp mnt4_G1_precomp;
-// typedef mnt4_ate_G2_precomp mnt4_G2_precomp;
+// type mnt4_G1_precomp=mnt4_ate_G1_precomp;
+// type mnt4_G2_precomp=mnt4_ate_G2_precomp;
 
-// mnt4_G1_precomp mnt4_precompute_G1(const mnt4_G1& P);
+// mnt4_G1_precomp mnt4_precompute_G1(P:&mnt4_G1);
 
-// mnt4_G2_precomp mnt4_precompute_G2(const mnt4_G2& Q);
+// mnt4_G2_precomp mnt4_precompute_G2(Q:&mnt4_G2);
 
-// mnt4_Fq4 mnt4_miller_loop(const mnt4_G1_precomp &prec_P,
-//                           const mnt4_G2_precomp &prec_Q);
+// mnt4_Fq4 mnt4_miller_loop(prec_P:&mnt4_G1_precomp,
+//                           prec_Q:&mnt4_G2_precomp);
 
-// mnt4_Fq4 mnt4_double_miller_loop(const mnt4_G1_precomp &prec_P1,
-//                                  const mnt4_G2_precomp &prec_Q1,
-//                                  const mnt4_G1_precomp &prec_P2,
-//                                  const mnt4_G2_precomp &prec_Q2);
+// mnt4_Fq4 mnt4_double_miller_loop(prec_P1:&mnt4_G1_precomp,
+//                                  prec_Q1:&mnt4_G2_precomp,
+//                                  prec_P2:&mnt4_G1_precomp,
+//                                  prec_Q2:&mnt4_G2_precomp);
 
-// mnt4_Fq4 mnt4_pairing(const mnt4_G1& P,
-//                       const mnt4_G2 &Q);
+// mnt4_Fq4 mnt4_pairing(P:mnt4_G1&,
+//                       Q:&mnt4_G2);
 
-// mnt4_GT mnt4_reduced_pairing(const mnt4_G1 &P,
-//                              const mnt4_G2 &Q);
+// mnt4_GT mnt4_reduced_pairing(P:&mnt4_G1,
+//                              Q:&mnt4_G2);
 
-// mnt4_GT mnt4_affine_reduced_pairing(const mnt4_G1 &P,
-//                                     const mnt4_G2 &Q);
+// mnt4_GT mnt4_affine_reduced_pairing(P:&mnt4_G1,
+//                                     Q:&mnt4_G2);
 
 // // } // namespace libff
 
@@ -170,9 +170,9 @@
 
 // // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 
-// bool mnt4_ate_G1_precomp::operator==(const mnt4_ate_G1_precomp &other) const
+// bool mnt4_ate_G1_precomp::operator==(other:&mnt4_ate_G1_precomp) const
 // {
 //     return (this->PX == other.PX &&
 //             this->PY == other.PY &&
@@ -180,7 +180,7 @@
 //             this->PY_twist == other.PY_twist);
 // }
 
-// std::ostream& operator<<(std::ostream &out, const mnt4_ate_G1_precomp &prec_P)
+// std::ostream& operator<<(std::ostream &out, prec_P:&mnt4_ate_G1_precomp)
 // {
 //     out << prec_P.PX << OUTPUT_SEPARATOR << prec_P.PY << OUTPUT_SEPARATOR << prec_P.PX_twist << OUTPUT_SEPARATOR << prec_P.PY_twist;
 
@@ -200,7 +200,7 @@
 //     return in;
 // }
 
-// bool mnt4_ate_dbl_coeffs::operator==(const mnt4_ate_dbl_coeffs &other) const
+// bool mnt4_ate_dbl_coeffs::operator==(other:&mnt4_ate_dbl_coeffs) const
 // {
 //     return (this->c_H == other.c_H &&
 //             this->c_4C == other.c_4C &&
@@ -208,7 +208,7 @@
 //             this->c_L == other.c_L);
 // }
 
-// std::ostream& operator<<(std::ostream &out, const mnt4_ate_dbl_coeffs &dc)
+// std::ostream& operator<<(std::ostream &out, dc:&mnt4_ate_dbl_coeffs)
 // {
 //     out << dc.c_H << OUTPUT_SEPARATOR << dc.c_4C << OUTPUT_SEPARATOR << dc.c_J << OUTPUT_SEPARATOR << dc.c_L;
 //     return out;
@@ -227,13 +227,13 @@
 //     return in;
 // }
 
-// bool mnt4_ate_add_coeffs::operator==(const mnt4_ate_add_coeffs &other) const
+// bool mnt4_ate_add_coeffs::operator==(other:&mnt4_ate_add_coeffs) const
 // {
 //     return (this->c_L1 == other.c_L1 &&
 //             this->c_RZ == other.c_RZ);
 // }
 
-// std::ostream& operator<<(std::ostream &out, const mnt4_ate_add_coeffs &ac)
+// std::ostream& operator<<(std::ostream &out, ac:&mnt4_ate_add_coeffs)
 // {
 //     out << ac.c_L1 << OUTPUT_SEPARATOR << ac.c_RZ;
 //     return out;
@@ -247,7 +247,7 @@
 //     return in;
 // }
 
-// bool mnt4_ate_G2_precomp::operator==(const mnt4_ate_G2_precomp &other) const
+// bool mnt4_ate_G2_precomp::operator==(other:&mnt4_ate_G2_precomp) const
 // {
 //     return (this->QX == other.QX &&
 //             this->QY == other.QY &&
@@ -258,7 +258,7 @@
 //             this->add_coeffs == other.add_coeffs);
 // }
 
-// std::ostream& operator<<(std::ostream& out, const mnt4_ate_G2_precomp &prec_Q)
+// std::ostream& operator<<(std::ostream& out, prec_Q:&mnt4_ate_G2_precomp)
 // {
 //     out << prec_Q.QX << OUTPUT_SEPARATOR
 //         << prec_Q.QY << OUTPUT_SEPARATOR
@@ -293,7 +293,7 @@
 //     consume_newline(in);
 
 //     prec_Q.dbl_coeffs.clear();
-//     size_t dbl_s;
+//     usize dbl_s;
 //     in >> dbl_s;
 //     consume_newline(in);
 
@@ -308,7 +308,7 @@
 //     }
 
 //     prec_Q.add_coeffs.clear();
-//     size_t add_s;
+//     usize add_s;
 //     in >> add_s;
 //     consume_newline(in);
 
@@ -327,10 +327,10 @@
 
 // /* final exponentiations */
 
-// mnt4_Fq4 mnt4_final_exponentiation_last_chunk(const mnt4_Fq4 &elt, const mnt4_Fq4 &elt_inv)
+// mnt4_Fq4 mnt4_final_exponentiation_last_chunk(elt:&mnt4_Fq4, elt_inv:&mnt4_Fq4)
 // {
 //     enter_block("Call to mnt4_final_exponentiation_last_chunk");
-//     const mnt4_Fq4 elt_q = elt.Frobenius_map(1);
+//     let elt_q= elt.Frobenius_map(1);
 //     mnt4_Fq4 w1_part = elt_q.cyclotomic_exp(mnt4_final_exponent_last_chunk_w1);
 //     mnt4_Fq4 w0_part;
 //     if mnt4_final_exponent_last_chunk_is_w0_neg
@@ -345,27 +345,27 @@
 //     return result;
 // }
 
-// mnt4_Fq4 mnt4_final_exponentiation_first_chunk(const mnt4_Fq4 &elt, const mnt4_Fq4 &elt_inv)
+// mnt4_Fq4 mnt4_final_exponentiation_first_chunk(elt:&mnt4_Fq4, elt_inv:&mnt4_Fq4)
 // {
 //     enter_block("Call to mnt4_final_exponentiation_first_chunk");
 
 //     /* (q^2-1) */
 
 //     /* elt_q2 = elt^(q^2) */
-//     const mnt4_Fq4 elt_q2 = elt.Frobenius_map(2);
+//     let elt_q2= elt.Frobenius_map(2);
 //     /* elt_q3_over_elt = elt^(q^2-1) */
-//     const mnt4_Fq4 elt_q2_over_elt = elt_q2 * elt_inv;
+//     let elt_q2_over_elt= elt_q2 * elt_inv;
 
 //     leave_block("Call to mnt4_final_exponentiation_first_chunk");
 //     return elt_q2_over_elt;
 // }
 
-// mnt4_GT mnt4_final_exponentiation(const mnt4_Fq4 &elt)
+// mnt4_GT mnt4_final_exponentiation(elt:&mnt4_Fq4)
 // {
 //     enter_block("Call to mnt4_final_exponentiation");
-//     const mnt4_Fq4 elt_inv = elt.inverse();
-//     const mnt4_Fq4 elt_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt, elt_inv);
-//     const mnt4_Fq4 elt_inv_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt_inv, elt);
+//     let elt_inv= elt.inverse();
+//     let elt_to_first_chunk= mnt4_final_exponentiation_first_chunk(elt, elt_inv);
+//     let elt_inv_to_first_chunk= mnt4_final_exponentiation_first_chunk(elt_inv, elt);
 //     mnt4_GT result = mnt4_final_exponentiation_last_chunk(elt_to_first_chunk, elt_inv_to_first_chunk);
 //     leave_block("Call to mnt4_final_exponentiation");
 
@@ -374,7 +374,7 @@
 
 // /* affine ate miller loop */
 
-// mnt4_affine_ate_G1_precomputation mnt4_affine_ate_precompute_G1(const mnt4_G1& P)
+// mnt4_affine_ate_G1_precomputation mnt4_affine_ate_precompute_G1(P:&mnt4_G1)
 // {
 //     enter_block("Call to mnt4_affine_ate_precompute_G1");
 
@@ -390,7 +390,7 @@
 //     return result;
 // }
 
-// mnt4_affine_ate_G2_precomputation mnt4_affine_ate_precompute_G2(const mnt4_G2& Q)
+// mnt4_affine_ate_G2_precomputation mnt4_affine_ate_precompute_G2(Q:&mnt4_G2)
 // {
 //     enter_block("Call to mnt4_affine_ate_precompute_G2");
 
@@ -404,10 +404,10 @@
 //     mnt4_Fq2 RX = Qcopy.X;
 //     mnt4_Fq2 RY = Qcopy.Y;
 
-//     const bigint<mnt4_Fr::num_limbs> &loop_count = mnt4_ate_loop_count;
+//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 //     bool found_nonzero = false;
 
-//     std::vector<long> NAF = find_wnaf(1, loop_count);
+//     Vec<long> NAF = find_wnaf(1, loop_count);
 //     for i in ( 0..=(long) NAF.len() - 1).rev()
 //     {
 //         if !found_nonzero
@@ -470,18 +470,18 @@
 //     return result;
 // }
 
-// mnt4_Fq4 mnt4_affine_ate_miller_loop(const mnt4_affine_ate_G1_precomputation &prec_P,
-//                                      const mnt4_affine_ate_G2_precomputation &prec_Q)
+// mnt4_Fq4 mnt4_affine_ate_miller_loop(prec_P:&mnt4_affine_ate_G1_precomputation,
+//                                      prec_Q:&mnt4_affine_ate_G2_precomputation)
 // {
 //     enter_block("Call to mnt4_affine_ate_miller_loop");
 
 //     mnt4_Fq4 f = mnt4_Fq4::one();
 
 //     bool found_nonzero = false;
-//     size_t idx = 0;
-//     const bigint<mnt4_Fr::num_limbs> &loop_count = mnt4_ate_loop_count;
+//     usize idx = 0;
+//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 
-//     std::vector<long> NAF = find_wnaf(1, loop_count);
+//     Vec<long> NAF = find_wnaf(1, loop_count);
 //     for i in ( 0..=(long) NAF.len() - 1).rev()
 //     {
 //         if !found_nonzero
@@ -542,7 +542,7 @@
 //     mnt4_Fq2 Z;
 //     mnt4_Fq2 T;
 
-//     void print() const
+//     pub fn  print() const
 //     {
 //         print!("extended mnt4_G2 projective X/Y/Z/T:\n");
 //         X.print();
@@ -551,24 +551,24 @@
 //         T.print();
 //     }
 
-//     static void test_invariant()
+//     static pub fn  test_invariant()
 //     {
 //         assert!(T == Z.squared());
 //     }
 // };
 
-// void doubling_step_for_flipped_miller_loop(extended_mnt4_G2_projective &current,
+// pub fn  doubling_step_for_flipped_miller_loop(extended_mnt4_G2_projective &current,
 //                                            mnt4_ate_dbl_coeffs &dc)
 // {
-//     const mnt4_Fq2 X = current.X, Y = current.Y, Z = current.Z, T = current.T;
+//     let X= current.X, Y = current.Y, Z = current.Z, T = current.T;
 
-//     const mnt4_Fq2 A = T.squared(); // A = T1^2
-//     const mnt4_Fq2 B = X.squared(); // B = X1^2
-//     const mnt4_Fq2 C = Y.squared(); // C = Y1^2
-//     const mnt4_Fq2 D = C.squared(); // D = C^2
-//     const mnt4_Fq2 E = (X+C).squared() - B - D; // E = (X1+C)^2-B-D
-//     const mnt4_Fq2 F = (B+B+B) + mnt4_twist_coeff_a * A; // F = 3*B +  a  *A
-//     const mnt4_Fq2 G = F.squared(); // G = F^2
+//     let A= T.squared(); // A = T1^2
+//     let B= X.squared(); // B = X1^2
+//     let C= Y.squared(); // C = Y1^2
+//     let D= C.squared(); // D = C^2
+//     let E= (X+C).squared() - B - D; // E = (X1+C)^2-B-D
+//     let F= (B+B+B) + mnt4_twist_coeff_a * A; // F = 3*B +  a  *A
+//     let G= F.squared(); // G = F^2
 
 //     current.X = -(E+E+E+E) + G; // X3 = -4*E+G
 //     current.Y = -mnt4_Fq("8")*D + F*(E+E-current.X); // Y3 = -8*D+F*(2*E-X3)
@@ -585,21 +585,21 @@
 // //#endif
 // }
 
-// void mixed_addition_step_for_flipped_miller_loop(const mnt4_Fq2 base_X, const mnt4_Fq2 base_Y, const mnt4_Fq2 base_Y_squared,
+// pub fn  mixed_addition_step_for_flipped_miller_loop(base_X:mnt4_Fq2, base_Y:mnt4_Fq2, base_Y_squared:mnt4_Fq2,
 //                                                  extended_mnt4_G2_projective &current,
 //                                                  mnt4_ate_add_coeffs &ac)
 // {
-//     const mnt4_Fq2 X1 = current.X, Y1 = current.Y, Z1 = current.Z, T1 = current.T;
-//     const mnt4_Fq2 &x2 = base_X,    &y2 =  base_Y, &y2_squared = base_Y_squared;
+//     let X1= current.X, Y1 = current.Y, Z1 = current.Z, T1 = current.T;
+//     x2:&mnt4_Fq2 = base_X,    &y2 =  base_Y, &y2_squared = base_Y_squared;
 
-//     const mnt4_Fq2 B = x2 * T1; // B = x2 * T1
-//     const mnt4_Fq2 D = ((y2 + Z1).squared() - y2_squared - T1) * T1; // D = ((y2 + Z1)^2 - y2squared - T1) * T1
-//     const mnt4_Fq2 H = B - X1; // H = B - X1
-//     const mnt4_Fq2 I = H.squared(); // I = H^2
-//     const mnt4_Fq2 E = I + I + I + I; // E = 4*I
-//     const mnt4_Fq2 J = H * E; // J = H * E
-//     const mnt4_Fq2 V = X1 * E; // V = X1 * E
-//     const mnt4_Fq2 L1 = D - (Y1 + Y1); // L1 = D - 2 * Y1
+//     let B= x2 * T1; // B = x2 * T1
+//     let D= ((y2 + Z1).squared() - y2_squared - T1) * T1; // D = ((y2 + Z1)^2 - y2squared - T1) * T1
+//     let H= B - X1; // H = B - X1
+//     let I= H.squared(); // I = H^2
+//     let E= I + I + I + I; // E = 4*I
+//     let J= H * E; // J = H * E
+//     let V= X1 * E; // V = X1 * E
+//     let L1= D - (Y1 + Y1); // L1 = D - 2 * Y1
 
 //     current.X = L1.squared() - J - (V+V); // X3 = L1^2 - J - 2*V
 //     current.Y = L1 * (V-current.X) - (Y1+Y1) * J; // Y3 = L1 * (V-X3) - 2*Y1 * J
@@ -613,7 +613,7 @@
 // //#endif
 // }
 
-// mnt4_ate_G1_precomp mnt4_ate_precompute_G1(const mnt4_G1& P)
+// mnt4_ate_G1_precomp mnt4_ate_precompute_G1(P:&mnt4_G1)
 // {
 //     enter_block("Call to mnt4_ate_precompute_G1");
 
@@ -630,7 +630,7 @@
 //     return result;
 // }
 
-// mnt4_ate_G2_precomp mnt4_ate_precompute_G2(const mnt4_G2& Q)
+// mnt4_ate_G2_precomp mnt4_ate_precompute_G2(Q:&mnt4_G2)
 // {
 //     enter_block("Call to mnt4_ate_precompute_G2");
 
@@ -650,12 +650,12 @@
 //     R.Z = mnt4_Fq2::one();
 //     R.T = mnt4_Fq2::one();
 
-//     const bigint<mnt4_Fr::num_limbs> &loop_count = mnt4_ate_loop_count;
+//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 //     bool found_one = false;
 
 //     for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
 //     {
-//         const bool bit = loop_count.test_bit(i);
+//         let mut bit = loop_count.test_bit(i);
 //         if !found_one
 //         {
 //             /* this skips the MSB itself */
@@ -691,8 +691,8 @@
 //     return result;
 // }
 
-// mnt4_Fq4 mnt4_ate_miller_loop(const mnt4_ate_G1_precomp &prec_P,
-//                               const mnt4_ate_G2_precomp &prec_Q)
+// mnt4_Fq4 mnt4_ate_miller_loop(prec_P:&mnt4_ate_G1_precomp,
+//                               prec_Q:&mnt4_ate_G2_precomp)
 // {
 //     enter_block("Call to mnt4_ate_miller_loop");
 
@@ -701,13 +701,13 @@
 //     mnt4_Fq4 f = mnt4_Fq4::one();
 
 //     bool found_one = false;
-//     size_t dbl_idx = 0;
-//     size_t add_idx = 0;
+//     usize dbl_idx = 0;
+//     usize add_idx = 0;
 
-//     const bigint<mnt4_Fr::num_limbs> &loop_count = mnt4_ate_loop_count;
+//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 //     for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
 //     {
-//         const bool bit = loop_count.test_bit(i);
+//         let mut bit = loop_count.test_bit(i);
 
 //         if !found_one
 //         {
@@ -747,10 +747,10 @@
 //     return f;
 // }
 
-// mnt4_Fq4 mnt4_ate_double_miller_loop(const mnt4_ate_G1_precomp &prec_P1,
-//                                      const mnt4_ate_G2_precomp &prec_Q1,
-//                                      const mnt4_ate_G1_precomp &prec_P2,
-//                                      const mnt4_ate_G2_precomp &prec_Q2)
+// mnt4_Fq4 mnt4_ate_double_miller_loop(prec_P1:&mnt4_ate_G1_precomp,
+//                                      prec_Q1:&mnt4_ate_G2_precomp,
+//                                      prec_P2:&mnt4_ate_G1_precomp,
+//                                      prec_Q2:&mnt4_ate_G2_precomp)
 // {
 //     enter_block("Call to mnt4_ate_double_miller_loop");
 
@@ -760,13 +760,13 @@
 //     mnt4_Fq4 f = mnt4_Fq4::one();
 
 //     bool found_one = false;
-//     size_t dbl_idx = 0;
-//     size_t add_idx = 0;
+//     usize dbl_idx = 0;
+//     usize add_idx = 0;
 
-//     const bigint<mnt4_Fr::num_limbs> &loop_count = mnt4_ate_loop_count;
+//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 //     for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
 //     {
-//         const bool bit = loop_count.test_bit(i);
+//         let mut bit = loop_count.test_bit(i);
 
 //         if !found_one
 //         {
@@ -823,7 +823,7 @@
 //     return f;
 // }
 
-// mnt4_Fq4 mnt4_ate_pairing(const mnt4_G1& P, const mnt4_G2 &Q)
+// mnt4_Fq4 mnt4_ate_pairing(Q:&mnt4_G1& P, const mnt4_G2)
 // {
 //     enter_block("Call to mnt4_ate_pairing");
 //     mnt4_ate_G1_precomp prec_P = mnt4_ate_precompute_G1(P);
@@ -833,58 +833,58 @@
 //     return result;
 // }
 
-// mnt4_GT mnt4_ate_reduced_pairing(const mnt4_G1 &P, const mnt4_G2 &Q)
+// mnt4_GT mnt4_ate_reduced_pairing(P:&mnt4_G1, Q:&mnt4_G2)
 // {
 //     enter_block("Call to mnt4_ate_reduced_pairing");
-//     const mnt4_Fq4 f = mnt4_ate_pairing(P, Q);
-//     const mnt4_GT result = mnt4_final_exponentiation(f);
+//     let f= mnt4_ate_pairing(P, Q);
+//     let result= mnt4_final_exponentiation(f);
 //     leave_block("Call to mnt4_ate_reduced_pairing");
 //     return result;
 // }
 
-// mnt4_G1_precomp mnt4_precompute_G1(const mnt4_G1& P)
+// mnt4_G1_precomp mnt4_precompute_G1(P:&mnt4_G1)
 // {
 //     return mnt4_ate_precompute_G1(P);
 // }
 
-// mnt4_G2_precomp mnt4_precompute_G2(const mnt4_G2& Q)
+// mnt4_G2_precomp mnt4_precompute_G2(Q:&mnt4_G2)
 // {
 //     return mnt4_ate_precompute_G2(Q);
 // }
 
-// mnt4_Fq4 mnt4_miller_loop(const mnt4_G1_precomp &prec_P,
-//                           const mnt4_G2_precomp &prec_Q)
+// mnt4_Fq4 mnt4_miller_loop(prec_P:&mnt4_G1_precomp,
+//                           prec_Q:&mnt4_G2_precomp)
 // {
 //     return mnt4_ate_miller_loop(prec_P, prec_Q);
 // }
 
-// mnt4_Fq4 mnt4_double_miller_loop(const mnt4_G1_precomp &prec_P1,
-//                                  const mnt4_G2_precomp &prec_Q1,
-//                                  const mnt4_G1_precomp &prec_P2,
-//                                  const mnt4_G2_precomp &prec_Q2)
+// mnt4_Fq4 mnt4_double_miller_loop(prec_P1:&mnt4_G1_precomp,
+//                                  prec_Q1:&mnt4_G2_precomp,
+//                                  prec_P2:&mnt4_G1_precomp,
+//                                  prec_Q2:&mnt4_G2_precomp)
 // {
 //     return mnt4_ate_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
 // }
 
-// mnt4_Fq4 mnt4_pairing(const mnt4_G1& P,
-//                       const mnt4_G2 &Q)
+// mnt4_Fq4 mnt4_pairing(P:mnt4_G1&,
+//                       Q:&mnt4_G2)
 // {
 //     return mnt4_ate_pairing(P, Q);
 // }
 
-// mnt4_GT mnt4_reduced_pairing(const mnt4_G1 &P,
-//                              const mnt4_G2 &Q)
+// mnt4_GT mnt4_reduced_pairing(P:&mnt4_G1,
+//                              Q:&mnt4_G2)
 // {
 //     return mnt4_ate_reduced_pairing(P, Q);
 // }
 
-// mnt4_GT mnt4_affine_reduced_pairing(const mnt4_G1 &P,
-//                                     const mnt4_G2 &Q)
+// mnt4_GT mnt4_affine_reduced_pairing(P:&mnt4_G1,
+//                                     Q:&mnt4_G2)
 // {
-//     const mnt4_affine_ate_G1_precomputation prec_P = mnt4_affine_ate_precompute_G1(P);
-//     const mnt4_affine_ate_G2_precomputation prec_Q = mnt4_affine_ate_precompute_G2(Q);
-//     const mnt4_Fq4 f = mnt4_affine_ate_miller_loop(prec_P, prec_Q);
-//     const mnt4_GT result = mnt4_final_exponentiation(f);
+//     let prec_P= mnt4_affine_ate_precompute_G1(P);
+//     let prec_Q= mnt4_affine_ate_precompute_G2(Q);
+//     let f= mnt4_affine_ate_miller_loop(prec_P, prec_Q);
+//     let result= mnt4_final_exponentiation(f);
 //     return result;
 // }
 

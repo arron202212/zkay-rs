@@ -12,7 +12,7 @@
 //#ifndef TRACE_LINES_HPP_
 // #define TRACE_LINES_HPP_
 
-// use  <memory>
+// 
 
 use ffec::common::utils;
 
@@ -33,14 +33,14 @@ use crate::relations::ram_computations::rams::ram_params;
 // 
 
     type FieldT=ram_base_field<ramT> ;
-class memory_line_variable_gadget <ramT> {
+pub struct  memory_line_variable_gadget <ramT> {
 //: public ram_gadget_base
 
 
-timestamp:    std::shared_ptr<dual_variable_gadget<FieldT> >,
-address:    std::shared_ptr<dual_variable_gadget<FieldT> >,
-contents_before:    std::shared_ptr<dual_variable_gadget<FieldT> >,
-contents_after:    std::shared_ptr<dual_variable_gadget<FieldT> >,
+timestamp:    RcCell<dual_variable_gadget<FieldT> >,
+address:    RcCell<dual_variable_gadget<FieldT> >,
+contents_before:    RcCell<dual_variable_gadget<FieldT> >,
+contents_after:    RcCell<dual_variable_gadget<FieldT> >,
 
 
 
@@ -52,8 +52,8 @@ contents_after:    std::shared_ptr<dual_variable_gadget<FieldT> >,
  *
  * Execution lines are used by execution_checker_gadget.
  */
-type ram_base_field<ramT> FieldT;
-class execution_line_variable_gadget<ramT> {
+// type FieldT=ram_base_field<ramT> ;
+pub struct  execution_line_variable_gadget<ramT> {
 // / : public memory_line_variable_gadget
 
     
@@ -89,10 +89,10 @@ has_accepted:    pb_variable<FieldT>,
 impl memory_line_variable_gadget<ramT>{
 
 pub fn new(
-    pb:ram_protoboard<ramT,
-                                                               timestamp_size:size_t,
+    pb:ram_protoboard<ramT>,
+                                                               timestamp_size:usize,
                                                                ap:ram_architecture_params<ramT>,
-                                                               annotation_prefix:std::string) ->Self
+                                                               annotation_prefix:String) ->Self
     
 {
     let address_size = ap.address_size();
@@ -102,34 +102,34 @@ pub fn new(
     address.reset(dual_variable_gadget::<FieldT>::new(pb, address_size, FMT(self.annotation_prefix, " address")));
     contents_before.reset(dual_variable_gadget::<FieldT>::new(pb, value_size, FMT(self.annotation_prefix, " contents_before")));
     contents_after.reset(dual_variable_gadget::<FieldT>::new(pb, value_size, FMT(self.annotation_prefix, " contents_after")));
-    ram_gadget_base<ramT>(pb, annotation_prefix)
+    ram_gadget_base::<ramT>(pb, annotation_prefix)
 }
 
 // 
 pub fn generate_r1cs_constraints(enforce_bitness:bool)
 {
-    timestamp->generate_r1cs_constraints(enforce_bitness);
-    address->generate_r1cs_constraints(enforce_bitness);
-    contents_before->generate_r1cs_constraints(enforce_bitness);
-    contents_after->generate_r1cs_constraints(enforce_bitness);
+    timestamp.generate_r1cs_constraints(enforce_bitness);
+    address.generate_r1cs_constraints(enforce_bitness);
+    contents_before.generate_r1cs_constraints(enforce_bitness);
+    contents_after.generate_r1cs_constraints(enforce_bitness);
 }
 
 
 pub fn generate_r1cs_witness_from_bits()
 {
-    timestamp->generate_r1cs_witness_from_bits();
-    address->generate_r1cs_witness_from_bits();
-    contents_before->generate_r1cs_witness_from_bits();
-    contents_after->generate_r1cs_witness_from_bits();
+    timestamp.generate_r1cs_witness_from_bits();
+    address.generate_r1cs_witness_from_bits();
+    contents_before.generate_r1cs_witness_from_bits();
+    contents_after.generate_r1cs_witness_from_bits();
 }
 
 
 pub fn generate_r1cs_witness_from_packed()
 {
-    timestamp->generate_r1cs_witness_from_packed();
-    address->generate_r1cs_witness_from_packed();
-    contents_before->generate_r1cs_witness_from_packed();
-    contents_after->generate_r1cs_witness_from_packed();
+    timestamp.generate_r1cs_witness_from_packed();
+    address.generate_r1cs_witness_from_packed();
+    contents_before.generate_r1cs_witness_from_packed();
+    contents_after.generate_r1cs_witness_from_packed();
 }
 
 
@@ -146,10 +146,10 @@ pub fn generate_r1cs_witness_from_packed()
 }
 impl execution_line_variable_gadget<ramT>{
 
-pub fn new(pb:ram_protoboard<ramT,
-                                                                     timestamp_size:size_t,
+pub fn new(pb:ram_protoboard<ramT>,
+                                                                     timestamp_size:usize,
                                                                      ap:ram_architecture_params<ramT>,
-                                                                     annotation_prefix:std::string) ->Self
+                                                                     annotation_prefix:String) ->Self
     
 {
    let  cpu_state_size = ap.cpu_state_size();

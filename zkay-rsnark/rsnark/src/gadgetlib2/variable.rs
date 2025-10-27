@@ -17,7 +17,7 @@
 // use  <string>
 // use  <unordered_set>
 // use  <utility>
-// use  <vector>
+// 
 
 use crate::gadgetlib2::infrastructure;
 use crate::gadgetlib2::pp;
@@ -62,25 +62,25 @@ type VarIndex_t=u64 ;
  */
 pub trait FElemInterface {
 // 
-    // virtual FElemInterface& operator=(const n:u64) = 0;
+    // virtual FElemInterface& operator=(0:n:u64) =,
     // /// FConst will be field agnostic, allowing us to hold values such as 0 and 1 without knowing
     // /// the underlying field. This assignment operator will convert to the correct field element.
-    // virtual FElemInterface& operator=(const FConst& src) = 0;
-    // virtual String asString() const = 0;
-    // virtual FieldType fieldType() const = 0;
-    // virtual FElemInterface& operator+=(const FElemInterface& other) = 0;
-    // virtual FElemInterface& operator-=(const FElemInterface& other) = 0;
-    // virtual FElemInterface& operator*=(const FElemInterface& other) = 0;
-    // virtual bool operator==(const FElemInterface& other) const = 0;
-    // virtual bool operator==(const FConst& other) const = 0;
+    // virtual FElemInterface& operator=(src:&FConst) = 0;
+    // virtual String asString() 0:=,
+    // virtual FieldType fieldType() 0:=,
+    // virtual FElemInterface& operator+=(other:&FElemInterface) = 0;
+    // virtual FElemInterface& operator-=(other:&FElemInterface) = 0;
+    // virtual FElemInterface& operator*=(other:&FElemInterface) = 0;
+    // virtual bool operator==(other:&FElemInterface) 0:=,
+    // virtual bool operator==(other:&FConst) 0:=,
     // /// This operator is not always mathematically well defined. 'n' will be checked in runtime
     // /// for fields in which integer values are not well defined.
-    // virtual bool operator==(const n:u64) const = 0;
+    // virtual bool operator==(0:n:u64) const =,
     //  @returns a unique_ptr to a copy of the current element.
-    // virtual FElemInterfacePtr clone() const = 0;
-    // virtual FElemInterfacePtr inverse() const = 0;
-    // virtual asLong:u64() const = 0;
-    // virtual int getBit(i:u32) const = 0;
+    // virtual FElemInterfacePtr clone() 0:=,
+    // virtual FElemInterfacePtr inverse() 0:=,
+    // virtual asLong:u64() 0:=,
+    // virtual int getBit(i:u32) 0:=,
     // virtual FElemInterface& power(exponent:u64) = 0;
     // virtual ~FElemInterface(){};
 }
@@ -90,10 +90,10 @@ pub trait FElemInterface {
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
 
-// inline bool operator==(const first:u64, const FElemInterface& second) {return second == first;}
-// inline bool operator!=(const first:u64, const FElemInterface& second) {return !(first == second);}
-// inline bool operator!=(const FElemInterface& first, const second:u64) {return !(first == second);}
-// inline bool operator!=(const FElemInterface& first, const FElemInterface& second) {
+// inline bool operator==(first:first:u64, second:&FElemInterface) {return second ==,}
+// inline bool operator!=(const first:u64, second:&FElemInterface) {return !(first == second);}
+// inline bool operator!=(first:FElemInterface&, const second:u64) {return !(first == second);}
+// inline bool operator!=(first:FElemInterface&, second:&FElemInterface) {
 //     return !(first == second);
 // }
 
@@ -107,32 +107,32 @@ pub trait FElemInterface {
 
 /// A wrapper pub struct for field elements. Can hold any derived type of FieldElementInterface
 pub struct FElem {
-// //private:
+// //
      elem_:FElemInterfacePtr,
 }
 // 
-//     explicit FElem(const FElemInterface& elem);
+//     explicit FElem(elem:&FElemInterface);
 //     /// Helper method. When doing arithmetic between a constant and a field specific element
 //     /// we want to "promote" the constant to the same field. This function changes the unique_ptr
 //     /// to point to a field specific element with the same value as the constant which it held.
-//     void promoteToFieldType(FieldType type);
+//     pub fn  promoteToFieldType(FieldType type);
 //     FElem();
 //     FElem(const n:u64);
 //     FElem(i:i32);
 //     FElem(n:usize);
-//     FElem(const Fp& elem);
+//     FElem(elem:&Fp);
 //     FElem(src:&FElem);
 
 //     FElem& operator=(other:&FElem);
 //     FElem& operator=(FElem&& other);
-//     FElem& operator=(const i:u64) { *elem_ = i; return self;}
+//     FElem& operator=(i:i:u64) { *elem_ =, return self;}
 //     String asString() const {return elem_.asString();}
 //     FieldType fieldType() const {return elem_.fieldType();}
 //     bool operator==(other:&FElem) const {return *elem_ == *other.elem_;}
 //     FElem& operator*=(other:&FElem);
 //     FElem& operator+=(other:&FElem);
 //     FElem& operator-=(other:&FElem);
-//     FElem operator-() const {FElem retval(0); retval -= FElem(*elem_); return retval;}
+//     FElem operator-() retval:{FElem retval(0); retval -= FElem(*elem_); return,}
 //     FElem inverse(fieldType:&FieldType);
 //     asLong:u64() const {return elem_.asLong();}
 //     int getBit(i:u32, fieldType:&FieldType);
@@ -150,7 +150,7 @@ pub struct FElem {
 // /// These operators are not always mathematically well defined. The will:u64 be checked in runtime
 // /// for fields in which values other than 0 and 1 are not well defined.
 // inline bool operator==(first:&FElem, const second:u64) {return first == FElem(second);}
-// inline bool operator==(const first:u64, second:&FElem) {return second == first;}
+// inline bool operator==(first:first:u64, second:&FElem) {return second ==,}
 // inline bool operator!=(first:&FElem, const second:u64) {return !(first == second);}
 // inline bool operator!=(const first:u64, second:&FElem) {return !(first == second);}
 
@@ -177,27 +177,27 @@ pub struct FElem {
     life, the universe and everything.
 */
 pub struct FConst {//: public FElemInterface 
-// //private:
+// //
      contents_:i64,
 }
-    // explicit FConst(const n:u64) : contents_(n) {}
+    // explicit FConst(const n:u64)->Self contents_(n) {}
 // 
-//     virtual FConst& operator=(const n:u64) {contents_ = n; return self;}
-//     virtual FConst& operator=(const FConst& src) {contents_ = src.contents_; return self;}
+//     virtual FConst& operator=(n:n:u64) {contents_ =, return self;}
+//     virtual FConst& operator=(src:&FConst) {contents_ = src.contents_; return self;}
 //     virtual String asString() const {return format!("{}",contents_);}
-//     virtual FieldType fieldType() const {return AGNOSTIC;}
-//     virtual FConst& operator+=(const FElemInterface& other);
-//     virtual FConst& operator-=(const FElemInterface& other);
-//     virtual FConst& operator*=(const FElemInterface& other);
-//     virtual bool operator==(const FElemInterface& other) const {return other == self;}
-//     virtual bool operator==(const FConst& other) const {return contents_ == other.contents_;}
-//     virtual bool operator==(const n:u64) const {return contents_ == n;}
+//     virtual FieldType fieldType() AGNOSTIC:{return,}
+//     virtual FConst& operator+=(other:&FElemInterface);
+//     virtual FConst& operator-=(other:&FElemInterface);
+//     virtual FConst& operator*=(other:&FElemInterface);
+//     virtual bool operator==(other:&FElemInterface) self:{return other ==,}
+//     virtual bool operator==(other:&FConst) const {return contents_ == other.contents_;}
+//     virtual bool operator==(n:n:u64) const {return contents_ ==,}
 //     /// @return a unique_ptr to a new copy of the element
 //     virtual FElemInterfacePtr clone() const {return FElemInterfacePtr(new FConst(self));}
 //     /// @return a unique_ptr to a new copy of the element's multiplicative inverse
 //     virtual FElemInterfacePtr inverse() const;
-//     asLong:u64() const {return contents_;}
-//     int getBit(i:u32) const { ffec::UNUSED(i); eyre::bail!("Cannot get bit from FConst."); }
+//     asLong:u64() contents_:{return,}
+//     int getBit(i:u32) const { //ffec::UNUSED(i); eyre::bail!("Cannot get bit from FConst."); }
 //     virtual FElemInterface& power(exponent:u64);
 
 //     friend pub struct FElem; // allow constructor call
@@ -219,21 +219,21 @@ pub struct FConst {//: public FElemInterface
     mpir (Windows) libraries.
  */
 pub struct R1P_Elem {
-// //private:/: public FElemInterface 
+// ///: public FElemInterface 
          elem_:Fp,
 }
 // 
 
-//     explicit R1P_Elem(const Fp& elem) : elem_(elem) {}
-//     virtual R1P_Elem& operator=(const FConst& src) {elem_ = src.asLong(); return self;}
-//     virtual R1P_Elem& operator=(const n:u64) {elem_ = Fp(n); return self;}
+//     explicit R1P_Elem(elem:&Fp)->Self elem_(elem) {}
+//     virtual R1P_Elem& operator=(src:&FConst) {elem_ = src.asLong(); return self;}
+//     virtual R1P_Elem& operator=(self:n:u64) {elem_ = Fp(n); return,}
 //     virtual String asString() const {return format!("{}", elem_.as_ulong());}
-//     virtual FieldType fieldType() const {return R1P;}
-//     virtual R1P_Elem& operator+=(const FElemInterface& other);
-//     virtual R1P_Elem& operator-=(const FElemInterface& other);
-//     virtual R1P_Elem& operator*=(const FElemInterface& other);
-//     virtual bool operator==(const FElemInterface& other) const;
-//     virtual bool operator==(const FConst& other) const {return elem_ == Fp(other.asLong());}
+//     virtual FieldType fieldType() R1P:{return,}
+//     virtual R1P_Elem& operator+=(other:&FElemInterface);
+//     virtual R1P_Elem& operator-=(other:&FElemInterface);
+//     virtual R1P_Elem& operator*=(other:&FElemInterface);
+//     virtual bool operator==(other:&FElemInterface) const;
+//     virtual bool operator==(other:&FConst) const {return elem_ == Fp(other.asLong());}
 //     virtual bool operator==(const n:u64) const {return elem_ == Fp(n);}
 //     /// @return a unique_ptr to a new copy of the element
 //     virtual FElemInterfacePtr clone() const {return FElemInterfacePtr(new R1P_Elem(self));}
@@ -274,7 +274,7 @@ pub struct R1P_Elem {
 //  */
 type VariableAssignment=HashMap<Variable, FElem, VariableStrictOrder>;
 pub struct Variable {
-// //private:
+// //
     index_:VarIndex_t,  ///< This index differentiates and identifies Variable instances.
      nextFreeIndex_:VarIndex_t, //static///< Monotonically-increasing counter to allocate disinct indices.
 // #ifdef DEBUG
@@ -293,7 +293,7 @@ pub struct Variable {
 //     /// A functor for strict ordering of Variables. Needed for STL containers.
 //     /// This is not an ordering of Variable assignments and has no semantic meaning.
 //     struct VariableStrictOrder {
-//         bool operator()(const Variable& first, const Variable& second)const {
+//         bool operator()(first:Variable&, second:&Variable)const {
 //             return first.index_ < second.index_;
 //         }
 //     };
@@ -304,7 +304,7 @@ pub struct Variable {
 //     /// A set of Variables should be declared as follows:    pub fn set s1;
 
 //     // jSNARK-edit: A simple getter for the Variable index
-//     int getIndex() const { return index_;}
+//     int getIndex() index_:{ return,}
 
 //     friend pub struct GadgetLibAdapter;
 // }; // pub struct Variable
@@ -325,7 +325,7 @@ use std::collections::HashMap;
 type VariableArrayContents =Vec<Variable> ;
 
 pub struct VariableArray {
-// //private:: public VariableArrayContents 
+// //: public VariableArrayContents 
 // #   ifdef DEBUG
 //     String name_;
 // #   endif
@@ -333,7 +333,7 @@ pub struct VariableArray {
 //     explicit VariableArray(name:&String = "");
 //     explicit VariableArray(size:i32, name:&String = "");
 //     explicit VariableArray(size:usize, name:&String = "");
-//     explicit VariableArray(size:usize, const Variable& contents)
+//     explicit VariableArray(size:usize, contents:&Variable)
 //             : VariableArrayContents(size, contents) {}
 
 //     using VariableArrayContents::operator[];
@@ -367,8 +367,8 @@ type PackedWordArray=VariableArray;
 /// Holds variables whose purpose is to be populated with the unpacked form of some word, bit by bit
 pub struct UnpackedWord {
 // : public VariableArray 
-    // UnpackedWord() : VariableArray() {}
-    // UnpackedWord(numBits:usize, name:&String) : VariableArray(numBits, name) {}
+    // UnpackedWord()->Self VariableArray() {}
+    // UnpackedWord(numBits:usize, name:&String)->Self VariableArray(numBits, name) {}
 } // pub struct UnpackedWord
 
 type UnpackedWordArray=Vec<UnpackedWord>;
@@ -376,7 +376,7 @@ type UnpackedWordArray=Vec<UnpackedWord>;
 /// Holds variables whose purpose is to be populated with the packed form of some word.
 /// word representation can be larger than a single field element in small enough fields
 pub struct MultiPackedWord {
-// //private:: public VariableArray 
+// //: public VariableArray 
     numBits_:usize,
     fieldType_:FieldType,
 }
@@ -384,7 +384,7 @@ pub struct MultiPackedWord {
 // 
 //     MultiPackedWord(fieldType:&FieldType = AGNOSTIC);
 //     MultiPackedWord(numBits:usize, fieldType:&FieldType, name:&String);
-//     void resize(numBits:usize);
+//     pub fn  resize(numBits:usize);
 //     String name() const {return pub fn name();}
 // }; // pub struct MultiPackedWord
 
@@ -392,23 +392,23 @@ type MultiPackedWordArray=Vec<MultiPackedWord>;
 
 /// Holds both representations of a word, both multipacked and unpacked
 pub struct DualWord {
-// //private:
+// //
     multipacked_:MultiPackedWord,
     unpacked_:UnpackedWord,
 // }
 // 
-//     DualWord(fieldType:&FieldType) : multipacked_(fieldType), unpacked_() {}
+//     DualWord(fieldType:&FieldType)->Self multipacked_(fieldType), unpacked_() {}
 //     DualWord(numBits:usize, fieldType:&FieldType, name:&String);
 //     DualWord(multipacked:&MultiPackedWord, unpacked:&UnpackedWord);
-//     MultiPackedWord multipacked() const {return multipacked_;}
-//     UnpackedWord unpacked() const {return unpacked_;}
-//     FlagVariable bit(i:usize) const {return unpacked_[i];} //syntactic sugar, same as unpacked()[i]
+//     MultiPackedWord multipacked() multipacked_:{return,}
+//     UnpackedWord unpacked() unpacked_:{return,}
+//     FlagVariable bit(i:usize) sugar:{return unpacked_[i];} //syntactic, same as unpacked()[i]
 //     usize numBits() const { return unpacked_.len(); }
-//     void resize(newSize:usize);
+//     pub fn  resize(newSize:usize);
 } // pub struct DualWord
 
 pub struct DualWordArray {
-// //private:
+// //
     // kept as 2 separate arrays because the more common usecase will be to request one of these,
     // and not dereference a specific DualWord
     multipackedContents_:MultiPackedWordArray,
@@ -416,13 +416,13 @@ pub struct DualWordArray {
     numElements_:usize,
 // 
 //     DualWordArray(fieldType:&FieldType);
-//     DualWordArray(const MultiPackedWordArray& multipackedContents, // TODO delete, for dev
-//                   const UnpackedWordArray& unpackedContents);
+//     DualWordArray(multipackedContents:MultiPackedWordArray&, // TODO delete, for dev
+//                   unpackedContents:&UnpackedWordArray);
 //     MultiPackedWordArray multipacked() const;
 //     UnpackedWordArray unpacked() const;
 //     PackedWordArray packed() const; //< For cases in which we can assume each unpacked value fits
 //                                     //< in 1 packed Variable
-//     void push_back(dualWord:&DualWorddualWord);
+//     pub fn  push_back(dualWord:&DualWorddualWord);
 //     DualWord at(i:usize) const;
 //     size:usize() const;
 } // pub struct DualWordArray
@@ -437,13 +437,13 @@ pub struct DualWordArray {
 /*************************************************************************************************/
 
 pub struct LinearTerm {
-//private:
+//
     variable_:Variable,
     coeff_:FElem,
 // 
-//     LinearTerm(const Variable& v) : variable_(v), coeff_(1) {}
-//     LinearTerm(const Variable& v, coeff:&FElem) : variable_(v), coeff_(coeff) {}
-//     LinearTerm(const Variable& v, n:u64) : variable_(v), coeff_(n) {}
+//     LinearTerm(v:&Variable)->Self variable_(v), coeff_(1) {}
+//     LinearTerm(v:Variable&, coeff:&FElem)->Self variable_(v), coeff_(coeff) {}
+//     LinearTerm(v:Variable&, n:u64)->Self variable_(v), coeff_(n) {}
 //     LinearTerm operator-() const {return LinearTerm(variable_, -coeff_);}
 
 //     // jSNARK-edit: These two operators are overloaded to support combining common factors for the same variables.
@@ -454,10 +454,10 @@ pub struct LinearTerm {
 //     FieldType fieldtype() const {return coeff_.fieldType();}
 //     String asString() const;
 //     FElem eval(assignment:&VariableAssignment) const;
-//     Variable variable() const {return variable_;}
+//     Variable variable() variable_:{return,}
 
 //     // jSNARK-edit: A simple getter for the coefficient
-//     FElem coeff() const {return coeff_;}
+//     FElem coeff() coeff_:{return,}
 
 //     friend pub struct Monomial;
 //     friend pub struct GadgetLibAdapter;
@@ -478,20 +478,20 @@ pub struct LinearTerm {
 /*************************************************************************************************/
 //  type size_type=Vec<LinearTerm>::size_type;
 pub struct LinearCombination {
-// protected:
+// 
     linearTerms_: Vec<LinearTerm>,
      indexMap_:HashMap<i32,i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
      constant_:FElem,
    
 // 
-//     LinearCombination() : linearTerms_(), constant_(0) {}
-//     LinearCombination(const Variable& var) : linearTerms_(1,var), constant_(0) {}
-//     LinearCombination(linTerm:&LinearTerm) : linearTerms_(1,linTerm), constant_(0) {}
-//     LinearCombination(i:u64) : linearTerms_(), constant_(i) {}
-//     LinearCombination(elem:&FElem) : linearTerms_(), constant_(elem) {}
+//     LinearCombination()->Self linearTerms_(), constant_(0) {}
+//     LinearCombination(var:&Variable)->Self linearTerms_(1,var), constant_(0) {}
+//     LinearCombination(linTerm:&LinearTerm)->Self linearTerms_(1,linTerm), constant_(0) {}
+//     LinearCombination(i:u64)->Self linearTerms_(), constant_(i) {}
+//     LinearCombination(elem:&FElem)->Self linearTerms_(), constant_(elem) {}
 
-//     LinearCombination& operator+=(const LinearCombination& other);
-//     LinearCombination& operator-=(const LinearCombination& other);
+//     LinearCombination& operator+=(other:&LinearCombination);
+//     LinearCombination& operator-=(other:&LinearCombination);
 //     LinearCombination& operator*=(other:&FElem);
 //     FElem eval(assignment:&VariableAssignment) const;
 //     String asString() const;
@@ -505,11 +505,11 @@ pub struct LinearCombination {
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
 
-// inline LinearCombination operator-(const LinearCombination& lc){return LinearCombination(0) -= lc;}
+// inline LinearCombination operator-(lc:&LinearCombination){return LinearCombination(0) -= lc;}
 
-// LinearCombination sum(const VariableArray& inputs);
+// LinearCombination sum(inputs:&VariableArray);
 // //TODO : change this to member function
-// LinearCombination negate(const LinearCombination& lc);
+// LinearCombination negate(lc:&LinearCombination);
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -520,7 +520,7 @@ pub struct LinearCombination {
 /*************************************************************************************************/
 
 pub struct Monomial {
-//private:
+//
     coeff_:FElem,
      variables_:BTreeMap<i32,i32>, //multiset// currently just a vector of variables. This can
                                    // surely be optimized e.g. hold a variable-degree pair
@@ -528,17 +528,17 @@ pub struct Monomial {
                                    // only be invoking degree 2 constraints in the near
                                    // future.
 // 
-//     Monomial(const Variable& var) : coeff_(1), variables_() {variables_.insert(var);}
-//     Monomial(const Variable& var, coeff:&FElem) : coeff_(coeff), variables_() {variables_.insert(var);}
-//     Monomial(val:&FElem) : coeff_(val), variables_() {}
+//     Monomial(var:&Variable)->Self coeff_(1), variables_() {variables_.insert(var);}
+//     Monomial(var:Variable&, coeff:&FElem)->Self coeff_(coeff), variables_() {variables_.insert(var);}
+//     Monomial(val:&FElem)->Self coeff_(val), variables_() {}
 //     Monomial(linearTerm:&LinearTerm);
 
 //     FElem eval(assignment:&VariableAssignment) const;
 //     set  getUsedVariables() const;
-//     const FElem getCoefficient() const;
+//     const:FElem getCoefficient(),
 //     String asString() const;
 //     Monomial operator-() const;
-//     Monomial& operator*=(const Monomial& other);
+//     Monomial& operator*=(other:&Monomial);
 } // pub struct Monomial
 
 /***********************************/
@@ -555,22 +555,22 @@ pub struct Monomial {
 /*************************************************************************************************/
 
 pub struct Polynomial {
-// //private:
+// //
      monomials_:Vec<Monomial>,
      constant_:FElem,
 }
 // 
-//     Polynomial() : monomials_(), constant_(0) {}
-//     Polynomial(const Monomial& monomial) : monomials_(1, monomial), constant_(0) {}
-//     Polynomial(const Variable& var) : monomials_(1, Monomial(var)), constant_(0) {}
-//     Polynomial(val:&FElem) : monomials_(), constant_(val) {}
-//     Polynomial(const LinearCombination& linearCombination);
-//     Polynomial(linearTerm:&LinearTerm) : monomials_(1, Monomial(linearTerm)), constant_(0) {}
-//     Polynomial(int i) : monomials_(), constant_(i) {}
+//     Polynomial()->Self monomials_(), constant_(0) {}
+//     Polynomial(monomial:&Monomial)->Self monomials_(1, monomial), constant_(0) {}
+//     Polynomial(var:&Variable)->Self monomials_(1, Monomial(var)), constant_(0) {}
+//     Polynomial(val:&FElem)->Self monomials_(), constant_(val) {}
+//     Polynomial(linearCombination:&LinearCombination);
+//     Polynomial(linearTerm:&LinearTerm)->Self monomials_(1, Monomial(linearTerm)), constant_(0) {}
+//     Polynomial(int i)->Self monomials_(), constant_(i) {}
 
 //     FElem eval(assignment:&VariableAssignment) const;
 //     set  getUsedVariables() const;
-//     const std::vector<Monomial>& getMonomials()const;
+//     const Vec<Monomial>& getMonomials()const;
 //     const FElem getConstant()const;
 //     String asString() const;
 //     Polynomial& operator+=(other:&Polynomial);
@@ -603,7 +603,7 @@ use crate::gadgetlib2::variable_operators;
 // use  <iostream>
 // use  <set>
 // use  <stdexcept>
-// use  <vector>
+// 
 
 // use crate::gadgetlib2::infrastructure;
 // use crate::gadgetlib2::pp;
@@ -675,25 +675,25 @@ use crate::gadgetlib2::variable;
 
 impl FElem{
 
-// pub fn FElem(const FElemInterface& elem) :
+// pub fn FElem(elem:&FElemInterface)->Self
 // 		elem_(elem.clone()) {
 // }
-// pub fn FElem() :
+// pub fn FElem()->Self
 // 		elem_(new FConst(0)) {
 // }
-// pub fn FElem(const n:u64) :
+// pub fn FElem(const n:u64)->Self
 // 		elem_(new FConst(n)) {
 // }
-// pub fn FElem(i:i32) :
+// pub fn FElem(i:i32)->Self
 // 		elem_(new FConst(i)) {
 // }
-// pub fn FElem(n:usize) :
+// pub fn FElem(n:usize)->Self
 // 		elem_(new FConst(n)) {
 // }
-// pub fn FElem(const Fp& elem) :
+// pub fn FElem(elem:&Fp)->Self
 // 		elem_(new R1P_Elem(elem)) {
 // }
-// pub fn FElem(src:&FElem) :
+// pub fn FElem(src:&FElem)->Self
 // 		elem_(src.elem_.clone()) {
 // }
 
@@ -752,17 +752,17 @@ pub fn getBit(i:u32, fieldType:&FieldType)->int{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-// FConst& pub fn operator+=(const FElemInterface& other) {
+// FConst& pub fn operator+=(other:&FElemInterface) {
 // 	contents_ += dynamic_cast<const FConst&>(other).contents_;
 // 	return self;
 // }
 
-// FConst& pub fn operator-=(const FElemInterface& other) {
+// FConst& pub fn operator-=(other:&FElemInterface) {
 // 	contents_ -= dynamic_cast<const FConst&>(other).contents_;
 // 	return self;
 // }
 
-// FConst& pub fn operator*=(const FElemInterface& other) {
+// FConst& pub fn operator*=(other:&FElemInterface) {
 // 	contents_ *= dynamic_cast<const FConst&>(other).contents_;
 // 	return self;
 // }
@@ -790,7 +790,7 @@ pub fn power(&self,exponent:u64)->&FElemInterface{
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-// R1P_Elem& pub fn operator+=(const FElemInterface& other) {
+// R1P_Elem& pub fn operator+=(other:&FElemInterface) {
 // 	if other.fieldType() == R1P {
 // 		elem_ += dynamic_cast<const R1P_Elem&>(other).elem_;
 // 	} else if other.fieldType() == AGNOSTIC {
@@ -801,7 +801,7 @@ pub fn power(&self,exponent:u64)->&FElemInterface{
 // 	return self;
 // }
 
-// R1P_Elem& pub fn operator-=(const FElemInterface& other) {
+// R1P_Elem& pub fn operator-=(other:&FElemInterface) {
 // 	if other.fieldType() == R1P {
 // 		elem_ -= dynamic_cast<const R1P_Elem&>(other).elem_;
 // 	} else if other.fieldType() == AGNOSTIC {
@@ -812,7 +812,7 @@ pub fn power(&self,exponent:u64)->&FElemInterface{
 // 	return self;
 // }
 
-// R1P_Elem& pub fn operator*=(const FElemInterface& other) {
+// R1P_Elem& pub fn operator*=(other:&FElemInterface) {
 // 	if other.fieldType() == R1P {
 // 		elem_ *= dynamic_cast<const R1P_Elem&>(other).elem_;
 // 	} else if other.fieldType() == AGNOSTIC {
@@ -823,7 +823,7 @@ pub fn power(&self,exponent:u64)->&FElemInterface{
 // 	return self;
 // }
 
-// bool pub fn operator==(const FElemInterface& other) const {
+// bool pub fn operator==(other:&FElemInterface) const {
 // 	const R1P_Elem* pOther = dynamic_cast<const R1P_Elem*>(&other);
 // 	if pOther {
 // 		return elem_ == pOther->elem_;
@@ -860,7 +860,7 @@ pub fn asLong() ->u64{
 impl Variable{
 
 // #ifdef DEBUG
-// pub fn Variable(name:&String) : index_(nextFreeIndex_++), name_(name) {
+// pub fn Variable(name:&String)->Self index_(nextFreeIndex_++), name_(name) {
 // 	assert!(nextFreeIndex_ > 0, format!("Variable index overflow has occured, maximum number of "
 // 					"Variables is {}", ULONG_MAX));
 // }
@@ -868,7 +868,7 @@ impl Variable{
 pub fn Variable(name:&String)->Self{
     let index_=nextFreeIndex_;
         nextFreeIndex_+=1;
-    // ffec::UNUSED(name);
+    // //ffec::UNUSED(name);
     assert!(nextFreeIndex_ > 0, "Variable index overflow has occured, maximum number of Variables is {}", u64::MAX);
     
 }
@@ -893,7 +893,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 		// eyre::bail!(
 		// 		format!(
 		// 				"Attempted to evaluate unassigned Variable \"{}\", idx:{}",
-		// 				name().c_str(), index_));
+		// 				name(), index_));
 	// }
 }
 }
@@ -914,13 +914,13 @@ impl VariableArray{
 // pub fn new2(size:i32, name:&String)->Self {
 //     // : VariableArrayContents() 
 //     for i in 0..size {
-//         push_back(Variable(format!("{}[{}]", name.c_str(), i)));
+//         push_back(Variable(format!("{}[{}]", name, i)));
 //     }
 // }
 
 // pub fn new3(size:usize, name:&String)->Self {// : VariableArrayContents()
 //     for i in 0..size {
-//         push_back(Variable(format!("{}[{}]", name.c_str(), i)));
+//         push_back(Variable(format!("{}[{}]", name, i)));
 //     }
 // }
 // pub fn name() ->String{
@@ -934,7 +934,7 @@ pub fn name() ->String{
 
 
 pub fn new(name:&String)->Self { 
-// ffec::UNUSED(name); : VariableArrayContents() 
+// //ffec::UNUSED(name); : VariableArrayContents() 
 }
 pub fn new(size:i32, name:&String)
     ->Self { VariableArrayContents(size) }
@@ -1046,8 +1046,8 @@ pub fn  push_back(dualWord:&DualWorddualWord) {
 }
 
 pub fn at(i:usize) ->DualWord{
-	//const MultiPackedWord multipackedRep = multipacked()[i];
-	//const UnpackedWord unpackedRep = unpacked()[i];
+	//let multipackedRep= multipacked()[i];
+	//let unpackedRep= unpacked()[i];
 	//const DualWord retval(multipackedRep, unpackedRep);
 	//return retval;
 	return DualWord::new(multipacked()[i], unpacked()[i]);
@@ -1074,12 +1074,12 @@ pub fn asString() ->String{
 	if coeff_ == 1 {
 		return variable_.name();
 	} else if coeff_ == -1 {
-		return format!("-1 * {}", variable_.name().c_str());
+		return format!("-1 * {}", variable_.name());
 	} else if coeff_ == 0 {
-		return format!("0 * {}", variable_.name().c_str());
+		return format!("0 * {}", variable_.name());
 	} else {
-		return format!("{} * {}", coeff_.asString().c_str(),
-				variable_.name().c_str());
+		return format!("{} * {}", coeff_.asString(),
+				variable_.name());
 	}
 }
 
@@ -1100,7 +1100,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 /*************************************************************************************************/
 
 // LinearCombination& pub fn operator+=(
-// 		const LinearCombination& other) {
+// 		other:&LinearCombination) {
 
 // 	// jSNARK-edit: This method is modified in order to reduce memory consumption when the same variable is
 // 	// being added to a linear combination object multiple times.
@@ -1146,7 +1146,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // }
 
 // LinearCombination& pub fn operator-=(
-// 		const LinearCombination& other) {
+// 		other:&LinearCombination) {
 
 // 	// jSNARK-edit: This method is rewritten in order to reduce memory consumption when the same variable is
 // 	// being added to a linear combination object multiple times.
@@ -1313,7 +1313,7 @@ pub fn asString() ->String{
 // 	return retval;
 // }
 
-// Monomial& pub fn operator*=(const Monomial& other) {
+// Monomial& pub fn operator*=(other:&Monomial) {
 // 	coeff_ *= other.coeff_;
 // 	variables_.insert(other.variables_.begin(), other.variables_.end());
 // 	return self;

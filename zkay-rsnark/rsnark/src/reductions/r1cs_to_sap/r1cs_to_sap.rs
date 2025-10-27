@@ -42,19 +42,19 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
  * Helper function to find evaluation domain that will be used by the reduction
  * for a given R1CS instance.
  */
-// template<typename FieldT>
-// std::shared_ptr<libfqfft::evaluation_domain<FieldT> > r1cs_to_sap_get_domain(&cs:r1cs_constraint_system<FieldT>);
+// 
+// RcCell<libfqfft::evaluation_domain<FieldT> > r1cs_to_sap_get_domain(&cs:r1cs_constraint_system<FieldT>);
 
 /**
  * Instance map for the R1CS-to-QAP reduction.
  */
-// template<typename FieldT>
+// 
 // sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>);
 
 /**
  * Instance map for the R1CS-to-QAP reduction followed by evaluation of the resulting QAP instance.
  */
-// template<typename FieldT>
+// 
 // sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1cs_constraint_system<FieldT>
 //                                                                          &t:FieldT);
 
@@ -63,7 +63,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
  *
  * The witness map takes zero knowledge into account when d1,d2 are random.
  */
-// template<typename FieldT>
+// 
 // sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
 //                                             primary_input:&r1cs_primary_input<FieldT>
 //                                             auxiliary_input:&r1cs_auxiliary_input<FieldT>
@@ -112,7 +112,7 @@ use fqfft::evaluation_domain::get_evaluation_domain;
  * for a given R1CS instance.
  */
 
-pub fn r1cs_to_sap_get_domain< FieldT>(&cs:r1cs_constraint_system<FieldT>)->std::shared_ptr<libfqfft::evaluation_domain<FieldT> > 
+pub fn r1cs_to_sap_get_domain< FieldT>(&cs:r1cs_constraint_system<FieldT>)->RcCell<libfqfft::evaluation_domain<FieldT> > 
 {
     /*
      * the SAP instance will have:
@@ -341,11 +341,11 @@ pub fn
  * More precisely, compute the coefficients
  *     h_0,h_1,...,h_n
  * of the polynomial
- *     H(z) := (A(z)*A(z)-C(z))/Z(z)
+ *     H(z)->Self= (A(z)*A(z)-C(z))/Z(z)
  * where
- *   A(z) := A_0(z) + \sum_{k=1}^{m} w_k A_k(z) + d1 * Z(z)
- *   C(z) := C_0(z) + \sum_{k=1}^{m} w_k C_k(z) + d2 * Z(z)
- *   Z(z) := "vanishing polynomial of set S"
+ *   A(z)->Self= A_0(z) + \sum_{k=1}^{m} w_k A_k(z) + d1 * Z(z)
+ *   C(z)->Self= C_0(z) + \sum_{k=1}^{m} w_k C_k(z) + d2 * Z(z)
+ *   Z(z)->Self= "vanishing polynomial of set S"
  * and
  *   m = number of variables of the SAP
  *   n = degree of the SAP

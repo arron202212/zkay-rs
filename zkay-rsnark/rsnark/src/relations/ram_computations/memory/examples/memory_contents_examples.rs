@@ -21,18 +21,18 @@ use crate::relations::ram_computations::memory::memory_interface;
 //  * the first block is located at the beginning of memory, while
 //  * the second block is located half-way through memory.
 //  */
-// memory_contents block_memory_contents(const size_t num_addresses,
-//                                       const size_t value_size,
-//                                       const size_t block1_size,
-//                                       const size_t block2_size);
+// memory_contents block_memory_contents(num_addresses:usize,
+//                                       value_size:usize,
+//                                       block1_size:usize,
+//                                       block2_size:usize);
 
 // /**
 //  * Sample memory contents having a given number of non-zero entries;
 //  * each non-zero entry is a random value at a random address (approximately).
 //  */
-// memory_contents random_memory_contents(const size_t num_addresses,
-//                                        const size_t value_size,
-//                                        const size_t num_filled);
+// memory_contents random_memory_contents(num_addresses:usize,
+//                                        value_size:usize,
+//                                        num_filled:usize);
 
 
 
@@ -58,10 +58,10 @@ use crate::relations::ram_computations::memory::memory_interface;
 
 
 
-pub fn  block_memory_contents(num_addresses:size_t,
-                                      value_size:size_t,
-                                      block1_size:size_t,
-                                      block2_size:size_t)->memory_contents
+pub fn  block_memory_contents(num_addresses:usize,
+                                      value_size:usize,
+                                      block1_size:usize,
+                                      block2_size:usize)->memory_contents
 {
     let  max_unit = 1u64<<value_size;
 
@@ -79,9 +79,9 @@ pub fn  block_memory_contents(num_addresses:size_t,
     return result;
 }
 
-pub fn  random_memory_contents(num_addresses:size_t,
-                                       value_size:size_t,
-                                       num_filled:size_t)->memory_contents
+pub fn  random_memory_contents(num_addresses:usize,
+                                       value_size:usize,
+                                       num_filled:usize)->memory_contents
 {
     let mut  max_unit = 1u64<<value_size;
 

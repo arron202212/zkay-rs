@@ -4,11 +4,11 @@
  Declaration of interfaces for a *single-predicate* ppzkPCD for R1CS.
 
  This includes:
- - class for proving key
- - class for verification key
- - class for processed verification key
- - class for key pair (proving key & verification key)
- - class for proof
+ - pub struct for proving key
+ - pub struct for verification key
+ - pub struct for processed verification key
+ - pub struct for key pair (proving key & verification key)
+ - pub struct for proof
  - generator algorithm
  - prover algorithm
  - verifier algorithm
@@ -40,7 +40,7 @@
 //#ifndef R1CS_SP_PPZKPCD_HPP_
 // #define R1CS_SP_PPZKPCD_HPP_
 
-// use  <memory>
+// 
 
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_params;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
@@ -56,7 +56,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 // 
    type A_pp= PCD_ppT::curve_A_pp;
     type B_pp= PCD_ppT::curve_B_pp;
-class r1cs_sp_ppzkpcd_proving_key<PCD_ppT> {
+pub struct r1cs_sp_ppzkpcd_proving_key<PCD_ppT> {
 
  
 
@@ -93,9 +93,9 @@ translation_step_r1cs_pk:                                r1cs_ppzksnark_proving_
 /**
  * A verification key for the R1CS (single-predicate) ppzkPCD.
  */
-   type A_pp= PCD_ppT::curve_A_pp;
-    type B_pp= PCD_ppT::curve_B_pp;
-class r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
+//    type A_pp= PCD_ppT::curve_A_pp;
+//     type B_pp= PCD_ppT::curve_B_pp;
+pub struct r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
 
  
 
@@ -110,7 +110,7 @@ impl r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
     Self{ compliance_step_r1cs_vk,
         translation_step_r1cs_vk}}
 
-     pub fn size_in_bits() ->size_t
+     pub fn size_in_bits() ->usize
     {
         return (compliance_step_r1cs_vk.size_in_bits()
                 + translation_step_r1cs_vk.size_in_bits());
@@ -130,22 +130,22 @@ impl r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
  * contains a small constant amount of additional pre-computed information that
  * enables a faster verification time.
  */
- type A_pp= PCD_ppT::curve_A_pp;
-    type B_pp= PCD_ppT::curve_B_pp;
-class r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> {
+//  type A_pp= PCD_ppT::curve_A_pp;
+//     type B_pp= PCD_ppT::curve_B_pp;
+pub struct r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> {
 
    
 
 compliance_step_r1cs_pvk:    r1cs_ppzksnark_processed_verification_key<A_pp>,
 translation_step_r1cs_pvk:    r1cs_ppzksnark_processed_verification_key<B_pp>,
-translation_step_r1cs_vk_bits:    ffec::bit_vector,
+translation_step_r1cs_vk_bits:    bit_vector,
 }
 impl r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> {
    
     pub fn new(
 compliance_step_r1cs_pvk:r1cs_ppzksnark_processed_verification_key<A_pp>,
 translation_step_r1cs_pvk:                                               r1cs_ppzksnark_processed_verification_key<B_pp>,
-                                               translation_step_r1cs_vk_bits:ffec::bit_vector) ->Self
+                                               translation_step_r1cs_vk_bits:bit_vector) ->Self
        
     {
     Self{
@@ -155,7 +155,7 @@ translation_step_r1cs_pvk:                                               r1cs_pp
     }}
 
 
-     pub fn size_in_bits() ->size_t
+     pub fn size_in_bits() ->usize
     {
         return (compliance_step_r1cs_pvk.size_in_bits() +
                 translation_step_r1cs_pvk.size_in_bits() +
@@ -170,9 +170,9 @@ translation_step_r1cs_pvk:                                               r1cs_pp
 /**
  * A key pair for the R1CS (single-predicate) ppzkPC, which consists of a proving key and a verification key.
  */
-   type A_pp= PCD_ppT::curve_A_pp;
-    type B_pp= PCD_ppT::curve_B_pp;
-class r1cs_sp_ppzkpcd_keypair<PCD_ppT> {
+//    type A_pp= PCD_ppT::curve_A_pp;
+//     type B_pp= PCD_ppT::curve_B_pp;
+pub struct  r1cs_sp_ppzkpcd_keypair<PCD_ppT> {
 
  
 
@@ -231,7 +231,7 @@ kp_B:                            r1cs_ppzksnark_keypair<B_pp>) ->Self
 // r1cs_sp_ppzkpcd_proof<PCD_ppT> r1cs_sp_ppzkpcd_prover(pk:r1cs_sp_ppzkpcd_proving_key<PCD_ppT>,
 //                                                       primary_input:r1cs_sp_ppzkpcd_primary_input<PCD_ppT>,
 //                                                       auxiliary_input:r1cs_sp_ppzkpcd_auxiliary_input<PCD_ppT>,
-//                                                       incoming_proofs:std::vector<r1cs_sp_ppzkpcd_proof<PCD_ppT> >);
+//                                                       incoming_proofs:Vec<r1cs_sp_ppzkpcd_proof<PCD_ppT> >);
 
 // /*
 //  Below are two variants of verifier algorithm for the R1CS (single-predicate) ppzkPCD.
@@ -357,7 +357,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::sp_pcd_circuits;
 // }
 impl r1cs_sp_ppzkpcd_verification_key<PCD_ppT>{
 
-r1cs_sp_ppzkpcd_verification_key<PCD_ppT>::dummy_verification_key()->r1cs_sp_ppzkpcd_verification_key<PCD_ppT> 
+pub fn dummy_verification_key()->r1cs_sp_ppzkpcd_verification_key<PCD_ppT> 
 {
     type curve_A_pp= PCD_ppT::curve_A_pp;
     type curve_B_pp= PCD_ppT::curve_B_pp;
@@ -451,7 +451,7 @@ r1cs_sp_ppzkpcd_verification_key<PCD_ppT>::dummy_verification_key()->r1cs_sp_ppz
  pub fn r1cs_sp_ppzkpcd_prover<PCD_ppT>(pk:r1cs_sp_ppzkpcd_proving_key<PCD_ppT>,
                                                       primary_input:r1cs_sp_ppzkpcd_primary_input<PCD_ppT>,
                                                       auxiliary_input:r1cs_sp_ppzkpcd_auxiliary_input<PCD_ppT>,
-                                                      incoming_proofs:std::vector<r1cs_sp_ppzkpcd_proof<PCD_ppT> >)->r1cs_sp_ppzkpcd_proof<PCD_ppT>
+                                                      incoming_proofs:Vec<r1cs_sp_ppzkpcd_proof<PCD_ppT> >)->r1cs_sp_ppzkpcd_proof<PCD_ppT>
 {
     type FieldT_A=ffec::Fr< PCD_ppT::curve_A_pp>;
     type FieldT_B=ffec::Fr< PCD_ppT::curve_B_pp>;
@@ -461,7 +461,7 @@ r1cs_sp_ppzkpcd_verification_key<PCD_ppT>::dummy_verification_key()->r1cs_sp_ppz
 
     ffec::enter_block("Call to r1cs_sp_ppzkpcd_prover");
 
-    let  translation_step_r1cs_vk_bits = r1cs_ppzksnark_verification_key_variable<curve_A_pp>::get_verification_key_bits(pk.translation_step_r1cs_vk);
+    let  translation_step_r1cs_vk_bits = r1cs_ppzksnark_verification_key_variable::<curve_A_pp>::get_verification_key_bits(pk.translation_step_r1cs_vk);
 // #ifdef DEBUG
     print!("Outgoing message:\n");
     primary_input.outgoing_message.print();

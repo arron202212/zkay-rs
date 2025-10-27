@@ -18,7 +18,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 
 
-// template<typename FieldT>
+// 
 pub trait  ram_tinyram<FieldT> {
 // 
     const  timestamp_length:usize=300;
@@ -30,8 +30,8 @@ pub trait  ram_tinyram<FieldT> {
     type architecture_params_type=tinyram_architecture_params;
 }
 
-// template<typename FieldT>
-// size_t ram_tinyram<FieldT>::timestamp_length = 300;
+// 
+// usize ram_tinyram<FieldT>::timestamp_length = 300;
 
 
 

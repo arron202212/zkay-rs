@@ -25,44 +25,44 @@ use crate::algebra::fields::prime_base::fp;
 // namespace libff {
 
 pub trait is_additive{
-    const  value:bool = false;
+    const  value:bool =false;
 }
 
 // struct is_additive {
-//     static const bool value = false;
+//     static let mut value = false;
 // };
 
-// template<>
+// 
 // struct is_additive<gf64> {
-//     static const bool value = true;
+//     static let mut value = true;
 // };
 
-// template<>
+// 
 // struct is_additive<gf128> {
-//     static const bool value = true;
+//     static let mut value = true;
 // };
 
-// template<>
+// 
 // struct is_additive<gf192> {
-//     static const bool value = true;
+//     static let mut value = true;
 // };
 
-// template<>
+// 
 // struct is_additive<gf256> {
-//     static const bool value = true;
+//     static let mut value = true;
 // };
 
 pub trait is_multiplicative{
-    const  value:bool = false;
+    const  value:bool =false;
 }
 
 // struct is_multiplicative {
-//     static const bool value = false;
+//     static let mut value = false;
 // };
 
-// template<mp_size_t n, const bigint<n>& modulus>
+// 
 // struct is_multiplicative<Fp_model<n, modulus>> {
-//     static const bool value = true;
+//     static let mut value = true;
 // };
 
 enum field_type {
@@ -71,73 +71,73 @@ enum field_type {
 }
 
 // 
-// field_type get_field_type(const typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type elem);
+// field_type get_field_type(const enable_if<is_multiplicative<FieldT>::value, FieldT>::type elem);
 
 // 
-// field_type get_field_type(const typename enable_if<is_additive<FieldT>::value, FieldT>::type elem);
+// field_type get_field_type(const enable_if<is_additive<FieldT>::value, FieldT>::type elem);
 
 // 
-// std::size_t log_of_field_size_helper(
-//     typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
+// std::usize log_of_field_size_helper(
+//     enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
 
 // 
-// std::size_t log_of_field_size_helper(
-//     typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
+// std::usize log_of_field_size_helper(
+//     enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
 
 // 
-// std::size_t soundness_log_of_field_size_helper(
-//     typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
+// std::usize soundness_log_of_field_size_helper(
+//     enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem);
 
 // 
-// std::size_t soundness_log_of_field_size_helper(
-//     typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
+// std::usize soundness_log_of_field_size_helper(
+//     enable_if<is_additive<FieldT>::value, FieldT>::type field_elem);
 
 // 
-// std::size_t get_word_of_field_elem(
-//     typename enable_if<is_additive<FieldT>::value, FieldT>::type field_elem, size_t word);
+// std::usize get_word_of_field_elem(
+//     enable_if<is_additive<FieldT>::value, FieldT>::type field_elem, usize word);
 
 // 
-// std::size_t get_word_of_field_elem(
-//     typename enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem, size_t word);
+// std::usize get_word_of_field_elem(
+//     enable_if<is_multiplicative<FieldT>::value, FieldT>::type field_elem, usize word);
 
 // 
 // FieldT coset_shift();
 
 // // returns root of unity of order n (for n a power of 2), if one exists
 // 
-// typename std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
-// get_root_of_unity(const std::size_t n);
+// std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
+// get_root_of_unity(const std::usize n);
 
 // 
-// typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
-// get_root_of_unity(const std::size_t n);
+// std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
+// get_root_of_unity(const std::usize n);
 
 // 
-// std::vector<FieldT> pack_int_vector_into_field_element_vector(const std::vector<std::size_t> &v, const std::size_t w);
+// Vec<FieldT> pack_int_vector_into_field_element_vector(v:&Vec<std::usize>, const std::usize w);
 
 // 
-// std::vector<FieldT> pack_bit_vector_into_field_element_vector(v:&bit_vector, const std::size_t chunk_bits);
+// Vec<FieldT> pack_bit_vector_into_field_element_vector(v:&bit_vector, const std::usize chunk_bits);
 
 // 
-// std::vector<FieldT> pack_bit_vector_into_field_element_vector(v:&bit_vector);
+// Vec<FieldT> pack_bit_vector_into_field_element_vector(v:&bit_vector);
 
 // 
-// std::vector<FieldT> convert_bit_vector_to_field_element_vector(v:&bit_vector);
+// Vec<FieldT> convert_bit_vector_to_field_element_vector(v:&bit_vector);
 
 // 
-// bit_vector convert_field_element_vector_to_bit_vector(const std::vector<FieldT> &v);
+// bit_vector convert_field_element_vector_to_bit_vector(v:&Vec<FieldT>);
 
 // 
 // bit_vector convert_field_element_to_bit_vector(el:FieldT);
 
 // 
-// bit_vector convert_field_element_to_bit_vector(el:FieldT, const std::size_t bitcount);
+// bit_vector convert_field_element_to_bit_vector(el:FieldT, const std::usize bitcount);
 
 // 
 // FieldT convert_bit_vector_to_field_element(v:&bit_vector);
 
 // 
-// void batch_invert(std::vector<FieldT> &vec);
+// pub fn  batch_invert(Vec<FieldT> &vec);
 
 // } // namespace libff
 // use ffec::algebra::field_utils::/field_utils.tcc;
@@ -162,7 +162,7 @@ enum field_type {
 
 // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 
 trait FTConfig{
     const NUM_LIMBS:usize;
@@ -235,7 +235,7 @@ pub fn  get_word_of_field_elem_is_multiplicative<FieldT>(field_elem:FieldT,  wor
 }
 
 
-// typename std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
+// std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
 pub fn get_root_of_unity_is_same_double<FieldT:Default>(n:usize)->FieldT
 {
     const  PI:f64 = 3.141592653589793238460264338328;
@@ -244,7 +244,7 @@ pub fn get_root_of_unity_is_same_double<FieldT:Default>(n:usize)->FieldT
 }
 
 // 
-// typename std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
+// std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
 pub fn get_root_of_unity_is_not_same_double<FieldT:Default>(n:usize)->eyre::Result<FieldT>
 {
     let logn = log2(n);

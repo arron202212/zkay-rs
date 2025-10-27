@@ -21,7 +21,7 @@
 // use  <iostream>
 // use  <map>
 // use  <string>
-// use  <vector>
+// 
 
 use crate::relations::variable;
 
@@ -67,13 +67,13 @@ pub struct r1cs_constraint<FieldT> {
 
 /* TODO: specify that it does *NOT* include the constant 1 */
 // < FieldT>
-// using r1cs_primary_input = std::vector<FieldT>;
+// using r1cs_primary_input = Vec<FieldT>;
 
 // < FieldT>
-// using r1cs_auxiliary_input = std::vector<FieldT>;
+// using r1cs_auxiliary_input = Vec<FieldT>;
 
 // < FieldT>
-// using r1cs_variable_assignment = std::vector<FieldT>; /* note the changed name! (TODO: remove this comment after primary_input transition is complete) */
+// using r1cs_variable_assignment = Vec<FieldT>; /* note the changed name! (TODO: remove this comment after primary_input transition is complete) */
 
 /************************* R1CS constraint system ****************************/
 
@@ -93,19 +93,19 @@ pub struct r1cs_constraint<FieldT> {
 
 pub struct  r1cs_constraint_system< FieldT> {
 
-primary_input_size:    size_t,
-auxiliary_input_size:    size_t,
+primary_input_size:    usize,
+auxiliary_input_size:    usize,
 
-constraints:    std::vector<r1cs_constraint<FieldT> >,
+constraints:    Vec<r1cs_constraint<FieldT> >,
 
 
-    // size_t num_inputs() const;
-    // size_t num_variables() const;
-    // size_t num_constraints() const;
+    // usize num_inputs() const;
+    // usize num_variables() const;
+    // usize num_constraints() const;
 
 // #ifdef DEBUG
-constraint_annotations:    std::map<size_t, std::string>,
-variable_annotations:    std::map<size_t, std::string>,
+constraint_annotations:    BTreeMap<usize, String>,
+variable_annotations:    BTreeMap<usize, String>,
 //#endif
 }
 
@@ -113,13 +113,13 @@ variable_annotations:    std::map<size_t, std::string>,
 //     bool is_satisfied(primary_input:&r1cs_primary_input<FieldT>
 //                       &auxiliary_input:r1cs_auxiliary_input<FieldT>) const;
 
-//     void add_constraint(&c:r1cs_constraint<FieldT>);
-//     void add_constraint(c:&r1cs_constraint<FieldT> &annotation:std::string);
+//     pub fn  add_constraint(&c:r1cs_constraint<FieldT>);
+//     pub fn  add_constraint(c:&r1cs_constraint<FieldT> &annotation:String);
 
-//     void swap_AB_if_beneficial();
+//     pub fn  swap_AB_if_beneficial();
 
 
-//     void report_linear_constraint_statistics() const;
+//     pub fn  report_linear_constraint_statistics() const;
 // };
 
 impl r1cs_constraint_system< FieldT> {
@@ -275,7 +275,7 @@ pub fn num_variables()  ->usize
 
 pub fn  dump_r1cs_constraint(constraint:&r1cs_constraint<FieldT>,
                           full_variable_assignment:&r1cs_variable_assignment<FieldT>,
-                          variable_annotations:&std::map<size_t, std::string>)
+                          variable_annotations:&BTreeMap<usize, String>)
 {
     print!("terms for a:\n"); constraint.a.print_with_assignment(full_variable_assignment, variable_annotations);
     print!("terms for b:\n"); constraint.b.print_with_assignment(full_variable_assignment, variable_annotations);
@@ -323,7 +323,7 @@ pub fn add_constraint(&c:r1cs_constraint<FieldT>)
 }
 
 
-pub fn add_constraint(c:&r1cs_constraint<FieldT> ,annotation:&std::string)
+pub fn add_constraint(c:&r1cs_constraint<FieldT> ,annotation:&String)
 {
 // #ifdef DEBUG
     // constraint_annotations[constraints.len()] = annotation;
@@ -468,7 +468,7 @@ cs.constraints.iter().map(|c|format!("{c}")).collect::<String>(),
 
 //     cs.constraints.clear();
 
-//     size_t s;
+//     usize s;
 //     in >> s;
 
 //     char b;

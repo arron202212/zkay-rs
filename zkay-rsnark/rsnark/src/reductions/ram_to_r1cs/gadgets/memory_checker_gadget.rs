@@ -25,12 +25,12 @@ pub struct  memory_checker_gadget<ramT> {
 
 timestamps_leq:    pb_variable<FieldT>,
 timestamps_less:    pb_variable<FieldT>,
-compare_timestamps:    std::shared_ptr<comparison_gadget<FieldT> >,
+compare_timestamps:    RcCell<comparison_gadget<FieldT> >,
 
 addresses_eq:    pb_variable<FieldT>,
 addresses_leq:    pb_variable<FieldT>,
 addresses_less:    pb_variable<FieldT>,
-compare_addresses:    std::shared_ptr<comparison_gadget<FieldT> >,
+compare_addresses:    RcCell<comparison_gadget<FieldT> >,
 
 loose_contents_after1_equals_contents_before2:    pb_variable<FieldT>,
 loose_contents_before2_equals_zero:    pb_variable<FieldT>,
@@ -70,16 +70,16 @@ impl memory_checker_gadget<ramT>{
 
 pub fn new(
 pb:ram_protoboard<ramT>,
-                                                   timestamp_size:size_t,
+                                                   timestamp_size:usize,
                                                    line1:memory_line_variable_gadget<ramT>,
                                                    line2:memory_line_variable_gadget<ramT>,
-                                                   annotation_prefix:std::string) ->Self
+                                                   annotation_prefix:String) ->Self
     
 {
     /* compare the two timestamps */
     timestamps_leq.allocate(pb, FMT(self.annotation_prefix, " timestamps_leq"));
     timestamps_less.allocate(pb, FMT(self.annotation_prefix, " timestamps_less"));
-    compare_timestamps.reset(comparison_gadget::<$2>::new(pb, timestamp_size, line1.timestamp->packed, line2.timestamp->packed, timestamps_less, timestamps_leq,
+    compare_timestamps.reset(comparison_gadget::<FieldT>::new(pb, timestamp_size, line1.timestamp.packed, line2.timestamp.packed, timestamps_less, timestamps_leq,
                                                            FMT(self.annotation_prefix, " compare_ts")));
 
 
@@ -88,7 +88,7 @@ pb:ram_protoboard<ramT>,
     addresses_eq.allocate(pb, FMT(self.annotation_prefix, " addresses_eq"));
     addresses_leq.allocate(pb, FMT(self.annotation_prefix, " addresses_leq"));
     addresses_less.allocate(pb, FMT(self.annotation_prefix, " addresses_less"));
-    compare_addresses.reset(comparison_gadget::<$2>::new(pb, address_size, line1.address->packed, line2.address->packed, addresses_less, addresses_leq,
+    compare_addresses.reset(comparison_gadget::<FieldT>::new(pb, address_size, line1.address.packed, line2.address.packed, addresses_less, addresses_leq,
                                                           FMT(self.annotation_prefix, " compare_addresses")));
 
     /*
@@ -126,17 +126,17 @@ pub fn generate_r1cs_constraints()
        - loose_timestamp2_is_zero.
      */
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_contents_after1_equals_contents_before2,
-                                                         line1.contents_after->packed - line2.contents_before->packed, 0),
+                                                         line1.contents_after.packed - line2.contents_before.packed, 0),
                                  FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_contents_after1_equals_contents_before2, FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_contents_before2_equals_zero,
-                                                         line2.contents_before->packed, 0),
+                                                         line2.contents_before.packed, 0),
                                  FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_contents_before2_equals_zero, FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_timestamp2_is_zero,
-                                                         line2.timestamp->packed, 0),
+                                                         line2.timestamp.packed, 0),
                                  FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_timestamp2_is_zero, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
 
@@ -180,9 +180,9 @@ pub fn generate_r1cs_witness()
       - loose_contents_before2_equals_zero;
       - loose_timestamp2_is_zero.
      */
-    self.pb.val(loose_contents_after1_equals_contents_before2) = if (self.pb.val(line1.contents_after->packed) == self.pb.val(line2.contents_before->packed))  {FieldT::one() }else  {FieldT::zero()};
-    self.pb.val(loose_contents_before2_equals_zero) = if self.pb.val(line2.contents_before->packed).is_zero()  {FieldT::one()} else {FieldT::zero()};
-    self.pb.val(loose_timestamp2_is_zero) =  (if self.pb.val(line2.timestamp->packed) == FieldT::zero()  {FieldT::one() }else {FieldT::zero()});
+    self.pb.val(loose_contents_after1_equals_contents_before2) = if (self.pb.val(line1.contents_after.packed) == self.pb.val(line2.contents_before.packed))  {FieldT::one() }else  {FieldT::zero()};
+    self.pb.val(loose_contents_before2_equals_zero) = if self.pb.val(line2.contents_before.packed).is_zero()  {FieldT::one()} else {FieldT::zero()};
+    self.pb.val(loose_timestamp2_is_zero) =  (if self.pb.val(line2.timestamp.packed) == FieldT::zero()  {FieldT::one() }else {FieldT::zero()});
 }
 
 

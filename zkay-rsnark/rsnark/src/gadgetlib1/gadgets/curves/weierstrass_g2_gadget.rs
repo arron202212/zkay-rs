@@ -15,7 +15,7 @@
 //#ifndef WEIERSTRASS_G2_GADGET_HPP_
 // #define WEIERSTRASS_G2_GADGET_HPP_
 
-use  <memory>
+// 
 
 use ffec::algebra::curves::public_params;
 
@@ -27,63 +27,49 @@ use crate::gadgetlib1::gadgets::pairing::pairing_params;
 /**
  * Gadget that represents a G2 variable.
  */
-template<typename ppT>
-class G2_variable : public gadget<ffec::Fr<ppT> > {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct G2_variable  {
+// : public gadget<ffec::Fr<ppT> >
+//     type FieldT=ffec::Fr<ppT>;
+//     type FqeT=ffec::Fqe<other_curve<ppT> >;
+//     type FqkT=ffec::Fqk<other_curve<ppT> >;
 
-    std::shared_ptr<Fqe_variable<ppT> > X;
-    std::shared_ptr<Fqe_variable<ppT> > Y;
+X:    RcCell<Fqe_variable<ppT> >,
+Y:    RcCell<Fqe_variable<ppT> >,
 
-    pb_linear_combination_array<FieldT> all_vars;
+all_vars:    pb_linear_combination_array<FieldT>,
 
-    G2_variable(protoboard<FieldT> &pb,
-                const std::string &annotation_prefix);
-    G2_variable(protoboard<FieldT> &pb,
-                const ffec::G2<other_curve<ppT> > &Q,
-                const std::string &annotation_prefix);
 
-    void generate_r1cs_witness(const ffec::G2<other_curve<ppT> > &Q);
 
-    // (See a comment in r1cs_ppzksnark_verifier_gadget.hpp about why
-    // we mark this function noinline.) TODO: remove later
-    static size_t __attribute__((noinline)) size_in_bits();
-    static size_t num_variables();
-};
+}
 
 /**
  * Gadget that creates constraints for the validity of a G2 variable.
  */
-template<typename ppT>
-class G2_checker_gadget : public gadget<ffec::Fr<ppT> > {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct G2_checker_gadget{
+//  : public gadget<ffec::Fr<ppT> > 
+//     type FieldT=ffec::Fr<ppT>;
+//     type FqeT=ffec::Fqe<other_curve<ppT> >;
+//     type FqkT=ffec::Fqk<other_curve<ppT> >;
 
-    G2_variable<ppT> Q;
+Q:    G2_variable<ppT>,
 
-    std::shared_ptr<Fqe_variable<ppT> > Xsquared;
-    std::shared_ptr<Fqe_variable<ppT> > Ysquared;
-    std::shared_ptr<Fqe_variable<ppT> > Xsquared_plus_a;
-    std::shared_ptr<Fqe_variable<ppT> > Ysquared_minus_b;
+Xsquared:    RcCell<Fqe_variable<ppT> >,
+Ysquared:    RcCell<Fqe_variable<ppT> >,
+Xsquared_plus_a:    RcCell<Fqe_variable<ppT> >,
+Ysquared_minus_b:    RcCell<Fqe_variable<ppT> >,
 
-    std::shared_ptr<Fqe_sqr_gadget<ppT> > compute_Xsquared;
-    std::shared_ptr<Fqe_sqr_gadget<ppT> > compute_Ysquared;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > curve_equation;
+compute_Xsquared:    RcCell<Fqe_sqr_gadget<ppT> >,
+compute_Ysquared:    RcCell<Fqe_sqr_gadget<ppT> >,
+curve_equation:    RcCell<Fqe_mul_gadget<ppT> >,
 
-    G2_checker_gadget(protoboard<FieldT> &pb,
-                      const G2_variable<ppT> &Q,
-                      const std::string &annotation_prefix);
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+
+}
 
 
 
-use crate::gadgetlib1::gadgets::curves/weierstrass_g2_gadget;
+// use crate::gadgetlib1::gadgets::curves::weierstrass_g2_gadget;
 
 //#endif // WEIERSTRASS_G2_GADGET_HPP_
 /** @file
@@ -104,113 +90,120 @@ use crate::gadgetlib1::gadgets::curves/weierstrass_g2_gadget;
 
  use ffec::algebra::scalar_multiplication::wnaf;
 
+impl G2_variable<ppT>{
 
 
-template<typename ppT>
-G2_variable<ppT>::G2_variable(protoboard<FieldT> &pb,
-                              const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix)
+pub fn new(pb:&protoboard<FieldT>,
+                              annotation_prefix:&String)->Self
+    
 {
-    X.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " X")));
-    Y.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " Y")));
+    X.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " X")));
+    Y.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Y")));
 
-    all_vars.insert(all_vars.end(), X->all_vars.begin(), X->all_vars.end());
-    all_vars.insert(all_vars.end(), Y->all_vars.begin(), Y->all_vars.end());
+    all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
+    all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
+    // gadget<FieldT>(pb, annotation_prefix)
 }
 
-template<typename ppT>
-G2_variable<ppT>::G2_variable(protoboard<FieldT> &pb,
-                              const ffec::G2<other_curve<ppT> > &Q,
-                              const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix)
+
+pub fn new2(pb:&protoboard<FieldT>,
+                              Q:&ffec::G2<other_curve<ppT> >,
+                              annotation_prefix:&String)->Self
+    
 {
-    ffec::G2<other_curve<ppT> > Q_copy = Q;
+    let  Q_copy = Q.clone();
     Q_copy.to_affine_coordinates();
 
-    X.reset(new Fqe_variable<ppT>(pb, Q_copy.X(), FMT(annotation_prefix, " X")));
-    Y.reset(new Fqe_variable<ppT>(pb, Q_copy.Y(), FMT(annotation_prefix, " Y")));
+    X.reset(Fqe_variable::<ppT>::new(pb, Q_copy.X(), FMT(annotation_prefix, " X")));
+    Y.reset(Fqe_variable::<ppT>::new(pb, Q_copy.Y(), FMT(annotation_prefix, " Y")));
 
-    all_vars.insert(all_vars.end(), X->all_vars.begin(), X->all_vars.end());
-    all_vars.insert(all_vars.end(), Y->all_vars.begin(), Y->all_vars.end());
+    all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
+    all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
+    // gadget<FieldT>(pb, annotation_prefix)
 }
 
-template<typename ppT>
-void G2_variable<ppT>::generate_r1cs_witness(const ffec::G2<other_curve<ppT> > &Q)
+
+pub fn generate_r1cs_witness(Q:&ffec::G2<other_curve<ppT> >)
 {
-    ffec::G2<other_curve<ppT> > Qcopy = Q;
+    let mut  Qcopy = Q.clone();
     Qcopy.to_affine_coordinates();
 
-    X->generate_r1cs_witness(Qcopy.X());
-    Y->generate_r1cs_witness(Qcopy.Y());
+    X.generate_r1cs_witness(Qcopy.X());
+    Y.generate_r1cs_witness(Qcopy.Y());
 }
 
-template<typename ppT>
-size_t G2_variable<ppT>::size_in_bits()
+
+pub fn size_in_bits()->usize
 {
-    return 2 * Fqe_variable<ppT>::size_in_bits();
+    return 2 * Fqe_variable::<ppT>::size_in_bits();
 }
 
-template<typename ppT>
-size_t G2_variable<ppT>::num_variables()
+
+pub fn num_variables()->usize
 {
-    return 2 * Fqe_variable<ppT>::num_variables();
+    return 2 * Fqe_variable::<ppT>::num_variables();
+}
+}
+impl G2_checker_gadget<ppT>{
+
+pub fn new(pb:&protoboard<FieldT>,
+                                          Q:&G2_variable<ppT>,
+                                          annotation_prefix:&String)->Self
+  
+{
+    Xsquared.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Xsquared")));
+    Ysquared.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Ysquared")));
+
+    compute_Xsquared.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.X), *Xsquared, FMT(annotation_prefix, " compute_Xsquared")));
+    compute_Ysquared.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.Y), *Ysquared, FMT(annotation_prefix, " compute_Ysquared")));
+
+    Xsquared_plus_a.reset(Fqe_variable::<ppT>::new((*Xsquared) + ffec::G2::<other_curve::<ppT> >::coeff_a));
+    Ysquared_minus_b.reset(Fqe_variable::<ppT>::new((*Ysquared) + (-ffec::G2::<other_curve::<ppT> >::coeff_b)));
+
+    curve_equation.reset(Fqe_mul_gadget::<ppT>::new(pb, *(Q.X), *Xsquared_plus_a, *Ysquared_minus_b, FMT(annotation_prefix, " curve_equation")));
+    Self{
+    //   gadget<FieldT>(pb, annotation_prefix),
+    Q
+    }
 }
 
-template<typename ppT>
-G2_checker_gadget<ppT>::G2_checker_gadget(protoboard<FieldT> &pb,
-                                          const G2_variable<ppT> &Q,
-                                          const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    Q(Q)
+
+pub fn generate_r1cs_constraints()
 {
-    Xsquared.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " Xsquared")));
-    Ysquared.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " Ysquared")));
-
-    compute_Xsquared.reset(new Fqe_sqr_gadget<ppT>(pb, *(Q.X), *Xsquared, FMT(annotation_prefix, " compute_Xsquared")));
-    compute_Ysquared.reset(new Fqe_sqr_gadget<ppT>(pb, *(Q.Y), *Ysquared, FMT(annotation_prefix, " compute_Ysquared")));
-
-    Xsquared_plus_a.reset(new Fqe_variable<ppT>((*Xsquared) + ffec::G2<other_curve<ppT> >::coeff_a));
-    Ysquared_minus_b.reset(new Fqe_variable<ppT>((*Ysquared) + (-ffec::G2<other_curve<ppT> >::coeff_b)));
-
-    curve_equation.reset(new Fqe_mul_gadget<ppT>(pb, *(Q.X), *Xsquared_plus_a, *Ysquared_minus_b, FMT(annotation_prefix, " curve_equation")));
+    compute_Xsquared.generate_r1cs_constraints();
+    compute_Ysquared.generate_r1cs_constraints();
+    curve_equation.generate_r1cs_constraints();
 }
 
-template<typename ppT>
-void G2_checker_gadget<ppT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_witness()
 {
-    compute_Xsquared->generate_r1cs_constraints();
-    compute_Ysquared->generate_r1cs_constraints();
-    curve_equation->generate_r1cs_constraints();
+    compute_Xsquared.generate_r1cs_witness();
+    compute_Ysquared.generate_r1cs_witness();
+    Xsquared_plus_a.evaluate();
+    curve_equation.generate_r1cs_witness();
+}
 }
 
-template<typename ppT>
-void G2_checker_gadget<ppT>::generate_r1cs_witness()
-{
-    compute_Xsquared->generate_r1cs_witness();
-    compute_Ysquared->generate_r1cs_witness();
-    Xsquared_plus_a->evaluate();
-    curve_equation->generate_r1cs_witness();
-}
 
-template<typename ppT>
-void test_G2_checker_gadget(const std::string &annotation)
+pub fn  test_G2_checker_gadget(annotation:&String)
 {
-    protoboard<ffec::Fr<ppT> > pb;
-    G2_variable<ppT> g(pb, "g");
-    G2_checker_gadget<ppT> g_check(pb, g, "g_check");
+    let mut  pb=protoboard::<ffec::Fr::<ppT> >::new();
+    let mut  g=G2_variable::<ppT>::new(pb, "g");
+    let mut g_check= G2_checker_gadget::<ppT>::new(pb, g, "g_check");
     g_check.generate_r1cs_constraints();
 
     print!("positive test\n");
-    g.generate_r1cs_witness(ffec::G2<other_curve<ppT> >::one());
+    g.generate_r1cs_witness(ffec::G2::<other_curve::<ppT> >::one());
     g_check.generate_r1cs_witness();
     assert!(pb.is_satisfied());
 
     print!("negative test\n");
-    g.generate_r1cs_witness(ffec::G2<other_curve<ppT> >::zero());
+    g.generate_r1cs_witness(ffec::G2::<other_curve::<ppT> >::zero());
     g_check.generate_r1cs_witness();
     assert!(!pb.is_satisfied());
 
-    print!("number of constraints for G2 checker (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for G2 checker (Fr is {})  = {}\n", annotation, pb.num_constraints());
 }
 
 

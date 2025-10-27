@@ -19,24 +19,24 @@ use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 /**
  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
  */
-template<typename FieldT>
+
 struct uscs_example {
     uscs_constraint_system<FieldT> constraint_system;
     uscs_primary_input<FieldT> primary_input;
     uscs_auxiliary_input<FieldT> auxiliary_input;
 
     uscs_example<FieldT>() = default;
-    uscs_example<FieldT>(const uscs_example<FieldT> &other) = default;
-    uscs_example<FieldT>(const uscs_constraint_system<FieldT> &constraint_system,
-                         const uscs_primary_input<FieldT> &primary_input,
-                         const uscs_auxiliary_input<FieldT> &auxiliary_input) :
-        constraint_system(constraint_system),
-        primary_input(primary_input),
+    uscs_example<FieldT>(other:&uscs_example<FieldT>) = default;
+    uscs_example<FieldT>(constraint_system:&uscs_constraint_system<FieldT>,
+                         primary_input:&uscs_primary_input<FieldT>,
+                         auxiliary_input:&uscs_auxiliary_input<FieldT>)->Self
+       constraint_system,
+       primary_input,
         auxiliary_input(auxiliary_input)
     {};
     uscs_example<FieldT>(uscs_constraint_system<FieldT> &&constraint_system,
                          uscs_primary_input<FieldT> &&primary_input,
-                         uscs_auxiliary_input<FieldT> &&auxiliary_input) :
+                         uscs_auxiliary_input<FieldT> &&auxiliary_input)->Self
         constraint_system((constraint_system)),
         primary_input((primary_input)),
         auxiliary_input((auxiliary_input))
@@ -50,9 +50,9 @@ struct uscs_example {
  * - the number of inputs of the USCS constraint system is num_inputs;
  * - the USCS input consists of ``full'' field elements (typically require the whole log|Field| bits to represent).
  */
-template<typename FieldT>
-uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_constraints,
-                                                            const size_t num_inputs);
+
+uscs_example<FieldT> generate_uscs_example_with_field_input(num_constraints:usize,
+                                                            num_inputs:usize);
 
 /**
  * Generate a USCS example such that:
@@ -61,9 +61,9 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
  * - the number of inputs of the USCS constraint system is num_inputs;
  * - the USCS input consists of binary values (as opposed to ``full'' field elements).
  */
-template<typename FieldT>
-uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_constraints,
-                                                             const size_t num_inputs);
+
+uscs_example<FieldT> generate_uscs_example_with_binary_input(num_constraints:usize,
+                                                             num_inputs:usize);
 
 
 
@@ -93,9 +93,9 @@ use ffec::common::utils;
 
 
 
-template<typename FieldT>
-uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_constraints,
-                                                            const size_t num_inputs)
+
+uscs_example<FieldT> generate_uscs_example_with_field_input(num_constraints:usize,
+                                                            num_inputs:usize)
 {
     ffec::enter_block("Call to generate_uscs_example_with_field_input");
 
@@ -114,7 +114,7 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
 
     for i in 0..num_constraints
     {
-        size_t x, y, z;
+        usize x, y, z;
 
         do
         {
@@ -123,10 +123,10 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
             z = std::rand() % num_constraints;
         } while (x == z || y == z);
 
-        const FieldT x_coeff = FieldT(std::rand());
-        const FieldT y_coeff = FieldT(std::rand());
-        const FieldT val = if std::rand() % 2 == 0 {FieldT::one()} else{-FieldT::one()};
-        const FieldT z_coeff = (val - x_coeff * full_variable_assignment[x] - y_coeff * full_variable_assignment[y]) * full_variable_assignment[z].inverse();
+        let x_coeff= FieldT(std::rand());
+        let y_coeff= FieldT(std::rand());
+        let val= if std::rand() % 2 == 0 {FieldT::one()} else{-FieldT::one()};
+        let z_coeff= (val - x_coeff * full_variable_assignment[x] - y_coeff * full_variable_assignment[y]) * full_variable_assignment[z].inverse();
 
         uscs_constraint<FieldT> constr;
         constr.add_term(x+1, x_coeff);
@@ -152,9 +152,9 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(const size_t num_con
     return uscs_example<FieldT>((cs), (primary_input), (auxiliary_input));
 }
 
-template<typename FieldT>
-uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_constraints,
-                                                             const size_t num_inputs)
+
+uscs_example<FieldT> generate_uscs_example_with_binary_input(num_constraints:usize,
+                                                             num_inputs:usize)
 {
     ffec::enter_block("Call to generate_uscs_example_with_binary_input");
 
@@ -170,14 +170,14 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(const size_t num_co
         full_variable_assignment.push_back(FieldT(std::rand() % 2));
     }
 
-    size_t lastvar = num_inputs-1;
+    usize lastvar = num_inputs-1;
     for i in 0..num_constraints
     {
         lastvar+=1;
 
         /* chose two random bits and XOR them together */
-        const size_t u = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
-        const size_t v = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
+        let u = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
+        let v = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
 
         uscs_constraint<FieldT> constr;
         constr.add_term(u+1, 1);

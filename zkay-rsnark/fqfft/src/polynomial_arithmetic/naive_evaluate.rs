@@ -27,7 +27,7 @@ use crate::tools::exceptions;
  * - a field element element t
  * The output is the polynomial P(x) evaluated at x = t.
  */
-// template<typename FieldT>
+// 
 // FieldT evaluate_polynomial(m:usize, coeff:&Vec<FieldT>, t:&FieldT);
 
 /**
@@ -40,7 +40,7 @@ use crate::tools::exceptions;
  * - an index idx in {0,...,m-1}
  * The output is the polynomial L_{idx,S}(z) evaluated at z = t.
  */
-// template<typename FieldT>
+// 
 // FieldT evaluate_lagrange_polynomial(m:usize, domain:&Vec<FieldT>, t:&FieldT, idx:usize);
 
 //} // libfqfft
@@ -68,7 +68,7 @@ use crate::tools::exceptions;
 
 //namespace libfqfft {
 
-// template<typename FieldT>
+// 
  pub fn evaluate_polynomial<FieldT: num_traits::Zero+ num_traits::One+Clone>(m:usize, coeff:&Vec<FieldT>, t:&FieldT)->eyre::Result<FieldT>
 {
     if m != coeff.len(){eyre::bail!("expected m == coeff.len()");}
@@ -85,7 +85,7 @@ use crate::tools::exceptions;
     return Ok(result);
 }
 
-// template<typename FieldT>
+// 
  pub fn evaluate_lagrange_polynomial<FieldT: Clone+std::ops::Sub<Output = FieldT>+num_traits::One+num_traits::Zero+ std::ops::MulAssign>(m:usize, domain:&Vec<FieldT>, t:&FieldT, idx:usize)->eyre::Result<FieldT>
 {
     if m != domain.len(){eyre::bail!("expected m == domain.len()");}

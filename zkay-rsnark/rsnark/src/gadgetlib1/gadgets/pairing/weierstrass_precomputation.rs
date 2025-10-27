@@ -14,13 +14,13 @@
 //#ifndef WEIERSTRASS_PRECOMPUTATION_HPP_
 // #define WEIERSTRASS_PRECOMPUTATION_HPP_
 
-use  <memory>
+
 
 use ffec::algebra::curves::mnt::mnt4::mnt4_init;
 use ffec::algebra::curves::mnt::mnt6::mnt6_init;
 
-use crate::gadgetlib1::gadgets::curves/weierstrass_g1_gadget;
-use crate::gadgetlib1::gadgets::curves/weierstrass_g2_gadget;
+use crate::gadgetlib1::gadgets::curves::weierstrass_g1_gadget;
+use crate::gadgetlib1::gadgets::curves::weierstrass_g2_gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params;
 
 
@@ -30,75 +30,74 @@ use crate::gadgetlib1::gadgets::pairing::pairing_params;
 /**
  * Not a gadget. It only holds values.
  */
-template<typename ppT>
-class G1_precomputation {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct G1_precomputation<ppT> {
 
-    std::shared_ptr<G1_variable<ppT> > P;
-    std::shared_ptr<Fqe_variable<ppT> > PY_twist_squared;
+    // type FieldT=ffec::Fr<ppT>;
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
-    G1_precomputation();
-    G1_precomputation(protoboard<FieldT> &pb,
-                      const ffec::G1<other_curve<ppT> > &P,
-                      const std::string &annotation_prefix);
-};
+P:    RcCell<G1_variable<ppT> >,
+PY_twist_squared:    RcCell<Fqe_variable<ppT> >,
+
+ 
+}
 
 /**
  * Gadget that verifies correct precomputation of the G1 variable.
  */
-template<typename ppT>
-class precompute_G1_gadget : public gadget<ffec::Fr<ppT> > {
 
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct precompute_G1_gadget<ppT> {//gadget<ffec::Fr<ppT> >
 
-    G1_precomputation<ppT> &precomp; // must be a reference.
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
+precomp:    G1_precomputation<ppT>, // must be a reference.
+}
+impl precompute_G1_gadget<ppT> {
     /* two possible pre-computations one for mnt4 and one for mnt6 */
-    template<typename FieldT>
-    precompute_G1_gadget(protoboard<FieldT> &pb,
-                         const G1_variable<ppT> &P,
-                         G1_precomputation<ppT> &precomp, // will allocate this inside
-                         const std::string &annotation_prefix,
-                         const typename std::enable_if<ffec::Fqk<other_curve<ppT> >::extension_degree() == 4, FieldT>::type& = FieldT()) :
-            gadget<FieldT>(pb, annotation_prefix),
-            precomp(precomp)
+    
+    pub fn new(pb:protoboard<FieldT>,
+                         P:&G1_variable<ppT>,
+precomp:                         G1_precomputation<ppT>, // will allocate this inside
+                         annotation_prefix:&String,
+                         )->Self
     {
-        pb_linear_combination<FieldT> c0, c1;
+// 4:std::enable_if<ffec::Fqk<other_curve::<ppT> >::extension_degree() ==, FieldT>::type& = FieldT()
+       let  (c0, c1)=(pb_linear_combination::<FieldT>::new() ,pb_linear_combination::<FieldT>::new());
         c0.assign(pb, P.Y * ((ffec::mnt4_twist).squared().c0));
         c1.assign(pb, P.Y * ((ffec::mnt4_twist).squared().c1));
 
-        precomp.P.reset(new G1_variable<ppT>(P));
-        precomp.PY_twist_squared.reset(new Fqe_variable<ppT>(pb, c0, c1, FMT(annotation_prefix, " PY_twist_squared")));
+        precomp.P.reset(G1_variable::<ppT>::new(P));
+        precomp.PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, c0, c1, FMT(annotation_prefix, " PY_twist_squared")));
+        //  gadget<FieldT>(pb, annotation_prefix),
+            Self{precomp}
     }
 
-    template<typename FieldT>
-    precompute_G1_gadget(protoboard<FieldT> &pb,
-                         const G1_variable<ppT> &P,
-                         G1_precomputation<ppT> &precomp, // will allocate this inside
-                         const std::string &annotation_prefix,
-                         const typename std::enable_if<ffec::Fqk<other_curve<ppT> >::extension_degree() == 6, FieldT>::type& = FieldT()) :
-        gadget<FieldT>(pb, annotation_prefix),
-            precomp(precomp)
+    
+    pub fn new2(pb:protoboard<FieldT>,
+                         P:&G1_variable<ppT>,
+precomp:                         G1_precomputation<ppT>, // will allocate this inside
+                         annotation_prefix:&String,
+                         )->Self
+        
     {
-        pb_linear_combination<FieldT> c0, c1, c2;
+// 6:std::enable_if<ffec::Fqk<other_curve::<ppT> >::extension_degree() ==, FieldT>::type& = FieldT()
+        let ( c0, c1, c2)=(pb_linear_combination::<FieldT>::new(),pb_linear_combination::<FieldT>::new(),pb_linear_combination::<FieldT>::new());
         c0.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c0));
         c1.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c1));
         c2.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c2));
 
-        precomp.P.reset(new G1_variable<ppT>(P));
-        precomp.PY_twist_squared.reset(new Fqe_variable<ppT>(pb, c0, c1, c2, FMT(annotation_prefix, " PY_twist_squared")));
+        precomp.P.reset(G1_variable::<ppT>::new(P));
+        precomp.PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, c0, c1, c2, FMT(annotation_prefix, " PY_twist_squared")));
+        // gadget<FieldT>(pb, annotation_prefix),
+           Self{ precomp}
     }
 
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+}
 
-template<typename ppT>
-void test_G1_variable_precomp(const std::string &annotation);
+
+
 
 
 /**************************** G2 Precomputation ******************************/
@@ -106,45 +105,36 @@ void test_G1_variable_precomp(const std::string &annotation);
 /**
  * Not a gadget. It only holds values.
  */
-template<typename ppT>
-class precompute_G2_gadget_coeffs {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct precompute_G2_gadget_coeffs<ppT> {
 
-    std::shared_ptr<Fqe_variable<ppT> > RX;
-    std::shared_ptr<Fqe_variable<ppT> > RY;
-    std::shared_ptr<Fqe_variable<ppT> > gamma;
-    std::shared_ptr<Fqe_variable<ppT> > gamma_X;
+    // type FieldT=ffec::Fr<ppT>;
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
-    precompute_G2_gadget_coeffs();
-    precompute_G2_gadget_coeffs(protoboard<FieldT> &pb,
-                                const std::string &annotation_prefix);
-    precompute_G2_gadget_coeffs(protoboard<FieldT> &pb,
-                                const G2_variable<ppT> &Q,
-                                const std::string &annotation_prefix);
-};
+RX:    RcCell<Fqe_variable<ppT> >,
+RY:    RcCell<Fqe_variable<ppT> >,
+gamma:    RcCell<Fqe_variable<ppT> >,
+gamma_X:    RcCell<Fqe_variable<ppT> >,
+
+
+}
 
 /**
  * Not a gadget. It only holds values.
  */
-template<typename ppT>
-class G2_precomputation {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct G2_precomputation<ppT> {
 
-    std::shared_ptr<G2_variable<ppT> > Q;
+    // type FieldT=ffec::Fr<ppT>;
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
-    std::vector<std::shared_ptr<precompute_G2_gadget_coeffs<ppT> > > coeffs;
+Q:    RcCell<G2_variable<ppT> >,
 
-    G2_precomputation();
-    G2_precomputation(protoboard<FieldT> &pb,
-                      const ffec::G2<other_curve<ppT> > &Q_val,
-                      const std::string &annotation_prefix);
-};
+coeffs:    Vec<RcCell<precompute_G2_gadget_coeffs<ppT> > >,
+
+}
 
 /**
  * Technical note:
@@ -165,37 +155,32 @@ class G2_precomputation {
  * RX = prev_gamma^2 - (2*prev_RX)
  * RY = prev_gamma * (prev_RX - RX) - prev_RY
  */
-template<typename ppT>
-class precompute_G2_gadget_doubling_step : public gadget<ffec::Fr<ppT> > {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct precompute_G2_gadget_doubling_step<ppT> {//gadget<ffec::Fr<ppT> >
 
-    precompute_G2_gadget_coeffs<ppT> cur;
-    precompute_G2_gadget_coeffs<ppT> next;
+    // type FieldT=ffec::Fr<ppT>;
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
-    std::shared_ptr<Fqe_variable<ppT> > RXsquared;
-    std::shared_ptr<Fqe_sqr_gadget<ppT> > compute_RXsquared;
-    std::shared_ptr<Fqe_variable<ppT> > three_RXsquared_plus_a;
-    std::shared_ptr<Fqe_variable<ppT> > two_RY;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > compute_gamma;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > compute_gamma_X;
+cur:    precompute_G2_gadget_coeffs<ppT>,
+next:    precompute_G2_gadget_coeffs<ppT>,
 
-    std::shared_ptr<Fqe_variable<ppT> > next_RX_plus_two_RX;
-    std::shared_ptr<Fqe_sqr_gadget<ppT> > compute_next_RX;
+RXsquared:    RcCell<Fqe_variable<ppT> >,
+compute_RXsquared:    RcCell<Fqe_sqr_gadget<ppT> >,
+three_RXsquared_plus_a:    RcCell<Fqe_variable<ppT> >,
+two_RY:    RcCell<Fqe_variable<ppT> >,
+compute_gamma:    RcCell<Fqe_mul_gadget<ppT> >,
+compute_gamma_X:    RcCell<Fqe_mul_gadget<ppT> >,
 
-    std::shared_ptr<Fqe_variable<ppT> > RX_minus_next_RX;
-    std::shared_ptr<Fqe_variable<ppT> > RY_plus_next_RY;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > compute_next_RY;
+next_RX_plus_two_RX:    RcCell<Fqe_variable<ppT> >,
+compute_next_RX:    RcCell<Fqe_sqr_gadget<ppT> >,
 
-    precompute_G2_gadget_doubling_step(protoboard<FieldT> &pb,
-                                       const precompute_G2_gadget_coeffs<ppT> &cur,
-                                       const precompute_G2_gadget_coeffs<ppT> &next,
-                                       const std::string &annotation_prefix);
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+RX_minus_next_RX:    RcCell<Fqe_variable<ppT> >,
+RY_plus_next_RY:    RcCell<Fqe_variable<ppT> >,
+compute_next_RY:    RcCell<Fqe_mul_gadget<ppT> >,
+
+  
+}
 
 /**
  * Technical note:
@@ -214,72 +199,59 @@ class precompute_G2_gadget_doubling_step : public gadget<ffec::Fr<ppT> > {
  *
  * If invert_Q is set to true: use -QY in place of QY everywhere above.
  */
-template<typename ppT>
-class precompute_G2_gadget_addition_step : public gadget<ffec::Fr<ppT> > {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct precompute_G2_gadget_addition_step<ppT> {//gadget<ffec::Fr<ppT> >
 
-    bool invert_Q;
-    precompute_G2_gadget_coeffs<ppT> cur;
-    precompute_G2_gadget_coeffs<ppT> next;
-    G2_variable<ppT> Q;
+    // type FieldT=ffec::Fr<ppT>;
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
-    std::shared_ptr<Fqe_variable<ppT> > RY_minus_QY;
-    std::shared_ptr<Fqe_variable<ppT> > RX_minus_QX;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > compute_gamma;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > compute_gamma_X;
+invert_Q:    bool,
+cur:    precompute_G2_gadget_coeffs<ppT>,
+next:    precompute_G2_gadget_coeffs<ppT>,
+Q:    G2_variable<ppT>,
 
-    std::shared_ptr<Fqe_variable<ppT> > next_RX_plus_RX_plus_QX;
-    std::shared_ptr<Fqe_sqr_gadget<ppT> > compute_next_RX;
+RY_minus_QY:    RcCell<Fqe_variable<ppT> >,
+RX_minus_QX:    RcCell<Fqe_variable<ppT> >,
+compute_gamma:    RcCell<Fqe_mul_gadget<ppT> >,
+compute_gamma_X:    RcCell<Fqe_mul_gadget<ppT> >,
 
-    std::shared_ptr<Fqe_variable<ppT> > RX_minus_next_RX;
-    std::shared_ptr<Fqe_variable<ppT> > RY_plus_next_RY;
-    std::shared_ptr<Fqe_mul_gadget<ppT> > compute_next_RY;
+next_RX_plus_RX_plus_QX:    RcCell<Fqe_variable<ppT> >,
+compute_next_RX:    RcCell<Fqe_sqr_gadget<ppT> >,
 
-    precompute_G2_gadget_addition_step(protoboard<FieldT> &pb,
-                                       const bool invert_Q,
-                                       const precompute_G2_gadget_coeffs<ppT> &cur,
-                                       const precompute_G2_gadget_coeffs<ppT> &next,
-                                       const G2_variable<ppT> &Q,
-                                       const std::string &annotation_prefix);
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+RX_minus_next_RX:    RcCell<Fqe_variable<ppT> >,
+RY_plus_next_RY:    RcCell<Fqe_variable<ppT> >,
+compute_next_RY:    RcCell<Fqe_mul_gadget<ppT> >,
+
+
+}
 
 /**
  * Gadget that verifies correct precomputation of the G2 variable.
  */
-template<typename ppT>
-class precompute_G2_gadget : public gadget<ffec::Fr<ppT> > {
 
-    type ffec::Fr<ppT> FieldT;
-    type ffec::Fqe<other_curve<ppT> > FqeT;
-    type ffec::Fqk<other_curve<ppT> > FqkT;
+pub struct precompute_G2_gadget<ppT> {//gadget<ffec::Fr<ppT> >
 
-    std::vector<std::shared_ptr<precompute_G2_gadget_addition_step<ppT> > > addition_steps;
-    std::vector<std::shared_ptr<precompute_G2_gadget_doubling_step<ppT> > > doubling_steps;
+    // type FieldT=ffec::Fr<ppT>;
+    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
+    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
 
-    size_t add_count;
-    size_t dbl_count;
+addition_steps:    Vec<RcCell<precompute_G2_gadget_addition_step<ppT> > >,
+doubling_steps:    Vec<RcCell<precompute_G2_gadget_doubling_step<ppT> > >,
 
-    G2_precomputation<ppT> &precomp; // important to have a reference here
+add_count:    usize,
+dbl_count:    usize,
 
-    precompute_G2_gadget(protoboard<FieldT> &pb,
-                         const G2_variable<ppT> &Q,
-                         G2_precomputation<ppT> &precomp,  // will allocate this inside
-                         const std::string &annotation_prefix);
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness();
-};
+precomp:    G2_precomputation<ppT>, // important to have a reference here
 
-template<typename ppT>
-void test_G2_variable_precomp(const std::string &annotation);
+}
 
 
 
-use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation;
+
+
+
+// use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation;
 
 //#endif // WEIERSTRASS_PRECOMPUTATION_HPP_
 /** @file
@@ -298,114 +270,118 @@ use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation;
 //#ifndef WEIERSTRASS_PRECOMPUTATION_TCC_
 // #define WEIERSTRASS_PRECOMPUTATION_TCC_
 
-use  <type_traits>
+// use  <type_traits>
 
 use crate::gadgetlib1::gadgets::pairing::mnt_pairing_params;
 
 
+impl G1_precomputation<ppT>{
 
-template<typename ppT>
-G1_precomputation<ppT>::G1_precomputation()
-{
-    // will be filled in precompute_G1_gadget, so do nothing here
-}
+// pub fn new2()
+// {
+//     // will be filled in precompute_G1_gadget, so do nothing here
+// }
 
-template<typename ppT>
-G1_precomputation<ppT>::G1_precomputation(protoboard<FieldT> &pb,
-                                          const ffec::G1<other_curve<ppT> > &P_val,
-                                          const std::string &annotation_prefix)
+
+pub fn new(pb:protoboard<FieldT>,
+                                          P_val:&ffec::G1<other_curve<ppT> >,
+                                          annotation_prefix:&String)->Self
 {
-    ffec::G1<other_curve<ppT> > P_val_copy = P_val;
+let P_val_copy= P_val;
     P_val_copy.to_affine_coordinates();
-    P.reset(new G1_variable<ppT>(pb, P_val_copy, FMT(annotation_prefix, " P")));
-    PY_twist_squared.reset(new Fqe_variable<ppT>(pb, P_val_copy.Y() * ffec::G2<other_curve<ppT> >::twist.squared(), " PY_twist_squared"));
+    P.reset(G1_variable::<ppT>::new(pb, P_val_copy, FMT(annotation_prefix, " P")));
+    PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, P_val_copy.Y() * ffec::G2::<other_curve::<ppT> >::twist.squared(), " PY_twist_squared"));
 }
 
-template<typename ppT>
-void precompute_G1_gadget<ppT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     /* the same for neither ppT = mnt4 nor ppT = mnt6 */
 }
 
-template<typename ppT>
-void precompute_G1_gadget<ppT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
-    precomp.PY_twist_squared->evaluate(); /* the same for both ppT = mnt4 and ppT = mnt6 */
+    precomp.PY_twist_squared.evaluate(); /* the same for both ppT = mnt4 and ppT = mnt6 */
+}
 }
 
-template<typename ppT>
-void test_G1_variable_precomp(const std::string &annotation)
+pub fn  test_G1_variable_precomp(annotation:&String)
 {
-    protoboard<ffec::Fr<ppT> > pb;
-    ffec::G1<other_curve<ppT> > g_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G1<other_curve<ppT> >::one();
+    let mut pb=protoboard::<ffec::Fr::<ppT> >:: new();
+    let mut  g_val = ffec::Fr::<other_curve::<ppT> >::random_element() * ffec::G1::<other_curve::<ppT> >::one();
 
-    G1_variable<ppT> g(pb, "g");
-    G1_precomputation<ppT> precomp;
-    precompute_G1_gadget<ppT> do_precomp(pb, g, precomp, "do_precomp");
+    let mut g=G1_variable::<ppT>::new(pb, "g");
+let mut precomp=    G1_precomputation::<ppT>::new();
+    let mut do_precomp=precompute_G1_gadget::<ppT>::new(pb, g, precomp, "do_precomp");
     do_precomp.generate_r1cs_constraints();
 
     g.generate_r1cs_witness(g_val);
     do_precomp.generate_r1cs_witness();
     assert!(pb.is_satisfied());
 
-    G1_precomputation<ppT> const_precomp(pb, g_val, "const_precomp");
+    let mut const_precomp=G1_precomputation::<ppT>::new(pb, g_val, "const_precomp");
 
-    ffec::affine_ate_G1_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G1(g_val);
-    assert!(precomp.PY_twist_squared->get_element() == native_precomp.PY_twist_squared);
-    assert!(const_precomp.PY_twist_squared->get_element() == native_precomp.PY_twist_squared);
+let native_precomp= other_curve::<ppT>::affine_ate_precompute_G1(g_val);
+    assert!(precomp.PY_twist_squared.get_element() == native_precomp.PY_twist_squared);
+    assert!(const_precomp.PY_twist_squared.get_element() == native_precomp.PY_twist_squared);
 
-    print!("number of constraints for G1 precomp (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for G1 precomp (Fr is {})  = {}\n", annotation, pb.num_constraints());
 }
 
-template<typename ppT>
-G2_precomputation<ppT>::G2_precomputation()
-{
-}
+impl precompute_G1_gadget<ppT> {
+// pub fn new()
+// {
+// }
 
-template<typename ppT>
-G2_precomputation<ppT>::G2_precomputation(protoboard<FieldT> &pb,
-                                          const ffec::G2<other_curve<ppT> > &Q_val,
-                                          const std::string &annotation_prefix)
+
+pub fn new(pb:protoboard<FieldT>,
+                                          Q_val:&ffec::G2::<other_curve::<ppT> >,
+                                          annotation_prefix:&String)->Self
 {
-    Q.reset(new G2_variable<ppT>(pb, Q_val, FMT(annotation_prefix, " Q")));
-    const ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(Q_val);
+    Q.reset(G2_variable::<ppT>::new(pb, Q_val, FMT(annotation_prefix, " Q")));
+    let  native_precomp = other_curve::<ppT>::affine_ate_precompute_G2(Q_val);
 
     coeffs.resize(native_precomp.coeffs.len() + 1); // the last precomp remains for convenient programming
     for i in 0..native_precomp.coeffs.len()
     {
-        coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>());
-        coeffs[i]->RX.reset(new Fqe_variable<ppT>(pb, native_precomp.coeffs[i].old_RX, FMT(annotation_prefix, " RX")));
-        coeffs[i]->RY.reset(new Fqe_variable<ppT>(pb, native_precomp.coeffs[i].old_RY, FMT(annotation_prefix, " RY")));
-        coeffs[i]->gamma.reset(new Fqe_variable<ppT>(pb, native_precomp.coeffs[i].gamma, FMT(annotation_prefix, " gamma")));
-        coeffs[i]->gamma_X.reset(new Fqe_variable<ppT>(pb, native_precomp.coeffs[i].gamma_X, FMT(annotation_prefix, " gamma_X")));
+        coeffs[i].reset(precompute_G2_gadget_coeffs::<ppT>::new());
+        coeffs[i].RX.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].old_RX, FMT(annotation_prefix, " RX")));
+        coeffs[i].RY.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].old_RY, FMT(annotation_prefix, " RY")));
+        coeffs[i].gamma.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].gamma, FMT(annotation_prefix, " gamma")));
+        coeffs[i].gamma_X.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].gamma_X, FMT(annotation_prefix, " gamma_X")));
     }
 }
 
-template<typename ppT>
-precompute_G2_gadget_coeffs<ppT>::precompute_G2_gadget_coeffs()
+}
+impl precompute_G2_gadget_coeffs<ppT>{
+// pub fn new2()
+// {
+//     // we will be filled in precomputed case of precompute_G2_gadget, so do nothing here
+// }
+
+
+pub fn new(pb:protoboard<FieldT>,
+                                                              annotation_prefix:&String)->Self
 {
-    // we will be filled in precomputed case of precompute_G2_gadget, so do nothing here
+    RX.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RX")));
+    RY.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RY")));
+    gamma.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma")));
+    gamma_X.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_X")));
+    Self{}
 }
 
-template<typename ppT>
-precompute_G2_gadget_coeffs<ppT>::precompute_G2_gadget_coeffs(protoboard<FieldT> &pb,
-                                                              const std::string &annotation_prefix)
-{
-    RX.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " RX")));
-    RY.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " RY")));
-    gamma.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " gamma")));
-    gamma_X.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " gamma_X")));
-}
 
-template<typename ppT>
-precompute_G2_gadget_coeffs<ppT>::precompute_G2_gadget_coeffs(protoboard<FieldT> &pb,
-                                                              const G2_variable<ppT> &Q,
-                                                              const std::string &annotation_prefix)
+
+pub fn new2(pb:protoboard<FieldT>,
+                                                              Q:&G2_variable<ppT>,
+                                                              annotation_prefix:&String)->Self
 {
-    RX.reset(new Fqe_variable<ppT>(*(Q.X)));
-    RY.reset(new Fqe_variable<ppT>(*(Q.Y)));
-    gamma.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " gamma")));
-    gamma_X.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " gamma_X")));
+    RX.reset(Fqe_variable::<ppT>::new(*(Q.X)));
+    RY.reset(Fqe_variable::<ppT>::new(*(Q.Y)));
+    gamma.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma")));
+    gamma_X.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_X")));
+}
 }
 
 /*
@@ -426,71 +402,72 @@ precompute_G2_gadget_coeffs<ppT>::precompute_G2_gadget_coeffs(protoboard<FieldT>
  RY = prev_gamma * (prev_RX - RX) - prev_RY
  */
 
-template<typename ppT>
-precompute_G2_gadget_doubling_step<ppT>::precompute_G2_gadget_doubling_step(protoboard<FieldT> &pb,
-                                                                            const precompute_G2_gadget_coeffs<ppT> &cur,
-                                                                            const precompute_G2_gadget_coeffs<ppT> &next,
-                                                                            const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    cur(cur),
-    next(next)
+impl G2_precomputation<ppT>{
+pub fn new(pb:protoboard<FieldT>,
+                                                                            cur:&precompute_G2_gadget_coeffs<ppT>,
+                                                                            next:&precompute_G2_gadget_coeffs<ppT>,
+                                                                            annotation_prefix:&String)->Self
+    
 {
-    RXsquared.reset(new Fqe_variable<ppT>(pb, FMT(annotation_prefix, " RXsquared")));
-    compute_RXsquared.reset(new Fqe_sqr_gadget<ppT>(pb, *(cur.RX), *RXsquared, FMT(annotation_prefix, " compute_RXsquared")));
-    three_RXsquared_plus_a.reset(new Fqe_variable<ppT>((*RXsquared) * FieldT(3) + ffec::G2<other_curve<ppT> >::coeff_a));
-    two_RY.reset(new Fqe_variable<ppT>(*(cur.RY) * FieldT(2)));
+    RXsquared.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RXsquared")));
+    compute_RXsquared.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.RX), *RXsquared, FMT(annotation_prefix, " compute_RXsquared")));
+    three_RXsquared_plus_a.reset(Fqe_variable::<ppT>::new((*RXsquared) * FieldT(3) + ffec::G2::<other_curve::<ppT> >::coeff_a));
+    two_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) * FieldT(2)));
 
-    compute_gamma.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *two_RY, *three_RXsquared_plus_a, FMT(annotation_prefix, " compute_gamma")));
-    compute_gamma_X.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *(cur.RX), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
+    compute_gamma.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *two_RY, *three_RXsquared_plus_a, FMT(annotation_prefix, " compute_gamma")));
+    compute_gamma_X.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *(cur.RX), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
 
-    next_RX_plus_two_RX.reset(new Fqe_variable<ppT>(*(next.RX) + *(cur.RX) * FieldT(2)));
-    compute_next_RX.reset(new Fqe_sqr_gadget<ppT>(pb, *(cur.gamma), *next_RX_plus_two_RX, FMT(annotation_prefix, " compute_next_RX")));
+    next_RX_plus_two_RX.reset(Fqe_variable::<ppT>::new(*(next.RX) + *(cur.RX) * FieldT(2)));
+    compute_next_RX.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.gamma), *next_RX_plus_two_RX, FMT(annotation_prefix, " compute_next_RX")));
 
-    RX_minus_next_RX.reset(new Fqe_variable<ppT>(*(cur.RX) + *(next.RX) * (-FieldT::one())));
-    RY_plus_next_RY.reset(new Fqe_variable<ppT>(*(cur.RY) + *(next.RY)));
-    compute_next_RY.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
+    RX_minus_next_RX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
+    RY_plus_next_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
+    compute_next_RY.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
+    // gadget<FieldT>(pb, annotation_prefix),
+   Self{cur,
+    next}
 }
 
-template<typename ppT>
-void precompute_G2_gadget_doubling_step<ppT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
-    compute_RXsquared->generate_r1cs_constraints();
-    compute_gamma->generate_r1cs_constraints();
-    compute_gamma_X->generate_r1cs_constraints();
-    compute_next_RX->generate_r1cs_constraints();
-    compute_next_RY->generate_r1cs_constraints();
+    compute_RXsquared.generate_r1cs_constraints();
+    compute_gamma.generate_r1cs_constraints();
+    compute_gamma_X.generate_r1cs_constraints();
+    compute_next_RX.generate_r1cs_constraints();
+    compute_next_RY.generate_r1cs_constraints();
 }
 
-template<typename ppT>
-void precompute_G2_gadget_doubling_step<ppT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
-    compute_RXsquared->generate_r1cs_witness();
-    two_RY->evaluate();
-    three_RXsquared_plus_a->evaluate();
+    compute_RXsquared.generate_r1cs_witness();
+    two_RY.evaluate();
+    three_RXsquared_plus_a.evaluate();
 
-    const FqeT three_RXsquared_plus_a_val = three_RXsquared_plus_a->get_element();
-    const FqeT two_RY_val = two_RY->get_element();
-    const FqeT gamma_val = three_RXsquared_plus_a_val * two_RY_val.inverse();
-    cur.gamma->generate_r1cs_witness(gamma_val);
+    let three_RXsquared_plus_a_val= three_RXsquared_plus_a.get_element();
+    let two_RY_val= two_RY.get_element();
+    let gamma_val= three_RXsquared_plus_a_val * two_RY_val.inverse();
+    cur.gamma.generate_r1cs_witness(gamma_val);
 
-    compute_gamma->generate_r1cs_witness();
-    compute_gamma_X->generate_r1cs_witness();
+    compute_gamma.generate_r1cs_witness();
+    compute_gamma_X.generate_r1cs_witness();
 
-    const FqeT RX_val = cur.RX->get_element();
-    const FqeT RY_val = cur.RY->get_element();
-    const FqeT next_RX_val = gamma_val.squared() - RX_val - RX_val;
-    const FqeT next_RY_val = gamma_val * (RX_val - next_RX_val) - RY_val;
+    let RX_val= cur.RX.get_element();
+    let RY_val= cur.RY.get_element();
+    let next_RX_val= gamma_val.squared() - RX_val - RX_val;
+    let next_RY_val= gamma_val * (RX_val - next_RX_val) - RY_val;
 
-    next.RX->generate_r1cs_witness(next_RX_val);
-    next.RY->generate_r1cs_witness(next_RY_val);
+    next.RX.generate_r1cs_witness(next_RX_val);
+    next.RY.generate_r1cs_witness(next_RY_val);
 
-    RX_minus_next_RX->evaluate();
-    RY_plus_next_RY->evaluate();
+    RX_minus_next_RX.evaluate();
+    RY_plus_next_RY.evaluate();
 
-    compute_next_RX->generate_r1cs_witness();
-    compute_next_RY->generate_r1cs_witness();
+    compute_next_RX.generate_r1cs_witness();
+    compute_next_RY.generate_r1cs_witness();
 }
-
+}
 /*
  G2_precompute_addition_step relates coeffs[i] and coeffs[i+1] as follows
 
@@ -506,90 +483,92 @@ void precompute_G2_gadget_doubling_step<ppT>::generate_r1cs_witness()
 
  If invert_Q is set to true: use -QY in place of QY everywhere above.
  */
-template<typename ppT>
-precompute_G2_gadget_addition_step<ppT>::precompute_G2_gadget_addition_step(protoboard<FieldT> &pb,
-                                                                            const bool invert_Q,
-                                                                            const precompute_G2_gadget_coeffs<ppT> &cur,
-                                                                            const precompute_G2_gadget_coeffs<ppT> &next,
-                                                                            const G2_variable<ppT> &Q,
-                                                                            const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    invert_Q(invert_Q),
-    cur(cur),
-    next(next),
-    Q(Q)
+impl precompute_G2_gadget_doubling_step<ppT> {
+pub fn new(pb:protoboard<FieldT>,
+                                                                            invert_Q:bool,
+                                                                            cur:&precompute_G2_gadget_coeffs<ppT>,
+                                                                            next:&precompute_G2_gadget_coeffs<ppT>,
+                                                                            Q:&G2_variable<ppT>,
+                                                                            annotation_prefix:&String)->Self
+   
 {
-    RY_minus_QY.reset(new Fqe_variable<ppT>(*(cur.RY) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()})));
+    RY_minus_QY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()})));
 
-    RX_minus_QX.reset(new Fqe_variable<ppT>(*(cur.RX) + *(Q.X) * (-FieldT::one())));
-    compute_gamma.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *RX_minus_QX, *RY_minus_QY, FMT(annotation_prefix, " compute_gamma")));
-    compute_gamma_X.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *(Q.X), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
+    RX_minus_QX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(Q.X) * (-FieldT::one())));
+    compute_gamma.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_QX, *RY_minus_QY, FMT(annotation_prefix, " compute_gamma")));
+    compute_gamma_X.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *(Q.X), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
 
-    next_RX_plus_RX_plus_QX.reset(new Fqe_variable<ppT>(*(next.RX) + *(cur.RX) + *(Q.X)));
-    compute_next_RX.reset(new Fqe_sqr_gadget<ppT>(pb, *(cur.gamma), *next_RX_plus_RX_plus_QX, FMT(annotation_prefix, " compute_next_RX")));
+    next_RX_plus_RX_plus_QX.reset(Fqe_variable::<ppT>::new(*(next.RX) + *(cur.RX) + *(Q.X)));
+    compute_next_RX.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.gamma), *next_RX_plus_RX_plus_QX, FMT(annotation_prefix, " compute_next_RX")));
 
-    RX_minus_next_RX.reset(new Fqe_variable<ppT>(*(cur.RX) + *(next.RX) * (-FieldT::one())));
-    RY_plus_next_RY.reset(new Fqe_variable<ppT>(*(cur.RY) + *(next.RY)));
-    compute_next_RY.reset(new Fqe_mul_gadget<ppT>(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
+    RX_minus_next_RX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
+    RY_plus_next_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
+    compute_next_RY.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
+    //  gadget<FieldT>(pb, annotation_prefix),
+   Self{invert_Q,
+   cur,
+   next,
+    Q}
 }
 
-template<typename ppT>
-void precompute_G2_gadget_addition_step<ppT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
-    compute_gamma->generate_r1cs_constraints();
-    compute_gamma_X->generate_r1cs_constraints();
-    compute_next_RX->generate_r1cs_constraints();
-    compute_next_RY->generate_r1cs_constraints();
+    compute_gamma.generate_r1cs_constraints();
+    compute_gamma_X.generate_r1cs_constraints();
+    compute_next_RX.generate_r1cs_constraints();
+    compute_next_RY.generate_r1cs_constraints();
 }
 
-template<typename ppT>
-void precompute_G2_gadget_addition_step<ppT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
-    RY_minus_QY->evaluate();
-    RX_minus_QX->evaluate();
+    RY_minus_QY.evaluate();
+    RX_minus_QX.evaluate();
 
-    const FqeT RY_minus_QY_val = RY_minus_QY->get_element();
-    const FqeT RX_minus_QX_val = RX_minus_QX->get_element();
-    const FqeT gamma_val = RY_minus_QY_val * RX_minus_QX_val.inverse();
-    cur.gamma->generate_r1cs_witness(gamma_val);
+    let RY_minus_QY_val= RY_minus_QY.get_element();
+    let RX_minus_QX_val= RX_minus_QX.get_element();
+    let gamma_val= RY_minus_QY_val * RX_minus_QX_val.inverse();
+    cur.gamma.generate_r1cs_witness(gamma_val);
 
-    compute_gamma->generate_r1cs_witness();
-    compute_gamma_X->generate_r1cs_witness();
+    compute_gamma.generate_r1cs_witness();
+    compute_gamma_X.generate_r1cs_witness();
 
-    const FqeT RX_val = cur.RX->get_element();
-    const FqeT RY_val = cur.RY->get_element();
-    const FqeT QX_val = Q.X->get_element();
-    const FqeT next_RX_val = gamma_val.squared() - RX_val - QX_val;
-    const FqeT next_RY_val = gamma_val * (RX_val - next_RX_val) - RY_val;
+    let RX_val= cur.RX.get_element();
+    let RY_val= cur.RY.get_element();
+    let QX_val= Q.X.get_element();
+    let next_RX_val= gamma_val.squared() - RX_val - QX_val;
+    let next_RY_val= gamma_val * (RX_val - next_RX_val) - RY_val;
 
-    next.RX->generate_r1cs_witness(next_RX_val);
-    next.RY->generate_r1cs_witness(next_RY_val);
+    next.RX.generate_r1cs_witness(next_RX_val);
+    next.RY.generate_r1cs_witness(next_RY_val);
 
-    next_RX_plus_RX_plus_QX->evaluate();
-    RX_minus_next_RX->evaluate();
-    RY_plus_next_RY->evaluate();
+    next_RX_plus_RX_plus_QX.evaluate();
+    RX_minus_next_RX.evaluate();
+    RY_plus_next_RY.evaluate();
 
-    compute_next_RX->generate_r1cs_witness();
-    compute_next_RY->generate_r1cs_witness();
+    compute_next_RX.generate_r1cs_witness();
+    compute_next_RY.generate_r1cs_witness();
 }
 
-template<typename ppT>
-precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
-                                                const G2_variable<ppT> &Q,
-                                                G2_precomputation<ppT> &precomp,  // will allocate this inside
-                                                const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    precomp(precomp)
-{
-    precomp.Q.reset(new G2_variable<ppT>(Q));
+}
 
-    const auto &loop_count = pairing_selector<ppT>::pairing_loop_count;
-    size_t coeff_count = 1; // the last RX/RY are unused in Miller loop, but will need to get allocated somehow
+impl precompute_G2_gadget_addition_step<ppT> {
+pub fn new(pb:protoboard<FieldT>,
+                                                Q:&G2_variable<ppT>,
+precomp:                                                G2_precomputation<ppT>,  // will allocate this inside
+                                                annotation_prefix:&String)->Self
+  
+{
+    precomp.Q.reset(G2_variable::<ppT>::new(Q));
+
+    let loop_count = pairing_selector::<ppT>::pairing_loop_count;
+    let coeff_count= 1; // the last RX/RY are unused in Miller loop, but will need to get allocated somehow
     self.add_count = 0;
     self.dbl_count = 0;
 
-    bool found_nonzero = false;
-    std::vector<long> NAF = find_wnaf(1, loop_count);
+let found_nonzero= false;
+let NAF= find_wnaf(1, loop_count);
     for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
@@ -613,15 +592,15 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
     addition_steps.resize(add_count);
     doubling_steps.resize(dbl_count);
 
-    precomp.coeffs[0].reset(new precompute_G2_gadget_coeffs<ppT>(pb, Q, FMT(annotation_prefix, " coeffs_0")));
+    precomp.coeffs[0].reset(precompute_G2_gadget_coeffs::<ppT>::new(pb, Q, FMT(annotation_prefix, " coeffs_0")));
     for i in 1..coeff_count
     {
-        precomp.coeffs[i].reset(new precompute_G2_gadget_coeffs<ppT>(pb, FMT(annotation_prefix, " coeffs_{}", i)));
+        precomp.coeffs[i].reset(precompute_G2_gadget_coeffs::<ppT>::new(pb, FMT(annotation_prefix, " coeffs_{}", i)));
     }
 
-    size_t add_id = 0;
-    size_t dbl_id = 0;
-    size_t coeff_id = 0;
+let add_id= 0;
+let dbl_id= 0;
+let coeff_id= 0;
 
     found_nonzero = false;
     for i in ( 0..=NAF.len()-1).rev()
@@ -633,48 +612,50 @@ precompute_G2_gadget<ppT>::precompute_G2_gadget(protoboard<FieldT> &pb,
             continue;
         }
 
-        doubling_steps[dbl_id].reset(new precompute_G2_gadget_doubling_step<ppT>(pb, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]),
+        doubling_steps[dbl_id].reset(precompute_G2_gadget_doubling_step::<ppT>::new(pb, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]),
                                                                                  FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
         dbl_id+=1;
         coeff_id+=1;
 
         if NAF[i] != 0
         {
-            addition_steps[add_id].reset(new precompute_G2_gadget_addition_step<ppT>(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
+            addition_steps[add_id].reset(precompute_G2_gadget_addition_step::<ppT>::new(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
                                                                                      FMT(annotation_prefix, " addition_steps_{}", add_id)));
             add_id+=1;
             coeff_id+=1;
         }
     }
+    //   gadget<FieldT>(pb, annotation_prefix),
+    Self{precomp}
 }
 
-template<typename ppT>
-void precompute_G2_gadget<ppT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     for i in 0..dbl_count
     {
-        doubling_steps[i]->generate_r1cs_constraints();
+        doubling_steps[i].generate_r1cs_constraints();
     }
 
     for i in 0..add_count
     {
-        addition_steps[i]->generate_r1cs_constraints();
+        addition_steps[i].generate_r1cs_constraints();
     }
 }
 
-template<typename ppT>
-void precompute_G2_gadget<ppT>::generate_r1cs_witness()
+
+pub fn generate_r1cs_witness()
 {
-    precomp.coeffs[0]->RX->generate_r1cs_witness(precomp.Q->X->get_element());
-    precomp.coeffs[0]->RY->generate_r1cs_witness(precomp.Q->Y->get_element());
+    precomp.coeffs[0].RX.generate_r1cs_witness(precomp.Q.X.get_element());
+    precomp.coeffs[0].RY.generate_r1cs_witness(precomp.Q.Y.get_element());
 
-    const auto &loop_count = pairing_selector<ppT>::pairing_loop_count;
+    let loop_count = pairing_selector::<ppT>::pairing_loop_count;
 
-    size_t add_id = 0;
-    size_t dbl_id = 0;
+let add_id= 0;
+let dbl_id= 0;
 
-    bool found_nonzero = false;
-    std::vector<long> NAF = find_wnaf(1, loop_count);
+let found_nonzero= false;
+let NAF= find_wnaf(1, loop_count);
     for i in ( 0..=NAF.len()-1).rev()
     {
         if !found_nonzero
@@ -684,44 +665,44 @@ void precompute_G2_gadget<ppT>::generate_r1cs_witness()
             continue;
         }
 
-        doubling_steps[dbl_id]->generate_r1cs_witness();
+        doubling_steps[dbl_id].generate_r1cs_witness();
         dbl_id+=1;
 
         if NAF[i] != 0
         {
-            addition_steps[add_id]->generate_r1cs_witness();
+            addition_steps[add_id].generate_r1cs_witness();
             add_id+=1;
         }
     }
 }
 
-template<typename ppT>
-void test_G2_variable_precomp(const std::string &annotation)
+}
+pub fn  test_G2_variable_precomp(annotation:&String)
 {
-    protoboard<ffec::Fr<ppT> > pb;
-    ffec::G2<other_curve<ppT> > g_val = ffec::Fr<other_curve<ppT> >::random_element() * ffec::G2<other_curve<ppT> >::one();
+    let mut pb=protoboard::<ffec::Fr::<ppT> >:: new();
+let g_val= ffec::Fr::<other_curve::<ppT> >::random_element() * ffec::G2::<other_curve::<ppT> >::one();
 
-    G2_variable<ppT> g(pb, "g");
-    G2_precomputation<ppT> precomp;
-    precompute_G2_gadget<ppT> do_precomp(pb, g, precomp, "do_precomp");
+   let mut  g=G2_variable::<ppT>::new(pb, "g");
+    let mut precomp=G2_precomputation::<ppT>::new();
+    let mut  do_precomp=precompute_G2_gadget::<ppT>::new(pb, g, precomp, "do_precomp");
     do_precomp.generate_r1cs_constraints();
 
     g.generate_r1cs_witness(g_val);
     do_precomp.generate_r1cs_witness();
     assert!(pb.is_satisfied());
 
-    ffec::affine_ate_G2_precomp<other_curve<ppT> > native_precomp = other_curve<ppT>::affine_ate_precompute_G2(g_val);
+let native_precomp= other_curve::<ppT>::affine_ate_precompute_G2(g_val);
 
     assert!(precomp.coeffs.len() - 1 == native_precomp.coeffs.len()); // the last precomp is unused, but remains for convenient programming
     for i in 0..native_precomp.coeffs.len()
     {
-        assert!(precomp.coeffs[i]->RX->get_element() == native_precomp.coeffs[i].old_RX);
-        assert!(precomp.coeffs[i]->RY->get_element() == native_precomp.coeffs[i].old_RY);
-        assert!(precomp.coeffs[i]->gamma->get_element() == native_precomp.coeffs[i].gamma);
-        assert!(precomp.coeffs[i]->gamma_X->get_element() == native_precomp.coeffs[i].gamma_X);
+        assert!(precomp.coeffs[i].RX.get_element() == native_precomp.coeffs[i].old_RX);
+        assert!(precomp.coeffs[i].RY.get_element() == native_precomp.coeffs[i].old_RY);
+        assert!(precomp.coeffs[i].gamma.get_element() == native_precomp.coeffs[i].gamma);
+        assert!(precomp.coeffs[i].gamma_X.get_element() == native_precomp.coeffs[i].gamma_X);
     }
 
-    print!("number of constraints for G2 precomp (Fr is %s)  = {}\n", annotation.c_str(), pb.num_constraints());
+    print!("number of constraints for G2 precomp (Fr is {})  = {}\n", annotation, pb.num_constraints());
 }
 
 

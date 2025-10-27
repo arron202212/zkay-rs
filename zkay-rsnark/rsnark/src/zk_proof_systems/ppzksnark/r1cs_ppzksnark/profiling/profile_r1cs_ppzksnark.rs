@@ -47,10 +47,10 @@ fn main( argc:i32, argv:&[&str])->i32
 
     if argc != 3 && argc != 4
     {
-        print!("usage: %s num_constraints input_size [Fr|bytes]\n", argv[0]);
+        print!("usage: {} num_constraints input_size [Fr|bytes]\n", argv[0]);
         return 1;
     }
-    const int num_constraints = atoi(argv[1]);
+    let num_constraints= atoi(argv[1]);
     int input_size = atoi(argv[2]);
     if argc == 4
     {
@@ -66,7 +66,7 @@ fn main( argc:i32, argv:&[&str])->i32
     ffec::leave_block("Generate R1CS example");
 
     ffec::print_header("(enter) Profile R1CS ppzkSNARK");
-    const bool test_serialization = true;
+    let mut test_serialization = true;
     run_r1cs_ppzksnark<default_r1cs_ppzksnark_pp>(example, test_serialization);
     ffec::print_header("(leave) Profile R1CS ppzkSNARK");
 }

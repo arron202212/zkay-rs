@@ -14,23 +14,23 @@ use crate::algebra::fields::prime_extension::fp12_2over3over2;
 
 // namespace libff {
 
-const mp_size_t bls12_381_r_bitcount = 255;
-const mp_size_t bls12_381_q_bitcount = 381;
+let bls12_381_r_bitcount= 255;
+let bls12_381_q_bitcount= 381;
 
-const mp_size_t bls12_381_r_limbs = (bls12_381_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-const mp_size_t bls12_381_q_limbs = (bls12_381_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+let bls12_381_r_limbs= (bls12_381_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+let bls12_381_q_limbs= (bls12_381_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
 
 extern bigint<bls12_381_r_limbs> bls12_381_modulus_r;
 extern bigint<bls12_381_q_limbs> bls12_381_modulus_q;
 
-typedef Fp_model<bls12_381_r_limbs, bls12_381_modulus_r> bls12_381_Fr;
-typedef Fp_model<bls12_381_q_limbs, bls12_381_modulus_q> bls12_381_Fq;
-typedef Fp2_model<bls12_381_q_limbs, bls12_381_modulus_q> bls12_381_Fq2;
-typedef Fp6_3over2_model<bls12_381_q_limbs, bls12_381_modulus_q> bls12_381_Fq6;
-typedef Fp12_2over3over2_model<bls12_381_q_limbs, bls12_381_modulus_q> bls12_381_Fq12;
-typedef bls12_381_Fq12 bls12_381_GT;
+type bls12_381_Fr=Fp_model<bls12_381_r_limbs, bls12_381_modulus_r>;
+type bls12_381_Fq=Fp_model<bls12_381_q_limbs, bls12_381_modulus_q>;
+type bls12_381_Fq2=Fp2_model<bls12_381_q_limbs, bls12_381_modulus_q>;
+type bls12_381_Fq6=Fp6_3over2_model<bls12_381_q_limbs, bls12_381_modulus_q>;
+type bls12_381_Fq12=Fp12_2over3over2_model<bls12_381_q_limbs, bls12_381_modulus_q>;
+type bls12_381_GT=bls12_381_Fq12;
 
-void init_bls12_381_fields();
+pub fn  init_bls12_381_fields();
 
 // } // namespace libff
 //#endif // BLS12_381_FIELDS_HPP_
@@ -48,7 +48,7 @@ use crate::algebra::curves::bls12_381/bls12_381_fields;
 bigint<bls12_381_r_limbs> bls12_381_modulus_r;
 bigint<bls12_381_q_limbs> bls12_381_modulus_q;
 
-void init_bls12_381_fields()
+pub fn  init_bls12_381_fields()
 {
     using bigint_r = bigint<bls12_381_r_limbs>;
     using bigint_q = bigint<bls12_381_q_limbs>;

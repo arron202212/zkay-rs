@@ -9,19 +9,19 @@
 
 use  <gtest/gtest.h>
 
-use crate::gadgetlib1::examples/simple_example;
+use crate::gadgetlib1::examples::simple_example;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
 
 namespace {
 
 TEST(gadgetLib1,Integration) {
-    type ffec::Fr<ffec::default_ec_pp> FieldT;
+    type FieldT=ffec::Fr<ffec::default_ec_pp>;
     // Create an example constraint system and translate to libsnark format
     ffec::default_ec_pp::init_public_params();
-    const auto example = crate::gen_r1cs_example_from_protoboard<FieldT>(100);
-    const bool test_serialization = false;
+    let example= crate::gen_r1cs_example_from_protoboard<FieldT>(100);
+    let mut test_serialization = false;
     // Run ppzksnark. Jump into function for breakdown
-    const bool bit = crate::run_r1cs_ppzksnark<ffec::default_ec_pp>(example, test_serialization);
+    let mut bit = crate::run_r1cs_ppzksnark<ffec::default_ec_pp>(example, test_serialization);
     EXPECT_TRUE(bit);
 };
 

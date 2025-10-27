@@ -25,7 +25,7 @@
 //#ifndef BENES_ROUTING_ALGORITHM_HPP_
 // #define BENES_ROUTING_ALGORITHM_HPP_
 
-use  <vector>
+// 
 
 use ffec::common::utils;
 
@@ -47,7 +47,7 @@ use crate::common::data_structures::integer_permutation;
  * queried at an arbitrary position, see implementation of
  * generate_benes_topology for details.)
  */
-type std::vector<std::vector<std::pair<size_t, size_t> > > benes_topology;
+type benes_topology=Vec<Vec<std::pair<usize, usize> > > ;
 
 /**
  * A routing assigns a bit to each switch in a Benes network.
@@ -57,7 +57,7 @@ type std::vector<std::vector<std::pair<size_t, size_t> > > benes_topology;
  * That is, we have one switch per packet, but switch settings are not
  * independent.
  */
-type std::vector<ffec::bit_vector> benes_routing;
+type benes_routing=Vec<bit_vector> ;
 
 /**
  * Return the number of (switch) columns in a Benes network for a given number of packets.
@@ -68,44 +68,44 @@ type std::vector<ffec::bit_vector> benes_routing;
  * - benes_num_columns(8) = 6,
  * and so on.
  */
-size_t benes_num_columns(const size_t num_packets);
+// usize benes_num_columns(num_packets:usize);
 
-/**
- * Return the topology of a Benes network for a given number of packets.
- *
- * See benes_topology (above) for details.
- */
-benes_topology generate_benes_topology(const size_t num_packets);
+// /**
+//  * Return the topology of a Benes network for a given number of packets.
+//  *
+//  * See benes_topology (above) for details.
+//  */
+// benes_topology generate_benes_topology(num_packets:usize);
 
-/**
- * Route the given permutation on a Benes network of suitable size.
- */
-benes_routing get_benes_routing(const integer_permutation &permutation);
+// /**
+//  * Route the given permutation on a Benes network of suitable size.
+//  */
+// benes_routing get_benes_routing(permutation:&integer_permutation);
 
-/**
- * Check if a routing "implements" the given permutation.
- */
-bool valid_benes_routing(const integer_permutation &permutation, const benes_routing &routing);
+// /**
+//  * Check if a routing "implements" the given permutation.
+//  */
+// bool valid_benes_routing(permutation:&integer_permutation, routing:&benes_routing);
 
 
 
-//#endif // BENES_ROUTING_ALGORITHM_HPP_
-/** @file
- *****************************************************************************
+// //#endif // BENES_ROUTING_ALGORITHM_HPP_
+// /** @file
+//  *****************************************************************************
 
- Implementation of interfaces for functionality for routing on a Benes network.
+//  Implementation of interfaces for functionality for routing on a Benes network.
 
- See benes_routing_algorithm.hpp .
+//  See benes_routing_algorithm.hpp .
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  *****************************************************************************
+//  * @author     This file is part of libsnark, developed by SCIPR Lab
+//  *             and contributors (see AUTHORS).
+//  * @copyright  MIT license (see LICENSE file)
+//  *****************************************************************************/
 
-use  <cassert>
+// use  <cassert>
 
-use crate::common::routing_algorithms::benes_routing_algorithm;
+// use crate::common::routing_algorithms::benes_routing_algorithm;
 
 
 
@@ -126,9 +126,9 @@ use crate::common::routing_algorithms::benes_routing_algorithm;
  * For example, all cross edges in the 0-th column flip the most
  * significant bit of row_idx.
  */
-size_t benes_cross_edge_mask(const size_t dimension, const size_t column_idx)
+ pub fn benes_cross_edge_mask(dimension:usize, column_idx:usize)->usize
 {
-    return if column_idx < dimension {1u64<<(dimension-1-column_idx)} else{1u64<<(column_idx-dimension});
+    return if column_idx < dimension {1u64<<(dimension-1-column_idx)} else{1u64<<(column_idx-dimension)};
 }
 
 /**
@@ -146,10 +146,10 @@ size_t benes_cross_edge_mask(const size_t dimension, const size_t column_idx)
  * - row_idx' of the destination packet (column_idx+1, row_idx') at
  *   the bottom subnetwork (if use_top = false)
  */
-size_t benes_lhs_packet_destination(const size_t dimension, const size_t column_idx, const size_t row_idx, const bool use_top)
+pub fn benes_lhs_packet_destination(dimension:usize, column_idx:usize, row_idx:usize, use_top:bool)->usize
 {
-    const size_t mask = benes_cross_edge_mask(dimension, column_idx);
-    return if use_top {row_idx & ~mask} else{row_idx | mask};
+    let  mask = benes_cross_edge_mask(dimension, column_idx);
+    return if use_top {row_idx & !mask} else{row_idx | mask};
 }
 
 /**
@@ -167,7 +167,7 @@ size_t benes_lhs_packet_destination(const size_t dimension, const size_t column_
  * - row_idx' of the destination packet (column_idx-1, row_idx') at
  *   the bottom subnetwork (if use_top = false)
  */
-size_t benes_rhs_packet_source(const size_t dimension, const size_t column_idx, const size_t row_idx, const bool use_top)
+pub fn benes_rhs_packet_source(dimension:usize, column_idx:usize, row_idx:usize, use_top:bool)->usize
 {
     return benes_lhs_packet_destination(dimension, column_idx-1, row_idx, use_top); /* by symmetry */
 }
@@ -177,7 +177,7 @@ size_t benes_rhs_packet_source(const size_t dimension, const size_t column_idx, 
  * return the switch setting that would route its packet using the top
  * subnetwork.
  */
-bool benes_get_switch_setting_from_subnetwork(const size_t dimension, const size_t column_idx, const size_t row_idx, const bool use_top)
+pub fn benes_get_switch_setting_from_subnetwork(dimension:usize, column_idx:usize, row_idx:usize, use_top:bool)->bool
 {
     return (row_idx != benes_lhs_packet_destination(dimension, column_idx, row_idx, use_top));
 }
@@ -188,9 +188,9 @@ bool benes_get_switch_setting_from_subnetwork(const size_t dimension, const size
  * benes_cross_edge_mask), this returns row_idx' of the "cross"
  * destination.
  */
-size_t benes_packet_cross_destination(const size_t dimension, const size_t column_idx, const size_t row_idx)
+pub fn benes_packet_cross_destination(dimension:usize, column_idx:usize, row_idx:usize)->usize
 {
-    const size_t mask = benes_cross_edge_mask(dimension, column_idx);
+    let  mask = benes_cross_edge_mask(dimension, column_idx);
     return row_idx ^ mask;
 }
 
@@ -200,26 +200,26 @@ size_t benes_packet_cross_destination(const size_t dimension, const size_t colum
  * comment by benes_cross_edge_mask), this returns row_idx' of the
  * "cross" source packet.
  */
-size_t benes_packet_cross_source(const size_t dimension, const size_t column_idx, const size_t packet_idx)
+pub fn benes_packet_cross_source(dimension:usize, column_idx:usize, packet_idx:usize)->usize
 {
     return benes_packet_cross_destination(dimension, column_idx-1, packet_idx); /* by symmetry */
 }
 
-size_t benes_num_columns(const size_t num_packets)
+pub fn benes_num_columns(num_packets:usize)->usize
 {
-    const size_t dimension = ffec::log2(num_packets);
+    let  dimension = ffec::log2(num_packets);
     assert!(num_packets == 1u64<<dimension);
 
     return 2*dimension;
 }
 
-benes_topology generate_benes_topology(const size_t num_packets)
+ pub fn generate_benes_topology(num_packets:usize)->benes_topology
 {
-    const size_t num_columns = benes_num_columns(num_packets);
-    const size_t dimension = ffec::log2(num_packets);
+    let  num_columns = benes_num_columns(num_packets);
+    let  dimension = ffec::log2(num_packets);
     assert!(num_packets == 1u64<<dimension);
 
-    benes_topology result(num_columns);
+     let mut result=benes_topology::new(num_columns);
 
     for column_idx in 0..num_columns
     {
@@ -244,14 +244,14 @@ benes_topology generate_benes_topology(const size_t num_packets)
  * - pi maps [subnetwork_offset..subnetwork_offset+subnetwork_size-1] to itself, offset by subnetwork_offset, and
  * - piinv is the inverse of pi.
  */
-void route_benes_inner(const size_t dimension,
-                       const integer_permutation &permutation,
-                       const integer_permutation &permutation_inv,
-                       const size_t column_idx_start,
-                       const size_t column_idx_end,
-                       const size_t subnetwork_offset,
-                       const size_t subnetwork_size,
-                       benes_routing &routing)
+pub fn route_benes_inner(dimension:usize,
+                       permutation:&integer_permutation,
+                       permutation_inv:&integer_permutation,
+                       column_idx_start:usize,
+                       column_idx_end:usize,
+                       subnetwork_offset:usize,
+                       subnetwork_size:usize,
+                       routing:&benes_routing )
 {
 // #ifdef DEBUG
     assert!(permutation.len() == subnetwork_size);
@@ -264,15 +264,15 @@ void route_benes_inner(const size_t dimension,
         /* nothing to route */
         return;
     }
-    ffec::bit_vector lhs_routed(subnetwork_size, false); /* adjusted by subnetwork_offset */
+    let mut  lhs_routed=vec![false;subnetwork_size]; /* adjusted by subnetwork_offset */
 
-    size_t w = subnetwork_offset; /* left-hand-side vertex to be routed. */
-    size_t last_unrouted = subnetwork_offset;
+    let mut  w = subnetwork_offset; /* left-hand-side vertex to be routed. */
+    let mut  last_unrouted = subnetwork_offset;
 
-    integer_permutation new_permutation(subnetwork_offset, subnetwork_offset + subnetwork_size - 1);
-    integer_permutation new_permutation_inv(subnetwork_offset, subnetwork_offset + subnetwork_size - 1);
+     let new_permutation=integer_permutation::new(subnetwork_offset, subnetwork_offset + subnetwork_size - 1);
+    let  new_permutation_inv=integer_permutation::new(subnetwork_offset, subnetwork_offset + subnetwork_size - 1);
 
-    while (true)
+    loop
     {
         /**
          * INVARIANT:
@@ -281,7 +281,7 @@ void route_benes_inner(const size_t dimension,
          */
 
         /* route w to its target on RHS, wprime = pi[w], using upper network */
-        size_t wprime = permutation.get(w);
+        let  wprime = permutation.get(w);
 
         /* route (column_idx_start, w) forward via top subnetwork */
         routing[column_idx_start][w] = benes_get_switch_setting_from_subnetwork(dimension, column_idx_start, w, true);
@@ -293,8 +293,8 @@ void route_benes_inner(const size_t dimension,
         new_permutation_inv.set(benes_rhs_packet_source(dimension, column_idx_end, wprime, true), benes_lhs_packet_destination(dimension, column_idx_start, w, true));
 
         /* now the other neighbor of wprime must be back-routed via the lower network, so get vprime, the neighbor on RHS and v, its target on LHS */
-        const size_t vprime = benes_packet_cross_source(dimension, column_idx_end, wprime);
-        const size_t v = permutation_inv.get(vprime);
+        let  vprime = benes_packet_cross_source(dimension, column_idx_end, wprime);
+        let  v = permutation_inv.get(vprime);
         assert!(!lhs_routed[v-subnetwork_offset]);
 
         /* back-route (column_idx_end, vprime) using the lower subnetwork */
@@ -329,11 +329,11 @@ void route_benes_inner(const size_t dimension,
         }
     }
 
-    const integer_permutation new_permutation_upper = new_permutation.slice(subnetwork_offset, subnetwork_offset + subnetwork_size/2 - 1);
-    const integer_permutation new_permutation_lower = new_permutation.slice(subnetwork_offset + subnetwork_size/2, subnetwork_offset + subnetwork_size - 1);
+    let  new_permutation_upper = new_permutation.slice(subnetwork_offset, subnetwork_offset + subnetwork_size/2 - 1);
+    let  new_permutation_lower = new_permutation.slice(subnetwork_offset + subnetwork_size/2, subnetwork_offset + subnetwork_size - 1);
 
-    const integer_permutation new_permutation_inv_upper = new_permutation_inv.slice(subnetwork_offset, subnetwork_offset + subnetwork_size/2 - 1);
-    const integer_permutation new_permutation_inv_lower = new_permutation_inv.slice(subnetwork_offset + subnetwork_size/2, subnetwork_offset + subnetwork_size - 1);
+    let  new_permutation_inv_upper = new_permutation_inv.slice(subnetwork_offset, subnetwork_offset + subnetwork_size/2 - 1);
+    let  new_permutation_inv_lower = new_permutation_inv.slice(subnetwork_offset + subnetwork_size/2, subnetwork_offset + subnetwork_size - 1);
 
     /* route upper part */
     route_benes_inner(dimension, new_permutation_upper, new_permutation_inv_upper, column_idx_start+1, column_idx_end-1,
@@ -344,13 +344,13 @@ void route_benes_inner(const size_t dimension,
                       subnetwork_offset+subnetwork_size/2, subnetwork_size/2, routing);
 }
 
-benes_routing get_benes_routing(const integer_permutation &permutation)
+ pub fn get_benes_routing(permutation:&integer_permutation)->benes_routing
 {
-    const size_t num_packets = permutation.len();
-    const size_t num_columns = benes_num_columns(num_packets);
-    const size_t dimension = ffec::log2(num_packets);
+    let  num_packets = permutation.len();
+    let  num_columns = benes_num_columns(num_packets);
+    let  dimension = ffec::log2(num_packets);
 
-    benes_routing routing(num_columns, ffec::bit_vector(num_packets));
+    let  routing=benes_routing::new(num_columns, bit_vector(num_packets));
 
     route_benes_inner(dimension, permutation, permutation.inverse(), 0, num_columns, 0, num_packets, routing);
 
@@ -358,23 +358,23 @@ benes_routing get_benes_routing(const integer_permutation &permutation)
 }
 
 /* auxiliary function that is used in valid_benes_routing below */
-template<typename T>
-std::vector<std::vector<T> > route_by_benes(const benes_routing &routing, const std::vector<T> &start)
-{
-    const size_t num_packets = start.len();
-    const size_t num_columns = benes_num_columns(num_packets);
-    const size_t dimension = ffec::log2(num_packets);
 
-    std::vector<std::vector<T> > res(num_columns+1, std::vector<T>(num_packets));
+ pub fn route_by_benes<T:Default>(routing:&benes_routing, start:&Vec<T>)->Vec<Vec<T> >
+{
+    let  num_packets = start.len();
+    let  num_columns = benes_num_columns(num_packets);
+    let  dimension = ffec::log2(num_packets);
+
+    let mut  res=vec![vec![T::default();num_packets];num_columns+1];
     res[0] = start;
 
     for column_idx in 0..num_columns
     {
-        const size_t mask = benes_cross_edge_mask(dimension, column_idx);
+        let  mask = benes_cross_edge_mask(dimension, column_idx);
 
         for packet_idx in 0..num_packets
         {
-            size_t next_packet_idx=  if (routing[column_idx][packet_idx] == false) {packet_idx} else{packet_idx ^ mask};
+            let  next_packet_idx=  if (routing[column_idx][packet_idx] == false) {packet_idx} else{packet_idx ^ mask};
             res[column_idx+1][next_packet_idx] = res[column_idx][packet_idx];
         }
     }
@@ -382,18 +382,18 @@ std::vector<std::vector<T> > route_by_benes(const benes_routing &routing, const 
     return res;
 }
 
-bool valid_benes_routing(const integer_permutation &permutation, const benes_routing &routing)
+pub fn valid_benes_routing(permutation:&integer_permutation, routing:&benes_routing)->bool
 {
-    const size_t num_packets = permutation.len();
-    const size_t num_columns = benes_num_columns(num_packets);
+    let  num_packets = permutation.len();
+    let  num_columns = benes_num_columns(num_packets);
 
-    std::vector<size_t> input_packets(num_packets);
+    let mut  input_packets=vec![0;num_packets];
     for packet_idx in 0..num_packets
     {
         input_packets[packet_idx] = packet_idx;
     }
 
-    const std::vector<std::vector<size_t> > routed_packets = route_by_benes(routing, input_packets);
+    let  routed_packets = route_by_benes(routing, input_packets);
 
     for packet_idx in 0..num_packets
     {

@@ -22,13 +22,13 @@ use crate::relations::circuit_satisfaction_problems/bacs/bacs;
  * Below are various template aliases (used for convenience).
  */
 
-template<typename ppT>
+
 using bacs_ppzksnark_circuit = bacs_circuit<ffec::Fr<ppT> >;
 
-template<typename ppT>
+
 using bacs_ppzksnark_primary_input = bacs_primary_input<ffec::Fr<ppT> >;
 
-template<typename ppT>
+
 using bacs_ppzksnark_auxiliary_input = bacs_auxiliary_input<ffec::Fr<ppT> >;
 
 

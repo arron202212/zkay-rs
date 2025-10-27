@@ -12,19 +12,19 @@ use crate::algebra::fields::prime_base::fp;
 
 // namespace libff {
 
-const mp_size_t bn128_r_bitcount = 254;
-const mp_size_t bn128_q_bitcount = 254;
+let bn128_r_bitcount= 254;
+let bn128_q_bitcount= 254;
 
-const mp_size_t bn128_r_limbs = (bn128_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-const mp_size_t bn128_q_limbs = (bn128_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+let bn128_r_limbs= (bn128_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+let bn128_q_limbs= (bn128_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
 
 extern bigint<bn128_r_limbs> bn128_modulus_r;
 extern bigint<bn128_q_limbs> bn128_modulus_q;
 
-typedef Fp_model<bn128_r_limbs, bn128_modulus_r> bn128_Fr;
-typedef Fp_model<bn128_q_limbs, bn128_modulus_q> bn128_Fq;
+type bn128_Fr=Fp_model<bn128_r_limbs, bn128_modulus_r>;
+type bn128_Fq=Fp_model<bn128_q_limbs, bn128_modulus_q>;
 
-void init_bn128_fields();
+pub fn  init_bn128_fields();
 
 // } // namespace libff
 //#endif // BN128_FIELDS_HPP_
@@ -42,7 +42,7 @@ use crate::algebra::curves::bn128::bn128_fields;
 bigint<bn128_r_limbs> bn128_modulus_r;
 bigint<bn128_q_limbs> bn128_modulus_q;
 
-void init_bn128_fields()
+pub fn  init_bn128_fields()
 {
     bn::Param::init(); // init ate-pairing library
 

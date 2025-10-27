@@ -17,11 +17,11 @@ use crate::relations::ram_computations::rams::ram_params;
 
 
 
-// template<typename ramT>
+// 
 pub struct ram_example<ramT> {
 ap:    ram_architecture_params<ramT>,
-boot_trace_size_bound:    size_t,
-time_bound:    size_t,
+boot_trace_size_bound:    usize,
+time_bound:    usize,
 boot_trace:    ram_boot_trace<ramT>,
 auxiliary_input:    ram_input_tape<ramT>,
 }
@@ -29,14 +29,14 @@ auxiliary_input:    ram_input_tape<ramT>,
 // /**
 //  * For now: only specialized to TinyRAM
 //  */
-// template<typename ramT>
-// ram_example<ramT> gen_ram_example_simple(ap:&ram_architecture_params<ramT>, const size_t boot_trace_size_bound, const size_t time_bound, const bool satisfiable=true);
+// 
+// ram_example<ramT> gen_ram_example_simple(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
 
 // /**
 //  * For now: only specialized to TinyRAM
 //  */
-// template<typename ramT>
-// ram_example<ramT> gen_ram_example_complex(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:size_t, time_bound:size_t, satisfiable:bool=true);
+// 
+// ram_example<ramT> gen_ram_example_complex(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
 
 
 
@@ -64,7 +64,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 
 
-pub fn  gen_ram_example_simple<ramT>(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:size_t, time_bound:size_t, satisfiable:bool)->ram_example<ramT>
+pub fn  gen_ram_example_simple<ramT>(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool)->ram_example<ramT>
 {
     enter_block("Call to gen_ram_example_simple");
 
@@ -107,7 +107,7 @@ boot_pos+=1;
     return result;
 }
 
-pub fn  gen_ram_example_complex<ramT>(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:size_t, time_bound:size_t, satisfiable:bool)->ram_example<ramT>
+pub fn  gen_ram_example_complex<ramT>(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool)->ram_example<ramT>
 {
     enter_block("Call to gen_ram_example_complex");
 

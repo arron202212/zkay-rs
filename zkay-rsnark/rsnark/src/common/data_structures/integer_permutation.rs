@@ -13,32 +13,32 @@
 // #define INTEGER_PERMUTATION_HPP_
 
 // use  <cstddef>
-// use  <vector>
+// 
 
 
 
 pub struct integer_permutation {
-// private:
-contents:    std::vector<size_t>, /* offset by min_element */
+// 
+contents:    Vec<usize>, /* offset by min_element */
 
 // 
-min_element:    size_t,
-max_element:    size_t,
+min_element:    usize,
+max_element:    usize,
 
-    // integer_permutation(size:size_t = 0);
-    // integer_permutation(min_element:size_t, max_element:size_t);
+    // integer_permutation(size:usize = 0);
+    // integer_permutation(min_element:usize, max_element:usize);
 
-    // integer_permutation& operator=(const integer_permutation &other) = default;
+    // integer_permutation& operator=(other:&integer_permutation) = default;
 
-    // size_t size() const;
-    // bool operator==(const integer_permutation &other) const;
+    // usize size() const;
+    // bool operator==(other:&integer_permutation) const;
 
-    // void set(position:size_t, value:size_t);
-    // size_t get(position:size_t) const;
+    // pub fn  set(position:usize, value:usize);
+    // usize get(position:usize) const;
 
     // bool is_valid() const;
     // integer_permutation inverse() const;
-    // integer_permutation slice(slice_min_element:size_t, slice_max_element:size_t) const;
+    // integer_permutation slice(slice_min_element:usize, slice_max_element:usize) const;
 
     // /* Similarly to std::next_permutation this transforms the current
     // integer permutation into the next lexicographically ordered
@@ -46,7 +46,7 @@ max_element:    size_t,
     // this is now the identity permutation on [min_element .. max_element] */
     // bool next_permutation();
 
-    // void random_shuffle();
+    // pub fn  random_shuffle();
 }
 
 
@@ -74,14 +74,14 @@ max_element:    size_t,
 
 
 impl integer_permutation{
-pub fn new(size:size_t) ->Self
+pub fn new(size:usize) ->Self
 {
     contents.resize(size);
     std::iota(contents.begin(), contents.end(), 0);
     Self{min_element:0, max_element:size-1}
 }
 
-pub fn new2(min_element:size_t, max_element:size_t) ->Self
+pub fn new2(min_element:usize, max_element:usize) ->Self
     
 {
     assert!(min_element <= max_element);
@@ -91,19 +91,19 @@ pub fn new2(min_element:size_t, max_element:size_t) ->Self
     Self{min_element, max_element}
 }
 
- pub fn size() ->size_t
+ pub fn size() ->usize
 {
     return max_element - min_element + 1;
 }
 
 
-pub fn set(position:size_t, value:size_t)
+pub fn set(position:usize, value:usize)
 {
     assert!(min_element <= position && position <= max_element);
     contents[position - min_element] = value;
 }
 
- pub fn get(position:size_t) ->size_t
+ pub fn get(position:usize) ->usize
 {
     assert!(min_element <= position && position <= max_element);
     return contents[position - min_element];
@@ -143,7 +143,7 @@ pub fn set(position:size_t, value:size_t)
     return result;
 }
 
- pub fn slice(slice_min_element:size_t, slice_max_element:size_t) ->Self
+ pub fn slice(slice_min_element:usize, slice_max_element:usize) ->Self
 {
     assert!(min_element <= slice_min_element && slice_min_element <= slice_max_element && slice_max_element <= max_element);
     let mut  result=integer_permutation::new(slice_min_element, slice_max_element);
@@ -173,7 +173,7 @@ pub fn random_shuffle()
 
 
 
-// bool pub fn operator==(const integer_permutation &other) const
+// bool pub fn operator==(other:&integer_permutation) const
 // {
 //     return (self.min_element == other.min_element &&
 //             self.max_element == other.max_element &&

@@ -18,8 +18,8 @@
  use crate::common::data_structures::sparse_vector::sparse_vector;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 
-// template<typename T>
-// class accumulation_vector;
+// 
+// pub struct accumulation_vector;
 
 
 /**
@@ -49,14 +49,14 @@ impl<T> accumulation_vector<T> {
 
     // bool is_fully_accumulated() const;
 
-    // size_t domain_size() const;
-    // size_t size() const;
+    // usize domain_size() const;
+    // usize size() const;
     //  pub fn size_in_bits(&self)->usize;
 
-    // template<typename FieldT>
-    // accumulation_vector<T> accumulate_chunk(it_begin:&typename Vec<FieldT>::const_iterator
-    //                                         it_end:&typename Vec<FieldT>::const_iterator
-    //                                         offset:size_t) const;
+    // 
+    // accumulation_vector<T> accumulate_chunk(it_begin:&Vec<FieldT>::const_iterator
+    //                                         it_end:&Vec<FieldT>::const_iterator
+    //                                         offset:usize) const;
 
 }
 
@@ -131,7 +131,7 @@ impl<T> fmt::Display for accumulation_vector<T> {
 
 
 
-// template<typename T>
+// 
 // std::istream& operator>>(std::istream& in, accumulation_vector<T> &v)
 // {
 //     in >> v.first;

@@ -19,36 +19,30 @@ use crate::gadgetlib1::gadgets::hashes::hash_io; // TODO: the current structure 
 
 
 
-type set_commitment=ffec::bit_vector ;
+type set_commitment=bit_vector ;
 
 struct set_membership_proof {
-address:    size_t,
+address:    usize,
 merkle_path:    merkle_authentication_path,
 
     // bool operator==(other:&set_membership_proof) const;
-    // size_t size_in_bits() const;
+    // usize size_in_bits() const;
     // friend std::ostream& operator<<(std::ostream &out, other:&set_membership_proof);
     // friend std::istream& operator>>(std::istream &in, set_membership_proof &other);
 }
 
 // 
-class set_commitment_accumulator<HashT> {
-// private:
-tree:    std::shared_ptr<merkle_tree<HashT> >,
-hash_to_pos:    std::map<ffec::bit_vector, size_t>,
+pub struct set_commitment_accumulator<HashT> {
+// 
+tree:    RcCell<merkle_tree<HashT> >,
+hash_to_pos:    BTreeMap<bit_vector, usize>,
 // 
 
-depth:    size_t,
-digest_size:    size_t,
-value_size:    size_t,
+depth:    usize,
+digest_size:    usize,
+value_size:    usize,
 
-    // set_commitment_accumulator(max_entries:size_t, value_size:size_t=0);
 
-    // void add(value:&ffec::bit_vector);
-    // bool is_in_set(value:&ffec::bit_vector) const;
-    // set_commitment get_commitment() const;
-
-    // set_membership_proof get_membership_proof(value:&ffec::bit_vector) const;
 }
 
 
@@ -70,7 +64,7 @@ use ffec::common::serialization;
 use std::mem;
 // use crate::common::data_structures::set_commitment;
 impl set_membership_proof{
- pub fn size_in_bits() ->size_t
+ pub fn size_in_bits() ->usize
 {
     if merkle_path.empty()
     {
@@ -106,7 +100,7 @@ impl set_membership_proof{
 // {
 //     in >> proof.address;
 //     ffec::consume_newline(in);
-//     size_t tree_depth;
+//     usize tree_depth;
 //     in >> tree_depth;
 //     ffec::consume_newline(in);
 //     proof.merkle_path.resize(tree_depth);
@@ -137,7 +131,7 @@ impl set_membership_proof{
 
 impl set_commitment_accumulator<HashT>{
 
-pub fn new(max_entries:size_t, value_size:size_t) ->Self
+pub fn new(max_entries:usize, value_size:usize) ->Self
     
 {
     let depth = ffec::log2(max_entries);
@@ -148,7 +142,7 @@ pub fn new(max_entries:size_t, value_size:size_t) ->Self
 }
 
 
-pub fn add(value:&ffec::bit_vector)
+pub fn add(value:&bit_vector)
 {
     assert!(value_size == 0 || value.len() == value_size);
     let  hash = HashT::get_hash(value);
@@ -161,7 +155,7 @@ pub fn add(value:&ffec::bit_vector)
 }
 
 
- pub fn is_in_set(value:&ffec::bit_vector) ->bool
+ pub fn is_in_set(value:&bit_vector) ->bool
 {
     assert!(value_size == 0 || value.len() == value_size);
     let  hash = HashT::get_hash(value);
@@ -175,7 +169,7 @@ pub fn get_commitment() ->set_commitment
 }
 
 
- pub fn get_membership_proof(value:&ffec::bit_vector) ->set_membership_proof
+ pub fn get_membership_proof(value:&bit_vector) ->set_membership_proof
 {
    let  hash = HashT::get_hash(value);
     let Some(it) = hash_to_pos.find(hash) else{

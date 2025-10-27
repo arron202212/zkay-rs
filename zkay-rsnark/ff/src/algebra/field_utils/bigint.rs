@@ -8,9 +8,9 @@
 #![allow(warnings, unused)]
 /** @file
  *****************************************************************************
- Declaration of bigint wrapper class around GMP's MPZ long integers.
+ Declaration of bigint wrapper pub struct around GMP's MPZ long integers.
 
- Notice that this class has no arithmetic operators. This is deliberate. All
+ Notice that this pub struct has no arithmetic operators. This is deliberate. All
  bigints should either be hardcoded or operated on the bit level to ensure
  high performance.
  *****************************************************************************
@@ -30,50 +30,50 @@ use crate::common::serialization;
 
 // // namespace libff {
 
-// template<mp_size_t n> class bigint;
-// template<mp_size_t n> std::ostream& operator<<(std::ostream &, const bigint<n>&);
-// template<mp_size_t n> std::istream& operator>>(std::istream &, bigint<n>&);
+//  pub struct bigint;
+// &);
+// &);
 
-/**
- * Wrapper class around GMP's MPZ long integers. It supports arithmetic operations,
- * serialization and randomization. Serialization is fragile, see common/serialization.hpp.
- */
-pub const GMP_NUMB_BITS:usize = 64;
-// template<mp_size_t n>
+// /**
+//  * Wrapper pub struct around GMP's MPZ long integers. It supports arithmetic operations,
+//  * serialization and randomization. Serialization is fragile, see common/serialization.hpp.
+//  */
+pub const GMP_NUMB_BITS:usize =64;
+// 
 #[derive(Clone)]
 pub struct bigint<const N:usize> {
     pub data:[u64;N],
 }
 // impl<const N:usize> bigint<N>{
-    // const  N:usize = n;
+    // n: N:usize =,
 
     
 
     // bigint() = default;
-    // bigint(const unsigned long x); /// Initalize from a small integer
+    // bigint(const u64 x); /// Initalize from a small integer
     // bigint(const char* s); /// Initialize from a string containing an integer in decimal notation
     // bigint(const mpz_t r); /// Initialize from MPZ element
 
     // static bigint one();
 
-    // void print() const;
-    // void print_hex() const;
-    // bool operator==(const bigint<n>& other) const;
-    // bool operator!=(const bigint<n>& other) const;
-    // bool operator<(const bigint<n>& other) const;
-    // void clear();
+    // pub fn  print() const;
+    // pub fn  print_hex() const;
+    // bool operator==(const:bigint<n>& other),
+    // bool operator!=(const:bigint<n>& other),
+    // bool operator<(const:bigint<n>& other),
+    // pub fn  clear();
     // bool is_zero() const;
     // bool is_even() const;
-    // usize max_bits() const { return n * GMP_NUMB_BITS; } /// Returns the number of bits representable by this bigint type
+    // usize max_bits() GMP_NUMB_BITS:{ return n *, } /// Returns the number of bits representable by this bigint type
     // usize num_bits() const; /// Returns the number of bits in this specific bigint value, i.e., position of the most-significant 1
 
-    // unsigned long as_ulong() const; /// Return the last limb of the integer
-    // void to_mpz(mpz_t r) const;
-    // bool test_bit(const usize bitno) const;
+    // u64 as_ulong() const; /// Return the last limb of the integer
+    // pub fn  to_mpz(mpz_t r) const;
+    // bool test_bit(bitno:usize) const;
 
     // bigint& randomize();
 
-    // friend std::ostream& operator<< <n>(std::ostream &out, const bigint<n> &b);
+    // friend std::ostream& operator<< <n>(std::ostream &out, b:&bigint<n>);
     // friend std::istream& operator>> <n>(std::istream &in, bigint<n> &b);
 // }
 
@@ -84,7 +84,7 @@ pub struct bigint<const N:usize> {
 
 /** @file
  *****************************************************************************
- Implementation of bigint wrapper class around GMP's MPZ long integers.
+ Implementation of bigint wrapper pub struct around GMP's MPZ long integers.
  *****************************************************************************
  * @author     This file is part of libff, developed by SCIPR Lab
  *             and contributors (see AUTHORS).
@@ -278,26 +278,26 @@ use rand::Rng;
 //#endif // BIGINT_TCC_
 use std::ops::Mul;
 impl<const N:usize> Mul for bigint<N> {
-    type Output = Self;
+    type Output =Self;
 
     fn mul(self, rhs: Self) -> Self {
         Self::new(0)
     }
 }
-impl<T,const N:usize> Mul<&T> for &bigint<N> {
+impl<T, const N:usize> Mul<&T> for bigint<N> {
     type Output = bigint<N>;
 
     fn mul(self, rhs: &T) -> bigint<N> {
         bigint::<N>::new(0)
     }
 }
-impl<T,const N:usize> Mul<&T> for bigint<N> {
-    type Output = Self;
+// impl<T,const N:usize> Mul<&T> for bigint<N> {
+//     type Output =Self;
 
-    fn mul(self, rhs: &T) -> Self {
-        Self::new(0)
-    }
-}
+//     fn mul(self, rhs: &T) -> Self {
+//         Self::new(0)
+//     }
+// }
 use std::cmp::Ordering;
 
 
@@ -315,19 +315,19 @@ impl<const N:usize> PartialOrd for bigint<N> {
 
 
 
-// template<mp_size_t n>
+// 
 // bool bigint<n>::operator==(const bigint<n>& other) const
 // {
 //     return (mpn_cmp(self.data, other.data, n) == 0);
 // }
 
-// template<mp_size_t n>
+// 
 // bool bigint<n>::operator!=(const bigint<n>& other) const
 // {
 //     return !(operator==(other));
 // }
 
-// template<mp_size_t n>
+// 
 // bool bigint<n>::operator<(const bigint<n>& other) const
 // {
 //     return (mpn_cmp(self.data, other.data, n) < 0);
@@ -347,8 +347,8 @@ impl<const N:usize> fmt::Display for bigint<N> {
 }
 
 
-// template<mp_size_t n>
-// std::ostream& operator<<(std::ostream &out, const bigint<n> &b)
+// 
+// std::ostream& operator<<(std::ostream &out, b:&bigint<n>)
 // {
 // // #ifdef BINARY_OUTPUT
 //     out.write((char*)b.data, sizeof(b.data[0]) * n);
@@ -364,16 +364,16 @@ impl<const N:usize> fmt::Display for bigint<N> {
 //     return out;
 // }
 
-// template<mp_size_t n>
+// 
 // std::istream& operator>>(std::istream &in, bigint<n> &b)
 // {
 // // #ifdef BINARY_OUTPUT
 //     in.read((char*)b.data, sizeof(b.data[0]) * n);
 // #else
-//     std::string s;
+//     String s;
 //     in >> s;
 
-//     size_t l = s.len();
+//     usize l = s.len();
 //     unsigned char* s_copy = new unsigned char[l];
 
 //     for i in 0..l

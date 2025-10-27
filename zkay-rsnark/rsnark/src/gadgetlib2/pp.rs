@@ -10,8 +10,8 @@
 //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PP_HPP_
 
-// use  <memory>
-// use  <vector>
+// 
+// 
 
 use ffec::common::default_types::ec_pp;
 
@@ -24,13 +24,13 @@ use ffec::common::default_types::ec_pp;
 /* curve-specific public parameters */
 type Fp=Fr<default_ec_pp> ;
 
-type FpVector=std::vector<Fp> ;
+type FpVector=Vec<Fp> ;
 
 pub struct PublicParams {
 // 
      log_p:usize,
 }
-//     PublicParams(const std::size_t log_p);
+//     PublicParams(const std::usize log_p);
 //     Fp getFp(long x) const; // to_support changes later
 //     ~PublicParams();
 // };
@@ -49,7 +49,7 @@ pub struct PublicParams {
  *****************************************************************************/
 
 // use  <cassert>
-// use  <vector>
+// 
 
 use crate::gadgetlib2::pp;
 

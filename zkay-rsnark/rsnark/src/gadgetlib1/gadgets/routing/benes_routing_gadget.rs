@@ -22,9 +22,9 @@ use crate::gadgetlib1::protoboard;
 
 
 
-template<typename FieldT>
-class benes_routing_gadget : public gadget<FieldT> {
-private:
+
+pub struct benes_routing_gadget<FieldT> {//gadget<FieldT>
+
     /*
       Indexing conventions:
 
@@ -36,8 +36,8 @@ private:
       (2*dimension-1 for switch bits/topology) and packet_idx is in
       range 0 .. num_packets-1.
     */
-    std::vector<std::vector<pb_variable_array<FieldT> > > routed_packets;
-    std::vector<multipacking_gadget<FieldT> > pack_inputs, unpack_outputs;
+routed_packets:    Vec<Vec<pb_variable_array<FieldT> > >,
+unpack_outputs:    Vec<multipacking_gadget<FieldT> >, pack_inputs:    Vec<multipacking_gadget<FieldT> >,
 
     /*
       If #packets = 1 then we can route without explicit routing bits
@@ -47,36 +47,24 @@ private:
       For benes_switch_bits 0 corresponds to straight edge and 1
       corresponds to cross edge.
     */
-    std::vector<pb_variable_array<FieldT>> benes_switch_bits;
-    benes_topology neighbors;
+benes_switch_bits:    Vec<pb_variable_array<FieldT>>,
+neighbors:    benes_topology,
 
-    const size_t num_packets;
-    const size_t num_columns;
+    num_packets:usize,
+    num_columns:usize,
 
-    const std::vector<pb_variable_array<FieldT> > routing_input_bits;
-    const std::vector<pb_variable_array<FieldT> > routing_output_bits;
-    size_t lines_to_unpack;
+    routing_input_bits:Vec<pb_variable_array<FieldT> >,
+    routing_output_bits:Vec<pb_variable_array<FieldT> >,
+lines_to_unpack:    usize,
 
-    const size_t packet_size, num_subpackets;
+    packet_size:usize, num_subpackets:usize,
 
-    benes_routing_gadget(protoboard<FieldT> &pb,
-                         const size_t num_packets,
-                         const std::vector<pb_variable_array<FieldT>> &routing_input_bits,
-                         const std::vector<pb_variable_array<FieldT>> &routing_output_bits,
-                         const size_t lines_to_unpack,
-                         const std::string& annotation_prefix="");
-
-    void generate_r1cs_constraints();
-
-    void generate_r1cs_witness(const integer_permutation &permutation);
-};
-
-template<typename FieldT>
-void test_benes_routing_gadget(const size_t num_packets, const size_t packet_size);
+}
 
 
 
-use crate::gadgetlib1::gadgets::routing::benes_routing_gadget;
+
+// use crate::gadgetlib1::gadgets::routing::benes_routing_gadget;
 
 //#endif // BENES_ROUTING_GADGET_HPP_
 /** @file
@@ -95,27 +83,20 @@ use crate::gadgetlib1::gadgets::routing::benes_routing_gadget;
 //#ifndef BENES_ROUTING_GADGET_TCC_
 // #define BENES_ROUTING_GADGET_TCC_
 
-use  <algorithm>
+// use  <algorithm>
 
 use ffec::common::profiling;
 
 
+impl benes_routing_gadget<FieldT>{
 
-template<typename FieldT>
-benes_routing_gadget<FieldT>::benes_routing_gadget(protoboard<FieldT> &pb,
-                                                   const size_t num_packets,
-                                                   const std::vector<pb_variable_array<FieldT> > &routing_input_bits,
-                                                   const std::vector<pb_variable_array<FieldT> > &routing_output_bits,
-                                                   const size_t lines_to_unpack,
-                                                   const std::string& annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    num_packets(num_packets),
-    num_columns(benes_num_columns(num_packets)),
-    routing_input_bits(routing_input_bits),
-    routing_output_bits(routing_output_bits),
-    lines_to_unpack(lines_to_unpack),
-    packet_size(routing_input_bits[0].len()),
-    num_subpackets(ffec::div_ceil(packet_size, FieldT::capacity()))
+pub fn new(pb:protoboard<FieldT>,
+                                                   num_packets:usize,
+                                                   routing_input_bits:&Vec<pb_variable_array<FieldT> >,
+                                                   routing_output_bits:&Vec<pb_variable_array<FieldT> >,
+                                                   lines_to_unpack:usize,
+                                                   annotation_prefix:&String)->Self
+    
 {
     assert!(lines_to_unpack <= routing_input_bits.len());
     assert!(num_packets == 1u64<<ffec::log2(num_packets));
@@ -129,7 +110,7 @@ benes_routing_gadget<FieldT>::benes_routing_gadget(protoboard<FieldT> &pb,
         routed_packets[column_idx].resize(num_packets);
         for packet_idx in 0..num_packets
         {
-            routed_packets[column_idx][packet_idx].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_%zu_{}", column_idx, packet_idx));
+            routed_packets[column_idx][packet_idx].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx, packet_idx));
         }
     }
 
@@ -139,16 +120,16 @@ benes_routing_gadget<FieldT>::benes_routing_gadget(protoboard<FieldT> &pb,
     for packet_idx in 0..num_packets
     {
         pack_inputs.push(
-            multipacking_gadget<FieldT>(pb,
-                                        pb_variable_array<FieldT>(routing_input_bits[packet_idx].begin(), routing_input_bits[packet_idx].end()),
+            multipacking_gadget::<FieldT>(pb,
+                                        pb_variable_array::<FieldT>(routing_input_bits[packet_idx].begin(), routing_input_bits[packet_idx].end()),
                                         routed_packets[0][packet_idx],
                                         FieldT::capacity(),
                                         FMT(self.annotation_prefix, " pack_inputs_{}", packet_idx)));
         if packet_idx < lines_to_unpack
         {
             unpack_outputs.push(
-                multipacking_gadget<FieldT>(pb,
-                                            pb_variable_array<FieldT>(routing_output_bits[packet_idx].begin(), routing_output_bits[packet_idx].end()),
+                multipacking_gadget::<FieldT>(pb,
+                                            pb_variable_array::<FieldT>(routing_output_bits[packet_idx].begin(), routing_output_bits[packet_idx].end()),
                                             routed_packets[num_columns][packet_idx],
                                             FieldT::capacity(),
                                             FMT(self.annotation_prefix, " unpack_outputs_{}", packet_idx)));
@@ -163,10 +144,19 @@ benes_routing_gadget<FieldT>::benes_routing_gadget(protoboard<FieldT> &pb,
             benes_switch_bits[column_idx].allocate(pb, num_packets, FMT(self.annotation_prefix, " benes_switch_bits_{}", column_idx));
         }
     }
+    // gadget<FieldT>(pb, annotation_prefix),
+   Self{num_packets,
+    num_columns:benes_num_columns(num_packets),
+   routing_input_bits,
+   routing_output_bits,
+   lines_to_unpack,
+    packet_size:routing_input_bits[0].len(),
+    num_subpackets:ffec::div_ceil(packet_size, FieldT::capacity())
+    }
 }
 
-template<typename FieldT>
-void benes_routing_gadget<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     /* packing/unpacking */
     for packet_idx in 0..num_packets
@@ -181,8 +171,8 @@ void benes_routing_gadget<FieldT>::generate_r1cs_constraints()
             for subpacket_idx in 0..num_subpackets
             {
                 self.pb.add_r1cs_constraint(
-                    r1cs_constraint<FieldT>(1, routed_packets[0][packet_idx][subpacket_idx], routed_packets[num_columns][packet_idx][subpacket_idx]),
-                    FMT(self.annotation_prefix, " fix_line_%zu_subpacket_{}", packet_idx, subpacket_idx));
+                    r1cs_constraint::<FieldT>(1, routed_packets[0][packet_idx][subpacket_idx], routed_packets[num_columns][packet_idx][subpacket_idx]),
+                    FMT(self.annotation_prefix, " fix_line_{}_subpacket_{}", packet_idx, subpacket_idx));
             }
         }
     }
@@ -192,24 +182,24 @@ void benes_routing_gadget<FieldT>::generate_r1cs_constraints()
     {
         for packet_idx in 0..num_packets
         {
-            const size_t straight_edge = neighbors[column_idx][packet_idx].first;
-            const size_t cross_edge = neighbors[column_idx][packet_idx].second;
+            let straight_edge = neighbors[column_idx][packet_idx].first;
+            let cross_edge = neighbors[column_idx][packet_idx].second;
 
             if num_subpackets == 1
             {
                 /* easy case: (cur-next)*(cur-cross) = 0 */
                 self.pb.add_r1cs_constraint(
-                    r1cs_constraint<FieldT>(
+                    r1cs_constraint::<FieldT>(
                         routed_packets[column_idx][packet_idx][0] - routed_packets[column_idx+1][straight_edge][0],
                         routed_packets[column_idx][packet_idx][0] - routed_packets[column_idx+1][cross_edge][0],
                         0),
-                    FMT(self.annotation_prefix, " easy_route_%zu_{}", column_idx, packet_idx));
+                    FMT(self.annotation_prefix, " easy_route_{}_{}", column_idx, packet_idx));
             }
             else
             {
                 /* routing bit must be boolean */
-                generate_boolean_r1cs_constraint<FieldT>(self.pb, benes_switch_bits[column_idx][packet_idx],
-                                                         FMT(self.annotation_prefix, " routing_bit_%zu_{}", column_idx, packet_idx));
+                generate_boolean_r1cs_constraint::<FieldT>(self.pb, benes_switch_bits[column_idx][packet_idx],
+                                                         FMT(self.annotation_prefix, " routing_bit_{}_{}", column_idx, packet_idx));
 
                 /* route forward according to routing bits */
                 for subpacket_idx in 0..num_subpackets
@@ -219,19 +209,19 @@ void benes_routing_gadget<FieldT>::generate_r1cs_constraints()
                       switch_bit * (cross_edge-straight_edge) = cur-straight_edge
                     */
                     self.pb.add_r1cs_constraint(
-                        r1cs_constraint<FieldT>(
+                        r1cs_constraint::<FieldT>(
                             benes_switch_bits[column_idx][packet_idx],
                             routed_packets[column_idx+1][cross_edge][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx],
                             routed_packets[column_idx][packet_idx][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx]),
-                        FMT(self.annotation_prefix, " route_forward_%zu_%zu_{}", column_idx, packet_idx, subpacket_idx));
+                        FMT(self.annotation_prefix, " route_forward_{}_{}_{}", column_idx, packet_idx, subpacket_idx));
                 }
             }
         }
     }
 }
 
-template<typename FieldT>
-void benes_routing_gadget<FieldT>::generate_r1cs_witness(const integer_permutation& permutation)
+
+pub fn generate_r1cs_witness(permutation:&integer_permutation)
 {
     /* pack inputs */
     for packet_idx in 0..num_packets
@@ -240,14 +230,14 @@ void benes_routing_gadget<FieldT>::generate_r1cs_witness(const integer_permutati
     }
 
     /* do the routing */
-    const benes_routing routing = get_benes_routing(permutation);
+    let routing= get_benes_routing(permutation);
 
     for column_idx in 0..num_columns
     {
         for packet_idx in 0..num_packets
         {
-            const size_t straight_edge = neighbors[column_idx][packet_idx].first;
-            const size_t cross_edge = neighbors[column_idx][packet_idx].second;
+            let straight_edge = neighbors[column_idx][packet_idx].first;
+            let cross_edge = neighbors[column_idx][packet_idx].second;
 
             if num_subpackets > 1
             {
@@ -256,9 +246,9 @@ void benes_routing_gadget<FieldT>::generate_r1cs_witness(const integer_permutati
 
             for subpacket_idx in 0..num_subpackets
             {
-                self.pb.val(routing[column_idx][packet_idx] ?
-                             routed_packets[column_idx+1][cross_edge][subpacket_idx] :
-                             routed_packets[column_idx+1][straight_edge][subpacket_idx]) =
+                self.pb.val( if routing[column_idx][packet_idx] 
+                             {routed_packets[column_idx+1][cross_edge][subpacket_idx]} else
+                             {routed_packets[column_idx+1][straight_edge][subpacket_idx]}) =
                     self.pb.val(routed_packets[column_idx][packet_idx][subpacket_idx]);
             }
         }
@@ -271,20 +261,21 @@ void benes_routing_gadget<FieldT>::generate_r1cs_witness(const integer_permutati
     }
 }
 
-template<typename FieldT>
-void test_benes_routing_gadget(const size_t num_packets, const size_t packet_size)
+}
+
+pub fn  test_benes_routing_gadget(num_packets:usize, packet_size:usize)
 {
-    const size_t dimension = ffec::log2(num_packets);
+    let dimension = ffec::log2(num_packets);
     assert!(num_packets == 1u64<<dimension);
 
     print!("testing benes_routing_gadget by routing 2^{}-entry vector of {} bits (Fp fits all {} bit integers)\n", dimension, packet_size, FieldT::capacity());
 
-    protoboard<FieldT> pb;
-    integer_permutation permutation(num_packets);
+    let mut  pb=protoboard::<FieldT> ::new();
+    let mut  permutation=integer_permutation::new(num_packets);
     permutation.random_shuffle();
     ffec::print_time("generated permutation");
 
-    std::vector<pb_variable_array<FieldT> > randbits(num_packets), outbits(num_packets);
+    let (randbits, outbits)=(vec![vec![];num_packets],vec![vec![];num_packets]);
     for packet_idx in 0..num_packets
     {
         randbits[packet_idx].allocate(pb, packet_size, FMT("", "randbits_{}", packet_idx));
@@ -292,12 +283,12 @@ void test_benes_routing_gadget(const size_t num_packets, const size_t packet_siz
 
         for bit_idx in 0..packet_size
         {
-            pb.val(randbits[packet_idx][bit_idx])=  if (rand() % 2) {FieldT::one()} else{FieldT::zero()};
+            pb.val(randbits[packet_idx][bit_idx])=  if rand() % 2!=0 {FieldT::one()} else{FieldT::zero()};
         }
     }
     ffec::print_time("generated bits to be routed");
 
-    benes_routing_gadget<FieldT> r(pb, num_packets, randbits, outbits, num_packets, "main_routing_gadget");
+    let mut r=benes_routing_gadget::<FieldT>::new(pb, num_packets, randbits, outbits, num_packets, "main_routing_gadget");
     r.generate_r1cs_constraints();
     ffec::print_time("generated routing constraints");
 
@@ -315,7 +306,7 @@ void test_benes_routing_gadget(const size_t num_packets, const size_t packet_siz
     }
 
     print!("negative test\n");
-    pb.val(pb_variable<FieldT>(10)) = FieldT(12345);
+    pb.val(pb_variable::<FieldT>(10)) = FieldT(12345);
     assert!(!pb.is_satisfied());
 
     print!("num_constraints = {}, num_variables = {}\n",

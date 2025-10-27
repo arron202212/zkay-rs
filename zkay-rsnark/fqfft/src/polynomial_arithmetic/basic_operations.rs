@@ -37,7 +37,7 @@
 //  * [Bostan, Lecerf, & Schost, 2003. Tellegen's Principle in Practice, on page 38].
 //  */
 // 
-// pub fn  _reverse(a:&Vec<FieldT>,  size_t n);
+// pub fn  _reverse(a:&Vec<FieldT>,  usize n);
 
 // /**
 //  * Computes the standard polynomial addition, polynomial A + polynomial B, and stores result in polynomial C.
@@ -75,7 +75,7 @@
 //  * [Bostan, Lecerf, & Schost, 2003. Tellegen's Principle in Practice, on page 39].
 //  */
 // 
-// Vec<FieldT> _polynomial_multiplication_transpose( size_t &n, a:&Vec<FieldT>,  c:&Vec<FieldT>);
+// Vec<FieldT> _polynomial_multiplication_transpose( usize &n, a:&Vec<FieldT>,  c:&Vec<FieldT>);
 
 // /**
 //  * Perform the standard Euclidean Division algorithm.

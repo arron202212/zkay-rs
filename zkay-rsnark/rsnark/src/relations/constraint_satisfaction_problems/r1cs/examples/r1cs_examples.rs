@@ -28,7 +28,7 @@ auxiliary_input:    r1cs_auxiliary_input<FieldT>,
 }
 impl r1cs_example< FieldT> {
     // r1cs_example<FieldT>() = default;
-    // r1cs_example<FieldT>(const r1cs_example<FieldT> &other) = default;
+    // r1cs_example<FieldT>(other:&r1cs_example<FieldT>) = default;
     pub fn new(constraint_system:r1cs_constraint_system<FieldT>,
                          primary_input:r1cs_primary_input<FieldT>,
                          auxiliary_input:r1cs_auxiliary_input<FieldT>) ->Self
@@ -54,8 +54,8 @@ auxiliary_input:                         r1cs_auxiliary_input<FieldT>)->Self
  * - the R1CS input consists of ``full'' field elements (typically require the whole log|Field| bits to represent).
 //  */
 // < FieldT>
-// r1cs_example<FieldT> generate_r1cs_example_with_field_input(const size_t num_constraints,
-//                                                             const size_t num_inputs);
+// r1cs_example<FieldT> generate_r1cs_example_with_field_input(num_constraints:usize,
+//                                                             num_inputs:usize);
 
 // /**
 //  * Generate a R1CS example such that:
@@ -65,8 +65,8 @@ auxiliary_input:                         r1cs_auxiliary_input<FieldT>)->Self
 //  * - the R1CS input consists of binary values (as opposed to ``full'' field elements).
 //  */
 // < FieldT>
-// r1cs_example<FieldT> generate_r1cs_example_with_binary_input(const size_t num_constraints,
-//                                                              const size_t num_inputs);
+// r1cs_example<FieldT> generate_r1cs_example_with_binary_input(num_constraints:usize,
+//                                                              num_inputs:usize);
 
 
 

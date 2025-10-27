@@ -20,11 +20,11 @@ use crate::relations::circuit_satisfaction_problems/tbcs/tbcs;
  * Below are various typedefs aliases (used for uniformity with other proof systems).
  */
 
-type tbcs_circuit tbcs_ppzksnark_circuit;
+type tbcs_ppzksnark_circuit=tbcs_circuit;
 
-type tbcs_primary_input tbcs_ppzksnark_primary_input;
+type tbcs_ppzksnark_primary_input=tbcs_primary_input;
 
-type tbcs_auxiliary_input tbcs_ppzksnark_auxiliary_input;
+type tbcs_ppzksnark_auxiliary_input=tbcs_auxiliary_input;
 
 
 

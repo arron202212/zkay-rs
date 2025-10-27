@@ -40,21 +40,21 @@ int main(int argc, const char * argv[])
 
     if argc != 3
     {
-        print!("usage: %s num_gates primary_input_size\n", argv[0]);
+        print!("usage: {} num_gates primary_input_size\n", argv[0]);
         return 1;
     }
-    const int num_gates = atoi(argv[1]);
+    let num_gates= atoi(argv[1]);
     int primary_input_size = atoi(argv[2]);
 
-    const size_t auxiliary_input_size = 0;
-    const size_t num_outputs = num_gates / 2;
+    let auxiliary_input_size = 0;
+    let num_outputs = num_gates / 2;
 
     ffec::enter_block("Generate BACS example");
     bacs_example<ffec::Fr<default_bacs_ppzksnark_pp> > example = generate_bacs_example<ffec::Fr<default_bacs_ppzksnark_pp> >(primary_input_size, auxiliary_input_size, num_gates, num_outputs);
     ffec::leave_block("Generate BACS example");
 
     ffec::print_header("(enter) Profile BACS ppzkSNARK");
-    const bool test_serialization = true;
+    let mut test_serialization = true;
     run_bacs_ppzksnark<default_bacs_ppzksnark_pp>(example, test_serialization);
     ffec::print_header("(leave) Profile BACS ppzkSNARK");
 }

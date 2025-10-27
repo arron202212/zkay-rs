@@ -9,7 +9,7 @@
 // // #define BASIC_GADGETS_HPP_
 
 // // use  <cassert>
-// // use  <memory>
+// // 
 
 use crate::gadgetlib1::gadget;
 
@@ -26,7 +26,7 @@ fn FMT(s:&String,c:&str){
 
 // 
 pub struct packing_gadget {
-// private:: public gadget<FieldT> 
+// : public gadget<FieldT> 
     /* no internal variables */
 // 
       bits:pb_linear_combination_array<FieldT> ,
@@ -52,7 +52,7 @@ pub struct packing_gadget {
 
 // 
 pub struct  multipacking_gadget {
-// private:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 packers:    Vec<packing_gadget<FieldT> >,
 // 
 bits:     pb_linear_combination_array<FieldT>,
@@ -118,7 +118,7 @@ num_chunks:     usize,
 
 // 
 pub struct  dual_variable_gadget  {
-// private:: public gadget<FieldT>
+// : public gadget<FieldT>
 consistency_check:    RcCell<packing_gadget<FieldT> >,
 // 
 packed:    pb_variable<FieldT>,
@@ -145,7 +145,7 @@ impl dual_variable_gadget  {
                          annotation_prefix:&String)->Self
         
     {
-// gadget<FieldT>(pb, annotation_prefix), bits(bits)
+// gadget<FieldT>(pb, annotation_prefix),bits
         packed.allocate(pb, FMT(annotation_prefix, " packed"));
         consistency_check.reset( packing_gadget::<FieldT>::new(pb,
                                                            bits,
@@ -159,7 +159,7 @@ impl dual_variable_gadget  {
                          annotation_prefix:&String) ->Self
        
     {
-//  gadget<FieldT>(pb, annotation_prefix), packed(packed)
+//  gadget<FieldT>(pb, annotation_prefix),packed
         bits.allocate(pb, width, FMT(annotation_prefix, " bits"));
         consistency_check.reset( packing_gadget::<FieldT>::new(pb,
                                                            bits,
@@ -183,7 +183,7 @@ impl dual_variable_gadget  {
 
 // 
 pub struct  disjunction_gadget {
-// private:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 inv:    pb_variable<FieldT>,
 // 
 inputs:     pb_variable_array<FieldT>,
@@ -196,7 +196,7 @@ impl disjunction_gadget {
                        annotation_prefix:&String) ->Self
         
     {
-// gadget<FieldT>(pb, annotation_prefix), inputs(inputs), output(output)
+// gadget<FieldT>(pb, annotation_prefix),inputs,output
         assert!(inputs.len() >= 1);
         inv.allocate(pb, FMT(annotation_prefix, " inv"));
     }
@@ -210,7 +210,7 @@ impl disjunction_gadget {
 
 // 
 pub struct  conjunction_gadget {
-// private:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 inv:    pb_variable<FieldT>,
 // 
 inputs:     pb_variable_array<FieldT>,
@@ -223,7 +223,7 @@ impl conjunction_gadget {
                        annotation_prefix:&String) ->Self
        
     {
-//  gadget<FieldT>(pb, annotation_prefix), inputs(inputs), output(output)
+//  gadget<FieldT>(pb, annotation_prefix),inputs,output
         assert!(inputs.len() >= 1);
         inv.allocate(pb, FMT(annotation_prefix, " inv"));
     }
@@ -237,7 +237,7 @@ impl conjunction_gadget {
 
 // 
 pub struct  comparison_gadget {
-// private:: public gadget<FieldT> 
+// : public gadget<FieldT> 
 alpha:    pb_variable_array<FieldT>,
 alpha_packed:    pb_variable<FieldT>,
 pack_alpha:    RcCell<packing_gadget<FieldT> >,
@@ -260,7 +260,7 @@ impl comparison_gadget {
                       less_or_eq:pb_variable<FieldT>,
                       annotation_prefix:&String) ->Self
     {
-//  gadget<FieldT>(pb, annotation_prefix), n(n), A(A), B(B), less(less), less_or_eq(less_or_eq)
+//  gadget<FieldT>(pb, annotation_prefix),n,A,B,less,less_or_eq
         alpha.allocate(pb, n, FMT(annotation_prefix, " alpha"));
         alpha.push(less_or_eq); // alpha[n] is less_or_eq
 
@@ -285,7 +285,7 @@ impl comparison_gadget {
 
 // 
 pub struct  inner_product_gadget {
-// private:: public gadget<FieldT> 
+// : public gadget<FieldT> 
     /* S_i = \sum_{k=0}^{i+1} A[i] * B[i] */
 S:    pb_variable_array<FieldT>,
 // 
@@ -301,7 +301,7 @@ result:     pb_variable<FieldT>,
                          annotation_prefix:&String)->Self
        
     {
-//  gadget<FieldT>(pb, annotation_prefix), A(A), B(B), result(result)
+//  gadget<FieldT>(pb, annotation_prefix),A,B,result
         assert!(A.len() >= 1);
         assert!(A.len() == B.len());
 
@@ -325,7 +325,7 @@ pub struct  loose_multiplexing_gadget {
 */
 // : public gadget<FieldT> 
 alpha:    pb_variable_array<FieldT>,
-// private:
+// 
 compute_result:    RcCell<inner_product_gadget<FieldT> >,
 // 
 arr:     pb_linear_combination_array<FieldT>,
@@ -342,7 +342,7 @@ impl loose_multiplexing_gadget {
                               annotation_prefix:&String) ->Self
         
     {
-// gadget<FieldT>(pb, annotation_prefix), arr(arr), index(index), result(result), success_flag(success_flag)
+// gadget<FieldT>(pb, annotation_prefix),arr,index,result,success_flag
         alpha.allocate(pb, arr.len(), FMT(annotation_prefix, " alpha"));
         compute_result.reset(inner_product_gadget::<FieldT>::new(pb, alpha, arr, result, FMT(annotation_prefix, " compute_result")));
     }
@@ -441,8 +441,8 @@ pub fn new(pb:&protoboard<FieldT> ,
                                                  annotation_prefix:&String) ->Self
   
 {
-//   gadget<FieldT>(pb, annotation_prefix), bits(bits), packed_vars(packed_vars),
-//     chunk_size(chunk_size),
+//   gadget<FieldT>(pb, annotation_prefix),bits,packed_vars,
+//    chunk_size,
 //     num_chunks(div_ceil(bits.len(), chunk_size))
     // last_chunk_size(bits.len() - (num_chunks-1) * chunk_size)
     assert!(packed_vars.len() == num_chunks);
@@ -495,7 +495,7 @@ pub fn new(pb:protoboard<FieldT> ,
                                                            annotation_prefix:&String) ->Self
 
 {
-// gadget<FieldT>(pb, annotation_prefix), source(source), target(target), do_copy(do_copy)
+// gadget<FieldT>(pb, annotation_prefix),source,target,do_copy
     assert!(source.len() == target.len());
 }
 
@@ -534,8 +534,8 @@ pub fn new(pb:protoboard<FieldT> ,
                                                        annotation_prefix:&String) ->Self
   
 {
-//   gadget<FieldT>(pb, annotation_prefix), source_bits(source_bits), target_bits(target_bits), do_copy(do_copy),
-//     chunk_size(chunk_size), num_chunks(div_ceil(source_bits.len(), chunk_size))
+//   gadget<FieldT>(pb, annotation_prefix),source_bits,target_bits,do_copy,
+//    chunk_size, num_chunks(div_ceil(source_bits.len(), chunk_size))
     assert!(source_bits.len() == target_bits.len());
 
     packed_source.allocate(pb, num_chunks, FMT(annotation_prefix, " packed_source"));

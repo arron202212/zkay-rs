@@ -22,11 +22,11 @@ use crate::algebra::fields::prime_extension::fp4;
 // #define mnt4_modulus_r mnt46_modulus_A
 // #define mnt4_modulus_q mnt46_modulus_B
 
-const mnt4_r_bitcount:usize= mnt46_A_bitcount;
-const mnt4_q_bitcount:usize= mnt46_B_bitcount;
+mnt46_A_bitcount:mnt4_r_bitcount:usize=,
+mnt46_B_bitcount:mnt4_q_bitcount:usize=,
 
-const mnt4_r_limbs:usize= mnt46_A_limbs;
-const mnt4_q_limbs:usize= mnt46_B_limbs;
+mnt46_A_limbs:mnt4_r_limbs:usize=,
+mnt46_B_limbs:mnt4_q_limbs:usize=,
 
 // static  mnt4_modulus_r:bigint<mnt4_r_limbs>={bigint::<mnt4_r_limbs>::new(0)};
 // static  mnt4_modulus_q:bigint<mnt4_q_limbs>={bigint::<mnt4_q_limbs>::new(0)};
@@ -37,7 +37,7 @@ pub type mnt4_Fq=Fp_model<mnt4_q_limbs, mnt4_modulus_q>;
 // type mnt4_Fq4=Fp4_model<mnt4_q_limbs, mnt4_modulus_q>;
 // type mnt4_GT=mnt4_Fq4;
 
-// void init_mnt4_fields();
+// pub fn  init_mnt4_fields();
 
 // } // namespace libff
 

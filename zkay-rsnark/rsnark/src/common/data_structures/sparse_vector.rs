@@ -13,7 +13,7 @@
 // // #define SPARSE_VECTOR_HPP_
 
 // use  <iostream>
-// use  <vector>
+// 
 
 
 
@@ -35,28 +35,28 @@ domain_size_:    usize,
     // sparse_vector() = default;
     // sparse_vector(&other:sparse_vector<T>) = default;
     // sparse_vector(sparse_vector<T> &&other) = default;
-    // pub fn new(v:Vec<T>); /* constructor from std::vector */
+    // pub fn new(v:Vec<T>); /* constructor from Vec */
 
     // sparse_vector<T>& operator=(&other:sparse_vector<T>) = default;
     // sparse_vector<T>& operator=(sparse_vector<T> &&other) = default;
 
-    // T operator[](idx:size_t) const;
+    // T operator[](idx:usize) const;
 
     // bool operator==(&other:sparse_vector<T>) const;
-    // bool operator==(&other:std::vector<T>) const;
+    // bool operator==(&other:Vec<T>) const;
 
     // bool is_valid() const;
     // bool empty() const;
 
-    // size_t domain_size() const; // return domain_size_
-    // size_t size() const; // return the number of indices (representing the number of non-zero entries)
+    // usize domain_size() const; // return domain_size_
+    // usize size() const; // return the number of indices (representing the number of non-zero entries)
     //  pub fn size_in_bits(&self)->usize; // return the number bits needed to store the sparse vector
 
     // /* return a pair consisting of the accumulated value and the sparse vector of non-accumulated values */
-    // template<typename FieldT>
-    // std::pair<T, sparse_vector<T> > accumulate(it_begin:&typename std::vector<FieldT>::const_iterator
-    //                                            it_end:&typename std::vector<FieldT>::const_iterator
-    //                                            offset:size_t) const;
+    // 
+    // std::pair<T, sparse_vector<T> > accumulate(it_begin:&Vec<FieldT>::const_iterator
+    //                                            it_end:&Vec<FieldT>::const_iterator
+    //                                            offset:usize) const;
 
 }
 
@@ -150,16 +150,16 @@ size(&self) ->usize
 pub fn 
  size_in_bits(&self)  ->usize
 {
-    return indices.len() * (sizeof(size_t) * 8 + T::size_in_bits());
+    return indices.len() * (sizeof(usize) * 8 + T::size_in_bits());
 }
 
 pub fn accumulate<FieldT>(it:&[FieldT],
-                                                             offset:size_t) ->(T, sparse_vector<T>)
+                                                             offset:usize) ->(T, sparse_vector<T>)
 {
 // // #ifdef MULTICORE
-//     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
+//     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
 // #else
-//     const size_t chunks = 1;
+//     let chunks = 1;
 // //#endif
 
     let mut accumulated_value = T::zero();
@@ -246,7 +246,7 @@ pub fn accumulate<FieldT>(it:&[FieldT],
 
 use std::ops::Index;
 impl<T> Index<usize> for sparse_vector<T> {
-type Output = T;
+type Output =T;
 
 fn index(&self, idx: usize) -> &Self::Output {
     let it = std::lower_bound(indices.begin(), indices.end(), idx);
@@ -256,7 +256,7 @@ fn index(&self, idx: usize) -> &Self::Output {
 
 
 // pub fn 
-// T sparse_vector<T>::operator[](idx:size_t) const
+// T sparse_vector<T>::operator[](idx:usize) const
 // {
 //     auto it = std::lower_bound(indices.begin(), indices.end(), idx);
 //     return if (it != indices.end() && *it == idx) {values[it - indices.begin()]} else{T()};
@@ -357,14 +357,14 @@ impl<T> PartialEq<&Vec<T>> for sparse_vector<T>{
 }
 
 // pub fn 
-// bool sparse_vector<T>::operator==(&other:std::vector<T>) const
+// bool sparse_vector<T>::operator==(&other:Vec<T>) const
 // {
 //     if self.domain_size_ < other.len()
 //     {
 //         return false;
 //     }
 
-//     size_t j = 0;
+//     usize j = 0;
 //     for i in 0..other.len()
 //     {
 //         if self.indices[j] == i
@@ -409,7 +409,7 @@ self.values.iter().map(|i|format!("{i}{OUTPUT_NEWLINE}")).collect::<String>(),
 //     in >> self.domain_size_;
 //     ffec::consume_newline(in);
 
-//     size_t s;
+//     usize s;
 //     in >> s;
 //     ffec::consume_newline(in);
 //     self.indices.resize(s);

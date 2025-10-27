@@ -17,7 +17,7 @@ use crate::common::default_types::tinyram_zksnark_pp;
 
 
 
-// type default_tinyram_zksnark_pp default_ram_zksnark_pp;
+// type default_ram_zksnark_pp=default_tinyram_zksnark_pp;
 
 
 

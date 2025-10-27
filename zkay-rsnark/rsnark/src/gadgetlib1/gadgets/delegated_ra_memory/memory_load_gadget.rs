@@ -13,12 +13,12 @@
 //#ifndef MEMORY_LOAD_GADGET_HPP_
 // #define MEMORY_LOAD_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_read_gadget;
 
 
 
-template<typename FieldT, typename HashT>
-using memory_load_gadget = merkle_tree_check_read_gadget<FieldT, HashT>;
+// 
+type memory_load_gadget< FieldT,  HashT> = merkle_tree_check_read_gadget<FieldT, HashT>;
 
 
 

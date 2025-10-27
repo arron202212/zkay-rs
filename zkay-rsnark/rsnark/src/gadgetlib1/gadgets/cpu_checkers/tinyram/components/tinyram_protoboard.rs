@@ -29,20 +29,20 @@ pub struct tinyram_protoboard  {
 
 // 
 pub struct tinyram_gadget {
-// protected:: public gadget<FieldT> 
+// : public gadget<FieldT> 
     pb:tinyram_protoboard<FieldT> ,
 // 
-//     tinyram_gadget(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string="");
+//     tinyram_gadget(pb:tinyram_protoboard<FieldT>, annotation_prefix:String="");
 }
 
 // standard gadgets provide two methods: generate_r1cs_constraints and generate_r1cs_witness
 // 
 pub struct tinyram_standard_gadget {
 // : public tinyram_gadget<FieldT> 
-//     tinyram_standard_gadget(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string="");
+//     tinyram_standard_gadget(pb:tinyram_protoboard<FieldT>, annotation_prefix:String="");
 
-//     virtual void generate_r1cs_constraints() = 0;
-//     virtual void generate_r1cs_witness() = 0;
+//     virtual pub fn  generate_r1cs_constraints() = 0;
+//     virtual pub fn  generate_r1cs_witness() = 0;
 }
 
 
@@ -77,16 +77,16 @@ pub fn new(ap:tinyram_architecture_params) ->Self
 }
 impl tinyram_gadget<FieldT>{
 
-pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string) ->Self
+pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
     
 {
-// gadget<FieldT>(pb, annotation_prefix), pb(pb)
+// gadget<FieldT>(pb, annotation_prefix),pb
   Self{}
 }
 }
 impl tinyram_standard_gadget<FieldT>{
 
-pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:std::string) ->Self
+pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
     
 {
 // tinyram_gadget<FieldT>(pb, annotation_prefix)

@@ -20,31 +20,31 @@ use crate::algebra::fields::binary::gf64;
 
 using namespace libff;
 
-gf32 gf32_mul(const uint32_t &a_val, const uint32_t &b_val)
+gf32 gf32_mul(a_val:&uint32_t, b_val:&uint32_t)
 {
     return gf32(a_val) * gf32(b_val);
 }
 
-gf64 gf64_mul(const uint64_t &a_val, const uint64_t &b_val)
+gf64 gf64_mul(a_val:&uint64_t, b_val:&uint64_t)
 {
     return gf64(a_val) * gf64(b_val);
 }
 
-gf128 gf128_mul(const uint64_t &a_val_high, const uint64_t &a_val_low, const uint64_t &b_val_high, const uint64_t &b_val_low)
+gf128 gf128_mul(a_val_high:&uint64_t, a_val_low:&uint64_t, b_val_high:&uint64_t, b_val_low:&uint64_t)
 {
     return gf128(a_val_high, a_val_low) * gf128(b_val_high, b_val_low);
 }
 
-gf192 gf192_mul(const uint64_t &a_val_high, const uint64_t &a_val_mid, const uint64_t &a_val_low,
-                const uint64_t &b_val_high, const uint64_t &b_val_mid, const uint64_t &b_val_low)
+gf192 gf192_mul(a_val_high:&uint64_t, a_val_mid:&uint64_t, a_val_low:&uint64_t,
+                b_val_high:&uint64_t, b_val_mid:&uint64_t, b_val_low:&uint64_t)
 {
     return gf192(a_val_high, a_val_mid, a_val_low) * gf192(b_val_high, b_val_mid, b_val_low);
 }
 
-gf256 gf256_mul(const uint64_t &a_val_high, const uint64_t &a_val_midh,
-                const uint64_t &a_val_midl, const uint64_t &a_val_low,
-                const uint64_t &b_val_high, const uint64_t &b_val_midh,
-                const uint64_t &b_val_midl, const uint64_t &b_val_low)
+gf256 gf256_mul(a_val_high:&uint64_t, a_val_midh:&uint64_t,
+                a_val_midl:&uint64_t, a_val_low:&uint64_t,
+                b_val_high:&uint64_t, b_val_midh:&uint64_t,
+                b_val_midl:&uint64_t, b_val_low:&uint64_t)
 {
     return gf256(a_val_high, a_val_midh, a_val_midl, a_val_low) *
            gf256(b_val_high, b_val_midh, b_val_midl, b_val_low);
@@ -67,8 +67,8 @@ TEST(GF32Test, MultiplicationTest) {
 
 TEST(GF32Test, InverseTest) {
     for i in 0..10{
-        const gf32 a = gf32::random_element();
-        const gf32 a_inv = a.inverse();
+        let a= gf32::random_element();
+        let a_inv= a.inverse();
 
         EXPECT_EQ(a*a_inv, gf32(1));
     }
@@ -91,8 +91,8 @@ TEST(GF64Test, MultiplicationTest) {
 
 TEST(GF64Test, InverseTest) {
     for i in 0..10{
-        const gf64 a = gf64::random_element();
-        const gf64 a_inv = a.inverse();
+        let a= gf64::random_element();
+        let a_inv= a.inverse();
 
         EXPECT_EQ(a*a_inv, gf64(1));
     }
@@ -113,8 +113,8 @@ TEST(GF128Test, MultiplicationTest) {
 }
 
 TEST(GF128Test, InverseTest) {
-    const gf128 a = gf128::random_element();
-    const gf128 a_inv = a.inverse();
+    let a= gf128::random_element();
+    let a_inv= a.inverse();
 
     EXPECT_EQ(a*a_inv, gf128(1));
 }
@@ -135,8 +135,8 @@ TEST(GF192Test, MultiplicationTest) {
 }
 
 TEST(GF192Test, InverseTest) {
-    const gf192 a = gf192::random_element();
-    const gf192 a_inv = a.inverse();
+    let a= gf192::random_element();
+    let a_inv= a.inverse();
 
     EXPECT_EQ(a*a_inv, gf192(1));
 }
@@ -157,8 +157,8 @@ TEST(GF256Test, MultiplicationTest) {
 }
 
 TEST(GF256Test, InverseTest) {
-    const gf256 a = gf256::random_element();
-    const gf256 a_inv = a.inverse();
+    let a= gf256::random_element();
+    let a_inv= a.inverse();
 
     EXPECT_EQ(a*a_inv, gf256(1));
 }

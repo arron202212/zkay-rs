@@ -16,39 +16,39 @@ use crate::algebra::fields::prime_base::fp;
 
 // namespace libff {
 
-class bn128_GT;
+pub struct bn128_GT;
 std::ostream& operator<<(std::ostream &, const bn128_GT&);
 std::istream& operator>>(std::istream &, bn128_GT&);
 
-class bn128_GT {
+pub struct bn128_GT {
 
     static bn128_GT GT_one;
     bn::Fp12 elem;
 
     bn128_GT();
-    bool operator==(const bn128_GT &other) const;
-    bool operator!=(const bn128_GT &other) const;
+    bool operator==(other:&bn128_GT) const;
+    bool operator!=(other:&bn128_GT) const;
 
-    bn128_GT operator*(const bn128_GT &other) const;
+    bn128_GT operator*(other:&bn128_GT) const;
     bn128_GT unitary_inverse() const;
 
     static bn128_GT one();
 
-    void print() { std::cout << this->elem << "\n"; };
+    pub fn cout << this->elem << "\n"; };
 
-    friend std::ostream& operator<<(std::ostream &out, const bn128_GT &g);
+    friend std::ostream& operator<<(std::ostream &out, g:&bn128_GT);
     friend std::istream& operator>>(std::istream &in, bn128_GT &g);
 };
 
-template<mp_size_t m>
-bn128_GT operator^(const bn128_GT &rhs, const bigint<m> &lhs)
+
+bn128_GT operator^(rhs:&bn128_GT, lhs:&bigint<m>)
 {
     return power<bn128_GT, m>(rhs, lhs);
 }
 
 
-template<mp_size_t m, const bigint<m>& modulus_p>
-bn128_GT operator^(const bn128_GT &rhs, const Fp_model<m,modulus_p> &lhs)
+
+bn128_GT operator^(rhs:&bn128_GT, lhs:&Fp_model<m,modulus_p>)
 {
     return power<bn128_GT, m>(rhs, lhs.as_bigint());
 }
@@ -67,29 +67,29 @@ use crate::algebra::curves::bn128::bn128_gt;
 // namespace libff {
 
 bn128_GT bn128_GT::GT_one;
-bn128_GT::bn128_GT()
+pub fn new()
 {
     this->elem.clear();
 }
 
-bool bn128_GT::operator==(const bn128_GT &other) const
+bool bn128_GT::operator==(other:&bn128_GT) const
 {
     return (this->elem == other.elem);
 }
 
-bool bn128_GT::operator!=(const bn128_GT& other) const
+bool bn128_GT::operator!=(other:&bn128_GT) const
 {
     return !(operator==(other));
 }
 
-bn128_GT bn128_GT::operator*(const bn128_GT &other) const
+bn128_GT bn128_GT::operator*(other:&bn128_GT) const
 {
     bn128_GT result;
     bn::Fp12::mul(result.elem, this->elem, other.elem);
     return result;
 }
 
-bn128_GT bn128_GT::unitary_inverse() const
+pub fn unitary_inverse()->bn128_GT
 {
     bn128_GT result(*this);
     bn::Fp6::neg(result.elem.b_, result.elem.b_);
@@ -101,7 +101,7 @@ bn128_GT bn128_GT::one()
     return GT_one;
 }
 
-std::ostream& operator<<(std::ostream &out, const bn128_GT &g)
+std::ostream& operator<<(std::ostream &out, g:&bn128_GT)
 {
 //#ifndef BINARY_OUTPUT
     out << g.elem.a_ << OUTPUT_SEPARATOR << g.elem.b_;

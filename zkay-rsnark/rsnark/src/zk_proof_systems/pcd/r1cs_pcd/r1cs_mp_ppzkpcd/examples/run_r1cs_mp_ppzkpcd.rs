@@ -26,13 +26,13 @@
  *
  * Optionally, also test the case of compliance predicates with different types.
  */
-// template< PCD_ppT>
-// bool run_r1cs_mp_ppzkpcd_tally_example(const size_t wordsize,
-//                                        const size_t max_arity,
-//                                        const size_t depth,
-//                                        const bool test_serialization,
-//                                        const bool test_multi_type,
-//                                        const bool test_same_type_optimization);
+// 
+// bool run_r1cs_mp_ppzkpcd_tally_example(wordsize:usize,
+//                                        max_arity:usize,
+//                                        depth:usize,
+//                                        test_serialization:bool,
+//                                        test_multi_type:bool,
+//                                        test_same_type_optimization:bool);
 
 
 
@@ -61,10 +61,10 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
 
 
 
-// template< PCD_ppT>
- pub fn run_r1cs_mp_ppzkpcd_tally_example<PCD_ppT>(wordsize:size_t,
-                                       max_arity:size_t,
-                                       depth:size_t,
+// 
+ pub fn run_r1cs_mp_ppzkpcd_tally_example<PCD_ppT>(wordsize:usize,
+                                       max_arity:usize,
+                                       depth:usize,
                                        test_serialization:bool,
                                        test_multi_type:bool,
                                        test_same_type_optimization:bool)->bool
@@ -123,8 +123,8 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
 
     ffec::leave_block("Generate all messages");
 
-    let mut  tree_proofs=vec![r1cs_mp_ppzkpcd_proof<PCD_ppT>::new();tree_size];//std::vector<r1cs_mp_ppzkpcd_proof<PCD_ppT> >
-    let mut tree_messages=vec![r1cs_pcd_message<PCD_ppT>::new();tree_size];
+    let mut  tree_proofs=vec![r1cs_mp_ppzkpcd_proof::<PCD_ppT>::new();tree_size];//Vec<r1cs_mp_ppzkpcd_proof<PCD_ppT> >
+    let mut tree_messages=vec![r1cs_pcd_message::<PCD_ppT>::new();tree_size];
 
     ffec::enter_block("Generate compliance predicates");
     let ( mut tally_1_accepted_types, mut tally_2_accepted_types)=(BTreeSet::new(),BTreeSet::new());
@@ -178,8 +178,8 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
 
             let  base_case = (max_arity * cur_idx + max_arity >= tree_size);
 
-            let mut msgs=vec![base_msg;max_arity];//std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > > 
-            let mut  proofs=vec![r1cs_mp_ppzkpcd_proof::<PCD_ppT>::new();max_arity];//std::vector<r1cs_mp_ppzkpcd_proof<PCD_ppT> >
+            let mut msgs=vec![base_msg;max_arity];//Vec<RcCell<r1cs_pcd_message<FieldT> > > 
+            let mut  proofs=vec![r1cs_mp_ppzkpcd_proof::<PCD_ppT>::new();max_arity];//Vec<r1cs_mp_ppzkpcd_proof<PCD_ppT> >
 
             if !base_case
             {

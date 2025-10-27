@@ -17,7 +17,7 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark;
 
 
 
-pub fn  simulate_random_memory_contents<FieldT>(ap:tinyram_architecture_params, input_size:size_t, program_size:size_t)
+pub fn  simulate_random_memory_contents<FieldT>(ap:tinyram_architecture_params, input_size:usize, program_size:usize)
 {
     let num_addresses = 1u64<<ap.dwaddr_len();
     let value_size = 2 * ap.w;
@@ -29,7 +29,7 @@ pub fn  simulate_random_memory_contents<FieldT>(ap:tinyram_architecture_params, 
 }
 
 
-pub fn  profile_ram_zksnark_verifier<ppT>(ap:tinyram_architecture_params, input_size:size_t, program_size:size_t)
+pub fn  profile_ram_zksnark_verifier<ppT>(ap:tinyram_architecture_params, input_size:usize, program_size:usize)
 {
     type ramT=ram_zksnark_machine_pp<ppT> ;
     let time_bound  = 10;
@@ -84,7 +84,7 @@ pub fn  print_ram_zksnark_verifier_profiling<ppT>()
 }
 
 
-pub fn  profile_ram_zksnark<ppT>(ap:tinyram_architecture_params, program_size:size_t, input_size:size_t, time_bound:size_t)
+pub fn  profile_ram_zksnark<ppT>(ap:tinyram_architecture_params, program_size:usize, input_size:usize, time_bound:usize)
 {
     type ramT=ram_zksnark_machine_pp<ppT> ;
 
@@ -97,12 +97,12 @@ pub fn  profile_ram_zksnark<ppT>(ap:tinyram_architecture_params, program_size:si
 
 // namespace po = boost::program_options;
 
-// bool process_command_line(const int argc, const char** argv,
+// bool process_command_line(argc:int, argv:char**,
 //                           bool &profile_gp,
-//                           size_t &w,
-//                           size_t &k,
+//                           usize &w,
+//                           usize &k,
 //                           bool &profile_v,
-//                           size_t &l)
+//                           usize &l)
 // {
 //     try
 //     {
@@ -110,11 +110,11 @@ pub fn  profile_ram_zksnark<ppT>(ap:tinyram_architecture_params, program_size:si
 //         desc.add_options()
 //             ("help", "print this help message")
 //             ("profile_gp", "profile generator and prover")
-//             ("w", po::value<size_t>(&w)->default_value(16), "word size")
-//             ("k", po::value<size_t>(&k)->default_value(16), "register count")
+//             ("w", po::value<usize>(&w)->default_value(16), "word size")
+//             ("k", po::value<usize>(&k)->default_value(16), "register count")
 //             ("profile_v", "profile verifier")
 //             ("v", "print version info")
-//             ("l", po::value<size_t>(&l)->default_value(10), "program length");
+//             ("l", po::value<usize>(&l)->default_value(10), "program length");
 
 //         po::variables_map vm;
 //         po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -157,10 +157,10 @@ pub fn  profile_ram_zksnark<ppT>(ap:tinyram_architecture_params, program_size:si
 //     ram_zksnark_PCD_pp<default_ram_zksnark_pp>::init_public_params();
 
 //     bool profile_gp;
-//     size_t w;
-//     size_t k;
+//     usize w;
+//     usize k;
 //     bool profile_v;
-//     size_t l;
+//     usize l;
 
 //     if !process_command_line(argc, argv, profile_gp, w, k, profile_v, l)
 //     {

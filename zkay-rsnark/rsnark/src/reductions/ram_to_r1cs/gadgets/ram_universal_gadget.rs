@@ -86,30 +86,30 @@ pub struct  ram_universal_gadget <ramT> {
 // : public ram_gadget_base
     
 
-num_memory_lines:    size_t,
+num_memory_lines:    usize,
 
-boot_lines:    std::vector<memory_line_variable_gadget<ramT> >,
-boot_line_bits:    std::vector<pb_variable_array<FieldT> >,
-unpack_boot_lines:    std::vector<multipacking_gadget<FieldT> >,
+boot_lines:    Vec<memory_line_variable_gadget<ramT> >,
+boot_line_bits:    Vec<pb_variable_array<FieldT> >,
+unpack_boot_lines:    Vec<multipacking_gadget<FieldT> >,
 
-load_instruction_lines:    std::vector<memory_line_variable_gadget<ramT> >,
-execution_lines:    std::vector<execution_line_variable_gadget<ramT> >, /* including the initial execution line */
+load_instruction_lines:    Vec<memory_line_variable_gadget<ramT> >,
+execution_lines:    Vec<execution_line_variable_gadget<ramT> >, /* including the initial execution line */
 
-unrouted_memory_lines:    std::vector<memory_line_variable_gadget<ramT>* >,
-routed_memory_lines:    std::vector<memory_line_variable_gadget<ramT> >,
+unrouted_memory_lines:    Vec<memory_line_variable_gadget<ramT> >,
+routed_memory_lines:    Vec<memory_line_variable_gadget<ramT> >,
 
-execution_checkers:    std::vector<ram_cpu_checker<ramT> >,
-memory_checkers:    std::vector<memory_checker_gadget<ramT> >,
+execution_checkers:    Vec<ram_cpu_checker<ramT> >,
+memory_checkers:    Vec<memory_checker_gadget<ramT> >,
 
-routing_inputs:    std::vector<pb_variable_array<FieldT> >,
-routing_outputs:    std::vector<pb_variable_array<FieldT> >,
+routing_inputs:    Vec<pb_variable_array<FieldT> >,
+routing_outputs:    Vec<pb_variable_array<FieldT> >,
 
-routing_network:    std::shared_ptr<as_waksman_routing_gadget<FieldT> >,
+routing_network:    RcCell<as_waksman_routing_gadget<FieldT> >,
 
 
 
-boot_trace_size_bound:    size_t,
-time_bound:    size_t,
+boot_trace_size_bound:    usize,
+time_bound:    usize,
 packed_input:    pb_variable_array<FieldT>,
 
     
@@ -146,11 +146,11 @@ use crate::relations::ram_computations::memory::ra_memory;
 
 impl ram_universal_gadget<ramT>{
 
-pub fn new(ram_protoboard<ramT> &pb,
+pub fn new( pb:ram_protoboard<ramT>,
                                                  boot_trace_size_bound:usize,
                                                  time_bound:usize,
                                                  packed_input:&pb_variable_array<FieldT>,
-                                                 annotation_prefix:&std::string) ->Self
+                                                 annotation_prefix:&String) ->Self
    
 {
     num_memory_lines = boot_trace_size_bound + (time_bound + 1) + time_bound; /* boot lines, (time_bound + 1) execution lines (including initial) and time_bound load instruction lines */
@@ -192,7 +192,7 @@ pub fn new(ram_protoboard<ramT> &pb,
     let packed_line_size = ffec::div_ceil(line_size_bits, max_chunk_size);
     assert!(packed_input.len() == packed_line_size * boot_trace_size_bound);
 
-    auto input_it = packed_input.begin();
+    let mut  input_it = packed_input.begin();
     for i in 0..boot_trace_size_bound
     {
         /* note the reversed order */
@@ -253,7 +253,7 @@ pub fn new(ram_protoboard<ramT> &pb,
     memory_checkers.reserve(num_memory_lines);
     for i in 0..num_memory_lines
     {
-        memory_checkers.push(memory_checker_gadget<ramT>(pb,
+        memory_checkers.push(memory_checker_gadget::<ramT>(pb,
                                                                  timestamp_size,
                                                                  *unrouted_memory_lines[i],
                                                                  routed_memory_lines[i],
@@ -367,7 +367,7 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
     execution_lines[0].cpu_state.fill_with_bits(self.pb, initial_state);
 
     /* fill in the boot section */
-    memory_contents memory_after_boot;
+    let mut  memory_after_boot=memory_contents::new();
 
     for it in &boot_trace.get_all_trace_entries()
     {
@@ -384,8 +384,8 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
     }
 
     /* do the actual execution */
-    ra_memory mem_backend(1u64<<(self.pb.ap.address_size()), self.pb.ap.value_size(), memory_after_boot);
-    typename ram_input_tape<ramT>::const_iterator auxiliary_input_it = auxiliary_input.begin();
+    let  mem_backend=ra_memory(1u64<<(self.pb.ap.address_size()), self.pb.ap.value_size(), memory_after_boot);
+    let  auxiliary_input_it = auxiliary_input.begin();
 
     self.pb.val(load_instruction_lines[0].address.packed) = FieldT(self.pb.ap.initial_pc_addr(), true);
     load_instruction_lines[0].address.generate_r1cs_witness_from_packed();
@@ -435,8 +435,8 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
       property.
     */
 
-    type std::pair<size_t, size_t> mem_pair; /* a pair of address, timestamp */
-    std::vector<mem_pair> mem_pairs;
+    type mem_pair=std::pair<usize, usize> ; /* a pair of address, timestamp */
+    let mut  mem_pairs=vec![];
 
     for i in 0..self.num_memory_lines
     {
@@ -446,7 +446,7 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
 
     std::sort(mem_pairs.begin(), mem_pairs.end());
 
-    integer_permutation pi(self.num_memory_lines);
+     let mut pi=integer_permutation::new(self.num_memory_lines);
     for i in 0..self.num_memory_lines
     {
         let timestamp = self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong();
@@ -486,7 +486,7 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
 }
 
 
-pub fn print_execution_trace() const
+pub fn print_execution_trace() 
 {
     for i in 0..boot_trace_size_bound
     {
@@ -517,7 +517,7 @@ pub fn print_execution_trace() const
 }
 
 
-pub fn print_memory_trace() const
+pub fn print_memory_trace() 
 {
     for i in 0..num_memory_lines
     {
@@ -547,7 +547,7 @@ pub fn packed_input_element_size(ap:&ram_architecture_params<ramT>)->usize
 
 
 pub fn packed_input_size(ap:&ram_architecture_params<ramT>,
-                                                     boot_trace_size_bound:size_t)->usize
+                                                     boot_trace_size_bound:usize)->usize
 {
     return packed_input_element_size(ap) * boot_trace_size_bound;
 }

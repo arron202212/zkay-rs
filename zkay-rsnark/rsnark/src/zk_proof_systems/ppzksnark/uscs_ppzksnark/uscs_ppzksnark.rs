@@ -4,11 +4,11 @@
  Declaration of interfaces for a ppzkSNARK for USCS.
 
  This includes:
- - class for proving key
- - class for verification key
- - class for processed verification key
- - class for key pair (proving key & verification key)
- - class for proof
+ - pub struct for proving key
+ - pub struct for verification key
+ - pub struct for processed verification key
+ - pub struct for key pair (proving key & verification key)
+ - pub struct for proof
  - generator algorithm
  - prover algorithm
  - verifier algorithm (with strong or weak input consistency)
@@ -46,7 +46,7 @@
 //#ifndef USCS_PPZKSNARK_HPP_
 // #define USCS_PPZKSNARK_HPP_
 
-use  <memory>
+
 
 use ffec::algebra::curves::public_params;
 
@@ -59,20 +59,20 @@ use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark_params;
 
 /******************************** Proving key ********************************/
 
-template<typename ppT>
-class uscs_ppzksnark_proving_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_proving_key<ppT> &pk);
+pub struct uscs_ppzksnark_proving_key;
 
-template<typename ppT>
+
+std::ostream& operator<<(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>);
+
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk);
 
 /**
  * A proving key for the USCS ppzkSNARK.
  */
-template<typename ppT>
-class uscs_ppzksnark_proving_key {
+
+pub struct uscs_ppzksnark_proving_key {
 
     ffec::G1_vector<ppT> V_g1_query;
     ffec::G1_vector<ppT> alpha_V_g1_query;
@@ -82,14 +82,14 @@ class uscs_ppzksnark_proving_key {
     uscs_ppzksnark_constraint_system<ppT> constraint_system;
 
     uscs_ppzksnark_proving_key() {};
-    uscs_ppzksnark_proving_key<ppT>& operator=(const uscs_ppzksnark_proving_key<ppT> &other) = default;
-    uscs_ppzksnark_proving_key(const uscs_ppzksnark_proving_key<ppT> &other) = default;
+    uscs_ppzksnark_proving_key<ppT>& operator=(other:&uscs_ppzksnark_proving_key<ppT>) = default;
+    uscs_ppzksnark_proving_key(other:&uscs_ppzksnark_proving_key<ppT>) = default;
     uscs_ppzksnark_proving_key(uscs_ppzksnark_proving_key<ppT> &&other) = default;
     uscs_ppzksnark_proving_key(ffec::G1_vector<ppT> &&V_g1_query,
                                ffec::G1_vector<ppT> &&alpha_V_g1_query,
                                ffec::G1_vector<ppT> &&H_g1_query,
                                ffec::G2_vector<ppT> &&V_g2_query,
-                               uscs_ppzksnark_constraint_system<ppT> &&constraint_system) :
+                               uscs_ppzksnark_constraint_system<ppT> &&constraint_system)->Self
         V_g1_query((V_g1_query)),
         alpha_V_g1_query((alpha_V_g1_query)),
         H_g1_query((H_g1_query)),
@@ -97,32 +97,32 @@ class uscs_ppzksnark_proving_key {
         constraint_system((constraint_system))
     {};
 
-    size_t G1_size() const
+    usize G1_size() const
     {
         return V_g1_query.len() + alpha_V_g1_query.len() + H_g1_query.len();
     }
 
-    size_t G2_size() const
+    usize G2_size() const
     {
         return V_g2_query.len();
     }
 
-    size_t G1_sparse_size() const
+    usize G1_sparse_size() const
     {
         return G1_size();
     }
 
-    size_t G2_sparse_size() const
+    usize G2_sparse_size() const
     {
         return G2_size();
     }
 
-    size_t size_in_bits() const
+    usize size_in_bits() const
     {
         return ffec::G1<ppT>::size_in_bits() * G1_size() + ffec::G2<ppT>::size_in_bits() * G2_size();
     }
 
-    void print_size() const
+    pub fn  print_size() const
     {
         ffec::print_indent(); print!("* G1 elements in PK: {}\n", self.G1_size());
         ffec::print_indent(); print!("* Non-zero G1 elements in PK: {}\n", self.G1_sparse_size());
@@ -131,28 +131,28 @@ class uscs_ppzksnark_proving_key {
         ffec::print_indent(); print!("* PK size in bits: {}\n", self.size_in_bits());
     }
 
-    bool operator==(const uscs_ppzksnark_proving_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const uscs_ppzksnark_proving_key<ppT> &pk);
+    bool operator==(other:&uscs_ppzksnark_proving_key<ppT>) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>);
     friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk);
 };
 
 
 /******************************* Verification key ****************************/
 
-template<typename ppT>
-class uscs_ppzksnark_verification_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_verification_key<ppT> &vk);
+pub struct uscs_ppzksnark_verification_key;
 
-template<typename ppT>
+
+std::ostream& operator<<(std::ostream &out, vk:&uscs_ppzksnark_verification_key<ppT>);
+
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_verification_key<ppT> &vk);
 
 /**
  * A verification key for the USCS ppzkSNARK.
  */
-template<typename ppT>
-class uscs_ppzksnark_verification_key {
+
+pub struct uscs_ppzksnark_verification_key {
 
     ffec::G2<ppT> tilde_g2;
     ffec::G2<ppT> alpha_tilde_g2;
@@ -161,55 +161,55 @@ class uscs_ppzksnark_verification_key {
     accumulation_vector<ffec::G1<ppT> > encoded_IC_query;
 
     uscs_ppzksnark_verification_key() = default;
-    uscs_ppzksnark_verification_key(const ffec::G2<ppT> &tilde_g2,
-                                    const ffec::G2<ppT> &alpha_tilde_g2,
-                                    const ffec::G2<ppT> &Z_g2,
-                                    const accumulation_vector<ffec::G1<ppT> > &eIC) :
-        tilde_g2(tilde_g2),
-        alpha_tilde_g2(alpha_tilde_g2),
-        Z_g2(Z_g2),
+    uscs_ppzksnark_verification_key(tilde_g2:&ffec::G2<ppT>,
+                                    alpha_tilde_g2:&ffec::G2<ppT>,
+                                    Z_g2:&ffec::G2<ppT>,
+                                    eIC:&accumulation_vector<ffec::G1<ppT> >)->Self
+       tilde_g2,
+       alpha_tilde_g2,
+       Z_g2,
         encoded_IC_query(eIC)
     {};
 
-    size_t G1_size() const
+    usize G1_size() const
     {
         return encoded_IC_query.len();
     }
 
-    size_t G2_size() const
+    usize G2_size() const
     {
         return 3;
     }
 
-    size_t size_in_bits() const
+    usize size_in_bits() const
     {
         return encoded_IC_query.size_in_bits() + 3 * ffec::G2<ppT>::size_in_bits();
     }
 
-    void print_size() const
+    pub fn  print_size() const
     {
         ffec::print_indent(); print!("* G1 elements in VK: {}\n", self.G1_size());
         ffec::print_indent(); print!("* G2 elements in VK: {}\n", self.G2_size());
         ffec::print_indent(); print!("* VK size in bits: {}\n", self.size_in_bits());
     }
 
-    bool operator==(const uscs_ppzksnark_verification_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const uscs_ppzksnark_verification_key<ppT> &vk);
+    bool operator==(other:&uscs_ppzksnark_verification_key<ppT>) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, vk:&uscs_ppzksnark_verification_key<ppT>);
     friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_verification_key<ppT> &vk);
 
-    static uscs_ppzksnark_verification_key<ppT> dummy_verification_key(const size_t input_size);
+    static uscs_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:usize);
 };
 
 
 /************************ Processed verification key *************************/
 
-template<typename ppT>
-class uscs_ppzksnark_processed_verification_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_processed_verification_key<ppT> &pvk);
+pub struct uscs_ppzksnark_processed_verification_key;
 
-template<typename ppT>
+
+std::ostream& operator<<(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>);
+
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk);
 
 /**
@@ -219,8 +219,8 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification
  * contains a small constant amount of additional pre-computed information that
  * enables a faster verification time.
  */
-template<typename ppT>
-class uscs_ppzksnark_processed_verification_key {
+
+pub struct uscs_ppzksnark_processed_verification_key {
 
     ffec::G1_precomp<ppT> pp_G1_one_precomp;
     ffec::G2_precomp<ppT> pp_G2_one_precomp;
@@ -231,8 +231,8 @@ class uscs_ppzksnark_processed_verification_key {
 
     accumulation_vector<ffec::G1<ppT> > encoded_IC_query;
 
-    bool operator==(const uscs_ppzksnark_processed_verification_key &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const uscs_ppzksnark_processed_verification_key<ppT> &pvk);
+    bool operator==(other:&uscs_ppzksnark_processed_verification_key) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>);
     friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk);
 };
 
@@ -242,15 +242,15 @@ class uscs_ppzksnark_processed_verification_key {
 /**
  * A key pair for the USCS ppzkSNARK, which consists of a proving key and a verification key.
  */
-template<typename ppT>
-class uscs_ppzksnark_keypair {
+
+pub struct uscs_ppzksnark_keypair {
 
     uscs_ppzksnark_proving_key<ppT> pk;
     uscs_ppzksnark_verification_key<ppT> vk;
 
     uscs_ppzksnark_keypair() {};
     uscs_ppzksnark_keypair(uscs_ppzksnark_proving_key<ppT> &&pk,
-                           uscs_ppzksnark_verification_key<ppT> &&vk) :
+                           uscs_ppzksnark_verification_key<ppT> &&vk)->Self
         pk((pk)),
         vk((vk))
     {}
@@ -261,13 +261,13 @@ class uscs_ppzksnark_keypair {
 
 /*********************************** Proof ***********************************/
 
-template<typename ppT>
-class uscs_ppzksnark_proof;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_proof<ppT> &proof);
+pub struct uscs_ppzksnark_proof;
 
-template<typename ppT>
+
+std::ostream& operator<<(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>);
+
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
 
 /**
@@ -277,8 +277,8 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
  * serializes/deserializes, and verifies proofs. We only expose some information
  * about the structure for statistics purposes.
  */
-template<typename ppT>
-class uscs_ppzksnark_proof {
+
+pub struct uscs_ppzksnark_proof {
 
     ffec::G1<ppT> V_g1;
     ffec::G1<ppT> alpha_V_g1;
@@ -296,29 +296,29 @@ class uscs_ppzksnark_proof {
     uscs_ppzksnark_proof(ffec::G1<ppT> &&V_g1,
                          ffec::G1<ppT> &&alpha_V_g1,
                          ffec::G1<ppT> &&H_g1,
-                         ffec::G2<ppT> &&V_g2) :
+                         ffec::G2<ppT> &&V_g2)->Self
         V_g1((V_g1)),
         alpha_V_g1((alpha_V_g1)),
         H_g1((H_g1)),
         V_g2((V_g2))
     {};
 
-    size_t G1_size() const
+    usize G1_size() const
     {
         return 3;
     }
 
-    size_t G2_size() const
+    usize G2_size() const
     {
         return 1;
     }
 
-    size_t size_in_bits() const
+    usize size_in_bits() const
     {
         return G1_size() * ffec::G1<ppT>::size_in_bits() + G2_size() * ffec::G2<ppT>::size_in_bits();
     }
 
-    void print_size() const
+    pub fn  print_size() const
     {
         ffec::print_indent(); print!("* G1 elements in proof: {}\n", self.G1_size());
         ffec::print_indent(); print!("* G2 elements in proof: {}\n", self.G2_size());
@@ -333,8 +333,8 @@ class uscs_ppzksnark_proof {
                 V_g2.is_well_formed());
     }
 
-    bool operator==(const uscs_ppzksnark_proof<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const uscs_ppzksnark_proof<ppT> &proof);
+    bool operator==(other:&uscs_ppzksnark_proof<ppT>) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>);
     friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
 };
 
@@ -346,8 +346,8 @@ class uscs_ppzksnark_proof {
  *
  * Given a USCS constraint system CS, this algorithm produces proving and verification keys for CS.
  */
-template<typename ppT>
-uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constraint_system<ppT> &cs);
+
+uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(cs:&uscs_ppzksnark_constraint_system<ppT>);
 
 /**
  * A prover algorithm for the USCS ppzkSNARK.
@@ -357,10 +357,10 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constr
  *               ``there exists Y such that CS(X,Y)=0''.
  * Above, CS is the USCS constraint system that was given as input to the generator algorithm.
  */
-template<typename ppT>
-uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key<ppT> &pk,
-                                                const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                                const uscs_ppzksnark_auxiliary_input<ppT> &auxiliary_input);
+
+uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(pk:&uscs_ppzksnark_proving_key<ppT>,
+                                                primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                                auxiliary_input:&uscs_ppzksnark_auxiliary_input<ppT>);
 
 /*
  Below are four variants of verifier algorithm for the USCS ppzkSNARK.
@@ -381,46 +381,46 @@ uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key
  * (1) accepts a non-processed verification key, and
  * (2) has weak input consistency.
  */
-template<typename ppT>
-bool uscs_ppzksnark_verifier_weak_IC(const uscs_ppzksnark_verification_key<ppT> &vk,
-                                     const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                     const uscs_ppzksnark_proof<ppT> &proof);
+
+bool uscs_ppzksnark_verifier_weak_IC(vk:&uscs_ppzksnark_verification_key<ppT>,
+                                     primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                     proof:&uscs_ppzksnark_proof<ppT>);
 
 /**
  * A verifier algorithm for the USCS ppzkSNARK that:
  * (1) accepts a non-processed verification key, and
  * (2) has strong input consistency.
  */
-template<typename ppT>
-bool uscs_ppzksnark_verifier_strong_IC(const uscs_ppzksnark_verification_key<ppT> &vk,
-                                       const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                       const uscs_ppzksnark_proof<ppT> &proof);
+
+bool uscs_ppzksnark_verifier_strong_IC(vk:&uscs_ppzksnark_verification_key<ppT>,
+                                       primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                       proof:&uscs_ppzksnark_proof<ppT>);
 
 /**
  * Convert a (non-processed) verification key into a processed verification key.
  */
-template<typename ppT>
-uscs_ppzksnark_processed_verification_key<ppT> uscs_ppzksnark_verifier_process_vk(const uscs_ppzksnark_verification_key<ppT> &vk);
+
+uscs_ppzksnark_processed_verification_key<ppT> uscs_ppzksnark_verifier_process_vk(vk:&uscs_ppzksnark_verification_key<ppT>);
 
 /**
  * A verifier algorithm for the USCS ppzkSNARK that:
  * (1) accepts a processed verification key, and
  * (2) has weak input consistency.
  */
-template<typename ppT>
-bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                            const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                            const uscs_ppzksnark_proof<ppT> &proof);
+
+bool uscs_ppzksnark_online_verifier_weak_IC(pvk:&uscs_ppzksnark_processed_verification_key<ppT>,
+                                            primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                            proof:&uscs_ppzksnark_proof<ppT>);
 
 /**
  * A verifier algorithm for the USCS ppzkSNARK that:
  * (1) accepts a processed verification key, and
  * (2) has strong input consistency.
  */
-template<typename ppT>
-bool uscs_ppzksnark_online_verifier_strong_IC(const uscs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                              const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                              const uscs_ppzksnark_proof<ppT> &proof);
+
+bool uscs_ppzksnark_online_verifier_strong_IC(pvk:&uscs_ppzksnark_processed_verification_key<ppT>,
+                                              primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                              proof:&uscs_ppzksnark_proof<ppT>);
 
 
 
@@ -456,12 +456,12 @@ use  <omp.h>
 //#endif
 
 use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
-use crate::relations::arithmetic_programs/ssp/ssp;
+use crate::relations::arithmetic_programs::ssp::ssp;
 
 
 
-template<typename ppT>
-bool uscs_ppzksnark_proving_key<ppT>::operator==(const uscs_ppzksnark_proving_key<ppT> &other) const
+
+bool uscs_ppzksnark_proving_key<ppT>::operator==(other:&uscs_ppzksnark_proving_key<ppT>) const
 {
     return (self.V_g1_query == other.V_g1_query &&
             self.alpha_V_g1_query == other.alpha_V_g1_query &&
@@ -470,8 +470,8 @@ bool uscs_ppzksnark_proving_key<ppT>::operator==(const uscs_ppzksnark_proving_ke
             self.constraint_system == other.constraint_system);
 }
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_proving_key<ppT> &pk)
+
+std::ostream& operator<<(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>)
 {
     out << pk.V_g1_query;
     out << pk.alpha_V_g1_query;
@@ -482,7 +482,7 @@ std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_proving_key<ppT
     return out;
 }
 
-template<typename ppT>
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk)
 {
     in >> pk.V_g1_query;
@@ -494,8 +494,8 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk)
     return in;
 }
 
-template<typename ppT>
-bool uscs_ppzksnark_verification_key<ppT>::operator==(const uscs_ppzksnark_verification_key<ppT> &other) const
+
+bool uscs_ppzksnark_verification_key<ppT>::operator==(other:&uscs_ppzksnark_verification_key<ppT>) const
 {
     return (self.tilde_g2 == other.tilde_g2 &&
             self.alpha_tilde_g2 == other.alpha_tilde_g2 &&
@@ -503,8 +503,8 @@ bool uscs_ppzksnark_verification_key<ppT>::operator==(const uscs_ppzksnark_verif
             self.encoded_IC_query == other.encoded_IC_query);
 }
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_verification_key<ppT> &vk)
+
+std::ostream& operator<<(std::ostream &out, vk:&uscs_ppzksnark_verification_key<ppT>)
 {
     out << vk.tilde_g2 << OUTPUT_NEWLINE;
     out << vk.alpha_tilde_g2 << OUTPUT_NEWLINE;
@@ -514,7 +514,7 @@ std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_verification_ke
     return out;
 }
 
-template<typename ppT>
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_verification_key<ppT> &vk)
 {
     in >> vk.tilde_g2;
@@ -529,8 +529,8 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_verification_key<ppT> 
     return in;
 }
 
-template<typename ppT>
-bool uscs_ppzksnark_processed_verification_key<ppT>::operator==(const uscs_ppzksnark_processed_verification_key<ppT> &other) const
+
+bool uscs_ppzksnark_processed_verification_key<ppT>::operator==(other:&uscs_ppzksnark_processed_verification_key<ppT>) const
 {
     return (self.pp_G1_one_precomp == other.pp_G1_one_precomp &&
             self.pp_G2_one_precomp == other.pp_G2_one_precomp &&
@@ -541,8 +541,8 @@ bool uscs_ppzksnark_processed_verification_key<ppT>::operator==(const uscs_ppzks
             self.encoded_IC_query == other.encoded_IC_query);
 }
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_processed_verification_key<ppT> &pvk)
+
+std::ostream& operator<<(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>)
 {
     out << pvk.pp_G1_one_precomp << OUTPUT_NEWLINE;
     out << pvk.pp_G2_one_precomp << OUTPUT_NEWLINE;
@@ -555,7 +555,7 @@ std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_processed_verif
     return out;
 }
 
-template<typename ppT>
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk)
 {
     in >> pvk.pp_G1_one_precomp;
@@ -576,8 +576,8 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification
     return in;
 }
 
-template<typename ppT>
-bool uscs_ppzksnark_proof<ppT>::operator==(const uscs_ppzksnark_proof<ppT> &other) const
+
+bool uscs_ppzksnark_proof<ppT>::operator==(other:&uscs_ppzksnark_proof<ppT>) const
 {
     return (self.V_g1 == other.V_g1 &&
             self.alpha_V_g1 == other.alpha_V_g1 &&
@@ -585,8 +585,8 @@ bool uscs_ppzksnark_proof<ppT>::operator==(const uscs_ppzksnark_proof<ppT> &othe
             self.V_g2 == other.V_g2);
 }
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_proof<ppT> &proof)
+
+std::ostream& operator<<(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>)
 {
     out << proof.V_g1 << OUTPUT_NEWLINE;
     out << proof.alpha_V_g1 << OUTPUT_NEWLINE;
@@ -596,7 +596,7 @@ std::ostream& operator<<(std::ostream &out, const uscs_ppzksnark_proof<ppT> &pro
     return out;
 }
 
-template<typename ppT>
+
 std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof)
 {
     in >> proof.V_g1;
@@ -611,8 +611,8 @@ std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof)
     return in;
 }
 
-template<typename ppT>
-uscs_ppzksnark_verification_key<ppT> uscs_ppzksnark_verification_key<ppT>::dummy_verification_key(const size_t input_size)
+
+uscs_ppzksnark_verification_key<ppT> uscs_ppzksnark_verification_key<ppT>::dummy_verification_key(input_size:usize)
 {
     uscs_ppzksnark_verification_key<ppT> result;
     result.tilde_g2       = ffec::Fr<ppT>::random_element() * ffec::G2<ppT>::one();
@@ -631,8 +631,8 @@ uscs_ppzksnark_verification_key<ppT> uscs_ppzksnark_verification_key<ppT>::dummy
     return result;
 }
 
-template <typename ppT>
-uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constraint_system<ppT> &cs)
+template <ppT>
+uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(cs:&uscs_ppzksnark_constraint_system<ppT>)
 {
     ffec::enter_block("Call to uscs_ppzksnark_generator");
 
@@ -675,11 +675,11 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constr
 
     ffec::enter_block("Generate USCS proving key");
 
-    const size_t g1_exp_count = Vt_table.len() + Vt_table_minus_Xt_table.len() + Ht_table.len();
-    const size_t g2_exp_count = Vt_table_minus_Xt_table.len();
+    let g1_exp_count = Vt_table.len() + Vt_table_minus_Xt_table.len() + Ht_table.len();
+    let g2_exp_count = Vt_table_minus_Xt_table.len();
 
-    size_t g1_window = ffec::get_exp_window_size<ffec::G1<ppT> >(g1_exp_count);
-    size_t g2_window = ffec::get_exp_window_size<ffec::G2<ppT> >(g2_exp_count);
+    usize g1_window = ffec::get_exp_window_size<ffec::G1<ppT> >(g1_exp_count);
+    usize g2_window = ffec::get_exp_window_size<ffec::G2<ppT> >(g2_exp_count);
 
     ffec::print_indent(); print!("* G1 window: {}\n", g1_window);
     ffec::print_indent(); print!("* G2 window: {}\n", g2_window);
@@ -762,17 +762,17 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(const uscs_ppzksnark_constr
     return uscs_ppzksnark_keypair<ppT>((pk), (vk));
 }
 
-template <typename ppT>
-uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key<ppT> &pk,
-                                                const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                                const uscs_ppzksnark_auxiliary_input<ppT> &auxiliary_input)
+template <ppT>
+uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(pk:&uscs_ppzksnark_proving_key<ppT>,
+                                                primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                                auxiliary_input:&uscs_ppzksnark_auxiliary_input<ppT>)
 {
     ffec::enter_block("Call to uscs_ppzksnark_prover");
 
     const ffec::Fr<ppT> d = ffec::Fr<ppT>::random_element();
 
     ffec::enter_block("Compute the polynomial H");
-    const ssp_witness<ffec::Fr<ppT> > ssp_wit = uscs_to_ssp_witness_map(pk.constraint_system, primary_input, auxiliary_input, d);
+    primary_input:ssp_witness<ffec::Fr<ppT> > ssp_wit = uscs_to_ssp_witness_map(pk.constraint_system,, auxiliary_input, d);
     ffec::leave_block("Compute the polynomial H");
 
     /* sanity checks */
@@ -794,9 +794,9 @@ uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key
     ffec::G2<ppT> V_g2       = pk.V_g2_query[0]+ssp_wit.d*pk.V_g2_query[pk.V_g2_query.len()-1];
 
 // #ifdef MULTICORE
-    const size_t chunks = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
+    override:usize chunks = omp_get_max_threads(); // to, set OMP_NUM_THREADS env var or call omp_set_num_threads()
 #else
-    const size_t chunks = 1;
+    let chunks = 1;
 //#endif
 
     // MAYBE LATER: do queries 1,2,4 at once for slightly better speed
@@ -850,8 +850,8 @@ uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(const uscs_ppzksnark_proving_key
     return proof;
 }
 
-template <typename ppT>
-uscs_ppzksnark_processed_verification_key<ppT> uscs_ppzksnark_verifier_process_vk(const uscs_ppzksnark_verification_key<ppT> &vk)
+template <ppT>
+uscs_ppzksnark_processed_verification_key<ppT> uscs_ppzksnark_verifier_process_vk(vk:&uscs_ppzksnark_verification_key<ppT>)
 {
     ffec::enter_block("Call to uscs_ppzksnark_verifier_process_vk");
 
@@ -873,10 +873,10 @@ uscs_ppzksnark_processed_verification_key<ppT> uscs_ppzksnark_verifier_process_v
     return pvk;
 }
 
-template <typename ppT>
-bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                            const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                            const uscs_ppzksnark_proof<ppT> &proof)
+template <ppT>
+bool uscs_ppzksnark_online_verifier_weak_IC(pvk:&uscs_ppzksnark_processed_verification_key<ppT>,
+                                            primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                            proof:&uscs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to uscs_ppzksnark_online_verifier_weak_IC");
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
@@ -884,7 +884,7 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
     ffec::enter_block("Compute input-dependent part of V");
     const accumulation_vector<ffec::G1<ppT> > accumulated_IC = pvk.encoded_IC_query.accumulate_chunk<ffec::Fr<ppT> >(primary_input.begin(), primary_input.end(), 0);
     assert!(accumulated_IC.is_fully_accumulated());
-    const ffec::G1<ppT> &acc = accumulated_IC.first;
+    acc:&ffec::G1<ppT> = accumulated_IC.first;
     ffec::leave_block("Compute input-dependent part of V");
 
     bool result = true;
@@ -956,10 +956,10 @@ bool uscs_ppzksnark_online_verifier_weak_IC(const uscs_ppzksnark_processed_verif
     return result;
 }
 
-template<typename ppT>
-bool uscs_ppzksnark_verifier_weak_IC(const uscs_ppzksnark_verification_key<ppT> &vk,
-                                     const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                     const uscs_ppzksnark_proof<ppT> &proof)
+
+bool uscs_ppzksnark_verifier_weak_IC(vk:&uscs_ppzksnark_verification_key<ppT>,
+                                     primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                     proof:&uscs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to uscs_ppzksnark_verifier_weak_IC");
     uscs_ppzksnark_processed_verification_key<ppT> pvk = uscs_ppzksnark_verifier_process_vk<ppT>(vk);
@@ -968,10 +968,10 @@ bool uscs_ppzksnark_verifier_weak_IC(const uscs_ppzksnark_verification_key<ppT> 
     return result;
 }
 
-template<typename ppT>
-bool uscs_ppzksnark_online_verifier_strong_IC(const uscs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                              const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                              const uscs_ppzksnark_proof<ppT> &proof)
+
+bool uscs_ppzksnark_online_verifier_strong_IC(pvk:&uscs_ppzksnark_processed_verification_key<ppT>,
+                                              primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                              proof:&uscs_ppzksnark_proof<ppT>)
 {
     bool result = true;
     ffec::enter_block("Call to uscs_ppzksnark_online_verifier_strong_IC");
@@ -990,10 +990,10 @@ bool uscs_ppzksnark_online_verifier_strong_IC(const uscs_ppzksnark_processed_ver
     return result;
 }
 
-template<typename ppT>
-bool uscs_ppzksnark_verifier_strong_IC(const uscs_ppzksnark_verification_key<ppT> &vk,
-                                       const uscs_ppzksnark_primary_input<ppT> &primary_input,
-                                       const uscs_ppzksnark_proof<ppT> &proof)
+
+bool uscs_ppzksnark_verifier_strong_IC(vk:&uscs_ppzksnark_verification_key<ppT>,
+                                       primary_input:&uscs_ppzksnark_primary_input<ppT>,
+                                       proof:&uscs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to uscs_ppzksnark_verifier_strong_IC");
     uscs_ppzksnark_processed_verification_key<ppT> pvk = uscs_ppzksnark_verifier_process_vk<ppT>(vk);

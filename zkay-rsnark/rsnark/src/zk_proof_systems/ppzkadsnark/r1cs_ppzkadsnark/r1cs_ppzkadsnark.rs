@@ -43,7 +43,7 @@
 //#ifndef R1CS_PPZKADSNARK_HPP_
 // #define R1CS_PPZKADSNARK_HPP_
 
-// use  <memory>
+// 
 
 use ffec::algebra::curves::public_params;
 
@@ -570,7 +570,7 @@ muA:                           G1<snark_pp<ppT>>) ->Self
  * R1CS ppZKADSNARK authentication parameters generator algorithm.
  */
 // 
-// r1cs_ppzkadsnark_auth_keys<ppT> r1cs_ppzkadsnark_auth_generator(void);
+// r1cs_ppzkadsnark_auth_keys<ppT> r1cs_ppzkadsnark_auth_generator(pub fn );
 
 /**
  * R1CS ppZKADSNARK authentication algorithm.

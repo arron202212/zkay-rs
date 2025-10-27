@@ -25,16 +25,16 @@ use crate::relations::ram_computations::rams::ram_params;
  * - snark_pp, and
  * - machine_pp.
  * as well as a method with the following signature:
- * - static void init_public_params();
+ * - static pub fn  init_public_params();
  *
  * For example, if you want to use the types my_snark_pp and my_machine_pp,
  * then you could declare my_ram_ppzksnark_pp as follows:
  *
- *   class my_ram_ppzksnark_pp {
+ *   pub struct my_ram_ppzksnark_pp {
  *   
- *       type my_snark_pp snark_pp;
- *       type my_machine_pp machine_pp;
- *       static void init_public params()
+ *       type snark_pp=my_snark_pp;
+ *       type machine_pp=my_machine_pp;
+ *       static pub fn  init_public params()
  *       {
  *           snark_pp::init_public_params(); // and additional initialization if needed
  *       }

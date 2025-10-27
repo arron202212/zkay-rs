@@ -52,13 +52,13 @@ use crate::common::default_types::r1cs_ppzkadsnark_pp;
     return key;
 }
 
-// template<>
+// 
 pub fn prfCompute<default_r1cs_ppzkadsnark_pp>(
     key:&aesPrfKeyT,  label:&labelT)->Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>  {
     // unsigned char seed_bytes[16];
     // mpz_t aux,Fr_mod;
     // unsigned char random_bytes[16*3];
-    // size_t exp_len;
+    // usize exp_len;
 
     // mpz_init (aux);
     // mpz_init (Fr_mod);

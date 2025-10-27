@@ -23,22 +23,22 @@ use crate::algebra::fields::prime_extension::fp6_2over3;
 // #define mnt6_modulus_r mnt46_modulus_B
 // #define mnt6_modulus_q mnt46_modulus_A
 
-const mp_size_t mnt6_r_bitcount = mnt46_B_bitcount;
-const mp_size_t mnt6_q_bitcount = mnt46_A_bitcount;
+let mnt6_r_bitcount= mnt46_B_bitcount;
+let mnt6_q_bitcount= mnt46_A_bitcount;
 
-const mp_size_t mnt6_r_limbs = mnt46_B_limbs;
-const mp_size_t mnt6_q_limbs = mnt46_A_limbs;
+let mnt6_r_limbs= mnt46_B_limbs;
+let mnt6_q_limbs= mnt46_A_limbs;
 
 extern bigint<mnt6_r_limbs> mnt6_modulus_r;
 extern bigint<mnt6_q_limbs> mnt6_modulus_q;
 
-typedef Fp_model<mnt6_r_limbs, mnt6_modulus_r> mnt6_Fr;
-typedef Fp_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq;
-typedef Fp3_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq3;
-typedef Fp6_2over3_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq6;
-typedef mnt6_Fq6 mnt6_GT;
+type mnt6_Fr=Fp_model<mnt6_r_limbs, mnt6_modulus_r>;
+type mnt6_Fq=Fp_model<mnt6_q_limbs, mnt6_modulus_q>;
+type mnt6_Fq3=Fp3_model<mnt6_q_limbs, mnt6_modulus_q>;
+type mnt6_Fq6=Fp6_2over3_model<mnt6_q_limbs, mnt6_modulus_q>;
+type mnt6_GT=mnt6_Fq6;
 
-void init_mnt6_fields();
+pub fn  init_mnt6_fields();
 
 // } // namespace libff
 
@@ -60,7 +60,7 @@ use crate::algebra::curves::mnt::mnt6::mnt6_fields;
 
 // namespace libff {
 
-void init_mnt6_fields()
+pub fn  init_mnt6_fields()
 {
     using bigint_r = bigint<mnt6_r_limbs>;
     using bigint_q = bigint<mnt6_q_limbs>;

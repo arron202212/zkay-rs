@@ -27,7 +27,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_par
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-// template<typename ppT>
+// 
 // bool run_r1cs_ppzkadsnark(example:r1cs_example<Fr<snark_pp<ppT>> >,
 //                           test_serialization:bool);
 
@@ -76,7 +76,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark;
  * (3) The "verifier", which runs the ppzkADSNARK verifier on input the verification key,
  *     a primary input for CS, and a proof.
  */
-// template<typename ppT>
+// 
  pub fn run_r1cs_ppzkadsnark<ppT>(example:r1cs_example<Fr<snark_pp<ppT>> >,
                           test_serialization:bool)->bool
 {

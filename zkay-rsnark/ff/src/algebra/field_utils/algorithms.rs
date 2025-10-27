@@ -27,30 +27,30 @@ trait FTConfig{
 // // namespace libff {
 
 // /** Repeated squaring. */
-// template<typename FieldT, mp_size_t m>
-// FieldT power(const FieldT &base, const bigint<m> &exponent);
+// 
+// FieldT power(base:&FieldT, exponent:&bigint<m>);
 
 // /** Repeated squaring. */
-// template<typename FieldT>
-// FieldT power(const FieldT &base, const unsigned long exponent);
+// 
+// FieldT power(base:&FieldT, const u64 exponent);
 
 // /**
-//  * The unsigned long long versions exist because libiop tends to use size_t instead
-//  * of unsigned long, and size_t may be the same size as ul or ull.
+//  * The u64 long versions exist because libiop tends to use usize instead
+//  * of u64, and usize may be the same size as ul or ull.
 //  */
-// template<typename FieldT>
-// FieldT power(const FieldT &base, const unsigned long long exponent);
+// 
+// FieldT power(base:&FieldT, const u64  exponent);
 
-// template<typename FieldT>
-// FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent);
+// 
+// FieldT power(base:&FieldT, const Vec<u64> exponent);
 
 // /**
 //  * Tonelli-Shanks square root with given s, t, and quadratic non-residue.
 //  * Only terminates if there is a square root. Only works if required parameters
 //  * are set in the field class.
 //  */
-// template<typename FieldT>
-// FieldT tonelli_shanks_sqrt<(const FieldT &value);
+// 
+// FieldT tonelli_shanks_sqrt<(value:&FieldT);
 
 // } // namespace libff
 
@@ -75,13 +75,13 @@ use crate::common::profiling;
 
 // namespace libff {
 pub struct Powers;
-// using std::size_t;
+// using std::usize;
 pub trait PowerConfig<T=Self>{
    fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:T)->FieldT;
 }
 
 impl<const M:usize> PowerConfig<&bigint<M>> for Powers{
-// template<typename FieldT, mp_size_t m>
+// 
 fn power<FieldT:One+Clone>(base:&FieldT, exponent:&bigint<M>)->FieldT
 {
     let mut  result = FieldT::one();
@@ -106,8 +106,8 @@ fn power<FieldT:One+Clone>(base:&FieldT, exponent:&bigint<M>)->FieldT
 }
 
 
-// template<typename FieldT>
-// FieldT power(const FieldT &base, const unsigned long exponent)
+// 
+// FieldT power(base:&FieldT, const u64 exponent)
 impl PowerConfig<u64> for Powers{
 fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:u64)->FieldT
 {
@@ -116,8 +116,8 @@ fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT
 }
 
 
-// template<typename FieldT>
-// FieldT power(const FieldT &base, const unsigned long long exponent)
+// 
+// FieldT power(base:&FieldT, const u64 exponent)
 impl PowerConfig<u128> for Powers{
 fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:u128)->FieldT
 {
@@ -143,8 +143,8 @@ fn power<FieldT:One+Clone+ for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT
 }
 }
 
-// template<typename FieldT>
-// FieldT power(const FieldT &base, const std::vector<unsigned long long> exponent)
+// 
+// FieldT power(base:&FieldT, const Vec<u64 long> exponent)
 impl PowerConfig<Vec<u128>> for Powers{
 fn power<FieldT:One + for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exponent:Vec<u128>)->FieldT
 {
@@ -174,7 +174,7 @@ fn power<FieldT:One + for<'a> std::ops::MulAssign<&'a FieldT>>(base:&FieldT, exp
 }
 }
 
-// template<typename FieldT>
+// 
  pub fn tonelli_shanks_sqrt<FieldT:FTConfig+Clone>(value:&FieldT)->FieldT
 {
     // A few assertions to make sure s, t, and nqr are initialized.

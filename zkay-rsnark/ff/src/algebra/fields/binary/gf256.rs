@@ -19,68 +19,68 @@
 // /* x^256 + x^10 + x^5 + x^2 + 1 */
 // /* gf256 implements the field GF(2)/(x^256 + x^10 + x^5 + x^2 + 1).
 //    Elements are represented internally with four uint64s */
-// class gf256 {
+// pub struct gf256 {
 
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-//     static long long add_cnt;
-//     static long long sub_cnt;
-//     static long long mul_cnt;
-//     static long long sqr_cnt;
-//     static long long inv_cnt;
+//     static i64 add_cnt;
+//     static i64 sub_cnt;
+//     static i64 mul_cnt;
+//     static i64 sqr_cnt;
+//     static i64 inv_cnt;
 // //#endif
 //     // x^256 + x^10 + x^5 + x^2 + 1
-//     static const constexpr uint64_t modulus_ = 0b10000100101;
-//     static const constexpr uint64_t num_bits = 256;
+//     static 0b10000100101:constexpr uint64_t modulus_ =,
+//     static 256:constexpr uint64_t num_bits =,
 
 //     explicit gf256();
 //     /* we need a constructor that only initializes the low 64 bits of value_ to
 //        be able to do gf256(0) and gf256(1). */
 //     explicit gf256(const uint64_t value_low);
-//     explicit gf256(const uint64_t value_high, const uint64_t value_midh,
-//                    const uint64_t value_midl, const uint64_t value_low);
+//     explicit gf256(value_high:uint64_t, value_midh:uint64_t,
+//                    value_midl:uint64_t, const uint64_t value_low);
 
-//     gf256& operator+=(const gf256 &other);
-//     gf256& operator-=(const gf256 &other);
-//     gf256& operator*=(const gf256 &other);
-//     gf256& operator^=(const unsigned long pow);
-//     template<mp_size_t m>
-//     gf256& operator^=(const bigint<m> &pow);
+//     gf256& operator+=(other:&gf256);
+//     gf256& operator-=(other:&gf256);
+//     gf256& operator*=(other:&gf256);
+//     gf256& operator^=(const u64 pow);
+//     
+//     gf256& operator^=(pow:&bigint<m>);
 
 //     gf256& square();
 //     gf256& invert();
 
-//     gf256 operator+(const gf256 &other) const;
-//     gf256 operator-(const gf256 &other) const;
+//     gf256 operator+(other:&gf256) const;
+//     gf256 operator-(other:&gf256) const;
 //     gf256 operator-() const;
-//     gf256 operator*(const gf256 &other) const;
-//     gf256 operator^(const unsigned long pow) const;
-//     template<mp_size_t m>
-//     gf256 operator^(const bigint<m> &pow) const;
+//     gf256 operator*(other:&gf256) const;
+//     gf256 operator^(const:u64 pow),
+//     
+//     gf256 operator^(pow:&bigint<m>) const;
 
 //     gf256 squared() const;
 //     gf256 inverse() const;
 //     gf256 sqrt() const;
 
-//     void randomize();
-//     void clear();
+//     pub fn  randomize();
+//     pub fn  clear();
 
-//     bool operator==(const gf256 &other) const;
-//     bool operator!=(const gf256 &other) const;
+//     bool operator==(other:&gf256) const;
+//     bool operator!=(other:&gf256) const;
 
 //     bool is_zero() const;
 
-//     void print() const;
+//     pub fn  print() const;
 //     /**
 //      * Returns the constituent bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 //      */
-//     std::vector<uint64_t> to_words() const;
+//     Vec<uint64_t> to_words() const;
 //     /**
 //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
 //      * Should always return true since the right-most bits are always valid.
 //      */
-//     bool from_words(std::vector<uint64_t> words);
+//     bool from_words(Vec<uint64_t> words);
 
 //     static gf256 random_element();
 
@@ -88,25 +88,25 @@
 //     static gf256 one();
 //     static gf256 multiplicative_generator; // generator of gf256^*
 
-//     static std::size_t ceil_size_in_bits() { return num_bits; }
-//     static std::size_t floor_size_in_bits() { return num_bits; }
-//     static constexpr std::size_t extension_degree() { return 256; }
-//     template<mp_size_t n>
+//     static std::usize ceil_size_in_bits() { return num_bits; }
+//     static std::usize floor_size_in_bits() { return num_bits; }
+//     static constexpr std::usize extension_degree() { return 256; }
+//     
 //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
-//     friend std::ostream& operator<<(std::ostream &out, const gf256 &el);
+//     friend std::ostream& operator<<(std::ostream &out, el:&gf256);
 //     friend std::istream& operator>>(std::istream &in, gf256 &el);
-// private:
+// 
 //     /* little-endian */
 //     uint64_t value_[4];
 // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// long long gf256::add_cnt = 0;
-// long long gf256::sub_cnt = 0;
-// long long gf256::mul_cnt = 0;
-// long long gf256::sqr_cnt = 0;
-// long long gf256::inv_cnt = 0;
+// i64 gf256::add_cnt = 0;
+// i64 gf256::sub_cnt = 0;
+// i64 gf256::mul_cnt = 0;
+// i64 gf256::sqr_cnt = 0;
+// i64 gf256::inv_cnt = 0;
 // //#endif
 
 // // } // namespace libff
@@ -131,31 +131,31 @@
 
 // // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 
 // const uint64_t gf256::modulus_;
 // gf256 gf256::multiplicative_generator = gf256(2);
 
-// gf256::gf256() : value_{0, 0, 0, 0}
+// pub fn new()->Self value_{0, 0, 0, 0}
 // {
 // }
 
-// gf256::gf256(const uint64_t value_low) : value_{value_low, 0, 0, 0}
+// pub fn new(0:uint64_t value_low)->Self value_{value_low,, 0, 0}
 // {
 // }
 
-// gf256::gf256(const uint64_t value_high, const uint64_t value_midh,
-//              const uint64_t value_midl, const uint64_t value_low) :
+// pub fn new(value_high:uint64_t, value_midh:uint64_t,
+//              value_midl:uint64_t, const uint64_t value_low)->Self
 //     value_{value_low, value_midl, value_midh, value_high}
 // {
 // }
 
-// std::vector<uint64_t> gf256::to_words() const
+// pub fn to_words()->Vec<uint64_t>
 // {
-//     return std::vector<uint64_t>({this->value_[0], this->value_[1], this->value_[2], this->value_[3]});
+//     return Vec<uint64_t>({this->value_[0], this->value_[1], this->value_[2], this->value_[3]});
 // }
 
-// bool gf256::from_words(std::vector<uint64_t> words)
+// bool gf256::from_words(Vec<uint64_t> words)
 // {
 //     this->value_[0] = words[0];
 //     this->value_[1] = words[1];
@@ -164,7 +164,7 @@
 //     return true;
 // }
 
-// gf256& gf256::operator+=(const gf256 &other)
+// gf256& gf256::operator+=(other:&gf256)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
@@ -176,7 +176,7 @@
 //     return (*this);
 // }
 
-// gf256& gf256::operator-=(const gf256 &other)
+// gf256& gf256::operator-=(other:&gf256)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
@@ -188,7 +188,7 @@
 //     return (*this);
 // }
 
-// gf256& gf256::operator*=(const gf256 &other)
+// gf256& gf256::operator*=(other:&gf256)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
@@ -230,11 +230,11 @@
 //     /* load the two operands and the modulus into 128-bit registers.
 //        we load corresponding limbs of both operands into a single register,
 //        because it lets us implement Karatsuba with fewer 128-bit xors. */
-//     const __m128i ab0 = _mm_set_epi64x(this->value_[0], other.value_[0]);
-//     const __m128i ab1 = _mm_set_epi64x(this->value_[1], other.value_[1]);
-//     const __m128i ab2 = _mm_set_epi64x(this->value_[2], other.value_[2]);
-//     const __m128i ab3 = _mm_set_epi64x(this->value_[3], other.value_[3]);
-//     const __m128i modulus = _mm_loadl_epi64((const __m128i*) &(this->modulus_));
+//     let ab0= _mm_set_epi64x(this->value_[0], other.value_[0]);
+//     let ab1= _mm_set_epi64x(this->value_[1], other.value_[1]);
+//     let ab2= _mm_set_epi64x(this->value_[2], other.value_[2]);
+//     let ab3= _mm_set_epi64x(this->value_[3], other.value_[3]);
+//     let modulus= _mm_loadl_epi64((const __m128i*) &(this->modulus_));
 //     __m128i c0 = _mm_clmulepi64_si128(ab0, ab0, 0x01); /* multiply low and high halves */
 //     __m128i c6 = _mm_clmulepi64_si128(ab3, ab3, 0x01);
 
@@ -269,11 +269,11 @@
 //     /* here we compute the same c as in Karatsuba, but by just naively
 //        multiplying all pairs of limbs of the operands and adding together
 //        the results that correspond to the same shift. */
-//     const __m128i a_low = _mm_loadu_si128((const __m128i*) &(this->value_[0]));
-//     const __m128i a_high = _mm_loadu_si128((const __m128i*) &(this->value_[2]));
-//     const __m128i b_low = _mm_loadu_si128((const __m128i*) &(other.value_[0]));
-//     const __m128i b_high = _mm_loadu_si128((const __m128i*) &(other.value_[2]));
-//     const __m128i modulus = _mm_loadl_epi64((const __m128i*) &(gf256::modulus_));
+//     let a_low= _mm_loadu_si128((const __m128i*) &(this->value_[0]));
+//     let a_high= _mm_loadu_si128((const __m128i*) &(this->value_[2]));
+//     let b_low= _mm_loadu_si128((const __m128i*) &(other.value_[0]));
+//     let b_high= _mm_loadu_si128((const __m128i*) &(other.value_[2]));
+//     let modulus= _mm_loadl_epi64((const __m128i*) &(gf256::modulus_));
 
 //     __m128i m00 = _mm_clmulepi64_si128(a_low, b_low, 0x00);
 //     __m128i m01 = _mm_clmulepi64_si128(a_low, b_low, 0x10);
@@ -379,7 +379,7 @@
 //     return (*this);
 // }
 
-// gf256& gf256::operator^=(const unsigned long pow)
+// gf256& gf256::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
@@ -401,13 +401,13 @@
 //     return (*this);
 // }
 
-// gf256 gf256::operator+(const gf256 &other) const
+// gf256 gf256::operator+(other:&gf256) const
 // {
 //     gf256 result(*this);
 //     return (result+=(other));
 // }
 
-// gf256 gf256::operator-(const gf256 &other) const
+// gf256 gf256::operator-(other:&gf256) const
 // {
 //     gf256 result(*this);
 //     return (result-=(other));
@@ -418,18 +418,18 @@
 //     return gf256(*this);
 // }
 
-// gf256 gf256::operator*(const gf256 &other) const
+// gf256 gf256::operator*(other:&gf256) const
 // {
 //     gf256 result(*this);
 //     return (result*=(other));
 // }
 
-// gf256 gf256::operator^(const unsigned long pow) const
+// gf256 gf256::operator^(const u64 pow) const
 // {
 //     return power<gf256>(*this, pow);
 // }
 
-// gf256 gf256::squared() const
+// pub fn squared()->gf256
 // {
 //     gf256 result(*this);
 //     result.square();
@@ -438,7 +438,7 @@
 
 // /* calculate el^{-1} as el^{2^{256}-2}. the addition chain below
 //    requires 270 mul/sqr operations total. */
-// gf256 gf256::inverse() const
+// pub fn inverse()->gf256
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->inv_cnt++;
@@ -474,17 +474,17 @@
 //     return result;
 // }
 
-// gf256 gf256::sqrt() const
+// pub fn sqrt()->gf256
 // {
 //     return (*this)^bigint<4>("57896044618658097711785492504343953926634992332820282019728792003956564819968"); // 2^255
 // }
 
-// void gf256::randomize()
+// pub fn randomize()
 // {
 //     randombytes_buf(&this->value_, 256/8);
 // }
 
-// void gf256::clear()
+// pub fn clear()
 // {
 //     this->value_[0] = 0;
 //     this->value_[1] = 0;
@@ -492,7 +492,7 @@
 //     this->value_[3] = 0;
 // }
 
-// bool gf256::operator==(const gf256 &other) const
+// bool gf256::operator==(other:&gf256) const
 // {
 //     return ((this->value_[0] == other.value_[0]) &&
 //             (this->value_[1] == other.value_[1]) &&
@@ -500,18 +500,18 @@
 //             (this->value_[3] == other.value_[3]));
 // }
 
-// bool gf256::operator!=(const gf256 &other) const
+// bool gf256::operator!=(other:&gf256) const
 // {
 //     return !(this->operator==(other));
 // }
 
-// bool gf256::is_zero() const
+// pub fn is_zero()->bool
 // {
 //     return (this->value_[0] == 0) && (this->value_[1] == 0) &&
 //            (this->value_[2] == 0) && (this->value_[3] == 0);
 // }
 
-// void gf256::print() const
+// pub fn print() const
 // {
 //     print!("%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "%016" PRIx64 "\n",
 //            this->value_[3], this->value_[2],
@@ -535,7 +535,7 @@
 //     return gf256(1);
 // }
 
-// std::ostream& operator<<(std::ostream &out, const gf256 &el)
+// std::ostream& operator<<(std::ostream &out, el:&gf256)
 // {
 //     out << el.value_[0] << " " << el.value_[1] << " " << el.value_[2] << " " << el.value_[3];
 //     return out;
@@ -552,15 +552,15 @@
 
 // // namespace libff {
 
-// template<mp_size_t m>
-// gf256& gf256::operator^=(const bigint<m> &pow)
+// 
+// gf256& gf256::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// template<mp_size_t m>
-// gf256 gf256::operator^(const bigint<m> &pow) const
+// 
+// gf256 gf256::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf256>(*this, pow);
 // }

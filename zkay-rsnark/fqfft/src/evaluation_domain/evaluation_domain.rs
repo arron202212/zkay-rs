@@ -21,7 +21,7 @@
  The descriptions below make use of the definition of a *Lagrange polynomial*,
  which we recall. Given a field F, a subset S=(a_i)_i of F, and an index idx
  in {0,...,|S-1|}, the idx-th Lagrange polynomial (wrt to subset S) is defined to be
- \f[   L_{idx,S}(z) := prod_{k \neq idx} (z - a_k) / prod_{k \neq idx} (a_{idx} - a_k)   \f]
+ \f[   L_{idx,S}(z)->Self= prod_{k \neq idx} (z - a_k) / prod_{k \neq idx} (a_{idx} - a_k)   \f]
  Note that, by construction:
  \f[   \forall j \neq idx: L_{idx,S}(a_{idx}) = 1  \text{ and }  L_{idx,S}(a_j) = 0   \f]
 
@@ -41,7 +41,7 @@
 /**
  * An evaluation domain.
  */
-// template<typename FieldT>
+// 
 pub trait evaluation_domain<FieldT> {
 
 
@@ -52,7 +52,7 @@ pub trait evaluation_domain<FieldT> {
      *
      * (See the function get_evaluation_domain below.)
      */
-    // evaluation_domain(const size_t m) : m(m) {};
+    // evaluation_domain(m:usize)->Self m(m) {};
 
     /**
      * Get the idx-th element in S.

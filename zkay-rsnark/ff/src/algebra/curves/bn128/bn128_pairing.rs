@@ -19,16 +19,16 @@ use crate::common::profiling;
 
 // namespace libff {
 
-using std::size_t;
+using std::usize;
 
-bool bn128_ate_G1_precomp::operator==(const bn128_ate_G1_precomp &other) const
+bool bn128_ate_G1_precomp::operator==(other:&bn128_ate_G1_precomp) const
 {
     return (this->P[0] == other.P[0] &&
             this->P[1] == other.P[1] &&
             this->P[2] == other.P[2]);
 }
 
-std::ostream& operator<<(std::ostream &out, const bn128_ate_G1_precomp &prec_P)
+std::ostream& operator<<(std::ostream &out, prec_P:&bn128_ate_G1_precomp)
 {
     for p in &prec_P.P
     {
@@ -55,7 +55,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G1_precomp &prec_P)
     return in;
 }
 
-bool bn128_ate_G2_precomp::operator==(const bn128_ate_G2_precomp &other) const
+bool bn128_ate_G2_precomp::operator==(other:&bn128_ate_G2_precomp) const
 {
     if (!(this->Q[0] == other.Q[0] &&
           this->Q[1] == other.Q[1] &&
@@ -80,7 +80,7 @@ bool bn128_ate_G2_precomp::operator==(const bn128_ate_G2_precomp &other) const
     return true;
 }
 
-std::ostream& operator<<(std::ostream &out, const bn128_ate_G2_precomp &prec_Q)
+std::ostream& operator<<(std::ostream &out, prec_Q:&bn128_ate_G2_precomp)
 {
     for q in &prec_Q.Q
     {
@@ -132,7 +132,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
 //#endif
     }
 
-    size_t count;
+    usize count;
     in >> count;
     consume_newline(in);
     prec_Q.coeffs.resize(count);
@@ -163,7 +163,7 @@ std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
     return in;
 }
 
-bn128_ate_G1_precomp bn128_ate_precompute_G1(const bn128_G1& P)
+bn128_ate_G1_precomp bn128_ate_precompute_G1(P:&bn128_G1)
 {
     enter_block("Call to bn128_ate_precompute_G1");
 
@@ -176,7 +176,7 @@ bn128_ate_G1_precomp bn128_ate_precompute_G1(const bn128_G1& P)
     return result;
 }
 
-bn128_ate_G2_precomp bn128_ate_precompute_G2(const bn128_G2& Q)
+bn128_ate_G2_precomp bn128_ate_precompute_G2(Q:&bn128_G2)
 {
     enter_block("Call to bn128_ate_precompute_G2");
 
@@ -189,25 +189,25 @@ bn128_ate_G2_precomp bn128_ate_precompute_G2(const bn128_G2& Q)
     return result;
 }
 
-bn128_Fq12 bn128_ate_miller_loop(const bn128_ate_G1_precomp &prec_P,
-                                 const bn128_ate_G2_precomp &prec_Q)
+bn128_Fq12 bn128_ate_miller_loop(prec_P:&bn128_ate_G1_precomp,
+                                 prec_Q:&bn128_ate_G2_precomp)
 {
     bn128_Fq12 f;
     bn::components::millerLoop(f.elem, prec_Q.coeffs, prec_P.P);
     return f;
 }
 
-bn128_Fq12 bn128_double_ate_miller_loop(const bn128_ate_G1_precomp &prec_P1,
-                                        const bn128_ate_G2_precomp &prec_Q1,
-                                        const bn128_ate_G1_precomp &prec_P2,
-                                        const bn128_ate_G2_precomp &prec_Q2)
+bn128_Fq12 bn128_double_ate_miller_loop(prec_P1:&bn128_ate_G1_precomp,
+                                        prec_Q1:&bn128_ate_G2_precomp,
+                                        prec_P2:&bn128_ate_G1_precomp,
+                                        prec_Q2:&bn128_ate_G2_precomp)
 {
     bn128_Fq12 f;
     bn::components::millerLoop2(f.elem, prec_Q1.coeffs, prec_P1.P, prec_Q2.coeffs, prec_P2.P);
     return f;
 }
 
-bn128_GT bn128_final_exponentiation(const bn128_Fq12 &elt)
+bn128_GT bn128_final_exponentiation(elt:&bn128_Fq12)
 {
     enter_block("Call to bn128_final_exponentiation");
     bn128_GT eltcopy = elt;

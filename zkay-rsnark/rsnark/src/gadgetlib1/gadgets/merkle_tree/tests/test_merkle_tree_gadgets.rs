@@ -6,22 +6,22 @@
  *****************************************************************************/
 
 // #ifdef CURVE_BN128
-use ffec::algebra::curves::bn128/bn128_pp;
+use ffec::algebra::curves::bn128::bn128_pp;
 //#endif
-use ffec::algebra::curves::edwards/edwards_pp;
+use ffec::algebra::curves::edwards::edwards_pp;
 use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
 use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
-use crate::gadgetlib1::gadgets::hashes::sha256/sha256_gadget;
-use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_read_gadget;
-use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_update_gadget;
+use crate::gadgetlib1::gadgets::hashes::sha256::sha256_gadget;
+use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_read_gadget;
+use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_update_gadget;
 
 
 
-template<typename ppT>
-void test_all_merkle_tree_gadgets()
+
+pub fn  test_all_merkle_tree_gadgets()
 {
-    type ffec::Fr<ppT> FieldT;
+    type FieldT=ffec::Fr<ppT>;
     test_merkle_tree_check_read_gadget<FieldT, CRH_with_bit_out_gadget<FieldT> >();
     test_merkle_tree_check_read_gadget<FieldT, sha256_two_to_one_hash_gadget<FieldT> >();
 
@@ -29,7 +29,7 @@ void test_all_merkle_tree_gadgets()
     test_merkle_tree_check_update_gadget<FieldT, sha256_two_to_one_hash_gadget<FieldT> >();
 }
 
-int main(void)
+pub fn main()->i32
 {
     ffec::start_profiling();
 

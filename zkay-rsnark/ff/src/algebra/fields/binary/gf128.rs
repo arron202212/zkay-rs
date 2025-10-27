@@ -18,67 +18,67 @@
 
 // // /* gf128 implements the field GF(2)/(x^128 + x^7 + x^2 + x + 1).
 // //    Elements are represented internally with two uint64s */
-// // class gf128 {
+// // pub struct gf128 {
 
 // // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-// //     static long long add_cnt;
-// //     static long long sub_cnt;
-// //     static long long mul_cnt;
-// //     static long long sqr_cnt;
-// //     static long long inv_cnt;
+// //     static i64 add_cnt;
+// //     static i64 sub_cnt;
+// //     static i64 mul_cnt;
+// //     static i64 sqr_cnt;
+// //     static i64 inv_cnt;
 // // //#endif
 // //     // x^128 + x^7 + x^2 + x + 1
-// //     static const constexpr uint64_t modulus_ = 0b10000111;
-// //     static const constexpr uint64_t num_bits = 128;
+// //     static 0b10000111:constexpr uint64_t modulus_ =,
+// //     static 128:constexpr uint64_t num_bits =,
 
 // //     explicit gf128();
 // //     /* we need a constructor that only initializes the low half of value_ to
 // //        be able to do gf128(0) and gf128(1). */
 // //     explicit gf128(const uint64_t value_low);
-// //     explicit gf128(const uint64_t value_high, const uint64_t value_low);
+// //     explicit gf128(value_high:uint64_t, const uint64_t value_low);
 
-// //     gf128& operator+=(const gf128 &other);
-// //     gf128& operator-=(const gf128 &other);
-// //     gf128& operator*=(const gf128 &other);
-// //     gf128& operator^=(const unsigned long pow);
-// //     template<mp_size_t m>
-// //     gf128& operator^=(const bigint<m> &pow);
+// //     gf128& operator+=(other:&gf128);
+// //     gf128& operator-=(other:&gf128);
+// //     gf128& operator*=(other:&gf128);
+// //     gf128& operator^=(const u64 pow);
+// //     
+// //     gf128& operator^=(pow:&bigint<m>);
     
 // //     gf128& square();
 // //     gf128& invert();
 
-// //     gf128 operator+(const gf128 &other) const;
-// //     gf128 operator-(const gf128 &other) const;
+// //     gf128 operator+(other:&gf128) const;
+// //     gf128 operator-(other:&gf128) const;
 // //     gf128 operator-() const;
-// //     gf128 operator*(const gf128 &other) const;
-// //     gf128 operator^(const unsigned long pow) const;
-// //     template<mp_size_t m>
-// //     gf128 operator^(const bigint<m> &pow) const;
+// //     gf128 operator*(other:&gf128) const;
+// //     gf128 operator^(const:u64 pow),
+// //     
+// //     gf128 operator^(pow:&bigint<m>) const;
 
 // //     gf128 squared() const;
 // //     gf128 inverse() const;
 // //     gf128 sqrt() const;
 
-// //     void randomize();
-// //     void clear();
+// //     pub fn  randomize();
+// //     pub fn  clear();
 
-// //     bool operator==(const gf128 &other) const;
-// //     bool operator!=(const gf128 &other) const;
+// //     bool operator==(other:&gf128) const;
+// //     bool operator!=(other:&gf128) const;
 
 // //     bool is_zero() const;
 
-// //     void print() const;
+// //     pub fn  print() const;
 // //     /**
 // //      * Returns the constituent bits in 64 bit words, in little-endian order.
 // //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 // //      */
-// //     std::vector<uint64_t> to_words() const;
+// //     Vec<uint64_t> to_words() const;
 // //     /**
 // //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 // //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
 // //      * Should always return true since the right-most bits are always valid.
 // //      */
-// //     bool from_words(std::vector<uint64_t> words);
+// //     bool from_words(Vec<uint64_t> words);
 
 // //     static gf128 random_element();
 
@@ -86,25 +86,25 @@
 // //     static gf128 one();
 // //     static gf128 multiplicative_generator; // generator of gf128^*
 
-// //     static std::size_t ceil_size_in_bits() { return num_bits; }
-// //     static std::size_t floor_size_in_bits() { return num_bits; }
-// //     static constexpr std::size_t extension_degree() { return 128; }
-// //     template<mp_size_t n>
+// //     static std::usize ceil_size_in_bits() { return num_bits; }
+// //     static std::usize floor_size_in_bits() { return num_bits; }
+// //     static constexpr std::usize extension_degree() { return 128; }
+// //     
 // //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
-// //     friend std::ostream& operator<<(std::ostream &out, const gf128 &el);
+// //     friend std::ostream& operator<<(std::ostream &out, el:&gf128);
 // //     friend std::istream& operator>>(std::istream &in, gf128 &el);
-// // private:
+// // 
 // //     /* little-endian */
 // //     uint64_t value_[2];
 // // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// // long long gf128::add_cnt = 0;
-// // long long gf128::sub_cnt = 0;
-// // long long gf128::mul_cnt = 0;
-// // long long gf128::sqr_cnt = 0;
-// // long long gf128::inv_cnt = 0;
+// // i64 gf128::add_cnt = 0;
+// // i64 gf128::sub_cnt = 0;
+// // i64 gf128::mul_cnt = 0;
+// // i64 gf128::sqr_cnt = 0;
+// // i64 gf128::inv_cnt = 0;
 // //#endif
 
 // // } // namespace libff
@@ -129,37 +129,37 @@
 
 // // namespace libff {
 
-// // using std::size_t;
+// // using std::usize;
 
 // const uint64_t gf128::modulus_;
 // gf128 gf128::multiplicative_generator = gf128(2);
 
-// gf128::gf128() : value_{0, 0}
+// pub fn new()->Self value_{0, 0}
 // {
 // }
 
-// gf128::gf128(const uint64_t value_low) : value_{value_low, 0}
+// pub fn new(const uint64_t value_low)->Self value_{value_low, 0}
 // {
 // }
 
-// gf128::gf128(const uint64_t value_high, const uint64_t value_low) :
+// pub fn new(value_high:uint64_t, const uint64_t value_low)->Self
 //     value_{value_low, value_high}
 // {
 // }
 
-// std::vector<uint64_t> gf128::to_words() const
+// pub fn to_words()->Vec<uint64_t>
 // {
-//     return std::vector<uint64_t>({this->value_[0], this->value_[1]});
+//     return Vec<uint64_t>({this->value_[0], this->value_[1]});
 // }
 
-// bool gf128::from_words(std::vector<uint64_t> words)
+// bool gf128::from_words(Vec<uint64_t> words)
 // {
 //     this->value_[0] = words[0];
 //     this->value_[1] = words[1];
 //     return true;
 // }
 
-// gf128& gf128::operator+=(const gf128 &other)
+// gf128& gf128::operator+=(other:&gf128)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
@@ -169,7 +169,7 @@
 //     return (*this);
 // }
 
-// gf128& gf128::operator-=(const gf128 &other)
+// gf128& gf128::operator-=(other:&gf128)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
@@ -179,7 +179,7 @@
 //     return (*this);
 // }
 
-// gf128& gf128::operator*=(const gf128 &other)
+// gf128& gf128::operator*=(other:&gf128)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
@@ -188,9 +188,9 @@
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
 //     /* load the two operands and the modulus into 128-bit registers */
-//     const __m128i a = _mm_loadu_si128((const __m128i*) &(this->value_));
-//     const __m128i b = _mm_loadu_si128((const __m128i*) &(other.value_));
-//     const __m128i modulus = _mm_loadl_epi64((const __m128i*) &(gf128::modulus_));
+//     let a= _mm_loadu_si128((const __m128i*) &(this->value_));
+//     let b= _mm_loadu_si128((const __m128i*) &(other.value_));
+//     let modulus= _mm_loadl_epi64((const __m128i*) &(gf128::modulus_));
 
 //     /* compute the 256-bit result of a * b with the 64x64-bit multiplication
 //        intrinsic */
@@ -254,7 +254,7 @@
 // //#endif
 // }
 
-// gf128& gf128::operator^=(const unsigned long pow)
+// gf128& gf128::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
@@ -276,13 +276,13 @@
 //     return (*this);
 // }
 
-// gf128 gf128::operator+(const gf128 &other) const
+// gf128 gf128::operator+(other:&gf128) const
 // {
 //     gf128 result(*this);
 //     return (result+=(other));
 // }
 
-// gf128 gf128::operator-(const gf128 &other) const
+// gf128 gf128::operator-(other:&gf128) const
 // {
 //     gf128 result(*this);
 //     return (result-=(other));
@@ -293,18 +293,18 @@
 //     return gf128(this->value_[1], this->value_[0]);
 // }
 
-// gf128 gf128::operator*(const gf128 &other) const
+// gf128 gf128::operator*(other:&gf128) const
 // {
 //     gf128 result(*this);
 //     return (result*=(other));
 // }
 
-// gf128 gf128::operator^(const unsigned long pow) const
+// gf128 gf128::operator^(const u64 pow) const
 // {
 //     return power<gf128>(*this, pow);
 // }
 
-// gf128 gf128::squared() const
+// pub fn squared()->gf128
 // {
 //     gf128 result(*this);
 //     result.square();
@@ -313,7 +313,7 @@
 
 // /* calculate el^{-1} as el^{2^{128}-2}. the addition chain below
 //    requires 142 mul/sqr operations total. */
-// gf128 gf128::inverse() const
+// pub fn inverse()->gf128
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->inv_cnt++;
@@ -349,38 +349,38 @@
 //     return result;
 // }
 
-// gf128 gf128::sqrt() const
+// pub fn sqrt()->gf128
 // {
 //     return (*this)^bigint<2>("170141183460469231731687303715884105728"); // 2^127
 // }
 
-// void gf128::randomize()
+// pub fn randomize()
 // {
 //     randombytes_buf(&this->value_, 128/8);
 // }
 
-// void gf128::clear()
+// pub fn clear()
 // {
 //     this->value_[0] = 0;
 //     this->value_[1] = 0;
 // }
 
-// bool gf128::operator==(const gf128 &other) const
+// bool gf128::operator==(other:&gf128) const
 // {
 //     return (this->value_[0] == other.value_[0]) && ((this->value_[1] == other.value_[1]));
 // }
 
-// bool gf128::operator!=(const gf128 &other) const
+// bool gf128::operator!=(other:&gf128) const
 // {
 //     return !(this->operator==(other));
 // }
 
-// bool gf128::is_zero() const
+// pub fn is_zero()->bool
 // {
 //     return (this->value_[0] == 0) && (this->value_[1] == 0);
 // }
 
-// void gf128::print() const
+// pub fn print() const
 // {
 //     print!("%016" PRIx64 "%016" PRIx64 "\n", this->value_[1], this->value_[0]);
 // }
@@ -402,7 +402,7 @@
 //     return gf128(1);
 // }
 
-// std::ostream& operator<<(std::ostream &out, const gf128 &el)
+// std::ostream& operator<<(std::ostream &out, el:&gf128)
 // {
 //     out << el.value_[0] << " " << el.value_[1];
 //     return out;
@@ -419,15 +419,15 @@
 
 // // namespace libff {
 
-// template<mp_size_t m>
-// gf128& gf128::operator^=(const bigint<m> &pow)
+// 
+// gf128& gf128::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// template<mp_size_t m>
-// gf128 gf128::operator^(const bigint<m> &pow) const
+// 
+// gf128 gf128::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf128>(*this, pow);
 // }

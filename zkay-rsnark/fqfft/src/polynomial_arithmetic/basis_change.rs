@@ -21,7 +21,7 @@
 //  * Below we make use of the Subproduct Tree description from
 //  * [Bostan and Schost 2005. Polynomial Evaluation and Interpolation on Special Sets of Points], on page 7.
 //  */
-// // template<typename FieldT>
+// // 
 // // pub fn compute_subproduct_tree(m:usize, Vec<Vec<Vec<FieldT> > > &T);
 
 // /**
@@ -29,7 +29,7 @@
 //  * Below we make use of the MonomialToNewton and TNewtonToMonomial pseudocode from
 //  * [Bostan and Schost 2005. Polynomial Evaluation and Interpolation on Special Sets of Points], on page 12 and 14.
 //  */
-// template<typename FieldT>
+// 
 // pub fn monomial_to_newton_basis(a:&Vec<FieldT>, T:&Vec<Vec<Vec<FieldT> > > , n:usize);
 
 // /**
@@ -37,7 +37,7 @@
 //  * Below we make use of the NewtonToMonomial pseudocode from
 //  * [Bostan and Schost 2005. Polynomial Evaluation and Interpolation on Special Sets of Points], on page 11.
 //  */
-// template<typename FieldT>
+// 
 // pub fn newton_to_monomial_basis(a:&Vec<FieldT>, T:&Vec<Vec<Vec<FieldT> > > , n:usize);
 
 // /**
@@ -45,7 +45,7 @@
 //  * Below we make use of the psuedocode from
 //  * [Bostan & Schost 2005. Polynomial Evaluation and Interpolation on Special Sets of Points] on page 26.
 //  */
-// template<typename FieldT>
+// 
 // pub fn monomial_to_newton_basis_geometric(a:&Vec<FieldT>,
 //                                          geometric_sequence:&Vec<FieldT>,
 //                                          geometric_triangular_sequence:&Vec<FieldT>,
@@ -56,7 +56,7 @@
 //  * Below we make use of the psuedocode from
 //  * [Bostan & Schost 2005. Polynomial Evaluation and Interpolation on Special Sets of Points] on page 26.
 //  */
-// template<typename FieldT>
+// 
 // pub fn newton_to_monomial_basis_geometric(a:&Vec<FieldT>,
 //                                          geometric_sequence:&Vec<FieldT>,
 //                                          geometric_triangular_sequence:&Vec<FieldT>,
@@ -93,7 +93,7 @@ use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
 use ffec::common::utils::log2;
 //namespace libfqfft {
 
-// template<typename FieldT>
+// 
 pub fn compute_subproduct_tree<FieldT:Clone+std::convert::From<i32>+ std::cmp::PartialEq+num_traits::Zero+num_traits::One+ std::default::Default>(m:usize, T:&mut Vec< Vec < Vec <FieldT> > > )
 {
     if T.len() != m + 1{ T.resize(m + 1,vec![]);}
@@ -133,7 +133,7 @@ pub fn compute_subproduct_tree<FieldT:Clone+std::convert::From<i32>+ std::cmp::P
     }
 }
 
-// template<typename FieldT>
+// 
 pub fn monomial_to_newton_basis<FieldT: num_traits::Zero+ std::default::Default+ std::ops::Neg<Output = FieldT>+ std::ops::SubAssign+std::cmp::PartialEq+ std::ops::AddAssign+ std::ops::Sub<Output = FieldT>+Clone+num_traits::One>(a:&mut Vec<FieldT>, T:&Vec<Vec<Vec<FieldT> > > , n:usize)->eyre::Result<()>
 {
     let m = log2(n);
@@ -188,7 +188,7 @@ pub fn monomial_to_newton_basis<FieldT: num_traits::Zero+ std::default::Default+
     Ok(())
 }
 
-// template<typename FieldT>
+// 
 pub fn newton_to_monomial_basis<FieldT:Clone+num_traits::Zero+num_traits::One+ std::cmp::PartialEq + std::default::Default>(a:&mut Vec<FieldT>, T:&Vec<Vec<Vec<FieldT> > > , n:usize)->eyre::Result<()>
 {
     let m = log2(n);
@@ -215,7 +215,7 @@ pub fn newton_to_monomial_basis<FieldT:Clone+num_traits::Zero+num_traits::One+ s
     Ok(())
 }
 
-// template<typename FieldT>
+// 
 pub fn monomial_to_newton_basis_geometric<FieldT:num_traits::Zero+Clone+num_traits::One+ std::default::Default+ std::cmp::PartialEq+ std::ops::Neg<Output = FieldT>>(a:&mut Vec<FieldT>,
                                          geometric_sequence:&Vec<FieldT>,
                                          geometric_triangular_sequence:&Vec<FieldT>,
@@ -255,7 +255,7 @@ pub fn monomial_to_newton_basis_geometric<FieldT:num_traits::Zero+Clone+num_trai
     }
 }
 
-// template<typename FieldT>
+// 
 pub fn newton_to_monomial_basis_geometric<FieldT: num_traits::Zero+ std::default::Default+Clone+ num_traits::One+std::ops::Mul+ std::cmp::PartialEq+ std::ops::Neg<Output = FieldT>+ std::ops::Sub>(a:&mut Vec<FieldT>,
                                          geometric_sequence:&Vec<FieldT>,
                                          geometric_triangular_sequence:&Vec<FieldT>,

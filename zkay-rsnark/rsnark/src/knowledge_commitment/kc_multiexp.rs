@@ -23,28 +23,28 @@ use crate::knowledge_commitment::knowledge_commitment;
 
 
 
-// template<typename T1, typename T2, mp_size_t n>
+// 
 // knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
-//                                                 scalar:&ffec::bigint<n> scalar_bits:size_t);
+//                                                 scalar:&ffec::bigint<n> scalar_bits:usize);
 
-// template<typename T1, typename T2, typename FieldT, ffec::multi_exp_method Method>
+// 
 // knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_commitment_vector<T1, T2>
-//                                                                 min_idx:size_t
-//                                                                 max_idx:size_t
-//                                                                 typename std::vector<FieldT>::const_iterator scalar_start,
-//                                                                 typename std::vector<FieldT>::const_iterator scalar_end,
-//                                                                 chunks:size_t);
+//                                                                 min_idx:usize
+//                                                                 max_idx:usize
+//                                                                 Vec<FieldT>::const_iterator scalar_start,
+//                                                                 Vec<FieldT>::const_iterator scalar_end,
+//                                                                 chunks:usize);
 
-// template<typename T1, typename T2, typename FieldT>
-// knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
-//                                                  T1_window:size_t
-//                                                  T2_window:size_t
+// 
+// knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:usize
+//                                                  T1_window:usize
+//                                                  T2_window:usize
 //                                                  T1_table:&ffec::window_table<T1>
 //                                                  T2_table:&ffec::window_table<T2>
 //                                                  T1_coeff:&FieldT
 //                                                  T2_coeff:&FieldT
-//                                                  v:&std::vector<FieldT>
-//                                                  suggested_num_chunks:size_t);
+//                                                  v:&Vec<FieldT>
+//                                                  suggested_num_chunks:usize);
 
 
 
@@ -65,45 +65,45 @@ use crate::knowledge_commitment::knowledge_commitment;
 
 
 
-// template<typename T1, typename T2, mp_size_t n>
+// 
 // knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
-//                                                 scalar:&ffec::bigint<n> scalar_bits:size_t)
+//                                                 scalar:&ffec::bigint<n> scalar_bits:usize)
 // {
 //     return knowledge_commitment<T1,T2>(opt_window_wnaf_exp(base.g, scalar, scalar_bits),
 //                                        opt_window_wnaf_exp(base.h, scalar, scalar_bits));
 // }
 
-// template<typename T1, typename T2, typename FieldT, ffec::multi_exp_method Method>
+// 
 // knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_commitment_vector<T1, T2>
-//                                                                 min_idx:size_t
-//                                                                 max_idx:size_t
-//                                                                 typename std::vector<FieldT>::const_iterator scalar_start,
-//                                                                 typename std::vector<FieldT>::const_iterator scalar_end,
-//                                                                 chunks:size_t)
+//                                                                 min_idx:usize
+//                                                                 max_idx:usize
+//                                                                 Vec<FieldT>::const_iterator scalar_start,
+//                                                                 Vec<FieldT>::const_iterator scalar_end,
+//                                                                 chunks:usize)
 // {
 //     ffec::enter_block("Process scalar vector");
 //     auto index_it = std::lower_bound(vec.indices.begin(), vec.indices.end(), min_idx);
-//     vec.indices.begin(:size_t offset = index_it -);
+//     vec.indices.begin(:usize offset = index_it -);
 
 //     auto value_it = vec.values.begin() + offset;
 
 //     FieldT::zero(:FieldT zero =);
 //     FieldT::one(:FieldT one =);
 
-//     std::vector<FieldT> p;
-//     std::vector<knowledge_commitment<T1, T2> > g;
+//     Vec<FieldT> p;
+//     Vec<knowledge_commitment<T1, T2> > g;
 
 //     knowledge_commitment<T1, T2> acc = knowledge_commitment<T1, T2>::zero();
 
-//     size_t num_skip = 0;
-//     size_t num_add = 0;
-//     size_t num_other = 0;
+//     usize num_skip = 0;
+//     usize num_add = 0;
+//     usize num_other = 0;
 
-//     std::distance(scalar_start:size_t scalar_length = scalar_end);
+//     std::distance(scalar_start:usize scalar_length = scalar_end);
 
 //     while (index_it != vec.indices.end() && *index_it < max_idx)
 //     {
-//         (*index_it:size_t scalar_position =) - min_idx;
+//         (*index_it:usize scalar_position =) - min_idx;
 //         assert!(scalar_position < scalar_length);
 
 //         scalar_position:FieldT scalar = *(scalar_start +);
@@ -143,25 +143,25 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     return acc + ffec::multi_exp<knowledge_commitment<T1, T2>, FieldT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
 // }
 
-// template<typename T1, typename T2, typename FieldT>
-// knowledge_commitment_vector<T1, T2> kc_batch_exp_internal(scalar_size:size_t
-//                                                           T1_window:size_t
-//                                                           T2_window:size_t
+// 
+// knowledge_commitment_vector<T1, T2> kc_batch_exp_internal(scalar_size:usize
+//                                                           T1_window:usize
+//                                                           T2_window:usize
 //                                                           T1_table:&ffec::window_table<T1>
 //                                                           T2_table:&ffec::window_table<T2>
 //                                                           T1_coeff:&FieldT
 //                                                           T2_coeff:&FieldT
-//                                                           v:&std::vector<FieldT>
-//                                                           start_pos:size_t
-//                                                           end_pos:size_t
-//                                                           expected_size:size_t)
+//                                                           v:&Vec<FieldT>
+//                                                           start_pos:usize
+//                                                           end_pos:usize
+//                                                           expected_size:usize)
 // {
 //     knowledge_commitment_vector<T1, T2> res;
 
 //     res.values.reserve(expected_size);
 //     res.indices.reserve(expected_size);
 
-//     for (size_t pos = start_pos; pos != end_pos; ++pos)
+//     for (usize pos = start_pos; pos != end_pos; ++pos)
 //     {
 //         if !v[pos].is_zero()
 //         {
@@ -174,43 +174,43 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     return res;
 // }
 
-// template<typename T1, typename T2, typename FieldT>
-// knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:size_t
-//                                                  T1_window:size_t
-//                                                  T2_window:size_t
+// 
+// knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:usize
+//                                                  T1_window:usize
+//                                                  T2_window:usize
 //                                                  T1_table:&ffec::window_table<T1>
 //                                                  T2_table:&ffec::window_table<T2>
 //                                                  T1_coeff:&FieldT
 //                                                  T2_coeff:&FieldT
-//                                                  v:&std::vector<FieldT>
-//                                                  suggested_num_chunks:size_t)
+//                                                  v:&Vec<FieldT>
+//                                                  suggested_num_chunks:usize)
 // {
 //     knowledge_commitment_vector<T1, T2> res;
 //     res.domain_size_ = v.len();
 
-//     size_t nonzero = 0;
+//     usize nonzero = 0;
 //     for i in 0..v.len()
 //     {
 //         nonzero += if v[i].is_zero() {0} else{1};
 //     }
 
-//     std::min(nonzero:size_t num_chunks = std::max((size_t)1, suggested_num_chunks));
+//     std::min(nonzero:usize num_chunks = std::max((usize)1, suggested_num_chunks));
 
 //     if !ffec::inhibit_profiling_info
 //     {
 //         ffec::print_indent(); print!("Non-zero coordinate count: {}/{} {}\n", nonzero, v.len(), 100.*nonzero/v.len());
 //     }
 
-//     std::vector<knowledge_commitment_vector<T1, T2> > tmp(num_chunks);
-//     std::vector<size_t> chunk_pos(num_chunks+1);
+//     Vec<knowledge_commitment_vector<T1, T2> > tmp(num_chunks);
+//     Vec<usize> chunk_pos(num_chunks+1);
 
-//     const size_t chunk_size = nonzero / num_chunks;
-//     1:size_t last_chunk = nonzero - chunk_size * (num_chunks -);
+//     let chunk_size = nonzero / num_chunks;
+//     1:usize last_chunk = nonzero - chunk_size * (num_chunks -);
 
 //     chunk_pos[0] = 0;
 
-//     size_t cnt = 0;
-//     size_t chunkno = 1;
+//     usize cnt = 0;
+//     usize chunkno = 1;
 
 //     for i in 0..v.len()
 //     {

@@ -14,7 +14,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_exa
 
 
 
-// r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(const size_t size);
+// r1cs_example<ffec::Fr<ffec::default_ec_pp> > gen_r1cs_example_from_gadgetlib2_protoboard(size:usize);
 
 
 

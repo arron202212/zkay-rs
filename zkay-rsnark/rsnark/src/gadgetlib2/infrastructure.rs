@@ -38,7 +38,7 @@
 // // This should be used in the declarations for a class
 // // #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
 //   TypeName(const TypeName&);               \
-//   void operator=(const TypeName&)
+//   pub fn  operator=(const TypeName&)
 
 // /********************************************************/
 // /*************** Debug String Formatting ****************/
@@ -48,7 +48,7 @@
 // // someday, if/when MSVC supports C++0x variadic templates, change FMT in release version to the
 // // following in order to increase efficiency:
 // // // #define GADGETLIB2_FMT(...) ""
-// ::std::string GADGETLIB2_FMT(const char* format, ...);
+// ::String GADGETLIB2_FMT(format:char*, ...);
 
 // /** Safely converts 64-bit types to 32-bit, or from unsigned to signed */
 // long safeConvert(const int64_t num);
@@ -57,7 +57,7 @@
 // /******************* Error Handling *********************/
 // /********************************************************/
 
-// // declare a function as never returning, to quiet down "control reaches end of non-void function" warnings
+// // declare a function as never returning, to quiet down "control reaches end of non-pub fn  function" warnings
 // #if defined(_MSC_VER) // VisualC++
 // // #define __noreturn _declspec(noreturn)
 // #elif defined(__GNUC__)
@@ -69,14 +69,14 @@
 
 
 //     /**
-//      * The ErrorHandling class containimplements the functionality of displaying the content of error
+//      * The ErrorHandling pub struct containimplements the functionality of displaying the content of error
 //      * messages (including content of call stack when error happened), and exiting the program.
 //      */
-//     class ErrorHandling {
+//     pub struct ErrorHandling {
 //         
-//             static void __noreturn fatalError(const ::std::string& msg);
-//             static void __noreturn fatalError(const std::stringstream& msg);
-//             static void printStacktrace();
+//             static pub fn  __noreturn fatalError(const ::String& msg);
+//             static pub fn  __noreturn fatalError(const std::stringstream& msg);
+//             static pub fn  printStacktrace();
 
 //     };
 
@@ -120,7 +120,7 @@
 // }
 // //// #define CEIL(a)  ((int64_t)ceil((double)(a)))
 
-// using ffec::UNUSED;
+// using //ffec::UNUSED;
 // } // namespace gadgetlib2
 
 // //#endif   // __infrastructure_HPP
@@ -153,23 +153,23 @@
 // /********************************************************/
 
 // // #ifdef DEBUG
-// const static size_t MAX_FMT = 256;
-// ::std::string GADGETLIB2_FMT(const char* format, ...) {
+// 256:static usize MAX_FMT =,
+// ::String GADGETLIB2_FMT(format:char*, ...) {
 //     char buf[MAX_FMT];
 //     va_list args;
 //     va_start(args, format);
 // #if defined(_MSC_VER)
-//     const int strChk =  vsnprintf_s(buf, MAX_FMT, MAX_FMT, format, args);
+//     MAX_FMT:int strChk =  vsnprintf_s(buf,, MAX_FMT, format, args);
 // #else
-//     const int strChk =  vsnprintf(buf, MAX_FMT, format, args);
+//     MAX_FMT:int strChk =  vsnprintf(buf,, format, args);
 // //#endif
 //     va_end(args);
 //     GADGETLIB_ASSERT(strChk >= 0 && strChk < MAX_FMT, "String length larger than buffer. Shorten"
 //                                         " string or increase buffer size defined in \"MAX_FMT\".");
-//     return ::std::string(buf);
+//     return ::String(buf);
 // }
 // #else // not DEBUG
-// ::std::string GADGETLIB2_FMT(const char* format, ...) {ffec::UNUSED(format); return "";}
+// ::String GADGETLIB2_FMT(format:char*, ...) {//ffec::UNUSED(format); return "";}
 // //#endif
 
 // /** Safely converts 64-bit types to 32-bit. */
@@ -188,29 +188,29 @@
 //     information (variable values, stack trace, etc.) but want to have every data possible to
 //     reproduce assertion.
 // */
-// void ErrorHandling::fatalError(const ::std::string& msg) {
+// pub fn  ErrorHandling::fatalError(const ::String& msg) {
 // #   ifdef DEBUG
 //         ::std::cerr << "ERROR:  " << msg << ::std::endl << ::std::endl;
 //         printStacktrace();
 //         throw ::std::runtime_error(msg);
 // #   else // not DEBUG
-//         ffec::UNUSED(msg);
-//         const ::std::string releaseMsg("Fatal error encountered. Run debug build for more"
+//         //ffec::UNUSED(msg);
+//         const ::String releaseMsg("Fatal error encountered. Run debug build for more"
 //                                                                   " information and stack trace.");
 //         ::std::cerr << "ERROR:  " << releaseMsg << ::std::endl << ::std::endl;
 //         throw ::std::runtime_error(releaseMsg);
 // #   endif
 // }
 
-// void ErrorHandling::fatalError(const ::std::stringstream& msg) {
+// pub fn  ErrorHandling::fatalError(const ::std::stringstream& msg) {
 //     fatalError(msg.str());
 // }
 
-// void ErrorHandling::printStacktrace() {
+// pub fn  ErrorHandling::printStacktrace() {
 // // #ifdef __GLIBC__
 //     std::cerr << "Stack trace (pipe through c++filt to demangle identifiers):" << std::endl;
-//     const int maxFrames = 100;
-//     void* frames[maxFrames];
+//     let maxFrames= 100;
+//     pub fn * frames[maxFrames];
 //     // Fill array with pointers to stack frames
 //     int numFrames = backtrace(frames, maxFrames);
 //     // Decode frames and print them to stderr

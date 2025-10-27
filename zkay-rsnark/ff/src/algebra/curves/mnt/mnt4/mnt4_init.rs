@@ -36,10 +36,10 @@
 // extern bool mnt4_final_exponent_last_chunk_is_w0_neg;
 // extern bigint<mnt4_q_limbs> mnt4_final_exponent_last_chunk_w1;
 
-// void init_mnt4_params();
+// pub fn  init_mnt4_params();
 
-// class mnt4_G1;
-// class mnt4_G2;
+// pub struct mnt4_G1;
+// pub struct mnt4_G2;
 
 // // } // namespace libff
 
@@ -80,7 +80,7 @@
 // bool mnt4_final_exponent_last_chunk_is_w0_neg;
 // bigint<mnt4_q_limbs> mnt4_final_exponent_last_chunk_w1;
 
-// void init_mnt4_params()
+// pub fn  init_mnt4_params()
 // {
 //     init_mnt4_fields();
 

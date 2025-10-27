@@ -17,11 +17,11 @@ use crate::algebra::curves::mnt::mnt6::mnt6_fields;
 
 // namespace libff {
 
-typedef Fp_model<mnt6_r_limbs, mnt6_modulus_r> mnt6_Fr;
-typedef Fp_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq;
-typedef Fp3_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq3;
-typedef Fp6_2over3_model<mnt6_q_limbs, mnt6_modulus_q> mnt6_Fq6;
-typedef mnt6_Fq6 mnt6_GT;
+type mnt6_Fr=Fp_model<mnt6_r_limbs, mnt6_modulus_r>;
+type mnt6_Fq=Fp_model<mnt6_q_limbs, mnt6_modulus_q>;
+type mnt6_Fq3=Fp3_model<mnt6_q_limbs, mnt6_modulus_q>;
+type mnt6_Fq6=Fp6_2over3_model<mnt6_q_limbs, mnt6_modulus_q>;
+type mnt6_GT=mnt6_Fq6;
 
 // parameters for twisted short Weierstrass curve E'/Fq3 : y^2 = x^3 + (a * twist^2) * x + (b * twist^3)
 extern mnt6_Fq3 mnt6_twist;
@@ -44,10 +44,10 @@ extern bigint<mnt6_q_limbs> mnt6_final_exponent_last_chunk_abs_of_w0;
 extern bool mnt6_final_exponent_last_chunk_is_w0_neg;
 extern bigint<mnt6_q_limbs> mnt6_final_exponent_last_chunk_w1;
 
-void init_mnt6_params();
+pub fn  init_mnt6_params();
 
-class mnt6_G1;
-class mnt6_G2;
+pub struct mnt6_G1;
+pub struct mnt6_G2;
 
 // } // namespace libff
 
@@ -90,7 +90,7 @@ bigint<mnt6_q_limbs> mnt6_final_exponent_last_chunk_abs_of_w0;
 bool mnt6_final_exponent_last_chunk_is_w0_neg;
 bigint<mnt6_q_limbs> mnt6_final_exponent_last_chunk_w1;
 
-void init_mnt6_params()
+pub fn  init_mnt6_params()
 {
     init_mnt6_fields();
 

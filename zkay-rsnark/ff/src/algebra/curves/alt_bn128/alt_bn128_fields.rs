@@ -14,23 +14,23 @@ use crate::algebra::fields::prime_extension::fp6_3over2;
 
 // namespace libff {
 
-const mp_size_t alt_bn128_r_bitcount = 254;
-const mp_size_t alt_bn128_q_bitcount = 254;
+let alt_bn128_r_bitcount= 254;
+let alt_bn128_q_bitcount= 254;
 
-const mp_size_t alt_bn128_r_limbs = (alt_bn128_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-const mp_size_t alt_bn128_q_limbs = (alt_bn128_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+let alt_bn128_r_limbs= (alt_bn128_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+let alt_bn128_q_limbs= (alt_bn128_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
 
 extern bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
 extern bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
 
-typedef Fp_model<alt_bn128_r_limbs, alt_bn128_modulus_r> alt_bn128_Fr;
-typedef Fp_model<alt_bn128_q_limbs, alt_bn128_modulus_q> alt_bn128_Fq;
-typedef Fp2_model<alt_bn128_q_limbs, alt_bn128_modulus_q> alt_bn128_Fq2;
-typedef Fp6_3over2_model<alt_bn128_q_limbs, alt_bn128_modulus_q> alt_bn128_Fq6;
-typedef Fp12_2over3over2_model<alt_bn128_q_limbs, alt_bn128_modulus_q> alt_bn128_Fq12;
-typedef alt_bn128_Fq12 alt_bn128_GT;
+type alt_bn128_Fr=Fp_model<alt_bn128_r_limbs, alt_bn128_modulus_r>;
+type alt_bn128_Fq=Fp_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
+type alt_bn128_Fq2=Fp2_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
+type alt_bn128_Fq6=Fp6_3over2_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
+type alt_bn128_Fq12=Fp12_2over3over2_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
+type alt_bn128_GT=alt_bn128_Fq12;
 
-void init_alt_bn128_fields();
+pub fn  init_alt_bn128_fields();
 
 // } // namespace libff
 
@@ -49,7 +49,7 @@ use crate::algebra::curves::alt_bn128::alt_bn128_fields;
 bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
 bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
 
-void init_alt_bn128_fields()
+pub fn  init_alt_bn128_fields()
 {
     using bigint_r = bigint<alt_bn128_r_limbs>;
     using bigint_q = bigint<alt_bn128_q_limbs>;

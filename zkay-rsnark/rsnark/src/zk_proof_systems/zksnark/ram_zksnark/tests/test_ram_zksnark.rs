@@ -13,30 +13,30 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;
 
 
 
-template<typename ppT>
-void test_ram_zksnark(const size_t w,
-                      const size_t k,
-                      const size_t boot_trace_size_bound,
-                      const size_t time_bound)
+
+pub fn  test_ram_zksnark(w:usize,
+                      k:usize,
+                      boot_trace_size_bound:usize,
+                      time_bound:usize)
 {
-    type ram_zksnark_machine_pp<ppT> ramT;
+    type ramT=ram_zksnark_machine_pp<ppT>;
     const ram_architecture_params<ramT> ap(w, k);
-    const ram_example<ramT> example = gen_ram_example_complex<ramT>(ap, boot_trace_size_bound, time_bound, true);
-    const bool test_serialization = true;
-    const bool ans = run_ram_zksnark<ppT>(example, test_serialization);
+    boot_trace_size_bound:ram_example<ramT> example = gen_ram_example_complex<ramT>(ap,, time_bound, true);
+    let mut test_serialization = true;
+    let mut ans = run_ram_zksnark<ppT>(example, test_serialization);
     assert!(ans);
 }
 
-int main(void)
+pub fn main()->i32
 {
     ffec::start_profiling();
     ram_zksnark_PCD_pp<default_ram_zksnark_pp>::init_public_params();
 
-    const size_t w = 32;
-    const size_t k = 16;
+    let w = 32;
+    let k = 16;
 
-    const size_t boot_trace_size_bound = 20;
-    const size_t time_bound = 10;
+    let boot_trace_size_bound = 20;
+    let time_bound = 10;
 
     test_ram_zksnark<default_ram_zksnark_pp>(w, k, boot_trace_size_bound, time_bound);
 }

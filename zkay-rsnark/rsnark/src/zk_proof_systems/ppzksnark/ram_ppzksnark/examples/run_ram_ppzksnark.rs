@@ -25,9 +25,9 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-// template<typename ram_ppzksnark_ppT>
-// bool run_ram_ppzksnark(const ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> > &example,
-//                        const bool test_serialization);
+// 
+// bool run_ram_ppzksnark(example:&ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >,
+//                        test_serialization:bool);
 
 
 
@@ -71,7 +71,7 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
  *     a boot trace, and a proof.
  */
-// template<typename ram_ppzksnark_ppT>
+// 
  pub fn run_ram_ppzksnark<ram_ppzksnark_ppT>(example:&ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> > ,
                         test_serialization:bool)->bool
 {

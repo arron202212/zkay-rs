@@ -12,13 +12,13 @@ use crate::gadgetlib1::protoboard;
 
 
 
-// template<typename FieldT>
+// 
 pub struct gadget<FieldT> {
-// protected:
+// 
      pb:protoboard<FieldT>,
     annotation_prefix:String,
 // 
-//     gadget(protoboard<FieldT> &pb, const std::string &annotation_prefix="");
+//     gadget(pb:protoboard<FieldT>, annotation_prefix:&String="");
 }
 
 
@@ -35,7 +35,7 @@ pub struct gadget<FieldT> {
 //#ifndef GADGET_TCC_
 // #define GADGET_TCC_
 
-// template<typename FieldT>
+// 
 impl<FieldT> gadget<FieldT>{
 pub fn new(pb:protoboard<FieldT> , annotation_prefix:String) ->Self
 {

@@ -11,20 +11,19 @@ use crate::algebra::field_utils::bigint;
 use crate::algebra::field_utils::field_utils;
 use crate::algebra::field_utils::algorithms;
 use crate::algebra::fields::binary::gf64;
-use crate::algebra::curves::edwards/edwards_fields;
+use crate::algebra::curves::edwards::edwards_fields;
 //#include <gtest/gtest.h>
 
 using namespace libff;
 
-using std::size_t;
+using std::usize;
 
-template<typename FieldT>
-FieldT power_naive(const FieldT &base, const std::size_t exponent)
+
+FieldT power_naive(base:&FieldT, const std::usize exponent)
 {
     FieldT result = FieldT::one();
 
     for i in 1..=exponent{
-    {
         result *= base;
     }
 
@@ -33,17 +32,16 @@ FieldT power_naive(const FieldT &base, const std::size_t exponent)
 
 
 TEST(ExponentiationTest, SimpleTest) {
-    typedef gf64 FieldT;
+    type FieldT=gf64;
 
-    const unsigned long max_power = 3000;
+    let  max_power = 3000;
     FieldT X = FieldT::random_element();
 
     FieldT X_i = FieldT::one();
     for i in 0 ..max_power{
-    {
-        const FieldT X_i_naive = power_naive<FieldT>(X, i);
-        const FieldT X_i_square_and_multiply_ul = power<FieldT>(X, i);
-        const FieldT X_i_square_and_multiply_ull = power<FieldT>(X, (unsigned long long) i);
+        let X_i_naive= power_naive<FieldT>(X, i);
+        let X_i_square_and_multiply_ul= power<FieldT>(X, i);
+        let X_i_square_and_multiply_ull= power<FieldT>(X, (u64 long) i);
 
         EXPECT_EQ(X_i, X_i_naive);
         EXPECT_EQ(X_i, X_i_square_and_multiply_ul);
@@ -111,12 +109,12 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
 
     bit_vector vec;
     for i in 0..12 + edwards_Fq::ceil_size_in_bits()
-        vec.push_back(0);
+       { vec.push_back(0);}
     vec.push_back(1);
     vec.push_back(0);
     vec.push_back(1);
 
-    std::vector<edwards_Fq> field_vec = pack_bit_vector_into_field_element_vector<edwards_Fq>(vec);
+    Vec<edwards_Fq> field_vec = pack_bit_vector_into_field_element_vector<edwards_Fq>(vec);
 
     EXPECT_EQ(field_vec.len(), 2);
     EXPECT_EQ(field_vec[0], edwards_Fq::zero());
@@ -142,7 +140,7 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
 
     // convert_field_element_vector_to_bit_vector
 
-    std::vector<edwards_Fq> field_vec2;
+    Vec<edwards_Fq> field_vec2;
     field_vec2.push_back(edwards_Fq(edwards_Fq(5)));
     field_vec2.push_back(edwards_Fq::zero());
 
@@ -153,5 +151,5 @@ TEST(FieldUtilsTest, FieldVectorConversionTest)
     EXPECT_EQ(vec3[1], 0);
     EXPECT_EQ(vec3[2], 1);
     for i in 3..vec3.len()
-        EXPECT_EQ(vec3[i], 0);
+        {EXPECT_EQ(vec3[i], 0);}
 }

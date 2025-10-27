@@ -29,11 +29,11 @@
 
 pub type bit_vector=Vec<bool> ;
 
-// template<bool B, class T = void>
-// struct enable_if { typedef void* type; };
+// 
+// struct enable_if { type type=pub fn *; };
 
-// template<class T>
-// struct enable_if<true, T> { typedef T type; };
+// 
+// struct enable_if<true, T> { type type=T; };
 
 // std::usize get_power_of_two(std::usize n);
 
@@ -49,17 +49,17 @@ pub type bit_vector=Vec<bool> ;
 // i32 from_twos_complement(std::usize i, std::usize w);
 
 // std::usize bitreverse(std::usize n, const std::usize l);
-// bit_vector int_list_to_bits(l:&const std::initializer_list<unsigned long>, const std::usize wordsize);
+// bit_vector int_list_to_bits(l:&const std::initializer_list<u64>, const std::usize wordsize);
 // /* throws error if y = 0 */
-// long long div_ceil(long long x, long long y);
+// i64 div_ceil(i64 x, i64 y);
 
 // bool is_little_endian();
 
-// std::string FORMAT(prefix:&const std::string, const char* format, ...);
+// String FORMAT(prefix:&format:String, const char*, ...);
 
 /* A variadic template to suppress unused argument warnings */
-// template<typename ... Types>
-// void UNUSED(Types&&...) {}
+// 
+// pub fn  UNUSED(Types&&...) {}
 
 // #ifdef DEBUG
 // #define FMT FORMAT
@@ -67,18 +67,18 @@ pub type bit_vector=Vec<bool> ;
 // #define FMT(...) (UNUSED(__VA_ARGS__), "")
 //#endif
 
-// void serialize_bit_vector(out:&String,v:& const bit_vector);
-// void deserialize_bit_vector(in:&mut String,v:& bit_vector);
+// pub fn  serialize_bit_vector(out:&String,v:& const bit_vector);
+// pub fn  deserialize_bit_vector(in:&mut String,v:& bit_vector);
 
 // /** Should not be used for fields, because the field function is named ceil_size_in_bits instead. */
-// template<typename CurveT>
-// std::usize curve_size_in_bits(const Vec <CurveT> &v);
+// 
+// std::usize curve_size_in_bits(v:&Vec <CurveT>);
 
 /* Print a vector in the form { elem0 elem1 elem2 ... }, with a newline at the end
-template<typename T>
-void print_vector(Vec <T> &vec);
-template<typename T>
-void print_vector(Vec <T> vec);*/
+
+pub fn  print_vector(Vec <T> &vec);
+
+pub fn  print_vector(Vec <T> vec);*/
  use std::fmt::Write;
 pub fn  print_vector<T: std::fmt::Display>(vec:&Vec <T>)
 {
@@ -96,21 +96,21 @@ pub fn  print_vector<T: std::fmt::Display>(vec:&Vec <T>)
 //  * T can be a field or elliptic curve group.
 //  * Used for testing to generate a test example that doesn't error.
 //  */
-// template<typename T>
+// 
 // T random_element_non_zero_one();
 // /**
 //  * Returns a random element of T that is not zero.
 //  * T can be a field or elliptic curve group.
 //  * Used for testing to generate a test example that doesn't error.
 //  */
-// template<typename T>
+// 
 // T random_element_non_zero();
 // /**
 //  * Returns a random element of T that is not equal to y.
 //  * T can be a field or elliptic curve group.
 //  * Used for testing to generate a test example that doesn't error.
 //  */
-// template<typename T>
+// 
 // T random_element_exclude(T y);
 
 // #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
@@ -226,15 +226,15 @@ pub fn is_little_endian()->bool{
     // a.to_le()==a.to_ne()
 }
 
-// pub fn FORMAT(prefix:&const std::string, const char* format, ...)->string{
-//     const static usize MAX_FMT = 256;
+// pub fn FORMAT(prefix:&format:String, const char*, ...)->string{
+//     256:static usize MAX_FMT =,
 //     char buf[MAX_FMT];
 //     va_list args;
 //     va_start(args, format);
 //     vsnprintf(buf, MAX_FMT, format, args);
 //     va_end(args);
 
-//     return prefix + std::string(buf);
+//     return prefix + String(buf);
 // }
 
 pub fn serialize_bit_vector(out:&mut String,v:& bit_vector){

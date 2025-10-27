@@ -6,7 +6,7 @@
  *****************************************************************************/
 //#include <gtest/gtest.h>
 
-use crate::algebra::curves::edwards/edwards_pp;
+use crate::algebra::curves::edwards::edwards_pp;
 use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 use crate::common::profiling;
@@ -21,9 +21,9 @@ use crate::algebra::curves::bls12_381/bls12_381_pp;
 
 using namespace libff;
 
-using std::size_t;
+using std::usize;
 
-class CurveGroupsTest: public ::testing::Test {
+pub struct CurveGroupsTest{//::testing::Test
 
     CurveGroupsTest()
     {
@@ -38,8 +38,8 @@ class CurveGroupsTest: public ::testing::Test {
     }
 };
 
-template<typename GroupT>
-void test_mixed_add()
+
+pub fn  test_mixed_add()
 {
     GroupT base, el, result;
 
@@ -74,8 +74,8 @@ void test_mixed_add()
     EXPECT_EQ(result, base.dbl());
 }
 
-template<typename GroupT>
-void test_group()
+
+pub fn  test_group()
 {
     bigint<1> rand1 = bigint<1>("76749407");
     bigint<1> rand2 = bigint<1>("44410867");
@@ -132,15 +132,15 @@ void test_group()
     test_mixed_add<GroupT>();
 }
 
-template<typename GroupT>
-void test_mul_by_q()
+
+pub fn  test_mul_by_q()
 {
     GroupT a = GroupT::random_element();
     EXPECT_EQ(GroupT::field_char() * a, a.mul_by_q());
 }
 
-template<typename GroupT>
-void test_output()
+
+pub fn  test_output()
 {
     GroupT g = GroupT::zero();
 

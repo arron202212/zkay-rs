@@ -29,10 +29,10 @@ extern bigint<12*bls12_381_q_limbs> bls12_381_final_exponent;
 extern bigint<bls12_381_q_limbs> bls12_381_final_exponent_z;
 extern bool bls12_381_final_exponent_is_z_neg;
 
-void init_bls12_381_params();
+pub fn  init_bls12_381_params();
 
-class bls12_381_G1;
-class bls12_381_G2;
+pub struct bls12_381_G1;
+pub struct bls12_381_G2;
 
 // } // namespace libff
 //#endif // BLS12_381_INIT_HPP_
@@ -56,7 +56,7 @@ bigint<12*bls12_381_q_limbs> bls12_381_final_exponent;
 bigint<bls12_381_q_limbs> bls12_381_final_exponent_z;
 bool bls12_381_final_exponent_is_z_neg;
 
-void init_bls12_381_params()
+pub fn  init_bls12_381_params()
 {
     init_bls12_381_fields();
 

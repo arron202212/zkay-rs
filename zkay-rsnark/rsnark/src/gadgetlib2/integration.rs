@@ -15,8 +15,8 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-// r1cs_constraint_system<Fr<default_ec_pp> > get_constraint_system_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
-// r1cs_variable_assignment<Fr<default_ec_pp> > get_variable_assignment_from_gadgetlib2(const gadgetlib2::Protoboard &pb);
+// r1cs_constraint_system<Fr<default_ec_pp> > get_constraint_system_from_gadgetlib2(pb:&gadgetlib2::Protoboard);
+// r1cs_variable_assignment<Fr<default_ec_pp> > get_variable_assignment_from_gadgetlib2(pb:&gadgetlib2::Protoboard);
 
 
 
@@ -94,8 +94,8 @@ pub fn get_constraint_system_from_gadgetlib2(pb:&Protoboard)->r1cs_constraint_sy
 
 pub fn  get_variable_assignment_from_gadgetlib2(pb:&Protoboard)->r1cs_variable_assignment<Fr<default_ec_pp> >
 {
-    // type Fr<default_ec_pp> FieldT;
-    // type gadgetlib2::GadgetLibAdapter GLA;
+    // type FieldT=Fr<default_ec_pp>;
+    // type GLA=gadgetlib2::GadgetLibAdapter;
 
     //The number of variables is the highest index created. This is also the required size for the assignment vector.
     //TODO: If there are multiple protoboards, or variables not assigned to a protoboard, then getNextFreeIndex() is *not* the number of variables! See also in get_constraint_system_from_gadgetlib2.

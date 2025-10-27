@@ -15,13 +15,13 @@
 // // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_CONSTRAINT_HPP_
 
 // use  <string>
-// use  <vector>
+// 
 
 // use crate::gadgetlib2::variable;
 
 // namespace gadgetlib2 {
 
-// enum class PrintOptions {
+// enum pub struct PrintOptions {
 //     DBG_PRINT_IF_NOT_SATISFIED,
 //     DBG_PRINT_IF_TRUE,
 //     DBG_PRINT_IF_FALSE,
@@ -31,34 +31,34 @@
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                    class Constraint                        ******************/
+// /*******************                    pub struct Constraint                        ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 
-// /// An abstract class for a field agnostic constraint. The derived classes will be field specific.
-// class Constraint {
+// /// An abstract pub struct for a field agnostic constraint. The derived classes will be field specific.
+// pub struct Constraint {
 // 
-//     explicit Constraint(const ::std::string& name); // casting disallowed by 'explicit'
-//     ::std::string name() const; ///< @returns name of the constraint as a string
+//     explicit Constraint(const ::String& name); // casting disallowed by 'explicit'
+//     ::String name() const; ///< @returns name of the constraint as a string
 //     /**
 //         @param[in] assignment  - An assignment of field elements for each variable.
 //         @param[in] printOnFail - when set to true, an unsatisfied constraint will print to stderr
 //                                  information explaining why it is not satisfied.
 //         @returns true if constraint is satisfied by the assignment
 //     **/
-//     virtual bool isSatisfied(const VariableAssignment& assignment,
-//                              const PrintOptions& printOnFail) const = 0;
+//     virtual bool isSatisfied(assignment:VariableAssignment&,
+//                              printOnFail:&PrintOptions) 0:=,
 //     /// @returns the constraint in a human readable string format
-//     virtual ::std::string annotation() const = 0;
-//     virtual const Variable::set getUsedVariables() const = 0;
-//     virtual Polynomial asPolynomial() const = 0;
-// protected:
+//     virtual ::String annotation() 0:=,
+//     virtual 0:Variable::set getUsedVariables() const =,
+//     virtual Polynomial asPolynomial() 0:=,
+// 
 // #   ifdef DEBUG
-//     ::std::string name_;
+//     ::String name_;
 // #   endif
 
-// }; // class Constraint
+// }; // pub struct Constraint
 
 // /***********************************/
 // /***   END OF CLASS DEFINITION   ***/
@@ -67,32 +67,32 @@
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                 class Rank1Constraint                       ******************/
+// /*******************                 pub struct Rank1Constraint                       ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /// A rank-1 prime characteristic constraint. The constraint is defined by <a,x> * <b,x> = <c,x>
 // /// where x is an assignment of field elements to the variables.
-// class Rank1Constraint : public Constraint {
-// private:
+// pub struct Rank1Constraint {//Constraint
+// 
 //     LinearCombination a_, b_, c_; // <a,x> * <b,x> = <c,x>
 // 
-//     Rank1Constraint(const LinearCombination& a,
-//                     const LinearCombination& b,
-//                     const LinearCombination& c,
-//                     const ::std::string& name);
+//     Rank1Constraint(a:LinearCombination&,
+//                     b:LinearCombination&,
+//                     c:LinearCombination&,
+//                     const ::String& name);
 
 //     LinearCombination a() const;
 //     LinearCombination b() const;
 //     LinearCombination c() const;
 
-//     virtual bool isSatisfied(const VariableAssignment& assignment,
-//                              const PrintOptions& printOnFail = PrintOptions::NO_DBG_PRINT) const;
-//     virtual ::std::string annotation() const;
-//     virtual const Variable::set getUsedVariables() const; /**< @returns a list of all variables
+//     virtual bool isSatisfied(assignment:VariableAssignment&,
+//                              printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+//     virtual ::String annotation() const;
+//     virtual const:Variable::set getUsedVariables(), /**< @returns a list of all variables
 //                                                                       used in the constraint */
-//     virtual Polynomial asPolynomial() const {return a_ * b_ - c_;}
-// }; // class Rank1Constraint
+//     virtual Polynomial asPolynomial() c_:{return a_ * b_ -,}
+// }; // pub struct Rank1Constraint
 
 // /***********************************/
 // /***   END OF CLASS DEFINITION   ***/
@@ -101,26 +101,26 @@
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                 class PolynomialConstraint                 ******************/
+// /*******************                 pub struct PolynomialConstraint                 ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 
-// class PolynomialConstraint : public Constraint {
-// private:
+// pub struct PolynomialConstraint {//Constraint
+// 
 //     Polynomial a_, b_;
 // 
-//     PolynomialConstraint(const Polynomial& a,
-//                          const Polynomial& b,
-//                          const ::std::string& name);
+//     PolynomialConstraint(a:Polynomial&,
+//                          b:Polynomial&,
+//                          const ::String& name);
 
-//     bool isSatisfied(const VariableAssignment& assignment,
-//                      const PrintOptions& printOnFail = PrintOptions::NO_DBG_PRINT) const;
-//     ::std::string annotation() const;
-//     virtual const Variable::set getUsedVariables() const; /**< @returns a list of all variables
+//     bool isSatisfied(assignment:VariableAssignment&,
+//                      printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+//     ::String annotation() const;
+//     virtual const:Variable::set getUsedVariables(), /**< @returns a list of all variables
 //                                                                         used in the constraint */
-//     virtual Polynomial asPolynomial() const {return a_ - b_;}
-// }; // class PolynomialConstraint
+//     virtual Polynomial asPolynomial() b_:{return a_ -,}
+// }; // pub struct PolynomialConstraint
 
 // /***********************************/
 // /***   END OF CLASS DEFINITION   ***/
@@ -129,17 +129,17 @@
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                   class ConstraintSystem                   ******************/
+// /*******************                   pub struct ConstraintSystem                   ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 
-// class ConstraintSystem {
-// protected:
-//     type ::std::shared_ptr<Constraint> ConstraintPtr;
-//     ::std::vector<ConstraintPtr> constraintsPtrs_;
+// pub struct ConstraintSystem {
 // 
-//     ConstraintSystem() : constraintsPtrs_() {};
+//     type ConstraintPtr=::RcCell<Constraint>;
+//     ::Vec<ConstraintPtr> constraintsPtrs_;
+// 
+//     ConstraintSystem()->Self constraintsPtrs_() {};
 
 //     /**
 //         Checks if all constraints are satisfied by an assignment.
@@ -148,26 +148,26 @@
 //                                  information explaining why it is not satisfied.
 //         @returns true if constraint is satisfied by the assignment
 //     **/
-//     bool isSatisfied(const VariableAssignment& assignment,
-//                      const PrintOptions& printOnFail = PrintOptions::NO_DBG_PRINT) const;
-//     void addConstraint(const Rank1Constraint& c);
-//     void addConstraint(const PolynomialConstraint& c);
-//     ::std::string annotation() const;
+//     bool isSatisfied(assignment:VariableAssignment&,
+//                      printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+//     pub fn  addConstraint(c:&Rank1Constraint);
+//     pub fn  addConstraint(c:&PolynomialConstraint);
+//     ::String annotation() const;
 //     Variable::set getUsedVariables() const;
 
-//     type ::std::set< ::std::unique_ptr<Polynomial> > PolyPtrSet;
+//     type PolyPtrSet=::BTreeSet< ::std::unique_ptr<Polynomial> >;
 //     /// Required for interfacing with BREX. Should be optimized in the future
 //     PolyPtrSet getConstraintPolynomials() const {
 //         PolyPtrSet retset;
-//         for(const auto& pConstraint : constraintsPtrs_) {
+//         for(pConstraint:&auto : constraintsPtrs_) {
 //             retset.insert(::std::unique_ptr<Polynomial>(new Polynomial(pConstraint->asPolynomial())));
 //         }
 //         return retset;
 //     }
-//     size_t getNumberOfConstraints() { return constraintsPtrs_.len(); }
-//     ConstraintPtr getConstraint(size_t idx){ return constraintsPtrs_[idx];}
-//     friend class GadgetLibAdapter;
-// }; // class ConstraintSystem
+//     usize getNumberOfConstraints() { return constraintsPtrs_.len(); }
+//     ConstraintPtr getConstraint(usize idx){ return constraintsPtrs_[idx];}
+//     friend pub struct GadgetLibAdapter;
+// }; // pub struct ConstraintSystem
 
 // /***********************************/
 // /***   END OF CLASS DEFINITION   ***/
@@ -188,37 +188,37 @@
 // use  <algorithm>
 // use  <cassert>
 // use  <iostream>
-// use  <memory>
+// 
 // use  <set>
 
 // use crate::gadgetlib2::constraint;
 // use crate::gadgetlib2::variable;
 
-// using ::std::string;
-// using ::std::vector;
-// using ::std::set;
+// using ::String;
+// using ::Vec;
+// using ::BTreeSet;
 // using ::std::cout;
 // using ::std::cerr;
 // using ::std::endl;
-// using ::std::shared_ptr;
+// using ::RcCell;
 
 // namespace gadgetlib2 {
 
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                    class Constraint                        ******************/
+// /*******************                    pub struct Constraint                        ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 
 // // #ifdef DEBUG
-// Constraint::Constraint(const string& name) : name_(name) {}
+// pub fn new(name:&string)->Self name_(name) {}
 // #else
-// Constraint::Constraint(const string& name) { ffec::UNUSED(name); }
+// pub fn new(name:&string) { //ffec::UNUSED(name); }
 // //#endif
 
-// string Constraint::name() const {
+// pub fn name()->string {
 // #   ifdef DEBUG
 //         return name_;
 // #   else
@@ -233,35 +233,35 @@
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                 class Rank1Constraint                       ******************/
+// /*******************                 pub struct Rank1Constraint                       ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 
-// Rank1Constraint::Rank1Constraint(const LinearCombination &a,
-//                                const LinearCombination &b,
-//                                const LinearCombination &c,
-//                                const string& name)
+// pub fn new(a:&LinearCombination,
+//                                b:&LinearCombination,
+//                                c:&LinearCombination,
+//                                name:&string)
 //     : Constraint(name), a_(a), b_(b), c_(c) {}
 
-// LinearCombination Rank1Constraint::a() const {return a_;}
-// LinearCombination Rank1Constraint::b() const {return b_;}
-// LinearCombination Rank1Constraint::c() const {return c_;}
+// pub fn a()->LinearCombination {return a_;}
+// pub fn b()->LinearCombination {return b_;}
+// pub fn c()->LinearCombination {return c_;}
 
-// bool Rank1Constraint::isSatisfied(const VariableAssignment& assignment,
-//                                   const PrintOptions& printOnFail) const {
-//     const FElem ares = a_.eval(assignment);
-//     const FElem bres = b_.eval(assignment);
-//     const FElem cres = c_.eval(assignment);
+// bool Rank1Constraint::isSatisfied(assignment:VariableAssignment&,
+//                                   printOnFail:&PrintOptions) const {
+//     let ares= a_.eval(assignment);
+//     let bres= b_.eval(assignment);
+//     let cres= c_.eval(assignment);
 //     if ares*bres != cres {
 // #       ifdef DEBUG
 //         if printOnFail == PrintOptions::DBG_PRINT_IF_NOT_SATISFIED {
-//             cerr << GADGETLIB2_FMT("Constraint named \"%s\" not satisfied. Constraint is:",
-//                 name().c_str()) << endl;
+//             cerr << GADGETLIB2_FMT("Constraint named \"{}\" not satisfied. Constraint is:",
+//                 name()) << endl;
 //             cerr << annotation() << endl;
 //             cerr << "Variable assignments are:" << endl;
 //             const Variable::set varSet = getUsedVariables();
-//             for(const Variable& var : varSet) {
+//             for(var:&Variable : varSet) {
 //                 cerr <<  var.name() << ": " << assignment.at(var).asString() << endl;
 //             }
 //             cerr << "a:   " << ares.asString() << endl;
@@ -270,14 +270,14 @@
 //             cerr << "c:   " << cres.asString() << endl;
 //         }
 // #       else
-//         ffec::UNUSED(printOnFail);
+//         //ffec::UNUSED(printOnFail);
 // #       endif
 //         return false;
 //     }
 //     return true;
 // }
 
-// string Rank1Constraint::annotation() const {
+// pub fn annotation()->string {
 // #   ifndef DEBUG
 //         return "";
 // #   endif
@@ -302,33 +302,33 @@
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                 class PolynomialConstraint                 ******************/
+// /*******************                 pub struct PolynomialConstraint                 ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 
-// PolynomialConstraint::PolynomialConstraint(const Polynomial& a, const Polynomial& b,
-//         const string& name) : Constraint(name), a_(a), b_(b) {}
+// pub fn new(a:Polynomial&, b:Polynomial&,
+//         name:&string)->Self Constraint(name), a_(a), b_(b) {}
 
-// bool PolynomialConstraint::isSatisfied(const VariableAssignment& assignment,
-//                                        const PrintOptions& printOnFail) const {
-//     const FElem aEval = a_.eval(assignment);
-//     const FElem bEval = b_.eval(assignment);
+// bool PolynomialConstraint::isSatisfied(assignment:VariableAssignment&,
+//                                        printOnFail:&PrintOptions) const {
+//     let aEval= a_.eval(assignment);
+//     let bEval= b_.eval(assignment);
 //     if aEval != bEval {
 // #       ifdef DEBUG
 //             if(printOnFail == PrintOptions::DBG_PRINT_IF_NOT_SATISFIED) {
-//                 cerr << GADGETLIB2_FMT("Constraint named \"%s\" not satisfied. Constraint is:",
-//                     name().c_str()) << endl;
+//                 cerr << GADGETLIB2_FMT("Constraint named \"{}\" not satisfied. Constraint is:",
+//                     name()) << endl;
 //                 cerr << annotation() << endl;
 // 				cerr << "Expecting: " << aEval << " == " << bEval << endl;
 //                 cerr << "Variable assignments are:" << endl;
 //                 const Variable::set varSet = getUsedVariables();
-//                 for(const Variable& var : varSet) {
+//                 for(var:&Variable : varSet) {
 //                     cerr <<  var.name() << ": " << assignment.at(var).asString() << endl;
 //                 }
 //             }
 // #       else
-//             ffec::UNUSED(printOnFail);
+//             //ffec::UNUSED(printOnFail);
 // #       endif
 
 //         return false;
@@ -336,7 +336,7 @@
 //     return true;
 // }
 
-// string PolynomialConstraint::annotation() const {
+// pub fn annotation()->string {
 // #   ifndef DEBUG
 //         return "";
 // #   endif
@@ -357,16 +357,16 @@
 // /***********************************/
 
 
-// void ConstraintSystem::addConstraint(const Rank1Constraint& c) {
-//     constraintsPtrs_.push(::std::shared_ptr<Constraint>(new Rank1Constraint(c)));
+// pub fn addConstraint(c:&Rank1Constraint) {
+//     constraintsPtrs_.push(::RcCell<Constraint>(new Rank1Constraint(c)));
 // }
 
-// void ConstraintSystem::addConstraint(const PolynomialConstraint& c) {
-//     constraintsPtrs_.push(::std::shared_ptr<Constraint>(new PolynomialConstraint(c)));
+// pub fn addConstraint(c:&PolynomialConstraint) {
+//     constraintsPtrs_.push(::RcCell<Constraint>(new PolynomialConstraint(c)));
 // }
 
-// bool ConstraintSystem::isSatisfied(const VariableAssignment& assignment,
-//                                    const PrintOptions& printOnFail) const {
+// bool ConstraintSystem::isSatisfied(assignment:VariableAssignment&,
+//                                    printOnFail:&PrintOptions) const {
 //     for i in 0..constraintsPtrs_.len() {
 //         if !constraintsPtrs_[i]->isSatisfied(assignment, printOnFail){
 //             return false;
@@ -375,7 +375,7 @@
 //     return true;
 // }
 
-// string ConstraintSystem::annotation() const {
+// pub fn annotation()->string {
 //     string retVal("\n");
 //     for(auto i = constraintsPtrs_.begin(); i != constraintsPtrs_.end(); ++i) {
 //         retVal += (*i)->annotation() + '\n';

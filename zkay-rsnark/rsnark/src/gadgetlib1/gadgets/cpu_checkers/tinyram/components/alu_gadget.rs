@@ -22,7 +22,7 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_control_f
 // 
 pub struct ALU_gadget{
 // : public tinyram_standard_gadget<FieldT> 
-components:    std::vector<std::shared_ptr<tinyram_standard_gadget<FieldT> > >,
+components:    Vec<RcCell<tinyram_standard_gadget<FieldT> > >,
 
 
 // 
@@ -46,7 +46,7 @@ pb:tinyram_protoboard<FieldT>,
                        flag:pb_variable<FieldT>,
                        instruction_results:pb_variable_array<FieldT>,
                        instruction_flags:pb_variable_array<FieldT>,
-                       annotation_prefix:std::string) ->Self
+                       annotation_prefix:String) ->Self
         
     {
         components.resize(1u64<<pb.ap.opcode_width());
@@ -176,9 +176,9 @@ pb:tinyram_protoboard<FieldT>,
         instruction_flags}
     }
 
-    // void generate_r1cs_constraints();
+    // pub fn  generate_r1cs_constraints();
 
-    // void generate_r1cs_witness();
+    // pub fn  generate_r1cs_witness();
 
 }
 

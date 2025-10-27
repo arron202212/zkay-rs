@@ -23,8 +23,8 @@
  * [Harvey 07, Multipoint Kronecker Substitution, Section 2.1] and
  * [Gathen and Gerhard, Modern Computer Algebra 3rd Ed., Section 8.4].
  */
-// template<typename FieldT>
-// void kronecker_substitution(v3:&Vec<FieldT>,  v1:&Vec<FieldT>,  v2:&Vec<FieldT>);
+// 
+// pub fn  kronecker_substitution(v3:&Vec<FieldT>,  v1:&Vec<FieldT>,  v2:&Vec<FieldT>);
 
 //} // libfqfft
 
@@ -56,11 +56,11 @@ use ffec::common::utils::div_ceil;
 use ffec::algebra::field_utils::bigint::GMP_NUMB_BITS;
 use crate::polynomial_arithmetic::basic_operations::_condense;
 const GMP_NAIL_BITS:usize=0;
-const GMP_LIMB_BITS:usize = GMP_NAIL_BITS + GMP_NUMB_BITS;
+const GMP_LIMB_BITS:usize = GMP_NAIL_BITS +GMP_NUMB_BITS;
 
 //namespace libfqfft {
 
-// template<typename FieldT>
+// 
 pub fn  kronecker_substitution<FieldT:  std::convert::From<usize>+std::ops::AddAssign+num_traits::Zero+std::ops::Add+Clone+std::cmp::PartialEq+ std::cmp::Ord+std::ops::Mul> (v3:&mut Vec<FieldT>,  v1:&Vec<FieldT>,  v2:&Vec<FieldT>)
 {
     /* Initialize */

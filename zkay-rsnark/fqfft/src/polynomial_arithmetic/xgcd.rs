@@ -21,8 +21,8 @@
  * Input: Polynomial A, Polynomial B.
  * Output: Polynomial G, Polynomial U, Polynomial V, such that G = (A * U) + (B * V).
  */
-// template<typename FieldT>
-// void _polynomial_xgcd(a:&Vec<FieldT>, b:&Vec<FieldT>, g:&Vec<FieldT>, u:&Vec<FieldT>, v:&Vec<FieldT>);
+// 
+// pub fn  _polynomial_xgcd(a:&Vec<FieldT>, b:&Vec<FieldT>, g:&Vec<FieldT>, u:&Vec<FieldT>, v:&Vec<FieldT>);
 
 //} // libfqfft
 
@@ -56,7 +56,7 @@ use crate::polynomial_arithmetic::basic_operations::{_polynomial_subtraction,_is
 
 //namespace libfqfft {
 
-// template<typename FieldT>
+// 
 pub fn  _polynomial_xgcd<FieldT: num_traits::Zero+ std::ops::Neg<Output = FieldT>+ std::ops::Sub<Output = FieldT>+std::ops::AddAssign+std::cmp::PartialEq+std::cmp::PartialEq+ std::ops::SubAssign+ num_traits::One+Clone+ std::default::Default>(a:&Vec<FieldT>, b:&Vec<FieldT>, g:&mut Vec<FieldT>, u:&mut Vec<FieldT>, v:&mut Vec<FieldT>)
 {
     if _is_zero(b)

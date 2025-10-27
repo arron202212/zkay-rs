@@ -8,7 +8,7 @@
 //#ifndef EDWARDS_INIT_HPP_
 // #define EDWARDS_INIT_HPP_
 use crate::algebra::curves::public_params;
-use crate::algebra::curves::edwards/edwards_fields;
+use crate::algebra::curves::edwards::edwards_fields;
 
 // namespace libff {
 
@@ -34,10 +34,10 @@ extern bigint<edwards_q_limbs> edwards_final_exponent_last_chunk_abs_of_w0;
 extern bool edwards_final_exponent_last_chunk_is_w0_neg;
 extern bigint<edwards_q_limbs> edwards_final_exponent_last_chunk_w1;
 
-void init_edwards_params();
+pub fn  init_edwards_params();
 
-class edwards_G1;
-class edwards_G2;
+pub struct edwards_G1;
+pub struct edwards_G2;
 
 // } // namespace libff
 //#endif // EDWARDS_INIT_HPP_
@@ -48,9 +48,9 @@ class edwards_G2;
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use crate::algebra::curves::edwards/edwards_g1;
-use crate::algebra::curves::edwards/edwards_g2;
-use crate::algebra::curves::edwards/edwards_init;
+use crate::algebra::curves::edwards::edwards_g1;
+use crate::algebra::curves::edwards::edwards_g2;
+use crate::algebra::curves::edwards::edwards_init;
 
 // namespace libff {
 
@@ -73,7 +73,7 @@ bigint<edwards_q_limbs> edwards_final_exponent_last_chunk_abs_of_w0;
 bool edwards_final_exponent_last_chunk_is_w0_neg;
 bigint<edwards_q_limbs> edwards_final_exponent_last_chunk_w1;
 
-void init_edwards_params()
+pub fn  init_edwards_params()
 {
     init_edwards_fields();
 

@@ -18,24 +18,24 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksna
 
 
 
-template<typename ppT>
-void test_ram_ppzksnark(const size_t w,
-                        const size_t k,
-                        const size_t program_size,
-                        const size_t input_size,
-                        const size_t time_bound)
+
+pub fn  test_ram_ppzksnark(w:usize,
+                        k:usize,
+                        program_size:usize,
+                        input_size:usize,
+                        time_bound:usize)
 {
     ffec::print_header("(enter) Test RAM ppzkSNARK");
 
-    type ram_ppzksnark_machine_pp<ppT> machine_ppT;
-    const size_t boot_trace_size_bound = program_size + input_size;
-    const bool satisfiable = true;
+    type machine_ppT=ram_ppzksnark_machine_pp<ppT>;
+    let boot_trace_size_bound = program_size + input_size;
+    let mut satisfiable = true;
 
     const ram_ppzksnark_architecture_params<ppT> ap(w, k);
-    const ram_example<machine_ppT> example = gen_ram_example_complex<machine_ppT>(ap, boot_trace_size_bound, time_bound, satisfiable);
+    boot_trace_size_bound:ram_example<machine_ppT> example = gen_ram_example_complex<machine_ppT>(ap,, time_bound, satisfiable);
 
-    const bool test_serialization = true;
-    const bool bit = run_ram_ppzksnark<ppT>(example, test_serialization);
+    let mut test_serialization = true;
+    let mut bit = run_ram_ppzksnark<ppT>(example, test_serialization);
     assert!(bit);
 
     ffec::print_header("(leave) Test RAM ppzkSNARK");
@@ -46,9 +46,9 @@ int main()
     ram_ppzksnark_snark_pp<default_ram_ppzksnark_pp>::init_public_params();
     ffec::start_profiling();
 
-    const size_t program_size = 100;
-    const size_t input_size = 2;
-    const size_t time_bound = 20;
+    let program_size = 100;
+    let input_size = 2;
+    let time_bound = 20;
 
     // 16-bit TinyRAM with 16 registers
     test_ram_ppzksnark<default_ram_ppzksnark_pp>(16, 16, program_size, input_size, time_bound);

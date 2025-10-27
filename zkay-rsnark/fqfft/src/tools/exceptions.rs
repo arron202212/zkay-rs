@@ -18,28 +18,28 @@
 
 //namespace libfqfft {
 
-// class DomainSizeException
+// pub struct DomainSizeException
 // {
 // 
-//     DomainSizeException(std::string error): _error(error) {}
+//     DomainSizeException(String error): _error(error) {}
 //     const char* what() const
 // 	{
-// 	    return _error.c_str();
+// 	    return _error;
 // 	}
-// private:
-//     std::string _error;
+// 
+//     String _error;
 // };
 
-// class InvalidSizeException
+// pub struct InvalidSizeException
 // {
 // 
-//     InvalidSizeException(std::string error): _error(error) {}
+//     InvalidSizeException(String error): _error(error) {}
 //     const char* what() const
 // 	{
-// 	    return _error.c_str();
+// 	    return _error;
 // 	}
-// private:
-//     std::string _error;
+// 
+//     String _error;
 // };
 
 // } //libfqfft

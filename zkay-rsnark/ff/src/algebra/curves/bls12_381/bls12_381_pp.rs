@@ -15,34 +15,34 @@ use crate::algebra::curves::public_params;
 
 // namespace libff {
 
-class bls12_381_pp {
+pub struct bls12_381_pp {
 
-    typedef bls12_381_Fr Fp_type;
-    typedef bls12_381_G1 G1_type;
-    typedef bls12_381_G2 G2_type;
-    typedef bls12_381_G1_precomp G1_precomp_type;
-    typedef bls12_381_G2_precomp G2_precomp_type;
-    typedef bls12_381_Fq Fq_type;
-    typedef bls12_381_Fq2 Fqe_type;
-    typedef bls12_381_Fq12 Fqk_type;
-    typedef bls12_381_GT GT_type;
+    type Fp_type=bls12_381_Fr;
+    type G1_type=bls12_381_G1;
+    type G2_type=bls12_381_G2;
+    type G1_precomp_type=bls12_381_G1_precomp;
+    type G2_precomp_type=bls12_381_G2_precomp;
+    type Fq_type=bls12_381_Fq;
+    type Fqe_type=bls12_381_Fq2;
+    type Fqk_type=bls12_381_Fq12;
+    type GT_type=bls12_381_GT;
 
-    static const bool has_affine_pairing = false;
+    static let mut has_affine_pairing = false;
 
-    static void init_public_params();
-    static bls12_381_GT final_exponentiation(const bls12_381_Fq12 &elt);
-    static bls12_381_G1_precomp precompute_G1(const bls12_381_G1 &P);
-    static bls12_381_G2_precomp precompute_G2(const bls12_381_G2 &Q);
-    static bls12_381_Fq12 miller_loop(const bls12_381_G1_precomp &prec_P,
-                                      const bls12_381_G2_precomp &prec_Q);
-    static bls12_381_Fq12 double_miller_loop(const bls12_381_G1_precomp &prec_P1,
-                                             const bls12_381_G2_precomp &prec_Q1,
-                                             const bls12_381_G1_precomp &prec_P2,
-                                             const bls12_381_G2_precomp &prec_Q2);
-    static bls12_381_Fq12 pairing(const bls12_381_G1 &P,
-                                  const bls12_381_G2 &Q);
-    static bls12_381_Fq12 reduced_pairing(const bls12_381_G1 &P,
-                                          const bls12_381_G2 &Q);
+    static pub fn  init_public_params();
+    static bls12_381_GT final_exponentiation(elt:&bls12_381_Fq12);
+    static bls12_381_G1_precomp precompute_G1(P:&bls12_381_G1);
+    static bls12_381_G2_precomp precompute_G2(Q:&bls12_381_G2);
+    static bls12_381_Fq12 miller_loop(prec_P:&bls12_381_G1_precomp,
+                                      prec_Q:&bls12_381_G2_precomp);
+    static bls12_381_Fq12 double_miller_loop(prec_P1:&bls12_381_G1_precomp,
+                                             prec_Q1:&bls12_381_G2_precomp,
+                                             prec_P2:&bls12_381_G1_precomp,
+                                             prec_Q2:&bls12_381_G2_precomp);
+    static bls12_381_Fq12 pairing(P:&bls12_381_G1,
+                                  Q:&bls12_381_G2);
+    static bls12_381_Fq12 reduced_pairing(P:&bls12_381_G1,
+                                          Q:&bls12_381_G2);
 };
 
 // } // namespace libff
@@ -52,48 +52,48 @@ use crate::algebra::curves::bls12_381/bls12_381_pp;
 
 // namespace libff {
 
-void bls12_381_pp::init_public_params()
+pub fn init_public_params()
 {
     init_bls12_381_params();
 }
 
-bls12_381_GT bls12_381_pp::final_exponentiation(const bls12_381_Fq12 &elt)
+bls12_381_GT bls12_381_pp::final_exponentiation(elt:&bls12_381_Fq12)
 {
     return bls12_381_final_exponentiation(elt);
 }
 
-bls12_381_G1_precomp bls12_381_pp::precompute_G1(const bls12_381_G1 &P)
+bls12_381_G1_precomp bls12_381_pp::precompute_G1(P:&bls12_381_G1)
 {
     return bls12_381_precompute_G1(P);
 }
 
-bls12_381_G2_precomp bls12_381_pp::precompute_G2(const bls12_381_G2 &Q)
+bls12_381_G2_precomp bls12_381_pp::precompute_G2(Q:&bls12_381_G2)
 {
     return bls12_381_precompute_G2(Q);
 }
 
-bls12_381_Fq12 bls12_381_pp::miller_loop(const bls12_381_G1_precomp &prec_P,
-                                         const bls12_381_G2_precomp &prec_Q)
+bls12_381_Fq12 bls12_381_pp::miller_loop(prec_P:&bls12_381_G1_precomp,
+                                         prec_Q:&bls12_381_G2_precomp)
 {
     return bls12_381_miller_loop(prec_P, prec_Q);
 }
 
-bls12_381_Fq12 bls12_381_pp::double_miller_loop(const bls12_381_G1_precomp &prec_P1,
-                                                const bls12_381_G2_precomp &prec_Q1,
-                                                const bls12_381_G1_precomp &prec_P2,
-                                                const bls12_381_G2_precomp &prec_Q2)
+bls12_381_Fq12 bls12_381_pp::double_miller_loop(prec_P1:&bls12_381_G1_precomp,
+                                                prec_Q1:&bls12_381_G2_precomp,
+                                                prec_P2:&bls12_381_G1_precomp,
+                                                prec_Q2:&bls12_381_G2_precomp)
 {
     return bls12_381_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
 }
 
-bls12_381_Fq12 bls12_381_pp::pairing(const bls12_381_G1 &P,
-                                     const bls12_381_G2 &Q)
+bls12_381_Fq12 bls12_381_pp::pairing(P:&bls12_381_G1,
+                                     Q:&bls12_381_G2)
 {
     return bls12_381_pairing(P, Q);
 }
 
-bls12_381_Fq12 bls12_381_pp::reduced_pairing(const bls12_381_G1 &P,
-                                             const bls12_381_G2 &Q)
+bls12_381_Fq12 bls12_381_pp::reduced_pairing(P:&bls12_381_G1,
+                                             Q:&bls12_381_G2)
 {
     return bls12_381_reduced_pairing(P, Q);
 }

@@ -37,16 +37,16 @@ use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 /**
  * Instance map for the TBCS-to-USCS reduction.
  */
-template<typename FieldT>
-uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &circuit);
+
+uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(circuit:&tbcs_circuit);
 
 /**
  * Witness map for the TBCS-to-USCS reduction.
  */
-template<typename FieldT>
-uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(const tbcs_circuit &circuit,
-                                                               const tbcs_primary_input &primary_input,
-                                                               const tbcs_auxiliary_input &auxiliary_input);
+
+uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(circuit:&tbcs_circuit,
+                                                               primary_input:&tbcs_primary_input,
+                                                               auxiliary_input:&tbcs_auxiliary_input);
 
 
 
@@ -73,8 +73,8 @@ use ffec::algebra::field_utils::field_utils;
 
 
 
-template<typename FieldT>
-uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &circuit)
+
+uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(circuit:&tbcs_circuit)
 {
     assert!(circuit.is_valid());
     uscs_constraint_system<FieldT> result;
@@ -94,9 +94,9 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
 
 // #ifdef DEBUG
         auto it = circuit.gate_annotations.find(g.output);
-        const std::string annotation = if it != circuit.gate_annotations.end() {it->second} else{FMT("", "compute_wire_{}", g.output)};
+        let annotation= if it != circuit.gate_annotations.end() {it.1} else{FMT("", "compute_wire_{}", g.output)};
 #else
-        const std::string annotation = "";
+        let annotation= "";
 //#endif
 
         switch (g.type)
@@ -204,12 +204,12 @@ uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(const tbcs_circuit &cir
     return result;
 }
 
-template<typename FieldT>
-uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(const tbcs_circuit &circuit,
-                                                               const tbcs_primary_input &primary_input,
-                                                               const tbcs_auxiliary_input &auxiliary_input)
+
+uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(circuit:&tbcs_circuit,
+                                                               primary_input:&tbcs_primary_input,
+                                                               auxiliary_input:&tbcs_auxiliary_input)
 {
-    const tbcs_variable_assignment all_wires = circuit.get_all_wires(primary_input, auxiliary_input);
+    let all_wires= circuit.get_all_wires(primary_input, auxiliary_input);
     const uscs_variable_assignment<FieldT> result = ffec::convert_bit_vector_to_field_element_vector<FieldT>(all_wires);
     return result;
 }

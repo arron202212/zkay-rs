@@ -24,7 +24,7 @@
 // #define SAP_HPP_
 
 // use  <map>
-// use  <memory>
+// 
 
 use fqfft::evaluation_domain::evaluation_domain;
 
@@ -32,7 +32,7 @@ use fqfft::evaluation_domain::evaluation_domain;
 
 /* forward declaration */
 // 
-// class sap_witness;
+// pub struct sap_witness;
 
 /**
  * A SAP instance.
@@ -47,7 +47,7 @@ use fqfft::evaluation_domain::evaluation_domain;
  */
 // 
 pub struct sap_instance<FieldT> {
-// //private:
+// //
 num_variables:    usize,
 degree:    usize,
 num_inputs:    usize,
@@ -59,30 +59,30 @@ A_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
 C_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
 }
 
-//     sap_instance(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
-//                  const usize num_variables,
-//                  const usize degree,
-//                  const usize num_inputs,
-//                  const Vec<HashMap<usize, FieldT> > &A_in_Lagrange_basis,
-//                  const Vec<HashMap<usize, FieldT> > &C_in_Lagrange_basis);
+//     sap_instance(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//                  num_variables:usize,
+//                  degree:usize,
+//                  num_inputs:usize,
+//                  A_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >,
+//                  C_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >);
 
-//     sap_instance(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
-//                  const usize num_variables,
-//                  const usize degree,
-//                  const usize num_inputs,
+//     sap_instance(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//                  num_variables:usize,
+//                  degree:usize,
+//                  num_inputs:usize,
 //                  Vec<HashMap<usize, FieldT> > &&A_in_Lagrange_basis,
 //                  Vec<HashMap<usize, FieldT> > &&C_in_Lagrange_basis);
 
-//     sap_instance(const sap_instance<FieldT> &other) = default;
+//     sap_instance(other:&sap_instance<FieldT>) = default;
 //     sap_instance(sap_instance<FieldT> &&other) = default;
-//     sap_instance& operator=(const sap_instance<FieldT> &other) = default;
+//     sap_instance& operator=(other:&sap_instance<FieldT>) = default;
 //     sap_instance& operator=(sap_instance<FieldT> &&other) = default;
 
 //     usize num_variables() const;
 //     usize degree() const;
 //     usize num_inputs() const;
 
-//     bool is_satisfied(const sap_witness<FieldT> &witness) const;
+//     bool is_satisfied(witness:&sap_witness<FieldT>) const;
 // };
 
 /**
@@ -98,7 +98,7 @@ C_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
  */
 // 
 pub struct sap_instance_evaluation<FieldT>{
-//private:
+//
 num_variables:    usize,
 degree:    usize,
 num_inputs:    usize,
@@ -112,35 +112,35 @@ Ht:    Vec<FieldT>, At:Vec<FieldT>, Ct:Vec<FieldT>,
 Zt:    FieldT,
 }
 
-//     sap_instance_evaluation(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
-//                             const usize num_variables,
-//                             const usize degree,
-//                             const usize num_inputs,
-//                             const FieldT &t,
-//                             const Vec<FieldT> &At,
-//                             const Vec<FieldT> &Ct,
-//                             const Vec<FieldT> &Ht,
-//                             const FieldT &Zt);
-//     sap_instance_evaluation(const RcCell<fqfft::evaluation_domain<FieldT> > &domain,
-//                             const usize num_variables,
-//                             const usize degree,
-//                             const usize num_inputs,
-//                             const FieldT &t,
+//     sap_instance_evaluation(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//                             num_variables:usize,
+//                             degree:usize,
+//                             num_inputs:usize,
+//                             t:&FieldT,
+//                             At:&Vec<FieldT>,
+//                             Ct:&Vec<FieldT>,
+//                             Ht:&Vec<FieldT>,
+//                             Zt:&FieldT);
+//     sap_instance_evaluation(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//                             num_variables:usize,
+//                             degree:usize,
+//                             num_inputs:usize,
+//                             t:&FieldT,
 //                             Vec<FieldT> &&At,
 //                             Vec<FieldT> &&Ct,
 //                             Vec<FieldT> &&Ht,
-//                             const FieldT &Zt);
+//                             Zt:&FieldT);
 
-//     sap_instance_evaluation(const sap_instance_evaluation<FieldT> &other) = default;
+//     sap_instance_evaluation(other:&sap_instance_evaluation<FieldT>) = default;
 //     sap_instance_evaluation(sap_instance_evaluation<FieldT> &&other) = default;
-//     sap_instance_evaluation& operator=(const sap_instance_evaluation<FieldT> &other) = default;
+//     sap_instance_evaluation& operator=(other:&sap_instance_evaluation<FieldT>) = default;
 //     sap_instance_evaluation& operator=(sap_instance_evaluation<FieldT> &&other) = default;
 
 //     usize num_variables() const;
 //     usize degree() const;
 //     usize num_inputs() const;
 
-//     bool is_satisfied(const sap_witness<FieldT> &witness) const;
+//     bool is_satisfied(witness:&sap_witness<FieldT>) const;
 // };
 
 /**
@@ -148,7 +148,7 @@ Zt:    FieldT,
  */
 // 
 pub struct sap_witness<FieldT>{
-//private:
+//
 num_variables:    usize,
 degree:    usize,
 num_inputs:    usize,
@@ -160,25 +160,25 @@ coefficients_for_ACs:    Vec<FieldT>,
 coefficients_for_H:    Vec<FieldT>,
 }
 
-//     sap_witness(const usize num_variables,
-//                 const usize degree,
-//                 const usize num_inputs,
-//                 const FieldT &d1,
-//                 const FieldT &d2,
-//                 const Vec<FieldT> &coefficients_for_ACs,
-//                 const Vec<FieldT> &coefficients_for_H);
+//     sap_witness(num_variables:usize,
+//                 degree:usize,
+//                 num_inputs:usize,
+//                 d1:&FieldT,
+//                 d2:&FieldT,
+//                 coefficients_for_ACs:&Vec<FieldT>,
+//                 coefficients_for_H:&Vec<FieldT>);
 
-//     sap_witness(const usize num_variables,
-//                 const usize degree,
-//                 const usize num_inputs,
-//                 const FieldT &d1,
-//                 const FieldT &d2,
-//                 const Vec<FieldT> &coefficients_for_ACs,
+//     sap_witness(num_variables:usize,
+//                 degree:usize,
+//                 num_inputs:usize,
+//                 d1:&FieldT,
+//                 d2:&FieldT,
+//                 coefficients_for_ACs:&Vec<FieldT>,
 //                 Vec<FieldT> &&coefficients_for_H);
 
-//     sap_witness(const sap_witness<FieldT> &other) = default;
+//     sap_witness(other:&sap_witness<FieldT>) = default;
 //     sap_witness(sap_witness<FieldT> &&other) = default;
-//     sap_witness& operator=(const sap_witness<FieldT> &other) = default;
+//     sap_witness& operator=(other:&sap_witness<FieldT>) = default;
 //     sap_witness& operator=(sap_witness<FieldT> &&other) = default;
 
 //     usize num_variables() const;

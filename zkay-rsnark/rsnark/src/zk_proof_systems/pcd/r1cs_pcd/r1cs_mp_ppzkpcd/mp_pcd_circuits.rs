@@ -42,8 +42,13 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
  * The circuit is an R1CS that checks compliance (for the given compliance predicate)
  * and validity of previous proofs.
  */
+pub trait FieldTConfig{
+type FieldT;
+}
+impl<ppT>  FieldTConfig for mp_compliance_step_pcd_circuit_maker<ppT> 
+{
 type FieldT=ffec::Fr<ppT> ;
-// 
+}
 pub struct  mp_compliance_step_pcd_circuit_maker<ppT> {
 
     
@@ -54,52 +59,52 @@ pb:    protoboard<FieldT>,
 
 zero:    pb_variable<FieldT>,
 
-block_for_outgoing_message:    std::shared_ptr<block_variable<FieldT> >,
-hash_outgoing_message:    std::shared_ptr<CRH_with_field_out_gadget<FieldT> >,
+block_for_outgoing_message:    RcCell<block_variable<FieldT> >,
+hash_outgoing_message:    RcCell<CRH_with_field_out_gadget<FieldT> >,
 
-block_for_incoming_messages:    std::vector<block_variable<FieldT> >,
-commitment_and_incoming_message_digests:    std::vector<pb_variable_array<FieldT> >,
-unpack_commitment_and_incoming_message_digests:    std::vector<multipacking_gadget<FieldT> >,
-commitment_and_incoming_messages_digest_bits:    std::vector<pb_variable_array<FieldT> >,
-hash_incoming_messages:    std::vector<CRH_with_field_out_gadget<FieldT> >,
+block_for_incoming_messages:    Vec<block_variable<FieldT> >,
+commitment_and_incoming_message_digests:    Vec<pb_variable_array<FieldT> >,
+unpack_commitment_and_incoming_message_digests:    Vec<multipacking_gadget<FieldT> >,
+commitment_and_incoming_messages_digest_bits:    Vec<pb_variable_array<FieldT> >,
+hash_incoming_messages:    Vec<CRH_with_field_out_gadget<FieldT> >,
 
-translation_step_vks:    std::vector<r1cs_ppzksnark_verification_key_variable<ppT> >,
-translation_step_vks_bits:    std::vector<pb_variable_array<FieldT> >,
+translation_step_vks:    Vec<r1cs_ppzksnark_verification_key_variable<ppT> >,
+translation_step_vks_bits:    Vec<pb_variable_array<FieldT> >,
 
 outgoing_message_type:    pb_variable<FieldT>,
 outgoing_message_payload:    pb_variable_array<FieldT>,
 outgoing_message_vars:    pb_variable_array<FieldT>,
 
 arity:    pb_variable<FieldT>,
-incoming_message_types:    std::vector<pb_variable<FieldT> >,
-incoming_message_payloads:    std::vector<pb_variable_array<FieldT> >,
-incoming_message_vars:    std::vector<pb_variable_array<FieldT> >,
+incoming_message_types:    Vec<pb_variable<FieldT> >,
+incoming_message_payloads:    Vec<pb_variable_array<FieldT> >,
+incoming_message_vars:    Vec<pb_variable_array<FieldT> >,
 
 local_data:    pb_variable_array<FieldT>,
 cp_witness:    pb_variable_array<FieldT>,
-compliance_predicate_as_gadget:    std::shared_ptr<gadget_from_r1cs<FieldT> >,
+compliance_predicate_as_gadget:    RcCell<gadget_from_r1cs<FieldT> >,
 
 outgoing_message_bits:    pb_variable_array<FieldT>,
-unpack_outgoing_message:    std::shared_ptr<multipacking_gadget<FieldT> >,
+unpack_outgoing_message:    RcCell<multipacking_gadget<FieldT> >,
 
-incoming_messages_bits:    std::vector<pb_variable_array<FieldT> >,
-unpack_incoming_messages:    std::vector<multipacking_gadget<FieldT> >,
+incoming_messages_bits:    Vec<pb_variable_array<FieldT> >,
+unpack_incoming_messages:    Vec<multipacking_gadget<FieldT> >,
 
 mp_compliance_step_pcd_circuit_input:    pb_variable_array<FieldT>,
 padded_translation_step_vk_and_outgoing_message_digest:    pb_variable_array<FieldT>,
-padded_commitment_and_incoming_messages_digest:    std::vector<pb_variable_array<FieldT> >,
+padded_commitment_and_incoming_messages_digest:    Vec<pb_variable_array<FieldT> >,
 
-commitment:    std::shared_ptr<set_commitment_variable<FieldT, CRH_with_bit_out_gadget<FieldT> > >,
-membership_proofs:    std::vector<set_membership_proof_variable<FieldT, CRH_with_bit_out_gadget<FieldT> > >,
-membership_checkers:    std::vector<set_commitment_gadget<FieldT, CRH_with_bit_out_gadget<FieldT> > >,
+commitment:    RcCell<set_commitment_variable<FieldT, CRH_with_bit_out_gadget<FieldT> > >,
+membership_proofs:    Vec<set_membership_proof_variable<FieldT, CRH_with_bit_out_gadget<FieldT> > >,
+membership_checkers:    Vec<set_commitment_gadget<FieldT, CRH_with_bit_out_gadget<FieldT> > >,
 membership_check_results:    pb_variable_array<FieldT>,
 common_type:    pb_variable<FieldT>,
 common_type_check_aux:    pb_variable_array<FieldT>,
 
-verifier_input:    std::vector<pb_variable_array<FieldT> >,
-proof:    std::vector<r1cs_ppzksnark_proof_variable<ppT> >,
+verifier_input:    Vec<pb_variable_array<FieldT> >,
+proof:    Vec<r1cs_ppzksnark_proof_variable<ppT> >,
 verification_results:    pb_variable_array<FieldT>,
-verifier:    std::vector<r1cs_ppzksnark_verifier_gadget<ppT> >,
+verifier:    Vec<r1cs_ppzksnark_verifier_gadget<ppT> >,
 
 
 }
@@ -111,7 +116,11 @@ verifier:    std::vector<r1cs_ppzksnark_verifier_gadget<ppT> >,
  *
  * The circuit is an R1CS that checks validity of previous proofs.
  */
+
+impl<ppT>  FieldTConfig for mp_translation_step_pcd_circuit_maker<ppT> 
+{
 type FieldT=ffec::Fr<ppT> ;
+}
 pub struct  mp_translation_step_pcd_circuit_maker<ppT> {
 
     
@@ -121,11 +130,11 @@ pb:    protoboard<FieldT>,
 mp_translation_step_pcd_circuit_input:    pb_variable_array<FieldT>,
 unpacked_mp_translation_step_pcd_circuit_input:    pb_variable_array<FieldT>,
 verifier_input:    pb_variable_array<FieldT>,
-unpack_mp_translation_step_pcd_circuit_input:    std::shared_ptr<multipacking_gadget<FieldT> >,
+unpack_mp_translation_step_pcd_circuit_input:    RcCell<multipacking_gadget<FieldT> >,
 
-hardcoded_compliance_step_vk:    std::shared_ptr<r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> >,
-proof:    std::shared_ptr<r1cs_ppzksnark_proof_variable<ppT> >,
-online_verifier:    std::shared_ptr<r1cs_ppzksnark_online_verifier_gadget<ppT> >,
+hardcoded_compliance_step_vk:    RcCell<r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> >,
+proof:    RcCell<r1cs_ppzksnark_proof_variable<ppT> >,
+online_verifier:    RcCell<r1cs_ppzksnark_online_verifier_gadget<ppT> >,
 
  
 }
@@ -178,7 +187,7 @@ use crate::gadgetlib1::constraint_profiling;
 impl mp_compliance_step_pcd_circuit_maker<ppT>{
 
 pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
-                                                                                max_number_of_predicates:size_t) ->Self
+                                                                                max_number_of_predicates:usize) ->Self
     
 {
     /* calculate some useful sizes */
@@ -260,7 +269,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
     /* allocate commitment, verification key(s) and membership checker(s)/proof(s) */
     commitment.reset( set_commitment_variable::<FieldT, CRH_with_bit_out_gadget::<FieldT> >::new(pb, commitment_size, "commitment"));
 
-    ffec::print_indent(); print!("* %s perform same type optimization for compliance predicate with type {}\n",
+    ffec::print_indent(); print!("* {} perform same type optimization for compliance predicate with type {}\n",
                            if compliance_predicate.relies_on_same_type_inputs {"Will"} else{"Will NOT"},
                            compliance_predicate.types);
     if compliance_predicate.relies_on_same_type_inputs
@@ -307,11 +316,11 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
     }
 
     /* allocate blocks */
-    block_for_outgoing_message.reset(block_variable::<FieldT>::new(pb, { commitment.bits, outgoing_message_bits }, "block_for_outgoing_message"));
+    block_for_outgoing_message.reset(block_variable::<FieldT>::new(pb,  [commitment.bits, outgoing_message_bits] , "block_for_outgoing_message"));
 
     for i in 0..compliance_predicate.max_arity
     {
-        block_for_incoming_messages.push(block_variable::<FieldT>(pb, { commitment.bits, incoming_messages_bits[i] }, FMT("", "block_for_incoming_messages_{}", i)));
+        block_for_incoming_messages.push(block_variable::<FieldT>(pb,  [commitment.bits, incoming_messages_bits[i]] , FMT("", "block_for_incoming_messages_{}", i)));
     }
 
     /* allocate hash checkers */
@@ -329,13 +338,13 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
     /* prepare arguments for the verifier */
     if compliance_predicate.relies_on_same_type_inputs
     {
-        translation_step_vks.push(r1cs_ppzksnark_verification_key_variable::<ppT>(pb, translation_step_vks_bits[0], mp_translation_step_pcd_circuit_maker<other_curve<ppT> >::input_size_in_elts(), "translation_step_vk"));
+        translation_step_vks.push(r1cs_ppzksnark_verification_key_variable::<ppT>(pb, translation_step_vks_bits[0], mp_translation_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_elts(), "translation_step_vk"));
     }
     else
     {
         for i in 0..compliance_predicate.max_arity
         {
-            translation_step_vks.push(r1cs_ppzksnark_verification_key_variable::<ppT>(pb, translation_step_vks_bits[i], mp_translation_step_pcd_circuit_maker<other_curve<ppT> >::input_size_in_elts(), FMT("", "translation_step_vks_{}", i)));
+            translation_step_vks.push(r1cs_ppzksnark_verification_key_variable::<ppT>(pb, translation_step_vks_bits[i], mp_translation_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_elts(), FMT("", "translation_step_vks_{}", i)));
         }
     }
 
@@ -357,7 +366,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
             verifier_input[i].push(zero);
         }
 
-        proof.push(r1cs_ppzksnark_proof_variable<ppT>(pb, FMT("", "proof_{}", i)));
+        proof.push(r1cs_ppzksnark_proof_variable::<ppT>(pb, FMT("", "proof_{}", i)));
         let mut vk_to_be_used = if compliance_predicate.relies_on_same_type_inputs {translation_step_vks[0]} else{translation_step_vks[i]};
         verifier.push(r1cs_ppzksnark_verifier_gadget::<ppT>(pb,
                                                                   vk_to_be_used,
@@ -547,11 +556,11 @@ pub fn generate_r1cs_constraints()
 
 
 pub fn generate_r1cs_witness(commitment_to_translation_step_r1cs_vks:set_commitment,
-                                                                      mp_translation_step_pcd_circuit_vks:std::vector<r1cs_ppzksnark_verification_key<other_curve<ppT> > >,
-                                                                      vk_membership_proofs:std::vector<set_membership_proof>,
+                                                                      mp_translation_step_pcd_circuit_vks:Vec<r1cs_ppzksnark_verification_key<other_curve<ppT> > >,
+                                                                      vk_membership_proofs:Vec<set_membership_proof>,
                                                                       compliance_predicate_primary_input:r1cs_pcd_compliance_predicate_primary_input<FieldT>,
                                                                       compliance_predicate_auxiliary_input:r1cs_pcd_compliance_predicate_auxiliary_input<FieldT>,
-                                                                      translation_step_proofs:std::vector<r1cs_ppzksnark_proof<other_curve<ppT> > >)
+                                                                      translation_step_proofs:Vec<r1cs_ppzksnark_proof<other_curve<ppT> > >)
 {
     self.pb.clear_values();
     self.pb.val(zero) = FieldT::zero();
@@ -636,32 +645,32 @@ pub fn generate_r1cs_witness(commitment_to_translation_step_r1cs_vks:set_commitm
 }
 
 
- pub fn field_logsize()->size_t
+ pub fn field_logsize()->usize
 {
     return ffec::Fr::<ppT>::size_in_bits();
 }
 
 
-pub fn field_capacity()->size_t
+pub fn field_capacity()->usize
 {
     return ffec::Fr::<ppT>::capacity();
 }
 
 
-pub fn input_size_in_elts()->size_t
+pub fn input_size_in_elts()->usize
 {
     let digest_size = CRH_with_field_out_gadget::<FieldT>::get_digest_len();
     return digest_size;
 }
 
 
-pub fn input_capacity_in_bits()->size_t
+pub fn input_capacity_in_bits()->usize
 {
     return input_size_in_elts() * field_capacity();
 }
 
 
-pub fn input_size_in_bits()->size_t
+pub fn input_size_in_bits()->usize
 {
     return input_size_in_elts() * field_logsize();
 }
@@ -752,31 +761,31 @@ pub fn get_auxiliary_input() ->r1cs_auxiliary_input<ffec::Fr<ppT> >
 }
 
 
- pub fn field_logsize()->size_t
+ pub fn field_logsize()->usize
 {
     return ffec::Fr::<ppT>::size_in_bits();
 }
 
 
-pub fn field_capacity()->size_t
+pub fn field_capacity()->usize
 {
     return ffec::Fr::<ppT>::capacity();
 }
 
 
-pub fn input_size_in_elts()->size_t
+pub fn input_size_in_elts()->usize
 {
-    return ffec::div_ceil(mp_compliance_step_pcd_circuit_maker<other_curve<ppT> >::input_size_in_bits(), Self::field_capacity());
+    return ffec::div_ceil(mp_compliance_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_bits(), Self::field_capacity());
 }
 
 
-pub fn input_capacity_in_bits()->size_t
+pub fn input_capacity_in_bits()->usize
 {
     return input_size_in_elts() * field_capacity();
 }
 
 
-pub fn input_size_in_bits()->size_t
+pub fn input_size_in_bits()->usize
 {
     return input_size_in_elts() * field_logsize();
 }

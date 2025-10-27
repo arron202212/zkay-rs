@@ -24,9 +24,9 @@ use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-template<typename ppT>
-bool run_tbcs_ppzksnark(const tbcs_example &example,
-                        const bool test_serialization);
+
+bool run_tbcs_ppzksnark(example:&tbcs_example,
+                        test_serialization:bool);
 
 
 
@@ -70,9 +70,9 @@ use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark;
  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
  *     a primary input for C, and a proof.
  */
-template<typename ppT>
-bool run_tbcs_ppzksnark(const tbcs_example &example,
-                        const bool test_serialization)
+
+bool run_tbcs_ppzksnark(example:&tbcs_example,
+                        test_serialization:bool)
 {
     ffec::enter_block("Call to run_tbcs_ppzksnark");
 
@@ -106,7 +106,7 @@ bool run_tbcs_ppzksnark(const tbcs_example &example,
     ffec::print_header("TBCS ppzkSNARK Verifier");
     bool ans = tbcs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
     print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-    print!("* The verification result is: %s\n", if ans {"PASS"} else{"FAIL"});
+    print!("* The verification result is: {}\n", if ans {"PASS"} else{"FAIL"});
 
     ffec::print_header("TBCS ppzkSNARK Online Verifier");
     bool ans2 = tbcs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);

@@ -17,23 +17,23 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 // //#ifndef MINDEPS
 // namespace po = boost::program_options;
 
-// bool process_verifier_command_line(const int argc, const char** argv,
-//                                    std::string &processed_assembly_fn,
-//                                    std::string &verification_key_fn,
-//                                    std::string &primary_input_fn,
-//                                    std::string &proof_fn,
-//                                    std::string &verification_result_fn)
+// bool process_verifier_command_line(argc:int, argv:char**,
+//                                    String &processed_assembly_fn,
+//                                    String &verification_key_fn,
+//                                    String &primary_input_fn,
+//                                    String &proof_fn,
+//                                    String &verification_result_fn)
 // {
 //     try
 //     {
 //         po::options_description desc("Usage");
 //         desc.add_options()
 //             ("help", "print this help message")
-//             ("processed_assembly", po::value<std::string>(&processed_assembly_fn)->required())
-//             ("verification_key", po::value<std::string>(&verification_key_fn)->required())
-//             ("primary_input", po::value<std::string>(&primary_input_fn)->required())
-//             ("proof", po::value<std::string>(&proof_fn)->required())
-//             ("verification_result", po::value<std::string>(&verification_result_fn)->required());
+//             ("processed_assembly", po::value<String>(&processed_assembly_fn)->required())
+//             ("verification_key", po::value<String>(&verification_key_fn)->required())
+//             ("primary_input", po::value<String>(&primary_input_fn)->required())
+//             ("proof", po::value<String>(&proof_fn)->required())
+//             ("verification_result", po::value<String>(&verification_result_fn)->required());
 
 //         po::variables_map vm;
 //         po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -63,17 +63,17 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 //     default_tinyram_ppzksnark_pp::init_public_params();
 
 // // #ifdef MINDEPS
-//     std::string processed_assembly_fn = "processed.txt";
-//     std::string verification_key_fn = "verification_key.txt";
-//     std::string proof_fn = "proof.txt";
-//     std::string primary_input_fn = "primary_input.txt";
-//     std::string verification_result_fn = "verification_result.txt";
+//     String processed_assembly_fn = "processed.txt";
+//     String verification_key_fn = "verification_key.txt";
+//     String proof_fn = "proof.txt";
+//     String primary_input_fn = "primary_input.txt";
+//     String verification_result_fn = "verification_result.txt";
 // #else
-//     std::string processed_assembly_fn;
-//     std::string verification_key_fn;
-//     std::string proof_fn;
-//     std::string primary_input_fn;
-//     std::string verification_result_fn;
+//     String processed_assembly_fn;
+//     String verification_key_fn;
+//     String proof_fn;
+//     String primary_input_fn;
+//     String verification_result_fn;
 
 //     if !process_verifier_command_line(argc, argv, processed_assembly_fn, verification_key_fn, primary_input_fn, proof_fn, verification_result_fn)
 //     {
@@ -98,11 +98,11 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 //     proof_file >> pi;
 //     proof_file.close();
 
-//     const ram_boot_trace<default_tinyram_ppzksnark_pp> boot_trace = tinyram_boot_trace_from_program_and_input(vk.ap, vk.primary_input_size_bound, program, primary_input);
-//     const bool bit = ram_ppzksnark_verifier<default_tinyram_ppzksnark_pp>(vk, boot_trace, pi);
+//     program:ram_boot_trace<default_tinyram_ppzksnark_pp> boot_trace = tinyram_boot_trace_from_program_and_input(vk.ap, vk.primary_input_size_bound,, primary_input);
+//     boot_trace:bool bit = ram_ppzksnark_verifier<default_tinyram_ppzksnark_pp>(vk,, pi);
 
 //     print!("================================================================================\n");
-//     print!("The verification result is: %s\n", if bit {"PASS"} else{"FAIL"});
+//     print!("The verification result is: {}\n", if bit {"PASS"} else{"FAIL"});
 //     print!("================================================================================\n");
 //     std::ofstream vr_file(verification_result_fn);
 //     vr_file << bit << "\n";

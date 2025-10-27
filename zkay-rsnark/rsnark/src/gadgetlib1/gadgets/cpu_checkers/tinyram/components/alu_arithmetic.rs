@@ -13,7 +13,7 @@
 
 //#ifndef ALU_ARITHMETIC_HPP_
 // #define ALU_ARITHMETIC_HPP_
-// use  <memory>
+// 
 
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
@@ -42,7 +42,7 @@ impl<FieldT>  ALU_arithmetic_gadget<FieldT>   {
                           flag:pb_variable<FieldT>,
                           result:pb_variable<FieldT>,
                           result_flag:pb_variable<FieldT>,
-                          annotation_prefix:std::string) ->Self
+                          annotation_prefix:String) ->Self
        {
 //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
        Self{ opcode_indicators,
@@ -59,8 +59,8 @@ impl<FieldT>  ALU_arithmetic_gadget<FieldT>   {
 pub struct  ALU_and_gadget  {
 // : public ALU_arithmetic_gadget<FieldT>
 res_word:    pb_variable_array<FieldT>,
-pack_result:    std::shared_ptr<packing_gadget<FieldT> >,
-not_all_zeros:    std::shared_ptr<disjunction_gadget<FieldT> >,
+pack_result:    RcCell<packing_gadget<FieldT> >,
+not_all_zeros:    RcCell<disjunction_gadget<FieldT> >,
 not_all_zeros_result:    pb_variable<FieldT>,
 }
 impl<FieldT>  ALU_and_gadget<FieldT>   {
@@ -73,7 +73,7 @@ impl<FieldT>  ALU_and_gadget<FieldT>   {
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
                    result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
         
     {
         res_word.allocate(pb, pb.ap.w, format!("{} res_bit",self.annotation_prefix));
@@ -100,8 +100,8 @@ impl<FieldT>  ALU_and_gadget<FieldT>   {
 pub struct  ALU_or_gadget<FieldT>   {
 // : public ALU_arithmetic_gadget<FieldT>
 res_word:    pb_variable_array<FieldT>,
-pack_result:    std::shared_ptr<packing_gadget<FieldT> >,
-not_all_zeros:    std::shared_ptr<disjunction_gadget<FieldT> >,
+pack_result:    RcCell<packing_gadget<FieldT> >,
+not_all_zeros:    RcCell<disjunction_gadget<FieldT> >,
 not_all_zeros_result:    pb_variable<FieldT>,
 }
 impl<FieldT>  ALU_or_gadget<FieldT>   {
@@ -114,7 +114,7 @@ impl<FieldT>  ALU_or_gadget<FieldT>   {
                   flag:pb_variable<FieldT>,
                   result:pb_variable<FieldT>,
                   result_flag:pb_variable<FieldT>,
-                  annotation_prefix:std::string)->Self
+                  annotation_prefix:String)->Self
         
     {
         res_word.allocate(pb, pb.ap.w, format!("{} res_bit",self.annotation_prefix));
@@ -141,8 +141,8 @@ Self{res_word,not_all_zeros_result,pack_result,not_all_zeros}
 pub struct  ALU_xor_gadget {
 // : public ALU_arithmetic_gadget<FieldT> 
 res_word:    pb_variable_array<FieldT>,
-pack_result:    std::shared_ptr<packing_gadget<FieldT> >,
-not_all_zeros:    std::shared_ptr<disjunction_gadget<FieldT> >,
+pack_result:    RcCell<packing_gadget<FieldT> >,
+not_all_zeros:    RcCell<disjunction_gadget<FieldT> >,
 not_all_zeros_result:    pb_variable<FieldT>,
 }
 impl ALU_xor_gadget<FieldT>  {
@@ -154,7 +154,7 @@ impl ALU_xor_gadget<FieldT>  {
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
                    result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
         
     {
         res_word.allocate(pb, pb.ap.w, format!("{} res_bit",self.annotation_prefix));
@@ -182,8 +182,8 @@ pub struct  ALU_not_gadget {
 /* we do bitwise not, because we need to compute flag */
 
 res_word:    pb_variable_array<FieldT>,
-pack_result:    std::shared_ptr<packing_gadget<FieldT> >,
-not_all_zeros:    std::shared_ptr<disjunction_gadget<FieldT> >,
+pack_result:    RcCell<packing_gadget<FieldT> >,
+not_all_zeros:    RcCell<disjunction_gadget<FieldT> >,
 not_all_zeros_result:    pb_variable<FieldT>,
 }
 impl ALU_not_gadget {
@@ -195,7 +195,7 @@ impl ALU_not_gadget {
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
                    result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
        
     {
         res_word.allocate(pb, pb.ap.w, format!("{} res_bit",self.annotation_prefix));
@@ -224,8 +224,8 @@ pub struct  ALU_add_gadget {
 addition_result:    pb_variable<FieldT>,
 res_word:    pb_variable_array<FieldT>,
 res_word_and_flag:    pb_variable_array<FieldT>,
-pack_result:    std::shared_ptr<packing_gadget<FieldT> >,
- unpack_addition:std::shared_ptr<packing_gadget<FieldT> >,
+pack_result:    RcCell<packing_gadget<FieldT> >,
+ unpack_addition:RcCell<packing_gadget<FieldT> >,
 }
 impl ALU_add_gadget {
     pub fn new(pb :tinyram_protoboard<FieldT> ,
@@ -236,7 +236,7 @@ impl ALU_add_gadget {
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
                    result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
        
     {
         addition_result.allocate(pb, format!("{} addition_result",self.annotation_prefix));
@@ -268,8 +268,8 @@ negated_flag:    pb_variable<FieldT>,
 res_word:    pb_variable_array<FieldT>,
 res_word_and_negated_flag:    pb_variable_array<FieldT>,
 
-pack_result:    std::shared_ptr<packing_gadget<FieldT> > ,
-unpack_intermediate:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_result:    RcCell<packing_gadget<FieldT> > ,
+unpack_intermediate:    RcCell<packing_gadget<FieldT> >,
 }
  impl ALU_sub_gadget<FieldT> {
     pub fn new(pb :tinyram_protoboard<FieldT> ,
@@ -280,7 +280,7 @@ unpack_intermediate:    std::shared_ptr<packing_gadget<FieldT> >,
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
                    result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
         
     {
         intermediate_result.allocate(pb, format!("{} intermediate_result",self.annotation_prefix));
@@ -317,7 +317,7 @@ pub struct  ALU_mov_gadget {
                    flag:pb_variable<FieldT>,
                    result:pb_variable<FieldT>,
                    result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
         {
 //  ALU_arithmetic_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, annotation_prefix)
         Self{}
@@ -341,7 +341,7 @@ pub struct  ALU_cmov_gadget {
                     flag:pb_variable<FieldT>,
                     result:pb_variable<FieldT>,
                     result_flag:pb_variable<FieldT>,
-                    annotation_prefix:std::string)->Self
+                    annotation_prefix:String)->Self
    
     {
 //  ALU_arithmetic_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, result, result_flag, annotation_prefix)
@@ -379,7 +379,7 @@ comparator:    comparison_gadget<FieldT>,
                    cmpa_result_flag:pb_variable<FieldT>,
                    cmpae_result:pb_variable<FieldT>,
                    cmpae_result_flag:pb_variable<FieldT>,
-                   annotation_prefix:std::string)->Self
+                   annotation_prefix:String)->Self
     { 
         // ALU_arithmetic_gadget<FieldT>(pb, opcode_indicators, desval, arg1val, arg2val, flag, cmpa_result, cmpa_result_flag, annotation_prefix),
         Self{comparator:comparison_gadget::<FieldT>::new(pb, pb.ap.w, arg2val.packed, arg1val.packed, cmpa_result_flag, cmpae_result_flag,
@@ -410,9 +410,9 @@ modified_arg1:    pb_variable_array<FieldT>,
 modified_arg2:    pb_variable_array<FieldT>,
 packed_modified_arg1:    pb_variable<FieldT>,
 packed_modified_arg2:    pb_variable<FieldT>,
-pack_modified_arg1:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_modified_arg2:    std::shared_ptr<packing_gadget<FieldT> >,
-comparator:    std::shared_ptr<comparison_gadget<FieldT> >,
+pack_modified_arg1:    RcCell<packing_gadget<FieldT> >,
+pack_modified_arg2:    RcCell<packing_gadget<FieldT> >,
+comparator:    RcCell<comparison_gadget<FieldT> >,
 
     cmpg_result:pb_variable<FieldT>,
     cmpg_result_flag:pb_variable<FieldT>,
@@ -430,7 +430,7 @@ comparator:    std::shared_ptr<comparison_gadget<FieldT> >,
                     cmpg_result_flag:pb_variable<FieldT>,
                     cmpge_result:pb_variable<FieldT>,
                     cmpge_result_flag:pb_variable<FieldT>,
-                    annotation_prefix:std::string)->Self
+                    annotation_prefix:String)->Self
    
     {
         negated_arg1val_sign.allocate(pb, format!("{} negated_arg1val_sign",self.annotation_prefix));
@@ -473,9 +473,9 @@ mul_result:    dual_variable_gadget<FieldT>,
 mull_bits:    pb_variable_array<FieldT>,
 umulh_bits:    pb_variable_array<FieldT>,
 result_flag:    pb_variable<FieldT>,
-pack_mull_result:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_umulh_result:    std::shared_ptr<packing_gadget<FieldT> >,
-compute_flag:    std::shared_ptr<disjunction_gadget<FieldT> >,
+pack_mull_result:    RcCell<packing_gadget<FieldT> >,
+pack_umulh_result:    RcCell<packing_gadget<FieldT> >,
+compute_flag:    RcCell<disjunction_gadget<FieldT> >,
 
     mull_result:pb_variable<FieldT>,
     mull_flag:pb_variable<FieldT>,
@@ -493,7 +493,7 @@ compute_flag:    std::shared_ptr<disjunction_gadget<FieldT> >,
                     mull_flag:pb_variable<FieldT>,
                     umulh_result:pb_variable<FieldT>,
                     umulh_flag:pb_variable<FieldT>,
-                    annotation_prefix:std::string)->Self
+                    annotation_prefix:String)->Self
     
     {
         mull_bits.insert(mull_bits.end(), mul_result.bits.begin(), mul_result.bits.begin()+pb.ap.w);
@@ -524,7 +524,7 @@ mul_result:    dual_variable_gadget<FieldT>,
 smulh_bits:    pb_variable_array<FieldT>,
 
 top:    pb_variable<FieldT>,
-pack_top:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_top:    RcCell<packing_gadget<FieldT> >,
 
 is_top_empty_aux:    pb_variable<FieldT> ,
 is_top_empty:    pb_variable<FieldT> ,
@@ -532,7 +532,7 @@ is_top_full_aux:    pb_variable<FieldT> ,
 is_top_full:    pb_variable<FieldT> ,
 
 result_flag:    pb_variable<FieldT>,
-pack_smulh_result:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_smulh_result:    RcCell<packing_gadget<FieldT> >,
 
     smulh_result:pb_variable<FieldT>,
     smulh_flag:pb_variable<FieldT>,
@@ -546,7 +546,7 @@ pack_smulh_result:    std::shared_ptr<packing_gadget<FieldT> >,
                     flag:pb_variable<FieldT>,
                     smulh_result:pb_variable<FieldT>,
                     smulh_flag:pb_variable<FieldT>,
-                    annotation_prefix:std::string)->Self
+                    annotation_prefix:String)->Self
    
     {
         smulh_bits.insert(smulh_bits.end(), mul_result.bits.begin()+pb.ap.w, mul_result.bits.begin()+2*pb.ap.w);
@@ -591,7 +591,7 @@ pub struct  ALU_divmod_gadget {
 B_inv:    pb_variable<FieldT>,
 B_nonzero:    pb_variable<FieldT>,
 A_aux:    pb_variable<FieldT>,
-r_less_B:    std::shared_ptr<comparison_gadget<FieldT> >,
+r_less_B:    RcCell<comparison_gadget<FieldT> >,
 
     udiv_result:pb_variable<FieldT>,
     udiv_flag:pb_variable<FieldT>,
@@ -609,7 +609,7 @@ r_less_B:    std::shared_ptr<comparison_gadget<FieldT> >,
                       udiv_flag:pb_variable<FieldT>,
                       umod_result:pb_variable<FieldT>,
                       umod_flag:pb_variable<FieldT>,
-                      annotation_prefix:std::string)->Self
+                      annotation_prefix:String)->Self
    
     {
         B_inv.allocate(pb, format!("{} B_inv",self.annotation_prefix));
@@ -633,19 +633,19 @@ r_less_B:    std::shared_ptr<comparison_gadget<FieldT> >,
 pub struct  ALU_shr_shl_gadget {
 
 reversed_input:    pb_variable<FieldT>,
-pack_reversed_input:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_reversed_input:    RcCell<packing_gadget<FieldT> >,
 
 barrel_right_internal:    pb_variable_array<FieldT>,
-shifted_out_bits:    std::vector<pb_variable_array<FieldT> >,
+shifted_out_bits:    Vec<pb_variable_array<FieldT> >,
 
 is_oversize_shift:    pb_variable<FieldT>,
-check_oversize_shift:    std::shared_ptr<disjunction_gadget<FieldT> >,
+check_oversize_shift:    RcCell<disjunction_gadget<FieldT> >,
 result:    pb_variable<FieldT>,
 
 result_bits:    pb_variable_array<FieldT>,
-unpack_result:    std::shared_ptr<packing_gadget<FieldT> >,
+unpack_result:    RcCell<packing_gadget<FieldT> >,
 reversed_result:    pb_variable<FieldT>,
-pack_reversed_result:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_reversed_result:    RcCell<packing_gadget<FieldT> >,
 
 shr_result:    pb_variable<FieldT>,
 shr_flag:    pb_variable<FieldT>,
@@ -665,7 +665,7 @@ logw:    usize,
                        shr_flag:pb_variable<FieldT>,
                        shl_result:pb_variable<FieldT>,
                        shl_flag:pb_variable<FieldT>,
-                       annotation_prefix:std::string)->Self
+                       annotation_prefix:String)->Self
    
     {
         logw = ffec::log2(pb.ap.w);
@@ -747,7 +747,7 @@ use ffec::common::utils;
    testing functions, which basically do the same thing: brute force
    the range of inputs which different success predicates */
 
-// template<class T, typename FieldT>
+// 
 type initializer_fn< T,  FieldT> =
     fn(&tinyram_protoboard<FieldT>,    // pb
                    &pb_variable_array<FieldT>,       // opcode_indicators
@@ -759,7 +759,7 @@ type initializer_fn< T,  FieldT> =
                    &pb_variable<FieldT>             // result_flag
                   )->T;
 
-// template<class T, typename FieldT>
+// 
 pub fn brute_force_arithmetic_gadget< T,  FieldT>( w:usize,
                                     opcode:usize,
                                     initializer:initializer_fn<T, FieldT>,

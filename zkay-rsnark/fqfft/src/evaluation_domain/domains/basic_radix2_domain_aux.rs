@@ -41,7 +41,7 @@
 //  * Compute the m Lagrange coefficients, relative to the set S={omega^{0},...,omega^{m-1}}, at the field element t.
 //  */
 // 
-// Vec<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(const size_t m, t:&FieldT);
+// Vec<FieldT> _basic_radix2_evaluate_all_lagrange_polynomials(m:usize, t:&FieldT);
 
 // //} // libfqfft
 
@@ -214,9 +214,9 @@ pub fn _basic_parallel_radix2_FFT_inner<FieldT:num_traits::Zero+BitXor<Output = 
 pub fn _basic_parallel_radix2_FFT<FieldT: num_traits::Zero+BitXor<Output = FieldT>+ std::convert::From<usize>+ std::ops::Sub<Output = FieldT>+ std::ops::MulAssign+ Clone+num_traits::One+std::ops::AddAssign>(a:&mut Vec<FieldT>, omega:&FieldT)
 {
 // #ifdef MULTICORE
-//     const size_t num_cpus = omp_get_max_threads();
+//     let num_cpus = omp_get_max_threads();
 // #else
-     const num_cpus:usize = 1;
+     const  num_cpus:usize =1;
 //#endif
     let log_cpus = if num_cpus & (num_cpus - 1) == 0  {log2(num_cpus)} else {log2(num_cpus) - 1};
 

@@ -28,10 +28,10 @@ extern bool alt_bn128_ate_is_loop_count_neg;
 extern bigint<alt_bn128_q_limbs> alt_bn128_final_exponent_z;
 extern bool alt_bn128_final_exponent_is_z_neg;
 
-void init_alt_bn128_params();
+pub fn  init_alt_bn128_params();
 
-class alt_bn128_G1;
-class alt_bn128_G2;
+pub struct alt_bn128_G1;
+pub struct alt_bn128_G2;
 
 // } // namespace libff
 //#endif // ALT_BN128_INIT_HPP_
@@ -61,7 +61,7 @@ bool alt_bn128_ate_is_loop_count_neg;
 bigint<alt_bn128_q_limbs> alt_bn128_final_exponent_z;
 bool alt_bn128_final_exponent_is_z_neg;
 
-void init_alt_bn128_params()
+pub fn  init_alt_bn128_params()
 {
     init_alt_bn128_fields();
 

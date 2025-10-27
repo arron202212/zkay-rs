@@ -14,7 +14,7 @@ use  "depends/gtest/googletest/include/gtest/gtest.h"
 use crate::gadgetlib2::pp;
 use crate::gadgetlib2::variable;
 
-using ::std::set;
+using ::BTreeSet;
 using namespace gadgetlib2;
 
 namespace {
@@ -151,22 +151,22 @@ TEST(gadgetLib2, FElem_FConst_operatorEquals) {
     FElem e1(int(1));
     FElem e2(FElem(2));
     e0 = e1 = 42;
-    //bool operator==(const FElem& other) const {return *elem_ == *other.elem_;}
+    //bool operator==(other:&FElem) const {return *elem_ == *other.elem_;}
     EXPECT_TRUE(e1 == e0);
     EXPECT_FALSE(e1 == e2);
     FElem eR1P = Fp(42);
     EXPECT_TRUE(e1 == eR1P);
     EXPECT_TRUE(eR1P == e1);
-    //bool operator==(const FElem& first, const long second);
+    //bool operator==(first:FElem&, const long second);
     FElem e3(FElem(4));
     EXPECT_TRUE(e3 == 4);
-    //bool operator==(const long first, const FElem& second);
+    //bool operator==(first:long, second:&FElem);
     EXPECT_TRUE(4 == e3);
 }
 
 TEST(gadgetLib2, FElem_FConst_operatorPlus) {
     initPublicParamsFromDefaultPp();
-    //FElem& operator+=(const FElem& other) {*elem_ += *other.elem_; return *this;}
+    //FElem& operator+=(other:&FElem) {*elem_ += *other.elem_; return *this;}
     FElem e0(0);
     FElem e1(0);
     e0 = e1 = 42;
@@ -177,7 +177,7 @@ TEST(gadgetLib2, FElem_FConst_operatorPlus) {
 
 TEST(gadgetLib2, FElem_FConst_operatorMinus) {
     initPublicParamsFromDefaultPp();
-    //FElem& operator+=(const FElem& other) {*elem_ += *other.elem_; return *this;}
+    //FElem& operator+=(other:&FElem) {*elem_ += *other.elem_; return *this;}
     FElem e0(0);
     FElem e1(0);
     e0 = e1 = 42;
@@ -192,7 +192,7 @@ TEST(gadgetLib2, FElem_FConst_operatorMinus) {
 
 TEST(gadgetLib2, FElem_FConst_operatorTimes) {
     initPublicParamsFromDefaultPp();
-    //FElem& operator+=(const FElem& other) {*elem_ += *other.elem_; return *this;}
+    //FElem& operator+=(other:&FElem) {*elem_ += *other.elem_; return *this;}
     FElem e0 = 21;
     FElem e1 = 2;
     e1 = e0 *= e1;
@@ -213,11 +213,11 @@ TEST(gadgetLib2, FElem_FConst_operatorNotEquals) {
     initPublicParamsFromDefaultPp();
     FElem e0 = 21;
     FElem e4(FElem(4));
-    //bool operator!=(const FElem& first, const FElem& second);
+    //bool operator!=(first:FElem&, second:&FElem);
     EXPECT_TRUE(e4 != e0);
-    //bool operator!=(const FElem& first, const long second);
+    //bool operator!=(first:FElem&, const long second);
     EXPECT_TRUE(e4 != 5);
-    //bool operator!=(const long first, const FElem& second);
+    //bool operator!=(first:long, second:&FElem);
     EXPECT_TRUE(5 != e4);
 }
 
@@ -370,7 +370,7 @@ TEST(gadgetLib2, FElem_R1P_Elem_inverse) {
 
 TEST(gadgetLib2, LinearTermConstructors) {
     initPublicParamsFromDefaultPp();
-    //LinearTerm(const Variable& v) : variable_(v), coeff_(1) {}
+    //LinearTerm(v:&Variable)->Self variable_(v), coeff_(1) {}
     VariableArray x(10, "x");
     LinearTerm lt0(x[0]);
     VariableAssignment ass;
@@ -382,11 +382,11 @@ TEST(gadgetLib2, LinearTermConstructors) {
     LinearTerm lt2(x[2]);
     ass[x[2]] = 24;
     EXPECT_EQ(lt2.eval(ass), 24);
-    //LinearTerm(const Variable& v, const FElem& coeff) : variable_(v), coeff_(coeff) {}
+    //LinearTerm(v:Variable&, coeff:&FElem)->Self variable_(v), coeff_(coeff) {}
     LinearTerm lt3(x[3], Fp(3));
     ass[x[3]] = Fp(4);
     EXPECT_EQ(lt3.eval(ass), 3 * 4);
-    //LinearTerm(const Variable& v, long n) : variable_(v), coeff_(n) {}
+    //LinearTerm(v:Variable&, long n)->Self variable_(v), coeff_(n) {}
     LinearTerm lt5(x[5], long(2));
     ass[x[5]] = 5;
     EXPECT_EQ(lt5.eval(ass), 5 * 2);
@@ -458,38 +458,38 @@ TEST(gadgetLib2, LinearTermOperatorTimes) {
 // TODO refactor this test
 TEST(gadgetLib2, LinearCombination) {
     initPublicParamsFromDefaultPp();
-//    LinearCombination() : linearTerms_(), constant_(0) {}
+//    LinearCombination()->Self linearTerms_(), constant_(0) {}
     LinearCombination lc0;
     VariableAssignment assignment;
     EXPECT_EQ(lc0.eval(assignment),0);
-//    LinearCombination(const Variable& var) : linearTerms_(1,var), constant_(0) {}
+//    LinearCombination(var:&Variable)->Self linearTerms_(1,var), constant_(0) {}
     VariableArray x(10,"x");
     LinearCombination lc1(x[1]);
     assignment[x[1]] = 42;
     EXPECT_EQ(lc1.eval(assignment),42);
-//    LinearCombination(const LinearTerm& linTerm) : linearTerms_(1,linTerm), constant_(0) {}
+//    LinearCombination(linTerm:&LinearTerm)->Self linearTerms_(1,linTerm), constant_(0) {}
     LinearTerm lt(x[2], Fp(2));
     LinearCombination lc2 = lt;
     assignment[x[2]] = 2;
     EXPECT_EQ(lc2.eval(assignment),4);
-//    LinearCombination(long i) : linearTerms_(), constant_(i) {}
+//    LinearCombination(long i)->Self linearTerms_(), constant_(i) {}
     LinearCombination lc3 = 3;
     EXPECT_EQ(lc3.eval(assignment),3);
-//    LinearCombination(const FElem& elem) : linearTerms_(), constant_(elem) {}
+//    LinearCombination(elem:&FElem)->Self linearTerms_(), constant_(elem) {}
     FElem elem = Fp(4);
     LinearCombination lc4 = elem;
     EXPECT_EQ(lc4.eval(assignment),4);
-//    LinearCombination& operator+=(const LinearCombination& other);
+//    LinearCombination& operator+=(other:&LinearCombination);
     lc1 = lc4 += lc2;
     EXPECT_EQ(lc4.eval(assignment),4+4);
     EXPECT_EQ(lc1.eval(assignment),4+4);
     EXPECT_EQ(lc2.eval(assignment),4);
-//    LinearCombination& operator-=(const LinearCombination& other);
+//    LinearCombination& operator-=(other:&LinearCombination);
     lc1 = lc4 -= lc3;
     EXPECT_EQ(lc4.eval(assignment),4+4-3);
     EXPECT_EQ(lc1.eval(assignment),4+4-3);
     EXPECT_EQ(lc3.eval(assignment),3);
-//    ::std::string asString() const;
+//    ::String asString() const;
 #   ifdef DEBUG
     EXPECT_EQ(lc1.asString(), "2 * x[2] + 1");
 #   else // ifdef DEBUG
@@ -501,7 +501,7 @@ TEST(gadgetLib2, LinearCombination) {
     assignment[x[2]] = 83;
     EXPECT_EQ(assignment[*sVar.begin()], 83);
     assignment[x[2]] = 2;
-//  LinearCombination operator-(const LinearCombination& lc);
+//  LinearCombination operator-(lc:&LinearCombination);
     lc2 = -lc1;
     EXPECT_EQ(lc2.eval(assignment),-5);
     lc2 = lc1 *= FElem(4);
@@ -511,17 +511,17 @@ TEST(gadgetLib2, LinearCombination) {
 
 TEST(gadgetLib2, MonomialConstructors) {
     initPublicParamsFromDefaultPp();
-    //Monomial(const Variable& var) : coeff_(1), variables_(1, var) {}
+    //Monomial(var:&Variable)->Self coeff_(1), variables_(1, var) {}
     VariableArray x(10, "x");
     Monomial m0 = x[0];
     VariableAssignment assignment;
     assignment[x[0]] = 42;
     EXPECT_EQ(m0.eval(assignment), 42);
-    //Monomial(const Variable& var, const FElem& coeff) : coeff_(coeff), variables_(1, var) {}
+    //Monomial(var:Variable&, coeff:&FElem)->Self coeff_(coeff), variables_(1, var) {}
     Monomial m1(x[1], Fp(3));
     assignment[x[1]] = 2;
     EXPECT_EQ(m1.eval(assignment), 6);
-    //Monomial(const LinearTerm& linearTerm);
+    //Monomial(linearTerm:&LinearTerm);
     LinearTerm lt(x[3], 3);
     Monomial m3 = lt;
     assignment[x[3]] = 3;
@@ -584,26 +584,26 @@ TEST(gadgetLib2, PolynomialConstructors) {
     Polynomial p0;
     VariableAssignment assignment;
     EXPECT_EQ(p0.eval(assignment), 0);
-    //Polynomial(const Monomial& monomial);
+    //Polynomial(monomial:&Monomial);
     VariableArray x(10, "x");
     Monomial m0(x[0], 3);
     Polynomial p1 = m0;
     assignment[x[0]] = 2;
     EXPECT_EQ(p1.eval(assignment), 6);
-    //Polynomial(const Variable& var);
+    //Polynomial(var:&Variable);
     Polynomial p2 = x[2];
     assignment[x[2]] = 2;
     EXPECT_EQ(p2.eval(assignment), 2);
-    //Polynomial(const FElem& val);
+    //Polynomial(val:&FElem);
     Polynomial p3 = FElem(Fp(3));
     EXPECT_EQ(p3.eval(assignment), 3);
-    //Polynomial(const LinearCombination& linearCombination);
+    //Polynomial(linearCombination:&LinearCombination);
     LinearCombination lc(x[0]);
     lc += x[2];
     Polynomial p4 = lc;
     EXPECT_EQ(p4.eval(assignment), 4);
-    //Polynomial(const LinearTerm& linearTerm);
-    const LinearTerm lt5 = 5 * x[5];
+    //Polynomial(linearTerm:&LinearTerm);
+    let lt5= 5 * x[5];
     Polynomial p5 = lt5;
     assignment[x[5]] = 5;
     EXPECT_EQ(p5.eval(assignment), 25);

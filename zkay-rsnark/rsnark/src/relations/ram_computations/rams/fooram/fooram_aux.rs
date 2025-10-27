@@ -13,7 +13,7 @@
 // #define FOORAM_AUX_HPP_
 
 // use  <iostream>
-// use  <vector>
+// 
 
 use ffec::common::utils;
 
@@ -21,15 +21,15 @@ use crate::relations::ram_computations::memory::memory_interface;
 
 
 
-type fooram_program=std::vector<usize> ;
-type fooram_input_tape=std::vector<usize> ;
-type fooram_input_tape_iterator = std::vector<usize>::const_iterator ;
+type fooram_program=Vec<usize> ;
+type fooram_input_tape=Vec<usize> ;
+type fooram_input_tape_iterator = Vec<usize>::const_iterator ;
 
 pub struct  fooram_architecture_params {
 // 
      w:usize,
 
-    // fooram_architecture_params(const usize w=16);
+    // fooram_architecture_params(w:usize=16);
 
     // usize num_addresses() const;
     // usize address_size() const;
@@ -40,8 +40,8 @@ pub struct  fooram_architecture_params {
     // memory_contents initial_memory_contents(program:&fooram_program,
     //                                         primary_input:&fooram_input_tape) const;
 
-    // ffec::bit_vector initial_cpu_state() const;
-    // void print() const;
+    // bit_vector initial_cpu_state() const;
+    // pub fn  print() const;
     // bool operator==(other:&fooram_architecture_params) const;
 
     // friend std::ostream& operator<<(std::ostream &out, ap:&fooram_architecture_params);
@@ -105,7 +105,7 @@ pub fn initial_memory_contents(program:&fooram_program,
 {
     let  m=memory_contents::new();
     /* fooram memory contents do not depend on program/input. */
-    // ffec::UNUSED(program, primary_input);
+    // //ffec::UNUSED(program, primary_input);
     return m;
 }
 

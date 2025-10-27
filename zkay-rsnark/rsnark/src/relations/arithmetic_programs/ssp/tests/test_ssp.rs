@@ -8,7 +8,7 @@ use  <algorithm>
 use  <cassert>
 use  <cstdio>
 use  <cstring>
-use  <vector>
+
 
 use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 use ffec::algebra::field_utils::field_utils;
@@ -20,14 +20,14 @@ use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_exampl
 
 
 
-template<typename FieldT>
-void test_ssp(const size_t num_constraints, const size_t num_inputs, const bool binary_input)
+
+pub fn  test_ssp(num_constraints:usize, num_inputs:usize, binary_input:bool)
 {
     ffec::enter_block("Call to test_ssp");
 
     ffec::print_indent(); print!("* Number of constraints: {}\n", num_constraints);
     ffec::print_indent(); print!("* Number of inputs: {}\n", num_inputs);
-    ffec::print_indent(); print!("* Input type: %s\n",if  binary_input  {"binary" }else {"field"});
+    ffec::print_indent(); print!("* Input type: {}\n",if  binary_input  {"binary" }else {"field"});
 
     ffec::enter_block("Generate constraint system and assignment");
     uscs_example<FieldT> example;
@@ -45,7 +45,7 @@ void test_ssp(const size_t num_constraints, const size_t num_inputs, const bool 
     assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
     ffec::leave_block("Check satisfiability of constraint system");
 
-    const FieldT t = FieldT::random_element(),
+    let t= FieldT::random_element(),
                  d = FieldT::random_element();
 
     ffec::enter_block("Compute SSP instance 1");
@@ -77,12 +77,12 @@ int main()
 
     ffec::mnt6_pp::init_public_params();
 
-    const size_t num_inputs = 10;
+    let num_inputs = 10;
 
-    const size_t basic_domain_size = 1u64<<ffec::mnt6_Fr::s;
-    const size_t step_domain_size = (1u64<<10) + (1u64<<8);
-    const size_t extended_domain_size = 1u64<<(ffec::mnt6_Fr::s+1);
-    const size_t extended_domain_size_special = extended_domain_size-1;
+    let basic_domain_size = 1u64<<ffec::mnt6_Fr::s;
+    let step_domain_size = (1u64<<10) + (1u64<<8);
+    let extended_domain_size = 1u64<<(ffec::mnt6_Fr::s+1);
+    let extended_domain_size_special = extended_domain_size-1;
 
     ffec::enter_block("Test SSP for binary inputs");
 

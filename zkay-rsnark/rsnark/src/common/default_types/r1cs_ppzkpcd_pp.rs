@@ -19,15 +19,15 @@ use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
 
 
-// class default_r1cs_ppzkpcd_pp {
+// pub struct default_r1cs_ppzkpcd_pp {
 // 
-//     type ffec::mnt4_pp curve_A_pp;
-//     type ffec::mnt6_pp curve_B_pp;
+//     type curve_A_pp=ffec::mnt4_pp;
+//     type curve_B_pp=ffec::mnt6_pp;
 
-//     type ffec::Fr<curve_A_pp> scalar_field_A;
-//     type ffec::Fr<curve_B_pp> scalar_field_B;
+//     type scalar_field_A=ffec::Fr<curve_A_pp>;
+//     type scalar_field_B=ffec::Fr<curve_B_pp>;
 
-//     static void init_public_params();
+//     static pub fn  init_public_params();
 // };
 
 
@@ -48,7 +48,7 @@ use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
 
 
-// void default_r1cs_ppzkpcd_pp::init_public_params()
+// pub fn init_public_params()
 // {
 //     curve_A_pp::init_public_params();
 //     curve_B_pp::init_public_params();

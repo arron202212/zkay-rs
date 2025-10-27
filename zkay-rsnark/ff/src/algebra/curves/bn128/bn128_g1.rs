@@ -16,56 +16,56 @@ use crate::algebra::curves::curve_utils;
 
 // namespace libff {
 
-class bn128_G1;
+pub struct bn128_G1;
 std::ostream& operator<<(std::ostream &, const bn128_G1&);
 std::istream& operator>>(std::istream &, bn128_G1&);
 
-class bn128_G1 {
-private:
-    static bn::Fp sqrt(const bn::Fp &el);
+pub struct bn128_G1 {
+
+    static bn::Fp sqrt(el:&bn::Fp);
 
 // #ifdef PROFILE_OP_COUNTS
-    static long long add_cnt;
-    static long long dbl_cnt;
+    static i64 add_cnt;
+    static i64 dbl_cnt;
 //#endif
-    static std::vector<std::size_t> wnaf_window_table;
-    static std::vector<std::size_t> fixed_base_exp_window_table;
+    static Vec<std::usize> wnaf_window_table;
+    static Vec<std::usize> fixed_base_exp_window_table;
     static bn128_G1 G1_zero;
     static bn128_G1 G1_one;
     static bool initialized;
 
-    typedef bn128_Fq base_field;
-    typedef bn128_Fr scalar_field;
+    type base_field=bn128_Fq;
+    type scalar_field=bn128_Fr;
 
     // Cofactor
-    static const mp_size_t h_bitcount = 1;
-    static const mp_size_t h_limbs = (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+    static let h_bitcount= 1;
+    static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
     static bigint<h_limbs> h;
 
     bn::Fp X, Y, Z;
-    void fill_coord(bn::Fp coord[3]) const { coord[0] = this->X; coord[1] = this->Y; coord[2] = this->Z; return; };
+    pub fn Fp coord[3]) return:{ coord[0] = this->X; coord[1] = this->Y; coord[2] = this->Z;, };
 
     bn128_G1();
-    bn128_G1(bn::Fp coord[3]) : X(coord[0]), Y(coord[1]), Z(coord[2]) {};
+    bn128_G1(bn::Fp coord[3])->Self X(coord[0]), Y(coord[1]), Z(coord[2]) {};
 
-    void print() const;
-    void print_coordinates() const;
+    pub fn  print() const;
+    pub fn  print_coordinates() const;
 
-    void to_affine_coordinates();
-    void to_special();
+    pub fn  to_affine_coordinates();
+    pub fn  to_special();
     bool is_special() const;
 
     bool is_zero() const;
 
-    bool operator==(const bn128_G1 &other) const;
-    bool operator!=(const bn128_G1 &other) const;
+    bool operator==(other:&bn128_G1) const;
+    bool operator!=(other:&bn128_G1) const;
 
-    bn128_G1 operator+(const bn128_G1 &other) const;
+    bn128_G1 operator+(other:&bn128_G1) const;
     bn128_G1 operator-() const;
-    bn128_G1 operator-(const bn128_G1 &other) const;
+    bn128_G1 operator-(other:&bn128_G1) const;
 
-    bn128_G1 add(const bn128_G1 &other) const;
-    bn128_G1 mixed_add(const bn128_G1 &other) const;
+    bn128_G1 add(other:&bn128_G1) const;
+    bn128_G1 mixed_add(other:&bn128_G1) const;
     bn128_G1 dbl() const;
     bn128_G1 mul_by_cofactor() const;
 
@@ -75,30 +75,30 @@ private:
     static bn128_G1 one();
     static bn128_G1 random_element();
 
-    static std::size_t size_in_bits() { return bn128_Fq::ceil_size_in_bits() + 1; }
+    static std::usize size_in_bits() { return bn128_Fq::ceil_size_in_bits() + 1; }
     static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
     static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
 
-    friend std::ostream& operator<<(std::ostream &out, const bn128_G1 &g);
+    friend std::ostream& operator<<(std::ostream &out, g:&bn128_G1);
     friend std::istream& operator>>(std::istream &in, bn128_G1 &g);
 
-    static void batch_to_special_all_non_zeros(std::vector<bn128_G1> &vec);
+    static pub fn  batch_to_special_all_non_zeros(Vec<bn128_G1> &vec);
 };
 
-template<mp_size_t m>
-bn128_G1 operator*(const bigint<m> &lhs, const bn128_G1 &rhs)
+
+bn128_G1 operator*(lhs:&bigint<m>, rhs:&bn128_G1)
 {
     return scalar_mul<bn128_G1, m>(rhs, lhs);
 }
 
-template<mp_size_t m, const bigint<m>& modulus_p>
-bn128_G1 operator*(const Fp_model<m,modulus_p> &lhs, const bn128_G1 &rhs)
+
+bn128_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&bn128_G1)
 {
     return scalar_mul<bn128_G1, m>(rhs, lhs.as_bigint());
 }
 
-std::ostream& operator<<(std::ostream& out, const std::vector<bn128_G1> &v);
-std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v);
+std::ostream& operator<<(std::ostream& out, v:&Vec<bn128_G1>);
+std::istream& operator>>(std::istream& in, Vec<bn128_G1> &v);
 
 
 // } // namespace libff
@@ -115,23 +115,23 @@ use crate::algebra::curves::bn128::bn_utils;
 
 // namespace libff {
 
-using std::size_t;
+using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
-long long bn128_G1::add_cnt = 0;
-long long bn128_G1::dbl_cnt = 0;
+i64 bn128_G1::add_cnt = 0;
+i64 bn128_G1::dbl_cnt = 0;
 //#endif
 
-std::vector<size_t> bn128_G1::wnaf_window_table;
-std::vector<size_t> bn128_G1::fixed_base_exp_window_table;
+Vec<usize> bn128_G1::wnaf_window_table;
+Vec<usize> bn128_G1::fixed_base_exp_window_table;
 bn128_G1 bn128_G1::G1_zero = {};
 bn128_G1 bn128_G1::G1_one = {};
 bool bn128_G1::initialized = false;
 bigint<bn128_G1::h_limbs> bn128_G1::h;
 
-bn::Fp bn128_G1::sqrt(const bn::Fp &el)
+bn::Fp bn128_G1::sqrt(el:&bn::Fp)
 {
-    size_t v = bn128_Fq_s;
+    usize v = bn128_Fq_s;
     bn::Fp z = bn128_Fq_nqr_to_t;
     bn::Fp w = mie::power(el, bn128_Fq_t_minus_1_over_2);
     bn::Fp x = el * w;
@@ -153,7 +153,7 @@ bn::Fp bn128_G1::sqrt(const bn::Fp &el)
 
     while (b != bn::Fp(1))
     {
-        size_t m = 0;
+        usize m = 0;
         bn::Fp b2m = b;
         while (b2m != bn::Fp(1))
         {
@@ -179,7 +179,7 @@ bn::Fp bn128_G1::sqrt(const bn::Fp &el)
     return x;
 }
 
-bn128_G1::bn128_G1()
+pub fn new()
 {
     if bn128_G1::initialized
     {
@@ -189,7 +189,7 @@ bn128_G1::bn128_G1()
     }
 }
 
-void bn128_G1::print() const
+pub fn print() const
 {
     if this->is_zero()
     {
@@ -203,7 +203,7 @@ void bn128_G1::print() const
     }
 }
 
-void bn128_G1::print_coordinates() const
+pub fn print_coordinates() const
 {
     if this->is_zero()
     {
@@ -215,7 +215,7 @@ void bn128_G1::print_coordinates() const
     }
 }
 
-void bn128_G1::to_affine_coordinates()
+pub fn to_affine_coordinates()
 {
     if this->is_zero()
     {
@@ -236,22 +236,22 @@ void bn128_G1::to_affine_coordinates()
     }
 }
 
-void bn128_G1::to_special()
+pub fn to_special()
 {
     this->to_affine_coordinates();
 }
 
-bool bn128_G1::is_special() const
+pub fn is_special()->bool
 {
     return (this->is_zero() || this->Z == 1);
 }
 
-bool bn128_G1::is_zero() const
+pub fn is_zero()->bool
 {
     return Z.isZero();
 }
 
-bool bn128_G1::operator==(const bn128_G1 &other) const
+bool bn128_G1::operator==(other:&bn128_G1) const
 {
     if this->is_zero()
     {
@@ -285,12 +285,12 @@ bool bn128_G1::operator==(const bn128_G1 &other) const
     return (lhs == rhs);
 }
 
-bool bn128_G1::operator!=(const bn128_G1& other) const
+bool bn128_G1::operator!=(other:&bn128_G1) const
 {
     return !(operator==(other));
 }
 
-bn128_G1 bn128_G1::operator+(const bn128_G1 &other) const
+bn128_G1 bn128_G1::operator+(other:&bn128_G1) const
 {
     // handle special cases having to do with O
     if this->is_zero()
@@ -321,12 +321,12 @@ bn128_G1 bn128_G1::operator-() const
     return result;
 }
 
-bn128_G1 bn128_G1::operator-(const bn128_G1 &other) const
+bn128_G1 bn128_G1::operator-(other:&bn128_G1) const
 {
     return (*this) + (-other);
 }
 
-bn128_G1 bn128_G1::add(const bn128_G1 &other) const
+pub fn add(other:&bn128_G1)->bn128_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
@@ -341,7 +341,7 @@ bn128_G1 bn128_G1::add(const bn128_G1 &other) const
     return result;
 }
 
-bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
+pub fn mixed_add(other:&bn128_G1)->bn128_G1
 {
     if this->is_zero()
     {
@@ -373,13 +373,13 @@ bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
 
     bn::Fp Z1Z1;
     bn::Fp::square(Z1Z1, this->Z);
-    const bn::Fp &U1 = this->X;
+    U1:&bn::Fp = this->X;
     bn::Fp U2;
     bn::Fp::mul(U2, other.X, Z1Z1);
     bn::Fp Z1_cubed;
     bn::Fp::mul(Z1_cubed, this->Z, Z1Z1);
 
-    const bn::Fp &S1 = this->Y;
+    S1:&bn::Fp = this->Y;
     bn::Fp S2;
     bn::Fp::mul(S2, other.Y, Z1_cubed); // S2 = Y2*Z1*Z1Z1
 
@@ -428,7 +428,7 @@ bn128_G1 bn128_G1::mixed_add(const bn128_G1 &other) const
     return result;
 }
 
-bn128_G1 bn128_G1::dbl() const
+pub fn dbl()->bn128_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
@@ -442,7 +442,7 @@ bn128_G1 bn128_G1::dbl() const
     return result;
 }
 
-bn128_G1 bn128_G1::mul_by_cofactor() const
+pub fn mul_by_cofactor()->bn128_G1
 {
     // Cofactor = 1
     return (*this);
@@ -463,7 +463,7 @@ bn128_G1 bn128_G1::random_element()
     return bn128_Fr::random_element().as_bigint() * G1_one;
 }
 
-std::ostream& operator<<(std::ostream &out, const bn128_G1 &g)
+std::ostream& operator<<(std::ostream &out, g:&bn128_G1)
 {
     bn128_G1 gcopy(g);
     gcopy.to_affine_coordinates();
@@ -492,7 +492,7 @@ std::ostream& operator<<(std::ostream &out, const bn128_G1 &g)
     return out;
 }
 
-bool bn128_G1::is_well_formed() const
+pub fn is_well_formed()->bool
 {
     if this->is_zero()
     {
@@ -581,7 +581,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
     return in;
 }
 
-std::ostream& operator<<(std::ostream& out, const std::vector<bn128_G1> &v)
+std::ostream& operator<<(std::ostream& out, v:&Vec<bn128_G1>)
 {
     out << v.len() << "\n";
     for t in &v
@@ -591,11 +591,11 @@ std::ostream& operator<<(std::ostream& out, const std::vector<bn128_G1> &v)
     return out;
 }
 
-std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v)
+std::istream& operator>>(std::istream& in, Vec<bn128_G1> &v)
 {
     v.clear();
 
-    size_t s;
+    usize s;
     in >> s;
     consume_newline(in);
     v.reserve(s);
@@ -610,9 +610,9 @@ std::istream& operator>>(std::istream& in, std::vector<bn128_G1> &v)
     return in;
 }
 
-void bn128_G1::batch_to_special_all_non_zeros(std::vector<bn128_G1> &vec)
+pub fn batch_to_special_all_non_zeros(Vec<bn128_G1> &vec)
 {
-    std::vector<bn::Fp> Z_vec;
+    Vec<bn::Fp> Z_vec;
     Z_vec.reserve(vec.len());
 
     for el in &vec
@@ -621,7 +621,7 @@ void bn128_G1::batch_to_special_all_non_zeros(std::vector<bn128_G1> &vec)
     }
     bn_batch_invert<bn::Fp>(Z_vec);
 
-    const bn::Fp one = 1;
+    1:bn::Fp one =,
 
     for i in 0..vec.len()
     {

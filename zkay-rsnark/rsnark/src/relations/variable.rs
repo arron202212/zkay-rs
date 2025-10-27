@@ -18,14 +18,14 @@
 // use  <cstddef>
 // use  <map>
 // use  <string>
-// use  <vector>
+// 
 
 
 
 /**
  * Mnemonic typedefs.
  */
-type var_index_t=size_t ;
+type var_index_t=usize ;
 type integer_coeff_t=long ;
 
 // /**
@@ -49,7 +49,7 @@ type integer_coeff_t=long ;
 pub struct variable<FieldT> {
      index:var_index_t,
 }
-//     variable(index(index:var_index_t index = 0) :) {};
+//     variable(index(index:var_index_t index = 0)->Self) {};
 
 //     linear_term<FieldT> operator*(int_coeff:integer_coeff_t) const;
 //     linear_term<FieldT> operator*(&field_coeff:FieldT) const;
@@ -134,7 +134,7 @@ pub struct linear_term<FieldT> {
  */
 // 
 pub struct linear_combination<FieldT> {
-    terms:std::vector<linear_term<FieldT> > ,
+    terms:Vec<linear_term<FieldT> > ,
 }
 
 //     linear_combination() {};
@@ -142,19 +142,19 @@ pub struct linear_combination<FieldT> {
 //     linear_combination(&field_coeff:FieldT);
 //     linear_combination(&var:variable<FieldT>);
 //     linear_combination(&lt:linear_term<FieldT>);
-//     linear_combination(&all_terms:std::vector<linear_term<FieldT> >);
+//     linear_combination(&all_terms:Vec<linear_term<FieldT> >);
 
 //     /* for supporting range-based for loops over linear_combination */
-//     typename std::vector<linear_term<FieldT> >::const_iterator begin() const;
-//     typename std::vector<linear_term<FieldT> >::const_iterator end() const;
+//     Vec<linear_term<FieldT> >::const_iterator begin() const;
+//     Vec<linear_term<FieldT> >::const_iterator end() const;
 
-//     void add_term(&var:variable<FieldT>);
-//     void add_term(var:&variable<FieldT> int_coeff:integer_coeff_t);
-//     void add_term(var:&variable<FieldT> &field_coeff:FieldT);
+//     pub fn  add_term(&var:variable<FieldT>);
+//     pub fn  add_term(var:&variable<FieldT> int_coeff:integer_coeff_t);
+//     pub fn  add_term(var:&variable<FieldT> &field_coeff:FieldT);
 
-//     void add_term(&lt:linear_term<FieldT>);
+//     pub fn  add_term(&lt:linear_term<FieldT>);
 
-//     FieldT evaluate(&assignment:std::vector<FieldT>) const;
+//     FieldT evaluate(&assignment:Vec<FieldT>) const;
 
 //     linear_combination<FieldT> operator*(int_coeff:integer_coeff_t) const;
 //     linear_combination<FieldT> operator*(&field_coeff:FieldT) const;
@@ -166,10 +166,10 @@ pub struct linear_combination<FieldT> {
 
 //     bool operator==(&other:linear_combination<FieldT>) const;
 
-//     bool is_valid(num_variables:size_t) const;
+//     bool is_valid(num_variables:usize) const;
 
-//     void print(variable_annotations = std::map<size_t:&std::map<size_t, std::string> std::string>()) const;
-//     void print_with_assignment(variable_annotations = std::map<size_t:&std::vector<FieldT> &full_assignment, std::string>():std::map<size_t, std::string>) const;
+//     pub fn  print(variable_annotations = BTreeMap<usize:&BTreeMap<usize, String> String>()) const;
+//     pub fn  print_with_assignment(variable_annotations = BTreeMap<usize:&Vec<FieldT> &full_assignment, String>():BTreeMap<usize, String>) const;
 
 //     friend std::ostream& operator<< <FieldT>(std::ostream &out, &lc:linear_combination<FieldT>);
 //     friend std::istream& operator>> <FieldT>(std::istream &in, linear_combination<FieldT> &lc);
@@ -439,13 +439,13 @@ pub fn new4(lt:&linear_term<FieldT>)
 }
 
 
-// typename std::vector<linear_term<FieldT> >::const_iterator linear_combination<FieldT>::begin() const
+// Vec<linear_term<FieldT> >::const_iterator linear_combination<FieldT>::begin() const
 // {
 //     return terms.begin();
 // }
 
 
-// typename std::vector<linear_term<FieldT> >::const_iterator linear_combination<FieldT>::end() const
+// Vec<linear_term<FieldT> >::const_iterator linear_combination<FieldT>::end() const
 // {
 //     return terms.end();
 // }
@@ -481,7 +481,7 @@ pub fn add_term4(other:linear_term<FieldT>)
 // }
 
 
- pub fn evaluate(assignment:std::vector<FieldT>) ->FieldT
+ pub fn evaluate(assignment:Vec<FieldT>) ->FieldT
 {
     let mut  acc = FieldT::zero();
     for lt in &terms
@@ -493,7 +493,7 @@ pub fn add_term4(other:linear_term<FieldT>)
 }
 
 
- pub fn is_valid(num_variables:size_t) ->bool
+ pub fn is_valid(num_variables:usize) ->bool
 {
     /* check that all terms in linear combination are sorted */
     for i in 1..terms.len()
@@ -510,7 +510,7 @@ pub fn add_term4(other:linear_term<FieldT>)
 }
 
 
-pub fn print(&variable_annotations:std::map<size_t, std::string>) 
+pub fn print(&variable_annotations:BTreeMap<usize, String>) 
 {
     for lt in &terms
     {
@@ -528,7 +528,7 @@ pub fn print(&variable_annotations:std::map<size_t, std::string>)
 }
 
 
-pub fn print_with_assignment(full_assignment:&std::vector<FieldT>,variable_annotations:&std::map<size_t, std::string>) 
+pub fn print_with_assignment(full_assignment:&Vec<FieldT>,variable_annotations:&BTreeMap<usize, String>) 
 {
     for lt in &terms
     {
@@ -583,7 +583,7 @@ lc.terms.iter().map(|lt| format!("{}\n{}{OUTPUT_NEWLINE}",lt.index,lt.coeff)).co
 // {
 //     lc.terms.clear();
 
-//     size_t s;
+//     usize s;
 //     in >> s;
 
 //     ffec::consume_newline(in);
@@ -640,7 +640,7 @@ lc.terms.iter().map(|lt| format!("{}\n{}{OUTPUT_NEWLINE}",lt.index,lt.coeff)).co
 // }
 impl linear_combination<FieldT>{
 
-pub fn new(all_terms:&std::vector<linear_term<FieldT> >)
+pub fn new(all_terms:&Vec<linear_term<FieldT> >)
 {
     if all_terms.empty()
     {

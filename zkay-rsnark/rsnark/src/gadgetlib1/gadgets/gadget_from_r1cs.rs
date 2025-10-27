@@ -12,35 +12,27 @@
 //#ifndef GADGET_FROM_R1CS_HPP_
 // #define GADGET_FROM_R1CS_HPP_
 
-use  <map>
+// use  <map>
 
 use crate::gadgetlib1::gadget;
 
 
 
-template<typename FieldT>
-class gadget_from_r1cs : public gadget<FieldT> {
 
-private:
-    const std::vector<pb_variable_array<FieldT> > vars;
-    const r1cs_constraint_system<FieldT> cs;
-    std::map<size_t, size_t> cs_to_vars;
+pub struct gadget_from_r1cs<FieldT> {//gadget<FieldT>
 
 
-
-    gadget_from_r1cs(protoboard<FieldT> &pb,
-                     const std::vector<pb_variable_array<FieldT> > &vars,
-                     const r1cs_constraint_system<FieldT> &cs,
-                     const std::string &annotation_prefix);
-
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness(const r1cs_primary_input<FieldT> &primary_input,
-                               const r1cs_auxiliary_input<FieldT> &auxiliary_input);
-};
+    vars:Vec<pb_variable_array<FieldT> >,
+    cs:r1cs_constraint_system<FieldT>,
+cs_to_vars:    BTreeMap<usize, usize>,
 
 
 
-use crate::gadgetlib1::gadgets::gadget_from_r1cs;
+}
+
+
+
+// use crate::gadgetlib1::gadgets::gadget_from_r1cs;
 
 //#endif // GADGET_FROM_R1CS_HPP_
 /** @file
@@ -60,19 +52,17 @@ use crate::gadgetlib1::gadgets::gadget_from_r1cs;
 // #define GADGET_FROM_R1CS_TCC_
 
 
+impl gadget_from_r1cs<FieldT>{
 
-template<typename FieldT>
-gadget_from_r1cs<FieldT>::gadget_from_r1cs(protoboard<FieldT> &pb,
-                                           const std::vector<pb_variable_array<FieldT> > &vars,
-                                           const r1cs_constraint_system<FieldT> &cs,
-                                           const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    vars(vars),
-    cs(cs)
+pub fn new(pb:protoboard<FieldT>,
+                                           vars:&Vec<pb_variable_array<FieldT> >,
+                                           cs:&r1cs_constraint_system<FieldT>,
+                                           annotation_prefix:&String)->Self
+    
 {
     cs_to_vars[0] = 0; /* constant term maps to constant term */
 
-    size_t cs_var_idx = 1;
+    let mut  cs_var_idx = 1;
     for va in &vars
     {
 // #ifdef DEBUG
@@ -86,12 +76,12 @@ gadget_from_r1cs<FieldT>::gadget_from_r1cs(protoboard<FieldT> &pb,
             if v.index != 0
             {
                 // handle annotations, except for re-annotating constant term
-                const std::map<size_t, std::string>::const_iterator it = cs.variable_annotations.find(cs_var_idx);
+                let  it = cs.variable_annotations.find(cs_var_idx);
 
-                std::string annotation = FMT(annotation_prefix, " variable_{}", cs_var_idx);
+                let  annotation = FMT(annotation_prefix, " variable_{}", cs_var_idx);
                 if it != cs.variable_annotations.end()
                 {
-                    annotation = annotation_prefix + " " + it->second;
+                    annotation = annotation_prefix + " " + it.1;
                 }
 
                 pb.augment_variable_annotation(v, annotation);
@@ -107,62 +97,65 @@ gadget_from_r1cs<FieldT>::gadget_from_r1cs(protoboard<FieldT> &pb,
 //#endif
 
     assert!(cs_var_idx - 1 == cs.num_variables());
+    // gadget<FieldT>(pb, annotation_prefix),
+   Self{vars,
+    cs}
 }
 
-template<typename FieldT>
-void gadget_from_r1cs<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     for i in 0..cs.num_constraints()
     {
-        const r1cs_constraint<FieldT> &constr = cs.constraints[i];
-        r1cs_constraint<FieldT> translated_constr;
+       let  constr = &cs.constraints[i];
+        let mut translated_constr=r1cs_constraint::<FieldT> ::new();
 
         for t in &constr.a.terms
         {
-            translated_constr.a.terms.push(linear_term<FieldT>(pb_variable<FieldT>(cs_to_vars[t.index]), t.coeff));
+            translated_constr.a.terms.push(linear_term::<FieldT>(pb_variable::<FieldT>(cs_to_vars[t.index]), t.coeff));
         }
 
         for t in &constr.b.terms
         {
-            translated_constr.b.terms.push(linear_term<FieldT>(pb_variable<FieldT>(cs_to_vars[t.index]), t.coeff));
+            translated_constr.b.terms.push(linear_term::<FieldT>(pb_variable::<FieldT>(cs_to_vars[t.index]), t.coeff));
         }
 
         for t in &constr.c.terms
         {
-            translated_constr.c.terms.push(linear_term<FieldT>(pb_variable<FieldT>(cs_to_vars[t.index]), t.coeff));
+            translated_constr.c.terms.push(linear_term::<FieldT>(pb_variable::<FieldT>(cs_to_vars[t.index]), t.coeff));
         }
 
-        std::string annotation = FMT(self.annotation_prefix, " constraint_{}", i);
+        let  annotation = FMT(self.annotation_prefix, " constraint_{}", i);
 
 // #ifdef DEBUG
-        auto it = cs.constraint_annotations.find(i);
+        let  it = cs.constraint_annotations.find(i);
         if it != cs.constraint_annotations.end()
         {
-            annotation = self.annotation_prefix + " " + it->second;
+            annotation = self.annotation_prefix + " " + it.1;
         }
 //#endif
         self.pb.add_r1cs_constraint(translated_constr, annotation);
     }
 }
 
-template<typename FieldT>
-void gadget_from_r1cs<FieldT>::generate_r1cs_witness(const r1cs_primary_input<FieldT> &primary_input,
-                                                     const r1cs_auxiliary_input<FieldT> &auxiliary_input)
+
+pub fn generate_r1cs_witness(primary_input:&r1cs_primary_input<FieldT>,
+                                                     auxiliary_input:&r1cs_auxiliary_input<FieldT>)
 {
     assert!(cs.num_inputs() == primary_input.len());
     assert!(cs.num_variables() == primary_input.len() + auxiliary_input.len());
 
     for i in 0..primary_input.len()
     {
-        self.pb.val(pb_variable<FieldT>(cs_to_vars[i+1])) = primary_input[i];
+        self.pb.val(pb_variable::<FieldT>(cs_to_vars[i+1])) = primary_input[i];
     }
 
     for i in 0..auxiliary_input.len()
     {
-        self.pb.val(pb_variable<FieldT>(cs_to_vars[primary_input.len()+i+1])) = auxiliary_input[i];
+        self.pb.val(pb_variable::<FieldT>(cs_to_vars[primary_input.len()+i+1])) = auxiliary_input[i];
     }
 }
 
-
+}
 
 //#endif // GADGET_FROM_R1CS_TCC_

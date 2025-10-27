@@ -26,7 +26,7 @@ process,
 // use  <sstream>
 // use  <fstream>
 // use  <list>
-// use  <vector>
+// 
 // use  <set>
 // use  <map>
 // use  <ctime>
@@ -49,7 +49,7 @@ use std::collections::HashMap;
 type Wire=u32;
 
 type FieldT=ffec::Fr<ffec::default_ec_pp> ;
-// type ::std::shared_ptr<LinearCombination> LinearCombinationPtr;
+// type LinearCombinationPtr=::RcCell<LinearCombination>;
 type WireMap=HashMap<Wire, u32> ;
 
 const  ADD_OPCODE:u32=1;
@@ -68,10 +68,10 @@ pub struct CircuitReader {
 
 // 	int getNumInputs() { return numInputs;}
 // 	int getNumOutputs() { return numOutputs;}
-// 	std::vector<Wire> getInputWireIds() const { return inputWireIds; }
-// 	std::vector<Wire> getOutputWireIds() const { return outputWireIds; }
+// 	Vec<Wire> getInputWireIds() inputWireIds:{ return, }
+// 	Vec<Wire> getOutputWireIds() outputWireIds:{ return, }
 
-// private:
+// 
 pb:ProtoboardPtr,
 
 variables:	Vec<VariablePtr>,
@@ -98,27 +98,27 @@ numNizkInputs:u32,
 currentLinearCombinationIdx:	u32 ,
 currentVariableIdx:u32,
 
-	// void parseAndEval(arithFilepath:&str, inputsFilepath:&str);
-	// void constructCircuit(const char*);  // Second Pass:
-	// void mapValuesToProtoboard();
+	// pub fn  parseAndEval(arithFilepath:&str, inputsFilepath:&str);
+	// pub fn  constructCircuit(const char*);  // Second Pass:
+	// pub fn  mapValuesToProtoboard();
 
-	// void find(unsigned int, LinearCombinationPtr&, bool intentionToEdit = false);
-	// void clean();
+	// pub fn  find(unsigned int, LinearCombinationPtr&, bool intentionToEdit = false);
+	// pub fn  clean();
 
-	// void addMulConstraint(char*, char*);
-	// void addXorConstraint(char*, char*);
+	// pub fn  addMulConstraint(char*, char*);
+	// pub fn  addXorConstraint(char*, char*);
 
-	// void addOrConstraint(char*, char*);
-	// void addAssertionConstraint(char*, char*);
+	// pub fn  addOrConstraint(char*, char*);
+	// pub fn  addAssertionConstraint(char*, char*);
 
-	// void addSplitConstraint(char*, char*, unsigned short);
-	// // void addPackConstraint(char*, char*, unsigned short);
-	// void addNonzeroCheckConstraint(char*, char*);
+	// pub fn  addSplitConstraint(char*, char*, unsigned short);
+	// // pub fn  addPackConstraint(char*, char*, unsigned short);
+	// pub fn  addNonzeroCheckConstraint(char*, char*);
 
-	// void handleAddition(char*, char*);
-	// void handlePackOperation(char*, char*, unsigned short);
-	// void handleMulConst(char*, char*, char*);
-	// void handleMulNegConst(char*, char*, char*);
+	// pub fn  handleAddition(char*, char*);
+	// pub fn  handlePackOperation(char*, char*, unsigned short);
+	// pub fn  handleMulConst(char*, char*, char*);
+	// pub fn  handleMulNegConst(char*, char*, char*);
 
 }
 
@@ -224,8 +224,8 @@ pub fn parseAndEval(&mut self,arithFilepath:&str, inputsFilepath:&str) {
 	let zeroElement = FieldT::zero();
 	let negOneElement = FieldT(-1);
 
-	// long long evalTime;
-	// long long begin, end;
+	// i64 evalTime;
+	// i64 begin, end;
 	// evalTime = 0;
 
 	// Parse the circuit: few lines were imported from Pinocchio's code.
@@ -411,7 +411,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 	for line in ifs2 {
 		lineCount+=1;
 //		if lineCount % 100000 == 0 {
-//			println!("At Line:: %d\n", lineCount);
+//			println!("At Line:: {}\n", lineCount);
 //		}
 
 		if line.is_empty() {
@@ -421,7 +421,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 
 		if let Ok((types,
 						numGateInputs, inputStr, numGateOutputs, outputStr))
-				= scan_fmt!(line.c_str(), "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",String,i32,String,i32,String ) {
+				= scan_fmt!(line, "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",String,i32,String,i32,String ) {
             match types{
 			 "add"=> {
 				assert!(numGateOutputs == 1);
@@ -472,7 +472,7 @@ pub fn constructCircuit(arithFilepath:&str) {
 	
 	// //#ifndef NO_PROCPS
 	// look_up_our_self(&usage2);
-	// unsigned long diff = usage2.vsize - usage1.vsize;
+	// u64 diff = usage2.vsize - usage1.vsize;
 	// println!("\tMemory usage for constraint translation: %lu MB\n", diff >> 20);
     //     //#endif
         

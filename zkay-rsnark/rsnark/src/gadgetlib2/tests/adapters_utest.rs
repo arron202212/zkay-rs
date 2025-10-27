@@ -17,22 +17,22 @@ namespace {
 
 TEST(GadgetLibAdapter, LinearTerm) {
     initPublicParamsFromDefaultPp();
-    const GadgetLibAdapter adapter;
+    adapter:GadgetLibAdapter,
     adapter.resetVariableIndex();
     const Variable x("x");
-    const LinearTerm lt = 5 * x;
-    const auto new_lt = adapter.convert(lt);
+    let lt= 5 * x;
+    let new_lt= adapter.convert(lt);
     EXPECT_EQ(new_lt.first, 0u);
     EXPECT_EQ(new_lt.second, Fp(5));
 }
 
 TEST(GadgetLibAdapter, LinearCombination) {
     initPublicParamsFromDefaultPp();
-    const GadgetLibAdapter adapter;
+    adapter:GadgetLibAdapter,
     const Variable x("x");
     const Variable y("y");
-    const LinearCombination lc = 5*x + 3*y + 42;
-    const auto new_lc = adapter.convert(lc);
+    let lc= 5*x + 3*y + 42;
+    let new_lc= adapter.convert(lc);
     EXPECT_EQ(new_lc.second, Fp(42));
     EXPECT_EQ(new_lc.first.len(), 2u);
     EXPECT_EQ(new_lc.first[0], adapter.convert(5 * x));
@@ -42,11 +42,11 @@ TEST(GadgetLibAdapter, LinearCombination) {
 TEST(GadgetLibAdapter, Constraint) {
     using ::std::get;
     initPublicParamsFromDefaultPp();
-    const GadgetLibAdapter adapter;
+    adapter:GadgetLibAdapter,
     const Variable x("x");
     const Variable y("y");
-    const Rank1Constraint constraint(x + y, 5 * x, 0, "(x + y) * (5 * x) == 0");
-    const auto new_constraint = adapter.convert(constraint);
+    y:Rank1Constraint constraint(x +, 5 * x, 0, "(x + y) * (5 * x) == 0");
+    let new_constraint= adapter.convert(constraint);
     EXPECT_EQ(get<0>(new_constraint), adapter.convert(x + y));
     EXPECT_EQ(get<1>(new_constraint), adapter.convert(5 * x + 0));
     EXPECT_EQ(get<2>(new_constraint), adapter.convert(LinearCombination(0)));
@@ -54,15 +54,15 @@ TEST(GadgetLibAdapter, Constraint) {
 
 TEST(GadgetLibAdapter, ConstraintSystem) {
     initPublicParamsFromDefaultPp();
-    const GadgetLibAdapter adapter;
+    adapter:GadgetLibAdapter,
     const Variable x("x");
     const Variable y("y");
-    const Rank1Constraint constraint0(x + y, 5 * x, 0, "(x + y) * (5*x) == 0");
-    const Rank1Constraint constraint1(x, y, 3, "x * y == 3");
+    y:Rank1Constraint constraint0(x +, 5 * x, 0, "(x + y) * (5*x) == 0");
+    y:Rank1Constraint constraint1(x,, 3, "x * y == 3");
     ConstraintSystem system;
     system.addConstraint(constraint0);
     system.addConstraint(constraint1);
-    const auto new_constraint_sys = adapter.convert(system);
+    let new_constraint_sys= adapter.convert(system);
     EXPECT_EQ(new_constraint_sys.len(), 2u);
     EXPECT_EQ(new_constraint_sys.at(0), adapter.convert(constraint0));
     EXPECT_EQ(new_constraint_sys.at(1), adapter.convert(constraint1));
@@ -70,24 +70,24 @@ TEST(GadgetLibAdapter, ConstraintSystem) {
 
 TEST(GadgetLibAdapter, VariableAssignment) {
     initPublicParamsFromDefaultPp();
-    const GadgetLibAdapter adapter;
+    adapter:GadgetLibAdapter,
     adapter.resetVariableIndex();
     const VariableArray varArray(10, "x");
     VariableAssignment assignment;
     for i in 0..varArray.len() {
         assignment[varArray[i]] = i;
     }
-    const auto new_assignment = adapter.convert(assignment);
+    let new_assignment= adapter.convert(assignment);
     ASSERT_EQ(assignment.len(), new_assignment.len());
     for i in 0..new_assignment.len() {
-        const GadgetLibAdapter::variable_index_t var = i;
+        i:GadgetLibAdapter::variable_index_t var =,
         EXPECT_EQ(new_assignment.at(var), Fp(i));
     }
 }
 
 TEST(GadgetLibAdapter, Protoboard) {
     initPublicParamsFromDefaultPp();
-    const GadgetLibAdapter adapter;
+    adapter:GadgetLibAdapter,
     adapter.resetVariableIndex();
     const Variable x("x");
     const Variable y("y");
@@ -96,7 +96,7 @@ TEST(GadgetLibAdapter, Protoboard) {
     pb->addRank1Constraint(x, y, 3, "x * y == 3");
     pb->val(x) = 1;
     pb->val(y) = 2;
-    const auto new_pb = adapter.convert(*pb);
+    let new_pb= adapter.convert(*pb);
     EXPECT_EQ(new_pb.first, adapter.convert(pb->constraintSystem()));
     EXPECT_EQ(new_pb.second, adapter.convert(pb->assignment()));
 }

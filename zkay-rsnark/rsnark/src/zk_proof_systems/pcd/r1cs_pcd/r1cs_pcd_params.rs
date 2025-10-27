@@ -7,8 +7,8 @@
 //#ifndef R1CS_PCD_PARAMS_HPP_
 // #define R1CS_PCD_PARAMS_HPP_
 
-// use  <memory>
-// use  <vector>
+// 
+// 
 
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
 
@@ -17,23 +17,23 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
 
 pub struct  r1cs_pcd_compliance_predicate_primary_input<FieldT> {
 
-outgoing_message:    std::shared_ptr<r1cs_pcd_message<FieldT> >,
+outgoing_message:    RcCell<r1cs_pcd_message<FieldT> >,
 }
 impl r1cs_pcd_compliance_predicate_primary_input<FieldT> {
-    pub fn new(outgoing_message:&std::shared_ptr<r1cs_pcd_message<FieldT> >) ->Self {
+    pub fn new(outgoing_message:&RcCell<r1cs_pcd_message<FieldT> >) ->Self {
     Self{outgoing_message}}
 }
 
 
 pub struct  r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> {
 
-incoming_messages:    std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > >,
-local_data:    std::shared_ptr<r1cs_pcd_local_data<FieldT> >,
+incoming_messages:    Vec<RcCell<r1cs_pcd_message<FieldT> > >,
+local_data:    RcCell<r1cs_pcd_local_data<FieldT> >,
 witness:    r1cs_pcd_witness<FieldT>,
 }
 impl r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> {
-    pub fn new(incoming_messages:&std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > >,
-                                                  local_data:&std::shared_ptr<r1cs_pcd_local_data<FieldT> >,
+    pub fn new(incoming_messages:&Vec<RcCell<r1cs_pcd_message<FieldT> > >,
+                                                  local_data:&RcCell<r1cs_pcd_local_data<FieldT> >,
                                                   witness:&r1cs_pcd_witness<FieldT>) ->Self
         {
         Self{incoming_messages ,local_data, witness
@@ -65,7 +65,7 @@ pub fn as_r1cs_primary_input() ->r1cs_primary_input<FieldT>
 }
 impl r1cs_pcd_compliance_predicate_auxiliary_input<FieldT>{
 
-pub fn as_r1cs_auxiliary_input(incoming_message_payload_lengths:&std::vector<size_t>) ->r1cs_auxiliary_input<FieldT> 
+pub fn as_r1cs_auxiliary_input(incoming_message_payload_lengths:&Vec<usize>) ->r1cs_auxiliary_input<FieldT> 
 {
    let  arity = incoming_messages.len();
 

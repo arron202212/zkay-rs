@@ -3,7 +3,7 @@
 
  Declaration of interfaces for a compliance predicate handler.
 
- A compliance predicate handler is a base class for creating compliance predicates.
+ A compliance predicate handler is a base pub struct for creating compliance predicates.
  It relies on classes declared in gadgetlib1.
 
  *****************************************************************************
@@ -28,91 +28,59 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_pre
 /**
  * A variable to represent an r1cs_pcd_message.
  */
-template<typename FieldT>
-class r1cs_pcd_message_variable : public gadget<FieldT> {
-protected:
-    size_t num_vars_at_construction;
+// 
+pub struct r1cs_pcd_message_variable<FieldT> {
+//  : public gadget
+num_vars_at_construction:    usize,
 
 
-    pb_variable<FieldT> type;
+types:    pb_variable<FieldT>,
 
-    pb_variable_array<FieldT> all_vars;
+all_vars:    pb_variable_array<FieldT>,
 
-    r1cs_pcd_message_variable(protoboard<FieldT> &pb,
-                              const std::string &annotation_prefix);
-    void update_all_vars();
-
-    void generate_r1cs_witness(const std::shared_ptr<r1cs_pcd_message<FieldT> > &message);
-    virtual std::shared_ptr<r1cs_pcd_message<FieldT> > get_message() const = 0;
-
-    virtual ~r1cs_pcd_message_variable() = default;
-};
+   
+}
 /*************************** Local data variable *****************************/
 
 /**
  * A variable to represent an r1cs_pcd_local_data.
  */
-template<typename FieldT>
-class r1cs_pcd_local_data_variable : public gadget<FieldT> {
-protected:
-    size_t num_vars_at_construction;
+// 
+pub struct r1cs_pcd_local_data_variable<FieldT> {
+// : public gadget
+num_vars_at_construction:    usize,
 
 
-    pb_variable_array<FieldT> all_vars;
+all_vars:    pb_variable_array<FieldT>,
 
-    r1cs_pcd_local_data_variable(protoboard<FieldT> &pb,
-                                 const std::string &annotation_prefix);
-    void update_all_vars();
-
-    void generate_r1cs_witness(const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data);
-
-    virtual ~r1cs_pcd_local_data_variable() = default;
-};
+}
 
 /*********************** Compliance predicate handler ************************/
 
 /**
- * A base class for creating compliance predicates.
+ * A base pub struct for creating compliance predicates.
  */
-template<typename FieldT, typename protoboardT>
-class compliance_predicate_handler {
-protected:
-    protoboardT pb;
+// 
+pub struct compliance_predicate_handler< FieldT,  protoboardT> {
 
-    std::shared_ptr<r1cs_pcd_message_variable<FieldT> > outgoing_message;
-    pb_variable<FieldT> arity;
-    std::vector<std::shared_ptr<r1cs_pcd_message_variable<FieldT> > > incoming_messages;
-    std::shared_ptr<r1cs_pcd_local_data_variable<FieldT> > local_data;
+pb:    protoboardT,
 
-    const size_t name;
-    const size_t type;
-    const size_t max_arity;
-    const bool relies_on_same_type_inputs;
-    const std::set<size_t> accepted_input_types;
+outgoing_message:    RcCell<r1cs_pcd_message_variable<FieldT> >,
+arity:    pb_variable<FieldT>,
+incoming_messages:    Vec<RcCell<r1cs_pcd_message_variable<FieldT> > >,
+local_data:    RcCell<r1cs_pcd_local_data_variable<FieldT> >,
 
-    compliance_predicate_handler(const protoboardT &pb,
-                                 const size_t name,
-                                 const size_t type,
-                                 const size_t max_arity,
-                                 const bool relies_on_same_type_inputs,
-                                 const std::set<size_t> accepted_input_types = std::set<size_t>());
-    virtual void generate_r1cs_constraints() = 0;
-    virtual void generate_r1cs_witness(const std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > > &incoming_message_values,
-                                       const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data_value);
+name:     usize,
+types:     usize,
+max_arity:     usize,
+relies_on_same_type_inputs:     bool,
+accepted_input_types:     BTreeSet<usize>,
 
-    r1cs_pcd_compliance_predicate<FieldT> get_compliance_predicate() const;
-    r1cs_variable_assignment<FieldT> get_full_variable_assignment() const;
-
-    std::shared_ptr<r1cs_pcd_message<FieldT> > get_outgoing_message() const;
-    size_t get_arity() const;
-    std::shared_ptr<r1cs_pcd_message<FieldT> > get_incoming_message(const size_t message_idx) const;
-    std::shared_ptr<r1cs_pcd_local_data<FieldT> > get_local_data() const;
-    r1cs_variable_assignment<FieldT> get_witness() const;
-};
+}
 
 
 
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
+// use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
 
 //#endif // CP_HANDLER_HPP_
 /** @file
@@ -131,23 +99,24 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
 //#ifndef CP_HANDLER_TCC_
 // #define CP_HANDLER_TCC_
 
-use  <algorithm>
+// use  <algorithm>
 
 
+impl r1cs_pcd_message_variable<FieldT>{
 
-template<typename FieldT>
-r1cs_pcd_message_variable<FieldT>::r1cs_pcd_message_variable(protoboard<FieldT> &pb,
-                                                             const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix)
+pub fn new(pb:protoboard<FieldT> ,
+                                                             annotation_prefix:&String) ->Self
+    
 {
-    type.allocate(pb, FMT(annotation_prefix, " type"));
-    all_vars.push(type);
+    types.allocate(pb, FMT(annotation_prefix, " type"));
+    all_vars.push(types);
 
     num_vars_at_construction = pb.num_variables();
+    // gadget<FieldT>(pb, annotation_prefix)
 }
 
-template<typename FieldT>
-void r1cs_pcd_message_variable<FieldT>::update_all_vars()
+
+pub fn update_all_vars()
 {
     /* NOTE: this assumes that r1cs_pcd_message_variable has been the
      * only gadget allocating variables on the protoboard and needs to
@@ -155,97 +124,105 @@ void r1cs_pcd_message_variable<FieldT>::update_all_vars()
 
     for var_idx in num_vars_at_construction + 1..=self.pb.num_variables()
     {
-        all_vars.push(pb_variable<FieldT>(var_idx));
+        all_vars.push(pb_variable::<FieldT>(var_idx));
     }
 }
 
-template<typename FieldT>
-void r1cs_pcd_message_variable<FieldT>::generate_r1cs_witness(const std::shared_ptr<r1cs_pcd_message<FieldT> > &message)
+
+pub fn generate_r1cs_witness(message:&RcCell<r1cs_pcd_message<FieldT> >)
 {
-    all_vars.fill_with_field_elements(self.pb, message->as_r1cs_variable_assignment());
+    all_vars.fill_with_field_elements(self.pb, message.as_r1cs_variable_assignment());
+}
 }
 
-template<typename FieldT>
-r1cs_pcd_local_data_variable<FieldT>::r1cs_pcd_local_data_variable(protoboard<FieldT> &pb,
-                                                                   const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix)
+impl r1cs_pcd_local_data_variable<FieldT>{
+
+pub fn new(pb:protoboard<FieldT> ,
+                                                                   annotation_prefix:&String)->Self
+    
 {
     num_vars_at_construction = pb.num_variables();
+    // gadget<FieldT>(pb, annotation_prefix)
 }
 
-template<typename FieldT>
-void r1cs_pcd_local_data_variable<FieldT>::update_all_vars()
+
+pub fn update_all_vars()
 {
     /* (the same NOTE as for r1cs_message_variable applies) */
 
     for var_idx in num_vars_at_construction + 1..=self.pb.num_variables()
     {
-        all_vars.push(pb_variable<FieldT>(var_idx));
+        all_vars.push(pb_variable::<FieldT>(var_idx));
     }
 }
 
-template<typename FieldT>
-void r1cs_pcd_local_data_variable<FieldT>::generate_r1cs_witness(const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data)
-{
-    all_vars.fill_with_field_elements(self.pb, local_data->as_r1cs_variable_assignment());
-}
 
-template<typename FieldT, typename protoboardT>
-compliance_predicate_handler<FieldT, protoboardT>::compliance_predicate_handler(const protoboardT &pb,
-                                                                                const size_t name,
-                                                                                const size_t type,
-                                                                                const size_t max_arity,
-                                                                                const bool relies_on_same_type_inputs,
-                                                                                const std::set<size_t> accepted_input_types) :
-    pb(pb), name(name), type(type), max_arity(max_arity), relies_on_same_type_inputs(relies_on_same_type_inputs),
-    accepted_input_types(accepted_input_types)
+pub fn generate_r1cs_witness(local_data:&RcCell<r1cs_pcd_local_data<FieldT> >)
+{
+    all_vars.fill_with_field_elements(self.pb, local_data.as_r1cs_variable_assignment());
+}}
+
+
+impl compliance_predicate_handler<FieldT, protoboardT>{
+
+pub fn new(pb:&protoboardT,
+                                                                                name:usize,
+                                                                                types:usize,
+                                                                                max_arity:usize,
+                                                                                relies_on_same_type_inputs:bool,
+                                                                                accepted_input_types:BTreeSet<usize>) ->Self
+    
 {
     incoming_messages.resize(max_arity);
+    Self{
+    pb, name, types, max_arity, relies_on_same_type_inputs,
+    accepted_input_types
+    }
 }
 
-template<typename FieldT, typename protoboardT>
-void compliance_predicate_handler<FieldT, protoboardT>::generate_r1cs_witness(const std::vector<std::shared_ptr<r1cs_pcd_message<FieldT> > > &incoming_message_values,
-                                                                              const std::shared_ptr<r1cs_pcd_local_data<FieldT> > &local_data_value)
+
+pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_message<FieldT> > >,
+                                                                              local_data_value:&RcCell<r1cs_pcd_local_data<FieldT> >)
 {
     pb.clear_values();
-    pb.val(outgoing_message->type) = FieldT(type);
+    pb.val(outgoing_message.types) = FieldT(types);
     pb.val(arity) = FieldT(incoming_message_values.len());
 
     for i in 0..incoming_message_values.len()
     {
-        incoming_messages[i]->generate_r1cs_witness(incoming_message_values[i]);
+        incoming_messages[i].generate_r1cs_witness(incoming_message_values[i]);
     }
 
-    local_data->generate_r1cs_witness(local_data_value);
+    local_data.generate_r1cs_witness(local_data_value);
 }
 
 
-template<typename FieldT, typename protoboardT>
-r1cs_pcd_compliance_predicate<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_compliance_predicate() const
+
+pub fn get_compliance_predicate()->r1cs_pcd_compliance_predicate<FieldT>
 {
     assert!(incoming_messages.len() == max_arity);
 
-    const size_t outgoing_message_payload_length = outgoing_message->all_vars.len() - 1;
+    let  outgoing_message_payload_length = outgoing_message.all_vars.len() - 1;
 
-    std::vector<size_t> incoming_message_payload_lengths(max_arity);
+    let mut incoming_message_payload_lengths=vec![0;max_arity];
     std::transform(incoming_messages.begin(), incoming_messages.end(),
                    incoming_message_payload_lengths.begin(),
-                   [] (const std::shared_ptr<r1cs_pcd_message_variable<FieldT> > &msg) { return msg->all_vars.len() - 1; });
+                   |msg:&RcCell<r1cs_pcd_message_variable<FieldT> >| { return msg.all_vars.len() - 1; });
 
-    const size_t local_data_length = local_data->all_vars.len();
+    let local_data_length = local_data.all_vars.len();
 
-    const size_t all_but_witness_length = ((1 + outgoing_message_payload_length) + 1 +
+    let all_but_witness_length = ((1 + outgoing_message_payload_length) + 1 +
                                            (max_arity + std::accumulate(incoming_message_payload_lengths.begin(),
                                                                         incoming_message_payload_lengths.end(), 0)) +
                                            local_data_length);
-    const size_t witness_length = pb.num_variables() - all_but_witness_length;
+    let witness_length = pb.num_variables() - all_but_witness_length;
 
-    r1cs_constraint_system<FieldT> constraint_system = pb.get_constraint_system();
+    let mut  constraint_system = pb.get_constraint_system();
     constraint_system.primary_input_size = 1 + outgoing_message_payload_length;
     constraint_system.auxiliary_input_size = pb.num_variables() - constraint_system.primary_input_size;
 
-    return r1cs_pcd_compliance_predicate<FieldT>(name,
-                                                 type,
+    return r1cs_pcd_compliance_predicate::<FieldT>(name,
+                                                 types,
                                                  constraint_system,
                                                  outgoing_message_payload_length,
                                                  max_arity,
@@ -256,51 +233,51 @@ r1cs_pcd_compliance_predicate<FieldT> compliance_predicate_handler<FieldT, proto
                                                  accepted_input_types);
 }
 
-template<typename FieldT, typename protoboardT>
-r1cs_variable_assignment<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_full_variable_assignment() const
+
+pub fn get_full_variable_assignment()->r1cs_variable_assignment<FieldT>
 {
     return pb.full_variable_assignment();
 }
 
-template<typename FieldT, typename protoboardT>
-std::shared_ptr<r1cs_pcd_message<FieldT> > compliance_predicate_handler<FieldT, protoboardT>::get_outgoing_message() const
+
+pub fn get_outgoing_message()->RcCell<r1cs_pcd_message<FieldT>>
 {
-    return outgoing_message->get_message();
+    return outgoing_message.get_message();
 }
 
-template<typename FieldT, typename protoboardT>
-size_t compliance_predicate_handler<FieldT, protoboardT>::get_arity() const
+
+pub fn get_arity()->usize
 {
     return pb.val(arity).as_ulong();
 }
 
-template<typename FieldT, typename protoboardT>
-std::shared_ptr<r1cs_pcd_message<FieldT> > compliance_predicate_handler<FieldT, protoboardT>::get_incoming_message(const size_t message_idx) const
+
+pub fn get_incoming_message(message_idx:usize)->RcCell<r1cs_pcd_message<FieldT>>
 {
     assert!(message_idx < max_arity);
-    return incoming_messages[message_idx]->get_message();
+    return incoming_messages[message_idx].get_message();
 }
 
-template<typename FieldT, typename protoboardT>
-std::shared_ptr<r1cs_pcd_local_data<FieldT> > compliance_predicate_handler<FieldT, protoboardT>::get_local_data() const
+
+pub fn get_local_data()->RcCell<r1cs_pcd_local_data<FieldT>>
 {
-    return local_data->get_local_data();
+    return local_data.get_local_data();
 }
 
-template<typename FieldT, typename protoboardT>
-r1cs_pcd_witness<FieldT> compliance_predicate_handler<FieldT, protoboardT>::get_witness() const
+
+pub fn get_witness()->r1cs_pcd_witness<FieldT>
 {
-    const r1cs_variable_assignment<FieldT> va = pb.full_variable_assignment();
+    let va = pb.full_variable_assignment();
     // outgoing_message + arity + incoming_messages + local_data
-    const size_t witness_pos = (outgoing_message->all_vars.len() + 1 +
+    let witness_pos = (outgoing_message.all_vars.len() + 1 +
                                 std::accumulate(incoming_messages.begin(), incoming_messages.end(),
-                                                0, [](size_t acc, const std::shared_ptr<r1cs_pcd_message_variable<FieldT> > &msg) {
-                                                    return acc + msg->all_vars.len(); }) +
-                                local_data->all_vars.len());
+                                                0, | acc:usize, msg:&RcCell<r1cs_pcd_message_variable<FieldT> >| {
+                                                    return acc + msg.all_vars.len(); }) +
+                                local_data.all_vars.len());
 
-    return r1cs_variable_assignment<FieldT>(va.begin() + witness_pos, va.end());
+    return r1cs_variable_assignment::<FieldT>(va.begin() + witness_pos, va.end());
 }
 
-
+}
 
 //#endif // CP_HANDLER_TCC_

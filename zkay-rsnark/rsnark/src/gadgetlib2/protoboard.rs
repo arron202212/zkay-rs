@@ -24,65 +24,65 @@ use crate::gadgetlib2::variable;
 
 // namespace gadgetlib2 {
 
-// class ProtoboardParams; // Forward declaration
-// type ::std::shared_ptr<const ProtoboardParams> ParamsCPtr;
+// pub struct ProtoboardParams; // Forward declaration
+// type ParamsCPtr=::RcCell<const ProtoboardParams>;
 
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 // /*******************                                                            ******************/
-// /*******************                       class Protoboard                     ******************/
+// /*******************                       pub struct Protoboard                     ******************/
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 pub struct Protoboard {
-// protected:
+// 
     assignment_:VariableAssignment,
     constraintSystem_:ConstraintSystem,
-    numInputs_:size_t,
+    numInputs_:usize,
     pParams_:ParamsCPtr, 
 fieldType_:FieldType,
     // TODO try to refactor this out and use inheritance for different types
                          // of protoboards, for instance TinyRAMProtoboard : public Protoboard
                          // This may not be trivial because of Gadget multiple inheritance scheme
 }
-//     Protoboard(const FieldType& fieldType, ParamsCPtr pParams);
+//     Protoboard(fieldType:FieldType&, ParamsCPtr pParams);
 // 
 //    
-//     static ProtoboardPtr create(const FieldType& fieldType, ParamsCPtr pParams = NULL) {
+//     static ProtoboardPtr create(fieldType:FieldType&, ParamsCPtr pParams = NULL) {
 //         return ProtoboardPtr(new Protoboard(fieldType, pParams));
 //     }
-//     size_t numVars() const {return assignment_.len();} // TODO change to take num from constraintSys_
-//     //size_t numVars() const {return constraintSystem_.getUsedVariables().len();} // TODO change to take num from constraintSys_
+//     usize numVars() const {return assignment_.len();} // TODO change to take num from constraintSys_
+//     //usize numVars() const {return constraintSystem_.getUsedVariables().len();} // TODO change to take num from constraintSys_
 
-//     size_t numInputs() const {return numInputs_;} // TODO Madars How do we book keep this?
-//     ParamsCPtr params() const {return pParams_;}
+//     usize numInputs() numInputs_:{return,} // TODO Madars How do we book keep this?
+//     ParamsCPtr params() pParams_:{return,}
 //     FElem& val(var:&Variable);
 //     FElem val(lc:&LinearCombination) const;
-//     void setValuesAsBitArray(varArray:&VariableArray, srcValue:usize);
-//     void setDualWordValue(dualWord:&DualWord, srcValue:usize);
-//     void setMultipackedWordValue(multipackedWord:&MultiPackedWord, srcValue:usize);
+//     pub fn  setValuesAsBitArray(varArray:&VariableArray, srcValue:usize);
+//     pub fn  setDualWordValue(dualWord:&DualWord, srcValue:usize);
+//     pub fn  setMultipackedWordValue(multipackedWord:&MultiPackedWord, srcValue:usize);
 
 //     // The following 3 methods are purposely not overloaded to the same name in order to reduce
 //     // programmer error. We want the programmer to explicitly code what type of constraint
 //     // she wants.
-//     void addRank1Constraint(a:&LinearCombination,
+//     pub fn  addRank1Constraint(a:&LinearCombination,
 //                             b:&LinearCombination,
 //                             c:&LinearCombination,
 //                             name:&String);
-//     void addGeneralConstraint(a:&Polynomial,
+//     pub fn  addGeneralConstraint(a:&Polynomial,
 //                               b:&Polynomial,
 //                               name:&String);
 //     /// adds a constraint of the form (a == 0)
-//     void addUnaryConstraint(a:&LinearCombination, name:&String);
+//     pub fn  addUnaryConstraint(a:&LinearCombination, name:&String);
 //     bool isSatisfied(printOnFail:PrintOptions = PrintOptions::NO_DBG_PRINT);
-//     bool flagIsSet(flag:&FlagVariable) const {return val(flag) == 1;}
-//     void setFlag(flag:&FlagVariable, bool newFlagState = true);
-//     void clearFlag(flag:&FlagVariable) {val(flag) = 0;}
-//     void flipFlag(flag:&FlagVariable) {val(flag) = 1 - val(flag);}
-//     void enforceBooleanity(var:&Variable);
-//     ::std::string annotation() const;
-//     ConstraintSystem constraintSystem() const {return constraintSystem_;}
-//     VariableAssignment assignment() const {return assignment_;}
+//     bool flagIsSet(flag:&FlagVariable) 1:{return val(flag) ==,}
+//     pub fn  setFlag(flag:&FlagVariable, bool newFlagState = true);
+//     pub fn  clearFlag(flag:&FlagVariable) {val(flag) = 0;}
+//     pub fn  flipFlag(flag:&FlagVariable) {val(flag) = 1 - val(flag);}
+//     pub fn  enforceBooleanity(var:&Variable);
+//     ::String annotation() const;
+//     ConstraintSystem constraintSystem() constraintSystem_:{return,}
+//     VariableAssignment assignment() assignment_:{return,}
 //     bool dualWordAssignmentEqualsValue(
 //             dualWord:&DualWord,
 //             expectedValue:usize,
@@ -103,16 +103,16 @@ fieldType_:FieldType,
 /*************************************************************************************************/
 /*************************************************************************************************/
 /*******************                                                            ******************/
-/*******************                     class ProtoboardParams                 ******************/
+/*******************                     pub struct ProtoboardParams                 ******************/
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
 /*
-    An abstract class to hold any additional information needed by a specific Protoboard. For
-    example a Protoboard specific to TinyRAM will have a class ArchParams which will inherit from
+    An abstract pub struct to hold any additional information needed by a specific Protoboard. For
+    example a Protoboard specific to TinyRAM will have a pub struct ArchParams which will inherit from
     this class.
 */
-// class ProtoboardParams {
+// pub struct ProtoboardParams {
 // 
 //     virtual ~ProtoboardParams() = 0;
 // };
@@ -133,7 +133,7 @@ fieldType_:FieldType,
 
 // use crate::gadgetlib2::protoboard;
 
-// using ::std::string;
+// using ::String;
 // using ::std::cout;
 // using ::std::endl;
 
@@ -142,7 +142,7 @@ fieldType_:FieldType,
 /*************************************************************************************************/
 /*************************************************************************************************/
 /*******************                                                            ******************/
-/*******************                       class Protoboard                     ******************/
+/*******************                       pub struct Protoboard                     ******************/
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -230,9 +230,9 @@ pub fn  enforceBooleanity(var:&Variable) {
 // #   ifdef DEBUG
 //         string retVal = constraintSystem_.annotation();
 //         retVal += "Variable Assignments:\n";
-//         for(const auto& assignmentPair : assignment_) {
-//             const string varName = assignmentPair.first.name();
-//             const string varAssignedValue = assignmentPair.second.asString();
+//         for(assignmentPair:&auto : assignment_) {
+//             let varName= assignmentPair.first.name();
+//             let varAssignedValue= assignmentPair.second.asString();
 //             retVal +=  varName + ": " + varAssignedValue + "\n";
 //         }
 //         return retVal;

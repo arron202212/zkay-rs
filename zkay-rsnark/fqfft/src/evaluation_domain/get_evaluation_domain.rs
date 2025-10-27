@@ -22,8 +22,8 @@
 
 // //namespace libfqfft {
 
-// template<typename FieldT>
-// std::shared_ptr<evaluation_domain<FieldT> > get_evaluation_domain(const size_t min_size);
+// 
+// RcCell<evaluation_domain<FieldT> > get_evaluation_domain(min_size:usize);
 
 // //} // libfqfft
 

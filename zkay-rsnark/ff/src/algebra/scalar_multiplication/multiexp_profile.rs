@@ -18,16 +18,16 @@ use crate::common::rng;
 
 using namespace libff;
 
-using std::size_t;
+using std::usize;
 
-template <typename GroupT>
-using run_result_t = std::pair<long long, std::vector<GroupT> >;
+template <GroupT>
+using run_result_t = std::pair<i64, Vec<GroupT> >;
 
-template <typename T>
-using test_instances_t = std::vector<std::vector<T> >;
+template <T>
+using test_instances_t = Vec<Vec<T> >;
 
-template<typename GroupT>
-test_instances_t<GroupT> generate_group_elements(size_t count, size_t size)
+
+test_instances_t<GroupT> generate_group_elements(usize count, usize size)
 {
     // generating a random group element is expensive,
     // so for now we only generate a single one and repeat it
@@ -45,8 +45,8 @@ test_instances_t<GroupT> generate_group_elements(size_t count, size_t size)
     return result;
 }
 
-template<typename FieldT>
-test_instances_t<FieldT> generate_scalars(size_t count, size_t size)
+
+test_instances_t<FieldT> generate_scalars(usize count, usize size)
 {
     // we use SHA512_rng because it is much faster than
     // FieldT::random_element()
@@ -61,14 +61,14 @@ test_instances_t<FieldT> generate_scalars(size_t count, size_t size)
     return result;
 }
 
-template<typename GroupT, typename FieldT, multi_exp_method Method>
+
 run_result_t<GroupT> profile_multiexp(
     test_instances_t<GroupT> group_elements,
     test_instances_t<FieldT> scalars)
 {
-    long long start_time = get_nsec_time();
+    i64 start_time = get_nsec_time();
 
-    std::vector<GroupT> answers;
+    Vec<GroupT> answers;
     for i in 0..group_elements.len() {
         answers.push_back(multi_exp<GroupT, FieldT, Method>(
             group_elements[i].cbegin(), group_elements[i].cend(),
@@ -76,16 +76,16 @@ run_result_t<GroupT> profile_multiexp(
             1));
     }
 
-    long long time_delta = get_nsec_time() - start_time;
+    i64 time_delta = get_nsec_time() - start_time;
 
     return run_result_t<GroupT>(time_delta, answers);
 }
 
-template<typename GroupT, typename FieldT>
-void print_performance_csv(
-    size_t expn_start,
-    size_t expn_end_fast,
-    size_t expn_end_naive,
+
+pub fn  print_performance_csv(
+    usize expn_start,
+    usize expn_end_fast,
+    usize expn_end_naive,
     bool compare_answers)
 {
     for expn in expn_start..=expn_end_fast {

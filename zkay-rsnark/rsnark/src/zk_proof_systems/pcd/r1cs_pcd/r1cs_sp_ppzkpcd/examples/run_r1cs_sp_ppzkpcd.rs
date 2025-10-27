@@ -24,11 +24,11 @@
  * Optionally, also test the serialization routines for keys and proofs.
  * (This takes additional time.)
  */
-// template<typename PCD_ppT>
-// bool run_r1cs_sp_ppzkpcd_tally_example(const size_t wordsize,
-//                                        const size_t arity,
-//                                        const size_t depth,
-//                                        const bool test_serialization);
+// 
+// bool run_r1cs_sp_ppzkpcd_tally_example(wordsize:usize,
+//                                        arity:usize,
+//                                        depth:usize,
+//                                        test_serialization:bool);
 
 
 
@@ -52,20 +52,20 @@
 //#ifndef RUN_R1CS_SP_PPZKPCD_TCC_
 // #define RUN_R1CS_SP_PPZKPCD_TCC_
 
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::examples/tally_cp;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::examples::tally_cp;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
 
 
 
-// template<typename PCD_ppT>
- pub fn run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize:size_t,
-                                       arity:size_t,
-                                       depth:size_t,
+// 
+ pub fn run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize:usize,
+                                       arity:usize,
+                                       depth:usize,
                                        test_serialization:bool)->bool
 {
     ffec::enter_block("Call to run_r1cs_sp_ppzkpcd_tally_example");
 
-    type FieldT=ffec::Fr<typename PCD_ppT::curve_A_pp> ;
+    type FieldT=ffec::Fr< PCD_ppT::curve_A_pp> ;
 
     let mut  all_accept = true;
 
@@ -166,13 +166,13 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
             for i in 0..arity
             {
                 print!("Message {} was:\n", i);
-                msgs[i]->print();
+                msgs[i].print();
             }
             print!("Summand at this node:\n{}\n", tree_elems[cur_idx]);
             print!("Outgoing message is:\n");
-            tree_messages[cur_idx]->print();
+            tree_messages[cur_idx].print();
             print!("\n");
-            print!("Current node = {}. Current proof verifies = %s\n", cur_idx, if ans  {"YES" }else {"NO"});
+            print!("Current node = {}. Current proof verifies = {}\n", cur_idx, if ans  {"YES" }else {"NO"});
             print!("\n\n\n ================================================================================\n\n\n");
         }
         nodes_in_layer /= arity;

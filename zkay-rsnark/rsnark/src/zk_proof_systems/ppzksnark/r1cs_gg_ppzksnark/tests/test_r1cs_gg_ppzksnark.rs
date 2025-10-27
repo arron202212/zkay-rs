@@ -16,19 +16,19 @@ use ffec::common::utils;
 
 use crate::common::default_types::r1cs_gg_ppzksnark_pp;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
-use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples/run_r1cs_gg_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark;
 
 
 
-template<typename ppT>
-void test_r1cs_gg_ppzksnark(size_t num_constraints,
-                         size_t input_size)
+
+pub fn  test_r1cs_gg_ppzksnark(usize num_constraints,
+                         usize input_size)
 {
     ffec::print_header("(enter) Test R1CS GG-ppzkSNARK");
 
-    const bool test_serialization = true;
+    let mut test_serialization = true;
     r1cs_example<ffec::Fr<ppT> > example = generate_r1cs_example_with_binary_input<ffec::Fr<ppT> >(num_constraints, input_size);
-    const bool bit = run_r1cs_gg_ppzksnark<ppT>(example, test_serialization);
+    let mut bit = run_r1cs_gg_ppzksnark<ppT>(example, test_serialization);
     assert!(bit);
 
     ffec::print_header("(leave) Test R1CS GG-ppzkSNARK");

@@ -33,19 +33,19 @@ TEST(gadgetLib2,R1P_AND_Gadget_SimpleTest) {
     VariableArray x(3, "x");
     Variable y("y");
     auto andGadget = AND_Gadget::create(pb, x, y);
-    andGadget->generateConstraints();
+    andGadget.generateConstraints();
 
     pb->val(x[0]) = 0;
     pb->val(x[1]) = 1;
     pb->val(x[2]) = 1;
-    andGadget->generateWitness();
+    andGadget.generateWitness();
     EXPECT_TRUE(pb->val(y) == 0);
     EXPECT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     pb->val(y) = 1;
     EXPECT_FALSE(pb->isSatisfied());
 
     pb->val(x[0]) = 1;
-    andGadget->generateWitness();
+    andGadget.generateWitness();
     EXPECT_TRUE(pb->val(y) == 1);
     EXPECT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
 
@@ -53,34 +53,34 @@ TEST(gadgetLib2,R1P_AND_Gadget_SimpleTest) {
     EXPECT_FALSE(pb->isSatisfied());
 }
 
-class LogicGadgetExhaustiveTester {
-protected:
-    ProtoboardPtr pb;
-    const size_t numInputs;
-    const VariableArray inputs;
-    const Variable output;
-    GadgetPtr logicGadget;
-    size_t currentInputValues;
+pub struct LogicGadgetExhaustiveTester {
 
-    LogicGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
-    void setInputValsTo(const size_t val);
-    void runCompletenessCheck();
-    virtual void ruinOutputVal() = 0;
-    void runSoundnessCheck();
+    ProtoboardPtr pb;
+    numInputs:usize;
+    inputs:VariableArray,
+    output:Variable,
+    GadgetPtr logicGadget;
+    usize currentInputValues;
+
+    LogicGadgetExhaustiveTester(ProtoboardPtr pb, usize numInputs);
+    pub fn  setInputValsTo(val:usize);
+    pub fn  runCompletenessCheck();
+    virtual pub fn  ruinOutputVal() = 0;
+    pub fn  runSoundnessCheck();
 
     DISALLOW_COPY_AND_ASSIGN(LogicGadgetExhaustiveTester);
 
-    void runExhaustiveTest();
+    pub fn  runExhaustiveTest();
 };
 
-class AndGadgetExhaustiveTester : public LogicGadgetExhaustiveTester {
-   virtual void ruinOutputVal();
-     AndGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
+pub struct AndGadgetExhaustiveTester {//LogicGadgetExhaustiveTester
+   virtual pub fn  ruinOutputVal();
+     AndGadgetExhaustiveTester(ProtoboardPtr pb, usize numInputs);
 };
 
-class OrGadgetExhaustiveTester : public LogicGadgetExhaustiveTester {
-   virtual void ruinOutputVal();
-     OrGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs);
+pub struct OrGadgetExhaustiveTester {//LogicGadgetExhaustiveTester
+   virtual pub fn  ruinOutputVal();
+     OrGadgetExhaustiveTester(ProtoboardPtr pb, usize numInputs);
 };
 
 
@@ -100,9 +100,9 @@ TEST(gadgetLib2,BinaryAND_Gadget) {
     Variable input2("input2");
     Variable result("result");
     auto andGadget = AND_Gadget::create(pb, input1, input2, result);
-    andGadget->generateConstraints();
+    andGadget.generateConstraints();
     pb->val(input1) = pb->val(input2) = 0;
-    andGadget->generateWitness();
+    andGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(result), 0);
     pb->val(result) = 1;
@@ -112,7 +112,7 @@ TEST(gadgetLib2,BinaryAND_Gadget) {
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     pb->val(input2) = 1;
     ASSERT_FALSE(pb->isSatisfied());
-    andGadget->generateWitness();
+    andGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(result), 1);
 }
@@ -133,9 +133,9 @@ TEST(gadgetLib2,BinaryOR_Gadget) {
     Variable input2("input2");
     Variable result("result");
     auto orGadget = OR_Gadget::create(pb, input1, input2, result);
-    orGadget->generateConstraints();
+    orGadget.generateConstraints();
     pb->val(input1) = pb->val(input2) = 0;
-    orGadget->generateWitness();
+    orGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(result), 0);
     pb->val(result) = 1;
@@ -146,7 +146,7 @@ TEST(gadgetLib2,BinaryOR_Gadget) {
     pb->val(result) = 1;
     ASSERT_CONSTRAINTS_SATISFIED(pb);
     pb->val(input2) = 1;
-    orGadget->generateWitness();
+    orGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(result), 1);
 }
@@ -154,22 +154,22 @@ TEST(gadgetLib2,BinaryOR_Gadget) {
 // TODO refactor this test --Shaul
 TEST(gadgetLib2,R1P_InnerProductGadget_Exhaustive) {
     initPublicParamsFromDefaultPp();
-    const size_t n = EXHAUSTIVE_N;
+    let n = EXHAUSTIVE_N;
     auto pb = Protoboard::create(R1P);
     VariableArray A(n, "A");
     VariableArray B(n, "B");
     Variable result("result");
     auto g = InnerProduct_Gadget::create(pb, A, B, result);
-    g->generateConstraints();
+    g.generateConstraints();
     for i in 0..1u<<n {
         for j in 0..1u<<n {
-            size_t correct = 0;
+            usize correct = 0;
             for k in 0..n {
                 pb->val(A[k])=  if i & (1u<<k) {1} else{0};
                 pb->val(B[k])=  if j & (1u<<k) {1} else{0};
                 correct += if (i & (1u<<k)) && (j & (1u<<k)) {1} else {0};
             }
-            g->generateWitness();
+            g.generateWitness();
             EXPECT_EQ(pb->val(result) , FElem(correct));
             EXPECT_TRUE(pb->isSatisfied());
             // negative test
@@ -182,20 +182,20 @@ TEST(gadgetLib2,R1P_InnerProductGadget_Exhaustive) {
 // TODO refactor this test --Shaul
 TEST(gadgetLib2,R1P_LooseMUX_Gadget_Exhaustive) {
 initPublicParamsFromDefaultPp();
-const size_t n = EXHAUSTIVE_N;
+let n = EXHAUSTIVE_N;
     auto pb = Protoboard::create(R1P);
     VariableArray arr(1<<n, "arr");
     Variable index("index");
     Variable result("result");
     Variable success_flag("success_flag");
     auto g = LooseMUX_Gadget::create(pb, arr, index, result, success_flag);
-    g->generateConstraints();
+    g.generateConstraints();
     for i in 0..1u<<n {
         pb->val(arr[i]) = (19*i) % (1u<<n);
     }
     for idx in -1..=(1<<n) {
         pb->val(index) = idx;
-        g->generateWitness();
+        g.generateWitness();
         if 0 <= idx && idx <= (1<<n) - 1 {
             EXPECT_EQ(pb->val(result) , (19*idx) % (1u<<n));
             EXPECT_EQ(pb->val(success_flag) , 1);
@@ -213,8 +213,8 @@ const size_t n = EXHAUSTIVE_N;
 }
 
 // Forward declaration
-void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr packingPB,
-                                       const int n, VariableArray packed, VariableArray unpacked,
+pub fn  packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr packingPB,
+                                       n:int, VariableArray packed, VariableArray unpacked,
                                        GadgetPtr packingGadget, GadgetPtr unpackingGadget);
 
 // TODO refactor this test --Shaul
@@ -222,7 +222,7 @@ TEST(gadgetLib2,R1P_Packing_Gadgets) {
     initPublicParamsFromDefaultPp();
     auto unpackingPB = Protoboard::create(R1P);
     auto packingPB = Protoboard::create(R1P);
-    const int n = EXHAUSTIVE_N;
+    let n= EXHAUSTIVE_N;
     { // test CompressionPacking_Gadget
         SCOPED_TRACE("testing CompressionPacking_Gadget");
         VariableArray packed(1, "packed");
@@ -253,9 +253,9 @@ TEST(gadgetLib2,R1P_EqualsConst_Gadget) {
     Variable input("input");
     Variable result("result");
     auto gadget = EqualsConst_Gadget::create(pb, 0, input, result);
-    gadget->generateConstraints();
+    gadget.generateConstraints();
     pb->val(input) = 0;
-    gadget->generateWitness();
+    gadget.generateWitness();
     // Positive test for input == n
     EXPECT_EQ(pb->val(result), 1);
     EXPECT_TRUE(pb->isSatisfied());
@@ -264,7 +264,7 @@ TEST(gadgetLib2,R1P_EqualsConst_Gadget) {
     EXPECT_FALSE(pb->isSatisfied());
     // Positive test for input != n
     pb->val(input) = 1;
-    gadget->generateWitness();
+    gadget.generateWitness();
     EXPECT_EQ(pb->val(result), 0);
     EXPECT_TRUE(pb->isSatisfied());
     // Negative test
@@ -278,17 +278,17 @@ TEST(gadgetLib2,ConditionalFlag_Gadget) {
     FlagVariable flag;
     Variable condition("condition");
     auto cfGadget = ConditionalFlag_Gadget::create(pb, condition, flag);
-    cfGadget->generateConstraints();
+    cfGadget.generateConstraints();
     pb->val(condition) = 1;
-    cfGadget->generateWitness();
+    cfGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     pb->val(condition) = 42;
-    cfGadget->generateWitness();
+    cfGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(flag),1);
     pb->val(condition) = 0;
     ASSERT_FALSE(pb->isSatisfied());
-    cfGadget->generateWitness();
+    cfGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(flag),0);
     pb->val(flag) = 1;
@@ -300,36 +300,36 @@ TEST(gadgetLib2,LogicImplication_Gadget) {
     FlagVariable flag;
     Variable condition("condition");
     auto implyGadget = LogicImplication_Gadget::create(pb, condition, flag);
-    implyGadget->generateConstraints();
+    implyGadget.generateConstraints();
     pb->val(condition) = 1;
     pb->val(flag) = 0;
     ASSERT_FALSE(pb->isSatisfied());
-    implyGadget->generateWitness();
+    implyGadget.generateWitness();
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
     ASSERT_EQ(pb->val(flag), 1);
     pb->val(condition) = 0;
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
-    implyGadget->generateWitness();
+    implyGadget.generateWitness();
     ASSERT_EQ(pb->val(flag), 1);
     pb->val(flag) = 0;
     ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
 }
 
 // TODO refactor this test --Shaul
-void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr packingPB,
-                                       const int n, VariableArray packed, VariableArray unpacked,
+pub fn  packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr packingPB,
+                                       n:int, VariableArray packed, VariableArray unpacked,
                                        GadgetPtr packingGadget, GadgetPtr unpackingGadget) {
-    packingGadget->generateConstraints();
-    unpackingGadget->generateConstraints();
+    packingGadget.generateConstraints();
+    unpackingGadget.generateConstraints();
     for i in 0..1l<<n {
-        ::std::vector<int> bits(n);
+        ::Vec<int> bits(n);
         for j in 0..n {
             bits[j]=  if i & 1u<<j {1} else{0 };
             packingPB->val(unpacked[j]) = bits[j]; // set unpacked bits in the packing protoboard
         }
         unpackingPB->val(packed[0]) = i; // set the packed value in the unpacking protoboard
-        unpackingGadget->generateWitness();
-        packingGadget->generateWitness();
+        unpackingGadget.generateWitness();
+        packingGadget.generateWitness();
         ASSERT_TRUE(unpackingPB->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
         ASSERT_TRUE(packingPB->isSatisfied());
         ASSERT_EQ(packingPB->val(packed[0]), i); // check packed value is correct
@@ -357,52 +357,52 @@ void packing_Gadget_R1P_ExhaustiveTest(ProtoboardPtr unpackingPB, ProtoboardPtr 
 }
 
 
-void LogicGadgetExhaustiveTester::setInputValsTo(const size_t val) {
+pub fn setInputValsTo(val:usize) {
     for maskBit in 0..numInputs {
         pb->val(inputs[maskBit])=  if (val & (1u << maskBit)) {1} else{0};
     }
 }
 
-void LogicGadgetExhaustiveTester::runCompletenessCheck() {
+pub fn runCompletenessCheck() {
     SCOPED_TRACE(GADGETLIB2_FMT("Positive (completeness) test failed. curInput: %u", currentInputValues));
     EXPECT_TRUE(pb->isSatisfied());
 }
 
-void LogicGadgetExhaustiveTester::runSoundnessCheck() {
+pub fn runSoundnessCheck() {
     SCOPED_TRACE(pb->annotation());
     SCOPED_TRACE(GADGETLIB2_FMT("Negative (soundness) test failed. curInput: %u, Constraints "
         "are:", currentInputValues));
     EXPECT_FALSE(pb->isSatisfied());
 }
-LogicGadgetExhaustiveTester::LogicGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs)
-    : pb(pb), numInputs(numInputs), inputs(numInputs, "inputs"), output("output"),
+pub fn new(ProtoboardPtr pb, usize numInputs)
+    :pb,numInputs, inputs(numInputs, "inputs"), output("output"),
     currentInputValues(0) {}
 
-void LogicGadgetExhaustiveTester::runExhaustiveTest() {
-    logicGadget->generateConstraints();
+pub fn runExhaustiveTest() {
+    logicGadget.generateConstraints();
     for (currentInputValues = 0; currentInputValues < (1u << numInputs); ++currentInputValues) {
         setInputValsTo(currentInputValues);
-        logicGadget->generateWitness();
+        logicGadget.generateWitness();
         runCompletenessCheck();
         ruinOutputVal();
         runSoundnessCheck();
     }
 }
 
-void AndGadgetExhaustiveTester::ruinOutputVal() {
+pub fn ruinOutputVal() {
     pb->val(output)=  if (currentInputValues == ((1u << numInputs) - 1)) {0} else{1};
 }
 
-AndGadgetExhaustiveTester::AndGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs)
+pub fn new(ProtoboardPtr pb, usize numInputs)
     : LogicGadgetExhaustiveTester(pb, numInputs) {
     logicGadget = AND_Gadget::create(pb, inputs, output);
 }
 
-void OrGadgetExhaustiveTester::ruinOutputVal() {
+pub fn ruinOutputVal() {
     pb->val(output)=  if (currentInputValues == 0) {1} else{0};
 }
 
-OrGadgetExhaustiveTester::OrGadgetExhaustiveTester(ProtoboardPtr pb, size_t numInputs)
+pub fn new(ProtoboardPtr pb, usize numInputs)
     : LogicGadgetExhaustiveTester(pb, numInputs) {
     logicGadget = OR_Gadget::create(pb, inputs, output);
 }

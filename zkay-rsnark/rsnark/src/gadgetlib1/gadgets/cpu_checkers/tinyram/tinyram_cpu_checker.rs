@@ -25,39 +25,39 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable
 
 // 
 pub struct tinyram_cpu_checker<FieldT> {
-// private:: public tinyram_standard_gadget<FieldT> 
+// : public tinyram_standard_gadget<FieldT> 
 opcode:    pb_variable_array<FieldT>,
 arg2_is_imm:    pb_variable<FieldT>,
 desidx:    pb_variable_array<FieldT>,
 arg1idx:    pb_variable_array<FieldT>,
 arg2idx:    pb_variable_array<FieldT>,
 
-prev_registers:    std::vector<word_variable_gadget<FieldT> >,
-next_registers:    std::vector<word_variable_gadget<FieldT> >,
+prev_registers:    Vec<word_variable_gadget<FieldT> >,
+next_registers:    Vec<word_variable_gadget<FieldT> >,
 prev_flag:    pb_variable<FieldT>,
 next_flag:    pb_variable<FieldT>,
 prev_tape1_exhausted:    pb_variable<FieldT>,
 next_tape1_exhausted:    pb_variable<FieldT>,
 
-prev_pc_addr_as_word_variable:    std::shared_ptr<word_variable_gadget<FieldT> >,
-desval:    std::shared_ptr<word_variable_gadget<FieldT> >,
-arg1val:    std::shared_ptr<word_variable_gadget<FieldT> >,
-arg2val:    std::shared_ptr<word_variable_gadget<FieldT> >,
+prev_pc_addr_as_word_variable:    RcCell<word_variable_gadget<FieldT> >,
+desval:    RcCell<word_variable_gadget<FieldT> >,
+arg1val:    RcCell<word_variable_gadget<FieldT> >,
+arg2val:    RcCell<word_variable_gadget<FieldT> >,
 
-decode_arguments:    std::shared_ptr<argument_decoder_gadget<FieldT> >,
+decode_arguments:    RcCell<argument_decoder_gadget<FieldT> >,
 opcode_indicators:    pb_variable_array<FieldT>,
-ALU:    std::shared_ptr<ALU_gadget<FieldT> >,
+ALU:    RcCell<ALU_gadget<FieldT> >,
 
-ls_prev_val_as_doubleword_variable:    std::shared_ptr<doubleword_variable_gadget<FieldT> >,
-ls_next_val_as_doubleword_variable:    std::shared_ptr<doubleword_variable_gadget<FieldT> >,
-memory_subaddress:    std::shared_ptr<dual_variable_gadget<FieldT> >,
+ls_prev_val_as_doubleword_variable:    RcCell<doubleword_variable_gadget<FieldT> >,
+ls_next_val_as_doubleword_variable:    RcCell<doubleword_variable_gadget<FieldT> >,
+memory_subaddress:    RcCell<dual_variable_gadget<FieldT> >,
 memory_subcontents:    pb_variable<FieldT>,
 memory_access_is_word:    pb_linear_combination<FieldT>,
 memory_access_is_byte:    pb_linear_combination<FieldT>,
-check_memory:    std::shared_ptr<memory_masking_gadget<FieldT> >,
+check_memory:    RcCell<memory_masking_gadget<FieldT> >,
 
-next_pc_addr_as_word_variable:    std::shared_ptr<word_variable_gadget<FieldT> >,
-consistency_enforcer:    std::shared_ptr<consistency_enforcer_gadget<FieldT> >,
+next_pc_addr_as_word_variable:    RcCell<word_variable_gadget<FieldT> >,
+consistency_enforcer:    RcCell<consistency_enforcer_gadget<FieldT> >,
 
 instruction_results:    pb_variable_array<FieldT>,
 instruction_flags:    pb_variable_array<FieldT>,
@@ -84,14 +84,14 @@ next_has_accepted:    pb_variable<FieldT>,
     //                     pb_variable_array<FieldT> &next_state,
     //                     pb_variable_array<FieldT> &next_pc_addr,
     //                     pb_variable<FieldT> &next_has_accepted,
-    //                     const std::string &annotation_prefix);
+    //                     annotation_prefix:&String);
 
-    // void generate_r1cs_constraints();
-    // void generate_r1cs_witness() { assert!(0); }
-    // void generate_r1cs_witness_address();
-    // void generate_r1cs_witness_other(tinyram_input_tape_iterator &aux_it,
-    //                                  const tinyram_input_tape_iterator &aux_end);
-    // void dump() const;
+    // pub fn  generate_r1cs_constraints();
+    // pub fn  generate_r1cs_witness() { assert!(0); }
+    // pub fn  generate_r1cs_witness_address();
+    // pub fn  generate_r1cs_witness_other(tinyram_input_tape_iterator &aux_it,
+    //                                  aux_end:&tinyram_input_tape_iterator);
+    // pub fn  dump() const;
 }
 
 
@@ -131,7 +131,7 @@ ls_next_val:                                                 pb_variable_array<F
 next_state:                                                 pb_variable_array<FieldT>,
 next_pc_addr:                                                 pb_variable_array<FieldT>,
 next_has_accepted:                                                 pb_variable<FieldT>,
-annotation_prefix:                                                  std::string
+annotation_prefix:                                                  String
 ) ->Self
 
 {
@@ -494,7 +494,7 @@ pub fn dump()
 
     let opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
     print!("   {} r{}, r{}, {}{}\n",
-           tinyram_opcode_names[(opcode_val)].c_str(),
+           tinyram_opcode_names[(opcode_val)],
            desidx.get_field_element_from_bits(self.pb).as_ulong(),
            arg1idx.get_field_element_from_bits(self.pb).as_ulong(),
            if self.pb.val(arg2_is_imm) == FieldT::one() {""} else{"r"},

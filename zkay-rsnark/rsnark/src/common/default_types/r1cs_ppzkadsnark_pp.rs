@@ -22,13 +22,13 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::signature:
 	pub struct default_r1cs_ppzkadsnark_pp;
     //  {
 	// 
-	// 	type default_r1cs_ppzksnark_pp snark_pp;
-	// 	type ed25519_skT skT;
-	// 	type ed25519_vkT vkT;
-    // 	type ed25519_sigT sigT;
-    // 	type aesPrfKeyT prfKeyT;
+	// 	type snark_pp=default_r1cs_ppzksnark_pp;
+	// 	type skT=ed25519_skT;
+	// 	type vkT=ed25519_vkT;
+    // 	type sigT=ed25519_sigT;
+    // 	type prfKeyT=aesPrfKeyT;
 
-    // 	static void init_public_params();
+    // 	static pub fn  init_public_params();
 	// };
 
 // };  // libsnark
@@ -49,7 +49,7 @@ use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
 
 
-// void default_r1cs_ppzkadsnark_pp::init_public_params()
+// pub fn init_public_params()
 // {
 //     snark_pp::init_public_params();
 // }

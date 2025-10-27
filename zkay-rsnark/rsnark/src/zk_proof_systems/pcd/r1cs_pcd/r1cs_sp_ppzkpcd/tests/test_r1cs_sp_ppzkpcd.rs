@@ -9,24 +9,24 @@ use crate::zk_proof_systems::pcd::r1cs_sp_ppzkpcd::examples::run_r1cs_sp_ppzkpcd
 
 
 
-template<typename PCD_ppT>
-void test_tally(const size_t arity, const size_t max_layer)
+
+pub fn  test_tally(arity:usize, max_layer:usize)
 {
-    const size_t wordsize = 32;
-    const bool test_serialization = true;
-    const bool bit = run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize, arity, max_layer, test_serialization);
+    let wordsize = 32;
+    let mut test_serialization = true;
+    arity:bool bit = run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(wordsize,, max_layer, test_serialization);
     assert!(bit);
 }
 
-int main(void)
+pub fn main()->i32
 {
-    type default_r1cs_ppzkpcd_pp PCD_pp;
+    type PCD_pp=default_r1cs_ppzkpcd_pp;
 
     ffec::start_profiling();
     PCD_pp::init_public_params();
 
-    const size_t arity = 2;
-    const size_t max_layer = 2;
+    let arity = 2;
+    let max_layer = 2;
 
     test_tally<PCD_pp>(arity, max_layer);
 }

@@ -21,7 +21,7 @@ use  <cstdlib>
 use  <iostream>
 use  <map>
 use  <string>
-use  <vector>
+
 
 use crate::relations::variable;
 
@@ -38,7 +38,7 @@ use crate::relations::variable;
  *
  * A USCS constraint is used to construct a USCS constraint system (see below).
  */
-template<typename FieldT>
+
 using uscs_constraint = linear_combination<FieldT>;
 
 
@@ -48,26 +48,26 @@ using uscs_constraint = linear_combination<FieldT>;
  * A USCS variable assignment is a vector of <FieldT> elements that represents
  * a candidate solution to a USCS constraint system (see below).
  */
-template<typename FieldT>
-using uscs_primary_input = std::vector<FieldT>;
 
-template<typename FieldT>
-using uscs_auxiliary_input = std::vector<FieldT>;
+using uscs_primary_input = Vec<FieldT>;
 
-template<typename FieldT>
-using uscs_variable_assignment = std::vector<FieldT>;
+
+using uscs_auxiliary_input = Vec<FieldT>;
+
+
+using uscs_variable_assignment = Vec<FieldT>;
 
 
 
 /************************* USCS constraint system ****************************/
 
-template<typename FieldT>
-class uscs_constraint_system;
 
-template<typename FieldT>
-std::ostream& operator<<(std::ostream &out, const uscs_constraint_system<FieldT> &cs);
+pub struct uscs_constraint_system;
 
-template<typename FieldT>
+
+std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
+
+
 std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
 
 /**
@@ -82,38 +82,38 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
-template<typename FieldT>
-class uscs_constraint_system {
 
-    size_t primary_input_size;
-    size_t auxiliary_input_size;
+pub struct uscs_constraint_system {
 
-    std::vector<uscs_constraint<FieldT> > constraints;
+    usize primary_input_size;
+    usize auxiliary_input_size;
 
-    uscs_constraint_system() : primary_input_size(0), auxiliary_input_size(0) {};
+    Vec<uscs_constraint<FieldT> > constraints;
 
-    size_t num_inputs() const;
-    size_t num_variables() const;
-    size_t num_constraints() const;
+    uscs_constraint_system()->Self primary_input_size(0), auxiliary_input_size(0) {};
+
+    usize num_inputs() const;
+    usize num_variables() const;
+    usize num_constraints() const;
 
 // #ifdef DEBUG
-    std::map<size_t, std::string> constraint_annotations;
-    std::map<size_t, std::string> variable_annotations;
+    BTreeMap<usize, String> constraint_annotations;
+    BTreeMap<usize, String> variable_annotations;
 //#endif
 
     bool is_valid() const;
-    bool is_satisfied(const uscs_primary_input<FieldT> &primary_input,
-                      const uscs_auxiliary_input<FieldT> &auxiliary_input) const;
+    bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
+                      auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
 
-    void add_constraint(const uscs_constraint<FieldT> &constraint);
-    void add_constraint(const uscs_constraint<FieldT> &constraint, const std::string &annotation);
+    pub fn  add_constraint(constraint:&uscs_constraint<FieldT>);
+    pub fn  add_constraint(constraint:&uscs_constraint<FieldT>, annotation:&String);
 
-    bool operator==(const uscs_constraint_system<FieldT> &other) const;
+    bool operator==(other:&uscs_constraint_system<FieldT>) const;
 
-    friend std::ostream& operator<< <FieldT>(std::ostream &out, const uscs_constraint_system<FieldT> &cs);
+    friend std::ostream& operator<< <FieldT>(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
     friend std::istream& operator>> <FieldT>(std::istream &in, uscs_constraint_system<FieldT> &cs);
 
-    void report_linear_constraint_statistics() const;
+    pub fn  report_linear_constraint_statistics() const;
 };
 
 
@@ -151,27 +151,27 @@ use ffec::common::utils;
 
 
 
-template<typename FieldT>
-size_t uscs_constraint_system<FieldT>::num_inputs() const
+
+pub fn num_inputs()->usize
 {
     return primary_input_size;
 }
 
-template<typename FieldT>
-size_t uscs_constraint_system<FieldT>::num_variables() const
+
+pub fn num_variables()->usize
 {
     return primary_input_size + auxiliary_input_size;
 }
 
 
-template<typename FieldT>
-size_t uscs_constraint_system<FieldT>::num_constraints() const
+
+pub fn num_constraints()->usize
 {
     return constraints.len();
 }
 
-template<typename FieldT>
-bool uscs_constraint_system<FieldT>::is_valid() const
+
+pub fn is_valid()->bool
 {
     if self.num_inputs() > self.num_variables() return false;
 
@@ -186,18 +186,18 @@ bool uscs_constraint_system<FieldT>::is_valid() const
     return true;
 }
 
-template<typename FieldT>
-void dump_uscs_constraint(const uscs_constraint<FieldT> &constraint,
-                          const uscs_variable_assignment<FieldT> &full_variable_assignment,
-                          const std::map<size_t, std::string> &variable_annotations)
+
+pub fn  dump_uscs_constraint(constraint:&uscs_constraint<FieldT>,
+                          full_variable_assignment:&uscs_variable_assignment<FieldT>,
+                          variable_annotations:&BTreeMap<usize, String>)
 {
     print!("terms:\n");
     constraint.print_with_assignment(full_variable_assignment, variable_annotations);
 }
 
-template<typename FieldT>
-bool uscs_constraint_system<FieldT>::is_satisfied(const uscs_primary_input<FieldT> &primary_input,
-                                                  const uscs_auxiliary_input<FieldT> &auxiliary_input) const
+
+bool uscs_constraint_system<FieldT>::is_satisfied(primary_input:&uscs_primary_input<FieldT>,
+                                                  auxiliary_input:&uscs_auxiliary_input<FieldT>) const
 {
     assert!(primary_input.len() == num_inputs());
     assert!(primary_input.len() + auxiliary_input.len() == num_variables());
@@ -212,7 +212,7 @@ bool uscs_constraint_system<FieldT>::is_satisfied(const uscs_primary_input<Field
         {
 // #ifdef DEBUG
             auto it = constraint_annotations.find(c);
-            print!("constraint {} (%s) unsatisfied\n", c, ( if let Some(it) =constraint_annotations.find(c) {it.1.to_string()} else {"no annotation" }));
+            print!("constraint {} ({}) unsatisfied\n", c, ( if let Some(it) =constraint_annotations.find(c) {it.1.to_string()} else {"no annotation" }));
             print!("<a,(1,x)> = "); res.print();
             print!("constraint was:\n");
             dump_uscs_constraint(constraints[c], full_variable_assignment, variable_annotations);
@@ -224,33 +224,33 @@ bool uscs_constraint_system<FieldT>::is_satisfied(const uscs_primary_input<Field
     return true;
 }
 
-template<typename FieldT>
-void uscs_constraint_system<FieldT>::add_constraint(const uscs_constraint<FieldT> &c)
+
+pub fn add_constraint(c:&uscs_constraint<FieldT>)
 {
     constraints.push(c);
 }
 
-template<typename FieldT>
-void uscs_constraint_system<FieldT>::add_constraint(const uscs_constraint<FieldT> &c, const std::string &annotation)
+
+pub fn add_constraint(c:&uscs_constraint<FieldT>, annotation:&String)
 {
 // #ifdef DEBUG
     constraint_annotations[constraints.len()] = annotation;
 #else
-    ffec::UNUSED(annotation);
+    //ffec::UNUSED(annotation);
 //#endif
     constraints.push(c);
 }
 
-template<typename FieldT>
-bool uscs_constraint_system<FieldT>::operator==(const uscs_constraint_system<FieldT> &other) const
+
+bool uscs_constraint_system<FieldT>::operator==(other:&uscs_constraint_system<FieldT>) const
 {
     return (self.constraints == other.constraints &&
             self.primary_input_size == other.primary_input_size &&
             self.auxiliary_input_size == other.auxiliary_input_size);
 }
 
-template<typename FieldT>
-std::ostream& operator<<(std::ostream &out, const uscs_constraint_system<FieldT> &cs)
+
+std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>)
 {
     out << cs.primary_input_size << "\n";
     out << cs.auxiliary_input_size << "\n";
@@ -264,7 +264,7 @@ std::ostream& operator<<(std::ostream &out, const uscs_constraint_system<FieldT>
     return out;
 }
 
-template<typename FieldT>
+
 std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
 {
     in >> cs.primary_input_size;
@@ -272,7 +272,7 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
 
     cs.constraints.clear();
 
-    size_t s;
+    usize s;
     in >> s;
 
     char b;
@@ -290,8 +290,8 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
     return in;
 }
 
-template<typename FieldT>
-void uscs_constraint_system<FieldT>::report_linear_constraint_statistics() const
+
+pub fn report_linear_constraint_statistics() const
 {
 // #ifdef DEBUG
     for i in 0..constraints.len()
@@ -305,7 +305,7 @@ void uscs_constraint_system<FieldT>::report_linear_constraint_statistics() const
 
         if a_is_const
         {
-            print!("%s\n", (if let Some(it) = constraint_annotations.find(i){it.1.to_string()} else{FMT("", "constraint_{}", i)} );
+            print!("{}\n", (if let Some(it) = constraint_annotations.find(i){it.1.to_string()} else{FMT("", "constraint_{}", i)} );
         }
     }
 //#endif

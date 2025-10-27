@@ -26,7 +26,7 @@
 // #define FOORAM_CPU_CHECKER_HPP_
 
 // use  <cstddef>
-// use  <memory>
+// 
 
 use ffec::common::serialization;
 
@@ -55,27 +55,27 @@ next_has_accepted:    pb_variable<FieldT>,
 zero:    pb_variable<FieldT>,
 packed_next_pc_addr:    pb_variable<FieldT>,
 one_as_addr:    pb_linear_combination_array<FieldT>,
-pack_next_pc_addr:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_next_pc_addr:    RcCell<packing_gadget<FieldT> >,
 
 packed_load_addr:    pb_variable<FieldT>,
 packed_store_addr:    pb_variable<FieldT>,
 packed_store_val:    pb_variable<FieldT>,
 
-increment_pc:    std::shared_ptr<bar_gadget<FieldT> >,
-compute_packed_load_addr:    std::shared_ptr<bar_gadget<FieldT> >,
-compute_packed_store_addr:    std::shared_ptr<bar_gadget<FieldT> >,
-compute_packed_store_val:    std::shared_ptr<bar_gadget<FieldT> >,
+increment_pc:    RcCell<bar_gadget<FieldT> >,
+compute_packed_load_addr:    RcCell<bar_gadget<FieldT> >,
+compute_packed_store_addr:    RcCell<bar_gadget<FieldT> >,
+compute_packed_store_val:    RcCell<bar_gadget<FieldT> >,
 
 packed_ls_addr:    pb_variable<FieldT>,
 packed_ls_prev_val:    pb_variable<FieldT>,
 packed_ls_next_val:    pb_variable<FieldT>,
 packed_prev_state:    pb_variable<FieldT>,
 packed_next_state:    pb_variable<FieldT>,
-pack_ls_addr:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_ls_prev_val:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_ls_next_val:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_prev_state:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_next_state:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_ls_addr:    RcCell<packing_gadget<FieldT> >,
+pack_ls_prev_val:    RcCell<packing_gadget<FieldT> >,
+pack_ls_next_val:    RcCell<packing_gadget<FieldT> >,
+pack_prev_state:    RcCell<packing_gadget<FieldT> >,
+pack_next_state:    RcCell<packing_gadget<FieldT> >,
 
     // fooram_cpu_checker(
 // fooram_protoboard<FieldT> &pb,
@@ -88,18 +88,18 @@ pack_next_state:    std::shared_ptr<packing_gadget<FieldT> >,
     //                    pb_variable_array<FieldT> &next_state,
     //                    pb_variable_array<FieldT> &next_pc_addr,
     //                    pb_variable<FieldT> &next_has_accepted,
-    //                    const std::string &annotation_prefix);
+    //                    annotation_prefix:&String);
 
-    // void generate_r1cs_constraints();
+    // pub fn  generate_r1cs_constraints();
 
-    // void generate_r1cs_witness() { assert!(0); }
+    // pub fn  generate_r1cs_witness() { assert!(0); }
 
-    // void generate_r1cs_witness_address();
+    // pub fn  generate_r1cs_witness_address();
 
-    // void generate_r1cs_witness_other(fooram_input_tape_iterator &aux_it,
-    //                                  const fooram_input_tape_iterator &aux_end);
+    // pub fn  generate_r1cs_witness_other(fooram_input_tape_iterator &aux_it,
+    //                                  aux_end:&fooram_input_tape_iterator);
 
-    // void dump() const;
+    // pub fn  dump() const;
 }
 
 
@@ -137,7 +137,7 @@ ls_next_val:                                               pb_variable_array<Fie
 next_state:                                               pb_variable_array<FieldT>,
 next_pc_addr:                                               pb_variable_array<FieldT>,
 next_has_accepted:                                               pb_variable<FieldT>,
-annotation_prefix:                                                std::string,
+annotation_prefix:                                                String,
 ) ->Self
    
 {
@@ -294,7 +294,7 @@ aux_it:&fooram_input_tape_iterator,
 aux_end:&                                                              fooram_input_tape_iterator)
 {
     /* fooram memory contents do not depend on program/input. */
-    // ffec::UNUSED(aux_it, aux_end);
+    // //ffec::UNUSED(aux_it, aux_end);
     /* packed_store_val = prev_state_bits + prev_pc_addr */
     compute_packed_store_val.generate_r1cs_witness();
 

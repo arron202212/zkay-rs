@@ -11,22 +11,19 @@
 //#include <vector>
 
 use crate::algebra::curves::curve_utils;
-use crate::algebra::curves::edwards/edwards_init;
+use crate::algebra::curves::edwards::edwards_init;
 
 // namespace libff {
 
-class edwards_G2;
-std::ostream& operator<<(std::ostream &, const edwards_G2&);
-std::istream& operator>>(std::istream &, edwards_G2&);
 
-class edwards_G2 {
+pub struct edwards_G2 {
 
 // #ifdef PROFILE_OP_COUNTS
-    static long long add_cnt;
-    static long long dbl_cnt;
+    static i64 add_cnt;
+    static i64 dbl_cnt;
 //#endif
-    static std::vector<std::size_t> wnaf_window_table;
-    static std::vector<std::size_t> fixed_base_exp_window_table;
+    static Vec<std::usize> wnaf_window_table;
+    static Vec<std::usize> fixed_base_exp_window_table;
 
     static edwards_G2 G2_zero;
     static edwards_G2 G2_one;
@@ -34,36 +31,36 @@ class edwards_G2 {
 
     edwards_Fq3 X, Y, Z;
     edwards_G2();
-private:
-    edwards_G2(const edwards_Fq3& X, const edwards_Fq3& Y, const edwards_Fq3& Z) : X(X), Y(Y), Z(Z) {};
 
-    static edwards_Fq3 mul_by_a(const edwards_Fq3 &elt);
-    static edwards_Fq3 mul_by_d(const edwards_Fq3 &elt);
-    typedef edwards_Fq base_field;
-    typedef edwards_Fq3 twist_field;
-    typedef edwards_Fr scalar_field;
+    edwards_G2(X:edwards_Fq3&, Y:edwards_Fq3&, Z:&edwards_Fq3)->SelfX,Y,Z {};
+
+    static edwards_Fq3 mul_by_a(elt:&edwards_Fq3);
+    static edwards_Fq3 mul_by_d(elt:&edwards_Fq3);
+    type base_field=edwards_Fq;
+    type twist_field=edwards_Fq3;
+    type scalar_field=edwards_Fr;
 
     // using inverted coordinates
-    edwards_G2(const edwards_Fq3& X, const edwards_Fq3& Y) : X(Y), Y(X), Z(X*Y) {};
+    edwards_G2(X:edwards_Fq3&, Y:&edwards_Fq3)->Self X(Y), Y(X), Z(X*Y) {};
 
-    void print() const;
-    void print_coordinates() const;
+    pub fn  print() const;
+    pub fn  print_coordinates() const;
 
-    void to_affine_coordinates();
-    void to_special();
+    pub fn  to_affine_coordinates();
+    pub fn  to_special();
     bool is_special() const;
 
     bool is_zero() const;
 
-    bool operator==(const edwards_G2 &other) const;
-    bool operator!=(const edwards_G2 &other) const;
+    bool operator==(other:&edwards_G2) const;
+    bool operator!=(other:&edwards_G2) const;
 
-    edwards_G2 operator+(const edwards_G2 &other) const;
+    edwards_G2 operator+(other:&edwards_G2) const;
     edwards_G2 operator-() const;
-    edwards_G2 operator-(const edwards_G2 &other) const;
+    edwards_G2 operator-(other:&edwards_G2) const;
 
-    edwards_G2 add(const edwards_G2 &other) const;
-    edwards_G2 mixed_add(const edwards_G2 &other) const;
+    edwards_G2 add(other:&edwards_G2) const;
+    edwards_G2 mixed_add(other:&edwards_G2) const;
     edwards_G2 dbl() const;
     edwards_G2 mul_by_q() const;
 
@@ -73,24 +70,24 @@ private:
     static edwards_G2 one();
     static edwards_G2 random_element();
 
-    static std::size_t size_in_bits() { return twist_field::ceil_size_in_bits() + 1; }
+    static std::usize size_in_bits() { return twist_field::ceil_size_in_bits() + 1; }
     static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
     static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
 
-    friend std::ostream& operator<<(std::ostream &out, const edwards_G2 &g);
+    friend std::ostream& operator<<(std::ostream &out, g:&edwards_G2);
     friend std::istream& operator>>(std::istream &in, edwards_G2 &g);
 
-    static void batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec);
+    static pub fn  batch_to_special_all_non_zeros(Vec<edwards_G2> &vec);
 };
 
-template<mp_size_t m>
-edwards_G2 operator*(const bigint<m> &lhs, const edwards_G2 &rhs)
+
+edwards_G2 operator*(lhs:&bigint<m>, rhs:&edwards_G2)
 {
     return scalar_mul<edwards_G2, m>(rhs, lhs);
 }
 
-template<mp_size_t m, const bigint<m>& modulus_p>
-edwards_G2 operator*(const Fp_model<m, modulus_p> &lhs, const edwards_G2 &rhs)
+
+edwards_G2 operator*(lhs:&Fp_model<m, modulus_p>, rhs:&edwards_G2)
 {
    return scalar_mul<edwards_G2, m>(rhs, lhs.as_bigint());
 }
@@ -104,23 +101,23 @@ edwards_G2 operator*(const Fp_model<m, modulus_p> &lhs, const edwards_G2 &rhs)
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
 
-use crate::algebra::curves::edwards/edwards_g2;
+use crate::algebra::curves::edwards::edwards_g2;
 
 // namespace libff {
 
 // #ifdef PROFILE_OP_COUNTS
-long long edwards_G2::add_cnt = 0;
-long long edwards_G2::dbl_cnt = 0;
+i64 edwards_G2::add_cnt = 0;
+i64 edwards_G2::dbl_cnt = 0;
 //#endif
 
-std::vector<size_t> edwards_G2::wnaf_window_table;
-std::vector<size_t> edwards_G2::fixed_base_exp_window_table;
+Vec<usize> edwards_G2::wnaf_window_table;
+Vec<usize> edwards_G2::fixed_base_exp_window_table;
 
 edwards_G2 edwards_G2::G2_zero = {};
 edwards_G2 edwards_G2::G2_one = {};
 bool edwards_G2::initialized = false;
 
-edwards_G2::edwards_G2()
+pub fn new()
 {
     if initialized
     {
@@ -130,7 +127,7 @@ edwards_G2::edwards_G2()
     }
 }
 
-edwards_Fq3 edwards_G2::mul_by_a(const edwards_Fq3 &elt)
+edwards_Fq3 edwards_G2::mul_by_a(elt:&edwards_Fq3)
 {
 	// should be
 	//  edwards_Fq3(edwards_twist_mul_by_a_c0 * elt.c2, edwards_twist_mul_by_a_c1 * elt.c0, edwards_twist_mul_by_a_c2 * elt.c1)
@@ -138,12 +135,12 @@ edwards_Fq3 edwards_G2::mul_by_a(const edwards_Fq3 &elt)
     return edwards_Fq3(edwards_twist_mul_by_a_c0 * elt.c2, elt.c0, elt.c1);
 }
 
-edwards_Fq3 edwards_G2::mul_by_d(const edwards_Fq3 &elt)
+edwards_Fq3 edwards_G2::mul_by_d(elt:&edwards_Fq3)
 {
 	return edwards_Fq3(edwards_twist_mul_by_d_c0 * elt.c2, edwards_twist_mul_by_d_c1 * elt.c0, edwards_twist_mul_by_d_c2 * elt.c1);
 }
 
-void edwards_G2::print() const
+pub fn print() const
 {
     if this->is_zero()
     {
@@ -163,7 +160,7 @@ void edwards_G2::print() const
     }
 }
 
-void edwards_G2::print_coordinates() const
+pub fn print_coordinates() const
 {
     if this->is_zero()
     {
@@ -184,7 +181,7 @@ void edwards_G2::print_coordinates() const
     }
 }
 
-void edwards_G2::to_affine_coordinates()
+pub fn to_affine_coordinates()
 {
     if this->is_zero()
     {
@@ -206,7 +203,7 @@ void edwards_G2::to_affine_coordinates()
     }
 }
 
-void edwards_G2::to_special()
+pub fn to_special()
 {
     if this->Z.is_zero()
     {
@@ -227,17 +224,17 @@ void edwards_G2::to_special()
 //#endif
 }
 
-bool edwards_G2::is_special() const
+pub fn is_special()->bool
 {
     return (this->is_zero() || this->Z == edwards_Fq3::one());
 }
 
-bool edwards_G2::is_zero() const
+pub fn is_zero()->bool
 {
     return (this->Y.is_zero() && this->Z.is_zero());
 }
 
-bool edwards_G2::operator==(const edwards_G2 &other) const
+bool edwards_G2::operator==(other:&edwards_G2) const
 {
     if this->is_zero()
     {
@@ -266,12 +263,12 @@ bool edwards_G2::operator==(const edwards_G2 &other) const
     return true;
 }
 
-bool edwards_G2::operator!=(const edwards_G2& other) const
+bool edwards_G2::operator!=(other:&edwards_G2) const
 {
     return !(operator==(other));
 }
 
-edwards_G2 edwards_G2::operator+(const edwards_G2 &other) const
+edwards_G2 edwards_G2::operator+(other:&edwards_G2) const
 {
     // handle special cases having to do with O
     if this->is_zero()
@@ -293,12 +290,12 @@ edwards_G2 edwards_G2::operator-() const
 }
 
 
-edwards_G2 edwards_G2::operator-(const edwards_G2 &other) const
+edwards_G2 edwards_G2::operator-(other:&edwards_G2) const
 {
     return (*this) + (-other);
 }
 
-edwards_G2 edwards_G2::add(const edwards_G2 &other) const
+pub fn add(other:&edwards_G2)->edwards_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
@@ -306,21 +303,21 @@ edwards_G2 edwards_G2::add(const edwards_G2 &other) const
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-twisted-inverted.html#addition-add-2008-bbjlp
 
-    const edwards_Fq3 A = (this->Z) * (other.Z);                       // A = Z1*Z2
-    const edwards_Fq3 B = edwards_G2::mul_by_d(A.squared());           // B = d*A^2
-    const edwards_Fq3 C = (this->X) * (other.X);                       // C = X1*X2
-    const edwards_Fq3 D = (this->Y) * (other.Y);                       // D = Y1*Y2
-    const edwards_Fq3 E = C*D;                                         // E = C*D
-    const edwards_Fq3 H = C - edwards_G2::mul_by_a(D);                 // H = C-a*D
-    const edwards_Fq3 I = (this->X+this->Y)*(other.X+other.Y)-C-D;     // I = (X1+Y1)*(X2+Y2)-C-D
-    const edwards_Fq3 X3 = (E+B)*H;                                    // X3 = (E+B)*H
-    const edwards_Fq3 Y3 = (E-B)*I;                                    // Y3 = (E-B)*I
-    const edwards_Fq3 Z3 = A*H*I;                                      // Z3 = A*H*I
+    let A= (this->Z) * (other.Z);                       // A = Z1*Z2
+    let B= edwards_G2::mul_by_d(A.squared());           // B = d*A^2
+    let C= (this->X) * (other.X);                       // C = X1*X2
+    let D= (this->Y) * (other.Y);                       // D = Y1*Y2
+    let E= C*D;                                         // E = C*D
+    let H= C - edwards_G2::mul_by_a(D);                 // H = C-a*D
+    let I= (this->X+this->Y)*(other.X+other.Y)-C-D;     // I = (X1+Y1)*(X2+Y2)-C-D
+    let X3= (E+B)*H;                                    // X3 = (E+B)*H
+    let Y3= (E-B)*I;                                    // Y3 = (E-B)*I
+    let Z3= A*H*I;                                      // Z3 = A*H*I
 
     return edwards_G2(X3, Y3, Z3);
 }
 
-edwards_G2 edwards_G2::mixed_add(const edwards_G2 &other) const
+pub fn mixed_add(other:&edwards_G2)->edwards_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
@@ -343,21 +340,21 @@ edwards_G2 edwards_G2::mixed_add(const edwards_G2 &other) const
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-madd-2007-lb
 
-    const edwards_Fq3 A = this->Z;                                     // A = Z1*Z2
-    const edwards_Fq3 B = edwards_G2::mul_by_d(A.squared());           // B = d*A^2
-    const edwards_Fq3 C = (this->X) * (other.X);                       // C = X1*X2
-    const edwards_Fq3 D = (this->Y) * (other.Y);                       // D = Y1*Y2
-    const edwards_Fq3 E = C*D;                                         // E = C*D
-    const edwards_Fq3 H = C - edwards_G2::mul_by_a(D);                 // H = C-a*D
-    const edwards_Fq3 I = (this->X+this->Y)*(other.X+other.Y)-C-D;     // I = (X1+Y1)*(X2+Y2)-C-D
-    const edwards_Fq3 X3 = (E+B)*H;                                    // X3 = (E+B)*H
-    const edwards_Fq3 Y3 = (E-B)*I;                                    // Y3 = (E-B)*I
-    const edwards_Fq3 Z3 = A*H*I;                                      // Z3 = A*H*I
+    let A= this->Z;                                     // A = Z1*Z2
+    let B= edwards_G2::mul_by_d(A.squared());           // B = d*A^2
+    let C= (this->X) * (other.X);                       // C = X1*X2
+    let D= (this->Y) * (other.Y);                       // D = Y1*Y2
+    let E= C*D;                                         // E = C*D
+    let H= C - edwards_G2::mul_by_a(D);                 // H = C-a*D
+    let I= (this->X+this->Y)*(other.X+other.Y)-C-D;     // I = (X1+Y1)*(X2+Y2)-C-D
+    let X3= (E+B)*H;                                    // X3 = (E+B)*H
+    let Y3= (E-B)*I;                                    // Y3 = (E-B)*I
+    let Z3= A*H*I;                                      // Z3 = A*H*I
 
     return edwards_G2(X3, Y3, Z3);
 }
 
-edwards_G2 edwards_G2::dbl() const
+pub fn dbl()->edwards_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
@@ -369,28 +366,28 @@ edwards_G2 edwards_G2::dbl() const
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-twisted-inverted.html#doubling-dbl-2008-bbjlp
 
-    const edwards_Fq3 A = (this->X).squared();                      // A = X1^2
-    const edwards_Fq3 B = (this->Y).squared();                      // B = Y1^2
-    const edwards_Fq3 U = edwards_G2::mul_by_a(B);                  // U = a*B
-    const edwards_Fq3 C = A+U;                                      // C = A+U
-    const edwards_Fq3 D = A-U;                                      // D = A-U
-    const edwards_Fq3 E = (this->X+this->Y).squared()-A-B;          // E = (X1+Y1)^2-A-B
-    const edwards_Fq3 X3 = C*D;                                     // X3 = C*D
-    const edwards_Fq3 dZZ = edwards_G2::mul_by_d(this->Z.squared());
-    const edwards_Fq3 Y3 = E*(C-dZZ-dZZ);                           // Y3 = E*(C-2*d*Z1^2)
-    const edwards_Fq3 Z3 = D*E;                                     // Z3 = D*E
+    let A= (this->X).squared();                      // A = X1^2
+    let B= (this->Y).squared();                      // B = Y1^2
+    let U= edwards_G2::mul_by_a(B);                  // U = a*B
+    let C= A+U;                                      // C = A+U
+    let D= A-U;                                      // D = A-U
+    let E= (this->X+this->Y).squared()-A-B;          // E = (X1+Y1)^2-A-B
+    let X3= C*D;                                     // X3 = C*D
+    let dZZ= edwards_G2::mul_by_d(this->Z.squared());
+    let Y3= E*(C-dZZ-dZZ);                           // Y3 = E*(C-2*d*Z1^2)
+    let Z3= D*E;                                     // Z3 = D*E
 
     return edwards_G2(X3, Y3, Z3);
 }
 
-edwards_G2 edwards_G2::mul_by_q() const
+pub fn mul_by_q()->edwards_G2
 {
     return edwards_G2((this->X).Frobenius_map(1),
                       edwards_twist_mul_by_q_Y * (this->Y).Frobenius_map(1),
                       edwards_twist_mul_by_q_Z * (this->Z).Frobenius_map(1));
 }
 
-bool edwards_G2::is_well_formed() const
+pub fn is_well_formed()->bool
 {
     /* Note that point at infinity is the only special case we must check as
        inverted representation does no cover points (0, +-c) and (+-c, 0). */
@@ -429,7 +426,7 @@ edwards_G2 edwards_G2::random_element()
     return edwards_Fr::random_element().as_bigint() * G2_one;
 }
 
-std::ostream& operator<<(std::ostream &out, const edwards_G2 &g)
+std::ostream& operator<<(std::ostream &out, g:&edwards_G2)
 {
     edwards_G2 copy(g);
     copy.to_affine_coordinates();
@@ -463,7 +460,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
     Y_lsb -= '0';
 
     edwards_Fq3 tX2 = tX.squared();
-    const edwards_Fq3 tY2 =
+    let tY2=
         (edwards_Fq3::one() - edwards_G2::mul_by_a(tX2)) *
         (edwards_Fq3::one() - edwards_G2::mul_by_d(tX2)).inverse();
     tY = tY2.sqrt();
@@ -486,9 +483,9 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
     return in;
 }
 
-void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
+pub fn batch_to_special_all_non_zeros(Vec<edwards_G2> &vec)
 {
-    std::vector<edwards_Fq3> Z_vec;
+    Vec<edwards_Fq3> Z_vec;
     Z_vec.reserve(vec.len());
 
     for el in &vec
@@ -497,7 +494,7 @@ void edwards_G2::batch_to_special_all_non_zeros(std::vector<edwards_G2> &vec)
     }
     batch_invert<edwards_Fq3>(Z_vec);
 
-    const edwards_Fq3 one = edwards_Fq3::one();
+    let one= edwards_Fq3::one();
 
     for i in 0..vec.len()
     {

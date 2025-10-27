@@ -9,12 +9,12 @@
 // #define BN_UTILS_HPP_
 //#include <vector>
 
-#include "depends/ate-pairing/include/bn.h"
+// #include "depends/ate-pairing/include/bn.h"
 
 // namespace libff {
 
-template<typename FieldT>
-void bn_batch_invert(std::vector<FieldT> &vec);
+
+pub fn  bn_batch_invert(Vec<FieldT> &vec);
 
 // } // namespace libff
 

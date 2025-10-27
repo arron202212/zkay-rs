@@ -20,15 +20,15 @@ use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksna
 
 
 
-template<typename ppT>
-void test_uscs_ppzksnark(size_t num_constraints,
-                         size_t input_size)
+
+pub fn  test_uscs_ppzksnark(usize num_constraints,
+                         usize input_size)
 {
     ffec::print_header("(enter) Test USCS ppzkSNARK");
 
-    const bool test_serialization = true;
+    let mut test_serialization = true;
     uscs_example<ffec::Fr<ppT> > example = generate_uscs_example_with_binary_input<ffec::Fr<ppT> >(num_constraints, input_size);
-    const bool bit = run_uscs_ppzksnark<ppT>(example, test_serialization);
+    let mut bit = run_uscs_ppzksnark<ppT>(example, test_serialization);
     assert!(bit);
 
     ffec::print_header("(leave) Test USCS ppzkSNARK");

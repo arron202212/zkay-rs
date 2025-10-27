@@ -4,10 +4,10 @@
  Declaration of interfaces for a ppzkSNARK for RAM.
 
  This includes:
- - the class for a proving key;
- - the class for a verification key;
- - the class for a key pair (proving key & verification key);
- - the class for a proof;
+ - the pub struct for a proving key;
+ - the pub struct for a verification key;
+ - the pub struct for a key pair (proving key & verification key);
+ - the pub struct for a proof;
  - the generator algorithm;
  - the prover algorithm;
  - the verifier algorithm.
@@ -46,7 +46,7 @@
 //#ifndef RAM_PPZKSNARK_HPP_
 // #define RAM_PPZKSNARK_HPP_
 
-// use  <memory>
+// 
 
 use crate::reductions::ram_to_r1cs::ram_to_r1cs;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
@@ -57,7 +57,7 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
 /******************************** Proving key ********************************/
 
 // 
-// class ram_ppzksnark_proving_key;
+// pub struct ram_ppzksnark_proving_key;
 
 // 
 // std::ostream& operator<<(std::ostream &out, pk:&ram_ppzksnark_proving_key<ram_ppzksnark_ppT>);
@@ -75,8 +75,8 @@ pub struct ram_ppzksnark_proving_key {
 
 r1cs_pk:    r1cs_ppzksnark_proving_key<snark_ppT>,
 ap:    ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
-primary_input_size_bound:    size_t,
-time_bound:    size_t,
+primary_input_size_bound:    usize,
+time_bound:    usize,
 }
 impl ram_ppzksnark_proving_key {
     // ram_ppzksnark_proving_key() {}
@@ -85,8 +85,8 @@ impl ram_ppzksnark_proving_key {
     pub fn new(
 r1cs_pk:                        r1cs_ppzksnark_proving_key<snark_ppT>,
                               ap:&ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
-                              primary_input_size_bound:size_t,
-                              time_bound:size_t) ->Self
+                              primary_input_size_bound:usize,
+                              time_bound:usize) ->Self
         
     {
     Self{r1cs_pk,
@@ -114,7 +114,7 @@ r1cs_pk:                        r1cs_ppzksnark_proving_key<snark_ppT>,
 
 // std::istream& operator>>(std::istream &in, ram_ppzksnark_verification_key<ram_ppzksnark_ppT> &vk);
 
-type snark_ppT<ram_ppzksnark_ppT>=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> ;
+// type snark_ppT<ram_ppzksnark_ppT>=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> ;
 /**
  * A verification key for the RAM ppzkSNARK.
  */
@@ -125,10 +125,10 @@ pub struct ram_ppzksnark_verification_key {
 
 r1cs_vk:    r1cs_ppzksnark_verification_key<snark_ppT>,
 ap:    ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
-primary_input_size_bound:    size_t,
-time_bound:    size_t,
+primary_input_size_bound:    usize,
+time_bound:    usize,
 
-bound_primary_input_locations:    std::set<size_t>,
+bound_primary_input_locations:    BTreeSet<usize>,
 }
 impl ram_ppzksnark_verification_key<ram_ppzksnark_ppT> {
     // ram_ppzksnark_verification_key() = default;
@@ -136,8 +136,8 @@ impl ram_ppzksnark_verification_key<ram_ppzksnark_ppT> {
     // ram_ppzksnark_verification_key(ram_ppzksnark_verification_key<ram_ppzksnark_ppT> &&other) = default;
     pub fn new(r1cs_vk:&r1cs_ppzksnark_verification_key<snark_ppT>,
                                    ap:&ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
-                                   primary_input_size_bound:size_t,
-                                   time_bound:size_t) ->Self
+                                   primary_input_size_bound:usize,
+                                   time_bound:usize) ->Self
         
     {
 Self{r1cs_vk,
@@ -201,8 +201,8 @@ vk:                          ram_ppzksnark_verification_key<ram_ppzksnark_ppT>) 
  */
 // 
 // ram_ppzksnark_keypair<ram_ppzksnark_ppT> ram_ppzksnark_generator(ap:&ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
-//                                                                  primary_input_size_bound:size_t,
-//                                                                  time_bound:size_t);
+//                                                                  primary_input_size_bound:usize,
+//                                                                  time_bound:usize);
 
 /**
  * A prover algorithm for the RAM ppzkSNARK.
@@ -255,7 +255,7 @@ vk:                          ram_ppzksnark_verification_key<ram_ppzksnark_ppT>) 
 
 use ffec::common::profiling;
 
-use crate::reductions::ram_to_r1cs::ram_to_r1cs;
+// use crate::reductions::ram_to_r1cs::ram_to_r1cs;
 
 
 
@@ -358,8 +358,8 @@ pub fn bind_primary_input(primary_input:&ram_ppzksnark_primary_input<ram_ppzksna
 
 
  pub fn ram_ppzksnark_generator<ram_ppzksnark_ppT> (ap:&ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
-                                                                 primary_input_size_bound:size_t,
-                                                                 time_bound:size_t)->ram_ppzksnark_keypair<ram_ppzksnark_ppT>
+                                                                 primary_input_size_bound:usize,
+                                                                 time_bound:usize)->ram_ppzksnark_keypair<ram_ppzksnark_ppT>
 {
     type ram_ppT=ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>;
     type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>;

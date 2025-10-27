@@ -5,11 +5,11 @@
  Declaration of interfaces for a SEppzkSNARK for R1CS.
 
  This includes:
- - class for proving key
- - class for verification key
- - class for processed verification key
- - class for key pair (proving key & verification key)
- - class for proof
+ - pub struct for proving key
+ - pub struct for verification key
+ - pub struct for processed verification key
+ - pub struct for key pair (proving key & verification key)
+ - pub struct for proof
  - generator algorithm
  - prover algorithm
  - verifier algorithm (with strong or weak input consistency)
@@ -49,7 +49,7 @@
 // //#ifndef R1CS_SE_PPZKSNARK_HPP_
 // // #define R1CS_SE_PPZKSNARK_HPP_
 
-// use  <memory>
+// 
 
 use ffec::algebra::curves::public_params;
 
@@ -409,9 +409,9 @@ r1cs_se_ppzksnark_prover<ppT>(pk:&r1cs_se_ppzksnark_proving_key<ppT>,
 // //#endif
 
 // // #ifdef MULTICORE
-//     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
+//     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
 // #else
-//     const size_t chunks = 1;
+//     let chunks = 1;
 // //#endif
 
     let  r = ffec::Fr::<ppT>::random_element();
@@ -608,9 +608,9 @@ fn  r1cs_se_ppzksnark_online_verifier_weak_IC<ppT>(pvk:&r1cs_se_ppzksnark_proces
     ffec::enter_block("Pairing computations");
 
 // // #ifdef MULTICORE
-//     override:size_t chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
+//     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
 // #else
-//     const size_t chunks = 1;
+//     let chunks = 1;
 // //#endif
 
     ffec::enter_block("Check first test");
@@ -932,7 +932,7 @@ proof.C ,)
 // }
 
 impl<ppT> r1cs_se_ppzksnark_verification_key<ppT>{
-pub fn  dummy_verification_key(&self, input_size:size_t )->r1cs_se_ppzksnark_verification_key<ppT>
+pub fn  dummy_verification_key(&self, input_size:usize )->r1cs_se_ppzksnark_verification_key<ppT>
 {
     let mut  result=r1cs_se_ppzksnark_verification_key::<ppT>::new();
     result.H = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();

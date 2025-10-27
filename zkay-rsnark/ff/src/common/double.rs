@@ -38,26 +38,26 @@ use num_complex::{Complex,ComplexFloat};
 //       static unsigned mul_cnt;
 //       static unsigned inv_cnt;
 
-//       Double operator+(const Double &other) const;
-//       Double operator-(const Double &other) const;
-//       Double operator*(const Double &other) const;
+//       Double operator+(other:&Double) const;
+//       Double operator-(other:&Double) const;
+//       Double operator*(other:&Double) const;
 //       Double operator-() const;
 
-//       Double& operator+=(const Double &other);
-//       Double& operator-=(const Double &other);
-//       Double& operator*=(const Double &other);
+//       Double& operator+=(other:&Double);
+//       Double& operator-=(other:&Double);
+//       Double& operator*=(other:&Double);
 
-//       bool operator==(const Double &other) const;
-//       bool operator!=(const Double &other) const;
+//       bool operator==(other:&Double) const;
+//       bool operator!=(other:&Double) const;
 
-//       bool operator<(const Double &other) const;
-//       bool operator>(const Double &other) const;
+//       bool operator<(other:&Double) const;
+//       bool operator>(other:&Double) const;
 
-//       Double operator^(const bigint<1> power) const;
-//       Double operator^(const size_t power) const;
+//       Double operator^(const:bigint<1> power),
+//       Double operator^(power:usize) const;
 
 //       bigint<1> as_bigint() const;
-//       unsigned long as_ulong() const;
+//       u64 as_ulong() const;
 //       Double inverse() const;
 //       Double squared() const;
 
@@ -69,7 +69,7 @@ use num_complex::{Complex,ComplexFloat};
 
 //       static Double multiplicative_generator;
 //       static Double root_of_unity; // See get_root_of_unity() in field_utils
-//       static size_t s;
+//       static usize s;
 //   };
 // } // libff
 
@@ -93,7 +93,7 @@ use crate::algebra::field_utils::bigint::bigint;
 
 // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 impl Double{
 pub fn new()->Self
 {
@@ -178,7 +178,7 @@ pub fn arithmetic_generator()->Self
 
 
 
-// pub fn operator+(const Double &other) const
+// pub fn operator+(other:&Double) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++add_cnt;
@@ -187,7 +187,7 @@ pub fn arithmetic_generator()->Self
 //     return Self::new(val + other.val);
 // }
 
-// pub fn operator-(const Double &other) const
+// pub fn operator-(other:&Double) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++sub_cnt;
@@ -196,7 +196,7 @@ pub fn arithmetic_generator()->Self
 //     return Self::new(val - other.val);
 // }
 
-// pub fn operator*(const Double &other) const
+// pub fn operator*(other:&Double) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++mul_cnt;
@@ -214,7 +214,7 @@ pub fn arithmetic_generator()->Self
 //     return Self::new(-val.real(), -val.imag());
 // }
 
-// Double& pub fn operator+=(const Double &other)
+// Double& pub fn operator+=(other:&Double)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++add_cnt;
@@ -224,7 +224,7 @@ pub fn arithmetic_generator()->Self
 //     return *this;
 // }
 
-// Double& pub fn operator-=(const Double &other)
+// Double& pub fn operator-=(other:&Double)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++sub_cnt;
@@ -234,7 +234,7 @@ pub fn arithmetic_generator()->Self
 //     return *this;
 // }
 
-// Double& pub fn operator*=(const Double &other)
+// Double& pub fn operator*=(other:&Double)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++mul_cnt;
@@ -244,23 +244,23 @@ pub fn arithmetic_generator()->Self
 //     return *this;
 // }
 
-// bool pub fn operator==(const Double &other) const
+// bool pub fn operator==(other:&Double) const
 // {
 //     return (std::abs(val.real() - other.val.real()) < 0.000001)
 //         && (std::abs(val.imag() - other.val.imag()) < 0.000001);
 // }
 
-// bool pub fn operator!=(const Double &other) const
+// bool pub fn operator!=(other:&Double) const
 // {
 //     return !(*this == other);
 // }
 
-// bool pub fn operator<(const Double &other) const
+// bool pub fn operator<(other:&Double) const
 // {
 //     return (val.real() < other.val.real());
 // }
 
-// bool pub fn operator>(const Double &other) const
+// bool pub fn operator>(other:&Double) const
 // {
 //     return (val.real() > other.val.real());
 // }
@@ -270,7 +270,7 @@ pub fn arithmetic_generator()->Self
 //     return Self::new(pow(val, power.as_ulong()));
 // }
 
-// pub fn operator^(const size_t power) const
+// pub fn operator^(power:usize) const
 // {
 //     return Self::new(pow(val, power));
 // }

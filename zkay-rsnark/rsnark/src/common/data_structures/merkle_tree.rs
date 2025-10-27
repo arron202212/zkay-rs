@@ -13,7 +13,7 @@
 // #define MERKLE_TREE_HPP_
 
 // use  <map>
-// use  <vector>
+// 
 
 use ffec::common::utils;
 
@@ -28,41 +28,41 @@ use ffec::common::utils;
  * built atop the values currently stored in the tree (the
  * implementation admits a very efficient support for sparse
  * trees). Besides offering methods to load and store values, the
- * class offers methods to retrieve the root of the Merkle tree and to
+ * pub struct offers methods to retrieve the root of the Merkle tree and to
  * obtain the authentication paths for (the value at) a given address.
  */
 
-type merkle_authentication_node=ffec::bit_vector ;
-type merkle_authentication_path=std::vector<merkle_authentication_node> ;
+type merkle_authentication_node=bit_vector ;
+type merkle_authentication_path=Vec<merkle_authentication_node> ;
   type hash_value_type= HashT::hash_value_type ;
     type merkle_authentication_path_type= HashT::merkle_authentication_path_type ;
 // 
 pub struct merkle_tree<HashT> {
-// private:
+// 
 
   
 
 // 
 
-hash_defaults:    std::vector<hash_value_type>,
-values:    std::map<size_t, ffec::bit_vector>,
-hashes:    std::map<size_t, hash_value_type>,
+hash_defaults:    Vec<hash_value_type>,
+values:    BTreeMap<usize, bit_vector>,
+hashes:    BTreeMap<usize, hash_value_type>,
 
-depth:    size_t,
-value_size:    size_t,
-digest_size:    size_t,
+depth:    usize,
+value_size:    usize,
+digest_size:    usize,
 
-    // merkle_tree(depth:size_t, value_size:size_t);
-    // merkle_tree(depth:size_t, value_size:size_t, const std::vector<ffec::bit_vector> &contents_as_vector);
-    // merkle_tree(depth:size_t, value_size:size_t, const std::map<size_t, ffec::bit_vector> &contents);
+    // merkle_tree(depth:usize, value_size:usize);
+    // merkle_tree(depth:usize, value_size:usize, contents_as_vector:&Vec<bit_vector>);
+    // merkle_tree(depth:usize, value_size:usize, contents:&BTreeMap<usize, bit_vector>);
 
-    // ffec::bit_vector get_value(address:size_t) const;
-    // void set_value(address:size_t, const ffec::bit_vector &value);
+    // bit_vector get_value(address:usize) const;
+    // pub fn  set_value(address:usize, value:&bit_vector);
 
     // hash_value_type get_root() const;
-    // merkle_authentication_path_type get_path(address:size_t) const;
+    // merkle_authentication_path_type get_path(address:usize) const;
 
-    // void dump() const;
+    // pub fn  dump() const;
 }
 
 
@@ -109,7 +109,7 @@ pub fn  two_to_one_CRH<HashT>(l:& HashT::hash_value_type,
 
 impl merkle_tree<HashT>{
 
-pub fn new(depth:size_t, value_size:size_t) ->Self
+pub fn new(depth:usize, value_size:usize) ->Self
     
 {
     assert(depth < std::mem::size_of::<usize>() * 8);
@@ -131,9 +131,9 @@ pub fn new(depth:size_t, value_size:size_t) ->Self
 }
 
 // 
-pub fn new2(depth:size_t,
-                                value_size:size_t,
-                                contents_as_vector:&std::vector<bit_vector>) ->Self
+pub fn new2(depth:usize,
+                                value_size:usize,
+                                contents_as_vector:&Vec<bit_vector>) ->Self
     
 {
     assert(log2(contents_as_vector.len()) <= depth);
@@ -166,9 +166,9 @@ pub fn new2(depth:size_t,
 }
 
 // 
-pub fn new3(depth:size_t,
-                                value_size:size_t,
-                                contents:&std::map<size_t, bit_vector>) ->Self
+pub fn new3(depth:usize,
+                                value_size:usize,
+                                contents:&BTreeMap<usize, bit_vector>) ->Self
     
 {
 
@@ -226,7 +226,7 @@ pub fn new3(depth:size_t,
 }
 
 
- pub fn get_value(address:size_t) ->bit_vector
+ pub fn get_value(address:usize) ->bit_vector
 {
     assert(log2(address) <= depth);
 
@@ -238,7 +238,7 @@ pub fn new3(depth:size_t,
 }
 
 
-pub fn set_value(address:size_t,
+pub fn set_value(address:usize,
                                    value:&bit_vector)
 {
     assert(log2(address) <= depth);
@@ -268,11 +268,11 @@ pub fn set_value(address:size_t,
 {
 if let Some(it) = hashes.find(0){it.1.clone()} else {hash_defaults[0]}
     // auto it = hashes.find(0);
-    // return (it == hashes.end() ? hash_defaults[0] : it->second);
+    // return (it == hashes.end() ? hash_defaults[0] : it.1);
 }
 
 
-  pub fn get_path(address:size_t) ->HashT::merkle_authentication_path_type
+  pub fn get_path(address:usize) ->HashT::merkle_authentication_path_type
 {
      let mut  result=HashT::merkle_authentication_path_type(depth);
     assert(log2(address) <= depth);

@@ -18,22 +18,22 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_proto
 
 // 
 pub struct consistency_enforcer_gadget {
-// private:: public tinyram_standard_gadget<FieldT>  
+// : public tinyram_standard_gadget<FieldT>  
 is_register_instruction:    pb_variable<FieldT>,
 is_control_flow_instruction:    pb_variable<FieldT>,
 is_stall_instruction:    pb_variable<FieldT>,
 
 packed_desidx:    pb_variable<FieldT>,
-pack_desidx:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_desidx:    RcCell<packing_gadget<FieldT> >,
 
 computed_result:    pb_variable<FieldT>,
 computed_flag:    pb_variable<FieldT>,
-compute_computed_result:    std::shared_ptr<inner_product_gadget<FieldT> >,
-compute_computed_flag:    std::shared_ptr<inner_product_gadget<FieldT> >,
+compute_computed_result:    RcCell<inner_product_gadget<FieldT> >,
+compute_computed_flag:    RcCell<inner_product_gadget<FieldT> >,
 
 pc_from_cf_or_zero:    pb_variable<FieldT>,
 
-demux_packed_outgoing_desval:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
+demux_packed_outgoing_desval:    RcCell<loose_multiplexing_gadget<FieldT> >,
 // 
 opcode_indicators:    pb_variable_array<FieldT>,
 instruction_results:    pb_variable_array<FieldT>,
@@ -62,10 +62,10 @@ packed_outgoing_desval:    pb_variable<FieldT>,
 //                                 packed_outgoing_pc:pb_variable<FieldT>,
 //                                 packed_outgoing_registers:pb_variable_array<FieldT>,
 //                                 outgoing_flag:pb_variable<FieldT>,
-//                                 annotation_prefix:std::string="");
+//                                 annotation_prefix:String="");
 
-//     void generate_r1cs_constraints();
-//     void generate_r1cs_witness();
+//     pub fn  generate_r1cs_constraints();
+//     pub fn  generate_r1cs_witness();
 // };
 
 
@@ -105,7 +105,7 @@ pb:tinyram_protoboard<FieldT>,
                                                                  packed_outgoing_pc:pb_variable<FieldT>,
                                                                  packed_outgoing_registers:pb_variable_array<FieldT>,
                                                                  outgoing_flag:pb_variable<FieldT>,
-                                                                 annotation_prefix:std::string) ->Self
+                                                                 annotation_prefix:String) ->Self
    
 {
     assert!(desidx.len() == pb.ap.reg_arg_width());
@@ -484,7 +484,7 @@ pub fn  test_control_flow_consistency_enforcer_gadget()
    let mut  packed_outgoing_registers=pb_variable_array::<FieldT>::new();
     packed_outgoing_registers.allocate(pb, ap.k, "packed_outgoing_registers");
 
-    control_flow_consistency_enforcer_gadget g(pb, opcode_indicators, instruction_results,
+    let mut g=control_flow_consistency_enforcer_gadget::new(pb, opcode_indicators, instruction_results,
                                                incoming_pc, packed_incoming_registers, incoming_flag,
                                                outgoing_pc, packed_outgoing_registers, outgoing_flag, "g");
     g.generate_r1cs_constraints();

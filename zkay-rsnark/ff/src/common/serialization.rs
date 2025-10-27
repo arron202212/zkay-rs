@@ -74,36 +74,36 @@ else
 const OUTPUT_SEPARATOR:&str= " ";
 }
 }
-// inline void consume_newline(ins:&impl BufRead);
-// inline void consume_OUTPUT_NEWLINE(ins:&impl BufRead);
-// inline void consume_OUTPUT_SEPARATOR(ins:&impl BufRead);
+// inline pub fn  consume_newline(ins:&impl BufRead);
+// inline pub fn  consume_OUTPUT_NEWLINE(ins:&impl BufRead);
+// inline pub fn  consume_OUTPUT_SEPARATOR(ins:&impl BufRead);
 
-// inline void output_bool(out:& BufWriter, b:bool);
-// inline void input_bool(ins:&impl BufRead, bool &b);
+// inline pub fn  output_bool(out:& BufWriter, b:bool);
+// inline pub fn  input_bool(ins:&impl BufRead, bool &b);
 
-// inline void output_bool_vector(out:& BufWriter, const std::vector<bool> &v);
-// inline void input_bool_vector(ins:&impl BufRead, std::vector<bool> &v);
+// inline pub fn  output_bool_vector(out:& BufWriter, v:&Vec<bool>);
+// inline pub fn  input_bool_vector(ins:&impl BufRead, Vec<bool> &v);
 
-// template<typename T>
-// T reserialize(const T &obj);
+// 
+// T reserialize(obj:&T);
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::vector<T> &v);
+// 
+// std::ostream& operator<<(std::ostream& out, v:&Vec<T>);
 
-// template<typename T>
-// std::istream& operator>>(std::ostream& out, std::vector<T> &v);
+// 
+// std::istream& operator>>(std::ostream& out, Vec<T> &v);
 
-// template<typename T1, typename T2>
-// std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m);
+// 
+// std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>);
 
-// template<typename T1, typename T2>
-// std::istream& operator>>(std::istream& in, std::map<T1, T2> &m);
+// 
+// std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m);
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::set<T> &s);
+// 
+// std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>);
 
-// template<typename T>
-// std::istream& operator>>(std::istream& in, std::set<T> &s);
+// 
+// std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
 // } // namespace libff
 
@@ -134,7 +134,7 @@ use std::io::BufWriter;
 use std::io::Write;
 // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 
 #[inline]
 pub fn  consume_newline(ins:&impl BufRead)
@@ -177,7 +177,7 @@ pub fn  output_bool<W: ?Sized + Write> (out:&mut  BufWriter<W>, b:bool)
 #[inline]
 pub fn input_bool(ins:&impl BufRead, b:bool)
 {
-    // size_t tmp;
+    // usize tmp;
     // in >> tmp;
     // consume_newline(in);
     // assert!(tmp == 0 || tmp == 1);
@@ -198,7 +198,7 @@ pub fn  output_bool_vector<W: ?Sized + Write> (out:& BufWriter<W>, v:&Vec<bool>)
 #[inline]
 pub fn  input_bool_vector(ins:&impl BufRead, v:&Vec<bool>)
 {
-    // size_t size;
+    // usize size;
     // in >> size;
     // consume_newline(in);
     // v.resize(size);
@@ -228,10 +228,10 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //#endif // SERIALIZATION_TCC_
 
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
+// 
+// std::ostream& operator<<(std::ostream& out, v:&Vec<T>)
 // {
-//     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
+//     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
 //     out << v.len() << "\n";
 //     for t in &v
 //     {
@@ -241,11 +241,11 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return out;
 // }
 
-// template<typename T>
-// std::istream& operator>>(std::istream& in, std::vector<T> &v)
+// 
+// std::istream& operator>>(std::istream& in, Vec<T> &v)
 // {
-//     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
-//     size_t size;
+//     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 
@@ -261,8 +261,8 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return in;
 // }
 
-// template<typename T1, typename T2>
-// std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m)
+// 
+// std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>)
 // {
 //     out << m.len() << "\n";
 
@@ -275,11 +275,11 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return out;
 // }
 
-// template<typename T1, typename T2>
-// std::istream& operator>>(std::istream& in, std::map<T1, T2> &m)
+// 
+// std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m)
 // {
 //     m.clear();
-//     size_t size;
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 
@@ -297,8 +297,8 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return in;
 // }
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::set<T> &s)
+// 
+// std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>)
 // {
 //     out << s.len() << "\n";
 
@@ -310,11 +310,11 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return out;
 // }
 
-// template<typename T>
-// std::istream& operator>>(std::istream& in, std::set<T> &s)
+// 
+// std::istream& operator>>(std::istream& in, BTreeSet<T> &s)
 // {
 //     s.clear();
-//     size_t size;
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 

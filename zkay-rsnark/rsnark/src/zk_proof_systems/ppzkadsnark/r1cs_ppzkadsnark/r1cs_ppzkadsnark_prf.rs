@@ -16,11 +16,11 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_par
 
 
 
-// template <typename ppT>
+// template <ppT>
 //  pub fn prfGen<ppT>()->r1cs_ppzkadsnark_prfKeyT<ppT>;
 
-// template<typename ppT>
-// prfCompute(const r1cs_ppzkadsnark_prfKeyT<ppT> &key, const labelT &label)->ffec::Fr<snark_pp<ppT>> ;
+// 
+// prfCompute(key:&r1cs_ppzkadsnark_prfKeyT<ppT>, label:&labelT)->ffec::Fr<snark_pp<ppT>> ;
 
 
 

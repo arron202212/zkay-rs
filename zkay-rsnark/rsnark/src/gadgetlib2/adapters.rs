@@ -33,7 +33,7 @@ pub trait ConvertConfig<T,R>{
 // namespace gadgetlib2 {
 
 // /**
-//  * This class is a temporary hack for quick integration of Fp constraints with ppsnark. It is the
+//  * This pub struct is a temporary hack for quick integration of Fp constraints with ppsnark. It is the
 //  * IDDQD of classes and has "god mode" friend access to many of the gadgetlib classes. This will
 //  * be refactored out in the future. --Shaul
 //  */
@@ -56,13 +56,13 @@ pub trait GadgetLibAdapter {
 //    fn  convert(assignment:&VariableAssignment)->assignment_t;
      fn   resetVariableIndex(); ///< Resets variable index to 0 to make variable indices deterministic.
                                       //TODO: Kill GadgetLibAdapter::resetVariableIndex()
-   fn   getNextFreeIndex()->size_t{return Variable::nextFreeIndex_;}
+   fn   getNextFreeIndex()->usize{return Variable::nextFreeIndex_;}
 //    fn  convert(pb:&Protoboard)->protoboard_t;
 //    fn  convert(fElem:FElem)->Fp_elem_t;
-   fn   getVariableIndex(v:&Variable)->size_t{return v.index_;}
+   fn   getVariableIndex(v:&Variable)->usize{return v.index_;}
 }
 
-// bool operator==(const GadgetLibAdapter::linear_combination_t& lhs,
+// bool operator==(lhs:GadgetLibAdapter::linear_combination_t&,
 //                 const GadgetLibAdapter::linear_term_t& rhs);
 
 // }
@@ -88,7 +88,7 @@ impl GLA{
     pub fn new()->Self{
     Self}
 }
-// type GadgetLibAdapter GLA;
+// type GLA=GadgetLibAdapter;
 impl GadgetLibAdapter for GLA{
 
 fn resetVariableIndex() { // This is a hack, used for testing
@@ -181,8 +181,8 @@ impl PartialEq for linear_combination_t{
 }
 
 
-// bool operator==(const linear_combination_t& lhs,
-//     const linear_term_t& rhs) {
+// bool operator==(lhs:linear_combination_t&,
+//     rhs:&linear_term_t) {
 //     return lhs.first.len() == 1 &&
 //         lhs.first.at(0) == rhs &&
 //         lhs.second == Fp(0);

@@ -18,21 +18,21 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_proto
 
 // 
 pub struct argument_decoder_gadget {
-// private:: public tinyram_standard_gadget<FieldT> 
+// : public tinyram_standard_gadget<FieldT> 
 packed_desidx:    pb_variable<FieldT>,
 packed_arg1idx:    pb_variable<FieldT>,
 packed_arg2idx:    pb_variable<FieldT>,
 
-pack_desidx:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_arg1idx:    std::shared_ptr<packing_gadget<FieldT> >,
-pack_arg2idx:    std::shared_ptr<packing_gadget<FieldT> >,
+pack_desidx:    RcCell<packing_gadget<FieldT> >,
+pack_arg1idx:    RcCell<packing_gadget<FieldT> >,
+pack_arg2idx:    RcCell<packing_gadget<FieldT> >,
 
 arg2_demux_result:    pb_variable<FieldT>,
 arg2_demux_success:    pb_variable<FieldT>,
 
-demux_des:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
-demux_arg1:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
-demux_arg2:    std::shared_ptr<loose_multiplexing_gadget<FieldT> >,
+demux_des:    RcCell<loose_multiplexing_gadget<FieldT> >,
+demux_arg1:    RcCell<loose_multiplexing_gadget<FieldT> >,
+demux_arg2:    RcCell<loose_multiplexing_gadget<FieldT> >,
 // 
 arg2_is_imm:    pb_variable<FieldT>,
 desidx:    pb_variable_array<FieldT>,
@@ -54,7 +54,7 @@ packed_arg2val:    pb_variable<FieldT>,
     //                         packed_desval:pb_variable<FieldT>,
     //                         packed_arg1val:pb_variable<FieldT>,
     //                         packed_arg2val:pb_variable<FieldT>,
-    //                         annotation_prefix:std::string="");
+    //                         annotation_prefix:String="");
 
 
 // }
@@ -94,7 +94,7 @@ pub fn new(
                                                          packed_desval:pb_variable<FieldT>,
                                                          packed_arg1val:pb_variable<FieldT>,
                                                          packed_arg2val:pb_variable<FieldT>,
-                                                         annotation_prefix:std::string) ->Self
+                                                         annotation_prefix:String) ->Self
    
 {
     assert!(desidx.len() == pb.ap.reg_arg_width());

@@ -77,36 +77,36 @@ const OUTPUT_SEPARATOR:&str= " ";
 }
 }
 
-// inline void consume_newline(std::istream &in);
-// inline void consume_OUTPUT_NEWLINE(std::istream &in);
-// inline void consume_OUTPUT_SEPARATOR(std::istream &in);
+// inline pub fn  consume_newline(std::istream &in);
+// inline pub fn  consume_OUTPUT_NEWLINE(std::istream &in);
+// inline pub fn  consume_OUTPUT_SEPARATOR(std::istream &in);
 
-// inline void output_bool(std::ostream &out, const bool b);
-// inline void input_bool(std::istream &in, bool &b);
+// inline pub fn  output_bool(std::ostream &out, b:bool);
+// inline pub fn  input_bool(std::istream &in, bool &b);
 
-// inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v);
-// inline void input_bool_vector(std::istream &in, std::vector<bool> &v);
+// inline pub fn  output_bool_vector(std::ostream &out, v:&Vec<bool>);
+// inline pub fn  input_bool_vector(std::istream &in, Vec<bool> &v);
 
-// template<typename T>
-// T reserialize(const T &obj);
+// 
+// T reserialize(obj:&T);
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::vector<T> &v);
+// 
+// std::ostream& operator<<(std::ostream& out, v:&Vec<T>);
 
-// template<typename T>
-// std::istream& operator>>(std::ostream& out, std::vector<T> &v);
+// 
+// std::istream& operator>>(std::ostream& out, Vec<T> &v);
 
-// template<typename T1, typename T2>
-// std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m);
+// 
+// std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>);
 
-// template<typename T1, typename T2>
-// std::istream& operator>>(std::istream& in, std::map<T1, T2> &m);
+// 
+// std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m);
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::set<T> &s);
+// 
+// std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>);
 
-// template<typename T>
-// std::istream& operator>>(std::istream& in, std::set<T> &s);
+// 
+// std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
 // //} // libfqfft
 
@@ -135,23 +135,13 @@ const OUTPUT_SEPARATOR:&str= " ";
 
 //namespace libfqfft {
 
-// inline void consume_newline(std::istream &in)
+// inline pub fn  consume_newline(std::istream &in)
 // {
 //     char c;
 //     in.read(&c, 1);
 // }
 
-// inline void consume_OUTPUT_NEWLINE(std::istream &in)
-// {
-// // #ifdef BINARY_OUTPUT
-//     // nothing to consume
-// #else
-//     char c;
-//     in.read(&c, 1);
-// //#endif
-// }
-
-// inline void consume_OUTPUT_SEPARATOR(std::istream &in)
+// inline pub fn  consume_OUTPUT_NEWLINE(std::istream &in)
 // {
 // // #ifdef BINARY_OUTPUT
 //     // nothing to consume
@@ -161,14 +151,24 @@ const OUTPUT_SEPARATOR:&str= " ";
 // //#endif
 // }
 
-// inline void output_bool(std::ostream &out, const bool b)
+// inline pub fn  consume_OUTPUT_SEPARATOR(std::istream &in)
+// {
+// // #ifdef BINARY_OUTPUT
+//     // nothing to consume
+// #else
+//     char c;
+//     in.read(&c, 1);
+// //#endif
+// }
+
+// inline pub fn  output_bool(std::ostream &out, b:bool)
 // {
 //     out << if b {1} else{0} << "\n";
 // }
 
-// inline void input_bool(std::istream &in, bool &b)
+// inline pub fn  input_bool(std::istream &in, bool &b)
 // {
-//     size_t tmp;
+//     usize tmp;
 //     in >> tmp;
 //     consume_newline(in);
 //     assert!(tmp == 0 || tmp == 1);
@@ -176,7 +176,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     b = if tmp == 1 {true} else{false};
 // }
 
-// inline void output_bool_vector(std::ostream &out, const std::vector<bool> &v)
+// inline pub fn  output_bool_vector(std::ostream &out, v:&Vec<bool>)
 // {
 //     out << v.len() << "\n";
 //     for b in &v
@@ -185,9 +185,9 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     }
 // }
 
-// inline void input_bool_vector(std::istream &in, std::vector<bool> &v)
+// inline pub fn  input_bool_vector(std::istream &in, Vec<bool> &v)
 // {
-//     size_t size;
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 //     v.resize(size);
@@ -199,8 +199,8 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     }
 // }
 
-// template<typename T>
-// T reserialize(const T &obj)
+// 
+// T reserialize(obj:&T)
 // {
 //     std::stringstream ss;
 //     ss << obj;
@@ -210,10 +210,10 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return tmp;
 // }
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::vector<T> &v)
+// 
+// std::ostream& operator<<(std::ostream& out, v:&Vec<T>)
 // {
-//     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
+//     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
 //     out << v.len() << "\n";
 //     for t in &v
 //     {
@@ -223,11 +223,11 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return out;
 // }
 
-// template<typename T>
-// std::istream& operator>>(std::istream& in, std::vector<T> &v)
+// 
+// std::istream& operator>>(std::istream& in, Vec<T> &v)
 // {
-//     assert!(!std::is_same<T, bool>::value, "this does not work for std::vector<bool>");
-//     size_t size;
+//     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 
@@ -243,8 +243,8 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return in;
 // }
 
-// template<typename T1, typename T2>
-// std::ostream& operator<<(std::ostream& out, const std::map<T1, T2> &m)
+// 
+// std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>)
 // {
 //     out << m.len() << "\n";
 
@@ -257,11 +257,11 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return out;
 // }
 
-// template<typename T1, typename T2>
-// std::istream& operator>>(std::istream& in, std::map<T1, T2> &m)
+// 
+// std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m)
 // {
 //     m.clear();
-//     size_t size;
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 
@@ -279,8 +279,8 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return in;
 // }
 
-// template<typename T>
-// std::ostream& operator<<(std::ostream& out, const std::set<T> &s)
+// 
+// std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>)
 // {
 //     out << s.len() << "\n";
 
@@ -293,11 +293,11 @@ const OUTPUT_SEPARATOR:&str= " ";
 // }
 
 
-// template<typename T>
-// std::istream& operator>>(std::istream& in, std::set<T> &s)
+// 
+// std::istream& operator>>(std::istream& in, BTreeSet<T> &s)
 // {
 //     s.clear();
-//     size_t size;
+//     usize size;
 //     in >> size;
 //     consume_newline(in);
 

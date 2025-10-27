@@ -4,11 +4,11 @@
  Declaration of interfaces for a ppzkSNARK for BACS.
 
  This includes:
- - class for proving key
- - class for verification key
- - class for processed verification key
- - class for key pair (proving key & verification key)
- - class for proof
+ - pub struct for proving key
+ - pub struct for verification key
+ - pub struct for processed verification key
+ - pub struct for key pair (proving key & verification key)
+ - pub struct for proof
  - generator algorithm
  - prover algorithm
  - verifier algorithm (with strong or weak input consistency)
@@ -42,70 +42,70 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
 /******************************** Proving key ********************************/
 
-template<typename ppT>
-class bacs_ppzksnark_proving_key;
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const bacs_ppzksnark_proving_key<ppT> &pk);
+pub struct bacs_ppzksnark_proving_key;
 
-template<typename ppT>
+
+std::ostream& operator<<(std::ostream &out, pk:&bacs_ppzksnark_proving_key<ppT>);
+
+
 std::istream& operator>>(std::istream &in, bacs_ppzksnark_proving_key<ppT> &pk);
 
 /**
  * A proving key for the BACS ppzkSNARK.
  */
-template<typename ppT>
-class bacs_ppzksnark_proving_key {
+
+pub struct bacs_ppzksnark_proving_key {
 
     bacs_ppzksnark_circuit<ppT> circuit;
     r1cs_ppzksnark_proving_key<ppT> r1cs_pk;
 
     bacs_ppzksnark_proving_key() {};
-    bacs_ppzksnark_proving_key(const bacs_ppzksnark_proving_key<ppT> &other) = default;
+    bacs_ppzksnark_proving_key(other:&bacs_ppzksnark_proving_key<ppT>) = default;
     bacs_ppzksnark_proving_key(bacs_ppzksnark_proving_key<ppT> &&other) = default;
-    bacs_ppzksnark_proving_key(const bacs_ppzksnark_circuit<ppT> &circuit,
-                               const r1cs_ppzksnark_proving_key<ppT> &r1cs_pk) :
-        circuit(circuit), r1cs_pk(r1cs_pk)
+    bacs_ppzksnark_proving_key(circuit:&bacs_ppzksnark_circuit<ppT>,
+                               r1cs_pk:&r1cs_ppzksnark_proving_key<ppT>)->Self
+       circuit,r1cs_pk
     {}
     bacs_ppzksnark_proving_key(bacs_ppzksnark_circuit<ppT> &&circuit,
-                               r1cs_ppzksnark_proving_key<ppT> &&r1cs_pk) :
+                               r1cs_ppzksnark_proving_key<ppT> &&r1cs_pk)->Self
         circuit((circuit)), r1cs_pk((r1cs_pk))
     {}
 
-    bacs_ppzksnark_proving_key<ppT>& operator=(const bacs_ppzksnark_proving_key<ppT> &other) = default;
+    bacs_ppzksnark_proving_key<ppT>& operator=(other:&bacs_ppzksnark_proving_key<ppT>) = default;
 
-    size_t G1_size() const
+    usize G1_size() const
     {
         return r1cs_pk.G1_size();
     }
 
-    size_t G2_size() const
+    usize G2_size() const
     {
         return r1cs_pk.G2_size();
     }
 
-    size_t G1_sparse_size() const
+    usize G1_sparse_size() const
     {
         return r1cs_pk.G1_sparse_size();
     }
 
-    size_t G2_sparse_size() const
+    usize G2_sparse_size() const
     {
         return r1cs_pk.G2_sparse_size();
     }
 
-    size_t size_in_bits() const
+    usize size_in_bits() const
     {
         return r1cs_pk.size_in_bits();
     }
 
-    void print_size() const
+    pub fn  print_size() const
     {
         r1cs_pk.print_size();
     }
 
-    bool operator==(const bacs_ppzksnark_proving_key<ppT> &other) const;
-    friend std::ostream& operator<< <ppT>(std::ostream &out, const bacs_ppzksnark_proving_key<ppT> &pk);
+    bool operator==(other:&bacs_ppzksnark_proving_key<ppT>) const;
+    friend std::ostream& operator<< <ppT>(std::ostream &out, pk:&bacs_ppzksnark_proving_key<ppT>);
     friend std::istream& operator>> <ppT>(std::istream &in, bacs_ppzksnark_proving_key<ppT> &pk);
 };
 
@@ -115,7 +115,7 @@ class bacs_ppzksnark_proving_key {
 /**
  * A verification key for the BACS ppzkSNARK.
  */
-template<typename ppT>
+
 using bacs_ppzksnark_verification_key = r1cs_ppzksnark_verification_key<ppT>;
 
 
@@ -128,7 +128,7 @@ using bacs_ppzksnark_verification_key = r1cs_ppzksnark_verification_key<ppT>;
  * contains a small constant amount of additional pre-computed information that
  * enables a faster verification time.
  */
-template<typename ppT>
+
 using bacs_ppzksnark_processed_verification_key = r1cs_ppzksnark_processed_verification_key<ppT>;
 
 
@@ -137,22 +137,22 @@ using bacs_ppzksnark_processed_verification_key = r1cs_ppzksnark_processed_verif
 /**
  * A key pair for the BACS ppzkSNARK, which consists of a proving key and a verification key.
  */
-template<typename ppT>
-class bacs_ppzksnark_keypair {
+
+pub struct bacs_ppzksnark_keypair {
 
     bacs_ppzksnark_proving_key<ppT> pk;
     bacs_ppzksnark_verification_key<ppT> vk;
 
     bacs_ppzksnark_keypair() {};
     bacs_ppzksnark_keypair(bacs_ppzksnark_keypair<ppT> &&other) = default;
-    bacs_ppzksnark_keypair(const bacs_ppzksnark_proving_key<ppT> &pk,
-                           const bacs_ppzksnark_verification_key<ppT> &vk) :
-        pk(pk),
+    bacs_ppzksnark_keypair(pk:&bacs_ppzksnark_proving_key<ppT>,
+                           vk:&bacs_ppzksnark_verification_key<ppT>)->Self
+       pk,
         vk(vk)
     {}
 
     bacs_ppzksnark_keypair(bacs_ppzksnark_proving_key<ppT> &&pk,
-                           bacs_ppzksnark_verification_key<ppT> &&vk) :
+                           bacs_ppzksnark_verification_key<ppT> &&vk)->Self
         pk((pk)),
         vk((vk))
     {}
@@ -164,7 +164,7 @@ class bacs_ppzksnark_keypair {
 /**
  * A proof for the BACS ppzkSNARK.
  */
-template<typename ppT>
+
 using bacs_ppzksnark_proof = r1cs_ppzksnark_proof<ppT>;
 
 
@@ -175,8 +175,8 @@ using bacs_ppzksnark_proof = r1cs_ppzksnark_proof<ppT>;
  *
  * Given a BACS circuit C, this algorithm produces proving and verification keys for C.
  */
-template<typename ppT>
-bacs_ppzksnark_keypair<ppT> bacs_ppzksnark_generator(const bacs_ppzksnark_circuit<ppT> &circuit);
+
+bacs_ppzksnark_keypair<ppT> bacs_ppzksnark_generator(circuit:&bacs_ppzksnark_circuit<ppT>);
 
 /**
  * A prover algorithm for the BACS ppzkSNARK.
@@ -186,10 +186,10 @@ bacs_ppzksnark_keypair<ppT> bacs_ppzksnark_generator(const bacs_ppzksnark_circui
  *               ``there exists Y such that C(X,Y)=0''.
  * Above, C is the BACS circuit that was given as input to the generator algorithm.
  */
-template<typename ppT>
-bacs_ppzksnark_proof<ppT> bacs_ppzksnark_prover(const bacs_ppzksnark_proving_key<ppT> &pk,
-                                                const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                                const bacs_ppzksnark_auxiliary_input<ppT> &auxiliary_input);
+
+bacs_ppzksnark_proof<ppT> bacs_ppzksnark_prover(pk:&bacs_ppzksnark_proving_key<ppT>,
+                                                primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                                auxiliary_input:&bacs_ppzksnark_auxiliary_input<ppT>);
 
 /*
  Below are four variants of verifier algorithm for the BACS ppzkSNARK.
@@ -210,46 +210,46 @@ bacs_ppzksnark_proof<ppT> bacs_ppzksnark_prover(const bacs_ppzksnark_proving_key
  * (1) accepts a non-processed verification key, and
  * (2) has weak input consistency.
  */
-template<typename ppT>
-bool bacs_ppzksnark_verifier_weak_IC(const bacs_ppzksnark_verification_key<ppT> &vk,
-                                     const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                     const bacs_ppzksnark_proof<ppT> &proof);
+
+bool bacs_ppzksnark_verifier_weak_IC(vk:&bacs_ppzksnark_verification_key<ppT>,
+                                     primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                     proof:&bacs_ppzksnark_proof<ppT>);
 
 /**
  * A verifier algorithm for the BACS ppzkSNARK that:
  * (1) accepts a non-processed verification key, and
  * (2) has strong input consistency.
  */
-template<typename ppT>
-bool bacs_ppzksnark_verifier_strong_IC(const bacs_ppzksnark_verification_key<ppT> &vk,
-                                       const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                       const bacs_ppzksnark_proof<ppT> &proof);
+
+bool bacs_ppzksnark_verifier_strong_IC(vk:&bacs_ppzksnark_verification_key<ppT>,
+                                       primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                       proof:&bacs_ppzksnark_proof<ppT>);
 
 /**
  * Convert a (non-processed) verification key into a processed verification key.
  */
-template<typename ppT>
-bacs_ppzksnark_processed_verification_key<ppT> bacs_ppzksnark_verifier_process_vk(const bacs_ppzksnark_verification_key<ppT> &vk);
+
+bacs_ppzksnark_processed_verification_key<ppT> bacs_ppzksnark_verifier_process_vk(vk:&bacs_ppzksnark_verification_key<ppT>);
 
 /**
  * A verifier algorithm for the BACS ppzkSNARK that:
  * (1) accepts a processed verification key, and
  * (2) has weak input consistency.
  */
-template<typename ppT>
-bool bacs_ppzksnark_online_verifier_weak_IC(const bacs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                            const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                            const bacs_ppzksnark_proof<ppT> &proof);
+
+bool bacs_ppzksnark_online_verifier_weak_IC(pvk:&bacs_ppzksnark_processed_verification_key<ppT>,
+                                            primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                            proof:&bacs_ppzksnark_proof<ppT>);
 
 /**
  * A verifier algorithm for the BACS ppzkSNARK that:
  * (1) accepts a processed verification key, and
  * (2) has strong input consistency.
  */
-template<typename ppT>
-bool bacs_ppzksnark_online_verifier_strong_IC(const bacs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                              const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                              const bacs_ppzksnark_proof<ppT> &proof);
+
+bool bacs_ppzksnark_online_verifier_strong_IC(pvk:&bacs_ppzksnark_processed_verification_key<ppT>,
+                                              primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                              proof:&bacs_ppzksnark_proof<ppT>);
 
 
 
@@ -277,15 +277,15 @@ use crate::reductions::bacs_to_r1cs::bacs_to_r1cs;
 
 
 
-template<typename ppT>
-bool bacs_ppzksnark_proving_key<ppT>::operator==(const bacs_ppzksnark_proving_key<ppT> &other) const
+
+bool bacs_ppzksnark_proving_key<ppT>::operator==(other:&bacs_ppzksnark_proving_key<ppT>) const
 {
     return (self.circuit == other.circuit &&
             self.r1cs_pk == other.r1cs_pk);
 }
 
-template<typename ppT>
-std::ostream& operator<<(std::ostream &out, const bacs_ppzksnark_proving_key<ppT> &pk)
+
+std::ostream& operator<<(std::ostream &out, pk:&bacs_ppzksnark_proving_key<ppT>)
 {
     out << pk.circuit << OUTPUT_NEWLINE;
     out << pk.r1cs_pk << OUTPUT_NEWLINE;
@@ -293,7 +293,7 @@ std::ostream& operator<<(std::ostream &out, const bacs_ppzksnark_proving_key<ppT
     return out;
 }
 
-template<typename ppT>
+
 std::istream& operator>>(std::istream &in, bacs_ppzksnark_proving_key<ppT> &pk)
 {
     in >> pk.circuit;
@@ -305,10 +305,10 @@ std::istream& operator>>(std::istream &in, bacs_ppzksnark_proving_key<ppT> &pk)
 }
 
 
-template<typename ppT>
-bacs_ppzksnark_keypair<ppT> bacs_ppzksnark_generator(const bacs_ppzksnark_circuit<ppT> &circuit)
+
+bacs_ppzksnark_keypair<ppT> bacs_ppzksnark_generator(circuit:&bacs_ppzksnark_circuit<ppT>)
 {
-    type ffec::Fr<ppT> FieldT;
+    type FieldT=ffec::Fr<ppT>;
 
     ffec::enter_block("Call to bacs_ppzksnark_generator");
     const r1cs_constraint_system<FieldT> r1cs_cs = bacs_to_r1cs_instance_map<FieldT>(circuit);
@@ -319,24 +319,24 @@ bacs_ppzksnark_keypair<ppT> bacs_ppzksnark_generator(const bacs_ppzksnark_circui
                                        r1cs_keypair.vk);
 }
 
-template<typename ppT>
-bacs_ppzksnark_proof<ppT> bacs_ppzksnark_prover(const bacs_ppzksnark_proving_key<ppT> &pk,
-                                                const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                                const bacs_ppzksnark_auxiliary_input<ppT> &auxiliary_input)
+
+bacs_ppzksnark_proof<ppT> bacs_ppzksnark_prover(pk:&bacs_ppzksnark_proving_key<ppT>,
+                                                primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                                auxiliary_input:&bacs_ppzksnark_auxiliary_input<ppT>)
 {
-    type ffec::Fr<ppT> FieldT;
+    type FieldT=ffec::Fr<ppT>;
 
     ffec::enter_block("Call to bacs_ppzksnark_prover");
-    const r1cs_variable_assignment<FieldT> r1cs_va = bacs_to_r1cs_witness_map<FieldT>(pk.circuit, primary_input, auxiliary_input);
+    primary_input:r1cs_variable_assignment<FieldT> r1cs_va = bacs_to_r1cs_witness_map<FieldT>(pk.circuit,, auxiliary_input);
     const r1cs_auxiliary_input<FieldT> r1cs_ai(r1cs_va.begin() + primary_input.len(), r1cs_va.end()); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
-    const r1cs_ppzksnark_proof<ppT> r1cs_proof = r1cs_ppzksnark_prover<ppT>(pk.r1cs_pk, primary_input, r1cs_ai);
+    primary_input:r1cs_ppzksnark_proof<ppT> r1cs_proof = r1cs_ppzksnark_prover<ppT>(pk.r1cs_pk,, r1cs_ai);
     ffec::leave_block("Call to bacs_ppzksnark_prover");
 
     return r1cs_proof;
 }
 
-template<typename ppT>
-bacs_ppzksnark_processed_verification_key<ppT> bacs_ppzksnark_verifier_process_vk(const bacs_ppzksnark_verification_key<ppT> &vk)
+
+bacs_ppzksnark_processed_verification_key<ppT> bacs_ppzksnark_verifier_process_vk(vk:&bacs_ppzksnark_verification_key<ppT>)
 {
     ffec::enter_block("Call to bacs_ppzksnark_verifier_process_vk");
     const bacs_ppzksnark_processed_verification_key<ppT> pvk = r1cs_ppzksnark_verifier_process_vk<ppT>(vk);
@@ -345,51 +345,51 @@ bacs_ppzksnark_processed_verification_key<ppT> bacs_ppzksnark_verifier_process_v
     return pvk;
 }
 
-template<typename ppT>
-bool bacs_ppzksnark_verifier_weak_IC(const bacs_ppzksnark_verification_key<ppT> &vk,
-                                     const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                     const bacs_ppzksnark_proof<ppT> &proof)
+
+bool bacs_ppzksnark_verifier_weak_IC(vk:&bacs_ppzksnark_verification_key<ppT>,
+                                     primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                     proof:&bacs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to bacs_ppzksnark_verifier_weak_IC");
     const bacs_ppzksnark_processed_verification_key<ppT> pvk = bacs_ppzksnark_verifier_process_vk<ppT>(vk);
-    const bool bit = r1cs_ppzksnark_online_verifier_weak_IC<ppT>(pvk, primary_input, proof);
+    primary_input:bool bit = r1cs_ppzksnark_online_verifier_weak_IC<ppT>(pvk,, proof);
     ffec::leave_block("Call to bacs_ppzksnark_verifier_weak_IC");
 
     return bit;
 }
 
-template<typename ppT>
-bool bacs_ppzksnark_verifier_strong_IC(const bacs_ppzksnark_verification_key<ppT> &vk,
-                                       const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                       const bacs_ppzksnark_proof<ppT> &proof)
+
+bool bacs_ppzksnark_verifier_strong_IC(vk:&bacs_ppzksnark_verification_key<ppT>,
+                                       primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                       proof:&bacs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to bacs_ppzksnark_verifier_strong_IC");
     const bacs_ppzksnark_processed_verification_key<ppT> pvk = bacs_ppzksnark_verifier_process_vk<ppT>(vk);
-    const bool bit = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, primary_input, proof);
+    primary_input:bool bit = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk,, proof);
     ffec::leave_block("Call to bacs_ppzksnark_verifier_strong_IC");
 
     return bit;
 }
 
-template<typename ppT>
-bool bacs_ppzksnark_online_verifier_weak_IC(const bacs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                            const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                            const bacs_ppzksnark_proof<ppT> &proof)
+
+bool bacs_ppzksnark_online_verifier_weak_IC(pvk:&bacs_ppzksnark_processed_verification_key<ppT>,
+                                            primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                            proof:&bacs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to bacs_ppzksnark_online_verifier_weak_IC");
-    const bool bit = r1cs_ppzksnark_online_verifier_weak_IC<ppT>(pvk, primary_input, proof);
+    primary_input:bool bit = r1cs_ppzksnark_online_verifier_weak_IC<ppT>(pvk,, proof);
     ffec::leave_block("Call to bacs_ppzksnark_online_verifier_weak_IC");
 
     return bit;
 }
 
-template<typename ppT>
-bool bacs_ppzksnark_online_verifier_strong_IC(const bacs_ppzksnark_processed_verification_key<ppT> &pvk,
-                                              const bacs_ppzksnark_primary_input<ppT> &primary_input,
-                                              const bacs_ppzksnark_proof<ppT> &proof)
+
+bool bacs_ppzksnark_online_verifier_strong_IC(pvk:&bacs_ppzksnark_processed_verification_key<ppT>,
+                                              primary_input:&bacs_ppzksnark_primary_input<ppT>,
+                                              proof:&bacs_ppzksnark_proof<ppT>)
 {
     ffec::enter_block("Call to bacs_ppzksnark_online_verifier_strong_IC");
-    const bool bit = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, primary_input, proof);
+    primary_input:bool bit = r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk,, proof);
     ffec::leave_block("Call to bacs_ppzksnark_online_verifier_strong_IC");
 
     return bit;

@@ -42,29 +42,29 @@
  * For example, if you want to use the types my_Field, my_Fqe, etc,
  * then you would do as follows. First declare a new type:
  *
- *   class my_ec_pp;
+ *   pub struct my_ec_pp;
  *
  * Second, specialize pairing_selector<ec_ppT> for the
- * case ec_ppT = my_ec_pp, using the above types:
+ * case ec_ppT = my_ec_pp, type  the above types:
  *
- *   template<>
- *   class pairing_selector<my_ec_pp> {
- *       type my_Field FieldT;
- *       type my_Fqe FqeT;
- *       type my_Fqk FqkT;
- *       type my_Fqe_variable_type Fqe_variable_type;
- *       type my_Fqe_mul_gadget_type Fqe_mul_gadget_type;
- *       type my_Fqe_mul_by_lc_gadget_type Fqe_mul_by_lc_gadget_type;
- *       type my_Fqe_sqr_gadget_type Fqe_sqr_gadget_type;
- *       type my_Fqk_variable_type Fqk_variable_type;
- *       type my_Fqk_mul_gadget_type Fqk_mul_gadget_type;
- *       type my_Fqk_special_mul_gadget_type Fqk_special_mul_gadget_type;
- *       type my_Fqk_sqr_gadget_type Fqk_sqr_gadget_type;
- *       type my_other_curve_type other_curve_type;
- *       type my_e_over_e_miller_loop_gadget_type e_over_e_miller_loop_gadget_type;
- *       type my_e_times_e_over_e_miller_loop_gadget_type e_times_e_over_e_miller_loop_gadget_type;
- *       type my_final_exp_gadget_type final_exp_gadget_type;
- *       static const constexpr ffec::bigint<...> &pairing_loop_count = ...;
+ *   
+ *   pub struct pairing_selector<my_ec_pp> {
+ *       type FieldT=my_Field;
+ *       type FqeT=my_Fqe;
+ *       type FqkT=my_Fqk;
+ *       type Fqe_variable_type=my_Fqe_variable_type;
+ *       type Fqe_mul_gadget_type=my_Fqe_mul_gadget_type;
+ *       type Fqe_mul_by_lc_gadget_type=my_Fqe_mul_by_lc_gadget_type;
+ *       type Fqe_sqr_gadget_type=my_Fqe_sqr_gadget_type;
+ *       type Fqk_variable_type=my_Fqk_variable_type;
+ *       type Fqk_mul_gadget_type=my_Fqk_mul_gadget_type;
+ *       type Fqk_special_mul_gadget_type=my_Fqk_special_mul_gadget_type;
+ *       type Fqk_sqr_gadget_type=my_Fqk_sqr_gadget_type;
+ *       type other_curve_type=my_other_curve_type;
+ *       type e_over_e_miller_loop_gadget_type=my_e_over_e_miller_loop_gadget_type;
+ *       type e_times_e_over_e_miller_loop_gadget_type=my_e_times_e_over_e_miller_loop_gadget_type;
+ *       type final_exp_gadget_type=my_final_exp_gadget_type;
+ *       static pairing_loop_count:&constexpr ffec::bigint<...> = ...;
  *   };
  *
  * Having done the above, my_ec_pp can be used as a template parameter.
@@ -73,43 +73,43 @@
  * ec_ppT to "MNT4" and "MNT6".
  *
  */
-template<typename ppT>
-class pairing_selector;
+
+// pub struct pairing_selector;
 
 /**
  * Below are various template aliases (used for convenience).
  */
 
-template<typename ppT>
-using FqkT = typename pairing_selector<ppT>::FqkT; // TODO: better name when stable
 
-template<typename ppT>
-using Fqe_variable = typename pairing_selector<ppT>::Fqe_variable_type;
-template<typename ppT>
-using Fqe_mul_gadget = typename pairing_selector<ppT>::Fqe_mul_gadget_type;
-template<typename ppT>
-using Fqe_mul_by_lc_gadget = typename pairing_selector<ppT>::Fqe_mul_by_lc_gadget_type;
-template<typename ppT>
-using Fqe_sqr_gadget = typename pairing_selector<ppT>::Fqe_sqr_gadget_type;
+type  FqkT = pairing_selector<ppT>::FqkT; // TODO: better name when stable
 
-template<typename ppT>
-using Fqk_variable = typename pairing_selector<ppT>::Fqk_variable_type;
-template<typename ppT>
-using Fqk_mul_gadget = typename pairing_selector<ppT>::Fqk_mul_gadget_type;
-template<typename ppT>
-using Fqk_special_mul_gadget = typename pairing_selector<ppT>::Fqk_special_mul_gadget_type;
-template<typename ppT>
-using Fqk_sqr_gadget = typename pairing_selector<ppT>::Fqk_sqr_gadget_type;
 
-template<typename ppT>
-using other_curve = typename pairing_selector<ppT>::other_curve_type;
+type  Fqe_variable = pairing_selector<ppT>::Fqe_variable_type;
 
-template<typename ppT>
-using e_over_e_miller_loop_gadget = typename pairing_selector<ppT>::e_over_e_miller_loop_gadget_type;
-template<typename ppT>
-using e_times_e_over_e_miller_loop_gadget = typename pairing_selector<ppT>::e_times_e_over_e_miller_loop_gadget_type;
-template<typename ppT>
-using final_exp_gadget = typename pairing_selector<ppT>::final_exp_gadget_type;
+type  Fqe_mul_gadget = pairing_selector<ppT>::Fqe_mul_gadget_type;
+
+type  Fqe_mul_by_lc_gadget = pairing_selector<ppT>::Fqe_mul_by_lc_gadget_type;
+
+type  Fqe_sqr_gadget = pairing_selector<ppT>::Fqe_sqr_gadget_type;
+
+
+type  Fqk_variable = pairing_selector<ppT>::Fqk_variable_type;
+
+type  Fqk_mul_gadget = pairing_selector<ppT>::Fqk_mul_gadget_type;
+
+type  Fqk_special_mul_gadget = pairing_selector<ppT>::Fqk_special_mul_gadget_type;
+
+type  Fqk_sqr_gadget = pairing_selector<ppT>::Fqk_sqr_gadget_type;
+
+
+type  other_curve = pairing_selector<ppT>::other_curve_type;
+
+
+type  e_over_e_miller_loop_gadget = pairing_selector<ppT>::e_over_e_miller_loop_gadget_type;
+
+type  e_times_e_over_e_miller_loop_gadget = pairing_selector<ppT>::e_times_e_over_e_miller_loop_gadget_type;
+
+type  final_exp_gadget = pairing_selector<ppT>::final_exp_gadget_type;
 
 
 

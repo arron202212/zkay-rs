@@ -12,7 +12,7 @@
 
 use crate::common::utils;
 use crate::algebra::fields::binary::gf32;
-use crate::algebra::curves::edwards/edwards_pp;
+use crate::algebra::curves::edwards::edwards_pp;
 use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
 using namespace libff;
@@ -34,15 +34,15 @@ TEST(Log2Test, SimpleTest) {
 TEST(Log2Test, PowersOfTwo) {
     for i in 10..20{
     {
-        const std::size_t k = (1ULL<<i);
+        const std::usize k = (1ULL<<i);
         EXPECT_EQ(log2(k-1), i);
         EXPECT_EQ(log2(k), i);
         EXPECT_EQ(log2(k+1), i+1);
     }
 }
 
-template<typename FieldT>
-void test_random_element()
+
+pub fn  test_random_element()
 {
     FieldT x = random_element_non_zero_one<FieldT>();
     EXPECT_NE(x, FieldT::zero());
@@ -67,7 +67,7 @@ TEST(UtilsTest, CurveVectorSizeTest)
     init_edwards_params();
     init_mnt6_params();
 
-    std::vector<edwards_G1> vec;
+    Vec<edwards_G1> vec;
 
     vec.push_back(edwards_G1::G1_one);
     vec.push_back(edwards_G1::G1_zero);
@@ -75,7 +75,7 @@ TEST(UtilsTest, CurveVectorSizeTest)
 
     EXPECT_EQ(curve_size_in_bits(vec), 552);
 
-    std::vector<mnt6_G2> vec2;
+    Vec<mnt6_G2> vec2;
 
     vec2.push_back(mnt6_G2::G2_zero);
     vec2.push_back(mnt6_G2::G2_one);

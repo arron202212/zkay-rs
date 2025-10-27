@@ -6,60 +6,32 @@
  *****************************************************************************/
 //#ifndef HASH_IO_HPP_
 // #define HASH_IO_HPP_
-use  <cstddef>
-use  <vector>
+// use  <cstddef>
+
 
 use crate::gadgetlib1::gadgets::basic_gadgets;
 
 
 
-template<typename FieldT>
-class digest_variable : public gadget<FieldT> {
 
-    size_t digest_size;
-    pb_variable_array<FieldT> bits;
+pub struct digest_variable<FieldT> {//gadget<FieldT>
 
-    digest_variable<FieldT>(protoboard<FieldT> &pb,
-                            const size_t digest_size,
-                            const std::string &annotation_prefix);
+digest_size:    usize,
+bits:    pb_variable_array<FieldT>,
 
-    digest_variable<FieldT>(protoboard<FieldT> &pb,
-                            const size_t digest_size,
-                            const pb_variable_array<FieldT> &partial_bits,
-                            const pb_variable<FieldT> &padding,
-                            const std::string &annotation_prefix);
-
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness(const ffec::bit_vector& contents);
-    ffec::bit_vector get_digest() const;
-};
-
-template<typename FieldT>
-class block_variable : public gadget<FieldT> {
-
-    size_t block_size;
-    pb_variable_array<FieldT> bits;
-
-    block_variable(protoboard<FieldT> &pb,
-                   const size_t block_size,
-                   const std::string &annotation_prefix);
-
-    block_variable(protoboard<FieldT> &pb,
-                   const std::vector<pb_variable_array<FieldT> > &parts,
-                   const std::string &annotation_prefix);
-
-    block_variable(protoboard<FieldT> &pb,
-                   const digest_variable<FieldT> &left,
-                   const digest_variable<FieldT> &right,
-                   const std::string &annotation_prefix);
-
-    void generate_r1cs_constraints();
-    void generate_r1cs_witness(const ffec::bit_vector& contents);
-    ffec::bit_vector get_block() const;
-};
+}
 
 
-use crate::gadgetlib1::gadgets::hashes::hash_io;
+pub struct block_variable<FieldT> {//gadget<FieldT>
+
+block_size:    usize,
+bits:    pb_variable_array<FieldT>,
+
+}
+
+
+
+// use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 //#endif // HASH_IO_HPP_
 /**
@@ -73,22 +45,25 @@ use crate::gadgetlib1::gadgets::hashes::hash_io;
 
 
 
-template<typename FieldT>
-digest_variable<FieldT>::digest_variable(protoboard<FieldT> &pb,
-                                         const size_t digest_size,
-                                         const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix), digest_size(digest_size)
+impl digest_variable<FieldT>{
+pub fn new(pb:protoboard<FieldT>,
+                                         digest_size:usize,
+                                         annotation_prefix:&String)->Self
+    
 {
     bits.allocate(pb, digest_size, FMT(self.annotation_prefix, " bits"));
+    // gadget<FieldT>(pb, annotation_prefix),
+    Self{digest_size}
 }
 
-template<typename FieldT>
-digest_variable<FieldT>::digest_variable(protoboard<FieldT> &pb,
-                                         const size_t digest_size,
-                                         const pb_variable_array<FieldT> &partial_bits,
-                                         const pb_variable<FieldT> &padding,
-                                         const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix), digest_size(digest_size)
+
+
+pub fn new2(pb:protoboard<FieldT>,
+                                         digest_size:usize,
+                                         partial_bits:&pb_variable_array<FieldT>,
+                                         padding:&pb_variable<FieldT>,
+                                         annotation_prefix:&String)->Self
+   
 {
     assert!(bits.len() <= digest_size);
     bits = partial_bits;
@@ -96,74 +71,85 @@ digest_variable<FieldT>::digest_variable(protoboard<FieldT> &pb,
     {
         bits.push(padding);
     }
+    //   gadget<FieldT>(pb, annotation_prefix),
+    Self{digest_size}
 }
 
-template<typename FieldT>
-void digest_variable<FieldT>::generate_r1cs_constraints()
+
+pub fn generate_r1cs_constraints()
 {
     for i in 0..digest_size
     {
-        generate_boolean_r1cs_constraint<FieldT>(self.pb, bits[i], FMT(self.annotation_prefix, " bits_{}", i));
+        generate_boolean_r1cs_constraint::<FieldT>(self.pb, bits[i], FMT(self.annotation_prefix, " bits_{}", i));
     }
 }
 
-template<typename FieldT>
-void digest_variable<FieldT>::generate_r1cs_witness(const ffec::bit_vector& contents)
+
+pub fn generate_r1cs_witness(contents:&bit_vector)
 {
     bits.fill_with_bits(self.pb, contents);
 }
 
-template<typename FieldT>
-ffec::bit_vector digest_variable<FieldT>::get_digest() const
+
+pub fn get_digest()->bit_vector
 {
     return bits.get_bits(self.pb);
 }
-
-template<typename FieldT>
-block_variable<FieldT>::block_variable(protoboard<FieldT> &pb,
-                                       const size_t block_size,
-                                       const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix), block_size(block_size)
-{
-    bits.allocate(pb, block_size, FMT(self.annotation_prefix, " bits"));
 }
 
-template<typename FieldT>
-block_variable<FieldT>::block_variable(protoboard<FieldT> &pb,
-                                       const std::vector<pb_variable_array<FieldT> > &parts,
-                                       const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix)
+impl block_variable<FieldT> {
+pub fn new(pb:protoboard<FieldT>,
+                                       block_size:usize,
+                                       annotation_prefix:&String)->Self
+    
+{
+    bits.allocate(pb, block_size, FMT(self.annotation_prefix, " bits"));
+    // gadget<FieldT>(pb, annotation_prefix),
+    Self{block_size}
+    
+}
+
+
+pub fn new2(pb:protoboard<FieldT>,
+                                       parts:&Vec<pb_variable_array<FieldT> >,
+                                       annotation_prefix:&String)->Self
+    
 {
     for part in &parts
     {
         bits.insert(bits.end(), part.begin(), part.end());
     }
+    // gadget<FieldT>(pb, annotation_prefix)
+    Self{}
 }
 
-template<typename FieldT>
-block_variable<FieldT>::block_variable(protoboard<FieldT> &pb,
-                                       const digest_variable<FieldT> &left,
-                                       const digest_variable<FieldT> &right,
-                                       const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix)
+
+pub fn new3(pb:protoboard<FieldT>,
+                                       left:&digest_variable<FieldT>,
+                                       right:&digest_variable<FieldT>,
+                                       annotation_prefix:&String)->Self
+    
 {
     assert!(left.bits.len() == right.bits.len());
     block_size = 2 * left.bits.len();
     bits.insert(bits.end(), left.bits.begin(), left.bits.end());
     bits.insert(bits.end(), right.bits.begin(), right.bits.end());
+// gadget<FieldT>(pb, annotation_prefix)
+    Self{}
 }
 
-template<typename FieldT>
-void block_variable<FieldT>::generate_r1cs_witness(const ffec::bit_vector& contents)
+
+pub fn generate_r1cs_witness(contents:&bit_vector)
 {
     bits.fill_with_bits(self.pb, contents);
 }
 
-template<typename FieldT>
-ffec::bit_vector block_variable<FieldT>::get_block() const
+
+pub fn get_block()->bit_vector
 {
     return bits.get_bits(self.pb);
 }
 
+}
 
 //#endif // HASH_IO_TCC_

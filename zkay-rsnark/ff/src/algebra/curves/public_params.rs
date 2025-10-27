@@ -18,43 +18,43 @@
 
   one should also define the following static methods:
 
-  void init_public_params();
+  pub fn  init_public_params();
 
-  GT<EC_ppT> final_exponentiation(const Fqk<EC_ppT> &elt);
+  GT<EC_ppT> final_exponentiation(elt:&Fqk<EC_ppT>);
 
-  G1_precomp<EC_ppT> precompute_G1(const G1<EC_ppT> &P);
-  G2_precomp<EC_ppT> precompute_G2(const G2<EC_ppT> &Q);
+  G1_precomp<EC_ppT> precompute_G1(P:&G1<EC_ppT>);
+  G2_precomp<EC_ppT> precompute_G2(Q:&G2<EC_ppT>);
 
-  Fqk<EC_ppT> miller_loop(const G1_precomp<EC_ppT> &prec_P,
-                          const G2_precomp<EC_ppT> &prec_Q);
+  Fqk<EC_ppT> miller_loop(prec_P:&G1_precomp<EC_ppT>,
+                          prec_Q:&G2_precomp<EC_ppT>);
 
-  affine_ate_G1_precomp<EC_ppT> affine_ate_precompute_G1(const G1<EC_ppT> &P);
-  affine_ate_G2_precomp<EC_ppT> affine_ate_precompute_G2(const G2<EC_ppT> &Q);
+  affine_ate_G1_precomp<EC_ppT> affine_ate_precompute_G1(P:&G1<EC_ppT>);
+  affine_ate_G2_precomp<EC_ppT> affine_ate_precompute_G2(Q:&G2<EC_ppT>);
 
 
-  Fqk<EC_ppT> affine_ate_miller_loop(const affine_ate_G1_precomp<EC_ppT> &prec_P,
-                                     const affine_ate_G2_precomp<EC_ppT> &prec_Q);
-  Fqk<EC_ppT> affine_ate_e_over_e_miller_loop(const affine_ate_G1_precomp<EC_ppT> &prec_P1,
-                                              const affine_ate_G2_precomp<EC_ppT> &prec_Q1,
-                                              const affine_ate_G1_precomp<EC_ppT> &prec_P2,
-                                              const affine_ate_G2_precomp<EC_ppT> &prec_Q2);
-  Fqk<EC_ppT> affine_ate_e_times_e_over_e_miller_loop(const affine_ate_G1_precomp<EC_ppT> &prec_P1,
-                                                      const affine_ate_G2_precomp<EC_ppT> &prec_Q1,
-                                                      const affine_ate_G1_precomp<EC_ppT> &prec_P2,
-                                                      const affine_ate_G2_precomp<EC_ppT> &prec_Q2,
-                                                      const affine_ate_G1_precomp<EC_ppT> &prec_P3,
-                                                      const affine_ate_G2_precomp<EC_ppT> &prec_Q3);
-  Fqk<EC_ppT> double_miller_loop(const G1_precomp<EC_ppT> &prec_P1,
-                                 const G2_precomp<EC_ppT> &prec_Q1,
-                                 const G1_precomp<EC_ppT> &prec_P2,
-                                 const G2_precomp<EC_ppT> &prec_Q2);
+  Fqk<EC_ppT> affine_ate_miller_loop(prec_P:&affine_ate_G1_precomp<EC_ppT>,
+                                     prec_Q:&affine_ate_G2_precomp<EC_ppT>);
+  Fqk<EC_ppT> affine_ate_e_over_e_miller_loop(prec_P1:&affine_ate_G1_precomp<EC_ppT>,
+                                              prec_Q1:&affine_ate_G2_precomp<EC_ppT>,
+                                              prec_P2:&affine_ate_G1_precomp<EC_ppT>,
+                                              prec_Q2:&affine_ate_G2_precomp<EC_ppT>);
+  Fqk<EC_ppT> affine_ate_e_times_e_over_e_miller_loop(prec_P1:&affine_ate_G1_precomp<EC_ppT>,
+                                                      prec_Q1:&affine_ate_G2_precomp<EC_ppT>,
+                                                      prec_P2:&affine_ate_G1_precomp<EC_ppT>,
+                                                      prec_Q2:&affine_ate_G2_precomp<EC_ppT>,
+                                                      prec_P3:&affine_ate_G1_precomp<EC_ppT>,
+                                                      prec_Q3:&affine_ate_G2_precomp<EC_ppT>);
+  Fqk<EC_ppT> double_miller_loop(prec_P1:&G1_precomp<EC_ppT>,
+                                 prec_Q1:&G2_precomp<EC_ppT>,
+                                 prec_P2:&G1_precomp<EC_ppT>,
+                                 prec_Q2:&G2_precomp<EC_ppT>);
 
-  Fqk<EC_ppT> pairing(const G1<EC_ppT> &P,
-                      const G2<EC_ppT> &Q);
-  GT<EC_ppT> reduced_pairing(const G1<EC_ppT> &P,
-                             const G2<EC_ppT> &Q);
-  GT<EC_ppT> affine_reduced_pairing(const G1<EC_ppT> &P,
-                                    const G2<EC_ppT> &Q);
+  Fqk<EC_ppT> pairing(P:&G1<EC_ppT>,
+                      Q:&G2<EC_ppT>);
+  GT<EC_ppT> reduced_pairing(P:&G1<EC_ppT>,
+                             Q:&G2<EC_ppT>);
+  GT<EC_ppT> affine_reduced_pairing(P:&G1<EC_ppT>,
+                                    Q:&G2<EC_ppT>);
 */
 
 

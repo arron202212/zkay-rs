@@ -36,7 +36,7 @@ pub trait  default_fooram_ppzksnark_pp {
 
 
 
-// template<typename ppT>
+// 
 pub fn  profile_ram_zksnark<ppT>(w:usize)
 {
     type ramT=ram_zksnark_machine_pp<ppT>;
@@ -50,7 +50,7 @@ pub fn  profile_ram_zksnark<ppT>(w:usize)
     assert!(bit);
 }
 
-// template<typename ppT>
+// 
 pub fn profile_ram_ppzksnark<ppT>(w:usize)
 {
     type ramT=ram_ppzksnark_machine_pp<ppT>;
@@ -66,7 +66,7 @@ pub fn profile_ram_ppzksnark<ppT>(w:usize)
 
 fn main( argc:i32,argv:[&str])->i32
 {
-    // ffec::UNUSED(argv);
+    // //ffec::UNUSED(argv);
     start_profiling();
     default_fooram_ppzksnark_pp::init_public_params();
     default_fooram_zksnark_pp::init_public_params();

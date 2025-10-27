@@ -26,11 +26,11 @@ pub struct ram_to_r1cs<ramT> {
 
     
 
-boot_trace_size_bound:    size_t,
+boot_trace_size_bound:    usize,
 
 main_protoboard:    ram_protoboard<ramT>,
 r1cs_input:    pb_variable_array<FieldT>,
-universal_gadget:    std::shared_ptr<ram_universal_gadget<ramT> >,
+universal_gadget:    RcCell<ram_universal_gadget<ramT> >,
 }
 
 
@@ -63,13 +63,13 @@ universal_gadget:    std::shared_ptr<ram_universal_gadget<ramT> >,
 impl ram_to_r1cs<ramT>{
 
 pub fn new(ap:&ram_architecture_params<ramT>,
-                               boot_trace_size_bound:size_t,
-                               time_bound:size_t) ->Self
+                               boot_trace_size_bound:usize,
+                               time_bound:usize) ->Self
    
 {
     let  r1cs_input_size = ram_universal_gadget::<ramT>::packed_input_size(ap, boot_trace_size_bound);
     r1cs_input.allocate(main_protoboard, r1cs_input_size, "r1cs_input");
-    universal_gadget.reset( ram_universal_gadget::<ramT>::(main_protoboard,
+    universal_gadget.reset( ram_universal_gadget::<ramT>::new(main_protoboard,
                                                           boot_trace_size_bound,
                                                           time_bound,
                                                           r1cs_input,
@@ -122,7 +122,7 @@ pub fn print_memory_trace()
 
 
  pub fn pack_primary_input_address_and_value(ap:&ram_architecture_params<ramT>,
-                                                                                           av:&address_and_value)->std::vector<ram_base_field<ramT> >
+                                                                                           av:&address_and_value)->Vec<ram_base_field<ramT> >
 {
     type FieldT=ram_base_field<ramT>;
 
@@ -144,7 +144,7 @@ pub fn print_memory_trace()
 
 
  pub fn primary_input_map(ap:&ram_architecture_params<ramT>,
-                                                                               boot_trace_size_bound:&size_t,
+                                                                               boot_trace_size_bound:&usize,
                                                                                boot_trace:&ram_boot_trace<ramT>)->r1cs_primary_input<ram_base_field<ramT> >
 {
     type FieldT=ram_base_field<ramT>;

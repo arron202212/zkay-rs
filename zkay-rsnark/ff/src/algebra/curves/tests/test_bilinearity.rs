@@ -6,7 +6,7 @@
  *****************************************************************************/
 //#include <gtest/gtest.h>
 
-use crate::algebra::curves::edwards/edwards_pp;
+use crate::algebra::curves::edwards::edwards_pp;
 use crate::common::profiling;
 // #ifdef CURVE_BN128
 use crate::algebra::curves::bn128::bn128_pp;
@@ -19,7 +19,7 @@ use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
 using namespace libff;
 
-class CurveBilinearityTest: public ::testing::Test {
+pub struct CurveBilinearityTest{//::testing::Test
 
     CurveBilinearityTest()
     {
@@ -35,8 +35,8 @@ class CurveBilinearityTest: public ::testing::Test {
     }
 };
 
-template<typename ppT>
-void pairing_test()
+
+pub fn  pairing_test()
 {
     GT<ppT> GT_one = GT<ppT>::one();
 
@@ -74,8 +74,8 @@ void pairing_test()
     print!("\n\n");
 }
 
-template<typename ppT>
-void double_miller_loop_test()
+
+pub fn  double_miller_loop_test()
 {
     const G1<ppT> P1 = (Fr<ppT>::random_element()) * G1<ppT>::one();
     const G1<ppT> P2 = (Fr<ppT>::random_element()) * G1<ppT>::one();
@@ -89,12 +89,12 @@ void double_miller_loop_test()
 
     const Fqk<ppT> ans_1 = ppT::miller_loop(prec_P1, prec_Q1);
     const Fqk<ppT> ans_2 = ppT::miller_loop(prec_P2, prec_Q2);
-    const Fqk<ppT> ans_12 = ppT::double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
+    prec_Q1:Fqk<ppT> ans_12 = ppT::double_miller_loop(prec_P1,, prec_P2, prec_Q2);
     EXPECT_EQ(ans_1 * ans_2, ans_12);
 }
 
-template<typename ppT>
-void affine_pairing_test()
+
+pub fn  affine_pairing_test()
 {
     GT<ppT> GT_one = GT<ppT>::one();
 

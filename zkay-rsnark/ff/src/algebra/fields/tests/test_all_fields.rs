@@ -26,7 +26,7 @@ use crate::common::utils;
 
 using namespace libff;
 
-class AllFieldsTest: public ::testing::Test {
+pub struct AllFieldsTest{//::testing::Test
 
     // We test one field from each class.
     // p, q, r are three different primes.
@@ -51,19 +51,19 @@ class AllFieldsTest: public ::testing::Test {
     }
 };
 
-template<typename FieldT>
-void expect_equal_or_negative(FieldT x, FieldT y)
+
+pub fn  expect_equal_or_negative(FieldT x, FieldT y)
 {
     EXPECT_TRUE(x == y || x == -y);
 }
 
-template<typename FieldT>
-void test_field()
+
+pub fn  test_field()
 {
     // constants
-    const FieldT one = FieldT::one();
-    const FieldT zero = FieldT::zero();
-    const FieldT two = one + one;
+    let one= FieldT::one();
+    let zero= FieldT::zero();
+    let two= one + one;
 
     /******************* Test standard field axioms and properties. *******************/
 
@@ -229,7 +229,7 @@ void test_field()
     x.randomize();
     EXPECT_EQ(reserialize(x), x);
 
-    std::vector<uint64_t> words = x.to_words();
+    Vec<uint64_t> words = x.to_words();
     EXPECT_TRUE(y.from_words(words));
     EXPECT_EQ(x, y);
 
@@ -243,7 +243,7 @@ void test_field()
     EXPECT_NE(x.to_words(), y.to_words());
     EXPECT_EQ(x.to_words(), z.to_words());
 
-    std::vector<uint64_t> zero_words = zero.to_words();
+    Vec<uint64_t> zero_words = zero.to_words();
     for word in &zero_words {
         EXPECT_EQ(word, 0);
     }
@@ -257,8 +257,8 @@ void test_field()
     EXPECT_LE(FieldT::floor_size_in_bits(), FieldT::ceil_size_in_bits());
 }
 
-template<typename FieldT>
-void test_op_profiling()
+
+pub fn  test_op_profiling()
 {
     FieldT::add_cnt = 0;
     FieldT::sub_cnt = 0;
@@ -288,8 +288,8 @@ void test_op_profiling()
     EXPECT_EQ(FieldT::inv_cnt, 2);
 }
 
-template<typename FieldT>
-void test_fp()
+
+pub fn  test_fp()
 {
     EXPECT_EQ(FieldT::extension_degree(), 1);
 
@@ -316,8 +316,8 @@ void test_fp()
     }
 }
 
-template<typename FieldT>
-void test_fpn_field()
+
+pub fn  test_fpn_field()
 {
     EXPECT_GE(FieldT::field_char().num_bits(), 2); // Characteristic is at least 2.
 
@@ -325,21 +325,21 @@ void test_fpn_field()
     FieldT x_q = x;
     for power in 0..10
     {
-        const FieldT x_qi = x.Frobenius_map(power);
+        let x_qi= x.Frobenius_map(power);
         EXPECT_EQ(x_qi, x_q);
 
         x_q = x_q^FieldT::field_char();
     }
 }
 
-template<typename FieldT>
-void test_binary_field()
+
+pub fn  test_binary_field()
 {
     FieldT zero = FieldT::zero();
     FieldT one = FieldT::one();
 
     EXPECT_GE(FieldT::modulus_, 1);
-    const uint64_t bits = FieldT::num_bits;
+    let bits= FieldT::num_bits;
     EXPECT_GE(bits, 1);
     const bigint<1> characteristic = FieldT::template field_char<1>();
     EXPECT_EQ(characteristic, bigint<1>(2));
@@ -348,7 +348,7 @@ void test_binary_field()
     FieldT x = generator;
     EXPECT_NE(generator, zero);
     EXPECT_NE(generator, one);
-    std::set<std::vector<uint64_t> > values;
+    BTreeSet<Vec<uint64_t> > values;
     for i in 0..10000
     {
         if x == one {

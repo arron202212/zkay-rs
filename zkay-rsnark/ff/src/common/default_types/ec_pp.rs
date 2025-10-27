@@ -16,7 +16,7 @@
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
 // use crate::algebra::curves::bls12_381/bls12_381_pp;
 // // namespace libff {
-// typedef bls12_381_pp default_ec_pp;
+// type default_ec_pp=bls12_381_pp;
 // // } // namespace libff
 // //#endif
 
@@ -24,7 +24,7 @@
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
 // use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 // // namespace libff {
-// typedef alt_bn128_pp default_ec_pp;
+// type default_ec_pp=alt_bn128_pp;
 // // } // namespace libff
 // //#endif
 
@@ -32,15 +32,15 @@
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
 // use crate::algebra::curves::bn128::bn128_pp;
 // // namespace libff {
-// typedef bn128_pp default_ec_pp;
+// type default_ec_pp=bn128_pp;
 // // } // namespace libff
 // //#endif
 
 // // #ifdef CURVE_EDWARDS
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
-// use crate::algebra::curves::edwards/edwards_pp;
+// use crate::algebra::curves::edwards::edwards_pp;
 // // namespace libff {
-// typedef edwards_pp default_ec_pp;
+// type default_ec_pp=edwards_pp;
 // // } // namespace libff
 // //#endif
 
@@ -48,7 +48,7 @@
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
 // use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 // // namespace libff {
-// typedef mnt4_pp default_ec_pp;
+// type default_ec_pp=mnt4_pp;
 // // } // namespace libff
 // //#endif
 
@@ -56,7 +56,7 @@
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
 // use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 // // namespace libff {
-// typedef mnt6_pp default_ec_pp;
+// type default_ec_pp=mnt6_pp;
 // // } // namespace libff
 // //#endif
 

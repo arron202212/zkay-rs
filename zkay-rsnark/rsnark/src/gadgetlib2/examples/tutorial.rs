@@ -94,29 +94,29 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     defining constraints and assignments as well as by utilizing sub-gadgets.
 // */
 
-// class NAND_Gadget : public Gadget {
+// pub struct NAND_Gadget {//Gadget
 // 
 //     // This is a convention we use to always create gadgets as if from a factory class. This will
 //     // be needed later for gadgets which have different implementations in different fields.
 //     static GadgetPtr create(ProtoboardPtr pb,
-//                             const FlagVariableArray& inputs,
-//                             const FlagVariable& output);
+//                             inputs:FlagVariableArray&,
+//                             output:&FlagVariable);
 //     // generateConstraints() is the method which creates all constraints on the protoboard
-//     void generateConstraints();
+//     pub fn  generateConstraints();
 //     // generateWitness() is the method which generates the witness by assigning a valid value to
 //     // each wire in the circuit (variable) and putting this on the protoboard
-//     void generateWitness();
-// private:
+//     pub fn  generateWitness();
+// 
 //     // constructor is private in order to stick to the convention that gadgets are created using a
 //     // create() method. This may not make sense now, but when dealing with non-field agnostic
-//     // gadgets it is very convenient to have a factory class with this convention.
+//     // gadgets it is very convenient to have a factory pub struct with this convention.
 //     // Notice the protoboard. This can be thought of as a 'memory manager' which holds the circuit
 //     // as the constraints are being built, and the 'wire values' as the witness is being built
-//     NAND_Gadget(ProtoboardPtr pb, const FlagVariableArray& inputs, const FlagVariable& output);
+//     NAND_Gadget(ProtoboardPtr pb, inputs:FlagVariableArray&, output:&FlagVariable);
 //     // init() does any non trivial work which we don't want in the constructor. This is where we
 //     // will 'wire' the sub-gadgets into the circuit. Each sub-gadget can be thought of as a
 //     // circuit gate with some specific functionality.
-//     void init();
+//     pub fn  init();
 //     // we want every gadget to be explicitly constructed
 //     DISALLOW_COPY_AND_ASSIGN(NAND_Gadget);
 
@@ -127,35 +127,35 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     // the constructor, but can include many more as well. Notice that almost always the variables
 //     // can be declared 'const', as these are local copies of formal variables, and do not change
 //     // over the span of the class' lifetime.
-//     const VariableArray inputs_;
-//     const FlagVariable output_;
-//     const FlagVariable andResult_;
+//     inputs_:VariableArray,
+//     output_:FlagVariable,
+//     andResult_:FlagVariable,
 // };
 
 // // IMPLEMENTATION
 // // Most constructors are trivial and only initialize and assert values.
-// NAND_Gadget::NAND_Gadget(ProtoboardPtr pb,
-//                          const FlagVariableArray& inputs,
-//                          const FlagVariable& output)
+// pub fn new(ProtoboardPtr pb,
+//                          inputs:FlagVariableArray&,
+//                          output:&FlagVariable)
 //         : Gadget(pb), inputs_(inputs), output_(output), andResult_("andResult") {}
 
-// void NAND_Gadget::init() {
+// pub fn  NAND_Gadget::init() {
 //     // we 'wire' the AND gate.
 //     andGadget_ = AND_Gadget::create(pb_, inputs_, andResult_);
 // }
 
 // // The create() method will usually look like this, for field-agnostic gadgets:
 // GadgetPtr NAND_Gadget::create(ProtoboardPtr pb,
-//                               const FlagVariableArray& inputs,
-//                               const FlagVariable& output) {
+//                               inputs:FlagVariableArray&,
+//                               output:&FlagVariable) {
 //     GadgetPtr pGadget(new NAND_Gadget(pb, inputs, output));
 //     pGadget->init();
 //     return pGadget;
 // }
 
-// void NAND_Gadget::generateConstraints() {
+// pub fn  NAND_Gadget::generateConstraints() {
 //     // we will invoke the AND gate constraint generator
-//     andGadget_->generateConstraints();
+//     andGadget_.generateConstraints();
 //     // and add our out negation constraint in order to make this a NAND gate
 //     addRank1Constraint(1, 1 - andResult_, output_, "1 * (1 - andResult) = output");
 //     // Another way to write the same constraint is:
@@ -173,7 +173,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     }
 // }
 
-// void NAND_Gadget::generateWitness() {
+// pub fn  NAND_Gadget::generateWitness() {
 //     // First we can assert that all input values are indeed boolean. The purpose of this assertion
 //     // is simply to print a clear error message, it is not security critical.
 //     // Notice the method val() which returns a reference to the current assignment for a variable
@@ -181,7 +181,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //         GADGETLIB_ASSERT(val(input) == 0 || val(input) == 1, "NAND input is not boolean");
 //     }
 //     // we will invoke the AND gate witness generator, this will set andResult_ correctly
-//     andGadget_->generateWitness();
+//     andGadget_.generateWitness();
 //     // and now we set the value of output_
 //     val(output_) = 1 - val(andResult_);
 //     // notice the use of 'val()' to tell the protoboard to assign this new value to the
@@ -199,7 +199,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     FlagVariable output("output");
 //     GadgetPtr nandGadget = NAND_Gadget::create(pb, inputs, output);
 //     // now we can generate a constraint system (or circuit)
-//     nandGadget->generateConstraints();
+//     nandGadget.generateConstraints();
 //     // if we try to evaluate the circuit now, an exception will be thrown, because we will
 //     // be attempting to evaluate unassigned variables.
 //     EXPECT_ANY_THROW(pb->isSatisfied());
@@ -207,7 +207,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     for input in &inputs {
 //         pb->val(input) = 1;
 //     }
-//     nandGadget->generateWitness();
+//     nandGadget.generateWitness();
 //     EXPECT_TRUE(pb->isSatisfied());
 //     EXPECT_TRUE(pb->val(output) == 0);
 //     // now let's try to ruin something and see what happens
@@ -221,7 +221,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     // before, we set both the inputs and the output. Notice the output is still set to '0'
 //     EXPECT_TRUE(pb->val(output) == 0);
 //     // Now we will let the gadget compute the result using generateWitness() and see what happens
-//     nandGadget->generateWitness();
+//     nandGadget.generateWitness();
 //     EXPECT_TRUE(pb->val(output) == 1);
 //     EXPECT_TRUE(pb->isSatisfied());
 // }
@@ -241,16 +241,16 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     bits long.
 // */
 
-// class HashDifficultyEnforcer_Gadget : public Gadget {
+// pub struct HashDifficultyEnforcer_Gadget {//Gadget
 // 
 //     static GadgetPtr create(ProtoboardPtr pb,
-//                             const MultiPackedWord& hashValue,
-//                             const size_t difficultyBits);
-//     void generateConstraints();
-//     void generateWitness();
-// private:
-//     const size_t hashSizeInBits_;
-//     const size_t difficultyBits_;
+//                             hashValue:MultiPackedWord&,
+//                             difficultyBits:usize);
+//     pub fn  generateConstraints();
+//     pub fn  generateWitness();
+// 
+//     hashSizeInBits_:usize;
+//     difficultyBits_:usize;
 //     DualWord hashValue_;
 //     // This GadgetPtr will be a gadget to unpack hashValue_ from packed representation to bit
 //     // representation. Recall 'DualWord' holds both values, but only the packed version will be
@@ -258,22 +258,22 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     GadgetPtr hashValueUnpacker_;
 
 //     HashDifficultyEnforcer_Gadget(ProtoboardPtr pb,
-//                                   const MultiPackedWord& hashValue,
-//                                   const size_t difficultyBits);
-//     void init();
+//                                   hashValue:MultiPackedWord&,
+//                                   difficultyBits:usize);
+//     pub fn  init();
 //     DISALLOW_COPY_AND_ASSIGN(HashDifficultyEnforcer_Gadget);
 // };
 
 // // IMPLEMENTATION
-// HashDifficultyEnforcer_Gadget::HashDifficultyEnforcer_Gadget(ProtoboardPtr pb,
-//                                                              const MultiPackedWord& hashValue,
-//                                                              const size_t difficultyBits)
+// pub fn new(ProtoboardPtr pb,
+//                                                              hashValue:MultiPackedWord&,
+//                                                              difficultyBits:usize)
 //     : Gadget(pb), hashSizeInBits_(64), difficultyBits_(difficultyBits),
 //       hashValue_(hashValue, UnpackedWord(64, "hashValue_u"))
 // {
 // }
 
-// void HashDifficultyEnforcer_Gadget::init() {
+// pub fn  HashDifficultyEnforcer_Gadget::init() {
 //     // because we are using a prime field with large characteristic, we can assume a 64 bit value
 //     // fits in the first element of a multipacked variable.
 //     GADGETLIB_ASSERT(hashValue_.multipacked().len() == 1, "multipacked word size too large");
@@ -285,16 +285,16 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // }
 
 // GadgetPtr HashDifficultyEnforcer_Gadget::create(ProtoboardPtr pb,
-//                                                 const MultiPackedWord& hashValue,
-//                                                 const size_t difficultyBits) {
+//                                                 hashValue:MultiPackedWord&,
+//                                                 difficultyBits:usize) {
 //     GadgetPtr pGadget(new HashDifficultyEnforcer_Gadget(pb, hashValue, difficultyBits));
 //     pGadget->init();
 //     return pGadget;
 // }
 
-// void HashDifficultyEnforcer_Gadget::generateConstraints() {
+// pub fn  HashDifficultyEnforcer_Gadget::generateConstraints() {
 //     // enforce that both representations are equal
-//     hashValueUnpacker_->generateConstraints();
+//     hashValueUnpacker_.generateConstraints();
 //     // add constraints asserting that the first 'difficultyBits' bits of 'hashValue' equal 0. Note
 //     // endianness, unpacked()[0] is LSB and unpacked()[63] is MSB
 //     for i in 0..difficultyBits_ {
@@ -302,9 +302,9 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     }
 // }
 
-// void HashDifficultyEnforcer_Gadget::generateWitness() {
+// pub fn  HashDifficultyEnforcer_Gadget::generateWitness() {
 //     // Take the packed representation and unpack to bits.
-//     hashValueUnpacker_->generateWitness();
+//     hashValueUnpacker_.generateWitness();
 //     // In a real setting we would add an assertion that the value will indeed satisfy the
 //     // difficulty constraint, and notify the user with an error otherwise. As this is a tutorial,
 //     // we'll let invalid values pass through so that we can see how isSatisfied() returns false.
@@ -320,19 +320,19 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // TEST(Examples, HashDifficultyEnforcer_Gadget) {
 //     initPublicParamsFromDefaultPp();
 //     auto pb = Protoboard::create(R1P);
-//     const MultiPackedWord hashValue(64, R1P, "hashValue");
-//     const size_t difficulty = 10;
+//     R1P:MultiPackedWord hashValue(64,, "hashValue");
+//     let difficulty = 10;
 //     auto difficultyEnforcer = HashDifficultyEnforcer_Gadget::create(pb, hashValue, difficulty);
-//     difficultyEnforcer->generateConstraints();
+//     difficultyEnforcer.generateConstraints();
 //     // constraints are created but no assignment yet. Will throw error on evaluation
 //     EXPECT_ANY_THROW(pb->isSatisfied());
 //     pb->val(hashValue[0]) = 42;
-//     difficultyEnforcer->generateWitness();
+//     difficultyEnforcer.generateWitness();
 //     // First 10 bits of 42 (when represented as a 64 bit number) are '0' so this should work
 //     EXPECT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
 //     pb->val(hashValue[0]) = 1000000000000000000;
 //     // This is a value > 2^54 so we expect constraint system not to be satisfied.
-//     difficultyEnforcer->generateWitness(); // This would have failed had we put an assertion
+//     difficultyEnforcer.generateWitness(); // This would have failed had we put an assertion
 //     EXPECT_FALSE(pb->isSatisfied());
 // }
 
@@ -360,37 +360,37 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // */
 
 
-// // This is a macro which creates an interface class for all field specific derived gadgets
-// // Convention is: class {GadgetName}_GadgetBase
+// // This is a macro which creates an interface pub struct for all field specific derived gadgets
+// // Convention is: pub struct {GadgetName}_GadgetBase
 // CREATE_GADGET_BASE_CLASS(VerifyTransactionAmounts_GadgetBase);
 
 // // Notice the multiple inheritance. We must specify the interface as well as the field specific
-// // base gadget. This is what allows the factory class to decide at compile time which field
-// // specific class to instantiate for every protoboard. See design notes in "gadget.hpp"
-// // Convention is: class {FieldType}_{GadgetName}_Gadget
-// class R1P_VerifyTransactionAmounts_Gadget : public VerifyTransactionAmounts_GadgetBase,
+// // base gadget. This is what allows the factory pub struct to decide at compile time which field
+// // specific pub struct to instantiate for every protoboard. See design notes in "gadget.hpp"
+// // Convention is: pub struct {FieldType}_{GadgetName}_Gadget
+// pub struct R1P_VerifyTransactionAmounts_Gadget : public VerifyTransactionAmounts_GadgetBase,
 //                                             public R1P_Gadget {
 // 
-//     void generateConstraints();
-//     void generateWitness();
+//     pub fn  generateConstraints();
+//     pub fn  generateWitness();
 
-//     // We give the factory class friend access in order to instantiate via private constructor.
-//     friend class VerifyTransactionAmounts_Gadget;
-// private:
+//     // We give the factory pub struct friend access in order to instantiate via private constructor.
+//     friend pub struct VerifyTransactionAmounts_Gadget;
+// 
 //     R1P_VerifyTransactionAmounts_Gadget(ProtoboardPtr pb,
-//                                         const VariableArray& txInputAmounts,
-//                                         const VariableArray& txOutputAmounts,
-//                                         const Variable& minersFee);
-//     void init();
+//                                         txInputAmounts:VariableArray&,
+//                                         txOutputAmounts:VariableArray&,
+//                                         minersFee:&Variable);
+//     pub fn  init();
 
-//     const VariableArray txInputAmounts_;
-//     const VariableArray txOutputAmounts_;
-//     const Variable minersFee_;
+//     txInputAmounts_:VariableArray,
+//     txOutputAmounts_:VariableArray,
+//     minersFee_:Variable,
 
 //     DISALLOW_COPY_AND_ASSIGN(R1P_VerifyTransactionAmounts_Gadget);
 // };
 
-// // create factory class using CREATE_GADGET_FACTORY_CLASS_XX macro (substitute XX with the number
+// // create factory pub struct using CREATE_GADGET_FACTORY_CLASS_XX macro (substitute XX with the number
 // // of arguments to the constructor, excluding the protoboard). Sometimes we want multiple
 // // constructors, see AND_Gadget for example. In this case we will have to manually write the
 // // factory class.
@@ -404,7 +404,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // // Destructor for the Base class
 // VerifyTransactionAmounts_GadgetBase::~VerifyTransactionAmounts_GadgetBase() {}
 
-// void R1P_VerifyTransactionAmounts_Gadget::generateConstraints() {
+// pub fn  R1P_VerifyTransactionAmounts_Gadget::generateConstraints() {
 //     addUnaryConstraint(sum(txInputAmounts_) - sum(txOutputAmounts_) - minersFee_,
 //                        "sum(txInputAmounts) == sum(txOutputAmounts) + minersFee");
 //     // It would seem this is enough, but an adversary could cause an overflow of one side of the
@@ -422,7 +422,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     // (3) Invoke the gadgets' witnesses in generateWitness()
 // }
 
-// void R1P_VerifyTransactionAmounts_Gadget::generateWitness() {
+// pub fn  R1P_VerifyTransactionAmounts_Gadget::generateWitness() {
 //     FElem sumInputs = 0;
 //     FElem sumOutputs = 0;
 //     for inputAmount in &txInputAmounts_ {
@@ -434,33 +434,33 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     val(minersFee_) = sumInputs - sumOutputs;
 // }
 
-// R1P_VerifyTransactionAmounts_Gadget::R1P_VerifyTransactionAmounts_Gadget(
+// pub fn new(
 //         ProtoboardPtr pb,
-//         const VariableArray& txInputAmounts,
-//         const VariableArray& txOutputAmounts,
-//         const Variable& minersFee)
+//         txInputAmounts:VariableArray&,
+//         txOutputAmounts:VariableArray&,
+//         minersFee:&Variable)
 //         // Notice we must initialize 3 base classes (diamond inheritance):
 //         : Gadget(pb), VerifyTransactionAmounts_GadgetBase(pb), R1P_Gadget(pb),
 //         txInputAmounts_(txInputAmounts), txOutputAmounts_(txOutputAmounts),
 //         minersFee_(minersFee) {}
 
-// void R1P_VerifyTransactionAmounts_Gadget::init() {}
+// pub fn  R1P_VerifyTransactionAmounts_Gadget::init() {}
 
 // /*
 //     As promised, recipe for creating field specific gadgets with agnostic interfaces:
 
-//     (1) Create the Base class using macro:
+//     (1) Create the Base pub struct using macro:
 //         CREATE_GADGET_BASE_CLASS({GadgetName}_GadgetBase);
 //     (2) Create the destructor for the base class:
 //         {GadgetName_Gadget}Base::~{GadgetName}_GadgetBase() {}
 //     (3) Create any field specific gadgets with multiple inheritance:
-//         class {FieldType}_{GadgetName}_Gadget : public {GadgetName}_GadgetBase,
+//         pub struct {FieldType}_{GadgetName}_Gadget : public {GadgetName}_GadgetBase,
 //                                                 public {FieldType_Gadget}
 //         Notice all arguments to the constructors must be const& in order to use the factory class
 //         macro. Constructor arguments must be the same for all field specific implementations.
-//     (4) Give the factory class {GadgetName}_Gadget public friend access to the field specific
+//     (4) Give the factory pub struct {GadgetName}_Gadget public friend access to the field specific
 //         classes.
-//     (5) Create the factory class using the macro:
+//     (5) Create the factory pub struct using the macro:
 //         CREATE_GADGET_FACTORY_CLASS_XX({GadgetName}_Gadget, type1, input1, type2, input2, ... ,
 //                                                                                   typeXX, inputXX);
 // */
@@ -473,10 +473,10 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     const Variable minersFee("minersFee");
 //     auto verifyTx = VerifyTransactionAmounts_Gadget::create(pb, inputAmounts, outputAmounts,
 //                                                             minersFee);
-//     verifyTx->generateConstraints();
+//     verifyTx.generateConstraints();
 //     pb->val(inputAmounts[0]) = pb->val(inputAmounts[1]) = 2;
 //     pb->val(outputAmounts[0]) = pb->val(outputAmounts[1]) = pb->val(outputAmounts[2]) = 1;
-//     verifyTx->generateWitness();
+//     verifyTx.generateWitness();
 //     EXPECT_TRUE(pb->isSatisfied());
 //     EXPECT_EQ(pb->val(minersFee), 1);
 //     pb->val(minersFee) = 3;
@@ -492,9 +492,9 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     initPublicParamsFromDefaultPp();
 //     // Create an example constraint system and translate to libsnark format
 //     const crate::r1cs_example<ffec::Fr<ffec::default_ec_pp> > example = crate::gen_r1cs_example_from_gadgetlib2_protoboard(100);
-//     const bool test_serialization = false;
+//     let mut test_serialization = false;
 //     // Run ppzksnark. Jump into function for breakdown
-//     const bool bit = crate::run_r1cs_ppzksnark<ffec::default_ec_pp>(example, test_serialization);
+//     let mut bit = crate::run_r1cs_ppzksnark<ffec::default_ec_pp>(example, test_serialization);
 //     EXPECT_TRUE(bit);
 // };
 

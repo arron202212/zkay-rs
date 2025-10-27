@@ -17,20 +17,20 @@ use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 
 
-// template<typename FieldT>
+// 
 pub struct fooram_protoboard<FieldT>  {
 // : public protoboard<FieldT>
       ap:fooram_architecture_params,
 
-    // fooram_protoboard(const fooram_architecture_params &ap);
+    // fooram_protoboard(ap:&fooram_architecture_params);
 }
 
-// template<typename FieldT>
+// 
 pub struct fooram_gadget  {
-// protected:: public gadget<FieldT>
+// : public gadget<FieldT>
      pb:fooram_protoboard<FieldT>,
 // 
-//     fooram_gadget(fooram_protoboard<FieldT> &pb, const std::string &annotation_prefix="");
+//     fooram_gadget(fooram_protoboard<FieldT> &pb, annotation_prefix:&String="");
 }
 
 
@@ -56,7 +56,7 @@ pub struct fooram_gadget  {
 
 impl fooram_protoboard<FieldT>{
 
-// template<typename FieldT>
+// 
 pub fn new(ap:fooram_architecture_params) ->Self
    
 {
@@ -66,8 +66,8 @@ pub fn new(ap:fooram_architecture_params) ->Self
 }
 
 impl fooram_gadget<FieldT>{
-// template<typename FieldT>
-pub fn new( pb:fooram_protoboard<FieldT>, annotation_prefix: std::string ) ->Self
+// 
+pub fn new( pb:fooram_protoboard<FieldT>, annotation_prefix: String ) ->Self
 {
 // gadget<FieldT>(pb, annotation_prefix)
 Self{pb}

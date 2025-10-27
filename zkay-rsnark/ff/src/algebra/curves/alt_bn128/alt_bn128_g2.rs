@@ -14,57 +14,57 @@ use crate::algebra::curves::curve_utils;
 
 // namespace libff {
 
-class alt_bn128_G2;
+pub struct alt_bn128_G2;
 std::ostream& operator<<(std::ostream &, const alt_bn128_G2&);
 std::istream& operator>>(std::istream &, alt_bn128_G2&);
 
-class alt_bn128_G2 {
+pub struct alt_bn128_G2 {
 
 // #ifdef PROFILE_OP_COUNTS
-    static long long add_cnt;
-    static long long dbl_cnt;
+    static i64 add_cnt;
+    static i64 dbl_cnt;
 //#endif
-    static std::vector<std::size_t> wnaf_window_table;
-    static std::vector<std::size_t> fixed_base_exp_window_table;
+    static Vec<std::usize> wnaf_window_table;
+    static Vec<std::usize> fixed_base_exp_window_table;
     static alt_bn128_G2 G2_zero;
     static alt_bn128_G2 G2_one;
     static bool initialized;
 
-    typedef alt_bn128_Fq base_field;
-    typedef alt_bn128_Fq2 twist_field;
-    typedef alt_bn128_Fr scalar_field;
+    type base_field=alt_bn128_Fq;
+    type twist_field=alt_bn128_Fq2;
+    type scalar_field=alt_bn128_Fr;
 
     // Cofactor
-    static const mp_size_t h_bitcount = 256;
-    static const mp_size_t h_limbs = (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+    static let h_bitcount= 256;
+    static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
     static bigint<h_limbs> h;
 
     alt_bn128_Fq2 X, Y, Z;
 
     // using Jacobian coordinates
     alt_bn128_G2();
-    alt_bn128_G2(const alt_bn128_Fq2& X, const alt_bn128_Fq2& Y, const alt_bn128_Fq2& Z) : X(X), Y(Y), Z(Z) {};
+    alt_bn128_G2(X:alt_bn128_Fq2&, Y:alt_bn128_Fq2&, Z:&alt_bn128_Fq2)->SelfX,Y,Z {};
 
-    static alt_bn128_Fq2 mul_by_b(const alt_bn128_Fq2 &elt);
+    static alt_bn128_Fq2 mul_by_b(elt:&alt_bn128_Fq2);
 
-    void print() const;
-    void print_coordinates() const;
+    pub fn  print() const;
+    pub fn  print_coordinates() const;
 
-    void to_affine_coordinates();
-    void to_special();
+    pub fn  to_affine_coordinates();
+    pub fn  to_special();
     bool is_special() const;
 
     bool is_zero() const;
 
-    bool operator==(const alt_bn128_G2 &other) const;
-    bool operator!=(const alt_bn128_G2 &other) const;
+    bool operator==(other:&alt_bn128_G2) const;
+    bool operator!=(other:&alt_bn128_G2) const;
 
-    alt_bn128_G2 operator+(const alt_bn128_G2 &other) const;
+    alt_bn128_G2 operator+(other:&alt_bn128_G2) const;
     alt_bn128_G2 operator-() const;
-    alt_bn128_G2 operator-(const alt_bn128_G2 &other) const;
+    alt_bn128_G2 operator-(other:&alt_bn128_G2) const;
 
-    alt_bn128_G2 add(const alt_bn128_G2 &other) const;
-    alt_bn128_G2 mixed_add(const alt_bn128_G2 &other) const;
+    alt_bn128_G2 add(other:&alt_bn128_G2) const;
+    alt_bn128_G2 mixed_add(other:&alt_bn128_G2) const;
     alt_bn128_G2 dbl() const;
     alt_bn128_G2 mul_by_q() const;
     alt_bn128_G2 mul_by_cofactor() const;
@@ -75,24 +75,24 @@ class alt_bn128_G2 {
     static alt_bn128_G2 one();
     static alt_bn128_G2 random_element();
 
-    static std::size_t size_in_bits() { return twist_field::ceil_size_in_bits() + 1; }
+    static std::usize size_in_bits() { return twist_field::ceil_size_in_bits() + 1; }
     static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
     static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
 
-    friend std::ostream& operator<<(std::ostream &out, const alt_bn128_G2 &g);
+    friend std::ostream& operator<<(std::ostream &out, g:&alt_bn128_G2);
     friend std::istream& operator>>(std::istream &in, alt_bn128_G2 &g);
 
-    static void batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec);
+    static pub fn  batch_to_special_all_non_zeros(Vec<alt_bn128_G2> &vec);
 };
 
-template<mp_size_t m>
-alt_bn128_G2 operator*(const bigint<m> &lhs, const alt_bn128_G2 &rhs)
+
+alt_bn128_G2 operator*(lhs:&bigint<m>, rhs:&alt_bn128_G2)
 {
     return scalar_mul<alt_bn128_G2, m>(rhs, lhs);
 }
 
-template<mp_size_t m, const bigint<m>& modulus_p>
-alt_bn128_G2 operator*(const Fp_model<m,modulus_p> &lhs, const alt_bn128_G2 &rhs)
+
+alt_bn128_G2 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&alt_bn128_G2)
 {
     return scalar_mul<alt_bn128_G2, m>(rhs, lhs.as_bigint());
 }
@@ -111,21 +111,21 @@ use crate::algebra::curves::alt_bn128::alt_bn128_g2;
 
 // namespace libff {
 
-using std::size_t;
+using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
-long long alt_bn128_G2::add_cnt = 0;
-long long alt_bn128_G2::dbl_cnt = 0;
+i64 alt_bn128_G2::add_cnt = 0;
+i64 alt_bn128_G2::dbl_cnt = 0;
 //#endif
 
-std::vector<size_t> alt_bn128_G2::wnaf_window_table;
-std::vector<size_t> alt_bn128_G2::fixed_base_exp_window_table;
+Vec<usize> alt_bn128_G2::wnaf_window_table;
+Vec<usize> alt_bn128_G2::fixed_base_exp_window_table;
 alt_bn128_G2 alt_bn128_G2::G2_zero = {};
 alt_bn128_G2 alt_bn128_G2::G2_one = {};
 bool alt_bn128_G2::initialized = false;
 bigint<alt_bn128_G2::h_limbs> alt_bn128_G2::h;
 
-alt_bn128_G2::alt_bn128_G2()
+pub fn new()
 {
     if initialized
     {
@@ -135,12 +135,12 @@ alt_bn128_G2::alt_bn128_G2()
     }
 }
 
-alt_bn128_Fq2 alt_bn128_G2::mul_by_b(const alt_bn128_Fq2 &elt)
+alt_bn128_Fq2 alt_bn128_G2::mul_by_b(elt:&alt_bn128_Fq2)
 {
     return alt_bn128_Fq2(alt_bn128_twist_mul_by_b_c0 * elt.c0, alt_bn128_twist_mul_by_b_c1 * elt.c1);
 }
 
-void alt_bn128_G2::print() const
+pub fn print() const
 {
     if this->is_zero()
     {
@@ -158,7 +158,7 @@ void alt_bn128_G2::print() const
     }
 }
 
-void alt_bn128_G2::print_coordinates() const
+pub fn print_coordinates() const
 {
     if this->is_zero()
     {
@@ -176,7 +176,7 @@ void alt_bn128_G2::print_coordinates() const
     }
 }
 
-void alt_bn128_G2::to_affine_coordinates()
+pub fn to_affine_coordinates()
 {
     if this->is_zero()
     {
@@ -195,22 +195,22 @@ void alt_bn128_G2::to_affine_coordinates()
     }
 }
 
-void alt_bn128_G2::to_special()
+pub fn to_special()
 {
     this->to_affine_coordinates();
 }
 
-bool alt_bn128_G2::is_special() const
+pub fn is_special()->bool
 {
     return (this->is_zero() || this->Z == alt_bn128_Fq2::one());
 }
 
-bool alt_bn128_G2::is_zero() const
+pub fn is_zero()->bool
 {
     return (this->Z.is_zero());
 }
 
-bool alt_bn128_G2::operator==(const alt_bn128_G2 &other) const
+bool alt_bn128_G2::operator==(other:&alt_bn128_G2) const
 {
     if this->is_zero()
     {
@@ -245,12 +245,12 @@ bool alt_bn128_G2::operator==(const alt_bn128_G2 &other) const
     return !((this->Y * Z2_cubed) != (other.Y * Z1_cubed));
 }
 
-bool alt_bn128_G2::operator!=(const alt_bn128_G2& other) const
+bool alt_bn128_G2::operator!=(other:&alt_bn128_G2) const
 {
     return !(operator==(other));
 }
 
-alt_bn128_G2 alt_bn128_G2::operator+(const alt_bn128_G2 &other) const
+alt_bn128_G2 alt_bn128_G2::operator+(other:&alt_bn128_G2) const
 {
     // handle special cases having to do with O
     if this->is_zero()
@@ -318,17 +318,17 @@ alt_bn128_G2 alt_bn128_G2::operator-() const
 }
 
 
-alt_bn128_G2 alt_bn128_G2::operator-(const alt_bn128_G2 &other) const
+alt_bn128_G2 alt_bn128_G2::operator-(other:&alt_bn128_G2) const
 {
     return (*this) + (-other);
 }
 
-alt_bn128_G2 alt_bn128_G2::add(const alt_bn128_G2 &other) const
+pub fn add(other:&alt_bn128_G2)->alt_bn128_G2
 {
     return (*this) + other;
 }
 
-alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
+pub fn mixed_add(other:&alt_bn128_G2)->alt_bn128_G2
 {
 // #ifdef DEBUG
     assert!(other.is_special());
@@ -357,15 +357,15 @@ alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
     // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
     // we know that Z2 = 1
 
-    const alt_bn128_Fq2 Z1Z1 = (this->Z).squared();
+    let Z1Z1= (this->Z).squared();
 
-    const alt_bn128_Fq2 &U1 = this->X;
-    const alt_bn128_Fq2 U2 = other.X * Z1Z1;
+    U1:&alt_bn128_Fq2 = this->X;
+    let U2= other.X * Z1Z1;
 
-    const alt_bn128_Fq2 Z1_cubed = (this->Z) * Z1Z1;
+    let Z1_cubed= (this->Z) * Z1Z1;
 
-    const alt_bn128_Fq2 &S1 = (this->Y);                // S1 = Y1 * Z2 * Z2Z2
-    const alt_bn128_Fq2 S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
+    S1:&alt_bn128_Fq2 = (this->Y);                // S1 = Y1 * Z2 * Z2Z2
+    let S2= (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
 
     // check for doubling case
     if U1 == U2 && S1 == S2
@@ -394,7 +394,7 @@ alt_bn128_G2 alt_bn128_G2::mixed_add(const alt_bn128_G2 &other) const
     return alt_bn128_G2(X3, Y3, Z3);
 }
 
-alt_bn128_G2 alt_bn128_G2::dbl() const
+pub fn dbl()->alt_bn128_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
@@ -429,19 +429,19 @@ alt_bn128_G2 alt_bn128_G2::dbl() const
     return alt_bn128_G2(X3, Y3, Z3);
 }
 
-alt_bn128_G2 alt_bn128_G2::mul_by_q() const
+pub fn mul_by_q()->alt_bn128_G2
 {
     return alt_bn128_G2(alt_bn128_twist_mul_by_q_X * (this->X).Frobenius_map(1),
                       alt_bn128_twist_mul_by_q_Y * (this->Y).Frobenius_map(1),
                       (this->Z).Frobenius_map(1));
 }
 
-alt_bn128_G2 alt_bn128_G2::mul_by_cofactor() const
+pub fn mul_by_cofactor()->alt_bn128_G2
 {
     return alt_bn128_G2::h * (*this);
 }
 
-bool alt_bn128_G2::is_well_formed() const
+pub fn is_well_formed()->bool
 {
     if this->is_zero()
     {
@@ -482,7 +482,7 @@ alt_bn128_G2 alt_bn128_G2::random_element()
     return (alt_bn128_Fr::random_element().as_bigint()) * G2_one;
 }
 
-std::ostream& operator<<(std::ostream &out, const alt_bn128_G2 &g)
+std::ostream& operator<<(std::ostream &out, g:&alt_bn128_G2)
 {
     alt_bn128_G2 copy(g);
     copy.to_affine_coordinates();
@@ -544,9 +544,9 @@ std::istream& operator>>(std::istream &in, alt_bn128_G2 &g)
     return in;
 }
 
-void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec)
+pub fn batch_to_special_all_non_zeros(Vec<alt_bn128_G2> &vec)
 {
-    std::vector<alt_bn128_Fq2> Z_vec;
+    Vec<alt_bn128_Fq2> Z_vec;
     Z_vec.reserve(vec.len());
 
     for el in &vec
@@ -555,7 +555,7 @@ void alt_bn128_G2::batch_to_special_all_non_zeros(std::vector<alt_bn128_G2> &vec
     }
     batch_invert<alt_bn128_Fq2>(Z_vec);
 
-    const alt_bn128_Fq2 one = alt_bn128_Fq2::one();
+    let one= alt_bn128_Fq2::one();
 
     for i in 0..vec.len()
     {

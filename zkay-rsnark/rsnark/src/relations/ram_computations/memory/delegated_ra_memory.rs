@@ -13,35 +13,35 @@
 // #define DELEGATED_RA_MEMORY_HPP_
 
 // use  <map>
-// use  <memory>
-// use  <vector>
+// 
+// 
 
 use crate::common::data_structures::merkle_tree;
 use crate::relations::ram_computations::memory::memory_interface;
 
 
 
-// template<typename HashT>
+// 
 pub struct delegated_ra_memory <HashT>{
-// private:: public memory_interface 
-    // bit_vector int_to_tree_elem(i:&size_t) const;
-    // size_t int_from_tree_elem(v:&bit_vector) const;
+// : public memory_interface 
+    // bit_vector int_to_tree_elem(i:&usize) const;
+    // usize int_from_tree_elem(v:&bit_vector) const;
 
      contents:RcCell<merkle_tree<HashT> >,
 }
 
 // 
-//     delegated_ra_memory(num_addresses:&size_t, value_size:&size_t);
-//     delegated_ra_memory(num_addresses:&size_t, value_size:&size_t, const std::vector<size_t> &contents_as_vector);
-//     delegated_ra_memory(num_addresses:&size_t, value_size:&size_t, const memory_contents &contents_as_map);
+//     delegated_ra_memory(num_addresses:&usize, value_size:&usize);
+//     delegated_ra_memory(num_addresses:&usize, value_size:&usize, contents_as_vector:&Vec<usize>);
+//     delegated_ra_memory(num_addresses:&usize, value_size:&usize, contents_as_map:&memory_contents);
 
-//     size_t get_value(address:&size_t) const;
-//     void set_value(address:&size_t, value:&size_t);
+//     usize get_value(address:&usize) const;
+//     pub fn  set_value(address:&usize, value:&usize);
 
-//     typename HashT::hash_value_type get_root() const;
-//     typename HashT::merkle_authentication_path_type get_path(address:&size_t) const;
+//     HashT::hash_value_type get_root() const;
+//     HashT::merkle_authentication_path_type get_path(address:&usize) const;
 
-//     void dump() const;
+//     pub fn  dump() const;
 // };
 
 
@@ -72,7 +72,7 @@ use ffec::common::utils;
 
 
 impl delegated_ra_memory<HashT>{
- pub fn int_to_tree_elem(i:&size_t) ->bit_vector
+ pub fn int_to_tree_elem(i:&usize) ->bit_vector
 {
      let mut v=vec![false;value_size];
     for k in 0..value_size
@@ -94,8 +94,8 @@ pub fn int_from_tree_elem(v:&bit_vector) ->usize
 }
 
 
-pub fn new(num_addresses:&size_t,
-                                                value_size:&size_t) ->Self
+pub fn new(num_addresses:&usize,
+                                                value_size:&usize) ->Self
     
 {
 //memory_interface(num_addresses, value_size)
@@ -103,21 +103,21 @@ pub fn new(num_addresses:&size_t,
 }
 
 
-pub fn new2(num_addresses:&size_t,
-                                                value_size:&size_t,
-                                                contents_as_vector:&std::vector<size_t>) ->Self
+pub fn new2(num_addresses:&usize,
+                                                value_size:&usize,
+                                                contents_as_vector:&Vec<usize>) ->Self
     
 {
     //memory_interface(num_addresses, value_size)
     let mut  contents_as_bit_vector_vector:Vec<_>=contents_as_vector.iter().map(|value| int_to_tree_elem(value)).collect();
-    // std::transform(contents_as_vector.begin(), contents_as_vector.end(), contents_as_bit_vector_vector, [this](size_t value) { return int_to_tree_elem(value); });
+    // std::transform(contents_as_vector.begin(), contents_as_vector.end(), contents_as_bit_vector_vector, [this](usize value) { return int_to_tree_elem(value); });
     contents.reset(merkle_tree::<HashT>::new(log2(num_addresses), value_size, contents_as_bit_vector_vector));
 }
 
 
-pub fn new3(num_addresses:&size_t,
-                                                value_size:&size_t,
-                                                contents_as_map:&std::map<size_t, size_t>) ->Self
+pub fn new3(num_addresses:&usize,
+                                                value_size:&usize,
+                                                contents_as_map:&BTreeMap<usize, usize>) ->Self
     
 {
     //memory_interface(num_addresses, value_size)
@@ -126,14 +126,14 @@ pub fn new3(num_addresses:&size_t,
     contents.reset(merkle_tree::<HashT>::new(log2(num_addresses), value_size, contents_as_bit_vector_map));
 }
 
- pub fn get_value(address:&size_t) ->usize
+ pub fn get_value(address:&usize) ->usize
 {
     return int_from_tree_elem(contents.get_value(address));
 }
 
 
-pub fn set_value(address:&size_t,
-                                           value:&size_t)
+pub fn set_value(address:&usize,
+                                           value:&usize)
 {
     contents.set_value(address, int_to_tree_elem(value));
 }
@@ -143,7 +143,7 @@ pub fn set_value(address:&size_t,
     return contents.get_root();
 }
 
- pub fn get_path(address:&size_t) ->HashT::merkle_authentication_path_type
+ pub fn get_path(address:&usize) ->HashT::merkle_authentication_path_type
 {
     return contents.get_path(address);
 }

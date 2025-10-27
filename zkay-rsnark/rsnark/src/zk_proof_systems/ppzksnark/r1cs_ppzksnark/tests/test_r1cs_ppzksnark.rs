@@ -20,15 +20,15 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 
 
 
-template<typename ppT>
-void test_r1cs_ppzksnark(size_t num_constraints,
-                         size_t input_size)
+
+pub fn  test_r1cs_ppzksnark(usize num_constraints,
+                         usize input_size)
 {
     ffec::print_header("(enter) Test R1CS ppzkSNARK");
 
-    const bool test_serialization = true;
+    let mut test_serialization = true;
     r1cs_example<ffec::Fr<ppT> > example = generate_r1cs_example_with_binary_input<ffec::Fr<ppT> >(num_constraints, input_size);
-    const bool bit = run_r1cs_ppzksnark<ppT>(example, test_serialization);
+    let mut bit = run_r1cs_ppzksnark<ppT>(example, test_serialization);
     assert!(bit);
 
     ffec::print_header("(leave) Test R1CS ppzkSNARK");

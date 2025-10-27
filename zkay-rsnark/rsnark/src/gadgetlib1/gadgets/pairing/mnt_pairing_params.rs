@@ -2,8 +2,8 @@
  *****************************************************************************
 
  Declaration of specializations of pairing_selector<ppT> to
- - pairing_selector<ffec::mnt4_pp>, and
- - pairing_selector<ffec::mnt6_pp>.
+ - pairing_selector<mnt4_pp>, and
+ - pairing_selector<mnt6_pp>.
 
  See pairing_params.hpp .
 
@@ -19,84 +19,74 @@
 use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
 use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
 
-use crate::gadgetlib1::gadgets::fields/fp2_gadgets;
-use crate::gadgetlib1::gadgets::fields/fp3_gadgets;
-use crate::gadgetlib1::gadgets::fields/fp4_gadgets;
-use crate::gadgetlib1::gadgets::fields/fp6_gadgets;
+use crate::gadgetlib1::gadgets::fields::fp2_gadgets;
+use crate::gadgetlib1::gadgets::fields::fp3_gadgets;
+use crate::gadgetlib1::gadgets::fields::fp4_gadgets;
+use crate::gadgetlib1::gadgets::fields::fp6_gadgets;
 use crate::gadgetlib1::gadgets::pairing::pairing_params;
 
 
 
-template<typename ppT>
-class mnt_e_over_e_miller_loop_gadget;
 
-template<typename ppT>
-class mnt_e_times_e_over_e_miller_loop_gadget;
-
-template<typename ppT>
-class mnt4_final_exp_gadget;
-
-template<typename ppT>
-class mnt6_final_exp_gadget;
 
 /**
  * Specialization for MNT4.
  */
-template<>
-class pairing_selector<ffec::mnt4_pp> {
 
-    type ffec::Fr<ffec::mnt4_pp> FieldT;
-    type ffec::Fqe<ffec::mnt6_pp> FqeT;
-    type ffec::Fqk<ffec::mnt6_pp> FqkT;
+pub trait pairing_selector<mnt4_pp> {
 
-    type Fp3_variable<FqeT> Fqe_variable_type;
-    type Fp3_mul_gadget<FqeT> Fqe_mul_gadget_type;
-    type Fp3_mul_by_lc_gadget<FqeT> Fqe_mul_by_lc_gadget_type;
-    type Fp3_sqr_gadget<FqeT> Fqe_sqr_gadget_type;
+    type FieldT=Fr<mnt4_pp>;
+    type FqeT=Fqe<mnt6_pp>;
+    type FqkT=Fqk<mnt6_pp>;
 
-    type Fp6_variable<FqkT> Fqk_variable_type;
-    type Fp6_mul_gadget<FqkT> Fqk_mul_gadget_type;
-    type Fp6_mul_by_2345_gadget<FqkT> Fqk_special_mul_gadget_type;
-    type Fp6_sqr_gadget<FqkT> Fqk_sqr_gadget_type;
+    type Fqe_variable_type=Fp3_variable<FqeT>;
+    type Fqe_mul_gadget_type=Fp3_mul_gadget<FqeT>;
+    type Fqe_mul_by_lc_gadget_type=Fp3_mul_by_lc_gadget<FqeT>;
+    type Fqe_sqr_gadget_type=Fp3_sqr_gadget<FqeT>;
 
-    type ffec::mnt6_pp other_curve_type;
+    type Fqk_variable_type=Fp6_variable<FqkT>;
+    type Fqk_mul_gadget_type=Fp6_mul_gadget<FqkT>;
+    type Fqk_special_mul_gadget_type=Fp6_mul_by_2345_gadget<FqkT>;
+    type Fqk_sqr_gadget_type=Fp6_sqr_gadget<FqkT>;
 
-    type mnt_e_over_e_miller_loop_gadget<ffec::mnt4_pp> e_over_e_miller_loop_gadget_type;
-    type mnt_e_times_e_over_e_miller_loop_gadget<ffec::mnt4_pp> e_times_e_over_e_miller_loop_gadget_type;
-    type mnt4_final_exp_gadget<ffec::mnt4_pp> final_exp_gadget_type;
+    type other_curve_type=mnt6_pp;
 
-    static const constexpr ffec::bigint<ffec::mnt6_Fr::num_limbs> &pairing_loop_count = ffec::mnt6_ate_loop_count;
-};
+    type e_over_e_miller_loop_gadget_type=mnt_e_over_e_miller_loop_gadget<mnt4_pp>;
+    type e_times_e_over_e_miller_loop_gadget_type=mnt_e_times_e_over_e_miller_loop_gadget<mnt4_pp>;
+    type final_exp_gadget_type=mnt4_final_exp_gadget<mnt4_pp>;
+
+    // static pairing_loop_count:&constexpr bigint<mnt6_Fr::num_limbs> = mnt6_ate_loop_count;
+}
 
 /**
  * Specialization for MNT6.
  */
-template<>
-class pairing_selector<ffec::mnt6_pp> {
 
-    type ffec::Fr<ffec::mnt6_pp> FieldT;
+pub trait pairing_selector1<mnt6_pp> {
 
-    type ffec::Fqe<ffec::mnt4_pp> FqeT;
-    type ffec::Fqk<ffec::mnt4_pp> FqkT;
+    type FieldT=Fr<mnt6_pp>;
 
-    type Fp2_variable<FqeT> Fqe_variable_type;
-    type Fp2_mul_gadget<FqeT> Fqe_mul_gadget_type;
-    type Fp2_mul_by_lc_gadget<FqeT> Fqe_mul_by_lc_gadget_type;
-    type Fp2_sqr_gadget<FqeT> Fqe_sqr_gadget_type;
+    type FqeT=Fqe<mnt4_pp>;
+    type FqkT=Fqk<mnt4_pp>;
 
-    type Fp4_variable<FqkT> Fqk_variable_type;
-    type Fp4_mul_gadget<FqkT> Fqk_mul_gadget_type;
-    type Fp4_mul_gadget<FqkT> Fqk_special_mul_gadget_type;
-    type Fp4_sqr_gadget<FqkT> Fqk_sqr_gadget_type;
+    type Fqe_variable_type=Fp2_variable<FqeT>;
+    type Fqe_mul_gadget_type=Fp2_mul_gadget<FqeT>;
+    type Fqe_mul_by_lc_gadget_type=Fp2_mul_by_lc_gadget<FqeT>;
+    type Fqe_sqr_gadget_type=Fp2_sqr_gadget<FqeT>;
 
-    type ffec::mnt4_pp other_curve_type;
+    type Fqk_variable_type=Fp4_variable<FqkT>;
+    type Fqk_mul_gadget_type=Fp4_mul_gadget<FqkT>;
+    type Fqk_special_mul_gadget_type=Fp4_mul_gadget<FqkT>;
+    type Fqk_sqr_gadget_type=Fp4_sqr_gadget<FqkT>;
 
-    type mnt_e_over_e_miller_loop_gadget<ffec::mnt6_pp> e_over_e_miller_loop_gadget_type;
-    type mnt_e_times_e_over_e_miller_loop_gadget<ffec::mnt6_pp> e_times_e_over_e_miller_loop_gadget_type;
-    type mnt6_final_exp_gadget<ffec::mnt6_pp> final_exp_gadget_type;
+    type other_curve_type=mnt4_pp;
 
-    static const constexpr ffec::bigint<ffec::mnt4_Fr::num_limbs> &pairing_loop_count = ffec::mnt4_ate_loop_count;
-};
+    type e_over_e_miller_loop_gadget_type=mnt_e_over_e_miller_loop_gadget<mnt6_pp>;
+    type e_times_e_over_e_miller_loop_gadget_type=mnt_e_times_e_over_e_miller_loop_gadget<mnt6_pp>;
+    type final_exp_gadget_type=mnt6_final_exp_gadget<mnt6_pp>;
+
+    // static pairing_loop_count:&constexpr bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+}
 
 
 

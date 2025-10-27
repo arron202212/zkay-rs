@@ -26,16 +26,16 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 /**
  * Instance map for the BACS-to-R1CS reduction.
  */
-template<typename FieldT>
-r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<FieldT> &circuit);
+
+r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<FieldT>);
 
 /**
  * Witness map for the BACS-to-R1CS reduction.
  */
-template<typename FieldT>
-r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(const bacs_circuit<FieldT> &circuit,
-                                                               const bacs_primary_input<FieldT> &primary_input,
-                                                               const bacs_auxiliary_input<FieldT> &auxiliary_input);
+
+r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(circuit:&bacs_circuit<FieldT>,
+                                                               primary_input:&bacs_primary_input<FieldT>,
+                                                               auxiliary_input:&bacs_auxiliary_input<FieldT>);
 
 
 
@@ -63,8 +63,8 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-template<typename FieldT>
-r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<FieldT> &circuit)
+
+r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<FieldT>)
 {
     ffec::enter_block("Call to bacs_to_r1cs_instance_map");
     assert!(circuit.is_valid());
@@ -79,12 +79,12 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
 
     for g in &circuit.gates
     {
-        result.constraints.push(r1cs_constraint<FieldT>(g.lhs, g.rhs, g.output));
+        result.constraints.push(r1cs_constraint::<FieldT>(g.lhs, g.rhs, g.output));
 // #ifdef DEBUG
         auto it = circuit.gate_annotations.find(g.output.index);
         if it != circuit.gate_annotations.end()
         {
-            result.constraint_annotations[result.constraints.len()-1] = it->second;
+            result.constraint_annotations[result.constraints.len()-1] = it.1;
         }
 //#endif
     }
@@ -93,10 +93,10 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
     {
         if g.is_circuit_output
         {
-            result.constraints.push(r1cs_constraint<FieldT>(1, g.output, 0));
+            result.constraints.push(r1cs_constraint::<FieldT>(1, g.output, 0));
 
 // #ifdef DEBUG
-            result.constraint_annotations[result.constraints.len()-1] = FMT("", "output_%zu_is_circuit_output", g.output.index);
+            result.constraint_annotations[result.constraints.len()-1] = FMT("", "output_{}_is_circuit_output", g.output.index);
 //#endif
         }
     }
@@ -106,10 +106,10 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(const bacs_circuit<Fiel
     return result;
 }
 
-template<typename FieldT>
-r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(const bacs_circuit<FieldT> &circuit,
-                                                               const bacs_primary_input<FieldT> &primary_input,
-                                                               const bacs_auxiliary_input<FieldT> &auxiliary_input)
+
+r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(circuit:&bacs_circuit<FieldT>,
+                                                               primary_input:&bacs_primary_input<FieldT>,
+                                                               auxiliary_input:&bacs_auxiliary_input<FieldT>)
 {
     ffec::enter_block("Call to bacs_to_r1cs_witness_map");
     const r1cs_variable_assignment<FieldT> result = circuit.get_all_wires(primary_input, auxiliary_input);

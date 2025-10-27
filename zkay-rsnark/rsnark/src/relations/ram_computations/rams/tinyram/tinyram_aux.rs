@@ -131,16 +131,16 @@ const  tinyram_opcodes_stall:[i32;4] = [
 type reg_count_t=usize ; // type for the number of registers
 type reg_width_t=usize ; // type for the width of a register
 
-// extern std::map<tinyram_opcode, std::string> tinyram_opcode_names;
+// extern BTreeMap<tinyram_opcode, String> tinyram_opcode_names;
 
-// extern std::map<std::string, tinyram_opcode> opcode_values;
+// extern BTreeMap<String, tinyram_opcode> opcode_values;
 
-// extern std::map<tinyram_opcode, tinyram_opcode_args> opcode_args;
+// extern BTreeMap<tinyram_opcode, tinyram_opcode_args> opcode_args;
 
-// void ensure_tinyram_opcode_value_map();
+// pub fn  ensure_tinyram_opcode_value_map();
 
 // pub struct tinyram_program;
-type tinyram_input_tape=std::vector<usize> ;
+type tinyram_input_tape=Vec<usize> ;
 type tinyram_input_tape_iterator= tinyram_input_tape::const_iterator ;
 
 pub struct tinyram_architecture_params {
@@ -149,7 +149,7 @@ pub struct tinyram_architecture_params {
      k:reg_count_t, /* number of registers */
 }
 //     tinyram_architecture_params() {};
-//     tinyram_architecture_params(const reg_width_t w, const reg_count_t k) : w(w), k(k) { assert!(w == 1u64 << log2(w)); };
+//     tinyram_architecture_params(w:reg_width_t, const reg_count_t k)->Selfw,k { assert!(w == 1u64 << log2(w)); };
 
 //     usize address_size() const;
 //     usize value_size() const;
@@ -177,7 +177,7 @@ pub struct tinyram_architecture_params {
 //     friend std::ostream& operator<<(std::ostream &out, ap:&tinyram_architecture_params);
 //     friend std::istream& operator>>(std::istream &in, tinyram_architecture_params &ap);
 
-//     void print() const;
+//     pub fn  print() const;
 // };
 
 /* order everywhere is reversed (i.e. MSB comes first),
@@ -192,7 +192,7 @@ pub struct tinyram_instruction {
     arg2idx_or_imm:usize,
 }
 //     tinyram_instruction(opcode:&tinyram_opcode,
-//                         const bool arg2_is_imm,
+//                         arg2_is_imm:bool,
 //                         desidx:&usize,
 //                         arg1idx:&usize,
 //                         arg2idx_or_imm:&usize);
@@ -202,23 +202,23 @@ pub struct tinyram_instruction {
 
 // tinyram_instruction random_tinyram_instruction(ap:&tinyram_architecture_params);
 
-// std::vector<tinyram_instruction> generate_tinyram_prelude(ap:&tinyram_architecture_params);
+// Vec<tinyram_instruction> generate_tinyram_prelude(ap:&tinyram_architecture_params);
 // extern tinyram_instruction tinyram_default_instruction;
 
 pub struct tinyram_program {
 // 
-instructions:    std::vector<tinyram_instruction>,
+instructions:    Vec<tinyram_instruction>,
 }
 impl tinyram_program {
     pub fn  size(&self) ->usize { return instructions.len(); }
-    // void add_instruction(instr:&tinyram_instruction);
+    // pub fn  add_instruction(instr:&tinyram_instruction);
 }
 
 // tinyram_program load_preprocessed_program(ap:&tinyram_architecture_params,
 //                                           std::istream &preprocessed);
 
 // memory_store_trace tinyram_boot_trace_from_program_and_input(ap:&tinyram_architecture_params,
-//                                                              const usize boot_trace_size_bound,
+//                                                              boot_trace_size_bound:usize,
 //                                                              program:&tinyram_program,
 //                                                              primary_input:&tinyram_input_tape);
 
@@ -293,7 +293,7 @@ const tinyram_opcode_names:[(i32,&str);40] =
     ( tinyram_opcode_READ,   "read" ),
     ( tinyram_opcode_ANSWER, "answer" )
 ];
-//std::map<tinyram_opcode, tinyram_opcode_args> 
+//BTreeMap<tinyram_opcode, tinyram_opcode_args> 
 const opcode_args:[(i32,i32);35] =
 [
     ( tinyram_opcode_AND,     tinyram_opcode_args_des_arg1_arg2 ),
@@ -330,7 +330,7 @@ const opcode_args:[(i32,i32);35] =
     ( tinyram_opcode_ANSWER,  tinyram_opcode_args_arg2 )
 ];
 
-// std::map<std::string, tinyram_opcode> opcode_values;
+// BTreeMap<String, tinyram_opcode> opcode_values;
 
 pub fn  ensure_tinyram_opcode_value_map()
 {
@@ -343,7 +343,7 @@ pub fn  ensure_tinyram_opcode_value_map()
     }
 }
 
-pub fn generate_tinyram_prelude(ap:&tinyram_architecture_params)->std::vector<tinyram_instruction> 
+pub fn generate_tinyram_prelude(ap:&tinyram_architecture_params)->Vec<tinyram_instruction> 
 {
     let mut  result=vec![];
     let  increment = log2(ap.w)/8;

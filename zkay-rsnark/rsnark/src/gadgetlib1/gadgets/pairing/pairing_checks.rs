@@ -16,7 +16,7 @@
 //#ifndef PAIRING_CHECKS_HPP_
 // #define PAIRING_CHECKS_HPP_
 
-use  <memory>
+
 
 use crate::gadgetlib1::gadgets::pairing::pairing_params;
 use crate::gadgetlib1::gadgets::pairing::weierstrass_final_exponentiation;
@@ -24,73 +24,51 @@ use crate::gadgetlib1::gadgets::pairing::weierstrass_miller_loop;
 
 
 
-template<typename ppT>
-class check_e_equals_e_gadget : public gadget<ffec::Fr<ppT> > {
+ type FieldT=ffec::Fr<ppT>;
+pub struct check_e_equals_e_gadget<ppT> {//gadget<ffec::Fr<ppT> >
 
 
-    type ffec::Fr<ppT> FieldT;
+   
 
-    std::shared_ptr<Fqk_variable<ppT> > ratio;
-    std::shared_ptr<e_over_e_miller_loop_gadget<ppT> > compute_ratio;
-    std::shared_ptr<final_exp_gadget<ppT> > check_finexp;
+ratio:    RcCell<Fqk_variable<ppT> >,
+compute_ratio:    RcCell<e_over_e_miller_loop_gadget<ppT> >,
+check_finexp:    RcCell<final_exp_gadget<ppT> >,
 
-    G1_precomputation<ppT> lhs_G1;
-    G2_precomputation<ppT> lhs_G2;
-    G1_precomputation<ppT> rhs_G1;
-    G2_precomputation<ppT> rhs_G2;
+lhs_G1:    G1_precomputation<ppT>,
+lhs_G2:    G2_precomputation<ppT>,
+rhs_G1:    G1_precomputation<ppT>,
+rhs_G2:    G2_precomputation<ppT>,
 
-    pb_variable<FieldT> result;
+result:    pb_variable<FieldT>,
 
-    check_e_equals_e_gadget(protoboard<FieldT> &pb,
-                            const G1_precomputation<ppT> &lhs_G1,
-                            const G2_precomputation<ppT> &lhs_G2,
-                            const G1_precomputation<ppT> &rhs_G1,
-                            const G2_precomputation<ppT> &rhs_G2,
-                            const pb_variable<FieldT> &result,
-                            const std::string &annotation_prefix);
-
-    void generate_r1cs_constraints();
-
-    void generate_r1cs_witness();
-};
-
-template<typename ppT>
-class check_e_equals_ee_gadget : public gadget<ffec::Fr<ppT> > {
+ 
+}
 
 
-    type ffec::Fr<ppT> FieldT;
+pub struct check_e_equals_ee_gadget<ppT> {//gadget<ffec::Fr<ppT> >
 
-    std::shared_ptr<Fqk_variable<ppT> > ratio;
-    std::shared_ptr<e_times_e_over_e_miller_loop_gadget<ppT> > compute_ratio;
-    std::shared_ptr<final_exp_gadget<ppT> > check_finexp;
 
-    G1_precomputation<ppT> lhs_G1;
-    G2_precomputation<ppT> lhs_G2;
-    G1_precomputation<ppT> rhs1_G1;
-    G2_precomputation<ppT> rhs1_G2;
-    G1_precomputation<ppT> rhs2_G1;
-    G2_precomputation<ppT> rhs2_G2;
+    // type FieldT=ffec::Fr<ppT>;
 
-    pb_variable<FieldT> result;
+ratio:    RcCell<Fqk_variable<ppT> >,
+compute_ratio:    RcCell<e_times_e_over_e_miller_loop_gadget<ppT> >,
+check_finexp:    RcCell<final_exp_gadget<ppT> >,
 
-    check_e_equals_ee_gadget(protoboard<FieldT> &pb,
-                             const G1_precomputation<ppT> &lhs_G1,
-                             const G2_precomputation<ppT> &lhs_G2,
-                             const G1_precomputation<ppT> &rhs1_G1,
-                             const G2_precomputation<ppT> &rhs1_G2,
-                             const G1_precomputation<ppT> &rhs2_G1,
-                             const G2_precomputation<ppT> &rhs2_G2,
-                             const pb_variable<FieldT> &result,
-                             const std::string &annotation_prefix);
+lhs_G1:    G1_precomputation<ppT>,
+lhs_G2:    G2_precomputation<ppT>,
+rhs1_G1:    G1_precomputation<ppT>,
+rhs1_G2:    G2_precomputation<ppT>,
+rhs2_G1:    G1_precomputation<ppT>,
+rhs2_G2:    G2_precomputation<ppT>,
 
-    void generate_r1cs_constraints();
+result:    pb_variable<FieldT>,
 
-    void generate_r1cs_witness();
-};
+    
+}
 
 
 
-use crate::gadgetlib1::gadgets::pairing::pairing_checks;
+// use crate::gadgetlib1::gadgets::pairing::pairing_checks;
 
 //#endif // PAIRING_CHECKS_HPP_
 /** @file
@@ -110,79 +88,83 @@ use crate::gadgetlib1::gadgets::pairing::pairing_checks;
 // #define PAIRING_CHECKS_TCC_
 
 
+impl check_e_equals_e_gadget<ppT> {
 
-template<typename ppT>
-check_e_equals_e_gadget<ppT>::check_e_equals_e_gadget(protoboard<FieldT> &pb,
-                                                      const G1_precomputation<ppT> &lhs_G1,
-                                                      const G2_precomputation<ppT> &lhs_G2,
-                                                      const G1_precomputation<ppT> &rhs_G1,
-                                                      const G2_precomputation<ppT> &rhs_G2,
-                                                      const pb_variable<FieldT> &result,
-                                                      const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    lhs_G1(lhs_G1),
-    lhs_G2(lhs_G2),
-    rhs_G1(rhs_G1),
-    rhs_G2(rhs_G2),
-    result(result)
+pub fn new(pb:protoboard<FieldT>,
+                                                      lhs_G1:&G1_precomputation<ppT>,
+                                                      lhs_G2:&G2_precomputation<ppT>,
+                                                      rhs_G1:&G1_precomputation<ppT>,
+                                                      rhs_G2:&G2_precomputation<ppT>,
+                                                      result:&pb_variable<FieldT>,
+                                                      annotation_prefix:&String)->Self
+  
 {
-    ratio.reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " ratio")));
-    compute_ratio.reset(new e_over_e_miller_loop_gadget<ppT>(pb, lhs_G1, lhs_G2, rhs_G1, rhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
-    check_finexp.reset(new final_exp_gadget<ppT>(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
-}
-
-template<typename ppT>
-void check_e_equals_e_gadget<ppT>::generate_r1cs_constraints()
-{
-    compute_ratio->generate_r1cs_constraints();
-    check_finexp->generate_r1cs_constraints();
-}
-
-template<typename ppT>
-void check_e_equals_e_gadget<ppT>::generate_r1cs_witness()
-{
-    compute_ratio->generate_r1cs_witness();
-    check_finexp->generate_r1cs_witness();
-}
-
-template<typename ppT>
-check_e_equals_ee_gadget<ppT>::check_e_equals_ee_gadget(protoboard<FieldT> &pb,
-                                                        const G1_precomputation<ppT> &lhs_G1,
-                                                        const G2_precomputation<ppT> &lhs_G2,
-                                                        const G1_precomputation<ppT> &rhs1_G1,
-                                                        const G2_precomputation<ppT> &rhs1_G2,
-                                                        const G1_precomputation<ppT> &rhs2_G1,
-                                                        const G2_precomputation<ppT> &rhs2_G2,
-                                                        const pb_variable<FieldT> &result,
-                                                        const std::string &annotation_prefix) :
-    gadget<FieldT>(pb, annotation_prefix),
-    lhs_G1(lhs_G1),
-    lhs_G2(lhs_G2),
-    rhs1_G1(rhs1_G1),
-    rhs1_G2(rhs1_G2),
-    rhs2_G1(rhs2_G1),
-    rhs2_G2(rhs2_G2),
-    result(result)
-{
-    ratio.reset(new Fqk_variable<ppT>(pb, FMT(annotation_prefix, " ratio")));
-    compute_ratio.reset(new e_times_e_over_e_miller_loop_gadget<ppT>(pb, rhs1_G1, rhs1_G2, rhs2_G1, rhs2_G2, lhs_G1, lhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
-    check_finexp.reset(new final_exp_gadget<ppT>(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
-}
-
-template<typename ppT>
-void check_e_equals_ee_gadget<ppT>::generate_r1cs_constraints()
-{
-    compute_ratio->generate_r1cs_constraints();
-    check_finexp->generate_r1cs_constraints();
-}
-
-template<typename ppT>
-void check_e_equals_ee_gadget<ppT>::generate_r1cs_witness()
-{
-    compute_ratio->generate_r1cs_witness();
-    check_finexp->generate_r1cs_witness();
+    ratio.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
+    compute_ratio.reset(e_over_e_miller_loop_gadget::<ppT>::new(pb, lhs_G1, lhs_G2, rhs_G1, rhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
+    check_finexp.reset(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
+    //   gadget<FieldT>(pb, annotation_prefix),
+   Self{lhs_G1,
+   lhs_G2,
+   rhs_G1,
+   rhs_G2,
+    result}
 }
 
 
+pub fn generate_r1cs_constraints()
+{
+    compute_ratio.generate_r1cs_constraints();
+    check_finexp.generate_r1cs_constraints();
+}
+
+
+pub fn generate_r1cs_witness()
+{
+    compute_ratio.generate_r1cs_witness();
+    check_finexp.generate_r1cs_witness();
+}
+
+}
+
+impl check_e_equals_ee_gadget<ppT> {
+pub fn new(pb:protoboard<FieldT>,
+                                                        lhs_G1:&G1_precomputation<ppT>,
+                                                        lhs_G2:&G2_precomputation<ppT>,
+                                                        rhs1_G1:&G1_precomputation<ppT>,
+                                                        rhs1_G2:&G2_precomputation<ppT>,
+                                                        rhs2_G1:&G1_precomputation<ppT>,
+                                                        rhs2_G2:&G2_precomputation<ppT>,
+                                                        result:&pb_variable<FieldT>,
+                                                        annotation_prefix:&String)->Self
+    
+{
+    ratio.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
+    compute_ratio.reset(e_times_e_over_e_miller_loop_gadget::<ppT>::new(pb, rhs1_G1, rhs1_G2, rhs2_G1, rhs2_G2, lhs_G1, lhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
+    check_finexp.reset(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
+    // gadget<FieldT>(pb, annotation_prefix),
+   Self{lhs_G1,
+   lhs_G2,
+   rhs1_G1,
+   rhs1_G2,
+   rhs2_G1,
+   rhs2_G2,
+    result}
+}
+
+
+pub fn generate_r1cs_constraints()
+{
+    compute_ratio.generate_r1cs_constraints();
+    check_finexp.generate_r1cs_constraints();
+}
+
+
+pub fn generate_r1cs_witness()
+{
+    compute_ratio.generate_r1cs_witness();
+    check_finexp.generate_r1cs_witness();
+}
+
+}
 
 //#endif // PAIRING_CHECKS_TCC_

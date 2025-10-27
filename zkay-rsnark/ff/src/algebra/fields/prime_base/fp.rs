@@ -20,7 +20,7 @@ use num_traits::{One,Zero};
 // namespace libff {
 
 // 
-// class Fp_model;
+// pub struct Fp_model;
 
 // 
 // std::ostream& operator<<(std::ostream &, const Fp_model<n, modulus>&);
@@ -31,7 +31,7 @@ use num_traits::{One,Zero};
 /**
  * Arithmetic in the finite field F[p], for prime p of fixed length.
  *
- * This class implements Fp-arithmetic, for a large prime p, using a fixed number
+ * This pub struct implements Fp-arithmetic, for a large prime p, using a fixed number
  * of words. It is optimized for tight memory consumption, so the modulus p is
  * passed as a template parameter, to avoid per-element overheads.
  *
@@ -45,18 +45,18 @@ use num_traits::{One,Zero};
 pub struct Fp_model<const N:usize,const modulus:u128 >{
     pub mont_repr: bigint<N>,
 }
-//     static const mp_size_t num_limbs = n;
-//     static const constexpr bigint<n>& mod = modulus;
+//     static let num_limbs= n;
+//     static modulus:constexpr bigint<n>& mod =,
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-//     static long long add_cnt;
-//     static long long sub_cnt;
-//     static long long mul_cnt;
-//     static long long sqr_cnt;
-//     static long long inv_cnt;
+//     static i64 add_cnt;
+//     static i64 sub_cnt;
+//     static i64 mul_cnt;
+//     static i64 sqr_cnt;
+//     static i64 inv_cnt;
 // //#endif
-//     static std::size_t num_bits;
+//     static std::usize num_bits;
 //     static bigint<N> euler; // (modulus-1)/2
-//     static std::size_t s; // modulus = 2^s * t + 1
+//     static std::usize s; // modulus = 2^s * t + 1
 //     static bigint<N> t; // with t odd
 //     static bigint<N> t_minus_1_over_2; // (t-1)/2
 //     static Fp_model<n, modulus> nqr; // a quadratic nonresidue
@@ -69,12 +69,12 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 
 //     Fp_model() {};
 //     Fp_model(b:&bigint<n>);
-//     Fp_model(const long x, const bool is_unsigned=false);
+//     Fp_model(x:long, is_unsigned:bool=false);
 
-//     set_ulong(const unsigned long x);
+//     set_ulong(const u64 x);
 
 //     /** Performs the operation montgomery_reduce(other * this.mont_repr). */
-//     mul_reduce(const bigint<N> &other);
+//     mul_reduce(other:&bigint<N>);
 
 //     clear();
 //     print();
@@ -84,7 +84,7 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 //      * Returns the constituent bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 //      */
-//     std::vector<uint64_t> to_words();
+//     Vec<uint64_t> to_words();
 //     /**
 //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
@@ -92,7 +92,7 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 //      *
 //      * Precondition: the vector is large enough to contain ceil_size_in_bits() bits.
 //      */
-//     bool from_words(std::vector<uint64_t> words);
+//     bool from_words(Vec<uint64_t> words);
 
 //     /* Return the standard (not Montgomery) representation of the
 //        Field element's requivalence class. I.e. Fp(2).as_bigint()
@@ -101,38 +101,38 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 //     /* Return the last limb of the standard representation of the
 //        field element. E.g. on 64-bit architectures Fp(123).as_ulong()
 //        and Fp(2^64+123).as_ulong() would both return 123. */
-//     unsigned long as_ulong();
+//     u64 as_ulong();
 
-//     bool operator==(const Fp_model& other);
-//     bool operator!=(const Fp_model& other);
+//     bool operator==(other:&Fp_model);
+//     bool operator!=(other:&Fp_model);
 //     bool is_zero();
 
-//     Fp_model& operator+=(const Fp_model& other);
-//     Fp_model& operator-=(const Fp_model& other);
-//     Fp_model& operator*=(const Fp_model& other);
-//     Fp_model& operator^=(const unsigned long pow);
-//     template<mp_size_t m>
-//     Fp_model& operator^=(const bigint<m> &pow);
+//     Fp_model& operator+=(other:&Fp_model);
+//     Fp_model& operator-=(other:&Fp_model);
+//     Fp_model& operator*=(other:&Fp_model);
+//     Fp_model& operator^=(const u64 pow);
+//     
+//     Fp_model& operator^=(pow:&bigint<m>);
 
-//     Fp_model operator+(const Fp_model& other);
-//     Fp_model operator-(const Fp_model& other);
-//     Fp_model operator*(const Fp_model& other);
-//     Fp_model operator^(const unsigned long pow);
-//     template<mp_size_t m>
-//     Fp_model operator^(const bigint<m> &pow);
+//     Fp_model operator+(other:&Fp_model);
+//     Fp_model operator-(other:&Fp_model);
+//     Fp_model operator*(other:&Fp_model);
+//     Fp_model operator^(const u64 pow);
+//     
+//     Fp_model operator^(pow:&bigint<m>);
 //     Fp_model operator-();
 
 //     Fp_model& square();
 //     Fp_model squared();
 //     Fp_model& invert();
 //     Fp_model inverse();
-//     Fp_model Frobenius_map(unsigned long power);
+//     Fp_model Frobenius_map(u64 power);
 //     Fp_model sqrt(); // HAS TO BE A SQUARE (else does not terminate)
 
-//     static std::size_t ceil_size_in_bits() { return num_bits; }
-//     static std::size_t floor_size_in_bits() { return num_bits - 1; }
+//     static std::usize ceil_size_in_bits() { return num_bits; }
+//     static std::usize floor_size_in_bits() { return num_bits - 1; }
 
-//     static constexpr std::size_t extension_degree() { return 1; }
+//     static constexpr std::usize extension_degree() { return 1; }
 //     static constexpr bigint<N> field_char() { return modulus; }
 //     static bool modulus_is_valid() { return modulus.data[n-1] != 0; } // mpn inverse assumes that highest limb is non-zero
 
@@ -142,39 +142,39 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 //     static Fp_model<n, modulus> geometric_generator(); // generator^k, for k = 1 to m, domain size m
 //     static Fp_model<n, modulus> arithmetic_generator();// generator++, for k = 1 to m, domain size m
 
-//     friend std::ostream& operator<< <n,modulus>(std::ostream &out, const Fp_model<n, modulus> &p);
+//     friend std::ostream& operator<< <n,modulus>(std::ostream &out, p:&Fp_model<n, modulus>);
 //     friend std::istream& operator>> <n,modulus>(std::istream &in, Fp_model<n, modulus> &p);
 
-// private:
+// 
 //     /** Returns a representation in bigint, depending on the MONTGOMERY_OUTPUT flag. */
 //     bigint<N> bigint_repr();
 // };
 
 // #ifdef PROFILE_OP_COUNTS
 // 
-// long long Fp_model<n, modulus>::add_cnt = 0;
+// i64 Fp_model<n, modulus>::add_cnt = 0;
 
 // 
-// long long Fp_model<n, modulus>::sub_cnt = 0;
+// i64 Fp_model<n, modulus>::sub_cnt = 0;
 
 // 
-// long long Fp_model<n, modulus>::mul_cnt = 0;
+// i64 Fp_model<n, modulus>::mul_cnt = 0;
 
 // 
-// long long Fp_model<n, modulus>::sqr_cnt = 0;
+// i64 Fp_model<n, modulus>::sqr_cnt = 0;
 
 // 
-// long long Fp_model<n, modulus>::inv_cnt = 0;
+// i64 Fp_model<n, modulus>::inv_cnt = 0;
 //#endif
 
 // 
-// size_t Fp_model<n, modulus>::num_bits;
+// usize Fp_model<n, modulus>::num_bits;
 
 // 
 // bigint<N> Fp_model<n, modulus>::euler;
 
 // 
-// size_t Fp_model<n, modulus>::s;
+// usize Fp_model<n, modulus>::s;
 
 // 
 // bigint<N> Fp_model<n, modulus>::t;
@@ -233,7 +233,7 @@ use crate::algebra::field_utils::fp_aux;
 
 // namespace libff {
 
-// using std::size_t;
+// using std::usize;
 
 impl<const N:usize,const modulus:u128 > Fp_model<N,modulus>
 {
@@ -403,7 +403,7 @@ pub fn mul_reduce(other:&bigint<N>)
 
 //         if mpn_cmp(res+n, modulus.data, n) >= 0
 //         {
-//             const mp_limb_t borrow = mpn_sub(res+n, res+n, n, modulus.data, n);
+//             n:mp_limb_t borrow = mpn_sub(res+n, res+n,, modulus.data, n);
 // //#ifndef NDEBUG
 //             assert!(borrow == 0);
 // #else
@@ -757,13 +757,13 @@ impl<const N:usize,const modulus:u128> PartialEq for Fp_model<N,modulus>  {
 }
 
 // 
-// bool pub fn operator==(const Fp_model& other)
+// bool pub fn operator==(other:&Fp_model)
 // {
 //     return (self.mont_repr == other.mont_repr);
 // }
 
 // 
-// bool pub fn operator!=(const Fp_model& other)
+// bool pub fn operator!=(other:&Fp_model)
 // {
 //     return (self.mont_repr != other.mont_repr);
 // }
@@ -865,12 +865,12 @@ impl<const N:usize,const modulus:u128> AddAssign for Fp_model<N,modulus>  {
 // //#endif
 //     {
 //         mp_limb_t scratch[n+1];
-//         const mp_limb_t carry = mpn_add_n(scratch, self.mont_repr.data, other.mont_repr.data, n);
+//         let carry= mpn_add_n(scratch, self.mont_repr.data, other.mont_repr.data, n);
 //         scratch[n] = carry;
 
 //         if carry || mpn_cmp(scratch, modulus.data, n) >= 0
 //         {
-//             const mp_limb_t borrow = mpn_sub(scratch, scratch, n+1, modulus.data, n);
+//             scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, modulus.data, n);
 // //#ifndef NDEBUG
 //             assert!(borrow == 0);
 // #else
@@ -983,12 +983,12 @@ impl<const N:usize,const modulus:u128> AddAssign for Fp_model<N,modulus>  {
 // // //#endif
 // //     {
 // //         mp_limb_t scratch[n+1];
-// //         const mp_limb_t carry = mpn_add_n(scratch, self.mont_repr.data, other.mont_repr.data, n);
+// //         let carry= mpn_add_n(scratch, self.mont_repr.data, other.mont_repr.data, n);
 // //         scratch[n] = carry;
 
 // //         if carry || mpn_cmp(scratch, modulus.data, n) >= 0
 // //         {
-// //             const mp_limb_t borrow = mpn_sub(scratch, scratch, n+1, modulus.data, n);
+// //             scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, modulus.data, n);
 // // //#ifndef NDEBUG
 // //             assert!(borrow == 0);
 // // #else
@@ -1073,7 +1073,7 @@ impl<const N:usize,const modulus:u128> SubAssign for Fp_model<N,modulus>  {
         // mp_limb_t scratch[n+1];
         // if mpn_cmp(self.mont_repr.data, other.mont_repr.data, n) < 0
         // {
-        //     const mp_limb_t carry = mpn_add_n(scratch, self.mont_repr.data, modulus.data, n);
+        //     let carry= mpn_add_n(scratch, self.mont_repr.data, modulus.data, n);
         //     scratch[n] = carry;
         // }
         // else
@@ -1082,7 +1082,7 @@ impl<const N:usize,const modulus:u128> SubAssign for Fp_model<N,modulus>  {
         //     scratch[n] = 0;
         // }
 
-        // const mp_limb_t borrow = mpn_sub(scratch, scratch, n+1, other.mont_repr.data, n);
+        // scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, other.mont_repr.data, n);
 //#ifndef NDEBUG
 //         assert!(borrow == 0);
 // #else
@@ -1167,7 +1167,7 @@ impl<const N:usize,const modulus:u128> SubAssign for Fp_model<N,modulus>  {
 //         mp_limb_t scratch[n+1];
 //         if mpn_cmp(self.mont_repr.data, other.mont_repr.data, n) < 0
 //         {
-//             const mp_limb_t carry = mpn_add_n(scratch, self.mont_repr.data, modulus.data, n);
+//             let carry= mpn_add_n(scratch, self.mont_repr.data, modulus.data, n);
 //             scratch[n] = carry;
 //         }
 //         else
@@ -1176,7 +1176,7 @@ impl<const N:usize,const modulus:u128> SubAssign for Fp_model<N,modulus>  {
 //             scratch[n] = 0;
 //         }
 
-//         const mp_limb_t borrow = mpn_sub(scratch, scratch, n+1, other.mont_repr.data, n);
+//         scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, other.mont_repr.data, n);
 // //#ifndef NDEBUG
 //         assert!(borrow == 0);
 // #else
@@ -1214,7 +1214,7 @@ impl<const N:usize,const modulus:u128> BitXorAssign<u64> for Fp_model<N,modulus>
 }
 
 // 
-// Fp_model<n,modulus>& pub fn operator^=(const unsigned long pow)
+// Fp_model<n,modulus>& pub fn operator^=(const u64 pow)
 // {
 //     (*this) = power<Fp_model<n, modulus> >(*this, pow);
 //     return (*this);
@@ -1225,14 +1225,14 @@ impl<const N:usize,const M:usize,const modulus:u128> BitXorAssign<&bigint<M>> fo
     }
 }
 // 
-// template<mp_size_t m>
-// Fp_model<n,modulus>& pub fn operator^=(const bigint<m> &pow)
+// 
+// Fp_model<n,modulus>& pub fn operator^=(pow:&bigint<m>)
 // {
 //     (*this) = power<Fp_model<n, modulus>, m>(*this, pow);
 //     return (*this);
 // }
 impl<const N:usize,const modulus:u128> Add for Fp_model<N,modulus>  {
-    type Output = Self;
+    type Output =Self;
 
     fn add(self, other: Self) -> Self {
         let mut r=self;
@@ -1247,7 +1247,7 @@ impl<const N:usize,const modulus:u128> Add for Fp_model<N,modulus>  {
 //     return (r += other);
 // }
 impl<const N:usize,const modulus:u128> Sub for  Fp_model<N,modulus>  {
-    type Output = Self;
+    type Output =Self;
 
     fn sub(self, other: Self) -> <Fp_model<N, modulus> as Sub>::Output  {
         let mut r=self;
@@ -1262,7 +1262,7 @@ impl<const N:usize,const modulus:u128> Sub for  Fp_model<N,modulus>  {
 //     return (r -= other);
 // }
 impl<const N:usize,const modulus:u128> Mul for  Fp_model<N,modulus> {
-    type Output = Self;
+    type Output =Self;
 
     fn mul(self, rhs: Self) -> Self {
          let mut r=self;
@@ -1278,7 +1278,7 @@ impl<const N:usize,const modulus:u128> Mul for  Fp_model<N,modulus> {
 //     return (r *= other);
 // }
 impl<const N:usize,const modulus:u128> BitXor<u64> for Fp_model<N, modulus> {
-    type Output = Self;
+    type Output =Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
     fn bitxor(self, rhs: u64) -> Self::Output  {
@@ -1288,13 +1288,13 @@ impl<const N:usize,const modulus:u128> BitXor<u64> for Fp_model<N, modulus> {
     }
 }
 // 
-// pub fn  operator^(const unsigned long pow)
+// pub fn  operator^(const u64 pow)
 // {
 //     Fp_model<n, modulus> r(*this);
 //     return (r ^= pow);
 // }
 impl<const N:usize,const M:usize,const modulus:u128> BitXor<&bigint<M>> for Fp_model<N,modulus>{
-    type Output = Self;
+    type Output =Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
     fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
@@ -1304,14 +1304,14 @@ impl<const N:usize,const M:usize,const modulus:u128> BitXor<&bigint<M>> for Fp_m
     }
 }
 // 
-// template<mp_size_t m>
-// pub fn  operator^(const bigint<m> &pow)
+// 
+// pub fn  operator^(pow:&bigint<m>)
 // {
 //     Fp_model<n, modulus> r(*this);
 //     return (r ^= pow);
 // }
 impl<const N:usize,const modulus:u128>  Neg for Fp_model<N,modulus> {
-    type Output = Self;
+    type Output =Self;
 
     fn neg(self) -> Self::Output {
             // #ifdef PROFILE_OP_COUNTS
@@ -1358,7 +1358,7 @@ impl<const N:usize,const modulus:u128> fmt::Display for Fp_model<N, modulus>{
 }
 
 // 
-// std::ostream& operator<<(std::ostream &out, const Fp_model<n, modulus> &p)
+// std::ostream& operator<<(std::ostream &out, p:&Fp_model<n, modulus>)
 // {
 //     out << p.bigint_repr();
 //     return out;

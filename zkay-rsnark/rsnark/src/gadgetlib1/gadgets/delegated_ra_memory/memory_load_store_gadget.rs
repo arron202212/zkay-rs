@@ -15,12 +15,12 @@
 //#ifndef MEMORY_LOAD_STORE_GADGET_HPP_
 // #define MEMORY_LOAD_STORE_GADGET_HPP_
 
-use crate::gadgetlib1::gadgets::merkle_tree/merkle_tree_check_update_gadget;
+use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_update_gadget;
 
 
 
-template<typename FieldT, typename HashT>
-using memory_load_store_gadget = merkle_tree_check_update_gadget<FieldT, HashT>;
+
+type memory_load_store_gadget< FieldT,  HashT> = merkle_tree_check_update_gadget<FieldT, HashT>;
 
 
 

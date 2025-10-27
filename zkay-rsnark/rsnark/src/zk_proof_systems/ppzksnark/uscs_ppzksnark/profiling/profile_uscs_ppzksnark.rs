@@ -48,19 +48,19 @@ int main(int argc, const char * argv[])
 
     if argc != 3
     {
-        print!("usage: %s num_constraints input_size\n", argv[0]);
+        print!("usage: {} num_constraints input_size\n", argv[0]);
         return 1;
     }
 
-    const int num_constraints = atoi(argv[1]);
-    const int input_size = atoi(argv[2]);
+    let num_constraints= atoi(argv[1]);
+    let input_size= atoi(argv[2]);
 
     ffec::enter_block("Generate USCS example");
     uscs_example<ffec::Fr<default_uscs_ppzksnark_pp> > example = generate_uscs_example_with_field_input<ffec::Fr<default_uscs_ppzksnark_pp> >(num_constraints, input_size);
     ffec::leave_block("Generate USCS example");
 
     ffec::print_header("(enter) Profile USCS ppzkSNARK");
-    const bool test_serialization = true;
+    let mut test_serialization = true;
     run_uscs_ppzksnark<default_uscs_ppzksnark_pp>(example, test_serialization);
     ffec::print_header("(leave) Profile USCS ppzkSNARK");
 }

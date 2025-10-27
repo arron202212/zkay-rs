@@ -22,16 +22,16 @@
 //#ifndef SSP_HPP_
 // #define SSP_HPP_
 
-use  <map>
-use  <memory>
+// use  <map>
+
 
 use fqfft::evaluation_domain::evaluation_domain;
 
 
 
 /* forward declaration */
-template<typename FieldT>
-class ssp_witness;
+
+// pub struct ssp_witness;
 
 /**
  * A SSP instance.
@@ -44,40 +44,19 @@ class ssp_witness;
  * There is no need to store the Z polynomial because it is uniquely
  * determined by the domain (as Z is its vanishing polynomial).
  */
-template<typename FieldT>
-class ssp_instance {
-private:
-    size_t num_variables_;
-    size_t degree_;
-    size_t num_inputs_;
+
+pub struct ssp_instance<FieldT> {
+
+num_variables:    usize,
+degree:    usize,
+num_inputs:    usize,
 
 
-    std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain;
+domain:    RcCell<libfqfft::evaluation_domain<FieldT> >,
 
-    std::vector<std::map<size_t, FieldT> > V_in_Lagrange_basis;
+V_in_Lagrange_basis:    Vec<BTreeMap<usize, FieldT> >,
 
-    ssp_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                 const size_t num_variables,
-                 const size_t degree,
-                 const size_t num_inputs,
-                 const std::vector<std::map<size_t, FieldT> > &V_in_Lagrange_basis);
-    ssp_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                 const size_t num_variables,
-                 const size_t degree,
-                 const size_t num_inputs,
-                 std::vector<std::map<size_t, FieldT> > &&V_in_Lagrange_basis);
-
-    ssp_instance(const ssp_instance<FieldT> &other) = default;
-    ssp_instance(ssp_instance<FieldT> &&other) = default;
-    ssp_instance& operator=(const ssp_instance<FieldT> &other) = default;
-    ssp_instance& operator=(ssp_instance<FieldT> &&other) = default;
-
-    size_t num_variables() const;
-    size_t degree() const;
-    size_t num_inputs() const;
-
-    bool is_satisfied(const ssp_witness<FieldT> &witness) const;
-};
+}
 
 
 /**
@@ -90,93 +69,46 @@ private:
  * - evaluations of the V (and Z) polynomials at t;
  * - evaluations of all monomials of t.
  */
-template<typename FieldT>
-class ssp_instance_evaluation {
-private:
-    size_t num_variables_;
-    size_t degree_;
-    size_t num_inputs_;
+
+pub struct ssp_instance_evaluation <FieldT> {
+
+num_variables:    usize,
+degree:    usize,
+num_inputs:    usize,
 
 
-    std::shared_ptr<libfqfft::evaluation_domain<FieldT> > domain;
+domain:    RcCell<libfqfft::evaluation_domain<FieldT> >,
 
-    FieldT t;
+t:    FieldT,
 
-    std::vector<FieldT> Vt, Ht;
+Ht:    Vec<FieldT>,
+     Vt:    Vec<FieldT>,
 
-    FieldT Zt;
+Zt:    FieldT,
 
-    ssp_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                            const size_t num_variables,
-                            const size_t degree,
-                            const size_t num_inputs,
-                            const FieldT &t,
-                            const std::vector<FieldT> &Vt,
-                            const std::vector<FieldT> &Ht,
-                            const FieldT &Zt);
-    ssp_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                            const size_t num_variables,
-                            const size_t degree,
-                            const size_t num_inputs,
-                            const FieldT &t,
-                            std::vector<FieldT> &&Vt,
-                            std::vector<FieldT> &&Ht,
-                            const FieldT &Zt);
-
-    ssp_instance_evaluation(const ssp_instance_evaluation<FieldT> &other) = default;
-    ssp_instance_evaluation(ssp_instance_evaluation<FieldT> &&other) = default;
-    ssp_instance_evaluation& operator=(const ssp_instance_evaluation<FieldT> &other) = default;
-    ssp_instance_evaluation& operator=(ssp_instance_evaluation<FieldT> &&other) = default;
-
-    size_t num_variables() const;
-    size_t degree() const;
-    size_t num_inputs() const;
-
-    bool is_satisfied(const ssp_witness<FieldT> &witness) const;
-};
+}
 
 /**
  * A SSP witness.
  */
-template<typename FieldT>
-class ssp_witness {
-private:
-    size_t num_variables_;
-    size_t degree_;
-    size_t num_inputs_;
+
+pub struct ssp_witness<FieldT> {
+
+num_variables:    usize,
+degree:    usize,
+num_inputs:    usize,
 
 
-    FieldT d;
+d:    FieldT,
 
-    std::vector<FieldT> coefficients_for_Vs;
-    std::vector<FieldT> coefficients_for_H;
+coefficients_for_Vs:    Vec<FieldT>,
+coefficients_for_H:    Vec<FieldT>,
 
-    ssp_witness(const size_t num_variables,
-                const size_t degree,
-                const size_t num_inputs,
-                const FieldT &d,
-                const std::vector<FieldT> &coefficients_for_Vs,
-                const std::vector<FieldT> &coefficients_for_H);
-    ssp_witness(const size_t num_variables,
-                const size_t degree,
-                const size_t num_inputs,
-                const FieldT &d,
-                const std::vector<FieldT> &coefficients_for_Vs,
-                std::vector<FieldT> &&coefficients_for_H);
-
-    ssp_witness(const ssp_witness<FieldT> &other) = default;
-    ssp_witness(ssp_witness<FieldT> &&other) = default;
-    ssp_witness& operator=(const ssp_witness<FieldT> &other) = default;
-    ssp_witness& operator=(ssp_witness<FieldT> &&other) = default;
-
-    size_t num_variables() const;
-    size_t degree() const;
-    size_t num_inputs() const;
-};
+}
 
 
 
-use crate::relations::arithmetic_programs/ssp/ssp;
+// use crate::relations::arithmetic_programs::ssp::ssp;
 
 //#endif // SSP_HPP_
 /** @file
@@ -198,66 +130,71 @@ use crate::relations::arithmetic_programs/ssp/ssp;
  use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::common::profiling;
 use ffec::common::utils;
-use fqfft::evaluation_domain::evaluation_domain;
+// use fqfft::evaluation_domain::evaluation_domain;
 
-
-
-template<typename FieldT>
-ssp_instance<FieldT>::ssp_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                   const size_t num_variables,
-                                   const size_t degree,
-                                   const size_t num_inputs,
-                                   const std::vector<std::map<size_t, FieldT> > &V_in_Lagrange_basis) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    V_in_Lagrange_basis(V_in_Lagrange_basis)
+impl ssp_instance<FieldT> 
 {
+
+pub fn new(domain:&RcCell<libfqfft::evaluation_domain<FieldT> >,
+                                   num_variables:usize,
+                                   degree:usize,
+                                   num_inputs:usize,
+                                   V_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >)->Self
+   
+{
+     Self{
+   num_variables,
+   degree,
+   num_inputs,
+   domain,
+    V_in_Lagrange_basis
+    }
 }
 
-template<typename FieldT>
-ssp_instance<FieldT>::ssp_instance(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                   const size_t num_variables,
-                                   const size_t degree,
-                                   const size_t num_inputs,
-                                   std::vector<std::map<size_t, FieldT> > &&V_in_Lagrange_basis) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    V_in_Lagrange_basis((V_in_Lagrange_basis))
+
+pub fn new2(domain:&RcCell<libfqfft::evaluation_domain<FieldT> >,
+                                   num_variables:usize,
+                                   degree:usize,
+                                   num_inputs:usize,
+V_in_Lagrange_basis:                                   Vec<BTreeMap<usize, FieldT> >)->Self
+    
 {
+    Self{num_variables,
+   degree,
+   num_inputs,
+   domain,
+    V_in_Lagrange_basis
+    }
 }
 
-template<typename FieldT>
-size_t ssp_instance<FieldT>::num_variables() const
+
+pub fn num_variables()->usize
 {
-    return num_variables_;
+    return num_variables;
 }
 
-template<typename FieldT>
-size_t ssp_instance<FieldT>::degree() const
+
+pub fn degree()->usize
 {
-    return degree_;
+    return degree;
 }
 
-template<typename FieldT>
-size_t ssp_instance<FieldT>::num_inputs() const
+
+pub fn num_inputs()->usize
 {
-    return num_inputs_;
+    return num_inputs;
 }
 
-template<typename FieldT>
-bool ssp_instance<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) const
+
+pub fn is_satisfied(witness:&ssp_witness<FieldT>)->bool
 {
-    const FieldT t = FieldT::random_element();;
-    std::vector<FieldT> Vt(self.num_variables()+1, FieldT::zero());
-    std::vector<FieldT> Ht(self.degree()+1);
+    let t= FieldT::random_element();
+    let mut  Vt=vec![FieldT::zero();self.num_variables()+1];
+    let mut  Ht=vec![FieldT::zero();self.degree()+1];
 
-    const FieldT Zt = self.domain->compute_vanishing_polynomial(t);
+    let mut Zt= self.domain.compute_vanishing_polynomial(t);
 
-    const std::vector<FieldT> u = self.domain->evaluate_all_lagrange_polynomials(t);
+    let  u = self.domain.evaluate_all_lagrange_polynomials(t);
 
     for i in 0..self.num_variables()+1
     {
@@ -267,84 +204,92 @@ bool ssp_instance<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) cons
         }
     }
 
-    FieldT ti = FieldT::one();
+    let mut  ti = FieldT::one();
     for i in 0..self.degree()+1
     {
         Ht[i] = ti;
         ti *= t;
     }
 
-    const ssp_instance_evaluation<FieldT> eval_ssp_inst(self.domain,
+    let   eval_ssp_inst=ssp_instance_evaluation::<FieldT>::new(self.domain,
                                                         self.num_variables(),
                                                         self.degree(),
                                                         self.num_inputs(),
                                                         t,
-                                                        (Vt),
-                                                        (Ht),
+                                                        Vt,
+                                                        Ht,
                                                         Zt);
     return eval_ssp_inst.is_satisfied(witness);
 }
-
-template<typename FieldT>
-ssp_instance_evaluation<FieldT>::ssp_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                                         const size_t num_variables,
-                                                         const size_t degree,
-                                                         const size_t num_inputs,
-                                                         const FieldT &t,
-                                                         const std::vector<FieldT> &Vt,
-                                                         const std::vector<FieldT> &Ht,
-                                                         const FieldT &Zt) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    t(t),
-    Vt(Vt),
-    Ht(Ht),
-    Zt(Zt)
-{
 }
 
-template<typename FieldT>
-ssp_instance_evaluation<FieldT>::ssp_instance_evaluation(const std::shared_ptr<libfqfft::evaluation_domain<FieldT> > &domain,
-                                                         const size_t num_variables,
-                                                         const size_t degree,
-                                                         const size_t num_inputs,
-                                                         const FieldT &t,
-                                                         std::vector<FieldT> &&Vt,
-                                                         std::vector<FieldT> &&Ht,
-                                                         const FieldT &Zt) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    domain(domain),
-    t(t),
-    Vt((Vt)),
-    Ht((Ht)),
-    Zt(Zt)
+impl ssp_instance_evaluation <FieldT> 
 {
+pub fn new(domain:&RcCell<libfqfft::evaluation_domain<FieldT> >,
+                                                         num_variables:usize,
+                                                         degree:usize,
+                                                         num_inputs:usize,
+                                                         t:&FieldT,
+                                                         Vt:&Vec<FieldT>,
+                                                         Ht:&Vec<FieldT>,
+                                                         Zt:&FieldT)->Self
+    
+{
+    Self{
+   num_variables,
+   degree,
+   num_inputs,
+   domain,
+   t,
+   Vt,
+   Ht,
+    Zt
+    }
 }
 
-template<typename FieldT>
-size_t ssp_instance_evaluation<FieldT>::num_variables() const
+
+pub fn new2(domain:&RcCell<libfqfft::evaluation_domain<FieldT> >,
+                                                         num_variables:usize,
+                                                         degree:usize,
+                                                         num_inputs:usize,
+                                                         t:&FieldT,
+Vt:                                                         Vec<FieldT>,
+Ht:                                                         Vec<FieldT>,
+                                                         Zt:&FieldT)->Self
+    
 {
-    return num_variables_;
+    Self{
+   num_variables,
+   degree,
+   num_inputs,
+   domain,
+   t,
+    Vt,
+    Ht,
+    Zt
+    }
 }
 
-template<typename FieldT>
-size_t ssp_instance_evaluation<FieldT>::degree() const
+
+pub fn num_variables()->usize
 {
-    return degree_;
+    return num_variables;
 }
 
-template<typename FieldT>
-size_t ssp_instance_evaluation<FieldT>::num_inputs() const
+
+pub fn degree()->usize
 {
-    return num_inputs_;
+    return degree;
 }
 
-template<typename FieldT>
-bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &witness) const
+
+pub fn num_inputs()->usize
+{
+    return num_inputs;
+}
+
+
+pub fn is_satisfied(witness:&ssp_witness<FieldT>)->bool
 {
 
     if self.num_variables() != witness.num_variables()
@@ -382,19 +327,19 @@ bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &wi
         return false;
     }
 
-    if self.Zt != self.domain->compute_vanishing_polynomial(self.t)
+    if self.Zt != self.domain.compute_vanishing_polynomial(self.t)
     {
         return false;
     }
 
-    FieldT ans_V = self.Vt[0] + witness.d*self.Zt;
-    FieldT ans_H = FieldT::zero();
+    let mut  ans_V = self.Vt[0] + witness.d*self.Zt;
+    let mut ans_H = FieldT::zero();
 
-    ans_V = ans_V + ffec::inner_product<FieldT>(self.Vt.begin()+1,
+    ans_V = ans_V + ffec::inner_product::<FieldT>(self.Vt.begin()+1,
                                                  self.Vt.begin()+1+self.num_variables(),
                                                  witness.coefficients_for_Vs.begin(),
                                                  witness.coefficients_for_Vs.begin()+self.num_variables());
-    ans_H = ans_H + ffec::inner_product<FieldT>(self.Ht.begin(),
+    ans_H = ans_H + ffec::inner_product::<FieldT>(self.Ht.begin(),
                                                  self.Ht.begin()+self.degree()+1,
                                                  witness.coefficients_for_H.begin(),
                                                  witness.coefficients_for_H.begin()+self.degree()+1);
@@ -406,57 +351,64 @@ bool ssp_instance_evaluation<FieldT>::is_satisfied(const ssp_witness<FieldT> &wi
 
     return true;
 }
-
-template<typename FieldT>
-ssp_witness<FieldT>::ssp_witness(const size_t num_variables,
-                                 const size_t degree,
-                                 const size_t num_inputs,
-                                 const FieldT &d,
-                                 const std::vector<FieldT> &coefficients_for_Vs,
-                                 const std::vector<FieldT> &coefficients_for_H) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    d(d),
-    coefficients_for_Vs(coefficients_for_Vs),
-    coefficients_for_H(coefficients_for_H)
-{
 }
-
-template<typename FieldT>
-ssp_witness<FieldT>::ssp_witness(const size_t num_variables,
-                                 const size_t degree,
-                                 const size_t num_inputs,
-                                 const FieldT &d,
-                                 const std::vector<FieldT> &coefficients_for_Vs,
-                                 std::vector<FieldT> &&coefficients_for_H) :
-    num_variables_(num_variables),
-    degree_(degree),
-    num_inputs_(num_inputs),
-    d(d),
-    coefficients_for_Vs(coefficients_for_Vs),
-    coefficients_for_H((coefficients_for_H))
+impl ssp_witness<FieldT> 
 {
-}
-
-template<typename FieldT>
-size_t ssp_witness<FieldT>::num_variables() const
+pub fn new(num_variables:usize,
+                                 degree:usize,
+                                 num_inputs:usize,
+                                 d:&FieldT,
+                                 coefficients_for_Vs:&Vec<FieldT>,
+                                 coefficients_for_H:&Vec<FieldT>)->Self
+   
 {
-    return num_variables_;
-}
-
-template<typename FieldT>
-size_t ssp_witness<FieldT>::degree() const
-{
-    return degree_;
-}
-
-template<typename FieldT>
-size_t ssp_witness<FieldT>::num_inputs() const
-{
-    return num_inputs_;
+    Self{ 
+   num_variables,
+   degree,
+   num_inputs,
+   d,
+   coefficients_for_Vs,
+    coefficients_for_H
+    }
 }
 
 
+pub fn new2(num_variables:usize,
+                                 degree:usize,
+                                 num_inputs:usize,
+                                 d:&FieldT,
+                                 coefficients_for_Vs:&Vec<FieldT>,
+coefficients_for_H:                                 Vec<FieldT>)->Self
+   
+{
+    Self{
+ num_variables,
+    degree,
+    num_inputs,
+   d,
+   coefficients_for_Vs,
+    coefficients_for_H
+    }
+}
+
+
+pub fn num_variables()->usize
+{
+    return num_variables;
+}
+
+
+pub fn degree()->usize
+{
+    return degree;
+}
+
+
+pub fn num_inputs()->usize
+{
+    return num_inputs;
+}
+
+}
 
 //#endif // SSP_TCC_
