@@ -195,7 +195,7 @@ impl<const N:usize> PartialEq for ordered_exponent<N> {
 }
 impl<const N:usize> PartialOrd for ordered_exponent<N> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.r.data.cmp(&other.r.data))
+        Some(self.r.0.0.cmp(&other.r.0.0))
     }
 }
 
@@ -216,7 +216,7 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
 //                 //  "mov $1, %[res]                  \n\t"
 //                 //  "done%=:                         \n\t"
 //                 //  : [res] "=&r" (res)
-//                 //  : [A] "r" (other.r.data), [mod] "r" (this->r.data)
+//                 //  : [A] "r" (other.r.0.0), [mod] "r" (this->r.0.0)
 //                 //  : "cc", "%rax");
 //             // return res;
 //         // }
@@ -235,7 +235,7 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
 //                 //  "mov $1, %[res]                  \n\t"
 //                 //  "done%=:                         \n\t"
 //                 //  : [res] "=&r" (res)
-//                 //  : [A] "r" (other.r.data), [mod] "r" (this->r.data)
+//                 //  : [A] "r" (other.r.0.0), [mod] "r" (this->r.0.0)
 //                 //  : "cc", "%rax");
 //             // return res;
 //         // }
@@ -255,14 +255,14 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
 //                 //  "mov $1, %[res]                  \n\t"
 //                 //  "done%=:                         \n\t"
 //                 //  : [res] "=&r" (res)
-//                 //  : [A] "r" (other.r.data), [mod] "r" (this->r.data)
+//                 //  : [A] "r" (other.r.0.0), [mod] "r" (this->r.0.0)
 //                 //  : "cc", "%rax");
 //             // return res;
 //         // }
 //         // else
 // // //#endif
 //         {
-//             return (mpn_cmp(this->r.data, other.r.data, n) < 0);
+//             return (mpn_cmp(this->r.0.0, other.r.0.0, n) < 0);
 //         }
 //     }
 // };
@@ -437,7 +437,7 @@ fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub
         else
         {
             // x A + y B => (x-y) A + y (B+A)
-            a.r.data[..n].iter_mut().zip(& b.r.data[..n]).for_each(|(ar    ,&br)|{
+            a.r.0.0[..n].iter_mut().zip(& b.r.0.0[..n]).for_each(|(ar    ,&br)|{
                 *ar-=br;
             });
             g[b.idx] = g[b.idx].clone() + g[a.idx].clone();

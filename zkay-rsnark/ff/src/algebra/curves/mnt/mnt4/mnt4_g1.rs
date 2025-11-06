@@ -165,8 +165,8 @@ pub fn print(&self)
         let mut  copy=self.clone();
         copy.to_affine_coordinates();
         print!("({:N$} , {:N$})\n",
-                   copy.X.as_bigint().data, 
-                   copy.Y.as_bigint().data, N=mnt4_Fq::num_limbs);
+                   copy.X.as_bigint().0.0, 
+                   copy.Y.as_bigint().0.0, N=mnt4_Fq::num_limbs);
     }
 }
 
@@ -179,9 +179,9 @@ pub fn print_coordinates(&self)
     else
     {
         print!("({:N$}: {:N$}: {:N$})\n",
-                   self.X.as_bigint().data, 
-                   self.Y.as_bigint().data, 
-                   self.Z.as_bigint().data, N=mnt4_Fq::num_limbs);
+                   self.X.as_bigint().0.0, 
+                   self.Y.as_bigint().0.0, 
+                   self.Z.as_bigint().0.0, N=mnt4_Fq::num_limbs);
     }
 }
 
@@ -545,7 +545,7 @@ pub fn batch_to_special_all_non_zeros(vec:&Vec<mnt4_G1>)
 //     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 // #else
 //     /* storing LSB of Y */
-//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
+//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
 // //#endif
 
 //     return out;
@@ -577,7 +577,7 @@ pub fn batch_to_special_all_non_zeros(vec:&Vec<mnt4_G1>)
 //         mnt4_Fq tY2 = (tX2 + mnt4_G1::coeff_a) * tX + mnt4_G1::coeff_b;
 //         tY = tY2.sqrt();
 
-//         if (tY.as_bigint().data[0] & 1) != Y_lsb
+//         if (tY.as_bigint().0.0[0] & 1) != Y_lsb
 //         {
 //             tY = -tY;
 //         }

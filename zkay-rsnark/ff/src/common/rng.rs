@@ -79,7 +79,7 @@ use crate::common::utils::is_little_endian;
 
 //         for i in 0..FieldT::num_limbs
 //         {
-//             rval.data[i] = hash[i];
+//             rval.0.0[i] = hash[i];
 //         }
 
 //         /* clear all bits higher than MSB of modulus */
@@ -92,20 +92,20 @@ use crate::common::utils::is_little_endian;
 //             let bit = bitno - (GMP_NUMB_BITS*part);
 
 //             let one= 1;
-//             rval.data[part] &= !(one<<bit);
+//             rval.0.0[part] &= !(one<<bit);
 
 //             bitno-=1;
 //         }
 
 //         iter+=1;
 //         let n=FieldT::num_limbs as usize;
-//         if rval.data[..n]< FieldT::mods.data[..n]{
+//         if rval.0.0[..n]< FieldT::mods.0.0[..n]{
 //         break
 //         }
 //     }
 
-//     /* if r.data is still >= modulus -- repeat (rejection sampling) */
-//     // while (mpn_cmp(rval.data, FieldT::mod.data, FieldT::num_limbs) >= 0);
+//     /* if r.0.0 is still >= modulus -- repeat (rejection sampling) */
+//     // while (mpn_cmp(rval.0.0, FieldT::mod.0.0, FieldT::num_limbs) >= 0);
 
 //     return FieldT::from(rval);
 // }

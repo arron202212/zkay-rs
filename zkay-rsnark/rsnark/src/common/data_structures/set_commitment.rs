@@ -173,7 +173,7 @@ pub fn get_commitment() ->set_commitment
 {
    let  hash = HashT::get_hash(value);
     let Some(it) = hash_to_pos.find(hash) else{
-        painc!("the hash is not found ");
+        panic!("the hash is not found ");
     };
    
 

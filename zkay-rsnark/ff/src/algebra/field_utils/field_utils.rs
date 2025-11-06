@@ -224,7 +224,7 @@ pub fn  get_word_of_field_elem_is_additive<FieldT>( field_elem:FieldT,  word:usi
 
 pub fn  get_word_of_field_elem_is_multiplicative<FieldT>(field_elem:FieldT,  word:usize)->usize
 {
-    // return field_elem.as_bigint().data[word];
+    // return field_elem.as_bigint().0.0[word];
     0
 }
 
@@ -277,7 +277,7 @@ where [(); FieldT::NUM_LIMBS]:
             let  word_or_0 = if word_index < v.len()  {v[word_index]} else {0};
             let  bit = (word_or_0 >> pos_in_word) & 1;
 
-            b.data[j / GMP_NUMB_BITS] |= (bit << (j % GMP_NUMB_BITS)) as u64;
+            b.0.0[j / GMP_NUMB_BITS] |= (bit << (j % GMP_NUMB_BITS)) as u64;
         }
         result[i] = FieldT::default();//(b);
     }
@@ -298,7 +298,7 @@ pub fn  pack_bit_vector_into_field_element_vector<FieldT:FTConfig+Default>(v:&bi
        let mut b= bigint::<{FieldT::NUM_LIMBS}> ::new(0);
         for j in 0..chunk_bits
         {
-            b.data[j / GMP_NUMB_BITS] |= ( if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j] { 1} else {0}) << (j % GMP_NUMB_BITS);
+            b.0.0[j / GMP_NUMB_BITS] |= ( if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j] { 1} else {0}) << (j % GMP_NUMB_BITS);
         }
         result[i] = FieldT::default();//(b);
     }

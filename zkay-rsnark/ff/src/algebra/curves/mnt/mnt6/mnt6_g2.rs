@@ -174,12 +174,12 @@ pub fn print() const
         mnt6_G2 copy(*this);
         copy.to_affine_coordinates();
         print!("(%Nd*z^2 + %Nd*z + %Nd , %Nd*z^2 + %Nd*z + %Nd)\n",
-                   copy.X.c2.as_bigint().data, mnt6_Fq::num_limbs,
-                   copy.X.c1.as_bigint().data, mnt6_Fq::num_limbs,
-                   copy.X.c0.as_bigint().data, mnt6_Fq::num_limbs,
-                   copy.Y.c2.as_bigint().data, mnt6_Fq::num_limbs,
-                   copy.Y.c1.as_bigint().data, mnt6_Fq::num_limbs,
-                   copy.Y.c0.as_bigint().data, mnt6_Fq::num_limbs);
+                   copy.X.c2.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   copy.X.c1.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   copy.X.c0.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   copy.Y.c2.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   copy.Y.c1.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   copy.Y.c0.as_bigint().0.0, mnt6_Fq::num_limbs);
     }
 }
 
@@ -192,15 +192,15 @@ pub fn print_coordinates() const
     else
     {
         print!("(%Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd)\n",
-                   this->X.c2.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->X.c1.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->X.c0.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->Y.c2.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->Y.c1.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->Y.c0.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->Z.c2.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->Z.c1.as_bigint().data, mnt6_Fq::num_limbs,
-                   this->Z.c0.as_bigint().data, mnt6_Fq::num_limbs);
+                   this->X.c2.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->X.c1.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->X.c0.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->Y.c2.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->Y.c1.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->Y.c0.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->Z.c2.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->Z.c1.as_bigint().0.0, mnt6_Fq::num_limbs,
+                   this->Z.c0.as_bigint().0.0, mnt6_Fq::num_limbs);
     }
 }
 
@@ -543,7 +543,7 @@ std::ostream& operator<<(std::ostream &out, g:&mnt6_G2)
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
-    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().data[0] & 1);
+    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
 //#endif
 
     return out;
@@ -575,7 +575,7 @@ std::istream& operator>>(std::istream &in, mnt6_G2 &g)
         let tY2= (tX2 + mnt6_twist_coeff_a) * tX + mnt6_twist_coeff_b;
         tY = tY2.sqrt();
 
-        if (tY.c0.as_bigint().data[0] & 1) != Y_lsb
+        if (tY.c0.as_bigint().0.0[0] & 1) != Y_lsb
         {
             tY = -tY;
         }

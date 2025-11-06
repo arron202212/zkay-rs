@@ -151,12 +151,12 @@ pub fn print() const
         edwards_G2 copy(*this);
         copy.to_affine_coordinates();
         print!("(%Nd*z^2 + %Nd*z + %Nd , %Nd*z^2 + %Nd*z + %Nd)\n",
-                   copy.X.c2.as_bigint().data, edwards_Fq::num_limbs,
-                   copy.X.c1.as_bigint().data, edwards_Fq::num_limbs,
-                   copy.X.c0.as_bigint().data, edwards_Fq::num_limbs,
-                   copy.Y.c2.as_bigint().data, edwards_Fq::num_limbs,
-                   copy.Y.c1.as_bigint().data, edwards_Fq::num_limbs,
-                   copy.Y.c0.as_bigint().data, edwards_Fq::num_limbs);
+                   copy.X.c2.as_bigint().0.0, edwards_Fq::num_limbs,
+                   copy.X.c1.as_bigint().0.0, edwards_Fq::num_limbs,
+                   copy.X.c0.as_bigint().0.0, edwards_Fq::num_limbs,
+                   copy.Y.c2.as_bigint().0.0, edwards_Fq::num_limbs,
+                   copy.Y.c1.as_bigint().0.0, edwards_Fq::num_limbs,
+                   copy.Y.c0.as_bigint().0.0, edwards_Fq::num_limbs);
     }
 }
 
@@ -169,15 +169,15 @@ pub fn print_coordinates() const
     else
     {
         print!("(%Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd : %Nd*z^2 + %Nd*z + %Nd)\n",
-                   this->X.c2.as_bigint().data, edwards_Fq::num_limbs,
-                   this->X.c1.as_bigint().data, edwards_Fq::num_limbs,
-                   this->X.c0.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Y.c2.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Y.c1.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Y.c0.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Z.c2.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Z.c1.as_bigint().data, edwards_Fq::num_limbs,
-                   this->Z.c0.as_bigint().data, edwards_Fq::num_limbs);
+                   this->X.c2.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->X.c1.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->X.c0.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->Y.c2.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->Y.c1.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->Y.c0.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->Z.c2.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->Z.c1.as_bigint().0.0, edwards_Fq::num_limbs,
+                   this->Z.c0.as_bigint().0.0, edwards_Fq::num_limbs);
     }
 }
 
@@ -434,7 +434,7 @@ std::ostream& operator<<(std::ostream &out, g:&edwards_G2)
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
-    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().data[0] & 1);
+    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
 //#endif
     return out;
 }
@@ -465,7 +465,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
         (edwards_Fq3::one() - edwards_G2::mul_by_d(tX2)).inverse();
     tY = tY2.sqrt();
 
-    if (tY.c0.as_bigint().data[0] & 1) != Y_lsb
+    if (tY.c0.as_bigint().0.0[0] & 1) != Y_lsb
     {
         tY = -tY;
     }

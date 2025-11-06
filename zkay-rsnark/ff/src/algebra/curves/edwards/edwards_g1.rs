@@ -111,8 +111,8 @@ pub fn print() const
         let  copy=self.clone();
         copy.to_affine_coordinates();
         print!("({:N$} , {:N$}\n",
-                   copy.X.as_bigint().data, 
-                   copy.Y.as_bigint().data, N=edwards_Fq::num_limbs);
+                   copy.X.as_bigint().0.0, 
+                   copy.Y.as_bigint().0.0, N=edwards_Fq::num_limbs);
     }
 }
 
@@ -125,9 +125,9 @@ pub fn print_coordinates()
     else
     {
         print!("({:N$} : {:N$} : {:N$})\n",
-                   self.X.as_bigint().data, 
-                   self.Y.as_bigint().data, 
-                   self.Z.as_bigint().data, N=edwards_Fq::num_limbs);
+                   self.X.as_bigint().0.0, 
+                   self.Y.as_bigint().0.0, 
+                   self.Z.as_bigint().0.0, N=edwards_Fq::num_limbs);
     }
 }
 
@@ -370,7 +370,7 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
 //     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 // #else
 //     /* storing LSB of Y */
-//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
+//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
 // //#endif
 
 //     return out;
@@ -434,7 +434,7 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
 //         (edwards_Fq::one() - edwards_coeff_d * tX2).inverse();
 //     tY = tY2.sqrt();
 
-//     if (tY.as_bigint().data[0] & 1) != Y_lsb
+//     if (tY.as_bigint().0.0[0] & 1) != Y_lsb
 //     {
 //         tY = -tY;
 //     }

@@ -21,94 +21,92 @@ use crate::algebra::field_utils::bigint;
 // namespace libff {
 
 
-pub struct BinaryField;
 
 /* The type parameter T is intended to be set to the child class
  * when this pub struct is extended. For example,
  * pub struct gf32 : public BinaryField<gf32> ...
  */
 
-pub struct BinaryField {
+pub trait BinaryField<T>:Fields<T>{
 
     /* Functions unique to binary fields */
 
     // TODO: add documentation about how moduli are represented.
-    static modulus_:constexpr uint64_t,
-    static num_bits:constexpr uint64_t,
+     const modulus_:u64,
+     const num_bits:u64,
 
     /** generator of gf2^n */
-    static T multiplicative_generator;
+     fn multiplicative_generator()->T;
 
     /** If extension field, returns the base field's characteristic. */
     
-    static constexpr bigint<n> field_char() { return bigint<n>(2); }
+     fn field_char<const N:usize>() {  bigint::<N>::new(2) }
 
     /* Functions common to all finite fields */
 
 // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-    static i64 add_cnt;
-    static i64 sub_cnt;
-    static i64 mul_cnt;
-    static i64 sqr_cnt;
-    static i64 inv_cnt;
+    //  i64 add_cnt;
+    //  i64 sub_cnt;
+    //  i64 mul_cnt;
+    //  i64 sqr_cnt;
+    //  i64 inv_cnt;
 //#endif
 
-    virtual T& operator+=(other:&T) = 0;
-    virtual T& operator-=(other:&T) = 0;
-    virtual T& operator*=(other:&T) = 0;
-    virtual T& operator^=(0:u64 pow) =,
+    //  T& operator+=(other:&T) = 0;
+    //  T& operator-=(other:&T) = 0;
+    //  T& operator*=(other:&T) = 0;
+    //  T& operator^=(0:u64 pow) =,
     
-    virtual T& operator^=(pow:&bigint<m>) = 0;
+    //  T& operator^=(pow:&bigint<m>) = 0;
 
-    virtual T& square() = 0;
-    virtual T& invert() = 0;
+//      fn square()->&T ;
+//      fn invert()->&T ;
 
-    virtual T operator+(other:&T) const;
-    virtual T operator-(other:&T) const;
-    virtual T operator*(other:&T) const;
-    virtual T operator^(const:u64 pow),
+//     //  T operator+(other:&T) const;
+//     //  T operator-(other:&T) const;
+//     //  T operator*(other:&T) const;
+//     //  T operator^(const:u64 pow),
     
-    virtual T operator^(pow:&bigint<m>) const;
-    virtual T operator-() 0:=,
+//     //  T operator^(pow:&bigint<m>) const;
+//     //  T operator-() 0:=,
 
-    virtual T squared() const;
-    virtual T inverse() const;
-    /** Always works. */
-    virtual T sqrt() 0:=,
+//      fn squared()->T ;
+//      fn inverse()->T ;
+//     /** Always works. */
+//      fn sqrt()->T ;
 
-    bool operator==(other:&T) 0:=,
-    bool operator!=(other:&T) 0:=,
-    bool is_zero() 0:=,
+   
+//     fn is_zero()->bool ;
 
-    pub fn  print() 0:=,
-    /**
-     * Returns the constituent bits in 64 bit words, in little-endian order.
-     * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
-     */
-    Vec<uint64_t> to_words() 0:=,
-    /**
-     * Sets the field element from the given bits in 64 bit words, in little-endian order.
-     * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
-     * Should always return true since the right-most bits are always valid.
-     */
-    bool from_words(Vec<uint64_t> words) = 0;
+//     fn  print() ;
+//     /**
+//      * Returns the constituent bits in 64 bit words, in little-endian order.
+//      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
+//      */
+//     fn to_words()->Vec<u64>;
+//     /**
+//      * Sets the field element from the given bits in 64 bit words, in little-endian order.
+//      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
+//      * Should always return true since the right-most bits are always valid.
+//      */
+// fn from_words(words:Vec<u64>)->bool ;
 
-    pub fn  randomize() = 0;
-    pub fn  clear() = 0;
+//     fn  randomize() ;
+//     fn  clear() ;
 
-    /* The static functions should be defined in field classes, but are static so they
-       can't be inherited. */
-    static T zero();
-    static T one();
-    static T random_element();
-    /** Equals 1 for prime field Fp. */
-    static constexpr std::usize extension_degree();
-    static std::usize ceil_size_in_bits() { return num_bits; }
-    static std::usize floor_size_in_bits() { return num_bits; }
+//     /* The  functions should be defined in field classes, but are  so they
+//        can't be inherited. */
+//        fn zero()->T;
+//      fn one()->T;
+//      fn random_element()->T;
+//     /** Equals 1 for prime field Fp. */
+//      fn  extension_degree()->usize;
+//      fn ceil_size_in_bits()->usize { return num_bits; }
+//      fn floor_size_in_bits()->usize { return num_bits; }
 
     // the following should be defined as well but can't be inherited
-    friend std::ostream& operator<<(std::ostream &out, p:&T);
-    friend std::istream& operator>>(std::istream &in, T &p);
-};
+    // friend std::ostream& operator<<(std::ostream &out, p:&T);
+    // friend std::istream& operator>>(std::istream &in, T &p);
+}
 
 // } // namespace libff

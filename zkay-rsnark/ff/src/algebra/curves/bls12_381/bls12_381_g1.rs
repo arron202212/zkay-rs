@@ -131,8 +131,8 @@ pub fn print() const
         bls12_381_G1 copy(*this);
         copy.to_affine_coordinates();
         print!("(%Nd , %Nd)\n",
-                   copy.X.as_bigint().data, bls12_381_Fq::num_limbs,
-                   copy.Y.as_bigint().data, bls12_381_Fq::num_limbs);
+                   copy.X.as_bigint().0.0, bls12_381_Fq::num_limbs,
+                   copy.Y.as_bigint().0.0, bls12_381_Fq::num_limbs);
     }
 }
 
@@ -145,9 +145,9 @@ pub fn print_coordinates() const
     else
     {
         print!("(%Nd : %Nd : %Nd)\n",
-                   this->X.as_bigint().data, bls12_381_Fq::num_limbs,
-                   this->Y.as_bigint().data, bls12_381_Fq::num_limbs,
-                   this->Z.as_bigint().data, bls12_381_Fq::num_limbs);
+                   this->X.as_bigint().0.0, bls12_381_Fq::num_limbs,
+                   this->Y.as_bigint().0.0, bls12_381_Fq::num_limbs,
+                   this->Z.as_bigint().0.0, bls12_381_Fq::num_limbs);
     }
 }
 
@@ -456,7 +456,7 @@ std::ostream& operator<<(std::ostream &out, g:&bls12_381_G1)
     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 #else
     /* storing LSB of Y */
-    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().data[0] & 1);
+    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
 //#endif
 
     return out;
@@ -488,7 +488,7 @@ std::istream& operator>>(std::istream &in, bls12_381_G1 &g)
         bls12_381_Fq tY2 = tX2*tX + bls12_381_coeff_b;
         tY = tY2.sqrt();
 
-        if (tY.as_bigint().data[0] & 1) != Y_lsb
+        if (tY.as_bigint().0.0[0] & 1) != Y_lsb
         {
             tY = -tY;
         }

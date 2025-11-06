@@ -164,10 +164,10 @@
 //         mnt4_G2 copy(*this);
 //         copy.to_affine_coordinates();
 //         print!("(%Nd*z + %Nd , %Nd*z + %Nd)\n",
-//                    copy.X.c1.as_bigint().data, mnt4_Fq::num_limbs,
-//                    copy.X.c0.as_bigint().data, mnt4_Fq::num_limbs,
-//                    copy.Y.c1.as_bigint().data, mnt4_Fq::num_limbs,
-//                    copy.Y.c0.as_bigint().data, mnt4_Fq::num_limbs);
+//                    copy.X.c1.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    copy.X.c0.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    copy.Y.c1.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    copy.Y.c0.as_bigint().0.0, mnt4_Fq::num_limbs);
 //     }
 // }
 
@@ -180,12 +180,12 @@
 //     else
 //     {
 //         print!("(%Nd*z + %Nd : %Nd*z + %Nd : %Nd*z + %Nd)\n",
-//                    this->X.c1.as_bigint().data, mnt4_Fq::num_limbs,
-//                    this->X.c0.as_bigint().data, mnt4_Fq::num_limbs,
-//                    this->Y.c1.as_bigint().data, mnt4_Fq::num_limbs,
-//                    this->Y.c0.as_bigint().data, mnt4_Fq::num_limbs,
-//                    this->Z.c1.as_bigint().data, mnt4_Fq::num_limbs,
-//                    this->Z.c0.as_bigint().data, mnt4_Fq::num_limbs);
+//                    this->X.c1.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    this->X.c0.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    this->Y.c1.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    this->Y.c0.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    this->Z.c1.as_bigint().0.0, mnt4_Fq::num_limbs,
+//                    this->Z.c0.as_bigint().0.0, mnt4_Fq::num_limbs);
 //     }
 // }
 
@@ -443,7 +443,7 @@
 // //     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
 // // #else
 // //     /* storing LSB of Y */
-// //     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().data[0] & 1);
+// //     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
 // // //#endif
 
 // //     return out;
@@ -475,7 +475,7 @@
 // //         mnt4_Fq2 tY2 = (tX2 + mnt4_twist_coeff_a ) * tX + mnt4_twist_coeff_b;
 // //         tY = tY2.sqrt();
 
-// //         if (tY.c0.as_bigint().data[0] & 1) != Y_lsb
+// //         if (tY.c0.as_bigint().0.0[0] & 1) != Y_lsb
 // //         {
 // //             tY = -tY;
 // //         }

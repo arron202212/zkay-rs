@@ -27,7 +27,7 @@ fn   serialize( pt:ffec::G1<ppT>)->String {
 
  let mut buf=[' ';256];
 let mut stream = BufWriter::new(buf.as_mut());
-    write!(stream, "{:num_limbs$x}\n{:num_limbs$x}\n", pt.X.as_bigint().data, pt.Y.as_bigint().data);
+    write!(stream, "{:num_limbs$x}\n{:num_limbs$x}\n", pt.X.as_bigint().0.0, pt.Y.as_bigint().0.0);
     buf.into_iter().collect()
 }
 
@@ -37,8 +37,8 @@ fn serialize2( pt:ffec::G2<ppT>)->String  {
     let mut buf=[' ';512];
 let mut stream = BufWriter::new(buf.as_mut());
     write!(stream, "{:num_limbs$x}\n{:num_limbs$x}\n{:num_limbs$x}\n{:num_limbs$x}\n",
-                 pt.X.c1.as_bigint().data,  pt.X.c0.as_bigint().data, 
-                 pt.Y.c1.as_bigint().data,  pt.Y.c0.as_bigint().data,);
+                 pt.X.c1.as_bigint().0.0,  pt.X.c0.as_bigint().0.0, 
+                 pt.Y.c1.as_bigint().0.0,  pt.Y.c0.as_bigint().0.0,);
      buf.into_iter().collect()
 }
 

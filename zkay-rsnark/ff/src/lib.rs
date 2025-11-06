@@ -10,5 +10,7 @@
 #![feature(adt_const_params)]
 #![feature(generic_const_items)]
 #![feature(generic_const_exprs)]
+#![feature(associated_type_defaults)]
+#![allow(incomplete_features)]
 pub mod algebra;
 pub mod common;

@@ -79,9 +79,9 @@ pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
     while !c.is_zero()
     {
         let mut  u;
-        if c.data[0] & 1 == 1
+        if c.0.0[0] & 1 == 1
         {
-            u = (c.data[0] as i64) % (1i64 << (window_size+1));
+            u = (c.0.0[0] as i64) % (1i64 << (window_size+1));
             if u > (1 << window_size)
             {
                 u = u - (1 << (window_size+1));
@@ -89,11 +89,11 @@ pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
 
             if u > 0
             {
-                // mpn_sub_1(c.data, c.data, N, u);
+                // mpn_sub_1(c.0.0, c.0.0, N, u);
             }
             else
             {
-                // mpn_add_1(c.data, c.data, N, -u);
+                // mpn_add_1(c.0.0, c.0.0, N, -u);
             }
         }
         else
@@ -103,7 +103,7 @@ pub fn find_wnaf<const N:usize>(window_size:usize, scalar:&bigint<N>)->Vec<i64>
         res[j] = u;
         j+=1;
 
-        // mpn_rshift(c.data, c.data, N, 1); // c = c/2
+        // mpn_rshift(c.0.0, c.0.0, N, 1); // c = c/2
     }
 
     return res;

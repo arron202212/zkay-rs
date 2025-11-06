@@ -1,119 +1,179 @@
-/** @file
- *****************************************************************************
- Declaration of common API for all finite fields in the prime_base/ and
- prime_extension/ directories.
 
- Currently NOT used by the fields in this library. This pub struct is not actually
- the parent pub struct of any field. All APIs are enforced through tests instead.
+//  Declaration of common API for all finite fields in the prime_base/ and
+//  prime_extension/ directories.
 
- The reason for this is to ensure high performance of all fields. This class
- exists as documentation for common API between fields.
+//  Currently NOT used by the fields in this library. This pub struct is not actually
+//  the parent pub struct of any field. All APIs are enforced through tests instead.
 
- Includes fields Fp^n for specified n. All of the prime extension fields must
- implement all functions declared in this class.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use crate::algebra::field_utils::bigint;
-//#include <vector>
+//  The reason for this is to ensure high performance of all fields. This class
+//  exists as documentation for common API between fields.
 
-// namespace libff {
+//  Includes fields Fp^n for specified n. All of the prime extension fields must
+//  implement all functions declared in this class.
 
 
-pub struct FpnField;
+use ark_ff::{BigInteger };
 
-/* The type parameter T is intended to be set to the child class
- * when this pub struct is extended. For example,
- * pub struct Fp_model : public FpnField<Fp_model, n, modulus> ...
- */
+use ark_std::{cmp::min, str::FromStr};
+use num_bigint::BigUint;
+use super::{field::Field,fft_friendly::FftField};
 
-pub struct FpnField {
+/// The interface for a prime field, i.e. the field of integers modulo a prime $p$.
+/// In the following example we'll use the prime field underlying the BLS12-381 G1 curve.
+/// ```rust
+/// use ark_ff::{BigInteger, Field, PrimeField, Zero};
+/// use ark_std::{test_rng, One, UniformRand};
+/// use ark_test_curves::bls12_381::Fq as F;
+///
+/// let mut rng = test_rng();
+/// let a = F::rand(&mut rng);
+/// // We can access the prime modulus associated with `F`:
+/// let modulus = <F as PrimeField>::MODULUS;
+/// assert_eq!(a.pow(&modulus), a); // the Euler-Fermat theorem tells us: a^{p-1} = 1 mod p
+///
+/// // We can convert field elements to integers in the range [0, MODULUS - 1]:
+/// let one: num_bigint::BigUint = F::one().into();
+/// assert_eq!(one, num_bigint::BigUint::one());
+///
+/// // We can construct field elements from an arbitrary sequence of bytes:
+/// let n = F::from_le_bytes_mod_order(&modulus.to_bytes_le());
+/// assert_eq!(n, F::zero());
+/// ```
+// pub trait FpParameters: 'static + Send + Sync + Sized {
+//     type BigInt: BigInteger;
 
-    /* Functions unique to Fp^n fields */
+//     /// The modulus of the field.
+//     const MODULUS: Self::BigInt;
 
-    /** The following parameters are used for the Tonelli-Shanks square root algorithms.
-     *  Can be set manually or calculated with init_tonelli_shanks_constants(). */
-    static bigint<T::extension_degree()*n> euler; // (modulus^deg-1)/2
-    static std::usize s; // modulus^deg = 2^s * t + 1
-    static bigint<T::extension_degree()*n> t; // with t odd
-    static bigint<T::extension_degree()*n> t_minus_1_over_2; // (t-1)/2
-    static T nqr; // a quadratic nonresidue in field
-    static T nqr_to_t; // nqr^t
+//     /// The number of bits needed to represent the `Self::MODULUS`.
+//     const MODULUS_BITS: u32;
 
-    /** If extension field, returns the base field's characteristic. */
-    static constexpr bigint<n> field_char();
+//     /// The number of bits that must be shaved from the beginning of
+//     /// the representation when randomly sampling.
+//     const REPR_SHAVE_BITS: u32;
 
-    /** If base field, is the identity. */
-    T Frobenius_map(u64 power) const;
+//     /// Let `M` be the power of 2^64 nearest to `Self::MODULUS_BITS`. Then
+//     /// `R = M % Self::MODULUS`.
+//     const R: Self::BigInt;
 
-    /* Functions common to all finite fields */
+//     /// R2 = R^2 % Self::MODULUS
+//     const R2: Self::BigInt;
 
-// #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-    static i64 add_cnt;
-    static i64 sub_cnt;
-    static i64 mul_cnt;
-    static i64 sqr_cnt;
-    static i64 inv_cnt;
-//#endif
+//     /// INV = -MODULUS^{-1} mod 2^64
+//     const INV: u64;
 
-    virtual T& operator+=(other:&T) = 0;
-    virtual T& operator-=(other:&T) = 0;
-    virtual T& operator*=(other:&T) = 0;
-    virtual T& operator^=(0:u64 pow) =,
-    
-    virtual T& operator^=(pow:&bigint<m>) = 0;
+//     /// A multiplicative generator of the field.
+//     /// `Self::GENERATOR` is an element having multiplicative order
+//     /// `Self::MODULUS - 1`.
+//     const GENERATOR: Self::BigInt;
 
-    virtual T& square() = 0; 
-    virtual T& invert() = 0;
+//     /// The number of bits that can be reliably stored.
+//     /// (Should equal `SELF::MODULUS_BITS - 1`)
+//     const CAPACITY: u32;
 
-    virtual T operator+(other:&T) const;
-    virtual T operator-(other:&T) const;
-    virtual T operator*(other:&T) const;
-    virtual T operator^(const:u64 pow),
-    
-    virtual T operator^(pow:&bigint<m>) const;
-    virtual T operator-() 0:=,
+//     /// 2^s * t = MODULUS - 1 with t odd. This is the two-adicity of
+//     /// `Self::MODULUS`.
+//     const TWO_ADICITY: u32;
 
-    virtual T squared() const;
-    virtual T inverse() const;
-    /** HAS TO BE A SQUARE (else does not terminate). */
-    virtual T sqrt() 0:=,
+//     /// t for 2^s * t = MODULUS - 1
+//     const T: Self::BigInt;
 
-    bool operator==(other:&T) 0:=,
-    bool operator!=(other:&T) 0:=,
-    bool is_zero() 0:=,
+//     /// 2^s root of unity computed by GENERATOR^t
+//     const ROOT_OF_UNITY: Self::BigInt;
 
-    pub fn  print() 0:=,
-    /**
-     * Returns the constituent bits in 64 bit words, in little-endian order.
-     * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
-     */
-    Vec<uint64_t> to_words() 0:=,
-    /**
-     * Sets the field element from the given bits in 64 bit words, in little-endian order.
-     * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
-     * Returns true when the right-most bits of each element represent a value less than the modulus.
-     */
-    bool from_words(Vec<uint64_t> words) = 0;
+//     /// (t - 1) / 2
+//     const T_MINUS_ONE_DIV_TWO: Self::BigInt;
 
-    pub fn  randomize() = 0;
-    pub fn  clear() = 0;
+//     /// (Self::MODULUS - 1) / 2
+//     const MODULUS_MINUS_ONE_DIV_TWO: Self::BigInt;
+// }
+// pub trait FpParameters: Send + Sync + 'static + Sized 
+// {   
+//      type BigInt: BigInteger;
+//      const  num_limbs:usize;
+//     const modulus:Self::BigInt;
+//     const num_bits:usize;
+//      const  euler:Self::BigInt; // (modulus-1)/2
+//      const  s:usize; // modulus = 2^s * t + 1
+//      const t:Self::BigInt; // with t odd
+//      const t_minus_1_over_2:Self::BigInt; // (t-1)/2
+//      const nqr:Self; // a quadratic nonresidue
+//      const nqr_to_t:Self; // nqr^t
+//      const multiplicative_generator:Self; // generator of Fp^*
+//      const root_of_unity:Self; // generator^((modulus-1)/2^s)
+//      const inv:u64; // modulus^(-1) mod W, where W = 2^(word size)
+//      const Rsquared:Self::BigInt ; // R^2, where R = W^k, where k = ??
+//      const Rcubed: Self::BigInt;   // R^3
+// }
 
-    /* The static functions should be defined in field classes, but are static so they
-       can't be inherited. */
-    static T zero();
-    static T one();
-    static T random_element();
-    /** Equals 1 for prime field Fp. */
-    static constexpr std::usize extension_degree();
-    static std::usize ceil_size_in_bits();
-    static std::usize floor_size_in_bits();
+pub trait PrimeField:
+    Field<BasePrimeField = Self>
+    + FftField
+    + FromStr
+    + From<<Self as PrimeField>::BigInt>
+    + Into<<Self as PrimeField>::BigInt>
+    + From<BigUint>
+    + Into<BigUint>
+{
+   
+    /// A `BigInteger` type that can represent elements of this field.
+    type BigInt: BigInteger;
 
-    // the following should be defined as well but can't be inherited
-    friend std::ostream& operator<<(std::ostream &out, p:&T);
-    friend std::istream& operator>>(std::istream &in, T &p);
-};
+    /// The modulus `p`.
+    const MODULUS: Self::BigInt;
 
-// } // namespace libff
+    /// The value `(p - 1)/ 2`.
+    const MODULUS_MINUS_ONE_DIV_TWO: Self::BigInt;
+
+    /// The size of the modulus in bits.
+    const MODULUS_BIT_SIZE: u32;
+
+    /// The trace of the field is defined as the smallest integer `t` such that by
+    /// `2^s * t = p - 1`, and `t` is coprime to 2.
+    const TRACE: Self::BigInt;
+    /// The value `(t - 1)/ 2`.
+    const TRACE_MINUS_ONE_DIV_TWO: Self::BigInt;
+
+    /// Construct a prime field element from an integer in the range 0..(p - 1).
+    fn from_bigint(repr: Self::BigInt) -> Option<Self>;
+
+    /// Converts an element of the prime field into an integer in the range 0..(p - 1).
+    fn into_bigint(self) -> Self::BigInt;
+
+    /// Reads bytes in big-endian, and converts them to a field element.
+    /// If the integer represented by `bytes` is larger than the modulus `p`, this method
+    /// performs the appropriate reduction.
+    fn from_be_bytes_mod_order(bytes: &[u8]) -> Self {
+        let mut bytes_copy = bytes.to_vec();
+        bytes_copy.reverse();
+        Self::from_le_bytes_mod_order(&bytes_copy)
+    }
+
+    /// Reads bytes in little-endian, and converts them to a field element.
+    /// If the integer represented by `bytes` is larger than the modulus `p`, this method
+    /// performs the appropriate reduction.
+    fn from_le_bytes_mod_order(bytes: &[u8]) -> Self {
+        let num_modulus_bytes = ((Self::MODULUS_BIT_SIZE + 7) / 8) as usize;
+        let num_bytes_to_directly_convert = min(num_modulus_bytes - 1, bytes.len());
+        // Copy the leading little-endian bytes directly into a field element.
+        // The number of bytes directly converted must be less than the
+        // number of bytes needed to represent the modulus, as we must begin
+        // modular reduction once the data is of the same number of bytes as the
+        // modulus.
+        let (bytes, bytes_to_directly_convert) =
+            bytes.split_at(bytes.len() - num_bytes_to_directly_convert);
+        // Guaranteed to not be None, as the input is less than the modulus size.
+        let mut res = Self::from_random_bytes(bytes_to_directly_convert).unwrap();
+
+        // Update the result, byte by byte.
+        // We go through existing field arithmetic, which handles the reduction.
+        // TODO: If we need higher speeds, parse more bytes at once, or implement
+        // modular multiplication by a u64
+        let window_size = Self::from(256u64);
+        for byte in bytes.iter().rev() {
+            res *= window_size;
+            res += Self::from(*byte);
+        }
+        res
+    }
+}

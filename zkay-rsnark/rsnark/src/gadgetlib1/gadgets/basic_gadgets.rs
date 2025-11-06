@@ -980,7 +980,7 @@ pub fn  generate_r1cs_witness()
     let mut  idx = valint.as_ulong();
     let  arrsize= bigint::<FieldT::num_limbs>::new(arr.len());
 
-    if idx >= arr.len() || mpn_cmp(valint.data, arrsize.data, FieldT::num_limbs) >= 0
+    if idx >= arr.len() || mpn_cmp(valint.0.0, arrsize.0.0, FieldT::num_limbs) >= 0
     {
         for i in 0..arr.len()
         {

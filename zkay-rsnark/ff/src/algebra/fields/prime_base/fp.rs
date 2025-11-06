@@ -17,6 +17,9 @@ use crate::algebra::fields::prime_base::fp::algorithms::{Powers,PowerConfig};
  use std::ops::{AddAssign,Mul,MulAssign,SubAssign,Neg,BitXor,Sub,Add,BitXorAssign};
 use crate::common::utils::bit_vector;
 use num_traits::{One,Zero};
+ use ark_ff::{BigInteger,BigInt, PrimeField};
+use std::marker::PhantomData;
+ use educe::Educe;
 // namespace libff {
 
 // 
@@ -41,34 +44,54 @@ use num_traits::{One,Zero};
  * using hand-optimzied assembly code.
  */
 // 
-#[derive(Clone)]
-pub struct Fp_model<const N:usize,const modulus:u128 >{
-    pub mont_repr: bigint<N>,
+pub trait Fp_modelConfig<const N:usize>: Send + Sync + 'static + Sized 
+{   
+     const  num_limbs:usize;
+    const modulus:bigint<N>;
+    const num_bits:usize;
+     const  euler:bigint<N>; // (modulus-1)/2
+     const  s:usize; // modulus = 2^s * t + 1
+     const t:bigint<N>; // with t odd
+     const t_minus_1_over_2:bigint<N>; // (t-1)/2
+     const nqr:Fp_model<N,Self>; // a quadratic nonresidue
+     const nqr_to_t:Fp_model<N,Self>; // nqr^t
+     const multiplicative_generator:Self; // generator of Fp^*
+     const root_of_unity:Fp_model<N,Self>; // generator^((modulus-1)/2^s)
+     const inv:u64; // modulus^(-1) mod W, where W = 2^(word size)
+     const Rsquared:bigint<N> ; // R^2, where R = W^k, where k = ??
+     const Rcubed: bigint<N>;   // R^3
 }
-//     static let num_limbs= n;
-//     static modulus:constexpr bigint<n>& mod =,
+
+#[derive(Educe)]
+#[educe(Default, Hash, Clone, Copy, Eq)]// PartialEq,
+pub struct Fp_model<const N:usize,T:Fp_modelConfig<N>>{
+    pub mont_repr: bigint<N>,
+    pub t:PhantomData<T>,
+}
+//      let num_limbs= n;
+//      modulus:constexpr bigint<N>& mod =,
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-//     static i64 add_cnt;
-//     static i64 sub_cnt;
-//     static i64 mul_cnt;
-//     static i64 sqr_cnt;
-//     static i64 inv_cnt;
+//      i64 add_cnt;
+//      i64 sub_cnt;
+//      i64 mul_cnt;
+//      i64 sqr_cnt;
+//      i64 inv_cnt;
 // //#endif
-//     static std::usize num_bits;
-//     static bigint<N> euler; // (modulus-1)/2
-//     static std::usize s; // modulus = 2^s * t + 1
-//     static bigint<N> t; // with t odd
-//     static bigint<N> t_minus_1_over_2; // (t-1)/2
-//     static Fp_model<n, modulus> nqr; // a quadratic nonresidue
-//     static Fp_model<n, modulus> nqr_to_t; // nqr^t
-//     static Fp_model<n, modulus> multiplicative_generator; // generator of Fp^*
-//     static Fp_model<n, modulus> root_of_unity; // generator^((modulus-1)/2^s)
-//     static mp_limb_t inv; // modulus^(-1) mod W, where W = 2^(word size)
-//     static bigint<N> Rsquared; // R^2, where R = W^k, where k = ??
-//     static bigint<N> Rcubed;   // R^3
+//      std::usize num_bits;
+//      bigint<N> euler; // (modulus-1)/2
+//      std::usize s; // modulus = 2^s * t + 1
+//      bigint<N> t; // with t odd
+//      bigint<N> t_minus_1_over_2; // (t-1)/2
+//      Fp_model<n, modulus> nqr; // a quadratic nonresidue
+//      Fp_model<n, modulus> nqr_to_t; // nqr^t
+//      Fp_model<n, modulus> multiplicative_generator; // generator of Fp^*
+//      Fp_model<n, modulus> root_of_unity; // generator^((modulus-1)/2^s)
+//      mp_limb_t inv; // modulus^(-1) mod W, where W = 2^(word size)
+//      bigint<N> Rsquared; // R^2, where R = W^k, where k = ??
+//      bigint<N> Rcubed;   // R^3
 
 //     Fp_model() {};
-//     Fp_model(b:&bigint<n>);
+//     Fp_model(b:&bigint<N>);
 //     Fp_model(x:long, is_unsigned:bool=false);
 
 //     set_ulong(const u64 x);
@@ -129,84 +152,27 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 //     Fp_model Frobenius_map(u64 power);
 //     Fp_model sqrt(); // HAS TO BE A SQUARE (else does not terminate)
 
-//     static std::usize ceil_size_in_bits() { return num_bits; }
-//     static std::usize floor_size_in_bits() { return num_bits - 1; }
+//      std::usize ceil_size_in_bits() { return num_bits; }
+//      std::usize floor_size_in_bits() { return num_bits - 1; }
 
-//     static constexpr std::usize extension_degree() { return 1; }
-//     static constexpr bigint<N> field_char() { return modulus; }
-//     static bool modulus_is_valid() { return modulus.data[n-1] != 0; } // mpn inverse assumes that highest limb is non-zero
+//      constexpr std::usize extension_degree() { return 1; }
+//      constexpr bigint<N> field_char() { return modulus; }
+//      bool modulus_is_valid() { return modulus.0.0[n-1] != 0; } // mpn inverse assumes that highest limb is non-zero
 
-//     static Fp_model<n, modulus> zero();
-//     static Fp_model<n, modulus> one();
-//     static Fp_model<n, modulus> random_element();
-//     static Fp_model<n, modulus> geometric_generator(); // generator^k, for k = 1 to m, domain size m
-//     static Fp_model<n, modulus> arithmetic_generator();// generator++, for k = 1 to m, domain size m
+//      Fp_model<n, modulus> zero();
+//      Fp_model<n, modulus> one();
+//      Fp_model<n, modulus> random_element();
+//      Fp_model<n, modulus> geometric_generator(); // generator^k, for k = 1 to m, domain size m
+//      Fp_model<n, modulus> arithmetic_generator();// generator++, for k = 1 to m, domain size m
 
-//     friend std::ostream& operator<< <n,modulus>(std::ostream &out, p:&Fp_model<n, modulus>);
-//     friend std::istream& operator>> <n,modulus>(std::istream &in, Fp_model<n, modulus> &p);
+//     friend std::ostream& operator<< <n,T>(std::ostream &out, p:&Fp_model<n, modulus>);
+//     friend std::istream& operator>> <n,T>(std::istream &in, Fp_model<n, modulus> &p);
 
 // 
 //     /** Returns a representation in bigint, depending on the MONTGOMERY_OUTPUT flag. */
 //     bigint<N> bigint_repr();
 // };
 
-// #ifdef PROFILE_OP_COUNTS
-// 
-// i64 Fp_model<n, modulus>::add_cnt = 0;
-
-// 
-// i64 Fp_model<n, modulus>::sub_cnt = 0;
-
-// 
-// i64 Fp_model<n, modulus>::mul_cnt = 0;
-
-// 
-// i64 Fp_model<n, modulus>::sqr_cnt = 0;
-
-// 
-// i64 Fp_model<n, modulus>::inv_cnt = 0;
-//#endif
-
-// 
-// usize Fp_model<n, modulus>::num_bits;
-
-// 
-// bigint<N> Fp_model<n, modulus>::euler;
-
-// 
-// usize Fp_model<n, modulus>::s;
-
-// 
-// bigint<N> Fp_model<n, modulus>::t;
-
-// 
-// bigint<N> Fp_model<n, modulus>::t_minus_1_over_2;
-
-// 
-// Fp_model<n, modulus> Fp_model<n, modulus>::nqr;
-
-// 
-// Fp_model<n, modulus> Fp_model<n, modulus>::nqr_to_t;
-
-// 
-// Fp_model<n, modulus> Fp_model<n, modulus>::multiplicative_generator;
-
-// 
-// Fp_model<n, modulus> Fp_model<n, modulus>::root_of_unity;
-
-// 
-// mp_limb_t Fp_model<n, modulus>::inv;
-
-// 
-// bigint<N> Fp_model<n, modulus>::Rsquared;
-
-// 
-// bigint<N> Fp_model<n, modulus>::Rcubed;
-
-// // } // namespace libff
-// use crate::algebra::fields::prime_base::fp.tcc;
-
-//#endif // FP_HPP_
 
 
 
@@ -230,202 +196,26 @@ pub struct Fp_model<const N:usize,const modulus:u128 >{
 
 use crate::algebra::field_utils::field_utils;
 use crate::algebra::field_utils::fp_aux;
+//  use crate::algebra::field_utils::bigint::bigint;
 
-// namespace libff {
-
-// using std::usize;
-
-impl<const N:usize,const modulus:u128 > Fp_model<N,modulus>
+impl<const N:usize,T:Fp_modelConfig<N>> Fp_model<N,T>
 {
-// where for<'a> &'a Fp_model<N, modulus>: MulAssign<&'a Fp_model<N, modulus>>
-// 
-pub fn Rsquared()->bigint<N>{
-   bigint::<N>::new(0)
-}
-pub fn Rcubed()->bigint<N>{
-     bigint::<N>::new(0)
-}
-pub fn mul_reduce(other:&bigint<N>)
+
+pub fn mul_reduce(&mut self,other:&bigint<N>)
 {
-    /* stupid pre-processor tricks; beware */
-// #if defined(__x86_64__) && defined(USE_ASM)
-//     if n == 3
-//     { // Use asm-optimized Comba multiplication and reduction
-//         mp_limb_t res[2*n];
-//         mp_limb_t c0, c1, c2;
-//         COMBA_3_BY_3_MUL(c0, c1, c2, res, self.mont_repr.data, other.data);
+   
+}
 
-//         mp_limb_t k;
-//         mp_limb_t tmp1, tmp2, tmp3;
-//         REDUCE_6_LIMB_PRODUCT(k, tmp1, tmp2, tmp3, inv, res, modulus.data);
-
-//         /* subtract t > mod */
-//         __asm__
-//             ("/* check for overflow */        \n\t"
-//              MONT_CMP(16)
-//              MONT_CMP(8)
-//              MONT_CMP(0)
-
-//              "/* subtract mod if overflow */  \n\t"
-//              "subtract%=:                     \n\t"
-//              MONT_FIRSTSUB
-//              MONT_NEXTSUB(8)
-//              MONT_NEXTSUB(16)
-//              "done%=:                         \n\t"
-//              :
-//              : [tmp] "r" (res+n), [M] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//         mpn_copyi(self.mont_repr.data, res+n, n);
-//     }
-//     else if n == 4
-//     { // use asm-optimized "CIOS method"
-
-//         mp_limb_t tmp[n+1];
-//         mp_limb_t T0=0, T1=1, cy=2, u=3; // TODO: fix this
-
-//         __asm__ (MONT_PRECOMPUTE
-//                  MONT_FIRSTITER(1)
-//                  MONT_FIRSTITER(2)
-//                  MONT_FIRSTITER(3)
-//                  MONT_FINALIZE(3)
-//                  MONT_ITERFIRST(1)
-//                  MONT_ITERITER(1, 1)
-//                  MONT_ITERITER(1, 2)
-//                  MONT_ITERITER(1, 3)
-//                  MONT_FINALIZE(3)
-//                  MONT_ITERFIRST(2)
-//                  MONT_ITERITER(2, 1)
-//                  MONT_ITERITER(2, 2)
-//                  MONT_ITERITER(2, 3)
-//                  MONT_FINALIZE(3)
-//                  MONT_ITERFIRST(3)
-//                  MONT_ITERITER(3, 1)
-//                  MONT_ITERITER(3, 2)
-//                  MONT_ITERITER(3, 3)
-//                  MONT_FINALIZE(3)
-//                  "/* check for overflow */        \n\t"
-//                  MONT_CMP(24)
-//                  MONT_CMP(16)
-//                  MONT_CMP(8)
-//                  MONT_CMP(0)
-
-//                  "/* subtract mod if overflow */  \n\t"
-//                  "subtract%=:                     \n\t"
-//                  MONT_FIRSTSUB
-//                  MONT_NEXTSUB(8)
-//                  MONT_NEXTSUB(16)
-//                  MONT_NEXTSUB(24)
-//                  "done%=:                         \n\t"
-//                  :
-//                  : [tmp] "r" (tmp), [A] "r" (self.mont_repr.data), [B] "r" (other.data), [inv] "r" (inv), [M] "r" (modulus.data),
-//                    [T0] "r" (T0), [T1] "r" (T1), [cy] "r" (cy), [u] "r" (u)
-//                  : "cc", "memory", "%rax", "%rdx"
-//         );
-//         mpn_copyi(self.mont_repr.data, tmp, n);
-//     }
-//     else if n == 5
-//     { // use asm-optimized "CIOS method"
-
-//         mp_limb_t tmp[n+1];
-//         mp_limb_t T0=0, T1=1, cy=2, u=3; // TODO: fix this
-
-//         __asm__ (MONT_PRECOMPUTE
-//                  MONT_FIRSTITER(1)
-//                  MONT_FIRSTITER(2)
-//                  MONT_FIRSTITER(3)
-//                  MONT_FIRSTITER(4)
-//                  MONT_FINALIZE(4)
-//                  MONT_ITERFIRST(1)
-//                  MONT_ITERITER(1, 1)
-//                  MONT_ITERITER(1, 2)
-//                  MONT_ITERITER(1, 3)
-//                  MONT_ITERITER(1, 4)
-//                  MONT_FINALIZE(4)
-//                  MONT_ITERFIRST(2)
-//                  MONT_ITERITER(2, 1)
-//                  MONT_ITERITER(2, 2)
-//                  MONT_ITERITER(2, 3)
-//                  MONT_ITERITER(2, 4)
-//                  MONT_FINALIZE(4)
-//                  MONT_ITERFIRST(3)
-//                  MONT_ITERITER(3, 1)
-//                  MONT_ITERITER(3, 2)
-//                  MONT_ITERITER(3, 3)
-//                  MONT_ITERITER(3, 4)
-//                  MONT_FINALIZE(4)
-//                  MONT_ITERFIRST(4)
-//                  MONT_ITERITER(4, 1)
-//                  MONT_ITERITER(4, 2)
-//                  MONT_ITERITER(4, 3)
-//                  MONT_ITERITER(4, 4)
-//                  MONT_FINALIZE(4)
-//                  "/* check for overflow */        \n\t"
-//                  MONT_CMP(32)
-//                  MONT_CMP(24)
-//                  MONT_CMP(16)
-//                  MONT_CMP(8)
-//                  MONT_CMP(0)
-
-//                  "/* subtract mod if overflow */  \n\t"
-//                  "subtract%=:                     \n\t"
-//                  MONT_FIRSTSUB
-//                  MONT_NEXTSUB(8)
-//                  MONT_NEXTSUB(16)
-//                  MONT_NEXTSUB(24)
-//                  MONT_NEXTSUB(32)
-//                  "done%=:                         \n\t"
-//                  :
-//                  : [tmp] "r" (tmp), [A] "r" (self.mont_repr.data), [B] "r" (other.data), [inv] "r" (inv), [M] "r" (modulus.data),
-//                    [T0] "r" (T0), [T1] "r" (T1), [cy] "r" (cy), [u] "r" (u)
-//                  : "cc", "memory", "%rax", "%rdx"
-//         );
-//         mpn_copyi(self.mont_repr.data, tmp, n);
-//     }
-//     else
-// //#endif
-//     {
-//         mp_limb_t res[2*n];
-//         mpn_mul_n(res, self.mont_repr.data, other.data, n);
-
-//         /*
-//           The Montgomery reduction here is based on Algorithm 14.32 in
-//           Handbook of Applied Cryptography
-//           <http://cacr.uwaterloo.ca/hac/about/chap14.pdf>.
-//          */
-//         for i in 0..n
-//         {
-//             mp_limb_t k = inv * res[i];
-//             /* calculate res = res + k * mod * b^i */
-//             mp_limb_t carryout = mpn_addmul_1(res+i, modulus.data, n, k);
-//             carryout = mpn_add_1(res+n+i, res+n+i, n-i, carryout);
-//             assert!(carryout == 0);
-//         }
-
-//         if mpn_cmp(res+n, modulus.data, n) >= 0
-//         {
-//             n:mp_limb_t borrow = mpn_sub(res+n, res+n,, modulus.data, n);
-// //#ifndef NDEBUG
-//             assert!(borrow == 0);
-// #else
-//             UNUSED(borrow);
-// //#endif
-//         }
-
-        // mpn_copyi(self.mont_repr.data, res+n, n);
-// Self{mont_repr:bigint::<N>::new(0)}
-    }
-
-
-
-pub fn new_bigint(b:&bigint<N>)->Self
+pub fn new(b:&bigint<N>)->Self
 {
     // mpn_copyi(self.mont_repr.data, Rsquared.data, n);
-    Self::mul_reduce(b);
-Self{mont_repr:bigint::<N>::new(0)}
+    let mut _self=Self{mont_repr:bigint::<N>::new(0),t:PhantomData};
+    _self.mul_reduce(b);
+    _self
 }
 
 
-pub fn new_i64(x:i64, is_unsigned:bool)->Self
+pub fn new_with_i64(x:i64, is_unsigned:bool)->Self
 {
     // assert!(std::numeric_limits<mp_limb_t>::max() >= std::numeric_limits<long>::max() as u64, "long won't fit in mp_limb_t");
     if is_unsigned || x >= 0
@@ -443,66 +233,67 @@ pub fn new_i64(x:i64, is_unsigned:bool)->Self
     }
 
     
-    // Self::mul_reduce(Self::Rsquared());
-    Self{mont_repr:bigint::<N>::new(0)}
+    // Self::mul_reduce(T::Rsquared);
+    Self{mont_repr:bigint::<N>::new(0),t:PhantomData}
 }
-
-
 pub fn set_ulong(&mut self,x:u64)
 {
     self.mont_repr.clear();
-    self.mont_repr.data[0] = x;
-    Self::mul_reduce(&Self::Rsquared());
+    self.mont_repr.0.0[0] = x;
+    self.mul_reduce(&T::Rsquared);
 }
-
 
 pub fn clear(&mut self)
 {
     self.mont_repr.clear();
 }
 
-
 pub fn randomize(&mut self)
 {
-   *self = Self::random_element();
+   *self = self.random_element();
 }
 
 
-pub fn as_bigint(&self) ->bigint<N> 
+pub fn as_bigint(&self) ->bigint<N>
 {
-    let one = bigint::<N> ::one();
+    let mut one = bigint::<N>::one();
     let mut res=self.clone();
-    Self::mul_reduce(&one);
+    res.mul_reduce(&one);
 
-    return (res.mont_repr);
+    res.mont_repr
 }
-
 
  pub fn as_ulong(&self) ->u64
 {
-    return self.as_bigint().as_ulong();
+     self.as_bigint().as_ulong()
 }
 
 
  pub fn is_zero(&self) ->bool
 {
-    return (self.mont_repr.is_zero()); // zero maps to zero
+    self.mont_repr.is_zero() // zero maps to zero
 }
 
 
 pub fn print(&self)
 {
     let mut tmp=Self::zero();
-    tmp.mont_repr.data[0] = 1;
-    Self::mul_reduce(&self.mont_repr);
+    tmp.mont_repr.0.0[0] = 1;
+    tmp.mul_reduce(&self.mont_repr);
 
     tmp.mont_repr.print();
 }
+     pub fn  ceil_size_in_bits(&self)->usize {  self.mont_repr.num_bits() }
+    pub fn  floor_size_in_bits(&self)->usize {  self.mont_repr.num_bits() - 1 }
+
+     pub fn  extension_degree()->usize {  1 }
+     pub fn field_char()->bigint<N> {  T::modulus }
+     pub fn  modulus_is_valid()-> bool{  T::modulus.0.0[N-1] != 0 } // mpn inverse assumes that highest limb is non-zero
 
 
 pub fn zero()->Self
 {
-    let mut res=Self::new_i64(0,false);
+    let mut res=Self::new_with_i64(0,false);
     // res.mont_repr.clear();
     return res;
 }
@@ -510,77 +301,37 @@ pub fn zero()->Self
 
  pub fn one()->Self
 {
-    let mut res=Self::new_i64(0,false);
-    // res.mont_repr.data[0] = 1;
-    Self::mul_reduce(&Self::Rsquared());
+    let mut res=Self::new_with_i64(0,false);
+    // res.mont_repr.0.0[0] = 1;
+    res.mul_reduce(&T::Rsquared);
     return res;
 }
 
 
 pub fn geometric_generator()->Self
 {
-    let mut res=Self::new_i64(0,false);
-    res.mont_repr.data[0] = 2;
-    Self::mul_reduce(&Self::Rsquared());
-    return res;
+    let mut res=Self::new_with_i64(0,false);
+    res.mont_repr.0.0[0] = 2;
+    res.mul_reduce(&T::Rsquared);
+     res
 }
 
 
 pub fn  arithmetic_generator()->Self
 {
-    let mut res=Self::new_i64(0,false);
-    res.mont_repr.data[0] = 1;
-    Self::mul_reduce(&Self::Rsquared());
-    return res;
+    let mut res=Self::new_with_i64(0,false);
+    res.mont_repr.0.0[0] = 1;
+    res.mul_reduce(&T::Rsquared);
+     res
 }
 
 
 pub fn  squared(&self) ->Self
 {
-// #ifdef PROFILE_OP_COUNTS
-    // self.sqr_cnt+=1;
-    // self.mul_cnt-=1; // zero out the upcoming mul
-//#endif
-    /* stupid pre-processor tricks; beware */
-// #if defined(__x86_64__) && defined(USE_ASM)
-//     if n == 3
-//     { // use asm-optimized Comba squaring
-//         mp_limb_t res[2*n];
-//         mp_limb_t c0, c1, c2;
-//         COMBA_3_BY_3_SQR(c0, c1, c2, res, self.mont_repr.data);
-
-//         mp_limb_t k;
-//         mp_limb_t tmp1, tmp2, tmp3;
-//         REDUCE_6_LIMB_PRODUCT(k, tmp1, tmp2, tmp3, inv, res, modulus.data);
-
-//         /* subtract t > mod */
-//         __asm__ volatile
-//             ("/* check for overflow */        \n\t"
-//              MONT_CMP(16)
-//              MONT_CMP(8)
-//              MONT_CMP(0)
-
-//              "/* subtract mod if overflow */  \n\t"
-//              "subtract%=:                     \n\t"
-//              MONT_FIRSTSUB
-//              MONT_NEXTSUB(8)
-//              MONT_NEXTSUB(16)
-//              "done%=:                         \n\t"
-//              :
-//              : [tmp] "r" (res+n), [M] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-
-//         Fp_model<n, modulus> r;
-//         mpn_copyi(r.mont_repr.data, res+n, n);
-//         return r;
-//     }
-//     else
-// //#endif
-    {
         let mut  r:Self=self.clone();
         r*=&r.clone();
         r
-    }
+
 }
 
 
@@ -593,57 +344,8 @@ pub fn square(&mut self)->&Self
 
  pub fn invert(&self)->&Self
 {
-// #ifdef PROFILE_OP_COUNTS
-    // self.inv_cnt++;
-//#endif
-
-    assert!(!self.is_zero());
-
-    let mut  g=bigint::<N>::new(0); /* gp should have room for vn = n limbs */
-
-    let  s=vec![0;N+1]; //mp_limb_t/* sp should have room for vn+1 limbs */
-    let  sn:i32=0;
-
-    let  v = modulus; // both source operands are destroyed by mpn_gcdext
-
-    /* computes gcd(u, v) = g = u*s + v*t, so s*u will be 1 (mod v) */
-    // let  gn = mpn_gcdext(g.data, s, &sn, self.mont_repr.data, N, v.data, N);
-//#ifndef NDEBUG
-//     assert!(gn == 1 && g.data[0] == 1); /* inverse exists */
-// #else
-    // UNUSED(gn);
-//#endif
-
-    // let  q; /* division result fits into q, as sn <= n+1 */
-    /* sn < 0 indicates negative sn; will fix up later */
-
-    if sn.abs() >= N as i32
-    {
-        /* if sn could require modulus reduction, do it here */
-        // mpn_tdiv_qr(&q, self.mont_repr.data, 0, s, sn.abs(), modulus.data, N);
-    }
-    else
-    {
-        /* otherwise just copy it over */
-        // mpn_zero(self.mont_repr.data, N);
-        // mpn_copyi(self.mont_repr.data, s, sn.abs());
-    }
-
-    /* fix up the negative sn */
-    if sn < 0
-    {
-        // let  borrow = mpn_sub_n(self.mont_repr.data, modulus.data, self.mont_repr.data, N);
-//#ifndef NDEBUG
-//         assert!(borrow == 0);
-// #else
-//         UNUSED(borrow);
-//#endif
-    }
-
-    Self::mul_reduce(&Self::Rcubed());
-    return self;
+   self
 }
-
 
 pub fn  inverse(&self) ->Self
 {
@@ -655,50 +357,19 @@ pub fn  inverse(&self) ->Self
 
 pub fn  Frobenius_map(&self, power:u64)->Self
 {
-    // UNUSED(power); // only for API consistency
-    // Fp_model<N,modulus> copy = *this;
-    // return copy;
-    self.clone()
+    *self
 }
 
 
-pub fn  random_element() ->Self
-{// / returns random element of Fp_model
-    /* note that as Montgomery representation is a bijection then
-       selecting a random element of {xR} is the same as selecting a
-       random element of {x} */
-    let mut  r=Self::new_i64(0,false);
-    loop
-    {
-        r.mont_repr.randomize();
-
-        /* clear all bits higher than MSB of modulus */
-        let mut bitno = GMP_NUMB_BITS * N - 1;
-        while modulus>>bitno&1!=0//.test_bit(bitno)
-        {
-           let part = bitno/GMP_NUMB_BITS;
-            let bit = bitno - (GMP_NUMB_BITS*part);
-
-            let  one = 1;
-            r.mont_repr.data[part] &= !(one<<bit);
-
-            bitno-=1;
-        }
-        // if r.mont_repr.data[..N]< modulus.data[..N]{
-        //     break
-        // }
-    }
-   /* if r.data is still >= modulus -- repeat (rejection sampling) */
-    // while (mpn_cmp(r.mont_repr.data, modulus.data, N) >= 0);
-
-    return r;
+pub fn  random_element(&self) ->Self
+{
+    *self
 }
 
 
 pub fn  sqrt(&self) ->Self
 {
-    // return tonelli_shanks_sqrt(self);
-    self.clone()
+    *self
 }
 
 
@@ -707,7 +378,7 @@ pub fn to_words(&self)  ->Vec<u64>
     // TODO: implement for other bit architectures
     assert!(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
     let  repr = self.bigint_repr();
-    repr.data.clone().try_into().unwrap()
+    repr.0.0.clone().try_into().unwrap()
 }
 
 
@@ -716,20 +387,17 @@ pub fn to_words(&self)  ->Vec<u64>
     // TODO: implement for other bit architectures
     assert!(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
 
-    // type FieldT=Fp_model<N, modulus> ; // Without the typedef C++ doesn't compile.
     let start_bit = words.len() * 64 ;//- FieldT::ceil_size_in_bits();
     assert!(start_bit >= 0); // Check the vector is big enough.
     let start_word = start_bit / 64;
     let bit_offset = start_bit % 64;
 
-    // Assumes mont_repr.data is just the right size to fit ceil_size_in_bits().
-    // std::copy(words.begin() + start_word, words.end(), self.mont_repr.data);
-    self.mont_repr.data.clone_from_slice(&words[start_word..]);
+    // Assumes mont_repr.0.0 is just the right size to fit ceil_size_in_bits().
+    // std::copy(words.begin() + start_word, words.end(), self.mont_repr.0.0);
+    self.mont_repr.0.0.clone_from_slice(&words[start_word..]);
     // Zero out the left-most bit_offset bits.
-    self.mont_repr.data[N - 1] = ((self.mont_repr.data[N - 1] as u64) << bit_offset) >> bit_offset;//mp_limb_t
-//#ifndef MONTGOMERY_OUTPUT
-    Self::mul_reduce(&Self::Rsquared());
-//#endif
+    self.mont_repr.0.0[N - 1] = ((self.mont_repr.0.0[N - 1] as u64) << bit_offset) >> bit_offset;//mp_limb_t
+
     // return self.mont_repr < modulus;
     false
 }
@@ -737,501 +405,49 @@ pub fn to_words(&self)  ->Vec<u64>
 
  pub fn bigint_repr(&self) ->bigint<N>
 {
-    // If the flag is defined, serialization and words output use the montgomery representation
-    // instead of the human-readable value.
-// #ifdef MONTGOMERY_OUTPUT
-    return self.mont_repr.clone();
-// #else
-    // return self.as_bigint();
-//#endif
+     self.as_bigint()
 }
 }
-// } // namespace libff
-//#endif // FP_TCC_
 
-impl<const N:usize,const modulus:u128> PartialEq for Fp_model<N,modulus>  {
+
+impl<const N:usize,T:Fp_modelConfig<N>> PartialEq for Fp_model<N,T>  {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
        self.mont_repr == other.mont_repr
     }
 }
 
-// 
-// bool pub fn operator==(other:&Fp_model)
-// {
-//     return (self.mont_repr == other.mont_repr);
-// }
 
-// 
-// bool pub fn operator!=(other:&Fp_model)
-// {
-//     return (self.mont_repr != other.mont_repr);
-// }
-
-impl<const N:usize,const modulus:u128> AddAssign for Fp_model<N,modulus>  {
+impl<const N:usize,T:Fp_modelConfig<N>> AddAssign for Fp_model<N,T>  {
     fn add_assign(&mut self, other: Self) {
-// #ifdef PROFILE_OP_COUNTS
-// self.add_cnt++;
-//#endif
-// #if defined(__x86_64__) && defined(USE_ASM)
-//     if N == 3
-//     {
-//         __asm__
-//             ("/* perform bignum addition */   \n\t"
-//              ADD_FIRSTADD
-//              ADD_NEXTADD(8)
-//              ADD_NEXTADD(16)
-//              "/* if overflow: subtract     */ \n\t"
-//              "/* (tricky point: if A and B are in the range we do not need to do anything special for the possible carry flag) */ \n\t"
-//              "jc      subtract%=              \n\t"
 
-//              "/* check for overflow */        \n\t"
-//              ADD_CMP(16)
-//              ADD_CMP(8)
-//              ADD_CMP(0)
-
-//              "/* subtract mod if overflow */  \n\t"
-//              "subtract%=:                     \n\t"
-//              ADD_FIRSTSUB
-//              ADD_NEXTSUB(8)
-//              ADD_NEXTSUB(16)
-//              "done%=:                         \n\t"
-//              :
-//              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//     }
-//     else if n == 4
-//     {
-//         __asm__
-//             ("/* perform bignum addition */   \n\t"
-//              ADD_FIRSTADD
-//              ADD_NEXTADD(8)
-//              ADD_NEXTADD(16)
-//              ADD_NEXTADD(24)
-//              "/* if overflow: subtract     */ \n\t"
-//              "/* (tricky point: if A and B are in the range we do not need to do anything special for the possible carry flag) */ \n\t"
-//              "jc      subtract%=              \n\t"
-
-//              "/* check for overflow */        \n\t"
-//              ADD_CMP(24)
-//              ADD_CMP(16)
-//              ADD_CMP(8)
-//              ADD_CMP(0)
-
-//              "/* subtract mod if overflow */  \n\t"
-//              "subtract%=:                     \n\t"
-//              ADD_FIRSTSUB
-//              ADD_NEXTSUB(8)
-//              ADD_NEXTSUB(16)
-//              ADD_NEXTSUB(24)
-//              "done%=:                         \n\t"
-//              :
-//              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//     }
-//     else if n == 5
-//     {
-//         __asm__
-//             ("/* perform bignum addition */   \n\t"
-//              ADD_FIRSTADD
-//              ADD_NEXTADD(8)
-//              ADD_NEXTADD(16)
-//              ADD_NEXTADD(24)
-//              ADD_NEXTADD(32)
-//              "/* if overflow: subtract     */ \n\t"
-//              "/* (tricky point: if A and B are in the range we do not need to do anything special for the possible carry flag) */ \n\t"
-//              "jc      subtract%=              \n\t"
-
-//              "/* check for overflow */        \n\t"
-//              ADD_CMP(32)
-//              ADD_CMP(24)
-//              ADD_CMP(16)
-//              ADD_CMP(8)
-//              ADD_CMP(0)
-
-//              "/* subtract mod if overflow */  \n\t"
-//              "subtract%=:                     \n\t"
-//              ADD_FIRSTSUB
-//              ADD_NEXTSUB(8)
-//              ADD_NEXTSUB(16)
-//              ADD_NEXTSUB(24)
-//              ADD_NEXTSUB(32)
-//              "done%=:                         \n\t"
-//              :
-//              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//     }
-//     else
-// //#endif
-//     {
-//         mp_limb_t scratch[n+1];
-//         let carry= mpn_add_n(scratch, self.mont_repr.data, other.mont_repr.data, n);
-//         scratch[n] = carry;
-
-//         if carry || mpn_cmp(scratch, modulus.data, n) >= 0
-//         {
-//             scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, modulus.data, n);
-// //#ifndef NDEBUG
-//             assert!(borrow == 0);
-// #else
-//             UNUSED(borrow);
-// //#endif
-//         }
-
-        // mpn_copyi(self.mont_repr.data, scratch, n);
-    // }
-
-    // return *this;
     }
 }
-
-// 
-// Fp_model<n,modulus>& pub fn operator+=(const Fp_model<n,modulus>& other)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-// //#endif
-// // #if defined(__x86_64__) && defined(USE_ASM)
-// //     if n == 3
-// //     {
-// //         __asm__
-// //             ("/* perform bignum addition */   \n\t"
-// //              ADD_FIRSTADD
-// //              ADD_NEXTADD(8)
-// //              ADD_NEXTADD(16)
-// //              "/* if overflow: subtract     */ \n\t"
-// //              "/* (tricky point: if A and B are in the range we do not need to do anything special for the possible carry flag) */ \n\t"
-// //              "jc      subtract%=              \n\t"
-
-// //              "/* check for overflow */        \n\t"
-// //              ADD_CMP(16)
-// //              ADD_CMP(8)
-// //              ADD_CMP(0)
-
-// //              "/* subtract mod if overflow */  \n\t"
-// //              "subtract%=:                     \n\t"
-// //              ADD_FIRSTSUB
-// //              ADD_NEXTSUB(8)
-// //              ADD_NEXTSUB(16)
-// //              "done%=:                         \n\t"
-// //              :
-// //              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-// //              : "cc", "memory", "%rax");
-// //     }
-// //     else if n == 4
-// //     {
-// //         __asm__
-// //             ("/* perform bignum addition */   \n\t"
-// //              ADD_FIRSTADD
-// //              ADD_NEXTADD(8)
-// //              ADD_NEXTADD(16)
-// //              ADD_NEXTADD(24)
-// //              "/* if overflow: subtract     */ \n\t"
-// //              "/* (tricky point: if A and B are in the range we do not need to do anything special for the possible carry flag) */ \n\t"
-// //              "jc      subtract%=              \n\t"
-
-// //              "/* check for overflow */        \n\t"
-// //              ADD_CMP(24)
-// //              ADD_CMP(16)
-// //              ADD_CMP(8)
-// //              ADD_CMP(0)
-
-// //              "/* subtract mod if overflow */  \n\t"
-// //              "subtract%=:                     \n\t"
-// //              ADD_FIRSTSUB
-// //              ADD_NEXTSUB(8)
-// //              ADD_NEXTSUB(16)
-// //              ADD_NEXTSUB(24)
-// //              "done%=:                         \n\t"
-// //              :
-// //              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-// //              : "cc", "memory", "%rax");
-// //     }
-// //     else if n == 5
-// //     {
-// //         __asm__
-// //             ("/* perform bignum addition */   \n\t"
-// //              ADD_FIRSTADD
-// //              ADD_NEXTADD(8)
-// //              ADD_NEXTADD(16)
-// //              ADD_NEXTADD(24)
-// //              ADD_NEXTADD(32)
-// //              "/* if overflow: subtract     */ \n\t"
-// //              "/* (tricky point: if A and B are in the range we do not need to do anything special for the possible carry flag) */ \n\t"
-// //              "jc      subtract%=              \n\t"
-
-// //              "/* check for overflow */        \n\t"
-// //              ADD_CMP(32)
-// //              ADD_CMP(24)
-// //              ADD_CMP(16)
-// //              ADD_CMP(8)
-// //              ADD_CMP(0)
-
-// //              "/* subtract mod if overflow */  \n\t"
-// //              "subtract%=:                     \n\t"
-// //              ADD_FIRSTSUB
-// //              ADD_NEXTSUB(8)
-// //              ADD_NEXTSUB(16)
-// //              ADD_NEXTSUB(24)
-// //              ADD_NEXTSUB(32)
-// //              "done%=:                         \n\t"
-// //              :
-// //              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-// //              : "cc", "memory", "%rax");
-// //     }
-// //     else
-// // //#endif
-// //     {
-// //         mp_limb_t scratch[n+1];
-// //         let carry= mpn_add_n(scratch, self.mont_repr.data, other.mont_repr.data, n);
-// //         scratch[n] = carry;
-
-// //         if carry || mpn_cmp(scratch, modulus.data, n) >= 0
-// //         {
-// //             scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, modulus.data, n);
-// // //#ifndef NDEBUG
-// //             assert!(borrow == 0);
-// // #else
-// //             UNUSED(borrow);
-// // //#endif
-// //         }
-
-//         // mpn_copyi(self.mont_repr.data, scratch, n);
-//     // }
-
-//     return *this;
-// }
-impl<const N:usize,const modulus:u128> SubAssign for Fp_model<N,modulus>  {
+impl<const N:usize,T:Fp_modelConfig<N>> SubAssign for Fp_model<N,T>  {
     fn sub_assign(&mut self, other: Self) {
-        // #ifdef PROFILE_OP_COUNTS
-        // self.sub_cnt++;
-        //#endif
-// #if defined(__x86_64__) && defined(USE_ASM)
-//     if n == 3
-//     {
-//         __asm__
-//             (SUB_FIRSTSUB
-//              SUB_NEXTSUB(8)
-//              SUB_NEXTSUB(16)
-
-//              "jnc     done%=\n\t"
-
-//              SUB_FIRSTADD
-//              SUB_NEXTADD(8)
-//              SUB_NEXTADD(16)
-
-//              "done%=:\n\t"
-//              :
-//              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//     }
-//     else if n == 4
-//     {
-//         __asm__
-//             (SUB_FIRSTSUB
-//              SUB_NEXTSUB(8)
-//              SUB_NEXTSUB(16)
-//              SUB_NEXTSUB(24)
-
-//              "jnc     done%=\n\t"
-
-//              SUB_FIRSTADD
-//              SUB_NEXTADD(8)
-//              SUB_NEXTADD(16)
-//              SUB_NEXTADD(24)
-
-//              "done%=:\n\t"
-//              :
-//              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//     }
-//     else if n == 5
-//     {
-//         __asm__
-//             (SUB_FIRSTSUB
-//              SUB_NEXTSUB(8)
-//              SUB_NEXTSUB(16)
-//              SUB_NEXTSUB(24)
-//              SUB_NEXTSUB(32)
-
-//              "jnc     done%=\n\t"
-
-//              SUB_FIRSTADD
-//              SUB_NEXTADD(8)
-//              SUB_NEXTADD(16)
-//              SUB_NEXTADD(24)
-//              SUB_NEXTADD(32)
-
-//              "done%=:\n\t"
-//              :
-//              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-//              : "cc", "memory", "%rax");
-//     }
-//     else
-// //#endif
-    {
-        // mp_limb_t scratch[n+1];
-        // if mpn_cmp(self.mont_repr.data, other.mont_repr.data, n) < 0
-        // {
-        //     let carry= mpn_add_n(scratch, self.mont_repr.data, modulus.data, n);
-        //     scratch[n] = carry;
-        // }
-        // else
-        // {
-        //     mpn_copyi(scratch, self.mont_repr.data, n);
-        //     scratch[n] = 0;
-        // }
-
-        // scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, other.mont_repr.data, n);
-//#ifndef NDEBUG
-//         assert!(borrow == 0);
-// #else
-//         UNUSED(borrow);
-//#endif
-
-        // mpn_copyi(self.mont_repr.data, scratch, n);
-    }
-    // return *this;
     }
 }
-// 
-// Fp_model<n,modulus>& pub fn operator-=(const Fp_model<n,modulus>& other)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-// //#endif
-// // #if defined(__x86_64__) && defined(USE_ASM)
-// //     if n == 3
-// //     {
-// //         __asm__
-// //             (SUB_FIRSTSUB
-// //              SUB_NEXTSUB(8)
-// //              SUB_NEXTSUB(16)
 
-// //              "jnc     done%=\n\t"
-
-// //              SUB_FIRSTADD
-// //              SUB_NEXTADD(8)
-// //              SUB_NEXTADD(16)
-
-// //              "done%=:\n\t"
-// //              :
-// //              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-// //              : "cc", "memory", "%rax");
-// //     }
-// //     else if n == 4
-// //     {
-// //         __asm__
-// //             (SUB_FIRSTSUB
-// //              SUB_NEXTSUB(8)
-// //              SUB_NEXTSUB(16)
-// //              SUB_NEXTSUB(24)
-
-// //              "jnc     done%=\n\t"
-
-// //              SUB_FIRSTADD
-// //              SUB_NEXTADD(8)
-// //              SUB_NEXTADD(16)
-// //              SUB_NEXTADD(24)
-
-// //              "done%=:\n\t"
-// //              :
-// //              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-// //              : "cc", "memory", "%rax");
-// //     }
-// //     else if n == 5
-// //     {
-// //         __asm__
-// //             (SUB_FIRSTSUB
-// //              SUB_NEXTSUB(8)
-// //              SUB_NEXTSUB(16)
-// //              SUB_NEXTSUB(24)
-// //              SUB_NEXTSUB(32)
-
-// //              "jnc     done%=\n\t"
-
-// //              SUB_FIRSTADD
-// //              SUB_NEXTADD(8)
-// //              SUB_NEXTADD(16)
-// //              SUB_NEXTADD(24)
-// //              SUB_NEXTADD(32)
-
-// //              "done%=:\n\t"
-// //              :
-// //              : [A] "r" (self.mont_repr.data), [B] "r" (other.mont_repr.data), [mod] "r" (modulus.data)
-// //              : "cc", "memory", "%rax");
-// //     }
-// //     else
-// // //#endif
-//     {
-//         mp_limb_t scratch[n+1];
-//         if mpn_cmp(self.mont_repr.data, other.mont_repr.data, n) < 0
-//         {
-//             let carry= mpn_add_n(scratch, self.mont_repr.data, modulus.data, n);
-//             scratch[n] = carry;
-//         }
-//         else
-//         {
-//             mpn_copyi(scratch, self.mont_repr.data, n);
-//             scratch[n] = 0;
-//         }
-
-//         scratch:mp_limb_t borrow = mpn_sub(scratch,, n+1, other.mont_repr.data, n);
-// //#ifndef NDEBUG
-//         assert!(borrow == 0);
-// #else
-//         UNUSED(borrow);
-// //#endif
-
-//         mpn_copyi(self.mont_repr.data, scratch, n);
-//     }
-//     return *this;
-// }
-impl<const N:usize,const modulus:u128> MulAssign<&Self>for Fp_model<N,modulus>  {
+impl<const N:usize,T:Fp_modelConfig<N>> MulAssign<&Self>for Fp_model<N,T>  {
     fn mul_assign(&mut self, rhs: &Self) {
-        // // #ifdef PROFILE_OP_COUNTS
-        //     self.mul_cnt++;
-        // //#endif
-        Self::mul_reduce(&rhs.mont_repr);
-        // *self
+        self.mul_reduce(&rhs.mont_repr);
     }
 }
-// 
-// Fp_model<n,modulus>& pub fn operator*=(const Fp_model<n,modulus>& other)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.mul_cnt++;
-// //#endif
 
-//     Self::mul_reduce(other.mont_repr);
-//     return *this;
-// }
 
-impl<const N:usize,const modulus:u128> BitXorAssign<u64> for Fp_model<N,modulus>  {
+impl<const N:usize,T:Fp_modelConfig<N>> BitXorAssign<u64> for Fp_model<N,T>  {
     fn bitxor_assign(&mut self, rhs: u64) {
-        *self = Powers::power::<Fp_model::<N, modulus> >(self, rhs);
+        *self = Powers::power::<Fp_model::<N, T> >(self, rhs);
     }
 }
 
-// 
-// Fp_model<n,modulus>& pub fn operator^=(const u64 pow)
-// {
-//     (*this) = power<Fp_model<n, modulus> >(*this, pow);
-//     return (*this);
-// }
-impl<const N:usize,const M:usize,const modulus:u128> BitXorAssign<&bigint<M>> for Fp_model<N,modulus>  {
+impl<const N:usize,const M:usize,T:Fp_modelConfig<N>> BitXorAssign<&bigint<M>> for Fp_model<N,T>  {
     fn bitxor_assign(&mut self, rhs: &bigint<M>) {
-        *self = Powers::power::<Fp_model::<N, modulus>>(self, rhs);
+        *self = Powers::power::<Fp_model::<N, T>>(self, rhs);
     }
 }
-// 
-// 
-// Fp_model<n,modulus>& pub fn operator^=(pow:&bigint<m>)
-// {
-//     (*this) = power<Fp_model<n, modulus>, m>(*this, pow);
-//     return (*this);
-// }
-impl<const N:usize,const modulus:u128> Add for Fp_model<N,modulus>  {
+
+impl<const N:usize,T:Fp_modelConfig<N>> Add for Fp_model<N,T>  {
     type Output =Self;
 
     fn add(self, other: Self) -> Self {
@@ -1240,28 +456,18 @@ impl<const N:usize,const modulus:u128> Add for Fp_model<N,modulus>  {
         r
     }
 }
-// 
-// pub fn  operator+(const Fp_model<n,modulus>& other)
-// {
-//     Fp_model<n, modulus> r(*this);
-//     return (r += other);
-// }
-impl<const N:usize,const modulus:u128> Sub for  Fp_model<N,modulus>  {
+
+impl<const N:usize,T:Fp_modelConfig<N>> Sub for  Fp_model<N,T>   {
     type Output =Self;
 
-    fn sub(self, other: Self) -> <Fp_model<N, modulus> as Sub>::Output  {
+    fn sub(self, other: Self) -> <Fp_model<N, T> as Sub>::Output  {
         let mut r=self;
         r-=other;
         r
     }
 }
-// 
-// pub fn  operator-(const Fp_model<n,modulus>& other)
-// {
-//     Fp_model<n, modulus> r(*this);
-//     return (r -= other);
-// }
-impl<const N:usize,const modulus:u128> Mul for  Fp_model<N,modulus> {
+
+impl<const N:usize,T:Fp_modelConfig<N>> Mul for  Fp_model<N,T>  {
     type Output =Self;
 
     fn mul(self, rhs: Self) -> Self {
@@ -1271,13 +477,8 @@ impl<const N:usize,const modulus:u128> Mul for  Fp_model<N,modulus> {
     }
 }
 
-// 
-// pub fn  operator*(const Fp_model<n,modulus>& other)
-// {
-//     Fp_model<n, modulus> r(*this);
-//     return (r *= other);
-// }
-impl<const N:usize,const modulus:u128> BitXor<u64> for Fp_model<N, modulus> {
+
+impl<const N:usize,T:Fp_modelConfig<N>> BitXor<u64> for Fp_model<N, T> {
     type Output =Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
@@ -1287,13 +488,9 @@ impl<const N:usize,const modulus:u128> BitXor<u64> for Fp_model<N, modulus> {
             r
     }
 }
-// 
-// pub fn  operator^(const u64 pow)
-// {
-//     Fp_model<n, modulus> r(*this);
-//     return (r ^= pow);
-// }
-impl<const N:usize,const M:usize,const modulus:u128> BitXor<&bigint<M>> for Fp_model<N,modulus>{
+
+
+impl<const N:usize,const M:usize,T:Fp_modelConfig<N>> BitXor<&bigint<M>> for Fp_model<N,T> {
     type Output =Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
@@ -1303,53 +500,20 @@ impl<const N:usize,const M:usize,const modulus:u128> BitXor<&bigint<M>> for Fp_m
             r
     }
 }
-// 
-// 
-// pub fn  operator^(pow:&bigint<m>)
-// {
-//     Fp_model<n, modulus> r(*this);
-//     return (r ^= pow);
-// }
-impl<const N:usize,const modulus:u128>  Neg for Fp_model<N,modulus> {
+
+impl<const N:usize,T:Fp_modelConfig<N>>  Neg for Fp_model<N,T> {
     type Output =Self;
 
     fn neg(self) -> Self::Output {
-            // #ifdef PROFILE_OP_COUNTS
-                // self.sub_cnt++;
-            //#endif
 
-            // if self.is_zero()
-            // {
-            //     return self;
-            // }
-            // else
-            // {
-                let mut  r=Self::new_i64(0,false);
-                // mpn_sub_n(r.mont_repr.data, modulus.data, self.mont_repr.data, n);
-                return r;
-            // }
+                let mut  r=Self::new_with_i64(0,false);
+                // mpn_sub_n(r.mont_repr.0.0, modulus.0.0, self.mont_repr.0.0, n);
+                 r
     }
 }
-// 
-// pub fn  operator-()
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-// //#endif
 
-//     if self.is_zero()
-//     {
-//         return (*this);
-//     }
-//     else
-//     {
-//         Fp_model<n, modulus> r;
-//         mpn_sub_n(r.mont_repr.data, modulus.data, self.mont_repr.data, n);
-//         return r;
-//     }
-// }
 use std::fmt;
-impl<const N:usize,const modulus:u128> fmt::Display for Fp_model<N, modulus>{
+impl<const N:usize,T:Fp_modelConfig<N>> fmt::Display for Fp_model<N, T>{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}",  
     self.bigint_repr() ,
@@ -1357,29 +521,13 @@ impl<const N:usize,const modulus:u128> fmt::Display for Fp_model<N, modulus>{
     }
 }
 
-// 
-// std::ostream& operator<<(std::ostream &out, p:&Fp_model<n, modulus>)
-// {
-//     out << p.bigint_repr();
-//     return out;
-// }
-
-// 
-// std::istream& operator>>(std::istream &in, Fp_model<n, modulus> &p)
-// {
-//     in >> p.mont_repr;
-// //#ifndef MONTGOMERY_OUTPUT
-//     p.mul_reduce(Self::Rsquared());
-// //#endif
-//     return in;
-// }
-impl<const N:usize,const modulus:u128> One for Fp_model<N, modulus> {
+impl<const N:usize,T:Fp_modelConfig<N>> One for Fp_model<N, T> {
     fn one()->Self{
         Self::one()
     }
 }
 
-impl<const N:usize,const modulus:u128> Zero for Fp_model<N, modulus> {
+impl<const N:usize,T:Fp_modelConfig<N>> Zero for Fp_model<N, T> {
     fn zero()->Self{
         Self::zero()
     }

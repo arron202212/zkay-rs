@@ -1110,7 +1110,7 @@ pub fn dummy_verification_key(input_size:usize)->r1cs_ppzkadsnark_verification_k
     enter_block("Call to r1cs_ppzkadsnark_auth_verify",false);
     assert !((data.len()==labels.len()) && (auth_data.len()==labels.len()));
     let mut  res = true;
-    for i in 0..data.len(){
+    for i in 0..0.0.len(){
         let mut  lambda = prfCompute::<ppT>(sak.S,labels[i]);
        let mut  mup = lambda + sak.i * data[i];
         res = res && (auth_data[i].mu == mup);
