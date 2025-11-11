@@ -10,14 +10,18 @@
 //#ifndef FP_HPP_
 // #define FP_HPP_
 
-use crate::algebra::field_utils::algorithms;
+use crate::algebra::field_utils::{BigInt,algorithms};
 use crate::algebra::field_utils::bigint::{bigint,GMP_NUMB_BITS};
 use crate::algebra::fields::prime_base::fp::algorithms::tonelli_shanks_sqrt;
 use crate::algebra::fields::prime_base::fp::algorithms::{Powers,PowerConfig};
+use crate::algebra::fields::sqrt::SqrtPrecomputation;
  use std::ops::{AddAssign,Mul,MulAssign,SubAssign,Neg,BitXor,Sub,Add,BitXorAssign};
 use crate::common::utils::bit_vector;
+use crate::algebra::fields::{field::Field,fpn_field::PrimeField};
+ use crate::algebra::fields::field::AdditiveGroup;
 use num_traits::{One,Zero};
- use ark_ff::{BigInteger,BigInt, PrimeField};
+ use crate::algebra::field_utils::{BigInteger};
+
 use std::marker::PhantomData;
  use educe::Educe;
 // namespace libff {
@@ -68,6 +72,111 @@ pub struct Fp_model<const N:usize,T:Fp_modelConfig<N>>{
     pub mont_repr: bigint<N>,
     pub t:PhantomData<T>,
 }
+
+/// A trait that specifies the configuration of a prime field.
+/// Also specifies how to perform arithmetic on field elements.
+pub trait FpConfig<const N: usize>: Send + Sync + 'static + Sized {
+    /// The modulus of the field.
+    const MODULUS: BigInt<N>;
+
+    /// A multiplicative generator of the field.
+    /// `Self::GENERATOR` is an element having multiplicative order
+    /// `Self::MODULUS - 1`.
+    const GENERATOR: Fp<Self, N>;
+
+    /// Additive identity of the field, i.e. the element `e`
+    /// such that, for all elements `f` of the field, `e + f = f`.
+    const ZERO: Fp<Self, N>;
+
+    /// Multiplicative identity of the field, i.e. the element `e`
+    /// such that, for all elements `f` of the field, `e * f = f`.
+    const ONE: Fp<Self, N>;
+
+    /// Let `N` be the size of the multiplicative group defined by the field.
+    /// Then `TWO_ADICITY` is the two-adicity of `N`, i.e. the integer `s`
+    /// such that `N = 2^s * t` for some odd integer `t`.
+    const TWO_ADICITY: u32;
+
+    /// 2^s root of unity computed by GENERATOR^t
+    const TWO_ADIC_ROOT_OF_UNITY: Fp<Self, N>;
+
+    /// An integer `b` such that there exists a multiplicative subgroup
+    /// of size `b^k` for some integer `k`.
+    const SMALL_SUBGROUP_BASE: Option<u32> = None;
+
+    /// The integer `k` such that there exists a multiplicative subgroup
+    /// of size `Self::SMALL_SUBGROUP_BASE^k`.
+    const SMALL_SUBGROUP_BASE_ADICITY: Option<u32> = None;
+
+    /// GENERATOR^((MODULUS-1) / (2^s *
+    /// SMALL_SUBGROUP_BASE^SMALL_SUBGROUP_BASE_ADICITY)) Used for mixed-radix
+    /// FFT.
+    const LARGE_SUBGROUP_ROOT_OF_UNITY: Option<Fp<Self, N>> = None;
+
+    /// Precomputed material for use when computing square roots.
+    /// Currently uses the generic Tonelli-Shanks,
+    /// which works for every modulus.
+    const SQRT_PRECOMP: Option<SqrtPrecomputation<Fp<Self, N>>>;
+
+    /// Set a += b.
+    fn add_assign(a: &mut Fp<Self, N>, b: &Fp<Self, N>);
+
+    /// Set a -= b.
+    fn sub_assign(a: &mut Fp<Self, N>, b: &Fp<Self, N>);
+
+    /// Set a = a + a.
+    fn double_in_place(a: &mut Fp<Self, N>);
+
+    /// Set a = -a;
+    fn neg_in_place(a: &mut Fp<Self, N>);
+
+    /// Set a *= b.
+    fn mul_assign(a: &mut Fp<Self, N>, b: &Fp<Self, N>);
+
+    /// Compute the inner product `<a, b>`.
+    fn sum_of_products<const T: usize>(a: &[Fp<Self, N>; T], b: &[Fp<Self, N>; T]) -> Fp<Self, N>;
+
+    /// Set a *= a.
+    fn square_in_place(a: &mut Fp<Self, N>);
+
+    /// Compute a^{-1} if `a` is not zero.
+    fn inverse(a: &Fp<Self, N>) -> Option<Fp<Self, N>>;
+
+    /// Construct a field element from an integer in the range
+    /// `0..(Self::MODULUS - 1)`. Returns `None` if the integer is outside
+    /// this range.
+    fn from_bigint(other: BigInt<N>) -> Option<Fp<Self, N>>;
+
+    /// Convert a field element to an integer in the range `0..(Self::MODULUS -
+    /// 1)`.
+    fn into_bigint(other: Fp<Self, N>) -> BigInt<N>;
+}
+/// Represents an element of the prime field F_p, where `p == P::MODULUS`.
+/// This type can represent elements in any field of size at most N * 64 bits.
+#[derive(Educe)]
+#[educe(Default, Hash, Clone, Copy, PartialEq, Eq)]
+pub struct Fp<P: FpConfig<N>, const N: usize>(
+    /// Contains the element in Montgomery form for efficient multiplication.
+    /// To convert an element to a [`BigInt`](struct@BigInt), use `into_bigint` or `into`.
+    #[doc(hidden)]
+    pub BigInt<N>,
+    #[doc(hidden)] pub PhantomData<P>,
+);
+
+pub type Fp64<P> = Fp<P, 1>;
+pub type Fp128<P> = Fp<P, 2>;
+pub type Fp192<P> = Fp<P, 3>;
+pub type Fp256<P> = Fp<P, 4>;
+pub type Fp320<P> = Fp<P, 5>;
+pub type Fp384<P> = Fp<P, 6>;
+pub type Fp448<P> = Fp<P, 7>;
+pub type Fp512<P> = Fp<P, 8>;
+pub type Fp576<P> = Fp<P, 9>;
+pub type Fp640<P> = Fp<P, 10>;
+pub type Fp704<P> = Fp<P, 11>;
+pub type Fp768<P> = Fp<P, 12>;
+pub type Fp832<P> = Fp<P, 13>;
+
 //      let num_limbs= n;
 //      modulus:constexpr bigint<N>& mod =,
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^

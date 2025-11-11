@@ -12,10 +12,19 @@ rust-version.workspace = true
 [lib]
 
 [dependencies]
+itertools = { workspace = true}
+hashbrown={workspace =true}
+num-integer={workspace = true}
 ark-ff={workspace = true}
 ark-ec={workspace = true}
 ark-std={workspace = true}
-ark-ff-macros.workspace = true
+# poly={workspace = true}
+# test-curves={workspace = true}
+ark-r1cs-std ={workspace = true}
+digest={workspace = true}
+arrayvec={workspace = true}
+libtest-mimic={workspace = true}
+ff-macros.workspace = true
 ark-serialize.workspace = true
 zeroize={workspace = true}
 cfg-if={workspace = true}

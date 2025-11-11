@@ -10,8 +10,12 @@ members = [
    "zkay-derive-core",
   "zkay-rsnark",
 "zkay-rsnark/ff",
+"zkay-rsnark/ff-curves",
+"zkay-rsnark/ff-macros",
 "zkay-rsnark/fqfft",
 "zkay-rsnark/rsnark",
+"zkay-rsnark/poly",
+"zkay-rsnark/test-curves",
 "zkay_rs/compiler/privacy/circuit_generation/circuit_helper",
 "zkay_rs/compiler/privacy/circuit_generation/circuit_helper_config",
 "zkay_rs/compiler/privacy/circuit_generation",
@@ -80,6 +84,10 @@ zkay-derive-core={path="zkay-derive-core"}
  ast-builder={path="zkay_rs/ast-builder"}
  zkay_rs={path="zkay_rs"}
 ffec={path="zkay-rsnark/ff"}
+ff-curves={path="zkay-rsnark/ff-curves"}
+test-curves={path="zkay-rsnark/test-curves"}
+poly={path="zkay-rsnark/poly"}
+ff-macros={path="zkay-rsnark/ff-macros"}
 fqfft={path="zkay-rsnark/fqfft"}
 rsnark={path="zkay-rsnark/rsnark"}
 zkay-rsnark={path="zkay-rsnark"}
@@ -132,16 +140,32 @@ backtrace-on-stack-overflow="0.3.0"
 ark-ff = "0.5.0"
 ark-ec = "0.5.0"
 ark-ed-on-bn254 = "0.5.0"
-ark-std = "0.5.0"
+ark-std = { version = "0.5.0", default-features = false }
+ark-r1cs-std = { version = "0.5.0", default-features = false }
 # ark-ff-asm = { version = "0.5.0" }
 ark-ff-macros = { version = "0.5.0" }
-# ark-poly = { version = "0.5.0",default-features = false }
+ark-poly = { version = "0.5.0",default-features = false }
 ark-serialize = { version = "0.5.0",  default-features = false }
 ark-serialize-derive = { version = "0.5.0"}
 
 ark-algebra-bench-templates =  { version = "0.5.0", default-features = false }
 ark-algebra-test-templates = { version = "0.5.0",  default-features = false }
 ark-test-curves = { version = "0.5.0", default-features = false }
+hashbrown = { version = "0.15", default-features = false, features = [
+    "inline-more",
+    "allocator-api2",
+] }
+arrayvec = { version = "0.7", default-features = false }
+criterion = "0.5.0"
+# educe = "0.6.0"
+digest = { version = "0.10", default-features = false }
+# hashbrown = { version = "0.15", default-features = false, features = [
+#     "inline-more",
+#     "allocator-api2",
+# ] }
+# hex = "0.4"
+# itertools = { version = "0.13", default-features = false }
+libtest-mimic = "0.8.1"
 
 zeroize="1.8.2"
 educe="0.6.0"
@@ -152,6 +176,7 @@ ff = {package="ff_ce" , version= "0.11", features = ["derive"]}
 num-complex = "0.4"
 num-traits = "0.2.8"
 num-derive = "0.4"
+num-integer = { version = "0.1", default-features = false }
 # anvil = { path = "crates/anvil" }
 cast = { git = "https://github.com/foundry-rs/foundry.git", branch = "master",package="cast" }
 # chisel = { path = "crates/chisel" }

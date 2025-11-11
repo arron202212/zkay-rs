@@ -83,7 +83,7 @@ pub trait CyclotomicMultSubgroup: Field {
 
         if Self::INVERSE_IS_FAST {
             // We only use NAF-based exponentiation if inverses are fast to compute.
-            let naf = ark_ff::biginteger::arithmetic::find_naf(e.as_ref());
+            let naf = crate::algebra::field_utils::arithmetic::find_naf(e.as_ref());
             exp_loop(self, naf.into_iter().rev())
         } else {
             exp_loop(

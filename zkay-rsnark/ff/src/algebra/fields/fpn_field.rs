@@ -12,7 +12,7 @@
 //  implement all functions declared in this class.
 
 
-use ark_ff::{BigInteger };
+use crate::algebra::field_utils::{BigInteger };
 
 use ark_std::{cmp::min, str::FromStr};
 use num_bigint::BigUint;

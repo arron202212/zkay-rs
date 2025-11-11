@@ -38,8 +38,9 @@ use ark_std::{
 };
 use num_bigint::BigUint;
 use zeroize::Zeroize;
+use super::BigInt;
+use crate::algebra::{field_utils::BigInteger,fields::fpn_field::PrimeField};
 
- use ark_ff::{BigInteger,BigInt, PrimeField};
 // //#ifndef BIGINT_HPP_
 // // #define BIGINT_HPP_
 // //#include <cstddef>

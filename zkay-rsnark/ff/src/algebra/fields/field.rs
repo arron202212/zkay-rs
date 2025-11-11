@@ -74,7 +74,7 @@ use crate::algebra::field_utils::bigint;
 // } // namespace libff
 
 use super::fpn_field::PrimeField;
-use ark_ff::UniformRand;
+use crate::algebra::UniformRand;
 use super::sqrt::{LegendreSymbol,SqrtPrecomputation};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
@@ -88,7 +88,7 @@ use ark_std::{
     vec::*,
 };
 
-pub use ark_ff_macros;
+// pub use ff_macros;
 pub use num_traits::{One, Zero};
 use zeroize::Zeroize;
 
@@ -374,7 +374,7 @@ pub trait Field:
     fn pow<S: AsRef<[u64]>>(&self, exp: S) -> Self {
         let mut res = Self::one();
 
-        for i in ark_ff::BitIteratorBE::without_leading_zeros(exp) {
+        for i in crate::algebra::bits::BitIteratorBE::without_leading_zeros(exp) {
             res.square_in_place();
 
             if i {
@@ -394,7 +394,7 @@ pub trait Field:
     #[inline]
     fn pow_with_table<S: AsRef<[u64]>>(powers_of_2: &[Self], exp: S) -> Option<Self> {
         let mut res = Self::one();
-        for (pow, bit) in ark_ff::BitIteratorLE::without_trailing_zeros(exp).enumerate() {
+        for (pow, bit) in crate::algebra::bits::BitIteratorLE::without_trailing_zeros(exp).enumerate() {
             if bit {
                 res *= powers_of_2.get(pow)?;
             }

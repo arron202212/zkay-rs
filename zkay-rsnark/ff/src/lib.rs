@@ -12,5 +12,7 @@
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
 #![allow(incomplete_features)]
+#[macro_use]
 pub mod algebra;
+pub use self::algebra::*;
 pub mod common;

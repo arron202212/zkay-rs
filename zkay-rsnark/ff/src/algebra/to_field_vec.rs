@@ -1,6 +1,6 @@
-use ark_ff::biginteger::BigInteger;
+// use ark_ff::biginteger::BigInteger;
 use ark_std::vec::*;
-use crate::algebra::fields::{field::Field, fpn_field::PrimeField};
+use crate::algebra::{field_utils::BigInteger,fields::{field::Field, fpn_field::PrimeField}};
 /// Types that can be converted to a vector of `F` elements. Useful for
 /// specifying how public inputs to a constraint system should be represented
 /// inside that constraint system.

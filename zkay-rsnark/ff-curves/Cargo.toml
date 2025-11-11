@@ -1,0 +1,61 @@
+[package]
+name = "ff-curves"
+version = "0.0.1"
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[lib]
+
+[dependencies]
+itertools = { workspace = true}
+hashbrown={workspace =true}
+num-integer={workspace = true}
+ffec={workspace = true}
+ark-ec={workspace = true}
+ark-std={workspace = true}
+poly={workspace = true}
+ark-r1cs-std ={workspace = true}
+digest={workspace = true}
+arrayvec={workspace = true}
+libtest-mimic={workspace = true}
+ff-macros.workspace = true
+ark-serialize.workspace = true
+zeroize={workspace = true}
+cfg-if={workspace = true}
+educe={workspace = true}
+num-complex={workspace = true}
+num-bigint={workspace = true}
+num-traits={workspace = true}
+num-derive={workspace = true}
+num_enum={workspace = true}
+eyre={workspace = true}
+dyn-clone={workspace = true}
+rand={workspace = true}
+rccell={workspace = true}
+zkay-derive={workspace = true}
+strum={workspace = true}
+strum_macros={workspace = true}
+enum_dispatch={ workspace = true }
+lazy_static={workspace = true}
+parking_lot={workspace = true}
+serde_closure={workspace = true}
+serde={workspace = true}
+serde_json={workspace = true}
+bincode={workspace = true}
+backtrace-on-stack-overflow={workspace=true}
+nohash-hasher={workspace = true}
+rustc-hash ={workspace = true}
+ahash={workspace = true}
+linked-hash-map={workspace = true}
+rand_chacha={workspace = true}
+rand_pcg={workspace = true}
+rand_core={workspace = true}
+rip_shuffle={workspace = true}
+bytebuffer={workspace=true}
+[dev-dependencies]
+test-curves = { workspace = true, features = ["bls12_381_curve"] }

@@ -1,9 +1,7 @@
-use ark_ff::{
-    // fields::{Field, PrimeField},
-    One,  
-    UniformRand, Zero,
+use crate::algebra::{
+    UniformRand,
 };
-use crate::algebra::{to_field_vec::ToConstraintField,fields::{field::{Field,AdditiveGroup},sqrt::{LegendreSymbol,  SqrtPrecomputation},fft_friendly::FftField, fpn_field::PrimeField}};
+use crate::algebra::{to_field_vec::ToConstraintField,fields::{Zero,One,  field::{Field,AdditiveGroup},sqrt::{LegendreSymbol,  SqrtPrecomputation},fft_friendly::FftField, fpn_field::PrimeField}};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, Compress, EmptyFlags, Flags, SerializationError, Valid, Validate,
@@ -702,8 +700,8 @@ where
 mod cube_ext_tests {
     use super::*;
     use ark_std::test_rng;
+    use crate::algebra::fields::field::Field;
     use ark_test_curves::{
-        ark_ff::Field,
         bls12_381::{Fq, Fq2, Fq6},
         mnt6_753::Fq3,
     };

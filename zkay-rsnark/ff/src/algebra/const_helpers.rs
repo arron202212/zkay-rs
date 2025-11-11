@@ -1,7 +1,7 @@
 use ark_serialize::{Read, Write};
 use ark_std::ops::{Index, IndexMut};
 
-use ark_ff::BigInt;
+use crate::algebra::field_utils::BigInt;
 
 /// A helper macro for emulating `for` loops in a `const` context.
 /// # Usage
