@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef MNT6_INIT_HPP_
 // // #define MNT6_INIT_HPP_
 
@@ -64,7 +63,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::mnt::mnt6::mnt6_g1;
 // use crate::algebra::curves::mnt::mnt6::mnt6_g2;
 // use crate::algebra::curves::mnt::mnt6::mnt6_init;

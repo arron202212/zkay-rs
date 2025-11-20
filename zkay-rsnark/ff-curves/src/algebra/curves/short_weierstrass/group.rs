@@ -1,27 +1,33 @@
 use super::{Affine, SWCurveConfig};
 use crate::algebra::curves::{
-    scalar_mul::{variable_base::VariableBaseMSM, ScalarMul},
     AffineRepr, CurveGroup, PrimeGroup,
+    scalar_mul::{ScalarMul, variable_base::VariableBaseMSM},
 };
-use ffec::algebra::{fields::{field::{batch_inversion,Field, AdditiveGroup}, fpn_field::PrimeField}, to_field_vec::ToConstraintField};
-use ffec::algebra::UniformRand;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };
 use ark_std::{
+    One, Zero,
     borrow::Borrow,
     fmt::{Debug, Display, Formatter, Result as FmtResult},
     hash::{Hash, Hasher},
     io::{Read, Write},
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
-    One, Zero,
 };
 use educe::Educe;
+use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field, batch_inversion},
+        fpn_field::PrimeField,
+    },
+    to_field_vec::ToConstraintField,
+};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use zeroize::Zeroize;
@@ -318,7 +324,7 @@ impl<P: SWCurveConfig> CurveGroup for Projective<P> {
                     let x = g.x * z2;
                     let y = g.y * z2 * z;
                     Affine::new_unchecked(x, y)
-                },
+                }
             })
             .collect()
     }

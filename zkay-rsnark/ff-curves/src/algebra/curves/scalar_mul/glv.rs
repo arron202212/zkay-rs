@@ -1,10 +1,10 @@
 use crate::algebra::curves::{
+    CurveGroup,
     short_weierstrass::{Affine, Projective, SWCurveConfig},
-     CurveGroup,
 };
-use ffec::algebra::fields::{ Zero};
-use ffec::algebra::fields::{field::AdditiveGroup,fpn_field::PrimeField};
 use ark_std::ops::Neg;
+use ffec::algebra::fields::Zero;
+use ffec::algebra::fields::{field::AdditiveGroup, fpn_field::PrimeField};
 use num_bigint::{BigInt, BigUint, Sign};
 use num_integer::Integer;
 use num_traits::{One, Signed};
@@ -121,7 +121,7 @@ pub trait GLVConfig: Send + Sync + 'static + SWCurveConfig {
                 (true, false) => res += b1,
                 (false, true) => res += b2,
                 (true, true) => res += b1b2,
-                (false, false) => {},
+                (false, false) => {}
             }
         }
         res
@@ -157,7 +157,7 @@ pub trait GLVConfig: Send + Sync + 'static + SWCurveConfig {
                 (true, false) => res += b1,
                 (false, true) => res += b2,
                 (true, true) => res += b1b2,
-                (false, false) => {},
+                (false, false) => {}
             }
         }
         res.into_affine()

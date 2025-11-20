@@ -1,13 +1,19 @@
 use ark_algebra_test_templates::*;
 use ffec::algebra::{
-    field_utils::{BigInteger, BigInteger256},
     One, UniformRand, Zero,
+    field_utils::{BigInteger, BigInteger256},
 };
-use ffec::algebra::{field_utils::BigInt,fields::{fft_friendly::FftField, field::Field, prime_extension::fp6::Fp6Config, fpn_field::PrimeField}};
+use ffec::algebra::{
+    field_utils::BigInt,
+    fields::{
+        fft_friendly::FftField, field::Field, fpn_field::PrimeField,
+        prime_extension::fp6::Fp6Config,
+    },
+};
 
 use ark_std::{cmp::Ordering, ops::MulAssign};
 
-use super::{Fq, Fq12, Fq2, Fq6, Fq6Config, Fr};
+use super::{Fq, Fq2, Fq6, Fq6Config, Fq12, Fr};
 
 test_field!(fr; Fr; mont_prime_field);
 test_field!(fq; Fq; mont_prime_field);

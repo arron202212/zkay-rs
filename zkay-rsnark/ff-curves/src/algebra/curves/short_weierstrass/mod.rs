@@ -4,13 +4,13 @@ use ark_serialize::{
 };
 use ark_std::io::{Read, Write};
 
-use ffec::algebra::fields::field::{Field, AdditiveGroup};
+use ffec::algebra::fields::field::{AdditiveGroup, Field};
 
 use crate::algebra::curves::{
+    AffineRepr,
     scalar_mul::{
         sw_double_and_add_affine, sw_double_and_add_projective, variable_base::VariableBaseMSM,
     },
-    AffineRepr,
 };
 use num_traits::Zero;
 
@@ -132,7 +132,7 @@ pub trait SWCurveConfig: super::CurveConfig {
             Compress::No => {
                 x.serialize_with_mode(&mut writer, compress)?;
                 y.serialize_with_flags(&mut writer, flags)
-            },
+            }
         }
     }
 
@@ -161,16 +161,16 @@ pub trait SWCurveConfig: super::CurveConfig {
                         } else {
                             (x, neg_y, flags)
                         }
-                    },
+                    }
                 }
-            },
+            }
             Compress::No => {
                 let x: Self::BaseField =
                     CanonicalDeserialize::deserialize_with_mode(&mut reader, compress, validate)?;
                 let (y, flags): (_, SWFlags) =
                     CanonicalDeserializeWithFlags::deserialize_with_flags(&mut reader)?;
                 (x, y, flags)
-            },
+            }
         };
         if flags.is_infinity() {
             Ok(Affine::identity())

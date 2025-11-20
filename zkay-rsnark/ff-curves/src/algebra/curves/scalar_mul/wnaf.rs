@@ -1,7 +1,7 @@
 use crate::algebra::curves::PrimeGroup;
+use ark_std::vec::*;
 use ffec::algebra::field_utils::BigInteger;
 use ffec::algebra::fields::fpn_field::PrimeField;
-use ark_std::vec::*;
 
 /// A helper type that contains all the context required for computing
 /// a window NAF multiplication of a group element by a scalar.

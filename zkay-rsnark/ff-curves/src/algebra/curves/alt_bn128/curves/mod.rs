@@ -1,10 +1,10 @@
+use crate::algebra::curves::alt_bn128::{Fq, Fq2, Fq2Config, Fq6Config, Fq12Config};
 use crate::algebra::curves::bn128::{
     bn,
     bn::{Bn, BnConfig, TwistType},
 };
-use ffec::algebra::fields::prime_base::MontFp;
 use ffec::algebra::Fp;
-use crate::algebra::curves::alt_bn128::{Fq2,Fq,Fq2Config,Fq6Config,Fq12Config};
+use ffec::algebra::fields::prime_base::MontFp;
 
 pub mod g1;
 pub mod g2;

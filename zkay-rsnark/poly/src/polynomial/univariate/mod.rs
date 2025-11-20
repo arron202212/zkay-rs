@@ -2,7 +2,7 @@
 
 use crate::{DenseUVPolynomial, EvaluationDomain, Evaluations, Polynomial};
 use ffec::{FftField, Field, Zero};
-use ark_std::{borrow::Cow, vec::*};
+use ark_std::{borrow::Cow,cfg_iter_mut,vec::*};
 use DenseOrSparsePolynomial::*;
 
 mod dense;

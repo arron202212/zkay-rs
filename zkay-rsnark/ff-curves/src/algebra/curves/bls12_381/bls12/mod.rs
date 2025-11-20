@@ -1,19 +1,24 @@
 use crate::algebra::curves::{
-    short_weierstrass::SWCurveConfig, CurveConfig,
+    AffineRepr, CurveConfig,
     pairing::{MillerLoopOutput, Pairing, PairingOutput},
-    AffineRepr,
-};
-use ffec::algebra::{
-    fields::{
-        prime_extension::{fp12_2over3over2::{Fp12, Fp12Config},
-        fp2::Fp2Config,
-        fp6_3over2::Fp6Config,
-        fp2::Fp2},field::Field, fpn_field::PrimeField,cyclotomic::CyclotomicMultSubgroup, 
-    },
-    bits::BitIteratorBE, 
+    short_weierstrass::SWCurveConfig,
 };
 use ark_std::{cfg_chunks_mut, marker::PhantomData, vec::*};
 use educe::Educe;
+use ffec::algebra::{
+    bits::BitIteratorBE,
+    fields::{
+        cyclotomic::CyclotomicMultSubgroup,
+        field::Field,
+        fpn_field::PrimeField,
+        prime_extension::{
+            fp2::Fp2,
+            fp2::Fp2Config,
+            fp6_3over2::Fp6Config,
+            fp12_2over3over2::{Fp12, Fp12Config},
+        },
+    },
+};
 use num_traits::{One, Zero};
 
 #[cfg(feature = "parallel")]
@@ -40,9 +45,9 @@ pub trait Bls12Config: 'static + Sized {
     type Fp12Config: Fp12Config<Fp6Config = Self::Fp6Config>;
     type G1Config: SWCurveConfig<BaseField = Self::Fp>;
     type G2Config: SWCurveConfig<
-        BaseField = Fp2<Self::Fp2Config>,
-        ScalarField = <Self::G1Config as CurveConfig>::ScalarField,
-    >;
+            BaseField = Fp2<Self::Fp2Config>,
+            ScalarField = <Self::G1Config as CurveConfig>::ScalarField,
+        >;
 
     fn multi_miller_loop(
         a: impl IntoIterator<Item = impl Into<G1Prepared<Self>>>,
@@ -182,12 +187,12 @@ impl<P: Bls12Config> Bls12<P> {
                 c2.mul_assign_by_fp(&py);
                 c1.mul_assign_by_fp(&px);
                 f.mul_by_014(&c0, &c1, &c2);
-            },
+            }
             TwistType::D => {
                 c0.mul_assign_by_fp(&py);
                 c1.mul_assign_by_fp(&px);
                 f.mul_by_034(&c0, &c1, &c2);
-            },
+            }
         }
     }
 

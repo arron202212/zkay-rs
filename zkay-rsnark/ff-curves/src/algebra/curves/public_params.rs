@@ -1,5 +1,3 @@
-
-
 /*
   for every curve the user should define corresponding
   public_params with the following typedefs:
@@ -57,34 +55,75 @@
                                     Q:&G2<EC_ppT>);
 */
 
+pub trait PublicParamsType {
+    type Fp_type;
+    type G1_type;
+    type G2_type;
+    type G1_precomp_type;
+    type G2_precomp_type;
+    type affine_ate_G1_precomp_type=();
+    type affine_ate_G2_precomp_type=();
+    type Fq_type;
+    type Fqe_type;
+    type Fqk_type;
+    type GT_type;
+}
 
-// type Fr<EC_ppT> =  EC_ppT::Fp_type;
+pub trait PublicParams:PublicParamsType {
+    type Fr = Self::Fp_type;
+    type G1 = Self::G1_type;
+    type G2 = Self::G2_type;
+    type G1_precomp = Self::G1_precomp_type;
+    type G2_precomp = Self::G2_precomp_type;
+    type affine_ate_G1_precomp = Self::affine_ate_G1_precomp_type;
+    type affine_ate_G2_precomp = Self::affine_ate_G2_precomp_type;
+    type Fq = Self::Fq_type;
+    type Fqe = Self::Fqe_type;
+    type Fqk = Self::Fqk_type;
+    type GT = Self::GT_type;
+    type Fr_vector = Vec<Self::Fr>;
+    type G1_vector = Vec<Self::G1>;
+    type G2_vector = Vec<Self::G2>;
+    const has_affine_pairing: bool = false;
 
-// type G1<EC_ppT> =  EC_ppT::G1_type;
+    fn init_public_params();
 
-// type G2<EC_ppT> =  EC_ppT::G2_type;
+    fn final_exponentiation(elt: &Self::Fqk) -> Self::GT;
 
-// type G1_precomp<EC_ppT> =  EC_ppT::G1_precomp_type;
+    fn precompute_G1(P: &Self::G1) -> Self::G1_precomp;
+    fn precompute_G2(Q: &Self::G2) -> Self::G2_precomp;
 
-// type G2_precomp<EC_ppT> =  EC_ppT::G2_precomp_type;
+    fn miller_loop(prec_P: &Self::G1_precomp, prec_Q: &Self::G2_precomp) -> Self::Fqk;
 
-// type affine_ate_G1_precomp<EC_ppT> =  EC_ppT::affine_ate_G1_precomp_type;
+    fn affine_ate_precompute_G1(P: &Self::G1) -> Self::affine_ate_G1_precomp;
+    fn affine_ate_precompute_G2(Q: &Self::G2) -> Self::affine_ate_G2_precomp;
 
-// type affine_ate_G2_precomp<EC_ppT> =  EC_ppT::affine_ate_G2_precomp_type;
+    fn affine_ate_miller_loop(
+        prec_P: &Self::affine_ate_G1_precomp,
+        prec_Q: &Self::affine_ate_G2_precomp,
+    ) -> Self::Fqk;
+    fn affine_ate_e_over_e_miller_loop(
+        prec_P1: &Self::affine_ate_G1_precomp,
+        prec_Q1: &Self::affine_ate_G2_precomp,
+        prec_P2: &Self::affine_ate_G1_precomp,
+        prec_Q2: &Self::affine_ate_G2_precomp,
+    ) -> Self::Fqk;
+    fn affine_ate_e_times_e_over_e_miller_loop(
+        prec_P1: &Self::affine_ate_G1_precomp,
+        prec_Q1: &Self::affine_ate_G2_precomp,
+        prec_P2: &Self::affine_ate_G1_precomp,
+        prec_Q2: &Self::affine_ate_G2_precomp,
+        prec_P3: &Self::affine_ate_G1_precomp,
+        prec_Q3: &Self::affine_ate_G2_precomp,
+    ) -> Self::Fqk;
+    fn double_miller_loop(
+        prec_P1: &Self::G1_precomp,
+        prec_Q1: &Self::G2_precomp,
+        prec_P2: &Self::G1_precomp,
+        prec_Q2: &Self::G2_precomp,
+    ) -> Self::Fqk;
 
-// type Fq<EC_ppT> =  EC_ppT::Fq_type;
-
-// type Fqe<EC_ppT> =  EC_ppT::Fqe_type;
-
-// type Fqk<EC_ppT> =  EC_ppT::Fqk_type;
-
-// type GT<EC_ppT> =  EC_ppT::GT_type;
-
-
-// type Fr_vector<EC_ppT> = Vec<Fr<EC_ppT> >;
-
-// type G1_vector<EC_ppT> = Vec<G1<EC_ppT> >;
-
-// type G2_vector<EC_ppT> = Vec<G2<EC_ppT> >;
-
-
+    fn pairing(P: &Self::G1, Q: &Self::G2) -> Self::Fqk;
+    fn reduced_pairing(P: &Self::G1, Q: &Self::G2) -> Self::GT;
+    fn affine_reduced_pairing(P: &Self::G1, Q: &Self::G2) -> Self::GT;
+}

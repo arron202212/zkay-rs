@@ -1,7 +1,7 @@
 //! A space-efficient implementation of Pippenger's algorithm.
 
-use ffec::algebra::{fields::{Zero,field::AdditiveGroup,fpn_field::PrimeField}};
 use ark_std::{borrow::Borrow, vec::*};
+use ffec::algebra::fields::{Zero, field::AdditiveGroup, fpn_field::PrimeField};
 use hashbrown::HashMap;
 
 use super::{DefaultHasher, VariableBaseMSM};

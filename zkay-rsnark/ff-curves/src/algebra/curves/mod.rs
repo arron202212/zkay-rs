@@ -1,18 +1,18 @@
-
- pub mod alt_bn128 ;
- pub mod bls12_381 ;
- pub mod bn128 ;
- pub mod edwards ;
- pub mod mnt ;
+pub mod alt_bn128;
+pub mod bls12_381;
+pub mod bn128;
+pub mod edwards;
+pub mod mnt;
 //  pub mod tests ;
- pub mod curve_utils ;
- pub mod public_params;
+pub mod curve_utils;
+pub mod public_params;
+pub use public_params::*;
 // pub mod pairing;
 pub mod short_weierstrass;
 // pub mod scalar_mul;
 pub mod hashing;
 use crate::algebra::curves::mnt::CurveConfig;
-// #![cfg_attr(not(feature = "std"), no_std)] 
+// #![cfg_attr(not(feature = "std"), no_std)]
 // #![warn(
 //     unused,
 //     future_incompatible,
@@ -30,12 +30,6 @@ use crate::algebra::curves::mnt::CurveConfig;
 
 // #[macro_use]
 // extern crate ark_std;
-use ffec::algebra::fields::{
-    field::{Field,AdditiveGroup},  fpn_field::PrimeField,
-};
-use ffec::algebra::{
-    UniformRand,
-};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     fmt::{Debug, Display},
@@ -43,7 +37,12 @@ use ark_std::{
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     vec::*,
 };
-pub use scalar_mul::{variable_base::VariableBaseMSM, ScalarMul};
+use ffec::algebra::UniformRand;
+use ffec::algebra::fields::{
+    field::{AdditiveGroup, Field},
+    fpn_field::PrimeField,
+};
+pub use scalar_mul::{ScalarMul, variable_base::VariableBaseMSM};
 use zeroize::Zeroize;
 
 // pub use ffec::algebra::fields::field::AdditiveGroup;
@@ -56,7 +55,6 @@ pub mod scalar_mul;
 /// Provides a `HashToCurve` trait and implementations of this trait via
 /// different hashing strategies.
 // pub mod hashing;
-
 pub mod pairing;
 
 /// Represents (elements of) a group of prime order `r`.
@@ -253,23 +251,23 @@ where
     Self::E2: MulAssign<<Self::E1 as CurveGroup>::BaseField>,
 {
     type E1: CurveGroup<
-        BaseField = <Self::E2 as PrimeGroup>::ScalarField,
-        ScalarField = <Self::E2 as CurveGroup>::BaseField,
-    >;
+            BaseField = <Self::E2 as PrimeGroup>::ScalarField,
+            ScalarField = <Self::E2 as CurveGroup>::BaseField,
+        >;
     type E2: CurveGroup;
 }
 
 /// A cycle of curves where both curves are pairing-friendly.
 pub trait PairingFriendlyCycle: CurveCycle {
     type Engine1: pairing::Pairing<
-        G1 = Self::E1,
-        G1Affine = <Self::E1 as CurveGroup>::Affine,
-        ScalarField = <Self::E1 as PrimeGroup>::ScalarField,
-    >;
+            G1 = Self::E1,
+            G1Affine = <Self::E1 as CurveGroup>::Affine,
+            ScalarField = <Self::E1 as PrimeGroup>::ScalarField,
+        >;
 
     type Engine2: pairing::Pairing<
-        G1 = Self::E2,
-        G1Affine = <Self::E2 as CurveGroup>::Affine,
-        ScalarField = <Self::E2 as PrimeGroup>::ScalarField,
-    >;
+            G1 = Self::E2,
+            G1Affine = <Self::E2 as CurveGroup>::Affine,
+            ScalarField = <Self::E2 as PrimeGroup>::ScalarField,
+        >;
 }

@@ -1,6 +1,9 @@
-use ffec::algebra::fields::{prime_base::{fp::Fp384, {MontBackend,MontFp}}};
-use ffec::algebra::fields::prime_base::MontConfig;
 use ffec::algebra::fields::field::AdditiveGroup;
+use ffec::algebra::fields::prime_base::MontConfig;
+use ffec::algebra::fields::prime_base::{
+    fp::Fp384,
+    {MontBackend, MontFp},
+};
 // use ff_macros::MontConfig;
 #[derive(ff_macros::MontConfig)]
 #[modulus = "4002409555221667393417789825735904156556882819939007885332058136124031650490837864442687629129015664037894272559787"]

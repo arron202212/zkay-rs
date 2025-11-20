@@ -1,7 +1,13 @@
 // use ark_ff::Field;
-use ffec::algebra::{fields::{field::{Field, AdditiveGroup}, fpn_field::PrimeField}, to_field_vec::ToConstraintField};
-use ffec::algebra::UniformRand;
 use ark_serialize::Flags;
+use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+    },
+    to_field_vec::ToConstraintField,
+};
 
 /// Flags to be encoded into the serialization.
 /// The default flags (empty) should not change the binary representation.

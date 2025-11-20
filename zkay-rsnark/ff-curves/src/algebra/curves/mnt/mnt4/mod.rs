@@ -1,21 +1,25 @@
 //  pub mod mnt4_fields;
- pub mod mnt4_g1;
- pub mod mnt4_g2;
- pub mod mnt4_init;
+pub mod mnt4_g1;
+pub mod mnt4_g2;
+pub mod mnt4_init;
 //  pub mod mnt4_pairing;
- pub mod mnt4_pp;
-
+pub mod mnt4_pp;
 
 use crate::algebra::curves::{
-    short_weierstrass::SWCurveConfig, CurveConfig,
+    CurveConfig,
     pairing::{MillerLoopOutput, Pairing, PairingOutput},
-};
-use ffec::algebra::fields::{
-    prime_extension::{fp2::{Fp2, Fp2Config},
-    fp4::{Fp4, Fp4Config}},
-    field::{Field,AdditiveGroup}, cyclotomic::CyclotomicMultSubgroup, fpn_field::PrimeField,
+    short_weierstrass::SWCurveConfig,
 };
 use educe::Educe;
+use ffec::algebra::fields::{
+    cyclotomic::CyclotomicMultSubgroup,
+    field::{AdditiveGroup, Field},
+    fpn_field::PrimeField,
+    prime_extension::{
+        fp2::{Fp2, Fp2Config},
+        fp4::{Fp4, Fp4Config},
+    },
+};
 use itertools::Itertools;
 use num_traits::{One, Zero};
 
@@ -49,9 +53,9 @@ pub trait MNT4Config: 'static + Sized {
     type Fp4Config: Fp4Config<Fp2Config = Self::Fp2Config>;
     type G1Config: SWCurveConfig<BaseField = Self::Fp, ScalarField = Self::Fr>;
     type G2Config: SWCurveConfig<
-        BaseField = Fp2<Self::Fp2Config>,
-        ScalarField = <Self::G1Config as CurveConfig>::ScalarField,
-    >;
+            BaseField = Fp2<Self::Fp2Config>,
+            ScalarField = <Self::G1Config as CurveConfig>::ScalarField,
+        >;
     fn multi_miller_loop(
         a: impl IntoIterator<Item = impl Into<G1Prepared<Self>>>,
         b: impl IntoIterator<Item = impl Into<G2Prepared<Self>>>,

@@ -14,10 +14,10 @@
 // namespace libff {
 
 
-pub fn  bn_batch_invert(Vec<FieldT> &vec);
+// pub fn  bn_batch_invert(Vec<FieldT> &vec);
 
 // } // namespace libff
 
-use crate::algebra::curves::bn128::bn_utils.tcc;
+// use crate::algebra::curves::bn128::bn_utils.tcc;
 
 //#endif // BN_UTILS_HPP_

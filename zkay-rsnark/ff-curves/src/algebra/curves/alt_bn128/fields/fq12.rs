@@ -1,8 +1,8 @@
-use ffec::algebra::{fields::{*, prime_base::MontFp}};
- use ffec::algebra::fields::prime_extension::fp12_2over3over2::{Fp12,Fp12Config};
- use crate::algebra::curves::alt_bn128::{Fq,Fq6,Fq6Config,Fq2};
+use crate::algebra::curves::alt_bn128::{Fq, Fq2, Fq6, Fq6Config};
 use ffec::algebra::fields::field::AdditiveGroup;
 use ffec::algebra::fields::field::Field;
+use ffec::algebra::fields::prime_extension::fp12_2over3over2::{Fp12, Fp12Config};
+use ffec::algebra::fields::{prime_base::MontFp, *};
 //use crate::*;
 
 pub type Fq12 = Fp12<Fq12Config>;

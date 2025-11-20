@@ -1,8 +1,8 @@
 // use ark_ff::prelude::*;
-use ark_std::One;
 use crate::algebra::curves::scalar_mul::BigInteger;
-use ffec::algebra::fields::fpn_field::PrimeField;
+use ark_std::One;
 use ark_std::{borrow::Borrow, cfg_into_iter, iterable::Iterable, vec::*};
+use ffec::algebra::fields::fpn_field::PrimeField;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

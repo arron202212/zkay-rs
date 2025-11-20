@@ -1,13 +1,12 @@
 use core::marker::PhantomData;
 
-
 use ffec::algebra::fields::field::batch_inversion;
-use poly::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial};
+use poly::{DenseUVPolynomial, Polynomial, univariate::DensePolynomial};
 
-use crate::algebra::curves::{CurveConfig,
-    hashing::{map_to_curve_hasher::MapToCurve, HashToCurveError},
-    short_weierstrass::{Affine,SWCurveConfig, Projective},
-    AffineRepr,
+use crate::algebra::curves::{
+    AffineRepr, CurveConfig,
+    hashing::{HashToCurveError, map_to_curve_hasher::MapToCurve},
+    short_weierstrass::{Affine, Projective, SWCurveConfig},
 };
 
 use super::swu::{SWUConfig, SWUMap};
@@ -59,7 +58,7 @@ where
                 let img_x = x_num.evaluate(&x) * v[0];
                 let img_y = (y_num.evaluate(&x) * y) * v[1];
                 Ok(Affine::new_unchecked(img_x, img_y))
-            },
+            }
             None => Ok(Affine::identity()),
         }
     }
@@ -93,9 +92,13 @@ impl<P: WBConfig> MapToCurve<Projective<P>> for WBMap<P> {
     fn check_parameters() -> Result<(), HashToCurveError> {
         match P::ISOGENY_MAP.apply(P::IsogenousCurve::GENERATOR) {
             Ok(point_on_curve) => {
-                debug_assert!(point_on_curve.is_on_curve(),
-			      "the isogeny maps the generator of its domain: {} into {} which does not belong to its codomain.",P::IsogenousCurve::GENERATOR, point_on_curve);
-            },
+                debug_assert!(
+                    point_on_curve.is_on_curve(),
+                    "the isogeny maps the generator of its domain: {} into {} which does not belong to its codomain.",
+                    P::IsogenousCurve::GENERATOR,
+                    point_on_curve
+                );
+            }
             Err(e) => return Err(e),
         }
 
@@ -118,19 +121,19 @@ impl<P: WBConfig> MapToCurve<Projective<P>> for WBMap<P> {
 #[cfg(test)]
 mod test {
     use crate::{
+        CurveConfig,
         hashing::{
+            HashToCurve,
             curve_maps::{
                 swu::SWUConfig,
                 wb::{IsogenyMap, WBConfig, WBMap},
             },
             map_to_curve_hasher::MapToCurveBasedHasher,
-            HashToCurve,
         },
         models::short_weierstrass::SWCurveConfig,
         short_weierstrass::{Affine, Projective},
-        CurveConfig,
     };
-    use ffec::algebra::{field_hashers::DefaultFieldHasher, fields::Fp64, MontBackend, MontFp};
+    use ffec::algebra::{MontBackend, MontFp, field_hashers::DefaultFieldHasher, fields::Fp64};
 
     #[derive(ff_macros::MontConfig)]
     #[modulus = "127"]

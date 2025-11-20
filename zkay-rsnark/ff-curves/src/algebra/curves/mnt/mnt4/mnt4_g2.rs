@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef MNT4_G2_HPP_
 // // #define MNT4_G2_HPP_
 
@@ -24,7 +23,7 @@
 // // std::istream& operator>>(std::istream &, mnt4_G2&);
 
 // pub struct mnt4_G2 {
-// // 
+// //
 // // // #ifdef PROFILE_OP_COUNTS
 // //     static i64 add_cnt;
 // //     static i64 dbl_cnt;
@@ -95,7 +94,6 @@
 // //     static pub fn  batch_to_special_all_non_zeros(Vec<mnt4_G2> &vec);
 // // };
 
-
 // // } // namespace libff
 
 // //#endif // MNT4_G2_HPP_
@@ -111,7 +109,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::mnt::mnt4::mnt4_g2;
 
 // // namespace libff {
@@ -220,7 +217,6 @@
 // {
 //     return (this->X.is_zero() && this->Z.is_zero());
 // }
-
 
 // pub fn add(other:&mnt4_G2)->mnt4_G2
 // {
@@ -420,18 +416,17 @@
 
 // // } // namespace libff
 
-// // 
+// //
 // // mnt4_G2 operator*(lhs:&bigint<m>, rhs:&mnt4_G2)
 // // {
 // //     return scalar_mul<mnt4_G2, m>(rhs, lhs);
 // // }
 
-// // 
+// //
 // // mnt4_G2 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&mnt4_G2)
 // // {
 // //     return scalar_mul<mnt4_G2, m>(rhs, lhs.as_bigint());
 // // }
-
 
 // // std::ostream& operator<<(std::ostream &out, g:&mnt4_G2)
 // // {
@@ -509,7 +504,6 @@
 // //     }
 
 // //     /* now neither is O */
-
 // //     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
 // //     if (this->X * other.Z) != (other.X * this->Z)
 // //     {
@@ -559,7 +553,6 @@
 // //       return this->add(other);
 // //       }
 // //     */
-
 // //     let X1Z2= (this->X) * (other.Z);        // X1Z2 = X1*Z2
 // //     let X2Z1= (this->Z) * (other.X);        // X2Z1 = X2*Z1
 
@@ -610,22 +603,20 @@
 // //     return mnt4_G2(this->X, -(this->Y), this->Z);
 // // }
 
-
 // // mnt4_G2 mnt4_G2::operator-(other:&mnt4_G2) const
 // // {
 // //     return (*this) + (-other);
 // // }
 
-
 use crate::algebra::curves::{
-    mnt::mnt4::{MNT4,MNT4Config},
-    short_weierstrass::{Affine, Projective},
     AffineRepr, CurveGroup,
+    mnt::mnt4::{MNT4, MNT4Config},
+    short_weierstrass::{Affine, Projective},
 };
-use ffec::algebra::fields::{field::Field,  prime_extension::fp2::Fp2};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{vec, vec::*};
 use educe::Educe;
+use ffec::algebra::fields::{field::Field, prime_extension::fp2::Fp2};
 use num_traits::One;
 
 pub type G2Affine<P> = Affine<<P as MNT4Config>::G2Config>;

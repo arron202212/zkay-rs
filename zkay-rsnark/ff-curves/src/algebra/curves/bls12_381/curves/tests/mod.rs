@@ -1,7 +1,7 @@
-use ark_algebra_test_templates::*;
 use crate::algebra::curves::{AffineRepr, CurveGroup, PrimeGroup};
+use ark_algebra_test_templates::*;
 use ffec::algebra::fields::field::Field;
-use ffec::algebra::{ One, UniformRand, Zero};
+use ffec::algebra::{One, UniformRand, Zero};
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize, Compress, Validate};
 use ark_std::{rand::Rng, test_rng, vec};
@@ -34,7 +34,7 @@ fn test_g1_subgroup_non_membership_via_endomorphism() {
     let mut rng = test_rng();
     loop {
         let x = Fq::rand(&mut rng);
-        let greatest = rng.gen();
+        let greatest = rng.r#gen();
 
         if let Some(p) = G1Affine::get_point_from_x_unchecked(x, greatest) {
             if !p.mul_bigint(Fr::characteristic()).is_zero() {
@@ -57,7 +57,7 @@ fn test_g2_subgroup_non_membership_via_endomorphism() {
     let mut rng = test_rng();
     loop {
         let x = Fq2::rand(&mut rng);
-        let greatest = rng.gen();
+        let greatest = rng.r#gen();
 
         if let Some(p) = G2Affine::get_point_from_x_unchecked(x, greatest) {
             if !p.mul_bigint(Fr::characteristic()).is_zero() {

@@ -4,15 +4,18 @@ pub mod wnaf;
 pub mod variable_base;
 
 use crate::algebra::curves::{
-    short_weierstrass::{Affine, Projective, SWCurveConfig},
     PrimeGroup,
+    short_weierstrass::{Affine, Projective, SWCurveConfig},
 };
 
-use ffec::algebra::{field_utils::{ BigInteger},fields::{field::AdditiveGroup,fpn_field::PrimeField,  Zero}};
 use ark_std::{
     cfg_iter, cfg_iter_mut,
     ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign},
     vec::*,
+};
+use ffec::algebra::{
+    field_utils::BigInteger,
+    fields::{Zero, field::AdditiveGroup, fpn_field::PrimeField},
 };
 
 #[cfg(feature = "parallel")]

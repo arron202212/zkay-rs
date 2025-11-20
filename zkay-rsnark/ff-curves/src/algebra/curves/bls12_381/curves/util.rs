@@ -1,10 +1,10 @@
-use crate::algebra::curves::{short_weierstrass::Affine, AffineRepr};
-use ffec::algebra::field_utils::{BigInteger384, };
-use ffec::algebra::fields::fpn_field::PrimeField;
+use crate::algebra::curves::{AffineRepr, short_weierstrass::Affine};
 use ark_serialize::SerializationError;
+use ffec::algebra::field_utils::BigInteger384;
+use ffec::algebra::fields::fpn_field::PrimeField;
 
-use super::{g1::Config as G1Config, g2::Config as G2Config,  G1Affine, G2Affine};
 use super::super::fields::{Fq, Fq2};
+use super::{G1Affine, G2Affine, g1::Config as G1Config, g2::Config as G2Config};
 pub const G1_SERIALIZED_SIZE: usize = 48;
 pub const G2_SERIALIZED_SIZE: usize = 96;
 

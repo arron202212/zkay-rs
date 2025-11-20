@@ -1,7 +1,7 @@
 use crate::algebra::curves::{
+    AffineRepr, CurveGroup,
     bn128::bn::BnConfig,
     short_weierstrass::{Affine, Projective},
-    AffineRepr, CurveGroup,
 };
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::*;

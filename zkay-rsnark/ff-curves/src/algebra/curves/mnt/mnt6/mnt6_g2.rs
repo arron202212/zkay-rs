@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef MNT6_G2_HPP_
 // // #define MNT6_G2_HPP_
 
@@ -94,12 +93,10 @@
 //     static pub fn  batch_to_special_all_non_zeros(Vec<mnt6_G2> &vec);
 // };
 
-
 // mnt6_G2 operator*(lhs:&bigint<m>, rhs:&mnt6_G2)
 // {
 //     return scalar_mul<mnt6_G2, m>(rhs, lhs);
 // }
-
 
 // mnt6_G2 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&mnt6_G2)
 // {
@@ -121,7 +118,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::mnt::mnt6::mnt6_g2;
 
 // // namespace libff {
@@ -250,7 +246,6 @@
 //     }
 
 //     /* now neither is O */
-
 //     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
 //     if (this->X * other.Z) != (other.X * this->Z)
 //     {
@@ -300,7 +295,6 @@
 //       return this->add(other);
 //       }
 //     */
-
 //     let X1Z2= (this->X) * (other.Z);        // X1Z2 = X1*Z2
 //     let X2Z1= (this->Z) * (other.X);        // X2Z1 = X2*Z1
 
@@ -350,7 +344,6 @@
 // {
 //     return mnt6_G2(this->X, -(this->Y), this->Z);
 // }
-
 
 // mnt6_G2 mnt6_G2::operator-(other:&mnt6_G2) const
 // {
@@ -617,16 +610,15 @@
 
 // // } // namespace libff
 
-
 use crate::algebra::curves::{
-    mnt::mnt6::{MNT6,MNT6Config},
-    short_weierstrass::{Affine, Projective},
     AffineRepr, CurveGroup,
+    mnt::mnt6::{MNT6, MNT6Config},
+    short_weierstrass::{Affine, Projective},
 };
-use ffec::algebra::fields::{field::Field, prime_extension::fp3::Fp3};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::*;
 use educe::Educe;
+use ffec::algebra::fields::{field::Field, prime_extension::fp3::Fp3};
 use num_traits::One;
 
 pub type G2Affine<P> = Affine<<P as MNT6Config>::G2Config>;

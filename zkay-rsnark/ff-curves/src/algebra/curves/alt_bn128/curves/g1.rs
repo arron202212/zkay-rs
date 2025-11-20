@@ -1,14 +1,22 @@
+use super::super::fields::{Fq, Fr};
 use crate::algebra::curves::{
+    CurveConfig,
     bn128::bn,
-    short_weierstrass::SWCurveConfig, CurveConfig,
     scalar_mul::glv::GLVConfig,
+    short_weierstrass::SWCurveConfig,
     short_weierstrass::{Affine, Projective},
 };
-pub use ffec::algebra::Fp;
-use ffec::algebra::{field_utils::BigInt,fields::{field::{AdditiveGroup,  Field}, prime_base::MontFp, fpn_field::PrimeField}};
-use ffec::algebra::fields::{ Zero};
 use ffec::BigInt;
-use super::super::fields::{Fq, Fr};
+pub use ffec::algebra::Fp;
+use ffec::algebra::fields::Zero;
+use ffec::algebra::{
+    field_utils::BigInt,
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+        prime_base::MontFp,
+    },
+};
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct Config;

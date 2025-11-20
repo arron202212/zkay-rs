@@ -12,7 +12,7 @@ license.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 metadata.docs.rs.workspace = true
-package.metadata.release.workspace = true
+# package.metadata.release.workspace = true
 keywords = ["cryptography", "finite-fields", "fft", "polynomials"]
 
 [dependencies]
@@ -38,7 +38,7 @@ criterion = "0.5.1"
 default = []
 # std = [ "ark-std/std", "ark-ff/std", "ark-serialize/std" ]
 # parallel = [ "std", "ark-ff/parallel", "rayon", "ark-std/parallel", "ark-serialize/parallel" ]
-
+# parallel = [ "rayon"]
 
 [[bench]]
 name = "fft"

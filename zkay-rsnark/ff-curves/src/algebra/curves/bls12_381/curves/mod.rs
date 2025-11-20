@@ -1,6 +1,6 @@
 use super::bls12::{Bls12, Bls12Config, TwistType};
 
-use crate::algebra::curves::bls12_381::fields::{Fq, Fq12Config, Fq2Config, Fq6Config};
+use crate::algebra::curves::bls12_381::fields::{Fq, Fq2Config, Fq6Config, Fq12Config};
 
 pub mod g1;
 pub mod g2;

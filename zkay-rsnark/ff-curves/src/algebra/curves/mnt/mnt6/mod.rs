@@ -1,20 +1,25 @@
 //  pub mod mnt6_fields;
- pub mod mnt6_g1;
- pub mod mnt6_g2;
- pub mod mnt6_init;
+pub mod mnt6_g1;
+pub mod mnt6_g2;
+pub mod mnt6_init;
 //  pub mod mnt6_pairing;
- pub mod mnt6_pp;
+pub mod mnt6_pp;
 
 use crate::algebra::curves::{
-    short_weierstrass::SWCurveConfig, CurveConfig,
+    CurveConfig,
     pairing::{MillerLoopOutput, Pairing, PairingOutput},
-};
-use ffec::algebra::fields::{
-    prime_extension::{fp3::{Fp3, Fp3Config},
-    fp6_2over3::{Fp6, Fp6Config}},
-    field::{Field,AdditiveGroup}, cyclotomic::CyclotomicMultSubgroup,  fpn_field::PrimeField,
+    short_weierstrass::SWCurveConfig,
 };
 use educe::Educe;
+use ffec::algebra::fields::{
+    cyclotomic::CyclotomicMultSubgroup,
+    field::{AdditiveGroup, Field},
+    fpn_field::PrimeField,
+    prime_extension::{
+        fp3::{Fp3, Fp3Config},
+        fp6_2over3::{Fp6, Fp6Config},
+    },
+};
 use itertools::Itertools;
 use num_traits::{One, Zero};
 
@@ -28,7 +33,7 @@ use rayon::prelude::*;
 
 use self::mnt6_g2::{AteAdditionCoefficients, AteDoubleCoefficients, G2ProjectiveExtended};
 pub use self::{
-   mnt6_g1::{G1Affine, G1Prepared, G1Projective},
+    mnt6_g1::{G1Affine, G1Prepared, G1Projective},
     mnt6_g2::{G2Affine, G2Prepared, G2Projective},
 };
 
@@ -48,9 +53,9 @@ pub trait MNT6Config: 'static + Sized {
     type Fp6Config: Fp6Config<Fp3Config = Self::Fp3Config>;
     type G1Config: SWCurveConfig<BaseField = Self::Fp, ScalarField = Self::Fr>;
     type G2Config: SWCurveConfig<
-        BaseField = Fp3<Self::Fp3Config>,
-        ScalarField = <Self::G1Config as CurveConfig>::ScalarField,
-    >;
+            BaseField = Fp3<Self::Fp3Config>,
+            ScalarField = <Self::G1Config as CurveConfig>::ScalarField,
+        >;
 
     fn multi_miller_loop(
         a: impl IntoIterator<Item = impl Into<G1Prepared<Self>>>,

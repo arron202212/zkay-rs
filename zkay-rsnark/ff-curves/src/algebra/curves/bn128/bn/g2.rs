@@ -1,6 +1,12 @@
-
-use ffec::algebra::{fields::{field::{Field, AdditiveGroup},prime_extension::fp2::Fp2,fpn_field::PrimeField}, to_field_vec::ToConstraintField};
 use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+        prime_extension::fp2::Fp2,
+    },
+    to_field_vec::ToConstraintField,
+};
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::*;
@@ -8,9 +14,9 @@ use educe::Educe;
 use num_traits::One;
 
 use crate::algebra::curves::{
-    bn128::bn::{BnConfig, TwistType},
-    short_weierstrass::{SWCurveConfig,Affine, Projective},
     AffineRepr, CurveGroup,
+    bn128::bn::{BnConfig, TwistType},
+    short_weierstrass::{Affine, Projective, SWCurveConfig},
 };
 
 pub type G2Affine<P> = Affine<<P as BnConfig>::G2Config>;

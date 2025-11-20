@@ -1,5 +1,5 @@
-use ffec::algebra::field_utils::{BigInteger, };
-use ffec::algebra::fields::{ Zero,field::Field, fpn_field::PrimeField,};
+use ffec::algebra::field_utils::BigInteger;
+use ffec::algebra::fields::{Zero, field::Field, fpn_field::PrimeField};
 pub mod elligator2;
 pub mod swu;
 pub mod wb;

@@ -7,8 +7,8 @@ use ark_std::{
     io::{Read, Write},
     ops::{Add, Mul, Neg, Sub},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
 };
@@ -17,11 +17,16 @@ use num_traits::{One, Zero};
 use zeroize::Zeroize;
 
 // use ark_ff::{fields::Field, AdditiveGroup, PrimeField, ToConstraintField, UniformRand};
-use ffec::algebra::{fields::{field::{Field, AdditiveGroup}, fpn_field::PrimeField}, to_field_vec::ToConstraintField};
-use ffec::algebra::UniformRand;
-use crate::algebra::curves::AffineRepr;
 use super::{Projective, TECurveConfig, TEFlags};
-
+use crate::algebra::curves::AffineRepr;
+use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+    },
+    to_field_vec::ToConstraintField,
+};
 
 /// Affine coordinates for a point on a twisted Edwards curve, over the
 /// base field `P::BaseField`.
@@ -129,11 +134,7 @@ impl<P: TECurveConfig> Affine<P> {
             .and_then(|x2| x2.sqrt())
             .map(|x| {
                 let neg_x = -x;
-                if x <= neg_x {
-                    (x, neg_x)
-                } else {
-                    (neg_x, x)
-                }
+                if x <= neg_x { (x, neg_x) } else { (neg_x, x) }
             })
     }
 

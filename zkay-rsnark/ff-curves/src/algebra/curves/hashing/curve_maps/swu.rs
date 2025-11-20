@@ -1,11 +1,10 @@
-use crate::algebra::curves::short_weierstrass::{SWCurveConfig,Affine, Projective};
-use ffec::algebra::fields::{ One, Zero};
-use ffec::algebra::fields::field::Field;
+use crate::algebra::curves::short_weierstrass::{Affine, Projective, SWCurveConfig};
 use core::marker::PhantomData;
+use ffec::algebra::fields::field::Field;
+use ffec::algebra::fields::{One, Zero};
 
-use crate::algebra::curves::{
-    hashing::{curve_maps::parity, map_to_curve_hasher::MapToCurve, HashToCurveError},
-  
+use crate::algebra::curves::hashing::{
+    HashToCurveError, curve_maps::parity, map_to_curve_hasher::MapToCurve,
 };
 
 /// Trait defining the necessary parameters for the SWU hash-to-curve method
@@ -34,8 +33,10 @@ impl<P: SWUConfig> MapToCurve<Projective<P>> for SWUMap<P> {
         );
 
         // Verifying the prerequisite for applicability  of SWU map
-        debug_assert!(!P::COEFF_A.is_zero() && !P::COEFF_B.is_zero(),
-		      "Simplified SWU requires a * b != 0 in the short Weierstrass form of y^2 = x^3 + a*x + b ");
+        debug_assert!(
+            !P::COEFF_A.is_zero() && !P::COEFF_B.is_zero(),
+            "Simplified SWU requires a * b != 0 in the short Weierstrass form of y^2 = x^3 + a*x + b "
+        );
 
         Ok(())
     }
@@ -162,14 +163,14 @@ mod test {
     type DefaultHasher = fnv::FnvHasher;
 
     use crate::{
-        hashing::{map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
         CurveConfig,
+        hashing::{HashToCurve, map_to_curve_hasher::MapToCurveBasedHasher},
     };
-    use ffec::algebra::field_hashers::DefaultFieldHasher;
     use ark_std::vec::*;
+    use ffec::algebra::field_hashers::DefaultFieldHasher;
 
     use super::*;
-    use ffec::algebra::{fields::Fp64, MontBackend, MontFp};
+    use ffec::algebra::{MontBackend, MontFp, fields::Fp64};
     use hashbrown::HashMap;
     use sha2::Sha256;
 

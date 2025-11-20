@@ -2,21 +2,27 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };
 use ark_std::{
+    One, Zero,
     borrow::Borrow,
     fmt::{Debug, Display, Formatter, Result as FmtResult},
     io::{Read, Write},
     ops::{Add, Mul, Neg, Sub},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
-    One, Zero,
 };
 
-use ffec::algebra::{fields::{field::{Field, AdditiveGroup}, fpn_field::PrimeField}, to_field_vec::ToConstraintField};
-use ffec::algebra::UniformRand;
 use educe::Educe;
+use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+    },
+    to_field_vec::ToConstraintField,
+};
 use zeroize::Zeroize;
 
 use super::{Projective, SWCurveConfig, SWFlags};

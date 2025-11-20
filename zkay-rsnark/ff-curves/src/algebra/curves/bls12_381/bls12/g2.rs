@@ -1,15 +1,18 @@
-use ffec::algebra::{fields::{field::{AdditiveGroup,  Field}, prime_extension::fp2::Fp2},bits::BitIteratorBE};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::{vec::*, One};
+use ark_std::{One, vec::*};
 use educe::Educe;
-
-use super::{
-    Bls12Config, TwistType,
+use ffec::algebra::{
+    bits::BitIteratorBE,
+    fields::{
+        field::{AdditiveGroup, Field},
+        prime_extension::fp2::Fp2,
+    },
 };
+
+use super::{Bls12Config, TwistType};
 use crate::algebra::curves::{
-    short_weierstrass::{SWCurveConfig,
-    Affine, Projective},
     AffineRepr, CurveGroup,
+    short_weierstrass::{Affine, Projective, SWCurveConfig},
 };
 
 pub type G2Affine<P> = Affine<<P as Bls12Config>::G2Config>;

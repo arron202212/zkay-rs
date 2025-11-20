@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef MNT6_PP_HPP_
 // // #define MNT6_PP_HPP_
 
@@ -21,7 +20,7 @@
 // // namespace libff {
 
 // pub struct mnt6_pp {
-// 
+//
 //     type Fp_type=mnt6_Fr;
 //     type G1_type=mnt6_G1;
 //     type G2_type=mnt6_G2;
@@ -85,7 +84,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
 // // namespace libff {
@@ -109,7 +107,6 @@
 // {
 //     return mnt6_precompute_G2(Q);
 // }
-
 
 // mnt6_Fq6 mnt6_pp::miller_loop(prec_P:&mnt6_G1_precomp,
 //                               prec_Q:&mnt6_G2_precomp)

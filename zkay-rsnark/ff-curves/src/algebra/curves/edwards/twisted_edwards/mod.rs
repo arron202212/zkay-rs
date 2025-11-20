@@ -4,12 +4,20 @@ use ark_serialize::{
 };
 use ark_std::io::{Read, Write};
 
-use crate::algebra::curves::{mnt::CurveConfig,scalar_mul::variable_base:: VariableBaseMSM, AffineRepr};
+use crate::algebra::curves::{
+    AffineRepr, mnt::CurveConfig, scalar_mul::variable_base::VariableBaseMSM,
+};
 use num_traits::Zero;
 
 // use ark_ff::{fields::Field, AdditiveGroup};
-use ffec::algebra::{fields::{field::{Field, AdditiveGroup}, fpn_field::PrimeField}, to_field_vec::ToConstraintField};
 use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+    },
+    to_field_vec::ToConstraintField,
+};
 
 mod affine;
 pub use affine::*;
@@ -112,7 +120,7 @@ pub trait TECurveConfig: CurveConfig {
             Compress::No => {
                 item.x.serialize_uncompressed(&mut writer)?;
                 item.y.serialize_uncompressed(&mut writer)
-            },
+            }
         }
     }
 
@@ -135,14 +143,14 @@ pub trait TECurveConfig: CurveConfig {
                 } else {
                     (x, y)
                 }
-            },
+            }
             Compress::No => {
                 let x: Self::BaseField =
                     CanonicalDeserialize::deserialize_uncompressed(&mut reader)?;
                 let y: Self::BaseField =
                     CanonicalDeserialize::deserialize_uncompressed(&mut reader)?;
                 (x, y)
-            },
+            }
         };
         let point = Affine::new_unchecked(x, y);
         if let Validate::Yes = validate {

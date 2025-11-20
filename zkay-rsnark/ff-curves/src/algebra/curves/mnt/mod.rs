@@ -1,11 +1,8 @@
-
- pub mod mnt4 ;
- pub mod mnt6 ;
- pub mod mnt46_common;
-use ffec::algebra::fields::{Zero};
-use ffec::algebra::fields::{
-    field::{Field},  fpn_field::PrimeField,
-};
+pub mod mnt4;
+pub mod mnt46_common;
+pub mod mnt6;
+use ffec::algebra::fields::Zero;
+use ffec::algebra::fields::{field::Field, fpn_field::PrimeField};
 
 /// Elliptic curves can be represented via different "models" with varying
 /// efficiency properties.

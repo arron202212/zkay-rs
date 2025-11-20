@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef MNT4_PP_HPP_
 // // #define MNT4_PP_HPP_
 
@@ -21,7 +20,7 @@
 // // namespace libff {
 
 // pub struct mnt4_pp {
-// 
+//
 //     type Fp_type=mnt4_Fr;
 //     type G1_type=mnt4_G1;
 //     type G2_type=mnt4_G2;
@@ -90,7 +89,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 
 // // namespace libff {

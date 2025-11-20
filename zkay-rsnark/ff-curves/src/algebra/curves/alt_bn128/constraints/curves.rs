@@ -1,7 +1,7 @@
 use ark_r1cs_std::groups::curves::short_weierstrass::ProjectiveVar;
 
-use super::FBaseVar;
 use super::super::curves::g1::Config;
+use super::FBaseVar;
 
 /// A group element in the Bn254 prime-order group.
 pub type GVar = ProjectiveVar<Config, FBaseVar>;

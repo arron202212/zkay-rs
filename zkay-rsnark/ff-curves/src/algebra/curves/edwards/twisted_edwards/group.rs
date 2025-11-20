@@ -2,22 +2,28 @@ use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };
 use ark_std::{
+    One, Zero,
     borrow::Borrow,
     fmt::{Display, Formatter, Result as FmtResult},
     hash::{Hash, Hasher},
     io::{Read, Write},
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
-    One, Zero,
 };
 
 // use ark_ff::{fields::Field, AdditiveGroup, PrimeField, ToConstraintField, UniformRand};
-use ffec::algebra::{fields::{field::{Field, AdditiveGroup}, fpn_field::PrimeField}, to_field_vec::ToConstraintField};
 use ffec::algebra::UniformRand;
+use ffec::algebra::{
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+    },
+    to_field_vec::ToConstraintField,
+};
 
 use educe::Educe;
 use zeroize::Zeroize;
@@ -27,8 +33,8 @@ use rayon::prelude::*;
 
 use super::{Affine, MontCurveConfig, TECurveConfig};
 use crate::algebra::curves::{
-    scalar_mul::{variable_base::VariableBaseMSM, ScalarMul},
     AffineRepr, CurveGroup, PrimeGroup,
+    scalar_mul::{ScalarMul, variable_base::VariableBaseMSM},
 };
 
 /// `Projective` implements Extended Twisted Edwards Coordinates
@@ -231,7 +237,7 @@ impl<P: TECurveConfig> CurveGroup for Projective<P> {
                     let x = g.x * &z;
                     let y = g.y * &z;
                     Affine::new_unchecked(x, y)
-                },
+                }
             })
             .collect()
     }

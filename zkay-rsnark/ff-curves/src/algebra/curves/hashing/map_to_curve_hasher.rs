@@ -1,9 +1,9 @@
 use crate::algebra::curves::{
-    hashing::{HashToCurve, HashToCurveError},
     AffineRepr, CurveGroup,
+    hashing::{HashToCurve, HashToCurveError},
 };
-use ffec::algebra::fields::field_hashers::HashToField;
 use ark_std::marker::PhantomData;
+use ffec::algebra::fields::field_hashers::HashToField;
 
 /// Trait for mapping a random field element to a random curve point.
 pub trait MapToCurve<T: CurveGroup>: Sized {

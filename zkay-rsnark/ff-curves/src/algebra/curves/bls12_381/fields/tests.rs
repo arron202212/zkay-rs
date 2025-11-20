@@ -1,11 +1,18 @@
 use ark_algebra_test_templates::*;
-use ffec::algebra::{
-    field_utils::{ BigInteger, BigInteger384},
-One, UniformRand, Zero
+use ffec::algebra::field_utils::BigInt;
+use ffec::algebra::fields::{
+    AdditiveGroup,
+    {
+        fft_friendly::FftField,
+        field::Field,
+        fpn_field::PrimeField,
+        prime_extension::{fp2::Fp2Config, fp6::Fp6Config, fp12_2over3over2::Fp12Config},
+    },
 };
-ffec::algebra::field_utils::BigInt;
- use ffec::algebra::fields::{{fft_friendly::FftField, field::Field, prime_extension::{fp12_2over3over2::Fp12Config, fp2::Fp2Config, fp6::Fp6Config},fpn_field::PrimeField},
-    AdditiveGroup};
+use ffec::algebra::{
+    One, UniformRand, Zero,
+    field_utils::{BigInteger, BigInteger384},
+};
 
 use ark_std::{
     cmp::Ordering,
@@ -13,7 +20,7 @@ use ark_std::{
     vec,
 };
 
-use crate::{Fq, Fq12, Fq12Config, Fq2, Fq2Config, Fq6, Fq6Config, Fr};
+use crate::{Fq, Fq2, Fq2Config, Fq6, Fq6Config, Fq12, Fq12Config, Fr};
 
 test_field!(fr; Fr; mont_prime_field);
 test_field!(fq; Fq; mont_prime_field);

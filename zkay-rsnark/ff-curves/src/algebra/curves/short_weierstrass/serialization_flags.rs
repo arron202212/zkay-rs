@@ -1,5 +1,5 @@
-use ffec::algebra::fields::field::Field;
 use ark_serialize::Flags;
+use ffec::algebra::fields::field::Field;
 
 /// Flags to be encoded into the serialization.
 /// The default flags (empty) should not change the binary representation.

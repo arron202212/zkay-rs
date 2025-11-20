@@ -1,13 +1,20 @@
-
-use crate::algebra::curves::{AffineRepr,
-    short_weierstrass::SWCurveConfig, CurveConfig,
+use crate::algebra::curves::{
+    AffineRepr, CurveConfig,
     scalar_mul::glv::GLVConfig,
+    short_weierstrass::SWCurveConfig,
     short_weierstrass::{Affine, Projective},
 };
-use ffec::algebra::Fp;
-use ffec::algebra::{field_utils::BigInt,fields::{field::{AdditiveGroup,  Field}, prime_base::MontFp, fpn_field::PrimeField}};
-use ffec::algebra::fields::{Zero};
 use ffec::BigInt;
+use ffec::algebra::Fp;
+use ffec::algebra::fields::Zero;
+use ffec::algebra::{
+    field_utils::BigInt,
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+        prime_base::MontFp,
+    },
+};
 
 use super::super::fields::{Fq, Fq2, Fr};
 
@@ -151,7 +158,7 @@ mod test {
 
     use super::*;
     use crate::g2;
-    use ark_std::{rand::Rng, UniformRand};
+    use ark_std::{UniformRand, rand::Rng};
 
     fn sample_unchecked() -> Affine<g2::Config> {
         let mut rng = ark_std::test_rng();

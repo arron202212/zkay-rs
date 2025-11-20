@@ -1,8 +1,8 @@
-use     super::Bls12Config;
+use super::Bls12Config;
 
 use crate::algebra::curves::{
-    short_weierstrass::{Affine, Projective},
     AffineRepr, CurveGroup,
+    short_weierstrass::{Affine, Projective},
 };
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};

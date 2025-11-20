@@ -1,24 +1,28 @@
-use ffec::algebra::fields::{field::{AdditiveGroup,Field}, cyclotomic::CyclotomicMultSubgroup, fpn_field::PrimeField};
+use crate::algebra::curves::ScalarMul;
+use crate::algebra::curves::{AffineRepr, CurveGroup, PrimeGroup, VariableBaseMSM};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };
 use ark_std::One;
 use ark_std::{
+    UniformRand, Zero,
     borrow::Borrow,
     fmt::{Debug, Display, Formatter, Result as FmtResult},
     io::{Read, Write},
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
-    UniformRand, Zero,
 };
 use educe::Educe;
+use ffec::algebra::fields::{
+    cyclotomic::CyclotomicMultSubgroup,
+    field::{AdditiveGroup, Field},
+    fpn_field::PrimeField,
+};
 use zeroize::Zeroize;
-use crate::algebra::curves::ScalarMul;
-use crate::algebra::curves::{AffineRepr, CurveGroup, PrimeGroup, VariableBaseMSM};
 
 /// Collection of types (mainly fields and curves) that together describe
 /// how to compute a pairing over a pairing-friendly curve.

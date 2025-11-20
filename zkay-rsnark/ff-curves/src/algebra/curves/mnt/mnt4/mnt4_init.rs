@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef MNT4_INIT_HPP_
 // // #define MNT4_INIT_HPP_
 
@@ -56,7 +55,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::mnt::mnt4::mnt4_g1;
 // use crate::algebra::curves::mnt::mnt4::mnt4_g2;
 // use crate::algebra::curves::mnt::mnt4::mnt4_init;
@@ -104,7 +102,6 @@
 //     mnt4_G1::G1_zero = mnt4_G1(mnt4_Fq::zero(),
 //                                mnt4_Fq::one(),
 //                                mnt4_Fq::zero());
-
 
 //     mnt4_G1::G1_one = mnt4_G1(mnt4_Fq("60760244141852568949126569781626075788424196370144486719385562369396875346601926534016838"),
 //                               mnt4_Fq("363732850702582978263902770815145784459747722357071843971107674179038674942891694705904306"),

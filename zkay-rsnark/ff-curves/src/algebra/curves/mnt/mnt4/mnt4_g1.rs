@@ -8,7 +8,6 @@
 // //  *             and contributors (see AUTHORS).
 // //  * @copyright  MIT license (see LICENSE file)
 // //  *****************************************************************************/
-
 // //#ifndef MNT4_G1_HPP_
 // // #define MNT4_G1_HPP_
 
@@ -24,7 +23,7 @@
 // // std::istream& operator>>(std::istream &, mnt4_G1&);
 
 // pub struct mnt4_G1 {
-// // 
+// //
 // // // #ifdef PROFILE_OP_COUNTS
 // //     static i64 add_cnt;
 // //     static i64 dbl_cnt;
@@ -90,13 +89,13 @@
 // //     static pub fn  batch_to_special_all_non_zeros(Vec<mnt4_G1> &vec);
 // // };
 
-// // 
+// //
 // // mnt4_G1 operator*(lhs:&bigint<m>, rhs:&mnt4_G1)
 // // {
 // //     return scalar_mul<mnt4_G1, m>(rhs, lhs);
 // // }
 
-// // 
+// //
 // // mnt4_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&mnt4_G1)
 // // {
 // //     return scalar_mul<mnt4_G1, m>(rhs, lhs.as_bigint());
@@ -120,7 +119,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // // use crate::algebra::curves::mnt::mnt4::mnt4_g1;
 
 // // namespace libff {
@@ -154,7 +152,7 @@
 //     G1_zero
 // }
 
-// pub fn print(&self) 
+// pub fn print(&self)
 // {
 //     if self.is_zero()
 //     {
@@ -165,12 +163,12 @@
 //         let mut  copy=self.clone();
 //         copy.to_affine_coordinates();
 //         print!("({:N$} , {:N$})\n",
-//                    copy.X.as_bigint().0.0, 
+//                    copy.X.as_bigint().0.0,
 //                    copy.Y.as_bigint().0.0, N=mnt4_Fq::num_limbs);
 //     }
 // }
 
-// pub fn print_coordinates(&self) 
+// pub fn print_coordinates(&self)
 // {
 //     if self.is_zero()
 //     {
@@ -179,8 +177,8 @@
 //     else
 //     {
 //         print!("({:N$}: {:N$}: {:N$})\n",
-//                    self.X.as_bigint().0.0, 
-//                    self.Y.as_bigint().0.0, 
+//                    self.X.as_bigint().0.0,
+//                    self.Y.as_bigint().0.0,
 //                    self.Z.as_bigint().0.0, N=mnt4_Fq::num_limbs);
 //     }
 // }
@@ -216,7 +214,6 @@
 // {
 //     return (self.X.is_zero() && self.Z.is_zero());
 // }
-
 
 // pub fn add( other:&Self) ->&mnt4_G1
 // {
@@ -388,11 +385,9 @@
 //     return (scalar_field::random_element().as_bigint()) * G1_one;
 // }
 
-
 // pub fn batch_to_special_all_non_zeros(vec:&Vec<mnt4_G1>)
 // {
 //     let  Z_vec=Vec::with_capacity(vec.len());
-    
 
 //     for el in &vec
 //     {
@@ -410,9 +405,6 @@
 // }
 // // } // namespace libff
 
-
-
-
 // // bool mnt4_G1::operator==(other:&mnt4_G1) const
 // // {
 // //     if self.is_zero()
@@ -426,7 +418,6 @@
 // //     }
 
 // //     /* now neither is O */
-
 // //     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
 // //     if (self.X * other.Z) != (other.X * self.Z)
 // //     {
@@ -476,7 +467,6 @@
 // //       return self.add(other);
 // //       }
 // //     */
-
 // //     let X1Z2= (self.X) * (other.Z);        // X1Z2 = X1*Z2
 // //     let X2Z1= (self.Z) * (other.X);        // X2Z1 = X2*Z1
 
@@ -527,13 +517,10 @@
 // //     return mnt4_G1(self.X, -(self.Y), self.Z);
 // // }
 
-
 // // mnt4_G1 mnt4_G1::operator-(other:&mnt4_G1) const
 // // {
 // //     return (*this) + (-other);
 // // }
-
-
 
 // // std::ostream& operator<<(std::ostream &out, g:&mnt4_G1)
 // // {
@@ -632,11 +619,11 @@
 // // }
 
 use crate::algebra::curves::{
-    mnt::mnt4::{MNT4,MNT4Config},
-    short_weierstrass::{Affine, Projective},
     AffineRepr, CurveGroup,
+    mnt::mnt4::{MNT4, MNT4Config},
+    short_weierstrass::{Affine, Projective},
 };
-use ffec::algebra::fields::{field::Field,  prime_extension::fp2::Fp2};
+use ffec::algebra::fields::{field::Field, prime_extension::fp2::Fp2};
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::vec::*;

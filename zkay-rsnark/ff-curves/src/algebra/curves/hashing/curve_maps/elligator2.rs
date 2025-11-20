@@ -1,10 +1,12 @@
-use crate::algebra::curves::edwards::twisted_edwards::{Affine, Projective,MontCurveConfig, TECurveConfig};
-use ffec::algebra::fields::{ One, Zero};
-use ffec::algebra::fields::field::Field;
+use crate::algebra::curves::edwards::twisted_edwards::{
+    Affine, MontCurveConfig, Projective, TECurveConfig,
+};
 use core::marker::PhantomData;
+use ffec::algebra::fields::field::Field;
+use ffec::algebra::fields::{One, Zero};
 
-use crate::algebra::curves::{
-    hashing::{curve_maps::parity, map_to_curve_hasher::MapToCurve, HashToCurveError},
+use crate::algebra::curves::hashing::{
+    HashToCurveError, curve_maps::parity, map_to_curve_hasher::MapToCurve,
 };
 
 /// Trait defining the necessary parameters for the Elligator2 hash-to-curve method
@@ -168,14 +170,14 @@ mod test {
     type DefaultHasher = fnv::FnvHasher;
 
     use crate::{
-        hashing::{map_to_curve_hasher::MapToCurveBasedHasher, HashToCurve},
         CurveConfig,
+        hashing::{HashToCurve, map_to_curve_hasher::MapToCurveBasedHasher},
     };
-    use ffec::algebra::bits::field_hashers::DefaultFieldHasher;
     use ark_std::vec::*;
+    use ffec::algebra::bits::field_hashers::DefaultFieldHasher;
 
     use super::*;
-    use ffec::algebra::bits::{fields::Fp64, MontBackend, MontFp};
+    use ffec::algebra::bits::{MontBackend, MontFp, fields::Fp64};
     use hashbrown::HashMap;
     use sha2::Sha256;
 

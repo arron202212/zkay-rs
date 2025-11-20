@@ -1,24 +1,24 @@
+use super::super::fields::{Fq, Fr};
+use super::g1_swu_iso;
+use super::util::{
+    EncodingFlags, G1_SERIALIZED_SIZE, read_g1_compressed, read_g1_uncompressed, serialize_fq,
+};
 use crate::algebra::curves::{
-    bls12_381::{bls12,
-    bls12::Bls12Config},
+    AffineRepr, CurveConfig, PrimeGroup,
+    bls12_381::{bls12, bls12::Bls12Config},
     hashing::curve_maps::wb::{IsogenyMap, WBConfig},
-    CurveConfig,
     scalar_mul::glv::GLVConfig,
     short_weierstrass::{Affine, SWCurveConfig},
-    AffineRepr, PrimeGroup,
 };
-use ffec::algebra::fields::{field::{AdditiveGroup, Field}, fpn_field::PrimeField, prime_base::MontFp};
-use ffec::algebra::field_utils::{BigInt};
 use ark_serialize::{Compress, SerializationError};
-use ark_std::{ops::Neg, One,Zero};
+use ark_std::{One, Zero, ops::Neg};
 use ffec::BigInt;
-use super::g1_swu_iso;
-use super::{
-    util::{
-        read_g1_compressed, read_g1_uncompressed, serialize_fq, EncodingFlags, G1_SERIALIZED_SIZE,
-    },
+use ffec::algebra::field_utils::BigInt;
+use ffec::algebra::fields::{
+    field::{AdditiveGroup, Field},
+    fpn_field::PrimeField,
+    prime_base::MontFp,
 };
-use super::super::fields::{Fq, Fr,};
 // use crate::algebra::curves::bls12_381::Config;
 pub type G1Affine = bls12::G1Affine<super::Config>;
 pub type G1Projective = bls12::G1Projective<super::Config>;
@@ -151,9 +151,9 @@ impl SWCurveConfig for Config {
 }
 
 impl GLVConfig for Config {
-    const ENDO_COEFFS: &'static[Self::BaseField] = &[
-        MontFp!("793479390729215512621379701633421447060886740281060493010456487427281649075476305620758731620350")
-    ];
+    const ENDO_COEFFS: &'static [Self::BaseField] = &[MontFp!(
+        "793479390729215512621379701633421447060886740281060493010456487427281649075476305620758731620350"
+    )];
 
     const LAMBDA: Self::ScalarField =
         MontFp!("52435875175126190479447740508185965837461563690374988244538805122978187051009");
@@ -193,14 +193,20 @@ impl WBConfig for Config {
 
 /// G1_GENERATOR_X =
 /// 3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507
-pub const G1_GENERATOR_X: Fq = MontFp!("3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507");
+pub const G1_GENERATOR_X: Fq = MontFp!(
+    "3685416753713387016781088315183077757961620795782546409894578378688607592378376318836054947676345821548104185464507"
+);
 
 /// G1_GENERATOR_Y =
 /// 1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569
-pub const G1_GENERATOR_Y: Fq = MontFp!("1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569");
+pub const G1_GENERATOR_Y: Fq = MontFp!(
+    "1339506544944476473020471379941921221584933875938349620426543736416511423956333506472724655353366534992391756441569"
+);
 
 /// BETA is a non-trivial cubic root of unity in Fq.
-pub const BETA: Fq = MontFp!("793479390729215512621379701633421447060886740281060493010456487427281649075476305620758731620350");
+pub const BETA: Fq = MontFp!(
+    "793479390729215512621379701633421447060886740281060493010456487427281649075476305620758731620350"
+);
 
 pub fn endomorphism(p: &Affine<Config>) -> Affine<Config> {
     // Endomorphism of the points on the curve.
@@ -217,7 +223,7 @@ mod test {
     use super::*;
     use crate::g1;
     use ark_serialize::CanonicalDeserialize;
-    use ark_std::{rand::Rng, UniformRand};
+    use ark_std::{UniformRand, rand::Rng};
 
     fn sample_unchecked() -> Affine<g1::Config> {
         let mut rng = ark_std::test_rng();

@@ -1,5 +1,7 @@
+
 //! This crate implements functions for manipulating polynomials over finite
 //! fields, including FFTs.
+#![allow(unexpected_cfgs)] 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     unused,
