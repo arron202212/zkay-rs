@@ -9,41 +9,50 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef R1CS_EXAMPLES_HPP_
 // #define R1CS_EXAMPLES_HPP_
-
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-
-
-
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
+    r1cs_variable_assignment,
+};
+use crate::relations::variable::linear_combination;
+use ffec::common::profiling::{enter_block, leave_block};
+use std::collections::BTreeMap;
 /**
  * A R1CS example comprises a R1CS constraint system, R1CS input, and R1CS witness.
  */
 
-pub struct r1cs_example< FieldT> {
-constraint_system:    r1cs_constraint_system<FieldT>,
-primary_input:    r1cs_primary_input<FieldT>,
-auxiliary_input:    r1cs_auxiliary_input<FieldT>,
+pub struct r1cs_example<FieldT: FieldTConfig> {
+    constraint_system: r1cs_constraint_system<FieldT>,
+    primary_input: r1cs_primary_input<FieldT>,
+    auxiliary_input: r1cs_auxiliary_input<FieldT>,
 }
-impl r1cs_example< FieldT> {
+impl<FieldT: FieldTConfig> r1cs_example<FieldT> {
     // r1cs_example<FieldT>() = default;
     // r1cs_example<FieldT>(other:&r1cs_example<FieldT>) = default;
-    pub fn new(constraint_system:r1cs_constraint_system<FieldT>,
-                         primary_input:r1cs_primary_input<FieldT>,
-                         auxiliary_input:r1cs_auxiliary_input<FieldT>) ->Self
-       
-    { Self{constraint_system,
-        primary_input,
-        auxiliary_input}}
+    pub fn new(
+        constraint_system: r1cs_constraint_system<FieldT>,
+        primary_input: r1cs_primary_input<FieldT>,
+        auxiliary_input: r1cs_auxiliary_input<FieldT>,
+    ) -> Self {
+        Self {
+            constraint_system,
+            primary_input,
+            auxiliary_input,
+        }
+    }
     pub fn new2(
-                        constraint_system:r1cs_constraint_system<FieldT>,
-primary_input:                         r1cs_primary_input<FieldT>,
-auxiliary_input:                         r1cs_auxiliary_input<FieldT>)->Self
-        
-    {Self{constraint_system,
-        primary_input,
-        auxiliary_input}}
+        constraint_system: r1cs_constraint_system<FieldT>,
+        primary_input: r1cs_primary_input<FieldT>,
+        auxiliary_input: r1cs_auxiliary_input<FieldT>,
+    ) -> Self {
+        Self {
+            constraint_system,
+            primary_input,
+            auxiliary_input,
+        }
+    }
 }
 
 /**
@@ -68,97 +77,97 @@ auxiliary_input:                         r1cs_auxiliary_input<FieldT>)->Self
 // r1cs_example<FieldT> generate_r1cs_example_with_binary_input(num_constraints:usize,
 //                                                              num_inputs:usize);
 
-
-
 // use crate::relations::constraint_satisfaction_problems/r1cs/examples/r1cs_examples;
 
 //#endif // R1CS_EXAMPLES_HPP_
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Implementation of functions to sample R1CS examples with prescribed parameters
- (according to some distribution).
+Implementation of functions to sample R1CS examples with prescribed parameters
+(according to some distribution).
 
- See r1cs_examples.hpp .
+See r1cs_examples.hpp .
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef R1CS_EXAMPLES_TCC_
 // #define R1CS_EXAMPLES_TCC_
 
 // use  <cassert>
-
 use ffec::common::utils;
 
-  use rand::Rng;
-   
+use rand::Rng;
 
-
- pub fn generate_r1cs_example_with_field_input< FieldT>(num_constraints:usize,
-                                                            num_inputs:usize)->r1cs_example<FieldT>
-{
-    enter_block("Call to generate_r1cs_example_with_field_input");
+pub fn generate_r1cs_example_with_field_input<FieldT: FieldTConfig>(
+    num_constraints: usize,
+    num_inputs: usize,
+) -> r1cs_example<FieldT> {
+    enter_block("Call to generate_r1cs_example_with_field_input", false);
 
     assert!(num_inputs <= num_constraints + 2);
 
-    let mut  cs=r1cs_constraint_system::<FieldT>::new();
+    let mut cs = r1cs_constraint_system::<FieldT>::default();
     cs.primary_input_size = num_inputs;
     cs.auxiliary_input_size = 2 + num_constraints - num_inputs; // TODO: explain this
 
-    let mut  full_variable_assignment=r1cs_variable_assignment::<FieldT>::new();
-    let  a = FieldT::random_element();
+    let mut full_variable_assignment = r1cs_variable_assignment::<FieldT>::new();
+    let a = FieldT::random_element();
     let b = FieldT::random_element();
-    full_variable_assignment.push_back(a);
-    full_variable_assignment.push_back(b);
+    full_variable_assignment.push(a);
+    full_variable_assignment.push(b);
 
-    for i in 0..num_constraints-1
-    {
-        let (mut  A, mut B, mut C)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
+    for i in 0..num_constraints - 1 {
+        let (mut A, mut B, mut C) = (
+            linear_combination::<FieldT>::default(),
+            linear_combination::<FieldT>::default(),
+            linear_combination::<FieldT>::default(),
+        );
 
-        if i % 2
-        {
+        if i % 2 {
             // a * b = c
-            A.add_term(i+1, 1);
-            B.add_term(i+2, 1);
-            C.add_term(i+3, 1);
-            let tmp = a*b;
-            full_variable_assignment.push_back(tmp);
-            a = b; b = tmp;
-        }
-        else
-        {
+            A.add_term(i + 1, 1);
+            B.add_term(i + 2, 1);
+            C.add_term(i + 3, 1);
+            let tmp = a * b;
+            full_variable_assignment.push(tmp);
+            a = b;
+            b = tmp;
+        } else {
             // a + b = c
             B.add_term(0, 1);
-            A.add_term(i+1, 1);
-            A.add_term(i+2, 1);
-            C.add_term(i+3, 1);
-            let tmp = a+b;
-            full_variable_assignment.push_back(tmp);
-            a = b; b = tmp;
+            A.add_term(i + 1, 1);
+            A.add_term(i + 2, 1);
+            C.add_term(i + 3, 1);
+            let tmp = a + b;
+            full_variable_assignment.push(tmp);
+            a = b;
+            b = tmp;
         }
 
-        cs.add_constraint(r1cs_constraint::<FieldT>(A, B, C));
+        cs.add_constraint(r1cs_constraint::<FieldT>::new(A, B, C));
     }
 
-   let (mut  A, mut B, mut C)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
-    let  fin = FieldT::zero();
-    for i in 1..cs.num_variables()
-    {
+    let (mut A, mut B, mut C) = (
+        linear_combination::<FieldT>::default(),
+        linear_combination::<FieldT>::default(),
+        linear_combination::<FieldT>::default(),
+    );
+    let fin = FieldT::zero();
+    for i in 1..cs.num_variables() {
         A.add_term(i, 1);
         B.add_term(i, 1);
-        fin = fin + full_variable_assignment[i-1];
+        fin = fin + full_variable_assignment[i - 1];
     }
     C.add_term(cs.num_variables(), 1);
-    cs.add_constraint(r1cs_constraint::<FieldT>(A, B, C));
-    full_variable_assignment.push_back(fin.squared());
+    cs.add_constraint(r1cs_constraint::<FieldT>::new(A, B, C));
+    full_variable_assignment.push(fin.squared());
 
     /* split variable assignment */
-     let primary_input=r1cs_primary_input::<FieldT>(full_variable_assignment.begin(), full_variable_assignment.begin() + num_inputs);
-     let auxiliary_input=r1cs_primary_input::<FieldT>(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
+    let primary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[..num_inputs]);
+    let auxiliary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[num_inputs..]);
 
     /* sanity checks */
     assert!(cs.num_variables() == full_variable_assignment.len());
@@ -169,59 +178,69 @@ use ffec::common::utils;
 
     leave_block("Call to generate_r1cs_example_with_field_input");
 
-    return r1cs_example::<FieldT>(cs, primary_input, auxiliary_input);
+    return r1cs_example::<FieldT>::new(cs, primary_input, auxiliary_input);
 }
 
-
- pub fn generate_r1cs_example_with_binary_input< FieldT>(num_constraints:usize,
-                                                             num_inputs:usize)->r1cs_example<FieldT>
-{
-    enter_block("Call to generate_r1cs_example_with_binary_input");
+pub fn generate_r1cs_example_with_binary_input<FieldT: FieldTConfig>(
+    num_constraints: usize,
+    num_inputs: usize,
+) -> r1cs_example<FieldT> {
+    enter_block("Call to generate_r1cs_example_with_binary_input", false);
 
     assert!(num_inputs >= 1);
 
-    let mut  cs=r1cs_constraint_system::<FieldT>::new();
+    let mut cs = r1cs_constraint_system::<FieldT>::default();
     cs.primary_input_size = num_inputs;
     cs.auxiliary_input_size = num_constraints; /* we will add one auxiliary variable per constraint */
-     let mut rng = rand::thread_rng();
-    let mut  full_variable_assignment=r1cs_variable_assignment::<FieldT>::new();
-    for i in 0..num_inputs
-    {
-        full_variable_assignment.push_back(FieldT::from(rng::r#gen::<i32>() % 2));
+    let mut full_variable_assignment = r1cs_variable_assignment::<FieldT>::default();
+    for i in 0..num_inputs {
+        full_variable_assignment.push(FieldT::from(rand::random::<usize>() % 2));
     }
 
-    let mut  lastvar = num_inputs-1;
-    for i in 0..num_constraints
-    {
-        lastvar+=1;
-        let  u = (if i == 0 { rng::r#gen::<i32>() % num_inputs} else {rng::r#gen::<i32>() % i});
-        let v = (if i == 0  {rng::r#gen::<i32>() % num_inputs }else {rng::r#gen::<i32>() % i});
+    let mut lastvar = num_inputs - 1;
+    for i in 0..num_constraints {
+        lastvar += 1;
+        let u = (if i == 0 {
+            rand::random::<usize>() % num_inputs
+        } else {
+            rand::random::<usize>() % i
+        });
+        let v = (if i == 0 {
+            rand::random::<usize>() % num_inputs
+        } else {
+            rand::random::<usize>() % i
+        });
 
         /* chose two random bits and XOR them together:
            res = u + v - 2 * u * v
            2 * u * v = u + v - res
         */
-        let (mut  A, mut B, mut C)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
-        A.add_term(u+1, 2);
-        B.add_term(v+1, 1);
-        if u == v
-        {
-            C.add_term(u+1, 2);
+        let (mut A, mut B, mut C) = (
+            linear_combination::<FieldT>::default(),
+            linear_combination::<FieldT>::default(),
+            linear_combination::<FieldT>::default(),
+        );
+        A.add_term(u + 1, 2);
+        B.add_term(v + 1, 1);
+        if u == v {
+            C.add_term(u + 1, 2);
+        } else {
+            C.add_term(u + 1, 1);
+            C.add_term(v + 1, 1);
         }
-        else
-        {
-            C.add_term(u+1, 1);
-            C.add_term(v+1, 1);
-        }
-        C.add_term(lastvar+1, -FieldT::one());
+        C.add_term(lastvar + 1, -FieldT::one());
 
-        cs.add_constraint(r1cs_constraint::<FieldT>(A, B, C));
-        full_variable_assignment.push_back(full_variable_assignment[u] + full_variable_assignment[v] - full_variable_assignment[u] * full_variable_assignment[v] - full_variable_assignment[u] * full_variable_assignment[v]);
+        cs.add_constraint(r1cs_constraint::<FieldT>::new(A, B, C));
+        full_variable_assignment.push(
+            full_variable_assignment[u] + full_variable_assignment[v]
+                - full_variable_assignment[u] * full_variable_assignment[v]
+                - full_variable_assignment[u] * full_variable_assignment[v],
+        );
     }
 
     /* split variable assignment */
-    let  primary_input=r1cs_primary_input::<FieldT>::new(full_variable_assignment.begin(), full_variable_assignment.begin() + num_inputs);
-    let  auxiliary_input=r1cs_primary_input::<FieldT>::new(full_variable_assignment.begin() + num_inputs, full_variable_assignment.end());
+    let primary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[..num_inputs]);
+    let auxiliary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[num_inputs..]);
 
     /* sanity checks */
     assert!(cs.num_variables() == full_variable_assignment.len());
@@ -230,11 +249,9 @@ use ffec::common::utils;
     assert!(cs.num_constraints() == num_constraints);
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    leave_block("Call to generate_r1cs_example_with_binary_input");
+    leave_block("Call to generate_r1cs_example_with_binary_input", false);
 
-    return r1cs_example::<FieldT>(cs, primary_input, auxiliary_input);
+    return r1cs_example::<FieldT>::new(cs, primary_input, auxiliary_input);
 }
-
-
 
 //#endif // R1CS_EXAMPLES_TCC

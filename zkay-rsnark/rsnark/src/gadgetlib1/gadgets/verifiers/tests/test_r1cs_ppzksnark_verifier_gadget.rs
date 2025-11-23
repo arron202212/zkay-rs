@@ -4,8 +4,8 @@
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
-use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
+use ff_curves::algebra::curves::mnt::mnt4::mnt4_pp;
+use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
 use ffec::algebra::field_utils::field_utils;
 
 use crate::gadgetlib1::gadgets::fields::fp2_gadgets;

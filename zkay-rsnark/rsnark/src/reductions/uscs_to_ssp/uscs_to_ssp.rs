@@ -37,33 +37,33 @@ use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 
 
-/**
- * Instance map for the USCS-to-SSP reduction.
- */
+// /**
+//  * Instance map for the USCS-to-SSP reduction.
+//  */
 
-ssp_instance<FieldT> uscs_to_ssp_instance_map(cs:&uscs_constraint_system<FieldT>);
+// ssp_instance<FieldT> uscs_to_ssp_instance_map(cs:&uscs_constraint_system<FieldT>);
 
-/**
- * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
- */
+// /**
+//  * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
+//  */
 
-ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(cs:&uscs_constraint_system<FieldT>,
-                                                                         t:&FieldT);
+// ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(cs:&uscs_constraint_system<FieldT>,
+//                                                                          t:&FieldT);
 
-/**
- * Witness map for the USCS-to-SSP reduction.
- *
- * The witness map takes zero knowledge into account when d is random.
- */
+// /**
+//  * Witness map for the USCS-to-SSP reduction.
+//  *
+//  * The witness map takes zero knowledge into account when d is random.
+//  */
 
-ssp_witness<FieldT> uscs_to_ssp_witness_map(cs:&uscs_constraint_system<FieldT>,
-                                            primary_input:&uscs_primary_input<FieldT>,
-                                            auxiliary_input:&uscs_auxiliary_input<FieldT>,
-                                            d:&FieldT);
+// ssp_witness<FieldT> uscs_to_ssp_witness_map(cs:&uscs_constraint_system<FieldT>,
+//                                             primary_input:&uscs_primary_input<FieldT>,
+//                                             auxiliary_input:&uscs_auxiliary_input<FieldT>,
+//                                             d:&FieldT);
 
 
 
-use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
+// use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
 
 //#endif // USCS_TO_SSP_HPP_
 /** @file
@@ -82,8 +82,8 @@ use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
 //#ifndef USCS_TO_SSP_TCC_
 // #define USCS_TO_SSP_TCC_
 
-use ffec::common::profiling;
-use ffec::common::utils;
+use common::profiling;
+use common::utils;
 use fqfft::evaluation_domain::get_evaluation_domain;
 
 
@@ -99,14 +99,14 @@ use fqfft::evaluation_domain::get_evaluation_domain;
  *   each V_i is expressed in the Lagrange basis.
  */
 
-ssp_instance<FieldT> uscs_to_ssp_instance_map(cs:&uscs_constraint_system<FieldT>)
+pub fn uscs_to_ssp_instance_map<FieldT> (cs:&uscs_constraint_system<FieldT>)->ssp_instance<FieldT> 
 {
-    ffec::enter_block("Call to uscs_to_ssp_instance_map");
+    enter_block("Call to uscs_to_ssp_instance_map");
 
-    const RcCell<libfqfft::evaluation_domain<FieldT> > domain = libfqfft::get_evaluation_domain<FieldT>(cs.num_constraints());
+    let domain = libfqfft::get_evaluation_domain::<FieldT>(cs.num_constraints());
 
-    ffec::enter_block("Compute polynomials V in Lagrange basis");
-    Vec<BTreeMap<usize, FieldT> > V_in_Lagrange_basis(cs.num_variables()+1);
+    enter_block("Compute polynomials V in Lagrange basis");
+    let mut V_in_Lagrange_basis=vec![BTreeMap::new();cs.num_variables()+1];
     for i in 0..cs.num_constraints()
     {
         for j in 0..cs.constraints[i].terms.len()
@@ -114,17 +114,17 @@ ssp_instance<FieldT> uscs_to_ssp_instance_map(cs:&uscs_constraint_system<FieldT>
             V_in_Lagrange_basis[cs.constraints[i].terms[j].index][i] += cs.constraints[i].terms[j].coeff;
         }
     }
-    for i in cs.num_constraints()..domain->m
+    for i in cs.num_constraints()..domain.m
     {
         V_in_Lagrange_basis[0][i] += FieldT::one();
     }
-    ffec::leave_block("Compute polynomials V in Lagrange basis");
+    leave_block("Compute polynomials V in Lagrange basis");
 
-    ffec::leave_block("Call to uscs_to_ssp_instance_map");
+    leave_block("Call to uscs_to_ssp_instance_map");
 
-    return ssp_instance<FieldT>(domain,
+    return ssp_instance::<FieldT>::new(domain,
                                 cs.num_variables(),
-                                domain->m,
+                                domain.m,
                                 cs.num_inputs(),
                                 (V_in_Lagrange_basis));
 }
@@ -142,20 +142,20 @@ ssp_instance<FieldT> uscs_to_ssp_instance_map(cs:&uscs_constraint_system<FieldT>
  *   n = degree of the SSP
  */
 
-ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(cs:&uscs_constraint_system<FieldT>,
-                                                                         t:&FieldT)
+ pub fn uscs_to_ssp_instance_map_with_evaluation<FieldT>(cs:&uscs_constraint_system<FieldT>,
+                                                                         t:&FieldT)->ssp_instance_evaluation<FieldT>
 {
-    ffec::enter_block("Call to uscs_to_ssp_instance_map_with_evaluation");
+    enter_block("Call to uscs_to_ssp_instance_map_with_evaluation");
 
-    const RcCell<libfqfft::evaluation_domain<FieldT> > domain = libfqfft::get_evaluation_domain<FieldT>(cs.num_constraints());
+    let  domain = libfqfft::get_evaluation_domain<FieldT>(cs.num_constraints());
 
-    Vec<FieldT> Vt(cs.num_variables()+1, FieldT::zero());
-    Vec<FieldT> Ht(domain->m+1);
+    let mut  Vt=vec![FieldT::default();cs.num_variables()+1, FieldT::zero()];
+    let mut  Ht=vec![FieldT::default();domain.m+1];
 
-    let Zt= domain->compute_vanishing_polynomial(t);
+    let Zt= domain.compute_vanishing_polynomial(t);
 
-    ffec::enter_block("Compute evaluations of V and H at t");
-    const Vec<FieldT> u = domain->evaluate_all_lagrange_polynomials(t);
+    enter_block("Compute evaluations of V and H at t");
+    let  u = domain.evaluate_all_lagrange_polynomials(t);
     for i in 0..cs.num_constraints()
     {
         for j in 0..cs.constraints[i].terms.len()
@@ -163,27 +163,27 @@ ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(cs:&usc
             Vt[cs.constraints[i].terms[j].index] += u[i]*cs.constraints[i].terms[j].coeff;
         }
     }
-    for i in cs.num_constraints()..domain->m
+    for i in cs.num_constraints()..domain.m
     {
         Vt[0] += u[i]; /* dummy constraint: 1^2 = 1 */
     }
-    FieldT ti = FieldT::one();
-    for i in 0..domain->m+1
+    let mut  ti = FieldT::one();
+    for i in 0..domain.m+1
     {
         Ht[i] = ti;
         ti *= t;
     }
-    ffec::leave_block("Compute evaluations of V and H at t");
+    leave_block("Compute evaluations of V and H at t");
 
-    ffec::leave_block("Call to uscs_to_ssp_instance_map_with_evaluation");
+    leave_block("Call to uscs_to_ssp_instance_map_with_evaluation");
 
-    return ssp_instance_evaluation<FieldT>(domain,
+    return ssp_instance_evaluation::<FieldT>::new(domain,
                                            cs.num_variables(),
-                                           domain->m,
+                                           domain.m,
                                            cs.num_inputs(),
                                            t,
-                                           (Vt),
-                                           (Ht),
+                                           Vt,
+                                           Ht,
                                            Zt);
 }
 
@@ -215,94 +215,94 @@ ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(cs:&usc
  * some reshuffling to save space.
  */
 
-ssp_witness<FieldT> uscs_to_ssp_witness_map(cs:&uscs_constraint_system<FieldT>,
+ pub fn uscs_to_ssp_witness_map<FieldT>(cs:&uscs_constraint_system<FieldT>,
                                             primary_input:&uscs_primary_input<FieldT>,
                                             auxiliary_input:&uscs_auxiliary_input<FieldT>,
-                                            d:&FieldT)
+                                            d:&FieldT)->ssp_witness<FieldT>
 {
-    ffec::enter_block("Call to uscs_to_ssp_witness_map");
+    enter_block("Call to uscs_to_ssp_witness_map");
 
     /* sanity check */
 
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    uscs_variable_assignment<FieldT> full_variable_assignment = primary_input;
-    full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
+    let mut  full_variable_assignment = primary_input;
+    full_variable_assignment.extend(auxiliary_input);
 
-    const RcCell<libfqfft::evaluation_domain<FieldT> > domain = libfqfft::get_evaluation_domain<FieldT>(cs.num_constraints());
+    let  domain = libfqfft::get_evaluation_domain<FieldT>(cs.num_constraints());
 
-    ffec::enter_block("Compute evaluation of polynomial V on set S");
-    Vec<FieldT> aA(domain->m, FieldT::zero());
-    assert!(domain->m >= cs.num_constraints());
+    enter_block("Compute evaluation of polynomial V on set S");
+    let mut aA=vec![FieldT::zero();domain.m];
+    assert!(domain.m >= cs.num_constraints());
     for i in 0..cs.num_constraints()
     {
         aA[i] += cs.constraints[i].evaluate(full_variable_assignment);
     }
-    for i in cs.num_constraints()..domain->m
+    for i in cs.num_constraints()..domain.m
     {
         aA[i] += FieldT::one();
     }
-    ffec::leave_block("Compute evaluation of polynomial V on set S");
+    leave_block("Compute evaluation of polynomial V on set S");
 
-    ffec::enter_block("Compute coefficients of polynomial V");
-    domain->iFFT(aA);
-    ffec::leave_block("Compute coefficients of polynomial V");
+    enter_block("Compute coefficients of polynomial V");
+    domain.iFFT(aA);
+    leave_block("Compute coefficients of polynomial V");
 
-    ffec::enter_block("Compute ZK-patch");
-    Vec<FieldT> coefficients_for_H(domain->m+1, FieldT::zero());
+    enter_block("Compute ZK-patch");
+    let mut  coefficients_for_H=vec![FieldT::zero();domain.m+1];
 // #ifdef MULTICORE
 //#pragma omp parallel for
 //#endif
     /* add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) */
-    for i in 0..domain->m
+    for i in 0..domain.m
     {
         coefficients_for_H[i] = FieldT(2)*d*aA[i];
     }
-    domain->add_poly_Z(d.squared(), coefficients_for_H);
-    ffec::leave_block("Compute ZK-patch");
+    domain.add_poly_Z(d.squared(), coefficients_for_H);
+    leave_block("Compute ZK-patch");
 
-    ffec::enter_block("Compute evaluation of polynomial V on set T");
-    domain->cosetFFT(aA, FieldT::multiplicative_generator);
-    ffec::leave_block("Compute evaluation of polynomial V on set T");
+    enter_block("Compute evaluation of polynomial V on set T");
+    domain.cosetFFT(aA, FieldT::multiplicative_generator);
+    leave_block("Compute evaluation of polynomial V on set T");
 
-    ffec::enter_block("Compute evaluation of polynomial H on set T");
-    Vec<FieldT> &H_tmp = aA; // can overwrite aA because it is not used later
+    enter_block("Compute evaluation of polynomial H on set T");
+    let  mut H_tmp = aA; // can overwrite aA because it is not used later
 // #ifdef MULTICORE
 //#pragma omp parallel for
 //#endif
-    for i in 0..domain->m
+    for i in 0..domain.m
     {
         H_tmp[i] = aA[i].squared()-FieldT::one();
     }
 
-    ffec::enter_block("Divide by Z on set T");
-    domain->divide_by_Z_on_coset(H_tmp);
-    ffec::leave_block("Divide by Z on set T");
+    enter_block("Divide by Z on set T");
+    domain.divide_by_Z_on_coset(H_tmp);
+    leave_block("Divide by Z on set T");
 
-    ffec::leave_block("Compute evaluation of polynomial H on set T");
+    leave_block("Compute evaluation of polynomial H on set T");
 
-    ffec::enter_block("Compute coefficients of polynomial H");
-    domain->icosetFFT(H_tmp, FieldT::multiplicative_generator);
-    ffec::leave_block("Compute coefficients of polynomial H");
+    enter_block("Compute coefficients of polynomial H");
+    domain.icosetFFT(H_tmp, FieldT::multiplicative_generator);
+    leave_block("Compute coefficients of polynomial H");
 
-    ffec::enter_block("Compute sum of H and ZK-patch");
+    enter_block("Compute sum of H and ZK-patch");
 // #ifdef MULTICORE
 //#pragma omp parallel for
 //#endif
-    for i in 0..domain->m
+    for i in 0..domain.m
     {
         coefficients_for_H[i] += H_tmp[i];
     }
-    ffec::leave_block("Compute sum of H and ZK-patch");
+    leave_block("Compute sum of H and ZK-patch");
 
-    ffec::leave_block("Call to uscs_to_ssp_witness_map");
+    leave_block("Call to uscs_to_ssp_witness_map");
 
-    return ssp_witness<FieldT>(cs.num_variables(),
-                               domain->m,
+    return ssp_witness::<FieldT>::new(cs.num_variables(),
+                               domain.m,
                                cs.num_inputs(),
                                d,
                                full_variable_assignment,
-                               (coefficients_for_H));
+                               coefficients_for_H);
 }
 
 

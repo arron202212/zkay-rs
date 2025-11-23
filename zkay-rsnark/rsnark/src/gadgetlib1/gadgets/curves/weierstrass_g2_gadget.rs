@@ -17,7 +17,7 @@
 
 // 
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params;
@@ -139,7 +139,7 @@ pub fn size_in_bits()->usize
 }
 
 
-pub fn num_variables()->usize
+pub fn num_variables(&self)->usize
 {
     return 2 * Fqe_variable::<ppT>::num_variables();
 }
@@ -188,7 +188,7 @@ pub fn generate_r1cs_witness()
 
 pub fn  test_G2_checker_gadget(annotation:&String)
 {
-    let mut  pb=protoboard::<ffec::Fr::<ppT> >::new();
+    let mut  pb=protoboard::<ppT::Fr >::new();
     let mut  g=G2_variable::<ppT>::new(pb, "g");
     let mut g_check= G2_checker_gadget::<ppT>::new(pb, g, "g_check");
     g_check.generate_r1cs_constraints();

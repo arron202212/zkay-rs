@@ -23,12 +23,12 @@
 // //#include <vector>
 // 
 // // namespace libff {
-const inhibit_profiling_info:bool=false;
+pub const inhibit_profiling_info:bool=false;
  use std::marker::ConstParamTy;
 use std::ops::{Add,Mul};
 use std::io::Write;
  #[derive(ConstParamTy, PartialEq, Eq)]
-enum multi_exp_method {
+pub enum multi_exp_method {
  /**
   * Naive multi-exponentiation individually multiplies each base by the
   * corresponding scalar and adds up the results.
@@ -285,7 +285,7 @@ impl<const N:usize> PartialOrd for ordered_exponent<N> {
 struct MultiExpInner<const Method: multi_exp_method>;
 
 trait MultiExpInnerConfig{
-    fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Config+Clone+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<T,Output = T>+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T;
+    fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Config+Clone+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<Output = FieldT>+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T;
 
 }
 
@@ -340,7 +340,7 @@ fn  multi_exp_inner<T: num_traits::Zero+Config+Clone+ std::ops::Sub<Output = T>,
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_naive_plain}>{
-fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
+fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<Output = FieldT>,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
     assert!(vec.len() == scalar.len());
     let mut  result=T::zero();
@@ -363,7 +363,7 @@ fn  multi_exp_inner<T: num_traits::Zero,FieldT: std::ops::Mul<T,Output = T>,cons
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for   MultiExpInner<{multi_exp_method::multi_exp_method_bos_coster}>{
-fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub<Output = T>,FieldT: std::ops::Mul<T, Output = T>+AsBigint+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
+fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub<Output = T>,FieldT: std::ops::Mul<Output = FieldT>+AsBigint+Clone,const NN:usize>(vec:&[T],scalar:&[FieldT])->T
 {
     const   n:usize =0;//FieldT::num_limbs;//MYTODO
 
@@ -372,10 +372,10 @@ fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub
         return T::zero();
     }
 
-    if vec.len()==1
-    {
-        return scalar[0].clone()*vec[0].clone();
-    }
+    // if vec.len()==1
+    // {
+    //     return scalar[0].clone()*vec[0].clone();
+    // }
 
    
     let  vec_len = scalar.len();
@@ -402,73 +402,73 @@ fn  multi_exp_inner<T: num_traits::Zero+Config+ std::clone::Clone+ std::ops::Sub
 
     let mut  opt_result = T::zero();
 
-    loop
-    {
-        let mut a =  opt_q[0].clone();
-        let  b =  if opt_q[1] < opt_q[2] { &opt_q[2]} else {&opt_q[1]};
+//     loop
+//     {
+//         let mut a =  opt_q[0].clone();
+//         let  b =  if opt_q[1] < opt_q[2] { &opt_q[2]} else {&opt_q[1]};
 
-        let  abits:usize = a.r.num_bits();
+//         let  abits:usize = a.r.num_bits();
 
-        if b.r.is_zero()
-        {
-            // opt_result = opt_result + (a.r * g[a.idx]);
-            opt_result = opt_result + opt_window_wnaf_exp(&g[a.idx], &a.r, abits);
-            break;
-        }
+//         if b.r.is_zero()
+//         {
+//             // opt_result = opt_result + (a.r * g[a.idx]);
+//             opt_result = opt_result + opt_window_wnaf_exp(&g[a.idx], &a.r, abits);
+//             break;
+//         }
 
-        let  bbits = b.r.num_bits();
-        let  limit = 20usize.min(abits-bbits);
+//         let  bbits = b.r.num_bits();
+//         let  limit = 20usize.min(abits-bbits);
 
-        if bbits < 1usize<<limit
-        {
-            /*
-              In this case, exponentiating to the power of a is cheaper than
-              subtracting b from a multiple times, so let's do it directly
-            */
-            // opt_result = opt_result + (a.r * g[a.idx]);
-            opt_result = opt_result + opt_window_wnaf_exp(&g[a.idx], &a.r, abits);
-// // #ifdef DEBUG
-            // print!("Skipping the following pair ({} bit number vs {} bit):\n", abits, bbits);
-            // a.r.print();
-            // b.r.print();
-// //#endif
-            a.r.clear();
-        }
-        else
-        {
-            // x A + y B => (x-y) A + y (B+A)
-            a.r.0.0[..n].iter_mut().zip(& b.r.0.0[..n]).for_each(|(ar    ,&br)|{
-                *ar-=br;
-            });
-            g[b.idx] = g[b.idx].clone() + g[a.idx].clone();
-        }
+//         if bbits < 1usize<<limit
+//         {
+//             /*
+//               In this case, exponentiating to the power of a is cheaper than
+//               subtracting b from a multiple times, so let's do it directly
+//             */
+//             // opt_result = opt_result + (a.r * g[a.idx]);
+//             opt_result = opt_result + opt_window_wnaf_exp(&g[a.idx], &a.r, abits);
+// // // #ifdef DEBUG
+//             // print!("Skipping the following pair ({} bit number vs {} bit):\n", abits, bbits);
+//             // a.r.print();
+//             // b.r.print();
+// // //#endif
+//             a.r.clear();
+//         }
+//         else
+//         {
+//             // x A + y B => (x-y) A + y (B+A)
+//             a.r.0.0[..n].iter_mut().zip(& b.r.0.0[..n]).for_each(|(ar    ,&br)|{
+//                 *ar-=br;
+//             });
+//             g[b.idx] = g[b.idx].clone() + g[a.idx].clone();
+//         }
 
-        // regardless of whether a was cleared or subtracted from we push it down, then take back up
+//         // regardless of whether a was cleared or subtracted from we push it down, then take back up
 
-        /* heapify A down */
-        let mut  a_pos = 0;
-        while 2*a_pos + 2< odd_vec_len
-        {
-            // this is a max-heap so to maintain a heap property we swap with the largest of the two
-            if opt_q[2*a_pos+1] < opt_q[2*a_pos+2]
-            {
-                opt_q.swap(a_pos,2*a_pos+2);
-                a_pos = 2*a_pos+2;
-            }
-            else
-            {   
-                opt_q.swap(a_pos,2*a_pos+1);
-                a_pos = 2*a_pos+1;
-            }
-        }
+//         /* heapify A down */
+//         let mut  a_pos = 0;
+//         while 2*a_pos + 2< odd_vec_len
+//         {
+//             // this is a max-heap so to maintain a heap property we swap with the largest of the two
+//             if opt_q[2*a_pos+1] < opt_q[2*a_pos+2]
+//             {
+//                 opt_q.swap(a_pos,2*a_pos+2);
+//                 a_pos = 2*a_pos+2;
+//             }
+//             else
+//             {   
+//                 opt_q.swap(a_pos,2*a_pos+1);
+//                 a_pos = 2*a_pos+1;
+//             }
+//         }
 
-        /* now heapify A up appropriate amount of times */
-        while a_pos > 0 && opt_q[(a_pos-1)/2] < opt_q[a_pos]
-        {
-            opt_q.swap(a_pos,(a_pos-1)/2);
-            a_pos = (a_pos-1) / 2;
-        }
-    }
+//         /* now heapify A up appropriate amount of times */
+//         while a_pos > 0 && opt_q[(a_pos-1)/2] < opt_q[a_pos]
+//         {
+//             opt_q.swap(a_pos,(a_pos-1)/2);
+//             a_pos = (a_pos-1) / 2;
+//         }
+//     }
 
     return opt_result;
 }
@@ -596,7 +596,7 @@ fn  multi_exp_inner<T: num_traits::Zero+AsBigint+Clone,FieldT: AsBigint,const NN
 }
 }
 // 
-pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone+Config+AsBigint+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<T,Output = T>+Clone,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
+pub fn multi_exp<T: num_traits::Zero+ std::clone::Clone+Config+AsBigint+ std::ops::Sub<Output = T>,FieldT:AsBigint+std::ops::Mul<Output = FieldT>+Clone,const Method:multi_exp_method>(vec:&[T],scalar:&[FieldT],
              chunks:usize)->T
 {
     let  total = vec.len();

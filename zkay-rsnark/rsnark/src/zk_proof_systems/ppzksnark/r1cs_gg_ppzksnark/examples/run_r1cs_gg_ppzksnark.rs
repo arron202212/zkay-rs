@@ -13,7 +13,7 @@
 //#ifndef RUN_R1CS_GG_PPZKSNARK_HPP_
 // #define RUN_R1CS_GG_PPZKSNARK_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 

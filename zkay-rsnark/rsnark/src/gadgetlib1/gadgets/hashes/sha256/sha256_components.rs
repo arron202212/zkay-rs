@@ -203,7 +203,7 @@ pub fn generate_r1cs_constraints()
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                              sigma0[i] + sigma1[i] + packed_W[i-16] + packed_W[i-7],
                                                              unreduced_W[i]),
-            FMT(self.annotation_prefix, " unreduced_W_{}", i));
+          FMT(self.annotation_prefix, " unreduced_W_{}", i));
 
         mod_reduce_W[i].generate_r1cs_constraints();
     }
@@ -306,12 +306,12 @@ pub fn generate_r1cs_constraints()
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                          packed_h + sigma1 + choice + K + W + sigma0 + majority,
                                                          unreduced_new_a),
-        FMT(self.annotation_prefix, " unreduced_new_a"));
+      FMT(self.annotation_prefix, " unreduced_new_a"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                          packed_d + packed_h + sigma1 + choice + K + W,
                                                          unreduced_new_e),
-        FMT(self.annotation_prefix, " unreduced_new_e"));
+      FMT(self.annotation_prefix, " unreduced_new_e"));
 
     mod_reduce_new_a.generate_r1cs_constraints();
     mod_reduce_new_e.generate_r1cs_constraints();

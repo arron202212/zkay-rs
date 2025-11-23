@@ -1,2 +1,2 @@
 pub mod bacs;
-pub mod  examples;
+pub mod examples;

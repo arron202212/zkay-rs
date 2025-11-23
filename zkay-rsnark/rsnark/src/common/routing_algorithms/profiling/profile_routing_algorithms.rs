@@ -1,22 +1,18 @@
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Functions to profile the algorithms that route on Benes and AS-Waksman networks.
+Functions to profile the algorithms that route on Benes and AS-Waksman networks.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 // use  <algorithm>
-
 use ffec::common::profiling;
 
 use crate::common::routing_algorithms::as_waksman_routing_algorithm;
 use crate::common::routing_algorithms::benes_routing_algorithm;
-
-
 
 // pub fn  profile_benes_algorithm(n:usize)
 // {

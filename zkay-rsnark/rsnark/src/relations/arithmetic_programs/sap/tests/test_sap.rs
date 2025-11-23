@@ -10,7 +10,7 @@ use  <cstdio>
 use  <cstring>
 
 
-use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
+use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
 use ffec::algebra::field_utils::field_utils;
 use ffec::common::profiling;
 use ffec::common::utils;

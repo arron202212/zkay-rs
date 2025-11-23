@@ -21,12 +21,13 @@ use crate::relations::constraint_satisfaction_problems/uscs/uscs;
  */
 
 struct uscs_example {
-    uscs_constraint_system<FieldT> constraint_system;
-    uscs_primary_input<FieldT> primary_input;
-    uscs_auxiliary_input<FieldT> auxiliary_input;
+constraint_system:    uscs_constraint_system<FieldT>,
+primary_input:    uscs_primary_input<FieldT>,
+auxiliary_input:    uscs_auxiliary_input<FieldT>,
+}
 
-    uscs_example<FieldT>() = default;
-    uscs_example<FieldT>(other:&uscs_example<FieldT>) = default;
+    // uscs_example<FieldT>() = default;
+    // uscs_example<FieldT>(other:&uscs_example<FieldT>) = default;
     uscs_example<FieldT>(constraint_system:&uscs_constraint_system<FieldT>,
                          primary_input:&uscs_primary_input<FieldT>,
                          auxiliary_input:&uscs_auxiliary_input<FieldT>)->Self
@@ -109,7 +110,7 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(num_constraints:usiz
     uscs_variable_assignment<FieldT> full_variable_assignment;
     for i in 0..num_constraints
     {
-        full_variable_assignment.push(FieldT(std::rand()));
+        full_variable_assignment.push(FieldT(rand::random()));
     }
 
     for i in 0..num_constraints
@@ -118,14 +119,14 @@ uscs_example<FieldT> generate_uscs_example_with_field_input(num_constraints:usiz
 
         do
         {
-            x = std::rand() % num_constraints;
-            y = std::rand() % num_constraints;
-            z = std::rand() % num_constraints;
+            x = rand::random() % num_constraints;
+            y = rand::random() % num_constraints;
+            z = rand::random() % num_constraints;
         } while (x == z || y == z);
 
-        let x_coeff= FieldT(std::rand());
-        let y_coeff= FieldT(std::rand());
-        let val= if std::rand() % 2 == 0 {FieldT::one()} else{-FieldT::one()};
+        let x_coeff= FieldT(rand::random());
+        let y_coeff= FieldT(rand::random());
+        let val= if rand::random() % 2 == 0 {FieldT::one()} else{-FieldT::one()};
         let z_coeff= (val - x_coeff * full_variable_assignment[x] - y_coeff * full_variable_assignment[y]) * full_variable_assignment[z].inverse();
 
         uscs_constraint<FieldT> constr;
@@ -167,7 +168,7 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(num_constraints:usi
     uscs_variable_assignment<FieldT> full_variable_assignment;
     for i in 0..num_inputs
     {
-        full_variable_assignment.push_back(FieldT(std::rand() % 2));
+        full_variable_assignment.push_back(FieldT(rand::random() % 2));
     }
 
     usize lastvar = num_inputs-1;
@@ -176,8 +177,8 @@ uscs_example<FieldT> generate_uscs_example_with_binary_input(num_constraints:usi
         lastvar+=1;
 
         /* chose two random bits and XOR them together */
-        let u = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
-        let v = if i == 0 {std::rand() % num_inputs} else{std::rand() % i};
+        let u = if i == 0 {rand::random() % num_inputs} else{rand::random() % i};
+        let v = if i == 0 {rand::random() % num_inputs} else{rand::random() % i};
 
         uscs_constraint<FieldT> constr;
         constr.add_term(u+1, 1);

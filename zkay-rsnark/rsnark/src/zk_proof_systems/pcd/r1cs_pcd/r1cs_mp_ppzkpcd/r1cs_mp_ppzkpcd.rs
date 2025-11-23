@@ -509,14 +509,14 @@ pub fn size_in_bits()->usize
 
 pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT>(compliance_predicates:Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT> >)->r1cs_mp_ppzkpcd_keypair<PCD_ppT> 
 {
-    assert!(ffec::Fr::< PCD_ppT::curve_A_pp>::modulo == ffec::Fq::< PCD_ppT::curve_B_pp>::modulo);
-    assert!(ffec::Fq::< PCD_ppT::curve_A_pp>::modulo == ffec::Fr::< PCD_ppT::curve_B_pp>::modulo);
+    // assert!(ffec::Fr::< PCD_ppT::curve_A_pp>::modulo == ffec::Fq::< PCD_ppT::curve_B_pp>::modulo);
+    // assert!(ffec::Fq::< PCD_ppT::curve_A_pp>::modulo == ffec::Fr::< PCD_ppT::curve_B_pp>::modulo);
 
-    type curve_A_pp= PCD_ppT::curve_A_pp;
-    type curve_B_pp= PCD_ppT::curve_B_pp;
+    // type curve_A_pp= PCD_ppT::curve_A_pp;
+    // type curve_B_pp= PCD_ppT::curve_B_pp;
 
-    type FieldT_A=ffec::Fr<curve_A_pp>;
-    type FieldT_B=ffec::Fr<curve_B_pp>;
+    // type FieldT_A=ffec::Fr<curve_A_pp>;
+    // type FieldT_B=ffec::Fr<curve_B_pp>;
 
     ffec::enter_block("Call to r1cs_mp_ppzkpcd_generator");
 
@@ -624,11 +624,11 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT>(compliance_predicates:Vec<r1cs_mp_ppzk
                                                       auxiliary_input:r1cs_mp_ppzkpcd_auxiliary_input<PCD_ppT>,
                                                       prev_proofs:Vec<r1cs_mp_ppzkpcd_proof<PCD_ppT> >)->r1cs_mp_ppzkpcd_proof<PCD_ppT>
 {
-    type curve_A_pp= PCD_ppT::curve_A_pp;
-    type curve_B_pp= PCD_ppT::curve_B_pp;
+    // type curve_A_pp= PCD_ppT::curve_A_pp;
+    // type curve_B_pp= PCD_ppT::curve_B_pp;
 
-    type FieldT_A=ffec::Fr<curve_A_pp>;
-    type FieldT_B=ffec::Fr<curve_B_pp>;
+    // type FieldT_A=ffec::Fr<curve_A_pp>;
+    // type FieldT_B=ffec::Fr<curve_B_pp>;
 
     ffec::enter_block("Call to r1cs_mp_ppzkpcd_prover");
 
@@ -749,7 +749,7 @@ pub fn  r1cs_mp_ppzkpcd_online_verifier<PCD_ppT>(pvk:r1cs_mp_ppzkpcd_processed_v
                                      primary_input:r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
                                      proof:r1cs_mp_ppzkpcd_proof<PCD_ppT>)->bool
 {
-    type curve_B_pp= PCD_ppT::curve_B_pp;
+    // type curve_B_pp= PCD_ppT::curve_B_pp;
 
     ffec::enter_block("Call to r1cs_mp_ppzkpcd_online_verifier");
     let r1cs_input = get_mp_translation_step_pcd_circuit_input::<curve_B_pp>(pvk.commitment_to_translation_step_r1cs_vks, primary_input);
@@ -763,8 +763,8 @@ pub fn  r1cs_mp_ppzkpcd_online_verifier<PCD_ppT>(pvk:r1cs_mp_ppzkpcd_processed_v
 
  pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT>(vk:r1cs_mp_ppzkpcd_verification_key<PCD_ppT>)->r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>
 {
-    type curve_A_pp= PCD_ppT::curve_A_pp;
-    type curve_B_pp= PCD_ppT::curve_B_pp;
+    // type curve_A_pp= PCD_ppT::curve_A_pp;
+    // type curve_B_pp= PCD_ppT::curve_B_pp;
 
     ffec::enter_block("Call to r1cs_mp_ppzkpcd_processed_verification_key");
 

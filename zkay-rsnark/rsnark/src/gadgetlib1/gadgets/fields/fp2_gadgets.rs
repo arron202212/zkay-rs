@@ -169,9 +169,9 @@ pub fn new4(pb:protoboard<FieldT> ,
 pub fn generate_r1cs_equals_const_constraints(el:&Fp2T)
 {
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c0, c0),
-                                 FMT(self.annotation_prefix, " c0"));
+                               FMT(self.annotation_prefix, " c0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c1, c1),
-                                 FMT(self.annotation_prefix, " c1"));
+                               FMT(self.annotation_prefix, " c1"));
 }
 
 
@@ -220,7 +220,7 @@ pub fn size_in_bits()->usize
 }
 
 
-pub fn num_variables()->usize
+pub fn num_variables(&self)->usize
 {
     return 2;
 }
@@ -260,12 +260,12 @@ pub fn generate_r1cs_constraints()
         Devegili, OhEigeartaigh, Scott, Dahab
 */
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c1, B.c1, v1),
-                                 FMT(self.annotation_prefix, " v1"));
+                               FMT(self.annotation_prefix, " v1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, B.c0, result.c0 + v1 * (-Fp2T::non_residue)),
-                                 FMT(self.annotation_prefix, " result.c0"));
+                               FMT(self.annotation_prefix, " result.c0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + A.c1, B.c0 + B.c1,
                                                          result.c1 + result.c0 + v1 * (FieldT::one() - Fp2T::non_residue)),
-                                 FMT(self.annotation_prefix, " result.c1"));
+                               FMT(self.annotation_prefix, " result.c1"));
 }
 
 
@@ -295,9 +295,9 @@ pub fn new(pb:protoboard<FieldT> ,
 pub fn generate_r1cs_constraints()
 {
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, lc, result.c0),
-                                 FMT(self.annotation_prefix, " result.c0"));
+                               FMT(self.annotation_prefix, " result.c0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c1, lc, result.c1),
-                                 FMT(self.annotation_prefix, " result.c1"));
+                               FMT(self.annotation_prefix, " result.c1"));
 }
 
 
@@ -338,11 +338,11 @@ pub fn generate_r1cs_constraints()
         Devegili, OhEigeartaigh, Scott, Dahab
 */
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(2 * A.c0, A.c1, result.c1),
-                                 FMT(self.annotation_prefix, " result.c1"));
+                               FMT(self.annotation_prefix, " result.c1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + A.c1,
                                                          A.c0 + Fp2T::non_residue * A.c1,
                                                          result.c0 + result.c1 * (FieldT::one() + Fp2T::non_residue) * FieldT(2).inverse()),
-                                 FMT(self.annotation_prefix, " result.c0"));
+                               FMT(self.annotation_prefix, " result.c0"));
 }
 
 

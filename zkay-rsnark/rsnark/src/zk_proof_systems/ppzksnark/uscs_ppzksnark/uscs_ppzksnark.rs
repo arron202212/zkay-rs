@@ -48,7 +48,7 @@
 
 
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
@@ -908,7 +908,7 @@ bool uscs_ppzksnark_online_verifier_weak_IC(pvk:&uscs_ppzksnark_processed_verifi
     ffec::Fqk<ppT> V_1 = ppT::miller_loop(proof_V_g1_with_acc_precomp,    pvk.pp_G2_one_precomp);
     ffec::Fqk<ppT> V_2 = ppT::miller_loop(pvk.pp_G1_one_precomp, proof_V_g2_precomp);
     ffec::GT<ppT> V = ppT::final_exponentiation(V_1 * V_2.unitary_inverse());
-    if V != ffec::GT::<ppT>::one()
+    if V != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -923,7 +923,7 @@ bool uscs_ppzksnark_online_verifier_weak_IC(pvk:&uscs_ppzksnark_processed_verifi
     ffec::Fqk<ppT> SSP_1  = ppT::miller_loop(proof_V_g1_with_acc_precomp,  proof_V_g2_precomp);
     ffec::Fqk<ppT> SSP_2  = ppT::miller_loop(proof_H_g1_precomp, pvk.vk_Z_g2_precomp);
     ffec::GT<ppT> SSP = ppT::final_exponentiation(SSP_1.unitary_inverse() * SSP_2 * pvk.pairing_of_g1_and_g2);
-    if SSP != ffec::GT::<ppT>::one()
+    if SSP != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -939,7 +939,7 @@ bool uscs_ppzksnark_online_verifier_weak_IC(pvk:&uscs_ppzksnark_processed_verifi
     ffec::Fqk<ppT> alpha_V_1 = ppT::miller_loop(proof_V_g1_precomp, pvk.vk_alpha_tilde_g2_precomp);
     ffec::Fqk<ppT> alpha_V_2 = ppT::miller_loop(proof_alpha_V_g1_precomp, pvk.vk_tilde_g2_precomp);
     ffec::GT<ppT> alpha_V = ppT::final_exponentiation(alpha_V_1 * alpha_V_2.unitary_inverse());
-    if alpha_V != ffec::GT::<ppT>::one()
+    if alpha_V != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {

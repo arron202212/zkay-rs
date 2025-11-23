@@ -13,7 +13,7 @@
 //#ifndef RUN_USCS_PPZKSNARK_HPP_
 // #define RUN_USCS_PPZKSNARK_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
 

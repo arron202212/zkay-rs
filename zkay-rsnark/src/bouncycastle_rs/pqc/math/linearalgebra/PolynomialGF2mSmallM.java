@@ -1088,7 +1088,7 @@ public class PolynomialGF2mSmallM
         {
             ;
         }
-        return degree;
+        return self.degree;
     }
 
     /**

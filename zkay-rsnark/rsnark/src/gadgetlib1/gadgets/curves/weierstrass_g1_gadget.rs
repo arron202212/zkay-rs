@@ -15,7 +15,7 @@
 //#ifndef WEIERSTRASS_G1_GADGET_HPP_
 // #define WEIERSTRASS_G1_GADGET_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::gadgetlib1::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params;
@@ -191,7 +191,7 @@ pub fn size_in_bits()->usize
 }
 
 
-pub fn num_variables()->usize
+pub fn num_variables(&self)->usize
 {
     return 2;
 }
@@ -215,17 +215,17 @@ pub fn  generate_r1cs_constraints()
         vec![P.X],
         vec![P.X],
         vec![P_X_squared]),
-        FMT(self.annotation_prefix, " P_X_squared"));
+      FMT(self.annotation_prefix, " P_X_squared"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![P.Y ],
         vec![P.Y ],
         vec![P_Y_squared ]),
-        FMT(self.annotation_prefix, " P_Y_squared"));
+      FMT(self.annotation_prefix, " P_Y_squared"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![P.X ],
         vec![P_X_squared, ONE * ffec::G1::<other_curve::<ppT> >::coeff_a],
         vec![P_Y_squared, ONE * (-ffec::G1::<other_curve::<ppT> >::coeff_b)]),
-        FMT(self.annotation_prefix, " curve_equation"));
+      FMT(self.annotation_prefix, " curve_equation"));
 }
 
 
@@ -279,25 +279,25 @@ pub fn  generate_r1cs_constraints()
         vec![lambda],
         vec![B.X, A.X * (-1)],
         vec![B.Y, A.Y * (-1)]),
-        FMT(self.annotation_prefix, " calc_lambda"));
+      FMT(self.annotation_prefix, " calc_lambda"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda ],
         vec![lambda],
         vec![C.X, A.X, B.X]),
-        FMT(self.annotation_prefix, " calc_X"));
+      FMT(self.annotation_prefix, " calc_X"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![A.X, C.X * (-1)],
         vec![C.Y, A.Y ]),
-        FMT(self.annotation_prefix, " calc_Y"));
+      FMT(self.annotation_prefix, " calc_Y"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![inv],
         vec![B.X, A.X * (-1)],
         vec![ONE]),
-        FMT(self.annotation_prefix, " no_special_cases"));
+      FMT(self.annotation_prefix, " no_special_cases"));
 }
 
 
@@ -334,25 +334,25 @@ pub fn  generate_r1cs_constraints()
         vec![A.X ],
         vec![A.X ],
         vec![Xsquared ]),
-        FMT(self.annotation_prefix, " calc_Xsquared"));
+       FMT(self.annotation_prefix, " calc_Xsquared"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda * 2 ],
         vec![A.Y ],
         vec![Xsquared * 3, ONE * ffec::G1::<other_curve::<ppT> >::coeff_a]),
-        FMT(self.annotation_prefix, " calc_lambda"));
+      FMT(self.annotation_prefix, " calc_lambda"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![lambda],
         vec![B.X, A.X * 2]),
-        FMT(self.annotation_prefix, " calc_X"));
+      FMT(self.annotation_prefix, " calc_X"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![A.X, B.X * (-1) ],
         vec![B.Y, A.Y ]),
-        FMT(self.annotation_prefix, " calc_Y"));
+      FMT(self.annotation_prefix, " calc_Y"));
 }
 
 
@@ -438,11 +438,11 @@ pub fn  generate_r1cs_constraints()
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
                                                              computed_results[i].X - chosen_results[i].X,
                                                              chosen_results[i+1].X - chosen_results[i].X),
-                                     FMT(self.annotation_prefix, " chosen_results_{}_X", i+1));
+                                   FMT(self.annotation_prefix, " chosen_results_{}_X", i+1));
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
                                                              computed_results[i].Y - chosen_results[i].Y,
                                                              chosen_results[i+1].Y - chosen_results[i].Y),
-                                     FMT(self.annotation_prefix, " chosen_results_{}_Y", i+1));
+                                   FMT(self.annotation_prefix, " chosen_results_{}_Y", i+1));
     }
 
     let  num_constraints_after = self.pb.num_constraints();
@@ -460,8 +460,8 @@ pub fn  generate_r1cs_witness()
     for i in 0..scalar_size
     {
         adders[i].generate_r1cs_witness();
-        self.pb.lc_val(chosen_results[i+1].X) = if self.pb.val(scalars[i]) == ffec::Fr::<ppT>::zero() {self.pb.lc_val(chosen_results[i].X)} else{self.pb.lc_val(computed_results[i].X)};
-        self.pb.lc_val(chosen_results[i+1].Y) = if self.pb.val(scalars[i]) == ffec::Fr::<ppT>::zero() {self.pb.lc_val(chosen_results[i].Y)} else{self.pb.lc_val(computed_results[i].Y)};
+        self.pb.lc_val(chosen_results[i+1].X) = if self.pb.val(scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].X)} else{self.pb.lc_val(computed_results[i].X)};
+        self.pb.lc_val(chosen_results[i+1].Y) = if self.pb.val(scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].Y)} else{self.pb.lc_val(computed_results[i].Y)};
     }
 }
 }

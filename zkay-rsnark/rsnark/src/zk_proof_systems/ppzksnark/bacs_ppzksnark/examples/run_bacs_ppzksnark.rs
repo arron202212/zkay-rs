@@ -13,7 +13,7 @@
 //#ifndef RUN_BACS_PPZKSNARK_HPP_
 // #define RUN_BACS_PPZKSNARK_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::relations::circuit_satisfaction_problems/bacs/examples/bacs_examples;
 

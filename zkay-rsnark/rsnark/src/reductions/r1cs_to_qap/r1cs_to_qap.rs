@@ -65,7 +65,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-use crate::reductions::r1cs_to_qap::r1cs_to_qap;
+// use crate::reductions::r1cs_to_qap::r1cs_to_qap;
 
 // //#endif // R1CS_TO_QAP_HPP_
 
@@ -86,8 +86,8 @@ use crate::reductions::r1cs_to_qap::r1cs_to_qap;
 // //#ifndef R1CS_TO_QAP_TCC_
 // // #define R1CS_TO_QAP_TCC_
 
-use ffec::common::profiling;
-use ffec::common::utils;
+use common::profiling;
+use common::utils;
 use fqfft::evaluation_domain::get_evaluation_domain;
 
 
@@ -107,7 +107,7 @@ use fqfft::evaluation_domain::get_evaluation_domain;
 pub fn
  r1cs_to_qap_instance_map(cs:&r1cs_constraint_system<FieldT>)->qap_instance<FieldT>
 {
-    ffec::enter_block("Call to r1cs_to_qap_instance_map",false);
+    enter_block("Call to r1cs_to_qap_instance_map",false);
 
     let domain = libfqfft::get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() +1);
 
@@ -115,7 +115,7 @@ pub fn
     let mut B_in_Lagrange_basis=Vec::with_capicity(cs.num_variables()+1);
     let mut C_in_Lagrange_basis=Vec::with_capicity(cs.num_variables()+1);
 
-    ffec::enter_block("Compute polynomials A, B, C in Lagrange basis");
+    enter_block("Compute polynomials A, B, C in Lagrange basis");
     /**
      * add and process the constraints
      *     input_i * 0 = 0
@@ -146,9 +146,9 @@ pub fn
                 cs.constraints[i].c.terms[j].coeff;
         }
     }
-    ffec::leave_block("Compute polynomials A, B, C in Lagrange basis");
+    leave_block("Compute polynomials A, B, C in Lagrange basis");
 
-    ffec::leave_block("Call to r1cs_to_qap_instance_map");
+    leave_block("Call to r1cs_to_qap_instance_map");
 
     return qap_instance::<FieldT>::new(domain,
                                 cs.num_variables(),
@@ -177,7 +177,7 @@ pub fn
  r1cs_to_qap_instance_map_with_evaluation(cs:&r1cs_constraint_system<FieldT>,
                                                                          t:&FieldT)->qap_instance_evaluation<FieldT>
 {
-    ffec::enter_block("Call to r1cs_to_qap_instance_map_with_evaluation");
+    enter_block("Call to r1cs_to_qap_instance_map_with_evaluation");
 
     let domain = libfqfft::get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() +1);
 
@@ -185,7 +185,7 @@ pub fn
 
     let  Zt =domain.compute_vanishing_polynomial(t);
 
-    ffec::enter_block("Compute evaluations of A, B, C, H at t");
+    enter_block("Compute evaluations of A, B, C, H at t");
     let   u =domain.evaluate_all_lagrange_polynomials(t);
     /**
      * add and process the constraints
@@ -224,9 +224,9 @@ pub fn
         Ht.push(ti);
         ti *= t;
     }
-    ffec::leave_block("Compute evaluations of A, B, C, H at t");
+    leave_block("Compute evaluations of A, B, C, H at t");
 
-    ffec::leave_block("Call to r1cs_to_qap_instance_map_with_evaluation");
+    leave_block("Call to r1cs_to_qap_instance_map_with_evaluation");
 
     return qap_instance_evaluation::<FieldT>::new(domain,
                                            cs.num_variables(),
@@ -277,7 +277,7 @@ pub fn
                                             d2:&FieldT,
                                             d3:&FieldT)->qap_witness<FieldT>
 {
-    ffec::enter_block("Call to r1cs_to_qap_witness_map");
+    enter_block("Call to r1cs_to_qap_witness_map");
 
     /* sanity check */
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -287,7 +287,7 @@ pub fn
     let mut  full_variable_assignment = primary_input.clone();
     full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
 
-    ffec::enter_block("Compute evaluation of polynomials A, B on set S");
+    enter_block("Compute evaluation of polynomials A, B on set S");
     let ( aA , aB)=(vec![FieldT::zero(),domain.m],vec![FieldT::zero(),domain.m]);
 
     /* account for the additional constraints input_i * 0 = 0 */
@@ -301,17 +301,17 @@ pub fn
         aA[i] += cs.constraints[i].a.evaluate(full_variable_assignment);
         aB[i] += cs.constraints[i].b.evaluate(full_variable_assignment);
     }
-    ffec::leave_block("Compute evaluation of polynomials A, B on set S");
+    leave_block("Compute evaluation of polynomials A, B on set S");
 
-    ffec::enter_block("Compute coefficients of polynomial A");
+    enter_block("Compute coefficients of polynomial A");
     domain.iFFT(aA);
-    ffec::leave_block("Compute coefficients of polynomial A");
+    leave_block("Compute coefficients of polynomial A");
 
-    ffec::enter_block("Compute coefficients of polynomial B");
+    enter_block("Compute coefficients of polynomial B");
     domain.iFFT(aB);
-    ffec::leave_block("Compute coefficients of polynomial B");
+    leave_block("Compute coefficients of polynomial B");
 
-    ffec::enter_block("Compute ZK-patch");
+    enter_block("Compute ZK-patch");
     let coefficients_for_H=vec![FieldT::zero();domain.m+1];
 // // #ifdef MULTICORE
 // //#pragma omp parallel for
@@ -323,17 +323,17 @@ pub fn
     }
     coefficients_for_H[0] -= d3;
     domain.add_poly_Z(d1*d2, coefficients_for_H);
-    ffec::leave_block("Compute ZK-patch");
+    leave_block("Compute ZK-patch");
 
-    ffec::enter_block("Compute evaluation of polynomial A on set T");
+    enter_block("Compute evaluation of polynomial A on set T");
     domain.cosetFFT(aA, FieldT::multiplicative_generator);
-    ffec::leave_block("Compute evaluation of polynomial A on set T");
+    leave_block("Compute evaluation of polynomial A on set T");
 
-    ffec::enter_block("Compute evaluation of polynomial B on set T");
+    enter_block("Compute evaluation of polynomial B on set T");
     domain.cosetFFT(aB, FieldT::multiplicative_generator);
-    ffec::leave_block("Compute evaluation of polynomial B on set T");
+    leave_block("Compute evaluation of polynomial B on set T");
 
-    ffec::enter_block("Compute evaluation of polynomial H on set T");
+    enter_block("Compute evaluation of polynomial H on set T");
     let H_tmp = &aA; // can overwrite aA because it is not used later
 // // #ifdef MULTICORE
 // //#pragma omp parallel for
@@ -344,21 +344,21 @@ pub fn
     }
     // Vec<FieldT>().swap(aB); // destroy aB
 
-    ffec::enter_block("Compute evaluation of polynomial C on set S");
+    enter_block("Compute evaluation of polynomial C on set S");
     let  mut aC=vec![FieldT::zero();domain.m];
     for i in 0..cs.num_constraints()
     {
         aC[i] += cs.constraints[i].c.evaluate(full_variable_assignment);
     }
-    ffec::leave_block("Compute evaluation of polynomial C on set S");
+    leave_block("Compute evaluation of polynomial C on set S");
 
-    ffec::enter_block("Compute coefficients of polynomial C");
+    enter_block("Compute coefficients of polynomial C");
     domain.iFFT(aC);
-    ffec::leave_block("Compute coefficients of polynomial C");
+    leave_block("Compute coefficients of polynomial C");
 
-    ffec::enter_block("Compute evaluation of polynomial C on set T");
+    enter_block("Compute evaluation of polynomial C on set T");
     domain.cosetFFT(aC, FieldT::multiplicative_generator);
-    ffec::leave_block("Compute evaluation of polynomial C on set T");
+    leave_block("Compute evaluation of polynomial C on set T");
 
 // // #ifdef MULTICORE
 // //#pragma omp parallel for
@@ -368,17 +368,17 @@ pub fn
         H_tmp[i] = (H_tmp[i]-aC[i]);
     }
 
-    ffec::enter_block("Divide by Z on set T");
+    enter_block("Divide by Z on set T");
     domain.divide_by_Z_on_coset(H_tmp);
-    ffec::leave_block("Divide by Z on set T");
+    leave_block("Divide by Z on set T");
 
-    ffec::leave_block("Compute evaluation of polynomial H on set T");
+    leave_block("Compute evaluation of polynomial H on set T");
 
-    ffec::enter_block("Compute coefficients of polynomial H");
+    enter_block("Compute coefficients of polynomial H");
     domain.icosetFFT(H_tmp, FieldT::multiplicative_generator);
-    ffec::leave_block("Compute coefficients of polynomial H");
+    leave_block("Compute coefficients of polynomial H");
 
-    ffec::enter_block("Compute sum of H and ZK-patch");
+    enter_block("Compute sum of H and ZK-patch");
 // // #ifdef MULTICORE
 // //#pragma omp parallel for
 // //#endif
@@ -386,9 +386,9 @@ pub fn
     {
         coefficients_for_H[i] += H_tmp[i];
     }
-    ffec::leave_block("Compute sum of H and ZK-patch");
+    leave_block("Compute sum of H and ZK-patch");
 
-    ffec::leave_block("Call to r1cs_to_qap_witness_map");
+    leave_block("Call to r1cs_to_qap_witness_map");
 
     return qap_witness::<FieldT>::new(cs.num_variables(),
                                domain.m,

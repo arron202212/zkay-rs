@@ -13,6 +13,7 @@ rust-version.workspace = true
 
 [dependencies]
 ffec={workspace =true}
+ff-curves={workspace = true}
 fqfft={workspace = true}
 scan_fmt={workspace = true}
 num-bigint={workspace = true}

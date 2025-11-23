@@ -1,49 +1,40 @@
+use crate::relations::FieldTConfig;
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of interfaces for:
- - a BACS variable assignment,
- - a BACS gate,
- - a BACS primary input,
- - a BACS auxiliary input,
- - a BACS circuit.
+Declaration of interfaces for:
+- a BACS variable assignment,
+- a BACS gate,
+- a BACS primary input,
+- a BACS auxiliary input,
+- a BACS circuit.
 
- Above, BACS stands for "Bilinear Arithmetic Circuit Satisfiability".
+Above, BACS stands for "Bilinear Arithmetic Circuit Satisfiability".
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef BACS_HPP_
 // #define BACS_HPP_
-
-
-
-use crate::relations::variable;
-
-
-
+use crate::relations::variable::{linear_combination, variable};
+use std::collections::BTreeMap;
 /*********************** BACS variable assignment ****************************/
 
 /**
  * A BACS variable assignment is a vector of field elements.
  */
 
-using bacs_variable_assignment = Vec<FieldT>;
-
+pub type bacs_variable_assignment<FieldT> = Vec<FieldT>;
 
 /**************************** BACS gate **************************************/
 
+// pub struct bacs_gate;
 
-struct bacs_gate;
+// std::ostream& operator<<(std::ostream &out, g:&bacs_gate<FieldT>);
 
-
-std::ostream& operator<<(std::ostream &out, g:&bacs_gate<FieldT>);
-
-
-std::istream& operator>>(std::istream &in, bacs_gate<FieldT> &g);
+// std::istream& operator>>(std::istream &in, bacs_gate<FieldT> &g);
 
 /**
  * A BACS gate is a formal expression of the form lhs * rhs = output ,
@@ -51,24 +42,21 @@ std::istream& operator>>(std::istream &in, bacs_gate<FieldT> &g);
  *
  * In other words, a BACS gate is an arithmetic gate that is bilinear.
  */
+#[derive(Clone, Default)]
+pub struct bacs_gate<FieldT: FieldTConfig> {
+    pub lhs: linear_combination<FieldT>,
+    pub rhs: linear_combination<FieldT>,
 
-struct bacs_gate {
+    pub output: variable<FieldT>,
+    pub is_circuit_output: bool,
+    // FieldT evaluate(input:&bacs_variable_assignment<FieldT>);
+    // pub fn  print(variable_annotations:&BTreeMap<usize, String> = BTreeMap<usize, String>());
 
-    linear_combination<FieldT> lhs;
-    linear_combination<FieldT> rhs;
+    // bool operator==(other:&bacs_gate<FieldT>);
 
-    variable<FieldT> output;
-    bool is_circuit_output;
-
-    FieldT evaluate(input:&bacs_variable_assignment<FieldT>) const;
-    pub fn  print(variable_annotations:&BTreeMap<usize, String> = BTreeMap<usize, String>()) const;
-
-    bool operator==(other:&bacs_gate<FieldT>) const;
-
-    friend std::ostream& operator<< <FieldT>(std::ostream &out, g:&bacs_gate<FieldT>);
-    friend std::istream& operator>> <FieldT>(std::istream &in, bacs_gate<FieldT> &g);
-};
-
+    // friend std::ostream& operator<< <FieldT>(std::ostream &out, g:&bacs_gate<FieldT>);
+    // friend std::istream& operator>> <FieldT>(std::istream &in, bacs_gate<FieldT> &g);
+}
 
 /****************************** BACS inputs **********************************/
 
@@ -76,25 +64,21 @@ struct bacs_gate {
  * A BACS primary input is a BACS variable assignment.
  */
 
-using bacs_primary_input = bacs_variable_assignment<FieldT>;
+pub type bacs_primary_input<FieldT> = bacs_variable_assignment<FieldT>;
 
 /**
  * A BACS auxiliary input is a BACS variable assigment.
  */
 
-using bacs_auxiliary_input = bacs_variable_assignment<FieldT>;
-
+pub type bacs_auxiliary_input<FieldT> = bacs_variable_assignment<FieldT>;
 
 /************************** BACS circuit *************************************/
 
+// pub struct bacs_circuit;
 
-pub struct bacs_circuit;
+// std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT>);
 
-
-std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT>);
-
-
-std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit);
+// std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit);
 
 /**
  * A BACS circuit is an arithmetic circuit in which every gate is a BACS gate.
@@ -106,356 +90,323 @@ std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit);
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
+#[derive(Default)]
+pub struct bacs_circuit<FieldT: FieldTConfig> {
+    pub primary_input_size: usize,
+    pub auxiliary_input_size: usize,
+    pub gates: Vec<bacs_gate<FieldT>>,
 
-pub struct bacs_circuit {
+    // bacs_circuit()->Self primary_input_size(0), auxiliary_input_size(0) {}
 
-    usize primary_input_size;
-    usize auxiliary_input_size;
-    Vec<bacs_gate<FieldT> > gates;
+    // usize num_inputs();
+    // usize num_gates();
+    // usize num_wires();
 
-    bacs_circuit()->Self primary_input_size(0), auxiliary_input_size(0) {}
+    // Vec<usize> wire_depths();
+    // usize depth();
 
-    usize num_inputs() const;
-    usize num_gates() const;
-    usize num_wires() const;
+    // #ifdef DEBUG
+    gate_annotations: BTreeMap<usize, String>,
+    variable_annotations: BTreeMap<usize, String>,
+    //#endif
 
-    Vec<usize> wire_depths() const;
-    usize depth() const;
+    // bool is_valid();
+    // bool is_satisfied(primary_input:&bacs_primary_input<FieldT>,
+    //                   auxiliary_input:&bacs_auxiliary_input<FieldT>);
 
-// #ifdef DEBUG
-    BTreeMap<usize, String> gate_annotations;
-    BTreeMap<usize, String> variable_annotations;
-//#endif
+    // bacs_variable_assignment<FieldT> get_all_outputs(primary_input:&bacs_primary_input<FieldT>,
+    //                                                  auxiliary_input:&bacs_auxiliary_input<FieldT>);
+    // bacs_variable_assignment<FieldT> get_all_wires(primary_input:&bacs_primary_input<FieldT>,
+    //                                                auxiliary_input:&bacs_auxiliary_input<FieldT>);
 
-    bool is_valid() const;
-    bool is_satisfied(primary_input:&bacs_primary_input<FieldT>,
-                      auxiliary_input:&bacs_auxiliary_input<FieldT>) const;
+    // pub fn  add_gate(g:&bacs_gate<FieldT>);
+    // pub fn  add_gate(g:&bacs_gate<FieldT>, annotation:&String);
 
-    bacs_variable_assignment<FieldT> get_all_outputs(primary_input:&bacs_primary_input<FieldT>,
-                                                     auxiliary_input:&bacs_auxiliary_input<FieldT>) const;
-    bacs_variable_assignment<FieldT> get_all_wires(primary_input:&bacs_primary_input<FieldT>,
-                                                   auxiliary_input:&bacs_auxiliary_input<FieldT>) const;
+    // bool operator==(other:&bacs_circuit<FieldT>);
 
-    pub fn  add_gate(g:&bacs_gate<FieldT>);
-    pub fn  add_gate(g:&bacs_gate<FieldT>, annotation:&String);
+    // pub fn  print();
+    // pub fn  print_info();
 
-    bool operator==(other:&bacs_circuit<FieldT>) const;
+    // friend std::ostream& operator<< <FieldT>(std::ostream &out, circuit:&bacs_circuit<FieldT>);
+    // friend std::istream& operator>> <FieldT>(std::istream &in, bacs_circuit<FieldT> &circuit);
+}
 
-    pub fn  print() const;
-    pub fn  print_info() const;
-
-    friend std::ostream& operator<< <FieldT>(std::ostream &out, circuit:&bacs_circuit<FieldT>);
-    friend std::istream& operator>> <FieldT>(std::istream &in, bacs_circuit<FieldT> &circuit);
-};
-
-
-
-use crate::relations::circuit_satisfaction_problems/bacs/bacs;
+// use crate::relations::circuit_satisfaction_problems::bacs::bacs;
 
 //#endif // BACS_HPP_
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Implementation of interfaces for:
- - a BACS variable assignment,
- - a BACS gate,
- - a BACS primary input,
- - a BACS auxiliary input,
- - a BACS circuit.
+Implementation of interfaces for:
+- a BACS variable assignment,
+- a BACS gate,
+- a BACS primary input,
+- a BACS auxiliary input,
+- a BACS circuit.
 
- See bacs.hpp .
+See bacs.hpp .
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef BACS_TCC_
 // #define BACS_TCC_
 
-use  <algorithm>
-
-use ffec::common::profiling;
+// use  <algorithm>
+use ffec::common::profiling::print_indent;
 use ffec::common::utils;
+//  use crate::relations::circuit_satisfaction_problems::bacs::bacs::bacs_circuit;
 
-
-
-
-pub fn evaluate(input:&bacs_variable_assignment<FieldT>)->FieldT
-{
-    return lhs.evaluate(input) * rhs.evaluate(input);
-}
-
-
-pub fn print(variable_annotations:&BTreeMap<usize, String>) const
-{
-    print!("(\n");
-    lhs.print(variable_annotations);
-    print!(")\n *\n(\n");
-    rhs.print(variable_annotations);
-    print!(")\n -> \n");
-    auto it = variable_annotations.find(output.index);
-    print!("    x_{} ({}) ({})\n",
-           output.index,
-           (if it == variable_annotations.end()  {"no annotation"} else{ it.1}),
-           (if is_circuit_output  {"circuit output"} else {"internal wire"}));
-}
-
-
-bool bacs_gate<FieldT>::operator==(other:&bacs_gate<FieldT>) const
-{
-    return (self.lhs == other.lhs &&
-            self.rhs == other.rhs &&
-            self.output == other.output &&
-            self.is_circuit_output == other.is_circuit_output);
-}
-
-
-std::ostream& operator<<(std::ostream &out, g:&bacs_gate<FieldT>)
-{
-    out <<  (if g.is_circuit_output {1} else{0}) << "\n";
-    out << g.lhs << OUTPUT_NEWLINE;
-    out << g.rhs << OUTPUT_NEWLINE;
-    out << g.output.index << "\n";
-
-    return out;
-}
-
-
-std::istream& operator>>(std::istream &in, bacs_gate<FieldT> &g)
-{
-    usize tmp;
-    in >> tmp;
-    ffec::consume_newline(in);
-    g.is_circuit_output = if tmp != 0 {true} else{false};
-    in >> g.lhs;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> g.rhs;
-    ffec::consume_OUTPUT_NEWLINE(in);
-    in >> g.output.index;
-    ffec::consume_newline(in);
-
-    return in;
-}
-
-
-pub fn num_inputs()->usize
-{
-    return primary_input_size + auxiliary_input_size;
-}
-
-
-pub fn num_gates()->usize
-{
-    return gates.len();
-}
-
-
-pub fn num_wires()->usize
-{
-    return num_inputs() + num_gates();
-}
-
-
-pub fn wire_depths()->Vec<usize>
-{
-    Vec<usize> depths;
-    depths.push(0);
-    depths.resize(num_inputs() + 1, 1);
-
-    for g in &gates
-    {
-        usize max_depth = 0;
-        for t in &g.lhs
-        {
-            max_depth = std::max(max_depth, depths[t.index]);
-        }
-
-        for t in &g.rhs
-        {
-            max_depth = std::max(max_depth, depths[t.index]);
-        }
-
-        depths.push(max_depth + 1);
+impl<FieldT: FieldTConfig> bacs_gate<FieldT> {
+    pub fn evaluate(&self, input: &bacs_variable_assignment<FieldT>) -> FieldT {
+        return self.lhs.evaluate(input) * self.rhs.evaluate(input);
     }
 
-    return depths;
+    pub fn print(&self, variable_annotations: &BTreeMap<usize, String>) {
+        print!("(\n");
+        self.lhs.print(variable_annotations);
+        print!(")\n *\n(\n");
+        self.rhs.print(variable_annotations);
+        print!(")\n -> \n");
+        let it = variable_annotations.get(&self.output.index);
+        print!(
+            "    x_{} ({}) ({})\n",
+            self.output.index,
+            (if let Some(v) = it { v } else { "no annotation" }),
+            (if self.is_circuit_output {
+                "circuit output"
+            } else {
+                "internal wire"
+            })
+        );
+    }
+
+    // bool bacs_gate<FieldT>::operator==(other:&bacs_gate<FieldT>)
+    // {
+    //     return (self.lhs == other.lhs &&
+    //             self.rhs == other.rhs &&
+    //             self.output == other.output &&
+    //             self.is_circuit_output == other.is_circuit_output);
+    // }
+
+    // std::ostream& operator<<(std::ostream &out, g:&bacs_gate<FieldT>)
+    // {
+    //     out <<  (if g.is_circuit_output {1} else{0}) << "\n";
+    //     out << g.lhs << OUTPUT_NEWLINE;
+    //     out << g.rhs << OUTPUT_NEWLINE;
+    //     out << g.output.index << "\n";
+
+    //     return out;
+    // }
+
+    // std::istream& operator>>(std::istream &in, bacs_gate<FieldT> &g)
+    // {
+    //     usize tmp;
+    //     in >> tmp;
+    //     consume_newline(in);
+    //     g.is_circuit_output = if tmp != 0 {true} else{false};
+    //     in >> g.lhs;
+    //     consume_OUTPUT_NEWLINE(in);
+    //     in >> g.rhs;
+    //     consume_OUTPUT_NEWLINE(in);
+    //     in >> g.output.index;
+    //     consume_newline(in);
+
+    //     return in;
+    // }
 }
+impl<FieldT: FieldTConfig> bacs_circuit<FieldT> {
+    pub fn num_inputs(&self) -> usize {
+        return self.primary_input_size + self.auxiliary_input_size;
+    }
 
+    pub fn num_gates(&self) -> usize {
+        return self.gates.len();
+    }
 
-pub fn depth()->usize
-{
-    Vec<usize> all_depths = self.wire_depths();
-    return *(std::max_element(all_depths.begin(), all_depths.end()));
-}
+    pub fn num_wires(&self) -> usize {
+        return self.num_inputs() + self.num_gates();
+    }
 
+    pub fn wire_depths(&self) -> Vec<usize> {
+        let mut depths = vec![0];
+        depths.resize(self.num_inputs() + 1, 1);
 
-pub fn is_valid()->bool
-{
-    for i in 0..num_gates()
-    {
-        /**
-         * The output wire of gates[i] must have index 1+num_inputs+i.
-         * (The '1+' accounts for the the index of the constant wire.)
-         */
-        if gates[i].output.index != 1+num_inputs()+i
-        {
-            return false;
+        for g in &self.gates {
+            let mut max_depth = 0;
+            for t in &g.lhs {
+                max_depth = std::cmp::max(max_depth, depths[t.index]);
+            }
+
+            for t in &g.rhs {
+                max_depth = std::cmp::max(max_depth, depths[t.index]);
+            }
+
+            depths.push(max_depth + 1);
         }
 
-        /**
-         * Gates must be topologically sorted.
-         */
-        if !gates[i].lhs.is_valid(gates[i].output.index) || !gates[i].rhs.is_valid(gates[i].output.index)
-        {
-            return false;
+        return depths;
+    }
+
+    pub fn depth(&self) -> usize {
+        let all_depths = self.wire_depths();
+        *all_depths.iter().max().unwrap()
+    }
+
+    pub fn is_valid(&self) -> bool {
+        for i in 0..self.num_gates() {
+            /**
+             * The output wire of gates[i] must have index 1+num_inputs+i.
+             * (The '1+' accounts for the the index of the constant wire.)
+             */
+            if self.gates[i].output.index != 1 + self.num_inputs() + i {
+                return false;
+            }
+
+            /**
+             * Gates must be topologically sorted.
+             */
+            if !self.gates[i].lhs.is_valid(self.gates[i].output.index)
+                || !self.gates[i].rhs.is_valid(self.gates[i].output.index)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn get_all_wires(
+        &self,
+        primary_input: &bacs_primary_input<FieldT>,
+        auxiliary_input: &bacs_auxiliary_input<FieldT>,
+    ) -> bacs_variable_assignment<FieldT> {
+        assert!(primary_input.len() == self.primary_input_size);
+        assert!(auxiliary_input.len() == self.auxiliary_input_size);
+
+        let mut result = bacs_variable_assignment::<FieldT>::new();
+        result.extend(primary_input.iter().cloned());
+        result.extend(auxiliary_input.iter().cloned());
+
+        assert!(result.len() == self.num_inputs());
+
+        for g in &self.gates {
+            let gate_output = g.evaluate(&result);
+            result.push(gate_output);
+        }
+
+        return result;
+    }
+
+    pub fn get_all_outputs(
+        &self,
+        primary_input: &bacs_primary_input<FieldT>,
+        auxiliary_input: &bacs_auxiliary_input<FieldT>,
+    ) -> bacs_variable_assignment<FieldT> {
+        let all_wires = self.get_all_wires(primary_input, auxiliary_input);
+
+        let mut all_outputs = bacs_variable_assignment::<FieldT>::new();
+
+        for g in &self.gates {
+            if g.is_circuit_output {
+                all_outputs.push(all_wires[g.output.index - 1].clone());
+            }
+        }
+
+        return all_outputs;
+    }
+
+    pub fn is_satisfied(
+        &self,
+        primary_input: &bacs_primary_input<FieldT>,
+        auxiliary_input: &bacs_auxiliary_input<FieldT>,
+    ) -> bool {
+        let all_outputs = self.get_all_outputs(primary_input, auxiliary_input);
+
+        for i in 0..all_outputs.len() {
+            if !all_outputs[i].is_zero() {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn add_gate(&mut self, g: bacs_gate<FieldT>) {
+        assert!(g.output.index == self.num_wires() + 1);
+        self.gates.push(g);
+    }
+
+    pub fn add_gate2(&mut self, g: bacs_gate<FieldT>, annotation: String) {
+        assert!(g.output.index == self.num_wires() + 1);
+        self.gates.push(g.clone());
+        // #ifdef DEBUG
+        self.gate_annotations.insert(g.output.index, annotation);
+        //#endif
+    }
+
+    // bool bacs_circuit<FieldT>::operator==(other:&bacs_circuit<FieldT>)
+    // {
+    //     return (self.primary_input_size == other.primary_input_size &&
+    //             self.auxiliary_input_size == other.auxiliary_input_size &&
+    //             self.gates == other.gates);
+    // }
+
+    // std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT>)
+    // {
+    //     out << circuit.primary_input_size << "\n";
+    //     out << circuit.auxiliary_input_size << "\n";
+    //     operator<<(out, circuit.gates); out << OUTPUT_NEWLINE;
+
+    //     return out;
+    // }
+
+    // std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit)
+    // {
+    //     in >> circuit.primary_input_size;
+    //     consume_newline(in);
+    //     in >> circuit.auxiliary_input_size;
+    //     consume_newline(in);
+    //     operator>>(in, circuit.gates);
+    //     consume_OUTPUT_NEWLINE(in);
+
+    //     return in;
+    // }
+
+    pub fn print(&self) {
+        print_indent();
+        print!("General information about the circuit:\n");
+        self.print_info();
+        print_indent();
+        print!("All gates:\n");
+        for i in 0..self.gates.len() {
+            let mut annotation = "no annotation";
+            // #ifdef DEBUG
+            if let Some(v) = self.gate_annotations.get(&i) {
+                annotation = v;
+            }
+            //#endif
+            print!("Gate {} ({}):\n", i, annotation);
+            // #ifdef DEBUG
+            self.gates[i].print(&self.variable_annotations);
+            // #else
+            // self.gates[i].print();
+            //#endif
         }
     }
 
-    return true;
-}
-
-
-bacs_variable_assignment<FieldT> bacs_circuit<FieldT>::get_all_wires(primary_input:&bacs_primary_input<FieldT>,
-                                                                     auxiliary_input:&bacs_auxiliary_input<FieldT>) const
-{
-    assert!(primary_input.len() == primary_input_size);
-    assert!(auxiliary_input.len() == auxiliary_input_size);
-
-    bacs_variable_assignment<FieldT> result;
-    result.insert(result.end(), primary_input.begin(), primary_input.end());
-    result.insert(result.end(), auxiliary_input.begin(), auxiliary_input.end());
-
-    assert!(result.len() == num_inputs());
-
-    for g in &gates
-    {
-        let gate_output= g.evaluate(result);
-        result.push(gate_output);
-    }
-
-    return result;
-}
-
-
-bacs_variable_assignment<FieldT> bacs_circuit<FieldT>::get_all_outputs(primary_input:&bacs_primary_input<FieldT>,
-                                                                       auxiliary_input:&bacs_auxiliary_input<FieldT>) const
-{
-    const bacs_variable_assignment<FieldT> all_wires = get_all_wires(primary_input, auxiliary_input);
-
-    bacs_variable_assignment<FieldT> all_outputs;
-
-    for g in &gates
-    {
-        if g.is_circuit_output
-        {
-            all_outputs.push(all_wires[g.output.index-1]);
-        }
-    }
-
-    return all_outputs;
-}
-
-
-bool bacs_circuit<FieldT>::is_satisfied(primary_input:&bacs_primary_input<FieldT>,
-                                        auxiliary_input:&bacs_auxiliary_input<FieldT>) const
-{
-    const bacs_variable_assignment<FieldT> all_outputs = get_all_outputs(primary_input, auxiliary_input);
-
-    for i in 0..all_outputs.len()
-    {
-        if !all_outputs[i].is_zero()
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-
-pub fn add_gate(g:&bacs_gate<FieldT>)
-{
-    assert!(g.output.index == num_wires()+1);
-    gates.push(g);
-}
-
-
-pub fn add_gate(g:&bacs_gate<FieldT>, annotation:&String)
-{
-    assert!(g.output.index == num_wires()+1);
-    gates.push(g);
-// #ifdef DEBUG
-    gate_annotations[g.output.index] = annotation;
-//#endif
-}
-
-
-bool bacs_circuit<FieldT>::operator==(other:&bacs_circuit<FieldT>) const
-{
-    return (self.primary_input_size == other.primary_input_size &&
-            self.auxiliary_input_size == other.auxiliary_input_size &&
-            self.gates == other.gates);
-}
-
-
-std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT>)
-{
-    out << circuit.primary_input_size << "\n";
-    out << circuit.auxiliary_input_size << "\n";
-    ffec::operator<<(out, circuit.gates); out << OUTPUT_NEWLINE;
-
-    return out;
-}
-
-
-std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit)
-{
-    in >> circuit.primary_input_size;
-    ffec::consume_newline(in);
-    in >> circuit.auxiliary_input_size;
-    ffec::consume_newline(in);
-    ffec::operator>>(in, circuit.gates);
-    ffec::consume_OUTPUT_NEWLINE(in);
-
-    return in;
-}
-
-
-pub fn print() const
-{
-    ffec::print_indent(); print!("General information about the circuit:\n");
-    self.print_info();
-    ffec::print_indent(); print!("All gates:\n");
-    for i in 0..gates.len()
-    {
-        String annotation = "no annotation";
-// #ifdef DEBUG
-        auto it = gate_annotations.find(i);
-        if it != gate_annotations.end()
-        {
-            annotation = it.1;
-        }
-//#endif
-        print!("Gate {} ({}):\n", i, annotation);
-// #ifdef DEBUG
-        gates[i].print(variable_annotations);
-#else
-        gates[i].print();
-//#endif
+    pub fn print_info(&self) {
+        print_indent();
+        print!("* Number of inputs: {}\n", self.num_inputs());
+        print_indent();
+        print!("* Number of gates: {}\n", self.num_gates());
+        print_indent();
+        print!("* Number of wires: {}\n", self.num_wires());
+        print_indent();
+        print!("* Depth: {}\n", self.depth());
     }
 }
-
-
-pub fn print_info() const
-{
-    ffec::print_indent(); print!("* Number of inputs: {}\n", self.num_inputs());
-    ffec::print_indent(); print!("* Number of gates: {}\n", self.num_gates());
-    ffec::print_indent(); print!("* Number of wires: {}\n", self.num_wires());
-    ffec::print_indent(); print!("* Depth: {}\n", self.depth());
-}
-
-
 
 //#endif // BACS_TCC_

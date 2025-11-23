@@ -97,7 +97,7 @@ boot_pos+=1;
 
     for i in 0..input_size
     {
-        result.boot_trace.set_trace_entry(boot_pos, ((1u64<<(ap.dwaddr_len()-1)) + i, std::rand() % (1u64<<(2*ap.w))));
+        result.boot_trace.set_trace_entry(boot_pos, ((1u64<<(ap.dwaddr_len()-1)) + i, rand::random() % (1u64<<(2*ap.w))));
 boot_pos+=1;
     }
 

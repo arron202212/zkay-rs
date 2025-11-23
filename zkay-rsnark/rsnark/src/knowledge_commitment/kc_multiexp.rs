@@ -4,7 +4,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef KC_MULTIEXP_HPP_
 // #define KC_MULTIEXP_HPP_
 
@@ -17,17 +16,15 @@
   Will probably go away in more general exp refactoring.
 */
 
- use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::algebra::scalar_multiplication::multiexp;
 
 use crate::knowledge_commitment::knowledge_commitment;
 
-
-
-// 
+//
 // knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
 //                                                 scalar:&ffec::bigint<n> scalar_bits:usize);
 
-// 
+//
 // knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_commitment_vector<T1, T2>
 //                                                                 min_idx:usize
 //                                                                 max_idx:usize
@@ -35,7 +32,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //                                                                 Vec<FieldT>::const_iterator scalar_end,
 //                                                                 chunks:usize);
 
-// 
+//
 // knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:usize
 //                                                  T1_window:usize
 //                                                  T2_window:usize
@@ -46,12 +43,9 @@ use crate::knowledge_commitment::knowledge_commitment;
 //                                                  v:&Vec<FieldT>
 //                                                  suggested_num_chunks:usize);
 
-
-
 // use crate::knowledge_commitment::kc_multiexp;
 
 //#endif // KC_MULTIEXP_HPP_
-
 
 // /** @file
 //  *****************************************************************************
@@ -59,13 +53,10 @@ use crate::knowledge_commitment::knowledge_commitment;
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef KC_MULTIEXP_TCC_
 // #define KC_MULTIEXP_TCC_
 
-
-
-// 
+//
 // knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
 //                                                 scalar:&ffec::bigint<n> scalar_bits:usize)
 // {
@@ -73,7 +64,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //                                        opt_window_wnaf_exp(base.h, scalar, scalar_bits));
 // }
 
-// 
+//
 // knowledge_commitment<T1, T2> kc_multi_exp_with_mixed_addition(vec:&knowledge_commitment_vector<T1, T2>
 //                                                                 min_idx:usize
 //                                                                 max_idx:usize
@@ -143,7 +134,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     return acc + ffec::multi_exp<knowledge_commitment<T1, T2>, FieldT, Method>(g.begin(), g.end(), p.begin(), p.end(), chunks);
 // }
 
-// 
+//
 // knowledge_commitment_vector<T1, T2> kc_batch_exp_internal(scalar_size:usize
 //                                                           T1_window:usize
 //                                                           T2_window:usize
@@ -174,7 +165,7 @@ use crate::knowledge_commitment::knowledge_commitment;
 //     return res;
 // }
 
-// 
+//
 // knowledge_commitment_vector<T1, T2> kc_batch_exp(scalar_size:usize
 //                                                  T1_window:usize
 //                                                  T2_window:usize
@@ -252,7 +243,5 @@ use crate::knowledge_commitment::knowledge_commitment;
 //         return res;
 //     }
 // }
-
-
 
 //#endif // KC_MULTIEXP_TCC_

@@ -286,7 +286,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
                                                                                                             sp_translation_step_vk_and_incoming_message_payload_digest_bits[i],
                                                                                                             sp_translation_step_vk_and_incoming_message_payload_digests[i],
                                                                                                             field_logsize(),
-                                                                                                            FMT("", "unpack_sp_translation_step_vk_and_incoming_message_payload_digests_{}", i)));
+                                                                                                          FMT("", "unpack_sp_translation_step_vk_and_incoming_message_payload_digests_{}", i)));
 
         verifier_input.push(sp_translation_step_vk_and_incoming_message_payload_digest_bits[i]);
         while (verifier_input[i].len() < padded_verifier_input_size)
@@ -301,7 +301,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
                                                     sp_translation_step_pcd_circuit_maker::<other_curve::<ppT> >::field_capacity(),
                                                     proof[i],
                                                     verification_result,
-                                                    FMT("", "verifiers_{}", i)));
+                                                  FMT("", "verifiers_{}", i)));
     }
 
     pb.set_input_sizes(input_size_in_elts());
@@ -395,7 +395,7 @@ pub fn generate_r1cs_constraints()
         for i in 1..compliance_predicate.max_arity
         {
             pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, incoming_message_types[0], incoming_message_types[i]),
-                                   FMT("", "type_{}_equal_to_type_0", i));
+                                 FMT("", "type_{}_equal_to_type_0", i));
         }
 
         pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, arity, compliance_predicate_arity), "full_arity");
@@ -471,13 +471,13 @@ pub fn generate_r1cs_witness(sp_translation_step_pcd_circuit_vk:&r1cs_ppzksnark_
 
 pub fn field_logsize()->usize
 {
-    return ffec::Fr::<ppT>::size_in_bits();
+    return ppT::Fr::size_in_bits();
 }
 
 
 pub fn field_capacity()->usize
 {
-    return ffec::Fr::<ppT>::capacity();
+    return ppT::Fr::capacity();
 }
 
 
@@ -595,13 +595,13 @@ pub fn get_auxiliary_input() ->r1cs_auxiliary_input<ffec::Fr<ppT> >
 
  pub fn field_logsize()->usize
 {
-    return ffec::Fr::<ppT>::size_in_bits();
+    return ppT::Fr::size_in_bits();
 }
 
 
  pub fn field_capacity()->usize
 {
-    return ffec::Fr::<ppT>::capacity();
+    return ppT::Fr::capacity();
 }
 
 
@@ -629,7 +629,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT>(sp_translation_step_vk_bits
                                                                       primary_input:&r1cs_pcd_compliance_predicate_primary_input<ffec::Fr<ppT> >)->r1cs_primary_input<ffec::Fr<ppT> > 
 {
     ffec::enter_block("Call to get_sp_compliance_step_pcd_circuit_input");
-    type FieldT=ffec::Fr<ppT>;
+    // type FieldT=ffec::Fr<ppT>;
 
     let outgoing_message_as_va = primary_input.outgoing_message.as_r1cs_variable_assignment();
     let mut  msg_bits=vec![];
@@ -658,7 +658,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT>(sp_translation_step_vk_bits
                                                                        primary_input:&r1cs_pcd_compliance_predicate_primary_input<ffec::Fr<other_curve<ppT> > >)->r1cs_primary_input<ffec::Fr<ppT> >
 {
     ffec::enter_block("Call to get_sp_translation_step_pcd_circuit_input");
-    type FieldT=ffec::Fr<ppT>;
+    // type FieldT=ffec::Fr<ppT>;
 
     let sp_compliance_step_pcd_circuit_input = get_sp_compliance_step_pcd_circuit_input::<other_curve::<ppT> >(sp_translation_step_vk_bits, primary_input);
     let mut  sp_compliance_step_pcd_circuit_input_bits=vec![];

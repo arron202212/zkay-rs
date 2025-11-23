@@ -111,7 +111,7 @@ pub fn new(pb:protoboard<FieldT>,
         let mut inp= block_variable::<FieldT>::new(pb, path.left_digests[i], path.right_digests[i], FMT(self.annotation_prefix, " inp_{}", i));
         hasher_inputs.push(inp);
         hashers.push(HashT(pb, 2*digest_size, inp, if i == 0 {*computed_root} else{internal_output[i-1]},
-                                   FMT(self.annotation_prefix, " load_hashers_{}", i)));
+                                 FMT(self.annotation_prefix, " load_hashers_{}", i)));
     }
 
     for i in 0..tree_depth
@@ -123,7 +123,7 @@ pub fn new(pb:protoboard<FieldT>,
         */
         propagators.push(digest_selector_gadget::<FieldT>::new(pb, digest_size, if i < tree_depth - 1 { internal_output[i]} else {leaf},
                                                                 address_bits[tree_depth-1-i], path.left_digests[i], path.right_digests[i],
-                                                                FMT(self.annotation_prefix, " digest_selector_{}", i)));
+                                                              FMT(self.annotation_prefix, " digest_selector_{}", i)));
     }
 
     check_root.reset(bit_vector_copy_gadget::<FieldT>::new(pb, computed_root.bits, root.bits, read_successful, FieldT::capacity(), FMT(annotation_prefix, " check_root")));
@@ -199,7 +199,7 @@ pub fn  test_merkle_tree_check_read_gadget()
     let tree_depth = 16;
    let mut  path=vec![merkle_authentication_node;tree_depth];
 
-    let mut  prev_hash:Vec<_>=(0..digest_len).map(|_|std::rand() % 2).collect();
+    let mut  prev_hash:Vec<_>=(0..digest_len).map(|_|rand::random() % 2).collect();
      let mut  leaf = prev_hash;
 
      let mut  address_bits;
@@ -207,10 +207,10 @@ pub fn  test_merkle_tree_check_read_gadget()
      let mut  address = 0;
     for level in ( 0..=tree_depth-1).rev()
     {
-        let mut computed_is_right = (std::rand() % 2);
+        let mut computed_is_right = (rand::random() % 2);
         address |= if computed_is_right {1u64 << (tree_depth-1-level)} else{0};
         address_bits.push_back(computed_is_right);
-         let mut  other:Vec<_>=(0..digest_len).map(|_|std::rand() % 2).collect();
+         let mut  other:Vec<_>=(0..digest_len).map(|_|rand::random() % 2).collect();
 
          let mut  block = prev_hash;
         block.insert(if computed_is_right  {block.begin() }else  {block.end()}, other.begin(), other.end());

@@ -25,7 +25,7 @@
 // // //#include <sys/resource.h>
 // // //#include <unistd.h>
 
-// // use ffec::algebra::curves::edwards::edwards_pp;
+// // use ff_curves::algebra::curves::edwards::edwards_pp;
 // use ffec::common::double;
 // // //#include <omp.h>
 

@@ -148,13 +148,13 @@ pub fn new(pb:protoboard<FieldT>,
                                         pb_variable_array::<FieldT>(routing_input_bits[packet_idx].begin(), routing_input_bits[packet_idx].end()),
                                         routed_packets[0][packet_idx],
                                         FieldT::capacity(),
-                                        FMT(self.annotation_prefix, " pack_inputs_{}", packet_idx)));
+                                      FMT(self.annotation_prefix, " pack_inputs_{}", packet_idx)));
         unpack_outputs.push(
             multipacking_gadget::<FieldT>(pb,
                                         pb_variable_array::<FieldT>(routing_output_bits[packet_idx].begin(), routing_output_bits[packet_idx].end()),
                                         routed_packets[num_columns][packet_idx],
                                         FieldT::capacity(),
-                                        FMT(self.annotation_prefix, " unpack_outputs_{}", packet_idx)));
+                                      FMT(self.annotation_prefix, " unpack_outputs_{}", packet_idx)));
     }
 
     /* allocate switch bits */
@@ -219,14 +219,14 @@ pub fn generate_r1cs_constraints()
                         r1cs_constraint::<FieldT>(routed_packets[column_idx][switch_input][0] - routed_packets[column_idx+1][straight_edge][0],
                                                 routed_packets[column_idx][switch_input][0] - routed_packets[column_idx+1][cross_edge][0],
                                                 0),
-                        FMT(self.annotation_prefix, " easy_route_{}_{}", column_idx, switch_input));
+                      FMT(self.annotation_prefix, " easy_route_{}_{}", column_idx, switch_input));
                 }
             }
             else
             {
                 /* require switching bit to be boolean */
                 generate_boolean_r1cs_constraint::<FieldT>(self.pb, asw_switch_bits[column_idx][row_idx],
-                                                         FMT(self.annotation_prefix, " asw_switch_bits_{}_{}", column_idx, row_idx));
+                                                       FMT(self.annotation_prefix, " asw_switch_bits_{}_{}", column_idx, row_idx));
 
                 /* route forward according to the switch bit */
                 for subpacket_idx in 0..num_subpackets
@@ -245,7 +245,7 @@ pub fn generate_r1cs_constraints()
                                 asw_switch_bits[column_idx][row_idx],
                                 routed_packets[column_idx+1][cross_edge][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx],
                                 routed_packets[column_idx][switch_input][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx]),
-                            FMT(self.annotation_prefix, " route_forward_{}_{}_{}", column_idx, switch_input, subpacket_idx));
+                          FMT(self.annotation_prefix, " route_forward_{}_{}_{}", column_idx, switch_input, subpacket_idx));
                     }
                 }
             }

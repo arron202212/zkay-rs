@@ -184,11 +184,11 @@ pub fn new4(pb:&protoboard<FieldT>,
 pub fn generate_r1cs_equals_const_constraints(el:&Fp3T)
 {
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c0, c0),
-                                 FMT(self.annotation_prefix, " c0"));
+                               FMT(self.annotation_prefix, " c0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c1, c1),
-                                 FMT(self.annotation_prefix, " c1"));
+                               FMT(self.annotation_prefix, " c1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c2, c2),
-                                 FMT(self.annotation_prefix, " c2"));
+                               FMT(self.annotation_prefix, " c2"));
 }
 
 
@@ -241,7 +241,7 @@ pub fn size_in_bits()->usize
 }
 
 
-pub fn num_variables()->usize
+pub fn num_variables(&self)->usize
 {
     return 3;
 }
@@ -307,15 +307,15 @@ pub fn generate_r1cs_constraints()
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + A.c1 + A.c2,
                                                          B.c0 + B.c1 + B.c2,
                                                          result.c1 + result.c2 + result.c0 * beta.inverse() + v0 * (FieldT(1) - beta.inverse()) + v4 * (FieldT(1) - beta)),
-                                 FMT(self.annotation_prefix, " v1"));
+                               FMT(self.annotation_prefix, " v1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 - A.c1 + A.c2,
                                                          B.c0 - B.c1 + B.c2,
                                                          -result.c1 + result.c2 + v0 * (FieldT(1) + beta.inverse()) - result.c0 * beta.inverse() + v4 * (FieldT(1) + beta)),
-                                 FMT(self.annotation_prefix, " v2"));
+                               FMT(self.annotation_prefix, " v2"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + 2 * A.c1 + 4 * A.c2,
                                                          B.c0 + 2 * B.c1 + 4 * B.c2,
                                                          2 * result.c1 + 4 * result.c2 + result.c0 * (FieldT(8) * beta.inverse()) + v0 * (FieldT(1) - FieldT(8) * beta.inverse()) + v4 * (FieldT(16) - FieldT(2) * beta)),
-                                 FMT(self.annotation_prefix, " v3"));
+                               FMT(self.annotation_prefix, " v3"));
 }
 
 
@@ -347,11 +347,11 @@ pub fn new(pb:&protoboard<FieldT>,
 pub fn generate_r1cs_constraints()
 {
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, lc, result.c0),
-                                 FMT(self.annotation_prefix, " result.c0"));
+                               FMT(self.annotation_prefix, " result.c0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c1, lc, result.c1),
-                                 FMT(self.annotation_prefix, " result.c1"));
+                               FMT(self.annotation_prefix, " result.c1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c2, lc, result.c2),
-                                 FMT(self.annotation_prefix, " result.c2"));
+                               FMT(self.annotation_prefix, " result.c2"));
 }
 
 

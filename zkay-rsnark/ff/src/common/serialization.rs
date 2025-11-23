@@ -67,11 +67,13 @@
 
 cfg_if::cfg_if!{
  if #[cfg(feature="BINARY_OUTPUT")]
-{const OUTPUT_NEWLINE:&str= "";
-const OUTPUT_SEPARATOR:&str= "";}
+{
+pub const OUTPUT_NEWLINE:&str= "";
+pub const OUTPUT_SEPARATOR:&str= "";}
 else
-{const OUTPUT_NEWLINE:&str= "\n";
-const OUTPUT_SEPARATOR:&str= " ";
+{
+pub const OUTPUT_NEWLINE:&str= "\n";
+pub const OUTPUT_SEPARATOR:&str= " ";
 }
 }
 // inline pub fn  consume_newline(ins:&impl BufRead);

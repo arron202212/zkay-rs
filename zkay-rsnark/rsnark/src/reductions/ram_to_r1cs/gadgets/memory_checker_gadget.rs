@@ -80,7 +80,7 @@ pb:ram_protoboard<ramT>,
     timestamps_leq.allocate(pb, FMT(self.annotation_prefix, " timestamps_leq"));
     timestamps_less.allocate(pb, FMT(self.annotation_prefix, " timestamps_less"));
     compare_timestamps.reset(comparison_gadget::<FieldT>::new(pb, timestamp_size, line1.timestamp.packed, line2.timestamp.packed, timestamps_less, timestamps_leq,
-                                                           FMT(self.annotation_prefix, " compare_ts")));
+                                                         FMT(self.annotation_prefix, " compare_ts")));
 
 
     /* compare the two addresses */
@@ -89,7 +89,7 @@ pb:ram_protoboard<ramT>,
     addresses_leq.allocate(pb, FMT(self.annotation_prefix, " addresses_leq"));
     addresses_less.allocate(pb, FMT(self.annotation_prefix, " addresses_less"));
     compare_addresses.reset(comparison_gadget::<FieldT>::new(pb, address_size, line1.address.packed, line2.address.packed, addresses_less, addresses_leq,
-                                                          FMT(self.annotation_prefix, " compare_addresses")));
+                                                        FMT(self.annotation_prefix, " compare_addresses")));
 
     /*
       Add variables that will contain flags representing the following relations:
@@ -127,17 +127,17 @@ pub fn generate_r1cs_constraints()
      */
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_contents_after1_equals_contents_before2,
                                                          line1.contents_after.packed - line2.contents_before.packed, 0),
-                                 FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
+                               FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_contents_after1_equals_contents_before2, FMT(self.annotation_prefix, " loose_contents_after1_equals_contents_before2"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_contents_before2_equals_zero,
                                                          line2.contents_before.packed, 0),
-                                 FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
+                               FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_contents_before2_equals_zero, FMT(self.annotation_prefix, " loose_contents_before2_equals_zero"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(loose_timestamp2_is_zero,
                                                          line2.timestamp.packed, 0),
-                                 FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
+                               FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, loose_timestamp2_is_zero, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
 
     /*
@@ -157,11 +157,11 @@ pub fn generate_r1cs_constraints()
       As usual, we implement "A => B" as "NOT (A AND (NOT B))".
     */
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(addresses_eq, 1 - loose_contents_after1_equals_contents_before2, 0),
-                                 FMT(self.annotation_prefix, " memory_retains_contents_between_accesses"));
+                               FMT(self.annotation_prefix, " memory_retains_contents_between_accesses"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(addresses_less, 1 - loose_contents_before2_equals_zero, 0),
-                                 FMT(self.annotation_prefix, " new_address_starts_at_zero"));
+                               FMT(self.annotation_prefix, " new_address_starts_at_zero"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1 - addresses_leq, 1 - loose_timestamp2_is_zero, 0),
-                                 FMT(self.annotation_prefix, " only_one_cycle"));
+                               FMT(self.annotation_prefix, " only_one_cycle"));
 }
 
 

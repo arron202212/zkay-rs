@@ -361,8 +361,8 @@ pub fn bind_primary_input(primary_input:&ram_ppzksnark_primary_input<ram_ppzksna
                                                                  primary_input_size_bound:usize,
                                                                  time_bound:usize)->ram_ppzksnark_keypair<ram_ppzksnark_ppT>
 {
-    type ram_ppT=ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>;
-    type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>;
+    // type ram_ppT=ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>;
+    // type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>;
 
     ffec::enter_block("Call to ram_ppzksnark_generator");
     let mut  universal_r1cs=ram_to_r1cs::<ram_ppT>::new(ap, primary_input_size_bound, time_bound);
@@ -381,9 +381,9 @@ pub fn ram_ppzksnark_prover<ram_ppzksnark_ppT> (pk:&ram_ppzksnark_proving_key<ra
                                                             primary_input:&ram_ppzksnark_primary_input<ram_ppzksnark_ppT>,
                                                             auxiliary_input:&ram_ppzksnark_auxiliary_input<ram_ppzksnark_ppT>)->ram_ppzksnark_proof<ram_ppzksnark_ppT> 
 {
-    type ram_ppT=ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>;
-    type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>;
-    type FieldT=ffec::Fr<snark_ppT>;
+    // type ram_ppT=ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>;
+    // type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>;
+    // type FieldT=ffec::Fr<snark_ppT>;
 
     ffec::enter_block("Call to ram_ppzksnark_prover");
     let mut  universal_r1cs=ram_to_r1cs::<ram_ppT>::new(pk.ap, pk.primary_input_size_bound, pk.time_bound);
@@ -405,7 +405,7 @@ pub fn ram_ppzksnark_prover<ram_ppzksnark_ppT> (pk:&ram_ppzksnark_proving_key<ra
                             primary_input:&ram_ppzksnark_primary_input<ram_ppzksnark_ppT>,
                             proof:&ram_ppzksnark_proof<ram_ppzksnark_ppT>)->bool
 {
-    type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> ;
+    // type snark_ppT=ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> ;
 
     ffec::enter_block("Call to ram_ppzksnark_verifier");
     let  input_specific_vk = vk.bind_primary_input(primary_input);

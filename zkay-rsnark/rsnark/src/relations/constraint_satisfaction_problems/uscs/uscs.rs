@@ -85,41 +85,41 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
 
 pub struct uscs_constraint_system {
 
-    usize primary_input_size;
-    usize auxiliary_input_size;
+primary_input_size:    usize,
+auxiliary_input_size:    usize,
 
-    Vec<uscs_constraint<FieldT> > constraints;
+constraints:    Vec<uscs_constraint<FieldT> >,
 
-    uscs_constraint_system()->Self primary_input_size(0), auxiliary_input_size(0) {};
+//     uscs_constraint_system()->Self primary_input_size(0), auxiliary_input_size(0) {};
 
-    usize num_inputs() const;
-    usize num_variables() const;
-    usize num_constraints() const;
+//     usize num_inputs() const;
+//     usize num_variables() const;
+//     usize num_constraints() const;
 
-// #ifdef DEBUG
-    BTreeMap<usize, String> constraint_annotations;
-    BTreeMap<usize, String> variable_annotations;
-//#endif
+// // #ifdef DEBUG
+//     BTreeMap<usize, String> constraint_annotations;
+//     BTreeMap<usize, String> variable_annotations;
+// //#endif
 
-    bool is_valid() const;
-    bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
-                      auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
+//     bool is_valid() const;
+//     bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
+//                       auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
 
-    pub fn  add_constraint(constraint:&uscs_constraint<FieldT>);
-    pub fn  add_constraint(constraint:&uscs_constraint<FieldT>, annotation:&String);
+//     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>);
+//     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>, annotation:&String);
 
-    bool operator==(other:&uscs_constraint_system<FieldT>) const;
+//     bool operator==(other:&uscs_constraint_system<FieldT>) const;
 
-    friend std::ostream& operator<< <FieldT>(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
-    friend std::istream& operator>> <FieldT>(std::istream &in, uscs_constraint_system<FieldT> &cs);
+//     friend std::ostream& operator<< <FieldT>(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
+//     friend std::istream& operator>> <FieldT>(std::istream &in, uscs_constraint_system<FieldT> &cs);
 
-    pub fn  report_linear_constraint_statistics() const;
-};
-
-
+//     pub fn  report_linear_constraint_statistics() const;
+}
 
 
-use crate::relations::constraint_satisfaction_problems/uscs/uscs;
+
+
+// use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 //#endif // USCS_HPP_
 /** @file
@@ -152,13 +152,13 @@ use ffec::common::utils;
 
 
 
-pub fn num_inputs()->usize
+pub fn num_inputs(&self)->usize
 {
     return primary_input_size;
 }
 
 
-pub fn num_variables()->usize
+pub fn num_variables(&self)->usize
 {
     return primary_input_size + auxiliary_input_size;
 }

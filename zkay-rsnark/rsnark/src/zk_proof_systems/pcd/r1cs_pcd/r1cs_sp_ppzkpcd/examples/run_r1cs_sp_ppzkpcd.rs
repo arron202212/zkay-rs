@@ -65,7 +65,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
 {
     ffec::enter_block("Call to run_r1cs_sp_ppzkpcd_tally_example");
 
-    type FieldT=ffec::Fr< PCD_ppT::curve_A_pp> ;
+    // type FieldT=ffec::Fr< PCD_ppT::curve_A_pp> ;
 
     let mut  all_accept = true;
 
@@ -80,7 +80,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
     let mut  tree_elems=vec![0;tree_size];
     for i in 0..tree_size
     {
-        tree_elems[i] = std::rand() % 10;
+        tree_elems[i] = rand::random() % 10;
         print!("tree_elems[{}] = {}\n", i, tree_elems[i]);
     }
     ffec::leave_block("Generate all messages");

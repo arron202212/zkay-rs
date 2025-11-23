@@ -43,7 +43,7 @@ References:
 
 // 
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
@@ -68,15 +68,14 @@ use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_par
  */
 
 struct r1cs_gg_ppzksnark_proving_key<ppT> {
-
-alpha_g1:    ffec::G1<ppT>,
-beta_g1:    ffec::G1<ppT>,
-beta_g2:    ffec::G2<ppT>,
-delta_g1:    ffec::G1<ppT>,
-delta_g2:    ffec::G2<ppT>,
+alpha_g1:    ppT::G1,
+beta_g1:    ppT::G1,
+beta_g2:    ppT::G2,
+delta_g1:    ppT::G1,
+delta_g2:    ppT::G2,
 
 A_query:    ffec::G1_vector<ppT>, // this could be a sparse vector if we had multiexp for those
-B_query:    knowledge_commitment_vector<ffec::G2<ppT>, ffec::G1<ppT> >,
+B_query:    knowledge_commitment_vector<ppT::G2, ppT::G1 >,
 H_query:    ffec::G1_vector<ppT>,
 L_query:    ffec::G1_vector<ppT>,
 
@@ -86,13 +85,13 @@ constraint_system:    r1cs_gg_ppzksnark_constraint_system<ppT>,
 impl<ppT> r1cs_gg_ppzksnark_proving_key<ppT> {
    
     pub fn new(
-alpha_g1:        ffec::G1<ppT>,
-beta_g1:                                  ffec::G1<ppT>,
-beta_g2:                                  ffec::G2<ppT>,
-delta_g1:                                  ffec::G1<ppT>,
-delta_g2:                                  ffec::G2<ppT>,
+alpha_g1:        ppT::G1,
+beta_g1:                                  ppT::G1,
+beta_g2:                                  ppT::G2,
+delta_g1:                                  ppT::G1,
+delta_g2:                                  ppT::G2,
 A_query:                                  ffec::G1_vector<ppT>,
-B_query:                                  knowledge_commitment_vector<ffec::G2<ppT>, ffec::G1<ppT> >,
+B_query:                                  knowledge_commitment_vector<ppT::G2, ppT::G1 >,
 H_query:                                  ffec::G1_vector<ppT>,
 L_query:                                  ffec::G1_vector<ppT>,
 constraint_system:                                  r1cs_gg_ppzksnark_constraint_system<ppT>,
@@ -137,7 +136,7 @@ constraint_system:                                  r1cs_gg_ppzksnark_constraint
     {
         return (ffec::size_in_bits(A_query) + B_query.size_in_bits() +
                 ffec::size_in_bits(H_query) + ffec::size_in_bits(L_query) +
-                1 * ffec::G1::<ppT>::size_in_bits() + 1 * ffec::G2::<ppT>::size_in_bits());
+                1 * ppT::G1::size_in_bits() + 1 * ppT::G2::size_in_bits());
     }
 
     fn print_size(&self) 
@@ -173,18 +172,18 @@ constraint_system:                                  r1cs_gg_ppzksnark_constraint
 struct r1cs_gg_ppzksnark_verification_key<ppT> {
 
 alpha_g1_beta_g2:    ffec::GT<ppT>,
-gamma_g2:    ffec::G2<ppT>,
-delta_g2:    ffec::G2<ppT>,
+gamma_g2:    ppT::G2,
+delta_g2:    ppT::G2,
 
-gamma_ABC_g1:    accumulation_vector<ffec::G1<ppT> >,
+gamma_ABC_g1:    accumulation_vector<ppT::G1 >,
 }
 
 impl<ppT> r1cs_gg_ppzksnark_verification_key<ppT> {
     // r1cs_gg_ppzksnark_verification_key() = default;
     pub fn new(alpha_g1_beta_g2:ffec::GT<ppT>,
-                                       gamma_g2:ffec::G2<ppT>,
-                                       delta_g2:ffec::G2<ppT>,
-                                       gamma_ABC_g1:accumulation_vector<ffec::G1<ppT> >,) ->Self
+                                       gamma_g2:ppT::G2,
+                                       delta_g2:ppT::G2,
+                                       gamma_ABC_g1:accumulation_vector<ppT::G1 >,) ->Self
        
     {
  Self{alpha_g1_beta_g2,
@@ -212,7 +211,7 @@ impl<ppT> r1cs_gg_ppzksnark_verification_key<ppT> {
      pub fn size_in_bits(&self)->usize
     {
         // TODO: include GT size
-        return (gamma_ABC_g1.size_in_bits() + 2 * ffec::G2::<ppT>::size_in_bits());
+        return (gamma_ABC_g1.size_in_bits() + 2 * ppT::G2::size_in_bits());
     }
 
     fn print_size(&self) 
@@ -254,7 +253,7 @@ vk_alpha_g1_beta_g2:    ffec::GT<ppT>,
 vk_gamma_g2_precomp:    ffec::G2_precomp<ppT>,
 vk_delta_g2_precomp:    ffec::G2_precomp<ppT>,
 
-gamma_ABC_g1:    accumulation_vector<ffec::G1<ppT> >,
+gamma_ABC_g1:    accumulation_vector<ppT::G1 >,
 
     // bool operator==(&other:r1cs_gg_ppzksnark_processed_verification_key) const;
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_gg_ppzksnark_processed_verification_key<ppT>);
@@ -308,24 +307,24 @@ Self{
  */
 struct r1cs_gg_ppzksnark_proof<ppT> {
 
-g_A:    ffec::G1<ppT>,
-g_B:    ffec::G2<ppT>,
-g_C:    ffec::G1<ppT>,
+g_A:    ppT::G1,
+g_B:    ppT::G2,
+g_C:    ppT::G1,
 }
 impl<ppT>  r1cs_gg_ppzksnark_proof<ppT> {
     pub fn default()->Self
     {
         // invalid proof with valid curve points
        Self{ 
-        g_A : ffec::G1::<ppT>::one(),
-        g_B : ffec::G2::<ppT>::one(),
-        g_C : ffec::G1::<ppT>::one(),
+        g_A : ppT::G1::one(),
+        g_B : ppT::G2::one(),
+        g_C : ppT::G1::one(),
     }
     }
     pub fn new(
-g_A:ffec::G1<ppT>,
-g_B:                            ffec::G2<ppT>,
-g_C:                            ffec::G1<ppT>,
+g_A:ppT::G1,
+g_B:                            ppT::G2,
+g_C:                            ppT::G1,
 ) ->Self
         
     {
@@ -348,7 +347,7 @@ g_C:                            ffec::G1<ppT>,
 
      pub fn size_in_bits(&self)->usize
     {
-        return G1_size() * ffec::G1::<ppT>::size_in_bits() + G2_size() * ffec::G2::<ppT>::size_in_bits();
+        return G1_size() * ppT::G1::size_in_bits() + G2_size() * ppT::G2::size_in_bits();
     }
 
     fn print_size(&self) 
@@ -389,11 +388,11 @@ pub fn
     r1cs_copy.swap_AB_if_beneficial();
 
     /* Generate secret randomness */
-    let t = ffec::Fr::<ppT>::random_element();
-    let alpha = ffec::Fr::<ppT>::random_element();
-    let beta = ffec::Fr::<ppT>::random_element();
-    let gamma = ffec::Fr::<ppT>::random_element();
-    let delta = ffec::Fr::<ppT>::random_element();
+    let t = ppT::Fr::random_element();
+    let alpha = ppT::Fr::random_element();
+    let beta = ppT::Fr::random_element();
+    let gamma = ppT::Fr::random_element();
+    let delta = ppT::Fr::random_element();
     let  gamma_inverse =gamma.inverse();
     let  delta_inverse =delta.inverse();
 
@@ -429,7 +428,7 @@ let Ht=qap.Ht;
 
     /* The gamma inverse product component: (beta*A_i(t) + alpha*B_i(t) + C_i(t)) * gamma^{-1}. */
     ffec::enter_block("Compute gamma_ABC for R1CS verification key");
-    let mut gamma_ABC=ffec::Fr_vector::<ppT>();
+    let mut gamma_ABC=ppT::Fr_vector();
     gamma_ABC.reserve(qap.num_inputs());
 
     let  gamma_ABC_0 = (beta * At[0] + alpha * Bt[0] + Ct[0]) * gamma_inverse;
@@ -441,7 +440,7 @@ let Ht=qap.Ht;
 
     /* The delta inverse product component: (beta*A_i(t) + alpha*B_i(t) + C_i(t)) * delta^{-1}. */
     ffec::enter_block("Compute L query for R1CS proving key");
-    let mut Lt=ffec::Fr_vector::<ppT>();
+    let mut Lt=ppT::Fr_vector();
     Lt.reserve(qap.num_variables() - qap.num_inputs());
 
    let mut  Lt_offset = qap.num_inputs() + 1;
@@ -465,20 +464,20 @@ let Ht=qap.Ht;
 // //#endif
 
     ffec::enter_block("Generating G1 MSM window table");
-let g1_generator=    ffec::G1::<ppT>::random_element();
+let g1_generator=    ppT::G1::random_element();
     let  g1_scalar_count = non_zero_At + non_zero_Bt +qap.num_variables();
-    let g1_scalar_size =ffec::Fr::<ppT>::size_in_bits();
-    let  g1_window_size = ffec::get_exp_window_size::<ffec::G1<ppT>>(g1_scalar_count);
+    let g1_scalar_size =ppT::Fr::size_in_bits();
+    let  g1_window_size = ffec::get_exp_window_size::<ppT::G1>(g1_scalar_count);
 
     ffec::print_indent(); print!("* G1 window: {}\n", g1_window_size);
     let  g1_table = ffec::get_window_table(g1_scalar_size, g1_window_size, g1_generator);
     ffec::leave_block("Generating G1 MSM window table");
 
     ffec::enter_block("Generating G2 MSM window table");
-    let  G2_gen =ffec::G2::<ppT>::random_element();
+    let  G2_gen =ppT::G2::random_element();
     let  g2_scalar_count = non_zero_Bt;
-    let g2_scalar_size =ffec::Fr::<ppT>::size_in_bits();
-    let g2_window_size = ffec::get_exp_window_size::<ffec::G2<ppT> >(g2_scalar_count);
+    let g2_scalar_size =ppT::Fr::size_in_bits();
+    let g2_window_size = ffec::get_exp_window_size::<ppT::G2 >(g2_scalar_count);
 
     ffec::print_indent(); print!("* G2 window: {}\n", g2_window_size);
     let  g2_table = ffec::get_window_table(g2_scalar_size, g2_window_size, G2_gen);
@@ -495,12 +494,12 @@ let g1_generator=    ffec::G1::<ppT>::random_element();
     ffec::enter_block("Compute the A-query", false);
     let  A_query = batch_exp(g1_scalar_size, g1_window_size, g1_table, At);
 // // #ifdef USE_MIXED_ADDITION
-//     ffec::batch_to_special<ffec::G1<ppT> >(A_query);
+//     ffec::batch_to_special<ppT::G1 >(A_query);
 // //#endif
     ffec::leave_block("Compute the A-query", false);
 
     ffec::enter_block("Compute the B-query", false);
-    let  mut  B_query = kc_batch_exp(ffec::Fr::<ppT>::size_in_bits(), g2_window_size, g1_window_size, g2_table, g1_table, ffec::Fr::<ppT>::one(), ffec::Fr::<ppT>::one(), Bt, chunks);
+    let  mut  B_query = kc_batch_exp(ppT::Fr::size_in_bits(), g2_window_size, g1_window_size, g2_table, g1_table, ppT::Fr::one(), ppT::Fr::one(), Bt, chunks);
     // NOTE: if USE_MIXED_ADDITION is defined,
     // kc_batch_exp will convert its output to special form internally
     ffec::leave_block("Compute the B-query", false);
@@ -508,14 +507,14 @@ let g1_generator=    ffec::G1::<ppT>::random_element();
     ffec::enter_block("Compute the H-query", false);
      let  mut H_query = batch_exp_with_coeff(g1_scalar_size, g1_window_size, g1_table, qap.Zt * delta_inverse, Ht);
 // // #ifdef USE_MIXED_ADDITION
-//     ffec::batch_to_special<ffec::G1<ppT> >(H_query);
+//     ffec::batch_to_special<ppT::G1 >(H_query);
 // //#endif
     ffec::leave_block("Compute the H-query", false);
 
     ffec::enter_block("Compute the L-query", false);
      let  mut L_query = batch_exp(g1_scalar_size, g1_window_size, g1_table, Lt);
 // // #ifdef USE_MIXED_ADDITION
-//     ffec::batch_to_special<ffec::G1<ppT> >(L_query);
+//     ffec::batch_to_special<ppT::G1 >(L_query);
 // //#endif
     ffec::leave_block("Compute the L-query", false);
     ffec::leave_block("Generate queries");
@@ -534,7 +533,7 @@ let g1_generator=    ffec::G1::<ppT>::random_element();
 
     ffec::leave_block("Call to r1cs_gg_ppzksnark_generator");
 
-    let mut  gamma_ABC_g1=accumulation_vector::<ffec::G1::<ppT> >::new(gamma_ABC_g1_0, gamma_ABC_g1_values);
+    let mut  gamma_ABC_g1=accumulation_vector::<ppT::G1 >::new(gamma_ABC_g1_0, gamma_ABC_g1_values);
 
     let mut vk = r1cs_gg_ppzksnark_verification_key::<ppT>(alpha_g1_beta_g2,
                                                                                          gamma_g2,
@@ -578,7 +577,7 @@ pub fn
 // //#endif
 
     ffec::enter_block("Compute the polynomial H");
-    let  qap_wit = r1cs_to_qap_witness_map(pk.constraint_system, primary_input, auxiliary_input, ffec::Fr::<ppT>::zero(), ffec::Fr::<ppT>::zero());
+    let  qap_wit = r1cs_to_qap_witness_map(pk.constraint_system, primary_input, auxiliary_input, ppT::Fr::zero(), ppT::Fr::zero());
 
     /* We are dividing degree 2(d-1) polynomial by degree d polynomial
        and not adding a PGHR-style ZK-patch, so our H is degree d-2 */
@@ -588,14 +587,14 @@ pub fn
     ffec::leave_block("Compute the polynomial H");
 
 // // #ifdef DEBUG
-//     let t =ffec::Fr::<ppT>::random_element();
+//     let t =ppT::Fr::random_element();
 //     qap_instance_evaluation<ffec::Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
 //     assert!(qap_inst.is_satisfied(qap_wit));
 // //#endif
 
     /* Choose two random field elements for prover zero-knowledge. */
-let r=    ffec::Fr::<ppT>::random_element();
-let s=    ffec::Fr::<ppT>::random_element();
+let r=    ppT::Fr::random_element();
+let s=    ppT::Fr::random_element();
 
 // // #ifdef DEBUG
 //     assert!(qap_wit.coefficients_for_ABCs.len() == qap_wit.num_variables());
@@ -615,10 +614,10 @@ let s=    ffec::Fr::<ppT>::random_element();
 
     ffec::enter_block("Compute evaluation to A-query", false);
     // TODO: sort out indexing
-    let  mut const_padded_assignment=ffec::Fr_vector::<ppT>::new(1, ffec::Fr::<ppT>::one());
+    let  mut const_padded_assignment=ppT::Fr_vector::new(1, ppT::Fr::one());
     const_padded_assignment.insert(const_padded_assignment.end(), qap_wit.coefficients_for_ABCs.begin(), qap_wit.coefficients_for_ABCs.end());
 
-    let  evaluation_At = ffec::multi_exp_with_mixed_addition::<ffec::G1<ppT>,
+    let  evaluation_At = ffec::multi_exp_with_mixed_addition::<ppT::G1,
                                                                         ffec::Fr<ppT>,
                                                                         ffec::multi_exp_method_BDLO12>(
         pk.A_query.begin(),
@@ -629,8 +628,8 @@ let s=    ffec::Fr::<ppT>::random_element();
     ffec::leave_block("Compute evaluation to A-query", false);
 
     ffec::enter_block("Compute evaluation to B-query", false);
-    let  evaluation_Bt = kc_multi_exp_with_mixed_addition::<ffec::G2<ppT>,
-                                                                                                           ffec::G1<ppT>,
+    let  evaluation_Bt = kc_multi_exp_with_mixed_addition::<ppT::G2,
+                                                                                                           ppT::G1,
                                                                                                            ffec::Fr<ppT>,
                                                                                                            ffec::multi_exp_method_BDLO12>(
         pk.B_query,
@@ -642,8 +641,8 @@ let s=    ffec::Fr::<ppT>::random_element();
     ffec::leave_block("Compute evaluation to B-query", false);
 
     ffec::enter_block("Compute evaluation to H-query", false);
-    let  evaluation_Ht = ffec::multi_exp::<ffec::G1::<ppT>,
-                                                    ffec::Fr::<ppT>,
+    let  evaluation_Ht = ffec::multi_exp::<ppT::G1,
+                                                    ppT::Fr,
                                                     ffec::multi_exp_method_BDLO12>(
         pk.H_query.begin(),
         pk.H_query.begin() + (qap_wit.degree() - 1),
@@ -653,8 +652,8 @@ let s=    ffec::Fr::<ppT>::random_element();
     ffec::leave_block("Compute evaluation to H-query", false);
 
     ffec::enter_block("Compute evaluation to L-query", false);
-    let  evaluation_Lt = ffec::multi_exp_with_mixed_addition::<ffec::G1::<ppT>,
-                                                                        ffec::Fr::<ppT>,
+    let  evaluation_Lt = ffec::multi_exp_with_mixed_addition::<ppT::G1,
+                                                                        ppT::Fr,
                                                                         ffec::multi_exp_method_BDLO12>(
         pk.L_query.begin(),
         pk.L_query.end(),
@@ -866,7 +865,7 @@ pub fn
     let pvk_vk_delta_g2_precomp = ppT::affine_ate_precompute_G2(vk.delta_g2);
 
     ffec::enter_block("Accumulate input");
-    let  accumulated_IC = vk.gamma_ABC_g1. accumulate_chunk::<ffec::Fr::<ppT> >(primary_input.begin(),primary_input.end(), 0);
+    let  accumulated_IC = vk.gamma_ABC_g1. accumulate_chunk::<ppT::Fr >(primary_input.begin(),primary_input.end(), 0);
     let acc = &accumulated_IC.first;
     ffec::leave_block("Accumulate input");
 
@@ -1126,18 +1125,18 @@ pub fn
  dummy_verification_key<ppT>(input_size:usize)->r1cs_gg_ppzksnark_verification_key<ppT>
 {
     let result=r1cs_gg_ppzksnark_verification_key::<ppT>() ;
-    result.alpha_g1_beta_g2 = ffec::Fr::<ppT>::random_element() * ffec::GT::<ppT>::random_element();
-    result.gamma_g2 = ffec::G2::<ppT>::random_element();
-    result.delta_g2 = ffec::G2::<ppT>::random_element();
+    result.alpha_g1_beta_g2 = ppT::Fr::random_element() * ppT::GT::random_element();
+    result.gamma_g2 = ppT::G2::random_element();
+    result.delta_g2 = ppT::G2::random_element();
 
-    let base = ffec::G1::<ppT>::random_element();
-    let mut v= ffec::G1_vector::<ppT>();
+    let base = ppT::G1::random_element();
+    let mut v= ppT::G1_vector();
     for i in 0..input_size
     {
-        v.push(ffec::G1::<ppT>::random_element());
+        v.push(ppT::G1::random_element());
     }
 
-    result.gamma_ABC_g1 = accumulation_vector::<ffec::G1<ppT> >(base, v);
+    result.gamma_ABC_g1 = accumulation_vector::<ppT::G1 >(base, v);
 
     return result;
 }

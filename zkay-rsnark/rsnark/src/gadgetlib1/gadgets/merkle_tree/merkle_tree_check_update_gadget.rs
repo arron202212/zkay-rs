@@ -120,22 +120,22 @@ pub fn new(pb:protoboard<FieldT>,
         let mut  prev_inp=block_variable::<FieldT>::new(pb, prev_path.left_digests[i], prev_path.right_digests[i], FMT(self.annotation_prefix, " prev_inp_{}", i));
         prev_hasher_inputs.push(prev_inp);
         prev_hashers.push(HashT(pb, 2*digest_size, prev_inp, if i == 0 {prev_root_digest} else{prev_internal_output[i-1]},
-                                                                  FMT(self.annotation_prefix, " prev_hashers_{}", i)));
+                                                                FMT(self.annotation_prefix, " prev_hashers_{}", i)));
 
         let mut  next_inp=block_variable::<FieldT>::new(pb, next_path.left_digests[i], next_path.right_digests[i], FMT(self.annotation_prefix, " next_inp_{}", i));
         next_hasher_inputs.push(next_inp);
         next_hashers.push(HashT(pb, 2*digest_size, next_inp, if i == 0 {*computed_next_root} else{next_internal_output[i-1]},
-                                                                  FMT(self.annotation_prefix, " next_hashers_{}", i)));
+                                                                FMT(self.annotation_prefix, " next_hashers_{}", i)));
     }
 
     for i in 0..tree_depth
     {
         prev_propagators.push(digest_selector_gadget::<FieldT>(pb,  digest_size, if i < tree_depth -1 {prev_internal_output[i]} else {prev_leaf_digest},
                                                                      address_bits[tree_depth-1-i], prev_path.left_digests[i], prev_path.right_digests[i],
-                                                                     FMT(self.annotation_prefix, " prev_propagators_{}", i)));
+                                                                   FMT(self.annotation_prefix, " prev_propagators_{}", i)));
         next_propagators.push(digest_selector_gadget::<FieldT>(pb, digest_size, if i < tree_depth -1 { next_internal_output[i]} else {next_leaf_digest},
                                                                      address_bits[tree_depth-1-i], next_path.left_digests[i], next_path.right_digests[i],
-                                                                     FMT(self.annotation_prefix, " next_propagators_{}", i)));
+                                                                   FMT(self.annotation_prefix, " next_propagators_{}", i)));
     }
 
     check_next_root.reset(bit_vector_copy_gadget::<FieldT>::new(pb, computed_next_root.bits, next_root_digest.bits, update_successful, FieldT::capacity(), FMT(annotation_prefix, " check_next_root")));
@@ -181,7 +181,7 @@ pub fn generate_r1cs_constraints()
             self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(address_bits[tree_depth-1-i],
                                                                  prev_path.left_digests[i].bits[j] - next_path.left_digests[i].bits[j] - prev_path.right_digests[i].bits[j] + next_path.right_digests[i].bits[j],
                                                                  next_path.right_digests[i].bits[j] - prev_path.right_digests[i].bits[j]),
-                                         FMT(self.annotation_prefix, " aux_check_{}_{}", i, j));
+                                       FMT(self.annotation_prefix, " aux_check_{}_{}", i, j));
         }
     }
 
@@ -262,8 +262,8 @@ pub fn  test_merkle_tree_check_update_gadget()
     let tree_depth = 16;
     let mut prev_path=vec![merkle_authentication_node;tree_depth];
 
-    let  prev_load_hash:Vec<_>=(0..digest_len).map(|_| std::rand() % 2).collect();
-    let  prev_store_hash:Vec<_>=(0..digest_len).map(|_| std::rand() % 2).collect();
+    let  prev_load_hash:Vec<_>=(0..digest_len).map(|_| rand::random() % 2).collect();
+    let  prev_store_hash:Vec<_>=(0..digest_len).map(|_| rand::random() % 2).collect();
 
     let  loaded_leaf = prev_load_hash;
     let stored_leaf = prev_store_hash;
@@ -273,10 +273,10 @@ pub fn  test_merkle_tree_check_update_gadget()
     let mut  address = 0;
     for level in ( 0..=tree_depth-1).rev()
     {
-        let mut computed_is_right = (std::rand() % 2);
+        let mut computed_is_right = (rand::random() % 2);
         address |= if computed_is_right {1u64 << (tree_depth-1-level)} else{0};
         address_bits.push_back(computed_is_right);
-        let mut  other:Vec<_>=(0..digest_len).map(|_| std::rand() % 2).collect();
+        let mut  other:Vec<_>=(0..digest_len).map(|_| rand::random() % 2).collect();
 
          let mut  load_block = prev_load_hash;
         load_block.insert( if computed_is_right  {load_block.begin()} else {load_block.end()}, other.begin(), other.end());

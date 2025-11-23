@@ -1,24 +1,21 @@
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- This file defines the default architecture and curve choices for RAM
- ppzk-SNARK.
+This file defines the default architecture and curve choices for RAM
+ppzk-SNARK.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 
 //#ifndef RAM_PPZKSNARK_PP_HPP_
 // #define RAM_PPZKSNARK_PP_HPP_
 
-use crate::common::default_types::tinyram_ppzksnark_pp;
+// use crate::common::default_types::tinyram_ppzksnark_pp;
 
-
-
-// type default_ram_ppzksnark_pp=default_tinyram_ppzksnark_pp;
-
-
+pub type default_ram_ppzksnark_pp =
+    crate::common::default_types::tinyram_ppzksnark_pp::default_tinyram_ppzksnark_pp;
 
 //#endif // RAM_PPZKSNARK_PP_HPP_

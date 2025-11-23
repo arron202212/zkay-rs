@@ -375,8 +375,8 @@ pub fn  test_arithmetic_consistency_enforcer_gadget()
 
     for i in 0..1u64<<ap.opcode_width()
     {
-        self.pb.val(instruction_results[i]) = FieldT(std::rand());
-        self.pb.val(instruction_flags[i]) = FieldT(std::rand() % 2);
+        self.pb.val(instruction_results[i]) = FieldT(rand::random());
+        self.pb.val(instruction_flags[i]) = FieldT(rand::random() % 2);
     }
 
     self.pb.val(incoming_pc) = FieldT(12345);
@@ -491,7 +491,7 @@ pub fn  test_control_flow_consistency_enforcer_gadget()
 
     for i in 0..1u64<<ap.opcode_width()
     {
-        self.pb.val(instruction_results[i]) = FieldT(std::rand());
+        self.pb.val(instruction_results[i]) = FieldT(rand::random());
     }
 
     self.pb.val(incoming_pc) = FieldT(12345);

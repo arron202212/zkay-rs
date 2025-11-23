@@ -222,13 +222,13 @@ pub fn dump_variables()
 }
 
 
- pub fn num_inputs() ->usize
+ pub fn num_inputs(&self) ->usize
 {
     return constraint_system.num_inputs();
 }
 
 
- pub fn num_variables() ->usize
+ pub fn num_variables(&self) ->usize
 {
     return next_free_var - 1;
 }

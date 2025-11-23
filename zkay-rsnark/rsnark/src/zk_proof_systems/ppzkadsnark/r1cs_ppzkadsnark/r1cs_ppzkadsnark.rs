@@ -45,7 +45,7 @@
 
 // 
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;

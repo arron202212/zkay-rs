@@ -12,7 +12,7 @@
 // //#ifndef R1CS_SE_PPZKSNARK_PARAMS_HPP_
 // // #define R1CS_SE_PPZKSNARK_PARAMS_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 

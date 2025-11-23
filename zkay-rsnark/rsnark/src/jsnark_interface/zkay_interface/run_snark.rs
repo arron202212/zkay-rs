@@ -4,6 +4,7 @@ use  crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 use  crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark;
 use  crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
 use  crate::jsnark_interface::circuit_reader;
+use ffec::common::profiling::{enter_block,leave_block};
 
 enum ProvingScheme {
     PGHR13,
@@ -17,10 +18,10 @@ use std::io::{BufWriter, Write};
 // int generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_scheme:i32, check_verification:i32);
 // }
 
-type   ppT=ffec::default_ec_pp ;
+type   ppT=ff_curves::default_ec_pp ;
 
-fn   serialize( pt:ffec::G1<ppT>)->String {
-    let  num_limbs = ffec::alt_bn128_Fq::num_limbs;
+fn   serialize( pt:ppT::G1)->String {
+    let  num_limbs = ff_curves::alt_bn128_Fq::num_limbs;
     pt.to_affine_coordinates();
    
 
@@ -31,8 +32,8 @@ let mut stream = BufWriter::new(buf.as_mut());
     buf.into_iter().collect()
 }
 
-fn serialize2( pt:ffec::G2<ppT>)->String  {
-    let  num_limbs = ffec::alt_bn128_Fq::num_limbs;
+fn serialize2( pt:ppT::G2)->String  {
+    let  num_limbs = ff_curves::alt_bn128_Fq::num_limbs;
     pt.to_affine_coordinates();
     let mut buf=[' ';512];
 let mut stream = BufWriter::new(buf.as_mut());
@@ -136,15 +137,15 @@ fn keygen<KeyPairT,F:Fn(&r1cs_constraint_system<FieldT>)->KeyPairT>(cs:& r1cs_co
     let  keypair = generate(cs);
 
     // Dump proving key to binary file
-    ffec::enter_block("WritingProverKey");
+    ff_curves::enter_block("WritingProverKey");
     writeToFile(prover_key_filename, keypair.pk);
-    ffec::leave_block("WritingProverKey");
+    ff_curves::leave_block("WritingProverKey");
 
     // Dump verification key in text format
-    ffec::enter_block("SerializeVk");
+    ff_curves::enter_block("SerializeVk");
     let  vk_out=File::open(verification_key_filename);
     serialize_vk(vk_out, keypair.vk, keypair.pk);
-    ffec::leave_block("SerializeVk");
+    ff_curves::leave_block("SerializeVk");
 
     // Also dump in binary format for local verification
     writeToFile(verification_key_filename + ".bin", keypair.vk);
@@ -166,36 +167,36 @@ VerificationKeyT,F2:Fn(& VerificationKeyT , & r1cs_primary_input<FieldT> ,  Proo
     let mut  proof;
     {
         // Read proving key
-        ffec::enter_block("ReadingProverKey");
+        ff_curves::enter_block("ReadingProverKey");
         let  pk = loadFromFile::<ProvingKeyT>(prover_key_filename);
-        ffec::leave_block("ReadingProverKey");
+        ff_curves::leave_block("ReadingProverKey");
 
         // Generate proof
         proof = prove(pk, public_inputs, private_inputs);
     }
 
     // Dump proof in text format
-    ffec::enter_block("SerializeProof");
+    ff_curves::enter_block("SerializeProof");
     let  p(proof_filename);
     serialize_proof(p, proof);
-    ffec::leave_block("SerializeProof");
+    ff_curves::leave_block("SerializeProof");
 
     if check_verification {
         // Check if verification works
         let  vk = loadFromFile::<VerificationKeyT>(verification_key_filename);
 
-        ffec::enter_block("Verifying proof");
+        ff_curves::enter_block("Verifying proof");
         let  ans = verify(vk, public_inputs, proof);
         println!("\n");
         println!("* The verification result is: {}\n", if ans { "PASS"} else {"FAIL"});
-        ffec::leave_block("Verifying proof");
+        ff_curves::leave_block("Verifying proof");
         return ans;
     }
     true
 }
 
 fn  generate_keys(input_directory:&str, output_directory:&str, proving_scheme:i32)->i32 {
-    ffec::start_profiling();
+    ff_curves::start_profiling();
     gadgetlib2::initPublicParamsFromDefaultPp();
     gadgetlib2::GadgetLibAdapter::resetVariableIndex();
 
@@ -212,29 +213,29 @@ fn  generate_keys(input_directory:&str, output_directory:&str, proving_scheme:i3
     let mut  cs;
     {
         let  pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
-        ffec::enter_block("CircuitReading");
+        ff_curves::enter_block("CircuitReading");
         let  reader=CircuitReader::new(arith_filename, dummy_input_filename, pb);
-        ffec::leave_block("CircuitReading");
-        ffec::enter_block("Extract constraint system");
+        ff_curves::leave_block("CircuitReading");
+        ff_curves::enter_block("Extract constraint system");
         cs = get_constraint_system_from_gadgetlib2(*pb);
         cs.primary_input_size = reader.getNumInputs() + reader.getNumOutputs();
         cs.auxiliary_input_size = gadgetlib2::GadgetLibAdapter::getNextFreeIndex() - cs.num_inputs();
-        ffec::leave_block("Extract constraint system");
+        ff_curves::leave_block("Extract constraint system");
     }
 
     match ps {
          ProvingScheme::PGHR13=>
-          {  ffec::print_header("PGHR13 Generator");
+          {  ff_curves::print_header("PGHR13 Generator");
             keygen::<r1cs_ppzksnark_keypair<ppT>, r1cs_ppzksnark_generator<ppT>>(cs, prover_key_filename,
                                                                                verification_key_filename);
         }
          ProvingScheme::GROTH16=>
-           { ffec::print_header("Groth16 Generator");
+           { ff_curves::print_header("Groth16 Generator");
             keygen::<r1cs_gg_ppzksnark_keypair<ppT>, r1cs_gg_ppzksnark_generator<ppT>>(cs, prover_key_filename,
                                                                                      verification_key_filename);
             }
          ProvingScheme::GM17=>
-           { ffec::print_header("GM17 Generator");
+           { ff_curves::print_header("GM17 Generator");
             keygen::<r1cs_se_ppzksnark_keypair<ppT>, r1cs_se_ppzksnark_generator<ppT>>(cs, prover_key_filename,
                                                                                      verification_key_filename);
             }
@@ -245,7 +246,7 @@ fn  generate_keys(input_directory:&str, output_directory:&str, proving_scheme:i3
 }
 
 fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_scheme:i32, check_verification:i32)->i32 {
-    ffec::start_profiling();
+    ff_curves::start_profiling();
     gadgetlib2::initPublicParamsFromDefaultPp();
     gadgetlib2::GadgetLibAdapter::resetVariableIndex();
 
@@ -264,7 +265,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
         let mut  cs;
         {
             // Read the circuit, evaluate, and translate constraints
-            ffec::enter_block("CircuitReading");
+            ff_curves::enter_block("CircuitReading");
             let mut  full_assignment;
             {
                 let mut  pb = gadgetlib2::Protoboard::create(gadgetlib2::R1P);
@@ -277,7 +278,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
                 full_assignment = get_variable_assignment_from_gadgetlib2(*pb);
                 cs.primary_input_size = primary_input_size;
                 cs.auxiliary_input_size = full_assignment.len() - primary_input_size;
-                ffec::leave_block("CircuitReading");
+                ff_curves::leave_block("CircuitReading");
             }
 
             // extract primary and auxiliary input
@@ -294,7 +295,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
     let  ret;
     match ps {
          ProvingScheme::PGHR13=> {
-            ffec::print_header("PGHR13 Prover");
+            ff_curves::print_header("PGHR13 Prover");
             ret = proofgen::<
                     r1cs_ppzksnark_proof<ppT>, r1cs_ppzksnark_proving_key<ppT>, r1cs_ppzksnark_prover<ppT>,
                     r1cs_ppzksnark_verification_key<ppT>, r1cs_ppzksnark_verifier_strong_IC<ppT>>(
@@ -304,7 +305,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
            
         }
         ProvingScheme::GROTH16=> {
-            ffec::print_header("Groth16 Prover");
+            ff_curves::print_header("Groth16 Prover");
             ret = proofgen::<
                     r1cs_gg_ppzksnark_proof<ppT>, r1cs_gg_ppzksnark_proving_key<ppT>, r1cs_gg_ppzksnark_prover<ppT>,
                     r1cs_gg_ppzksnark_verification_key<ppT>, r1cs_gg_ppzksnark_verifier_strong_IC<ppT>>(
@@ -314,7 +315,7 @@ fn generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_s
            
         }
          ProvingScheme::GM17=> {
-            ffec::print_header("GM17 Prover");
+            ff_curves::print_header("GM17 Prover");
             ret = proofgen::<
                     r1cs_se_ppzksnark_proof<ppT>, r1cs_se_ppzksnark_proving_key<ppT>, r1cs_se_ppzksnark_prover<ppT>,
                     r1cs_se_ppzksnark_verification_key<ppT>, r1cs_se_ppzksnark_verifier_strong_IC<ppT>>(

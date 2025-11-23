@@ -13,7 +13,7 @@
 
 use crate::gadgetlib1::gadget;
 
-fn FMT(s:&String,c:&str){
+pub fn FMT(s:&String,c:&str){
 
 }
 
@@ -136,7 +136,7 @@ impl dual_variable_gadget  {
         // consistency_check.reset(packing_gadget::<FieldT>::new(pb,
         //                                                    bits,
         //                                                    packed,
-        //                                                    FMT(annotation_prefix, " consistency_check")));
+        //                                                  FMT(annotation_prefix, " consistency_check")));
         Self{packed,bits}
     }
 
@@ -150,7 +150,7 @@ impl dual_variable_gadget  {
         consistency_check.reset( packing_gadget::<FieldT>::new(pb,
                                                            bits,
                                                            packed,
-                                                           FMT(annotation_prefix, " consistency_check")));
+                                                         FMT(annotation_prefix, " consistency_check")));
     }
 
     pub fn new3(pb:&protoboard<FieldT> ,
@@ -164,7 +164,7 @@ impl dual_variable_gadget  {
         consistency_check.reset( packing_gadget::<FieldT>::new(pb,
                                                            bits,
                                                            packed,
-                                                           FMT(annotation_prefix, " consistency_check")));
+                                                         FMT(annotation_prefix, " consistency_check")));
     }
 
     // pub fn generate_r1cs_constraints(enforce_bitness:bool);
@@ -268,12 +268,12 @@ impl comparison_gadget {
         not_all_zeros.allocate(pb, FMT(annotation_prefix, " not_all_zeros"));
 
         pack_alpha.reset( packing_gadget::<FieldT>::new(pb, alpha, alpha_packed,
-                                                    FMT(annotation_prefix, " pack_alpha")));
+                                                  FMT(annotation_prefix, " pack_alpha")));
 
         all_zeros_test.reset(disjunction_gadget::<FieldT>::new(pb,
                                                             pb_variable_array::<FieldT>(alpha.begin(), alpha.begin() + n),
                                                             not_all_zeros,
-                                                            FMT(annotation_prefix, " all_zeros_test")));
+                                                          FMT(annotation_prefix, " all_zeros_test")));
     }
 
     // pub fn generate_r1cs_constraints();
@@ -391,14 +391,14 @@ pub fn generate_boolean_r1cs_constraint(pb:&protoboard<FieldT> , lc:&pb_linear_c
 /* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
 {
     pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(lc, 1-lc, 0),
-                           FMT(annotation_prefix, " boolean_r1cs_constraint"));
+                         FMT(annotation_prefix, " boolean_r1cs_constraint"));
 }
 
 
 pub fn generate_r1cs_equals_const_constraint(pb:&protoboard<FieldT> , lc:&pb_linear_combination<FieldT>, c:&FieldT, annotation_prefix:&String)
 {
     pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, lc, c),
-                           FMT(annotation_prefix, " constness_constraint"));
+                         FMT(annotation_prefix, " constness_constraint"));
 }
 
 impl packing_gadget<FieldT>{
@@ -505,7 +505,7 @@ pub fn  generate_r1cs_constraints()
     for i in 0..source.len()
     {
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(do_copy, source[i] - target[i], 0),
-                                     FMT(annotation_prefix, " copying_check_{}", i));
+                                   FMT(annotation_prefix, " copying_check_{}", i));
     }
 }
 
@@ -798,7 +798,7 @@ pub fn  generate_r1cs_constraints()
 
     /* not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget */
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, not_all_zeros,
-                                     FMT(annotation_prefix, " not_all_zeros"));
+                                   FMT(annotation_prefix, " not_all_zeros"));
 
     /* constraints for packed(alpha) = 2^n + B - A */
     pack_alpha.generate_r1cs_constraints(true);
@@ -807,7 +807,7 @@ pub fn  generate_r1cs_constraints()
     /* compute result */
     all_zeros_test.generate_r1cs_constraints();
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(less_or_eq, not_all_zeros, less),
-                                 FMT(annotation_prefix, " less"));
+                               FMT(annotation_prefix, " less"));
 }
 
 
@@ -877,7 +877,7 @@ pub fn  generate_r1cs_constraints()
         self.pb.add_r1cs_constraint(
             r1cs_constraint::<FieldT>(A[i], B[i],
                                     (if i == A.len()-1  {result} else {S[i] + ( if i == 0  {0 * ONE} else {-S[i-1]})})),
-            FMT(annotation_prefix, " S_{}", i));
+          FMT(annotation_prefix, " S_{}", i));
     }
 }
 
@@ -951,7 +951,7 @@ pub fn  generate_r1cs_constraints()
     {
         self.pb.add_r1cs_constraint(
             r1cs_constraint::<FieldT>(alpha[i], index - i, 0),
-            FMT(annotation_prefix, " alpha_{}", i));
+          FMT(annotation_prefix, " alpha_{}", i));
     }
 
     /* 1 * (\sum \alpha_i) = success_flag */

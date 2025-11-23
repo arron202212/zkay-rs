@@ -31,7 +31,7 @@ pub fn  simulate_random_memory_contents<FieldT>(ap:tinyram_architecture_params, 
 
 pub fn  profile_ram_zksnark_verifier<ppT>(ap:tinyram_architecture_params, input_size:usize, program_size:usize)
 {
-    type ramT=ram_zksnark_machine_pp<ppT> ;
+    // type ramT=ram_zksnark_machine_pp<ppT> ;
     let time_bound  = 10;
 
     let boot_trace_size_bound = program_size + input_size;
@@ -86,7 +86,7 @@ pub fn  print_ram_zksnark_verifier_profiling<ppT>()
 
 pub fn  profile_ram_zksnark<ppT>(ap:tinyram_architecture_params, program_size:usize, input_size:usize, time_bound:usize)
 {
-    type ramT=ram_zksnark_machine_pp<ppT> ;
+    // type ramT=ram_zksnark_machine_pp<ppT> ; 
 
     let  boot_trace_size_bound = program_size + input_size;
     let example = gen_ram_example_complex::<ramT>(ap, boot_trace_size_bound, time_bound, true);

@@ -135,7 +135,7 @@ pub fn new(pb:&protoboard<FieldT>,
             doubling_steps[dbl_id].reset(Fpk_sqr_gadgetT::<FpkT>::new(pb,
                                                                    *intermediate[intermed_id],
                                                                    if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
-                                                                   FMT(annotation_prefix, " doubling_steps_{}", dbl_count)));
+                                                                 FMT(annotation_prefix, " doubling_steps_{}", dbl_count)));
             intermed_id+=1;
             dbl_id+=1;
         }
@@ -151,7 +151,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                                        *intermediate[intermed_id],
                                                                        elt,
                                                                        if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
-                                                                       FMT(annotation_prefix, " addition_steps_{}", dbl_count)));
+                                                                     FMT(annotation_prefix, " addition_steps_{}", dbl_count)));
                 add_id+=1;
                 intermed_id+=1;
             }
@@ -162,7 +162,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                                           if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
                                                                           elt,
                                                                           *intermediate[intermed_id],
-                                                                          FMT(annotation_prefix, " subtraction_steps_{}", dbl_count)));
+                                                                        FMT(annotation_prefix, " subtraction_steps_{}", dbl_count)));
                 sub_id+=1;
                 intermed_id+=1;
             }

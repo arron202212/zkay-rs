@@ -258,7 +258,7 @@ pub fn generate_r1cs_witness(el:&Fp6T)
     return Fp6_variable::<Fp6T>(self.pb,
                               Fp3_variable::<Fp3T>(self.pb, new_c0c0, new_c0c1, new_c0c2, FMT(self.annotation_prefix, " Frobenius_map_c0")),
                               Fp3_variable::<Fp3T>(self.pb, new_c1c0, new_c1c1, new_c1c2, FMT(self.annotation_prefix, " Frobenius_map_c1")),
-                              FMT(self.annotation_prefix, " Frobenius_map"));
+                            FMT(self.annotation_prefix, " Frobenius_map"));
 }
 
 
@@ -322,7 +322,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                            result_c1_plus_v0_plus_v1_c0,
                                                            result_c1_plus_v0_plus_v1_c1,
                                                            result_c1_plus_v0_plus_v1_c2,
-                                                           FMT(annotation_prefix, " result_c1_plus_v0_plus_v1")));
+                                                         FMT(annotation_prefix, " result_c1_plus_v0_plus_v1")));
 
     compute_result_c1.reset(Fp3_mul_gadget::<Fp3T>::new(pb, *Ac0_plus_Ac1, *Bc0_plus_Bc1, *result_c1_plus_v0_plus_v1, FMT(annotation_prefix, " compute_result_c1")));
     // gadget<FieldT>(pb, annotation_prefix), 
@@ -423,7 +423,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                            result_c1_plus_v0_plus_v1_c0,
                                                            result_c1_plus_v0_plus_v1_c1,
                                                            result_c1_plus_v0_plus_v1_c2,
-                                                           FMT(annotation_prefix, " result_c1_plus_v0_plus_v1")));
+                                                         FMT(annotation_prefix, " result_c1_plus_v0_plus_v1")));
 
     compute_result_c1.reset(Fp3_mul_gadget::<Fp3T>::new(pb, *Ac0_plus_Ac1, *Bc0_plus_Bc1, *result_c1_plus_v0_plus_v1, FMT(annotation_prefix, " compute_result_c1")));
     // gadget<FieldT>(pb, annotation_prefix), 
@@ -437,15 +437,15 @@ pub fn generate_r1cs_constraints()
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0.c1,
                                                          Fp3T::non_residue * B.c0.c2,
                                                          result.c0.c0 - Fp6T::non_residue * v1.c2),
-                                 FMT(self.annotation_prefix, " v0.c0"));
+                               FMT(self.annotation_prefix, " v0.c0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0.c2,
                                                          Fp3T::non_residue * B.c0.c2,
                                                          result.c0.c1 - v1.c0),
-                                 FMT(self.annotation_prefix, " v0.c1"));
+                               FMT(self.annotation_prefix, " v0.c1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0.c0,
                                                          B.c0.c2,
                                                          result.c0.c2 - v1.c1),
-                                 FMT(self.annotation_prefix, " v0.c2"));
+                               FMT(self.annotation_prefix, " v0.c2"));
     compute_result_c1.generate_r1cs_constraints();
 }
 

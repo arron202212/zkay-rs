@@ -71,7 +71,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
 {
     ffec::enter_block("Call to run_r1cs_mp_ppzkpcd_tally_example");
 
-    type FieldT=ffec::Fr< PCD_ppT::curve_A_pp> ;
+    type FieldT=ffec::Fr;//< PCD_ppT::curve_A_pp> ;
 
     let mut  all_accept = true;
 
@@ -106,12 +106,12 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
                 }
                 else
                 {
-                    tree_types[node_idx] = 1 + (std::rand() % 2);
+                    tree_types[node_idx] = 1 + (rand::random() % 2);
                 }
             }
 
-            tree_elems[node_idx] = std::rand() % 100;
-            tree_arity[node_idx] = 1 + (std::rand() % max_arity); /* we will just skip below this threshold */
+            tree_elems[node_idx] = rand::random() % 100;
+            tree_arity[node_idx] = 1 + (rand::random() % max_arity); /* we will just skip below this threshold */
             print!("tree_types[{}] = {}\n", node_idx, tree_types[node_idx]);
             print!("tree_elems[{}] = {}\n", node_idx, tree_elems[node_idx]);
             print!("tree_arity[{}] = {}\n", node_idx, tree_arity[node_idx]);

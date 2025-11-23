@@ -304,14 +304,14 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
 
             membership_proofs.push(set_membership_proof_variable::<FieldT, CRH_with_bit_out_gadget::<FieldT> >(pb,
                                                                                                                    max_number_of_predicates,
-                                                                                                                   FMT("", "membership_proof_{}", i)));
+                                                                                                                 FMT("", "membership_proof_{}", i)));
             membership_checkers.push(set_commitment_gadget::<FieldT, CRH_with_bit_out_gadget::<FieldT> >(pb,
                                                                                                              max_number_of_predicates,
                                                                                                              translation_step_vks_bits[i],
                                                                                                              *commitment,
                                                                                                              membership_proofs[i],
                                                                                                              membership_check_results[i],
-                                                                                                             FMT("", "membership_checkers_{}", i)));
+                                                                                                           FMT("", "membership_checkers_{}", i)));
         }
     }
 
@@ -358,7 +358,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
                                                                                                 commitment_and_incoming_messages_digest_bits[i],
                                                                                                 commitment_and_incoming_message_digests[i],
                                                                                                 field_logsize(),
-                                                                                                FMT("", "unpack_commitment_and_incoming_message_digests_{}", i)));
+                                                                                              FMT("", "unpack_commitment_and_incoming_message_digests_{}", i)));
 
         verifier_input.push(commitment_and_incoming_messages_digest_bits[i]);
         while (verifier_input[i].len() < padded_verifier_input_size)
@@ -374,7 +374,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
                                                                   mp_translation_step_pcd_circuit_maker::<other_curve::<ppT> >::field_capacity(),
                                                                   proof[i],
                                                                   verification_results[i],
-                                                                  FMT("", "verifier_{}", i)));
+                                                                FMT("", "verifier_{}", i)));
     }
 
     pb.set_input_sizes(input_size_in_elts());
@@ -514,7 +514,7 @@ pub fn generate_r1cs_constraints()
                     pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(( if i == 0  {common_type} else{ common_type_check_aux[i-1]}),
                                                                    common_type - FieldT(*it),
                                                                    (if i == compliance_predicate.accepted_input_types.len() - 1  {0 * ONE }else {common_type_check_aux[i]})),
-                                           FMT("", "common_type_in_prescribed_set_{}_must_equal_{}", i, *it));
+                                         FMT("", "common_type_in_prescribed_set_{}_must_equal_{}", i, *it));
                     
                 }
             }
@@ -647,13 +647,13 @@ pub fn generate_r1cs_witness(commitment_to_translation_step_r1cs_vks:set_commitm
 
  pub fn field_logsize()->usize
 {
-    return ffec::Fr::<ppT>::size_in_bits();
+    return ppT::Fr::size_in_bits();
 }
 
 
 pub fn field_capacity()->usize
 {
-    return ffec::Fr::<ppT>::capacity();
+    return ppT::Fr::capacity();
 }
 
 
@@ -763,13 +763,13 @@ pub fn get_auxiliary_input() ->r1cs_auxiliary_input<ffec::Fr<ppT> >
 
  pub fn field_logsize()->usize
 {
-    return ffec::Fr::<ppT>::size_in_bits();
+    return ppT::Fr::size_in_bits();
 }
 
 
 pub fn field_capacity()->usize
 {
-    return ffec::Fr::<ppT>::capacity();
+    return ppT::Fr::capacity();
 }
 
 

@@ -876,7 +876,7 @@ public class IntegerPolynomial
         {
             degree--;
         }
-        return degree;
+        return self.degree;
     }
 
     /**

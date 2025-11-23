@@ -134,7 +134,7 @@ pub fn new(pb:protoboard<FieldT>,
                                                                        round_a[i], round_b[i], round_c[i], round_d[i],
                                                                        round_e[i], round_f[i], round_g[i], round_h[i],
                                                                        packed_W[i], SHA256_K[i], round_a[i+1], round_e[i+1],
-                                                                       FMT(self.annotation_prefix, " round_functions_{}", i)));
+                                                                     FMT(self.annotation_prefix, " round_functions_{}", i)));
     }
 
     /* finalize */
@@ -147,7 +147,7 @@ pub fn new(pb:protoboard<FieldT>,
                                                         32+1,
                                                         reduced_output[i],
                                                         pb_variable_array::<FieldT>(output.bits.rbegin() + (7-i) * 32, output.bits.rbegin() + (8-i) * 32),
-                                                        FMT(self.annotation_prefix, " reduce_output_{}", i)));
+                                                      FMT(self.annotation_prefix, " reduce_output_{}", i)));
     }
     // gadget<FieldT>(pb, annotation_prefix),
    Self{prev_output,
@@ -169,12 +169,12 @@ pub fn generate_r1cs_constraints()
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                              round_functions[3-i].packed_d + round_functions[63-i].packed_new_a,
                                                              unreduced_output[i]),
-            FMT(self.annotation_prefix, " unreduced_output_{}", i));
+          FMT(self.annotation_prefix, " unreduced_output_{}", i));
 
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                              round_functions[3-i].packed_h + round_functions[63-i].packed_new_e,
                                                              unreduced_output[4+i]),
-            FMT(self.annotation_prefix, " unreduced_output_{}", 4+i));
+          FMT(self.annotation_prefix, " unreduced_output_{}", 4+i));
     }
 
     for i in 0..8

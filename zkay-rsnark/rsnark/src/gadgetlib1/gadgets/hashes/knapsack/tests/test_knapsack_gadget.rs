@@ -6,11 +6,11 @@
  *****************************************************************************/
 
 // #ifdef CURVE_BN128
-use ffec::algebra::curves::bn128::bn128_pp;
+use ff_curves::algebra::curves::bn128::bn128_pp;
 //#endif
-use ffec::algebra::curves::edwards::edwards_pp;
-use ffec::algebra::curves::mnt::mnt4::mnt4_pp;
-use ffec::algebra::curves::mnt::mnt6::mnt6_pp;
+use ff_curves::algebra::curves::edwards::edwards_pp;
+use ff_curves::algebra::curves::mnt::mnt4::mnt4_pp;
+use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
 
 use crate::gadgetlib1::gadgets::hashes::knapsack::knapsack_gadget;
 

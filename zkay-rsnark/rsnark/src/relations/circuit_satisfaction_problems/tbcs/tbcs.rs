@@ -1,39 +1,34 @@
+use crate::relations::FieldTConfig;
+use crate::relations::variable;
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of interfaces for:
- - a TBCS gate,
- - a TBCS variable assignment, and
- - a TBCS circuit.
+Declaration of interfaces for:
+- a TBCS gate,
+- a TBCS variable assignment, and
+- a TBCS circuit.
 
- Above, TBCS stands for "Two-input Boolean Circuit Satisfiability".
+Above, TBCS stands for "Two-input Boolean Circuit Satisfiability".
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef TBCS_HPP_
 // #define TBCS_HPP_
-
-use ffec::common::profiling;
-
-use crate::relations::variable;
-
-
-
+use ffec::common::profiling::print_indent;
+use std::collections::BTreeMap;
 /*********************** BACS variable assignment ****************************/
 
 /**
  * A TBCS variable assignment is a vector of bools.
  */
-type tbcs_variable_assignment=Vec<bool>;
-
+pub type tbcs_variable_assignment = Vec<bool>;
 
 /**************************** TBCS gate **************************************/
 
-type tbcs_wire_t=usize;
+pub type tbcs_wire_t = usize;
 
 /**
  * Types of TBCS gates (2-input boolean gates).
@@ -52,7 +47,13 @@ type tbcs_wire_t=usize;
  *
  * [1] = https://mitpress.mit.edu/sites/default/files/titles/content/9780262640688_sch_0001.pdf
  */
-enum tbcs_gate_type {
+use num_enum::{FromPrimitive, IntoPrimitive};
+use strum::Display;
+#[derive(Display, Debug, Default, Clone, FromPrimitive, IntoPrimitive)]
+#[repr(u8)]
+pub enum tbcs_gate_type {
+    #[default]
+    // #[num_enum(default)]
     TBCS_GATE_CONSTANT_0 = 0,
     TBCS_GATE_AND = 1,
     TBCS_GATE_X_AND_NOT_Y = 2,
@@ -68,10 +69,10 @@ enum tbcs_gate_type {
     TBCS_GATE_NOT_X = 12,
     TBCS_GATE_IF_X_THEN_Y = 13,
     TBCS_GATE_NAND = 14,
-    TBCS_GATE_CONSTANT_1 = 15
-};
+    TBCS_GATE_CONSTANT_1 = 15,
+}
 
-static let num_tbcs_gate_types= 16;
+pub const num_tbcs_gate_types: u8 = 16;
 
 /**
  * A TBCS gate is a formal expression of the form
@@ -84,39 +85,35 @@ static let num_tbcs_gate_types= 16;
  *
  * A TBCS gate is used to construct a TBCS circuit (see below).
  */
+#[derive(Default, Clone)]
 pub struct tbcs_gate {
+    pub left_wire: tbcs_wire_t,
+    pub right_wire: tbcs_wire_t,
 
+    pub types: tbcs_gate_type,
 
-    tbcs_wire_t left_wire;
-    tbcs_wire_t right_wire;
+    pub output: tbcs_wire_t,
 
-    tbcs_gate_type type;
+    pub is_circuit_output: bool,
+    // bool evaluate(input:&tbcs_variable_assignment);
+    // pub fn  print(variable_annotations:&BTreeMap<usize, String> = BTreeMap<usize, String>());
+    // bool operator==(other:&tbcs_gate);
 
-    tbcs_wire_t output;
-
-    bool is_circuit_output;
-
-    bool evaluate(input:&tbcs_variable_assignment) const;
-    pub fn  print(variable_annotations:&BTreeMap<usize, String> = BTreeMap<usize, String>()) const;
-    bool operator==(other:&tbcs_gate) const;
-
-    friend std::ostream& operator<<(std::ostream &out, g:&tbcs_gate);
-    friend std::istream& operator>>(std::istream &in, tbcs_gate &g);
-};
-
+    // friend std::ostream& operator<<(std::ostream &out, g:&tbcs_gate);
+    // friend std::istream& operator>>(std::istream &in, tbcs_gate &g);
+}
 
 /****************************** TBCS inputs **********************************/
 
 /**
  * A TBCS primary input is a TBCS variable assignment.
  */
-type tbcs_primary_input=tbcs_variable_assignment;
+pub type tbcs_primary_input = tbcs_variable_assignment;
 
 /**
  * A TBCS auxiliary input is a TBCS variable assignment.
  */
-type tbcs_auxiliary_input=tbcs_variable_assignment;
-
+pub type tbcs_auxiliary_input = tbcs_variable_assignment;
 
 /************************** TBCS circuit *************************************/
 
@@ -130,396 +127,366 @@ type tbcs_auxiliary_input=tbcs_variable_assignment;
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
+#[derive(Default)]
 pub struct tbcs_circuit {
+    pub primary_input_size: usize,
+    pub auxiliary_input_size: usize,
+    pub gates: Vec<tbcs_gate>,
 
-    usize primary_input_size;
-    usize auxiliary_input_size;
-    Vec<tbcs_gate> gates;
+    // tbcs_circuit()->Self primary_input_size(0), auxiliary_input_size(0) {}
 
-    tbcs_circuit()->Self primary_input_size(0), auxiliary_input_size(0) {}
+    // usize num_inputs();
+    // usize num_gates();
+    // usize num_wires();
 
-    usize num_inputs() const;
-    usize num_gates() const;
-    usize num_wires() const;
+    // Vec<usize> wire_depths();
+    // usize depth();
 
-    Vec<usize> wire_depths() const;
-    usize depth() const;
+    // #ifdef DEBUG
+    pub gate_annotations: BTreeMap<usize, String>,
+    pub variable_annotations: BTreeMap<usize, String>,
+    //#endif
 
-// #ifdef DEBUG
-    BTreeMap<usize, String> gate_annotations;
-    BTreeMap<usize, String> variable_annotations;
-//#endif
+    // bool is_valid();
+    // bool is_satisfied(primary_input:&tbcs_primary_input,
+    //                   auxiliary_input:&tbcs_auxiliary_input);
 
-    bool is_valid() const;
-    bool is_satisfied(primary_input:&tbcs_primary_input,
-                      auxiliary_input:&tbcs_auxiliary_input) const;
+    // tbcs_variable_assignment get_all_wires(primary_input:&tbcs_primary_input,
+    //                                        auxiliary_input:&tbcs_auxiliary_input);
+    // tbcs_variable_assignment get_all_outputs(primary_input:&tbcs_primary_input,
+    //                                          auxiliary_input:&tbcs_auxiliary_input);
 
-    tbcs_variable_assignment get_all_wires(primary_input:&tbcs_primary_input,
-                                           auxiliary_input:&tbcs_auxiliary_input) const;
-    tbcs_variable_assignment get_all_outputs(primary_input:&tbcs_primary_input,
-                                             auxiliary_input:&tbcs_auxiliary_input) const;
+    // pub fn  add_gate(g:&tbcs_gate);
+    // pub fn  add_gate(g:&tbcs_gate, annotation:&String);
 
-    pub fn  add_gate(g:&tbcs_gate);
-    pub fn  add_gate(g:&tbcs_gate, annotation:&String);
+    // bool operator==(other:&tbcs_circuit);
 
-    bool operator==(other:&tbcs_circuit) const;
+    // pub fn  print();
+    // pub fn  print_info();
 
-    pub fn  print() const;
-    pub fn  print_info() const;
-
-    friend std::ostream& operator<<(std::ostream &out, circuit:&tbcs_circuit);
-    friend std::istream& operator>>(std::istream &in, tbcs_circuit &circuit);
-};
-
-
+    // friend std::ostream& operator<<(std::ostream &out, circuit:&tbcs_circuit);
+    // friend std::istream& operator>>(std::istream &in, tbcs_circuit &circuit);
+}
 
 //#endif // TBCS_HPP_
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Implementation of interfaces for:
- - a TBCS gate,
- - a TBCS variable assignment, and
- - a TBCS constraint system.
+Implementation of interfaces for:
+- a TBCS gate,
+- a TBCS variable assignment, and
+- a TBCS constraint system.
 
- See tbcs.hpp .
+See tbcs.hpp .
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-use  <algorithm>
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
+// use  <algorithm>
 use ffec::common::utils;
 
-use crate::relations::circuit_satisfaction_problems/tbcs/tbcs;
+use crate::relations::circuit_satisfaction_problems::tbcs::tbcs;
 
-
-
-pub fn evaluate(input:&tbcs_variable_assignment)->bool
-{
-    /**
-     * This function is very tricky.
-     * See comment in tbcs.hpp .
-     */
-
-    let mut X = if left_wire == 0 {true} else{input[left_wire - 1]};
-    let mut Y = if right_wire == 0 {true} else{input[right_wire - 1]};
-
-    let pos = 3 -   ( (if X {2} else{0}) + (if Y {1} else{0})); /* 3 - ... inverts position */
-
-    return (((int)type) & (1u << pos));
-}
-
-pub fn  print_tbcs_wire(variable_annotations:&tbcs_wire_t wire, const BTreeMap<usize, String>)
-{
-    /**
-     * The type tbcs_wire_t does not deserve promotion to a class,
-     * but still benefits from a dedicated printing mechanism.
-     */
-    if wire == 0
-    {
-        print!("  1");
-    }
-    else
-    {
-        auto it = variable_annotations.find(wire);
-        print!("    x_{} ({})",
-               wire,
-               (if it == variable_annotations.end()  {"no annotation" }else {it.1}));
-    }
-}
-
-pub fn print(variable_annotations:&BTreeMap<usize, String>) const
-{
-    switch (self.type)
-    {
-    case TBCS_GATE_CONSTANT_0:
-        print!("CONSTANT_0");
-        break;
-    case TBCS_GATE_AND:
-        print!("AND");
-        break;
-    case TBCS_GATE_X_AND_NOT_Y:
-        print!("X_AND_NOT_Y");
-        break;
-    case TBCS_GATE_X:
-        print!("X");
-        break;
-    case TBCS_GATE_NOT_X_AND_Y:
-        print!("NOT_X_AND_Y");
-        break;
-    case TBCS_GATE_Y:
-        print!("Y");
-        break;
-    case TBCS_GATE_XOR:
-        print!("XOR");
-        break;
-    case TBCS_GATE_OR:
-        print!("OR");
-        break;
-    case TBCS_GATE_NOR:
-        print!("NOR");
-        break;
-    case TBCS_GATE_EQUIVALENCE:
-        print!("EQUIVALENCE");
-        break;
-    case TBCS_GATE_NOT_Y:
-        print!("NOT_Y");
-        break;
-    case TBCS_GATE_IF_Y_THEN_X:
-        print!("IF_Y_THEN_X");
-        break;
-    case TBCS_GATE_NOT_X:
-        print!("NOT_X");
-        break;
-    case TBCS_GATE_IF_X_THEN_Y:
-        print!("IF_X_THEN_Y");
-        break;
-    case TBCS_GATE_NAND:
-        print!("NAND");
-        break;
-    case TBCS_GATE_CONSTANT_1:
-        print!("CONSTANT_1");
-        break;
-    default:
-        print!("Invalid type");
-    }
-
-    print!("\n(\n");
-    print_tbcs_wire(left_wire, variable_annotations);
-    print!(",\n");
-    print_tbcs_wire(right_wire, variable_annotations);
-    print!("\n) ->\n");
-    print_tbcs_wire(output, variable_annotations);
-    print!(" ({})\n", if is_circuit_output  {"circuit output" }else {"internal wire"});
-}
-
-bool tbcs_gate::operator==(other:&tbcs_gate) const
-{
-    return (self.left_wire == other.left_wire &&
-            self.right_wire == other.right_wire &&
-            self.type == other.type &&
-            self.output == other.output &&
-            self.is_circuit_output == other.is_circuit_output);
-}
-
-std::ostream& operator<<(std::ostream &out, g:&tbcs_gate)
-{
-    out << g.left_wire << "\n";
-    out << g.right_wire << "\n";
-    out << (int)g.type << "\n";
-    out << g.output << "\n";
-    ffec::output_bool(out, g.is_circuit_output);
-
-    return out;
-}
-
-std::istream& operator>>(std::istream &in, tbcs_gate &g)
-{
-    in >> g.left_wire;
-    ffec::consume_newline(in);
-    in >> g.right_wire;
-    ffec::consume_newline(in);
-    int tmp;
-    in >> tmp;
-    g.type = (tbcs_gate_type)tmp;
-    ffec::consume_newline(in);
-    in >> g.output;
-    ffec::input_bool(in, g.is_circuit_output);
-
-    return in;
-}
-
-pub fn wire_depths()->Vec<usize>
-{
-    Vec<usize> depths(num_inputs(), 1);
-
-    for g in &gates
-    {
-        depths.push(std::max(depths[g.left_wire], depths[g.right_wire]) + 1);
-    }
-
-    return depths;
-}
-
-pub fn num_inputs()->usize
-{
-    return primary_input_size + auxiliary_input_size;
-}
-
-pub fn num_gates()->usize
-{
-    return gates.len();
-}
-
-pub fn num_wires()->usize
-{
-    return num_inputs() + num_gates();
-}
-
-pub fn depth()->usize
-{
-    Vec<usize> all_depths = self.wire_depths();
-    return *(std::max_element(all_depths.begin(), all_depths.end()));
-}
-
-pub fn is_valid()->bool
-{
-    for i in 0..num_gates()
-    {
+impl tbcs_gate {
+    pub fn evaluate(&self, input: &tbcs_variable_assignment) -> bool {
         /**
-         * The output wire of gates[i] must have index 1+num_inputs+i.
-         * (The '1+' accounts for the index of the constant wire.)
+         * This function is very tricky.
+         * See comment in tbcs.hpp .
          */
-        if gates[i].output != num_inputs()+i+1
-        {
-            return false;
-        }
+        let mut X = if self.left_wire == 0 {
+            true
+        } else {
+            input[self.left_wire - 1]
+        };
+        let mut Y = if self.right_wire == 0 {
+            true
+        } else {
+            input[self.right_wire - 1]
+        };
 
+        let pos = 3 - ((if X { 2 } else { 0 }) + (if Y { 1 } else { 0 })); /* 3 - ... inverts position */
+        let t: usize = self.types.clone() as usize;
+        (t & (1usize << pos)) != 0
+    }
+
+    pub fn print_tbcs_wire(
+        &self,
+        wire: tbcs_wire_t,
+        variable_annotations: &BTreeMap<usize, String>,
+    ) {
         /**
-         * Gates must be topologically sorted.
+         * The type tbcs_wire_t does not deserve promotion to a class,
+         * but still benefits from a dedicated printing mechanism.
          */
-        if gates[i].left_wire >= gates[i].output || gates[i].right_wire >= gates[i].output
-        {
-            return false;
+        if wire == 0 {
+            print!("  1");
+        } else {
+            print!(
+                "    x_{} ({})",
+                wire,
+                (if let Some(it) = variable_annotations.get(&wire) {
+                    it
+                } else {
+                    "no annotation"
+                })
+            );
         }
     }
 
-    return true;
-}
+    pub fn print(&self, variable_annotations: &BTreeMap<usize, String>) {
+        match self.types {
+            tbcs_gate_type::TBCS_GATE_CONSTANT_0 => print!("CONSTANT_0"),
+            tbcs_gate_type::TBCS_GATE_AND => print!("AND"),
+            tbcs_gate_type::TBCS_GATE_X_AND_NOT_Y => print!("X_AND_NOT_Y"),
+            tbcs_gate_type::TBCS_GATE_X => print!("X"),
+            tbcs_gate_type::TBCS_GATE_NOT_X_AND_Y => print!("NOT_X_AND_Y"),
+            tbcs_gate_type::TBCS_GATE_Y => print!("Y"),
+            tbcs_gate_type::TBCS_GATE_XOR => print!("XOR"),
+            tbcs_gate_type::TBCS_GATE_OR => print!("OR"),
+            tbcs_gate_type::TBCS_GATE_NOR => print!("NOR"),
+            tbcs_gate_type::TBCS_GATE_EQUIVALENCE => print!("EQUIVALENCE"),
+            tbcs_gate_type::TBCS_GATE_NOT_Y => print!("NOT_Y"),
+            tbcs_gate_type::TBCS_GATE_IF_Y_THEN_X => print!("IF_Y_THEN_X"),
+            tbcs_gate_type::TBCS_GATE_NOT_X => print!("NOT_X"),
+            tbcs_gate_type::TBCS_GATE_IF_X_THEN_Y => print!("IF_X_THEN_Y"),
+            tbcs_gate_type::TBCS_GATE_NAND => print!("NAND"),
+            tbcs_gate_type::TBCS_GATE_CONSTANT_1 => print!("CONSTANT_1"),
+            _ => print!("Invalid type"),
+        }
 
-tbcs_variable_assignment tbcs_circuit::get_all_wires(primary_input:&tbcs_primary_input,
-                                                     auxiliary_input:&tbcs_auxiliary_input) const
-{
-    assert!(primary_input.len() == primary_input_size);
-    assert!(auxiliary_input.len() == auxiliary_input_size);
-
-    tbcs_variable_assignment result;
-    result.insert(result.end(), primary_input.begin(), primary_input.end());
-    result.insert(result.end(), auxiliary_input.begin(), auxiliary_input.end());
-
-    assert!(result.len() == num_inputs());
-
-    for g in &gates
-    {
-        let mut gate_output = g.evaluate(result);
-        result.push_back(gate_output);
+        print!("\n(\n");
+        self.print_tbcs_wire(self.left_wire, variable_annotations);
+        print!(",\n");
+        self.print_tbcs_wire(self.right_wire, variable_annotations);
+        print!("\n) ->\n");
+        self.print_tbcs_wire(self.output, variable_annotations);
+        print!(
+            " ({})\n",
+            if self.is_circuit_output {
+                "circuit output"
+            } else {
+                "internal wire"
+            }
+        );
     }
 
-    return result;
+    // bool tbcs_gate::operator==(other:&tbcs_gate)
+    // {
+    //     return (self.left_wire == other.left_wire &&
+    //             self.right_wire == other.right_wire &&
+    //             self.types == other.types &&
+    //             self.output == other.output &&
+    //             self.is_circuit_output == other.is_circuit_output);
+    // }
+
+    // std::ostream& operator<<(std::ostream &out, g:&tbcs_gate)
+    // {
+    //     out << g.left_wire << "\n";
+    //     out << g.right_wire << "\n";
+    //     out << (int)g.types << "\n";
+    //     out << g.output << "\n";
+    //     output_bool(out, g.is_circuit_output);
+
+    //     return out;
+    // }
+
+    // std::istream& operator>>(std::istream &in, tbcs_gate &g)
+    // {
+    //     in >> g.left_wire;
+    //     consume_newline(in);
+    //     in >> g.right_wire;
+    //     consume_newline(in);
+    //     int tmp;
+    //     in >> tmp;
+    //     g.types = (tbcs_gate_type)tmp;
+    //     consume_newline(in);
+    //     in >> g.output;
+    //     input_bool(in, g.is_circuit_output);
+
+    //     return in;
+    // }
 }
 
-tbcs_variable_assignment tbcs_circuit::get_all_outputs(primary_input:&tbcs_primary_input,
-                                                       auxiliary_input:&tbcs_auxiliary_input) const
-{
-    let all_wires= get_all_wires(primary_input, auxiliary_input);
-    tbcs_variable_assignment all_outputs;
+impl tbcs_circuit {
+    pub fn wire_depths(&self) -> Vec<usize> {
+        let mut depths = vec![1; self.num_inputs()];
 
-    for g in &gates
-    {
-        if g.is_circuit_output
-        {
-            all_outputs.push_back(all_wires[g.output-1]);
+        for g in &self.gates {
+            depths.push(std::cmp::max(depths[g.left_wire], depths[g.right_wire]) + 1);
+        }
+
+        return depths;
+    }
+
+    pub fn num_inputs(&self) -> usize {
+        return self.primary_input_size + self.auxiliary_input_size;
+    }
+
+    pub fn num_gates(&self) -> usize {
+        return self.gates.len();
+    }
+
+    pub fn num_wires(&self) -> usize {
+        return self.num_inputs() + self.num_gates();
+    }
+
+    pub fn depth(&self) -> usize {
+        let all_depths = self.wire_depths();
+        *all_depths.iter().max().unwrap()
+    }
+
+    pub fn is_valid(&self) -> bool {
+        for i in 0..self.num_gates() {
+            /**
+             * The output wire of gates[i] must have index 1+num_inputs+i.
+             * (The '1+' accounts for the index of the constant wire.)
+             */
+            if self.gates[i].output != self.num_inputs() + i + 1 {
+                return false;
+            }
+
+            /**
+             * Gates must be topologically sorted.
+             */
+            if self.gates[i].left_wire >= self.gates[i].output
+                || self.gates[i].right_wire >= self.gates[i].output
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn get_all_wires(
+        &self,
+        primary_input: &tbcs_primary_input,
+        auxiliary_input: &tbcs_auxiliary_input,
+    ) -> tbcs_variable_assignment {
+        assert!(primary_input.len() == self.primary_input_size);
+        assert!(auxiliary_input.len() == self.auxiliary_input_size);
+
+        let mut result = tbcs_variable_assignment::new();
+        result.extend(primary_input.iter());
+        result.extend(auxiliary_input.iter());
+
+        assert!(result.len() == self.num_inputs());
+
+        for g in &self.gates {
+            let mut gate_output = g.evaluate(&result);
+            result.push(gate_output);
+        }
+
+        return result;
+    }
+
+    pub fn get_all_outputs(
+        &self,
+        primary_input: &tbcs_primary_input,
+        auxiliary_input: &tbcs_auxiliary_input,
+    ) -> tbcs_variable_assignment {
+        let all_wires = self.get_all_wires(primary_input, auxiliary_input);
+        let mut all_outputs = tbcs_variable_assignment::new();
+
+        for g in &self.gates {
+            if g.is_circuit_output {
+                all_outputs.push(all_wires[g.output - 1]);
+            }
+        }
+
+        return all_outputs;
+    }
+
+    pub fn is_satisfied(
+        &self,
+        primary_input: &tbcs_primary_input,
+        auxiliary_input: &tbcs_auxiliary_input,
+    ) -> bool {
+        let all_outputs = self.get_all_outputs(primary_input, auxiliary_input);
+        for i in 0..all_outputs.len() {
+            if all_outputs[i] {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn add_gate(&mut self, g: tbcs_gate) {
+        assert!(g.output == self.num_wires() + 1);
+        self.gates.push(g);
+    }
+
+    pub fn add_gate2(&mut self, g: tbcs_gate, annotation: String) {
+        assert!(g.output == self.num_wires() + 1);
+        self.gates.push(g.clone());
+        // #ifdef DEBUG
+        self.gate_annotations.insert(g.output.clone(), annotation);
+        // #else
+        //UNUSED(annotation);
+        //#endif
+    }
+
+    // bool tbcs_circuit::operator==(other:&tbcs_circuit)
+    // {
+    //     return (self.primary_input_size == other.primary_input_size &&
+    //             self.auxiliary_input_size == other.auxiliary_input_size &&
+    //             self.gates == other.gates);
+    // }
+
+    // std::ostream& operator<<(std::ostream &out, circuit:&tbcs_circuit)
+    // {
+    //     out << circuit.primary_input_size << "\n";
+    //     out << circuit.auxiliary_input_size << "\n";
+    //     operator<<(out, circuit.gates); out << OUTPUT_NEWLINE;
+
+    //     return out;
+    // }
+
+    // std::istream& operator>>(std::istream &in, tbcs_circuit &circuit)
+    // {
+    //     in >> circuit.primary_input_size;
+    //     consume_newline(in);
+    //     in >> circuit.auxiliary_input_size;
+    //     consume_newline(in);
+    //     operator>>(in, circuit.gates);
+    //     consume_OUTPUT_NEWLINE(in);
+
+    //     return in;
+    // }
+
+    pub fn print(&self) {
+        print_indent();
+        print!("General information about the circuit:\n");
+        self.print_info();
+        print_indent();
+        print!("All gates:\n");
+        for i in 0..self.gates.len() {
+            let mut annotation = "no annotation";
+            // #ifdef DEBUG
+            if let Some(it) = self.gate_annotations.get(&i) {
+                annotation = it;
+            }
+            //#endif
+            print!("Gate {} ({}):\n", i, annotation);
+            // #ifdef DEBUG
+            self.gates[i].print(&self.variable_annotations);
+            // #else
+            // self.gates[i].print();
+            //#endif
         }
     }
 
-    return all_outputs;
-}
-
-
-bool tbcs_circuit::is_satisfied(primary_input:&tbcs_primary_input,
-                                auxiliary_input:&tbcs_auxiliary_input) const
-{
-    let all_outputs= get_all_outputs(primary_input, auxiliary_input);
-    for i in 0..all_outputs.len()
-    {
-        if all_outputs[i]
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-pub fn add_gate(g:&tbcs_gate)
-{
-    assert!(g.output == num_wires()+1);
-    gates.push(g);
-}
-
-pub fn add_gate(g:&tbcs_gate, annotation:&String)
-{
-    assert!(g.output == num_wires()+1);
-    gates.push(g);
-// #ifdef DEBUG
-    gate_annotations[g.output] = annotation;
-#else
-    //ffec::UNUSED(annotation);
-//#endif
-}
-
-bool tbcs_circuit::operator==(other:&tbcs_circuit) const
-{
-    return (self.primary_input_size == other.primary_input_size &&
-            self.auxiliary_input_size == other.auxiliary_input_size &&
-            self.gates == other.gates);
-}
-
-std::ostream& operator<<(std::ostream &out, circuit:&tbcs_circuit)
-{
-    out << circuit.primary_input_size << "\n";
-    out << circuit.auxiliary_input_size << "\n";
-    ffec::operator<<(out, circuit.gates); out << OUTPUT_NEWLINE;
-
-    return out;
-}
-
-std::istream& operator>>(std::istream &in, tbcs_circuit &circuit)
-{
-    in >> circuit.primary_input_size;
-    ffec::consume_newline(in);
-    in >> circuit.auxiliary_input_size;
-    ffec::consume_newline(in);
-    ffec::operator>>(in, circuit.gates);
-    ffec::consume_OUTPUT_NEWLINE(in);
-
-    return in;
-}
-
-pub fn print() const
-{
-    ffec::print_indent(); print!("General information about the circuit:\n");
-    self.print_info();
-    ffec::print_indent(); print!("All gates:\n");
-    for i in 0..gates.len()
-    {
-        String annotation = "no annotation";
-// #ifdef DEBUG
-        auto it = gate_annotations.find(i);
-        if it != gate_annotations.end()
-        {
-            annotation = it.1;
-        }
-//#endif
-        print!("Gate {} ({}):\n", i, annotation);
-// #ifdef DEBUG
-        gates[i].print(variable_annotations);
-#else
-        gates[i].print();
-//#endif
+    pub fn print_info(&self) {
+        print_indent();
+        print!("* Number of inputs: {}\n", self.num_inputs());
+        print_indent();
+        print!("* Number of gates: {}\n", self.num_gates());
+        print_indent();
+        print!("* Number of wires: {}\n", self.num_wires());
+        print_indent();
+        print!("* Depth: {}\n", self.depth());
     }
 }
-
-pub fn print_info() const
-{
-    ffec::print_indent(); print!("* Number of inputs: {}\n", self.num_inputs());
-    ffec::print_indent(); print!("* Number of gates: {}\n", self.num_gates());
-    ffec::print_indent(); print!("* Number of wires: {}\n", self.num_wires());
-    ffec::print_indent(); print!("* Depth: {}\n", self.depth());
-}
-
-

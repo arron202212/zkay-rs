@@ -34,7 +34,9 @@ pub trait ContentsConfig{
      type contents;
 }
 impl ContentsConfig for pb_variable_array <FieldT>
-{ type contents=Vec<pb_variable<FieldT> > ;}
+{ 
+    type contents=Vec<pb_variable<FieldT> > ;
+}
 
 // : private Vec<pb_variable<FieldT> >
 pub struct pb_variable_array <FieldT>

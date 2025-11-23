@@ -68,12 +68,12 @@ pub fn  block_memory_contents(num_addresses:usize,
     let mut  result=memory_contents::new();
     for i in 0..block1_size
     {
-        result[i] = std::rand() % max_unit;
+        result[i] = rand::random() % max_unit;
     }
 
     for i in 0..block2_size
     {
-        result[num_addresses/2+i] = std::rand() % max_unit;
+        result[num_addresses/2+i] = rand::random() % max_unit;
     }
 
     return result;

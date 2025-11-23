@@ -21,9 +21,9 @@
 
 // // #ifdef CURVE_ALT_BN128
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
-// use crate::algebra::curves::alt_bn128::alt_bn128_pp;
+use crate::algebra::curves::alt_bn128::alt_bn128_pp::alt_bn128_pp;
 // // namespace libff {
-// type default_ec_pp=alt_bn128_pp;
+pub type default_ec_pp=alt_bn128_pp;
 // // } // namespace libff
 // //#endif
 

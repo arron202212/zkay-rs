@@ -12,9 +12,9 @@
 //#ifndef BACS_PPZKSNARK_PARAMS_HPP_
 // #define BACS_PPZKSNARK_PARAMS_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
-use crate::relations::circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems::bacs::bacs;
 
 
 

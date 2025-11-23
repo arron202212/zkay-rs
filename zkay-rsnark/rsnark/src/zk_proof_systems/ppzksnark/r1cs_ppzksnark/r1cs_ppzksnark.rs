@@ -48,12 +48,12 @@
 
 // 
 
-// use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
-// use crate::common::data_structures::accumulation_vector;
-// use crate::knowledge_commitment::knowledge_commitment;
-// use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params;
+use crate::common::data_structures::accumulation_vector;
+use crate::knowledge_commitment::knowledge_commitment;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params;
 
 // 
 
@@ -209,7 +209,7 @@ alphaA_g2:ffec::G2<ppT>,
 
      pub fn size_in_bits(&self)->usize
     {
-        return (2 * ffec::G1::<ppT>::size_in_bits() + encoded_IC_query.size_in_bits() + 5 * ffec::G2::<ppT>::size_in_bits());
+        return (2 * ppT::G1::size_in_bits() + encoded_IC_query.size_in_bits() + 5 * ppT::G2::size_in_bits());
     }
 
     fn print_size(&self) 
@@ -317,16 +317,16 @@ impl<ppT> r1cs_ppzksnark_proof<ppT>{
     {
         // invalid proof with valid curve points
        Self {
-        g_A: knowledge_commitment::new(ffec::G1::<ppT> ::one(),ffec::G1::<ppT>::one()),
-        g_B : knowledge_commitment::new(ffec::G2::<ppT> ::one(),ffec::G1::<ppT>::one()),
-        g_C : lknowledge_commitment::new(ffec::G1::<ppT> ::one(),ffec::G1::<ppT>::one()),
-        g_H : ffec::G1::<ppT>::one(),
-        g_K : ffec::G1::<ppT>::one(),
+        g_A: knowledge_commitment::new(ppT::G1 ::one(),ppT::G1::one()),
+        g_B : knowledge_commitment::new(ppT::G2 ::one(),ppT::G1::one()),
+        g_C : lknowledge_commitment::new(ppT::G1 ::one(),ppT::G1::one()),
+        g_H : ppT::G1::one(),
+        g_K : ppT::G1::one(),
         }
     }
     pub fn new_paras(
 g_A:knowledge_commitment<ffec::G1<ppT>, ffec::G1<ppT> >,
-g_B:                         knowledge_commitment<ffec::G2::<ppT>, ffec::G1<ppT> >,
+g_B:                         knowledge_commitment<ppT::G2, ffec::G1<ppT> >,
 g_C:                         knowledge_commitment<ffec::G1<ppT>, ffec::G1<ppT> >,
 g_H:                         ffec::G1<ppT>,
 g_K:                         ffec::G1<ppT>,
@@ -351,7 +351,7 @@ g_K:                         ffec::G1<ppT>,
 
      pub fn size_in_bits(&self)->usize
     {
-        return G1_size() * ffec::G1::<ppT>::size_in_bits() + G2_size() * ffec::G2::<ppT>::size_in_bits();
+        return G1_size() * ppT::G1::size_in_bits() + G2_size() * ppT::G2::size_in_bits();
     }
 
     fn print_size(&self) 
@@ -394,7 +394,7 @@ pub fn
     cs_copy.swap_AB_if_beneficial();
 
     /* draw random element at which the QAP is evaluated */
-    let t =ffec::Fr::<ppT>::random_element();
+    let t =ppT::Fr::random_element();
 
     let  qap_inst = r1cs_to_qap_instance_map_with_evaluation(cs_copy, t);
 
@@ -447,17 +447,17 @@ pub fn
         beta ,
         gamma )
         =(
- ffec::Fr::<ppT>::random_element(),
- ffec::Fr::<ppT>::random_element(),
- ffec::Fr::<ppT>::random_element(),
- ffec::Fr::<ppT>::random_element(),
- ffec::Fr::<ppT>::random_element(),
- ffec::Fr::<ppT>::random_element(),
- ffec::Fr::<ppT>::random_element());
+ ppT::Fr::random_element(),
+ ppT::Fr::random_element(),
+ ppT::Fr::random_element(),
+ ppT::Fr::random_element(),
+ ppT::Fr::random_element(),
+ ppT::Fr::random_element(),
+ ppT::Fr::random_element());
     let     rC = rA * rB;
 
     // consrtuct the same-coefficient-check query (must happen before zeroing out the prefix of At)
-    let mut  Kt=ffec::Fr_vector::<ppT>::new();
+    let mut  Kt=ppT::Fr_vector::new();
     Kt.reserve(qap_inst.num_variables()+4);
     for i in 0..qap_inst.num_variables()+1
     {
@@ -468,20 +468,20 @@ pub fn
     Kt.push(beta * rC * qap_inst.Zt);
 
     /* zero out prefix of At and stick it into IC coefficients */
-    let mut IC_coefficients=ffec::Fr_vector::<ppT>::new();
+    let mut IC_coefficients=ppT::Fr_vector::new();
     IC_coefficients.reserve(qap_inst.num_inputs() + 1);
     for i in 0..qap_inst.num_inputs() + 1
     {
         IC_coefficients.push(At[i]);
         assert!(!IC_coefficients[i].is_zero());
-        At[i] = ffec::Fr::<ppT>::zero();
+        At[i] = ppT::Fr::zero();
     }
 
     let  g1_exp_count = 2*(non_zero_At - qap_inst.num_inputs() + non_zero_Ct) + non_zero_Bt + non_zero_Ht +Kt.len();
     let  g2_exp_count = non_zero_Bt;
 
-    let  g1_window = ffec::get_exp_window_size::<ffec::G1::<ppT> >(g1_exp_count);
-    let  g2_window = ffec::get_exp_window_size::<ffec::G2::<ppT> >(g2_exp_count);
+    let  g1_window = ffec::get_exp_window_size::<ppT::G1 >(g1_exp_count);
+    let  g2_window = ffec::get_exp_window_size::<ppT::G2 >(g2_exp_count);
     ffec::print_indent(); print!("* G1 window: {}\n", g1_window);
     ffec::print_indent(); print!("* G2 window: {}\n", g2_window);
 
@@ -492,37 +492,37 @@ pub fn
 // //#endif
 
     ffec::enter_block("Generating G1 multiexp table");
-    let  g1_table = get_window_table(ffec::Fr::<ppT>::size_in_bits(), g1_window, ffec::G1::<ppT>::one());
+    let  g1_table = get_window_table(ppT::Fr::size_in_bits(), g1_window, ppT::G1::one());
     ffec::leave_block("Generating G1 multiexp table");
 
     ffec::enter_block("Generating G2 multiexp table");
-    let  g2_table = get_window_table(ffec::Fr::<ppT>::size_in_bits(), g2_window, ffec::G2::<ppT>::one());
+    let  g2_table = get_window_table(ppT::Fr::size_in_bits(), g2_window, ppT::G2::one());
     ffec::leave_block("Generating G2 multiexp table");
 
     ffec::enter_block("Generate R1CS proving key");
 
     ffec::enter_block("Generate knowledge commitments");
     ffec::enter_block("Compute the A-query", false);
-    let  A_query = kc_batch_exp(ffec::Fr::<ppT>::size_in_bits(), g1_window, g1_window, g1_table, g1_table, rA, rA*alphaA, At, chunks);
+    let  A_query = kc_batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_window, g1_table, g1_table, rA, rA*alphaA, At, chunks);
     ffec::leave_block("Compute the A-query", false);
 
     ffec::enter_block("Compute the B-query", false);
-    let B_query = kc_batch_exp(ffec::Fr::<ppT>::size_in_bits(), g2_window, g1_window, g2_table, g1_table, rB, rB*alphaB, Bt, chunks);
+    let B_query = kc_batch_exp(ppT::Fr::size_in_bits(), g2_window, g1_window, g2_table, g1_table, rB, rB*alphaB, Bt, chunks);
     ffec::leave_block("Compute the B-query", false);
 
     ffec::enter_block("Compute the C-query", false);
-    let  C_query = kc_batch_exp(ffec::Fr::<ppT>::size_in_bits(), g1_window, g1_window, g1_table, g1_table, rC, rC*alphaC, Ct, chunks);
+    let  C_query = kc_batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_window, g1_table, g1_table, rC, rC*alphaC, Ct, chunks);
     ffec::leave_block("Compute the C-query", false);
 
     ffec::enter_block("Compute the H-query", false);
-    let H_query = batch_exp(ffec::Fr::<ppT>::size_in_bits(), g1_window, g1_table, Ht);
+    let H_query = batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_table, Ht);
 // // #ifdef USE_MIXED_ADDITION
 //     ffec::batch_to_special<ffec::G1<ppT> >(H_query);
 // //#endif
     ffec::leave_block("Compute the H-query", false);
 
     ffec::enter_block("Compute the K-query", false);
-    let K_query = batch_exp(ffec::Fr::<ppT>::size_in_bits(), g1_window, g1_table, Kt);
+    let K_query = batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_table, Kt);
 // // #ifdef USE_MIXED_ADDITION
 //     ffec::batch_to_special<ffec::G1<ppT> >(K_query);
 // //#endif
@@ -533,30 +533,30 @@ pub fn
     ffec::leave_block("Generate R1CS proving key");
 
     ffec::enter_block("Generate R1CS verification key");
-    let  alphaA_g2 = alphaA * ffec::G2::<ppT>::one();
-    let alphaB_g1 = alphaB * ffec::G1::<ppT>::one();
-    let alphaC_g2 = alphaC * ffec::G2::<ppT>::one();
-    let gamma_g2 = gamma * ffec::G2::<ppT>::one();
-    let gamma_beta_g1 = (gamma * beta) * ffec::G1::<ppT>::one();
-    let gamma_beta_g2 = (gamma * beta) * ffec::G2::<ppT>::one();
-    let rC_Z_g2 = (rC * qap_inst.Zt) * ffec::G2::<ppT>::one();
+    let  alphaA_g2 = alphaA * ppT::G2::one();
+    let alphaB_g1 = alphaB * ppT::G1::one();
+    let alphaC_g2 = alphaC * ppT::G2::one();
+    let gamma_g2 = gamma * ppT::G2::one();
+    let gamma_beta_g1 = (gamma * beta) * ppT::G1::one();
+    let gamma_beta_g2 = (gamma * beta) * ppT::G2::one();
+    let rC_Z_g2 = (rC * qap_inst.Zt) * ppT::G2::one();
 
     ffec::enter_block("Encode IC query for R1CS verification key");
-    let encoded_IC_base = (rA * IC_coefficients[0]) * ffec::G1::<ppT>::one();
-    let mut multiplied_IC_coefficients=ffec::Fr_vector::<ppT>::new();
+    let encoded_IC_base = (rA * IC_coefficients[0]) * ppT::G1::one();
+    let mut multiplied_IC_coefficients=ppT::Fr_vector::new();
     multiplied_IC_coefficients.reserve(qap_inst.num_inputs());
     for i in 1..qap_inst.num_inputs() + 1
     {
         multiplied_IC_coefficients.push(rA * IC_coefficients[i]);
     }
-    let  encoded_IC_values = batch_exp(ffec::Fr::<ppT>::size_in_bits(), g1_window, g1_table, multiplied_IC_coefficients);
+    let  encoded_IC_values = batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_table, multiplied_IC_coefficients);
 
     ffec::leave_block("Encode IC query for R1CS verification key");
     ffec::leave_block("Generate R1CS verification key");
 
     ffec::leave_block("Call to r1cs_ppzksnark_generator");
 
-    let mut  encoded_IC_query=accumulation_vector::<ffec::G1::<ppT> >::new((encoded_IC_base), (encoded_IC_values));
+    let mut  encoded_IC_query=accumulation_vector::<ppT::G1 >::new((encoded_IC_base), (encoded_IC_values));
 
     let mut vk = r1cs_ppzksnark_verification_key::<ppT>::new(alphaA_g2,
                                                                                    alphaB_g1,
@@ -602,7 +602,7 @@ pub fn
 // //#endif
     let (d1,
 d2,
-d3)=(ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element());
+d3)=(ppT::Fr::random_element(),ppT::Fr::random_element(),ppT::Fr::random_element());
     
 
     ffec::enter_block("Compute the polynomial H");
@@ -610,7 +610,7 @@ d3)=(ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element(),ffec::F
     ffec::leave_block("Compute the polynomial H");
 
 // // #ifdef DEBUG
-//     ffec::Fr::<ppT>::random_element(:ffec::Fr<ppT> t =);
+//     ppT::Fr::random_element(:ffec::Fr<ppT> t =);
 //     qap_instance_evaluation<ffec::Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
 //     assert!(qap_inst.is_satisfied(qap_wit));
 // //#endif
@@ -619,7 +619,7 @@ d3)=(ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element(),ffec::F
     let  g_B = pk.B_query[0] + qap_wit.d2*pk.B_query[qap_wit.num_variables()+1];
     let  g_C = pk.C_query[0] + qap_wit.d3*pk.C_query[qap_wit.num_variables()+1];
 
-    let  g_H = ffec::G1::<ppT>::zero();
+    let  g_H = ppT::G1::zero();
     let  g_K = (pk.K_query[0] +
                    qap_wit.d1*pk.K_query[qap_wit.num_variables()+1] +
                    qap_wit.d2*pk.K_query[qap_wit.num_variables()+2] +
@@ -628,7 +628,7 @@ d3)=(ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element(),ffec::F
 // // #ifdef DEBUG
 //     for i in 0..qap_wit.num_inputs() + 1
 //     {
-//         assert!(pk.A_query[i].g == ffec::G1::<ppT>::zero());
+//         assert!(pk.A_query[i].g == ppT::G1::zero());
 //     }
 //     assert!(pk.A_query.domain_size() == qap_wit.num_variables()+2);
 //     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+2);
@@ -646,9 +646,9 @@ d3)=(ffec::Fr::<ppT>::random_element(),ffec::Fr::<ppT>::random_element(),ffec::F
     ffec::enter_block("Compute the proof");
 
     ffec::enter_block("Compute answer to A-query", false);
-    g_A = g_A + kc_multi_exp_with_mixed_addition::<ffec::G1::<ppT>,
-                                                 ffec::G1::<ppT>,
-                                                 ffec::Fr::<ppT>,
+    g_A = g_A + kc_multi_exp_with_mixed_addition::<ppT::G1,
+                                                 ppT::G1,
+                                                 ppT::Fr,
                                                  ffec::multi_exp_method_bos_coster>(
         pk.A_query,
         1, 1+qap_wit.num_variables(),
@@ -767,7 +767,7 @@ pub fn
     ffec::enter_block("Call to r1cs_ppzksnark_verifier_process_vk");
 
     let  pvk=r1cs_ppzksnark_processed_verification_key::<ppT>::new();
-    pvk.pp_G2_one_precomp        = ppT::precompute_G2(ffec::G2::<ppT>::one());
+    pvk.pp_G2_one_precomp        = ppT::precompute_G2(ppT::G2::one());
     pvk.vk_alphaA_g2_precomp     = ppT::precompute_G2(vk.alphaA_g2);
     pvk.vk_alphaB_g1_precomp     = ppT::precompute_G1(vk.alphaB_g1);
     pvk.vk_alphaC_g2_precomp     = ppT::precompute_G2(vk.alphaC_g2);
@@ -797,7 +797,7 @@ pub fn
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
     ffec::enter_block("Compute input-dependent part of A");
-    let  accumulated_IC = pvk.encoded_IC_query.accumulate_chunk::<ffec::Fr::<ppT> >(primary_input.begin(),primary_input.end(), 0);
+    let  accumulated_IC = pvk.encoded_IC_query.accumulate_chunk::<ppT::Fr >(primary_input.begin(),primary_input.end(), 0);
     let acc = &accumulated_IC.first;
     ffec::leave_block("Compute input-dependent part of A");
 
@@ -821,7 +821,7 @@ pub fn
     let  kc_A_1 = ppT::miller_loop(proof_g_A_g_precomp,      pvk.vk_alphaA_g2_precomp);
     let  kc_A_2 = ppT::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
     let  kc_A = ppT::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
-    if kc_A != ffec::GT::<ppT>::one()
+    if kc_A != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -837,7 +837,7 @@ pub fn
     let  kc_B_1 = ppT::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
     let  kc_B_2 = ppT::miller_loop(proof_g_B_h_precomp,    pvk.pp_G2_one_precomp);
     let  kc_B = ppT::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
-    if kc_B != ffec::GT::<ppT>::one()
+    if kc_B != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -853,7 +853,7 @@ pub fn
     let kc_C_1 = ppT::miller_loop(proof_g_C_g_precomp,      pvk.vk_alphaC_g2_precomp);
     let  kc_C_2 = ppT::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
     let  kc_C = ppT::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
-    if kc_C != ffec::GT::<ppT>::one()
+    if kc_C != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -871,7 +871,7 @@ pub fn
     let  QAP_1  = ppT::miller_loop(proof_g_A_g_acc_precomp,  proof_g_B_g_precomp);
     let  QAP_23  = ppT::double_miller_loop(proof_g_H_precomp, pvk.vk_rC_Z_g2_precomp, proof_g_C_g_precomp, pvk.pp_G2_one_precomp);
     let  QAP = ppT::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
-    if QAP != ffec::GT::<ppT>::one()
+    if QAP != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -887,7 +887,7 @@ pub fn
     let  K_1 = ppT::miller_loop(proof_g_K_precomp, pvk.vk_gamma_g2_precomp);
     let  K_23 = ppT::double_miller_loop(proof_g_A_g_acc_C_precomp, pvk.vk_gamma_beta_g2_precomp, pvk.vk_gamma_beta_g1_precomp, proof_g_B_g_precomp);
     let  K = ppT::final_exponentiation(K_1 * K_23.unitary_inverse());
-    if K != ffec::GT::<ppT>::one()
+    if K != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -951,7 +951,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     ffec::enter_block("Call to r1cs_ppzksnark_affine_verifier_weak_IC");
     assert!(vk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    let pvk_pp_G2_one_precomp        = ppT::affine_ate_precompute_G2(ffec::G2::<ppT>::one());
+    let pvk_pp_G2_one_precomp        = ppT::affine_ate_precompute_G2(ppT::G2::one());
     let pvk_vk_alphaA_g2_precomp     = ppT::affine_ate_precompute_G2(vk.alphaA_g2);
     let pvk_vk_alphaB_g1_precomp     = ppT::affine_ate_precompute_G1(vk.alphaB_g1);
     let pvk_vk_alphaC_g2_precomp     = ppT::affine_ate_precompute_G2(vk.alphaC_g2);
@@ -961,7 +961,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     let pvk_vk_gamma_beta_g2_precomp = ppT::affine_ate_precompute_G2(vk.gamma_beta_g2);
 
     ffec::enter_block("Compute input-dependent part of A");
-   let  accumulated_IC = vk.encoded_IC_query.accumulate_chunk::<ffec::Fr::<ppT> >(primary_input.begin(), primary_input.end(), 0);
+   let  accumulated_IC = vk.encoded_IC_query.accumulate_chunk::<ppT::Fr >(primary_input.begin(), primary_input.end(), 0);
     assert!(accumulated_IC.is_fully_accumulated());
     let acc = &accumulated_IC.first;
     ffec::leave_block("Compute input-dependent part of A");
@@ -973,7 +973,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     let kc_A_miller = ppT::affine_ate_e_over_e_miller_loop(proof_g_A_g_precomp, pvk_vk_alphaA_g2_precomp, proof_g_A_h_precomp, pvk_pp_G2_one_precomp);
     let kc_A = ppT::final_exponentiation(kc_A_miller);
 
-    if kc_A != ffec::GT::<ppT>::one()
+    if kc_A != ppT::GT::one()
     {
         ffec::print_indent(); print!("Knowledge commitment for A query incorrect.\n");
         result = false;
@@ -985,7 +985,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     let proof_g_B_h_precomp = ppT::affine_ate_precompute_G1(proof.g_B.h);
     let kc_B_miller = ppT::affine_ate_e_over_e_miller_loop(pvk_vk_alphaB_g1_precomp, proof_g_B_g_precomp, proof_g_B_h_precomp,    pvk_pp_G2_one_precomp);
     let kc_B = ppT::final_exponentiation(kc_B_miller);
-    if kc_B != ffec::GT::<ppT>::one()
+    if kc_B != ppT::GT::one()
     {
         ffec::print_indent(); print!("Knowledge commitment for B query incorrect.\n");
         result = false;
@@ -997,7 +997,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     let proof_g_C_h_precomp = ppT::affine_ate_precompute_G1(proof.g_C.h);
     let kc_C_miller = ppT::affine_ate_e_over_e_miller_loop(proof_g_C_g_precomp, pvk_vk_alphaC_g2_precomp, proof_g_C_h_precomp, pvk_pp_G2_one_precomp);
     let kc_C = ppT::final_exponentiation(kc_C_miller);
-    if kc_C != ffec::GT::<ppT>::one()
+    if kc_C != ppT::GT::one()
     {
         ffec::print_indent(); print!("Knowledge commitment for C query incorrect.\n");
         result = false;
@@ -1009,7 +1009,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     let proof_g_H_precomp       = ppT::affine_ate_precompute_G1(proof.g_H);
     let QAP_miller  = ppT::affine_ate_e_times_e_over_e_miller_loop(proof_g_H_precomp, pvk_vk_rC_Z_g2_precomp, proof_g_C_g_precomp, pvk_pp_G2_one_precomp, proof_g_A_g_acc_precomp,  proof_g_B_g_precomp);
     let QAP = ppT::final_exponentiation(QAP_miller);
-    if QAP != ffec::GT::<ppT>::one()
+    if QAP != ppT::GT::one()
     {
         ffec::print_indent(); print!("QAP divisibility check failed.\n");
         result = false;
@@ -1021,7 +1021,7 @@ r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(vk:r1cs_ppzksnark_verification_key<p
     let proof_g_A_g_acc_C_precomp = ppT::affine_ate_precompute_G1((proof.g_A.g + acc) + proof.g_C.g);
     let K_miller = ppT::affine_ate_e_times_e_over_e_miller_loop(proof_g_A_g_acc_C_precomp, pvk_vk_gamma_beta_g2_precomp, pvk_vk_gamma_beta_g1_precomp, proof_g_B_g_precomp, proof_g_K_precomp, pvk_vk_gamma_g2_precomp);
     let K = ppT::final_exponentiation(K_miller);
-    if K != ffec::GT::<ppT>::one()
+    if K != ppT::GT::one()
     {
         ffec::print_indent(); print!("Same-coefficient check failed.\n");
         result = false;
@@ -1276,22 +1276,22 @@ impl<ppT> r1cs_ppzksnark_verification_key<ppT>{
 pub fn dummy_verification_key(input_size:usize)->r1cs_ppzksnark_verification_key<ppT>
 {
     let mut result=r1cs_ppzksnark_verification_key::<ppT>::new();
-    result.alphaA_g2 = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
-    result.alphaB_g1 = ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one();
-    result.alphaC_g2 = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
-    result.gamma_g2 = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
-    result.gamma_beta_g1 = ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one();
-    result.gamma_beta_g2 = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
-    result.rC_Z_g2 = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
+    result.alphaA_g2 = ppT::Fr::random_element() * ppT::G2::one();
+    result.alphaB_g1 = ppT::Fr::random_element() * ppT::G1::one();
+    result.alphaC_g2 = ppT::Fr::random_element() * ppT::G2::one();
+    result.gamma_g2 = ppT::Fr::random_element() * ppT::G2::one();
+    result.gamma_beta_g1 = ppT::Fr::random_element() * ppT::G1::one();
+    result.gamma_beta_g2 = ppT::Fr::random_element() * ppT::G2::one();
+    result.rC_Z_g2 = ppT::Fr::random_element() * ppT::G2::one();
 
-    let base = ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one();
-    let mut  v=ffec::G1_vector::<ppT>::new();
+    let base = ppT::Fr::random_element() * ppT::G1::one();
+    let mut  v=ppT::G1_vector::new();
     for i in 0..input_size
     {
-        v.push(ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one());
+        v.push(ppT::Fr::random_element() * ppT::G1::one());
     }
 
-    result.encoded_IC_query = accumulation_vector::<ffec::G1::<ppT> >(base, v);
+    result.encoded_IC_query = accumulation_vector::<ppT::G1 >(base, v);
 
     return result;
 }

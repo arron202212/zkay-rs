@@ -88,12 +88,12 @@ pub trait evaluation_domain<FieldT> {
      * The output is a vector (b_{0},...,b_{m-1})
      * where b_{i} is the evaluation of L_{i,S}(z) at z = t.
      */
-    fn  evaluate_all_lagrange_polynomials(t:&FieldT)->Vec<FieldT>  ;
+    fn  evaluate_all_lagrange_polynomials(&self,t:&FieldT)->Vec<FieldT>  ;
 
     /**
      * Evaluate the vanishing polynomial of S at the field element t.
      */
-    fn   compute_vanishing_polynomial(t:&FieldT)->FieldT ;
+    fn   compute_vanishing_polynomial(&self,t:&FieldT)->FieldT ;
 
     /**
      * Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.

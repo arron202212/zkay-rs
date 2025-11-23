@@ -245,7 +245,7 @@ pub fn new( pb:ram_protoboard<ramT>,
                                                               execution_lines[i+1].cpu_state, // next_state
                                                               load_instruction_lines[i+1].address.bits, // next_pc_addr
                                                               execution_lines[i+1].has_accepted, // next_has_accepted
-                                                              FMT(annotation_prefix, " execution_checkers_{}", i)));
+                                                            FMT(annotation_prefix, " execution_checkers_{}", i)));
     }
     ffec::leave_block("Allocate execution checkers");
 
@@ -257,7 +257,7 @@ pub fn new( pb:ram_protoboard<ramT>,
                                                                  timestamp_size,
                                                                  *unrouted_memory_lines[i],
                                                                  routed_memory_lines[i],
-                                                                 FMT(self.annotation_prefix, " memory_checkers_{}", i)));
+                                                               FMT(self.annotation_prefix, " memory_checkers_{}", i)));
     }
     ffec::leave_block("Allocate all memory checkers");
 
@@ -313,7 +313,7 @@ pub fn generate_r1cs_constraints()
     {
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, load_instruction_lines[i].contents_before.packed,
                                                              load_instruction_lines[i].contents_after.packed),
-                                     FMT(self.annotation_prefix, " load_instruction_{}_is_a_load", i));
+                                   FMT(self.annotation_prefix, " load_instruction_{}_is_a_load", i));
     }
 
     /* ensure correct execution */

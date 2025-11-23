@@ -75,7 +75,7 @@ pub fn new(pb:protoboard<FieldT>,
     else
     {
         element_digest.reset(digest_variable::<FieldT>::new(pb, HashT::get_digest_len(),
-                                                         FMT(annotation_prefix, " element_digest")));
+                                                       FMT(annotation_prefix, " element_digest")));
         hash_element.reset(HashT::new(pb, element_bits.len(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
         check_membership.reset(merkle_tree_check_read_gadget::<FieldT, HashT>::new(pb,
                                                                                 tree_depth,
@@ -84,7 +84,7 @@ pub fn new(pb:protoboard<FieldT>,
                                                                                 root_digest,
                                                                                 *proof.merkle_path,
                                                                                 check_successful,
-                                                                                FMT(annotation_prefix, " check_membership")));
+                                                                              FMT(annotation_prefix, " check_membership")));
     }
     //  gadget<FieldT>(pb, annotation_prefix), 
     Self{tree_depth:ffec::log2(max_entries),element_bits,
@@ -131,7 +131,7 @@ pub fn  test_set_commitment_gadget()
     let mut set_elems=vec![];
     for i in 0..max_set_size
     {
-        let mut  elem:Vec<_>=(0..value_size).map(|_|std::rand() % 2);
+        let mut  elem:Vec<_>=(0..value_size).map(|_|rand::random() % 2);
         
         set_elems.push(elem);
         accumulator.add(elem);
@@ -166,7 +166,7 @@ pub fn  test_set_commitment_gadget()
     /* test an element not in set */
     for i in 0..value_size
     {
-        pb.val(element_bits[i]) = FieldT(std::rand() % 2);
+        pb.val(element_bits[i]) = FieldT(rand::random() % 2);
     }
 
     pb.val(check_succesful) = FieldT::zero(); /* do not require the check result to be successful */

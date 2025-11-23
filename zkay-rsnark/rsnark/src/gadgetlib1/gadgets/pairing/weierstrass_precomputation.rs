@@ -16,8 +16,8 @@
 
 
 
-use ffec::algebra::curves::mnt::mnt4::mnt4_init;
-use ffec::algebra::curves::mnt::mnt6::mnt6_init;
+use ff_curves::algebra::curves::mnt::mnt4::mnt4_init;
+use ff_curves::algebra::curves::mnt::mnt6::mnt6_init;
 
 use crate::gadgetlib1::gadgets::curves::weierstrass_g1_gadget;
 use crate::gadgetlib1::gadgets::curves::weierstrass_g2_gadget;
@@ -308,7 +308,7 @@ pub fn generate_r1cs_witness()
 
 pub fn  test_G1_variable_precomp(annotation:&String)
 {
-    let mut pb=protoboard::<ffec::Fr::<ppT> >:: new();
+    let mut pb=protoboard::<ppT::Fr >:: new();
     let mut  g_val = ffec::Fr::<other_curve::<ppT> >::random_element() * ffec::G1::<other_curve::<ppT> >::one();
 
     let mut g=G1_variable::<ppT>::new(pb, "g");
@@ -613,14 +613,14 @@ let coeff_id= 0;
         }
 
         doubling_steps[dbl_id].reset(precompute_G2_gadget_doubling_step::<ppT>::new(pb, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]),
-                                                                                 FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
+                                                                               FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
         dbl_id+=1;
         coeff_id+=1;
 
         if NAF[i] != 0
         {
             addition_steps[add_id].reset(precompute_G2_gadget_addition_step::<ppT>::new(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
-                                                                                     FMT(annotation_prefix, " addition_steps_{}", add_id)));
+                                                                                   FMT(annotation_prefix, " addition_steps_{}", add_id)));
             add_id+=1;
             coeff_id+=1;
         }
@@ -679,7 +679,7 @@ let NAF= find_wnaf(1, loop_count);
 }
 pub fn  test_G2_variable_precomp(annotation:&String)
 {
-    let mut pb=protoboard::<ffec::Fr::<ppT> >:: new();
+    let mut pb=protoboard::<ppT::Fr >:: new();
 let g_val= ffec::Fr::<other_curve::<ppT> >::random_element() * ffec::G2::<other_curve::<ppT> >::one();
 
    let mut  g=G2_variable::<ppT>::new(pb, "g");

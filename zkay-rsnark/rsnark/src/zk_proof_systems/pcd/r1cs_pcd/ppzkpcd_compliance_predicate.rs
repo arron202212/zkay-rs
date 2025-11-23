@@ -12,7 +12,7 @@
 //#ifndef PPZKPCD_COMPLIANCE_PREDICATE_HPP_
 // #define PPZKPCD_COMPLIANCE_PREDICATE_HPP_
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate;
 

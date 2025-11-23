@@ -19,19 +19,19 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef SAP_HPP_
 // #define SAP_HPP_
 
 // use  <map>
-// 
+//
 
-use fqfft::evaluation_domain::evaluation_domain;
-
-
-
+use crate::relations::FieldTConfig;
+use ffec::scalar_multiplication::multiexp::inner_product;
+use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
+use rccell::RcCell;
+use std::collections::HashMap;
 /* forward declaration */
-// 
+//
 // pub struct sap_witness;
 
 /**
@@ -45,28 +45,28 @@ use fqfft::evaluation_domain::evaluation_domain;
  * There is no need to store the Z polynomial because it is uniquely
  * determined by the domain (as Z is its vanishing polynomial).
  */
-// 
-pub struct sap_instance<FieldT> {
-// //
-num_variables:    usize,
-degree:    usize,
-num_inputs:    usize,
+//
+pub struct sap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+    // //
+    num_variables: usize,
+    degree: usize,
+    num_inputs: usize,
 
-// //
-domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
+    // //
+    domain: RcCell<ED>,
 
-A_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
-C_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
+    A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
 }
 
-//     sap_instance(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//     sap_instance(domain:&RcCell<ED >,
 //                  num_variables:usize,
 //                  degree:usize,
 //                  num_inputs:usize,
 //                  A_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >,
 //                  C_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >);
 
-//     sap_instance(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//     sap_instance(domain:&RcCell<ED >,
 //                  num_variables:usize,
 //                  degree:usize,
 //                  num_inputs:usize,
@@ -96,23 +96,25 @@ C_in_Lagrange_basis:    Vec<HashMap<usize, FieldT> >,
  * - evaluations of all monomials of t;
  * - counts about how many of the above evaluations are in fact non-zero.
  */
-// 
-pub struct sap_instance_evaluation<FieldT>{
 //
-num_variables:    usize,
-degree:    usize,
-num_inputs:    usize,
-//
-domain:    RcCell<fqfft::evaluation_domain<FieldT> >,
+pub struct sap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+    //
+    num_variables: usize,
+    degree: usize,
+    num_inputs: usize,
+    //
+    domain: RcCell<ED>,
 
-t:    FieldT,
+    t: FieldT,
 
-Ht:    Vec<FieldT>, At:Vec<FieldT>, Ct:Vec<FieldT>,
+    Ht: Vec<FieldT>,
+    At: Vec<FieldT>,
+    Ct: Vec<FieldT>,
 
-Zt:    FieldT,
+    Zt: FieldT,
 }
 
-//     sap_instance_evaluation(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//     sap_instance_evaluation(domain:&RcCell<ED >,
 //                             num_variables:usize,
 //                             degree:usize,
 //                             num_inputs:usize,
@@ -121,7 +123,7 @@ Zt:    FieldT,
 //                             Ct:&Vec<FieldT>,
 //                             Ht:&Vec<FieldT>,
 //                             Zt:&FieldT);
-//     sap_instance_evaluation(domain:&RcCell<fqfft::evaluation_domain<FieldT> >,
+//     sap_instance_evaluation(domain:&RcCell<ED >,
 //                             num_variables:usize,
 //                             degree:usize,
 //                             num_inputs:usize,
@@ -146,18 +148,19 @@ Zt:    FieldT,
 /**
  * A SAP witness.
  */
-// 
-pub struct sap_witness<FieldT>{
 //
-num_variables:    usize,
-degree:    usize,
-num_inputs:    usize,
+pub struct sap_witness<FieldT> {
+    //
+    num_variables: usize,
+    degree: usize,
+    num_inputs: usize,
 
-//
-d2:    FieldT,d1:FieldT,
+    //
+    d2: FieldT,
+    d1: FieldT,
 
-coefficients_for_ACs:    Vec<FieldT>,
-coefficients_for_H:    Vec<FieldT>,
+    coefficients_for_ACs: Vec<FieldT>,
+    coefficients_for_H: Vec<FieldT>,
 }
 
 //     sap_witness(num_variables:usize,
@@ -186,8 +189,6 @@ coefficients_for_H:    Vec<FieldT>,
 //     usize num_inputs() const;
 // };
 
-
-
 // use crate::relations::arithmetic_programs::sap::sap;
 
 //#endif // SAP_HPP_
@@ -203,309 +204,276 @@ See sap.hpp .
 *             and contributors (see AUTHORS).
 * @copyright  MIT license (see LICENSE file)
 *****************************************************************************/
-
 //#ifndef SAP_TCC_
 // #define SAP_TCC_
-
- use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::common::profiling;
 use ffec::common::utils;
 
-
-
-impl<FieldT> sap_instance<FieldT>{
-
-pub fn new(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
-                                   num_variables:usize,
-                                   degree:usize,
-                                   num_inputs:usize,
-                                   A_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >,
-                                   C_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >) ->Self
-   
-{
- Self{num_variables,
-    degree,
-    num_inputs,
-    domain,
-    A_in_Lagrange_basis,
-    C_in_Lagrange_basis}
-}
-
-
-pub fn new2(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
-                                   num_variables:usize,
-                                   degree:usize,
-                                   num_inputs:usize,
-A_in_Lagrange_basis:                                   Vec<HashMap<usize, FieldT> >,
-C_in_Lagrange_basis:                                   Vec<HashMap<usize, FieldT> >) ->Self
-   
-{
- Self{num_variables,
-    degree,
-    num_inputs,
-    domain,
-    A_in_Lagrange_basis,
-    C_in_Lagrange_basis}
-}
-
-
-pub fn num_variables()->usize
-{
-    return num_variables;
-}
-
-
-pub fn degree()->usize
-{
-    return degree;
-}
-
-
-pub fn num_inputs()->usize
-{
-    return num_inputs;
-}
-
-
- pub fn is_satisfied(witness:sap_witness<FieldT>) ->bool
-{
-    let  t = FieldT::random_element();
-
-    let At =vec![FieldT::zero();self.num_variables()+1];
-    let  Ct =vec![FieldT::zero();self.num_variables()+1];
-    let  Ht=Vec::with_capacity(self.degree()+1);
-
-    let  Zt = self.domain.compute_vanishing_polynomial(t);
-
-    let  u = self.domain.evaluate_all_lagrange_polynomials(t);
-
-    for  i in 0.. self.num_variables()+1
-    {
-        for el in &A_in_Lagrange_basis[i]
-        {
-            At[i] += u[el.first] * el.second;
-        }
-
-        for el in &C_in_Lagrange_basis[i]
-        {
-            Ct[i] += u[el.first] * el.second;
+impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance<FieldT, ED> {
+    pub fn new(
+        domain: RcCell<ED>,
+        num_variables: usize,
+        degree: usize,
+        num_inputs: usize,
+        A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+        C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    ) -> Self {
+        Self {
+            num_variables,
+            degree,
+            num_inputs,
+            domain,
+            A_in_Lagrange_basis,
+            C_in_Lagrange_basis,
         }
     }
 
-    let  ti = FieldT::one();
-    for i in  0.. self.degree()+1
-    {
-        Ht[i] = ti;
-        ti *= t;
+    pub fn new2(
+        domain: RcCell<ED>,
+        num_variables: usize,
+        degree: usize,
+        num_inputs: usize,
+        A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+        C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    ) -> Self {
+        Self {
+            num_variables,
+            degree,
+            num_inputs,
+            domain,
+            A_in_Lagrange_basis,
+            C_in_Lagrange_basis,
+        }
     }
 
-    let   eval_sap_inst=sap_instance_evaluation::<FieldT>::new(self.domain,
-                                                        self.num_variables(),
-                                                        self.degree(),
-                                                        self.num_inputs(),
-                                                        t,
-                                                        At,
-                                                        Ct,
-                                                        Ht,
-                                                        Zt);
-    return eval_sap_inst.is_satisfied(witness);
-}
-}
-
-impl<FieldT> sap_instance_evaluation<FieldT>{
-
-pub fn new(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
-                                                         num_variables:usize,
-                                                         degree:usize,
-                                                         num_inputs:usize,
-                                                         t:FieldT,
-                                                         At:Vec<FieldT>,
-                                                         Ct:Vec<FieldT>,
-                                                         Ht:Vec<FieldT>,
-                                                         Zt:FieldT) ->Self
-
-{
-    Self{num_variables,
-    degree,
-    num_inputs,
-    domain,
-    t,
-    At,
-    Ct,
-    Ht,
-    Zt}
-}
-
-
-pub fn new1(domain:RcCell<fqfft::evaluation_domain<FieldT> >,
-                                                         num_variables:usize,
-                                                         degree:usize,
-                                                         num_inputs:usize,
-                                                         t:FieldT,
-At:                                                         Vec<FieldT>,
-Ct:                                                         Vec<FieldT>,
-Ht:                                                         Vec<FieldT>,
-                                                         Zt:FieldT) ->Self
-  
-{
- Self{ num_variables,
-    degree,
-    num_inputs,
-    domain,
-    t,
-    At,
-    Ct,
-    Ht,
-    Zt}
-}
-
-
-pub fn num_variables()->usize
-{
-    return num_variables;
-}
-
-
-pub fn degree()->usize
-{
-    return degree;
-}
-
-
-pub fn num_inputs()->usize
-{
-    return num_inputs;
-}
-
-
- pub fn is_satisfied(witness:sap_witness<FieldT>) ->bool
-{
-    if self.num_variables() != witness.num_variables()
-    {
-        return false;
+    pub fn num_variables(&self) -> usize {
+        return self.num_variables;
     }
 
-    if self.degree() != witness.degree()
-    {
-        return false;
+    pub fn degree(&self) -> usize {
+        return self.degree;
     }
 
-    if self.num_inputs() != witness.num_inputs()
-    {
-        return false;
+    pub fn num_inputs(&self) -> usize {
+        return self.num_inputs;
     }
 
-    if self.num_variables() != witness.coefficients_for_ACs.len()
-    {
-        return false;
-    }
+    pub fn is_satisfied(&self, witness: sap_witness<FieldT>) -> bool {
+        let mut t = FieldT::random_element();
 
-    if self.degree()+1 != witness.coefficients_for_H.len()
-    {
-        return false;
-    }
+        let mut At = vec![FieldT::zero(); self.num_variables() + 1];
+        let mut Ct = vec![FieldT::zero(); self.num_variables() + 1];
+        let mut Ht = Vec::with_capacity(self.degree() + 1);
 
-    if self.At.len() != self.num_variables()+1 || self.Ct.len() != self.num_variables()+1
-    {
-        return false;
-    }
+        let mut Zt = self.domain.borrow().compute_vanishing_polynomial(&t);
 
-    if self.Ht.len() != self.degree()+1
-    {
-        return false;
-    }
+        let u = self.domain.borrow().evaluate_all_lagrange_polynomials(&t);
 
-    if self.Zt != self.domain.compute_vanishing_polynomial(self.t)
-    {
-        return false;
-    }
+        for i in 0..self.num_variables() + 1 {
+            for el in &self.A_in_Lagrange_basis[i] {
+                At[i] += u[*el.0].clone() * el.1.clone();
+            }
 
-    let ans_A = self.At[0] + witness.d1*self.Zt;
-    let ans_C = self.Ct[0] + witness.d2*self.Zt;
-    let ans_H = FieldT::zero();
+            for el in &self.C_in_Lagrange_basis[i] {
+                Ct[i] += u[*el.0].clone() * el.1.clone();
+            }
+        }
 
-    ans_A = ans_A + ffec::inner_product::<FieldT>(self.At.begin()+1,
-                                                 self.At.begin()+1+self.num_variables(),
-                                                 witness.coefficients_for_ACs.begin(),
-                                                 witness.coefficients_for_ACs.begin()+self.num_variables());
-    ans_C = ans_C + ffec::inner_product::<FieldT>(self.Ct.begin()+1,
-                                                 self.Ct.begin()+1+self.num_variables(),
-                                                 witness.coefficients_for_ACs.begin(),
-                                                 witness.coefficients_for_ACs.begin()+self.num_variables());
-    ans_H = ans_H + ffec::inner_product::<FieldT>(self.Ht.begin(),
-                                                 self.Ht.begin()+self.degree()+1,
-                                                 witness.coefficients_for_H.begin(),
-                                                 witness.coefficients_for_H.begin()+self.degree()+1);
+        let mut ti = FieldT::one();
+        for i in 0..self.degree() + 1 {
+            Ht[i] = ti.clone();
+            ti *= t.clone();
+        }
 
-    if ans_A * ans_A - ans_C != ans_H * self.Zt
-    {
-        return false;
-    }
-
-    return true;
-}
-}
-impl sap_witness<FieldT>{
-
-pub fn new(num_variables:usize,
-                                 degree:usize,
-                                 num_inputs:usize,
-                                 d1:FieldT,
-                                 d2:FieldT,
-                                 coefficients_for_ACs:Vec<FieldT>,
-                                 coefficients_for_H:Vec<FieldT>) ->Self
-   
-{
- Self{num_variables,
-    degree,
-    num_inputs,
-    d1,
-    d2,
-    coefficients_for_ACs,
-    coefficients_for_H}
-}
-
-
-pub fn new2(num_variables:usize,
-                                 degree:usize,
-                                 num_inputs:usize,
-                                 d1:FieldT,
-                                 d2:FieldT,
-                                 coefficients_for_ACs:Vec<FieldT>,
-coefficients_for_H:                                 Vec<FieldT>) ->Self
- 
-{
-   Self{
-    num_variables,
-    degree,
-    num_inputs,
-    d1,
-    d2,
-    coefficients_for_ACs,
-    coefficients_for_H
+        let eval_sap_inst = sap_instance_evaluation::<FieldT, ED>::new(
+            self.domain.clone(),
+            self.num_variables(),
+            self.degree(),
+            self.num_inputs(),
+            t,
+            At,
+            Ct,
+            Ht,
+            Zt,
+        );
+        return eval_sap_inst.is_satisfied(witness);
     }
 }
 
+impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance_evaluation<FieldT, ED> {
+    pub fn new(
+        domain: RcCell<ED>,
+        num_variables: usize,
+        degree: usize,
+        num_inputs: usize,
+        t: FieldT,
+        At: Vec<FieldT>,
+        Ct: Vec<FieldT>,
+        Ht: Vec<FieldT>,
+        Zt: FieldT,
+    ) -> Self {
+        Self {
+            num_variables,
+            degree,
+            num_inputs,
+            domain,
+            t,
+            At,
+            Ct,
+            Ht,
+            Zt,
+        }
+    }
 
+    pub fn new1(
+        domain: RcCell<ED>,
+        num_variables: usize,
+        degree: usize,
+        num_inputs: usize,
+        t: FieldT,
+        At: Vec<FieldT>,
+        Ct: Vec<FieldT>,
+        Ht: Vec<FieldT>,
+        Zt: FieldT,
+    ) -> Self {
+        Self {
+            num_variables,
+            degree,
+            num_inputs,
+            domain,
+            t,
+            At,
+            Ct,
+            Ht,
+            Zt,
+        }
+    }
 
-pub fn num_variables()->usize
-{
-    return num_variables;
+    pub fn num_variables(&self) -> usize {
+        return self.num_variables;
+    }
+
+    pub fn degree(&self) -> usize {
+        return self.degree;
+    }
+
+    pub fn num_inputs(&self) -> usize {
+        return self.num_inputs;
+    }
+
+    pub fn is_satisfied(&self, witness: sap_witness<FieldT>) -> bool {
+        if self.num_variables() != witness.num_variables() {
+            return false;
+        }
+
+        if self.degree() != witness.degree() {
+            return false;
+        }
+
+        if self.num_inputs() != witness.num_inputs() {
+            return false;
+        }
+
+        if self.num_variables() != witness.coefficients_for_ACs.len() {
+            return false;
+        }
+
+        if self.degree() + 1 != witness.coefficients_for_H.len() {
+            return false;
+        }
+
+        if self.At.len() != self.num_variables() + 1 || self.Ct.len() != self.num_variables() + 1 {
+            return false;
+        }
+
+        if self.Ht.len() != self.degree() + 1 {
+            return false;
+        }
+
+        if self.Zt != self.domain.borrow().compute_vanishing_polynomial(&self.t) {
+            return false;
+        }
+
+        let mut ans_A = self.At[0].clone() + witness.d1.clone() * self.Zt.clone();
+        let mut ans_C = self.Ct[0].clone() + witness.d2.clone() * self.Zt.clone();
+        let mut ans_H = FieldT::zero();
+
+        ans_A = ans_A
+            + inner_product::<FieldT>(
+                &self.At[1..1 + self.num_variables()],
+                &witness.coefficients_for_ACs[..self.num_variables()],
+            );
+        ans_C = ans_C
+            + inner_product::<FieldT>(
+                &self.Ct[1..1 + self.num_variables()],
+                &witness.coefficients_for_ACs[..self.num_variables()],
+            );
+        ans_H = ans_H
+            + inner_product::<FieldT>(
+                &self.Ht[..self.degree() + 1],
+                &witness.coefficients_for_H[..self.degree() + 1],
+            );
+
+        if ans_A.clone() * ans_A.clone() - ans_C != ans_H * self.Zt.clone() {
+            return false;
+        }
+
+        return true;
+    }
 }
+impl<FieldT> sap_witness<FieldT> {
+    pub fn new(
+        num_variables: usize,
+        degree: usize,
+        num_inputs: usize,
+        d1: FieldT,
+        d2: FieldT,
+        coefficients_for_ACs: Vec<FieldT>,
+        coefficients_for_H: Vec<FieldT>,
+    ) -> Self {
+        Self {
+            num_variables,
+            degree,
+            num_inputs,
+            d1,
+            d2,
+            coefficients_for_ACs,
+            coefficients_for_H,
+        }
+    }
 
+    pub fn new2(
+        num_variables: usize,
+        degree: usize,
+        num_inputs: usize,
+        d1: FieldT,
+        d2: FieldT,
+        coefficients_for_ACs: Vec<FieldT>,
+        coefficients_for_H: Vec<FieldT>,
+    ) -> Self {
+        Self {
+            num_variables,
+            degree,
+            num_inputs,
+            d1,
+            d2,
+            coefficients_for_ACs,
+            coefficients_for_H,
+        }
+    }
 
-pub fn degree()->usize
-{
-    return degree;
-}
+    pub fn num_variables(&self) -> usize {
+        return self.num_variables;
+    }
 
+    pub fn degree(&self) -> usize {
+        return self.degree;
+    }
 
-pub fn num_inputs()->usize
-{
-    return num_inputs;
-}
-
-
+    pub fn num_inputs(&self) -> usize {
+        return self.num_inputs;
+    }
 }
 
 //#endif // SAP_TCC_

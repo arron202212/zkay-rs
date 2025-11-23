@@ -242,7 +242,7 @@ pub fn new(pb:&protoboard<FieldT>,
         compute_bits[i].reset(XOR3_gadget::<FieldT>::new(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2),
                                               if i + shift < 32 {W[i+shift]} else{ONE},
                                               (i + shift >= 32), result_bits[i],
-                                              FMT(self.annotation_prefix, " compute_bits_{}", i)));
+                                            FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
     //  gadget<FieldT>(pb, annotation_prefix),
@@ -290,7 +290,7 @@ pub fn new(pb:&protoboard<FieldT>,
     for i in 0..32
     {
         compute_bits[i].reset(XOR3_gadget::<FieldT>::new(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2), SHA256_GADGET_ROTR(W, i, rot3), false, result_bits[i],
-                                                      FMT(self.annotation_prefix, " compute_bits_{}", i)));
+                                                    FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
 
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
@@ -402,7 +402,7 @@ pub fn generate_r1cs_constraints()
         self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(X[i] + Y[i] + Z[i] - 2 * result_bits[i],
                                                              1 - (X[i] + Y[i] + Z[i] -  2 * result_bits[i]),
                                                              0),
-                                     FMT(self.annotation_prefix, " result_bits_{}", i));
+                                   FMT(self.annotation_prefix, " result_bits_{}", i));
     }
     pack_result.generate_r1cs_constraints(false);
 }

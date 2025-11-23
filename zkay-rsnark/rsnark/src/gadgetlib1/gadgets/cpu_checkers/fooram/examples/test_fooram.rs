@@ -39,7 +39,7 @@ pub trait  default_fooram_ppzksnark_pp {
 // 
 pub fn  profile_ram_zksnark<ppT>(w:usize)
 {
-    type ramT=ram_zksnark_machine_pp<ppT>;
+    // type ramT=ram_zksnark_machine_pp<ppT>;
 
     let  example=ram_example::<ramT>::new();
     example.ap = ram_architecture_params::<ramT>(w);
@@ -53,7 +53,7 @@ pub fn  profile_ram_zksnark<ppT>(w:usize)
 // 
 pub fn profile_ram_ppzksnark<ppT>(w:usize)
 {
-    type ramT=ram_ppzksnark_machine_pp<ppT>;
+    // type ramT=ram_ppzksnark_machine_pp<ppT>;
 
     let  example=ram_example::<ramT>::new();
     example.ap = ram_architecture_params::<ramT>(w);

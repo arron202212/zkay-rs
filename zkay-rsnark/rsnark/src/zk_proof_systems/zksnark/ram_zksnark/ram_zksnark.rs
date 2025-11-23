@@ -296,8 +296,8 @@ impl ram_zksnark_verification_key<ram_zksnark_ppT>{
 
  pub fn ram_zksnark_generator<ram_zksnark_ppT>(ap:&ram_zksnark_architecture_params<ram_zksnark_ppT>)->ram_zksnark_keypair<ram_zksnark_ppT>
 {
-    type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
-    type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
+    // type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
+    // type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
     ffec::enter_block("Call to ram_zksnark_generator");
 
     ffec::enter_block("Generate compliance predicate for RAM");
@@ -324,9 +324,9 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(pk:&ram_zksnark_proving_key<ram_zksna
                                                       time_bound:&usize,
                                                       auxiliary_input:&ram_zksnark_auxiliary_input<ram_zksnark_ppT>)->ram_zksnark_proof<ram_zksnark_ppT> 
 {
-    type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
-    type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
-    type FieldT=ffec::Fr< pcdT::curve_A_pp>; // XXX
+    // type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
+    // type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
+    // type FieldT=ffec::Fr< pcdT::curve_A_pp>; // XXX
 
     assert!(ffec::log2(time_bound) <= ramT::timestamp_length);
 
@@ -410,9 +410,9 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(pk:&ram_zksnark_proving_key<ram_zksna
                           time_bound:&usize,
                           proof:&ram_zksnark_proof<ram_zksnark_ppT>)->bool
 {
-    type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
-    type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
-    type FieldT=ffec::Fr< pcdT::curve_A_pp>; // XXX
+    // type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
+    // type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
+    // type FieldT=ffec::Fr< pcdT::curve_A_pp>; // XXX
 
     ffec::enter_block("Call to ram_zksnark_verifier");
     let   cp_primary_input=r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(ram_compliance_predicate_handler::<ramT>::get_final_case_msg(vk.ap, primary_input, time_bound));

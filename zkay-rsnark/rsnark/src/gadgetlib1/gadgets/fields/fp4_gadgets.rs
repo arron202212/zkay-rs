@@ -247,7 +247,7 @@ pub fn Frobenius_map( power:usize) ->Fp4_variable<Fp4T>
     return Fp4_variable::<Fp4T>(self.pb,
                               Fp2_variable::<Fp2T>(self.pb, new_c0c0, new_c0c1, FMT(self.annotation_prefix, " Frobenius_map_c0")),
                               Fp2_variable::<Fp2T>(self.pb, new_c1c0, new_c1c1, FMT(self.annotation_prefix, " Frobenius_map_c1")),
-                              FMT(self.annotation_prefix, " Frobenius_map"));
+                            FMT(self.annotation_prefix, " Frobenius_map"));
 }
 
 
@@ -417,39 +417,39 @@ pub fn generate_r1cs_constraints()
         a0 + a1 + a2 + a3,
         b0 + b1 + b2 + b3,
         v1),
-                                 FMT(self.annotation_prefix, " v1"));
+                               FMT(self.annotation_prefix, " v1"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         a0 - a1 + a2 - a3,
         b0 - b1 + b2 - b3,
         v2),
-                                 FMT(self.annotation_prefix, " v2"));
+                               FMT(self.annotation_prefix, " v2"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         a3,
         b3,
         v6),
-                                 FMT(self.annotation_prefix, " v6"));
+                               FMT(self.annotation_prefix, " v6"));
 
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         a0,
         b0,
         u * c0 + beta * u * c2 - beta * u * FieldT(2).inverse() * v1 - beta * u * FieldT(2).inverse() * v2 + beta * v6),
-                                 FMT(self.annotation_prefix, " v0"));
+                               FMT(self.annotation_prefix, " v0"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         a0 + FieldT(2)*a1 + FieldT(4)*a2 + FieldT(8)*a3,
         b0 + FieldT(2)*b1 + FieldT(4)*b2 + FieldT(8)*b3,
         - FieldT(15) * u * c0 - FieldT(30) * u * c1 - FieldT(3) * (FieldT(4) + beta) * u * c2 - FieldT(6) * (FieldT(4) + beta) * u * c3 + (FieldT(24) - FieldT(3) * beta * FieldT(2).inverse()) * u * v1 + (-FieldT(8) + beta * FieldT(2).inverse()) * u * v2 - FieldT(3) * (-FieldT(16) + beta) * v6),
-                                 FMT(self.annotation_prefix, " v3"));
+                               FMT(self.annotation_prefix, " v3"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         a0 - FieldT(2)*a1 + FieldT(4)*a2 - FieldT(8)*a3,
         b0 - FieldT(2)*b1 + FieldT(4)*b2 - FieldT(8)*b3,
         - FieldT(15) * u * c0 + FieldT(30) * u * c1 - FieldT(3) * (FieldT(4) + beta) * u * c2 + FieldT(6) * (FieldT(4) + beta) * u * c3 + (FieldT(24) - FieldT(3) * beta * FieldT(2).inverse()) * u * v2 + (-FieldT(8) + beta * FieldT(2).inverse()) * u * v1
         - FieldT(3) * (-FieldT(16) + beta) * v6),
-                                 FMT(self.annotation_prefix, " v4"));
+                               FMT(self.annotation_prefix, " v4"));
     self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
         a0 + FieldT(3)*a1 + FieldT(9)*a2 + FieldT(27)*a3,
         b0 + FieldT(3)*b1 + FieldT(9)*b2 + FieldT(27)*b3,
         - FieldT(80) * u * c0 - FieldT(240) * u * c1 - FieldT(8) * (FieldT(9) + beta) * u * c2 - FieldT(24) * (FieldT(9) + beta) * u * c3 - FieldT(2) * (-FieldT(81) + beta) * u * v1 + (-FieldT(81) + beta) * u * v2 - FieldT(8) * (-FieldT(81) + beta) * v6),
-                                 FMT(self.annotation_prefix, " v5"));
+                               FMT(self.annotation_prefix, " v5"));
 }
 
 

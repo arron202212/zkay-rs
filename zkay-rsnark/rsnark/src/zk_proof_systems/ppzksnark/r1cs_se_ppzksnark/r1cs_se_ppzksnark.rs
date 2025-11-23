@@ -51,7 +51,7 @@
 
 // 
 
-use ffec::algebra::curves::public_params;
+use ff_curves::algebra::curves::public_params;
 
 use crate::common::data_structures::accumulation_vector;
 use crate::knowledge_commitment::knowledge_commitment;
@@ -146,8 +146,8 @@ Self{
 
     pub fn size_in_bits(&self)->usize
     {
-         G1_size() * ffec::G1::<ppT>::size_in_bits() +
-               G2_size() * ffec::G2::<ppT>::size_in_bits()
+         G1_size() * ppT::G1::size_in_bits() +
+               G2_size() * ppT::G2::size_in_bits()
     }
 
     fn print_size(&self) 
@@ -222,8 +222,8 @@ H,
 
     pub fn size_in_bits(&self)->usize
     {
-        return (G1_size() * ffec::G1::<ppT>::size_in_bits() +
-                G2_size() * ffec::G2::<ppT>::size_in_bits());
+        return (G1_size() * ppT::G1::size_in_bits() +
+                G2_size() * ppT::G2::size_in_bits());
     }
 
      fn print_size(&self) 
@@ -333,8 +333,8 @@ Self{
 
     pub fn size_in_bits(&self)->usize
     {
-        return G1_size() * ffec::G1::<ppT>::size_in_bits() +
-               G2_size() * ffec::G2::<ppT>::size_in_bits();
+        return G1_size() * ppT::G1::size_in_bits() +
+               G2_size() * ppT::G2::size_in_bits();
     }
 
      fn print_size(&self) 
@@ -386,8 +386,8 @@ r1cs_se_ppzksnark_prover<ppT>(pk:&r1cs_se_ppzksnark_proving_key<ppT>,
 //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
 // //#endif
 
-    let  (d1,d2) =( ffec::Fr::<ppT>::random_element(),
-     ffec::Fr::<ppT>::random_element());
+    let  (d1,d2) =( ppT::Fr::random_element(),
+     ppT::Fr::random_element());
 
     ffec::enter_block("Compute the polynomial H");
     let  sap_wit = r1cs_to_sap_witness_map(
@@ -395,7 +395,7 @@ r1cs_se_ppzksnark_prover<ppT>(pk:&r1cs_se_ppzksnark_proving_key<ppT>,
     ffec::leave_block("Compute the polynomial H");
 
 // // #ifdef DEBUG
-//     ffec::Fr::<ppT>::random_element(:ffec::Fr<ppT> t =);
+//     ppT::Fr::random_element(:ffec::Fr<ppT> t =);
 //     sap_instance_evaluation<ffec::Fr<ppT> > sap_inst = r1cs_to_sap_instance_map_with_evaluation(pk.constraint_system, t);
 //     assert!(sap_inst.is_satisfied(sap_wit));
 // //#endif
@@ -414,7 +414,7 @@ r1cs_se_ppzksnark_prover<ppT>(pk:&r1cs_se_ppzksnark_proving_key<ppT>,
 //     let chunks = 1;
 // //#endif
 
-    let  r = ffec::Fr::<ppT>::random_element();
+    let  r = ppT::Fr::random_element();
 
     ffec::enter_block("Compute the proof");
 
@@ -467,8 +467,8 @@ r1cs_se_ppzksnark_prover<ppT>(pk:&r1cs_se_ppzksnark_proving_key<ppT>,
      * and G^{2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t)} =
      *              = \prod_{i=0}^m C_query_2 * input_i
      */
-    let  C = ffec::multi_exp::<ffec::G1::<ppT>,
-                                        ffec::Fr::<ppT>,
+    let  C = ffec::multi_exp::<ppT::G1,
+                                        ppT::Fr,
                                         ffec::multi_exp_method_BDLO12>(
             pk.C_query_1.begin(),
             pk.C_query_1.end(),
@@ -637,7 +637,7 @@ fn  r1cs_se_ppzksnark_online_verifier_weak_IC<ppT>(pvk:&r1cs_se_ppzksnark_proces
     let  test1 = ppT::final_exponentiation(
         test1_l.unitary_inverse() * test1_r1 * test1_r2 * test1_r3);
 
-    if test1 != ffec::GT::<ppT>::one()
+    if test1 != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -658,7 +658,7 @@ fn  r1cs_se_ppzksnark_online_verifier_weak_IC<ppT>(pvk:&r1cs_se_ppzksnark_proces
     let  test2 = ppT::final_exponentiation(
         test2_l * test2_r.unitary_inverse());
 
-    if test2 != ffec::GT::<ppT>::one()
+    if test2 != ppT::GT::one()
     {
         if !ffec::inhibit_profiling_info
         {
@@ -935,16 +935,16 @@ impl<ppT> r1cs_se_ppzksnark_verification_key<ppT>{
 pub fn  dummy_verification_key(&self, input_size:usize )->r1cs_se_ppzksnark_verification_key<ppT>
 {
     let mut  result=r1cs_se_ppzksnark_verification_key::<ppT>::new();
-    result.H = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
-    result.G_alpha = ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one();
-    result.H_beta = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
-    result.G_gamma = ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one();
-    result.H_gamma = ffec::Fr::<ppT>::random_element() * ffec::G2::<ppT>::one();
+    result.H = ppT::Fr::random_element() * ppT::G2::one();
+    result.G_alpha = ppT::Fr::random_element() * ppT::G1::one();
+    result.H_beta = ppT::Fr::random_element() * ppT::G2::one();
+    result.G_gamma = ppT::Fr::random_element() * ppT::G1::one();
+    result.H_gamma = ppT::Fr::random_element() * ppT::G2::one();
 
-    let  mut v=ffec::G1_vector::<ppT>::new();
+    let  mut v=ppT::G1_vector::new();
     for i in 0..=input_size
     {
-        v.push(ffec::Fr::<ppT>::random_element() * ffec::G1::<ppT>::one());
+        v.push(ppT::Fr::random_element() * ppT::G1::one());
     }
     result.query = (v);
 
@@ -963,7 +963,7 @@ pub fn  r1cs_se_ppzksnark_generator<ppT>(cs:r1cs_se_ppzksnark_constraint_system<
         r1cs_to_sap_get_domain(cs);
     let mut t;
     loop {
-        t = ffec::Fr::<ppT>::random_element();
+        t = ppT::Fr::random_element();
         if !domain.compute_vanishing_polynomial(t).is_zero(){
 break}
     } 
@@ -1000,11 +1000,11 @@ break}
     G ,
     H)=
 (
-     ffec::Fr::<ppT>::random_element(),
-    ffec::Fr::<ppT>::random_element(),
-    ffec::Fr::<ppT>::random_element(),
-     ffec::G1::<ppT>::random_element(),
-     ffec::G2::<ppT>::random_element());
+     ppT::Fr::random_element(),
+    ppT::Fr::random_element(),
+    ppT::Fr::random_element(),
+     ppT::G1::random_element(),
+     ppT::G2::random_element());
 
     ffec::enter_block("Generating G multiexp table");
     let G_exp_count = sap_inst.num_inputs() + 1 // verifier_query
@@ -1013,26 +1013,26 @@ break}
                          // C_query_1
                          + sap_inst.num_variables() - sap_inst.num_inputs()
                          + sap_inst.num_variables() + 1; // C_query_2
-      let      G_window = ffec::get_exp_window_size::<ffec::G1::<ppT> >(G_exp_count);
+      let      G_window = ffec::get_exp_window_size::<ppT::G1 >(G_exp_count);
     ffec::print_indent(); print!("* G window: {}\n", G_window);
     let G_table = get_window_table(
-        ffec::Fr::<ppT>::size_in_bits(), G_window, G);
+        ppT::Fr::size_in_bits(), G_window, G);
     ffec::leave_block("Generating G multiexp table");
 
     ffec::enter_block("Generating H_gamma multiexp table");
     letH_gamma = gamma * H;
     let H_gamma_exp_count = non_zero_At; // B_query
-     let      H_gamma_window = ffec::get_exp_window_size::<ffec::G2::<ppT> >(H_gamma_exp_count);
+     let      H_gamma_window = ffec::get_exp_window_size::<ppT::G2 >(H_gamma_exp_count);
     ffec::print_indent(); print!("* H_gamma window: {}\n", H_gamma_window);
     letH_gamma_table = get_window_table(
-        ffec::Fr::<ppT>::size_in_bits(), H_gamma_window, H_gamma);
+        ppT::Fr::size_in_bits(), H_gamma_window, H_gamma);
     ffec::leave_block("Generating H_gamma multiexp table");
 
     ffec::enter_block("Generate R1CS verification key");
     let G_alpha = alpha * G;
     let H_beta = beta * H;
 
-   let mut  tmp_exponents=ffec::Fr_vector::<ppT>::new();
+   let mut  tmp_exponents=ppT::Fr_vector::new();
     tmp_exponents.reserve(sap_inst.num_inputs() + 1);
     for  i in 0..= sap_inst.num_inputs()
     {
@@ -1040,7 +1040,7 @@ break}
     }
     let  verifier_query = ffec::batch_exp::<ffec::G1<ppT>,
                                                             ffec::Fr<ppT> >(
-        ffec::Fr::<ppT>::size_in_bits(),
+        ppT::Fr::size_in_bits(),
         G_window,
         G_table,
         tmp_exponents);
@@ -1059,7 +1059,7 @@ break}
 
     let  A_query = ffec::batch_exp::<ffec::G1<ppT>,
                                                      ffec::Fr<ppT> >(
-        ffec::Fr::<ppT>::size_in_bits(),
+        ppT::Fr::size_in_bits(),
         G_window,
         G_table,
         tmp_exponents);
@@ -1072,7 +1072,7 @@ break}
     ffec::enter_block("Compute the B-query", false);
     let  B_query = ffec::batch_exp::<ffec::G2<ppT>,
                                                      ffec::Fr<ppT> >(
-        ffec::Fr::<ppT>::size_in_bits(),
+        ppT::Fr::size_in_bits(),
         H_gamma_window,
         H_gamma_table,
         At);
@@ -1099,7 +1099,7 @@ break}
     }
     let  G_gamma2_Z_t = ffec::batch_exp::<ffec::G1<ppT>,
                                                           ffec::Fr<ppT> >(
-        ffec::Fr::<ppT>::size_in_bits(),
+        ppT::Fr::size_in_bits(),
         G_window,
         G_table,
         tmp_exponents);
@@ -1116,9 +1116,9 @@ break}
         tmp_exponents.push(gamma *
             (gamma * Ct[i] + (alpha + beta) * At[i]));
     }
-    let C_query_1 = ffec::batch_exp::<ffec::G1::<ppT>,
-                                                       ffec::Fr::<ppT> >(
-        ffec::Fr::<ppT>::size_in_bits(),
+    let C_query_1 = ffec::batch_exp::<ppT::G1,
+                                                       ppT::Fr >(
+        ppT::Fr::size_in_bits(),
         G_window,
         G_table,
         tmp_exponents);
@@ -1136,9 +1136,9 @@ break}
     {
         tmp_exponents.push(double_gamma2_Z * At[i]);
     }
-    let  C_query_2 = ffec::batch_exp::<ffec::G1::<ppT>,
-                                                       ffec::Fr::<ppT> >(
-        ffec::Fr::<ppT>::size_in_bits(),
+    let  C_query_2 = ffec::batch_exp::<ppT::G1,
+                                                       ppT::Fr >(
+        ppT::Fr::size_in_bits(),
         G_window,
         G_table,
         tmp_exponents);

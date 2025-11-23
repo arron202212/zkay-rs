@@ -102,7 +102,7 @@ public class GF2mField
      */
     public int getDegree()
     {
-        return degree;
+        return self.degree;
     }
 
     /**

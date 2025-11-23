@@ -18,28 +18,28 @@
 //#ifndef BACS_TO_R1CS_HPP_
 // #define BACS_TO_R1CS_HPP_
 
-use crate::relations::circuit_satisfaction_problems/bacs/bacs;
+use crate::relations::circuit_satisfaction_problems::bacs::bacs;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
-/**
- * Instance map for the BACS-to-R1CS reduction.
- */
+// /**
+//  * Instance map for the BACS-to-R1CS reduction.
+//  */
 
-r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<FieldT>);
+// r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<FieldT>);
 
-/**
- * Witness map for the BACS-to-R1CS reduction.
- */
+// /**
+//  * Witness map for the BACS-to-R1CS reduction.
+//  */
 
-r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(circuit:&bacs_circuit<FieldT>,
-                                                               primary_input:&bacs_primary_input<FieldT>,
-                                                               auxiliary_input:&bacs_auxiliary_input<FieldT>);
+// r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(circuit:&bacs_circuit<FieldT>,
+//                                                                primary_input:&bacs_primary_input<FieldT>,
+//                                                                auxiliary_input:&bacs_auxiliary_input<FieldT>);
 
 
 
-use crate::reductions::bacs_to_r1cs::bacs_to_r1cs;
+// use crate::reductions::bacs_to_r1cs::bacs_to_r1cs;
 
 //#endif // BACS_TO_R1CS_HPP_
 /** @file
@@ -58,17 +58,17 @@ See bacs_to_r1cs.hpp .
 //#ifndef BACS_TO_R1CS_TCC_
 // #define BACS_TO_R1CS_TCC_
 
-use crate::relations::circuit_satisfaction_problems/bacs/bacs;
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
+// use crate::relations::circuit_satisfaction_problems::bacs::bacs;
+// use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 
 
 
 
-r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<FieldT>)
+ pub fn bacs_to_r1cs_instance_map<FieldT>(circuit:&bacs_circuit<FieldT>)->r1cs_constraint_system<FieldT>
 {
-    ffec::enter_block("Call to bacs_to_r1cs_instance_map");
+    enter_block("Call to bacs_to_r1cs_instance_map");
     assert!(circuit.is_valid());
-    r1cs_constraint_system<FieldT> result;
+    let mut result= r1cs_constraint_system::<FieldT>::new();
 
 // #ifdef DEBUG
     result.variable_annotations = circuit.variable_annotations;
@@ -81,10 +81,9 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<F
     {
         result.constraints.push(r1cs_constraint::<FieldT>(g.lhs, g.rhs, g.output));
 // #ifdef DEBUG
-        auto it = circuit.gate_annotations.find(g.output.index);
-        if it != circuit.gate_annotations.end()
+        if let Some(v) = circuit.gate_annotations.get(g.output.index)
         {
-            result.constraint_annotations[result.constraints.len()-1] = it.1;
+            result.constraint_annotations[result.constraints.len()-1] = v;
         }
 //#endif
     }
@@ -101,19 +100,19 @@ r1cs_constraint_system<FieldT> bacs_to_r1cs_instance_map(circuit:&bacs_circuit<F
         }
     }
 
-    ffec::leave_block("Call to bacs_to_r1cs_instance_map");
+    leave_block("Call to bacs_to_r1cs_instance_map");
 
     return result;
 }
 
 
-r1cs_variable_assignment<FieldT> bacs_to_r1cs_witness_map(circuit:&bacs_circuit<FieldT>,
+pub fn bacs_to_r1cs_witness_map<FieldT>(circuit:&bacs_circuit<FieldT>,
                                                                primary_input:&bacs_primary_input<FieldT>,
-                                                               auxiliary_input:&bacs_auxiliary_input<FieldT>)
+                                                               auxiliary_input:&bacs_auxiliary_input<FieldT>)->r1cs_variable_assignment<FieldT> 
 {
-    ffec::enter_block("Call to bacs_to_r1cs_witness_map");
-    const r1cs_variable_assignment<FieldT> result = circuit.get_all_wires(primary_input, auxiliary_input);
-    ffec::leave_block("Call to bacs_to_r1cs_witness_map");
+    enter_block("Call to bacs_to_r1cs_witness_map");
+    const result = circuit.get_all_wires(primary_input, auxiliary_input);
+    leave_block("Call to bacs_to_r1cs_witness_map");
 
     return result;
 }

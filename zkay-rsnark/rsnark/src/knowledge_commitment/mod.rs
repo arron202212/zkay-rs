@@ -1,2 +1,2 @@
-pub mod   kc_multiexp;
-pub mod        knowledge_commitment;
+pub mod kc_multiexp;
+pub mod knowledge_commitment;
