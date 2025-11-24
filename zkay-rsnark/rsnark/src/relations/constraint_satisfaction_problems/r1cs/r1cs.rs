@@ -40,7 +40,7 @@ use std::collections::BTreeMap;
  *
  * A R1CS constraint is used to construct a R1CS constraint system (see below).
  */
-// < FieldT>
+#[derive(Default, Clone)]
 pub struct r1cs_constraint<FieldT: FieldTConfig> {
     a: linear_combination<FieldT>,
     b: linear_combination<FieldT>,
@@ -87,7 +87,7 @@ pub type r1cs_variable_assignment<FieldT> = Vec<FieldT>; /* note the changed nam
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
-
+#[derive(Default, Clone)]
 pub struct r1cs_constraint_system<FieldT: FieldTConfig> {
     pub primary_input_size: usize,
     pub auxiliary_input_size: usize,
@@ -121,6 +121,9 @@ impl<FieldT: FieldTConfig> r1cs_constraint_system<FieldT> {
         Self {
             primary_input_size: 0,
             auxiliary_input_size: 0,
+            constraints: vec![],
+            constraint_annotations: BTreeMap::new(),
+            variable_annotations: BTreeMap::new(),
         }
     }
 }

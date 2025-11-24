@@ -464,7 +464,7 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
 
     pub fn new3(var: variable<FieldT>) -> Self {
         let mut terms = vec![];
-        Self::add_term(var, &mut terms);
+        Self::add_term0(var, &mut terms);
         Self { terms }
     }
 
@@ -484,10 +484,15 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
     //     return terms.end();
     // }
 
-    pub fn add_term(var: variable<FieldT>, terms: &mut Vec<linear_term<FieldT>>) {
+    pub fn add_term0(var: variable<FieldT>, terms: &mut Vec<linear_term<FieldT>>) {
         terms.push(linear_term::<FieldT>::new2(var, FieldT::one()));
     }
-
+    pub fn add_term(&mut self, var: usize, int_coeff: integer_coeff_t) {
+        self.terms.push(linear_term::<FieldT>::new1(
+            variable::<FieldT>::new(var),
+            int_coeff,
+        ));
+    }
     pub fn add_term2(
         var: variable<FieldT>,
         int_coeff: integer_coeff_t,
@@ -495,7 +500,12 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
     ) {
         terms.push(linear_term::<FieldT>::new1(var, int_coeff));
     }
-
+    pub fn add_term_with_field(&mut self, var: usize, coeff: FieldT) {
+        self.terms.push(linear_term::<FieldT>::new2(
+            variable::<FieldT>::new(var),
+            coeff,
+        ));
+    }
     pub fn add_term3(var: variable<FieldT>, coeff: FieldT, terms: &mut Vec<linear_term<FieldT>>) {
         terms.push(linear_term::<FieldT>::new2(var, coeff));
     }

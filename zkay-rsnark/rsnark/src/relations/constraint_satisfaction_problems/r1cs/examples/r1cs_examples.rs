@@ -114,10 +114,10 @@ pub fn generate_r1cs_example_with_field_input<FieldT: FieldTConfig>(
     cs.auxiliary_input_size = 2 + num_constraints - num_inputs; // TODO: explain this
 
     let mut full_variable_assignment = r1cs_variable_assignment::<FieldT>::new();
-    let a = FieldT::random_element();
-    let b = FieldT::random_element();
-    full_variable_assignment.push(a);
-    full_variable_assignment.push(b);
+    let mut a = FieldT::random_element();
+    let mut b = FieldT::random_element();
+    full_variable_assignment.push(a.clone());
+    full_variable_assignment.push(b.clone());
 
     for i in 0..num_constraints - 1 {
         let (mut A, mut B, mut C) = (
@@ -126,13 +126,13 @@ pub fn generate_r1cs_example_with_field_input<FieldT: FieldTConfig>(
             linear_combination::<FieldT>::default(),
         );
 
-        if i % 2 {
+        if i % 2 != 0 {
             // a * b = c
             A.add_term(i + 1, 1);
             B.add_term(i + 2, 1);
             C.add_term(i + 3, 1);
-            let tmp = a * b;
-            full_variable_assignment.push(tmp);
+            let tmp = a * b.clone();
+            full_variable_assignment.push(tmp.clone());
             a = b;
             b = tmp;
         } else {
@@ -141,8 +141,8 @@ pub fn generate_r1cs_example_with_field_input<FieldT: FieldTConfig>(
             A.add_term(i + 1, 1);
             A.add_term(i + 2, 1);
             C.add_term(i + 3, 1);
-            let tmp = a + b;
-            full_variable_assignment.push(tmp);
+            let tmp = a + b.clone();
+            full_variable_assignment.push(tmp.clone());
             a = b;
             b = tmp;
         }
@@ -155,28 +155,28 @@ pub fn generate_r1cs_example_with_field_input<FieldT: FieldTConfig>(
         linear_combination::<FieldT>::default(),
         linear_combination::<FieldT>::default(),
     );
-    let fin = FieldT::zero();
+    let mut fin = FieldT::zero();
     for i in 1..cs.num_variables() {
         A.add_term(i, 1);
         B.add_term(i, 1);
-        fin = fin + full_variable_assignment[i - 1];
+        fin = fin + full_variable_assignment[i - 1].clone();
     }
     C.add_term(cs.num_variables(), 1);
     cs.add_constraint(r1cs_constraint::<FieldT>::new(A, B, C));
     full_variable_assignment.push(fin.squared());
 
     /* split variable assignment */
-    let primary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[..num_inputs]);
-    let auxiliary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[num_inputs..]);
+    let primary_input = full_variable_assignment[..num_inputs].to_vec();
+    let auxiliary_input = full_variable_assignment[num_inputs..].to_vec();
 
     /* sanity checks */
     assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
     assert!(cs.num_constraints() == num_constraints);
-    assert!(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.is_satisfied(&primary_input, &auxiliary_input));
 
-    leave_block("Call to generate_r1cs_example_with_field_input");
+    leave_block("Call to generate_r1cs_example_with_field_input", false);
 
     return r1cs_example::<FieldT>::new(cs, primary_input, auxiliary_input);
 }
@@ -194,7 +194,7 @@ pub fn generate_r1cs_example_with_binary_input<FieldT: FieldTConfig>(
     cs.auxiliary_input_size = num_constraints; /* we will add one auxiliary variable per constraint */
     let mut full_variable_assignment = r1cs_variable_assignment::<FieldT>::default();
     for i in 0..num_inputs {
-        full_variable_assignment.push(FieldT::from(rand::random::<usize>() % 2));
+        full_variable_assignment.push(FieldT::from(rand::random::<i64>() % 2));
     }
 
     let mut lastvar = num_inputs - 1;
@@ -228,26 +228,26 @@ pub fn generate_r1cs_example_with_binary_input<FieldT: FieldTConfig>(
             C.add_term(u + 1, 1);
             C.add_term(v + 1, 1);
         }
-        C.add_term(lastvar + 1, -FieldT::one());
+        C.add_term_with_field(lastvar + 1, -FieldT::one());
 
         cs.add_constraint(r1cs_constraint::<FieldT>::new(A, B, C));
         full_variable_assignment.push(
-            full_variable_assignment[u] + full_variable_assignment[v]
-                - full_variable_assignment[u] * full_variable_assignment[v]
-                - full_variable_assignment[u] * full_variable_assignment[v],
+            full_variable_assignment[u].clone() + full_variable_assignment[v].clone()
+                - full_variable_assignment[u].clone() * full_variable_assignment[v].clone()
+                - full_variable_assignment[u].clone() * full_variable_assignment[v].clone(),
         );
     }
 
     /* split variable assignment */
-    let primary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[..num_inputs]);
-    let auxiliary_input = r1cs_primary_input::<FieldT>::new(full_variable_assignment[num_inputs..]);
+    let primary_input = full_variable_assignment[..num_inputs].to_vec();
+    let auxiliary_input = full_variable_assignment[num_inputs..].to_vec();
 
     /* sanity checks */
     assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
     assert!(cs.num_constraints() == num_constraints);
-    assert!(cs.is_satisfied(primary_input, auxiliary_input));
+    assert!(cs.is_satisfied(&primary_input, &auxiliary_input));
 
     leave_block("Call to generate_r1cs_example_with_binary_input", false);
 

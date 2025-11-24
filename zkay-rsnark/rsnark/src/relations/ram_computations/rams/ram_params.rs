@@ -1,25 +1,28 @@
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of public-parameter selector for RAMs.
+Declaration of public-parameter selector for RAMs.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef RAM_PARAMS_HPP_
 // #define RAM_PARAMS_HPP_
-
-// 
-
+use crate::relations::ram_computations::memory::memory_interface::memory_contents;
+use crate::relations::ram_computations::memory::memory_store_trace::memory_store_trace;
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
+    tinyram_input_tape, tinyram_program,
+};
 use ffec::common::utils;
-
-use crate::relations::ram_computations::memory::memory_store_trace;
-
-
-
+use ffec::common::utils::bit_vector;
+pub trait InstructionConfig {
+    fn as_dword<APT: ArchitectureParamsTypeConfig>(&self, ap: &APT) -> usize;
+}
+pub trait ProgramConfig<IC: InstructionConfig> {
+    fn instructions(&self) -> &Vec<IC>;
+}
 /*
   When declaring a new ramT one should do a make it a pub struct that declares typedefs for:
 
@@ -36,30 +39,104 @@ use crate::relations::ram_computations::memory::memory_store_trace;
   timestamp_length, which specifies the zk-SNARK reduction timestamp
   length.
 */
+pub trait ArchitectureParamsTypeConfig: Default + Clone {
+    fn w(&self) -> usize {
+        0
+    }
+    fn k(&self) -> usize {
+        0
+    }
+    fn num_addresses(&self) -> usize {
+        0
+    }
+    fn address_size(&self) -> usize {
+        0
+    }
 
+    fn value_size(&self) -> usize {
+        0
+    }
 
-type  ram_base_field<ramT> =  ramT::base_field_type;
+    fn cpu_state_size(&self) -> usize {
+        0
+    }
 
+    fn initial_pc_addr(&self) -> usize {
+        0
+    }
 
-type ram_cpu_state=bit_vector;
+    fn initial_cpu_state(&self) -> bit_vector {
+        let result = vec![];
+        return result;
+    }
 
+    fn initial_memory_contents<IC: InstructionConfig, PC: ProgramConfig<IC>>(
+        &self,
+        program: &PC,
+        primary_input: &tinyram_input_tape,
+    ) -> memory_contents {
+        // remember that memory consists of 1u64<<dwaddr_len() double words (!)
+        let mut m = memory_contents::new();
 
-type ram_boot_trace =memory_store_trace;
+        return m;
+    }
 
+    fn opcode_width(&self) -> usize {
+        0
+    }
 
-type  ram_protoboard<ramT> =  ramT::protoboard_type;
+    fn reg_arg_width(&self) -> usize {
+        0
+    }
 
+    fn instruction_padding_width(&self) -> usize {
+        0
+    }
 
-type  ram_gadget_base<ramT> =  ramT::gadget_base_type;
+    fn reg_arg_or_imm_width(&self) -> usize {
+        0
+    }
 
+    fn dwaddr_len(&self) -> usize {
+        0
+    }
 
-type  ram_cpu_checker<ramT> =  ramT::cpu_checker_type;
+    fn subaddr_len(&self) -> usize {
+        0
+    }
 
+    fn bytes_in_word(&self) -> usize {
+        0
+    }
 
-type  ram_architecture_params<ramT> =  ramT::architecture_params_type;
+    fn instr_size(&self) -> usize {
+        0
+    }
+    fn print(&self) {}
+}
+pub trait ram_params_type: Default {
+    const timestamp_length: usize;
+    type base_field_type;
+    type protoboard_type;
+    type gadget_base_type;
+    type cpu_checker_type;
+    type architecture_params_type: ArchitectureParamsTypeConfig;
+}
+pub type ram_base_field<ramT> = <ramT as ram_params_type>::base_field_type;
 
+pub type ram_cpu_state = bit_vector;
 
-type  ram_input_tape = Vec<usize>;
+pub type ram_boot_trace = memory_store_trace;
+
+pub type ram_protoboard<ramT> = <ramT as ram_params_type>::protoboard_type;
+
+pub type ram_gadget_base<ramT> = <ramT as ram_params_type>::gadget_base_type;
+
+pub type ram_cpu_checker<ramT> = <ramT as ram_params_type>::cpu_checker_type;
+
+pub type ram_architecture_params<ramT> = <ramT as ram_params_type>::architecture_params_type;
+
+pub type ram_input_tape = Vec<usize>;
 
 /*
   One should also make the following methods for ram_architecture_params
@@ -75,7 +152,5 @@ type  ram_input_tape = Vec<usize>;
   usize initial_pc_addr();
   bit_vector initial_cpu_state();
 */
-
-
 
 //#endif // RAM_PARAMS_HPP_

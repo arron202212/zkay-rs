@@ -15,7 +15,7 @@ Declaration of interfaces for a Merkle tree.
 //
 use ffec::common::utils;
 use ffec::common::utils::log2;
-
+use std::collections::BTreeMap;
 /**
  * A Merkle tree is maintained as two maps:
  * - a map from addresses to values, and
@@ -29,12 +29,12 @@ use ffec::common::utils::log2;
  * obtain the authentication paths for (the value at) a given address.
  */
 use std::marker::PhantomData;
-//  use std::collections::Vec;
+
 use ffec::common::utils::bit_vector;
-type merkle_authentication_node = bit_vector;
-type merkle_authentication_path = Vec<merkle_authentication_node>;
-type hash_value_type = bit_vector; //hash_value_type ;
-type merkle_authentication_path_type = merkle_authentication_path; //merkle_authentication_path_type ;
+pub type merkle_authentication_node = bit_vector;
+pub type merkle_authentication_path = Vec<merkle_authentication_node>;
+pub type hash_value_type = bit_vector; //hash_value_type ;
+pub type merkle_authentication_path_type = merkle_authentication_path; //merkle_authentication_path_type ;
 //
 pub struct merkle_tree<HashT: HashTConfig> {
     hash_defaults: Vec<hash_value_type>,
@@ -136,7 +136,7 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
     }
 
     //
-    pub fn new2(depth: usize, value_size: usize, contents_as_vector: &Vec<bit_vector>) -> Self {
+    pub fn new2(depth: usize, value_size: usize, contents_as_vector: Vec<bit_vector>) -> Self {
         assert!(log2(contents_as_vector.len()) <= depth);
         let mut hash_defaults = Vec::with_capacity(depth + 1);
         let n = contents_as_vector.len();
@@ -171,17 +171,17 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
     }
 
     //
-    pub fn new3(depth: usize, value_size: usize, contents: &Vec<bit_vector>) -> Self {
+    pub fn new3(depth: usize, value_size: usize, contents: BTreeMap<usize, bit_vector>) -> Self {
         let mut hash_defaults: Vec<_> = Vec::<Self>::with_capacity(depth + 1);
         let (mut values, mut hashes) = (Vec::new(), Vec::new());
         if (!contents.is_empty()) {
-            assert!(contents.iter().last().unwrap().len() < 1usize << depth);
+            assert!(contents.iter().last().unwrap().1.len() < 1usize << depth);
 
-            for (address, value) in contents.iter().enumerate() {
+            for (address, value) in contents {
                 let idx = address + (1usize << depth) - 1;
 
-                values[address] = value;
-                hashes[idx] = value;
+                values[address] = value.clone();
+                hashes[idx] = value.clone();
                 // hashes[idx].resize(digest_size);
             }
 
