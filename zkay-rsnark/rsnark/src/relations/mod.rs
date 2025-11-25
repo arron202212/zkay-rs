@@ -9,9 +9,11 @@ pub trait FieldTConfig:
     + std::fmt::Display
     + std::ops::Neg<Output = Self>
     + From<i64>
+    + From<usize>
     + ffec::Zero
     + std::cmp::PartialEq
     + std::ops::AddAssign
+    + std::ops::SubAssign
     + std::ops::MulAssign
     + ffec::scalar_multiplication::multiexp::AsBigint
     + ffec::scalar_multiplication::wnaf::Config
@@ -26,4 +28,5 @@ pub trait FieldTConfig:
     fn squared(&self) -> Self;
     fn print(&self);
     fn inverse(&self) -> Self;
+    fn multiplicative_generator() -> Self;
 }

@@ -42,9 +42,9 @@ use std::collections::BTreeMap;
  */
 #[derive(Default, Clone)]
 pub struct r1cs_constraint<FieldT: FieldTConfig> {
-    a: linear_combination<FieldT>,
-    b: linear_combination<FieldT>,
-    c: linear_combination<FieldT>,
+    pub a: linear_combination<FieldT>,
+    pub b: linear_combination<FieldT>,
+    pub c: linear_combination<FieldT>,
 }
 
 //     r1cs_constraint() {};

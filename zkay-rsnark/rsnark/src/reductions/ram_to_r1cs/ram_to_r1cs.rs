@@ -22,12 +22,7 @@
 
 type FieldT=ram_base_field<ramT>;
 pub struct ram_to_r1cs<ramT> {
-
-
-    
-
 boot_trace_size_bound:    usize,
-
 main_protoboard:    ram_protoboard<ramT>,
 r1cs_input:    pb_variable_array<FieldT>,
 universal_gadget:    RcCell<ram_universal_gadget<ramT> >,

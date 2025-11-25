@@ -22,7 +22,7 @@ Declaration of interfaces for:
 //
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 /**
  * Mnemonic typedefs.
  */
@@ -67,6 +67,14 @@ impl<FieldT: FieldTConfig> Mul<FieldT> for variable<FieldT> {
         linear_term::<FieldT>::new2(self, rhs)
     }
 }
+impl<FieldT: FieldTConfig> Mul<i64> for variable<FieldT> {
+    type Output = linear_term<FieldT>;
+
+    fn mul(self, rhs: i64) -> Self::Output {
+        linear_term::<FieldT>::new1(self, rhs)
+    }
+}
+
 //     variable(index(index:var_index_t index = 0)->Self) {};
 
 //     linear_term<FieldT> operator*(int_coeff:integer_coeff_t) const;
@@ -272,7 +280,13 @@ use ffec::algebra::field_utils::bigint::bigint;
 
 //     return result;
 // }
+impl<FieldT: FieldTConfig> Add<linear_combination<FieldT>> for variable<FieldT> {
+    type Output = linear_combination<FieldT>;
 
+    fn add(self, rhs: linear_combination<FieldT>) -> Self::Output {
+        rhs
+    }
+}
 //
 // linear_combination<FieldT> variable<FieldT>::operator-(&other:linear_combination<FieldT>) const
 // {
@@ -315,7 +329,13 @@ impl<FieldT: FieldTConfig> PartialEq for variable<FieldT> {
 // {
 //     return linear_combination<FieldT>(int_coeff) + var;
 // }
+impl<FieldT: FieldTConfig> Add<i64> for variable<FieldT> {
+    type Output = linear_combination<FieldT>;
 
+    fn add(self, rhs: i64) -> Self::Output {
+        self + linear_combination::<FieldT>::new(rhs)
+    }
+}
 //
 // linear_combination<FieldT> operator+(field_coeff:&FieldT &var:variable<FieldT>)
 // {
@@ -374,6 +394,13 @@ impl<FieldT: FieldTConfig> linear_term<FieldT> {
 // {
 //     return linear_combination<FieldT>(int_coeff) + lt;
 // }
+impl<FieldT: FieldTConfig> Add<i64> for linear_term<FieldT> {
+    type Output = linear_combination<FieldT>;
+
+    fn add(self, rhs: i64) -> Self::Output {
+        linear_combination::<FieldT>::new(rhs) + self
+    }
+}
 
 //
 // linear_combination<FieldT> operator+(field_coeff:&FieldT &lt:linear_term<FieldT>)
@@ -386,7 +413,13 @@ impl<FieldT: FieldTConfig> linear_term<FieldT> {
 // {
 //     return linear_combination<FieldT>(int_coeff) - lt;
 // }
+impl<FieldT: FieldTConfig> Sub<i64> for linear_term<FieldT> {
+    type Output = linear_combination<FieldT>;
 
+    fn sub(self, rhs: i64) -> Self::Output {
+        linear_combination::<FieldT>::new(rhs) + self
+    }
+}
 //
 // linear_combination<FieldT> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>)
 // {
@@ -405,6 +438,21 @@ impl<FieldT: FieldTConfig> Add<linear_combination<FieldT>> for linear_term<Field
         linear_combination::<FieldT>::new4(self) + rhs
     }
 }
+impl<FieldT: FieldTConfig> Add for linear_term<FieldT> {
+    type Output = linear_combination<FieldT>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        linear_combination::<FieldT>::new4(self) + linear_combination::<FieldT>::new4(rhs)
+    }
+}
+impl<FieldT: FieldTConfig> Add<linear_term<FieldT>> for linear_combination<FieldT> {
+    type Output = linear_combination<FieldT>;
+
+    fn add(self, rhs: linear_term<FieldT>) -> Self::Output {
+        linear_combination::<FieldT>::new4(rhs) + self
+    }
+}
+
 //
 // linear_combination<FieldT> linear_term<FieldT>::operator-(&other:linear_combination<FieldT>) const
 // {
@@ -663,6 +711,13 @@ impl<FieldT: FieldTConfig> fmt::Display for linear_combination<FieldT> {
 // {
 //     return linear_combination<FieldT>(int_coeff) + lc;
 // }
+impl<FieldT: FieldTConfig> Add<i64> for linear_combination<FieldT> {
+    type Output = Self;
+
+    fn add(self, rhs: i64) -> Self::Output {
+        self + linear_combination::<FieldT>::new(rhs)
+    }
+}
 
 //
 // linear_combination<FieldT> operator+(field_coeff:&FieldT &lc:linear_combination<FieldT>)

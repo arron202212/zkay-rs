@@ -106,7 +106,7 @@ fn convert(lt:&LinearTerm )->linear_term_t {
 
 impl ConvertConfig<&LinearCombination,linear_combination_t> for GLA{
 fn convert(lc:&LinearCombination )->linear_combination_t {
-    let mut  sparse_vec=sparse_vec_t::with_capicity(lc.linearTerms_.len());
+    let mut  sparse_vec=sparse_vec_t::with_capacity(lc.linearTerms_.len());
     // sparse_vec.reserve(lc.linearTerms_.len());
     for lt in &lc.linearTerms_ {
         sparse_vec.push(convert(lt));
@@ -125,7 +125,7 @@ fn convert(constraint:&Constraint )->constraint_t {
 }
 impl ConvertConfig<&ConstraintSystem,constraint_sys_t> for GLA{
 fn convert(constraint_sys:&ConstraintSystem )->constraint_sys_t {
-     let mut retval=constraint_sys_t::with_capicity(constraint_sys.constraintsPtrs_.len());
+     let mut retval=constraint_sys_t::with_capacity(constraint_sys.constraintsPtrs_.len());
     // retval.reserve(constraint_sys.constraintsPtrs_.len());
     for constraintPtr in &constraint_sys.constraintsPtrs_ {
         retval.push(convert(*constraintPtr));

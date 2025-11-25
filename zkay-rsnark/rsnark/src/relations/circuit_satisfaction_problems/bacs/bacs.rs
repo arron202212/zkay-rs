@@ -106,8 +106,8 @@ pub struct bacs_circuit<FieldT: FieldTConfig> {
     // usize depth();
 
     // #ifdef DEBUG
-    gate_annotations: BTreeMap<usize, String>,
-    variable_annotations: BTreeMap<usize, String>,
+    pub gate_annotations: BTreeMap<usize, String>,
+    pub variable_annotations: BTreeMap<usize, String>,
     //#endif
 
     // bool is_valid();

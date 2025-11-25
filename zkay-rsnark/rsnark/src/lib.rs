@@ -16,7 +16,7 @@ pub mod common;
 // pub mod   gadgetlib1;
 // pub mod        gadgetlib2;
 pub mod knowledge_commitment;
-// pub mod   reductions;
+pub mod reductions;
 pub mod relations;
 // pub mod    zk_proof_systems;
 // pub mod    jsnark_interface ;

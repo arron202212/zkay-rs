@@ -57,27 +57,27 @@ pub trait evaluation_domain<FieldT> {
     /**
      * Get the idx-th element in S.
      */
-    fn   get_domain_element( idx:usize) ->FieldT;
+    fn   get_domain_element(&self, idx:usize) ->FieldT;
 
     /**
      * Compute the FFT, over the domain S, of the vector a.
      */
-    fn   FFT(a:&Vec<FieldT>) ;
+    fn   FFT(&self,a:&Vec<FieldT>) ;
 
     /**
      * Compute the inverse FFT, over the domain S, of the vector a.
      */
-    fn   iFFT(a:&Vec<FieldT>) ;
+    fn   iFFT(&self,a:&Vec<FieldT>) ;
 
     /**
      * Compute the FFT, over the domain g*S, of the vector a.
      */
-    fn   cosetFFT(a:&Vec<FieldT>, g:&FieldT) ;
+    fn   cosetFFT(&self,a:&Vec<FieldT>, g:&FieldT) ;
 
     /**
      * Compute the inverse FFT, over the domain g*S, of the vector a.
      */
-    fn   icosetFFT(a:&Vec<FieldT>, g:&FieldT) ;
+    fn   icosetFFT(&self,a:&Vec<FieldT>, g:&FieldT) ;
 
     /**
      * Evaluate all Lagrange polynomials.
@@ -98,12 +98,12 @@ pub trait evaluation_domain<FieldT> {
     /**
      * Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.
      */
-    fn   add_poly_Z(coeff:&FieldT, H:&Vec<FieldT>) ;
+    fn   add_poly_Z(&self,coeff:&FieldT, H:&Vec<FieldT>) ;
 
     /**
      * Multiply by the evaluation, on a coset of S, of the inverse of the vanishing polynomial of S.
      */
-    fn   divide_by_Z_on_coset(P:&Vec<FieldT>) ;
+    fn   divide_by_Z_on_coset(&self,P:&Vec<FieldT>) ;
 }
 
 // //} // libfqfft

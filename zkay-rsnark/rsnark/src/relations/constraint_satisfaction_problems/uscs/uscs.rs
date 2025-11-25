@@ -1,32 +1,30 @@
+use crate::relations::FieldTConfig;
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of interfaces for:
- - a USCS constraint,
- - a USCS variable assignment, and
- - a USCS constraint system.
+Declaration of interfaces for:
+- a USCS constraint,
+- a USCS variable assignment, and
+- a USCS constraint system.
 
- Above, USCS stands for "Unitary-Square Constraint System".
+Above, USCS stands for "Unitary-Square Constraint System".
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef USCS_HPP_
 // #define USCS_HPP_
 
-use  <cstdlib>
-use  <iostream>
-use  <map>
-use  <string>
-
-
+// use  <cstdlib>
+// use  <iostream>
+// use  <map>
+// use  <string>
 use crate::relations::variable;
-
-
-
+use crate::relations::variable::linear_combination;
+use std::collections::BTreeMap;
+use std::fmt;
 /************************* USCS constraint ***********************************/
 
 /**
@@ -39,8 +37,7 @@ use crate::relations::variable;
  * A USCS constraint is used to construct a USCS constraint system (see below).
  */
 
-using uscs_constraint = linear_combination<FieldT>;
-
+pub type uscs_constraint<FieldT> = linear_combination<FieldT>;
 
 /************************* USCS variable assignment **************************/
 
@@ -49,26 +46,19 @@ using uscs_constraint = linear_combination<FieldT>;
  * a candidate solution to a USCS constraint system (see below).
  */
 
-using uscs_primary_input = Vec<FieldT>;
+pub type uscs_primary_input<FieldT> = Vec<FieldT>;
 
+pub type uscs_auxiliary_input<FieldT> = Vec<FieldT>;
 
-using uscs_auxiliary_input = Vec<FieldT>;
-
-
-using uscs_variable_assignment = Vec<FieldT>;
-
-
+pub type uscs_variable_assignment<FieldT> = Vec<FieldT>;
 
 /************************* USCS constraint system ****************************/
 
+// pub struct uscs_constraint_system;
 
-pub struct uscs_constraint_system;
+// std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
 
-
-std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
-
-
-std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
+// std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
 
 /**
  * A system of USCS constraints looks like
@@ -82,235 +72,251 @@ std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
+#[derive(Default, Clone)]
+pub struct uscs_constraint_system<FieldT: FieldTConfig> {
+    pub primary_input_size: usize,
+    pub auxiliary_input_size: usize,
+    pub constraints: Vec<uscs_constraint<FieldT>>,
 
-pub struct uscs_constraint_system {
+    //     uscs_constraint_system()->Self primary_input_size(0), auxiliary_input_size(0) {};
 
-primary_input_size:    usize,
-auxiliary_input_size:    usize,
+    //     usize num_inputs() const;
+    //     usize num_variables() const;
+    //     usize num_constraints() const;
 
-constraints:    Vec<uscs_constraint<FieldT> >,
+    // // #ifdef DEBUG
+    pub constraint_annotations: BTreeMap<usize, String>,
+    pub variable_annotations: BTreeMap<usize, String>,
+    // //#endif
 
-//     uscs_constraint_system()->Self primary_input_size(0), auxiliary_input_size(0) {};
+    //     bool is_valid() const;
+    //     bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
+    //                       auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
 
-//     usize num_inputs() const;
-//     usize num_variables() const;
-//     usize num_constraints() const;
+    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>);
+    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>, annotation:&String);
 
-// // #ifdef DEBUG
-//     BTreeMap<usize, String> constraint_annotations;
-//     BTreeMap<usize, String> variable_annotations;
-// //#endif
+    //     bool operator==(other:&uscs_constraint_system<FieldT>) const;
 
-//     bool is_valid() const;
-//     bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
-//                       auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
+    //     friend std::ostream& operator<< <FieldT>(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
+    //     friend std::istream& operator>> <FieldT>(std::istream &in, uscs_constraint_system<FieldT> &cs);
 
-//     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>);
-//     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>, annotation:&String);
-
-//     bool operator==(other:&uscs_constraint_system<FieldT>) const;
-
-//     friend std::ostream& operator<< <FieldT>(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
-//     friend std::istream& operator>> <FieldT>(std::istream &in, uscs_constraint_system<FieldT> &cs);
-
-//     pub fn  report_linear_constraint_statistics() const;
+    //     pub fn  report_linear_constraint_statistics() const;
 }
-
-
-
 
 // use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 //#endif // USCS_HPP_
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Implementation of interfaces for:
- - a USCS constraint,
- - a USCS variable assignment, and
- - a USCS constraint system.
+Implementation of interfaces for:
+- a USCS constraint,
+- a USCS variable assignment, and
+- a USCS constraint system.
 
- See uscs.hpp .
+See uscs.hpp .
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef USCS_TCC_
 // #define USCS_TCC_
 
-use  <algorithm>
-use  <cassert>
-use  <set>
-
+// use  <algorithm>
+// use  <cassert>
+// use  <set>
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
 use ffec::common::utils;
 
-
-
-
-pub fn num_inputs(&self)->usize
-{
-    return primary_input_size;
-}
-
-
-pub fn num_variables(&self)->usize
-{
-    return primary_input_size + auxiliary_input_size;
-}
-
-
-
-pub fn num_constraints()->usize
-{
-    return constraints.len();
-}
-
-
-pub fn is_valid()->bool
-{
-    if self.num_inputs() > self.num_variables() return false;
-
-    for c in 0..constraints.len()
-    {
-        if !valid_vector(constraints[c], self.num_variables())
-        {
-            return false;
-        }
+impl<FieldT: FieldTConfig> uscs_constraint_system<FieldT> {
+    pub fn num_inputs(&self) -> usize {
+        return self.primary_input_size;
     }
 
-    return true;
+    pub fn num_variables(&self) -> usize {
+        return self.primary_input_size + self.auxiliary_input_size;
+    }
+
+    pub fn num_constraints(&self) -> usize {
+        return self.constraints.len();
+    }
+
+    pub fn is_valid(&self) -> bool {
+        if self.num_inputs() > self.num_variables() {
+            return false;
+        }
+
+        for c in 0..self.constraints.len() {
+            if self.constraints[c].terms.len() != self.num_variables() {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn is_satisfied(
+        &self,
+        primary_input: &uscs_primary_input<FieldT>,
+        auxiliary_input: &uscs_auxiliary_input<FieldT>,
+    ) -> bool {
+        assert!(primary_input.len() == self.num_inputs());
+        assert!(primary_input.len() + auxiliary_input.len() == self.num_variables());
+
+        let mut full_variable_assignment: Vec<_> = primary_input
+            .iter()
+            .chain(auxiliary_input)
+            .cloned()
+            .collect();
+
+        for c in 0..self.constraints.len() {
+            let mut res = self.constraints[c].evaluate(&full_variable_assignment);
+            if !(res.squared() == FieldT::one()) {
+                // #ifdef DEBUG
+                print!(
+                    "constraint {} ({}) unsatisfied\n",
+                    c,
+                    (if let Some(it) = self.constraint_annotations.get(&c) {
+                        it
+                    } else {
+                        "no annotation"
+                    })
+                );
+                print!("<a,(1,x)> = ");
+                res.print();
+                print!("constraint was:\n");
+                dump_uscs_constraint(
+                    &self.constraints[c],
+                    &full_variable_assignment,
+                    &self.variable_annotations,
+                );
+                //#endif // DEBUG
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn add_constraint0(&mut self, c: uscs_constraint<FieldT>) {
+        self.constraints.push(c);
+    }
+
+    pub fn add_constraint(&mut self, c: uscs_constraint<FieldT>, annotation: &str) {
+        // #ifdef DEBUG
+        self.constraint_annotations
+            .insert(self.constraints.len(), annotation.to_owned());
+        // #else
+        //ffec::UNUSED(annotation);
+        //#endif
+        self.constraints.push(c);
+    }
+
+    pub fn report_linear_constraint_statistics(&self) {
+        // #ifdef DEBUG
+        for i in 0..self.constraints.len() {
+            let constr = &self.constraints[i];
+            let mut a_is_const = true;
+            for t in &constr.terms {
+                a_is_const = a_is_const && (t.index == 0);
+            }
+
+            if a_is_const {
+                print!(
+                    "{}\n",
+                    if let Some(it) = self.constraint_annotations.get(&i) {
+                        it.to_string()
+                    } else {
+                        format!("constraint_{}", i)
+                    }
+                );
+            }
+        }
+        //#endif
+    }
 }
 
+//#endif // USCS_TCC_
 
-pub fn  dump_uscs_constraint(constraint:&uscs_constraint<FieldT>,
-                          full_variable_assignment:&uscs_variable_assignment<FieldT>,
-                          variable_annotations:&BTreeMap<usize, String>)
-{
+pub fn dump_uscs_constraint<FieldT: FieldTConfig>(
+    constraint: &uscs_constraint<FieldT>,
+    full_variable_assignment: &uscs_variable_assignment<FieldT>,
+    variable_annotations: &BTreeMap<usize, String>,
+) {
     print!("terms:\n");
     constraint.print_with_assignment(full_variable_assignment, variable_annotations);
 }
 
+// bool uscs_constraint_system<FieldT>::operator==(other:&uscs_constraint_system<FieldT>) const
+// {
+//     return (self.constraints == other.constraints &&
+//             self.primary_input_size == other.primary_input_size &&
+//             self.auxiliary_input_size == other.auxiliary_input_size);
+// }
 
-bool uscs_constraint_system<FieldT>::is_satisfied(primary_input:&uscs_primary_input<FieldT>,
-                                                  auxiliary_input:&uscs_auxiliary_input<FieldT>) const
-{
-    assert!(primary_input.len() == num_inputs());
-    assert!(primary_input.len() + auxiliary_input.len() == num_variables());
-
-    uscs_variable_assignment<FieldT> full_variable_assignment = primary_input;
-    full_variable_assignment.insert(full_variable_assignment.end(), auxiliary_input.begin(), auxiliary_input.end());
-
-    for c in 0..constraints.len()
-    {
-        FieldT res = constraints[c].evaluate(full_variable_assignment);
-        if !(res.squared() == FieldT::one())
-        {
-// #ifdef DEBUG
-            auto it = constraint_annotations.find(c);
-            print!("constraint {} ({}) unsatisfied\n", c, ( if let Some(it) =constraint_annotations.find(c) {it.1.to_string()} else {"no annotation" }));
-            print!("<a,(1,x)> = "); res.print();
-            print!("constraint was:\n");
-            dump_uscs_constraint(constraints[c], full_variable_assignment, variable_annotations);
-//#endif // DEBUG
-            return false;
-        }
+impl<FieldT: FieldTConfig> PartialEq for uscs_constraint_system<FieldT> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.constraints == other.constraints
+            && self.primary_input_size == other.primary_input_size
+            && self.auxiliary_input_size == other.auxiliary_input_size
     }
-
-    return true;
 }
 
-
-pub fn add_constraint(c:&uscs_constraint<FieldT>)
-{
-    constraints.push(c);
-}
-
-
-pub fn add_constraint(c:&uscs_constraint<FieldT>, annotation:&String)
-{
-// #ifdef DEBUG
-    constraint_annotations[constraints.len()] = annotation;
-#else
-    //ffec::UNUSED(annotation);
-//#endif
-    constraints.push(c);
-}
-
-
-bool uscs_constraint_system<FieldT>::operator==(other:&uscs_constraint_system<FieldT>) const
-{
-    return (self.constraints == other.constraints &&
-            self.primary_input_size == other.primary_input_size &&
-            self.auxiliary_input_size == other.auxiliary_input_size);
-}
-
-
-std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>)
-{
-    out << cs.primary_input_size << "\n";
-    out << cs.auxiliary_input_size << "\n";
-
-    out << cs.num_constraints() << "\n";
-    for c in &cs.constraints
-    {
-        out << c;
+impl<FieldT: FieldTConfig> fmt::Display for uscs_constraint_system<FieldT> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}\n{}\n{}\n{}",
+            self.primary_input_size,
+            self.auxiliary_input_size,
+            self.num_constraints(),
+            self.constraints
+                .iter()
+                .map(|c| format!("{c}"))
+                .collect::<String>(),
+        )
     }
-
-    return out;
 }
+// std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>)
+// {
+//     out << cs.primary_input_size << "\n";
+//     out << cs.auxiliary_input_size << "\n";
 
+//     out << cs.num_constraints() << "\n";
+//     for c in &cs.constraints
+//     {
+//         out << c;
+//     }
 
-std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
-{
-    in >> cs.primary_input_size;
-    in >> cs.auxiliary_input_size;
+//     return out;
+// }
 
-    cs.constraints.clear();
+// std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
+// {
+//     in >> cs.primary_input_size;
+//     in >> cs.auxiliary_input_size;
 
-    usize s;
-    in >> s;
+//     cs.constraints.clear();
 
-    char b;
-    in.read(&b, 1);
+//     usize s;
+//     in >> s;
 
-    cs.constraints.reserve(s);
+//     char b;
+//     in.read(&b, 1);
 
-    for i in 0..s
-    {
-        uscs_constraint<FieldT> c;
-        in >> c;
-        cs.constraints.push(c);
-    }
+//     cs.constraints.reserve(s);
 
-    return in;
-}
+//     for i in 0..s
+//     {
+//         uscs_constraint<FieldT> c;
+//         in >> c;
+//         cs.constraints.push(c);
+//     }
 
-
-pub fn report_linear_constraint_statistics() const
-{
-// #ifdef DEBUG
-    for i in 0..constraints.len()
-    {
-        auto &constr = constraints[i];
-        bool a_is_const = true;
-        for t in &constr.terms
-        {
-            a_is_const = a_is_const && (t.index == 0);
-        }
-
-        if a_is_const
-        {
-            print!("{}\n", (if let Some(it) = constraint_annotations.find(i){it.1.to_string()} else{FMT("", "constraint_{}", i)} );
-        }
-    }
-//#endif
-}
-
-
-
-//#endif // USCS_TCC_
+//     return in;
+// }
