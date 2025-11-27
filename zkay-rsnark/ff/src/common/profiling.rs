@@ -1,4 +1,3 @@
-
 #![allow(dead_code)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -52,7 +51,6 @@
 
 // //#endif // PROFILING_HPP_
 
-
 //  Implementation of functions for profiling code blocks.
 
 // //  See profiling.hpp .
@@ -72,7 +70,7 @@
 // //#ifndef NO_PROCPS
 // //#include <proc/readproc.h>
 // //#endif
-const indentation:usize =0;
+const indentation: usize = 0;
 
 // pub struct Profiling;
 
@@ -282,10 +280,8 @@ const indentation:usize =0;
 //     print!("\n================================================================================\n\n");
 // }
 
-pub fn print_indent()
-{
-    for  i in  0..indentation
-    {
+pub fn print_indent() {
+    for i in 0..indentation {
         print!("  ");
     }
 }
@@ -298,91 +294,89 @@ pub fn print_indent()
 //     }
 // }
 
-pub fn enter_block(msg:&str,  indent:bool)
-{
-//     if inhibit_profiling_counters
-//     {
-//         return;
-//     }
+pub fn enter_block(msg: &str, indent: bool) {
+    //     if inhibit_profiling_counters
+    //     {
+    //         return;
+    //     }
 
-//     block_names.emplace_back(msg);
-//     i64 t = get_nsec_time();
-//     enter_times[msg] = t;
-//     i64 cpu_t = get_nsec_cpu_time();
-//     enter_cpu_times[msg] = cpu_t;
+    //     block_names.emplace_back(msg);
+    //     i64 t = get_nsec_time();
+    //     enter_times[msg] = t;
+    //     i64 cpu_t = get_nsec_cpu_time();
+    //     enter_cpu_times[msg] = cpu_t;
 
-//     if inhibit_profiling_info
-//     {
-//         return;
-//     }
+    //     if inhibit_profiling_info
+    //     {
+    //         return;
+    //     }
 
-// // #ifdef MULTICORE
-// #pragma omp critical
-// //#endif
-//     {
-//         op_profiling_enter(msg);
+    // // #ifdef MULTICORE
+    // #pragma omp critical
+    // //#endif
+    //     {
+    //         op_profiling_enter(msg);
 
-//         print_indent();
-//         print!("(enter) %-35s\t", msg);
-//         print_times_from_last_and_start(t, t, cpu_t, cpu_t);
-//         print!("\n");
-//         fflush(stdout);
+    //         print_indent();
+    //         print!("(enter) %-35s\t", msg);
+    //         print_times_from_last_and_start(t, t, cpu_t, cpu_t);
+    //         print!("\n");
+    //         fflush(stdout);
 
-//         if indent
-//         {
-//             ++indentation;
-//         }
-//     }
+    //         if indent
+    //         {
+    //             ++indentation;
+    //         }
+    //     }
 }
-pub fn leave_block(msg:&str,  indent:bool)
-{
-//     if inhibit_profiling_counters
-//     {
-//         return;
-//     }
+pub fn leave_block(msg: &str, indent: bool) {
+    //     if inhibit_profiling_counters
+    //     {
+    //         return;
+    //     }
 
-// //#ifndef MULTICORE
-//     assert!(*(--block_names.end()) == msg);
-// //#endif
-//     block_names.pop_back();
+    // //#ifndef MULTICORE
+    //     assert!(*(--block_names.end()) == msg);
+    // //#endif
+    //     block_names.pop_back();
 
-//     ++invocation_counts[msg];
+    //     ++invocation_counts[msg];
 
-//     i64 t = get_nsec_time();
-//     last_times[msg] = (t - enter_times[msg]);
-//     cumulative_times[msg] += (t - enter_times[msg]);
+    //     i64 t = get_nsec_time();
+    //     last_times[msg] = (t - enter_times[msg]);
+    //     cumulative_times[msg] += (t - enter_times[msg]);
 
-//     i64 cpu_t = get_nsec_cpu_time();
-//     last_cpu_times[msg] = (cpu_t - enter_cpu_times[msg]);
+    //     i64 cpu_t = get_nsec_cpu_time();
+    //     last_cpu_times[msg] = (cpu_t - enter_cpu_times[msg]);
 
-// // #ifdef PROFILE_OP_COUNTS
-//     for p in &op_data_points
-//     {
-//         cumulative_op_counts[std::make_pair(msg, p.first)] += *(p.second)-op_counts[std::make_pair(msg, p.first)];
-//     }
-// //#endif
+    // // #ifdef PROFILE_OP_COUNTS
+    //     for p in &op_data_points
+    //     {
+    //         cumulative_op_counts[std::make_pair(msg, p.first)] += *(p.second)-op_counts[std::make_pair(msg, p.first)];
+    //     }
+    // //#endif
 
-//     if inhibit_profiling_info
-//     {
-//         return;
-//     }
+    //     if inhibit_profiling_info
+    //     {
+    //         return;
+    //     }
 
-// // #ifdef MULTICORE
-// #pragma omp critical
-// //#endif
-//     {
-//         if indent
-//         {
-//             --indentation;
-//         }
+    // // #ifdef MULTICORE
+    // #pragma omp critical
+    // //#endif
+    //     {
+    //         if indent
+    //         {
+    //             --indentation;
+    //         }
 
-//         print_indent();
-//         print!("(leave) %-35s\t", msg);
-//         print_times_from_last_and_start(t, enter_times[msg], cpu_t, enter_cpu_times[msg]);
-//         print_op_profiling(msg);
-//         print!("\n");
-//         fflush(stdout);
-//     }
+    //         print_indent();
+    //         print!("(leave) %-35s\t", msg);
+    //         print_times_from_last_and_start(t, enter_times[msg], cpu_t, enter_cpu_times[msg]);
+    //         print_op_profiling(msg);
+    //         print!("\n");
+    //         fflush(stdout);
+    //     }
 }
 
 // pub fn  print_mem(s:&String)

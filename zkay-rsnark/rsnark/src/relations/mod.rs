@@ -29,4 +29,5 @@ pub trait FieldTConfig:
     fn print(&self);
     fn inverse(&self) -> Self;
     fn multiplicative_generator() -> Self;
+    fn from_int(i: u64, signed: bool) -> Self;
 }

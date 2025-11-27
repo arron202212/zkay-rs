@@ -7,9 +7,9 @@
 //! These roots of unity comprise the domain over which
 //! polynomial arithmetic is performed.
 
-use ffec::{FftField, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{fmt, hash, rand::Rng, vec::*};
+use ffec::{FftField, Zero};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

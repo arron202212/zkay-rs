@@ -135,7 +135,7 @@ pub fn new(pb:&protoboard<FieldT>,
     full_bits = result_bits;
     for i in result_bits.len()..X_bits
     {
-        let mut  full_bits_overflow=pb_variable::<FieldT>::new();
+        let mut  full_bits_overflow=variable::<FieldT,pb_variable>::new();
         full_bits_overflow.allocate(pb, FMT(self.annotation_prefix, " full_bits_{}", i));
         full_bits.push(full_bits_overflow);
     }

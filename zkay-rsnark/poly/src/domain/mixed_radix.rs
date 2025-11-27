@@ -12,12 +12,12 @@
 
 pub use crate::domain::utils::Elements;
 use crate::domain::{
-    utils::{best_fft, bitreverse},
     DomainCoeff, EvaluationDomain,
+    utils::{best_fft, bitreverse},
 };
-use ffec::{fields::utils::k_adicity, FftField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{cmp::min, fmt, vec::*};
+use ffec::{FftField, fields::utils::k_adicity};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
@@ -391,12 +391,12 @@ pub(crate) fn serial_mixed_radix_fft<T: DomainCoeff<F>, F: FftField>(
 #[cfg(test)]
 mod tests {
     use crate::{
-        polynomial::{univariate::DensePolynomial, DenseUVPolynomial, Polynomial},
         EvaluationDomain, MixedRadixEvaluationDomain,
+        polynomial::{DenseUVPolynomial, Polynomial, univariate::DensePolynomial},
     };
-    use ffec::{FftField, Field, One, UniformRand, Zero};
     use ark_std::{rand::Rng, test_rng};
     use ark_test_curves::bn384_small_two_adicity::Fq as Fr;
+    use ffec::{FftField, Field, One, UniformRand, Zero};
 
     #[test]
     fn vanishing_polynomial_evaluation() {
@@ -531,10 +531,10 @@ mod tests {
     fn parallel_fft_consistency() {
         use super::serial_mixed_radix_fft;
         use crate::domain::utils::parallel_fft;
-        use ffec::PrimeField;
         use ark_std::{test_rng, vec::*};
         use ark_test_curves::bn384_small_two_adicity::Fq as Fr;
         use core::cmp::min;
+        use ffec::PrimeField;
 
         fn test_consistency<F: PrimeField, R: Rng>(rng: &mut R, max_coeffs: u32) {
             for _ in 0..5 {

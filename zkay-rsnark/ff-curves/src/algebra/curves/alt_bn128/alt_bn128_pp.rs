@@ -8,13 +8,20 @@
 // #define ALT_BN128_PP_HPP_
 // use crate::algebra::curves::alt_bn128::alt_bn128_g1;
 // use crate::algebra::curves::alt_bn128::alt_bn128_g2;
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::{alt_bn128_Fq12,alt_bn128_GT,alt_bn128_Fq2,alt_bn128_Fq};
+use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
+    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT,
+};
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 use crate::algebra::curves::alt_bn128::alt_bn128_init::init_alt_bn128_params;
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{alt_bn128_reduced_pairing,alt_bn128_pairing,alt_bn128_final_exponentiation,alt_bn128_miller_loop,alt_bn128_double_miller_loop};
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing::alt_bn128_precompute_G1;
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing::alt_bn128_precompute_G2;
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{alt_bn128_G1_precomp,alt_bn128_G2_precomp};
+use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
+    alt_bn128_G1_precomp, alt_bn128_G2_precomp,
+};
+use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
+    alt_bn128_double_miller_loop, alt_bn128_final_exponentiation, alt_bn128_miller_loop,
+    alt_bn128_pairing, alt_bn128_reduced_pairing,
+};
 use crate::algebra::curves::public_params;
 
 // namespace libff {
@@ -48,12 +55,11 @@ use crate::algebra::curves::public_params;
  *             and contributors (see AUTHORS).
  * @copyright  MIT license (see LICENSE file)
  *****************************************************************************/
-
 // use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
 
- use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
-use crate::{PublicParamsType,PublicParams};
+use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
+use crate::{PublicParams, PublicParamsType};
 pub struct alt_bn128_pp;
 impl PublicParamsType for alt_bn128_pp {
     type Fp_type = alt_bn128_Fr;

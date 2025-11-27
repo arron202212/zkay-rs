@@ -1,26 +1,24 @@
 /** @file
- *****************************************************************************
- Implementation of arithmetic in the finite field F[p^2].
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+Implementation of arithmetic in the finite field F[p^2].
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef FP2_HPP_
 // #define FP2_HPP_
 //#include <vector>
-
-use crate::algebra::fields::{prime_base::fp::Fp_modelConfig};
+use crate::algebra::fields::prime_base::fp::Fp_modelConfig;
 // namespace libff {
 
-// 
+//
 // pub struct Fp2_model;
 
-// 
+//
 // std::ostream& operator<<(std::ostream &, const Fp2_model<n, modulus> &);
 
-// 
+//
 // std::istream& operator>>(std::istream &, Fp2_model<n, modulus> &);
 
 /**
@@ -31,9 +29,9 @@ use crate::algebra::fields::{prime_base::fp::Fp_modelConfig};
  *
  * ASSUMPTION: p = 1 (mod 6)
  */
-// 
+//
 pub trait Fp2_modelConfig: 'static + Send + Sync + Sized {
-    type my_Fp:PrimeField;
+    type my_Fp: PrimeField;
     const non_residue: Self::my_Fp;
 
     const nqr: (Self::my_Fp, Self::my_Fp);
@@ -42,10 +40,9 @@ pub trait Fp2_modelConfig: 'static + Send + Sync + Sized {
     const Frobenius_coeffs_c1: [Self::my_Fp; 2];
 }
 
-
 // pub struct  Fp2_model {
-// 
-    // type my_Fp=Fp_model<n, modulus>;
+//
+// type my_Fp=Fp_model<n, modulus>;
 // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
 //     static i64 add_cnt;
 //     static i64 sub_cnt;
@@ -63,7 +60,7 @@ pub trait Fp2_modelConfig: 'static + Send + Sync + Sized {
 //     static Fp2_model<n, modulus> nqr_to_t; // nqr^t
 //     static my_Fp Frobenius_coeffs_c1[2]; // non_residue^((modulus^i-1)/2)
 
-    //  c0:my_Fp, c1:my_Fp;
+//  c0:my_Fp, c1:my_Fp;
 // }
 //     Fp2_model() {};
 //     Fp2_model(c0:my_Fp&, c1:&my_Fp)->Selfc0,c1 {};
@@ -92,14 +89,14 @@ pub trait Fp2_modelConfig: 'static + Send + Sync + Sized {
 //     Fp2_model& operator-=(other:&Fp2_model);
 //     Fp2_model& operator*=(other:&Fp2_model);
 //     Fp2_model& operator^=(const u64 pow);
-//     
+//
 //     Fp2_model& operator^=(pow:&bigint<m>);
 
 //     Fp2_model operator+(other:&Fp2_model) const;
 //     Fp2_model operator-(other:&Fp2_model) const;
 //     Fp2_model operator*(other:&Fp2_model) const;
 //     Fp2_model operator^(const:u64 pow),
-//     
+//
 //     Fp2_model operator^(other:&bigint<m>) const;
 //     Fp2_model operator-() const;
 
@@ -126,39 +123,36 @@ pub trait Fp2_modelConfig: 'static + Send + Sync + Sized {
 //     friend std::istream& operator>> <n, modulus>(std::istream &in, Fp2_model<n, modulus> &el);
 // };
 
-
 //#endif // FP2_HPP_
 /** @file
- *****************************************************************************
- Implementation of arithmetic in the finite field F[p^2].
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+Implementation of arithmetic in the finite field F[p^2].
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef FP2_TCC_
 // #define FP2_TCC_
-
 use crate::algebra::field_utils::field_utils;
 
 // namespace libff {
 
 // using std::usize;
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::zero()
 // {
 //     return Fp2_model<n, modulus>(my_Fp::zero(), my_Fp::zero());
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::one()
 // {
 //     return Fp2_model<n, modulus>(my_Fp::one(), my_Fp::zero());
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::random_element()
 // {
 //     Fp2_model<n, modulus> r;
@@ -168,25 +162,25 @@ use crate::algebra::field_utils::field_utils;
 //     return r;
 // }
 
-// 
+//
 // pub fn randomize()
 // {
 //     (*this) = Fp2_model<n, modulus>::random_element();
 // }
 
-// 
+//
 // bool Fp2_model<n,modulus>::operator==(other:&Fp2_model<n,modulus>) const
 // {
 //     return (this->c0 == other.c0 && this->c1 == other.c1);
 // }
 
-// 
+//
 // bool Fp2_model<n,modulus>::operator!=(other:&Fp2_model<n,modulus>) const
 // {
 //     return !(operator==(other));
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator+(other:&Fp2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -196,7 +190,7 @@ use crate::algebra::field_utils::field_utils;
 //                                 this->c1 + other.c1);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator-(other:&Fp2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -206,7 +200,7 @@ use crate::algebra::field_utils::field_utils;
 //                                 this->c1 - other.c1);
 // }
 
-// 
+//
 // Fp2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp2_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -216,7 +210,7 @@ use crate::algebra::field_utils::field_utils;
 //                                 lhs*rhs.c1);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator*(other:&Fp2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -233,77 +227,76 @@ use crate::algebra::field_utils::field_utils;
 //                                 (a + b)*(A+B) - aA - bB);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator-() const
 // {
 //     return Fp2_model<n,modulus>(-this->c0,
 //                                 -this->c1);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator^(const u64 pow) const
 // {
 //     return power<Fp2_model<n, modulus>>(*this, pow);
 // }
 
-// 
-// 
+//
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator^(pow:&bigint<m>) const
 // {
 //     return power<Fp2_model<n, modulus>, m>(*this, pow);
 // }
 
-// 
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator+=(const Fp2_model<n,modulus>& other)
 // {
 //     (*this) = *this + other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator-=(const Fp2_model<n,modulus>& other)
 // {
 //     (*this) = *this - other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator*=(const Fp2_model<n,modulus>& other)
 // {
 //     (*this) = *this * other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
-// 
+//
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::squared() const
 // {
 //     return squared_complex();
 // }
 
-// 
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::square()
 // {
 //     (*this) = squared();
 //     return (*this);
 // }
 
-
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::squared_karatsuba() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -318,7 +311,7 @@ use crate::algebra::field_utils::field_utils;
 //                                 (a + b).squared() - asq - bsq);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::squared_complex() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -332,7 +325,7 @@ use crate::algebra::field_utils::field_utils;
 //                                 ab + ab);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::inverse() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -351,27 +344,27 @@ use crate::algebra::field_utils::field_utils;
 //     return Fp2_model<n,modulus>(c0, c1);
 // }
 
-// 
+//
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::invert()
 // {
 //     (*this) = inverse();
 //     return (*this);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::Frobenius_map(u64 power) const
 // {
 //     return Fp2_model<n,modulus>(c0,
 //                                 Frobenius_coeffs_c1[power % 2] * c1);
 // }
 
-// 
+//
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::sqrt() const
 // {
 //     return tonelli_shanks_sqrt(*this);
 // }
 
-// 
+//
 // Vec<uint64_t> Fp2_model<n,modulus>::to_words() const
 // {
 //     Vec<uint64_t> words = c0.to_words();
@@ -380,7 +373,7 @@ use crate::algebra::field_utils::field_utils;
 //     return words;
 // }
 
-// 
+//
 // bool Fp2_model<n,modulus>::from_words(Vec<uint64_t> words)
 // {
 //     Vec<uint64_t>::const_iterator vec_start = words.begin();
@@ -392,21 +385,21 @@ use crate::algebra::field_utils::field_utils;
 //     return c0.from_words(words0) && c1.from_words(words1);
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream &out, el:&Fp2_model<n, modulus>)
 // {
 //     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
 // {
 //     in >> el.c0 >> el.c1;
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<Fp2_model<n, modulus> >)
 // {
 //     out << v.len() << "\n";
@@ -418,7 +411,7 @@ use crate::algebra::field_utils::field_utils;
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<Fp2_model<n, modulus> > &v)
 // {
 //     v.clear();
@@ -444,9 +437,8 @@ use crate::algebra::field_utils::field_utils;
 // } // namespace libff
 //#endif // FP2_TCC_
 
-
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
-use crate::algebra::fields::{fpn_field::PrimeField, cyclotomic::CyclotomicMultSubgroup};
+use crate::algebra::fields::{cyclotomic::CyclotomicMultSubgroup, fpn_field::PrimeField};
 use ark_std::Zero;
 use core::{marker::PhantomData, ops::Not};
 

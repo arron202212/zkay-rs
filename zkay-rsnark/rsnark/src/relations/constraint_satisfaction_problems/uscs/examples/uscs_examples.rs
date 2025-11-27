@@ -15,22 +15,28 @@ use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
     uscs_auxiliary_input, uscs_constraint, uscs_constraint_system, uscs_primary_input,
     uscs_variable_assignment,
 };
+use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use ffec::common::profiling::{enter_block, leave_block};
-
 /**
  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
  */
 
-pub struct uscs_example<FieldT: FieldTConfig> {
-    pub constraint_system: uscs_constraint_system<FieldT>,
+pub struct uscs_example<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+> {
+    pub constraint_system: uscs_constraint_system<FieldT, SV, SLC>,
     pub primary_input: uscs_primary_input<FieldT>,
     pub auxiliary_input: uscs_auxiliary_input<FieldT>,
 }
-impl<FieldT: FieldTConfig> uscs_example<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    uscs_example<FieldT, SV, SLC>
+{
     // uscs_example<FieldT>() = default;
     // uscs_example<FieldT>(other:&uscs_example<FieldT>) = default;
     pub fn new(
-        constraint_system: uscs_constraint_system<FieldT>,
+        constraint_system: uscs_constraint_system<FieldT, SV, SLC>,
         primary_input: uscs_primary_input<FieldT>,
         auxiliary_input: uscs_auxiliary_input<FieldT>,
     ) -> Self {
@@ -86,16 +92,20 @@ impl<FieldT: FieldTConfig> uscs_example<FieldT> {
 // use  <cassert>
 use ffec::common::utils;
 
-pub fn generate_uscs_example_with_field_input<FieldT: FieldTConfig>(
+pub fn generate_uscs_example_with_field_input<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
     num_constraints: usize,
     num_inputs: usize,
-) -> uscs_example<FieldT> {
+) -> uscs_example<FieldT, SV, SLC> {
     enter_block("Call to generate_uscs_example_with_field_input", false);
 
     assert!(num_inputs >= 1);
     assert!(num_constraints >= num_inputs);
 
-    let mut cs = uscs_constraint_system::<FieldT>::default();
+    let mut cs = uscs_constraint_system::<FieldT, SV, SLC>::default();
     cs.primary_input_size = num_inputs;
     cs.auxiliary_input_size = num_constraints - num_inputs;
 
@@ -128,7 +138,7 @@ pub fn generate_uscs_example_with_field_input<FieldT: FieldTConfig>(
             - y_coeff.clone() * full_variable_assignment[y].clone())
             * full_variable_assignment[z].inverse();
 
-        let mut constr = uscs_constraint::<FieldT>::default();
+        let mut constr = uscs_constraint::<FieldT, SV, SLC>::default();
         constr.add_term_with_field(x + 1, x_coeff);
         constr.add_term_with_field(y + 1, y_coeff);
         constr.add_term_with_field(z + 1, z_coeff);
@@ -150,18 +160,22 @@ pub fn generate_uscs_example_with_field_input<FieldT: FieldTConfig>(
 
     leave_block("Call to generate_uscs_example_with_field_input", false);
 
-    return uscs_example::<FieldT>::new(cs, primary_input, auxiliary_input);
+    return uscs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }
 
-pub fn generate_uscs_example_with_binary_input<FieldT: FieldTConfig>(
+pub fn generate_uscs_example_with_binary_input<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
     num_constraints: usize,
     num_inputs: usize,
-) -> uscs_example<FieldT> {
+) -> uscs_example<FieldT, SV, SLC> {
     enter_block("Call to generate_uscs_example_with_binary_input", false);
 
     assert!(num_inputs >= 1);
 
-    let mut cs = uscs_constraint_system::<FieldT>::default();
+    let mut cs = uscs_constraint_system::<FieldT, SV, SLC>::default();
     cs.primary_input_size = num_inputs;
     cs.auxiliary_input_size = num_constraints;
 
@@ -186,7 +200,7 @@ pub fn generate_uscs_example_with_binary_input<FieldT: FieldTConfig>(
             rand::random::<usize>() % i
         };
 
-        let mut constr = uscs_constraint::<FieldT>::default();
+        let mut constr = uscs_constraint::<FieldT, SV, SLC>::default();
         constr.add_term(u + 1, 1);
         constr.add_term(v + 1, 1);
         constr.add_term(lastvar + 1, 1);
@@ -213,7 +227,7 @@ pub fn generate_uscs_example_with_binary_input<FieldT: FieldTConfig>(
 
     leave_block("Call to generate_uscs_example_with_binary_input", false);
 
-    return uscs_example::<FieldT>::new(cs, primary_input, auxiliary_input);
+    return uscs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }
 
 //#endif // USCS_EXAMPLES_TCC

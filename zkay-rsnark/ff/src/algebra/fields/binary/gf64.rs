@@ -5,7 +5,6 @@
 //  * @author     This file is part of libff (see AUTHORS), migrated from libiop
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef LIBFF_ALGEBRA_GF64_HPP_
 // // #define LIBFF_ALGEBRA_GF64_HPP_
 
@@ -39,7 +38,7 @@
 // //     gf64& operator-=(other:&gf64);
 // //     gf64& operator*=(other:&gf64);
 // //     gf64& operator^=(const u64 pow);
-// //     
+// //
 // //     gf64& operator^=(pow:&bigint<m>);
 
 // //     gf64& square();
@@ -50,7 +49,7 @@
 // //     gf64 operator-() const;
 // //     gf64 operator*(other:&gf64) const;
 // //     gf64 operator^(const:u64 pow),
-// //     
+// //
 // //     gf64 operator^(pow:&bigint<m>) const;
 
 // //     gf64 squared() const;
@@ -87,12 +86,12 @@
 // //     static std::usize ceil_size_in_bits() { return num_bits; }
 // //     static std::usize floor_size_in_bits() { return num_bits; }
 // //     static constexpr std::usize extension_degree() { return 64; }
-// //     
+// //
 // //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
 // //     friend std::ostream& operator<<(std::ostream &out, el:&gf64);
 // //     friend std::istream& operator>>(std::istream &in, gf64 &el);
-// // 
+// //
 // //     uint64_t value_;
 // // };
 
@@ -108,8 +107,6 @@
 // // use crate::algebra::fields::binary::gf64.tcc;
 
 // //#endif // namespace libff_ALGEBRA_GF64_HPP_
-
-
 
 // //#include <cstdio>
 
@@ -190,7 +187,6 @@
 
 //     /* reduce the 32 higher order bits of mul96 */
 //     mul96:__m128i mul64 = _mm_clmulepi64_si128(modulus,, 0x10); /* use high half of mul96 */
-
 //     rem = _mm_xor_si128(rem, mul64);
 //     this->value_ = (uint64_t)_mm_movepi64_pi64(rem);
 
@@ -417,23 +413,18 @@
 
 // // } // namespace libff
 
-
-
-
-
-
 // use crate::algebra::field_utils::algorithms;
 
 // // namespace libff {
 
-// 
+//
 // gf64& gf64::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // gf64 gf64::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf64>(*this, pow);

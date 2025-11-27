@@ -1,9 +1,9 @@
 //! Work with sparse and dense polynomials.
 
 use crate::{DenseUVPolynomial, EvaluationDomain, Evaluations, Polynomial};
-use ffec::{FftField, Field, Zero};
-use ark_std::{borrow::Cow,cfg_iter_mut,vec::*};
 use DenseOrSparsePolynomial::*;
+use ark_std::{borrow::Cow, cfg_iter_mut, vec::*};
+use ffec::{FftField, Field, Zero};
 
 mod dense;
 mod sparse;
@@ -175,7 +175,7 @@ impl<'a, F: 'a + FftField> DenseOrSparsePolynomial<'a, F> {
                     domain.fft_in_place(&mut first);
                     Evaluations::from_vec_and_domain(first, domain)
                 }
-            },
+            }
             DPolynomial(Cow::Owned(mut d)) => {
                 if d.is_zero() {
                     Evaluations::zero(domain)
@@ -197,7 +197,7 @@ impl<'a, F: 'a + FftField> DenseOrSparsePolynomial<'a, F> {
                     domain.fft_in_place(&mut d.coeffs);
                     Evaluations::from_vec_and_domain(d.coeffs, domain)
                 }
-            },
+            }
         }
     }
 }

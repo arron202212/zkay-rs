@@ -96,7 +96,7 @@ pub struct   r1cs_pcd_compliance_predicate<FieldT>  {
 name:    usize,
 types:    usize,
 
-constraint_system:    r1cs_constraint_system<FieldT>,
+constraint_system:    r1cs_constraint_system<FieldT,SLC>,
 
 outgoing_message_payload_length:    usize,
 max_arity:    usize,
@@ -169,7 +169,7 @@ impl r1cs_pcd_compliance_predicate<FieldT>{
 
 pub fn new(name:&usize,
                                                                      types:&usize,
-                                                                     constraint_system:r1cs_constraint_system<FieldT>,
+                                                                     constraint_system:r1cs_constraint_system<FieldT,SLC>,
                                                                      outgoing_message_payload_length:&usize,
                                                                      max_arity:&usize,
                                                                      incoming_message_payload_lengths:Vec<usize>,

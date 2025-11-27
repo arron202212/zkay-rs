@@ -12,7 +12,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef FP4_HPP_
 // // #define FP4_HPP_
 
@@ -21,18 +20,18 @@
 
 // // namespace libff {
 
-// 
+//
 // pub struct Fp4_model;
 
-// 
+//
 // std::ostream& operator<<(std::ostream &, const Fp4_model<n, modulus> &);
 
-// 
+//
 // std::istream& operator>>(std::istream &, Fp4_model<n, modulus> &);
 
-// 
+//
 // pub struct Fp4_model {
-// 
+//
 //     type my_Fp=Fp_model<n, modulus>;
 //     type my_Fp2=Fp2_model<n, modulus>;
 //     type my_Fpe=my_Fp2;
@@ -81,7 +80,7 @@
 //     Fp4_model& operator-=(other:&Fp4_model);
 //     Fp4_model& operator*=(other:&Fp4_model);
 //     Fp4_model& operator^=(const u64 pow);
-//     
+//
 //     Fp4_model& operator^=(pow:&bigint<m>);
 
 //     Fp4_model operator+(other:&Fp4_model) const;
@@ -89,9 +88,9 @@
 //     Fp4_model operator*(other:&Fp4_model) const;
 //     Fp4_model mul_by_023(other:&Fp4_model) const;
 //     Fp4_model operator^(const:u64 pow),
-//     
+//
 //     Fp4_model operator^(exponent:&bigint<m>) const;
-//     
+//
 //     Fp4_model operator^(exponent:&Fp_model<m, modulus_p>) const;
 //     Fp4_model operator-() const;
 
@@ -106,7 +105,7 @@
 
 //     static my_Fp2 mul_by_non_residue(elt:&my_Fp2);
 
-//     
+//
 //     Fp4_model cyclotomic_exp(exponent:&bigint<m>) const;
 
 //     static std::usize ceil_size_in_bits() { return 2 * my_Fp2::ceil_size_in_bits(); }
@@ -124,52 +123,51 @@
 // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// 
+//
 // i64 Fp4_model<n, modulus>::add_cnt = 0;
 
-// 
+//
 // i64 Fp4_model<n, modulus>::sub_cnt = 0;
 
-// 
+//
 // i64 Fp4_model<n, modulus>::mul_cnt = 0;
 
-// 
+//
 // i64 Fp4_model<n, modulus>::sqr_cnt = 0;
 
-// 
+//
 // i64 Fp4_model<n, modulus>::inv_cnt = 0;
 // //#endif
 
-// 
+//
 // Fp4_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp4_model<n, modulus>);
 
-// 
+//
 // Fp4_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp4_model<n, modulus>);
 
-// 
+//
 // bigint<4*n> Fp4_model<n, modulus>::euler;
 
-// 
+//
 // usize Fp4_model<n, modulus>::s;
 
-// 
+//
 // bigint<4*n> Fp4_model<n, modulus>::t;
 
-// 
+//
 // bigint<4*n> Fp4_model<n, modulus>::t_minus_1_over_2;
 
-// 
+//
 // Fp4_model<n, modulus> Fp4_model<n, modulus>::nqr;
 
-// 
+//
 // Fp4_model<n, modulus> Fp4_model<n, modulus>::nqr_to_t;
 
-// 
+//
 // Fp_model<n, modulus> Fp4_model<n, modulus>::non_residue;
 
-// 
+//
 // Fp_model<n, modulus> Fp4_model<n, modulus>::Frobenius_coeffs_c1[4];
-
 
 // // } // namespace libff
 
@@ -188,7 +186,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef FP4_TCC_
 // // #define FP4_TCC_
 
@@ -197,27 +194,27 @@
 
 // // namespace libff {
 
-// 
+//
 // Fp2_model<n, modulus> Fp4_model<n, modulus>::mul_by_non_residue(elt:&Fp2_model<n, modulus>)
 // {
 //     return Fp2_model<n, modulus>(non_residue * elt.c1, elt.c0);
 // }
 
-// 
+//
 // Fp4_model<n, modulus> Fp4_model<n, modulus>::zero()
 // {
 //     return Fp4_model<n,modulus>(my_Fp2::zero(),
 //                                 my_Fp2::zero());
 // }
 
-// 
+//
 // Fp4_model<n, modulus> Fp4_model<n, modulus>::one()
 // {
 //     return Fp4_model<n,modulus>(my_Fp2::one(),
 //                                 my_Fp2::zero());
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::random_element()
 // {
 //     Fp4_model<n, modulus> r;
@@ -227,25 +224,25 @@
 //     return r;
 // }
 
-// 
+//
 // pub fn randomize()
 // {
 //     (*this) = Fp4_model<n, modulus>::random_element();
 // }
 
-// 
+//
 // bool Fp4_model<n,modulus>::operator==(other:&Fp4_model<n,modulus>) const
 // {
 //     return (this->c0 == other.c0 && this->c1 == other.c1);
 // }
 
-// 
+//
 // bool Fp4_model<n,modulus>::operator!=(other:&Fp4_model<n,modulus>) const
 // {
 //     return !(operator==(other));
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::operator+(other:&Fp4_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -255,7 +252,7 @@
 //                                 this->c1 + other.c1);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::operator-(other:&Fp4_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -265,7 +262,7 @@
 //                                 this->c1 - other.c1);
 // }
 
-// 
+//
 // Fp4_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp4_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -275,7 +272,7 @@
 //                                 lhs*rhs.c1);
 // }
 
-// 
+//
 // Fp4_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp4_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -285,14 +282,13 @@
 //                                 lhs*rhs.c1);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::operator*(other:&Fp4_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
-
 //     B:&my_Fp2 = other.c1, &A = other.c0,
 //         &b = this->c1, &a = this->c0;
 //     let aA= a*A;
@@ -303,7 +299,7 @@
 //                                 (a+b)*(A+B) - aA  - bB);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::mul_by_023(other:&Fp4_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -322,77 +318,76 @@
 //                                 (a+b)*(A+B) - aA  - bB);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::operator-() const
 // {
 //     return Fp4_model<n,modulus>(-this->c0,
 //                                 -this->c1);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::operator^(const u64 pow) const
 // {
 //     return power<Fp4_model<n, modulus> >(*this, pow);
 // }
 
-// 
-// 
+//
+//
 // Fp4_model<n, modulus> Fp4_model<n,modulus>::operator^(exponent:&bigint<m>) const
 // {
 //     return power<Fp4_model<n, modulus> >(*this, exponent);
 // }
 
-// 
-// 
+//
+//
 // Fp4_model<n, modulus> Fp4_model<n,modulus>::operator^(exponent:&Fp_model<m, modulus_p>) const
 // {
 //     return (*this)^(exponent.as_bigint());
 // }
 
-// 
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator+=(const Fp4_model<n,modulus>& other)
 // {
 //     (*this) = *this + other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator-=(const Fp4_model<n,modulus>& other)
 // {
 //     (*this) = *this - other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator*=(const Fp4_model<n,modulus>& other)
 // {
 //     (*this) = *this * other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
-// 
+//
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::squared() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex) */
-
 //     b:&my_Fp2 = this->c1, &a = this->c0;
 //     let ab= a * b;
 
@@ -400,14 +395,14 @@
 //                                 ab + ab);
 // }
 
-// 
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::square()
 // {
 //     (*this) = squared();
 //     return (*this);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::inverse() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -422,28 +417,28 @@
 //     return Fp4_model<n,modulus>(a * new_t1, - (b * new_t1));
 // }
 
-// 
+//
 // Fp4_model<n,modulus>& Fp4_model<n,modulus>::invert()
 // {
 //     (*this) = inverse();
 //     return (*this);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::Frobenius_map(u64 power) const
 // {
 //     return Fp4_model<n,modulus>(c0.Frobenius_map(power),
 //                                 Frobenius_coeffs_c1[power % 4] * c1.Frobenius_map(power));
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::unitary_inverse() const
 // {
 //     return Fp4_model<n,modulus>(this->c0,
 //                                 -this->c1);
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::cyclotomic_squared() const
 // {
 //     let A= this->c1.squared();
@@ -457,8 +452,8 @@
 //     return Fp4_model<n,modulus>(F, G);
 // }
 
-// 
-// 
+//
+//
 // Fp4_model<n, modulus> Fp4_model<n,modulus>::cyclotomic_exp(exponent:&bigint<m>) const
 // {
 //     Fp4_model<n,modulus> res = Fp4_model<n,modulus>::one();
@@ -492,13 +487,13 @@
 //     return res;
 // }
 
-// 
+//
 // Fp4_model<n,modulus> Fp4_model<n,modulus>::sqrt() const
 // {
 //     return tonelli_shanks_sqrt(*this);
 // }
 
-// 
+//
 // Vec<uint64_t> Fp4_model<n,modulus>::to_words() const
 // {
 //     Vec<uint64_t> words = c0.to_words();
@@ -507,7 +502,7 @@
 //     return words;
 // }
 
-// 
+//
 // bool Fp4_model<n,modulus>::from_words(Vec<uint64_t> words)
 // {
 //     Vec<uint64_t>::const_iterator vec_start = words.begin();
@@ -519,14 +514,14 @@
 //     return c0.from_words(words0) && c1.from_words(words1);
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream &out, el:&Fp4_model<n, modulus>)
 // {
 //     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream &in, Fp4_model<n, modulus> &el)
 // {
 //     in >> el.c0 >> el.c1;
@@ -538,8 +533,8 @@
 // //#endif // FP4_TCC_
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
 use crate::algebra::fields::{
-    prime_extension::fp2::{Fp2, Fp2Config},
     cyclotomic::CyclotomicMultSubgroup,
+    prime_extension::fp2::{Fp2, Fp2Config},
 };
 // use crate::algebra::{fields::PrimeField, cyclotomic::CyclotomicMultSubgroup};
 use ark_std::Zero;

@@ -20,9 +20,9 @@ pub mod g2_swu_iso;
 #[cfg(feature = "bls12_381_curve")]
 pub use {
     fq::*,
-    fq12::*,
     fq2::*,
     fq6::*,
+    fq12::*,
     g1::{G1Affine, G1Projective},
     g2::{G2Affine, G2Projective},
 };
@@ -34,7 +34,7 @@ mod tests;
 pub use pairing::*;
 #[cfg(feature = "bls12_381_curve")]
 mod pairing {
-    use super::{g1, g2, Fq, Fq12Config, Fq2Config, Fq6Config};
+    use super::{Fq, Fq2Config, Fq6Config, Fq12Config, g1, g2};
     use ark_ec::bls12::{Bls12, Bls12Config, TwistType};
 
     pub type Bls12_381 = Bls12<Config>;

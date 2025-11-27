@@ -108,7 +108,7 @@ pub fn new(pb:protoboard<FieldT> ,
                                  annotation_prefix:&String) ->Self
     
 {
-   let  ( c0_var, c1_var)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+   let  ( c0_var, c1_var)=(variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
     c0_var.allocate(pb, FMT(annotation_prefix, " c0"));
     c1_var.allocate(pb, FMT(annotation_prefix, " c1"));
 

@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef EXCEPTIONS_HPP_
 // #define EXCEPTIONS_HPP_
 
@@ -20,25 +19,25 @@
 
 // pub struct DomainSizeException
 // {
-// 
+//
 //     DomainSizeException(String error): _error(error) {}
 //     const char* what() const
 // 	{
 // 	    return _error;
 // 	}
-// 
+//
 //     String _error;
 // };
 
 // pub struct InvalidSizeException
 // {
-// 
+//
 //     InvalidSizeException(String error): _error(error) {}
 //     const char* what() const
 // 	{
 // 	    return _error;
 // 	}
-// 
+//
 //     String _error;
 // };
 

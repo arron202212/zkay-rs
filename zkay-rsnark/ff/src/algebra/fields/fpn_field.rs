@@ -1,4 +1,3 @@
-
 //  Declaration of common API for all finite fields in the prime_base/ and
 //  prime_extension/ directories.
 
@@ -11,12 +10,11 @@
 //  Includes fields Fp^n for specified n. All of the prime extension fields must
 //  implement all functions declared in this class.
 
+use crate::algebra::field_utils::BigInteger;
 
-use crate::algebra::field_utils::{BigInteger };
-
+use super::{fft_friendly::FftField, field::Field};
 use ark_std::{cmp::min, str::FromStr};
 use num_bigint::BigUint;
-use super::{field::Field,fft_friendly::FftField};
 
 /// The interface for a prime field, i.e. the field of integers modulo a prime $p$.
 /// In the following example we'll use the prime field underlying the BLS12-381 G1 curve.
@@ -87,8 +85,8 @@ use super::{field::Field,fft_friendly::FftField};
 //     /// (Self::MODULUS - 1) / 2
 //     const MODULUS_MINUS_ONE_DIV_TWO: Self::BigInt;
 // }
-// pub trait FpParameters: Send + Sync + 'static + Sized 
-// {   
+// pub trait FpParameters: Send + Sync + 'static + Sized
+// {
 //      type BigInt: BigInteger;
 //      const  num_limbs:usize;
 //     const modulus:Self::BigInt;
@@ -115,7 +113,6 @@ pub trait PrimeField:
     + From<BigUint>
     + Into<BigUint>
 {
-   
     /// A `BigInteger` type that can represent elements of this field.
     type BigInt: BigInteger;
 

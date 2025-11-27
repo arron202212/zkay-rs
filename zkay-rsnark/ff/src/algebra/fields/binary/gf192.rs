@@ -5,7 +5,6 @@
 //  * @author     This file is part of libff (see AUTHORS), migrated from libiop
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef LIBFF_ALGEBRA_GF192_HPP_
 // // #define LIBFF_ALGEBRA_GF192_HPP_
 
@@ -41,9 +40,9 @@
 //     gf192& operator-=(other:&gf192);
 //     gf192& operator*=(other:&gf192);
 //     gf192& operator^=(const u64 pow);
-//     
+//
 //     gf192& operator^=(pow:&bigint<m>);
-    
+
 //     gf192& square();
 //     gf192& invert();
 
@@ -52,7 +51,7 @@
 //     gf192 operator-() const;
 //     gf192 operator*(other:&gf192) const;
 //     gf192 operator^(const:u64 pow),
-//     
+//
 //     gf192 operator^(pow:&bigint<m>) const;
 
 //     gf192 squared() const;
@@ -89,12 +88,12 @@
 //     static std::usize ceil_size_in_bits() { return num_bits; }
 //     static std::usize floor_size_in_bits() { return num_bits; }
 //     static constexpr std::usize extension_degree() { return 192; }
-//     
+//
 //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
 //     friend std::ostream& operator<<(std::ostream &out, el:&gf192);
 //     friend std::istream& operator>>(std::istream &in, gf192 &el);
-// 
+//
 //     /* little-endian */
 //     uint64_t value_[3];
 // };
@@ -239,7 +238,6 @@
 //                                 _mm_slli_si128(c3, 8));
 
 //     /* done with the multiplication, time to reduce */
-
 //     /* reduce w.r.t. high half of d2 */
 //     __m128i tmp = _mm_clmulepi64_si128(d2, modulus, 0x01);
 //     d1 = _mm_xor_si128(d1, tmp);
@@ -378,7 +376,6 @@
 //         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
 //         a *= b;
 //         /* now a = el^{2^{2^{i+1}}-1} */
-
 //         prev_result = result;
 //         if i == 0
 //         {
@@ -470,19 +467,18 @@
 
 // // } // namespace libff
 
-
 // use crate::algebra::field_utils::algorithms;
 
 // // namespace libff {
 
-// 
+//
 // gf192& gf192::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // gf192 gf192::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf192>(*this, pow);

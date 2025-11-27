@@ -1,38 +1,36 @@
+use crate::algebra::field_utils::BigInteger;
+use crate::algebra::field_utils::bigint::{GMP_NUMB_BITS, bigint};
 /** @file
- *****************************************************************************
- Declaration of arithmetic in the finite field F[p], for prime p of fixed length.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+Declaration of arithmetic in the finite field F[p], for prime p of fixed length.
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef FP_HPP_
 // #define FP_HPP_
-
-use crate::algebra::field_utils::{BigInt,algorithms};
-use crate::algebra::field_utils::bigint::{bigint,GMP_NUMB_BITS};
+use crate::algebra::field_utils::{BigInt, algorithms};
+use crate::algebra::fields::field::AdditiveGroup;
 use crate::algebra::fields::prime_base::fp::algorithms::tonelli_shanks_sqrt;
-use crate::algebra::fields::prime_base::fp::algorithms::{Powers,PowerConfig};
+use crate::algebra::fields::prime_base::fp::algorithms::{PowerConfig, Powers};
 use crate::algebra::fields::sqrt::SqrtPrecomputation;
- use std::ops::{AddAssign,Mul,MulAssign,SubAssign,Neg,BitXor,Sub,Add,BitXorAssign};
+use crate::algebra::fields::{field::Field, fpn_field::PrimeField};
 use crate::common::utils::bit_vector;
-use crate::algebra::fields::{field::Field,fpn_field::PrimeField};
- use crate::algebra::fields::field::AdditiveGroup;
-use num_traits::{One,Zero};
- use crate::algebra::field_utils::{BigInteger};
+use num_traits::{One, Zero};
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
+use educe::Educe;
 use std::marker::PhantomData;
- use educe::Educe;
 // namespace libff {
 
-// 
+//
 // pub struct Fp_model;
 
-// 
+//
 // std::ostream& operator<<(std::ostream &, const Fp_model<n, modulus>&);
 
-// 
+//
 // std::istream& operator>>(std::istream &, Fp_model<n, modulus> &);
 
 /**
@@ -47,30 +45,29 @@ use std::marker::PhantomData;
  * we implement performance-critical routines, like addition and multiplication,
  * using hand-optimzied assembly code.
  */
-// 
-pub trait Fp_modelConfig<const N:usize>: Send + Sync + 'static + Sized 
-{   
-     const  num_limbs:usize;
-    const modulus:bigint<N>;
-    const num_bits:usize;
-     const  euler:bigint<N>; // (modulus-1)/2
-     const  s:usize; // modulus = 2^s * t + 1
-     const t:bigint<N>; // with t odd
-     const t_minus_1_over_2:bigint<N>; // (t-1)/2
-     const nqr:Fp_model<N,Self>; // a quadratic nonresidue
-     const nqr_to_t:Fp_model<N,Self>; // nqr^t
-     const multiplicative_generator:Self; // generator of Fp^*
-     const root_of_unity:Fp_model<N,Self>; // generator^((modulus-1)/2^s)
-     const inv:u64; // modulus^(-1) mod W, where W = 2^(word size)
-     const Rsquared:bigint<N> ; // R^2, where R = W^k, where k = ??
-     const Rcubed: bigint<N>;   // R^3
+//
+pub trait Fp_modelConfig<const N: usize>: Send + Sync + 'static + Sized {
+    const num_limbs: usize;
+    const modulus: bigint<N>;
+    const num_bits: usize;
+    const euler: bigint<N>; // (modulus-1)/2
+    const s: usize; // modulus = 2^s * t + 1
+    const t: bigint<N>; // with t odd
+    const t_minus_1_over_2: bigint<N>; // (t-1)/2
+    const nqr: Fp_model<N, Self>; // a quadratic nonresidue
+    const nqr_to_t: Fp_model<N, Self>; // nqr^t
+    const multiplicative_generator: Self; // generator of Fp^*
+    const root_of_unity: Fp_model<N, Self>; // generator^((modulus-1)/2^s)
+    const inv: u64; // modulus^(-1) mod W, where W = 2^(word size)
+    const Rsquared: bigint<N>; // R^2, where R = W^k, where k = ??
+    const Rcubed: bigint<N>; // R^3
 }
 
 #[derive(Educe)]
-#[educe(Default, Hash, Clone, Copy, Eq)]// PartialEq,
-pub struct Fp_model<const N:usize,T:Fp_modelConfig<N>>{
+#[educe(Default, Hash, Clone, Copy, Eq)] // PartialEq,
+pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
     pub mont_repr: bigint<N>,
-    pub t:PhantomData<T>,
+    pub t: PhantomData<T>,
 }
 
 /// A trait that specifies the configuration of a prime field.
@@ -243,14 +240,14 @@ pub type Fp832<P> = Fp<P, 13>;
 //     Fp_model& operator-=(other:&Fp_model);
 //     Fp_model& operator*=(other:&Fp_model);
 //     Fp_model& operator^=(const u64 pow);
-//     
+//
 //     Fp_model& operator^=(pow:&bigint<m>);
 
 //     Fp_model operator+(other:&Fp_model);
 //     Fp_model operator-(other:&Fp_model);
 //     Fp_model operator*(other:&Fp_model);
 //     Fp_model operator^(const u64 pow);
-//     
+//
 //     Fp_model operator^(pow:&bigint<m>);
 //     Fp_model operator-();
 
@@ -277,24 +274,19 @@ pub type Fp832<P> = Fp<P, 13>;
 //     friend std::ostream& operator<< <n,T>(std::ostream &out, p:&Fp_model<n, modulus>);
 //     friend std::istream& operator>> <n,T>(std::istream &in, Fp_model<n, modulus> &p);
 
-// 
+//
 //     /** Returns a representation in bigint, depending on the MONTGOMERY_OUTPUT flag. */
 //     bigint<N> bigint_repr();
 // };
 
-
-
-
-
 /** @file
- *****************************************************************************
- Implementation of arithmetic in the finite field F[p], for prime p of fixed length.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+Implementation of arithmetic in the finite field F[p], for prime p of fixed length.
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef FP_TCC_
 // #define FP_TCC_
 //#include <cassert>
@@ -302,345 +294,308 @@ pub type Fp832<P> = Fp<P, 13>;
 //#include <cstdlib>
 //#include <limits>
 //#include <vector>
-
 use crate::algebra::field_utils::field_utils;
 use crate::algebra::field_utils::fp_aux;
 //  use crate::algebra::field_utils::bigint::bigint;
 
-impl<const N:usize,T:Fp_modelConfig<N>> Fp_model<N,T>
-{
+impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
+    pub fn mul_reduce(&mut self, other: &bigint<N>) {}
 
-pub fn mul_reduce(&mut self,other:&bigint<N>)
-{
-   
-}
-
-pub fn new(b:&bigint<N>)->Self
-{
-    // mpn_copyi(self.mont_repr.data, Rsquared.data, n);
-    let mut _self=Self{mont_repr:bigint::<N>::new(0),t:PhantomData};
-    _self.mul_reduce(b);
-    _self
-}
-
-
-pub fn new_with_i64(x:i64, is_unsigned:bool)->Self
-{
-    // assert!(std::numeric_limits<mp_limb_t>::max() >= std::numeric_limits<long>::max() as u64, "long won't fit in mp_limb_t");
-    if is_unsigned || x >= 0
-    {
-        // self.mont_repr.data[0] = x;//(mp_limb_t)
-    }
-    else
-    {
-        // let  borrow = mpn_sub_1(self.mont_repr.data, modulus.data, n, (mp_limb_t)-x);
-//#ifndef NDEBUG
-//             assert!(borrow == 0);
-// #else
-//             UNUSED(borrow);
-//#endif
+    pub fn new(b: &bigint<N>) -> Self {
+        // mpn_copyi(self.mont_repr.data, Rsquared.data, n);
+        let mut _self = Self {
+            mont_repr: bigint::<N>::new(0),
+            t: PhantomData,
+        };
+        _self.mul_reduce(b);
+        _self
     }
 
-    
-    // Self::mul_reduce(T::Rsquared);
-    Self{mont_repr:bigint::<N>::new(0),t:PhantomData}
-}
-pub fn set_ulong(&mut self,x:u64)
-{
-    self.mont_repr.clear();
-    self.mont_repr.0.0[0] = x;
-    self.mul_reduce(&T::Rsquared);
-}
+    pub fn new_with_i64(x: i64, is_unsigned: bool) -> Self {
+        // assert!(std::numeric_limits<mp_limb_t>::max() >= std::numeric_limits<long>::max() as u64, "long won't fit in mp_limb_t");
+        if is_unsigned || x >= 0 {
+            // self.mont_repr.data[0] = x;//(mp_limb_t)
+        } else {
+            // let  borrow = mpn_sub_1(self.mont_repr.data, modulus.data, n, (mp_limb_t)-x);
+            //#ifndef NDEBUG
+            //             assert!(borrow == 0);
+            // #else
+            //             UNUSED(borrow);
+            //#endif
+        }
 
-pub fn clear(&mut self)
-{
-    self.mont_repr.clear();
-}
+        // Self::mul_reduce(T::Rsquared);
+        Self {
+            mont_repr: bigint::<N>::new(0),
+            t: PhantomData,
+        }
+    }
+    pub fn set_ulong(&mut self, x: u64) {
+        self.mont_repr.clear();
+        self.mont_repr.0.0[0] = x;
+        self.mul_reduce(&T::Rsquared);
+    }
 
-pub fn randomize(&mut self)
-{
-   *self = self.random_element();
-}
+    pub fn clear(&mut self) {
+        self.mont_repr.clear();
+    }
 
+    pub fn randomize(&mut self) {
+        *self = self.random_element();
+    }
 
-pub fn as_bigint(&self) ->bigint<N>
-{
-    let mut one = bigint::<N>::one();
-    let mut res=self.clone();
-    res.mul_reduce(&one);
+    pub fn as_bigint(&self) -> bigint<N> {
+        let mut one = bigint::<N>::one();
+        let mut res = self.clone();
+        res.mul_reduce(&one);
 
-    res.mont_repr
-}
+        res.mont_repr
+    }
 
- pub fn as_ulong(&self) ->u64
-{
-     self.as_bigint().as_ulong()
-}
+    pub fn as_ulong(&self) -> u64 {
+        self.as_bigint().as_ulong()
+    }
 
+    pub fn is_zero(&self) -> bool {
+        self.mont_repr.is_zero() // zero maps to zero
+    }
 
- pub fn is_zero(&self) ->bool
-{
-    self.mont_repr.is_zero() // zero maps to zero
-}
+    pub fn print(&self) {
+        let mut tmp = Self::zero();
+        tmp.mont_repr.0.0[0] = 1;
+        tmp.mul_reduce(&self.mont_repr);
 
+        tmp.mont_repr.print();
+    }
+    pub fn ceil_size_in_bits(&self) -> usize {
+        self.mont_repr.num_bits()
+    }
+    pub fn floor_size_in_bits(&self) -> usize {
+        self.mont_repr.num_bits() - 1
+    }
 
-pub fn print(&self)
-{
-    let mut tmp=Self::zero();
-    tmp.mont_repr.0.0[0] = 1;
-    tmp.mul_reduce(&self.mont_repr);
+    pub fn extension_degree() -> usize {
+        1
+    }
+    pub fn field_char() -> bigint<N> {
+        T::modulus
+    }
+    pub fn modulus_is_valid() -> bool {
+        T::modulus.0.0[N - 1] != 0
+    } // mpn inverse assumes that highest limb is non-zero
 
-    tmp.mont_repr.print();
-}
-     pub fn  ceil_size_in_bits(&self)->usize {  self.mont_repr.num_bits() }
-    pub fn  floor_size_in_bits(&self)->usize {  self.mont_repr.num_bits() - 1 }
+    pub fn zero() -> Self {
+        let mut res = Self::new_with_i64(0, false);
+        // res.mont_repr.clear();
+        return res;
+    }
 
-     pub fn  extension_degree()->usize {  1 }
-     pub fn field_char()->bigint<N> {  T::modulus }
-     pub fn  modulus_is_valid()-> bool{  T::modulus.0.0[N-1] != 0 } // mpn inverse assumes that highest limb is non-zero
+    pub fn one() -> Self {
+        let mut res = Self::new_with_i64(0, false);
+        // res.mont_repr.0.0[0] = 1;
+        res.mul_reduce(&T::Rsquared);
+        return res;
+    }
 
+    pub fn geometric_generator() -> Self {
+        let mut res = Self::new_with_i64(0, false);
+        res.mont_repr.0.0[0] = 2;
+        res.mul_reduce(&T::Rsquared);
+        res
+    }
 
-pub fn zero()->Self
-{
-    let mut res=Self::new_with_i64(0,false);
-    // res.mont_repr.clear();
-    return res;
-}
+    pub fn arithmetic_generator() -> Self {
+        let mut res = Self::new_with_i64(0, false);
+        res.mont_repr.0.0[0] = 1;
+        res.mul_reduce(&T::Rsquared);
+        res
+    }
 
-
- pub fn one()->Self
-{
-    let mut res=Self::new_with_i64(0,false);
-    // res.mont_repr.0.0[0] = 1;
-    res.mul_reduce(&T::Rsquared);
-    return res;
-}
-
-
-pub fn geometric_generator()->Self
-{
-    let mut res=Self::new_with_i64(0,false);
-    res.mont_repr.0.0[0] = 2;
-    res.mul_reduce(&T::Rsquared);
-     res
-}
-
-
-pub fn  arithmetic_generator()->Self
-{
-    let mut res=Self::new_with_i64(0,false);
-    res.mont_repr.0.0[0] = 1;
-    res.mul_reduce(&T::Rsquared);
-     res
-}
-
-
-pub fn  squared(&self) ->Self
-{
-        let mut  r:Self=self.clone();
-        r*=&r.clone();
+    pub fn squared(&self) -> Self {
+        let mut r: Self = self.clone();
+        r *= &r.clone();
         r
+    }
 
+    pub fn square(&mut self) -> &Self {
+        *self = self.squared();
+        self
+    }
+
+    pub fn invert(&self) -> &Self {
+        self
+    }
+
+    pub fn inverse(&self) -> Self {
+        let mut r = self.clone();
+        r.invert();
+        r
+    }
+
+    pub fn Frobenius_map(&self, power: u64) -> Self {
+        *self
+    }
+
+    pub fn random_element(&self) -> Self {
+        *self
+    }
+
+    pub fn sqrt(&self) -> Self {
+        *self
+    }
+
+    pub fn to_words(&self) -> Vec<u64> {
+        // TODO: implement for other bit architectures
+        assert!(
+            GMP_NUMB_BITS == 64,
+            "Only 64-bit architectures are currently supported"
+        );
+        let repr = self.bigint_repr();
+        repr.0.0.clone().try_into().unwrap()
+    }
+
+    pub fn from_words(&mut self, words: &Vec<u64>) -> bool {
+        // TODO: implement for other bit architectures
+        assert!(
+            GMP_NUMB_BITS == 64,
+            "Only 64-bit architectures are currently supported"
+        );
+
+        let start_bit = words.len() * 64; //- FieldT::ceil_size_in_bits();
+        assert!(start_bit >= 0); // Check the vector is big enough.
+        let start_word = start_bit / 64;
+        let bit_offset = start_bit % 64;
+
+        // Assumes mont_repr.0.0 is just the right size to fit ceil_size_in_bits().
+        // std::copy(words.begin() + start_word, words.end(), self.mont_repr.0.0);
+        self.mont_repr.0.0.clone_from_slice(&words[start_word..]);
+        // Zero out the left-most bit_offset bits.
+        self.mont_repr.0.0[N - 1] =
+            ((self.mont_repr.0.0[N - 1] as u64) << bit_offset) >> bit_offset; //mp_limb_t
+
+        // return self.mont_repr < modulus;
+        false
+    }
+
+    pub fn bigint_repr(&self) -> bigint<N> {
+        self.as_bigint()
+    }
 }
 
-
-pub fn square(&mut self)->&Self
-{
-    *self  = self.squared();
-    self
-}
-
-
- pub fn invert(&self)->&Self
-{
-   self
-}
-
-pub fn  inverse(&self) ->Self
-{
-    let mut  r=self.clone();
-    r.invert();
-    r
-}
-
-
-pub fn  Frobenius_map(&self, power:u64)->Self
-{
-    *self
-}
-
-
-pub fn  random_element(&self) ->Self
-{
-    *self
-}
-
-
-pub fn  sqrt(&self) ->Self
-{
-    *self
-}
-
-
-pub fn to_words(&self)  ->Vec<u64>
-{
-    // TODO: implement for other bit architectures
-    assert!(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
-    let  repr = self.bigint_repr();
-    repr.0.0.clone().try_into().unwrap()
-}
-
-
- pub fn from_words(&mut self,words:&Vec<u64>)->bool
-{
-    // TODO: implement for other bit architectures
-    assert!(GMP_NUMB_BITS == 64, "Only 64-bit architectures are currently supported");
-
-    let start_bit = words.len() * 64 ;//- FieldT::ceil_size_in_bits();
-    assert!(start_bit >= 0); // Check the vector is big enough.
-    let start_word = start_bit / 64;
-    let bit_offset = start_bit % 64;
-
-    // Assumes mont_repr.0.0 is just the right size to fit ceil_size_in_bits().
-    // std::copy(words.begin() + start_word, words.end(), self.mont_repr.0.0);
-    self.mont_repr.0.0.clone_from_slice(&words[start_word..]);
-    // Zero out the left-most bit_offset bits.
-    self.mont_repr.0.0[N - 1] = ((self.mont_repr.0.0[N - 1] as u64) << bit_offset) >> bit_offset;//mp_limb_t
-
-    // return self.mont_repr < modulus;
-    false
-}
-
-
- pub fn bigint_repr(&self) ->bigint<N>
-{
-     self.as_bigint()
-}
-}
-
-
-impl<const N:usize,T:Fp_modelConfig<N>> PartialEq for Fp_model<N,T>  {
+impl<const N: usize, T: Fp_modelConfig<N>> PartialEq for Fp_model<N, T> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-       self.mont_repr == other.mont_repr
+        self.mont_repr == other.mont_repr
     }
 }
 
-
-impl<const N:usize,T:Fp_modelConfig<N>> AddAssign for Fp_model<N,T>  {
-    fn add_assign(&mut self, other: Self) {
-
-    }
+impl<const N: usize, T: Fp_modelConfig<N>> AddAssign for Fp_model<N, T> {
+    fn add_assign(&mut self, other: Self) {}
 }
-impl<const N:usize,T:Fp_modelConfig<N>> SubAssign for Fp_model<N,T>  {
-    fn sub_assign(&mut self, other: Self) {
-    }
+impl<const N: usize, T: Fp_modelConfig<N>> SubAssign for Fp_model<N, T> {
+    fn sub_assign(&mut self, other: Self) {}
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>> MulAssign<&Self>for Fp_model<N,T>  {
+impl<const N: usize, T: Fp_modelConfig<N>> MulAssign<&Self> for Fp_model<N, T> {
     fn mul_assign(&mut self, rhs: &Self) {
         self.mul_reduce(&rhs.mont_repr);
     }
 }
 
-
-impl<const N:usize,T:Fp_modelConfig<N>> BitXorAssign<u64> for Fp_model<N,T>  {
+impl<const N: usize, T: Fp_modelConfig<N>> BitXorAssign<u64> for Fp_model<N, T> {
     fn bitxor_assign(&mut self, rhs: u64) {
-        *self = Powers::power::<Fp_model::<N, T> >(self, rhs);
+        *self = Powers::power::<Fp_model<N, T>>(self, rhs);
     }
 }
 
-impl<const N:usize,const M:usize,T:Fp_modelConfig<N>> BitXorAssign<&bigint<M>> for Fp_model<N,T>  {
+impl<const N: usize, const M: usize, T: Fp_modelConfig<N>> BitXorAssign<&bigint<M>>
+    for Fp_model<N, T>
+{
     fn bitxor_assign(&mut self, rhs: &bigint<M>) {
-        *self = Powers::power::<Fp_model::<N, T>>(self, rhs);
+        *self = Powers::power::<Fp_model<N, T>>(self, rhs);
     }
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>> Add for Fp_model<N,T>  {
-    type Output =Self;
+impl<const N: usize, T: Fp_modelConfig<N>> Add for Fp_model<N, T> {
+    type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        let mut r=self;
-        r+=other;
+        let mut r = self;
+        r += other;
         r
     }
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>> Sub for  Fp_model<N,T>   {
-    type Output =Self;
+impl<const N: usize, T: Fp_modelConfig<N>> Sub for Fp_model<N, T> {
+    type Output = Self;
 
-    fn sub(self, other: Self) -> <Fp_model<N, T> as Sub>::Output  {
-        let mut r=self;
-        r-=other;
+    fn sub(self, other: Self) -> <Fp_model<N, T> as Sub>::Output {
+        let mut r = self;
+        r -= other;
         r
     }
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>> Mul for  Fp_model<N,T>  {
-    type Output =Self;
+impl<const N: usize, T: Fp_modelConfig<N>> Mul for Fp_model<N, T> {
+    type Output = Self;
 
     fn mul(self, rhs: Self) -> Self {
-         let mut r=self;
+        let mut r = self;
         r *= &rhs;
         r
     }
 }
 
-
-impl<const N:usize,T:Fp_modelConfig<N>> BitXor<u64> for Fp_model<N, T> {
-    type Output =Self;
+impl<const N: usize, T: Fp_modelConfig<N>> BitXor<u64> for Fp_model<N, T> {
+    type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: u64) -> Self::Output  {
-            let mut r=self;
-            r ^= rhs;
-            r
+    fn bitxor(self, rhs: u64) -> Self::Output {
+        let mut r = self;
+        r ^= rhs;
+        r
     }
 }
 
-
-impl<const N:usize,const M:usize,T:Fp_modelConfig<N>> BitXor<&bigint<M>> for Fp_model<N,T> {
-    type Output =Self;
+impl<const N: usize, const M: usize, T: Fp_modelConfig<N>> BitXor<&bigint<M>> for Fp_model<N, T> {
+    type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
     fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
-            let mut r=self;
-            r ^= rhs;
-            r
+        let mut r = self;
+        r ^= rhs;
+        r
     }
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>>  Neg for Fp_model<N,T> {
-    type Output =Self;
+impl<const N: usize, T: Fp_modelConfig<N>> Neg for Fp_model<N, T> {
+    type Output = Self;
 
     fn neg(self) -> Self::Output {
-
-                let mut  r=Self::new_with_i64(0,false);
-                // mpn_sub_n(r.mont_repr.0.0, modulus.0.0, self.mont_repr.0.0, n);
-                 r
+        let mut r = Self::new_with_i64(0, false);
+        // mpn_sub_n(r.mont_repr.0.0, modulus.0.0, self.mont_repr.0.0, n);
+        r
     }
 }
 
 use std::fmt;
-impl<const N:usize,T:Fp_modelConfig<N>> fmt::Display for Fp_model<N, T>{
+impl<const N: usize, T: Fp_modelConfig<N>> fmt::Display for Fp_model<N, T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}",  
-    self.bigint_repr() ,
-)
+        write!(f, "{}", self.bigint_repr(),)
     }
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>> One for Fp_model<N, T> {
-    fn one()->Self{
+impl<const N: usize, T: Fp_modelConfig<N>> One for Fp_model<N, T> {
+    fn one() -> Self {
         Self::one()
     }
 }
 
-impl<const N:usize,T:Fp_modelConfig<N>> Zero for Fp_model<N, T> {
-    fn zero()->Self{
+impl<const N: usize, T: Fp_modelConfig<N>> Zero for Fp_model<N, T> {
+    fn zero() -> Self {
         Self::zero()
     }
-    fn is_zero(&self)->bool{
-    false
+    fn is_zero(&self) -> bool {
+        false
     }
 }

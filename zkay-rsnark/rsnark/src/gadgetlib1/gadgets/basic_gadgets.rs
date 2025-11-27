@@ -653,7 +653,7 @@ pub fn test_disjunction_gadget(n:usize)
    let mut  inputs= pb_variable_array::<FieldT>::new();
     inputs.allocate(pb, n, "inputs");
 
-    let mut  output=pb_variable::<FieldT>::new();
+    let mut  output=variable::<FieldT,pb_variable>::new();
     output.allocate(pb, "output");
 
     let mut  d=disjunction_gadget::<FieldT>::new(pb, inputs, output, "d");
@@ -746,7 +746,7 @@ pub fn test_conjunction_gadget(n:usize)
     let mut  inputs=pb_variable_array::<FieldT>::new();
     inputs.allocate(pb, n, "inputs");
 
-    let mut  output=pb_variable::<FieldT>::new();
+    let mut  output=variable::<FieldT,pb_variable>::new();
     output.allocate(pb, "output");
 
      let mut c=conjunction_gadget::<FieldT>::new(pb, inputs, output, "c");
@@ -833,7 +833,7 @@ pub fn test_comparison_gadget(n:usize)
 
     let mut pb=protoboard::<FieldT> ::new();
 
-    let (A, B, less, less_or_eq)=(pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new());
+    let (A, B, less, less_or_eq)=(variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new());
     A.allocate(pb, "A");
     B.allocate(pb, "B");
     less.allocate(pb, "less");
@@ -906,7 +906,7 @@ pub fn test_inner_product_gadget(n:usize)
    let mut  B= pb_variable_array::<FieldT>::new();
     B.allocate(pb, n, "B");
 
-    let mut  result=pb_variable::<FieldT>::new();
+    let mut  result=variable::<FieldT,pb_variable>::new();
     result.allocate(pb, "result");
 
     let mut g=inner_product_gadget::<FieldT> ::new(pb, A, B, result, "g");
@@ -1010,7 +1010,7 @@ pub fn test_loose_multiplexing_gadget(n:usize)
 
     let mut  arr=pb_variable_array::<FieldT>::new();
     arr.allocate(pb, 1u64<<n, "arr");
-   let ( index, result, success_flag)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+   let ( index, result, success_flag)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
     index.allocate(pb, "index");
     result.allocate(pb, "result");
     success_flag.allocate(pb, "success_flag");

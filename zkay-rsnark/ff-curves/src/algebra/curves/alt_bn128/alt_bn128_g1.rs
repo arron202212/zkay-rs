@@ -4,16 +4,15 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef ALT_BN128_G1_HPP_
 // // #define ALT_BN128_G1_HPP_
 // //#include <vector>
 
 // use crate::algebra::curves::alt_bn128::alt_bn128_init;
 // use crate::algebra::curves::curve_utils;
+use crate::algebra::curves::alt_bn128::curves::Bn254;
 use crate::algebra::curves::pairing::Pairing;
-use crate::algebra::curves::alt_bn128::curves::Bn254; 
-pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
+pub type alt_bn128_G1 = <Bn254 as Pairing>::G1;
 // // namespace libff {
 
 // // pub struct alt_bn128_G1;
@@ -83,12 +82,10 @@ pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
 //     static pub fn  batch_to_special_all_non_zeros(Vec<alt_bn128_G1> &vec);
 // };
 
-
 // alt_bn128_G1 operator*(lhs:&bigint<m>, rhs:&alt_bn128_G1)
 // {
 //     return scalar_mul<alt_bn128_G1, m>(rhs, lhs);
 // }
-
 
 // alt_bn128_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&alt_bn128_G1)
 // {
@@ -106,7 +103,6 @@ pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // use crate::algebra::curves::alt_bn128::alt_bn128_g1;
 
 // // namespace libff {
@@ -213,7 +209,6 @@ pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
 //     }
 
 //     /* now neither is O */
-
 //     // using Jacobian coordinates so:
 //     // (X1:Y1:Z1) = (X2:Y2:Z2)
 //     // iff
@@ -307,7 +302,6 @@ pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
 //     return alt_bn128_G1(this->X, -(this->Y), this->Z);
 // }
 
-
 // alt_bn128_G1 alt_bn128_G1::operator-(other:&alt_bn128_G1) const
 // {
 //     return (*this) + (-other);
@@ -367,7 +361,7 @@ pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
 // //#endif
- 
+
 //     alt_bn128_Fq H = U2-(this->X);                         // H = U2-X1
 //     alt_bn128_Fq HH = H.squared() ;                        // HH = H^2
 //     alt_bn128_Fq I = HH+HH;                                // I = 4*HH
@@ -400,7 +394,7 @@ pub type alt_bn128_G1=<Bn254 as Pairing>::G1;
 
 //     // using Jacobian coordinates according to
 //     // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
-    
+
 //     alt_bn128_Fq A = (this->X).squared();         // A = X1^2
 //     alt_bn128_Fq B = (this->Y).squared();        // B = Y1^2
 //     alt_bn128_Fq C = B.squared();                // C = B^2

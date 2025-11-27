@@ -54,16 +54,13 @@
 use std::borrow::Borrow;
 
 use syn::{
-    parse_quote, token::Brace, Block, Expr, ExprBlock, ExprForLoop, ExprIf, ExprLet, ExprRange,
-    Pat, PatIdent, RangeLimits, Stmt,
+    Block, Expr, ExprBlock, ExprForLoop, ExprIf, ExprLet, ExprRange, Pat, PatIdent, RangeLimits,
+    Stmt, parse_quote, token::Brace,
 };
 
 /// Routine to unroll for loops within a block
 pub(crate) fn unroll_in_block(block: &Block, unroll_by: usize) -> Block {
-    let Block {
-         brace_token,
-         stmts,
-    } = block;
+    let Block { brace_token, stmts } = block;
     let mut new_stmts = Vec::new();
     for stmt in stmts.iter() {
         if let Stmt::Expr(expr, semi) = stmt {

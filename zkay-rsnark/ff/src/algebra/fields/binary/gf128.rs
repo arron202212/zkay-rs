@@ -5,7 +5,6 @@
 //  * @author     This file is part of libff (see AUTHORS), migrated from libiop
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef LIBFF_ALGEBRA_GF128_HPP_
 // // #define LIBFF_ALGEBRA_GF128_HPP_
 
@@ -41,9 +40,9 @@
 // //     gf128& operator-=(other:&gf128);
 // //     gf128& operator*=(other:&gf128);
 // //     gf128& operator^=(const u64 pow);
-// //     
+// //
 // //     gf128& operator^=(pow:&bigint<m>);
-    
+
 // //     gf128& square();
 // //     gf128& invert();
 
@@ -52,7 +51,7 @@
 // //     gf128 operator-() const;
 // //     gf128 operator*(other:&gf128) const;
 // //     gf128 operator^(const:u64 pow),
-// //     
+// //
 // //     gf128 operator^(pow:&bigint<m>) const;
 
 // //     gf128 squared() const;
@@ -89,12 +88,12 @@
 // //     static std::usize ceil_size_in_bits() { return num_bits; }
 // //     static std::usize floor_size_in_bits() { return num_bits; }
 // //     static constexpr std::usize extension_degree() { return 128; }
-// //     
+// //
 // //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
 // //     friend std::ostream& operator<<(std::ostream &out, el:&gf128);
 // //     friend std::istream& operator>>(std::istream &in, gf128 &el);
-// // 
+// //
 // //     /* little-endian */
 // //     uint64_t value_[2];
 // // };
@@ -196,10 +195,8 @@
 //        intrinsic */
 //     __m128i mul256_high = _mm_clmulepi64_si128(a, b, 0x11); /* high of both */
 //     __m128i mul256_low = _mm_clmulepi64_si128(a, b, 0x00); /* low of both */
-
 //     __m128i mul256_mid1 = _mm_clmulepi64_si128(a, b, 0x01); /* low of a, high of b */
 //     __m128i mul256_mid2 = _mm_clmulepi64_si128(a, b, 0x10); /* high of a, low of b */
-
 //     /* Add the 4 terms together */
 //     __m128i mul256_mid = _mm_xor_si128(mul256_mid1, mul256_mid2);
 //     /* lower 64 bits of mid don't intersect with high, and upper 64 bits don't intersect with low */
@@ -207,7 +204,6 @@
 //     mul256_low = _mm_xor_si128(mul256_low, _mm_slli_si128(mul256_mid, 8));
 
 //     /* done computing mul256_low and mul256_high, time to reduce */
-
 //     /* reduce w.r.t. high half of mul256_high */
 //     __m128i tmp = _mm_clmulepi64_si128(mul256_high, modulus, 0x01);
 //     mul256_low = _mm_xor_si128(mul256_low, _mm_slli_si128(tmp, 8));
@@ -335,7 +331,6 @@
 //         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
 //         a *= b;
 //         /* now a = el^{2^{2^{i+1}}-1} */
-
 //         if i == 0
 //         {
 //             result = b;
@@ -419,14 +414,14 @@
 
 // // namespace libff {
 
-// 
+//
 // gf128& gf128::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // gf128 gf128::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf128>(*this, pow);

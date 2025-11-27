@@ -1,9 +1,8 @@
 //! A dense univariate polynomial represented in coefficient form.
 use crate::{
-    univariate::{DenseOrSparsePolynomial, SparsePolynomial},
     DenseUVPolynomial, EvaluationDomain, Evaluations, GeneralEvaluationDomain, Polynomial,
+    univariate::{DenseOrSparsePolynomial, SparsePolynomial},
 };
-use ffec::{FftField, Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     fmt,
@@ -11,6 +10,7 @@ use ark_std::{
     rand::Rng,
     vec::*,
 };
+use ffec::{FftField, Field, Zero};
 
 #[cfg(feature = "parallel")]
 use ark_std::cmp::max;
@@ -686,11 +686,11 @@ impl_op!(Div, div, Field);
 
 #[cfg(test)]
 mod tests {
-    use crate::{polynomial::univariate::*, GeneralEvaluationDomain};
-    use ffec::{Fp64, MontBackend, MontConfig};
-    use ffec::{One, UniformRand};
+    use crate::{GeneralEvaluationDomain, polynomial::univariate::*};
     use ark_std::{rand::Rng, test_rng};
     use ark_test_curves::bls12_381::Fr;
+    use ffec::{Fp64, MontBackend, MontConfig};
+    use ffec::{One, UniformRand};
 
     fn rand_sparse_poly<R: Rng>(degree: usize, rng: &mut R) -> SparsePolynomial<Fr> {
         // Initialize coeffs so that its guaranteed to have a x^{degree} term

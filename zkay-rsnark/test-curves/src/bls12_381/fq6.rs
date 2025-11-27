@@ -1,7 +1,7 @@
 use crate::bls12_381::{Fq2, Fq2Config};
 use ark_ff::{
-    fields::{Fp6, Fp6Config},
     MontFp,
+    fields::{Fp6, Fp6Config},
 };
 
 pub type Fq6 = Fp6<Fq6Config>;

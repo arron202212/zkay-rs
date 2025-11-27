@@ -9,7 +9,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef FP_AUX_TCC_
 // #define FP_AUX_TCC_
 
@@ -81,7 +80,6 @@
 //   and the PowerPC pseudocode of gmp-ecm library (c) Paul Zimmermann and Alexander Kruppa
 //   (see comments on top of powerpc64/mulredc.m4).
 // */
-
 // // #define MONT_PRECOMPUTE                                                 \
 //     "xorq    %[cy], %[cy]            \n\t"                              \
 //     "movq    0(%[A]), %%rax          \n\t"                              \
@@ -161,7 +159,6 @@
 //   Compared to the above, we save 5-20% of cycles by using careful register
 //   renaming to implement Comba forward operation.
 //  */
-
 // // #define COMBA_3_BY_3_MUL(c0_, c1_, c2_, res_, A_, B_)    \
 //     asm volatile (                              \
 //         "movq  0(%[A]), %%rax             \n\t" \

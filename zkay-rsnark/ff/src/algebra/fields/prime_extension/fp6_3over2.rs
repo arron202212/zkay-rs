@@ -6,7 +6,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef FP6_3OVER2_HPP_
 // // #define FP6_3OVER2_HPP_
 // //#include <vector>
@@ -16,13 +15,13 @@
 
 // // namespace libff {
 
-// 
+//
 // pub struct Fp6_3over2_model;
 
-// 
+//
 // std::ostream& operator<<(std::ostream &, const Fp6_3over2_model<n, modulus> &);
 
-// 
+//
 // std::istream& operator>>(std::istream &, Fp6_3over2_model<n, modulus> &);
 
 // /**
@@ -33,7 +32,7 @@
 //  *
 //  * ASSUMPTION: p = 1 (mod 6)
 //  */
-// 
+//
 // pub struct Fp6_3over2_model {
 
 //     type my_Fp=Fp_model<n, modulus>;
@@ -84,14 +83,14 @@
 //     Fp6_3over2_model& operator-=(other:&Fp6_3over2_model);
 //     Fp6_3over2_model& operator*=(other:&Fp6_3over2_model);
 //     Fp6_3over2_model& operator^=(const u64 pow);
-//     
+//
 //     Fp6_3over2_model& operator^=(pow:&bigint<m>);
 
 //     Fp6_3over2_model operator+(other:&Fp6_3over2_model) const;
 //     Fp6_3over2_model operator-(other:&Fp6_3over2_model) const;
 //     Fp6_3over2_model operator*(other:&Fp6_3over2_model) const;
 //     Fp6_3over2_model operator^(const:u64 pow),
-//     
+//
 //     Fp6_3over2_model operator^(other:&bigint<m>) const;
 //     Fp6_3over2_model operator-() const;
 
@@ -119,59 +118,59 @@
 // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// 
+//
 // i64 Fp6_3over2_model<n, modulus>::add_cnt = 0;
 
-// 
+//
 // i64 Fp6_3over2_model<n, modulus>::sub_cnt = 0;
 
-// 
+//
 // i64 Fp6_3over2_model<n, modulus>::mul_cnt = 0;
 
-// 
+//
 // i64 Fp6_3over2_model<n, modulus>::sqr_cnt = 0;
 
-// 
+//
 // i64 Fp6_3over2_model<n, modulus>::inv_cnt = 0;
 // //#endif
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<Fp6_3over2_model<n, modulus> >);
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<Fp6_3over2_model<n, modulus> > &v);
 
-// 
+//
 // Fp6_3over2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp6_3over2_model<n, modulus>);
 
-// 
+//
 // Fp6_3over2_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp6_3over2_model<n, modulus>);
 
-// 
+//
 // bigint<6*n> Fp6_3over2_model<n, modulus>::euler;
 
-// 
+//
 // usize Fp6_3over2_model<n, modulus>::s;
 
-// 
+//
 // bigint<6*n> Fp6_3over2_model<n, modulus>::t;
 
-// 
+//
 // bigint<6*n> Fp6_3over2_model<n, modulus>::t_minus_1_over_2;
 
-// 
+//
 // Fp6_3over2_model<n, modulus> Fp6_3over2_model<n, modulus>::nqr;
 
-// 
+//
 // Fp6_3over2_model<n, modulus> Fp6_3over2_model<n, modulus>::nqr_to_t;
 
-// 
+//
 // Fp2_model<n, modulus> Fp6_3over2_model<n, modulus>::non_residue;
 
-// 
+//
 // Fp2_model<n, modulus> Fp6_3over2_model<n, modulus>::Frobenius_coeffs_c1[6];
 
-// 
+//
 // Fp2_model<n, modulus> Fp6_3over2_model<n, modulus>::Frobenius_coeffs_c2[6];
 
 // // } // namespace libff
@@ -186,7 +185,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef FP6_3OVER2_TCC_
 // // #define FP6_3OVER2_TCC_
 // use crate::algebra::field_utils::field_utils;
@@ -195,25 +193,25 @@
 
 // using std::usize;
 
-// 
+//
 // Fp2_model<n, modulus> Fp6_3over2_model<n,modulus>::mul_by_non_residue(elt:&Fp2_model<n, modulus>)
 // {
 //     return Fp2_model<n, modulus>(non_residue * elt);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::zero()
 // {
 //     return Fp6_3over2_model<n, modulus>(my_Fp2::zero(), my_Fp2::zero(), my_Fp2::zero());
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::one()
 // {
 //     return Fp6_3over2_model<n, modulus>(my_Fp2::one(), my_Fp2::zero(), my_Fp2::zero());
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::random_element()
 // {
 //     Fp6_3over2_model<n, modulus> r;
@@ -224,25 +222,25 @@
 //     return r;
 // }
 
-// 
+//
 // pub fn randomize()
 // {
 //     (*this) = Fp6_3over2_model<n, modulus>::random_element();
 // }
 
-// 
+//
 // bool Fp6_3over2_model<n,modulus>::operator==(other:&Fp6_3over2_model<n,modulus>) const
 // {
 //     return (this->c0 == other.c0 && this->c1 == other.c1 && this->c2 == other.c2);
 // }
 
-// 
+//
 // bool Fp6_3over2_model<n,modulus>::operator!=(other:&Fp6_3over2_model<n,modulus>) const
 // {
 //     return !(operator==(other));
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator+(other:&Fp6_3over2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -253,7 +251,7 @@
 //                                        this->c2 + other.c2);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator-(other:&Fp6_3over2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -264,7 +262,7 @@
 //                                        this->c2 - other.c2);
 // }
 
-// 
+//
 // Fp6_3over2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp6_3over2_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -275,7 +273,7 @@
 //                                        lhs*rhs.c2);
 // }
 
-// 
+//
 // Fp6_3over2_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp6_3over2_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -286,14 +284,13 @@
 //                                        lhs*rhs.c2);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator*(other:&Fp6_3over2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba) */
-
 //     A:&my_Fp2 = other.c0, &B = other.c1, &C = other.c2,
 //                  &a = this->c0, &b = this->c1, &c = this->c2;
 //     let aA= a*A;
@@ -305,7 +302,7 @@
 //                                        (a+c)*(A+C)-aA+bB-cC);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator-() const
 // {
 //     return Fp6_3over2_model<n,modulus>(-this->c0,
@@ -313,63 +310,62 @@
 //                                        -this->c2);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator^(const u64 pow) const
 // {
 //     return power<Fp6_3over2_model<n, modulus> >(*this, pow);
 // }
 
-// 
-// 
+//
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator^(pow:&bigint<m>) const
 // {
 //     return power<Fp6_3over2_model<n, modulus>, m>(*this, pow);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator+=(const Fp6_3over2_model<n,modulus>& other)
 // {
 //     (*this) = *this + other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator-=(const Fp6_3over2_model<n,modulus>& other)
 // {
 //     (*this) = *this - other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator*=(const Fp6_3over2_model<n,modulus>& other)
 // {
 //     (*this) = *this * other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
-// 
+//
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::squared() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
-
 //     a:&my_Fp2 = this->c0, &b = this->c1, &c = this->c2;
 //     let s0= a.squared();
 //     let ab= a*b;
@@ -384,21 +380,20 @@
 //                                        s1 + s2 + s3 - s0 - s4);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::square()
 // {
 //     (*this) = squared();
 //     return (*this);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::inverse() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->inv_cnt++;
 // //#endif
 //     /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17 */
-
 //     a:&my_Fp2 = this->c0, &b = this->c1, &c = this->c2;
 //     let t0= a.squared();
 //     let t1= b.squared();
@@ -413,14 +408,14 @@
 //     return Fp6_3over2_model<n,modulus>(t6 * c0, t6 * c1, t6 * c2);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::invert()
 // {
 //     (*this) = inverse();
 //     return (*this);
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::Frobenius_map(u64 power) const
 // {
 //     return Fp6_3over2_model<n,modulus>(c0.Frobenius_map(power),
@@ -428,13 +423,13 @@
 //                                        Frobenius_coeffs_c2[power % 6] * c2.Frobenius_map(power));
 // }
 
-// 
+//
 // Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::sqrt() const
 // {
 //     return tonelli_shanks_sqrt(*this);
 // }
 
-// 
+//
 // Vec<uint64_t> Fp6_3over2_model<n,modulus>::to_words() const
 // {
 //     Vec<uint64_t> words = c0.to_words();
@@ -445,7 +440,7 @@
 //     return words;
 // }
 
-// 
+//
 // bool Fp6_3over2_model<n,modulus>::from_words(Vec<uint64_t> words)
 // {
 //     Vec<uint64_t>::const_iterator vec_start = words.begin();
@@ -459,21 +454,21 @@
 //     return c0.from_words(words0) && c1.from_words(words1) && c2.from_words(words2);
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream &out, el:&Fp6_3over2_model<n, modulus>)
 // {
 //     out << el.c0 << OUTPUT_SEPARATOR << el.c1 << OUTPUT_SEPARATOR << el.c2;
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream &in, Fp6_3over2_model<n, modulus> &el)
 // {
 //     in >> el.c0 >> el.c1 >> el.c2;
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<Fp6_3over2_model<n, modulus> >)
 // {
 //     out << v.len() << "\n";
@@ -485,7 +480,7 @@
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<Fp6_3over2_model<n, modulus> > &v)
 // {
 //     v.clear();
@@ -511,7 +506,11 @@
 // // } // namespace libff
 // //#endif // FP6_3_OVER_2_TCC_
 use super::cubic_extension::{CubicExtConfig, CubicExtField};
-use crate::algebra::fields::{cyclotomic::CyclotomicMultSubgroup, prime_extension::fp2::{Fp2, Fp2Config}, sqrt::SqrtPrecomputation};
+use crate::algebra::fields::{
+    cyclotomic::CyclotomicMultSubgroup,
+    prime_extension::fp2::{Fp2, Fp2Config},
+    sqrt::SqrtPrecomputation,
+};
 //  use crate::algebra::{fields::PrimeField, cyclotomic::CyclotomicMultSubgroup};
 use ark_std::Zero;
 use core::marker::PhantomData;

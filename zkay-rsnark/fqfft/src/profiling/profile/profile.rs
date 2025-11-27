@@ -8,7 +8,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // // //#ifndef PROFILE_OP_COUNTS
 // // #error PROFILE_OP_COUNTS must be defined to build this profiler.
 // // //#endif
@@ -70,7 +69,6 @@
 // {
 //   /* Determine domain sizes and precompute domain vectors */
 //   let  dom_sizes:Vec<_>=domain_sizes.split_ascii_whitespace().map(|s| s.parse::<usize>().unwrap()).collect();
-
 
 //   let mut  domain=vec![vec![];dom_sizes.len()];
 //   for i in 0..dom_sizes.len()

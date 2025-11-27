@@ -126,8 +126,9 @@ pub fn mac_discard(a: u64, b: u64, c: u64, carry: &mut u64) {
 #[macro_export]
 macro_rules! mac_with_carry {
     ($a:expr, $b:expr, $c:expr, &mut $carry:expr$(,)?) => {{
-        let tmp =
-            ($a as u128) + crate::algebra::field_utils::arithmetic::widening_mul($b, $c) + ($carry as u128);
+        let tmp = ($a as u128)
+            + crate::algebra::field_utils::arithmetic::widening_mul($b, $c)
+            + ($carry as u128);
         $carry = (tmp >> 64) as u64;
         tmp as u64
     }};

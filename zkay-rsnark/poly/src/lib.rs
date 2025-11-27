@@ -1,7 +1,6 @@
-
 //! This crate implements functions for manipulating polynomials over finite
 //! fields, including FFTs.
-#![allow(unexpected_cfgs)] 
+#![allow(unexpected_cfgs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(
     unused,
@@ -37,7 +36,7 @@ pub use evaluations::{
     },
     univariate::Evaluations,
 };
-pub use polynomial::{multivariate, univariate, DenseMVPolynomial, DenseUVPolynomial, Polynomial};
+pub use polynomial::{DenseMVPolynomial, DenseUVPolynomial, Polynomial, multivariate, univariate};
 
 #[cfg(test)]
 mod test;

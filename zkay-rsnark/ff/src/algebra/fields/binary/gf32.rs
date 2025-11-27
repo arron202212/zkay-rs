@@ -5,7 +5,6 @@
 //  * @author     This file is part of libff (see AUTHORS), migrated from libiop
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef LIBFF_ALGEBRA_GF32_HPP_
 // // #define LIBFF_ALGEBRA_GF32_HPP_
 
@@ -19,7 +18,7 @@
 // /* gf32 implements the field GF(2)/[x^32 + x^22 + x^2 + x^1 + 1].
 //    Elements are represented internally with a single uint32 */
 // // pub struct gf32 {
-// // 
+// //
 // // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
 // //     static i64 add_cnt;
 // //     static i64 sub_cnt;
@@ -38,7 +37,7 @@
 // //     gf32& operator-=(other:&gf32);
 // //     gf32& operator*=(other:&gf32);
 // //     gf32& operator^=(const u64 pow);
-// //     
+// //
 // //     gf32& operator^=(pow:&bigint<m>);
 
 // //     gf32& square();
@@ -49,7 +48,7 @@
 // //     gf32 operator-() const;
 // //     gf32 operator*(other:&gf32) const;
 // //     gf32 operator^(const:u64 pow),
-// //     
+// //
 // //     gf32 operator^(pow:&bigint<m>) const;
 
 // //     gf32 squared() const;
@@ -86,12 +85,12 @@
 // //     static std::usize ceil_size_in_bits() { return num_bits; }
 // //     static std::usize floor_size_in_bits() { return num_bits; }
 // //     static constexpr std::usize extension_degree() { return 32; }
-// //     
+// //
 // //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
 // //     friend std::ostream& operator<<(std::ostream &out, el:&gf32);
 // //     friend std::istream& operator>>(std::istream &in, gf32 &el);
-// // 
+// //
 // //     uint32_t value_;
 // // };
 
@@ -204,7 +203,6 @@
 //         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
 //         a *= b;
 //         /* now a = el^{2^{2^{i+1}}-1} */
-
 //         if i == 0
 //         {
 //             result = b;
@@ -286,7 +284,6 @@
 // //#endif
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
-
 //     /* Slow, but straight-forward */
 //     uint32_t result = 0;
 //     uint32_t shifted = this->value_;
@@ -319,7 +316,6 @@
 //     return (*this);
 // }
 
-
 // gf32 gf32::operator+(other:&gf32) const
 // {
 //     gf32 result(*this);
@@ -349,7 +345,6 @@
 //     return power<gf32>(*this, pow);
 // }
 
-
 // bool gf32::operator==(other:&gf32) const
 // {
 //     return (this->value_ == other.value_);
@@ -359,7 +354,6 @@
 // {
 //     return !(this->operator==(other));
 // }
-
 
 // std::ostream& operator<<(std::ostream &out, el:&gf32)
 // {
@@ -378,14 +372,14 @@
 
 // // namespace libff {
 
-// 
+//
 // gf32& gf32::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // gf32 gf32::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf32>(*this, pow);

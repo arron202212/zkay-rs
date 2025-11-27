@@ -1,5 +1,4 @@
 //! Work with sparse multivariate polynomials.
-use ffec::Field;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     cmp::Ordering,
@@ -8,6 +7,7 @@ use ark_std::{
     ops::Deref,
     vec::*,
 };
+use ffec::Field;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

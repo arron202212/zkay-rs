@@ -1,9 +1,8 @@
 //! A sparse multivariate polynomial represented in coefficient form.
 use crate::{
-    multivariate::{SparseTerm, Term},
     DenseMVPolynomial, Polynomial,
+    multivariate::{SparseTerm, Term},
 };
-use ffec::{Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     cmp::Ordering,
@@ -12,6 +11,7 @@ use ark_std::{
     rand::Rng,
     vec::*,
 };
+use ffec::{Field, Zero};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -200,7 +200,7 @@ impl<'a, F: Field, T: Term> Add<&'a SparsePolynomial<F, T>> for &SparsePolynomia
                     let other = other_iter.next().unwrap();
                     let cur = cur_iter.next().unwrap();
                     (cur.0 + other.0, cur.1.clone())
-                },
+                }
                 Some(Ordering::Greater) => other_iter.next().unwrap().clone(),
                 None => break,
             };
@@ -293,9 +293,9 @@ impl<F: Field, T: Term> Zero for SparsePolynomial<F, T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ffec::UniformRand;
     use ark_std::test_rng;
     use ark_test_curves::bls12_381::Fr;
+    use ffec::UniformRand;
 
     // TODO: Make tests generic over term type
 

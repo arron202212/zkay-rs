@@ -1,8 +1,15 @@
+use crate::algebra::{UniformRand, field_utils::BigInteger};
 use crate::algebra::{
-    field_utils::BigInteger,
-     UniformRand, 
+    fields::{
+        One, Zero,
+        fft_friendly::FftField,
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+        sqrt::{LegendreSymbol, SqrtPrecomputation},
+    },
+    to_field_vec::ToConstraintField,
 };
-use crate::algebra::{to_field_vec::ToConstraintField,fields::{One,Zero,field::{Field,AdditiveGroup},fft_friendly::FftField, sqrt::{LegendreSymbol,SqrtPrecomputation}, fpn_field::PrimeField}};
+use crate::impl_additive_ops_from_ref;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, Compress, EmptyFlags, Flags, SerializationError, Valid, Validate,
@@ -14,14 +21,13 @@ use ark_std::{
     iter::*,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
 };
+use educe::Educe;
 use zeroize::Zeroize;
- use educe::Educe;
-use crate::impl_additive_ops_from_ref;
 /// Defines a Quadratic extension field from a quadratic non-residue.
 pub trait QuadExtConfig: 'static + Send + Sync + Sized {
     /// The prime field that this quadratic extension is eventually an extension of.
@@ -482,11 +488,7 @@ impl<P: QuadExtConfig> From<i128> for QuadExtField<P> {
     #[inline]
     fn from(val: i128) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -500,11 +502,7 @@ impl<P: QuadExtConfig> From<i64> for QuadExtField<P> {
     #[inline]
     fn from(val: i64) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -518,11 +516,7 @@ impl<P: QuadExtConfig> From<i32> for QuadExtField<P> {
     #[inline]
     fn from(val: i32) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -536,11 +530,7 @@ impl<P: QuadExtConfig> From<i16> for QuadExtField<P> {
     #[inline]
     fn from(val: i16) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -554,11 +544,7 @@ impl<P: QuadExtConfig> From<i8> for QuadExtField<P> {
     #[inline]
     fn from(val: i8) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -790,11 +776,9 @@ where
 #[cfg(test)]
 mod quad_ext_tests {
     use super::*;
-    use ark_std::test_rng;
     use crate::algebra::fields::field::Field;
-    use ark_test_curves::{
-        bls12_381::{Fq, Fq2},
-    };
+    use ark_std::test_rng;
+    use ark_test_curves::bls12_381::{Fq, Fq2};
 
     #[test]
     fn test_from_base_prime_field_elements() {

@@ -13,7 +13,9 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
 };
-use crate::relations::variable::linear_combination;
+use crate::relations::variable::{
+    SubLinearCombinationConfig, SubVariableConfig, linear_combination,
+};
 use ffec::common::profiling;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;
@@ -119,8 +121,13 @@ pub fn times_four<FieldT: FieldTConfig>(x: FieldT) -> FieldT {
  * for a given R1CS instance.
  */
 
-pub fn r1cs_to_sap_get_domain<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
-    cs: &r1cs_constraint_system<FieldT>,
+pub fn r1cs_to_sap_get_domain<
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
+    cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> RcCell<ED> {
     /*
      * the SAP instance will have:
@@ -137,8 +144,13 @@ pub fn r1cs_to_sap_get_domain<FieldT: FieldTConfig, ED: evaluation_domain<FieldT
 /**
  * Instance map for the R1CS-to-SAP reduction.
  */
-pub fn r1cs_to_sap_instance_map<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
-    cs: &r1cs_constraint_system<FieldT>,
+pub fn r1cs_to_sap_instance_map<
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
+    cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> sap_instance<FieldT, ED> {
     enter_block("Call to r1cs_to_sap_instance_map", false);
 
@@ -169,25 +181,25 @@ pub fn r1cs_to_sap_instance_map<FieldT: FieldTConfig, ED: evaluation_domain<Fiel
     let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].a.terms.len() {
-            *A_in_Lagrange_basis[cs.constraints[i].a.terms[j].index]
+            *A_in_Lagrange_basis[cs.constraints[i].a.terms[j].index.index]
                 .entry(2 * i)
                 .or_insert(FieldT::zero()) += cs.constraints[i].a.terms[j].coeff.clone();
-            *A_in_Lagrange_basis[cs.constraints[i].a.terms[j].index]
+            *A_in_Lagrange_basis[cs.constraints[i].a.terms[j].index.index]
                 .entry(2 * i + 1)
                 .or_insert(FieldT::zero()) += cs.constraints[i].a.terms[j].coeff.clone();
         }
 
         for j in 0..cs.constraints[i].b.terms.len() {
-            *A_in_Lagrange_basis[cs.constraints[i].b.terms[j].index]
+            *A_in_Lagrange_basis[cs.constraints[i].b.terms[j].index.index]
                 .entry(2 * i)
                 .or_insert(FieldT::zero()) += cs.constraints[i].b.terms[j].coeff.clone();
-            *A_in_Lagrange_basis[cs.constraints[i].b.terms[j].index]
+            *A_in_Lagrange_basis[cs.constraints[i].b.terms[j].index.index]
                 .entry(2 * i + 1)
                 .or_insert(FieldT::zero()) -= cs.constraints[i].b.terms[j].coeff.clone();
         }
 
         for j in 0..cs.constraints[i].c.terms.len() {
-            *C_in_Lagrange_basis[cs.constraints[i].c.terms[j].index]
+            *C_in_Lagrange_basis[cs.constraints[i].c.terms[j].index.index]
                 .entry(2 * i)
                 .or_insert(FieldT::zero()) +=
                 times_four(cs.constraints[i].c.terms[j].coeff.clone());
@@ -276,8 +288,10 @@ pub fn r1cs_to_sap_instance_map<FieldT: FieldTConfig, ED: evaluation_domain<Fiel
 pub fn r1cs_to_sap_instance_map_with_evaluation<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
 >(
-    cs: &r1cs_constraint_system<FieldT>,
+    cs: &r1cs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
 ) -> sap_instance_evaluation<FieldT, ED> {
     enter_block("Call to r1cs_to_sap_instance_map_with_evaluation", false);
@@ -302,21 +316,21 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].a.terms.len() {
-            At[cs.constraints[i].a.terms[j].index] +=
+            At[cs.constraints[i].a.terms[j].index.index] +=
                 u[2 * i].clone() * cs.constraints[i].a.terms[j].coeff.clone();
-            At[cs.constraints[i].a.terms[j].index] +=
+            At[cs.constraints[i].a.terms[j].index.index] +=
                 u[2 * i + 1].clone() * cs.constraints[i].a.terms[j].coeff.clone();
         }
 
         for j in 0..cs.constraints[i].b.terms.len() {
-            At[cs.constraints[i].b.terms[j].index] +=
+            At[cs.constraints[i].b.terms[j].index.index] +=
                 u[2 * i].clone() * cs.constraints[i].b.terms[j].coeff.clone();
-            At[cs.constraints[i].b.terms[j].index] -=
+            At[cs.constraints[i].b.terms[j].index.index] -=
                 u[2 * i + 1].clone() * cs.constraints[i].b.terms[j].coeff.clone();
         }
 
         for j in 0..cs.constraints[i].c.terms.len() {
-            Ct[cs.constraints[i].c.terms[j].index] +=
+            Ct[cs.constraints[i].c.terms[j].index.index] +=
                 times_four(u[2 * i].clone() * cs.constraints[i].c.terms[j].coeff.clone());
         }
 
@@ -392,8 +406,13 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
 * The code below is not as simple as the above high-level description due to
 * some reshuffling to save space.
 */
-pub fn r1cs_to_sap_witness_map<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
-    cs: &r1cs_constraint_system<FieldT>,
+pub fn r1cs_to_sap_witness_map<
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
+    cs: &r1cs_constraint_system<FieldT, SV, SLC>,
     primary_input: &r1cs_primary_input<FieldT>,
     auxiliary_input: &r1cs_auxiliary_input<FieldT>,
     d1: &FieldT,

@@ -1,5 +1,5 @@
 use ark_algebra_bench_templates::{bench, criterion_main, field_common, paste, prime_field, sqrt};
-use ark_test_curves::mnt4_753::{fq::Fq, fr::Fr, G1Projective as G1};
+use ark_test_curves::mnt4_753::{G1Projective as G1, fq::Fq, fr::Fr};
 
 bench!(
     Name = "MNT4_753",

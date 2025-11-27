@@ -1,15 +1,15 @@
 extern crate criterion;
 mod common;
 
-use ffec::{FftField, Field};
 use ark_poly::{
-    polynomial::univariate::{DensePolynomial, SparsePolynomial},
     DenseUVPolynomial, EvaluationDomain, GeneralEvaluationDomain, Polynomial,
+    polynomial::univariate::{DensePolynomial, SparsePolynomial},
 };
 use ark_std::rand::Rng;
 use ark_test_curves::bls12_381::Fr as bls12_381_fr;
 use common::size_range;
-use criterion::{criterion_group, criterion_main, Bencher, BenchmarkId, Criterion};
+use criterion::{Bencher, BenchmarkId, Criterion, criterion_group, criterion_main};
+use ffec::{FftField, Field};
 
 const BENCHMARK_MIN_DEGREE: usize = 1 << 15;
 const BENCHMARK_MAX_DEGREE: usize = 1 << 17;

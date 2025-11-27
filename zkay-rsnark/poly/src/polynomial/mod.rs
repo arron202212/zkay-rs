@@ -1,5 +1,4 @@
 //! Modules for working with univariate or multivariate polynomials.
-use ffec::{Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     fmt::Debug,
@@ -8,6 +7,7 @@ use ark_std::{
     rand::Rng,
     vec::*,
 };
+use ffec::{Field, Zero};
 
 pub mod multivariate;
 pub mod univariate;

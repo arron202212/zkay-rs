@@ -6,7 +6,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef FP12_2OVER3OVER2_HPP_
 // // #define FP12_2OVER3OVER2_HPP_
 // //#include <vector>
@@ -17,13 +16,13 @@
 
 // // namespace libff {
 
-// 
+//
 // pub struct Fp12_2over3over2_model;
 
-// 
+//
 // std::ostream& operator<<(std::ostream &, const Fp12_2over3over2_model<n, modulus> &);
 
-// 
+//
 // std::istream& operator>>(std::istream &, Fp12_2over3over2_model<n, modulus> &);
 
 // /**
@@ -34,7 +33,7 @@
 //  *
 //  * ASSUMPTION: p = 1 (mod 6)
 //  */
-// 
+//
 // pub struct Fp12_2over3over2_model {
 
 //     type my_Fp=Fp_model<n, modulus>;
@@ -85,16 +84,16 @@
 //     Fp12_2over3over2_model& operator-=(other:&Fp12_2over3over2_model);
 //     Fp12_2over3over2_model& operator*=(other:&Fp12_2over3over2_model);
 //     Fp12_2over3over2_model& operator^=(const u64 pow);
-//     
+//
 //     Fp12_2over3over2_model& operator^=(pow:&bigint<m>);
 
 //     Fp12_2over3over2_model operator+(other:&Fp12_2over3over2_model) const;
 //     Fp12_2over3over2_model operator-(other:&Fp12_2over3over2_model) const;
 //     Fp12_2over3over2_model operator*(other:&Fp12_2over3over2_model) const;
 //     Fp12_2over3over2_model operator^(const:u64 pow),
-//     
+//
 //     Fp12_2over3over2_model operator^(exponent:&bigint<m>) const;
-//     
+//
 //     Fp12_2over3over2_model operator^(exponent:&Fp_model<m, exp_modulus>) const;
 //     Fp12_2over3over2_model operator-() const;
 
@@ -114,7 +113,7 @@
 
 //     static my_Fp6 mul_by_non_residue(elt:&my_Fp6);
 
-//     
+//
 //     Fp12_2over3over2_model cyclotomic_exp(exponent:&bigint<m>) const;
 
 //     static std::usize ceil_size_in_bits() { return 2 * my_Fp6::ceil_size_in_bits(); }
@@ -132,59 +131,59 @@
 // };
 
 // // #ifdef PROFILE_OP_COUNTS
-// 
+//
 // i64 Fp12_2over3over2_model<n, modulus>::add_cnt = 0;
 
-// 
+//
 // i64 Fp12_2over3over2_model<n, modulus>::sub_cnt = 0;
 
-// 
+//
 // i64 Fp12_2over3over2_model<n, modulus>::mul_cnt = 0;
 
-// 
+//
 // i64 Fp12_2over3over2_model<n, modulus>::sqr_cnt = 0;
 
-// 
+//
 // i64 Fp12_2over3over2_model<n, modulus>::inv_cnt = 0;
 // //#endif
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<Fp12_2over3over2_model<n, modulus> >);
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<Fp12_2over3over2_model<n, modulus> > &v);
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp12_2over3over2_model<n, modulus>);
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp12_2over3over2_model<n, modulus>);
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> operator*(lhs:&Fp6_3over2_model<n, modulus>, rhs:&Fp12_2over3over2_model<n, modulus>);
 
-// 
+//
 // bigint<12*n> Fp12_2over3over2_model<n, modulus>::euler;
 
-// 
+//
 // usize Fp12_2over3over2_model<n, modulus>::s;
 
-// 
+//
 // bigint<12*n> Fp12_2over3over2_model<n, modulus>::t;
 
-// 
+//
 // bigint<12*n> Fp12_2over3over2_model<n, modulus>::t_minus_1_over_2;
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::nqr;
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::nqr_to_t;
 
-// 
+//
 // Fp2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::non_residue;
 
-// 
+//
 // Fp2_model<n, modulus> Fp12_2over3over2_model<n, modulus>::Frobenius_coeffs_c1[12];
 
 // // } // namespace libff
@@ -198,7 +197,6 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef FP12_2OVER3OVER2_TCC_
 // // #define FP12_2OVER3OVER2_TCC_
 
@@ -206,25 +204,25 @@
 
 // using std::usize;
 
-// 
+//
 // Fp6_3over2_model<n, modulus> Fp12_2over3over2_model<n,modulus>::mul_by_non_residue(elt:&Fp6_3over2_model<n, modulus>)
 // {
 //     return Fp6_3over2_model<n, modulus>(non_residue * elt.c2, elt.c0, elt.c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::zero()
 // {
 //     return Fp12_2over3over2_model<n, modulus>(my_Fp6::zero(), my_Fp6::zero());
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::one()
 // {
 //     return Fp12_2over3over2_model<n, modulus>(my_Fp6::one(), my_Fp6::zero());
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::random_element()
 // {
 //     Fp12_2over3over2_model<n, modulus> r;
@@ -234,25 +232,25 @@
 //     return r;
 // }
 
-// 
+//
 // pub fn randomize()
 // {
 //     (*this) = Fp12_2over3over2_model<n, modulus>::random_element();
 // }
 
-// 
+//
 // bool Fp12_2over3over2_model<n,modulus>::operator==(other:&Fp12_2over3over2_model<n,modulus>) const
 // {
 //     return (this->c0 == other.c0 && this->c1 == other.c1);
 // }
 
-// 
+//
 // bool Fp12_2over3over2_model<n,modulus>::operator!=(other:&Fp12_2over3over2_model<n,modulus>) const
 // {
 //     return !(operator==(other));
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator+(other:&Fp12_2over3over2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -262,7 +260,7 @@
 //                                              this->c1 + other.c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator-(other:&Fp12_2over3over2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -272,7 +270,7 @@
 //                                              this->c1 - other.c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp12_2over3over2_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -282,7 +280,7 @@
 //                                              lhs*rhs.c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp12_2over3over2_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -292,7 +290,7 @@
 //                                              lhs*rhs.c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n, modulus> operator*(lhs:&Fp6_3over2_model<n, modulus>, rhs:&Fp12_2over3over2_model<n, modulus>)
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -302,14 +300,13 @@
 //                                              lhs*rhs.c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator*(other:&Fp12_2over3over2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
-
 //     A:&my_Fp6 = other.c0, &B = other.c1,
 //         &a = this->c0, &b = this->c1;
 //     let aA= a * A;
@@ -319,90 +316,89 @@
 //                                              (a + b)*(A+B) - aA - bB);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator-() const
 // {
 //     return Fp12_2over3over2_model<n,modulus>(-this->c0,
 //                                              -this->c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::operator^(const u64 pow) const
 // {
 //     return power<Fp12_2over3over2_model<n, modulus> >(*this, pow);
 // }
 
-// 
-// 
+//
+//
 // Fp12_2over3over2_model<n, modulus> Fp12_2over3over2_model<n,modulus>::operator^(exponent:&bigint<m>) const
 // {
 //     return power<Fp12_2over3over2_model<n, modulus> >(*this, exponent);
 // }
 
-// 
-// 
+//
+//
 // Fp12_2over3over2_model<n, modulus> Fp12_2over3over2_model<n,modulus>::operator^(exponent:&Fp_model<m, exp_modulus>) const
 // {
 //     return (*this)^(exponent.as_bigint());
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::operator+=(const Fp12_2over3over2_model<n,modulus>& other)
 // {
 //     (*this) = *this + other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::operator-=(const Fp12_2over3over2_model<n,modulus>& other)
 // {
 //     (*this) = *this - other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::operator*=(const Fp12_2over3over2_model<n,modulus>& other)
 // {
 //     (*this) = *this * other;
 //     return (*this);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::operator^=(const u64 pow)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
-// 
+//
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared() const
 // {
 //     return squared_complex();
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::square()
 // {
 //     (*this) = squared();
 //     return (*this);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared_karatsuba() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
-
 //     a:&my_Fp6 = this->c0, &b = this->c1;
 //     let asq= a.squared();
 //     let bsq= b.squared();
@@ -411,14 +407,13 @@
 //                                              (a + b).squared() - asq - bsq);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::squared_complex() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
-
 //     a:&my_Fp6 = this->c0, &b = this->c1;
 //     let ab= a * b;
 
@@ -426,14 +421,13 @@
 //                                              ab + ab);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::inverse() const
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->inv_cnt++;
 // //#endif
 //     /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
-
 //     a:&my_Fp6 = this->c0, &b = this->c1;
 //     let t0= a.squared();
 //     let t1= b.squared();
@@ -445,28 +439,28 @@
 //     return Fp12_2over3over2_model<n,modulus>(c0, c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus>& Fp12_2over3over2_model<n,modulus>::invert()
 // {
 //     (*this) = inverse();
 //     return (*this);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::Frobenius_map(u64 power) const
 // {
 //     return Fp12_2over3over2_model<n,modulus>(c0.Frobenius_map(power),
 //                                              Frobenius_coeffs_c1[power % 12] * c1.Frobenius_map(power));
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::unitary_inverse() const
 // {
 //     return Fp12_2over3over2_model<n,modulus>(this->c0,
 //                                              -this->c1);
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::cyclotomic_squared() const
 // {
 //     /* OLD: naive implementation
@@ -533,7 +527,7 @@
 //     return Fp12_2over3over2_model<n,modulus>(my_Fp6(z0,z4,z3),my_Fp6(z2,z1,z5));
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::mul_by_045(ell_0:&Fp2_model<n, modulus>,
 //                                                                                 ell_VW:&Fp2_model<n, modulus>,
 //                                                                                 ell_VV:&Fp2_model<n, modulus>) const
@@ -545,7 +539,6 @@
 
 //     return (*this) * a;
 //     */
-
 //     my_Fp2 z0 = this->c0.c0;
 //     my_Fp2 z1 = this->c0.c1;
 //     my_Fp2 z2 = this->c0.c2;
@@ -573,7 +566,7 @@
 //     return Fp12_2over3over2_model<n,modulus>(my_Fp6(t0,t1,t2),my_Fp6(t3,t4,t5));
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::mul_by_024(ell_0:&Fp2_model<n, modulus>,
 //                                                                                 ell_VW:&Fp2_model<n, modulus>,
 //                                                                                 ell_VV:&Fp2_model<n, modulus>) const
@@ -656,8 +649,8 @@
 
 // }
 
-// 
-// 
+//
+//
 // Fp12_2over3over2_model<n, modulus> Fp12_2over3over2_model<n,modulus>::cyclotomic_exp(exponent:&bigint<m>) const
 // {
 //     Fp12_2over3over2_model<n,modulus> res = Fp12_2over3over2_model<n,modulus>::one();
@@ -684,13 +677,13 @@
 //     return res;
 // }
 
-// 
+//
 // Fp12_2over3over2_model<n,modulus> Fp12_2over3over2_model<n,modulus>::sqrt() const
 // {
 //     return tonelli_shanks_sqrt(*this);
 // }
 
-// 
+//
 // Vec<uint64_t> Fp12_2over3over2_model<n,modulus>::to_words() const
 // {
 //     Vec<uint64_t> words = c0.to_words();
@@ -699,7 +692,7 @@
 //     return words;
 // }
 
-// 
+//
 // bool Fp12_2over3over2_model<n,modulus>::from_words(Vec<uint64_t> words)
 // {
 //     Vec<uint64_t>::const_iterator vec_start = words.begin();
@@ -711,21 +704,21 @@
 //     return c0.from_words(words0) && c1.from_words(words1);
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream &out, el:&Fp12_2over3over2_model<n, modulus>)
 // {
 //     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream &in, Fp12_2over3over2_model<n, modulus> &el)
 // {
 //     in >> el.c0 >> el.c1;
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<Fp12_2over3over2_model<n, modulus> >)
 // {
 //     out << v.len() << "\n";
@@ -737,7 +730,7 @@
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<Fp12_2over3over2_model<n, modulus> > &v)
 // {
 //     v.clear();
@@ -762,15 +755,16 @@
 
 // // } // namespace libff
 // //#endif // FP12_2OVER3OVER2_TCC_
- use educe::Educe;
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
 use crate::algebra::fields::{
+    cyclotomic::CyclotomicMultSubgroup,
+    field::{AdditiveGroup, Field},
     prime_extension::{
-        fp6_3over2::{Fp6, Fp6Config},
         fp2::{Fp2, Fp2Config as Fp2ConfigTrait},
+        fp6_3over2::{Fp6, Fp6Config},
     },
-    field::{Field,AdditiveGroup}, cyclotomic::CyclotomicMultSubgroup,
 };
+use educe::Educe;
 //  use crate::algebra::{fields::PrimeField, cyclotomic::CyclotomicMultSubgroup};
 use ark_std::Zero;
 use core::{marker::PhantomData, ops::Not};

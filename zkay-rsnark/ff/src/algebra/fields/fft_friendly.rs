@@ -1,5 +1,5 @@
-use ark_ff::utils;
 use super::field::Field;
+use ark_ff::utils;
 /// The interface for fields that are able to be used in FFTs.
 pub trait FftField: Field {
     /// The generator of the multiplicative group of the field

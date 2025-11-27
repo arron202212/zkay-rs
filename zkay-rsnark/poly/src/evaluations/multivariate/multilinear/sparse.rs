@@ -1,20 +1,20 @@
 //! multilinear polynomial represented in sparse evaluation form.
 
 use crate::{
-    evaluations::multivariate::multilinear::swap_bits, DenseMultilinearExtension,
-    MultilinearExtension, Polynomial,
+    DenseMultilinearExtension, MultilinearExtension, Polynomial,
+    evaluations::multivariate::multilinear::swap_bits,
 };
-use ffec::{Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
+    UniformRand,
     collections::BTreeMap,
     fmt,
     fmt::{Debug, Formatter},
     ops::{Add, AddAssign, Index, Neg, Sub, SubAssign},
     rand::Rng,
     vec::*,
-    UniformRand,
 };
+use ffec::{Field, Zero};
 use hashbrown::HashMap;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -409,13 +409,13 @@ fn hashmap_to_treemap<F: Field, S>(map: &HashMap<usize, F, S>) -> BTreeMap<usize
 #[cfg(test)]
 mod tests {
     use crate::{
-        evaluations::multivariate::multilinear::MultilinearExtension, Polynomial,
-        SparseMultilinearExtension,
+        Polynomial, SparseMultilinearExtension,
+        evaluations::multivariate::multilinear::MultilinearExtension,
     };
-    use ffec::{One, Zero};
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-    use ark_std::{ops::Neg, test_rng, vec::*, UniformRand};
+    use ark_std::{UniformRand, ops::Neg, test_rng, vec::*};
     use ark_test_curves::bls12_381::Fr;
+    use ffec::{One, Zero};
     /// Some sanity test to ensure random sparse polynomial make sense.
     #[test]
     fn random_poly() {

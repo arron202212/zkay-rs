@@ -7,29 +7,29 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of interfaces for evaluation domains.
+Declaration of interfaces for evaluation domains.
 
- Roughly, given a desired size m for the domain, the constructor selects
- a choice of domain S with size ~m that has been selected so to optimize
- - computations of Lagrange polynomials, and
- - FFT/iFFT computations.
- An evaluation domain also provides other other functions, e.g., accessing
- individual elements in S or evaluating its vanishing polynomial.
+Roughly, given a desired size m for the domain, the constructor selects
+a choice of domain S with size ~m that has been selected so to optimize
+- computations of Lagrange polynomials, and
+- FFT/iFFT computations.
+An evaluation domain also provides other other functions, e.g., accessing
+individual elements in S or evaluating its vanishing polynomial.
 
- The descriptions below make use of the definition of a *Lagrange polynomial*,
- which we recall. Given a field F, a subset S=(a_i)_i of F, and an index idx
- in {0,...,|S-1|}, the idx-th Lagrange polynomial (wrt to subset S) is defined to be
- \f[   L_{idx,S}(z)->Self= prod_{k \neq idx} (z - a_k) / prod_{k \neq idx} (a_{idx} - a_k)   \f]
- Note that, by construction:
- \f[   \forall j \neq idx: L_{idx,S}(a_{idx}) = 1  \text{ and }  L_{idx,S}(a_j) = 0   \f]
+The descriptions below make use of the definition of a *Lagrange polynomial*,
+which we recall. Given a field F, a subset S=(a_i)_i of F, and an index idx
+in {0,...,|S-1|}, the idx-th Lagrange polynomial (wrt to subset S) is defined to be
+\f[   L_{idx,S}(z)->Self= prod_{k \neq idx} (z - a_k) / prod_{k \neq idx} (a_{idx} - a_k)   \f]
+Note that, by construction:
+\f[   \forall j \neq idx: L_{idx,S}(a_{idx}) = 1  \text{ and }  L_{idx,S}(a_j) = 0   \f]
 
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+*****************************************************************************
+* @author     This file is part of libfqfft, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 
 //#ifndef EVALUATION_DOMAIN_HPP_
 // #define EVALUATION_DOMAIN_HPP_
@@ -41,11 +41,9 @@
 /**
  * An evaluation domain.
  */
-// 
+//
 pub trait evaluation_domain<FieldT> {
-
-
-    const M:usize;
+    const M: usize;
 
     /**
      * Construct an evaluation domain S of size m, if possible.
@@ -57,27 +55,27 @@ pub trait evaluation_domain<FieldT> {
     /**
      * Get the idx-th element in S.
      */
-    fn   get_domain_element(&self, idx:usize) ->FieldT;
+    fn get_domain_element(&self, idx: usize) -> FieldT;
 
     /**
      * Compute the FFT, over the domain S, of the vector a.
      */
-    fn   FFT(&self,a:&Vec<FieldT>) ;
+    fn FFT(&self, a: &Vec<FieldT>);
 
     /**
      * Compute the inverse FFT, over the domain S, of the vector a.
      */
-    fn   iFFT(&self,a:&Vec<FieldT>) ;
+    fn iFFT(&self, a: &Vec<FieldT>);
 
     /**
      * Compute the FFT, over the domain g*S, of the vector a.
      */
-    fn   cosetFFT(&self,a:&Vec<FieldT>, g:&FieldT) ;
+    fn cosetFFT(&self, a: &Vec<FieldT>, g: &FieldT);
 
     /**
      * Compute the inverse FFT, over the domain g*S, of the vector a.
      */
-    fn   icosetFFT(&self,a:&Vec<FieldT>, g:&FieldT) ;
+    fn icosetFFT(&self, a: &Vec<FieldT>, g: &FieldT);
 
     /**
      * Evaluate all Lagrange polynomials.
@@ -88,22 +86,22 @@ pub trait evaluation_domain<FieldT> {
      * The output is a vector (b_{0},...,b_{m-1})
      * where b_{i} is the evaluation of L_{i,S}(z) at z = t.
      */
-    fn  evaluate_all_lagrange_polynomials(&self,t:&FieldT)->Vec<FieldT>  ;
+    fn evaluate_all_lagrange_polynomials(&self, t: &FieldT) -> Vec<FieldT>;
 
     /**
      * Evaluate the vanishing polynomial of S at the field element t.
      */
-    fn   compute_vanishing_polynomial(&self,t:&FieldT)->FieldT ;
+    fn compute_vanishing_polynomial(&self, t: &FieldT) -> FieldT;
 
     /**
      * Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.
      */
-    fn   add_poly_Z(&self,coeff:&FieldT, H:&Vec<FieldT>) ;
+    fn add_poly_Z(&self, coeff: &FieldT, H: &Vec<FieldT>);
 
     /**
      * Multiply by the evaluation, on a coset of S, of the inverse of the vanishing polynomial of S.
      */
-    fn   divide_by_Z_on_coset(&self,P:&Vec<FieldT>) ;
+    fn divide_by_Z_on_coset(&self, P: &Vec<FieldT>);
 }
 
 // //} // libfqfft

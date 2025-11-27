@@ -284,7 +284,7 @@ pub fn  test_full_pairing(annotation:&String)
 
     let mut miller_result=Fqk_variable::<ppT>::new(pb, "miller_result");
     let mut miller=mnt_miller_loop_gadget::<ppT>::new(pb, prec_P, prec_Q, miller_result, "miller");
-    let mut result_is_one=pb_variable::<FieldT>::new();
+    let mut result_is_one=variable::<FieldT,pb_variable>::new();
     result_is_one.allocate(pb, "result_is_one");
     let mut finexp=final_exp_gadget::<ppT>::new(pb, miller_result, result_is_one, "finexp");
 
@@ -342,7 +342,7 @@ pub fn  test_full_precomputed_pairing(annotation:&String)
 
     let mut miller_result=Fqk_variable::<ppT>::new(pb, "miller_result");
     let mut miller=mnt_miller_loop_gadget::<ppT>::new(pb, prec_P, prec_Q, miller_result, "miller");
-    let mut result_is_one=pb_variable::<FieldT>::new();
+    let mut result_is_one=variable::<FieldT,pb_variable>::new();
     result_is_one.allocate(pb, "result_is_one");
     let mut finexp=final_exp_gadget::<ppT>::new(pb, miller_result, result_is_one, "finexp");
 

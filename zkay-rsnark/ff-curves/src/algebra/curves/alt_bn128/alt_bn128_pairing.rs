@@ -8,9 +8,11 @@
 // #define ALT_BN128_PAIRING_HPP_
 //#include <vector>
 // use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G2,alt_bn128_G1};
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::{alt_bn128_Fq12,alt_bn128_GT,alt_bn128_Fq};
-use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
+use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
+    alt_bn128_Fq, alt_bn128_Fq12, alt_bn128_GT,
+};
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
+use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 // namespace libff {
 
 /* final exponentiation */
@@ -18,9 +20,9 @@ use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 // alt_bn128_GT alt_bn128_final_exponentiation(elt:&alt_bn128_Fq12);
 
 /* ate pairing */
-use crate::algebra::curves::pairing::{Pairing,prepare_g1,prepare_g2};
-use crate::algebra::curves::alt_bn128::curves::{Bn254,Config,G1Affine,G2Affine}; 
-pub type alt_bn128_ate_G1_precomp=<Bn254 as Pairing>::G1Prepared;
+use crate::algebra::curves::alt_bn128::curves::{Bn254, Config, G1Affine, G2Affine};
+use crate::algebra::curves::pairing::{Pairing, prepare_g1, prepare_g2};
+pub type alt_bn128_ate_G1_precomp = <Bn254 as Pairing>::G1Prepared;
 use ffec::One;
 // struct alt_bn128_ate_G1_precomp {
 //     alt_bn128_Fq PX;
@@ -43,7 +45,7 @@ pub type alt_bn128_ate_ell_coeffs = EllCoeff<Config>;
 // }
 
 use crate::algebra::curves::bn128::bn::g2::G2Prepared;
-pub type alt_bn128_ate_G2_precomp=<Bn254 as Pairing>::G2Prepared;
+pub type alt_bn128_ate_G2_precomp = <Bn254 as Pairing>::G2Prepared;
 // struct alt_bn128_ate_G2_precomp {
 //     alt_bn128_Fq2 QX;
 //     alt_bn128_Fq2 QY;
@@ -397,7 +399,7 @@ pub fn alt_bn128_ate_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_ate_G1_precomp
 
     // leave_block("Call to alt_bn128_ate_precompute_G1");
     // return result;
-     let g: G1Affine = (*P).into();
+    let g: G1Affine = (*P).into();
     alt_bn128_ate_G1_precomp::from(g)
 }
 
@@ -461,7 +463,7 @@ pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp
 
     // leave_block("Call to alt_bn128_ate_precompute_G2");
     // return result;
-     let g: G2Affine = (*Q).into();
+    let g: G2Affine = (*Q).into();
     alt_bn128_ate_G2_precomp::from(g)
 }
 
@@ -492,7 +494,6 @@ pub fn alt_bn128_ate_miller_loop(
     //     /* code below gets executed for all bits (EXCEPT the MSB itself) of
     //        alt_bn128_param_p (skipping leading zeros) in MSB to LSB
     //        order */
-
     //     c = prec_Q.coeffs[idx++];
     //     f = f.squared();
     //     f = f.mul_by_024(c.ell_0, prec_P.PY * c.ell_VW, prec_P.PX * c.ell_VV);
@@ -548,7 +549,6 @@ pub fn alt_bn128_ate_double_miller_loop(
     //     /* code below gets executed for all bits (EXCEPT the MSB itself) of
     //        alt_bn128_param_p (skipping leading zeros) in MSB to LSB
     //        order */
-
     //     alt_bn128_ate_ell_coeffs c1 = prec_Q1.coeffs[idx];
     //     alt_bn128_ate_ell_coeffs c2 = prec_Q2.coeffs[idx];
     //     ++idx;

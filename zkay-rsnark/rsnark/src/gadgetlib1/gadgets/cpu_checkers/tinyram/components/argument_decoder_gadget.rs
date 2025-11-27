@@ -200,14 +200,14 @@ pub fn  test_argument_decoder_gadget()
     let mut  packed_registers=pb_variable_array::<FieldT>::new();
     packed_registers.allocate(pb, ap.k, "packed_registers");
 
-    let mut  arg2_is_imm=pb_variable::<FieldT> ::new();
+    let mut  arg2_is_imm=variable::<FieldT,pb_variable> ::new();
     arg2_is_imm.allocate(pb, "arg_is_imm");
 
     let mut desidx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_width(), "desidx");
     let mut arg1idx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_width(), "arg1idx");
     let mut arg2idx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_or_imm_width(), "arg2idx");
 
-     let (mut packed_desval, mut packed_arg1val, mut packed_arg2val)=(pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new(),);
+     let (mut packed_desval, mut packed_arg1val, mut packed_arg2val)=(variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),);
     packed_desval.allocate(pb, "packed_desval");
     packed_arg1val.allocate(pb, "packed_arg1val");
     packed_arg2val.allocate(pb, "packed_arg2val");

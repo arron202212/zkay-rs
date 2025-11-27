@@ -1,4 +1,3 @@
-use crate::relations::FieldTConfig;
 /** @file
 *****************************************************************************
 
@@ -31,12 +30,14 @@ ASIACRYPT 2014,
 *****************************************************************************/
 //#ifndef USCS_TO_SSP_HPP_
 // #define USCS_TO_SSP_HPP_
+use crate::relations::FieldTConfig;
 use crate::relations::arithmetic_programs::ssp::ssp::{
     ssp_instance, ssp_instance_evaluation, ssp_witness,
 };
 use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
     uscs_auxiliary_input, uscs_constraint_system, uscs_primary_input,
 };
+use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;
 use fqfft::evaluation_domain::{
@@ -93,8 +94,13 @@ See uscs_to_ssp.hpp .
  *   each V_i is expressed in the Lagrange basis.
  */
 
-pub fn uscs_to_ssp_instance_map<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
-    cs: &uscs_constraint_system<FieldT>,
+pub fn uscs_to_ssp_instance_map<
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
+    cs: &uscs_constraint_system<FieldT, SV, SLC>,
 ) -> ssp_instance<FieldT, ED> {
     enter_block("Call to uscs_to_ssp_instance_map", false);
 
@@ -104,7 +110,7 @@ pub fn uscs_to_ssp_instance_map<FieldT: FieldTConfig, ED: evaluation_domain<Fiel
     let mut V_in_Lagrange_basis = vec![BTreeMap::new(); cs.num_variables() + 1];
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
-            *V_in_Lagrange_basis[cs.constraints[i].terms[j].index]
+            *V_in_Lagrange_basis[cs.constraints[i].terms[j].index.index]
                 .entry(i)
                 .or_insert(FieldT::zero()) += cs.constraints[i].terms[j].coeff.clone();
         }
@@ -141,8 +147,10 @@ pub fn uscs_to_ssp_instance_map<FieldT: FieldTConfig, ED: evaluation_domain<Fiel
 pub fn uscs_to_ssp_instance_map_with_evaluation<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
 >(
-    cs: &uscs_constraint_system<FieldT>,
+    cs: &uscs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
 ) -> ssp_instance_evaluation<FieldT, ED> {
     enter_block("Call to uscs_to_ssp_instance_map_with_evaluation", false);
@@ -158,7 +166,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     let u = domain.borrow().evaluate_all_lagrange_polynomials(t);
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
-            Vt[cs.constraints[i].terms[j].index] +=
+            Vt[cs.constraints[i].terms[j].index.index] +=
                 u[i].clone() * cs.constraints[i].terms[j].coeff.clone();
         }
     }
@@ -214,8 +222,13 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
  * some reshuffling to save space.
  */
 
-pub fn uscs_to_ssp_witness_map<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
-    cs: &uscs_constraint_system<FieldT>,
+pub fn uscs_to_ssp_witness_map<
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
+    cs: &uscs_constraint_system<FieldT, SV, SLC>,
     primary_input: &uscs_primary_input<FieldT>,
     auxiliary_input: &uscs_auxiliary_input<FieldT>,
     d: &FieldT,

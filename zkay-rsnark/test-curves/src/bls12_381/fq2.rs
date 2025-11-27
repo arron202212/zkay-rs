@@ -1,7 +1,7 @@
-use crate::bls12_381::{Fq, FQ_ONE, FQ_ZERO};
+use crate::bls12_381::{FQ_ONE, FQ_ZERO, Fq};
 use ark_ff::{
-    fields::{AdditiveGroup, Fp2, Fp2Config},
     MontFp,
+    fields::{AdditiveGroup, Fp2, Fp2Config},
 };
 
 pub type Fq2 = Fp2<Fq2Config>;

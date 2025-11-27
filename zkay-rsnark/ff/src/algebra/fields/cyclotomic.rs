@@ -88,7 +88,8 @@ pub trait CyclotomicMultSubgroup: Field {
         } else {
             exp_loop(
                 self,
-                crate::algebra::bits::BitIteratorBE::without_leading_zeros(e.as_ref()).map(|e| e as i8),
+                crate::algebra::bits::BitIteratorBE::without_leading_zeros(e.as_ref())
+                    .map(|e| e as i8),
             )
         };
     }

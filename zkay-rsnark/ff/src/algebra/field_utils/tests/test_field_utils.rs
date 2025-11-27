@@ -1,155 +1,152 @@
+use crate::algebra::curves::edwards::edwards_fields;
+use crate::algebra::field_utils::algorithms;
 /**
- *****************************************************************************
- Basic tests for some of the field utils in this directory, mainly bigint
- and power.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+*****************************************************************************
+Basic tests for some of the field utils in this directory, mainly bigint
+and power.
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 use crate::algebra::field_utils::bigint;
 use crate::algebra::field_utils::field_utils;
-use crate::algebra::field_utils::algorithms;
 use crate::algebra::fields::binary::gf64;
-use crate::algebra::curves::edwards::edwards_fields;
 //#include <gtest/gtest.h>
 
-using namespace libff;
+// using namespace libff;
 
-using std::usize;
+// using std::usize;
 
+pub fn power_naive<FieldT>(base: &FieldT, exponent: usize) -> FieldT {
+    let mut result = FieldT::one();
 
-FieldT power_naive(base:&FieldT, const std::usize exponent)
-{
-    FieldT result = FieldT::one();
-
-    for i in 1..=exponent{
-        result *= base;
+    for i in 1..=exponent {
+        result *= base.clone();
     }
 
     return result;
 }
 
+// TEST(ExponentiationTest, SimpleTest) {
+//     type FieldT=gf64;
 
-TEST(ExponentiationTest, SimpleTest) {
-    type FieldT=gf64;
+//     let  max_power = 3000;
+//     FieldT X = FieldT::random_element();
 
-    let  max_power = 3000;
-    FieldT X = FieldT::random_element();
+//     FieldT X_i = FieldT::one();
+//     for i in 0 ..max_power{
+//         let X_i_naive= power_naive<FieldT>(X, i);
+//         let X_i_square_and_multiply_ul= power<FieldT>(X, i);
+//         let X_i_square_and_multiply_ull= power<FieldT>(X, (u64 long) i);
 
-    FieldT X_i = FieldT::one();
-    for i in 0 ..max_power{
-        let X_i_naive= power_naive<FieldT>(X, i);
-        let X_i_square_and_multiply_ul= power<FieldT>(X, i);
-        let X_i_square_and_multiply_ull= power<FieldT>(X, (u64 long) i);
+//         EXPECT_EQ(X_i, X_i_naive);
+//         EXPECT_EQ(X_i, X_i_square_and_multiply_ul);
+//         EXPECT_EQ(X_i, X_i_square_and_multiply_ull);
 
-        EXPECT_EQ(X_i, X_i_naive);
-        EXPECT_EQ(X_i, X_i_square_and_multiply_ul);
-        EXPECT_EQ(X_i, X_i_square_and_multiply_ull);
+//         X_i *= X;
+//     }
+// }
 
-        X_i *= X;
-    }
-}
+// TEST(FieldUtilsTest, BigintTest)
+// {
+//     bigint<3> zero = bigint<3>("0");
+//     bigint<3> one = bigint<3>("1");
+//     bigint<3> x = bigint<3>("987654567895678909876876545678909876543456");
+//     bigint<3> y = bigint<3>("324531232345676543272920293863628304859020");
 
-TEST(FieldUtilsTest, BigintTest)
-{
-    bigint<3> zero = bigint<3>("0");
-    bigint<3> one = bigint<3>("1");
-    bigint<3> x = bigint<3>("987654567895678909876876545678909876543456");
-    bigint<3> y = bigint<3>("324531232345676543272920293863628304859020");
+//     bigint<3> zero2;
+//     bigint<3> z = bigint<3>("987654567895678909876876545678909876543456");
+//     bigint<3> w = bigint<3>("987654567895678909876876545678909876543451");
 
-    bigint<3> zero2;
-    bigint<3> z = bigint<3>("987654567895678909876876545678909876543456");
-    bigint<3> w = bigint<3>("987654567895678909876876545678909876543451");
+//     EXPECT_EQ(zero, zero2);
+//     EXPECT_EQ(one, bigint<3>::one());
+//     EXPECT_EQ(x, x);
+//     EXPECT_EQ(x, z);
 
-    EXPECT_EQ(zero, zero2);
-    EXPECT_EQ(one, bigint<3>::one());
-    EXPECT_EQ(x, x);
-    EXPECT_EQ(x, z);
+//     EXPECT_NE(zero, one);
+//     EXPECT_NE(x, one);
+//     EXPECT_NE(x, zero);
+//     EXPECT_NE(x, y);
 
-    EXPECT_NE(zero, one);
-    EXPECT_NE(x, one);
-    EXPECT_NE(x, zero);
-    EXPECT_NE(x, y);
+//     EXPECT_FALSE(x.is_zero());
+//     EXPECT_FALSE(one.is_zero());
+//     EXPECT_TRUE(zero.is_zero());
 
-    EXPECT_FALSE(x.is_zero());
-    EXPECT_FALSE(one.is_zero());
-    EXPECT_TRUE(zero.is_zero());
+//     EXPECT_TRUE(x.is_even());
+//     EXPECT_TRUE(y.is_even());
+//     EXPECT_TRUE(zero.is_even());
 
-    EXPECT_TRUE(x.is_even());
-    EXPECT_TRUE(y.is_even());
-    EXPECT_TRUE(zero.is_even());
+//     EXPECT_FALSE(one.is_even());
+//     EXPECT_FALSE(w.is_even());
 
-    EXPECT_FALSE(one.is_even());
-    EXPECT_FALSE(w.is_even());
+//     EXPECT_LT(zero, one);
+//     EXPECT_LT(zero, x);
+//     EXPECT_LT(zero, y);
+//     EXPECT_LT(one, x);
+//     EXPECT_LT(y, x);
+//     EXPECT_LT(w, x);
+//     EXPECT_LT(y, w);
+//     EXPECT_FALSE(x < y);
 
-    EXPECT_LT(zero, one);
-    EXPECT_LT(zero, x);
-    EXPECT_LT(zero, y);
-    EXPECT_LT(one, x);
-    EXPECT_LT(y, x);
-    EXPECT_LT(w, x);
-    EXPECT_LT(y, w);
-    EXPECT_FALSE(x < y);
+//     x.print();
+//     x.print_hex();
 
-    x.print();
-    x.print_hex();
+//     x.randomize();
+//     EXPECT_EQ(x, x);
+//     x.clear();
+//     EXPECT_EQ(x, zero);
+// }
 
-    x.randomize();
-    EXPECT_EQ(x, x);
-    x.clear();
-    EXPECT_EQ(x, zero);
-}
+// TEST(FieldUtilsTest, FieldVectorConversionTest)
+// {
+//     init_edwards_fields();
 
-TEST(FieldUtilsTest, FieldVectorConversionTest)
-{
-    init_edwards_fields();
+//     // pack_bit_vector_into_field_element_vector
 
-    // pack_bit_vector_into_field_element_vector
+//     bit_vector vec;
+//     for i in 0..12 + edwards_Fq::ceil_size_in_bits()
+//        { vec.push_back(0);}
+//     vec.push_back(1);
+//     vec.push_back(0);
+//     vec.push_back(1);
 
-    bit_vector vec;
-    for i in 0..12 + edwards_Fq::ceil_size_in_bits()
-       { vec.push_back(0);}
-    vec.push_back(1);
-    vec.push_back(0);
-    vec.push_back(1);
+//     Vec<edwards_Fq> field_vec = pack_bit_vector_into_field_element_vector<edwards_Fq>(vec);
 
-    Vec<edwards_Fq> field_vec = pack_bit_vector_into_field_element_vector<edwards_Fq>(vec);
+//     EXPECT_EQ(field_vec.len(), 2);
+//     EXPECT_EQ(field_vec[0], edwards_Fq::zero());
+//     EXPECT_EQ(field_vec[1], edwards_Fq(40960)); // 5 * 2**13
 
-    EXPECT_EQ(field_vec.len(), 2);
-    EXPECT_EQ(field_vec[0], edwards_Fq::zero());
-    EXPECT_EQ(field_vec[1], edwards_Fq(40960)); // 5 * 2**13
+//     // convert_bit_vector_to_field_element_vector
 
-    // convert_bit_vector_to_field_element_vector
+//     bit_vector vec2;
+//     vec2.push_back(0);
+//     vec2.push_back(0);
+//     vec2.push_back(1);
+//     vec2.push_back(0);
+//     vec2.push_back(1);
 
-    bit_vector vec2;
-    vec2.push_back(0);
-    vec2.push_back(0);
-    vec2.push_back(1);
-    vec2.push_back(0);
-    vec2.push_back(1);
+//     field_vec = convert_bit_vector_to_field_element_vector<edwards_Fq>(vec2);
 
-    field_vec = convert_bit_vector_to_field_element_vector<edwards_Fq>(vec2);
+//     EXPECT_EQ(field_vec.len(), 5);
+//     EXPECT_EQ(field_vec[0], edwards_Fq::zero());
+//     EXPECT_EQ(field_vec[1], edwards_Fq::zero());
+//     EXPECT_EQ(field_vec[2], edwards_Fq::one());
+//     EXPECT_EQ(field_vec[3], edwards_Fq::zero());
+//     EXPECT_EQ(field_vec[4], edwards_Fq::one());
 
-    EXPECT_EQ(field_vec.len(), 5);
-    EXPECT_EQ(field_vec[0], edwards_Fq::zero());
-    EXPECT_EQ(field_vec[1], edwards_Fq::zero());
-    EXPECT_EQ(field_vec[2], edwards_Fq::one());
-    EXPECT_EQ(field_vec[3], edwards_Fq::zero());
-    EXPECT_EQ(field_vec[4], edwards_Fq::one());
+//     // convert_field_element_vector_to_bit_vector
 
-    // convert_field_element_vector_to_bit_vector
+//     Vec<edwards_Fq> field_vec2;
+//     field_vec2.push_back(edwards_Fq(edwards_Fq(5)));
+//     field_vec2.push_back(edwards_Fq::zero());
 
-    Vec<edwards_Fq> field_vec2;
-    field_vec2.push_back(edwards_Fq(edwards_Fq(5)));
-    field_vec2.push_back(edwards_Fq::zero());
+//     bit_vector vec3 = convert_field_element_vector_to_bit_vector(field_vec2);
 
-    bit_vector vec3 = convert_field_element_vector_to_bit_vector(field_vec2);
-
-    EXPECT_EQ(vec3.len(), edwards_Fq::ceil_size_in_bits() * 2);
-    EXPECT_EQ(vec3[0], 1);
-    EXPECT_EQ(vec3[1], 0);
-    EXPECT_EQ(vec3[2], 1);
-    for i in 3..vec3.len()
-        {EXPECT_EQ(vec3[i], 0);}
-}
+//     EXPECT_EQ(vec3.len(), edwards_Fq::ceil_size_in_bits() * 2);
+//     EXPECT_EQ(vec3[0], 1);
+//     EXPECT_EQ(vec3[1], 0);
+//     EXPECT_EQ(vec3[2], 1);
+//     for i in 3..vec3.len()
+//         {EXPECT_EQ(vec3[i], 0);}
+// }

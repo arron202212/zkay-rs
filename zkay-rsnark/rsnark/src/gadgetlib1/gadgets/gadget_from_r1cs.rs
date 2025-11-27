@@ -23,7 +23,7 @@ pub struct gadget_from_r1cs<FieldT> {//gadget<FieldT>
 
 
     vars:Vec<pb_variable_array<FieldT> >,
-    cs:r1cs_constraint_system<FieldT>,
+    cs:r1cs_constraint_system<FieldT,SLC>,
 cs_to_vars:    BTreeMap<usize, usize>,
 
 
@@ -56,7 +56,7 @@ impl gadget_from_r1cs<FieldT>{
 
 pub fn new(pb:protoboard<FieldT>,
                                            vars:&Vec<pb_variable_array<FieldT> >,
-                                           cs:&r1cs_constraint_system<FieldT>,
+                                           cs:&r1cs_constraint_system<FieldT,SLC>,
                                            annotation_prefix:&String)->Self
     
 {
@@ -112,17 +112,17 @@ pub fn generate_r1cs_constraints()
 
         for t in &constr.a.terms
         {
-            translated_constr.a.terms.push(linear_term::<FieldT>(pb_variable::<FieldT>(cs_to_vars[t.index]), t.coeff));
+            translated_constr.a.terms.push(linear_term::<FieldT>(variable::<FieldT,pb_variable>(cs_to_vars[t.index]), t.coeff));
         }
 
         for t in &constr.b.terms
         {
-            translated_constr.b.terms.push(linear_term::<FieldT>(pb_variable::<FieldT>(cs_to_vars[t.index]), t.coeff));
+            translated_constr.b.terms.push(linear_term::<FieldT>(variable::<FieldT,pb_variable>(cs_to_vars[t.index]), t.coeff));
         }
 
         for t in &constr.c.terms
         {
-            translated_constr.c.terms.push(linear_term::<FieldT>(pb_variable::<FieldT>(cs_to_vars[t.index]), t.coeff));
+            translated_constr.c.terms.push(linear_term::<FieldT>(variable::<FieldT,pb_variable>(cs_to_vars[t.index]), t.coeff));
         }
 
         let  annotation = FMT(self.annotation_prefix, " constraint_{}", i);
@@ -147,12 +147,12 @@ pub fn generate_r1cs_witness(primary_input:&r1cs_primary_input<FieldT>,
 
     for i in 0..primary_input.len()
     {
-        self.pb.val(pb_variable::<FieldT>(cs_to_vars[i+1])) = primary_input[i];
+        self.pb.val(variable::<FieldT,pb_variable>(cs_to_vars[i+1])) = primary_input[i];
     }
 
     for i in 0..auxiliary_input.len()
     {
-        self.pb.val(pb_variable::<FieldT>(cs_to_vars[primary_input.len()+i+1])) = auxiliary_input[i];
+        self.pb.val(variable::<FieldT,pb_variable>(cs_to_vars[primary_input.len()+i+1])) = auxiliary_input[i];
     }
 }
 

@@ -1,21 +1,21 @@
 // #![feature(generic_const_exprs)]
 //  pub mod tests;
 pub mod algorithms;
- pub mod bigint;
- pub mod field_utils;
- pub mod fp_aux;
+pub mod bigint;
+pub mod field_utils;
+pub mod fp_aux;
 // pub mod arithmetic;
 
-use crate::{const_for,algebra::{
-    bits::{BitIteratorBE, BitIteratorLE},
-}};
 use crate::algebra::UniformRand;
-#[allow(unused)]
-use ff_macros::unroll_for_loops;
+use crate::{
+    algebra::bits::{BitIteratorBE, BitIteratorLE},
+    const_for,
+};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };
 use ark_std::{
+    Zero,
     borrow::Borrow,
     // convert::TryFrom,
     fmt::{Debug, Display, UpperHex},
@@ -25,13 +25,14 @@ use ark_std::{
         ShrAssign,
     },
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     str::FromStr,
     vec::*,
-    Zero,
 };
+#[allow(unused)]
+use ff_macros::unroll_for_loops;
 use num_bigint::BigUint;
 use zeroize::Zeroize;
 
@@ -294,7 +295,8 @@ impl<const N: usize> BigInt<N> {
     /// Computes the Montgomery R2 constant modulo `self`.
     #[doc(hidden)]
     pub const fn montgomery_r2(&self) -> Self {
-        let two_pow_n_times_64_square = crate::algebra::const_helpers::R2Buffer([0u64; N], [0u64; N], 1);
+        let two_pow_n_times_64_square =
+            crate::algebra::const_helpers::R2Buffer([0u64; N], [0u64; N], 1);
         const_modulo!(two_pow_n_times_64_square, self)
     }
 }
@@ -569,7 +571,7 @@ impl<const N: usize> Ord for BigInt<N> {
             let a = &self.0[N - i - 1];
             let b = &other.0[N - i - 1];
             match a.cmp(b) {
-                Ordering::Equal => {},
+                Ordering::Equal => {}
                 order => return order,
             };
         }

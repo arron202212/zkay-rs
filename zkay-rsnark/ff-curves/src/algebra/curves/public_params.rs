@@ -61,15 +61,15 @@ pub trait PublicParamsType {
     type G2_type;
     type G1_precomp_type;
     type G2_precomp_type;
-    type affine_ate_G1_precomp_type=();
-    type affine_ate_G2_precomp_type=();
+    type affine_ate_G1_precomp_type = ();
+    type affine_ate_G2_precomp_type = ();
     type Fq_type;
     type Fqe_type;
     type Fqk_type;
     type GT_type;
 }
 
-pub trait PublicParams:PublicParamsType {
+pub trait PublicParams: PublicParamsType {
     type Fr = Self::Fp_type;
     type G1 = Self::G1_type;
     type G2 = Self::G2_type;

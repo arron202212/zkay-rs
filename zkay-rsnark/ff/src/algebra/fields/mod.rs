@@ -1,16 +1,16 @@
 
- pub mod binary ;
+pub mod binary;
 
 #[macro_use]
- pub mod prime_base ;
+pub mod prime_base;
 pub use self::prime_base::*;
 
 #[macro_use]
- pub mod prime_extension ;
+pub mod prime_extension;
 pub use self::prime_extension::*;
 //  pub mod tests ;
 //  pub mod binary_field ;
- pub mod field ;
+pub mod field;
 pub use self::field::*;
 //  pub mod fpn_field;
 // pub mod sqrt;
@@ -18,14 +18,11 @@ pub use self::field::*;
 // pub mod arithmetic;
 // pub mod cyclotomic;
 // pub mod field_hashers;
-pub use num_traits::{One, Zero};
 pub use ff_macros;
-
+pub use num_traits::{One, Zero};
 
 #[macro_use]
 pub mod arithmetic;
-
-
 
 pub mod field_hashers;
 

@@ -788,11 +788,11 @@ pub fn brute_force_arithmetic_gadget< T,  FieldT>( w:usize,
     arg1val.generate_r1cs_constraints(true);
     let mut  arg2val=word_variable_gadget::<FieldT>::new(pb, "arg2val");
     arg2val.generate_r1cs_constraints(true);
-     let mut flag=pb_variable::<FieldT>::new(); 
+     let mut flag=variable::<FieldT,pb_variable>::new(); 
     flag.allocate(pb, "flag");
-     let mut  result=pb_variable::<FieldT>::new(); 
+     let mut  result=variable::<FieldT,pb_variable>::new(); 
      result.allocate(pb, "result");
-     let mut  result_flag=pb_variable::<FieldT>::new(); 
+     let mut  result_flag=variable::<FieldT,pb_variable>::new(); 
      result_flag.allocate(pb, "result_flag");
 
     let mut g=T::new();
@@ -1405,10 +1405,10 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_cmp_gadget<FieldT>{
-                                                                      let mut cmpa_result=pb_variable::<FieldT>::new(); cmpa_result.allocate(pb, "cmpa_result");
-                                                                      let mut cmpa_result_flag=pb_variable::<FieldT>::new(); cmpa_result_flag.allocate(pb, "cmpa_result_flag");
-                                                                      let mut cmpae_result=pb_variable::<FieldT>::new(); cmpae_result.allocate(pb, "cmpae_result");
-                                                                      let mut cmpae_result_flag=pb_variable::<FieldT>::new(); cmpae_result_flag.allocate(pb, "cmpae_result_flag");
+                                                                      let mut cmpa_result=variable::<FieldT,pb_variable>::new(); cmpa_result.allocate(pb, "cmpa_result");
+                                                                      let mut cmpa_result_flag=variable::<FieldT,pb_variable>::new(); cmpa_result_flag.allocate(pb, "cmpa_result_flag");
+                                                                      let mut cmpae_result=variable::<FieldT,pb_variable>::new(); cmpae_result.allocate(pb, "cmpae_result");
+                                                                      let mut cmpae_result_flag=variable::<FieldT,pb_variable>::new(); cmpae_result_flag.allocate(pb, "cmpae_result_flag");
                                                                       return ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                         result, result_flag,
                                                                                                         cmpa_result, cmpa_result_flag,
@@ -1434,10 +1434,10 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_cmp_gadget<FieldT>{
-                                                                      let mut cmpe_result=pb_variable::<FieldT>::new(); cmpe_result.allocate(pb, "cmpe_result");
-                                                                      let mut cmpe_result_flag=pb_variable::<FieldT>::new(); cmpe_result_flag.allocate(pb, "cmpe_result_flag");
-                                                                      let mut cmpae_result=pb_variable::<FieldT>::new(); cmpae_result.allocate(pb, "cmpae_result");
-                                                                      let mut cmpae_result_flag=pb_variable::<FieldT>::new(); cmpae_result_flag.allocate(pb, "cmpae_result_flag");
+                                                                      let mut cmpe_result=variable::<FieldT,pb_variable>::new(); cmpe_result.allocate(pb, "cmpe_result");
+                                                                      let mut cmpe_result_flag=variable::<FieldT,pb_variable>::new(); cmpe_result_flag.allocate(pb, "cmpe_result_flag");
+                                                                      let mut cmpae_result=variable::<FieldT,pb_variable>::new(); cmpae_result.allocate(pb, "cmpae_result");
+                                                                      let mut cmpae_result_flag=variable::<FieldT,pb_variable>::new(); cmpae_result_flag.allocate(pb, "cmpae_result_flag");
                                                                       return ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                         cmpe_result, cmpe_result_flag,
                                                                                                         result, result_flag,
@@ -1463,10 +1463,10 @@ flag:&                                                                      pb_v
 result:&                                                                      pb_variable<FieldT>,
 result_flag:&                                                                      pb_variable<FieldT>| ->
                                                                   ALU_cmp_gadget<FieldT>{
-                                                                      let mut cmpe_result=pb_variable::<FieldT>::new(); cmpe_result.allocate(pb, "cmpe_result");
-                                                                      let mut cmpe_result_flag=pb_variable::<FieldT>::new(); cmpe_result_flag.allocate(pb, "cmpe_result_flag");
-                                                                      let mut cmpa_result=pb_variable::<FieldT>::new(); cmpa_result.allocate(pb, "cmpa_result");
-                                                                      let mut cmpa_result_flag=pb_variable::<FieldT>::new(); cmpa_result_flag.allocate(pb, "cmpa_result_flag");
+                                                                      let mut cmpe_result=variable::<FieldT,pb_variable>::new(); cmpe_result.allocate(pb, "cmpe_result");
+                                                                      let mut cmpe_result_flag=variable::<FieldT,pb_variable>::new(); cmpe_result_flag.allocate(pb, "cmpe_result_flag");
+                                                                      let mut cmpa_result=variable::<FieldT,pb_variable>::new(); cmpa_result.allocate(pb, "cmpa_result");
+                                                                      let mut cmpa_result_flag=variable::<FieldT,pb_variable>::new(); cmpa_result_flag.allocate(pb, "cmpa_result_flag");
                                                                       return ALU_cmp_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                         cmpe_result, cmpe_result_flag,
                                                                                                         cmpa_result, cmpa_result_flag,
@@ -1551,8 +1551,8 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_cmps_gadget<FieldT>{
-                                                                       let mut cmpge_result=pb_variable::<FieldT>::new(); cmpge_result.allocate(pb, "cmpge_result");
-                                                                       let mut cmpge_result_flag=pb_variable::<FieldT>::new(); cmpge_result_flag.allocate(pb, "cmpge_result_flag");
+                                                                       let mut cmpge_result=variable::<FieldT,pb_variable>::new(); cmpge_result.allocate(pb, "cmpge_result");
+                                                                       let mut cmpge_result_flag=variable::<FieldT,pb_variable>::new(); cmpge_result_flag.allocate(pb, "cmpge_result_flag");
                                                                        return ALU_cmps_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           result, result_flag,
                                                                                                           cmpge_result, cmpge_result_flag, "ALU_cmps_gadget");
@@ -1580,8 +1580,8 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_cmps_gadget<FieldT>{
-                                                                       let mut cmpg_result=pb_variable::<FieldT>::new(); cmpg_result.allocate(pb, "cmpg_result");
-                                                                       let mut cmpg_result_flag=pb_variable::<FieldT>::new(); cmpg_result_flag.allocate(pb, "cmpg_result_flag");
+                                                                       let mut cmpg_result=variable::<FieldT,pb_variable>::new(); cmpg_result.allocate(pb, "cmpg_result");
+                                                                       let mut cmpg_result_flag=variable::<FieldT,pb_variable>::new(); cmpg_result_flag.allocate(pb, "cmpg_result_flag");
                                                                        return ALU_cmps_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           cmpg_result, cmpg_result_flag,
                                                                                                           result, result_flag, "ALU_cmps_gadget");
@@ -1661,8 +1661,8 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_umul_gadget<FieldT>{
-                                                                       let mut umulh_result=pb_variable::<FieldT>::new(); umulh_result.allocate(pb, "umulh_result");
-                                                                       let mut umulh_flag=pb_variable::<FieldT>::new(); umulh_flag.allocate(pb, "umulh_flag");
+                                                                       let mut umulh_result=variable::<FieldT,pb_variable>::new(); umulh_result.allocate(pb, "umulh_result");
+                                                                       let mut umulh_flag=variable::<FieldT,pb_variable>::new(); umulh_flag.allocate(pb, "umulh_flag");
                                                                        return ALU_umul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           result, result_flag,
                                                                                                           umulh_result, umulh_flag,
@@ -1690,8 +1690,8 @@ flag:&                                                                       pb_
 result:&                                                                       pb_variable<FieldT>,
 result_flag:&                                                                       pb_variable<FieldT>| ->
                                                                    ALU_umul_gadget<FieldT>{
-                                                                       let mut mull_result=pb_variable::<FieldT>::new(); mull_result.allocate(pb, "mull_result");
-                                                                       let mut mull_flag=pb_variable::<FieldT>::new(); mull_flag.allocate(pb, "mull_flag");
+                                                                       let mut mull_result=variable::<FieldT,pb_variable>::new(); mull_result.allocate(pb, "mull_result");
+                                                                       let mut mull_flag=variable::<FieldT,pb_variable>::new(); mull_flag.allocate(pb, "mull_flag");
                                                                        return ALU_umul_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                           mull_result, mull_flag,
                                                                                                           result, result_flag,
@@ -1952,8 +1952,8 @@ flag:&                                                                         p
 result:&                                                                         pb_variable<FieldT>,
 result_flag:&                                                                         pb_variable<FieldT>| ->
                                                                      ALU_divmod_gadget<FieldT>{
-                                                                         let mut umod_result=pb_variable::<FieldT>::new(); umod_result.allocate(pb, "umod_result");
-                                                                         let mut umod_flag=pb_variable::<FieldT>::new(); umod_flag.allocate(pb, "umod_flag");
+                                                                         let mut umod_result=variable::<FieldT,pb_variable>::new(); umod_result.allocate(pb, "umod_result");
+                                                                         let mut umod_flag=variable::<FieldT,pb_variable>::new(); umod_flag.allocate(pb, "umod_flag");
                                                                          return ALU_divmod_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                               result, result_flag,
                                                                                                               umod_result, umod_flag,
@@ -1983,8 +1983,8 @@ flag:&                                                                         p
 result:&                                                                         pb_variable<FieldT>,
 result_flag:&                                                                         pb_variable<FieldT>| ->
                                                                      ALU_divmod_gadget<FieldT>{
-                                                                         let mut udiv_result=pb_variable::<FieldT>::new(); udiv_result.allocate(pb, "udiv_result");
-                                                                         let mut udiv_flag=pb_variable::<FieldT>::new(); udiv_flag.allocate(pb, "udiv_flag");
+                                                                         let mut udiv_result=variable::<FieldT,pb_variable>::new(); udiv_result.allocate(pb, "udiv_result");
+                                                                         let mut udiv_flag=variable::<FieldT,pb_variable>::new(); udiv_flag.allocate(pb, "udiv_flag");
                                                                          return ALU_divmod_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                               udiv_result, udiv_flag,
                                                                                                               result, result_flag,
@@ -2176,8 +2176,8 @@ flag:&                                                                          
 result:&                                                                          pb_variable<FieldT>,
 result_flag:&                                                                          pb_variable<FieldT>| ->
                                                                       ALU_shr_shl_gadget<FieldT>{
-                                                                          let mut shl_result=pb_variable::<FieldT>::new(); shl_result.allocate(pb, "shl_result");
-                                                                          let mut shl_flag=pb_variable::<FieldT>::new(); shl_flag.allocate(pb, "shl_flag");
+                                                                          let mut shl_result=variable::<FieldT,pb_variable>::new(); shl_result.allocate(pb, "shl_result");
+                                                                          let mut shl_flag=variable::<FieldT,pb_variable>::new(); shl_flag.allocate(pb, "shl_flag");
                                                                           return ALU_shr_shl_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                                 result, result_flag,
                                                                                                                 shl_result, shl_flag,
@@ -2207,8 +2207,8 @@ flag:&                                                                          
 result:&                                                                          pb_variable<FieldT>,
 result_flag:&                                                                          pb_variable<FieldT>| ->
                                                                       ALU_shr_shl_gadget<FieldT>{
-                                                                          let mut shr_result=pb_variable::<FieldT>::new(); shr_result.allocate(pb, "shr_result");
-                                                                          let mut shr_flag=pb_variable::<FieldT>::new(); shr_flag.allocate(pb, "shr_flag");
+                                                                          let mut shr_result=variable::<FieldT,pb_variable>::new(); shr_result.allocate(pb, "shr_result");
+                                                                          let mut shr_flag=variable::<FieldT,pb_variable>::new(); shr_flag.allocate(pb, "shr_flag");
                                                                           return ALU_shr_shl_gadget::<FieldT>::new(pb, opcode_indicators, desval, arg1val, arg2val, flag,
                                                                                                                 shr_result, shr_flag,
                                                                                                                 result, result_flag,

@@ -143,7 +143,7 @@ pub fn  test_set_commitment_gadget()
     element_bits.allocate(pb, value_size, "element_bits");
     let mut  root_digest=set_commitment_variable::<FieldT, HashT>::new(pb, digest_len, "root_digest");
 
-   let mut check_succesful= pb_variable::<FieldT>::new();
+   let mut check_succesful= variable::<FieldT,pb_variable>::new();
     check_succesful.allocate(pb, "check_succesful");
 
     let mut proof= set_membership_proof_variable::<FieldT, HashT>::new(pb, max_set_size, "proof");

@@ -1,9 +1,9 @@
-use libtest_mimic::{run, Arguments, Failed, Trial};
+use libtest_mimic::{Arguments, Failed, Trial, run};
 
 use sha2::{Sha256, Sha384, Sha512};
 use sha3::{Shake128, Shake256};
 use std::{
-    fs::{read_dir, File},
+    fs::{File, read_dir},
     io::BufReader,
     marker::PhantomData,
 };

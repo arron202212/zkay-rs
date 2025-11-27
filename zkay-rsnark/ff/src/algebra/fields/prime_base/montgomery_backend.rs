@@ -1,11 +1,12 @@
 use super::fp::{Fp, FpConfig};
+use crate::algebra::field_utils::BigInteger;
 use crate::algebra::{
-    field_utils::{arithmetic as fa,BigInt}, fields::{fpn_field::PrimeField, sqrt::SqrtPrecomputation,Zero}, 
+    field_utils::{BigInt, arithmetic as fa},
+    fields::{Zero, fpn_field::PrimeField, sqrt::SqrtPrecomputation},
 };
-use crate::algebra::field_utils::{  BigInteger};
-use ff_macros::unroll_for_loops;
+use crate::{adc, mac, mac_with_carry};
 use ark_std::marker::PhantomData;
-use crate::{mac_with_carry,mac,adc};
+use ff_macros::unroll_for_loops;
 /// A trait that specifies the constants and arithmetic procedures
 /// for Montgomery arithmetic over the prime field defined by `MODULUS`.
 ///
@@ -89,7 +90,7 @@ pub trait MontConfig<const N: usize>: 'static + Sync + Send + Sized {
                 // Thus we can set MSB to `carry` to get the correct result of (MODULUS + 1) // 2:
                 result.0[N - 1] |= (carry as u64) << 63;
                 Some(result.divide_by_2_round_down())
-            },
+            }
             false => None,
         }
     };
@@ -253,7 +254,7 @@ pub trait MontConfig<const N: usize>: 'static + Sync + Send + Sized {
             return;
         }
 
-        let mut r =  crate::algebra::const_helpers::MulBuffer::<N>::zeroed();
+        let mut r = crate::algebra::const_helpers::MulBuffer::<N>::zeroed();
 
         let mut carry = 0;
         for i in 0..(N - 1) {
@@ -347,11 +348,7 @@ pub trait MontConfig<const N: usize>: 'static + Sync + Send + Sized {
             }
         }
 
-        if u == one {
-            Some(b)
-        } else {
-            Some(c)
-        }
+        if u == one { Some(b) } else { Some(c) }
     }
 
     fn from_bigint(r: BigInt<N>) -> Option<Fp<MontBackend<Self, N>, N>> {
@@ -540,8 +537,8 @@ pub const fn can_use_no_carry_square_optimization<T: MontConfig<N>, const N: usi
     top_two_bits_are_zero && !all_remaining_bits_are_one
 }
 
-pub const fn sqrt_precomputation<const N: usize, T: MontConfig<N>>(
-) -> Option<SqrtPrecomputation<Fp<MontBackend<T, N>, N>>> {
+pub const fn sqrt_precomputation<const N: usize, T: MontConfig<N>>()
+-> Option<SqrtPrecomputation<Fp<MontBackend<T, N>, N>>> {
     match T::MODULUS.mod_4() {
         3 => match T::MODULUS_PLUS_ONE_DIV_FOUR.as_ref() {
             Some(BigInt(modulus_plus_one_div_four)) => Some(SqrtPrecomputation::Case3Mod4 {
@@ -734,11 +731,7 @@ impl<T: MontConfig<N>, const N: usize> Fp<MontBackend<T, N>, N> {
             repr.0[i] = limbs[i];
         });
         let res = Self::new(repr);
-        if is_positive {
-            res
-        } else {
-            res.const_neg()
-        }
+        if is_positive { res } else { res.const_neg() }
     }
 
     const fn mul_without_cond_subtract(mut self, other: &Self) -> (bool, Self) {

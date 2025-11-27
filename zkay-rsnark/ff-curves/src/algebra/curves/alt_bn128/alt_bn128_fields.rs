@@ -11,8 +11,8 @@
 // use ffec::algebra::fields::prime_extension::fp2;
 // use ffec::algebra::fields::prime_extension::fp6_3over2;
 use super::fields::{fq::Fq, fq2::Fq2, fq6::Fq6, fq12::Fq12, fr::Fr};
-use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
+use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 //  use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G2,alt_bn128_G1};
 // namespace libff {
 

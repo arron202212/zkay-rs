@@ -4,7 +4,7 @@ use ark_ec::{
 };
 use ark_ff::MontFp;
 
-use crate::mnt4_753::{Fq, Fr, FR_ONE};
+use crate::mnt4_753::{FR_ONE, Fq, Fr};
 
 pub type G1Affine = Affine<Config>;
 pub type G1Projective = Projective<Config>;

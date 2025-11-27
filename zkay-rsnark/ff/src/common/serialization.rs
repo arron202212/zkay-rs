@@ -7,13 +7,13 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 /** @file
- *****************************************************************************
- Declaration of serialization routines and constants.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+*****************************************************************************
+Declaration of serialization routines and constants.
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef SERIALIZATION_HPP_
 // #define SERIALIZATION_HPP_
 
@@ -65,7 +65,7 @@
  * portable between machines of different word sizes.
  */
 
-cfg_if::cfg_if!{
+cfg_if::cfg_if! {
  if #[cfg(feature="BINARY_OUTPUT")]
 {
 pub const OUTPUT_NEWLINE:&str= "";
@@ -86,25 +86,25 @@ pub const OUTPUT_SEPARATOR:&str= " ";
 // inline pub fn  output_bool_vector(out:& BufWriter, v:&Vec<bool>);
 // inline pub fn  input_bool_vector(ins:&impl BufRead, Vec<bool> &v);
 
-// 
+//
 // T reserialize(obj:&T);
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<T>);
 
-// 
+//
 // std::istream& operator>>(std::ostream& out, Vec<T> &v);
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>);
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m);
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>);
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
 // } // namespace libff
@@ -113,23 +113,21 @@ pub const OUTPUT_SEPARATOR:&str= " ";
 
 //#endif // SERIALIZATION_HPP_
 
-
 /** @file
- *****************************************************************************
- Implementation of serialization routines.
+*****************************************************************************
+Implementation of serialization routines.
 
- See serialization.hpp .
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+See serialization.hpp .
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef SERIALIZATION_TCC_
 // #define SERIALIZATION_TCC_
 
 //#include <cassert>
 //#include <sstream>
-
 use crate::common::utils;
 use std::io::BufRead;
 use std::io::BufWriter;
@@ -139,46 +137,41 @@ use std::io::Write;
 // using std::usize;
 
 #[inline]
-pub fn  consume_newline(ins:&impl BufRead)
-{
+pub fn consume_newline(ins: &impl BufRead) {
     // let mut c;
     // ins.read(&c, 1);
 }
 
 #[inline]
-pub fn  consume_OUTPUT_NEWLINE(ins:&impl BufRead)
-{
-// #ifdef BINARY_OUTPUT
+pub fn consume_OUTPUT_NEWLINE(ins: &impl BufRead) {
+    // #ifdef BINARY_OUTPUT
     // nothing to consume
     // UNUSED(in);
-// #else
+    // #else
     // let mut c;
     // in.read(&c, 1);
-//#endif
+    //#endif
 }
 
 #[inline]
-pub fn  consume_OUTPUT_SEPARATOR(ins:&impl BufRead)
-{
-// #ifdef BINARY_OUTPUT
+pub fn consume_OUTPUT_SEPARATOR(ins: &impl BufRead) {
+    // #ifdef BINARY_OUTPUT
     // nothing to consume
-//     UNUSED(in);
-// #else
+    //     UNUSED(in);
+    // #else
     // char c;
     // ins.read(&c, 1);
-//#endif
+    //#endif
 }
 
 #[inline]
-pub fn  output_bool<W: ?Sized + Write> (out:&mut  BufWriter<W>, b:bool)
-{
-    write!(out,"{}\n", b as u8);
+pub fn output_bool<W: ?Sized + Write>(out: &mut BufWriter<W>, b: bool) {
+    write!(out, "{}\n", b as u8);
     // out << (if b { 1} else {0}) << "\n";
 }
 
 #[inline]
-pub fn input_bool(ins:&impl BufRead, b:bool)
-{
+pub fn input_bool(ins: &impl BufRead, b: bool) {
     // usize tmp;
     // in >> tmp;
     // consume_newline(in);
@@ -188,8 +181,7 @@ pub fn input_bool(ins:&impl BufRead, b:bool)
 }
 
 #[inline]
-pub fn  output_bool_vector<W: ?Sized + Write> (out:& BufWriter<W>, v:&Vec<bool>)
-{
+pub fn output_bool_vector<W: ?Sized + Write>(out: &BufWriter<W>, v: &Vec<bool>) {
     // out << v.len() << "\n";
     // for bool in &v
     // {
@@ -198,8 +190,7 @@ pub fn  output_bool_vector<W: ?Sized + Write> (out:& BufWriter<W>, v:&Vec<bool>)
 }
 
 #[inline]
-pub fn  input_bool_vector(ins:&impl BufRead, v:&Vec<bool>)
-{
+pub fn input_bool_vector(ins: &impl BufRead, v: &Vec<bool>) {
     // usize size;
     // in >> size;
     // consume_newline(in);
@@ -212,25 +203,20 @@ pub fn  input_bool_vector(ins:&impl BufRead, v:&Vec<bool>)
     // }
 }
 
-pub fn  reserialize<T:Clone>(obj:&T)->T
-{
+pub fn reserialize<T: Clone>(obj: &T) -> T {
     // std::stringstream ss;
     // ss << obj;
     // T tmp;
     // ss >> tmp;
     // return tmp;
     obj.clone()
-
 }
-
-
 
 // }
 
 //#endif // SERIALIZATION_TCC_
 
-
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<T>)
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
@@ -243,7 +229,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<T> &v)
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
@@ -263,7 +249,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>)
 // {
 //     out << m.len() << "\n";
@@ -277,7 +263,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m)
 // {
 //     m.clear();
@@ -299,7 +285,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>)
 // {
 //     out << s.len() << "\n";
@@ -312,7 +298,7 @@ pub fn  reserialize<T:Clone>(obj:&T)->T
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s)
 // {
 //     s.clear();

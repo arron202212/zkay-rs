@@ -1,10 +1,9 @@
 //! Multilinear polynomial represented in dense evaluation form.
 
 use crate::{
-    evaluations::multivariate::multilinear::{swap_bits, MultilinearExtension},
     Polynomial,
+    evaluations::multivariate::multilinear::{MultilinearExtension, swap_bits},
 };
-use ffec::{Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     fmt,
@@ -16,6 +15,7 @@ use ark_std::{
     slice::{Iter, IterMut},
     vec::*,
 };
+use ffec::{Field, Zero};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
@@ -432,9 +432,9 @@ impl<F: Field> Polynomial<F> for DenseMultilinearExtension<F> {
 #[cfg(test)]
 mod tests {
     use crate::{DenseMultilinearExtension, MultilinearExtension, Polynomial};
-    use ffec::{Field, One, Zero};
-    use ark_std::{ops::Neg, test_rng, vec::*, UniformRand};
+    use ark_std::{UniformRand, ops::Neg, test_rng, vec::*};
     use ark_test_curves::bls12_381::Fr;
+    use ffec::{Field, One, Zero};
 
     /// utility: evaluate multilinear extension (in form of data array) at a random point
     fn evaluate_data_array<F: Field>(data: &[F], point: &[F]) -> F {

@@ -11,7 +11,6 @@
 // // #define EC_PP_HPP_
 
 // /************************ Pick the elliptic curve ****************************/
-
 // // #ifdef CURVE_BLS12_381
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED
 // use crate::algebra::curves::bls12_381/bls12_381_pp;

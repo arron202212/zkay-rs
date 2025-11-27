@@ -2,7 +2,7 @@ mod expander;
 
 use core::marker::PhantomData;
 
-use crate::algebra::fields::{field::Field,fpn_field::PrimeField};
+use crate::algebra::fields::{field::Field, fpn_field::PrimeField};
 
 use digest::{FixedOutputReset, XofReader};
 use expander::Expander;

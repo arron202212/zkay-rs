@@ -22,7 +22,7 @@ Declaration of interfaces for:
 //
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Neg, Sub};
 /**
  * Mnemonic typedefs.
  */
@@ -43,35 +43,59 @@ pub type integer_coeff_t = i64;
 
 /********************************* Variable **********************************/
 
+pub trait SubVariableConfig: Default + Clone + std::cmp::PartialEq {}
+#[derive(Clone, Default, PartialEq)]
+pub struct DefaultVariable;
+impl SubVariableConfig for DefaultVariable {}
+pub type DV = DefaultVariable;
+
+pub trait SubLinearCombinationConfig: Default + Clone + std::cmp::PartialEq {}
+
+#[derive(Clone, Default, PartialEq)]
+pub struct DefaultLinearCombination;
+impl SubLinearCombinationConfig for DefaultLinearCombination {}
+pub type DLC = DefaultLinearCombination;
+
 /**
- * A variable represents a formal expression of the form "x_{index}".
+ *  A variable represents a formal expression of the form "x_{index}".
  */
-//
 #[derive(Clone, Default)]
-pub struct variable<FieldT: FieldTConfig> {
+pub struct variable<FieldT: FieldTConfig, SV: SubVariableConfig> {
     pub index: var_index_t,
     _t: PhantomData<FieldT>,
+    t: SV,
 }
-impl<FieldT: FieldTConfig> variable<FieldT> {
-    pub fn new(index: var_index_t) -> Self {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> variable<FieldT, SV> {
+    pub fn new(index: var_index_t, t: SV) -> Self {
         Self {
             index,
             _t: PhantomData,
+            t,
         }
     }
 }
-impl<FieldT: FieldTConfig> Mul<FieldT> for variable<FieldT> {
-    type Output = linear_term<FieldT>;
-
-    fn mul(self, rhs: FieldT) -> Self::Output {
-        linear_term::<FieldT>::new2(self, rhs)
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<var_index_t> for variable<FieldT, SV> {
+    fn from(rhs: var_index_t) -> Self {
+        Self {
+            index: rhs,
+            _t: PhantomData,
+            t: SV::default(),
+        }
     }
 }
-impl<FieldT: FieldTConfig> Mul<i64> for variable<FieldT> {
-    type Output = linear_term<FieldT>;
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<FieldT> for variable<FieldT, SV> {
+    type Output = linear_term<FieldT, SV>;
 
-    fn mul(self, rhs: i64) -> Self::Output {
-        linear_term::<FieldT>::new1(self, rhs)
+    fn mul(self, rhs: FieldT) -> Self::Output {
+        linear_term::<FieldT, SV>::new_with_field(self, rhs)
+    }
+}
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<integer_coeff_t> for variable<FieldT, SV> {
+    type Output = linear_term<FieldT, SV>;
+
+    fn mul(self, rhs: integer_coeff_t) -> Self::Output {
+        linear_term::<FieldT, SV>::new_with_int_coeff(self, rhs)
     }
 }
 
@@ -80,31 +104,31 @@ impl<FieldT: FieldTConfig> Mul<i64> for variable<FieldT> {
 //     linear_term<FieldT> operator*(int_coeff:integer_coeff_t) const;
 //     linear_term<FieldT> operator*(&field_coeff:FieldT) const;
 
-//     linear_combination<FieldT> operator+(&other:linear_combination<FieldT>) const;
-//     linear_combination<FieldT> operator-(&other:linear_combination<FieldT>) const;
+//     linear_combination<FieldT,T> operator+(&other:linear_combination<FieldT,T>) const;
+//     linear_combination<FieldT,T> operator-(&other:linear_combination<FieldT,T>) const;
 
 //     linear_term<FieldT> operator-() const;
 
-//     bool operator==(&other:variable<FieldT>) const;
+//     bool operator==(&other:variable<FieldT,T>) const;
 // };
 
 //
-// linear_term<FieldT> operator*(int_coeff:integer_coeff_t &var:variable<FieldT>);
+// linear_term<FieldT> operator*(int_coeff:integer_coeff_t &var:variable<FieldT,T>);
 
 //
-// linear_term<FieldT> operator*(field_coeff:&FieldT &var:variable<FieldT>);
+// linear_term<FieldT> operator*(field_coeff:&FieldT &var:variable<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator+(int_coeff:integer_coeff_t &var:variable<FieldT>);
+// linear_combination<FieldT,T> operator+(int_coeff:integer_coeff_t &var:variable<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator+(field_coeff:&FieldT &var:variable<FieldT>);
+// linear_combination<FieldT,T> operator+(field_coeff:&FieldT &var:variable<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &var:variable<FieldT>);
+// linear_combination<FieldT,T> operator-(int_coeff:integer_coeff_t &var:variable<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator-(field_coeff:&FieldT &var:variable<FieldT>);
+// linear_combination<FieldT,T> operator-(field_coeff:&FieldT &var:variable<FieldT,T>);
 
 /****************************** Linear term **********************************/
 
@@ -112,20 +136,20 @@ impl<FieldT: FieldTConfig> Mul<i64> for variable<FieldT> {
  * A linear term represents a formal expression of the form "coeff * x_{index}".
  */
 #[derive(Clone)]
-pub struct linear_term<FieldT: FieldTConfig> {
-    pub index: var_index_t,
+pub struct linear_term<FieldT: FieldTConfig, SV: SubVariableConfig> {
+    pub index: variable<FieldT, SV>,
     pub coeff: FieldT,
 }
 //     linear_term() {};
-//     linear_term(&var:variable<FieldT>);
-//     linear_term(var:&variable<FieldT> int_coeff:integer_coeff_t);
-//     linear_term(var:&variable<FieldT> &field_coeff:FieldT);
+//     linear_term(&var:variable<FieldT,T>);
+//     linear_term(var:&variable<FieldT,T> int_coeff:integer_coeff_t);
+//     linear_term(var:&variable<FieldT,T> &field_coeff:FieldT);
 
 //     linear_term<FieldT> operator*(int_coeff:integer_coeff_t) const;
 //     linear_term<FieldT> operator*(&field_coeff:FieldT) const;
 
-//     linear_combination<FieldT> operator+(&other:linear_combination<FieldT>) const;
-//     linear_combination<FieldT> operator-(&other:linear_combination<FieldT>) const;
+//     linear_combination<FieldT,T> operator+(&other:linear_combination<FieldT,T>) const;
+//     linear_combination<FieldT,T> operator-(&other:linear_combination<FieldT,T>) const;
 
 //     linear_term<FieldT> operator-() const;
 
@@ -139,16 +163,16 @@ pub struct linear_term<FieldT: FieldTConfig> {
 // linear_term<FieldT> operator*(field_coeff:&FieldT &lt:linear_term<FieldT>);
 
 //
-// linear_combination<FieldT> operator+(int_coeff:integer_coeff_t &lt:linear_term<FieldT>);
+// linear_combination<FieldT,T> operator+(int_coeff:integer_coeff_t &lt:linear_term<FieldT>);
 
 //
-// linear_combination<FieldT> operator+(field_coeff:&FieldT &lt:linear_term<FieldT>);
+// linear_combination<FieldT,T> operator+(field_coeff:&FieldT &lt:linear_term<FieldT>);
 
 //
-// linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &lt:linear_term<FieldT>);
+// linear_combination<FieldT,T> operator-(int_coeff:integer_coeff_t &lt:linear_term<FieldT>);
 
 //
-// linear_combination<FieldT> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>);
+// linear_combination<FieldT,T> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>);
 
 /***************************** Linear combination ****************************/
 
@@ -156,20 +180,29 @@ pub struct linear_term<FieldT: FieldTConfig> {
  * A linear combination represents a formal expression of the form "sum_i coeff_i * x_{index_i}".
  */
 #[derive(Clone, Default, PartialEq)]
-pub struct linear_combination<FieldT: FieldTConfig> {
-    pub terms: Vec<linear_term<FieldT>>,
+pub struct linear_combination<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+> {
+    pub terms: Vec<linear_term<FieldT, SV>>,
+    pub t: SLC,
 }
 use std::borrow::Borrow;
-impl<FieldT: FieldTConfig> IntoIterator for linear_combination<FieldT> {
-    type Item = linear_term<FieldT>;
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> IntoIterator
+    for linear_combination<FieldT, SV, SLC>
+{
+    type Item = linear_term<FieldT, SV>;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.terms.into_iter()
     }
 }
-impl<FieldT: FieldTConfig> IntoIterator for &linear_combination<FieldT> {
-    type Item = linear_term<FieldT>;
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> IntoIterator
+    for &linear_combination<FieldT, SV, SLC>
+{
+    type Item = linear_term<FieldT, SV>;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -179,7 +212,7 @@ impl<FieldT: FieldTConfig> IntoIterator for &linear_combination<FieldT> {
 //     linear_combination() {};
 //     linear_combination(int_coeff:integer_coeff_t);
 //     linear_combination(&field_coeff:FieldT);
-//     linear_combination(&var:variable<FieldT>);
+//     linear_combination(&var:variable<FieldT,T>);
 //     linear_combination(&lt:linear_term<FieldT>);
 //     linear_combination(&all_terms:Vec<linear_term<FieldT> >);
 
@@ -187,50 +220,50 @@ impl<FieldT: FieldTConfig> IntoIterator for &linear_combination<FieldT> {
 //     Vec<linear_term<FieldT> >::const_iterator begin() const;
 //     Vec<linear_term<FieldT> >::const_iterator end() const;
 
-//     pub fn  add_term(&var:variable<FieldT>);
-//     pub fn  add_term(var:&variable<FieldT> int_coeff:integer_coeff_t);
-//     pub fn  add_term(var:&variable<FieldT> &field_coeff:FieldT);
+//     pub fn  add_term(&var:variable<FieldT,T>);
+//     pub fn  add_term(var:&variable<FieldT,T> int_coeff:integer_coeff_t);
+//     pub fn  add_term(var:&variable<FieldT,T> &field_coeff:FieldT);
 
 //     pub fn  add_term(&lt:linear_term<FieldT>);
 
 //     FieldT evaluate(&assignment:Vec<FieldT>) const;
 
-//     linear_combination<FieldT> operator*(int_coeff:integer_coeff_t) const;
-//     linear_combination<FieldT> operator*(&field_coeff:FieldT) const;
+//     linear_combination<FieldT,T> operator*(int_coeff:integer_coeff_t) const;
+//     linear_combination<FieldT,T> operator*(&field_coeff:FieldT) const;
 
-//     linear_combination<FieldT> operator+(&other:linear_combination<FieldT>) const;
+//     linear_combination<FieldT,T> operator+(&other:linear_combination<FieldT,T>) const;
 
-//     linear_combination<FieldT> operator-(&other:linear_combination<FieldT>) const;
-//     linear_combination<FieldT> operator-() const;
+//     linear_combination<FieldT,T> operator-(&other:linear_combination<FieldT,T>) const;
+//     linear_combination<FieldT,T> operator-() const;
 
-//     bool operator==(&other:linear_combination<FieldT>) const;
+//     bool operator==(&other:linear_combination<FieldT,T>) const;
 
 //     bool is_valid(num_variables:usize) const;
 
 //     pub fn  print(variable_annotations = BTreeMap<usize:&BTreeMap<usize, String> String>()) const;
 //     pub fn  print_with_assignment(variable_annotations = BTreeMap<usize:&Vec<FieldT> &full_assignment, String>():BTreeMap<usize, String>) const;
 
-//     friend std::ostream& operator<< <FieldT>(std::ostream &out, &lc:linear_combination<FieldT>);
-//     friend std::istream& operator>> <FieldT>(std::istream &in, linear_combination<FieldT> &lc);
+//     friend std::ostream& operator<< <FieldT>(std::ostream &out, &lc:linear_combination<FieldT,T>);
+//     friend std::istream& operator>> <FieldT>(std::istream &in, linear_combination<FieldT,T> &lc);
 // };
 
 //
-// linear_combination<FieldT> operator*(int_coeff:integer_coeff_t &lc:linear_combination<FieldT>);
+// linear_combination<FieldT,T> operator*(int_coeff:integer_coeff_t &lc:linear_combination<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator*(field_coeff:&FieldT &lc:linear_combination<FieldT>);
+// linear_combination<FieldT,T> operator*(field_coeff:&FieldT &lc:linear_combination<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator+(int_coeff:integer_coeff_t &lc:linear_combination<FieldT>);
+// linear_combination<FieldT,T> operator+(int_coeff:integer_coeff_t &lc:linear_combination<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator+(field_coeff:&FieldT &lc:linear_combination<FieldT>);
+// linear_combination<FieldT,T> operator+(field_coeff:&FieldT &lc:linear_combination<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &lc:linear_combination<FieldT>);
+// linear_combination<FieldT,T> operator-(int_coeff:integer_coeff_t &lc:linear_combination<FieldT,T>);
 
 //
-// linear_combination<FieldT> operator-(field_coeff:&FieldT &lc:linear_combination<FieldT>);
+// linear_combination<FieldT,T> operator-(field_coeff:&FieldT &lc:linear_combination<FieldT,T>);
 
 // use crate::relations::variable;
 
@@ -259,47 +292,49 @@ See variabe.hpp .
 use ffec::algebra::field_utils::bigint::bigint;
 
 //
-// linear_term<FieldT> variable<FieldT>::operator*(int_coeff:integer_coeff_t) const
+// linear_term<FieldT> variable<FieldT,T>::operator*(int_coeff:integer_coeff_t) const
 // {
 //     return linear_term::<FieldT>(*this, int_coeff);
 // }
 
 //
-// linear_term<FieldT> variable<FieldT>::operator*(&field_coeff:FieldT) const
+// linear_term<FieldT> variable<FieldT,T>::operator*(&field_coeff:FieldT) const
 // {
 //     return linear_term::<FieldT>(*this, field_coeff);
 // }
 
 //
-// linear_combination<FieldT> variable<FieldT>::operator+(&other:linear_combination<FieldT>) const
+// linear_combination<FieldT,T> variable<FieldT,T>::operator+(&other:linear_combination<FieldT,T>) const
 // {
-//     linear_combination<FieldT> result;
+//     linear_combination<FieldT,T> result;
 
 //     result.add_term(*this);
 //     result.terms.insert(result.terms.begin(), other.terms.begin(), other.terms.end());
 
 //     return result;
 // }
-impl<FieldT: FieldTConfig> Add<linear_combination<FieldT>> for variable<FieldT> {
-    type Output = linear_combination<FieldT>;
+impl<FieldT: FieldTConfig, SLC: SubLinearCombinationConfig, SV: SubVariableConfig>
+    Add<linear_combination<FieldT, SV, SLC>> for variable<FieldT, SV>
+{
+    type Output = linear_combination<FieldT, SV, SLC>;
 
-    fn add(self, rhs: linear_combination<FieldT>) -> Self::Output {
+    fn add(self, rhs: linear_combination<FieldT, SV, SLC>) -> Self::Output {
         rhs
     }
 }
 //
-// linear_combination<FieldT> variable<FieldT>::operator-(&other:linear_combination<FieldT>) const
+// linear_combination<FieldT,T> variable<FieldT,T>::operator-(&other:linear_combination<FieldT,T>) const
 // {
 //     return (*this) + (-other);
 // }
 
 //
-// linear_term<FieldT> variable<FieldT>::operator-() const
+// linear_term<FieldT> variable<FieldT,T>::operator-() const
 // {
 //     return linear_term::<FieldT>(*this, -FieldT::one());
 // }
 
-impl<FieldT: FieldTConfig> PartialEq for variable<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> PartialEq for variable<FieldT, SV> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.index == other.index
@@ -307,72 +342,94 @@ impl<FieldT: FieldTConfig> PartialEq for variable<FieldT> {
 }
 
 //
-// bool variable<FieldT>::operator==(&other:variable<FieldT>) const
+// bool variable<FieldT,T>::operator==(&other:variable<FieldT,T>) const
 // {
 //     return (self.index == other.index);
 // }
 
 //
-// linear_term<FieldT> operator*(int_coeff:integer_coeff_t &var:variable<FieldT>)
+// linear_term<FieldT> operator*(int_coeff:integer_coeff_t &var:variable<FieldT,T>)
 // {
 //     return linear_term::<FieldT>(var, int_coeff);
 // }
 
 //
-// linear_term<FieldT> operator*(field_coeff:&FieldT &var:variable<FieldT>)
+// linear_term<FieldT> operator*(field_coeff:&FieldT &var:variable<FieldT,T>)
 // {
 //     return linear_term::<FieldT>(var, field_coeff);
 // }
 
 //
-// linear_combination<FieldT> operator+(int_coeff:integer_coeff_t &var:variable<FieldT>)
+// linear_combination<FieldT,T> operator+(int_coeff:integer_coeff_t &var:variable<FieldT,T>)
 // {
-//     return linear_combination<FieldT>(int_coeff) + var;
+//     return linear_combination<FieldT,T>(int_coeff) + var;
 // }
-impl<FieldT: FieldTConfig> Add<i64> for variable<FieldT> {
-    type Output = linear_combination<FieldT>;
+// impl<FieldT: FieldTConfig,SV: SubVariableConfig, SLC:SubLinearCombinationConfig> Add<linear_combination<FieldT, SLC>> for variable<FieldT, SV> {
+//     type Output = linear_combination<FieldT, SLC>;
 
-    fn add(self, rhs: i64) -> Self::Output {
-        self + linear_combination::<FieldT>::new(rhs)
-    }
-}
-//
-// linear_combination<FieldT> operator+(field_coeff:&FieldT &var:variable<FieldT>)
-// {
-//     return linear_combination<FieldT>(field_coeff) + var;
+//     fn add(self, rhs: linear_combination<FieldT, SLC>) -> Self::Output {
+//         self + rhs
+//     }
 // }
 
 //
-// linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &var:variable<FieldT>)
+// linear_combination<FieldT,T> operator+(field_coeff:&FieldT &var:variable<FieldT,T>)
 // {
-//     return linear_combination<FieldT>(int_coeff) - var;
+//     return linear_combination<FieldT,T>(field_coeff) + var;
 // }
 
 //
-// linear_combination<FieldT> operator-(field_coeff:&FieldT &var:variable<FieldT>)
+// linear_combination<FieldT,T> operator-(int_coeff:integer_coeff_t &var:variable<FieldT,T>)
 // {
-//     return linear_combination<FieldT>(field_coeff) - var;
+//     return linear_combination<FieldT,T>(int_coeff) - var;
 // }
 
-impl<FieldT: FieldTConfig> linear_term<FieldT> {
-    pub fn new(var: variable<FieldT>) -> Self {
+//
+// linear_combination<FieldT,T> operator-(field_coeff:&FieldT &var:variable<FieldT,T>)
+// {
+//     return linear_combination<FieldT,T>(field_coeff) - var;
+// }
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> linear_term<FieldT, SV> {
+    pub fn new_with_int_coeff(var: variable<FieldT, SV>, int_coeff: integer_coeff_t) -> Self {
         Self {
-            index: var.index,
-            coeff: FieldT::one(),
-        }
-    }
-
-    pub fn new1(var: variable<FieldT>, int_coeff: integer_coeff_t) -> Self {
-        Self {
-            index: var.index,
+            index: var,
             coeff: FieldT::from(int_coeff),
         }
     }
 
-    pub fn new2(var: variable<FieldT>, coeff: FieldT) -> Self {
-        Self {
-            index: var.index,
-            coeff,
+    pub fn new_with_field(var: variable<FieldT, SV>, coeff: FieldT) -> Self {
+        Self { index: var, coeff }
+    }
+}
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<variable<FieldT, SV>>
+    for linear_term<FieldT, SV>
+{
+    fn from(rhs: variable<FieldT, SV>) -> Self {
+        linear_term::<FieldT, SV> {
+            index: rhs,
+            coeff: FieldT::one(),
+        }
+    }
+}
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<integer_coeff_t>
+    for linear_term<FieldT, SV>
+{
+    fn from(rhs: integer_coeff_t) -> Self {
+        linear_term::<FieldT, SV> {
+            index: variable::<FieldT, SV>::default(),
+            coeff: FieldT::from(rhs),
+        }
+    }
+}
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<FieldT> for linear_term<FieldT, SV> {
+    fn from(rhs: FieldT) -> Self {
+        linear_term::<FieldT, SV> {
+            index: variable::<FieldT, SV>::default(),
+            coeff: rhs,
         }
     }
 }
@@ -388,73 +445,124 @@ impl<FieldT: FieldTConfig> linear_term<FieldT> {
 // {
 //     return linear_term::<FieldT>(self.index, field_coeff * self.coeff);
 // }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<FieldT> for linear_term<FieldT, SV> {
+    type Output = linear_term<FieldT, SV>;
 
-//
-// linear_combination<FieldT> operator+(int_coeff:integer_coeff_t &lt:linear_term<FieldT>)
-// {
-//     return linear_combination<FieldT>(int_coeff) + lt;
-// }
-impl<FieldT: FieldTConfig> Add<i64> for linear_term<FieldT> {
-    type Output = linear_combination<FieldT>;
-
-    fn add(self, rhs: i64) -> Self::Output {
-        linear_combination::<FieldT>::new(rhs) + self
+    fn mul(self, rhs: FieldT) -> Self::Output {
+        linear_term::<FieldT, SV>::new_with_field(
+            variable::<FieldT, SV>::from(self.index),
+            rhs * self.coeff.clone(),
+        )
     }
 }
 
 //
-// linear_combination<FieldT> operator+(field_coeff:&FieldT &lt:linear_term<FieldT>)
+// linear_combination<FieldT,T> operator+(int_coeff:integer_coeff_t &lt:linear_term<FieldT>)
 // {
-//     return linear_combination<FieldT>(field_coeff) + lt;
+//     return linear_combination<FieldT,T>(int_coeff) + lt;
+// }
+// impl<FieldT: FieldTConfig,SV:SubVariableConfig,SLC:SubLinearCombinationConfig> Add<integer_coeff_t> for linear_term<FieldT,SV> {
+//     type Output = linear_combination<FieldT,SV, SLC>;
+
+//     fn add(self, rhs: integer_coeff_t) -> Self::Output {
+//         linear_combination::<FieldT,SV,SLC>::from(rhs) + self
+//     }
 // }
 
 //
-// linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &lt:linear_term<FieldT>)
+// linear_combination<FieldT,T> operator+(field_coeff:&FieldT &lt:linear_term<FieldT>)
 // {
-//     return linear_combination<FieldT>(int_coeff) - lt;
-// }
-impl<FieldT: FieldTConfig> Sub<i64> for linear_term<FieldT> {
-    type Output = linear_combination<FieldT>;
-
-    fn sub(self, rhs: i64) -> Self::Output {
-        linear_combination::<FieldT>::new(rhs) + self
-    }
-}
-//
-// linear_combination<FieldT> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>)
-// {
-//     return linear_combination<FieldT>(field_coeff) - lt;
+//     return linear_combination<FieldT,T>(field_coeff) + lt;
 // }
 
 //
-// linear_combination<FieldT> linear_term<FieldT>::operator+(&other:linear_combination<FieldT>) const
+// linear_combination<FieldT,T> operator-(int_coeff:integer_coeff_t &lt:linear_term<FieldT>)
 // {
-//     return linear_combination<FieldT>(*this) + other;
+//     return linear_combination<FieldT,T>(int_coeff) - lt;
 // }
-impl<FieldT: FieldTConfig> Add<linear_combination<FieldT>> for linear_term<FieldT> {
-    type Output = linear_combination<FieldT>;
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Sub<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = linear_combination<FieldT, SV, SLC>;
 
-    fn add(self, rhs: linear_combination<FieldT>) -> Self::Output {
-        linear_combination::<FieldT>::new4(self) + rhs
+    fn sub(self, rhs: integer_coeff_t) -> Self::Output {
+        self - linear_combination::<FieldT, SV, SLC>::from(rhs)
     }
 }
-impl<FieldT: FieldTConfig> Add for linear_term<FieldT> {
-    type Output = linear_combination<FieldT>;
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Sub
+    for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        linear_combination::<FieldT>::new4(self) + linear_combination::<FieldT>::new4(rhs)
+    fn sub(self, rhs: Self) -> Self::Output {
+        self + (-rhs)
     }
 }
-impl<FieldT: FieldTConfig> Add<linear_term<FieldT>> for linear_combination<FieldT> {
-    type Output = linear_combination<FieldT>;
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Neg
+    for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
 
-    fn add(self, rhs: linear_term<FieldT>) -> Self::Output {
-        linear_combination::<FieldT>::new4(rhs) + self
+    fn neg(self) -> Self::Output {
+        self * (-FieldT::one())
+    }
+}
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Mul<FieldT>
+    for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn mul(self, rhs: FieldT) -> Self::Output {
+        self
+    }
+}
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Mul<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn mul(self, rhs: integer_coeff_t) -> Self::Output {
+        self
+    }
+}
+//
+// linear_combination<FieldT,T> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>)
+// {
+//     return linear_combination<FieldT,T>(field_coeff) - lt;
+// }
+
+//
+// linear_combination<FieldT,T> linear_term<FieldT>::operator+(&other:linear_combination<FieldT,T>) const
+// {
+//     return linear_combination<FieldT,T>(*this) + other;
+// }
+// impl<FieldT: FieldTConfig,SV:SubVariableConfig,SLC:SubLinearCombinationConfig> Add<linear_combination<FieldT,SV, SLC>> for linear_term<FieldT,SV> {
+//     type Output = linear_combination<FieldT,SV, SLC>;
+
+//     fn add(self, rhs: linear_combination<FieldT,SV, SLC>) -> Self::Output {
+//         linear_combination::<FieldT,SV, SLC>::from(self) + rhs
+//     }
+// }
+// impl<FieldT: FieldTConfig,SV:SubVariableConfig,SLC:SubLinearCombinationConfig> Add for linear_term<FieldT,SV> {
+//     type Output = linear_combination<FieldT,SV, SLC>;
+
+//     fn add(self, rhs: Self) -> Self::Output {
+//         linear_combination::<FieldT,SV, SLC>::from(self) + linear_combination::<FieldT, SLC>::new4(rhs)
+//     }
+// }
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Add<linear_term<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = linear_combination<FieldT, SV, SLC>;
+
+    fn add(self, rhs: linear_term<FieldT, SV>) -> Self::Output {
+        linear_combination::<FieldT, SV, SLC>::from(rhs) + self
     }
 }
 
 //
-// linear_combination<FieldT> linear_term<FieldT>::operator-(&other:linear_combination<FieldT>) const
+// linear_combination<FieldT,T> linear_term<FieldT>::operator-(&other:linear_combination<FieldT,T>) const
 // {
 //     return (*this) + (-other);
 // }
@@ -465,7 +573,7 @@ impl<FieldT: FieldTConfig> Add<linear_term<FieldT>> for linear_combination<Field
 //     return linear_term::<FieldT>(self.index, -self.coeff);
 // }
 
-impl<FieldT: FieldTConfig> PartialEq for linear_term<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> PartialEq for linear_term<FieldT, SV> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.index == other.index && self.coeff == other.coeff
@@ -491,78 +599,70 @@ impl<FieldT: FieldTConfig> PartialEq for linear_term<FieldT> {
 //     return linear_term::<FieldT>(lt.index, field_coeff * lt.coeff);
 // }
 
-impl<FieldT: FieldTConfig> linear_combination<FieldT> {
-    pub fn new(int_coeff: integer_coeff_t) -> Self {
-        let mut terms = vec![];
-        Self::add_term4(
-            linear_term::<FieldT>::new1(variable::<FieldT>::new(0), int_coeff),
-            &mut terms,
-        );
-        Self { terms }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    From<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+{
+    fn from(rhs: integer_coeff_t) -> Self {
+        linear_combination::<FieldT, SV, SLC>::from(linear_term::<FieldT, SV>::from(rhs))
     }
+}
 
-    pub fn new2(field_coeff: FieldT) -> Self {
-        let mut terms = vec![];
-        Self::add_term4(
-            linear_term::<FieldT>::new2(variable::<FieldT>::new(0), field_coeff),
-            &mut terms,
-        );
-        Self { terms }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> From<FieldT>
+    for linear_combination<FieldT, SV, SLC>
+{
+    fn from(rhs: FieldT) -> Self {
+        linear_combination::<FieldT, SV, SLC>::from(linear_term::<FieldT, SV>::from(rhs))
     }
+}
 
-    pub fn new3(var: variable<FieldT>) -> Self {
-        let mut terms = vec![];
-        Self::add_term0(var, &mut terms);
-        Self { terms }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    From<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    fn from(rhs: variable<FieldT, SV>) -> Self {
+        linear_combination::<FieldT, SV, SLC>::from(linear_term::<FieldT, SV>::from(rhs))
     }
+}
 
-    pub fn new4(lt: linear_term<FieldT>) -> Self {
-        let mut terms = vec![];
-        Self::add_term4(lt, &mut terms);
-        Self { terms }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    From<linear_term<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    fn from(rhs: linear_term<FieldT, SV>) -> Self {
+        linear_combination::<FieldT, SV, SLC> {
+            terms: vec![rhs],
+            t: SLC::default(),
+        }
     }
+}
 
-    // Vec<linear_term<FieldT> >::const_iterator linear_combination<FieldT>::begin() const
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    linear_combination<FieldT, SV, SLC>
+{
+    // Vec<linear_term<FieldT> >::const_iterator linear_combination<FieldT,T>::begin() const
     // {
     //     return terms.begin();
     // }
 
-    // Vec<linear_term<FieldT> >::const_iterator linear_combination<FieldT>::end() const
+    // Vec<linear_term<FieldT> >::const_iterator linear_combination<FieldT,T>::end() const
     // {
     //     return terms.end();
     // }
 
-    pub fn add_term0(var: variable<FieldT>, terms: &mut Vec<linear_term<FieldT>>) {
-        terms.push(linear_term::<FieldT>::new2(var, FieldT::one()));
-    }
     pub fn add_term(&mut self, var: usize, int_coeff: integer_coeff_t) {
-        self.terms.push(linear_term::<FieldT>::new1(
-            variable::<FieldT>::new(var),
-            int_coeff,
-        ));
+        self.terms
+            .push(linear_term::<FieldT, SV>::new_with_int_coeff(
+                variable::<FieldT, SV>::from(var),
+                int_coeff,
+            ));
     }
-    pub fn add_term2(
-        var: variable<FieldT>,
-        int_coeff: integer_coeff_t,
-        terms: &mut Vec<linear_term<FieldT>>,
-    ) {
-        terms.push(linear_term::<FieldT>::new1(var, int_coeff));
-    }
+
     pub fn add_term_with_field(&mut self, var: usize, coeff: FieldT) {
-        self.terms.push(linear_term::<FieldT>::new2(
-            variable::<FieldT>::new(var),
+        self.terms.push(linear_term::<FieldT, SV>::new_with_field(
+            variable::<FieldT, SV>::from(var),
             coeff,
         ));
     }
-    pub fn add_term3(var: variable<FieldT>, coeff: FieldT, terms: &mut Vec<linear_term<FieldT>>) {
-        terms.push(linear_term::<FieldT>::new2(var, coeff));
-    }
 
-    pub fn add_term4(other: linear_term<FieldT>, terms: &mut Vec<linear_term<FieldT>>) {
-        terms.push(other);
-    }
-
-    // linear_combination<FieldT> linear_combination<FieldT>::operator*(int_coeff:integer_coeff_t) const
+    // linear_combination<FieldT,T> linear_combination<FieldT,T>::operator*(int_coeff:integer_coeff_t) const
     // {
     //     return (*this) * FieldT(int_coeff);
     // }
@@ -570,10 +670,10 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
     pub fn evaluate(&self, assignment: &Vec<FieldT>) -> FieldT {
         let mut acc = FieldT::zero();
         for lt in &self.terms {
-            acc += if lt.index == 0 {
+            acc += if lt.index.index == 0 {
                 FieldT::one()
             } else {
-                assignment[lt.index - 1].clone()
+                assignment[lt.index.index - 1].clone()
             } * lt.coeff.clone();
         }
         return acc;
@@ -582,26 +682,26 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
     pub fn is_valid(&self, num_variables: usize) -> bool {
         /* check that all terms in linear combination are sorted */
         for i in 1..self.terms.len() {
-            if self.terms[i - 1].index >= self.terms[i].index {
+            if self.terms[i - 1].index.index >= self.terms[i].index.index {
                 return false;
             }
         }
 
         /* check that the variables are in proper range. as the variables
         are sorted, it suffices to check the last term */
-        self.terms.last().unwrap().index < num_variables
+        self.terms.last().unwrap().index.index < num_variables
     }
 
     pub fn print(&self, variable_annotations: &BTreeMap<usize, String>) {
         for lt in &self.terms {
-            if lt.index == 0 {
+            if lt.index.index == 0 {
                 print!("    1 * ");
                 lt.coeff.print();
             } else {
                 print!(
                     "    x_{} ({}) * ",
-                    lt.index,
-                    (if let Some(it) = variable_annotations.get(&lt.index) {
+                    lt.index.index,
+                    (if let Some(it) = variable_annotations.get(&lt.index.index) {
                         it
                     } else {
                         "no annotation"
@@ -618,31 +718,35 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
         variable_annotations: &BTreeMap<usize, String>,
     ) {
         for lt in &self.terms {
-            if lt.index == 0 {
+            if lt.index.index == 0 {
                 print!("    1 * ");
                 lt.coeff.print();
             } else {
-                print!("    x_{} * ", lt.index);
+                print!("    x_{} * ", lt.index.index);
                 lt.coeff.print();
 
                 print!(
                     "    where x_{} ({}) was assigned value ",
-                    lt.index,
-                    (if let Some(it) = variable_annotations.get(&lt.index) {
+                    lt.index.index,
+                    (if let Some(it) = variable_annotations.get(&lt.index.index) {
                         it
                     } else {
                         "no annotation"
                     })
                 );
-                full_assignment[lt.index - 1].print();
+                full_assignment[lt.index.index - 1].print();
                 print!("      i.e. negative of ");
-                (-full_assignment[lt.index - 1].clone()).clone().print();
+                (-full_assignment[lt.index.index - 1].clone())
+                    .clone()
+                    .print();
             }
         }
     }
 }
 use std::fmt;
-impl<FieldT: FieldTConfig> fmt::Display for linear_combination<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> fmt::Display
+    for linear_combination<FieldT, SV, SLC>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -650,14 +754,14 @@ impl<FieldT: FieldTConfig> fmt::Display for linear_combination<FieldT> {
             self.terms.len(),
             self.terms
                 .iter()
-                .map(|lt| format!("{}\n{}{OUTPUT_NEWLINE}", lt.index, lt.coeff))
+                .map(|lt| format!("{}\n{}{OUTPUT_NEWLINE}", lt.index.index, lt.coeff))
                 .collect::<String>(),
         )
     }
 }
 
 //
-// std::ostream& operator<<(std::ostream &out, &lc:linear_combination<FieldT>)
+// std::ostream& operator<<(std::ostream &out, &lc:linear_combination<FieldT,T>)
 // {
 //     out << lc.terms.len() << "\n";
 //     for lt in &lc.terms
@@ -670,7 +774,7 @@ impl<FieldT: FieldTConfig> fmt::Display for linear_combination<FieldT> {
 // }
 
 //
-// std::istream& operator>>(std::istream &in, linear_combination<FieldT> &lc)
+// std::istream& operator>>(std::istream &in, linear_combination<FieldT,T> &lc)
 // {
 //     lc.terms.clear();
 
@@ -695,55 +799,53 @@ impl<FieldT: FieldTConfig> fmt::Display for linear_combination<FieldT> {
 // }
 
 //
-// linear_combination<FieldT> operator*(int_coeff:integer_coeff_t &lc:linear_combination<FieldT>)
+// linear_combination<FieldT,T> operator*(int_coeff:integer_coeff_t &lc:linear_combination<FieldT,T>)
 // {
 //     return lc * int_coeff;
 // }
 
 //
-// linear_combination<FieldT> operator*(field_coeff:&FieldT &lc:linear_combination<FieldT>)
+// linear_combination<FieldT,T> operator*(field_coeff:&FieldT &lc:linear_combination<FieldT,T>)
 // {
 //     return lc * field_coeff;
 // }
 
 //
-// linear_combination<FieldT> operator+(int_coeff:integer_coeff_t &lc:linear_combination<FieldT>)
+// linear_combination<FieldT,T> operator+(int_coeff:integer_coeff_t &lc:linear_combination<FieldT,T>)
 // {
-//     return linear_combination<FieldT>(int_coeff) + lc;
-// }
-impl<FieldT: FieldTConfig> Add<i64> for linear_combination<FieldT> {
-    type Output = Self;
-
-    fn add(self, rhs: i64) -> Self::Output {
-        self + linear_combination::<FieldT>::new(rhs)
-    }
-}
-
-//
-// linear_combination<FieldT> operator+(field_coeff:&FieldT &lc:linear_combination<FieldT>)
-// {
-//     return linear_combination<FieldT>(field_coeff) + lc;
+//     return linear_combination<FieldT,T>(int_coeff) + lc;
 // }
 
 //
-// linear_combination<FieldT> operator-(int_coeff:integer_coeff_t &lc:linear_combination<FieldT>)
+// linear_combination<FieldT,T> operator+(field_coeff:&FieldT &lc:linear_combination<FieldT,T>)
 // {
-//     return linear_combination<FieldT>(int_coeff) - lc;
+//     return linear_combination<FieldT,T>(field_coeff) + lc;
 // }
 
 //
-// linear_combination<FieldT> operator-(field_coeff:&FieldT &lc:linear_combination<FieldT>)
+// linear_combination<FieldT,T> operator-(int_coeff:integer_coeff_t &lc:linear_combination<FieldT,T>)
 // {
-//     return linear_combination<FieldT>(field_coeff) - lc;
+//     return linear_combination<FieldT,T>(int_coeff) - lc;
 // }
-impl<FieldT: FieldTConfig> linear_combination<FieldT> {
-    pub fn new5(all_terms: Vec<linear_term<FieldT>>) -> Self {
+
+//
+// linear_combination<FieldT,T> operator-(field_coeff:&FieldT &lc:linear_combination<FieldT,T>)
+// {
+//     return linear_combination<FieldT,T>(field_coeff) - lc;
+// }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    linear_combination<FieldT, SV, SLC>
+{
+    pub fn new(all_terms: Vec<linear_term<FieldT, SV>>) -> Self {
         if all_terms.is_empty() {
-            return Self { terms: vec![] };
+            return Self {
+                terms: vec![],
+                t: SLC::default(),
+            };
         }
 
         let mut terms = all_terms;
-        terms.sort_unstable_by_key(|v| v.index);
+        terms.sort_unstable_by_key(|v| v.index.index);
 
         // auto result_it = terms.begin();
         let mut j = 0;
@@ -758,18 +860,24 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
         }
         terms.resize(
             j + 1,
-            linear_term::<FieldT>::new2(variable::<FieldT>::new(0), FieldT::zero()),
+            linear_term::<FieldT, SV>::new_with_field(
+                variable::<FieldT, SV>::default(),
+                FieldT::zero(),
+            ),
         );
-        Self { terms }
+        Self {
+            terms,
+            t: SLC::default(),
+        }
     }
 }
 
 //#endif // VARIABLE_TCC
 
 //
-// linear_combination<FieldT> linear_combination<FieldT>::operator*(&field_coeff:FieldT) const
+// linear_combination<FieldT,T> linear_combination<FieldT,T>::operator*(&field_coeff:FieldT) const
 // {
-//     linear_combination<FieldT> result;
+//     linear_combination<FieldT,T> result;
 //     result.terms.reserve(self.terms.len());
 //     for lt in &self.terms
 //     {
@@ -779,9 +887,9 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
 // }
 
 //
-// linear_combination<FieldT> linear_combination<FieldT>::operator+(&other:linear_combination<FieldT>) const
+// linear_combination<FieldT,T> linear_combination<FieldT,T>::operator+(&other:linear_combination<FieldT,T>) const
 // {
-//     linear_combination<FieldT> result;
+//     linear_combination<FieldT,T> result;
 //     result.terms.reserve(self.terms.len() + other.terms.len());
 
 //     auto it1 = self.terms.begin();
@@ -803,7 +911,7 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
 //         else
 //         {
 //             /* it1->index == it2->index */
-//             result.terms.push(variable<FieldT>(it1->index), it1->coeff + it2->coeff);
+//             result.terms.push(variable<FieldT,T>(it1->index), it1->coeff + it2->coeff);
 //             it1+=1;
 //             it2+=1;
 //         }
@@ -821,28 +929,40 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT> {
 //     return result;
 // }
 
-impl<FieldT: FieldTConfig> Add for linear_combination<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Add
+    for linear_combination<FieldT, SV, SLC>
+{
     type Output = Self;
 
-    fn add(self, rhs: linear_combination<FieldT>) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         rhs
     }
 }
 
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Add<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn add(self, rhs: integer_coeff_t) -> Self::Output {
+        self + linear_combination::<FieldT, SV, SLC>::from(rhs)
+    }
+}
+
 //
-// linear_combination<FieldT> linear_combination<FieldT>::operator-(&other:linear_combination<FieldT>) const
+// linear_combination<FieldT,T> linear_combination<FieldT,T>::operator-(&other:linear_combination<FieldT,T>) const
 // {
 //     return (*this) + (-other);
 // }
 
 //
-// linear_combination<FieldT> linear_combination<FieldT>::operator-() const
+// linear_combination<FieldT,T> linear_combination<FieldT,T>::operator-() const
 // {
 //     return (*this) * (-FieldT::one());
 // }
 
 //
-// bool linear_combination<FieldT>::operator==(&other:linear_combination<FieldT>) const
+// bool linear_combination<FieldT,T>::operator==(&other:linear_combination<FieldT,T>) const
 // {
 //     return (self.terms == other.terms);
 // }

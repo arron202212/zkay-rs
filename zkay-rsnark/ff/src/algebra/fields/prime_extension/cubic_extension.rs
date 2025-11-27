@@ -1,7 +1,14 @@
+use crate::algebra::UniformRand;
 use crate::algebra::{
-    UniformRand,
+    fields::{
+        One, Zero,
+        fft_friendly::FftField,
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+        sqrt::{LegendreSymbol, SqrtPrecomputation},
+    },
+    to_field_vec::ToConstraintField,
 };
-use crate::algebra::{to_field_vec::ToConstraintField,fields::{Zero,One,  field::{Field,AdditiveGroup},sqrt::{LegendreSymbol,  SqrtPrecomputation},fft_friendly::FftField, fpn_field::PrimeField}};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, Compress, EmptyFlags, Flags, SerializationError, Valid, Validate,
@@ -13,13 +20,13 @@ use ark_std::{
     iter::*,
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     rand::{
-        distributions::{Distribution, Standard},
         Rng,
+        distributions::{Distribution, Standard},
     },
     vec::*,
 };
-use zeroize::Zeroize;
 use educe::Educe;
+use zeroize::Zeroize;
 
 /// Defines a Cubic extension field from a cubic non-residue.
 pub trait CubicExtConfig: 'static + Send + Sync + Sized {
@@ -376,11 +383,7 @@ impl<P: CubicExtConfig> From<i128> for CubicExtField<P> {
     #[inline]
     fn from(val: i128) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -394,11 +397,7 @@ impl<P: CubicExtConfig> From<i64> for CubicExtField<P> {
     #[inline]
     fn from(val: i64) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -412,11 +411,7 @@ impl<P: CubicExtConfig> From<i32> for CubicExtField<P> {
     #[inline]
     fn from(val: i32) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -430,11 +425,7 @@ impl<P: CubicExtConfig> From<i16> for CubicExtField<P> {
     #[inline]
     fn from(val: i16) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -448,11 +439,7 @@ impl<P: CubicExtConfig> From<i8> for CubicExtField<P> {
     #[inline]
     fn from(val: i8) -> Self {
         let abs = Self::from(val.unsigned_abs());
-        if val.is_positive() {
-            abs
-        } else {
-            -abs
-        }
+        if val.is_positive() { abs } else { -abs }
     }
 }
 
@@ -524,7 +511,7 @@ impl<P: CubicExtConfig> Div<&CubicExtField<P>> for CubicExtField<P> {
     }
 }
 use crate::impl_additive_ops_from_ref;
- use crate::impl_multiplicative_ops_from_ref;
+use crate::impl_multiplicative_ops_from_ref;
 impl_additive_ops_from_ref!(CubicExtField, CubicExtConfig);
 impl_multiplicative_ops_from_ref!(CubicExtField, CubicExtConfig);
 impl<P: CubicExtConfig> AddAssign<&Self> for CubicExtField<P> {
@@ -699,8 +686,8 @@ where
 #[cfg(test)]
 mod cube_ext_tests {
     use super::*;
-    use ark_std::test_rng;
     use crate::algebra::fields::field::Field;
+    use ark_std::test_rng;
     use ark_test_curves::{
         bls12_381::{Fq, Fq2, Fq6},
         mnt6_753::Fq3,

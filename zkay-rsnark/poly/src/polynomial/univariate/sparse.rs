@@ -1,10 +1,9 @@
 //! A sparse polynomial represented in coefficient form.
 use crate::{
+    DenseUVPolynomial, EvaluationDomain, Evaluations,
     polynomial::Polynomial,
     univariate::{DenseOrSparsePolynomial, DensePolynomial},
-    DenseUVPolynomial, EvaluationDomain, Evaluations,
 };
-use ffec::{FftField, Field, Zero};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     cmp::Ordering,
@@ -13,6 +12,7 @@ use ark_std::{
     ops::{Add, AddAssign, Deref, DerefMut, Mul, Neg, SubAssign},
     vec::*,
 };
+use ffec::{FftField, Field, Zero};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -144,7 +144,7 @@ impl<'a, F: Field> Add<&'a SparsePolynomial<F>> for &SparsePolynomial<F> {
                 Ordering::Less => {
                     result.coeffs.push((self_term_degree, self_term_coeff));
                     self_index += 1;
-                },
+                }
                 Ordering::Equal => {
                     let term_sum = self_term_coeff + other_term_coeff;
                     if !term_sum.is_zero() {
@@ -152,11 +152,11 @@ impl<'a, F: Field> Add<&'a SparsePolynomial<F>> for &SparsePolynomial<F> {
                     }
                     self_index += 1;
                     other_index += 1;
-                },
+                }
                 Ordering::Greater => {
                     result.coeffs.push((other_term_degree, other_term_coeff));
                     other_index += 1;
-                },
+                }
             }
         }
     }
@@ -321,13 +321,13 @@ impl<F: Field> From<DensePolynomial<F>> for SparsePolynomial<F> {
 #[cfg(test)]
 mod tests {
     use crate::{
+        EvaluationDomain, GeneralEvaluationDomain,
         polynomial::Polynomial,
         univariate::{DensePolynomial, SparsePolynomial},
-        EvaluationDomain, GeneralEvaluationDomain,
     };
-    use ffec::{UniformRand, Zero};
     use ark_std::{cmp::max, ops::Mul, rand::Rng, test_rng};
     use ark_test_curves::bls12_381::Fr;
+    use ffec::{UniformRand, Zero};
 
     // probability of rand sparse polynomial having a particular coefficient be 0
     const ZERO_COEFF_PROBABILITY: f64 = 0.8f64;

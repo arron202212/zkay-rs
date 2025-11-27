@@ -573,7 +573,7 @@ pub fn generate_r1cs_witness(sp_translation_step_input:r1cs_primary_input<ffec::
     print!("Input to the translation circuit:\n");
     for i in 0..self.pb.num_inputs()
     {
-        self.pb.val(pb_variable::<FieldT>(i+1)).print();
+        self.pb.val(variable::<FieldT,pb_variable>(i+1)).print();
     }
 
     assert!(self.pb.is_satisfied());

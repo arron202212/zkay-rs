@@ -1,14 +1,14 @@
 //! A univariate polynomial represented in evaluations form.
 
 use crate::{
-    univariate::DensePolynomial, DenseUVPolynomial, EvaluationDomain, GeneralEvaluationDomain,
+    DenseUVPolynomial, EvaluationDomain, GeneralEvaluationDomain, univariate::DensePolynomial,
 };
-use ffec::{batch_inversion, FftField};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{
     ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Sub, SubAssign},
     vec::*,
 };
+use ffec::{FftField, batch_inversion};
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

@@ -2,12 +2,12 @@
 // to the arkworks APIs
 
 use crate::domain::{
-    radix2::{fft, EvaluationDomain, Radix2EvaluationDomain},
-    utils::compute_powers_serial,
     DomainCoeff,
+    radix2::{EvaluationDomain, Radix2EvaluationDomain, fft},
+    utils::compute_powers_serial,
 };
-use ffec::FftField;
 use ark_std::{cfg_chunks_mut, vec::*};
+use ffec::FftField;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 

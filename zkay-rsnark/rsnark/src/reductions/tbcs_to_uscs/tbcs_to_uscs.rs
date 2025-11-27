@@ -35,7 +35,9 @@ use crate::relations::circuit_satisfaction_problems::tbcs::tbcs::{
 use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
     uscs_constraint_system, uscs_variable_assignment,
 };
-use crate::relations::variable::{linear_combination, variable};
+use crate::relations::variable::{
+    SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable,
+};
 use ffec::common::utils::FMT;
 use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
 // /**
@@ -50,11 +52,15 @@ use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
 //                                                                primary_input:&tbcs_primary_input,
 //                                                                auxiliary_input:&tbcs_auxiliary_input);
 
-pub fn tbcs_to_uscs_instance_map<FieldT: FieldTConfig>(
+pub fn tbcs_to_uscs_instance_map<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
     circuit: &tbcs_circuit,
-) -> uscs_constraint_system<FieldT> {
+) -> uscs_constraint_system<FieldT, SV, SLC> {
     assert!(circuit.is_valid());
-    let mut result = uscs_constraint_system::<FieldT>::default();
+    let mut result = uscs_constraint_system::<FieldT, SV, SLC>::default();
 
     // #ifdef DEBUG
     result.variable_annotations = circuit.variable_annotations.clone();
@@ -64,9 +70,18 @@ pub fn tbcs_to_uscs_instance_map<FieldT: FieldTConfig>(
     result.auxiliary_input_size = circuit.auxiliary_input_size + circuit.gates.len();
 
     for g in &circuit.gates {
-        let x = variable::<FieldT>::new(g.left_wire);
-        let y = variable::<FieldT>::new(g.right_wire);
-        let z = variable::<FieldT>::new(g.output);
+        let x = linear_combination::<FieldT, SV, SLC>::from(variable::<FieldT, SV>::new(
+            g.left_wire,
+            SV::default(),
+        ));
+        let y = linear_combination::<FieldT, SV, SLC>::from(variable::<FieldT, SV>::new(
+            g.right_wire,
+            SV::default(),
+        ));
+        let z = linear_combination::<FieldT, SV, SLC>::from(variable::<FieldT, SV>::new(
+            g.output,
+            SV::default(),
+        ));
 
         // #ifdef DEBUG
         // auto it = circuit.gate_annotations.find(g.output);
@@ -178,14 +193,19 @@ pub fn tbcs_to_uscs_instance_map<FieldT: FieldTConfig>(
 
     for i in 0..circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.len() {
         /* require that 2 * wire - 1 \in {-1,1}, that is wire \in {0,1} */
-        result.add_constraint(variable::<FieldT>::new(i) * 2 - 1, &format!("wire_{}", i));
+        result.add_constraint(
+            linear_combination::<FieldT, SV, SLC>::from(
+                variable::<FieldT, SV>::new(i, SV::default()) * 2,
+            ) - 1i64,
+            &format!("wire_{}", i),
+        );
     }
 
     for g in &circuit.gates {
         if g.is_circuit_output {
             /* require that output + 1 \in {-1,1}, this together with output binary (above) enforces output = 0 */
             result.add_constraint(
-                variable::<FieldT>::new(g.output) + 1,
+                variable::<FieldT, SV>::new(g.output, SV::default()) + 1i64.into(),
                 &format!("output_{}", g.output),
             );
         }

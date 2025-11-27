@@ -1,4 +1,3 @@
-use crate::relations::FieldTConfig;
 /** @file
 *****************************************************************************
 
@@ -18,6 +17,9 @@ Above, BACS stands for "Bilinear Arithmetic Circuit Satisfiability".
 *****************************************************************************/
 //#ifndef BACS_HPP_
 // #define BACS_HPP_
+use crate::relations::FieldTConfig;
+use crate::relations::variable::SubLinearCombinationConfig;
+use crate::relations::variable::SubVariableConfig;
 use crate::relations::variable::{linear_combination, variable};
 use std::collections::BTreeMap;
 /*********************** BACS variable assignment ****************************/
@@ -43,11 +45,11 @@ pub type bacs_variable_assignment<FieldT> = Vec<FieldT>;
  * In other words, a BACS gate is an arithmetic gate that is bilinear.
  */
 #[derive(Clone, Default)]
-pub struct bacs_gate<FieldT: FieldTConfig> {
-    pub lhs: linear_combination<FieldT>,
-    pub rhs: linear_combination<FieldT>,
+pub struct bacs_gate<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> {
+    pub lhs: linear_combination<FieldT, SV, SLC>,
+    pub rhs: linear_combination<FieldT, SV, SLC>,
 
-    pub output: variable<FieldT>,
+    pub output: variable<FieldT, SV>,
     pub is_circuit_output: bool,
     // FieldT evaluate(input:&bacs_variable_assignment<FieldT>);
     // pub fn  print(variable_annotations:&BTreeMap<usize, String> = BTreeMap<usize, String>());
@@ -76,9 +78,9 @@ pub type bacs_auxiliary_input<FieldT> = bacs_variable_assignment<FieldT>;
 
 // pub struct bacs_circuit;
 
-// std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT>);
+// std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT,SV,SLC>);
 
-// std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit);
+// std::istream& operator>>(std::istream &in, bacs_circuit<FieldT,SV,SLC> &circuit);
 
 /**
  * A BACS circuit is an arithmetic circuit in which every gate is a BACS gate.
@@ -91,10 +93,14 @@ pub type bacs_auxiliary_input<FieldT> = bacs_variable_assignment<FieldT>;
  * Thus, the 0-th variable is not included in num_variables.
  */
 #[derive(Default)]
-pub struct bacs_circuit<FieldT: FieldTConfig> {
+pub struct bacs_circuit<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+> {
     pub primary_input_size: usize,
     pub auxiliary_input_size: usize,
-    pub gates: Vec<bacs_gate<FieldT>>,
+    pub gates: Vec<bacs_gate<FieldT, SV, SLC>>,
 
     // bacs_circuit()->Self primary_input_size(0), auxiliary_input_size(0) {}
 
@@ -122,13 +128,13 @@ pub struct bacs_circuit<FieldT: FieldTConfig> {
     // pub fn  add_gate(g:&bacs_gate<FieldT>);
     // pub fn  add_gate(g:&bacs_gate<FieldT>, annotation:&String);
 
-    // bool operator==(other:&bacs_circuit<FieldT>);
+    // bool operator==(other:&bacs_circuit<FieldT,SV,SLC>);
 
     // pub fn  print();
     // pub fn  print_info();
 
-    // friend std::ostream& operator<< <FieldT>(std::ostream &out, circuit:&bacs_circuit<FieldT>);
-    // friend std::istream& operator>> <FieldT>(std::istream &in, bacs_circuit<FieldT> &circuit);
+    // friend std::ostream& operator<< <FieldT>(std::ostream &out, circuit:&bacs_circuit<FieldT,SV,SLC>);
+    // friend std::istream& operator>> <FieldT>(std::istream &in, bacs_circuit<FieldT,SV,SLC> &circuit);
 }
 
 // use crate::relations::circuit_satisfaction_problems::bacs::bacs;
@@ -159,7 +165,9 @@ use ffec::common::profiling::print_indent;
 use ffec::common::utils;
 //  use crate::relations::circuit_satisfaction_problems::bacs::bacs::bacs_circuit;
 
-impl<FieldT: FieldTConfig> bacs_gate<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    bacs_gate<FieldT, SV, SLC>
+{
     pub fn evaluate(&self, input: &bacs_variable_assignment<FieldT>) -> FieldT {
         return self.lhs.evaluate(input) * self.rhs.evaluate(input);
     }
@@ -217,7 +225,9 @@ impl<FieldT: FieldTConfig> bacs_gate<FieldT> {
     //     return in;
     // }
 }
-impl<FieldT: FieldTConfig> bacs_circuit<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    bacs_circuit<FieldT, SV, SLC>
+{
     pub fn num_inputs(&self) -> usize {
         return self.primary_input_size + self.auxiliary_input_size;
     }
@@ -237,11 +247,11 @@ impl<FieldT: FieldTConfig> bacs_circuit<FieldT> {
         for g in &self.gates {
             let mut max_depth = 0;
             for t in &g.lhs {
-                max_depth = std::cmp::max(max_depth, depths[t.index]);
+                max_depth = std::cmp::max(max_depth, depths[t.index.index]);
             }
 
             for t in &g.rhs {
-                max_depth = std::cmp::max(max_depth, depths[t.index]);
+                max_depth = std::cmp::max(max_depth, depths[t.index.index]);
             }
 
             depths.push(max_depth + 1);
@@ -334,12 +344,12 @@ impl<FieldT: FieldTConfig> bacs_circuit<FieldT> {
         return true;
     }
 
-    pub fn add_gate(&mut self, g: bacs_gate<FieldT>) {
+    pub fn add_gate(&mut self, g: bacs_gate<FieldT, SV, SLC>) {
         assert!(g.output.index == self.num_wires() + 1);
         self.gates.push(g);
     }
 
-    pub fn add_gate2(&mut self, g: bacs_gate<FieldT>, annotation: String) {
+    pub fn add_gate2(&mut self, g: bacs_gate<FieldT, SV, SLC>, annotation: String) {
         assert!(g.output.index == self.num_wires() + 1);
         self.gates.push(g.clone());
         // #ifdef DEBUG
@@ -347,14 +357,14 @@ impl<FieldT: FieldTConfig> bacs_circuit<FieldT> {
         //#endif
     }
 
-    // bool bacs_circuit<FieldT>::operator==(other:&bacs_circuit<FieldT>)
+    // bool bacs_circuit<FieldT,SV,SLC>::operator==(other:&bacs_circuit<FieldT,SV,SLC>)
     // {
     //     return (self.primary_input_size == other.primary_input_size &&
     //             self.auxiliary_input_size == other.auxiliary_input_size &&
     //             self.gates == other.gates);
     // }
 
-    // std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT>)
+    // std::ostream& operator<<(std::ostream &out, circuit:&bacs_circuit<FieldT,SV,SLC>)
     // {
     //     out << circuit.primary_input_size << "\n";
     //     out << circuit.auxiliary_input_size << "\n";
@@ -363,7 +373,7 @@ impl<FieldT: FieldTConfig> bacs_circuit<FieldT> {
     //     return out;
     // }
 
-    // std::istream& operator>>(std::istream &in, bacs_circuit<FieldT> &circuit)
+    // std::istream& operator>>(std::istream &in, bacs_circuit<FieldT,SV,SLC> &circuit)
     // {
     //     in >> circuit.primary_input_size;
     //     consume_newline(in);

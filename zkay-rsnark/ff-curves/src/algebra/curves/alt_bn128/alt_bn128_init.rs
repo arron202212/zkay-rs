@@ -8,9 +8,13 @@ use crate::algebra::curves::alt_bn128::alt_bn128_fields::init_alt_bn128_fields;
 //#ifndef ALT_BN128_INIT_HPP_
 // #define ALT_BN128_INIT_HPP_
 // use crate::algebra::curves::public_params;
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::{alt_bn128_Fq12,alt_bn128_GT,alt_bn128_Fq2,alt_bn128_Fq};
+use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
+    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT,
+};
 // use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G1,alt_bn128_G2};
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{alt_bn128_G1_precomp,alt_bn128_G2_precomp};
+use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
+    alt_bn128_G1_precomp, alt_bn128_G2_precomp,
+};
 // namespace libff {
 
 // // parameters for Barreto--Naehrig curve E/Fq : y^2 = x^3 + b

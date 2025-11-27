@@ -164,7 +164,7 @@ pub fn test_ALU_jmp_gadget()
     let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
     let mut pc=word_variable_gadget::<FieldT>::new(pb, "pc");let mut argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
-   let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+   let (mut  flag,mut  result)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
@@ -231,7 +231,7 @@ pub fn test_ALU_cjmp_gadget()
 
     let mut  pc=word_variable_gadget::<FieldT>::new(pb, "pc");
     let mut argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
-    let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+    let (mut  flag,mut  result)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
@@ -313,7 +313,7 @@ pub fn test_ALU_cnjmp_gadget()
 
     let mut  pc=word_variable_gadget::<FieldT>::new(pb, "pc");
     let mut  argval2=word_variable_gadget::<FieldT>::new(pb, "argval2");
-    let (mut  flag,mut  result)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+    let (mut  flag,mut  result)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);

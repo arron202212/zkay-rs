@@ -1,30 +1,28 @@
 /** @file
- *****************************************************************************
- Declaration of common API for all finite fields.
+*****************************************************************************
+Declaration of common API for all finite fields.
 
- Currently NOT used by the fields in this library. This pub struct is not actually
- the parent pub struct of any field. All APIs are enforced through tests instead.
+Currently NOT used by the fields in this library. This pub struct is not actually
+the parent pub struct of any field. All APIs are enforced through tests instead.
 
- The reason for this is to ensure high performance of all fields. This class
- exists as documentation for common API between fields.
+The reason for this is to ensure high performance of all fields. This class
+exists as documentation for common API between fields.
 
- Includes two types of fields, F[p^n] for selected n and F[2^n] for a separate
- range of n. All of these finite fields must implement all functions declared
- in this class.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+Includes two types of fields, F[p^n] for selected n and F[2^n] for a separate
+range of n. All of these finite fields must implement all functions declared
+in this class.
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 use crate::algebra::field_utils::bigint;
 
-
 /* The type parameter T is intended to be set to the child class
-   when this pub struct is extended. For example,
-   pub struct Fp_model : public Field<Fp_model> ... */
-// 
+when this pub struct is extended. For example,
+pub struct Fp_model : public Field<Fp_model> ... */
+//
 // pub trait Field<T> {
-
 
 //      fn square()->T ;
 //      fn invert()->T ;
@@ -35,7 +33,7 @@ use crate::algebra::field_utils::bigint;
 //      fn sqrt()->T ;
 
 //     //  T operator^(:u64 pow),
-    
+
 //     //  T operator^(pow:&bigint<m>) ;
 
 //     // bool operator==(other:&T) ,
@@ -68,14 +66,13 @@ use crate::algebra::field_utils::bigint;
 //      fn ceil_size_in_bits()->usize;
 //      fn floor_size_in_bits()->usize;
 
-
 // }
 
 // } // namespace libff
 
 use super::fpn_field::PrimeField;
+use super::sqrt::{LegendreSymbol, SqrtPrecomputation};
 use crate::algebra::UniformRand;
-use super::sqrt::{LegendreSymbol,SqrtPrecomputation};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, EmptyFlags, Flags,
@@ -91,7 +88,6 @@ use ark_std::{
 // pub use ff_macros;
 pub use num_traits::{One, Zero};
 use zeroize::Zeroize;
-
 
 // #[cfg(feature = "parallel")]
 // use ark_std::cmp::max;
@@ -394,7 +390,9 @@ pub trait Field:
     #[inline]
     fn pow_with_table<S: AsRef<[u64]>>(powers_of_2: &[Self], exp: S) -> Option<Self> {
         let mut res = Self::one();
-        for (pow, bit) in crate::algebra::bits::BitIteratorLE::without_trailing_zeros(exp).enumerate() {
+        for (pow, bit) in
+            crate::algebra::bits::BitIteratorLE::without_trailing_zeros(exp).enumerate()
+        {
             if bit {
                 res *= powers_of_2.get(pow)?;
             }
@@ -455,7 +453,8 @@ fn serial_batch_inversion_and_mul<F: Field>(v: &mut [F], coeff: &F) {
     tmp *= coeff;
 
     // Second pass: iterate backwards to compute inverses
-    for (f, s) in v.iter_mut()
+    for (f, s) in v
+        .iter_mut()
         // Backwards
         .rev()
         // Ignore normalized elements

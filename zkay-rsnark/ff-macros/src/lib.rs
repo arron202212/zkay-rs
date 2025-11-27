@@ -129,7 +129,7 @@ fn fetch_attr(name: &str, attrs: &[syn::Attribute]) -> Option<String> {
                 } else {
                     panic!("attribute {name} should be a string")
                 }
-            },
+            }
             _ => continue,
         }
     }

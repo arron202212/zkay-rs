@@ -352,16 +352,16 @@ pub fn  test_arithmetic_consistency_enforcer_gadget()
 
     let mut desidx=dual_variable_gadget::<FieldT> ::new(pb, ap.reg_arg_width(), "desidx");
 
-    let mut   incoming_pc=pb_variable::<FieldT>::new();
+    let mut   incoming_pc=variable::<FieldT,pb_variable>::new();
     incoming_pc.allocate(pb, "incoming_pc");
 
     let mut  packed_incoming_registers=pb_variable_array::<FieldT>::new();
     packed_incoming_registers.allocate(pb, ap.k, "packed_incoming_registers");
 
-     let mut incoming_load_flag=pb_variable::<FieldT> ::new();
+     let mut incoming_load_flag=variable::<FieldT,pb_variable> ::new();
     incoming_load_flag.allocate(pb, "incoming_load_flag");
 
-    let  (mut outgoing_pc, mut outgoing_flag)=(pb_variable::<FieldT> ::new(),pb_variable::<FieldT> ::new());
+    let  (mut outgoing_pc, mut outgoing_flag)=(variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new());
     outgoing_pc.allocate(pb, "outgoing_pc");
     outgoing_flag.allocate(pb, "outgoing_flag");
 
@@ -470,14 +470,14 @@ pub fn  test_control_flow_consistency_enforcer_gadget()
     opcode_indicators.allocate(pb, 1u64<<ap.opcode_width(), "opcode_indicators");
     instruction_results.allocate(pb, 1u64<<ap.opcode_width(), "instruction_results");
 
-     let  (mut incoming_pc, mut incoming_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+     let  (mut incoming_pc, mut incoming_flag)=(variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
     incoming_pc.allocate(pb, "incoming_pc");
     incoming_flag.allocate(pb, "incoming_flag");
 
     let mut  packed_incoming_registers=pb_variable_array::<FieldT>::new();
     packed_incoming_registers.allocate(pb, ap.k, "packed_incoming_registers");
 
-    let  (mut outgoing_pc,mut  outgoing_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+    let  (mut outgoing_pc,mut  outgoing_flag)=(variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
     outgoing_pc.allocate(pb, "outgoing_pc");
     outgoing_flag.allocate(pb, "outgoing_flag");
 
@@ -537,7 +537,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     let mut opcode_indicators=pb_variable_array::<FieldT>::new();
     opcode_indicators.allocate(pb, 1u64<<ap.opcode_width(), "opcode_indicators");
 
-    let  (mut incoming_pc, mut incoming_flag,mut  incoming_load_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+    let  (mut incoming_pc, mut incoming_flag,mut  incoming_load_flag)=(variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
     incoming_pc.allocate(pb, "incoming_pc");
     incoming_flag.allocate(pb, "incoming_flag");
     incoming_load_flag.allocate(pb, "incoming_load_flag");
@@ -545,7 +545,7 @@ pub fn  test_special_consistency_enforcer_gadget()
     let mut packed_incoming_registers=pb_variable_array::<FieldT>::new();
     packed_incoming_registers.allocate(pb, ap.k, "packed_incoming_registers");
 
-    let   (mut outgoing_pc, mut outgoing_flag,mut  outgoing_load_flag)=(pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+    let   (mut outgoing_pc, mut outgoing_flag,mut  outgoing_load_flag)=(variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
     outgoing_pc.allocate(pb, "outgoing_pc");
     outgoing_flag.allocate(pb, "outgoing_flag");
     outgoing_load_flag.allocate(pb, "outgoing_load_flag");

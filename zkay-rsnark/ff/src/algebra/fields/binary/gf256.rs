@@ -5,7 +5,6 @@
 //  * @author     This file is part of libff (see AUTHORS), migrated from libiop
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // //#ifndef LIBFF_ALGEBRA_GF256_HPP_
 // // #define LIBFF_ALGEBRA_GF256_HPP_
 
@@ -43,7 +42,7 @@
 //     gf256& operator-=(other:&gf256);
 //     gf256& operator*=(other:&gf256);
 //     gf256& operator^=(const u64 pow);
-//     
+//
 //     gf256& operator^=(pow:&bigint<m>);
 
 //     gf256& square();
@@ -54,7 +53,7 @@
 //     gf256 operator-() const;
 //     gf256 operator*(other:&gf256) const;
 //     gf256 operator^(const:u64 pow),
-//     
+//
 //     gf256 operator^(pow:&bigint<m>) const;
 
 //     gf256 squared() const;
@@ -91,12 +90,12 @@
 //     static std::usize ceil_size_in_bits() { return num_bits; }
 //     static std::usize floor_size_in_bits() { return num_bits; }
 //     static constexpr std::usize extension_degree() { return 256; }
-//     
+//
 //     static constexpr bigint<n> field_char() { return bigint<n>(2); }
 
 //     friend std::ostream& operator<<(std::ostream &out, el:&gf256);
 //     friend std::istream& operator>>(std::istream &in, gf256 &el);
-// 
+//
 //     /* little-endian */
 //     uint64_t value_[4];
 // };
@@ -226,7 +225,6 @@
 //          8. c4 = (a1 + a3) * (b1 + b3) - c6 + u - t
 //          9. c3 = (a0 + a1 + a2 + a3) * (b0 + b1 + b2 + b3)
 //                  - c0 - c1 - c2 - c4 - c5 - c6 */
-
 //     /* load the two operands and the modulus into 128-bit registers.
 //        we load corresponding limbs of both operands into a single register,
 //        because it lets us implement Karatsuba with fewer 128-bit xors. */
@@ -313,7 +311,6 @@
 //     __m128i d3 = _mm_xor_si128(c6, _mm_srli_si128(c5, 8));
 
 //     /* done with the multiplication, time to reduce */
-
 //     /* reduce w.r.t. high half of d3 */
 //     __m128i tmp = _mm_clmulepi64_si128(d3, modulus, 0x01);
 //     d2 = _mm_xor_si128(d2, _mm_srli_si128(tmp, 8));
@@ -460,7 +457,6 @@
 //         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
 //         a *= b;
 //         /* now a = el^{2^{2^{i+1}}-1} */
-
 //         if i == 0
 //         {
 //             result = b;
@@ -552,14 +548,14 @@
 
 // // namespace libff {
 
-// 
+//
 // gf256& gf256::operator^=(pow:&bigint<m>)
 // {
 //     (*this) = *this ^ pow;
 //     return (*this);
 // }
 
-// 
+//
 // gf256 gf256::operator^(pow:&bigint<m>) const
 // {
 //     return power<gf256>(*this, pow);

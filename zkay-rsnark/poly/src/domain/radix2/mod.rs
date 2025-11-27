@@ -6,9 +6,9 @@
 
 pub use crate::domain::utils::Elements;
 use crate::domain::{DomainCoeff, EvaluationDomain};
-use ffec::FftField;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::{fmt, vec::*};
+use ffec::FftField;
 
 mod fft;
 
@@ -175,12 +175,12 @@ impl<F: FftField> EvaluationDomain<F> for Radix2EvaluationDomain<F> {
 mod tests {
     use super::DEGREE_AWARE_FFT_THRESHOLD_FACTOR;
     use crate::{
-        polynomial::{univariate::*, DenseUVPolynomial, Polynomial},
         EvaluationDomain, Radix2EvaluationDomain,
+        polynomial::{DenseUVPolynomial, Polynomial, univariate::*},
     };
-    use ffec::{FftField, Field, One, UniformRand, Zero};
     use ark_std::{collections::BTreeSet, rand::Rng, test_rng};
     use ark_test_curves::bls12_381::Fr;
+    use ffec::{FftField, Field, One, UniformRand, Zero};
 
     #[test]
     fn vanishing_polynomial_evaluation() {

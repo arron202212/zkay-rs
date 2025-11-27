@@ -4,7 +4,7 @@ use ark_ec::{
 };
 use ark_ff::Zero;
 
-use crate::bn384_small_two_adicity::{Fq, Fr, FR_ONE};
+use crate::bn384_small_two_adicity::{FR_ONE, Fq, Fr};
 
 pub type G1Affine = Affine<Config>;
 pub type G1Projective = Projective<Config>;

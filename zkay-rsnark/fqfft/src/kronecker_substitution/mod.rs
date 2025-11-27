@@ -1,1 +1,1 @@
-pub mod   kronecker_substitution;
+pub mod kronecker_substitution;

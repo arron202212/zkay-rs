@@ -2,6 +2,8 @@ use crate::relations::FieldTConfig;
 use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
     bacs_auxiliary_input, bacs_circuit, bacs_gate, bacs_primary_input, bacs_variable_assignment,
 };
+use crate::relations::variable::SubLinearCombinationConfig;
+use crate::relations::variable::SubVariableConfig;
 /** @file
 *****************************************************************************
 
@@ -20,16 +22,22 @@ use crate::relations::variable::{linear_combination, variable};
  * A BACS example comprises a BACS circuit, BACS primary input, and BACS auxiliary input.
  */
 #[derive(Default)]
-pub struct bacs_example<FieldT: FieldTConfig> {
-    circuit: bacs_circuit<FieldT>,
+pub struct bacs_example<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+> {
+    circuit: bacs_circuit<FieldT, SV, SLC>,
     primary_input: bacs_primary_input<FieldT>,
     auxiliary_input: bacs_auxiliary_input<FieldT>,
 }
-impl<FieldT: FieldTConfig> bacs_example<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    bacs_example<FieldT, SV, SLC>
+{
     // bacs_example<FieldT>() = default;
     // bacs_example<FieldT>(other:&bacs_example<FieldT>) = default;
     pub fn new(
-        circuit: bacs_circuit<FieldT>,
+        circuit: bacs_circuit<FieldT, SV, SLC>,
         primary_input: bacs_primary_input<FieldT>,
         auxiliary_input: bacs_auxiliary_input<FieldT>,
     ) -> Self {
@@ -81,28 +89,37 @@ See bacs_examples.hpp .
 // use  <cassert>
 use ffec::common::utils;
 
-pub fn random_linear_combination<FieldT: FieldTConfig>(
+pub fn random_linear_combination<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
     num_variables: usize,
-) -> linear_combination<FieldT> {
+) -> linear_combination<FieldT, SV, SLC> {
     let terms = 1i32 + (rand::random::<i32>() % 3);
-    let mut result = linear_combination::<FieldT>::new(0);
+    let mut result = linear_combination::<FieldT, SV, SLC>::from(0);
 
     for i in 0..terms {
         let coeff = FieldT::random_element(); //FieldT(rand::random()); // TODO: replace with FieldT::random_element(), when it becomes faster...
-        result =
-            variable::<FieldT>::new(rand::random::<usize>() % (num_variables + 1)) * coeff + result;
+        result = result
+            + variable::<FieldT, SV>::from(rand::random::<usize>() % (num_variables + 1))
+                * coeff.clone();
     }
 
     return result;
 }
 
-pub fn generate_bacs_example<FieldT: FieldTConfig>(
+pub fn generate_bacs_example<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
     primary_input_size: usize,
     auxiliary_input_size: usize,
     num_gates: usize,
     num_outputs: usize,
-) -> bacs_example<FieldT> {
-    let mut example = bacs_example::<FieldT>::default();
+) -> bacs_example<FieldT, SV, SLC> {
+    let mut example = bacs_example::<FieldT, SV, SLC>::default();
     for i in 0..primary_input_size {
         example.primary_input.push(FieldT::random_element());
     }
@@ -121,9 +138,9 @@ pub fn generate_bacs_example<FieldT: FieldTConfig>(
     for i in 0..num_gates {
         let num_variables = primary_input_size + auxiliary_input_size + i;
         let mut gate = bacs_gate::default();
-        gate.lhs = random_linear_combination::<FieldT>(num_variables);
-        gate.rhs = random_linear_combination::<FieldT>(num_variables);
-        gate.output = variable::<FieldT>::new(num_variables + 1);
+        gate.lhs = random_linear_combination::<FieldT, SV, SLC>(num_variables);
+        gate.rhs = random_linear_combination::<FieldT, SV, SLC>(num_variables);
+        gate.output = variable::<FieldT, SV>::new(num_variables + 1, SV::default());
 
         if i >= num_gates - num_outputs {
             /* make gate a circuit output and fix */
@@ -139,11 +156,13 @@ pub fn generate_bacs_example<FieldT: FieldTConfig>(
             if rand::random::<i32>() % 2 == 0 {
                 let lhs_val = gate.lhs.evaluate(&all_vals);
                 let coeff: FieldT = -(lhs_val * var_val.inverse());
-                gate.lhs = variable::<FieldT>::new(var_idx) * coeff + gate.lhs.clone();
+                gate.lhs =
+                    gate.lhs.clone() + variable::<FieldT, SV>::new(var_idx, SV::default()) * coeff;
             } else {
                 let rhs_val = gate.rhs.evaluate(&all_vals);
                 let coeff = -(rhs_val * var_val.inverse());
-                gate.rhs = variable::<FieldT>::new(var_idx) * coeff + gate.rhs.clone();
+                gate.rhs =
+                    gate.rhs.clone() + variable::<FieldT, SV>::new(var_idx, SV::default()) * coeff;
             }
 
             assert!(gate.evaluate(&all_vals).is_zero());

@@ -8,22 +8,20 @@
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 // #ifndef DOUBLE_HPP_
 // #define DOUBLE_HPP_
 
 // #include <complex>
-use num_complex::{Complex,ComplexFloat};
+use num_complex::{Complex, ComplexFloat};
 
 // #include <libff/algebra/fields/bigint.hpp>
 
 // namespace libff {
 
-  pub struct Double 
-  {
-//     
-       val:Complex<f64>,
-  }
+pub struct Double {
+    //
+    val: Complex<f64>,
+}
 
 //       Double();
 
@@ -76,107 +74,97 @@ use num_complex::{Complex,ComplexFloat};
 // #endif // DOUBLE_HPP_
 
 /** @file
- *****************************************************************************
- Implementation of complex domain data type.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+*****************************************************************************
+Implementation of complex domain data type.
+*****************************************************************************
+* @author     This file is part of libff, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#include <cmath>
 //#include <complex>
 
 //#include <math.h>
-
 use crate::algebra::field_utils::bigint::bigint;
 // use crate::common::f64;
 
 // namespace libff {
 
 // using std::usize;
-impl Double{
-pub fn new()->Self
-{
-   Self{ val : Complex::<f64>::new(0.0,0.0)}
+impl Double {
+    pub fn new() -> Self {
+        Self {
+            val: Complex::<f64>::new(0.0, 0.0),
+        }
+    }
+
+    pub fn new_real(real: f64) -> Self {
+        Self {
+            val: Complex::<f64>::new(real, 0.0),
+        }
+    }
+
+    pub fn new_real_imag(real: f64, imag: f64) -> Self {
+        Self {
+            val: Complex::<f64>::new(real, imag),
+        }
+    }
+
+    pub fn new_complex(num: Complex<f64>) -> Self {
+        Self { val: num }
+    }
+
+    // unsigned pub fn add_cnt = 0;
+    // unsigned pub fn sub_cnt = 0;
+    // unsigned pub fn mul_cnt = 0;
+    // unsigned pub fn inv_cnt = 0;
+
+    pub fn inverse(&self) -> Self {
+        // #ifdef PROFILE_OP_COUNTS
+        // ++inv_cnt;
+        //#endif
+
+        return Self::new_complex(Complex::<f64>::new(1.0, 0.0) / self.val.clone());
+    }
+
+    pub fn as_bigint(&self) -> bigint<1> {
+        return bigint::<{ 1 }>::new(self.val.re() as u64);
+    }
+
+    pub fn as_ulong(&self) -> u64 {
+        self.val.re().round() as u64
+    }
+
+    pub fn squared(&self) -> Self {
+        return Self::new_complex(self.val.clone() * self.val.clone());
+    }
+
+    pub fn one() -> Self {
+        return Self::new_real(1.0);
+    }
+
+    pub fn zero() -> Self {
+        return Self::new_real(0.0);
+    }
+
+    pub fn random_element() -> Self {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
+        return Self::new_real((rng.r#gen::<i64>() % 1001) as f64);
+    }
+
+    pub fn geometric_generator() -> Self {
+        return Self::new_real(2.0);
+    }
+
+    pub fn arithmetic_generator() -> Self {
+        return Self::new_real(1.0);
+    }
+
+    // pub fn multiplicative_generator = Double(2);
+
+    // } // namespace libff
 }
-
-pub fn new_real( real:f64)->Self
-{
-   Self{ val : Complex::<f64>::new(real, 0.0)}
-}
-
-pub fn new_real_imag( real:f64,  imag:f64)->Self
-{
-   Self{ val : Complex::<f64>::new(real, imag)}
-}
-
-pub fn new_complex( num:Complex<f64>)->Self
-{
-   Self {val : num}
-}
-
-// unsigned pub fn add_cnt = 0;
-// unsigned pub fn sub_cnt = 0;
-// unsigned pub fn mul_cnt = 0;
-// unsigned pub fn inv_cnt = 0;
-
-pub fn inverse(&self) ->Self
-{
-// #ifdef PROFILE_OP_COUNTS
-    // ++inv_cnt;
-//#endif
-
-    return Self::new_complex(Complex::<f64>::new(1.0,0.0) / self.val.clone());
-}
-
-pub fn as_bigint(&self) ->bigint<1> 
-{
-    return bigint::<{1}>::new( self.val.re() as u64);
-}
-
-pub fn as_ulong(&self) ->u64
-{
-      self.val.re().round() as u64
-}
-
-pub fn squared(&self) ->Self
-{
-    return Self::new_complex(self.val.clone() * self.val.clone());
-}
-
-pub fn one()->Self
-{
-    return Self::new_real(1.0);
-}
-
-pub fn zero()->Self
-{
-    return Self::new_real(0.0);
-}
-
-pub fn random_element()->Self
-{
-    use rand::Rng;
-    let mut rng = rand::thread_rng();
-    return Self::new_real((rng.r#gen::<i64>()  % 1001)  as f64);
-}
-
-pub fn geometric_generator()->Self
-{
-    return Self::new_real(2.0);
-}
-
-pub fn arithmetic_generator()->Self
-{
-    return Self::new_real(1.0);
-}
-
-// pub fn multiplicative_generator = Double(2);
-
-// } // namespace libff
-}
-
-
 
 // pub fn operator+(other:&Double) const
 // {

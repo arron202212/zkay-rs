@@ -10,7 +10,6 @@ pub use crate::domain::utils::Elements;
 use crate::domain::{
     DomainCoeff, EvaluationDomain, MixedRadixEvaluationDomain, Radix2EvaluationDomain,
 };
-use ffec::FftField;
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };
@@ -18,6 +17,7 @@ use ark_std::{
     io::{Read, Write},
     vec::*,
 };
+use ffec::FftField;
 
 /// Defines a domain over which finite field (I)FFTs can be performed.
 ///
@@ -237,10 +237,10 @@ impl<F: FftField> Iterator for GeneralElements<F> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{polynomial::Polynomial, EvaluationDomain, GeneralEvaluationDomain};
-    use ffec::Zero;
+    use crate::{EvaluationDomain, GeneralEvaluationDomain, polynomial::Polynomial};
     use ark_std::{rand::Rng, test_rng};
     use ark_test_curves::{bls12_381::Fr, bn384_small_two_adicity::Fr as BNFr};
+    use ffec::Zero;
 
     #[test]
     fn vanishing_polynomial_evaluation() {

@@ -1,13 +1,13 @@
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of serialization routines and constants.
+Declaration of serialization routines and constants.
 
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+*****************************************************************************
+* @author     This file is part of libfqfft, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 
 //#ifndef SERIALIZATION_HPP_
 // #define SERIALIZATION_HPP_
@@ -67,7 +67,7 @@
 // #define OUTPUT_NEWLINE "\n"
 // #define OUTPUT_SEPARATOR " "
 //#endif
-cfg_if::cfg_if!{
+cfg_if::cfg_if! {
  if #[cfg(feature="BINARY_OUTPUT")]
 {const OUTPUT_NEWLINE:&str= "";
 const OUTPUT_SEPARATOR:&str= "";}
@@ -87,25 +87,25 @@ const OUTPUT_SEPARATOR:&str= " ";
 // inline pub fn  output_bool_vector(std::ostream &out, v:&Vec<bool>);
 // inline pub fn  input_bool_vector(std::istream &in, Vec<bool> &v);
 
-// 
+//
 // T reserialize(obj:&T);
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<T>);
 
-// 
+//
 // std::istream& operator>>(std::ostream& out, Vec<T> &v);
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>);
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m);
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>);
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
 // //} // libfqfft
@@ -126,7 +126,6 @@ const OUTPUT_SEPARATOR:&str= " ";
 //  *             and contributors (see AUTHORS).
 //  * @copyright  MIT license (see LICENSE file)
 //  *****************************************************************************/
-
 //#ifndef SERIALIZATION_TCC_
 // #define SERIALIZATION_TCC_
 
@@ -199,7 +198,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     }
 // }
 
-// 
+//
 // T reserialize(obj:&T)
 // {
 //     std::stringstream ss;
@@ -210,7 +209,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return tmp;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, v:&Vec<T>)
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
@@ -223,7 +222,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, Vec<T> &v)
 // {
 //     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
@@ -243,7 +242,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>)
 // {
 //     out << m.len() << "\n";
@@ -257,7 +256,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return out;
 // }
 
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m)
 // {
 //     m.clear();
@@ -279,7 +278,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return in;
 // }
 
-// 
+//
 // std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>)
 // {
 //     out << s.len() << "\n";
@@ -292,8 +291,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 //     return out;
 // }
 
-
-// 
+//
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s)
 // {
 //     s.clear();

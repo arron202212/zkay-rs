@@ -22,7 +22,9 @@ Above, USCS stands for "Unitary-Square Constraint System".
 // use  <map>
 // use  <string>
 use crate::relations::variable;
-use crate::relations::variable::linear_combination;
+use crate::relations::variable::{
+    SubLinearCombinationConfig, SubVariableConfig, linear_combination,
+};
 use std::collections::BTreeMap;
 use std::fmt;
 /************************* USCS constraint ***********************************/
@@ -37,7 +39,7 @@ use std::fmt;
  * A USCS constraint is used to construct a USCS constraint system (see below).
  */
 
-pub type uscs_constraint<FieldT> = linear_combination<FieldT>;
+pub type uscs_constraint<FieldT, SV, SLC> = linear_combination<FieldT, SV, SLC>;
 
 /************************* USCS variable assignment **************************/
 
@@ -73,10 +75,14 @@ pub type uscs_variable_assignment<FieldT> = Vec<FieldT>;
  * Thus, the 0-th variable is not included in num_variables.
  */
 #[derive(Default, Clone)]
-pub struct uscs_constraint_system<FieldT: FieldTConfig> {
+pub struct uscs_constraint_system<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+> {
     pub primary_input_size: usize,
     pub auxiliary_input_size: usize,
-    pub constraints: Vec<uscs_constraint<FieldT>>,
+    pub constraints: Vec<uscs_constraint<FieldT, SV, SLC>>,
 
     //     uscs_constraint_system()->Self primary_input_size(0), auxiliary_input_size(0) {};
 
@@ -93,8 +99,8 @@ pub struct uscs_constraint_system<FieldT: FieldTConfig> {
     //     bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
     //                       auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
 
-    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>);
-    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT>, annotation:&String);
+    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT,SLC>);
+    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT,SLC>, annotation:&String);
 
     //     bool operator==(other:&uscs_constraint_system<FieldT>) const;
 
@@ -132,7 +138,9 @@ use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
 use ffec::common::utils;
 
-impl<FieldT: FieldTConfig> uscs_constraint_system<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    uscs_constraint_system<FieldT, SV, SLC>
+{
     pub fn num_inputs(&self) -> usize {
         return self.primary_input_size;
     }
@@ -202,11 +210,11 @@ impl<FieldT: FieldTConfig> uscs_constraint_system<FieldT> {
         return true;
     }
 
-    pub fn add_constraint0(&mut self, c: uscs_constraint<FieldT>) {
+    pub fn add_constraint0(&mut self, c: uscs_constraint<FieldT, SV, SLC>) {
         self.constraints.push(c);
     }
 
-    pub fn add_constraint(&mut self, c: uscs_constraint<FieldT>, annotation: &str) {
+    pub fn add_constraint(&mut self, c: uscs_constraint<FieldT, SV, SLC>, annotation: &str) {
         // #ifdef DEBUG
         self.constraint_annotations
             .insert(self.constraints.len(), annotation.to_owned());
@@ -222,7 +230,7 @@ impl<FieldT: FieldTConfig> uscs_constraint_system<FieldT> {
             let constr = &self.constraints[i];
             let mut a_is_const = true;
             for t in &constr.terms {
-                a_is_const = a_is_const && (t.index == 0);
+                a_is_const = a_is_const && (t.index.index == 0);
             }
 
             if a_is_const {
@@ -242,8 +250,12 @@ impl<FieldT: FieldTConfig> uscs_constraint_system<FieldT> {
 
 //#endif // USCS_TCC_
 
-pub fn dump_uscs_constraint<FieldT: FieldTConfig>(
-    constraint: &uscs_constraint<FieldT>,
+pub fn dump_uscs_constraint<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+>(
+    constraint: &uscs_constraint<FieldT, SV, SLC>,
     full_variable_assignment: &uscs_variable_assignment<FieldT>,
     variable_annotations: &BTreeMap<usize, String>,
 ) {
@@ -258,7 +270,9 @@ pub fn dump_uscs_constraint<FieldT: FieldTConfig>(
 //             self.auxiliary_input_size == other.auxiliary_input_size);
 // }
 
-impl<FieldT: FieldTConfig> PartialEq for uscs_constraint_system<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> PartialEq
+    for uscs_constraint_system<FieldT, SV, SLC>
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.constraints == other.constraints
@@ -267,7 +281,9 @@ impl<FieldT: FieldTConfig> PartialEq for uscs_constraint_system<FieldT> {
     }
 }
 
-impl<FieldT: FieldTConfig> fmt::Display for uscs_constraint_system<FieldT> {
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> fmt::Display
+    for uscs_constraint_system<FieldT, SV, SLC>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -313,7 +329,7 @@ impl<FieldT: FieldTConfig> fmt::Display for uscs_constraint_system<FieldT> {
 
 //     for i in 0..s
 //     {
-//         uscs_constraint<FieldT> c;
+//         uscs_constraint<FieldT,SLC> c;
 //         in >> c;
 //         cs.constraints.push(c);
 //     }

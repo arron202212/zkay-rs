@@ -142,7 +142,7 @@ pb:&protoboard<FieldT>,
                               annotation_prefix:&String) ->Self
    
 {
-    let (X_var, Y_var)=( pb_variable::<FieldT>::new(),pb_variable::<FieldT>::new());
+    let (X_var, Y_var)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
 
     X_var.allocate(pb, FMT(annotation_prefix, " X"));
     Y_var.allocate(pb, FMT(annotation_prefix, " Y"));

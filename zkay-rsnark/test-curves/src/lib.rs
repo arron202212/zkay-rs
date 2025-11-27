@@ -1,6 +1,9 @@
 #![no_std]
 
-pub use ffec::{self,algebra::{ fields::*, FftField, Field, LegendreSymbol, MontFp, PrimeField}};
+pub use ffec::{
+    self,
+    algebra::{FftField, Field, LegendreSymbol, MontFp, PrimeField, fields::*},
+};
 
 pub use ff_curves::{self, *};
 

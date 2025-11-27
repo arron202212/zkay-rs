@@ -124,7 +124,7 @@ pub fn update_all_vars()
 
     for var_idx in num_vars_at_construction + 1..=self.pb.num_variables()
     {
-        all_vars.push(pb_variable::<FieldT>(var_idx));
+        all_vars.push(variable::<FieldT,pb_variable>(var_idx));
     }
 }
 
@@ -152,7 +152,7 @@ pub fn update_all_vars()
 
     for var_idx in num_vars_at_construction + 1..=self.pb.num_variables()
     {
-        all_vars.push(pb_variable::<FieldT>(var_idx));
+        all_vars.push(variable::<FieldT,pb_variable>(var_idx));
     }
 }
 

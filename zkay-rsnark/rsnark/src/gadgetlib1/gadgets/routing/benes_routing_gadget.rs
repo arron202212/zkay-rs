@@ -306,7 +306,7 @@ pub fn  test_benes_routing_gadget(num_packets:usize, packet_size:usize)
     }
 
     print!("negative test\n");
-    pb.val(pb_variable::<FieldT>(10)) = FieldT(12345);
+    pb.val(variable::<FieldT,pb_variable>(10)) = FieldT(12345);
     assert!(!pb.is_satisfied());
 
     print!("num_constraints = {}, num_variables = {}\n",
