@@ -98,7 +98,7 @@ use ffec::common::profiling;
 
 impl as_waksman_routing_gadget<FieldT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                              num_packets:usize,
                                                              routing_input_bits:&Vec<pb_variable_array<FieldT> >,
                                                              routing_output_bits:&Vec<pb_variable_array<FieldT> >,
@@ -114,7 +114,7 @@ pub fn new(pb:protoboard<FieldT>,
     routed_packets[0].resize(num_packets);
     for packet_idx in 0..num_packets
     {
-        routed_packets[0][packet_idx].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_0_{}", packet_idx));
+        routed_packets[0][packet_idx].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_0_{}", packet_idx));
     }
 
     for column_idx in 0..num_columns
@@ -132,8 +132,8 @@ pub fn new(pb:protoboard<FieldT>,
             {
                 let straight_edge = neighbors[column_idx][row_idx].first;
                 let cross_edge = neighbors[column_idx][row_idx].second;
-                routed_packets[column_idx+1][straight_edge].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx+1, straight_edge));
-                routed_packets[column_idx+1][cross_edge].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx+1, cross_edge));
+                routed_packets[column_idx+1][straight_edge].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx+1, straight_edge));
+                routed_packets[column_idx+1][cross_edge].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx+1, cross_edge));
                 row_idx+=1; /* skip the next idx, as it to refers to the same packets */
             }
         }
@@ -144,13 +144,13 @@ pub fn new(pb:protoboard<FieldT>,
     for packet_idx in 0..num_packets
     {
         pack_inputs.push(
-            multipacking_gadget::<FieldT>(pb,
+            multipacking_gadget::<FieldT>(&pb,
                                         pb_variable_array::<FieldT>(routing_input_bits[packet_idx].begin(), routing_input_bits[packet_idx].end()),
                                         routed_packets[0][packet_idx],
                                         FieldT::capacity(),
                                       FMT(self.annotation_prefix, " pack_inputs_{}", packet_idx)));
         unpack_outputs.push(
-            multipacking_gadget::<FieldT>(pb,
+            multipacking_gadget::<FieldT>(&pb,
                                         pb_variable_array::<FieldT>(routing_output_bits[packet_idx].begin(), routing_output_bits[packet_idx].end()),
                                         routed_packets[num_columns][packet_idx],
                                         FieldT::capacity(),
@@ -168,13 +168,13 @@ pub fn new(pb:protoboard<FieldT>,
             {
                 if neighbors[column_idx][row_idx].first != neighbors[column_idx][row_idx].second
                 {
-                    asw_switch_bits[column_idx][row_idx].allocate(pb, FMT(annotation_prefix, " asw_switch_bits_{}_{}", column_idx, row_idx));
+                    asw_switch_bits[column_idx][row_idx].allocate(&pb, FMT(annotation_prefix, " asw_switch_bits_{}_{}", column_idx, row_idx));
                     row_idx+=1; /* next row_idx corresponds to the same switch, so skip it */
                 }
             }
         }
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{num_packets,
     num_columns:as_waksman_num_columns(num_packets),
    routing_input_bits,
@@ -332,8 +332,8 @@ pub fn  test_as_waksman_routing_gadget(num_packets:usize, packet_size:usize)
     let  (randbits, outbits)=(vec![vec![];num_packets],vec![vec![];num_packets]);
     for packet_idx in 0..num_packets
     {
-        randbits[packet_idx].allocate(pb, packet_size, FMT("", "randbits_{}", packet_idx));
-        outbits[packet_idx].allocate(pb, packet_size, FMT("", "outbits_{}", packet_idx));
+        randbits[packet_idx].allocate(&pb, packet_size, FMT("", "randbits_{}", packet_idx));
+        outbits[packet_idx].allocate(&pb, packet_size, FMT("", "outbits_{}", packet_idx));
 
         for bit_idx in 0..packet_size
         {
@@ -342,7 +342,7 @@ pub fn  test_as_waksman_routing_gadget(num_packets:usize, packet_size:usize)
     }
     ffec::print_time("generated bits to be routed");
 
-   let mut  r=as_waksman_routing_gadget::<FieldT>::new (pb, num_packets, randbits, outbits, "main_routing_gadget");
+   let mut  r=as_waksman_routing_gadget::<FieldT>::new (&pb, num_packets, randbits, outbits, "main_routing_gadget");
     r.generate_r1cs_constraints();
     ffec::print_time("generated routing constraints");
 

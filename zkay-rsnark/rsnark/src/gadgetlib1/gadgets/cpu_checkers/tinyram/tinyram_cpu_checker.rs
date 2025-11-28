@@ -153,8 +153,8 @@ annotation_prefix:                                                  String
    let ( packed_prev_registers, packed_next_registers)=( pb_variable_array::<FieldT>::new(), pb_variable_array::<FieldT>::new());
     for i in 0..pb.ap.k
     {
-        prev_registers.push(word_variable_gadget::<FieldT>(pb, pb_variable_array::<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} prev_registers_{}", i)));
-        next_registers.push(word_variable_gadget::<FieldT>(pb, pb_variable_array::<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} next_registers_{}", i)));
+        prev_registers.push(word_variable_gadget::<FieldT>(&pb, pb_variable_array::<FieldT>(prev_state.begin() + i * pb.ap.w, prev_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} prev_registers_{}", i)));
+        next_registers.push(word_variable_gadget::<FieldT>(&pb, pb_variable_array::<FieldT>(next_state.begin() + i * pb.ap.w, next_state.begin() + (i + 1) * pb.ap.w), format!("{annotation_prefix} next_registers_{}", i)));
 
         packed_prev_registers.push(prev_registers[i].packed);
         packed_next_registers.push(next_registers[i].packed);
@@ -177,11 +177,11 @@ prev_state.next_back();
                                                                format!("{annotation_prefix} decode_arguments")));
 
     /* create indicator variables for opcodes */
-    opcode_indicators.allocate(pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} opcode_indicators"));
+    opcode_indicators.allocate(&pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} opcode_indicators"));
 
     /* perform the ALU operations */
-    instruction_results.allocate(pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} instruction_results"));
-    instruction_flags.allocate(pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} instruction_flags"));
+    instruction_results.allocate(&pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} instruction_results"));
+    instruction_flags.allocate(&pb, 1u64<<pb.ap.opcode_width(), format!("{annotation_prefix} instruction_flags"));
 
     ALU.reset(ALU_gadget::<FieldT>::new(pb, opcode_indicators, *prev_pc_addr_as_word_variable, *desval, *arg1val, *arg2val, prev_flag, instruction_results, instruction_flags,
                                      format!("{annotation_prefix} ALU")));
@@ -193,9 +193,9 @@ prev_state.next_back();
     memory_subaddress.reset(dual_variable_gadget::<FieldT>::new(pb, pb_variable_array::<FieldT>(arg2val.bits.begin(), arg2val.bits.begin() + pb.ap.subaddr_len()),
                                                              format!("{annotation_prefix} memory_subaddress")));
 
-    memory_subcontents.allocate(pb, format!("{annotation_prefix} memory_subcontents"));
-    memory_access_is_word.assign(pb, 1 - (opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB]));
-    memory_access_is_byte.assign(pb, opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB]);
+    memory_subcontents.allocate(&pb, format!("{annotation_prefix} memory_subcontents"));
+    memory_access_is_word.assign(&pb, 1 - (opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB]));
+    memory_access_is_byte.assign(&pb, opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB]);
 
     check_memory.reset( memory_masking_gadget::<FieldT>::new(pb,
                                                          *ls_prev_val_as_doubleword_variable,
@@ -207,7 +207,7 @@ prev_state.next_back();
                                                          format!("{annotation_prefix} check_memory")));
 
     /* handle reads */
-    read_not1.allocate(pb, format!("{annotation_prefix} read_not1"));
+    read_not1.allocate(&pb, format!("{annotation_prefix} read_not1"));
 
     /* check consistency of the states according to the ALU results */
     next_pc_addr_as_word_variable.reset(word_variable_gadget::<FieldT>::new(pb, next_pc_addr, format!("{annotation_prefix} next_pc_addr_as_word_variable")));
@@ -221,7 +221,7 @@ prev_state.next_back();
                                                                        packed_next_registers,
                                                                        next_flag,
                                                                        format!("{annotation_prefix} consistency_enforcer")));
-    // tinyram_standard_gadget<FieldT>(pb, annotation_prefix), 
+    // tinyram_standard_gadget<FieldT>(&pb, annotation_prefix), 
    Self{ prev_pc_addr, prev_pc_val,
     prev_state, ls_addr, ls_prev_val, ls_next_val,
     next_state, next_pc_addr, next_has_accepted}

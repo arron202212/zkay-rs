@@ -21,7 +21,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux;
 
 // 
 pub struct tinyram_protoboard  {
-// : public protoboard<FieldT>
+// : public RcCell<protoboard<FieldT>>
       ap:tinyram_architecture_params,
 
     // tinyram_protoboard(ap:tinyram_architecture_params);
@@ -80,7 +80,7 @@ impl tinyram_gadget<FieldT>{
 pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
     
 {
-// gadget<FieldT>(pb, annotation_prefix),pb
+// gadget<FieldT>(&pb, annotation_prefix),pb
   Self{}
 }
 }
@@ -89,7 +89,7 @@ impl tinyram_standard_gadget<FieldT>{
 pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
     
 {
-// tinyram_gadget<FieldT>(pb, annotation_prefix)
+// tinyram_gadget<FieldT>(&pb, annotation_prefix)
     Self{}
 }
 }

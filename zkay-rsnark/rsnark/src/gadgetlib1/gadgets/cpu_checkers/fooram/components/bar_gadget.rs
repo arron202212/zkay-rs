@@ -47,7 +47,7 @@ pack_Z:    RcCell<packing_gadget<FieldT> >,
 
 width:    usize,
 
-    // bar_gadget(pb:protoboard<FieldT>,
+    // bar_gadget(pb:RcCell<protoboard<FieldT>>,
     //            X:&pb_linear_combination_array<FieldT>,
     //            a:&FieldT,
     //            Y:&pb_linear_combination_array<FieldT>,
@@ -83,7 +83,7 @@ impl bar_gadget<FieldT>{
 
 // 
 pub fn new(
-pb:&protoboard<FieldT>,
+pb:&RcCell<protoboard<FieldT>>,
 X:&                                pb_linear_combination_array<FieldT>,
 a:&                                FieldT,
 Y:&                                pb_linear_combination_array<FieldT>,
@@ -96,16 +96,16 @@ annotation_prefix:&                                String
     assert!(X.len() == Y.len());
     let width = X.len();
 
-    result.allocate(pb, FMT(annotation_prefix, " result"));
-    Z_bits.allocate(pb, width, FMT(annotation_prefix, " Z_bits"));
-    overflow.allocate(pb, 2*width, FMT(annotation_prefix, " overflow"));
+    result.allocate(&pb, FMT(annotation_prefix, " result"));
+    Z_bits.allocate(&pb, width, FMT(annotation_prefix, " Z_bits"));
+    overflow.allocate(&pb, 2*width, FMT(annotation_prefix, " overflow"));
 
     unpacked_result.insert(unpacked_result.end(), Z_bits.begin(), Z_bits.end());
     unpacked_result.insert(unpacked_result.end(), overflow.begin(), overflow.end());
 
-    unpack_result.reset( packing_gadget::<FieldT>(pb, unpacked_result, result, FMT(annotation_prefix, " unpack_result")));
+    unpack_result.reset( packing_gadget::<FieldT>(&pb, unpacked_result, result, FMT(annotation_prefix, " unpack_result")));
     pack_Z.reset( packing_gadget::<FieldT>::new(pb, Z_bits, Z_packed, FMT(annotation_prefix, " pack_Z")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{X,
     a,
     Y,

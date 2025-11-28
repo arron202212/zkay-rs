@@ -138,26 +138,26 @@ scalar_size:     usize,
 impl G1_variable<ppT>{
 
 pub fn new(
-pb:&protoboard<FieldT>,
+pb:&RcCell<protoboard<FieldT>>,
                               annotation_prefix:&String) ->Self
    
 {
     let (X_var, Y_var)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
 
-    X_var.allocate(pb, FMT(annotation_prefix, " X"));
-    Y_var.allocate(pb, FMT(annotation_prefix, " Y"));
+    X_var.allocate(&pb, FMT(annotation_prefix, " X"));
+    Y_var.allocate(&pb, FMT(annotation_prefix, " Y"));
 
     X = pb_linear_combination::<FieldT>(X_var);
     Y = pb_linear_combination::<FieldT>(Y_var);
 
     all_vars.push(X);
     all_vars.push(Y);
-    //  gadget<FieldT>(pb, annotation_prefix)
+    //  gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
 pub fn new2(
-pb:&protoboard<FieldT>,
+pb:&RcCell<protoboard<FieldT>>,
                               P:&ffec::G1::<other_curve::<ppT> >,
                               annotation_prefix:&String)->Self
     
@@ -165,13 +165,13 @@ pb:&protoboard<FieldT>,
     let  Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
 
-    X.assign(pb, Pcopy.X());
-    Y.assign(pb, Pcopy.Y());
+    X.assign(&pb, Pcopy.X());
+    Y.assign(&pb, Pcopy.Y());
     X.evaluate(pb);
     Y.evaluate(pb);
     all_vars.push(X);
     all_vars.push(Y);
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
@@ -199,12 +199,12 @@ pub fn num_variables(&self)->usize
 impl G1_checker_gadget<ppT>{
 
 pub fn new(
-pb:&protoboard<FieldT>, P:&G1_variable<ppT>, annotation_prefix:&String)->Self
+pb:&RcCell<protoboard<FieldT>>, P:&G1_variable<ppT>, annotation_prefix:&String)->Self
     
 {
-    P_X_squared.allocate(pb, FMT(annotation_prefix, " P_X_squared"));
-    P_Y_squared.allocate(pb, FMT(annotation_prefix, " P_Y_squared"));
-    // gadget<FieldT>(pb, annotation_prefix),
+    P_X_squared.allocate(&pb, FMT(annotation_prefix, " P_X_squared"));
+    P_Y_squared.allocate(&pb, FMT(annotation_prefix, " P_Y_squared"));
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self {P}
 }
 
@@ -238,7 +238,7 @@ pub fn  generate_r1cs_witness()
 impl G1_add_gadget<ppT>{
 
 pub fn new(
-pb:&protoboard<FieldT>,
+pb:&RcCell<protoboard<FieldT>>,
                                   A:&G1_variable<ppT>,
                                   B:&G1_variable<ppT>,
                                   C:&G1_variable<ppT>,
@@ -262,10 +262,10 @@ pb:&protoboard<FieldT>,
       So we need to check that A.x - B.x != 0, which can be done by
       enforcing I * (B.x - A.x) = 1
     */
-    lambda.allocate(pb, FMT(annotation_prefix, " lambda"));
-    inv.allocate(pb, FMT(annotation_prefix, " inv"));
+    lambda.allocate(&pb, FMT(annotation_prefix, " lambda"));
+    inv.allocate(&pb, FMT(annotation_prefix, " inv"));
     Self{
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     A,
     B,
     C
@@ -312,16 +312,16 @@ pub fn  generate_r1cs_witness()
 impl G1_dbl_gadget<ppT>{
 
 pub fn new(
-pb:&protoboard<FieldT>,
+pb:&RcCell<protoboard<FieldT>>,
                                   A:&G1_variable<ppT>,
                                   B:&G1_variable<ppT>,
                                   annotation_prefix:&String)->Self
   
 {
-    Xsquared.allocate(pb, FMT(annotation_prefix, " X_squared"));
-    lambda.allocate(pb, FMT(annotation_prefix, " lambda"));
+    Xsquared.allocate(&pb, FMT(annotation_prefix, " X_squared"));
+    lambda.allocate(&pb, FMT(annotation_prefix, " lambda"));
     Self{
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
     A,
     B
     }
@@ -368,7 +368,7 @@ pub fn  generate_r1cs_witness()
 impl G1_multiscalar_mul_gadget<ppT>{
 
 pub fn new(
-    pb:&protoboard<FieldT>,
+    pb:&RcCell<protoboard<FieldT>>,
                                                           base:&G1_variable<ppT>,
                                                           scalars:&pb_variable_array<FieldT>,
                                                           elt_size:usize,
@@ -385,28 +385,28 @@ pub fn new(
         points_and_powers.push(points[i]);
         for j in 0..elt_size - 1
         {
-            points_and_powers.push(G1_variable::<ppT>(pb, FMT(annotation_prefix, " points_{}_times_2_to_{}", i, j+1)));
-            doublers.push(G1_dbl_gadget::<ppT>(pb, points_and_powers[i*elt_size + j], points_and_powers[i*elt_size + j + 1], FMT(annotation_prefix, " double_{}_to_2_to_{}", i, j+1)));
+            points_and_powers.push(G1_variable::<ppT>(&pb, FMT(annotation_prefix, " points_{}_times_2_to_{}", i, j+1)));
+            doublers.push(G1_dbl_gadget::<ppT>(&pb, points_and_powers[i*elt_size + j], points_and_powers[i*elt_size + j + 1], FMT(annotation_prefix, " double_{}_to_2_to_{}", i, j+1)));
         }
     }
 
     chosen_results.push(base);
     for i in 0..scalar_size
     {
-        computed_results.push(G1_variable::<ppT>(pb, FMT(annotation_prefix, " computed_results_{}")));
+        computed_results.push(G1_variable::<ppT>(&pb, FMT(annotation_prefix, " computed_results_{}")));
         if i < scalar_size-1
         {
-            chosen_results.push(G1_variable::<ppT>(pb, FMT(annotation_prefix, " chosen_results_{}")));
+            chosen_results.push(G1_variable::<ppT>(&pb, FMT(annotation_prefix, " chosen_results_{}")));
         }
         else
         {
             chosen_results.push(result);
         }
 
-        adders.push(G1_add_gadget::<ppT>(pb, chosen_results[i], points_and_powers[i], computed_results[i], FMT(annotation_prefix, " adders_{}")));
+        adders.push(G1_add_gadget::<ppT>(&pb, chosen_results[i], points_and_powers[i], computed_results[i], FMT(annotation_prefix, " adders_{}")));
     }
     Self{
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     base,
     scalars,
     points,

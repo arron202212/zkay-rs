@@ -9,6 +9,7 @@ pub trait FieldTConfig:
     + std::fmt::Display
     + std::ops::Neg<Output = Self>
     + From<i64>
+    + From<i32>
     + From<usize>
     + ffec::Zero
     + std::cmp::PartialEq
@@ -21,6 +22,7 @@ pub trait FieldTConfig:
     + ffec::Zero
     + Clone
     + Default
+    + std::ops::BitXor<usize, Output = Self>
     + std::ops::Sub<Output = Self>
     + std::ops::Add<Output = Self>
 {
@@ -30,4 +32,5 @@ pub trait FieldTConfig:
     fn inverse(&self) -> Self;
     fn multiplicative_generator() -> Self;
     fn from_int(i: u64, signed: bool) -> Self;
+    fn capacity() -> usize;
 }

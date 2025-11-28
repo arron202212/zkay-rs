@@ -18,11 +18,11 @@ pub fn  test_two_to_one()
 {
     let mut  pb=protoboard::<FieldT> ::new();
 
-    digest_variable<FieldT> left(pb, SHA256_digest_size, "left");
-    digest_variable<FieldT> right(pb, SHA256_digest_size, "right");
-    digest_variable<FieldT> output(pb, SHA256_digest_size, "output");
+    digest_variable<FieldT> left(&pb, SHA256_digest_size, "left");
+    digest_variable<FieldT> right(&pb, SHA256_digest_size, "right");
+    digest_variable<FieldT> output(&pb, SHA256_digest_size, "output");
 
-    sha256_two_to_one_hash_gadget<FieldT> f(pb, left, right, output, "f");
+    sha256_two_to_one_hash_gadget<FieldT> f(&pb, left, right, output, "f");
     f.generate_r1cs_constraints();
     print!("Number of constraints for sha256_two_to_one_hash_gadget: {}\n", pb.num_constraints());
 

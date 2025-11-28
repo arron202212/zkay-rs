@@ -253,7 +253,7 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 
 /* Note the slight interface change: this gadget will allocate g_RR_at_P inside itself (!) */
 impl mnt_miller_loop_dbl_line_eval::<ppT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                   prec_P:&G1_precomputation::<ppT>,
                                                                   c:&precompute_G2_gadget_coeffs::<ppT>,
 g_RR_at_P:&                                                                  RcCell<Fqk_variable::<ppT> >,
@@ -283,7 +283,7 @@ g_RR_at_P:&                                                                  RcC
                                                                FMT(annotation_prefix, " compute_g_RR_at_P_c1")));
     }
     g_RR_at_P.reset(Fqk_variable::<ppT>::new(pb, *(prec_P.PY_twist_squared), *g_RR_at_P_c1, FMT(annotation_prefix, " g_RR_at_P")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{prec_P,c,g_RR_at_P}
 }
 
@@ -326,7 +326,7 @@ pub fn generate_r1cs_witness()
 
 /* Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!) */
 impl mnt_miller_loop_add_line_eval::<ppT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                   invert_Q:bool,
                                                                   prec_P:&G1_precomputation::<ppT>,
                                                                   c:&precompute_G2_gadget_coeffs::<ppT>,
@@ -358,7 +358,7 @@ g_RQ_at_P:&                                                                  RcC
                                                                FMT(annotation_prefix, " compute_g_RQ_at_P_c1")));
     }
     g_RQ_at_P.reset(Fqk_variable::<ppT>::new(pb, *(prec_P.PY_twist_squared), *g_RQ_at_P_c1, FMT(annotation_prefix, " g_RQ_at_P")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{invert_Q,prec_P,c,Q,g_RQ_at_P}
 }
 
@@ -392,7 +392,7 @@ pub fn generate_r1cs_witness()
 
 impl mnt_miller_loop_gadget::<ppT> {
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                     prec_P:&G1_precomputation::<ppT>,
                                                     prec_Q:&G2_precomputation::<ppT>,
                                                     result:&Fqk_variable::<ppT>,
@@ -478,7 +478,7 @@ pub fn new(pb:protoboard<FieldT>,
             add_id+=1;
         }
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{prec_P,prec_Q,result}
 }
 
@@ -556,15 +556,15 @@ pub fn  test_mnt_miller_loop(annotation:&String)
      let mut result=Fqk_variable::<ppT>::new(pb, "result");
      let mut miller=mnt_miller_loop_gadget::<ppT>::new(pb, prec_P, prec_Q, result, "miller");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P");
+    PROFILE_CONSTRAINTS(&pb, "precompute P");
     {
         compute_prec_P.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q");
+    PROFILE_CONSTRAINTS(&pb, "precompute Q");
     {
         compute_prec_Q.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop");
+    PROFILE_CONSTRAINTS(&pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
@@ -586,7 +586,7 @@ pub fn  test_mnt_miller_loop(annotation:&String)
 }
 
 impl mnt_e_over_e_miller_loop_gadget::<ppT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                       prec_P1:&G1_precomputation::<ppT>,
                                                                       prec_Q1:&G2_precomputation::<ppT>,
                                                                       prec_P2:&G1_precomputation::<ppT>,
@@ -694,7 +694,7 @@ pub fn new(pb:protoboard<FieldT>,
             add_id+=1;
         }
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{prec_P1,prec_Q1,prec_P2,prec_Q2,result}
 }
 
@@ -795,17 +795,17 @@ let mut compute_prec_Q2=     precompute_G2_gadget::<ppT>::new(pb, Q2, prec_Q2, "
 let mut result=     Fqk_variable::<ppT>::new(pb, "result");
 let mut miller=     mnt_e_over_e_miller_loop_gadget::<ppT>::new(pb, prec_P1, prec_Q1, prec_P2, prec_Q2, result, "miller");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P");
+    PROFILE_CONSTRAINTS(&pb, "precompute P");
     {
         compute_prec_P1.generate_r1cs_constraints();
         compute_prec_P2.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q");
+    PROFILE_CONSTRAINTS(&pb, "precompute Q");
     {
         compute_prec_Q1.generate_r1cs_constraints();
         compute_prec_Q2.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop");
+    PROFILE_CONSTRAINTS(&pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
@@ -834,7 +834,7 @@ let mut miller=     mnt_e_over_e_miller_loop_gadget::<ppT>::new(pb, prec_P1, pre
 }
 impl mnt_e_times_e_over_e_miller_loop_gadget::<ppT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                       prec_P1:&G1_precomputation::<ppT>,
                                                                                       prec_Q1:&G2_precomputation::<ppT>,
                                                                                       prec_P2:&G1_precomputation::<ppT>,
@@ -963,7 +963,7 @@ pub fn new(pb:protoboard<FieldT>,
             add_id+=1;
         }
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{prec_P1,prec_Q1,prec_P2,prec_Q2,prec_P3,prec_Q3,result}
 }
 
@@ -1083,19 +1083,19 @@ let mut compute_prec_Q3=     precompute_G2_gadget::<ppT>::new(pb, Q3, prec_Q3, "
     let mut result=Fqk_variable::<ppT> ::new(pb, "result");
     let mut  miller=mnt_e_times_e_over_e_miller_loop_gadget::<ppT>::new(pb, prec_P1, prec_Q1, prec_P2, prec_Q2, prec_P3, prec_Q3, result, "miller");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P");
+    PROFILE_CONSTRAINTS(&pb, "precompute P");
     {
         compute_prec_P1.generate_r1cs_constraints();
         compute_prec_P2.generate_r1cs_constraints();
         compute_prec_P3.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q");
+    PROFILE_CONSTRAINTS(&pb, "precompute Q");
     {
         compute_prec_Q1.generate_r1cs_constraints();
         compute_prec_Q2.generate_r1cs_constraints();
         compute_prec_Q3.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop");
+    PROFILE_CONSTRAINTS(&pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }

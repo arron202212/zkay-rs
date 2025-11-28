@@ -57,7 +57,7 @@ precomp:    G1_precomputation<ppT>, // must be a reference.
 impl precompute_G1_gadget<ppT> {
     /* two possible pre-computations one for mnt4 and one for mnt6 */
     
-    pub fn new(pb:protoboard<FieldT>,
+    pub fn new(pb:RcCell<protoboard<FieldT>>,
                          P:&G1_variable<ppT>,
 precomp:                         G1_precomputation<ppT>, // will allocate this inside
                          annotation_prefix:&String,
@@ -65,17 +65,17 @@ precomp:                         G1_precomputation<ppT>, // will allocate this i
     {
 // 4:std::enable_if<ffec::Fqk<other_curve::<ppT> >::extension_degree() ==, FieldT>::type& = FieldT()
        let  (c0, c1)=(pb_linear_combination::<FieldT>::new() ,pb_linear_combination::<FieldT>::new());
-        c0.assign(pb, P.Y * ((ffec::mnt4_twist).squared().c0));
-        c1.assign(pb, P.Y * ((ffec::mnt4_twist).squared().c1));
+        c0.assign(&pb, P.Y * ((ffec::mnt4_twist).squared().c0));
+        c1.assign(&pb, P.Y * ((ffec::mnt4_twist).squared().c1));
 
         precomp.P.reset(G1_variable::<ppT>::new(P));
         precomp.PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, c0, c1, FMT(annotation_prefix, " PY_twist_squared")));
-        //  gadget<FieldT>(pb, annotation_prefix),
+        //  gadget<FieldT>(&pb, annotation_prefix),
             Self{precomp}
     }
 
     
-    pub fn new2(pb:protoboard<FieldT>,
+    pub fn new2(pb:RcCell<protoboard<FieldT>>,
                          P:&G1_variable<ppT>,
 precomp:                         G1_precomputation<ppT>, // will allocate this inside
                          annotation_prefix:&String,
@@ -84,13 +84,13 @@ precomp:                         G1_precomputation<ppT>, // will allocate this i
     {
 // 6:std::enable_if<ffec::Fqk<other_curve::<ppT> >::extension_degree() ==, FieldT>::type& = FieldT()
         let ( c0, c1, c2)=(pb_linear_combination::<FieldT>::new(),pb_linear_combination::<FieldT>::new(),pb_linear_combination::<FieldT>::new());
-        c0.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c0));
-        c1.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c1));
-        c2.assign(pb, P.Y * ((ffec::mnt6_twist).squared().c2));
+        c0.assign(&pb, P.Y * ((ffec::mnt6_twist).squared().c0));
+        c1.assign(&pb, P.Y * ((ffec::mnt6_twist).squared().c1));
+        c2.assign(&pb, P.Y * ((ffec::mnt6_twist).squared().c2));
 
         precomp.P.reset(G1_variable::<ppT>::new(P));
         precomp.PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, c0, c1, c2, FMT(annotation_prefix, " PY_twist_squared")));
-        // gadget<FieldT>(pb, annotation_prefix),
+        // gadget<FieldT>(&pb, annotation_prefix),
            Self{ precomp}
     }
 
@@ -283,7 +283,7 @@ impl G1_precomputation<ppT>{
 // }
 
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                           P_val:&ffec::G1<other_curve<ppT> >,
                                           annotation_prefix:&String)->Self
 {
@@ -335,7 +335,7 @@ impl precompute_G1_gadget<ppT> {
 // }
 
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                           Q_val:&ffec::G2::<other_curve::<ppT> >,
                                           annotation_prefix:&String)->Self
 {
@@ -361,7 +361,7 @@ impl precompute_G2_gadget_coeffs<ppT>{
 // }
 
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                               annotation_prefix:&String)->Self
 {
     RX.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RX")));
@@ -373,7 +373,7 @@ pub fn new(pb:protoboard<FieldT>,
 
 
 
-pub fn new2(pb:protoboard<FieldT>,
+pub fn new2(pb:RcCell<protoboard<FieldT>>,
                                                               Q:&G2_variable<ppT>,
                                                               annotation_prefix:&String)->Self
 {
@@ -403,7 +403,7 @@ pub fn new2(pb:protoboard<FieldT>,
  */
 
 impl G2_precomputation<ppT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                             cur:&precompute_G2_gadget_coeffs<ppT>,
                                                                             next:&precompute_G2_gadget_coeffs<ppT>,
                                                                             annotation_prefix:&String)->Self
@@ -423,7 +423,7 @@ pub fn new(pb:protoboard<FieldT>,
     RX_minus_next_RX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
     RY_plus_next_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
     compute_next_RY.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{cur,
     next}
 }
@@ -484,7 +484,7 @@ pub fn generate_r1cs_witness()
  If invert_Q is set to true: use -QY in place of QY everywhere above.
  */
 impl precompute_G2_gadget_doubling_step<ppT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                             invert_Q:bool,
                                                                             cur:&precompute_G2_gadget_coeffs<ppT>,
                                                                             next:&precompute_G2_gadget_coeffs<ppT>,
@@ -504,7 +504,7 @@ pub fn new(pb:protoboard<FieldT>,
     RX_minus_next_RX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
     RY_plus_next_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
     compute_next_RY.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
    Self{invert_Q,
    cur,
    next,
@@ -554,7 +554,7 @@ pub fn generate_r1cs_witness()
 }
 
 impl precompute_G2_gadget_addition_step<ppT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                 Q:&G2_variable<ppT>,
 precomp:                                                G2_precomputation<ppT>,  // will allocate this inside
                                                 annotation_prefix:&String)->Self
@@ -625,7 +625,7 @@ let coeff_id= 0;
             coeff_id+=1;
         }
     }
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
     Self{precomp}
 }
 

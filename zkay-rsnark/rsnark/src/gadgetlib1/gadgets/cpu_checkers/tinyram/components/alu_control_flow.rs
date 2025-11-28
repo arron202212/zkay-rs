@@ -37,7 +37,7 @@ impl ALU_control_flow_gadget<FieldT>  {
                             result:pb_variable<FieldT>,
                             annotation_prefix:String) ->Self
          {
-// tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+// tinyram_standard_gadget<FieldT>(&pb, annotation_prefix),
         Self{pc,
         argval2,
         flag,
@@ -56,7 +56,7 @@ impl ALU_jmp_gadget {
                    result:pb_variable<FieldT>,
                    annotation_prefix:String) ->Self
         {
-// ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) 
+// ALU_control_flow_gadget<FieldT>(&pb, pc, argval2, flag, result, annotation_prefix) 
     Self{}
 }
 
@@ -77,7 +77,7 @@ impl ALU_cjmp_gadget {
                     result:pb_variable<FieldT>,
                     annotation_prefix:String) ->Self
          {
-// ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix)
+// ALU_control_flow_gadget<FieldT>(&pb, pc, argval2, flag, result, annotation_prefix)
     Self{}
 }
 
@@ -99,7 +99,7 @@ impl ALU_cnjmp_gadget {
                      result:pb_variable<FieldT>,
                      annotation_prefix:String) ->Self
       {
-//   ALU_control_flow_gadget<FieldT>(pb, pc, argval2, flag, result, annotation_prefix) 
+//   ALU_control_flow_gadget<FieldT>(&pb, pc, argval2, flag, result, annotation_prefix) 
     Self{}
 }
 
@@ -168,8 +168,8 @@ pub fn test_ALU_jmp_gadget()
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
-    flag.allocate(pb, "flag");
-    result.allocate(pb, "result");
+    flag.allocate(&pb, "flag");
+    result.allocate(&pb, "result");
 
      let mut jmp=ALU_jmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "jmp");
     jmp.generate_r1cs_constraints();
@@ -235,8 +235,8 @@ pub fn test_ALU_cjmp_gadget()
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
-    flag.allocate(pb, "flag");
-    result.allocate(pb, "result");
+    flag.allocate(&pb, "flag");
+    result.allocate(&pb, "result");
 
     let mut  cjmp=ALU_cjmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "cjmp");
     cjmp.generate_r1cs_constraints();
@@ -317,8 +317,8 @@ pub fn test_ALU_cnjmp_gadget()
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
-    flag.allocate(pb, "flag");
-    result.allocate(pb, "result");
+    flag.allocate(&pb, "flag");
+    result.allocate(&pb, "result");
 
     let mut cnjmp= ALU_cnjmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "cjmp");
     cnjmp.generate_r1cs_constraints();

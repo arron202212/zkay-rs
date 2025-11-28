@@ -47,17 +47,17 @@ merkle_path:    RcCell<merkle_authentication_path_variable<FieldT, HashT> >,
 
 
 impl set_membership_proof_variable<FieldT, HashT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                             max_entries:usize,
                                                                             annotation_prefix:&String)->Self
     
 {
     if tree_depth > 0
     {
-        address_bits.allocate(pb, tree_depth, FMT(annotation_prefix, " address_bits"));
+        address_bits.allocate(&pb, tree_depth, FMT(annotation_prefix, " address_bits"));
         merkle_path.reset(merkle_authentication_path_variable::<FieldT, HashT>::new(pb, tree_depth, FMT(annotation_prefix, " merkle_path")));
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{max_entries,
     tree_depth:ffec::log2(max_entries)}
 }

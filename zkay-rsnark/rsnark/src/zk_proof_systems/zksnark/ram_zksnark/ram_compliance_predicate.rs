@@ -342,17 +342,17 @@ pub fn unpacked_payload_size_in_bits(ap:&ram_architecture_params<ramT>)->usize
 impl ram_pcd_message_variable<ramT>{
 
 pub fn new(
-pb:protoboard<FieldT>,
+pb:RcCell<protoboard<FieldT>>,
                                                          ap:ram_architecture_params<ramT>,
                                                          annotation_prefix:&String) ->Self
     
 {
     let unpacked_payload_size_in_bits = ram_pcd_message::<ramT>::unpacked_payload_size_in_bits(ap);
     let packed_payload_size = div_ceil(unpacked_payload_size_in_bits, FieldT::capacity());
-    packed_payload.allocate(pb, packed_payload_size, FMT(annotation_prefix, " packed_payload"));
+    packed_payload.allocate(&pb, packed_payload_size, FMT(annotation_prefix, " packed_payload"));
 
     self.update_all_vars();
-    // r1cs_pcd_message_variable<ram_base_field<ramT> >(pb, annotation_prefix),ap
+    // r1cs_pcd_message_variable<ram_base_field<ramT> >(&pb, annotation_prefix),ap
     Self{ap}
 }
 
@@ -452,14 +452,14 @@ pub fn as_r1cs_variable_assignment() ->r1cs_variable_assignment<ram_base_field<r
 impl  ram_pcd_local_data_variable<ramT>{
 
 pub fn new(
-pb:protoboard<FieldT>,
+pb:RcCell<protoboard<FieldT>>,
                                                                annotation_prefix:&String)->Self
     
 {
-    is_halt_case.allocate(pb, FMT(annotation_prefix, " is_halt_case"));
+    is_halt_case.allocate(&pb, FMT(annotation_prefix, " is_halt_case"));
 
     self.update_all_vars();
-    r1cs_pcd_local_data_variable::<ram_base_field::<ramT> >(pb, annotation_prefix)
+    r1cs_pcd_local_data_variable::<ram_base_field::<ramT> >(&pb, annotation_prefix)
 }
 }
 /*

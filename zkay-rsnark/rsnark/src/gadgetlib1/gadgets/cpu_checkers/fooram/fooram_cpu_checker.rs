@@ -142,7 +142,7 @@ annotation_prefix:                                                String,
    
 {
     /* increment PC */
-    packed_next_pc_addr.allocate(pb, format!("{annotation_prefix} packed_next_pc_addr"));
+    packed_next_pc_addr.allocate(&pb, format!("{annotation_prefix} packed_next_pc_addr"));
     pack_next_pc_addr.reset( packing_gadget::<FieldT>::new(pb, next_pc_addr, packed_next_pc_addr, format!("{annotation_prefix} pack_next_pc_addr")));
 
     one_as_addr.resize(next_pc_addr.len());
@@ -156,31 +156,31 @@ annotation_prefix:                                                String,
     increment_pc.reset( bar_gadget::<FieldT>::new(pb, prev_pc_addr, FieldT::one(), one_as_addr, FieldT::one(), packed_next_pc_addr, format!("{annotation_prefix} increment_pc")));
 
     /* packed_store_addr = prev_pc_addr + prev_pc_val */
-    packed_store_addr.allocate(pb, format!("{annotation_prefix} packed_store_addr"));
+    packed_store_addr.allocate(&pb, format!("{annotation_prefix} packed_store_addr"));
     compute_packed_store_addr.reset(bar_gadget::<FieldT>::new(pb, prev_pc_addr, FieldT::one(), prev_pc_val, FieldT::one(), packed_store_addr, format!("{annotation_prefix} compute_packed_store_addr")));
 
     /* packed_load_addr = 2 * x + next_pc_addr */
-    packed_load_addr.allocate(pb, format!("{annotation_prefix} packed_load_addr"));
+    packed_load_addr.allocate(&pb, format!("{annotation_prefix} packed_load_addr"));
     compute_packed_load_addr.reset(bar_gadget::<FieldT>::new(pb, prev_pc_val, FieldT(2), next_pc_addr, FieldT::one(), packed_load_addr, format!("{annotation_prefix} compute_packed_load_addr")));
 
     /*
       packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
       packed_ls_addr ~ ls_addr
     */
-    packed_ls_addr.allocate(pb, format!("{annotation_prefix} packed_ls_addr"));
+    packed_ls_addr.allocate(&pb, format!("{annotation_prefix} packed_ls_addr"));
     pack_ls_addr.reset(packing_gadget::<FieldT>::new(pb, ls_addr, packed_ls_addr, " pack_ls_addr"));
 
     /* packed_store_val = prev_state_bits + prev_pc_addr */
-    packed_store_val.allocate(pb, format!("{annotation_prefix} packed_store_val"));
+    packed_store_val.allocate(&pb, format!("{annotation_prefix} packed_store_val"));
     compute_packed_store_val.reset(bar_gadget::<FieldT>::new(pb, prev_state, FieldT::one(), prev_pc_addr, FieldT::one(), packed_store_val, format!("{annotation_prefix} compute_packed_store_val")));
 
     /*
       packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
       packed_ls_next_val ~ ls_next_val
     */
-    packed_ls_prev_val.allocate(pb, format!("{annotation_prefix} packed_ls_prev_val"));
+    packed_ls_prev_val.allocate(&pb, format!("{annotation_prefix} packed_ls_prev_val"));
     pack_ls_prev_val.reset(packing_gadget::<FieldT>::new(self.pb, ls_prev_val, packed_ls_prev_val, format!("{annotation_prefix} pack_ls_prev_val")));
-    packed_ls_next_val.allocate(pb, format!("{annotation_prefix} packed_ls_next_val"));
+    packed_ls_next_val.allocate(&pb, format!("{annotation_prefix} packed_ls_next_val"));
     pack_ls_next_val.reset(packing_gadget::<FieldT>::new(self.pb, ls_next_val, packed_ls_next_val, format!("{annotation_prefix} pack_ls_next_val")));
 
     /*
@@ -188,14 +188,14 @@ annotation_prefix:                                                String,
       packed_next_state ~ next_state
       packed_prev_state ~ prev_state
     */
-    packed_prev_state.allocate(pb, format!("{annotation_prefix} packed_prev_state"));
+    packed_prev_state.allocate(&pb, format!("{annotation_prefix} packed_prev_state"));
     pack_prev_state.reset(packing_gadget::<FieldT>::new(pb, prev_state, packed_prev_state, " pack_prev_state"));
 
-    packed_next_state.allocate(pb, format!("{annotation_prefix} packed_next_state"));
+    packed_next_state.allocate(&pb, format!("{annotation_prefix} packed_next_state"));
     pack_next_state.reset(packing_gadget::<FieldT>::new(pb, next_state, packed_next_state, " pack_next_state"));
 
     /* next_has_accepted = 1 */
-    //  fooram_gadget<FieldT>(pb, annotation_prefix),
+    //  fooram_gadget<FieldT>(&pb, annotation_prefix),
     Self{prev_pc_addr,
     prev_pc_val,
     prev_state,

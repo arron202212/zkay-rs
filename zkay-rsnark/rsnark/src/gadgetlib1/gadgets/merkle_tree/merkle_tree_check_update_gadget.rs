@@ -91,7 +91,7 @@ update_successful:    pb_linear_combination<FieldT>,
 
 impl merkle_tree_check_update_gadget<FieldT, HashT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                 tree_depth:usize,
                                                                                 address_bits:&pb_variable_array<FieldT>,
                                                                                 prev_leaf_digest:&digest_variable<FieldT>,
@@ -109,8 +109,8 @@ pub fn new(pb:protoboard<FieldT>,
 
     for i in 0..tree_depth-1
     {
-        prev_internal_output.push(digest_variable::<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " prev_internal_output_{}", i)));
-        next_internal_output.push(digest_variable::<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " next_internal_output_{}", i)));
+        prev_internal_output.push(digest_variable::<FieldT>(&pb, digest_size, FMT(self.annotation_prefix, " prev_internal_output_{}", i)));
+        next_internal_output.push(digest_variable::<FieldT>(&pb, digest_size, FMT(self.annotation_prefix, " next_internal_output_{}", i)));
     }
 
     computed_next_root.reset(digest_variable::<FieldT>::new(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
@@ -119,27 +119,27 @@ pub fn new(pb:protoboard<FieldT>,
     {
         let mut  prev_inp=block_variable::<FieldT>::new(pb, prev_path.left_digests[i], prev_path.right_digests[i], FMT(self.annotation_prefix, " prev_inp_{}", i));
         prev_hasher_inputs.push(prev_inp);
-        prev_hashers.push(HashT(pb, 2*digest_size, prev_inp, if i == 0 {prev_root_digest} else{prev_internal_output[i-1]},
+        prev_hashers.push(HashT(&pb, 2*digest_size, prev_inp, if i == 0 {prev_root_digest} else{prev_internal_output[i-1]},
                                                                 FMT(self.annotation_prefix, " prev_hashers_{}", i)));
 
         let mut  next_inp=block_variable::<FieldT>::new(pb, next_path.left_digests[i], next_path.right_digests[i], FMT(self.annotation_prefix, " next_inp_{}", i));
         next_hasher_inputs.push(next_inp);
-        next_hashers.push(HashT(pb, 2*digest_size, next_inp, if i == 0 {*computed_next_root} else{next_internal_output[i-1]},
+        next_hashers.push(HashT(&pb, 2*digest_size, next_inp, if i == 0 {*computed_next_root} else{next_internal_output[i-1]},
                                                                 FMT(self.annotation_prefix, " next_hashers_{}", i)));
     }
 
     for i in 0..tree_depth
     {
-        prev_propagators.push(digest_selector_gadget::<FieldT>(pb,  digest_size, if i < tree_depth -1 {prev_internal_output[i]} else {prev_leaf_digest},
+        prev_propagators.push(digest_selector_gadget::<FieldT>(&pb,  digest_size, if i < tree_depth -1 {prev_internal_output[i]} else {prev_leaf_digest},
                                                                      address_bits[tree_depth-1-i], prev_path.left_digests[i], prev_path.right_digests[i],
                                                                    FMT(self.annotation_prefix, " prev_propagators_{}", i)));
-        next_propagators.push(digest_selector_gadget::<FieldT>(pb, digest_size, if i < tree_depth -1 { next_internal_output[i]} else {next_leaf_digest},
+        next_propagators.push(digest_selector_gadget::<FieldT>(&pb, digest_size, if i < tree_depth -1 { next_internal_output[i]} else {next_leaf_digest},
                                                                      address_bits[tree_depth-1-i], next_path.left_digests[i], next_path.right_digests[i],
                                                                    FMT(self.annotation_prefix, " next_propagators_{}", i)));
     }
 
     check_next_root.reset(bit_vector_copy_gadget::<FieldT>::new(pb, computed_next_root.bits, next_root_digest.bits, update_successful, FieldT::capacity(), FMT(annotation_prefix, " check_next_root")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{digest_size:HashT::get_digest_len(),
    tree_depth,
    address_bits,
@@ -298,7 +298,7 @@ pub fn  test_merkle_tree_check_update_gadget()
     /* execute the test */
     let mut  pb=protoboard::<FieldT> ::new();
      let mut  address_bits_va=pb_variable_array::<FieldT>::new();
-    address_bits_va.allocate(pb, tree_depth, "address_bits");
+    address_bits_va.allocate(&pb, tree_depth, "address_bits");
     let mut  prev_leaf_digest=digest_variable::<FieldT>::new(pb, digest_len, "prev_leaf_digest");
     let mut prev_root_digest=digest_variable::<FieldT>::new(pb, digest_len, "prev_root_digest");
     let mut prev_path_var= merkle_authentication_path_variable::<FieldT, HashT>::new(pb, tree_depth, "prev_path_var");
@@ -312,12 +312,12 @@ pub fn  test_merkle_tree_check_update_gadget()
     prev_path_var.generate_r1cs_constraints();
     mls.generate_r1cs_constraints();
 
-    address_bits_va.fill_with_bits(pb, address_bits);
+    address_bits_va.fill_with_bits(&pb, address_bits);
     assert!(address_bits_va.get_field_element_from_bits(pb).as_ulong() == address);
     prev_leaf_digest.generate_r1cs_witness(loaded_leaf);
     prev_path_var.generate_r1cs_witness(address, prev_path);
     next_leaf_digest.generate_r1cs_witness(stored_leaf);
-    address_bits_va.fill_with_bits(pb, address_bits);
+    address_bits_va.fill_with_bits(&pb, address_bits);
     mls.generate_r1cs_witness();
 
     /* make sure that update check will check for the right things */
@@ -325,7 +325,7 @@ pub fn  test_merkle_tree_check_update_gadget()
     next_leaf_digest.generate_r1cs_witness(stored_leaf);
     prev_root_digest.generate_r1cs_witness(load_root);
     next_root_digest.generate_r1cs_witness(store_root);
-    address_bits_va.fill_with_bits(pb, address_bits);
+    address_bits_va.fill_with_bits(&pb, address_bits);
     assert!(pb.is_satisfied());
 
     let num_constraints = pb.num_constraints();

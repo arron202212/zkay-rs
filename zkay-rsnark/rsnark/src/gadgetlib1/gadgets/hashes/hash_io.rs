@@ -46,19 +46,19 @@ bits:    pb_variable_array<FieldT>,
 
 
 impl digest_variable<FieldT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                          digest_size:usize,
                                          annotation_prefix:&String)->Self
     
 {
-    bits.allocate(pb, digest_size, FMT(self.annotation_prefix, " bits"));
-    // gadget<FieldT>(pb, annotation_prefix),
+    bits.allocate(&pb, digest_size, FMT(self.annotation_prefix, " bits"));
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{digest_size}
 }
 
 
 
-pub fn new2(pb:protoboard<FieldT>,
+pub fn new2(pb:RcCell<protoboard<FieldT>>,
                                          digest_size:usize,
                                          partial_bits:&pb_variable_array<FieldT>,
                                          padding:&pb_variable<FieldT>,
@@ -71,7 +71,7 @@ pub fn new2(pb:protoboard<FieldT>,
     {
         bits.push(padding);
     }
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
     Self{digest_size}
 }
 
@@ -98,19 +98,19 @@ pub fn get_digest()->bit_vector
 }
 
 impl block_variable<FieldT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                        block_size:usize,
                                        annotation_prefix:&String)->Self
     
 {
-    bits.allocate(pb, block_size, FMT(self.annotation_prefix, " bits"));
-    // gadget<FieldT>(pb, annotation_prefix),
+    bits.allocate(&pb, block_size, FMT(self.annotation_prefix, " bits"));
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{block_size}
     
 }
 
 
-pub fn new2(pb:protoboard<FieldT>,
+pub fn new2(pb:RcCell<protoboard<FieldT>>,
                                        parts:&Vec<pb_variable_array<FieldT> >,
                                        annotation_prefix:&String)->Self
     
@@ -119,12 +119,12 @@ pub fn new2(pb:protoboard<FieldT>,
     {
         bits.insert(bits.end(), part.begin(), part.end());
     }
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
     Self{}
 }
 
 
-pub fn new3(pb:protoboard<FieldT>,
+pub fn new3(pb:RcCell<protoboard<FieldT>>,
                                        left:&digest_variable<FieldT>,
                                        right:&digest_variable<FieldT>,
                                        annotation_prefix:&String)->Self
@@ -134,7 +134,7 @@ pub fn new3(pb:protoboard<FieldT>,
     block_size = 2 * left.bits.len();
     bits.insert(bits.end(), left.bits.begin(), left.bits.end());
     bits.insert(bits.end(), right.bits.begin(), right.bits.end());
-// gadget<FieldT>(pb, annotation_prefix)
+// gadget<FieldT>(&pb, annotation_prefix)
     Self{}
 }
 

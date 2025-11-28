@@ -34,8 +34,8 @@ impl memory_checker_gadget<ramT> {
         annotation_prefix: String,
     ) -> Self {
         /* compare the two timestamps */
-        timestamps_leq.allocate(pb, FMT(self.annotation_prefix, " timestamps_leq"));
-        timestamps_less.allocate(pb, FMT(self.annotation_prefix, " timestamps_less"));
+        timestamps_leq.allocate(&pb, FMT(self.annotation_prefix, " timestamps_leq"));
+        timestamps_less.allocate(&pb, FMT(self.annotation_prefix, " timestamps_less"));
         compare_timestamps.reset(comparison_gadget::<FieldT>::new(
             pb,
             timestamp_size,
@@ -48,9 +48,9 @@ impl memory_checker_gadget<ramT> {
 
         /* compare the two addresses */
         let address_size = pb.ap.address_size();
-        addresses_eq.allocate(pb, FMT(self.annotation_prefix, " addresses_eq"));
-        addresses_leq.allocate(pb, FMT(self.annotation_prefix, " addresses_leq"));
-        addresses_less.allocate(pb, FMT(self.annotation_prefix, " addresses_less"));
+        addresses_eq.allocate(&pb, FMT(self.annotation_prefix, " addresses_eq"));
+        addresses_leq.allocate(&pb, FMT(self.annotation_prefix, " addresses_leq"));
+        addresses_less.allocate(&pb, FMT(self.annotation_prefix, " addresses_less"));
         compare_addresses.reset(comparison_gadget::<FieldT>::new(
             pb,
             address_size,
@@ -85,9 +85,9 @@ impl memory_checker_gadget<ramT> {
             ),
         );
         loose_timestamp2_is_zero
-            .allocate(pb, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
+            .allocate(&pb, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
         Self {
-            // ram_gadget_base<ramT>(pb, annotation_prefix),
+            // ram_gadget_base<ramT>(&pb, annotation_prefix),
             line1,
             line2,
         }

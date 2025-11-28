@@ -57,7 +57,7 @@ use crate::common::data_structures::set_commitment;
 
 
 impl set_commitment_gadget<FieldT, HashT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                             max_entries:usize,
                                                             element_bits:&pb_variable_array<FieldT>,
                                                             root_digest:&set_commitment_variable<FieldT, HashT>,
@@ -86,7 +86,7 @@ pub fn new(pb:protoboard<FieldT>,
                                                                                 check_successful,
                                                                               FMT(annotation_prefix, " check_membership")));
     }
-    //  gadget<FieldT>(pb, annotation_prefix), 
+    //  gadget<FieldT>(&pb, annotation_prefix), 
     Self{tree_depth:ffec::log2(max_entries),element_bits,
    root_digest,proof,check_successful}
 }
@@ -140,11 +140,11 @@ pub fn  test_set_commitment_gadget()
 
     let mut  pb=protoboard::<FieldT> ::new();
     let mut  element_bits=pb_variable_array::<FieldT>::new();
-    element_bits.allocate(pb, value_size, "element_bits");
+    element_bits.allocate(&pb, value_size, "element_bits");
     let mut  root_digest=set_commitment_variable::<FieldT, HashT>::new(pb, digest_len, "root_digest");
 
    let mut check_succesful= variable::<FieldT,pb_variable>::new();
-    check_succesful.allocate(pb, "check_succesful");
+    check_succesful.allocate(&pb, "check_succesful");
 
     let mut proof= set_membership_proof_variable::<FieldT, HashT>::new(pb, max_set_size, "proof");
 
@@ -154,7 +154,7 @@ pub fn  test_set_commitment_gadget()
     /* test all elements from set */
     for i in 0..max_set_size
     {
-        element_bits.fill_with_bits(pb, set_elems[i]);
+        element_bits.fill_with_bits(&pb, set_elems[i]);
         pb.val(check_succesful) = FieldT::one();
         proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[i]));
         sc.generate_r1cs_witness();

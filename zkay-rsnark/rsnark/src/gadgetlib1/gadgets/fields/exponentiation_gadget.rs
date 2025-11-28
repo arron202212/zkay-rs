@@ -74,7 +74,7 @@ dbl_count:    usize,
 
 impl exponentiation_gadget<FpkT, Fpk_variableT, Fpk_mul_gadgetT, Fpk_sqr_gadgetT, m>{
 // 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                                                                                        elt:&Fpk_variableT<FpkT>,
                                                                                                        power:&ffec::bigint<m>,
                                                                                                        result:&Fpk_variableT<FpkT>,
@@ -168,7 +168,7 @@ pub fn new(pb:&protoboard<FieldT>,
             }
         }
     }
-    // gadget<FieldT>(pb, annotation_prefix), 
+    // gadget<FieldT>(&pb, annotation_prefix), 
     Self{elt, power, result}
 }
 

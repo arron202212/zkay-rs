@@ -195,29 +195,29 @@ compute_csq:    RcCell<Fp2_sqr_gadget<Fp2T> >,
 
 impl Fp6_variable<Fp6T>{
 
-pub fn new(pb:&protoboard<FieldT>, annotation_prefix:&String) ->Self
+pub fn new(pb:&RcCell<protoboard<FieldT>>, annotation_prefix:&String) ->Self
     
 {
     Self{
-// gadget<FieldT>(pb, annotation_prefix), 
+// gadget<FieldT>(&pb, annotation_prefix), 
     c0:Fp3_variable::<Fp3T>::new(pb, FMT(annotation_prefix, " c0")), c1:Fp3_variable::<Fp3T>::new(pb, FMT(annotation_prefix, " c1"))}
 }
 
 
-pub fn new2(pb:&protoboard<FieldT>,
+pub fn new2(pb:&RcCell<protoboard<FieldT>>,
                                  el:&Fp6T,
                                  annotation_prefix:&String) ->Self
    
 {
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
     Self{ c0:Fp3_variable::<Fp3T>::new(pb, el.c0, FMT(annotation_prefix, " c0")), c1:Fp3_variable::<Fp3T>::new(pb, el.c1, FMT(annotation_prefix, " c1"))}
 }
 
 
-pub fn new3(pb:&protoboard<FieldT>, c0:&Fp3_variable<Fp3T>, c1:&Fp3_variable<Fp3T>, annotation_prefix:&String) ->Self
+pub fn new3(pb:&RcCell<protoboard<FieldT>>, c0:&Fp3_variable<Fp3T>, c1:&Fp3_variable<Fp3T>, annotation_prefix:&String) ->Self
     
 {
-    // gadget<FieldT>(pb, annotation_prefix), 
+    // gadget<FieldT>(&pb, annotation_prefix), 
     Self{c0, c1}
 }
 
@@ -270,7 +270,7 @@ pub fn evaluate()
 }
 impl Fp6_mul_gadget<Fp6T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                      A:&Fp6_variable<Fp6T>,
                                      B:&Fp6_variable<Fp6T>,
                                      result:&Fp6_variable<Fp6T>,
@@ -298,26 +298,26 @@ pub fn new(pb:&protoboard<FieldT>,
 
     compute_v1.reset(Fp3_mul_gadget::<Fp3T>::new(pb, A.c1, B.c1, *v1, FMT(annotation_prefix, " compute_v1")));
 
-    v0_c0.assign(pb, result.c0.c0 - Fp6T::non_residue * v1.c2);
-    v0_c1.assign(pb, result.c0.c1 - v1.c0);
-    v0_c2.assign(pb, result.c0.c2 - v1.c1);
+    v0_c0.assign(&pb, result.c0.c0 - Fp6T::non_residue * v1.c2);
+    v0_c1.assign(&pb, result.c0.c1 - v1.c0);
+    v0_c2.assign(&pb, result.c0.c2 - v1.c1);
     v0.reset(Fp3_variable::<Fp3T>::new(pb, v0_c0, v0_c1, v0_c2, FMT(annotation_prefix, " v0")));
 
     compute_v0.reset(Fp3_mul_gadget::<Fp3T>::new(pb, A.c0, B.c0, *v0, FMT(annotation_prefix, " compute_v0")));
 
-    Ac0_plus_Ac1_c0.assign(pb, A.c0.c0 + A.c1.c0);
-    Ac0_plus_Ac1_c1.assign(pb, A.c0.c1 + A.c1.c1);
-    Ac0_plus_Ac1_c2.assign(pb, A.c0.c2 + A.c1.c2);
+    Ac0_plus_Ac1_c0.assign(&pb, A.c0.c0 + A.c1.c0);
+    Ac0_plus_Ac1_c1.assign(&pb, A.c0.c1 + A.c1.c1);
+    Ac0_plus_Ac1_c2.assign(&pb, A.c0.c2 + A.c1.c2);
     Ac0_plus_Ac1.reset(Fp3_variable::<Fp3T>::new(pb, Ac0_plus_Ac1_c0, Ac0_plus_Ac1_c1, Ac0_plus_Ac1_c2, FMT(annotation_prefix, " Ac0_plus_Ac1")));
 
-    Bc0_plus_Bc1_c0.assign(pb, B.c0.c0 + B.c1.c0);
-    Bc0_plus_Bc1_c1.assign(pb, B.c0.c1 + B.c1.c1);
-    Bc0_plus_Bc1_c2.assign(pb, B.c0.c2 + B.c1.c2);
+    Bc0_plus_Bc1_c0.assign(&pb, B.c0.c0 + B.c1.c0);
+    Bc0_plus_Bc1_c1.assign(&pb, B.c0.c1 + B.c1.c1);
+    Bc0_plus_Bc1_c2.assign(&pb, B.c0.c2 + B.c1.c2);
     Bc0_plus_Bc1.reset(Fp3_variable::<Fp3T>::new(pb, Bc0_plus_Bc1_c0, Bc0_plus_Bc1_c1, Bc0_plus_Bc1_c2, FMT(annotation_prefix, " Bc0_plus_Bc1")));
 
-    result_c1_plus_v0_plus_v1_c0.assign(pb, result.c1.c0 + v0.c0 + v1.c0);
-    result_c1_plus_v0_plus_v1_c1.assign(pb, result.c1.c1 + v0.c1 + v1.c1);
-    result_c1_plus_v0_plus_v1_c2.assign(pb, result.c1.c2 + v0.c2 + v1.c2);
+    result_c1_plus_v0_plus_v1_c0.assign(&pb, result.c1.c0 + v0.c0 + v1.c0);
+    result_c1_plus_v0_plus_v1_c1.assign(&pb, result.c1.c1 + v0.c1 + v1.c1);
+    result_c1_plus_v0_plus_v1_c2.assign(&pb, result.c1.c2 + v0.c2 + v1.c2);
     result_c1_plus_v0_plus_v1.reset(Fp3_variable::<Fp3T>::new(pb,
                                                            result_c1_plus_v0_plus_v1_c0,
                                                            result_c1_plus_v0_plus_v1_c1,
@@ -325,7 +325,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                          FMT(annotation_prefix, " result_c1_plus_v0_plus_v1")));
 
     compute_result_c1.reset(Fp3_mul_gadget::<Fp3T>::new(pb, *Ac0_plus_Ac1, *Bc0_plus_Bc1, *result_c1_plus_v0_plus_v1, FMT(annotation_prefix, " compute_result_c1")));
-    // gadget<FieldT>(pb, annotation_prefix), 
+    // gadget<FieldT>(&pb, annotation_prefix), 
     Self{A, B, result}
 }
 
@@ -369,7 +369,7 @@ pub fn generate_r1cs_witness()
 
 impl Fp6_mul_by_2345_gadget<Fp6T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                                      A:&Fp6_variable<Fp6T>,
                                                      B:&Fp6_variable<Fp6T>,
                                                      result:&Fp6_variable<Fp6T>,
@@ -406,19 +406,19 @@ pub fn new(pb:&protoboard<FieldT>,
     /* we inline result.c0 in v0 as follows: v0 = (result.c0.c0 - Fp6T::non_residue * v1->c2, result.c0.c1 - v1->c0, result.c0.c2 - v1->c1) */
     v0.reset(Fp3_variable::<Fp3T>::new(pb, FMT(annotation_prefix, " v0")));
 
-    Ac0_plus_Ac1_c0.assign(pb, A.c0.c0 + A.c1.c0);
-    Ac0_plus_Ac1_c1.assign(pb, A.c0.c1 + A.c1.c1);
-    Ac0_plus_Ac1_c2.assign(pb, A.c0.c2 + A.c1.c2);
+    Ac0_plus_Ac1_c0.assign(&pb, A.c0.c0 + A.c1.c0);
+    Ac0_plus_Ac1_c1.assign(&pb, A.c0.c1 + A.c1.c1);
+    Ac0_plus_Ac1_c2.assign(&pb, A.c0.c2 + A.c1.c2);
     Ac0_plus_Ac1.reset(Fp3_variable::<Fp3T>::new(pb, Ac0_plus_Ac1_c0, Ac0_plus_Ac1_c1, Ac0_plus_Ac1_c2, FMT(annotation_prefix, " Ac0_plus_Ac1")));
 
-    Bc0_plus_Bc1_c0.assign(pb, B.c0.c0 + B.c1.c0);
-    Bc0_plus_Bc1_c1.assign(pb, B.c0.c1 + B.c1.c1);
-    Bc0_plus_Bc1_c2.assign(pb, B.c0.c2 + B.c1.c2);
+    Bc0_plus_Bc1_c0.assign(&pb, B.c0.c0 + B.c1.c0);
+    Bc0_plus_Bc1_c1.assign(&pb, B.c0.c1 + B.c1.c1);
+    Bc0_plus_Bc1_c2.assign(&pb, B.c0.c2 + B.c1.c2);
     Bc0_plus_Bc1.reset(Fp3_variable::<Fp3T>::new(pb, Bc0_plus_Bc1_c0, Bc0_plus_Bc1_c1, Bc0_plus_Bc1_c2, FMT(annotation_prefix, " Bc0_plus_Bc1")));
 
-    result_c1_plus_v0_plus_v1_c0.assign(pb, result.c1.c0 + v0.c0 + v1.c0);
-    result_c1_plus_v0_plus_v1_c1.assign(pb, result.c1.c1 + v0.c1 + v1.c1);
-    result_c1_plus_v0_plus_v1_c2.assign(pb, result.c1.c2 + v0.c2 + v1.c2);
+    result_c1_plus_v0_plus_v1_c0.assign(&pb, result.c1.c0 + v0.c0 + v1.c0);
+    result_c1_plus_v0_plus_v1_c1.assign(&pb, result.c1.c1 + v0.c1 + v1.c1);
+    result_c1_plus_v0_plus_v1_c2.assign(&pb, result.c1.c2 + v0.c2 + v1.c2);
     result_c1_plus_v0_plus_v1.reset(Fp3_variable::<Fp3T>::new(pb,
                                                            result_c1_plus_v0_plus_v1_c0,
                                                            result_c1_plus_v0_plus_v1_c1,
@@ -426,7 +426,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                          FMT(annotation_prefix, " result_c1_plus_v0_plus_v1")));
 
     compute_result_c1.reset(Fp3_mul_gadget::<Fp3T>::new(pb, *Ac0_plus_Ac1, *Bc0_plus_Bc1, *result_c1_plus_v0_plus_v1, FMT(annotation_prefix, " compute_result_c1")));
-    // gadget<FieldT>(pb, annotation_prefix), 
+    // gadget<FieldT>(&pb, annotation_prefix), 
     Self{A, B, result}
 }
 
@@ -487,7 +487,7 @@ pub fn generate_r1cs_witness()
 
 impl Fp6_sqr_gadget<Fp6T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                      A:&Fp6_variable<Fp6T>,
                                      result:&Fp6_variable<Fp6T>,
                                      annotation_prefix:&String) ->Self
@@ -495,7 +495,7 @@ pub fn new(pb:&protoboard<FieldT>,
 {
     // We can't do better than 3 Fp3_mul_gadget's for squaring, so we just use multiplication.
     mul.reset(Fp6_mul_gadget::<Fp6T>::new(pb, A, A, result, FMT(annotation_prefix, " mul")));
-    //  gadget<FieldT>(pb, annotation_prefix), 
+    //  gadget<FieldT>(&pb, annotation_prefix), 
     Self{A, result}
 }
 
@@ -513,7 +513,7 @@ pub fn generate_r1cs_witness()
 }
 impl Fp6_cyclotomic_sqr_gadget<Fp6T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                                            A:&Fp6_variable<Fp6T>,
                                                            result:&Fp6_variable<Fp6T>,
                                                            annotation_prefix:&String) ->Self
@@ -544,14 +544,14 @@ pub fn new(pb:&protoboard<FieldT>,
     b.reset(Fp2_variable::<Fp2T>::new(pb, A.c1.c0, A.c0.c2, FMT(annotation_prefix, " b")));
     c.reset(Fp2_variable::<Fp2T>::new(pb, A.c0.c1, A.c1.c2, FMT(annotation_prefix, " c")));
 
-    asq_c0.assign(pb, (result.c0.c0 + 2 * a.c0) * FieldT(3).inverse());
-    asq_c1.assign(pb, (result.c1.c1 - 2 * a.c1) * FieldT(3).inverse());
+    asq_c0.assign(&pb, (result.c0.c0 + 2 * a.c0) * FieldT(3).inverse());
+    asq_c1.assign(&pb, (result.c1.c1 - 2 * a.c1) * FieldT(3).inverse());
 
-    bsq_c0.assign(pb, (result.c0.c1 + 2 * c.c0) * FieldT(3).inverse());
-    bsq_c1.assign(pb, (result.c1.c2 - 2 * c.c1) * FieldT(3).inverse());
+    bsq_c0.assign(&pb, (result.c0.c1 + 2 * c.c0) * FieldT(3).inverse());
+    bsq_c1.assign(&pb, (result.c1.c2 - 2 * c.c1) * FieldT(3).inverse());
 
-    csq_c0.assign(pb, (result.c0.c2 + 2 * b.c1) * FieldT(3).inverse());
-    csq_c1.assign(pb, (result.c1.c0 - 2 * b.c0) * (FieldT(3) * Fp2T::non_residue).inverse());
+    csq_c0.assign(&pb, (result.c0.c2 + 2 * b.c1) * FieldT(3).inverse());
+    csq_c1.assign(&pb, (result.c1.c0 - 2 * b.c0) * (FieldT(3) * Fp2T::non_residue).inverse());
 
     asq.reset(Fp2_variable::<Fp2T>::new(pb, asq_c0, asq_c1, FMT(annotation_prefix, " asq")));
     bsq.reset(Fp2_variable::<Fp2T>::new(pb, bsq_c0, bsq_c1, FMT(annotation_prefix, " bsq")));
@@ -560,7 +560,7 @@ pub fn new(pb:&protoboard<FieldT>,
     compute_asq.reset(Fp2_sqr_gadget::<Fp2T>::new(pb, *a, *asq, FMT(annotation_prefix, " compute_asq")));
     compute_bsq.reset(Fp2_sqr_gadget::<Fp2T>::new(pb, *b, *bsq, FMT(annotation_prefix, " compute_bsq")));
     compute_csq.reset(Fp2_sqr_gadget::<Fp2T>::new(pb, *c, *csq, FMT(annotation_prefix, " compute_csq")));
-    // gadget<FieldT>(pb, annotation_prefix), 
+    // gadget<FieldT>(&pb, annotation_prefix), 
     Self{A, result}
 }
 

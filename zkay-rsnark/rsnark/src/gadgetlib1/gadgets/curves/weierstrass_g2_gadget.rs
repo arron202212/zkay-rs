@@ -93,7 +93,7 @@ curve_equation:    RcCell<Fqe_mul_gadget<ppT> >,
 impl G2_variable<ppT>{
 
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                               annotation_prefix:&String)->Self
     
 {
@@ -102,11 +102,11 @@ pub fn new(pb:&protoboard<FieldT>,
 
     all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
     all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
-pub fn new2(pb:&protoboard<FieldT>,
+pub fn new2(pb:&RcCell<protoboard<FieldT>>,
                               Q:&ffec::G2<other_curve<ppT> >,
                               annotation_prefix:&String)->Self
     
@@ -119,7 +119,7 @@ pub fn new2(pb:&protoboard<FieldT>,
 
     all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
     all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
@@ -146,7 +146,7 @@ pub fn num_variables(&self)->usize
 }
 impl G2_checker_gadget<ppT>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                           Q:&G2_variable<ppT>,
                                           annotation_prefix:&String)->Self
   
@@ -162,7 +162,7 @@ pub fn new(pb:&protoboard<FieldT>,
 
     curve_equation.reset(Fqe_mul_gadget::<ppT>::new(pb, *(Q.X), *Xsquared_plus_a, *Ysquared_minus_b, FMT(annotation_prefix, " curve_equation")));
     Self{
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
     Q
     }
 }

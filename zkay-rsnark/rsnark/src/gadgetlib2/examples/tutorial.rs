@@ -148,7 +148,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // GadgetPtr NAND_Gadget::create(ProtoboardPtr pb,
 //                               inputs:FlagVariableArray&,
 //                               output:&FlagVariable) {
-//     GadgetPtr pGadget(new NAND_Gadget(pb, inputs, output));
+//     GadgetPtr pGadget(new NAND_Gadget(&pb, inputs, output));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -197,7 +197,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     // create 5 variables inputs[0]...inputs[4]. The string "inputs" is used for debug messages
 //     FlagVariableArray inputs(5, "inputs");
 //     FlagVariable output("output");
-//     GadgetPtr nandGadget = NAND_Gadget::create(pb, inputs, output);
+//     GadgetPtr nandGadget = NAND_Gadget::create(&pb, inputs, output);
 //     // now we can generate a constraint system (or circuit)
 //     nandGadget.generateConstraints();
 //     // if we try to evaluate the circuit now, an exception will be thrown, because we will
@@ -287,7 +287,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 // GadgetPtr HashDifficultyEnforcer_Gadget::create(ProtoboardPtr pb,
 //                                                 hashValue:MultiPackedWord&,
 //                                                 difficultyBits:usize) {
-//     GadgetPtr pGadget(new HashDifficultyEnforcer_Gadget(pb, hashValue, difficultyBits));
+//     GadgetPtr pGadget(new HashDifficultyEnforcer_Gadget(&pb, hashValue, difficultyBits));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -322,7 +322,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     auto pb = Protoboard::create(R1P);
 //     R1P:MultiPackedWord hashValue(64,, "hashValue");
 //     let difficulty = 10;
-//     auto difficultyEnforcer = HashDifficultyEnforcer_Gadget::create(pb, hashValue, difficulty);
+//     auto difficultyEnforcer = HashDifficultyEnforcer_Gadget::create(&pb, hashValue, difficulty);
 //     difficultyEnforcer.generateConstraints();
 //     // constraints are created but no assignment yet. Will throw error on evaluation
 //     EXPECT_ANY_THROW(pb->isSatisfied());
@@ -471,7 +471,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzks
 //     const VariableArray inputAmounts(2, "inputAmounts");
 //     const VariableArray outputAmounts(3, "outputAmounts");
 //     const Variable minersFee("minersFee");
-//     auto verifyTx = VerifyTransactionAmounts_Gadget::create(pb, inputAmounts, outputAmounts,
+//     auto verifyTx = VerifyTransactionAmounts_Gadget::create(&pb, inputAmounts, outputAmounts,
 //                                                             minersFee);
 //     verifyTx.generateConstraints();
 //     pb->val(inputAmounts[0]) = pb->val(inputAmounts[1]) = 2;

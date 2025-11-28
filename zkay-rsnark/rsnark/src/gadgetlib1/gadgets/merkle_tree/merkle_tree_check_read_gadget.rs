@@ -77,7 +77,7 @@ read_successful:    pb_linear_combination<FieldT>,
 
 
 impl merkle_tree_check_read_gadget<FieldT, HashT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                             tree_depth:usize,
                                                                             address_bits:&pb_linear_combination_array<FieldT>,
                                                                             leaf:&digest_variable<FieldT>,
@@ -101,7 +101,7 @@ pub fn new(pb:protoboard<FieldT>,
 
     for i in 0..tree_depth-1
     {
-        internal_output.push(digest_variable::<FieldT>(pb, digest_size, FMT(self.annotation_prefix, " internal_output_{}", i)));
+        internal_output.push(digest_variable::<FieldT>(&pb, digest_size, FMT(self.annotation_prefix, " internal_output_{}", i)));
     }
 
     computed_root.reset(digest_variable::<FieldT>::new(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
@@ -110,7 +110,7 @@ pub fn new(pb:protoboard<FieldT>,
     {
         let mut inp= block_variable::<FieldT>::new(pb, path.left_digests[i], path.right_digests[i], FMT(self.annotation_prefix, " inp_{}", i));
         hasher_inputs.push(inp);
-        hashers.push(HashT(pb, 2*digest_size, inp, if i == 0 {*computed_root} else{internal_output[i-1]},
+        hashers.push(HashT(&pb, 2*digest_size, inp, if i == 0 {*computed_root} else{internal_output[i-1]},
                                  FMT(self.annotation_prefix, " load_hashers_{}", i)));
     }
 
@@ -127,7 +127,7 @@ pub fn new(pb:protoboard<FieldT>,
     }
 
     check_root.reset(bit_vector_copy_gadget::<FieldT>::new(pb, computed_root.bits, root.bits, read_successful, FieldT::capacity(), FMT(annotation_prefix, " check_root")));
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
    Self{ digest_size:HashT::get_digest_len(),
    tree_depth,
    address_bits,
@@ -225,7 +225,7 @@ pub fn  test_merkle_tree_check_read_gadget()
     /* execute test */
     let mut  pb=protoboard::<FieldT> ::new();
     let mut  address_bits_va=pb_variable_array::<FieldT>::new();
-    address_bits_va.allocate(pb, tree_depth, "address_bits");
+    address_bits_va.allocate(&pb, tree_depth, "address_bits");
     let mut  leaf_digest=digest_variable::<FieldT>::new(pb, digest_len, "input_block");
     let mut  root_digest=digest_variable::<FieldT>::new(pb, digest_len, "output_digest");
     let mut  path_var=merkle_authentication_path_variable::<FieldT, HashT>::new(pb, tree_depth, "path_var");
@@ -234,14 +234,14 @@ pub fn  test_merkle_tree_check_read_gadget()
     path_var.generate_r1cs_constraints();
     ml.generate_r1cs_constraints();
 
-    address_bits_va.fill_with_bits(pb, address_bits);
+    address_bits_va.fill_with_bits(&pb, address_bits);
     assert!(address_bits_va.get_field_element_from_bits(pb).as_ulong() == address);
     leaf_digest.generate_r1cs_witness(leaf);
     path_var.generate_r1cs_witness(address, path);
     ml.generate_r1cs_witness();
 
     /* make sure that read checker didn't accidentally overwrite anything */
-    address_bits_va.fill_with_bits(pb, address_bits);
+    address_bits_va.fill_with_bits(&pb, address_bits);
     leaf_digest.generate_r1cs_witness(leaf);
     root_digest.generate_r1cs_witness(root);
     assert!(pb.is_satisfied());

@@ -132,10 +132,10 @@ pb:tinyram_protoboard<FieldT>,
       We use little-endian indexing here (least significant
       bit/byte/word has the smallest address).
     */
-    is_word0.allocate(pb, format!("{} is_word0",self.annotation_prefix));
-    is_word1.allocate(pb, format!("{} is_word1",self.annotation_prefix));
-    is_subaddress.allocate(pb, 2 * pb.ap.bytes_in_word(), format!("{} is_sub_address",self.annotation_prefix));
-    is_byte.allocate(pb, 2 * pb.ap.bytes_in_word(), format!("{} is_byte",self.annotation_prefix));
+    is_word0.allocate(&pb, format!("{} is_word0",self.annotation_prefix));
+    is_word1.allocate(&pb, format!("{} is_word1",self.annotation_prefix));
+    is_subaddress.allocate(&pb, 2 * pb.ap.bytes_in_word(), format!("{} is_sub_address",self.annotation_prefix));
+    is_byte.allocate(&pb, 2 * pb.ap.bytes_in_word(), format!("{} is_byte",self.annotation_prefix));
 
     /*
       Get value of the dw_contents_prev for which the specified entity
@@ -143,10 +143,10 @@ pb:tinyram_protoboard<FieldT>,
       will be the same as the value of dw_contents_prev, when 3rd
       (0-indexed) byte is set to all zeros.
     */
-    masked_out_word0.assign(pb, (FieldT(2)^pb.ap.w) * pb_packing_sum::<FieldT>(
+    masked_out_word0.assign(&pb, (FieldT(2)^pb.ap.w) * pb_packing_sum::<FieldT>(
                                 pb_variable_array::<FieldT>(dw_contents_prev.bits.begin() + pb.ap.w,
                                                           dw_contents_prev.bits.begin() + 2 * pb.ap.w)));
-    masked_out_word1.assign(pb, pb_packing_sum::<FieldT>(
+    masked_out_word1.assign(&pb, pb_packing_sum::<FieldT>(
                                 pb_variable_array::<FieldT>(dw_contents_prev.bits.begin(),
                                                           dw_contents_prev.bits.begin() + pb.ap.w)));
     masked_out_bytes.resize(2 * pb.ap.bytes_in_word());
@@ -154,7 +154,7 @@ pb:tinyram_protoboard<FieldT>,
     for i in 0..2 * pb.ap.bytes_in_word()
     {
         /* just subtract out the byte to be masked */
-        masked_out_bytes[i].assign(pb, (dw_contents_prev.packed -
+        masked_out_bytes[i].assign(&pb, (dw_contents_prev.packed -
                                         (FieldT(2)^(8*i)) * pb_packing_sum::<FieldT>(
                                             pb_variable_array::<FieldT>(dw_contents_prev.bits.begin() + 8*i,
                                                                       dw_contents_prev.bits.begin() + 8*(i+1)))));
@@ -175,7 +175,7 @@ pb:tinyram_protoboard<FieldT>,
     masked_out_results.push(masked_out_word1);
     masked_out_results.insert(masked_out_results.end(), masked_out_bytes.begin(), masked_out_bytes.end());
 
-    masked_out_dw_contents_prev.allocate(pb, format!("{} masked_out_dw_contents_prev",self.annotation_prefix));
+    masked_out_dw_contents_prev.allocate(&pb, format!("{} masked_out_dw_contents_prev",self.annotation_prefix));
     get_masked_out_dw_contents_prev.reset( inner_product_gadget::<FieldT>::new(pb, masked_out_indicators, masked_out_results, masked_out_dw_contents_prev,
                                                                            format!("{} get_masked_out_dw_contents_prev",self.annotation_prefix)));
 
@@ -187,8 +187,8 @@ pb:tinyram_protoboard<FieldT>,
     {
         shift_lc = shift_lc + is_byte[i] * (FieldT(2)^(8*i));
     }
-    shift.assign(pb, shift_lc);
-    //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+    shift.assign(&pb, shift_lc);
+    //  tinyram_standard_gadget<FieldT>(&pb, annotation_prefix),
     Self{dw_contents_prev,
     subaddress,
     subcontents,

@@ -81,7 +81,7 @@ impl<FieldT:FieldTConfig,ramT> memory_line_variable_gadget<FieldT,ramT> {
             value_size,
             FMT(self.annotation_prefix, " contents_after"),
         ));
-        // ram_gadget_base::<ramT>(pb, annotation_prefix)
+        // ram_gadget_base::<ramT>(&pb, annotation_prefix)
         Self{timestamp,address,contents_before,contents_after}
     }
 
@@ -126,9 +126,9 @@ impl<FieldT:FieldTConfig,ramT> execution_line_variable_gadget<FieldT,ramT> {
     ) -> Self {
         let cpu_state_size = ap.cpu_state_size();
 
-        cpu_state.allocate(pb, cpu_state_size, FMT(annotation_prefix, " cpu_state"));
-        has_accepted.allocate(pb, FMT(annotation_prefix, " has_accepted"));
-        // memory_line_variable_gadget<ramT>(pb, timestamp_size, ap, annotation_prefix)
+        cpu_state.allocate(&pb, cpu_state_size, FMT(annotation_prefix, " cpu_state"));
+        has_accepted.allocate(&pb, FMT(annotation_prefix, " has_accepted"));
+        // memory_line_variable_gadget<ramT>(&pb, timestamp_size, ap, annotation_prefix)
         Self {}
     }
 }

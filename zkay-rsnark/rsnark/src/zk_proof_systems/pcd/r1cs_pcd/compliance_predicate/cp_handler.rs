@@ -104,15 +104,15 @@ accepted_input_types:     BTreeSet<usize>,
 
 impl r1cs_pcd_message_variable<FieldT>{
 
-pub fn new(pb:protoboard<FieldT> ,
+pub fn new(pb:RcCell<protoboard<FieldT>> ,
                                                              annotation_prefix:&String) ->Self
     
 {
-    types.allocate(pb, FMT(annotation_prefix, " type"));
+    types.allocate(&pb, FMT(annotation_prefix, " type"));
     all_vars.push(types);
 
     num_vars_at_construction = pb.num_variables();
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
@@ -137,12 +137,12 @@ pub fn generate_r1cs_witness(message:&RcCell<r1cs_pcd_message<FieldT> >)
 
 impl r1cs_pcd_local_data_variable<FieldT>{
 
-pub fn new(pb:protoboard<FieldT> ,
+pub fn new(pb:RcCell<protoboard<FieldT>> ,
                                                                    annotation_prefix:&String)->Self
     
 {
     num_vars_at_construction = pb.num_variables();
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
 }
 
 

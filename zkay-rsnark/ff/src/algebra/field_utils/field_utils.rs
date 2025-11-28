@@ -254,7 +254,7 @@ where
     [(); FieldT::NUM_LIMBS]:,
 {
     let chunk_bits = 0usize; //FieldT::floor_size_in_bits();
-    let repacked_size = div_ceil((v.len() * w) as i64, chunk_bits as i64).unwrap() as usize;
+    let repacked_size = div_ceil((v.len() * w), chunk_bits).unwrap();
     let mut result = Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size {
@@ -286,7 +286,7 @@ where
 {
     // assert!(chunk_bits <= FieldT::floor_size_in_bits());
 
-    let repacked_size = div_ceil(v.len() as i64, chunk_bits as i64).unwrap() as usize;
+    let repacked_size = div_ceil(v.len(), chunk_bits).unwrap();
     let mut result = Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size {

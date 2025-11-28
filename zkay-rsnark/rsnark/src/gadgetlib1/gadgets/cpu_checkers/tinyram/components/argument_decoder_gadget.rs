@@ -102,16 +102,16 @@ pub fn new(
     assert!(arg2idx.len() == pb.ap.reg_arg_or_imm_width());
 
     /* decode accordingly */
-    packed_desidx.allocate(pb, format!("{} packed_desidx",self.annotation_prefix));
-    packed_arg1idx.allocate(pb, format!("{} packed_arg1idx",self.annotation_prefix));
-    packed_arg2idx.allocate(pb, format!("{} packed_arg2idx",self.annotation_prefix));
+    packed_desidx.allocate(&pb, format!("{} packed_desidx",self.annotation_prefix));
+    packed_arg1idx.allocate(&pb, format!("{} packed_arg1idx",self.annotation_prefix));
+    packed_arg2idx.allocate(&pb, format!("{} packed_arg2idx",self.annotation_prefix));
 
     pack_desidx.reset(packing_gadget::<FieldT>::new(pb, desidx, packed_desidx, format!("{}pack_desidx",self.annotation_prefix)));
     pack_arg1idx.reset(packing_gadget::<FieldT>::new(pb, arg1idx, packed_arg1idx, format!("{}pack_arg1idx",self.annotation_prefix)));
     pack_arg2idx.reset(packing_gadget::<FieldT>::new(pb, arg2idx, packed_arg2idx, format!("{}pack_arg2idx",self.annotation_prefix)));
 
-    arg2_demux_result.allocate(pb, format!("{} arg2_demux_result",self.annotation_prefix));
-    arg2_demux_success.allocate(pb, format!("{} arg2_demux_success",self.annotation_prefix));
+    arg2_demux_result.allocate(&pb, format!("{} arg2_demux_result",self.annotation_prefix));
+    arg2_demux_success.allocate(&pb, format!("{} arg2_demux_success",self.annotation_prefix));
 
     demux_des.reset(
         loose_multiplexing_gadget::<FieldT>::new(pb, packed_registers, packed_desidx, packed_desval, ONE,
@@ -122,7 +122,7 @@ pub fn new(
     demux_arg2.reset(
         loose_multiplexing_gadget::<FieldT>::new(pb, packed_registers, packed_arg2idx, arg2_demux_result, arg2_demux_success,
                                               format!("{} demux_arg2",self.annotation_prefix)));
-    //  tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+    //  tinyram_standard_gadget<FieldT>(&pb, annotation_prefix),
     Self{arg2_is_imm,
     desidx,
     arg1idx,
@@ -198,19 +198,19 @@ pub fn  test_argument_decoder_gadget()
     let mut  pb=tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
 
     let mut  packed_registers=pb_variable_array::<FieldT>::new();
-    packed_registers.allocate(pb, ap.k, "packed_registers");
+    packed_registers.allocate(&pb, ap.k, "packed_registers");
 
     let mut  arg2_is_imm=variable::<FieldT,pb_variable> ::new();
-    arg2_is_imm.allocate(pb, "arg_is_imm");
+    arg2_is_imm.allocate(&pb, "arg_is_imm");
 
     let mut desidx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_width(), "desidx");
     let mut arg1idx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_width(), "arg1idx");
     let mut arg2idx=dual_variable_gadget::<FieldT>::new(pb, ap.reg_arg_or_imm_width(), "arg2idx");
 
      let (mut packed_desval, mut packed_arg1val, mut packed_arg2val)=(variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),);
-    packed_desval.allocate(pb, "packed_desval");
-    packed_arg1val.allocate(pb, "packed_arg1val");
-    packed_arg2val.allocate(pb, "packed_arg2val");
+    packed_desval.allocate(&pb, "packed_desval");
+    packed_arg1val.allocate(&pb, "packed_arg1val");
+    packed_arg2val.allocate(&pb, "packed_arg2val");
 
      let mut g=argument_decoder_gadget::<FieldT>::new(pb, packed_registers, arg2_is_imm,
                                       desidx.bits, arg1idx.bits, arg2idx.bits,

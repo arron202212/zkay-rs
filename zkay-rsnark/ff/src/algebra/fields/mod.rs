@@ -1,4 +1,3 @@
-
 pub mod binary;
 
 #[macro_use]

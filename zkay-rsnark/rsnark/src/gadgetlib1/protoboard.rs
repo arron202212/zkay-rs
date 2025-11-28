@@ -89,8 +89,8 @@ pub struct protoboard<FieldT: FieldTConfig> {
 // use  <cstdio>
 use ffec::common::profiling;
 
-impl<FieldT: FieldTConfig> protoboard<FieldT> {
-    pub fn new() -> Self {
+impl<FieldT: FieldTConfig> Default for protoboard<FieldT> {
+    fn default() -> Self {
         let mut constraint_system =
             r1cs_constraint_system::<FieldT, pb_variable, pb_linear_combination>::default();
         // #ifdef DEBUG
@@ -110,14 +110,15 @@ impl<FieldT: FieldTConfig> protoboard<FieldT> {
             constraint_system,
         }
     }
-
+}
+impl<FieldT: FieldTConfig> protoboard<FieldT> {
     pub fn clear_values(&mut self) {
         self.values.fill(FieldT::zero());
     }
 
     pub fn allocate_var_index(&mut self, annotation: String) -> var_index_t {
         // #ifdef DEBUG
-        assert!(annotation != "");
+        assert!(!annotation.is_empty());
         self.constraint_system
             .variable_annotations
             .insert(self.next_free_var, annotation);

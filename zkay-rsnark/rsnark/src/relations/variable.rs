@@ -525,6 +525,16 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         self
     }
 }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Mul
+    for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        self
+    }
+}
+
 //
 // linear_combination<FieldT,T> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>)
 // {
@@ -646,7 +656,18 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     // {
     //     return terms.end();
     // }
-
+    pub fn add_term_with_index(&mut self, var: usize) {
+        self.terms.push(linear_term::<FieldT, SV>::new_with_field(
+            variable::<FieldT, SV>::from(var),
+            FieldT::one(),
+        ));
+    }
+    pub fn add_term_with_variable(&mut self, var: variable<FieldT, SV>) {
+        self.terms.push(linear_term::<FieldT, SV>::new_with_field(
+            var,
+            FieldT::one(),
+        ));
+    }
     pub fn add_term(&mut self, var: usize, int_coeff: integer_coeff_t) {
         self.terms
             .push(linear_term::<FieldT, SV>::new_with_int_coeff(
@@ -949,6 +970,25 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Add<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn add(self, rhs: variable<FieldT, SV>) -> Self::Output {
+        self + linear_combination::<FieldT, SV, SLC>::from(rhs)
+    }
+}
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Add<FieldT>
+    for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn add(self, rhs: FieldT) -> Self::Output {
+        self + linear_combination::<FieldT, SV, SLC>::from(rhs)
+    }
+}
 //
 // linear_combination<FieldT,T> linear_combination<FieldT,T>::operator-(&other:linear_combination<FieldT,T>) const
 // {

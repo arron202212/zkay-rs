@@ -165,7 +165,7 @@ pb:tinyram_protoboard<FieldT>,
                                          instruction_results[tinyram_opcode_CNJMP],
                                          format!("{} CNJMP",self.annotation_prefix)));
 
-    // tinyram_standard_gadget<FieldT>(pb, annotation_prefix),
+    // tinyram_standard_gadget<FieldT>(&pb, annotation_prefix),
         Self{opcode_indicators,
         pc,
         desval,

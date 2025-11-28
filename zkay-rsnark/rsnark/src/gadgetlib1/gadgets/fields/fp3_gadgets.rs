@@ -109,14 +109,14 @@ mul:    RcCell<Fp3_mul_gadget<Fp3T> >,
 
 impl Fp3_variable<Fp3T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                  annotation_prefix:&String)->Self
     
 {
    let ( c0_var, c1_var, c2_var)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
-    c0_var.allocate(pb, FMT(annotation_prefix, " c0"));
-    c1_var.allocate(pb, FMT(annotation_prefix, " c1"));
-    c2_var.allocate(pb, FMT(annotation_prefix, " c2"));
+    c0_var.allocate(&pb, FMT(annotation_prefix, " c0"));
+    c1_var.allocate(&pb, FMT(annotation_prefix, " c1"));
+    c2_var.allocate(&pb, FMT(annotation_prefix, " c2"));
 
     c0 = pb_linear_combination::<FieldT>(c0_var);
     c1 = pb_linear_combination::<FieldT>(c1_var);
@@ -125,18 +125,18 @@ pub fn new(pb:&protoboard<FieldT>,
     all_vars.push(c0);
     all_vars.push(c1);
     all_vars.push(c2);
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
-pub fn new2(pb:&protoboard<FieldT>,
+pub fn new2(pb:&RcCell<protoboard<FieldT>>,
                                  el:&Fp3T,
                                  annotation_prefix:&String)->Self
    
 {
-    c0.assign(pb, el.c0);
-    c1.assign(pb, el.c1);
-    c2.assign(pb, el.c2);
+    c0.assign(&pb, el.c0);
+    c1.assign(&pb, el.c1);
+    c2.assign(&pb, el.c2);
 
     c0.evaluate(pb);
     c1.evaluate(pb);
@@ -145,28 +145,28 @@ pub fn new2(pb:&protoboard<FieldT>,
     all_vars.push(c0);
     all_vars.push(c1);
     all_vars.push(c2);
-    //  gadget<FieldT>(pb, annotation_prefix)
+    //  gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
-pub fn new3(pb:&protoboard<FieldT>,
+pub fn new3(pb:&RcCell<protoboard<FieldT>>,
                                  el:&Fp3T,
                                  coeff:&pb_linear_combination<FieldT>,
                                  annotation_prefix:&String)->Self
     
 {
-    c0.assign(pb, el.c0 * coeff);
-    c1.assign(pb, el.c1 * coeff);
-    c2.assign(pb, el.c2 * coeff);
+    c0.assign(&pb, el.c0 * coeff);
+    c1.assign(&pb, el.c1 * coeff);
+    c2.assign(&pb, el.c2 * coeff);
 
     all_vars.push(c0);
     all_vars.push(c1);
     all_vars.push(c2);
-// gadget<FieldT>(pb, annotation_prefix)
+// gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
-pub fn new4(pb:&protoboard<FieldT>,
+pub fn new4(pb:&RcCell<protoboard<FieldT>>,
                                  c0:&pb_linear_combination<FieldT>,
                                  c1:&pb_linear_combination<FieldT>,
                                  c2:&pb_linear_combination<FieldT>,
@@ -176,7 +176,7 @@ pub fn new4(pb:&protoboard<FieldT>,
     all_vars.push(c0);
     all_vars.push(c1);
     all_vars.push(c2);
-// gadget<FieldT>(pb, annotation_prefix), 
+// gadget<FieldT>(&pb, annotation_prefix), 
     Self{c0, c1, c2}
 }
 
@@ -248,16 +248,16 @@ pub fn num_variables(&self)->usize
 }
 impl Fp3_mul_gadget<Fp3T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                      A:&Fp3_variable<Fp3T>,
                                      B:&Fp3_variable<Fp3T>,
                                      result:&Fp3_variable<Fp3T>,
                                      annotation_prefix:&String)->Self
     
 {
-    v0.allocate(pb, FMT(annotation_prefix, " v0"));
-    v4.allocate(pb, FMT(annotation_prefix, " v4"));
-    // gadget<FieldT>(pb, annotation_prefix), 
+    v0.allocate(&pb, FMT(annotation_prefix, " v0"));
+    v4.allocate(&pb, FMT(annotation_prefix, " v4"));
+    // gadget<FieldT>(&pb, annotation_prefix), 
     Self{A, B, result}
 }
 
@@ -333,14 +333,14 @@ pub fn generate_r1cs_witness()
 
 impl Fp3_mul_by_lc_gadget<Fp3T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                                  A:&Fp3_variable<Fp3T>,
                                                  lc:&pb_linear_combination<FieldT>,
                                                  result:&Fp3_variable<Fp3T>,
                                                  annotation_prefix:&String)->Self
    
 {
-//  gadget<FieldT>(pb, annotation_prefix),A,lc,result
+//  gadget<FieldT>(&pb, annotation_prefix),A,lc,result
 }
 
 
@@ -365,14 +365,14 @@ pub fn generate_r1cs_witness()
 
 impl Fp3_sqr_gadget<Fp3T>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                      A:&Fp3_variable<Fp3T>,
                                      result:&Fp3_variable<Fp3T>,
                                      annotation_prefix:&String)->Self
     
 {
     mul.reset(Fp3_mul_gadget::<Fp3T>::new(pb, A, A, result, FMT(annotation_prefix, " mul")));
-// gadget<FieldT>(pb, annotation_prefix),A,result
+// gadget<FieldT>(&pb, annotation_prefix),A,result
 }
 
 

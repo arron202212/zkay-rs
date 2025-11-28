@@ -226,7 +226,7 @@ use crate::gadgetlib1::constraint_profiling;
 
 
 impl r1cs_ppzksnark_proof_variable<ppT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                   annotation_prefix:&String)->Self
     
 {
@@ -255,7 +255,7 @@ pub fn new(pb:protoboard<FieldT>,
 
     assert!(all_G1_vars.len() == num_G1);
     assert!(all_G2_vars.len() == num_G2);
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
     Self{}
 }
 
@@ -307,7 +307,7 @@ pub fn size()->usize
 }
 
 impl r1cs_ppzksnark_verification_key_variable<ppT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                         all_bits:&pb_variable_array<FieldT>,
                                                                                         input_size:usize,
                                                                                         annotation_prefix:&String)->Self
@@ -354,7 +354,7 @@ pub fn new(pb:protoboard<FieldT>,
     assert!(all_vars.len() == (num_G1 * G1_variable::<ppT>::num_variables() + num_G2 * G2_variable::<ppT>::num_variables()));
 
     packer.reset(multipacking_gadget::<FieldT>::new(pb, all_bits, all_vars, FieldT::size_in_bits(), FMT(annotation_prefix, " packer")));
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
    Self{all_bits,
     input_size}
 }
@@ -433,7 +433,7 @@ pub fn get_verification_key_bits(r1cs_vk:&r1cs_ppzksnark_verification_key<other_
 
     let mut  pb=protoboard::<FieldT> ::new();
     let mut  vk_bits=pb_variable_array::<FieldT>::new();
-    vk_bits.allocate(pb, vk_size_in_bits, "vk_bits");
+    vk_bits.allocate(&pb, vk_size_in_bits, "vk_bits");
     let mut  vk=r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, vk_bits, input_size_in_elts, "translation_step_vk");
     vk.generate_r1cs_witness(r1cs_vk);
 
@@ -449,7 +449,7 @@ impl r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT>{
 // }
 
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                                                                                 r1cs_vk:&r1cs_ppzksnark_verification_key<other_curve::<ppT> >,
                                                                                                                                                 annotation_prefix:&String)
 {
@@ -474,7 +474,7 @@ pub fn new(pb:protoboard<FieldT>,
 }
 impl r1cs_ppzksnark_verifier_process_vk_gadget<ppT> {
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                           vk:&r1cs_ppzksnark_verification_key_variable<ppT>,
                                                                                           pvk:&r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT> ,
                                                                                           annotation_prefix:&String)->Self
@@ -502,7 +502,7 @@ pub fn new(pb:protoboard<FieldT>,
     compute_vk_gamma_beta_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.gamma_beta_g2, *pvk.vk_gamma_beta_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g2_precomp")));
     compute_vk_gamma_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.gamma_g2, *pvk.vk_gamma_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_g2_precomp")));
     compute_vk_rC_Z_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.rC_Z_g2, *pvk.vk_rC_Z_g2_precomp, FMT(annotation_prefix, " compute_vk_rC_Z_g2_precomp")));
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
    Self{vk,
     pvk}
 }
@@ -535,7 +535,7 @@ pub fn generate_r1cs_witness()
 }
 
 impl  r1cs_ppzksnark_online_verifier_gadget<ppT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                   pvk:&r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable<ppT>,
                                                                                   input:&pb_variable_array<FieldT>,
                                                                                   elt_size:usize,
@@ -587,23 +587,23 @@ pub fn new(pb:protoboard<FieldT>,
     compute_proof_g_B_g_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *(proof.g_B_g), *proof_g_B_g_precomp, FMT(annotation_prefix, " compute_proof_g_B_g_precomp")));
 
     // check validity of A knowledge commitment
-    kc_A_valid.allocate(pb, FMT(annotation_prefix, " kc_A_valid"));
+    kc_A_valid.allocate(&pb, FMT(annotation_prefix, " kc_A_valid"));
     check_kc_A_valid.reset(check_e_equals_e_gadget::<ppT>::new(pb, *proof_g_A_g_precomp, *(pvk.vk_alphaA_g2_precomp), *proof_g_A_h_precomp, *(pvk.pp_G2_one_precomp), kc_A_valid, FMT(annotation_prefix, " check_kc_A_valid")));
 
     // check validity of B knowledge commitment
-    kc_B_valid.allocate(pb, FMT(annotation_prefix, " kc_B_valid"));
+    kc_B_valid.allocate(&pb, FMT(annotation_prefix, " kc_B_valid"));
     check_kc_B_valid.reset(check_e_equals_e_gadget::<ppT>::new(pb, *(pvk.vk_alphaB_g1_precomp), *proof_g_B_g_precomp, *proof_g_B_h_precomp, *(pvk.pp_G2_one_precomp), kc_B_valid, FMT(annotation_prefix, " check_kc_B_valid")));
 
     // check validity of C knowledge commitment
-    kc_C_valid.allocate(pb, FMT(annotation_prefix, " kc_C_valid"));
+    kc_C_valid.allocate(&pb, FMT(annotation_prefix, " kc_C_valid"));
     check_kc_C_valid.reset(check_e_equals_e_gadget::<ppT>::new(pb, *proof_g_C_g_precomp, *(pvk.vk_alphaC_g2_precomp), *proof_g_C_h_precomp, *(pvk.pp_G2_one_precomp), kc_C_valid, FMT(annotation_prefix, " check_kc_C_valid")));
 
     // check QAP divisibility
-    QAP_valid.allocate(pb, FMT(annotation_prefix, " QAP_valid"));
+    QAP_valid.allocate(&pb, FMT(annotation_prefix, " QAP_valid"));
     check_QAP_valid.reset(check_e_equals_ee_gadget::<ppT>::new(pb, *proof_g_A_g_acc_precomp, *proof_g_B_g_precomp, *proof_g_H_precomp, *(pvk.vk_rC_Z_g2_precomp), *proof_g_C_g_precomp, *(pvk.pp_G2_one_precomp), QAP_valid, FMT(annotation_prefix, " check_QAP_valid")));
 
     // check coefficients
-    CC_valid.allocate(pb, FMT(annotation_prefix, " CC_valid"));
+    CC_valid.allocate(&pb, FMT(annotation_prefix, " CC_valid"));
     check_CC_valid.reset(check_e_equals_ee_gadget::<ppT>::new(pb, *proof_g_K_precomp, *(pvk.vk_gamma_g2_precomp), *proof_g_A_g_acc_C_precomp, *(pvk.vk_gamma_beta_g2_precomp), *(pvk.vk_gamma_beta_g1_precomp), *proof_g_B_g_precomp, CC_valid, FMT(annotation_prefix, " check_CC_valid")));
 
     // final constraint
@@ -614,7 +614,7 @@ pub fn new(pb:protoboard<FieldT>,
     all_test_results.push(CC_valid);
 
     all_tests_pass.reset(conjunction_gadget::<FieldT>::new(pb, all_test_results, result, FMT(annotation_prefix, " all_tests_pass")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{pvk,
    input,
    elt_size,
@@ -692,7 +692,7 @@ pub fn generate_r1cs_witness()
 impl  r1cs_ppzksnark_verifier_gadget<ppT> {
 
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                     vk:&r1cs_ppzksnark_verification_key_variable<ppT>,
                                                                     input:&pb_variable_array<FieldT>,
                                                                     elt_size:usize,
@@ -704,7 +704,7 @@ pub fn new(pb:protoboard<FieldT>,
     pvk.reset(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new());
     compute_pvk.reset(r1cs_ppzksnark_verifier_process_vk_gadget::<ppT>::new(pb, vk, *pvk, FMT(annotation_prefix, " compute_pvk")));
     online_verifier.reset(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb, *pvk, input, elt_size, proof, result, FMT(annotation_prefix, " online_verifier")));
-    // gadget<FieldT>(pb, annotation_prefix)
+    // gadget<FieldT>(&pb, annotation_prefix)
     Self{}
 }
 

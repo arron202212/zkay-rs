@@ -91,7 +91,7 @@ f:    RcCell<sha256_compression_function_gadget<FieldT> >,
 
 impl sha256_compression_function_gadget<FieldT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                prev_output:&pb_linear_combination_array<FieldT>,
                                                                                new_block:&pb_variable_array<FieldT>,
                                                                                output:&digest_variable<FieldT>,
@@ -99,7 +99,7 @@ pub fn new(pb:protoboard<FieldT>,
     
 {
     /* message schedule and inputs for it */
-    packed_W.allocate(pb, 64, FMT(self.annotation_prefix, " packed_W"));
+    packed_W.allocate(&pb, 64, FMT(self.annotation_prefix, " packed_W"));
     message_schedule.reset(sha256_message_schedule_gadget::<FieldT>::new(pb, new_block, packed_W, FMT(self.annotation_prefix, " message_schedule")));
 
     /* initalize */
@@ -123,14 +123,14 @@ pub fn new(pb:protoboard<FieldT>,
         round_b.push_back(round_a[i]);
 
         let mut  new_round_a_variables=pb_variable_array::<FieldT>::new();
-        new_round_a_variables.allocate(pb, 32, FMT(self.annotation_prefix, " new_round_a_variables_{}", i+1));
+        new_round_a_variables.allocate(&pb, 32, FMT(self.annotation_prefix, " new_round_a_variables_{}", i+1));
         round_a.push(new_round_a_variables);
 
         let mut  new_round_e_variables=pb_variable_array::<FieldT>::new();
-        new_round_e_variables.allocate(pb, 32, FMT(self.annotation_prefix, " new_round_e_variables_{}", i+1));
+        new_round_e_variables.allocate(&pb, 32, FMT(self.annotation_prefix, " new_round_e_variables_{}", i+1));
         round_e.push(new_round_e_variables);
 
-        round_functions.push_back(sha256_round_function_gadget::<FieldT>(pb,
+        round_functions.push_back(sha256_round_function_gadget::<FieldT>(&pb,
                                                                        round_a[i], round_b[i], round_c[i], round_d[i],
                                                                        round_e[i], round_f[i], round_g[i], round_h[i],
                                                                        packed_W[i], SHA256_K[i], round_a[i+1], round_e[i+1],
@@ -138,18 +138,18 @@ pub fn new(pb:protoboard<FieldT>,
     }
 
     /* finalize */
-    unreduced_output.allocate(pb, 8, FMT(self.annotation_prefix, " unreduced_output"));
-    reduced_output.allocate(pb, 8, FMT(self.annotation_prefix, " reduced_output"));
+    unreduced_output.allocate(&pb, 8, FMT(self.annotation_prefix, " unreduced_output"));
+    reduced_output.allocate(&pb, 8, FMT(self.annotation_prefix, " reduced_output"));
     for i in 0..8
     {
-        reduce_output.push_back(lastbits_gadget::<FieldT>(pb,
+        reduce_output.push_back(lastbits_gadget::<FieldT>(&pb,
                                                         unreduced_output[i],
                                                         32+1,
                                                         reduced_output[i],
                                                         pb_variable_array::<FieldT>(output.bits.rbegin() + (7-i) * 32, output.bits.rbegin() + (8-i) * 32),
                                                       FMT(self.annotation_prefix, " reduce_output_{}", i)));
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{prev_output,
    new_block,
     output}
@@ -225,7 +225,7 @@ pub fn generate_r1cs_witness()
 }
 
 impl sha256_two_to_one_hash_gadget<FieldT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                      left:&digest_variable<FieldT>,
                                                                      right:&digest_variable<FieldT>,
                                                                      output:&digest_variable<FieldT>,
@@ -239,18 +239,18 @@ pub fn new(pb:protoboard<FieldT>,
 
     /* compute the hash itself */
     f.reset(sha256_compression_function_gadget::<FieldT>::new(pb, SHA256_default_IV::<FieldT>(pb), block, output, FMT(self.annotation_prefix, " f")));
-    //  gadget<FieldT>(pb, annotation_prefix)
+    //  gadget<FieldT>(&pb, annotation_prefix)
 }
 
 
-pub fn new2(pb:protoboard<FieldT>,
+pub fn new2(pb:RcCell<protoboard<FieldT>>,
                                                                      block_length:usize,
                                                                      input_block:&block_variable<FieldT>,
                                                                      output:&digest_variable<FieldT>,
                                                                      annotation_prefix:&String)->Self
     
 {
-// gadget<FieldT>(pb, annotation_prefix)
+// gadget<FieldT>(&pb, annotation_prefix)
     assert!(block_length == SHA256_block_size);
     assert!(input_block.bits.len() == block_length);
     f.reset(sha256_compression_function_gadget::<FieldT>::new(pb, SHA256_default_IV::<FieldT>(pb), input_block.bits, output, FMT(self.annotation_prefix, " f")));

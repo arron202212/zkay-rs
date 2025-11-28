@@ -49,7 +49,7 @@ pub fn  gen_r1cs_example_from_gadgetlib2_protoboard(size:usize)->r1cs_example<ff
     let  A=VariableArray::new(size, "A");
     let  B=VariableArray::new(size, "B");
     let result= Variable::new("result");
-    let g = InnerProduct_Gadget::create(pb, A, B, result);
+    let g = InnerProduct_Gadget::create(&pb, A, B, result);
     // create constraints. This part is done by generator.
     g.generateConstraints();
     // create assignment (witness). This part is done by prover.

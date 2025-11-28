@@ -25,18 +25,18 @@ impl word_variable_gadget {
 // : public dual_variable_gadget<FieldT> 
     pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
         {
-//  dual_variable_gadget<FieldT>(pb, pb.ap.w, annotation_prefix)
+//  dual_variable_gadget<FieldT>(&pb, pb.ap.w, annotation_prefix)
     Self
 }
     pub fn new1(pb:tinyram_protoboard<FieldT>, bits:pb_variable_array<FieldT>, annotation_prefix:String) ->Self
         {
-// dual_variable_gadget<FieldT>(pb, bits, annotation_prefix) 
+// dual_variable_gadget<FieldT>(&pb, bits, annotation_prefix) 
     Self
 
 }
     pub fn new2(pb:tinyram_protoboard<FieldT>, packed:pb_variable<FieldT>, annotation_prefix:String) ->Self
         {
-//  dual_variable_gadget<FieldT>(pb, packed, pb.ap.w, annotation_prefix)
+//  dual_variable_gadget<FieldT>(&pb, packed, pb.ap.w, annotation_prefix)
         Self
 }
 }
@@ -50,15 +50,15 @@ impl doubleword_variable_gadget  {
 // : public dual_variable_gadget<FieldT>
     pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
         {
-// dual_variable_gadget<FieldT>(pb, 2*pb.ap.w, annotation_prefix) 
+// dual_variable_gadget<FieldT>(&pb, 2*pb.ap.w, annotation_prefix) 
 }
     pub fn new1(pb:tinyram_protoboard<FieldT>, bits:pb_variable_array<FieldT>, annotation_prefix:String) ->Self
        {
-//  dual_variable_gadget<FieldT>(pb, bits, annotation_prefix) 
+//  dual_variable_gadget<FieldT>(&pb, bits, annotation_prefix) 
 }
     pub fn new2(pb:tinyram_protoboard<FieldT>, packed:pb_variable<FieldT>, annotation_prefix:String) ->Self
          {
-// dual_variable_gadget<FieldT>(pb, packed, 2*pb.ap.w, annotation_prefix)
+// dual_variable_gadget<FieldT>(&pb, packed, 2*pb.ap.w, annotation_prefix)
 }
 }
 

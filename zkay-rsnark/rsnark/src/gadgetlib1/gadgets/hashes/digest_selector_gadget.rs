@@ -42,7 +42,7 @@ right:    digest_variable<FieldT>,
 
 impl digest_selector_gadget<FieldT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                        digest_size:usize,
                                                        input:&digest_variable<FieldT>,
                                                        is_right:&pb_linear_combination<FieldT>,
@@ -51,7 +51,7 @@ pub fn new(pb:protoboard<FieldT>,
                                                        annotation_prefix:&String)->Self
 
 {
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{digest_size,input,is_right,left,right}
 }
 

@@ -27,8 +27,8 @@ pub fn  get_as_waksman_size( n:usize, l:usize, num_constraints:usize, num_variab
     let  (mut randbits, mut outbits)=(vec![vec![];n],vec![vec![];n]);
     for y in 0..n
     {
-        randbits[y].allocate(pb, l, FMT("", "randbits_{}", y));
-        outbits[y].allocate(pb, l, FMT("", "outbits_{}", y));
+        randbits[y].allocate(&pb, l, FMT("", "randbits_{}", y));
+        outbits[y].allocate(&pb, l, FMT("", "outbits_{}", y));
     }
 
     let mut r=as_waksman_routing_gadget::<FieldT>::new(pb, n, randbits, outbits, "main_routing_gadget");
@@ -49,8 +49,8 @@ pub fn  get_benes_size( n:usize, l:usize,  num_constraints:&mut usize, num_varia
     let (mut  randbits,outbits)=(vec![vec![];1usize<<t],vec![vec![];1usize<<t]);
     for y in 0..1u64<<t
     {
-        randbits[y].allocate(pb, l, FMT("", "randbits_{}", y));
-        outbits[y].allocate(pb, l, FMT("", "outbits_{}", y));
+        randbits[y].allocate(&pb, l, FMT("", "randbits_{}", y));
+        outbits[y].allocate(&pb, l, FMT("", "outbits_{}", y));
     }
 
     let mut r=benes_routing_gadget::<FieldT>::new(pb, n, randbits, outbits, n, "main_routing_gadget");

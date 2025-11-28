@@ -19,7 +19,7 @@ use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
 // 
 pub struct fooram_protoboard<FieldT>  {
-// : public protoboard<FieldT>
+// : public RcCell<protoboard<FieldT>>
       ap:fooram_architecture_params,
 
     // fooram_protoboard(ap:&fooram_architecture_params);
@@ -60,7 +60,7 @@ impl fooram_protoboard<FieldT>{
 pub fn new(ap:fooram_architecture_params) ->Self
    
 {
-    // protoboard<FieldT>(), 
+    // RcCell<protoboard<FieldT>>(), 
     Self{ap}
 }
 }
@@ -69,7 +69,7 @@ impl fooram_gadget<FieldT>{
 // 
 pub fn new( pb:fooram_protoboard<FieldT>, annotation_prefix: String ) ->Self
 {
-// gadget<FieldT>(pb, annotation_prefix)
+// gadget<FieldT>(&pb, annotation_prefix)
 Self{pb}
 }
 

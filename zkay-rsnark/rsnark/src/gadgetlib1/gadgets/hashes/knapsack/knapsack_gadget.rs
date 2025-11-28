@@ -131,7 +131,7 @@ use ffec::common::rng;
 // usize pub fn num_cached_coefficients;
 impl knapsack_CRH_with_field_out_gadget<FieldT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                input_len:usize,
                                                                                input_block:block_variable<FieldT>,
                                                                                output:pb_linear_combination_array<FieldT>,
@@ -144,7 +144,7 @@ pub fn new(pb:protoboard<FieldT>,
         sample_randomness(input_len);
     }
     assert!(output.len() == self.get_digest_len());
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
     Self{input_len,
     dimension,
     input_block,
@@ -244,7 +244,7 @@ pub fn sample_randomness(input_len:usize)
 
 impl knapsack_CRH_with_bit_out_gadget<FieldT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                            input_len:usize,
                                                                            input_block:block_variable<FieldT>,
                                                                            output_digest:digest_variable<FieldT>,
@@ -257,12 +257,12 @@ pub fn new(pb:protoboard<FieldT>,
 
     for i in 0..dimension
     {
-        output[i].assign(pb, pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(output_digest.bits.begin() + i * FieldT::size_in_bits(),
+        output[i].assign(&pb, pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(output_digest.bits.begin() + i * FieldT::size_in_bits(),
                                                                               output_digest.bits.begin() + (i + 1) * FieldT::size_in_bits())));
     }
 
     hasher.reset(knapsack_CRH_with_field_out_gadget::<FieldT>::new(pb, input_len, input_block, output, FMT(annotation_prefix, " hasher")));
-    //    gadget<FieldT>(pb, annotation_prefix),
+    //    gadget<FieldT>(&pb, annotation_prefix),
     Self{input_len,
     dimension,
     input_block,

@@ -124,7 +124,7 @@ result:    pb_variable<FieldT>,
 
 impl lastbits_gadget<FieldT>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                          X:&pb_variable<FieldT>,
                                          X_bits:usize,
                                          result:&pb_variable<FieldT>,
@@ -136,14 +136,14 @@ pub fn new(pb:&protoboard<FieldT>,
     for i in result_bits.len()..X_bits
     {
         let mut  full_bits_overflow=variable::<FieldT,pb_variable>::new();
-        full_bits_overflow.allocate(pb, FMT(self.annotation_prefix, " full_bits_{}", i));
+        full_bits_overflow.allocate(&pb, FMT(self.annotation_prefix, " full_bits_{}", i));
         full_bits.push(full_bits_overflow);
     }
 
     unpack_bits.reset(packing_gadget::<FieldT>::new(pb, full_bits, X, FMT(self.annotation_prefix, " unpack_bits")));
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
     Self{
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     X,
     X_bits,
     result,
@@ -167,7 +167,7 @@ pub fn generate_r1cs_witness()
 }
 impl XOR3_gadget<FieldT>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                  A:&pb_linear_combination<FieldT>,
                                  B:&pb_linear_combination<FieldT>,
                                  C:&pb_linear_combination<FieldT>,
@@ -178,10 +178,10 @@ pub fn new(pb:&protoboard<FieldT>,
 {
     if !assume_C_is_zero
     {
-        tmp.allocate(pb, FMT(self.annotation_prefix, " tmp"));
+        tmp.allocate(&pb, FMT(self.annotation_prefix, " tmp"));
     }
     Self{
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
     A,
     B,
     C,
@@ -226,7 +226,7 @@ pub fn generate_r1cs_witness()
 impl small_sigma_gadget<FieldT>{
 /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                                W:&pb_variable_array<FieldT>,
                                                result:&pb_variable<FieldT>,
                                                rot1:usize,
@@ -235,7 +235,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                                annotation_prefix:&String) ->Self
    
 {
-    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
+    result_bits.allocate(&pb, 32, FMT(self.annotation_prefix, " result_bits"));
     compute_bits.resize(32);
     for i in 0..32
     {
@@ -245,7 +245,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                             FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
     Self{
     W,
     result
@@ -276,7 +276,7 @@ pub fn generate_r1cs_witness()
 }
 impl big_sigma_gadget<FieldT>{
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                            W:&pb_linear_combination_array<FieldT>,
                                            result:&pb_variable<FieldT>,
                                            rot1:usize,
@@ -285,7 +285,7 @@ pub fn new(pb:&protoboard<FieldT>,
                                            annotation_prefix:&String) ->Self
    
 {
-    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
+    result_bits.allocate(&pb, 32, FMT(self.annotation_prefix, " result_bits"));
     compute_bits.resize(32);
     for i in 0..32
     {
@@ -295,7 +295,7 @@ pub fn new(pb:&protoboard<FieldT>,
 
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
     Self{
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
     W,
     result
     }
@@ -327,16 +327,16 @@ pub fn generate_r1cs_witness()
 impl choice_gadget<FieldT>{
 /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                      X:&pb_linear_combination_array<FieldT>,
                                      Y:&pb_linear_combination_array<FieldT>,
                                      Z:&pb_linear_combination_array<FieldT>,
                                      result:&pb_variable<FieldT>, annotation_prefix:&String) ->Self
     
 {
-    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
+    result_bits.allocate(&pb, 32, FMT(self.annotation_prefix, " result_bits"));
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
     Self{X,
     Y,
     Z,
@@ -371,7 +371,7 @@ pub fn generate_r1cs_witness()
 impl majority_gadget<FieldT>{
 /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
 
-pub fn new(pb:&protoboard<FieldT>,
+pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                          X:&pb_linear_combination_array<FieldT>,
                                          Y:&pb_linear_combination_array<FieldT>,
                                          Z:&pb_linear_combination_array<FieldT>,
@@ -379,9 +379,9 @@ pub fn new(pb:&protoboard<FieldT>,
                                          annotation_prefix:&String) ->Self
 
 {
-    result_bits.allocate(pb, 32, FMT(self.annotation_prefix, " result_bits"));
+    result_bits.allocate(&pb, 32, FMT(self.annotation_prefix, " result_bits"));
     pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
-        // gadget<FieldT>(pb, annotation_prefix),
+        // gadget<FieldT>(&pb, annotation_prefix),
     Self{X,
     Y,
     Z,

@@ -19,7 +19,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
 
 
-pub fn  dump_constraints( pb:protoboard<FieldT> )
+pub fn  dump_constraints( pb:RcCell<protoboard<FieldT>> )
 {
 // #ifdef DEBUG
     for s in &pb.constraint_system.constraint_annotations
@@ -53,21 +53,21 @@ pub fn  test_verifier(annotation_A:&String, annotation_B:&String)
 
     let mut  pb=protoboard::<FieldT_B>::new();
     let mut  vk_bits=pb_variable_array::<FieldT_B>::new();
-    vk_bits.allocate(pb, vk_size_in_bits, "vk_bits");
+    vk_bits.allocate(&pb, vk_size_in_bits, "vk_bits");
 
     let mut  primary_input_bits=pb_variable_array::<FieldT_B>::new();
-    primary_input_bits.allocate(pb, primary_input_size_in_bits, "primary_input_bits");
+    primary_input_bits.allocate(&pb, primary_input_size_in_bits, "primary_input_bits");
 
     let mut proof=r1cs_ppzksnark_proof_variable::<ppT_B> ::new(pb, "proof");
 
    let mut  vk=r1cs_ppzksnark_verification_key_variable::<ppT_B> ::new(pb, vk_bits, primary_input_size, "vk");
 
     let mut result=pb_variable::<FieldT_B> ::new();
-    result.allocate(pb, "result");
+    result.allocate(&pb, "result");
 
     let mut  verifier=r1cs_ppzksnark_verifier_gadget::<ppT_B>::new(pb, vk, primary_input_bits, elt_size, proof, result, "verifier");
 
-    PROFILE_CONSTRAINTS(pb, "check that proofs lies on the curve");
+    PROFILE_CONSTRAINTS(&pb, "check that proofs lies on the curve");
     {
         proof.generate_r1cs_constraints();
     }
@@ -80,7 +80,7 @@ pub fn  test_verifier(annotation_A:&String, annotation_B:&String)
         input_as_bits.insert(input_as_bits.end(), v.begin(), v.end());
     }
 
-    primary_input_bits.fill_with_bits(pb, input_as_bits);
+    primary_input_bits.fill_with_bits(&pb, input_as_bits);
 
     vk.generate_r1cs_witness(keypair.vk);
     proof.generate_r1cs_witness(pi);
@@ -125,16 +125,16 @@ pub fn  test_hardcoded_verifier(annotation_A:&String, annotation_B:&String)
     let mut pb=protoboard::<FieldT_B> ::new();
     let mut  hardcoded_vk=r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT_B>::new(pb, keypair.vk, "hardcoded_vk");
     let mut  primary_input_bits=pb_variable_array::<FieldT_B>::new;
-    primary_input_bits.allocate(pb, primary_input_size_in_bits, "primary_input_bits");
+    primary_input_bits.allocate(&pb, primary_input_size_in_bits, "primary_input_bits");
 
     let  proof=r1cs_ppzksnark_proof_variable::<ppT_B>::new(pb, "proof");
 
     let mut  result=pb_variable::<FieldT_B>::new();
-    result.allocate(pb, "result");
+    result.allocate(&pb, "result");
 
     let mut  online_verifier=r1cs_ppzksnark_online_verifier_gadget::<ppT_B>::new(pb, hardcoded_vk, primary_input_bits, elt_size, proof, result, "online_verifier");
 
-    PROFILE_CONSTRAINTS(pb, "check that proofs lies on the curve");
+    PROFILE_CONSTRAINTS(&pb, "check that proofs lies on the curve");
     {
         proof.generate_r1cs_constraints();
     }
@@ -147,7 +147,7 @@ pub fn  test_hardcoded_verifier(annotation_A:&String, annotation_B:&String)
         input_as_bits.insert(input_as_bits.end(), v.begin(), v.end());
     }
 
-    primary_input_bits.fill_with_bits(pb, input_as_bits);
+    primary_input_bits.fill_with_bits(&pb, input_as_bits);
 
     proof.generate_r1cs_witness(pi);
     online_verifier.generate_r1cs_witness();
@@ -285,22 +285,22 @@ pub fn  test_full_pairing(annotation:&String)
     let mut miller_result=Fqk_variable::<ppT>::new(pb, "miller_result");
     let mut miller=mnt_miller_loop_gadget::<ppT>::new(pb, prec_P, prec_Q, miller_result, "miller");
     let mut result_is_one=variable::<FieldT,pb_variable>::new();
-    result_is_one.allocate(pb, "result_is_one");
+    result_is_one.allocate(&pb, "result_is_one");
     let mut finexp=final_exp_gadget::<ppT>::new(pb, miller_result, result_is_one, "finexp");
 
-    PROFILE_CONSTRAINTS(pb, "precompute P");
+    PROFILE_CONSTRAINTS(&pb, "precompute P");
     {
         compute_prec_P.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "precompute Q");
+    PROFILE_CONSTRAINTS(&pb, "precompute Q");
     {
         compute_prec_Q.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "Miller loop");
+    PROFILE_CONSTRAINTS(&pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "final exp");
+    PROFILE_CONSTRAINTS(&pb, "final exp");
     {
         finexp.generate_r1cs_constraints();
     }
@@ -343,14 +343,14 @@ pub fn  test_full_precomputed_pairing(annotation:&String)
     let mut miller_result=Fqk_variable::<ppT>::new(pb, "miller_result");
     let mut miller=mnt_miller_loop_gadget::<ppT>::new(pb, prec_P, prec_Q, miller_result, "miller");
     let mut result_is_one=variable::<FieldT,pb_variable>::new();
-    result_is_one.allocate(pb, "result_is_one");
+    result_is_one.allocate(&pb, "result_is_one");
     let mut finexp=final_exp_gadget::<ppT>::new(pb, miller_result, result_is_one, "finexp");
 
-    PROFILE_CONSTRAINTS(pb, "Miller loop");
+    PROFILE_CONSTRAINTS(&pb, "Miller loop");
     {
         miller.generate_r1cs_constraints();
     }
-    PROFILE_CONSTRAINTS(pb, "final exp");
+    PROFILE_CONSTRAINTS(&pb, "final exp");
     {
         finexp.generate_r1cs_constraints();
     }

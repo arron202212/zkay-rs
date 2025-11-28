@@ -88,8 +88,8 @@ pub fn kronecker_substitution<
     let b = 2; //* (v1_max * v2_max).as_bigint().num_bits() + 1;
 
     /* Number of limbs needed in total */
-    let k1 = div_ceil((n1 * b) as i64, GMP_NUMB_BITS as i64).unwrap();
-    let k2 = div_ceil((n2 * b) as i64, GMP_NUMB_BITS as i64).unwrap();
+    let k1 = div_ceil((n1 * b), GMP_NUMB_BITS).unwrap();
+    let k2 = div_ceil((n2 * b), GMP_NUMB_BITS).unwrap();
 
     /* Output polynomial */
     v3.resize(n3, FieldT::zero());
@@ -99,7 +99,7 @@ pub fn kronecker_substitution<
      * to free memory afterwards. P1, P2, and P3 will remain fixed pointers
      * to the start of their respective polynomials as reference.
      */
-    let m1 = vec![0; 2 * (k1 + k2) as usize]; //(mp_limb_t*) malloc (sizeof (mp_limb_t) * 2 * (k1 + k2));
+    let m1 = vec![0; 2 * (k1 + k2)]; //(mp_limb_t*) malloc (sizeof (mp_limb_t) * 2 * (k1 + k2));
     // let p1 = m1;
     //     let p2 = p1 + k1;
     //     let p3 = p2 + k2;

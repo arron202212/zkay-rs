@@ -90,7 +90,7 @@ result:    pb_variable<FieldT>,
 
 impl check_e_equals_e_gadget<ppT> {
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                       lhs_G1:&G1_precomputation<ppT>,
                                                       lhs_G2:&G2_precomputation<ppT>,
                                                       rhs_G1:&G1_precomputation<ppT>,
@@ -102,7 +102,7 @@ pub fn new(pb:protoboard<FieldT>,
     ratio.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
     compute_ratio.reset(e_over_e_miller_loop_gadget::<ppT>::new(pb, lhs_G1, lhs_G2, rhs_G1, rhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
     check_finexp.reset(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
-    //   gadget<FieldT>(pb, annotation_prefix),
+    //   gadget<FieldT>(&pb, annotation_prefix),
    Self{lhs_G1,
    lhs_G2,
    rhs_G1,
@@ -127,7 +127,7 @@ pub fn generate_r1cs_witness()
 }
 
 impl check_e_equals_ee_gadget<ppT> {
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                         lhs_G1:&G1_precomputation<ppT>,
                                                         lhs_G2:&G2_precomputation<ppT>,
                                                         rhs1_G1:&G1_precomputation<ppT>,
@@ -141,7 +141,7 @@ pub fn new(pb:protoboard<FieldT>,
     ratio.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
     compute_ratio.reset(e_times_e_over_e_miller_loop_gadget::<ppT>::new(pb, rhs1_G1, rhs1_G2, rhs2_G1, rhs2_G2, lhs_G1, lhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
     check_finexp.reset(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{lhs_G1,
    lhs_G2,
    rhs1_G1,

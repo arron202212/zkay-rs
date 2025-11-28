@@ -120,7 +120,7 @@
 //     static GadgetPtr create(ProtoboardPtr pb, ADD_ELLIPSES_1(Type1, name1)) {                     \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1));                                     \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1));                                     \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
 //         }                                                                                         \
@@ -139,7 +139,7 @@
 //                                 ADD_ELLIPSES_2(Type1, name1, Type2, name2)) {                     \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2));                              \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2));                              \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
 //         }                                                                                         \
@@ -158,7 +158,7 @@
 //                                 ADD_ELLIPSES_3(Type1, name1, Type2, name2, Type3, name3)) {       \
 //         GadgetPtr pGadget;                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2, name3));                       \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2, name3));                       \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
 //         }                                                                                         \
@@ -178,7 +178,7 @@
 //                   ADD_ELLIPSES_4(Type1, name1, Type2, name2, Type3, name3, Type4, name4)) {       \
 //         GadgetPtr pGadget;                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2, name3, name4));                \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2, name3, name4));                \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
 //         }                                                                                         \
@@ -199,7 +199,7 @@
 //                                  Type5, name5)) {                                                 \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2, name3, name4, name5));         \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2, name3, name4, name5));         \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
 //         }                                                                                         \
@@ -220,7 +220,7 @@
 //                                  Type5, name5, Type6, name6, Type7, name7)) {                     \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2, name3, name4, name5, name6,    \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2, name3, name4, name5, name6,    \
 //                                                  name7));                                         \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
@@ -244,7 +244,7 @@
 //                                  Type5, name5, Type6, name6, Type7, name7, Type8, name8)) {       \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2, name3, name4, name5, name6,    \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2, name3, name4, name5, name6,    \
 //                                                  name7, name8));                                  \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \
@@ -268,7 +268,7 @@
 //                                  Type9, name9)) {                                                 \
 //         GadgetPtr pGadget;                                                                        \
 //         if pb->fieldType_ == R1P {                                                              \
-//             pGadget.reset(new R1P_ ## GadgetType(pb, name1, name2, name3, name4, name5, name6,    \
+//             pGadget.reset(new R1P_ ## GadgetType(&pb, name1, name2, name3, name4, name5, name6,    \
 //                                                  name7, name8, name9));                           \
 //         } else {                                                                                  \
 //             GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");              \

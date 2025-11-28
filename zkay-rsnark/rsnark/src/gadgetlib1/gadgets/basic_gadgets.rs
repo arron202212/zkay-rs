@@ -1,69 +1,72 @@
-// /** @file
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::pb_variable::{
+    ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
+    pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
+    r1cs_variable_assignment,
+};
+use crate::relations::variable::{linear_combination, variable};
+use ffec::common::utils::div_ceil;
+use ffec::field_utils::bigint::bigint;
+use rccell::RcCell;
+pub fn FMT(s: &String, c: &str) {}
 
-// //#ifndef BASIC_GADGETS_HPP_
-// // #define BASIC_GADGETS_HPP_
-
-// // use  <cassert>
-// // 
-
-use crate::gadgetlib1::gadget;
-
-pub fn FMT(s:&String,c:&str){
+#[macro_export]
+macro_rules! prefix_format {
+    ("",$fmt:expr $(, $($arg:tt)*)?) => {
+        format!($fmt, $($($arg)*)?)
+    };
+    ($prefix:expr, $fmt:expr $(, $($arg:tt)*)?) => {
+            format!(concat!("{}", $fmt),$prefix,$($($arg)*)?)
+    };
 
 }
 
 /* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
-// 
-// pub fn generate_boolean_r1cs_constraint(pb:&protoboard<FieldT> , lc:&pb_linear_combination<FieldT>, annotation_prefix:&String);
+//
+// pub fn generate_boolean_r1cs_constraint(pb:&RcCell<protoboard<FieldT>> , lc:&linear_combination<FieldT,pb_variable,pb_linear_combination>, annotation_prefix:&String);
 
-// 
-// pub fn generate_r1cs_equals_const_constraint(pb:&protoboard<FieldT> , lc:&pb_linear_combination<FieldT>, annotation_prefix:&FieldT& c,  String);
+//
+// pub fn generate_r1cs_equals_const_constraint(pb:&RcCell<protoboard<FieldT>> , lc:&linear_combination<FieldT,pb_variable,pb_linear_combination>, annotation_prefix:&FieldT& c,  String);
 
-// 
-pub struct packing_gadget {
-// : public gadget<FieldT> 
+//
+pub struct packing_gadget<FieldT: FieldTConfig> {
     /* no internal variables */
-// 
-      bits:pb_linear_combination_array<FieldT> ,
-      packed:pb_linear_combination<FieldT>,
+    pub bits: pb_linear_combination_array<FieldT>,
+    pub packed: linear_combination<FieldT, pb_variable, pb_linear_combination>,
 }
 
- impl packing_gadget {
-    pub fn new(pb:protoboard<FieldT> ,
-                   bits:pb_linear_combination_array<FieldT>,
-                   packed:pb_linear_combination<FieldT>,
-                   annotation_prefix:&String) ->Self
-        { 
-        // gadget<FieldT>(pb, annotation_prefix),
-        Self{ bits, packed}
-        }
+impl<FieldT: FieldTConfig> packing_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        bits: pb_linear_combination_array<FieldT>,
+        packed: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        gadget::<FieldT, Self>::new(pb, annotation_prefix, Self { bits, packed })
+    }
 
     // pub fn generate_r1cs_constraints(enforce_bitness:bool);
     // /* adds constraint result = \sum  bits[i] * 2^i */
-
     // pub fn generate_r1cs_witness_from_packed();
     // pub fn generate_r1cs_witness_from_bits();
 }
 
-// 
-pub struct  multipacking_gadget {
-// : public gadget<FieldT> 
-packers:    Vec<packing_gadget<FieldT> >,
-// 
-bits:     pb_linear_combination_array<FieldT>,
-packed_vars:     pb_linear_combination_array<FieldT>,
-
-chunk_size:     usize,
-num_chunks:     usize,
-last_chunk_size:   usize,
+//
+pub struct multipacking_gadget<FieldT: FieldTConfig> {
+    pub packers: Vec<gadget<FieldT, packing_gadget<FieldT>>>,
+    pub bits: pb_linear_combination_array<FieldT>,
+    pub packed_vars: pb_linear_combination_array<FieldT>,
+    pub chunk_size: usize,
+    pub num_chunks: usize,
+    pub last_chunk_size: usize,
 }
 // impl multipacking_gadget {
-//     multipacking_gadget(pb:&protoboard<FieldT> ,
+//     multipacking_gadget(pb:&RcCell<protoboard<FieldT>> ,
 //                         bits:&pb_linear_combination_array<FieldT>,
 //                         packed_vars:&pb_linear_combination_array<FieldT>,
 //                         chunk_size:usize,
@@ -73,98 +76,122 @@ last_chunk_size:   usize,
 //     // pub fn generate_r1cs_witness_from_bits();
 // }
 
-// 
-pub struct  field_vector_copy_gadget {
-// : public gadget<FieldT> 
-source:     pb_variable_array<FieldT>,
-target:     pb_variable_array<FieldT>,
-do_copy:     pb_linear_combination<FieldT>,
-
-    // field_vector_copy_gadget(pb:&protoboard<FieldT> ,
+//
+pub struct field_vector_copy_gadget<FieldT: FieldTConfig> {
+    pub source: pb_variable_array<FieldT>,
+    pub target: pb_variable_array<FieldT>,
+    pub do_copy: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    // field_vector_copy_gadget(pb:&RcCell<protoboard<FieldT>> ,
     //                          source:&pb_variable_array<FieldT>,
     //                          target:&pb_variable_array<FieldT>,
-    //                          do_copy:&pb_linear_combination<FieldT>,
+    //                          do_copy:&linear_combination<FieldT,pb_variable,pb_linear_combination>,
     //                          annotation_prefix:&String);
-    // pub fn generate_r1cs_constraints();
-    // pub fn generate_r1cs_witness();
+    // pub fn generate_r1cs_constraints(&self);
+    // pub fn generate_r1cs_witness(&self);
 }
 
-// 
-pub struct  bit_vector_copy_gadget  {
-// : public gadget<FieldT>
-source_bits:     pb_variable_array<FieldT>,
-target_bits:     pb_variable_array<FieldT>,
-do_copy:     pb_linear_combination<FieldT>,
-
-packed_source:    pb_variable_array<FieldT>,
-packed_target:    pb_variable_array<FieldT>,
-
-pack_source:    RcCell<multipacking_gadget<FieldT> >,
-pack_target:    RcCell<multipacking_gadget<FieldT> >,
-copier:    RcCell<field_vector_copy_gadget<FieldT> >,
-
-chunk_size:     usize,
-num_chunks:     usize,
-
-    // bit_vector_copy_gadget(pb:&protoboard<FieldT> ,
+//
+pub struct bit_vector_copy_gadget<FieldT: FieldTConfig> {
+    pub source_bits: pb_variable_array<FieldT>,
+    pub target_bits: pb_variable_array<FieldT>,
+    pub do_copy: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub packed_source: pb_variable_array<FieldT>,
+    pub packed_target: pb_variable_array<FieldT>,
+    pub pack_source: RcCell<gadget<FieldT, multipacking_gadget<FieldT>>>,
+    pub pack_target: RcCell<gadget<FieldT, multipacking_gadget<FieldT>>>,
+    pub copier: RcCell<gadget<FieldT, field_vector_copy_gadget<FieldT>>>,
+    pub chunk_size: usize,
+    pub num_chunks: usize,
+    // bit_vector_copy_gadget(pb:&RcCell<protoboard<FieldT>> ,
     //                        source_bits:&pb_variable_array<FieldT>,
     //                        target_bits:&pb_variable_array<FieldT>,
-    //                        do_copy:&pb_linear_combination<FieldT>,
+    //                        do_copy:&linear_combination<FieldT,pb_variable,pb_linear_combination>,
     //                        chunk_size:usize,
     //                        annotation_prefix:&String);
     // pub fn generate_r1cs_constraints(enforce_source_bitness:bool, enforce_target_bitness:bool);
-    // pub fn generate_r1cs_witness();
+    // pub fn generate_r1cs_witness(&self);
 }
 
-// 
-pub struct  dual_variable_gadget  {
-// : public gadget<FieldT>
-consistency_check:    RcCell<packing_gadget<FieldT> >,
-// 
-packed:    pb_variable<FieldT>,
-bits:    pb_variable_array<FieldT>,
+//
+pub struct dual_variable_gadget<FieldT: FieldTConfig> {
+    pub consistency_check: RcCell<gadget<FieldT, packing_gadget<FieldT>>>,
+    pub packed: variable<FieldT, pb_variable>,
+    pub bits: pb_variable_array<FieldT>,
 }
-impl dual_variable_gadget  {
-    pub fn new(pb:protoboard<FieldT> ,
-                         width:usize,
-                         annotation_prefix:&String) ->Self
-     
-    {
-//    gadget<FieldT>(pb, annotation_prefix)
-        packed.allocate(pb, FMT(annotation_prefix, " packed"));
-        bits.allocate(pb, width, FMT(annotation_prefix, " bits"));
-        // consistency_check.reset(packing_gadget::<FieldT>::new(pb,
-        //                                                    bits,
-        //                                                    packed,
-        //                                                  FMT(annotation_prefix, " consistency_check")));
-        Self{packed,bits}
+impl<FieldT: FieldTConfig> dual_variable_gadget<FieldT> {
+    pub fn new(
+        mut pb: RcCell<protoboard<FieldT>>,
+        width: usize,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut packed = variable::<FieldT, pb_variable>::default();
+        packed.allocate(&pb, prefix_format!(annotation_prefix, " packed"));
+        let mut bits = pb_variable_array::<FieldT>::default();
+        bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " bits"));
+        let consistency_check = RcCell::new(packing_gadget::<FieldT>::new(
+            pb.clone(),
+            bits.clone().into(),
+            packed.clone().into(),
+            prefix_format!(annotation_prefix, " consistency_check"),
+        ));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                consistency_check,
+                packed,
+                bits,
+            },
+        )
     }
 
-    pub fn new2(pb:&protoboard<FieldT> ,
-                         bits:&pb_variable_array<FieldT>,
-                         annotation_prefix:&String)->Self
-        
-    {
-// gadget<FieldT>(pb, annotation_prefix),bits
-        packed.allocate(pb, FMT(annotation_prefix, " packed"));
-        consistency_check.reset( packing_gadget::<FieldT>::new(pb,
-                                                           bits,
-                                                           packed,
-                                                         FMT(annotation_prefix, " consistency_check")));
+    pub fn new2(
+        pb: RcCell<protoboard<FieldT>>,
+        bits: pb_variable_array<FieldT>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut packed = variable::<FieldT, pb_variable>::default();
+        packed.allocate(&pb, prefix_format!(annotation_prefix, " packed"));
+        let consistency_check = RcCell::new(packing_gadget::<FieldT>::new(
+            pb.clone(),
+            bits.clone().into(),
+            packed.clone().into(),
+            prefix_format!(annotation_prefix, " consistency_check"),
+        ));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                consistency_check,
+                packed,
+                bits,
+            },
+        )
     }
 
-    pub fn new3(pb:&protoboard<FieldT> ,
-                         packed:&pb_variable<FieldT>,
-                         width:usize,
-                         annotation_prefix:&String) ->Self
-       
-    {
-//  gadget<FieldT>(pb, annotation_prefix),packed
-        bits.allocate(pb, width, FMT(annotation_prefix, " bits"));
-        consistency_check.reset( packing_gadget::<FieldT>::new(pb,
-                                                           bits,
-                                                           packed,
-                                                         FMT(annotation_prefix, " consistency_check")));
+    pub fn new3(
+        pb: RcCell<protoboard<FieldT>>,
+        packed: variable<FieldT, pb_variable>,
+        width: usize,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut bits = pb_variable_array::<FieldT>::default();
+        bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " bits"));
+        let consistency_check = RcCell::new(packing_gadget::<FieldT>::new(
+            pb.clone(),
+            bits.clone().into(),
+            packed.clone().into(),
+            prefix_format!(annotation_prefix, " consistency_check"),
+        ));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                consistency_check,
+                packed,
+                bits,
+            },
+        )
     }
 
     // pub fn generate_r1cs_constraints(enforce_bitness:bool);
@@ -181,915 +208,1168 @@ impl dual_variable_gadget  {
   if X != 0 then R = 1 and I = X^{-1}
 */
 
-// 
-pub struct  disjunction_gadget {
-// : public gadget<FieldT> 
-inv:    pb_variable<FieldT>,
-// 
-inputs:     pb_variable_array<FieldT>,
-output:     pb_variable<FieldT>,
+pub struct disjunction_gadget<FieldT: FieldTConfig> {
+    pub inv: variable<FieldT, pb_variable>,
+    pub inputs: pb_variable_array<FieldT>,
+    pub output: variable<FieldT, pb_variable>,
 }
-impl disjunction_gadget {
-    pub fn new(pb:protoboard<FieldT>,
-                       inputs:pb_variable_array<FieldT>,
-                       output:pb_variable<FieldT>,
-                       annotation_prefix:&String) ->Self
-        
-    {
-// gadget<FieldT>(pb, annotation_prefix),inputs,output
+impl<FieldT: FieldTConfig> disjunction_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        inputs: pb_variable_array<FieldT>,
+        output: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut inv = variable::<FieldT, pb_variable>::default();
         assert!(inputs.len() >= 1);
-        inv.allocate(pb, FMT(annotation_prefix, " inv"));
+        inv.allocate(&pb, prefix_format!(annotation_prefix, " inv"));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                inv,
+                inputs,
+                output,
+            },
+        )
     }
 
-    // pub fn generate_r1cs_constraints();
-    // pub fn generate_r1cs_witness();
+    // pub fn generate_r1cs_constraints(&self);
+    // pub fn generate_r1cs_witness(&self);
 }
 
-// 
-// pub fn test_disjunction_gadget(n:usize);
-
-// 
-pub struct  conjunction_gadget {
-// : public gadget<FieldT> 
-inv:    pb_variable<FieldT>,
-// 
-inputs:     pb_variable_array<FieldT>,
-output:     pb_variable<FieldT>,
+pub struct conjunction_gadget<FieldT: FieldTConfig> {
+    pub inv: variable<FieldT, pb_variable>,
+    pub inputs: pb_variable_array<FieldT>,
+    pub output: variable<FieldT, pb_variable>,
 }
-impl conjunction_gadget {
-    pub fn new(pb:protoboard<FieldT>,
-                       inputs:pb_variable_array<FieldT>,
-                       output:pb_variable<FieldT>,
-                       annotation_prefix:&String) ->Self
-       
-    {
-//  gadget<FieldT>(pb, annotation_prefix),inputs,output
+impl<FieldT: FieldTConfig> conjunction_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        inputs: pb_variable_array<FieldT>,
+        output: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut inv = variable::<FieldT, pb_variable>::default();
         assert!(inputs.len() >= 1);
-        inv.allocate(pb, FMT(annotation_prefix, " inv"));
+        inv.allocate(&pb, prefix_format!(annotation_prefix, " inv"));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                inv,
+                inputs,
+                output,
+            },
+        )
     }
 
-//     pub fn generate_r1cs_constraints();
-//     pub fn generate_r1cs_witness();
+    //     pub fn generate_r1cs_constraints(&self);
+    //     pub fn generate_r1cs_witness(&self);
 }
 
-// 
-// pub fn test_conjunction_gadget(n:usize);
-
-// 
-pub struct  comparison_gadget {
-// : public gadget<FieldT> 
-alpha:    pb_variable_array<FieldT>,
-alpha_packed:    pb_variable<FieldT>,
-pack_alpha:    RcCell<packing_gadget<FieldT> >,
-
-all_zeros_test:    RcCell<disjunction_gadget<FieldT> >,
-not_all_zeros:    pb_variable<FieldT>,
-// 
-n:     usize,
-A:     pb_linear_combination<FieldT>,
-B:     pb_linear_combination<FieldT>,
-less:     pb_variable<FieldT>,
-less_or_eq:     pb_variable<FieldT>,
+pub struct comparison_gadget<FieldT: FieldTConfig> {
+    pub alpha: pb_variable_array<FieldT>,
+    pub alpha_packed: variable<FieldT, pb_variable>,
+    pub pack_alpha: RcCell<gadget<FieldT, packing_gadget<FieldT>>>,
+    pub all_zeros_test: RcCell<gadget<FieldT, disjunction_gadget<FieldT>>>,
+    pub not_all_zeros: variable<FieldT, pb_variable>,
+    pub n: usize,
+    pub A: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub B: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub less: variable<FieldT, pb_variable>,
+    pub less_or_eq: variable<FieldT, pb_variable>,
 }
-impl comparison_gadget {
-    pub fn new(pb:protoboard<FieldT>,
-                      n:usize,
-                      A:pb_linear_combination<FieldT>,
-                      B:pb_linear_combination<FieldT>,
-                      less:pb_variable<FieldT>,
-                      less_or_eq:pb_variable<FieldT>,
-                      annotation_prefix:&String) ->Self
-    {
-//  gadget<FieldT>(pb, annotation_prefix),n,A,B,less,less_or_eq
-        alpha.allocate(pb, n, FMT(annotation_prefix, " alpha"));
-        alpha.push(less_or_eq); // alpha[n] is less_or_eq
+impl<FieldT: FieldTConfig> comparison_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        n: usize,
+        A: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        B: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        less: variable<FieldT, pb_variable>,
+        less_or_eq: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut alpha = pb_variable_array::<FieldT>::default();
+        alpha.allocate(&pb, n, &prefix_format!(annotation_prefix, " alpha"));
+        alpha.contents.push(less_or_eq.clone()); // alpha[n] is less_or_eq
+        let mut alpha_packed = variable::<FieldT, pb_variable>::default();
+        alpha_packed.allocate(&pb, prefix_format!(annotation_prefix, " alpha_packed"));
+        let mut not_all_zeros = variable::<FieldT, pb_variable>::default();
+        not_all_zeros.allocate(&pb, prefix_format!(annotation_prefix, " not_all_zeros"));
 
-        alpha_packed.allocate(pb, FMT(annotation_prefix, " alpha_packed"));
-        not_all_zeros.allocate(pb, FMT(annotation_prefix, " not_all_zeros"));
+        let pack_alpha = RcCell::new(packing_gadget::<FieldT>::new(
+            pb.clone(),
+            alpha.clone().into(),
+            alpha_packed.clone().into(),
+            prefix_format!(annotation_prefix, " pack_alpha"),
+        ));
 
-        pack_alpha.reset( packing_gadget::<FieldT>::new(pb, alpha, alpha_packed,
-                                                  FMT(annotation_prefix, " pack_alpha")));
-
-        all_zeros_test.reset(disjunction_gadget::<FieldT>::new(pb,
-                                                            pb_variable_array::<FieldT>(alpha.begin(), alpha.begin() + n),
-                                                            not_all_zeros,
-                                                          FMT(annotation_prefix, " all_zeros_test")));
+        let all_zeros_test = RcCell::new(disjunction_gadget::<FieldT>::new(
+            pb.clone(),
+            pb_variable_array::<FieldT>::new(alpha.contents[..n].to_vec()),
+            not_all_zeros.clone(),
+            prefix_format!(annotation_prefix, " all_zeros_test"),
+        ));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                alpha,
+                alpha_packed,
+                pack_alpha,
+                all_zeros_test,
+                not_all_zeros,
+                n,
+                A,
+                B,
+                less,
+                less_or_eq,
+            },
+        )
     }
 
-    // pub fn generate_r1cs_constraints();
-    // pub fn generate_r1cs_witness();
+    // pub fn generate_r1cs_constraints(&self);
+    // pub fn generate_r1cs_witness(&self);
 }
 
-// 
-// pub fn test_comparison_gadget(n:usize);
-
-// 
-pub struct  inner_product_gadget {
-// : public gadget<FieldT> 
+pub struct inner_product_gadget<FieldT: FieldTConfig> {
     /* S_i = \sum_{k=0}^{i+1} A[i] * B[i] */
-S:    pb_variable_array<FieldT>,
-// 
-A:     pb_linear_combination_array<FieldT>,
-B:     pb_linear_combination_array<FieldT>,
-result:     pb_variable<FieldT>,
+    pub S: pb_variable_array<FieldT>,
+    pub A: pb_linear_combination_array<FieldT>,
+    pub B: pb_linear_combination_array<FieldT>,
+    pub result: variable<FieldT, pb_variable>,
 }
- impl inner_product_gadget {
-    pub fn new(pb:protoboard<FieldT>,
-                         A:pb_linear_combination_array<FieldT>,
-                         B:pb_linear_combination_array<FieldT>,
-                         result:pb_variable<FieldT>,
-                         annotation_prefix:&String)->Self
-       
-    {
-//  gadget<FieldT>(pb, annotation_prefix),A,B,result
+impl<FieldT: FieldTConfig> inner_product_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        A: pb_linear_combination_array<FieldT>,
+        B: pb_linear_combination_array<FieldT>,
+        result: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        //  gadget<FieldT>(&pb, annotation_prefix),A,B,result
         assert!(A.len() >= 1);
         assert!(A.len() == B.len());
-
-        S.allocate(pb, A.len()-1, FMT(annotation_prefix, " S"));
+        let mut S = pb_variable_array::<FieldT>::default();
+        S.allocate(&pb, A.len() - 1, &prefix_format!(annotation_prefix, " S"));
+        gadget::<FieldT, Self>::new(pb, annotation_prefix, Self { S, A, B, result })
     }
 
-    // pub fn generate_r1cs_constraints();
-    // pub fn generate_r1cs_witness();
+    // pub fn generate_r1cs_constraints(&self);
+    // pub fn generate_r1cs_witness(&self);
 }
 
-// 
-// pub fn test_inner_product_gadget(n:usize);
-
-// 
-pub struct  loose_multiplexing_gadget {
-/*
-  this implements loose multiplexer:
-  index not in bounds -> success_flag = 0
-  index in bounds && success_flag = 1 -> result is correct
-  however if index is in bounds we can also set success_flag to 0 (and then result will be forced to be 0)
-*/
-// : public gadget<FieldT> 
-alpha:    pb_variable_array<FieldT>,
-// 
-compute_result:    RcCell<inner_product_gadget<FieldT> >,
-// 
-arr:     pb_linear_combination_array<FieldT>,
-index:     pb_variable<FieldT>,
-result:     pb_variable<FieldT>,
-success_flag:     pb_variable<FieldT>,
+pub struct loose_multiplexing_gadget<FieldT: FieldTConfig> {
+    //   this implements loose multiplexer:
+    //   index not in bounds -> success_flag = 0
+    //   index in bounds && success_flag = 1 -> result is correct
+    //   however if index is in bounds we can also set success_flag to 0 (and then result will be forced to be 0)
+    pub alpha: pb_variable_array<FieldT>,
+    pub compute_result: RcCell<gadget<FieldT, inner_product_gadget<FieldT>>>,
+    pub arr: pb_linear_combination_array<FieldT>,
+    pub index: variable<FieldT, pb_variable>,
+    pub result: variable<FieldT, pb_variable>,
+    pub success_flag: variable<FieldT, pb_variable>,
 }
-impl loose_multiplexing_gadget {
-    pub fn new(pb:protoboard<FieldT>,
-                              arr:pb_linear_combination_array<FieldT>,
-                              index:pb_variable<FieldT>,
-                              result:pb_variable<FieldT>,
-                              success_flag:pb_variable<FieldT>,
-                              annotation_prefix:&String) ->Self
-        
-    {
-// gadget<FieldT>(pb, annotation_prefix),arr,index,result,success_flag
-        alpha.allocate(pb, arr.len(), FMT(annotation_prefix, " alpha"));
-        compute_result.reset(inner_product_gadget::<FieldT>::new(pb, alpha, arr, result, FMT(annotation_prefix, " compute_result")));
+impl<FieldT: FieldTConfig> loose_multiplexing_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        arr: pb_linear_combination_array<FieldT>,
+        index: variable<FieldT, pb_variable>,
+        result: variable<FieldT, pb_variable>,
+        success_flag: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let mut alpha = pb_variable_array::<FieldT>::default();
+        alpha.allocate(&pb, arr.len(), &prefix_format!(annotation_prefix, " alpha"));
+        let compute_result = RcCell::new(inner_product_gadget::<FieldT>::new(
+            pb.clone(),
+            alpha.clone().into(),
+            arr.clone().into(),
+            result.clone(),
+            prefix_format!(annotation_prefix, " compute_result"),
+        ));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                alpha,
+                compute_result,
+                arr,
+                index,
+                result,
+                success_flag,
+            },
+        )
     }
 
-    // pub fn generate_r1cs_constraints();
-    // pub fn generate_r1cs_witness();
+    // pub fn generate_r1cs_constraints(&self);
+    // pub fn generate_r1cs_witness(&self);
 }
 
-// 
-// pub fn test_loose_multiplexing_gadget(n:usize);
-
-// < FieldT,  VarT>
-// pub fn create_linear_combination_constraints(pb:&protoboard<FieldT> ,
-//                                            base:&Vec<FieldT>,
-//                                            v:&Vec<(VarT,FieldT) >,
-//                                            target:&VarT,
-//                                            annotation_prefix:&String);
-
-// < FieldT,  VarT>
-// pub fn create_linear_combination_witness(pb:&protoboard<FieldT> ,
-//                                        base:&Vec<FieldT>,
-//                                        v:&Vec<(VarT,FieldT) >,
-//                                        target:&VarT);
-
-
-// use crate::gadgetlib1::gadgets::basic_gadgets;
-
-//#endif // BASIC_GADGETS_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef BASIC_GADGETS_TCC_
-// #define BASIC_GADGETS_TCC_
-
-use ffec::common::profiling;
+use ffec::common::profiling::print_time;
 use ffec::common::utils;
 
-
-
-// 
-pub fn generate_boolean_r1cs_constraint(pb:&protoboard<FieldT> , lc:&pb_linear_combination<FieldT>, annotation_prefix:&String)
-/* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
-{
-    pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(lc, 1-lc, 0),
-                         FMT(annotation_prefix, " boolean_r1cs_constraint"));
+//
+pub fn generate_boolean_r1cs_constraint<FieldT: FieldTConfig>(
+    pb: &RcCell<protoboard<FieldT>>,
+    lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    annotation_prefix: String,
+) {
+    /* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
+    pb.borrow_mut().add_r1cs_constraint(
+        r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+            lc.clone(),
+            -lc.clone() + 1,
+            0.into(),
+        ),
+        prefix_format!(annotation_prefix, " boolean_r1cs_constraint"),
+    );
 }
 
-
-pub fn generate_r1cs_equals_const_constraint(pb:&protoboard<FieldT> , lc:&pb_linear_combination<FieldT>, c:&FieldT, annotation_prefix:&String)
-{
-    pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, lc, c),
-                         FMT(annotation_prefix, " constness_constraint"));
+pub fn generate_r1cs_equals_const_constraint<FieldT: FieldTConfig>(
+    pb: &RcCell<protoboard<FieldT>>,
+    lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    c: &FieldT,
+    annotation_prefix: String,
+) {
+    pb.borrow_mut().add_r1cs_constraint(
+        r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+            1.into(),
+            lc.clone(),
+            c.clone().into(),
+        ),
+        prefix_format!(annotation_prefix, " constness_constraint"),
+    );
 }
 
-impl packing_gadget<FieldT>{
+impl<FieldT: FieldTConfig> gadget<FieldT, packing_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
+        /* adds constraint result = \sum  bits[i] * 2^i */
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                1.into(),
+                pb_packing_sum::<FieldT>(&self.t.bits),
+                self.t.packed.clone(),
+            ),
+            prefix_format!(self.annotation_prefix, " packing_constraint"),
+        );
 
-pub fn  generate_r1cs_constraints(enforce_bitness:bool)
-{/* adds constraint result = \sum  bits[i] * 2^i */
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_packing_sum::<FieldT>(bits), packed), FMT(annotation_prefix, " packing_constraint"));
+        if enforce_bitness {
+            for i in 0..self.t.bits.len() {
+                generate_boolean_r1cs_constraint::<FieldT>(
+                    &self.pb,
+                    &self.t.bits[i],
+                    prefix_format!(self.annotation_prefix, " bitness_{}", i),
+                );
+            }
+        }
+    }
 
-    if enforce_bitness
+    pub fn generate_r1cs_witness_from_packed(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
     {
-        for i in 0..bits.len()
-        {
-            generate_boolean_r1cs_constraint::<FieldT>(self.pb, bits[i], FMT(annotation_prefix, " bitness_{}", i));
+        self.t.packed.evaluate_pb(&self.pb);
+        assert!(
+            self.pb
+                .borrow()
+                .lc_val(&self.t.packed)
+                .as_bigint::<{ FieldT::num_limbs as usize }>()
+                .num_bits()
+                <= self.t.bits.len()
+        ); // `bits` is large enough to represent this packed value
+        self.t
+            .bits
+            .fill_with_bits_of_field_element(&self.pb, &self.pb.borrow().lc_val(&self.t.packed));
+    }
+
+    pub fn generate_r1cs_witness_from_bits(&self) {
+        self.t.bits.evaluate(&self.pb);
+        *self.pb.borrow_mut().lc_val_ref(&self.t.packed) =
+            self.t.bits.get_field_element_from_bits(&self.pb);
+    }
+}
+
+impl<FieldT: FieldTConfig> multipacking_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        bits: pb_linear_combination_array<FieldT>,
+        packed_vars: pb_linear_combination_array<FieldT>,
+        chunk_size: usize,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let num_chunks = (div_ceil(bits.len(), chunk_size).unwrap());
+        let last_chunk_size = (bits.len() - (num_chunks - 1) * chunk_size);
+        assert!(packed_vars.len() == num_chunks);
+        let mut packers = vec![];
+        for i in 0..num_chunks {
+            packers.push(packing_gadget::<FieldT>::new(
+                pb.clone(),
+                pb_linear_combination_array::<FieldT>::new(
+                    bits.contents[i * chunk_size..std::cmp::min((i + 1) * chunk_size, bits.len())]
+                        .to_vec(),
+                ),
+                packed_vars[i].clone(),
+                prefix_format!(annotation_prefix, " packers_{}", i),
+            ));
+        }
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                packers,
+                bits,
+                packed_vars,
+                chunk_size,
+                num_chunks,
+                last_chunk_size,
+            },
+        )
+    }
+}
+impl<FieldT: FieldTConfig> gadget<FieldT, multipacking_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
+        for i in 0..self.t.num_chunks {
+            self.t.packers[i].generate_r1cs_constraints(enforce_bitness);
+        }
+    }
+
+    pub fn generate_r1cs_witness_from_packed(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
+        for i in 0..self.t.num_chunks {
+            self.t.packers[i].generate_r1cs_witness_from_packed();
+        }
+    }
+
+    pub fn generate_r1cs_witness_from_bits(&self) {
+        for i in 0..self.t.num_chunks {
+            self.t.packers[i].generate_r1cs_witness_from_bits();
         }
     }
 }
 
-
-pub fn  generate_r1cs_witness_from_packed()
-{
-    packed.evaluate(self.pb);
-    assert!(self.pb.lc_val(packed).as_bigint().num_bits() <= bits.len()); // `bits` is large enough to represent this packed value
-    bits.fill_with_bits_of_field_element(self.pb, self.pb.lc_val(packed));
+pub fn multipacking_num_chunks<FieldT: FieldTConfig>(num_bits: usize) -> usize {
+    div_ceil(num_bits, FieldT::capacity()).unwrap()
 }
-
-
-pub fn  generate_r1cs_witness_from_bits()
-{
-    bits.evaluate(self.pb);
-    self.pb.lc_val(packed) = bits.get_field_element_from_bits(self.pb);
-}
-}
-
-impl multipacking_gadget<FieldT>{
-
-pub fn new(pb:&protoboard<FieldT> ,
-                                                 bits:&pb_linear_combination_array<FieldT>,
-                                                 packed_vars:&pb_linear_combination_array<FieldT>,
-                                                 chunk_size:usize,
-                                                 annotation_prefix:&String) ->Self
-  
-{
-//   gadget<FieldT>(pb, annotation_prefix),bits,packed_vars,
-//    chunk_size,
-//     num_chunks(div_ceil(bits.len(), chunk_size))
-    // last_chunk_size(bits.len() - (num_chunks-1) * chunk_size)
-    assert!(packed_vars.len() == num_chunks);
-    for i in 0..num_chunks
-    {
-        packers.push(packing_gadget::<FieldT>(self.pb, pb_linear_combination_array::<FieldT>(bits.begin() + i * chunk_size,
-                                                                                                  bits.begin() + std::cmp::min((i+1) * chunk_size, bits.len())),
-                                                    packed_vars[i], FMT(annotation_prefix, " packers_{}", i)));
+impl<FieldT: FieldTConfig> field_vector_copy_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        source: pb_variable_array<FieldT>,
+        target: pb_variable_array<FieldT>,
+        do_copy: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        // gadget<FieldT>(&pb, annotation_prefix),source,target,do_copy
+        assert!(source.len() == target.len());
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                source,
+                target,
+                do_copy,
+            },
+        )
     }
 }
-
-
-pub fn  generate_r1cs_constraints(enforce_bitness:bool)
-{
-    for i in 0..num_chunks
-    {
-        packers[i].generate_r1cs_constraints(enforce_bitness);
-    }
-}
-
-
-pub fn  generate_r1cs_witness_from_packed()
-{
-    for i in 0..num_chunks
-    {
-        packers[i].generate_r1cs_witness_from_packed();
-    }
-}
-
-
-pub fn  generate_r1cs_witness_from_bits()
-{
-    for i in 0..num_chunks
-    {
-        packers[i].generate_r1cs_witness_from_bits();
-    }
-}
-}
-
- pub fn multipacking_num_chunks(num_bits:usize)->usize
-{
-    return div_ceil(num_bits, FieldT::capacity());
-}
-impl field_vector_copy_gadget<FieldT>{
-
-pub fn new(pb:protoboard<FieldT> ,
-                                                           source:pb_variable_array<FieldT>,
-                                                           target:pb_variable_array<FieldT>,
-                                                           do_copy:pb_linear_combination<FieldT>,
-                                                           annotation_prefix:&String) ->Self
-
-{
-// gadget<FieldT>(pb, annotation_prefix),source,target,do_copy
-    assert!(source.len() == target.len());
-}
-
-
-pub fn  generate_r1cs_constraints()
-{
-    for i in 0..source.len()
-    {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(do_copy, source[i] - target[i], 0),
-                                   FMT(annotation_prefix, " copying_check_{}", i));
-    }
-}
-
-
-pub fn  generate_r1cs_witness()
-{
-    do_copy.evaluate(self.pb);
-    assert!(self.pb.lc_val(do_copy) == FieldT::one() || self.pb.lc_val(do_copy) == FieldT::zero());
-    if self.pb.lc_val(do_copy) != FieldT::zero()
-    {
-        for i in 0..source.len()
-        {
-            self.pb.val(target[i]) = self.pb.val(source[i]);
-        }
-    }
-}
-}
-
-impl bit_vector_copy_gadget<FieldT>{
-
-pub fn new(pb:protoboard<FieldT> ,
-                                                       source_bits:pb_variable_array<FieldT>,
-                                                       target_bits:pb_variable_array<FieldT>,
-                                                       do_copy:pb_linear_combination<FieldT>,
-                                                       chunk_size:usize,
-                                                       annotation_prefix:&String) ->Self
-  
-{
-//   gadget<FieldT>(pb, annotation_prefix),source_bits,target_bits,do_copy,
-//    chunk_size, num_chunks(div_ceil(source_bits.len(), chunk_size))
-    assert!(source_bits.len() == target_bits.len());
-
-    packed_source.allocate(pb, num_chunks, FMT(annotation_prefix, " packed_source"));
-    pack_source.reset(multipacking_gadget::<FieldT>::new(pb, source_bits, packed_source, chunk_size, FMT(annotation_prefix, " pack_source")));
-
-    packed_target.allocate(pb, num_chunks, FMT(annotation_prefix, " packed_target"));
-    pack_target.reset(multipacking_gadget::<FieldT>::new(pb, target_bits, packed_target, chunk_size, FMT(annotation_prefix, " pack_target")));
-
-    copier.reset(field_vector_copy_gadget::<FieldT>::new(pb, packed_source, packed_target, do_copy, FMT(annotation_prefix, " copier")));
-}
-
-
-pub fn  generate_r1cs_constraints(enforce_source_bitness:bool, enforce_target_bitness:bool)
-{
-    pack_source.generate_r1cs_constraints(enforce_source_bitness);
-    pack_target.generate_r1cs_constraints(enforce_target_bitness);
-
-    copier.generate_r1cs_constraints();
-}
-
-
-pub fn  generate_r1cs_witness()
-{
-    do_copy.evaluate(self.pb);
-    assert!(self.pb.lc_val(do_copy) == FieldT::zero() || self.pb.lc_val(do_copy) == FieldT::one());
-    if self.pb.lc_val(do_copy) == FieldT::one()
-    {
-        for i in 0..source_bits.len()
-        {
-            self.pb.val(target_bits[i]) = self.pb.val(source_bits[i]);
+impl<FieldT: FieldTConfig> gadget<FieldT, field_vector_copy_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self) {
+        for i in 0..self.t.source.len() {
+            self.pb.borrow_mut().add_r1cs_constraint(
+                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                    self.t.do_copy.clone(),
+                    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        self.t.source[i].clone(),
+                    ) - linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        self.t.target[i].clone(),
+                    ),
+                    0.into(),
+                ),
+                prefix_format!(self.annotation_prefix, " copying_check_{}", i),
+            );
         }
     }
 
-    pack_source.generate_r1cs_witness_from_bits();
-    pack_target.generate_r1cs_witness_from_bits();
-}
-}
-
-impl dual_variable_gadget<FieldT>{
-
-pub fn  generate_r1cs_constraints(enforce_bitness:bool)
-{
-    consistency_check.generate_r1cs_constraints(enforce_bitness);
-}
-
-
-pub fn  generate_r1cs_witness_from_packed()
-{
-    consistency_check.generate_r1cs_witness_from_packed();
-}
-
-
-pub fn  generate_r1cs_witness_from_bits()
-{
-    consistency_check.generate_r1cs_witness_from_bits();
-}
-}
-impl disjunction_gadget<FieldT>{
-
-pub fn  generate_r1cs_constraints()
-{
-    /* inv * sum = output */
-    let (mut  a1,mut b1,mut c1)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
-    a1.add_term(inv);
-    for i in 0..inputs.len()
-    {
-        b1.add_term(inputs[i]);
-    }
-    c1.add_term(output);
-
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a1, b1, c1), FMT(annotation_prefix, " inv*sum=output"));
-
-    /* (1-output) * sum = 0 */
-    let (mut  a2,mut b2,mut c2)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
-    a2.add_term(ONE);
-    a2.add_term(output, -1);
-    for i in 0..inputs.len()
-    {
-        b2.add_term(inputs[i]);
-    }
-    c2.add_term(ONE, 0);
-
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a2, b2, c2), FMT(annotation_prefix, " (1-output)*sum=0"));
-}
-
-
-pub fn  generate_r1cs_witness()
-{
-    let mut  sum = FieldT::zero();
-
-    for i in 0..inputs.len()
-    {
-        sum += self.pb.val(inputs[i]);
-    }
-
-    if sum.is_zero()
-    {
-        self.pb.val(inv) = FieldT::zero();
-        self.pb.val(output) = FieldT::zero();
-    }
-    else
-    {
-        self.pb.val(inv) = sum.inverse();
-        self.pb.val(output) = FieldT::one();
+    pub fn generate_r1cs_witness(&self) {
+        self.t.do_copy.evaluate_pb(&self.pb);
+        assert!(
+            self.pb.borrow().lc_val(&self.t.do_copy) == FieldT::one()
+                || self.pb.borrow().lc_val(&self.t.do_copy) == FieldT::zero()
+        );
+        if self.pb.borrow().lc_val(&self.t.do_copy) != FieldT::zero() {
+            for i in 0..self.t.source.len() {
+                *self.pb.borrow_mut().val_ref(&self.t.target[i]) =
+                    self.pb.borrow().val(&self.t.source[i]);
+            }
+        }
     }
 }
+
+impl<FieldT: FieldTConfig> bit_vector_copy_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT>>,
+        source_bits: pb_variable_array<FieldT>,
+        target_bits: pb_variable_array<FieldT>,
+        do_copy: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        chunk_size: usize,
+        annotation_prefix: String,
+    ) -> gadget<FieldT, Self> {
+        let num_chunks = (div_ceil(source_bits.len(), chunk_size).unwrap());
+        assert!(source_bits.len() == target_bits.len());
+        let mut packed_source = pb_variable_array::<FieldT>::default();
+        packed_source.allocate(
+            &pb,
+            num_chunks,
+            &prefix_format!(annotation_prefix, " packed_source"),
+        );
+        let pack_source = RcCell::new(multipacking_gadget::<FieldT>::new(
+            pb.clone(),
+            source_bits.clone().into(),
+            packed_source.clone().into(),
+            chunk_size,
+            prefix_format!(annotation_prefix, " pack_source"),
+        ));
+        let mut packed_target = pb_variable_array::<FieldT>::default();
+        packed_target.allocate(
+            &pb,
+            num_chunks,
+            &prefix_format!(annotation_prefix, " packed_target"),
+        );
+        let pack_target = RcCell::new(multipacking_gadget::<FieldT>::new(
+            pb.clone(),
+            target_bits.clone().into(),
+            packed_target.clone().into(),
+            chunk_size,
+            prefix_format!(annotation_prefix, " pack_target"),
+        ));
+
+        let copier = RcCell::new(field_vector_copy_gadget::<FieldT>::new(
+            pb.clone(),
+            packed_source.clone(),
+            packed_target.clone(),
+            do_copy.clone(),
+            prefix_format!(annotation_prefix, " copier"),
+        ));
+        gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                source_bits,
+                target_bits,
+                do_copy,
+                packed_source,
+                packed_target,
+                pack_source,
+                pack_target,
+                copier,
+                chunk_size,
+                num_chunks,
+            },
+        )
+    }
+}
+impl<FieldT: FieldTConfig> gadget<FieldT, bit_vector_copy_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(
+        &self,
+        enforce_source_bitness: bool,
+        enforce_target_bitness: bool,
+    ) {
+        self.t
+            .pack_source
+            .borrow()
+            .generate_r1cs_constraints(enforce_source_bitness);
+        self.t
+            .pack_target
+            .borrow()
+            .generate_r1cs_constraints(enforce_target_bitness);
+
+        self.t.copier.borrow().generate_r1cs_constraints();
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        self.t.do_copy.evaluate_pb(&self.pb);
+        assert!(
+            self.pb.borrow().lc_val(&self.t.do_copy) == FieldT::zero()
+                || self.pb.borrow().lc_val(&self.t.do_copy) == FieldT::one()
+        );
+        if self.pb.borrow().lc_val(&self.t.do_copy) == FieldT::one() {
+            for i in 0..self.t.source_bits.len() {
+                *self.pb.borrow_mut().val_ref(&self.t.target_bits[i]) =
+                    self.pb.borrow().val(&self.t.source_bits[i]);
+            }
+        }
+
+        self.t
+            .pack_source
+            .borrow()
+            .generate_r1cs_witness_from_bits();
+        self.t
+            .pack_target
+            .borrow()
+            .generate_r1cs_witness_from_bits();
+    }
 }
 
+impl<FieldT: FieldTConfig> gadget<FieldT, dual_variable_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
+        self.t
+            .consistency_check
+            .borrow()
+            .generate_r1cs_constraints(enforce_bitness);
+    }
 
-pub fn test_disjunction_gadget(n:usize)
-{
+    pub fn generate_r1cs_witness_from_packed(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
+        self.t
+            .consistency_check
+            .borrow()
+            .generate_r1cs_witness_from_packed();
+    }
+
+    pub fn generate_r1cs_witness_from_bits(&self) {
+        self.t
+            .consistency_check
+            .borrow()
+            .generate_r1cs_witness_from_bits();
+    }
+}
+impl<FieldT: FieldTConfig> gadget<FieldT, disjunction_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self) {
+        /* inv * sum = output */
+        let (mut a1, mut b1, mut c1) = (
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+        );
+        a1.add_term_with_variable(self.t.inv.clone());
+        for i in 0..self.t.inputs.len() {
+            b1.add_term_with_variable(self.t.inputs[i].clone());
+        }
+        c1.add_term_with_variable(self.t.output.clone());
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(a1, b1, c1),
+            prefix_format!(self.annotation_prefix, " inv*sum=output"),
+        );
+
+        /* (1-output) * sum = 0 */
+        let (mut a2, mut b2, mut c2) = (
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+        );
+        a2.add_term_with_index(ONE);
+        a2.add_term(self.t.output.index, -1);
+        for i in 0..self.t.inputs.len() {
+            b2.add_term_with_variable(self.t.inputs[i].clone());
+        }
+        c2.add_term(ONE, 0);
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(a2, b2, c2),
+            prefix_format!(self.annotation_prefix, " (1-output)*sum=0"),
+        );
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        let mut sum = FieldT::zero();
+
+        for i in 0..self.t.inputs.len() {
+            sum += self.pb.borrow().val(&self.t.inputs[i]);
+        }
+
+        if sum.is_zero() {
+            *self.pb.borrow_mut().val_ref(&self.t.inv) = FieldT::zero();
+            *self.pb.borrow_mut().val_ref(&self.t.output) = FieldT::zero();
+        } else {
+            *self.pb.borrow_mut().val_ref(&self.t.inv) = sum.inverse();
+            *self.pb.borrow_mut().val_ref(&self.t.output) = FieldT::one();
+        }
+    }
+}
+
+pub fn test_disjunction_gadget<FieldT: FieldTConfig>(n: usize) {
     print!("testing disjunction_gadget on all {} bit strings\n", n);
 
-    let mut  pb=protoboard::<FieldT>::new();
-   let mut  inputs= pb_variable_array::<FieldT>::new();
-    inputs.allocate(pb, n, "inputs");
+    let mut pb = RcCell::new(protoboard::<FieldT>::default());
+    let mut inputs = pb_variable_array::<FieldT>::default();
+    inputs.allocate(&pb, n, "inputs");
 
-    let mut  output=variable::<FieldT,pb_variable>::new();
-    output.allocate(pb, "output");
+    let mut output = variable::<FieldT, pb_variable>::default();
+    output.allocate(&pb, "output".to_owned());
 
-    let mut  d=disjunction_gadget::<FieldT>::new(pb, inputs, output, "d");
+    let mut d = disjunction_gadget::<FieldT>::new(
+        pb.clone(),
+        inputs.clone(),
+        output.clone(),
+        "d".to_owned(),
+    );
     d.generate_r1cs_constraints();
 
-    for w in 0..1u64<<n
-    {
-        for j in 0..n
-        {
-            pb.val(inputs[j]) = FieldT::from(if w & (1u64<<j)!=0  {1} else {0});
+    for w in 0..1usize << n {
+        for j in 0..n {
+            *pb.borrow_mut().val_ref(&inputs[j]) =
+                FieldT::from(if w & (1usize << j) != 0 { 1i64 } else { 0 });
         }
 
         d.generate_r1cs_witness();
 
-// #ifdef DEBUG
+        // #ifdef DEBUG
         print!("positive test for {}\n", w);
-//#endif
-        assert!(pb.val(output) == if w {FieldT::one()}else{FieldT::zero()});
-        assert!(pb.is_satisfied());
+        //#endif
+        assert!(
+            pb.borrow().val(&output)
+                == if w != 0 {
+                    FieldT::one()
+                } else {
+                    FieldT::zero()
+                }
+        );
+        assert!(pb.borrow().is_satisfied());
 
-// #ifdef DEBUG
+        // #ifdef DEBUG
         print!("negative test for {}\n", w);
-//#endif
-        pb.val(output) = (if w  {FieldT::zero()} else {FieldT::one()});
-        assert!(!pb.is_satisfied());
+        //#endif
+        *pb.borrow_mut().val_ref(&output) = (if w != 0 {
+            FieldT::zero()
+        } else {
+            FieldT::one()
+        });
+        assert!(!pb.borrow().is_satisfied());
     }
 
     print_time("disjunction tests successful");
 }
 
-impl conjunction_gadget<FieldT>{
+impl<FieldT: FieldTConfig> gadget<FieldT, conjunction_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self) {
+        /* inv * (n-sum) = 1-output */
+        let (mut a1, mut b1, mut c1) = (
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+        );
+        a1.add_term_with_variable(self.t.inv.clone());
+        b1.add_term(ONE, self.t.inputs.len() as i64);
+        for i in 0..self.t.inputs.len() {
+            b1.add_term(self.t.inputs[i].index, -1);
+        }
+        c1.add_term_with_index(ONE);
+        c1.add_term(self.t.output.index, -1);
 
-pub fn  generate_r1cs_constraints()
-{
-    /* inv * (n-sum) = 1-output */
-     let (a1, b1, c1)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
-    a1.add_term(inv);
-    b1.add_term(ONE, inputs.len());
-    for i in 0..inputs.len()
-    {
-        b1.add_term(inputs[i], -1);
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(a1, b1, c1),
+            prefix_format!(self.annotation_prefix, " inv*(n-sum)=(1-output)"),
+        );
+
+        /* output * (n-sum) = 0 */
+        let (mut a2, mut b2, mut c2) = (
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+        );
+
+        a2.add_term_with_variable(self.t.output.clone());
+        b2.add_term(ONE, self.t.inputs.len() as i64);
+        for i in 0..self.t.inputs.len() {
+            b2.add_term(self.t.inputs[i].index, -1);
+        }
+        c2.add_term(ONE, 0);
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(a2, b2, c2),
+            prefix_format!(self.annotation_prefix, " output*(n-sum)=0"),
+        );
     }
-    c1.add_term(ONE);
-    c1.add_term(output, -1);
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a1, b1, c1), FMT(annotation_prefix, " inv*(n-sum)=(1-output)"));
+    pub fn generate_r1cs_witness(&self) {
+        let mut sum = FieldT::from(self.t.inputs.len());
 
-    /* output * (n-sum) = 0 */
-         let (a2, b2, c2)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
+        for i in 0..self.t.inputs.len() {
+            sum -= self.pb.borrow().val(&self.t.inputs[i]);
+        }
 
-    a2.add_term(output);
-    b2.add_term(ONE, inputs.len());
-    for i in 0..inputs.len()
-    {
-        b2.add_term(inputs[i], -1);
+        if sum.is_zero() {
+            *self.pb.borrow_mut().val_ref(&self.t.inv) = FieldT::zero();
+            *self.pb.borrow_mut().val_ref(&self.t.output) = FieldT::one();
+        } else {
+            *self.pb.borrow_mut().val_ref(&self.t.inv) = sum.inverse();
+            *self.pb.borrow_mut().val_ref(&self.t.output) = FieldT::zero();
+        }
     }
-    c2.add_term(ONE, 0);
-
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a2, b2, c2), FMT(annotation_prefix, " output*(n-sum)=0"));
 }
 
-
-pub fn  generate_r1cs_witness()
-{
-    let mut  sum = FieldT::from(inputs.len());
-
-    for i in 0..inputs.len()
-    {
-        sum -= self.pb.val(inputs[i]);
-    }
-
-    if sum.is_zero()
-    {
-        self.pb.val(inv) = FieldT::zero();
-        self.pb.val(output) = FieldT::one();
-    }
-    else
-    {
-        self.pb.val(inv) = sum.inverse();
-        self.pb.val(output) = FieldT::zero();
-    }
-}
-}
-
-pub fn test_conjunction_gadget(n:usize)
-{
+pub fn test_conjunction_gadget<FieldT: FieldTConfig>(n: usize) {
     print!("testing conjunction_gadget on all {} bit strings\n", n);
 
-    let mut pb=protoboard::<FieldT>::new() ;
-    let mut  inputs=pb_variable_array::<FieldT>::new();
-    inputs.allocate(pb, n, "inputs");
+    let mut pb = RcCell::new(protoboard::<FieldT>::default());
+    let mut inputs = pb_variable_array::<FieldT>::default();
+    inputs.allocate(&pb, n, "inputs");
 
-    let mut  output=variable::<FieldT,pb_variable>::new();
-    output.allocate(pb, "output");
+    let mut output = variable::<FieldT, pb_variable>::default();
+    output.allocate(&pb, "output".to_owned());
 
-     let mut c=conjunction_gadget::<FieldT>::new(pb, inputs, output, "c");
+    let mut c = conjunction_gadget::<FieldT>::new(
+        pb.clone(),
+        inputs.clone(),
+        output.clone(),
+        "c".to_owned(),
+    );
     c.generate_r1cs_constraints();
 
-    for w in 0..1u64<<n
-    {
-        for j in 0..n
-        {
-            pb.val(inputs[j]) = if w & (1u64<<j)!=0 { FieldT::one()} else {FieldT::zero()};
+    for w in 0..1usize << n {
+        for j in 0..n {
+            *pb.borrow_mut().val_ref(&inputs[j]) = if w & (1usize << j) != 0 {
+                FieldT::one()
+            } else {
+                FieldT::zero()
+            };
         }
 
         c.generate_r1cs_witness();
 
-// #ifdef DEBUG
+        // #ifdef DEBUG
         print!("positive test for {}\n", w);
-//#endif
-        assert!(pb.val(output) == if w == (1u64<<n) - 1 {FieldT::one()}else{FieldT::zero()});
-        assert!(pb.is_satisfied());
+        //#endif
+        assert!(
+            pb.borrow().val(&output)
+                == if w == (1usize << n) - 1 {
+                    FieldT::one()
+                } else {
+                    FieldT::zero()
+                }
+        );
+        assert!(pb.borrow().is_satisfied());
 
-// #ifdef DEBUG
+        // #ifdef DEBUG
         print!("negative test for {}\n", w);
-//#endif
-        pb.val(output) = if w == (1u64<<n) - 1 {FieldT::zero()}else{FieldT::one()};
-        assert!(!pb.is_satisfied());
+        //#endif
+        *pb.borrow_mut().val_ref(&output) = if w == (1usize << n) - 1 {
+            FieldT::zero()
+        } else {
+            FieldT::one()
+        };
+        assert!(!pb.borrow().is_satisfied());
     }
 
     print_time("conjunction tests successful");
 }
 
-impl comparison_gadget<FieldT>{
+impl<FieldT: FieldTConfig> gadget<FieldT, comparison_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self) {
+        /*
+         packed(alpha) = 2^n + B - A
 
-pub fn  generate_r1cs_constraints()
-{
-    /*
-      packed(alpha) = 2^n + B - A
+         not_all_zeros = \bigvee_{i=0}^{n-1} alpha_i
 
-      not_all_zeros = \bigvee_{i=0}^{n-1} alpha_i
+         if B - A > 0, then 2^n + B - A > 2^n,
+             so alpha_n = 1 and not_all_zeros = 1
+         if B - A = 0, then 2^n + B - A = 2^n,
+             so alpha_n = 1 and not_all_zeros = 0
+         if B - A < 0, then 2^n + B - A \in {0, 1, \ldots, 2^n-1},
+             so alpha_n = 0
 
-      if B - A > 0, then 2^n + B - A > 2^n,
-          so alpha_n = 1 and not_all_zeros = 1
-      if B - A = 0, then 2^n + B - A = 2^n,
-          so alpha_n = 1 and not_all_zeros = 0
-      if B - A < 0, then 2^n + B - A \in {0, 1, \ldots, 2^n-1},
-          so alpha_n = 0
+         therefore alpha_n = less_or_eq and alpha_n * not_all_zeros = less
+        */
 
-      therefore alpha_n = less_or_eq and alpha_n * not_all_zeros = less
-     */
+        /* not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget */
+        generate_boolean_r1cs_constraint::<FieldT>(
+            &self.pb,
+            &self.t.not_all_zeros.clone().into(),
+            prefix_format!(self.annotation_prefix, " not_all_zeros"),
+        );
 
-    /* not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget */
-    generate_boolean_r1cs_constraint::<FieldT>(self.pb, not_all_zeros,
-                                   FMT(annotation_prefix, " not_all_zeros"));
+        /* constraints for packed(alpha) = 2^n + B - A */
+        self.t.pack_alpha.borrow().generate_r1cs_constraints(true);
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                1.into(),
+                self.t.B.clone() + (FieldT::from(2) ^ self.t.n) - self.t.A.clone(),
+                self.t.alpha_packed.clone().into(),
+            ),
+            prefix_format!(self.annotation_prefix, " main_constraint"),
+        );
 
-    /* constraints for packed(alpha) = 2^n + B - A */
-    pack_alpha.generate_r1cs_constraints(true);
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, (FieldT(2)^n) + B - A, alpha_packed), FMT(annotation_prefix, " main_constraint"));
+        /* compute result */
+        self.t.all_zeros_test.borrow().generate_r1cs_constraints();
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.less_or_eq.clone().into(),
+                self.t.not_all_zeros.clone().into(),
+                self.t.less.clone().into(),
+            ),
+            prefix_format!(self.annotation_prefix, " less"),
+        );
+    }
 
-    /* compute result */
-    all_zeros_test.generate_r1cs_constraints();
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(less_or_eq, not_all_zeros, less),
-                               FMT(annotation_prefix, " less"));
+    pub fn generate_r1cs_witness(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
+        self.t.A.evaluate_pb(&self.pb);
+        self.t.B.evaluate_pb(&self.pb);
+
+        /* unpack 2^n + B - A into alpha_packed */
+        *self.pb.borrow_mut().val_ref(&self.t.alpha_packed) = (FieldT::from(2) ^ self.t.n)
+            + self.pb.borrow().lc_val(&self.t.B)
+            - self.pb.borrow().lc_val(&self.t.A);
+        self.t
+            .pack_alpha
+            .borrow()
+            .generate_r1cs_witness_from_packed();
+
+        /* compute result */
+        self.t.all_zeros_test.borrow().generate_r1cs_witness();
+        *self.pb.borrow_mut().val_ref(&self.t.less) =
+            self.pb.borrow().val(&self.t.less_or_eq) * self.pb.borrow().val(&self.t.not_all_zeros);
+    }
 }
 
-
-pub fn  generate_r1cs_witness()
-{
-    A.evaluate(self.pb);
-    B.evaluate(self.pb);
-
-    /* unpack 2^n + B - A into alpha_packed */
-    self.pb.val(alpha_packed) = (FieldT(2)^n) + self.pb.lc_val(B) - self.pb.lc_val(A);
-    pack_alpha.generate_r1cs_witness_from_packed();
-
-    /* compute result */
-    all_zeros_test.generate_r1cs_witness();
-    self.pb.val(less) = self.pb.val(less_or_eq) * self.pb.val(not_all_zeros);
-}
-}
-
-
-pub fn test_comparison_gadget(n:usize)
+pub fn test_comparison_gadget<FieldT: FieldTConfig>(n: usize)
+where
+    [(); { FieldT::num_limbs as usize }]:,
 {
     print!("testing comparison_gadget on all {} bit inputs\n", n);
 
-    let mut pb=protoboard::<FieldT> ::new();
+    let mut pb = RcCell::new(protoboard::<FieldT>::default());
 
-    let (A, B, less, less_or_eq)=(variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new(),variable::<FieldT,pb_variable> ::new());
-    A.allocate(pb, "A");
-    B.allocate(pb, "B");
-    less.allocate(pb, "less");
-    less_or_eq.allocate(pb, "less_or_eq");
+    let (mut A, mut B, mut less, mut less_or_eq) = (
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
+    );
+    A.allocate(&pb, "A".to_owned());
+    B.allocate(&pb, "B".to_owned());
+    less.allocate(&pb, "less".to_owned());
+    less_or_eq.allocate(&pb, "less_or_eq".to_owned());
 
-    let mut cmp=comparison_gadget::<FieldT>::new(pb, n, A, B, less, less_or_eq, "cmp");
+    let mut cmp = comparison_gadget::<FieldT>::new(
+        pb.clone(),
+        n,
+        A.clone().into(),
+        B.clone().into(),
+        less.clone(),
+        less_or_eq.clone(),
+        "cmp".to_owned(),
+    );
     cmp.generate_r1cs_constraints();
 
-    for a in 0..1u64<<n
-    {
-        for b in 0..1u64<<n
-        {
-            pb.val(A) = FieldT(a);
-            pb.val(B) = FieldT(b);
+    for a in 0..1usize << n {
+        for b in 0..1usize << n {
+            *pb.borrow_mut().val_ref(&A) = FieldT::from(a);
+            *pb.borrow_mut().val_ref(&B) = FieldT::from(b);
 
             cmp.generate_r1cs_witness();
 
-// #ifdef DEBUG
+            // #ifdef DEBUG
             print!("positive test for {} < {}\n", a, b);
-//#endif
-            assert!(pb.val(less) == if a < b {FieldT::one()}else{FieldT::zero()});
-            assert!(pb.val(less_or_eq) == if a <= b {FieldT::one()}else{FieldT::zero()});
-            assert!(pb.is_satisfied());
+            //#endif
+            assert!(pb.borrow().val(&less) == if a < b { FieldT::one() } else { FieldT::zero() });
+            assert!(
+                *pb.borrow_mut().val_ref(&less_or_eq)
+                    == if a <= b {
+                        FieldT::one()
+                    } else {
+                        FieldT::zero()
+                    }
+            );
+            assert!(pb.borrow().is_satisfied());
         }
     }
 
     print_time("comparison tests successful");
 }
 
-impl inner_product_gadget<FieldT>{
+impl<FieldT: FieldTConfig> gadget<FieldT, inner_product_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self) {
+        /*
+          S_i = \sum_{k=0}^{i+1} A[i] * B[i]
+          S[0] = A[0] * B[0]
+          S[i+1] - S[i] = A[i] * B[i]
+        */
+        for i in 0..self.t.A.len() {
+            self.pb.borrow_mut().add_r1cs_constraint(
+                r1cs_constraint::<FieldT,pb_variable,pb_linear_combination>::new(
+                    self.t.A[i].clone(),
+                    self.t.B[i].clone(),
+                    (if i == self.t.A.len() - 1 {
+                        linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(self.t.result.clone())
+                    } else {
+                         (if i == 0 { linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(0)*linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(FieldT::one())} else { -linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(self.t.S[i - 1].clone()) })+self.t.S[i].clone()
+                    }),
+                ),
+                prefix_format!(self.annotation_prefix, " S_{}", i),
+            );
+        }
+    }
 
-pub fn  generate_r1cs_constraints()
-{
-    /*
-      S_i = \sum_{k=0}^{i+1} A[i] * B[i]
-      S[0] = A[0] * B[0]
-      S[i+1] - S[i] = A[i] * B[i]
-    */
-    for i in 0..A.len()
-    {
-        self.pb.add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(A[i], B[i],
-                                    (if i == A.len()-1  {result} else {S[i] + ( if i == 0  {0 * ONE} else {-S[i-1]})})),
-          FMT(annotation_prefix, " S_{}", i));
+    pub fn generate_r1cs_witness(&self) {
+        let mut total = FieldT::zero();
+        for i in 0..self.t.A.len() {
+            self.t.A[i].evaluate_pb(&self.pb);
+            self.t.B[i].evaluate_pb(&self.pb);
+
+            total += self.pb.borrow().lc_val(&self.t.A[i]) * self.pb.borrow().lc_val(&self.t.B[i]);
+            *self.pb.borrow_mut().val_ref(
+                &(if i == self.t.A.len() - 1 {
+                    self.t.result.clone()
+                } else {
+                    self.t.S[i].clone()
+                }),
+            ) = total.clone();
+        }
     }
 }
 
-
-pub fn  generate_r1cs_witness()
-{
-    let mut  total = FieldT::zero();
-    for i in 0..A.len()
-    {
-        A[i].evaluate(self.pb);
-        B[i].evaluate(self.pb);
-
-        total += self.pb.lc_val(A[i]) * self.pb.lc_val(B[i]);
-        self.pb.val(if i == A.len()-1  {result }else  {S[i]}) = total;
-    }
-}
-}
-
-pub fn test_inner_product_gadget(n:usize)
-{
+pub fn test_inner_product_gadget<FieldT: FieldTConfig>(n: usize) {
     print!("testing inner_product_gadget on all {} bit strings\n", n);
 
-    let mut  pb=protoboard::<FieldT>::new();
-   let mut  A= pb_variable_array::<FieldT>::new();
-    A.allocate(pb, n, "A");
-   let mut  B= pb_variable_array::<FieldT>::new();
-    B.allocate(pb, n, "B");
+    let mut pb = RcCell::new(protoboard::<FieldT>::default());
+    let mut A = pb_variable_array::<FieldT>::default();
+    A.allocate(&pb, n, "A");
+    let mut B = pb_variable_array::<FieldT>::default();
+    B.allocate(&pb, n, "B");
 
-    let mut  result=variable::<FieldT,pb_variable>::new();
-    result.allocate(pb, "result");
+    let mut result = variable::<FieldT, pb_variable>::default();
+    result.allocate(&pb, "result".to_owned());
 
-    let mut g=inner_product_gadget::<FieldT> ::new(pb, A, B, result, "g");
+    let mut g = inner_product_gadget::<FieldT>::new(
+        pb.clone(),
+        A.clone().into(),
+        B.clone().into(),
+        result.clone(),
+        "g".to_owned(),
+    );
     g.generate_r1cs_constraints();
 
-    for i in 0..1u64<<n
-    {
-        for j in 0..1u64<<n
-        {
-            let mut  correct = 0;
-            for k in 0..n
-            {
-                pb.val(A[k]) = if i & (1u64<<k) {FieldT::one()}else{FieldT::zero()};
-                pb.val(B[k]) = if j & (1u64<<k) {FieldT::one()}else{FieldT::zero()};
-                correct += if (i & (1u64<<k)) && (j & (1u64<<k)) {1}else{0};
+    for i in 0..1usize << n {
+        for j in 0..1usize << n {
+            let mut correct = 0;
+            for k in 0..n {
+                *pb.borrow_mut().val_ref(&A[k]) = if i & (1usize << k) != 0 {
+                    FieldT::one()
+                } else {
+                    FieldT::zero()
+                };
+                *pb.borrow_mut().val_ref(&B[k]) = if j & (1usize << k) != 0 {
+                    FieldT::one()
+                } else {
+                    FieldT::zero()
+                };
+                correct += if (i & (1usize << k) != 0) && (j & (1usize << k) != 0) {
+                    1
+                } else {
+                    0
+                };
             }
 
             g.generate_r1cs_witness();
-// #ifdef DEBUG
+            // #ifdef DEBUG
             print!("positive test for ({}, {})\n", i, j);
-//#endif
-            assert!(pb.val(result) == FieldT::from(correct));
-            assert!(pb.is_satisfied());
+            //#endif
+            assert!(pb.borrow().val(&result) == FieldT::from(correct as i64));
+            assert!(pb.borrow().is_satisfied());
 
-// #ifdef DEBUG
+            // #ifdef DEBUG
             print!("negative test for ({}, {})\n", i, j);
-//#endif
-            pb.val(result) = FieldT::from(100*n+19);
-            assert!(!pb.is_satisfied());
+            //#endif
+            *pb.borrow_mut().val_ref(&result) = FieldT::from(100 * n + 19);
+            assert!(!pb.borrow().is_satisfied());
         }
     }
 
     print_time("inner_product_gadget tests successful");
 }
 
-impl loose_multiplexing_gadget<FieldT>{
+impl<FieldT: FieldTConfig> gadget<FieldT, loose_multiplexing_gadget<FieldT>> {
+    pub fn generate_r1cs_constraints(&self) {
+        /* \alpha_i (index - i) = 0 */
+        for i in 0..self.t.arr.len() {
+            self.pb.borrow_mut().add_r1cs_constraint(
+                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                    self.t.alpha[i].clone().into(),
+                    FieldT::from(self.t.index.index - i).into(),
+                    0.into(),
+                ),
+                prefix_format!(self.annotation_prefix, " alpha_{}", i),
+            );
+        }
 
-pub fn  generate_r1cs_constraints()
-{
-    /* \alpha_i (index - i) = 0 */
-    for i in 0..arr.len()
-    {
-        self.pb.add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(alpha[i], index - i, 0),
-          FMT(annotation_prefix, " alpha_{}", i));
+        /* 1 * (\sum \alpha_i) = success_flag */
+        let (mut a, mut b, mut c) = (
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+        );
+        a.add_term_with_index(ONE);
+        for i in 0..self.t.arr.len() {
+            b.add_term_with_variable(self.t.alpha[i].clone());
+        }
+        c.add_term_with_variable(self.t.success_flag.clone());
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(a, b, c),
+            prefix_format!(self.annotation_prefix, " main_constraint"),
+        );
+
+        /* now success_flag is constrained to either 0 (if index is out of
+        range) or \alpha_i. constrain it and \alpha_i to zero */
+        generate_boolean_r1cs_constraint::<FieldT>(
+            &self.pb,
+            &self.t.success_flag.clone().into(),
+            prefix_format!(self.annotation_prefix, " success_flag"),
+        );
+
+        /* compute result */
+        self.t.compute_result.borrow().generate_r1cs_constraints();
     }
 
-    /* 1 * (\sum \alpha_i) = success_flag */
-    let ( a, b, c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
-    a.add_term(ONE);
-    for i in 0..arr.len()
+    pub fn generate_r1cs_witness(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
     {
-        b.add_term(alpha[i]);
+        /* assumes that idx can be fit in ulong; true for our purposes for now */
+        let mut valint = self
+            .pb
+            .borrow()
+            .val(&self.t.index)
+            .as_bigint::<{ FieldT::num_limbs as usize }>();
+        let mut idx = valint.as_ulong() as usize;
+        let arrsize = bigint::<{ FieldT::num_limbs as usize }>::new(self.t.arr.len() as u64);
+
+        if idx >= self.t.arr.len()
+            || &valint.0.0[..FieldT::num_limbs as usize]
+                >= &arrsize.0.0[..FieldT::num_limbs as usize]
+        {
+            for i in 0..self.t.arr.len() {
+                *self.pb.borrow_mut().val_ref(&self.t.alpha[i]) = FieldT::zero();
+            }
+
+            *self.pb.borrow_mut().val_ref(&self.t.success_flag) = FieldT::zero();
+        } else {
+            for i in 0..self.t.arr.len() {
+                *self.pb.borrow_mut().val_ref(&self.t.alpha[i]) = if i == idx {
+                    FieldT::one()
+                } else {
+                    FieldT::zero()
+                };
+            }
+
+            *self.pb.borrow_mut().val_ref(&self.t.success_flag) = FieldT::one();
+        }
+
+        self.t.compute_result.borrow().generate_r1cs_witness();
     }
-    c.add_term(success_flag);
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a, b, c), FMT(annotation_prefix, " main_constraint"));
-
-    /* now success_flag is constrained to either 0 (if index is out of
-       range) or \alpha_i. constrain it and \alpha_i to zero */
-    generate_boolean_r1cs_constraint::<FieldT>(self.pb, success_flag, FMT(annotation_prefix, " success_flag"));
-
-    /* compute result */
-    compute_result.generate_r1cs_constraints();
 }
 
-
-pub fn  generate_r1cs_witness()
+pub fn test_loose_multiplexing_gadget<FieldT: FieldTConfig>(n: usize)
+where
+    [(); { FieldT::num_limbs as usize }]:,
 {
-    /* assumes that idx can be fit in ulong; true for our purposes for now */
-     let mut  valint = self.pb.val(index).as_bigint();
-    let mut  idx = valint.as_ulong();
-    let  arrsize= bigint::<FieldT::num_limbs>::new(arr.len());
+    print!(
+        "testing loose_multiplexing_gadget on 2**{} variable<FieldT,pb_variable> array inputs\n",
+        n
+    );
+    let mut pb = RcCell::new(protoboard::<FieldT>::default());
 
-    if idx >= arr.len() || mpn_cmp(valint.0.0, arrsize.0.0, FieldT::num_limbs) >= 0
-    {
-        for i in 0..arr.len()
-        {
-            self.pb.val(alpha[i]) = FieldT::zero();
-        }
+    let mut arr = pb_variable_array::<FieldT>::default();
+    arr.allocate(&pb, 1usize << n, "arr");
+    let (mut index, mut result, mut success_flag) = (
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
+    );
+    index.allocate(&pb, "index".to_owned());
+    result.allocate(&pb, "result".to_owned());
+    success_flag.allocate(&pb, "success_flag".to_owned());
 
-        self.pb.val(success_flag) = FieldT::zero();
-    }
-    else
-    {
-        for i in 0..arr.len()
-        {
-            self.pb.val(alpha[i]) = if i == idx {FieldT::one()}else{FieldT::zero()};
-        }
-
-        self.pb.val(success_flag) = FieldT::one();
-    }
-
-    compute_result.generate_r1cs_witness();
-}}
-
-
-pub fn test_loose_multiplexing_gadget(n:usize)
-{
-    print!("testing loose_multiplexing_gadget on 2**{} pb_variable<FieldT> array inputs\n", n);
-    let mut  pb=protoboard::<FieldT>::new();
-
-    let mut  arr=pb_variable_array::<FieldT>::new();
-    arr.allocate(pb, 1u64<<n, "arr");
-   let ( index, result, success_flag)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
-    index.allocate(pb, "index");
-    result.allocate(pb, "result");
-    success_flag.allocate(pb, "success_flag");
-
-    let mut  g=loose_multiplexing_gadget::<FieldT>::new(pb, arr, index, result, success_flag, "g");
+    let mut g = loose_multiplexing_gadget::<FieldT>::new(
+        pb.clone(),
+        arr.clone().into(),
+        index.clone(),
+        result.clone(),
+        success_flag.clone(),
+        "g".to_owned(),
+    );
     g.generate_r1cs_constraints();
 
-    for i in 0..1u64<<n
-    {
-        pb.val(arr[i]) = FieldT::from((19*i) % (1u64<<n));
+    for i in 0..1usize << n {
+        *pb.borrow_mut().val_ref(&arr[i]) = FieldT::from((19 * i) % (1usize << n));
     }
 
-    for idx in -1..=(int)(1u64<<n)
-    {
-        pb.val(index) = FieldT::from(idx);
+    for idx in -1..=(1i64 << n) {
+        *pb.borrow_mut().val_ref(&index) = FieldT::from(idx);
         g.generate_r1cs_witness();
 
-        if 0 <= idx && idx <= (1u64<<n) - 1
-        {
+        if 0 <= idx && idx <= (1i64 << n) - 1 {
             print!("demuxing element {} (in bounds)\n", idx);
-            assert!(pb.val(result) == FieldT((19*idx) % (1u64<<n)));
-            assert!(pb.val(success_flag) == FieldT::one());
-            assert!(pb.is_satisfied());
-            pb.val(result) -= FieldT::one();
-            assert!(!pb.is_satisfied());
-        }
-        else
-        {
+            assert!(pb.borrow().val(&result) == FieldT::from((19 * idx) % (1i64 << n)));
+            assert!(pb.borrow().val(&success_flag) == FieldT::one());
+            assert!(pb.borrow().is_satisfied());
+            *pb.borrow_mut().val_ref(&result) -= FieldT::one();
+            assert!(!pb.borrow().is_satisfied());
+        } else {
             print!("demuxing element {} (out of bounds)\n", idx);
-            assert!(pb.val(success_flag) == FieldT::zero());
-            assert!(pb.is_satisfied());
-            pb.val(success_flag) = FieldT::one();
-            assert!(!pb.is_satisfied());
+            assert!(pb.borrow().val(&success_flag) == FieldT::zero());
+            assert!(pb.borrow().is_satisfied());
+            *pb.borrow_mut().val_ref(&success_flag) = FieldT::one();
+            assert!(!pb.borrow().is_satisfied());
         }
     }
     print!("loose_multiplexing_gadget tests successful\n");
 }
 
-// < FieldT,  VarT>
-pub fn create_linear_combination_constraints< FieldT,  VarT>(pb:&protoboard<FieldT> ,
-                                           base:&Vec<FieldT>,
-                                           v:&Vec<(VarT,FieldT) >,
-                                           target:&VarT,
-                                           annotation_prefix:&String)
-{
-    for i in 0..base.len()
-    {
-        let ( a, b, c)=(linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new(),linear_combination::<FieldT>::new());
+pub fn create_linear_combination_constraints<FieldT: FieldTConfig, VarT: VarTConfig<FieldT>>(
+    pb: &RcCell<protoboard<FieldT>>,
+    base: &Vec<FieldT>,
+    v: &Vec<(VarT, FieldT)>,
+    target: &VarT,
+    annotation_prefix: String,
+) {
+    for i in 0..base.len() {
+        let (mut a, mut b, mut c) = (
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+        );
 
-        a.add_term(ONE);
-        b.add_term(ONE, base[i]);
+        a.add_term_with_index(ONE);
+        b.add_term_with_field(ONE, base[i].clone());
 
-        for p in &v
-        {
-            b.add_term(p.first.all_vars[i], p.1);
+        for p in v {
+            b.add_term_with_field(p.0.all_vars()[i].index, p.1.clone());
         }
 
-        c.add_term(target.all_vars[i]);
+        c.add_term_with_variable(target.all_vars()[i].clone());
 
-        pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(a, b, c), FMT(annotation_prefix, " linear_combination_{}", i));
+        pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(a, b, c),
+            prefix_format!(annotation_prefix, " linear_combination_{}", i),
+        );
     }
 }
 
+pub fn create_linear_combination_witness<FieldT: FieldTConfig, VarT: VarTConfig<FieldT>>(
+    pb: &RcCell<protoboard<FieldT>>,
+    base: &Vec<FieldT>,
+    v: &Vec<(VarT, FieldT)>,
+    target: &VarT,
+) {
+    for i in 0..base.len() {
+        *pb.borrow_mut().val_ref(&target.all_vars()[i]) = base[i].clone();
 
-pub fn create_linear_combination_witness< FieldT,  VarT>(pb:&protoboard<FieldT> ,
-                                       base:&Vec<FieldT>,
-                                       v:&Vec<(VarT,FieldT) >,
-                                       target:&VarT)
-{
-    for i in 0..base.len()
-    {
-        pb.val(target.all_vars[i]) = base[i];
-
-        for p in &v
-        {
-            pb.val(target.all_vars[i]) += p.second * pb.val(p.first.all_vars[i]);
+        for p in v {
+            *pb.borrow_mut().val_ref(&target.all_vars()[i]) +=
+                p.1.clone() * pb.borrow().val(&p.0.all_vars()[i]);
         }
     }
 }
-
-
-//#endif // BASIC_GADGETS_TCC_
+pub trait VarTConfig<FieldT: FieldTConfig> {
+    fn all_vars(&self) -> &pb_variable_array<FieldT>;
+}

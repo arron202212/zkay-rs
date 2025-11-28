@@ -32,7 +32,7 @@ TEST(gadgetLib2,R1P_AND_Gadget_SimpleTest) {
 
     VariableArray x(3, "x");
     Variable y("y");
-    auto andGadget = AND_Gadget::create(pb, x, y);
+    auto andGadget = AND_Gadget::create(&pb, x, y);
     andGadget.generateConstraints();
 
     pb->val(x[0]) = 0;
@@ -89,7 +89,7 @@ TEST(gadgetLib2,R1P_ANDGadget_ExhaustiveTest) {
     for inputSize in 1..=EXHAUSTIVE_N {
         SCOPED_TRACE(GADGETLIB2_FMT("n = %u \n", inputSize));
         auto pb = Protoboard::create(R1P);
-        AndGadgetExhaustiveTester tester(pb, inputSize);
+        AndGadgetExhaustiveTester tester(&pb, inputSize);
         tester.runExhaustiveTest();
     }
 }
@@ -99,7 +99,7 @@ TEST(gadgetLib2,BinaryAND_Gadget) {
     Variable input1("input1");
     Variable input2("input2");
     Variable result("result");
-    auto andGadget = AND_Gadget::create(pb, input1, input2, result);
+    auto andGadget = AND_Gadget::create(&pb, input1, input2, result);
     andGadget.generateConstraints();
     pb->val(input1) = pb->val(input2) = 0;
     andGadget.generateWitness();
@@ -122,7 +122,7 @@ TEST(gadgetLib2,R1P_ORGadget_Exhaustive) {
     for n in 1..=EXHAUSTIVE_N {
         SCOPED_TRACE(GADGETLIB2_FMT("n = %u \n", n));
         auto pb = Protoboard::create(R1P);
-        OrGadgetExhaustiveTester tester(pb, n);
+        OrGadgetExhaustiveTester tester(&pb, n);
         tester.runExhaustiveTest();
     }
 }
@@ -132,7 +132,7 @@ TEST(gadgetLib2,BinaryOR_Gadget) {
     Variable input1("input1");
     Variable input2("input2");
     Variable result("result");
-    auto orGadget = OR_Gadget::create(pb, input1, input2, result);
+    auto orGadget = OR_Gadget::create(&pb, input1, input2, result);
     orGadget.generateConstraints();
     pb->val(input1) = pb->val(input2) = 0;
     orGadget.generateWitness();
@@ -159,7 +159,7 @@ TEST(gadgetLib2,R1P_InnerProductGadget_Exhaustive) {
     VariableArray A(n, "A");
     VariableArray B(n, "B");
     Variable result("result");
-    auto g = InnerProduct_Gadget::create(pb, A, B, result);
+    auto g = InnerProduct_Gadget::create(&pb, A, B, result);
     g.generateConstraints();
     for i in 0..1u<<n {
         for j in 0..1u<<n {
@@ -188,7 +188,7 @@ let n = EXHAUSTIVE_N;
     Variable index("index");
     Variable result("result");
     Variable success_flag("success_flag");
-    auto g = LooseMUX_Gadget::create(pb, arr, index, result, success_flag);
+    auto g = LooseMUX_Gadget::create(&pb, arr, index, result, success_flag);
     g.generateConstraints();
     for i in 0..1u<<n {
         pb->val(arr[i]) = (19*i) % (1u<<n);
@@ -252,7 +252,7 @@ TEST(gadgetLib2,R1P_EqualsConst_Gadget) {
     auto pb = Protoboard::create(R1P);
     Variable input("input");
     Variable result("result");
-    auto gadget = EqualsConst_Gadget::create(pb, 0, input, result);
+    auto gadget = EqualsConst_Gadget::create(&pb, 0, input, result);
     gadget.generateConstraints();
     pb->val(input) = 0;
     gadget.generateWitness();
@@ -277,7 +277,7 @@ TEST(gadgetLib2,ConditionalFlag_Gadget) {
     auto pb = Protoboard::create(R1P);
     FlagVariable flag;
     Variable condition("condition");
-    auto cfGadget = ConditionalFlag_Gadget::create(pb, condition, flag);
+    auto cfGadget = ConditionalFlag_Gadget::create(&pb, condition, flag);
     cfGadget.generateConstraints();
     pb->val(condition) = 1;
     cfGadget.generateWitness();
@@ -299,7 +299,7 @@ TEST(gadgetLib2,LogicImplication_Gadget) {
     auto pb = Protoboard::create(R1P);
     FlagVariable flag;
     Variable condition("condition");
-    auto implyGadget = LogicImplication_Gadget::create(pb, condition, flag);
+    auto implyGadget = LogicImplication_Gadget::create(&pb, condition, flag);
     implyGadget.generateConstraints();
     pb->val(condition) = 1;
     pb->val(flag) = 0;
@@ -394,8 +394,8 @@ pub fn ruinOutputVal() {
 }
 
 pub fn new(ProtoboardPtr pb, usize numInputs)
-    : LogicGadgetExhaustiveTester(pb, numInputs) {
-    logicGadget = AND_Gadget::create(pb, inputs, output);
+    : LogicGadgetExhaustiveTester(&pb, numInputs) {
+    logicGadget = AND_Gadget::create(&pb, inputs, output);
 }
 
 pub fn ruinOutputVal() {
@@ -403,8 +403,8 @@ pub fn ruinOutputVal() {
 }
 
 pub fn new(ProtoboardPtr pb, usize numInputs)
-    : LogicGadgetExhaustiveTester(pb, numInputs) {
-    logicGadget = OR_Gadget::create(pb, inputs, output);
+    : LogicGadgetExhaustiveTester(&pb, numInputs) {
+    logicGadget = OR_Gadget::create(&pb, inputs, output);
 }
 
 

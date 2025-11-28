@@ -49,11 +49,11 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 //     pb_variable<FieldT> res;
 
 //     // the variables on the protoboard are (ONE (constant 1 term), res, A[0], ..., A[num_constraints-1], B[0], ..., B[num_constraints-1])
-//     res.allocate(pb, "res");
-//     A.allocate(pb, new_num_constraints, "A");
-//     B.allocate(pb, new_num_constraints, "B");
+//     res.allocate(&pb, "res");
+//     A.allocate(&pb, new_num_constraints, "A");
+//     B.allocate(&pb, new_num_constraints, "B");
 
-//     inner_product_gadget<FieldT> compute_inner_product(pb, A, B, res, "compute_inner_product");
+//     inner_product_gadget<FieldT> compute_inner_product(&pb, A, B, res, "compute_inner_product");
 //     compute_inner_product.generate_r1cs_constraints();
 
 //     /* fill in random example */

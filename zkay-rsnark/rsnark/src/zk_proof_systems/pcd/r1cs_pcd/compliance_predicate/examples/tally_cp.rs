@@ -52,9 +52,9 @@ pub struct  tally_pcd_local_data<FieldT> {
 /**
  * Subclass a R1CS compliance predicate handler to the tally compliance predicate handler.
  */
-type base_handler=compliance_predicate_handler<FieldT, protoboard<FieldT> > ;
+type base_handler=compliance_predicate_handler<FieldT, RcCell<protoboard<FieldT>> > ;
 pub struct  tally_cp_handler<FieldT> {
-// /: public compliance_predicate_handler<FieldT, protoboard<FieldT> > 
+// /: public compliance_predicate_handler<FieldT, RcCell<protoboard<FieldT>> > 
     
 incoming_types:    pb_variable_array<FieldT>,
 
@@ -177,16 +177,16 @@ wordsize:    usize,
 }
 impl tally_pcd_message_variable<FieldT>{
     pub fn new(
-pb:&        protoboard<FieldT>,
+pb:&        RcCell<protoboard<FieldT>>,
                                wordsize:usize,
                                annotation_prefix:&String) ->Self
         
     {
-        sum_bits.allocate(pb, wordsize, FMT(annotation_prefix, " sum_bits"));
-        count_bits.allocate(pb, wordsize, FMT(annotation_prefix, " count_bits"));
+        sum_bits.allocate(&pb, wordsize, FMT(annotation_prefix, " sum_bits"));
+        count_bits.allocate(&pb, wordsize, FMT(annotation_prefix, " count_bits"));
 
         self.update_all_vars();
-        //r1cs_pcd_message_variable<FieldT>(pb, annotation_prefix),
+        //r1cs_pcd_message_variable<FieldT>(&pb, annotation_prefix),
         Self{
          wordsize
         }
@@ -214,14 +214,14 @@ summand:    pb_variable<FieldT>,
 }
 impl tally_pcd_local_data_variable<FieldT> {
     pub fn new(
-pb:&    protoboard<FieldT>,
+pb:&    RcCell<protoboard<FieldT>>,
                                   annotation_prefix:&String) ->Self
         
     {
-        summand.allocate(pb, FMT(annotation_prefix, " summand"));
+        summand.allocate(&pb, FMT(annotation_prefix, " summand"));
 
         self.update_all_vars();
-        // r1cs_pcd_local_data_variable<FieldT>(pb, annotation_prefix)
+        // r1cs_pcd_local_data_variable<FieldT>(&pb, annotation_prefix)
     }
 
     pub fn get_local_data() ->RcCell<r1cs_pcd_local_data<FieldT> > 

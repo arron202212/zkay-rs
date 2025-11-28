@@ -1,4 +1,3 @@
-
 pub mod gf128;
 pub mod gf192;
 pub mod gf256;

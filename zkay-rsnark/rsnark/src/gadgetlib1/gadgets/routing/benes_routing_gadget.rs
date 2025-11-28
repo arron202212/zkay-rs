@@ -90,7 +90,7 @@ use ffec::common::profiling;
 
 impl benes_routing_gadget<FieldT>{
 
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                    num_packets:usize,
                                                    routing_input_bits:&Vec<pb_variable_array<FieldT> >,
                                                    routing_output_bits:&Vec<pb_variable_array<FieldT> >,
@@ -110,7 +110,7 @@ pub fn new(pb:protoboard<FieldT>,
         routed_packets[column_idx].resize(num_packets);
         for packet_idx in 0..num_packets
         {
-            routed_packets[column_idx][packet_idx].allocate(pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx, packet_idx));
+            routed_packets[column_idx][packet_idx].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx, packet_idx));
         }
     }
 
@@ -120,7 +120,7 @@ pub fn new(pb:protoboard<FieldT>,
     for packet_idx in 0..num_packets
     {
         pack_inputs.push(
-            multipacking_gadget::<FieldT>(pb,
+            multipacking_gadget::<FieldT>(&pb,
                                         pb_variable_array::<FieldT>(routing_input_bits[packet_idx].begin(), routing_input_bits[packet_idx].end()),
                                         routed_packets[0][packet_idx],
                                         FieldT::capacity(),
@@ -128,7 +128,7 @@ pub fn new(pb:protoboard<FieldT>,
         if packet_idx < lines_to_unpack
         {
             unpack_outputs.push(
-                multipacking_gadget::<FieldT>(pb,
+                multipacking_gadget::<FieldT>(&pb,
                                             pb_variable_array::<FieldT>(routing_output_bits[packet_idx].begin(), routing_output_bits[packet_idx].end()),
                                             routed_packets[num_columns][packet_idx],
                                             FieldT::capacity(),
@@ -141,10 +141,10 @@ pub fn new(pb:protoboard<FieldT>,
         benes_switch_bits.resize(num_columns);
         for column_idx in 0..num_columns
         {
-            benes_switch_bits[column_idx].allocate(pb, num_packets, FMT(self.annotation_prefix, " benes_switch_bits_{}", column_idx));
+            benes_switch_bits[column_idx].allocate(&pb, num_packets, FMT(self.annotation_prefix, " benes_switch_bits_{}", column_idx));
         }
     }
-    // gadget<FieldT>(pb, annotation_prefix),
+    // gadget<FieldT>(&pb, annotation_prefix),
    Self{num_packets,
     num_columns:benes_num_columns(num_packets),
    routing_input_bits,
@@ -278,8 +278,8 @@ pub fn  test_benes_routing_gadget(num_packets:usize, packet_size:usize)
     let (randbits, outbits)=(vec![vec![];num_packets],vec![vec![];num_packets]);
     for packet_idx in 0..num_packets
     {
-        randbits[packet_idx].allocate(pb, packet_size, FMT("", "randbits_{}", packet_idx));
-        outbits[packet_idx].allocate(pb, packet_size, FMT("", "outbits_{}", packet_idx));
+        randbits[packet_idx].allocate(&pb, packet_size, FMT("", "randbits_{}", packet_idx));
+        outbits[packet_idx].allocate(&pb, packet_size, FMT("", "outbits_{}", packet_idx));
 
         for bit_idx in 0..packet_size
         {

@@ -903,7 +903,7 @@
 // GadgetPtr AND_Gadget::create(ProtoboardPtr pb, input:VariableArray&, result:&Variable){
 //     GadgetPtr pGadget;
 //     if pb->fieldType_ == R1P {
-//         pGadget.reset(new R1P_AND_Gadget(pb, input, result));
+//         pGadget.reset(new R1P_AND_Gadget(&pb, input, result));
 //     } else {
 //         GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");
 //     }
@@ -915,7 +915,7 @@
 //                              input1:LinearCombination&,
 //                              input2:LinearCombination&,
 //                              result:&Variable) {
-//     GadgetPtr pGadget(new BinaryAND_Gadget(pb, input1, input2, result));
+//     GadgetPtr pGadget(new BinaryAND_Gadget(&pb, input1, input2, result));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -1009,7 +1009,7 @@
 // GadgetPtr OR_Gadget::create(ProtoboardPtr pb, input:VariableArray&, result:&Variable) {
 //     GadgetPtr pGadget;
 //     if pb->fieldType_ == R1P {
-//         pGadget.reset(new R1P_OR_Gadget(pb, input, result));
+//         pGadget.reset(new R1P_OR_Gadget(&pb, input, result));
 //     } else {
 //         GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");
 //     }
@@ -1021,7 +1021,7 @@
 //                             input1:LinearCombination&,
 //                             input2:LinearCombination&,
 //                             result:&Variable) {
-//     GadgetPtr pGadget(new BinaryOR_Gadget(pb, input1, input2, result));
+//     GadgetPtr pGadget(new BinaryOR_Gadget(&pb, input1, input2, result));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -1187,7 +1187,7 @@
 //                                   successFlag:&Variable) {
 //     GadgetPtr pGadget;
 //     if pb->fieldType_ == R1P {
-//         pGadget.reset(new R1P_LooseMUX_Gadget(pb, inputs, index, output, successFlag));
+//         pGadget.reset(new R1P_LooseMUX_Gadget(&pb, inputs, index, output, successFlag));
 //     } else {
 //         GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");
 //     }
@@ -1212,7 +1212,7 @@
 //     }
 //     VariableArray outVec;
 //     outVec.push_back(output);
-//     auto result = LooseMUX_Gadget::create(pb, inpVec, index, outVec, successFlag);
+//     auto result = LooseMUX_Gadget::create(&pb, inpVec, index, outVec, successFlag);
 //     return result;
 // }
 
@@ -1415,7 +1415,7 @@
 // GadgetPtr DualWord_Gadget::create(ProtoboardPtr pb,
 //                                       var:DualWord&,
 //                                       PackingMode packingMode) {
-//     GadgetPtr pGadget(new DualWord_Gadget(pb, var, packingMode));
+//     GadgetPtr pGadget(new DualWord_Gadget(&pb, var, packingMode));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -1457,7 +1457,7 @@
 // GadgetPtr DualWordArray_Gadget::create(ProtoboardPtr pb,
 //                                            vars:DualWordArray&,
 //                                            PackingMode packingMode) {
-//     GadgetPtr pGadget(new DualWordArray_Gadget(pb, vars, packingMode));
+//     GadgetPtr pGadget(new DualWordArray_Gadget(&pb, vars, packingMode));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -1507,7 +1507,7 @@
 //                                 zeroValue:LinearCombination&,
 //                                 oneValue:LinearCombination&,
 //                                 result:&Variable) {
-//     GadgetPtr pGadget(new Toggle_Gadget(pb, toggle, zeroValue, oneValue, result));
+//     GadgetPtr pGadget(new Toggle_Gadget(&pb, toggle, zeroValue, oneValue, result));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -1559,7 +1559,7 @@
 // GadgetPtr ConditionalFlag_Gadget::create(ProtoboardPtr pb,
 //                                          condition:LinearCombination&,
 //                                          flag:&FlagVariable) {
-//     GadgetPtr pGadget(new ConditionalFlag_Gadget(pb, condition, flag));
+//     GadgetPtr pGadget(new ConditionalFlag_Gadget(&pb, condition, flag));
 //     pGadget->init();
 //     return pGadget;
 // }
@@ -1608,7 +1608,7 @@
 // GadgetPtr LogicImplication_Gadget::create(ProtoboardPtr pb,
 //                                           condition:LinearCombination&,
 //                                           flag:&FlagVariable) {
-//     GadgetPtr pGadget(new LogicImplication_Gadget(pb, condition, flag));
+//     GadgetPtr pGadget(new LogicImplication_Gadget(&pb, condition, flag));
 //     pGadget->init();
 //     return pGadget;
 // }

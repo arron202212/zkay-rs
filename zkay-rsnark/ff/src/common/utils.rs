@@ -207,7 +207,7 @@ pub fn int_list_to_bits(l: &Vec<u64>, wordsize: usize) -> bit_vector {
     return res;
 }
 
-pub fn div_ceil(x: i64, y: i64) -> eyre::Result<i64> {
+pub fn div_ceil(x: usize, y: usize) -> eyre::Result<usize> {
     if y == 0 {
         eyre::bail!("div_ceil: division by zero, second argument must be non-zero");
     }

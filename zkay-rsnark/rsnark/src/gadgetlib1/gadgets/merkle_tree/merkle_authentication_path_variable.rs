@@ -43,17 +43,17 @@ right_digests:    Vec<digest_variable<FieldT> >,
 
 
 impl merkle_authentication_path_variable<FieldT, HashT>{
-pub fn new(pb:protoboard<FieldT>,
+pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                         tree_depth:usize,
                                                                                         annotation_prefix:&String)->Self
    
 {
     for i in 0..tree_depth
     {
-        left_digests.push(digest_variable::<FieldT>(pb, HashT::get_digest_len(), FMT(annotation_prefix, " left_digests_{}", i)));
-        right_digests.push(digest_variable::<FieldT>(pb, HashT::get_digest_len(), FMT(annotation_prefix, " right_digests_{}", i)));
+        left_digests.push(digest_variable::<FieldT>(&pb, HashT::get_digest_len(), FMT(annotation_prefix, " left_digests_{}", i)));
+        right_digests.push(digest_variable::<FieldT>(&pb, HashT::get_digest_len(), FMT(annotation_prefix, " right_digests_{}", i)));
     }
-    //  gadget<FieldT>(pb, annotation_prefix),
+    //  gadget<FieldT>(&pb, annotation_prefix),
     Self{tree_depth}
 }
 

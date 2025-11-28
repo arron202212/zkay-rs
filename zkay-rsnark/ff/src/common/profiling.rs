@@ -246,27 +246,26 @@ const indentation: usize = 0;
 //     }
 // }
 
-// pub fn  print_time(const char* msg)
-// {
-//     if inhibit_profiling_info
-//     {
-//         return;
-//     }
+pub fn print_time(msg: &str) {
+    //     if inhibit_profiling_info
+    //     {
+    //         return;
+    //     }
 
-//     i64 now = get_nsec_time();
-//     i64 cpu_now = get_nsec_cpu_time();
+    //     i64 now = get_nsec_time();
+    //     i64 cpu_now = get_nsec_cpu_time();
 
-//     print!("%-35s\t", msg);
-//     print_times_from_last_and_start(now, last_time, cpu_now, last_cpu_time);
-// // #ifdef PROFILE_OP_COUNTS
-//     print_op_profiling(msg);
-// //#endif
-//     print!("\n");
+    //     print!("%-35s\t", msg);
+    //     print_times_from_last_and_start(now, last_time, cpu_now, last_cpu_time);
+    // // #ifdef PROFILE_OP_COUNTS
+    //     print_op_profiling(msg);
+    // //#endif
+    //     print!("\n");
 
-//     fflush(stdout);
-//     last_time = now;
-//     last_cpu_time = cpu_now;
-// }
+    //     fflush(stdout);
+    //     last_time = now;
+    //     last_cpu_time = cpu_now;
+}
 
 // pub fn  print_header(const char *msg)
 // {
