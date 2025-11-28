@@ -1,7 +1,7 @@
 // Declaration of interfaces for a gadget that can be created from an R1CS constraint system.
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::protoboard;
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
@@ -12,13 +12,16 @@ use crate::relations::variable::{
 };
 use rccell::RcCell;
 use std::collections::BTreeMap;
+use std::marker::PhantomData;
+
 pub struct gadget_from_r1cs<
     FieldT: FieldTConfig,
+    PB: PBConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 > {
     //gadget<FieldT>
-    vars: Vec<pb_variable_array<FieldT>>,
+    vars: Vec<pb_variable_array<FieldT, PB>>,
     cs: r1cs_constraint_system<FieldT, SV, SLC>,
     cs_to_vars: BTreeMap<usize, usize>,
 }
@@ -41,15 +44,15 @@ See gadget_from_r1cs.hpp .
 //#ifndef GADGET_FROM_R1CS_TCC_
 // #define GADGET_FROM_R1CS_TCC_
 use crate::prefix_format;
-impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    gadget_from_r1cs<FieldT, SV, SLC>
+impl<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    gadget_from_r1cs<FieldT, PB, SV, SLC>
 {
     pub fn new(
-        mut pb: RcCell<protoboard<FieldT>>,
-        vars: Vec<pb_variable_array<FieldT>>,
+        mut pb: RcCell<protoboard<FieldT, PB>>,
+        vars: Vec<pb_variable_array<FieldT, PB>>,
         cs: r1cs_constraint_system<FieldT, SV, SLC>,
         annotation_prefix: String,
-    ) -> gadget<FieldT, Self> {
+    ) -> gadget<FieldT, PB, Self> {
         let mut cs_to_vars = BTreeMap::from([(0, 0)]); // constant term maps to constant term 
 
         let mut cs_var_idx = 1;
@@ -91,8 +94,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         //#endif
 
         assert!(cs_var_idx - 1 == cs.num_variables());
-        // gadget<FieldT>(&pb, annotation_prefix),
-        gadget::<FieldT, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
@@ -104,8 +106,8 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    gadget<FieldT, gadget_from_r1cs<FieldT, SV, SLC>>
+impl<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    gadget<FieldT, PB, gadget_from_r1cs<FieldT, PB, SV, SLC>>
 {
     pub fn generate_r1cs_constraints(&mut self) {
         for i in 0..self.t.cs.num_constraints() {

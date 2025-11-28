@@ -1,4 +1,4 @@
-use crate::gadgetlib1::protoboard::protoboard;
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::relations::FieldTConfig;
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, linear_term, variable,
@@ -6,6 +6,7 @@ use crate::relations::variable::{
 use ffec::common::utils;
 use ffec::common::utils::bit_vector;
 use rccell::RcCell;
+use std::marker::PhantomData;
 pub type lc_index_t = usize;
 
 #[derive(Clone, Default, PartialEq)]
@@ -14,34 +15,35 @@ pub struct pb_variable;
 // public variable<FieldT>
 // pb_variable(let index= 0)->Self variable<FieldT>(index) {};
 
-// pub fn  allocate(pb:&RcCell<protoboard<FieldT>>, annotation:&String="");
+// pub fn  allocate(pb:&RcCell<protoboard<FieldT,PB>>, annotation:&String="");
 // }
 // pub trait ContentsConfig {
 //     type contents;
 // }
-// impl ContentsConfig for pb_variable_array<FieldT> {
+// impl ContentsConfig for pb_variable_array<FieldT,PB> {
 //     type contents = Vec<pb_variable<FieldT>>;
 // }
 impl SubVariableConfig for pb_variable {}
 // : private Vec<pb_variable<FieldT> >
 #[derive(Default, Clone)]
-pub struct pb_variable_array<FieldT: FieldTConfig> {
+pub struct pb_variable_array<FieldT: FieldTConfig, PB: PBConfig> {
     pub contents: Vec<variable<FieldT, pb_variable>>,
+    _pb: PhantomData<PB>,
     // pb_variable_array()->Self contents() {};
     // pb_variable_array(usize count, value:&pb_variable<FieldT>)->Self contents(count, value) {};
     // pb_variable_array(contents::const_iterator first, contents::const_iterator last)->Self contents(first, last) {};
     // pb_variable_array(contents::const_reverse_iterator first, contents::const_reverse_iterator last)->Self contents(first, last) {};
-    // pub fn  allocate(pb:&RcCell<protoboard<FieldT>>, n:usize, annotation_prefix:&String="");
+    // pub fn  allocate(pb:&RcCell<protoboard<FieldT,PB>>, n:usize, annotation_prefix:&String="");
 
-    // pub fn  fill_with_field_elements(pb:&RcCell<protoboard<FieldT>>, vals:&Vec<FieldT>) ;
-    // pub fn  fill_with_bits(pb:&RcCell<protoboard<FieldT>>, bits:&bit_vector) ;
-    // pub fn  fill_with_bits_of_ulong(pb:&RcCell<protoboard<FieldT>>, i:u64) ;
-    // pub fn  fill_with_bits_of_field_element(pb:&RcCell<protoboard<FieldT>>, r:&FieldT) ;
+    // pub fn  fill_with_field_elements(pb:&RcCell<protoboard<FieldT,PB>>, vals:&Vec<FieldT>) ;
+    // pub fn  fill_with_bits(pb:&RcCell<protoboard<FieldT,PB>>, bits:&bit_vector) ;
+    // pub fn  fill_with_bits_of_ulong(pb:&RcCell<protoboard<FieldT,PB>>, i:u64) ;
+    // pub fn  fill_with_bits_of_field_element(pb:&RcCell<protoboard<FieldT,PB>>, r:&FieldT) ;
 
-    // Vec<FieldT> get_vals(pb:&RcCell<protoboard<FieldT>>) ;
-    // bit_vector get_bits(pb:&RcCell<protoboard<FieldT>>) ;
+    // Vec<FieldT> get_vals(pb:&RcCell<protoboard<FieldT,PB>>) ;
+    // bit_vector get_bits(pb:&RcCell<protoboard<FieldT,PB>>) ;
 
-    // FieldT get_field_element_from_bits(pb:&RcCell<protoboard<FieldT>>) ;
+    // FieldT get_field_element_from_bits(pb:&RcCell<protoboard<FieldT,PB>>) ;
 }
 
 /* index 0 corresponds to the constant term (used in legacy code) */
@@ -56,18 +58,20 @@ pub struct pb_linear_combination {
     // pb_linear_combination();
     // pb_linear_combination(var:&pb_variable<FieldT>);
 
-    // pub fn  assign(pb:&RcCell<protoboard<FieldT>>, lc:&linear_combination<FieldT>);
-    // pub fn  evaluate(pb:&RcCell<protoboard<FieldT>>) ;
+    // pub fn  assign(pb:&RcCell<protoboard<FieldT,PB>>, lc:&linear_combination<FieldT>);
+    // pub fn  evaluate(pb:&RcCell<protoboard<FieldT,PB>>) ;
 
     // bool is_constant() ;
     // FieldT constant_term() ;
 }
-// impl ContentsConfig for pb_linear_combination_array<FieldT> {
+// impl ContentsConfig for pb_linear_combination_array<FieldT,PB> {
 //     type contents = Vec<pb_linear_combination<FieldT>>;
 // }
 //
-impl<FieldT: FieldTConfig> From<pb_variable_array<FieldT>> for pb_linear_combination_array<FieldT> {
-    fn from(rhs: pb_variable_array<FieldT>) -> Self {
+impl<FieldT: FieldTConfig, PB: PBConfig> From<pb_variable_array<FieldT, PB>>
+    for pb_linear_combination_array<FieldT, PB>
+{
+    fn from(rhs: pb_variable_array<FieldT, PB>) -> Self {
         Self {
             contents: rhs
                 .contents
@@ -75,31 +79,33 @@ impl<FieldT: FieldTConfig> From<pb_variable_array<FieldT>> for pb_linear_combina
                 .cloned()
                 .map(|v| linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(v))
                 .collect(),
+            _pb: PhantomData,
         }
     }
 }
 #[derive(Clone)]
-pub struct pb_linear_combination_array<FieldT: FieldTConfig> {
+pub struct pb_linear_combination_array<FieldT: FieldTConfig, PB: PBConfig> {
     //: private
     pub contents: Vec<linear_combination<FieldT, pb_variable, pb_linear_combination>>,
+    _pb: PhantomData<PB>,
     // pb_linear_combination_array()->Self contents() {};
-    // pb_linear_combination_array(arr:&arr:&pb_variable_array<FieldT>) { for v in self.push(pb_linear_combination<FieldT>(v)); };
+    // pb_linear_combination_array(arr:&arr:&pb_variable_array<FieldT,PB>) { for v in self.push(pb_linear_combination<FieldT>(v)); };
     // pb_linear_combination_array(usize count)->Self contents(count) {};
     // pb_linear_combination_array(usize count, value:&pb_linear_combination<FieldT>)->Self contents(count, value) {};
     // pb_linear_combination_array(contents::const_iterator first, contents::const_iterator last)->Self contents(first, last) {};
     // pb_linear_combination_array(contents::const_reverse_iterator first, contents::const_reverse_iterator last)->Self contents(first, last) {};
 
-    // pub fn  evaluate(pb:&RcCell<protoboard<FieldT>>) ;
+    // pub fn  evaluate(pb:&RcCell<protoboard<FieldT,PB>>) ;
 
-    // pub fn  fill_with_field_elements(pb:&RcCell<protoboard<FieldT>>, vals:&Vec<FieldT>) ;
-    // pub fn  fill_with_bits(pb:&RcCell<protoboard<FieldT>>, bits:&bit_vector) ;
-    // pub fn  fill_with_bits_of_ulong(pb:&RcCell<protoboard<FieldT>>,  i:u64) ;
-    // pub fn  fill_with_bits_of_field_element(pb:RcCell<protoboard<FieldT>>, r:&FieldT) ;
+    // pub fn  fill_with_field_elements(pb:&RcCell<protoboard<FieldT,PB>>, vals:&Vec<FieldT>) ;
+    // pub fn  fill_with_bits(pb:&RcCell<protoboard<FieldT,PB>>, bits:&bit_vector) ;
+    // pub fn  fill_with_bits_of_ulong(pb:&RcCell<protoboard<FieldT,PB>>,  i:u64) ;
+    // pub fn  fill_with_bits_of_field_element(pb:RcCell<protoboard<FieldT,PB>>, r:&FieldT) ;
 
-    // Vec<FieldT> get_vals(pb:&RcCell<protoboard<FieldT>>) ;
-    // bit_vector get_bits(pb:&RcCell<protoboard<FieldT>>) ;
+    // Vec<FieldT> get_vals(pb:&RcCell<protoboard<FieldT,PB>>) ;
+    // bit_vector get_bits(pb:&RcCell<protoboard<FieldT,PB>>) ;
 
-    // FieldT get_field_element_from_bits(pb:&RcCell<protoboard<FieldT>>) ;
+    // FieldT get_field_element_from_bits(pb:&RcCell<protoboard<FieldT,PB>>) ;
 }
 
 // linear_combination<FieldT> pb_sum(v:&pb_linear_combination_array<FieldT>);
@@ -111,12 +117,16 @@ pub struct pb_linear_combination_array<FieldT: FieldTConfig> {
 // use ffec::common::utils;
 
 impl<FieldT: FieldTConfig> variable<FieldT, pb_variable> {
-    pub fn allocate(&mut self, pb: &RcCell<protoboard<FieldT>>, annotation: String) {
+    pub fn allocate<PB: PBConfig>(
+        &mut self,
+        pb: &RcCell<protoboard<FieldT, PB>>,
+        annotation: String,
+    ) {
         self.index = pb.borrow_mut().allocate_var_index(annotation);
     }
 }
 
-impl<FieldT: FieldTConfig> IntoIterator for pb_variable_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> IntoIterator for pb_variable_array<FieldT, PB> {
     type Item = variable<FieldT, pb_variable>;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
@@ -126,7 +136,7 @@ impl<FieldT: FieldTConfig> IntoIterator for pb_variable_array<FieldT> {
 }
 
 use std::ops::{Index, IndexMut};
-impl<FieldT: FieldTConfig> Index<usize> for pb_variable_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> Index<usize> for pb_variable_array<FieldT, PB> {
     type Output = variable<FieldT, pb_variable>;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -134,13 +144,13 @@ impl<FieldT: FieldTConfig> Index<usize> for pb_variable_array<FieldT> {
     }
 }
 
-impl<FieldT: FieldTConfig> IndexMut<usize> for pb_variable_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> IndexMut<usize> for pb_variable_array<FieldT, PB> {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.contents.get_mut(index).unwrap()
     }
 }
 
-impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
     pub fn len(&self) -> usize {
         self.contents.len()
     }
@@ -149,9 +159,17 @@ impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
     }
     /* allocates pb_variable<FieldT> array in MSB->LSB order */
     pub fn new(contents: Vec<variable<FieldT, pb_variable>>) -> Self {
-        Self { contents }
+        Self {
+            contents,
+            _pb: PhantomData,
+        }
     }
-    pub fn allocate(&mut self, pb: &RcCell<protoboard<FieldT>>, n: usize, annotation_prefix: &str) {
+    pub fn allocate(
+        &mut self,
+        pb: &RcCell<protoboard<FieldT, PB>>,
+        n: usize,
+        annotation_prefix: &str,
+    ) {
         // #ifdef DEBUG
         assert!(!annotation_prefix.is_empty());
         //#endif
@@ -163,14 +181,18 @@ impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
         }
     }
 
-    pub fn fill_with_field_elements(&self, pb: &RcCell<protoboard<FieldT>>, vals: &Vec<FieldT>) {
+    pub fn fill_with_field_elements(
+        &self,
+        pb: &RcCell<protoboard<FieldT, PB>>,
+        vals: &Vec<FieldT>,
+    ) {
         assert!(self.contents.len() == vals.len());
         for i in 0..vals.len() {
             *pb.borrow_mut().val_ref(&self.contents[i]) = vals[i].clone();
         }
     }
 
-    pub fn fill_with_bits(&self, pb: &RcCell<protoboard<FieldT>>, bits: &bit_vector) {
+    pub fn fill_with_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>, bits: &bit_vector) {
         assert!(self.contents.len() == bits.len());
         for i in 0..bits.len() {
             *pb.borrow_mut().val_ref(&self.contents[i]) = if bits[i] {
@@ -181,7 +203,7 @@ impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
         }
     }
 
-    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT>>, r: &FieldT)
+    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT, PB>>, r: &FieldT)
     where
         [(); { FieldT::num_limbs as usize }]:,
     {
@@ -195,14 +217,14 @@ impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
         }
     }
 
-    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT>>, i: u64)
+    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT, PB>>, i: u64)
     where
         [(); { FieldT::num_limbs as usize }]:,
     {
         self.fill_with_bits_of_field_element(&pb, &FieldT::from_int(i, true));
     }
 
-    pub fn get_vals(&self, pb: &RcCell<protoboard<FieldT>>) -> Vec<FieldT> {
+    pub fn get_vals(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> Vec<FieldT> {
         let mut result = Vec::with_capacity(self.contents.len());
         for i in 0..self.contents.len() {
             result[i] = pb.borrow().val(&self.contents[i]);
@@ -210,7 +232,7 @@ impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
         return result;
     }
 
-    pub fn get_bits(&self, pb: &RcCell<protoboard<FieldT>>) -> bit_vector {
+    pub fn get_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> bit_vector {
         let mut result = bit_vector::new();
         for i in 0..self.contents.len() {
             let v = pb.borrow().val(&self.contents[i]);
@@ -220,7 +242,7 @@ impl<FieldT: FieldTConfig> pb_variable_array<FieldT> {
         return result;
     }
 
-    pub fn get_field_element_from_bits(&self, pb: &RcCell<protoboard<FieldT>>) -> FieldT {
+    pub fn get_field_element_from_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> FieldT {
         let mut result = FieldT::zero();
 
         for i in 0..self.contents.len() {
@@ -259,9 +281,9 @@ impl pb_linear_combination {
 impl SubLinearCombinationConfig for pb_linear_combination {}
 
 impl<FieldT: FieldTConfig> linear_combination<FieldT, pb_variable, pb_linear_combination> {
-    pub fn assign(
+    pub fn assign<PB: PBConfig>(
         &mut self,
-        pb: &RcCell<protoboard<FieldT>>,
+        pb: &RcCell<protoboard<FieldT, PB>>,
         lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,
     ) {
         assert!(!self.t.is_variable);
@@ -269,7 +291,7 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT, pb_variable, pb_linear_com
         self.terms = lc.terms.clone();
     }
 
-    pub fn evaluate_pb(&self, pb: &RcCell<protoboard<FieldT>>) {
+    pub fn evaluate_pb<PB: PBConfig>(&self, pb: &RcCell<protoboard<FieldT, PB>>) {
         if self.t.is_variable {
             return; // do nothing
         }
@@ -313,7 +335,7 @@ impl<FieldT: FieldTConfig> linear_combination<FieldT, pb_variable, pb_linear_com
     }
 }
 
-impl<FieldT: FieldTConfig> IntoIterator for pb_linear_combination_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> IntoIterator for pb_linear_combination_array<FieldT, PB> {
     type Item = linear_combination<FieldT, pb_variable, pb_linear_combination>;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
@@ -322,7 +344,7 @@ impl<FieldT: FieldTConfig> IntoIterator for pb_linear_combination_array<FieldT> 
     }
 }
 
-impl<FieldT: FieldTConfig> Index<usize> for pb_linear_combination_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> Index<usize> for pb_linear_combination_array<FieldT, PB> {
     type Output = linear_combination<FieldT, pb_variable, pb_linear_combination>;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -330,17 +352,22 @@ impl<FieldT: FieldTConfig> Index<usize> for pb_linear_combination_array<FieldT> 
     }
 }
 
-impl<FieldT: FieldTConfig> IndexMut<usize> for pb_linear_combination_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> IndexMut<usize>
+    for pb_linear_combination_array<FieldT, PB>
+{
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         self.contents.get_mut(index).unwrap()
     }
 }
 
-impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
+impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB> {
     pub fn new(
         contents: Vec<linear_combination<FieldT, pb_variable, pb_linear_combination>>,
     ) -> Self {
-        Self { contents }
+        Self {
+            contents,
+            _pb: PhantomData,
+        }
     }
     pub fn len(&self) -> usize {
         self.contents.len()
@@ -350,20 +377,24 @@ impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
     ) -> std::slice::Iter<linear_combination<FieldT, pb_variable, pb_linear_combination>> {
         self.contents.iter()
     }
-    pub fn evaluate(&self, pb: &RcCell<protoboard<FieldT>>) {
+    pub fn evaluate(&self, pb: &RcCell<protoboard<FieldT, PB>>) {
         for i in 0..self.contents.len() {
             self.contents[i].evaluate_pb(pb);
         }
     }
 
-    pub fn fill_with_field_elements(&self, pb: &RcCell<protoboard<FieldT>>, vals: &Vec<FieldT>) {
+    pub fn fill_with_field_elements(
+        &self,
+        pb: &RcCell<protoboard<FieldT, PB>>,
+        vals: &Vec<FieldT>,
+    ) {
         assert!(self.contents.len() == vals.len());
         for i in 0..vals.len() {
             *pb.borrow_mut().lc_val_ref(&self.contents[i]) = vals[i].clone();
         }
     }
 
-    pub fn fill_with_bits(&self, pb: &RcCell<protoboard<FieldT>>, bits: &bit_vector) {
+    pub fn fill_with_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>, bits: &bit_vector) {
         assert!(self.contents.len() == bits.len());
         for i in 0..bits.len() {
             *pb.borrow_mut().lc_val_ref(&self.contents[i]) = if bits[i] {
@@ -374,7 +405,7 @@ impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
         }
     }
 
-    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT>>, r: &FieldT)
+    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT, PB>>, r: &FieldT)
     where
         [(); { FieldT::num_limbs as usize }]:,
     {
@@ -388,14 +419,14 @@ impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
         }
     }
 
-    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT>>, i: usize)
+    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT, PB>>, i: usize)
     where
         [(); { FieldT::num_limbs as usize }]:,
     {
         self.fill_with_bits_of_field_element(&pb, &FieldT::from(i));
     }
 
-    pub fn get_vals(&self, pb: &RcCell<protoboard<FieldT>>) -> Vec<FieldT> {
+    pub fn get_vals(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> Vec<FieldT> {
         let mut result = Vec::with_capacity(self.contents.len());
         for i in 0..self.contents.len() {
             result[i] = pb.borrow().lc_val(&self.contents[i]);
@@ -403,7 +434,7 @@ impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
         return result;
     }
 
-    pub fn get_bits(&self, pb: &RcCell<protoboard<FieldT>>) -> bit_vector {
+    pub fn get_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> bit_vector {
         let mut result = bit_vector::new();
         for i in 0..self.contents.len() {
             let v = pb.borrow().lc_val(&self.contents[i]);
@@ -413,7 +444,7 @@ impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
         return result;
     }
 
-    pub fn get_field_element_from_bits(&self, pb: &RcCell<protoboard<FieldT>>) -> FieldT {
+    pub fn get_field_element_from_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> FieldT {
         let mut result = FieldT::zero();
 
         for i in 0..self.contents.len() {
@@ -429,8 +460,8 @@ impl<FieldT: FieldTConfig> pb_linear_combination_array<FieldT> {
     }
 }
 
-pub fn pb_sum<FieldT: FieldTConfig, SV: SubVariableConfig>(
-    v: &pb_linear_combination_array<FieldT>,
+pub fn pb_sum<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig>(
+    v: &pb_linear_combination_array<FieldT, PB>,
 ) -> linear_combination<FieldT, pb_variable, pb_linear_combination> {
     let mut result = linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(0);
     for term in &v.contents {
@@ -440,8 +471,8 @@ pub fn pb_sum<FieldT: FieldTConfig, SV: SubVariableConfig>(
     return result;
 }
 
-pub fn pb_packing_sum<FieldT: FieldTConfig>(
-    v: &pb_linear_combination_array<FieldT>,
+pub fn pb_packing_sum<FieldT: FieldTConfig, PB: PBConfig>(
+    v: &pb_linear_combination_array<FieldT, PB>,
 ) -> linear_combination<FieldT, pb_variable, pb_linear_combination> {
     let mut twoi = FieldT::one(); // will hold 2^i entering each iteration
     let mut all_terms = vec![]; //Vec<linear_term<FieldT> > 
@@ -455,8 +486,8 @@ pub fn pb_packing_sum<FieldT: FieldTConfig>(
     return linear_combination::<FieldT, pb_variable, pb_linear_combination>::new(all_terms);
 }
 
-pub fn pb_coeff_sum<FieldT: FieldTConfig>(
-    v: &pb_linear_combination_array<FieldT>,
+pub fn pb_coeff_sum<FieldT: FieldTConfig, PB: PBConfig>(
+    v: &pb_linear_combination_array<FieldT, PB>,
     coeffs: &Vec<FieldT>,
 ) -> linear_combination<FieldT, pb_variable, pb_linear_combination> {
     assert!(v.contents.len() == coeffs.len());

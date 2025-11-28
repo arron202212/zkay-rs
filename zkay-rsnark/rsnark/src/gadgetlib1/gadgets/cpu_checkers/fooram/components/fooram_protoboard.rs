@@ -1,78 +1,45 @@
-/** @file
- *****************************************************************************
-
- Declaration of interfaces for a protoboard for the FOORAM CPU.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef FOORAM_PROTOBOARD_HPP_
-// #define FOORAM_PROTOBOARD_HPP_
+// Declaration of interfaces for a protoboard for the FOORAM CPU.
 
 use crate::gadgetlib1::gadget;
 use crate::relations::ram_computations::rams::fooram::fooram_aux;
 
-
-
-// 
-pub struct fooram_protoboard<FieldT>  {
-// : public RcCell<protoboard<FieldT>>
-      ap:fooram_architecture_params,
-
+pub struct fooram_protoboard<FieldT: FieldTConfig> {
+    ap: fooram_architecture_params,
+    _t: PhantomData<FieldT>,
     // fooram_protoboard(ap:&fooram_architecture_params);
 }
-
-// 
-pub struct fooram_gadget  {
-// : public gadget<FieldT>
-     pb:fooram_protoboard<FieldT>,
-// 
-//     fooram_gadget(fooram_protoboard<FieldT> &pb, annotation_prefix:&String="");
+pub trait SubFooRamConfig:Default+Clone{
+}
+pub struct fooram_gadget<FieldT: FieldTConfig, T:SubFooRamConfig> {
+    pb: protoboard<FieldT, fooram_protoboard<FieldT>>,
+    _t: PhantomData<FieldT>,
+    t:T,
+    //     fooram_gadget(fooram_protoboard<FieldT> &pb, annotation_prefix:&String="");
 }
 
+// Implementation of interfaces for a protoboard for the FOORAM CPU.
 
-
-// use crate::gadgetlib1::gadgets::cpu_checkers/fooram/components/fooram_protoboard;
-
-//#endif // FOORAM_PROTOBOARD_HPP_
-/** @file
- *****************************************************************************
-
- Implementation of interfaces for a protoboard for the FOORAM CPU.
-
- See fooram_protoboard.hpp .
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef FOORAM_PROTOBOARD_TCC_
-// #define FOORAM_PROTOBOARD_TCC_
-
-impl fooram_protoboard<FieldT>{
-
-// 
-pub fn new(ap:fooram_architecture_params) ->Self
+impl<FieldT: FieldTConfig> fooram_protoboard<FieldT> {
+    pub fn new(ap: fooram_architecture_params) -> protoboard<FieldT, Self> {
+        protoboard::<FieldT, Self>::new(Self {
+            ap,
+            _t: PhantomData,
+        })
+    }
+}
+impl<FieldT: FieldTConfig> PBConfig for fooram_protoboard<FieldT> {
    
-{
-    // RcCell<protoboard<FieldT>>(), 
-    Self{ap}
 }
+impl<FieldT: FieldTConfig,T:SubFooRamConfig> fooram_gadget<FieldT,T> {
+    pub fn new(pb: protoboard<FieldT, fooram_protoboard<FieldT>>, annotation_prefix: String,t:T) -> gadget<FieldT,fooram_protoboard<FieldT>, Self> {
+        gadget::<FieldT,fooram_protoboard<FieldT>, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                pb,
+                _t: PhantomData,
+                t,
+            },
+        )
+    }
 }
-
-impl fooram_gadget<FieldT>{
-// 
-pub fn new( pb:fooram_protoboard<FieldT>, annotation_prefix: String ) ->Self
-{
-// gadget<FieldT>(&pb, annotation_prefix)
-Self{pb}
-}
-
-}
-
-//#endif // FOORAM_PROTOBOARD_HPP_

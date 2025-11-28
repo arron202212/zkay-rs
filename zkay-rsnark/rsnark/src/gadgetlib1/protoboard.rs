@@ -7,36 +7,19 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, var_index_t, variable,
 };
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef PROTOBOARD_HPP_
-// #define PROTOBOARD_HPP_
 
-// use  <algorithm>
-// use  <cassert>
-// use  <cstdio>
-// use  <string>
-//
 use ffec::common::utils;
-//
-// pub struct r1cs_constraint;
 
-//
-// pub struct r1cs_constraint_system;
+pub trait PBConfig: Default + Clone {}
 
-//
-pub struct protoboard<FieldT: FieldTConfig> {
-    //
+pub struct protoboard<FieldT: FieldTConfig, T: PBConfig> {
     pub constant_term: FieldT, /* only here, because pb.val() needs to be able to return reference to the constant 1 term */
     pub values: r1cs_variable_assignment<FieldT>, /* values[0] will hold the value of the first allocated variable of the protoboard, *NOT* constant 1 */
     pub next_free_var: var_index_t,
     pub next_free_lc: lc_index_t,
     pub lc_values: Vec<FieldT>,
     pub constraint_system: r1cs_constraint_system<FieldT, pb_variable, pb_linear_combination>,
+    pub t: T,
 }
 
 //
@@ -74,22 +57,9 @@ pub struct protoboard<FieldT: FieldTConfig> {
 //     lc_index_t allocate_lc_index();
 // };
 
-// use crate::gadgetlib1::protoboard;
-//#endif // PROTOBOARD_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef PROTOBOARD_TCC_
-// #define PROTOBOARD_TCC_
-
-// use  <cstdarg>
-// use  <cstdio>
 use ffec::common::profiling;
 
-impl<FieldT: FieldTConfig> Default for protoboard<FieldT> {
+impl<FieldT: FieldTConfig, T: PBConfig> Default for protoboard<FieldT, T> {
     fn default() -> Self {
         let mut constraint_system =
             r1cs_constraint_system::<FieldT, pb_variable, pb_linear_combination>::default();
@@ -108,10 +78,32 @@ impl<FieldT: FieldTConfig> Default for protoboard<FieldT> {
             next_free_lc: 0,
             lc_values: vec![],
             constraint_system,
+            t: T::default(),
         }
     }
 }
-impl<FieldT: FieldTConfig> protoboard<FieldT> {
+impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
+    fn new(t: T) -> Self {
+        let mut constraint_system =
+            r1cs_constraint_system::<FieldT, pb_variable, pb_linear_combination>::default();
+        // #ifdef DEBUG
+        constraint_system
+            .variable_annotations
+            .insert(0, "ONE".to_owned());
+        //#endif
+
+        // to account for constant 1 term
+
+        Self {
+            constant_term: FieldT::one(),
+            values: r1cs_variable_assignment::<FieldT>::default(),
+            next_free_var: 1,
+            next_free_lc: 0,
+            lc_values: vec![],
+            constraint_system,
+            t,
+        }
+    }
     pub fn clear_values(&mut self) {
         self.values.fill(FieldT::zero());
     }
@@ -271,5 +263,3 @@ impl<FieldT: FieldTConfig> protoboard<FieldT> {
         self.constraint_system.clone()
     }
 }
-
-//#endif // PROTOBOARD_TCC_
