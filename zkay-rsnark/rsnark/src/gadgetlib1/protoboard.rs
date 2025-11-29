@@ -83,7 +83,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> Default for protoboard<FieldT, T> {
     }
 }
 impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
-    fn new(t: T) -> Self {
+    pub fn new(t: T) -> Self {
         let mut constraint_system =
             r1cs_constraint_system::<FieldT, pb_variable, pb_linear_combination>::default();
         // #ifdef DEBUG

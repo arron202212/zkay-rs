@@ -33,7 +33,7 @@ macro_rules! prefix_format {
 
 //
 // pub fn generate_r1cs_equals_const_constraint(pb:&RcCell<protoboard<FieldT,PB>> , lc:&linear_combination<FieldT,pb_variable,pb_linear_combination>, annotation_prefix:&FieldT& c,  String);
-
+#[derive(Clone, Default)]
 pub struct packing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     /* no internal variables */
     pub bits: pb_linear_combination_array<FieldT, PB>,

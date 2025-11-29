@@ -83,7 +83,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> From<pb_variable_array<FieldT, PB>>
         }
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct pb_linear_combination_array<FieldT: FieldTConfig, PB: PBConfig> {
     //: private
     pub contents: Vec<linear_combination<FieldT, pb_variable, pb_linear_combination>>,

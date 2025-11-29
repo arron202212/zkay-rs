@@ -489,6 +489,15 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         self - linear_combination::<FieldT, SV, SLC>::from(rhs)
     }
 }
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Sub<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = linear_combination<FieldT, SV, SLC>;
+
+    fn sub(self, rhs: variable<FieldT, SV>) -> Self::Output {
+        self - linear_combination::<FieldT, SV, SLC>::from(rhs)
+    }
+}
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Sub
     for linear_combination<FieldT, SV, SLC>
 {

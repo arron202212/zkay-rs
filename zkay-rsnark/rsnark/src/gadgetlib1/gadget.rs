@@ -1,6 +1,7 @@
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::relations::FieldTConfig;
 use rccell::RcCell;
+#[derive(Clone, Default)]
 pub struct gadget<FieldT: FieldTConfig, PB: PBConfig, T> {
     pub pb: RcCell<protoboard<FieldT, PB>>,
     pub annotation_prefix: String,

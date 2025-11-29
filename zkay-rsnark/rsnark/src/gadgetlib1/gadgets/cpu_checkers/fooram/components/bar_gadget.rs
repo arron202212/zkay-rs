@@ -1,8 +1,17 @@
 // Declaration of interfaces for an auxiliarry gadget for the FOORAM CPU.
-
-use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets::basic_gadgets;
-
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets::packing_gadget;
+use crate::gadgetlib1::pb_variable::{
+    pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
+    pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
+use rccell::RcCell;
+use std::marker::PhantomData;
 /**
  * The bar gadget checks linear combination
  *                   Z = aX + bY (mod 2^w)
@@ -14,25 +23,24 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
  * - load_addr = 2 * x + PC'
  * - store_addr = x + PC
  */
-
+#[derive(Clone, Default)]
 pub struct bar_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<FieldT>
-    X: pb_linear_combination_array<FieldT>,
+    X: pb_linear_combination_array<FieldT, PB>,
     a: FieldT,
-    Y: pb_linear_combination_array<FieldT>,
+    Y: pb_linear_combination_array<FieldT, PB>,
     b: FieldT,
     Z_packed: linear_combination<FieldT, pb_variable, pb_linear_combination>,
-    Z_bits: pb_variable_array<FieldT>,
+    Z_bits: pb_variable_array<FieldT, PB>,
 
     result: variable<FieldT, pb_variable>,
-    overflow: pb_variable_array<FieldT>,
-    unpacked_result: pb_variable_array<FieldT>,
+    overflow: pb_variable_array<FieldT, PB>,
+    unpacked_result: pb_variable_array<FieldT, PB>,
 
-    unpack_result: RcCell<gadget<FieldT, packing_gadget<FieldT>>>,
-    pack_Z: RcCell<gadget<FieldT, packing_gadget<FieldT>>>,
+    unpack_result: RcCell<gadget<FieldT, PB, packing_gadget<FieldT, PB>>>,
+    pack_Z: RcCell<gadget<FieldT, PB, packing_gadget<FieldT, PB>>>,
 
     width: usize,
-    _pb: PhantomData<PB>,
     // bar_gadget(pb:RcCell<protoboard<FieldT>>,
     //            X:&pb_linear_combination_array<FieldT>,
     //            a:&FieldT,
@@ -44,81 +52,96 @@ pub struct bar_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // pub fn  generate_r1cs_witness();
 }
 
-impl<FieldT: FieldTConfig, PB: PBConfig> bar_gadget<FieldT,PB> {
+impl<FieldT: FieldTConfig, PB: PBConfig> bar_gadget<FieldT, PB> {
     pub fn new(
-        pb: RcCell<protoboard<FieldT>>,
-        X: pb_linear_combination_array<FieldT>,
+        pb: RcCell<protoboard<FieldT, PB>>,
+        X: pb_linear_combination_array<FieldT, PB>,
         a: FieldT,
-        Y: pb_linear_combination_array<FieldT>,
+        Y: pb_linear_combination_array<FieldT, PB>,
         b: FieldT,
         Z_packed: linear_combination<FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> gadget<FieldT,PB, Self> {
+    ) -> gadget<FieldT, PB, Self> {
         assert!(X.len() == Y.len());
         let width = X.len();
         let mut result = variable::<FieldT, pb_variable>::default();
         result.allocate(&pb, prefix_format!(annotation_prefix, " result"));
-        let mut Z_bits = pb_variable_array::<FieldT>::default();
-        Z_bits.allocate(&pb, width, prefix_format!(annotation_prefix, " Z_bits"));
-        let mut overflow = pb_variable_array::<FieldT>::default();
+        let mut Z_bits = pb_variable_array::<FieldT, PB>::default();
+        Z_bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " Z_bits"));
+        let mut overflow = pb_variable_array::<FieldT, PB>::default();
         overflow.allocate(
             &pb,
             2 * width,
-            prefix_format!(annotation_prefix, " overflow"),
+            &prefix_format!(annotation_prefix, " overflow"),
         );
-        let mut unpacked_result = pb_variable_array::<FieldT>::default();
-        unpacked_result.contents.extend(Z_bits);
-        unpacked_result.contents.extend(overflow);
+        let mut unpacked_result = pb_variable_array::<FieldT, PB>::default();
+        unpacked_result.contents.extend(Z_bits.clone());
+        unpacked_result.contents.extend(overflow.clone());
 
-        let unpack_result = RcCell::new(packing_gadget::<FieldT>(
-            &pb,
-            unpacked_result.clone(),
-            result.clone(),
+        let unpack_result = RcCell::new(packing_gadget::<FieldT, PB>::new(
+            pb.clone(),
+            unpacked_result.clone().into(),
+            result.clone().into(),
             prefix_format!(annotation_prefix, " unpack_result"),
         ));
-        let pack_Z = RcCell::new(packing_gadget::<FieldT>::new(
-            pb,
-            Z_bits.clone(),
-            Z_packed.clone(),
+        let pack_Z = RcCell::new(packing_gadget::<FieldT, PB>::new(
+            pb.clone(),
+            Z_bits.clone().into(),
+            Z_packed.clone().into(),
             prefix_format!(annotation_prefix, " pack_Z"),
         ));
-        gadget::<FieldT,PB, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
+                width,
+                result,
+                unpack_result,
                 X,
                 a,
                 Y,
                 b,
                 Z_packed,
-                _pb: PhantomData,
+                pack_Z,
+                overflow,
+                Z_bits,
+                unpacked_result,
             },
         )
     }
 }
-impl<FieldT: FieldTConfig> gadget<FieldT, bar_gadget<FieldT>> {
+impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, bar_gadget<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&self) {
-        self.t.unpack_result.generate_r1cs_constraints(true);
-        self.t.pack_Z.generate_r1cs_constraints(false);
+        self.t
+            .unpack_result
+            .borrow()
+            .generate_r1cs_constraints(true);
+        self.t.pack_Z.borrow().generate_r1cs_constraints(false);
 
-        self.pb.borrow().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>::new(
-                1,
-                self.t.a * pb_packing_sum::<FieldT>(self.t.X)
-                    + self.t.b * pb_packing_sum::<FieldT>(self.t.Y),
-                self.t.result,
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                1.into(),
+                pb_packing_sum::<FieldT, PB>(&self.t.X) * self.t.a.clone()
+                    + pb_packing_sum::<FieldT, PB>(&self.t.Y) * self.t.b.clone(),
+                self.t.result.clone().into(),
             ),
             prefix_format!(self.annotation_prefix, " compute_result"),
         );
     }
 
-    pub fn generate_r1cs_witness(&self) {
-        *self.pb.borrow_mut().val_ref(self.t.result) =
-            self.t.X.get_field_element_from_bits(self.pb) * self.t.a
-                + self.t.Y.get_field_element_from_bits(self.pb) * self.t.b;
-        self.t.unpack_result.generate_r1cs_witness_from_packed();
+    pub fn generate_r1cs_witness(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
+        *self.pb.borrow_mut().val_ref(&self.t.result) =
+            self.t.X.get_field_element_from_bits(&self.pb) * self.t.a.clone()
+                + self.t.Y.get_field_element_from_bits(&self.pb) * self.t.b.clone();
+        self.t
+            .unpack_result
+            .borrow()
+            .generate_r1cs_witness_from_packed();
 
-        self.t.pack_Z.generate_r1cs_witness_from_bits();
+        self.t.pack_Z.borrow().generate_r1cs_witness_from_bits();
     }
 }
 
