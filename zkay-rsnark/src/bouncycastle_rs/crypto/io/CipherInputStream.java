@@ -446,7 +446,7 @@ public class CipherInputStream
             throw new IOException("cipher must implement SkippingCipher to be used with reset()");
         }
 
-        in.reset();
+        in=RcCell::new();
 
         skippingCipher.seekTo(markPosition);
 

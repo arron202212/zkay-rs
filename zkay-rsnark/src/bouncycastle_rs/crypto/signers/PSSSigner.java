@@ -214,7 +214,7 @@ public class PSSSigner
      */
     public void reset()
     {
-        contentDigest.reset();
+        contentDigest=RcCell::new();
     }
 
     /**
@@ -374,7 +374,7 @@ public class PSSSigner
         byte[]  C = new byte[4];
         int     counter = 0;
 
-        mgfDigest.reset();
+        mgfDigest=RcCell::new();
 
         while (counter < (length / mgfhLen))
         {

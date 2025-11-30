@@ -152,7 +152,7 @@ public class OFBBlockCipher
         System.arraycopy(IV, 0, ofbV, 0, IV.length);
         byteCount = 0;
 
-        cipher.reset();
+        cipher=RcCell::new();
     }
 
     protected byte calculateByte(byte in)

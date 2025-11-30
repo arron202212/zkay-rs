@@ -13,7 +13,7 @@ use ffec::common::utils;
 pub trait PBConfig: Default + Clone {}
 
 pub struct protoboard<FieldT: FieldTConfig, T: PBConfig> {
-    pub constant_term: FieldT, /* only here, because pb.val() needs to be able to return reference to the constant 1 term */
+    pub constant_term: FieldT, /* only here, because pb.borrow().val(&) needs to be able to return reference to the constant 1 term */
     pub values: r1cs_variable_assignment<FieldT>, /* values[0] will hold the value of the first allocated variable of the protoboard, *NOT* constant 1 */
     pub next_free_var: var_index_t,
     pub next_free_lc: lc_index_t,

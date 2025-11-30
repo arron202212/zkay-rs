@@ -1,2 +1,2 @@
 pub mod fooram;
-//  pub mod tinyram;
+pub mod tinyram;

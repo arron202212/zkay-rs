@@ -571,7 +571,7 @@ public class TigerDigest
      */
     public TigerDigest(TigerDigest t)
     {
-        this.reset(t);
+        this=RcCell::new(t);
     }
 
     public String getAlgorithmName()

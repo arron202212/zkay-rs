@@ -57,8 +57,8 @@ pub fn  gen_r1cs_example_from_gadgetlib2_protoboard(size:usize)->r1cs_example<ff
     let mut rng = rand::thread_rng();
     for  k in  0.. size
     {
-        pb.val(A[k]) = rng::r#gen::<i32>() % 2;
-        pb.val(B[k]) = rng::r#gen::<i32>() % 2;
+        pb.borrow().val(&A[k]) = rng::r#gen::<i32>() % 2;
+        pb.borrow().val(&B[k]) = rng::r#gen::<i32>() % 2;
     }
     g.generateWitness();
     // translate constraint system to libsnark format.

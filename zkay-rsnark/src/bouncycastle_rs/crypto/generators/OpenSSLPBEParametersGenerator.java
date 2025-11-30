@@ -68,7 +68,7 @@ public class OpenSSLPBEParametersGenerator
             }
 
             // do another round
-            digest.reset();
+            digest=RcCell::new();
             digest.update(buf, 0, buf.length);
         }
         

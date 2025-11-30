@@ -79,7 +79,7 @@ public class SHA384Digest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         /* SHA-384 initial hash value
          * The first 64 bits of the fractional parts of the square roots

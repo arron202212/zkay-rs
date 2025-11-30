@@ -156,7 +156,7 @@ pub fn generate_r1cs_constraints()
 {
     for i in 0..dimension
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                              pb_coeff_sum::<FieldT>(input_block.bits,
                                                                                   knapsack_coefficients[input_len * i.. input_len * (i+1)].to_vec()),
                                                              output[i]), FMT(self.annotation_prefix, " knapsack_{}", i));
@@ -261,7 +261,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                               output_digest.bits.begin() + (i + 1) * FieldT::size_in_bits())));
     }
 
-    hasher.reset(knapsack_CRH_with_field_out_gadget::<FieldT>::new(pb, input_len, input_block, output, FMT(annotation_prefix, " hasher")));
+    hasher=RcCell::new(knapsack_CRH_with_field_out_gadget::<FieldT>::new(pb, input_len, input_block, output, FMT(annotation_prefix, " hasher")));
     //    gadget<FieldT>(&pb, annotation_prefix),
     Self{input_len,
     dimension,

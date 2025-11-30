@@ -97,7 +97,7 @@ public class SkeinMac
 
     public void reset()
     {
-        engine.reset();
+        engine=RcCell::new();
     }
 
     public void update(byte in)

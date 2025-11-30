@@ -64,7 +64,7 @@ pub fn new(ap:&ram_architecture_params<ramT>,
 {
     let  r1cs_input_size = ram_universal_gadget::<ramT>::packed_input_size(ap, boot_trace_size_bound);
     r1cs_input.allocate(main_protoboard, r1cs_input_size, "r1cs_input");
-    universal_gadget.reset( ram_universal_gadget::<ramT>::new(main_protoboard,
+    universal_gadget=RcCell::new( ram_universal_gadget::<ramT>::new(main_protoboard,
                                                           boot_trace_size_bound,
                                                           time_bound,
                                                           r1cs_input,

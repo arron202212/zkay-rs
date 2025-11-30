@@ -505,8 +505,8 @@ public class OCBBlockCipher
 
     protected void reset(boolean clearMac)
     {
-        hashCipher.reset();
-        mainCipher.reset();
+        hashCipher=RcCell::new();
+        mainCipher=RcCell::new();
 
         clear(hashBlock);
         clear(mainBlock);

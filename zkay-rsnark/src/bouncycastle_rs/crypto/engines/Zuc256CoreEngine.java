@@ -175,7 +175,7 @@ public class Zuc256CoreEngine
     public void reset(final Memoable pState)
     {
         final Zuc256CoreEngine e = (Zuc256CoreEngine)pState;
-        super.reset(pState);
+        super=RcCell::new(pState);
         theD = e.theD;
     }
 }

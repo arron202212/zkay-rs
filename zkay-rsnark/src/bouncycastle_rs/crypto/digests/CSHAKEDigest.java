@@ -102,7 +102,7 @@ public class CSHAKEDigest
 
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
         
         if (diff != null)
         {

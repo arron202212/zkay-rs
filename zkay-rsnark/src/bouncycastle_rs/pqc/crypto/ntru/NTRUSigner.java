@@ -48,7 +48,7 @@ public class NTRUSigner
             this.verificationKey = (NTRUSigningPublicKeyParameters)params;
         }
         hashAlg = this.params.hashAlg;
-        hashAlg.reset();
+        hashAlg=RcCell::new();
     }
 
     /**

@@ -308,7 +308,7 @@ public class ISO9796d2Signer
      */
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
         messageLength = 0;
         clearBlock(mBuf);
         
@@ -525,7 +525,7 @@ public class ISO9796d2Signer
                 return returnFalse(block);
             }
             
-            digest.reset();
+            digest=RcCell::new();
             digest.update(block, mStart, off - mStart);
             digest.doFinal(hash, 0);
 

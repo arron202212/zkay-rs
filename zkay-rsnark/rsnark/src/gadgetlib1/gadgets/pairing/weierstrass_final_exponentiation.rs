@@ -126,36 +126,36 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                   annotation_prefix:&String)->Self
     
 {
-    one.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " one")));
-    el_inv.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv")));
-    el_q_3.reset(Fqk_variable::<ppT>::new(el.Frobenius_map(3)));
-    el_q_3_minus_1.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_q_3_minus_1")));
-    alpha.reset(Fqk_variable::<ppT>::new(el_q_3_minus_1.Frobenius_map(1)));
-    beta.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " beta")));
-    beta_q.reset(Fqk_variable::<ppT>::new(beta.Frobenius_map(1)));
+    one=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " one")));
+    el_inv=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv")));
+    el_q_3=RcCell::new(Fqk_variable::<ppT>::new(el.Frobenius_map(3)));
+    el_q_3_minus_1=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_q_3_minus_1")));
+    alpha=RcCell::new(Fqk_variable::<ppT>::new(el_q_3_minus_1.Frobenius_map(1)));
+    beta=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " beta")));
+    beta_q=RcCell::new(Fqk_variable::<ppT>::new(beta.Frobenius_map(1)));
 
-    el_inv_q_3.reset(Fqk_variable::<ppT>::new(el_inv.Frobenius_map(3)));
-    el_inv_q_3_minus_1.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv_q_3_minus_1")));
-    inv_alpha.reset(Fqk_variable::<ppT>::new(el_inv_q_3_minus_1.Frobenius_map(1)));
-    inv_beta.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " inv_beta")));
-    w1.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w1")));
-    w0.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w0")));
-    result.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " result")));
+    el_inv_q_3=RcCell::new(Fqk_variable::<ppT>::new(el_inv.Frobenius_map(3)));
+    el_inv_q_3_minus_1=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv_q_3_minus_1")));
+    inv_alpha=RcCell::new(Fqk_variable::<ppT>::new(el_inv_q_3_minus_1.Frobenius_map(1)));
+    inv_beta=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " inv_beta")));
+    w1=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w1")));
+    w0=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w0")));
+    result=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " result")));
 
-    compute_el_inv.reset(Fqk_mul_gadget::<ppT>::new(pb, el, *el_inv, *one, FMT(annotation_prefix, " compute_el_inv")));
-    compute_el_q_3_minus_1.reset(Fqk_mul_gadget::<ppT>::new(pb, *el_q_3, *el_inv, *el_q_3_minus_1, FMT(annotation_prefix, " compute_el_q_3_minus_1")));
-    compute_beta.reset(Fqk_mul_gadget::<ppT>::new(pb, *alpha, *el_q_3_minus_1, *beta, FMT(annotation_prefix, " compute_beta")));
+    compute_el_inv=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, el, *el_inv, *one, FMT(annotation_prefix, " compute_el_inv")));
+    compute_el_q_3_minus_1=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *el_q_3, *el_inv, *el_q_3_minus_1, FMT(annotation_prefix, " compute_el_q_3_minus_1")));
+    compute_beta=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *alpha, *el_q_3_minus_1, *beta, FMT(annotation_prefix, " compute_beta")));
 
-    compute_el_inv_q_3_minus_1.reset(Fqk_mul_gadget::<ppT>::new(pb, *el_inv_q_3, el, *el_inv_q_3_minus_1, FMT(annotation_prefix, " compute_el_inv__q_3_minus_1")));
-    compute_inv_beta.reset(Fqk_mul_gadget::<ppT>::new(pb, *inv_alpha, *el_inv_q_3_minus_1, *inv_beta, FMT(annotation_prefix, " compute_inv_beta")));
+    compute_el_inv_q_3_minus_1=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *el_inv_q_3, el, *el_inv_q_3_minus_1, FMT(annotation_prefix, " compute_el_inv__q_3_minus_1")));
+    compute_inv_beta=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *inv_alpha, *el_inv_q_3_minus_1, *inv_beta, FMT(annotation_prefix, " compute_inv_beta")));
 
-    compute_w1.reset( exponentiation_gadget::<FqkT<ppT>, Fp6_variable, Fp6_mul_gadget, Fp6_cyclotomic_sqr_gadget, ffec::mnt6_q_limbs>::new(
+    compute_w1=RcCell::new( exponentiation_gadget::<FqkT<ppT>, Fp6_variable, Fp6_mul_gadget, Fp6_cyclotomic_sqr_gadget, ffec::mnt6_q_limbs>::new(
         pb, *beta_q, ffec::mnt6_final_exponent_last_chunk_w1, *w1, FMT(annotation_prefix, " compute_w1")));
 
-    compute_w0.reset( exponentiation_gadget::<FqkT<ppT>, Fp6_variable, Fp6_mul_gadget, Fp6_cyclotomic_sqr_gadget, ffec::mnt6_q_limbs>::new(
+    compute_w0=RcCell::new( exponentiation_gadget::<FqkT<ppT>, Fp6_variable, Fp6_mul_gadget, Fp6_cyclotomic_sqr_gadget, ffec::mnt6_q_limbs>::new(
         pb,  (if ffec::mnt6_final_exponent_last_chunk_is_w0_neg {*inv_beta} else{*beta}), ffec::mnt6_final_exponent_last_chunk_abs_of_w0, *w0, FMT(annotation_prefix, " compute_w0")));
 
-    compute_result.reset(Fqk_mul_gadget::<ppT>::new(pb, *w1, *w0, *result, FMT(annotation_prefix, " compute_result")));
+    compute_result=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *w1, *w0, *result, FMT(annotation_prefix, " compute_result")));
     // gadget<FieldT>(&pb, annotation_prefix),
   Self {el,
     result_is_one}
@@ -178,12 +178,12 @@ pub fn generate_r1cs_constraints()
     compute_result.generate_r1cs_constraints();
 
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, result_is_one, FMT(self.annotation_prefix, " result_is_one"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, 1 - result.c0.c0, 0), " check c0.c0");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c0.c1, 0), " check c0.c1");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c0.c2, 0), " check c0.c2");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c0, 0), " check c1.c0");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c1, 0), " check c1.c1");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c2, 0), " check c1.c2");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, 1 - result.c0.c0, 0), " check c0.c0");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c0.c1, 0), " check c0.c1");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c0.c2, 0), " check c0.c2");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c0, 0), " check c1.c0");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c1, 0), " check c1.c1");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c2, 0), " check c1.c2");
 }
 
 
@@ -208,7 +208,7 @@ pub fn generate_r1cs_witness()
     compute_w1.generate_r1cs_witness();
     compute_result.generate_r1cs_witness();
 
-    self.pb.val(result_is_one) = if result.get_element() == one.get_element() {FieldT::one()} else{FieldT::zero()};
+    self.pb.borrow().val(&result_is_one) = if result.get_element() == one.get_element() {FieldT::one()} else{FieldT::zero()};
 }
 }
 
@@ -219,26 +219,26 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                   annotation_prefix:&String)->Self
    
 {
-    one.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " one")));
-    el_inv.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv")));
-    el_q_2.reset(Fqk_variable::<ppT>::new(el.Frobenius_map(2)));
-    el_q_2_minus_1.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_q_2_minus_1")));
-    el_q_3_minus_q.reset(Fqk_variable::<ppT>::new(el_q_2_minus_1.Frobenius_map(1)));
-    el_inv_q_2.reset(Fqk_variable::<ppT>::new(el_inv.Frobenius_map(2)));
-    el_inv_q_2_minus_1.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv_q_2_minus_1")));
-    w1.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w1")));
-    w0.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w0")));
-    result.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " result")));
+    one=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " one")));
+    el_inv=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv")));
+    el_q_2=RcCell::new(Fqk_variable::<ppT>::new(el.Frobenius_map(2)));
+    el_q_2_minus_1=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_q_2_minus_1")));
+    el_q_3_minus_q=RcCell::new(Fqk_variable::<ppT>::new(el_q_2_minus_1.Frobenius_map(1)));
+    el_inv_q_2=RcCell::new(Fqk_variable::<ppT>::new(el_inv.Frobenius_map(2)));
+    el_inv_q_2_minus_1=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " el_inv_q_2_minus_1")));
+    w1=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w1")));
+    w0=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " w0")));
+    result=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " result")));
 
-    compute_el_inv.reset(Fqk_mul_gadget::<ppT>::new(pb, el, *el_inv, *one, FMT(annotation_prefix, " compute_el_inv")));
-    compute_el_q_2_minus_1.reset(Fqk_mul_gadget::<ppT>::new(pb, *el_q_2, *el_inv, *el_q_2_minus_1, FMT(annotation_prefix, " compute_el_q_2_minus_1")));
-    compute_el_inv_q_2_minus_1.reset(Fqk_mul_gadget::<ppT>::new(pb, *el_inv_q_2, el, *el_inv_q_2_minus_1, FMT(annotation_prefix, " compute_el_inv_q_2_minus_1")));
+    compute_el_inv=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, el, *el_inv, *one, FMT(annotation_prefix, " compute_el_inv")));
+    compute_el_q_2_minus_1=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *el_q_2, *el_inv, *el_q_2_minus_1, FMT(annotation_prefix, " compute_el_q_2_minus_1")));
+    compute_el_inv_q_2_minus_1=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *el_inv_q_2, el, *el_inv_q_2_minus_1, FMT(annotation_prefix, " compute_el_inv_q_2_minus_1")));
 
-    compute_w1.reset( exponentiation_gadget::<FqkT<ppT>, Fp4_variable, Fp4_mul_gadget, Fp4_cyclotomic_sqr_gadget, ffec::mnt4_q_limbs>::new(
+    compute_w1=RcCell::new( exponentiation_gadget::<FqkT<ppT>, Fp4_variable, Fp4_mul_gadget, Fp4_cyclotomic_sqr_gadget, ffec::mnt4_q_limbs>::new(
         pb, *el_q_3_minus_q, ffec::mnt4_final_exponent_last_chunk_w1, *w1, FMT(annotation_prefix, " compute_w1")));
-    compute_w0.reset( exponentiation_gadget::<FqkT<ppT>, Fp4_variable, Fp4_mul_gadget, Fp4_cyclotomic_sqr_gadget, ffec::mnt4_q_limbs>::new(
+    compute_w0=RcCell::new( exponentiation_gadget::<FqkT<ppT>, Fp4_variable, Fp4_mul_gadget, Fp4_cyclotomic_sqr_gadget, ffec::mnt4_q_limbs>::new(
         pb,  (if ffec::mnt4_final_exponent_last_chunk_is_w0_neg {*el_inv_q_2_minus_1} else{*el_q_2_minus_1}), ffec::mnt4_final_exponent_last_chunk_abs_of_w0, *w0, FMT(annotation_prefix, " compute_w0")));
-    compute_result.reset(Fqk_mul_gadget::<ppT>::new(pb, *w1, *w0, *result, FMT(annotation_prefix, " compute_result")));
+    compute_result=RcCell::new(Fqk_mul_gadget::<ppT>::new(pb, *w1, *w0, *result, FMT(annotation_prefix, " compute_result")));
     //  gadget<FieldT>(&pb, annotation_prefix),
    Self{el,
     result_is_one}
@@ -257,10 +257,10 @@ pub fn generate_r1cs_constraints()
     compute_result.generate_r1cs_constraints();
 
     generate_boolean_r1cs_constraint::<FieldT>(self.pb, result_is_one, FMT(self.annotation_prefix, " result_is_one"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, 1 - result.c0.c0, 0), " check c0.c0");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c0.c1, 0), " check c0.c1");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c0, 0), " check c1.c0");
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c1, 0), " check c1.c0");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, 1 - result.c0.c0, 0), " check c0.c0");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c0.c1, 0), " check c0.c1");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c0, 0), " check c1.c0");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(result_is_one, result.c1.c1, 0), " check c1.c0");
 }
 
 
@@ -279,7 +279,7 @@ pub fn generate_r1cs_witness()
     compute_w0.generate_r1cs_witness();
     compute_result.generate_r1cs_witness();
 
-    self.pb.val(result_is_one) = if result.get_element() == one.get_element() {FieldT::one()} else{FieldT::zero()};
+    self.pb.borrow().val(&result_is_one) = if result.get_element() == one.get_element() {FieldT::one()} else{FieldT::zero()};
 }
 
 }

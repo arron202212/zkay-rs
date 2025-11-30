@@ -64,7 +64,7 @@ pub fn generate_r1cs_constraints()
           input = is_right * right + (1-is_right) * left
           input - left = is_right(right - left)
         */
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_right, right.bits[i] - left.bits[i], input.bits[i] - left.bits[i]),
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(is_right, right.bits[i] - left.bits[i], input.bits[i] - left.bits[i]),
                                    FMT(self.annotation_prefix, " propagate_{}", i));
     }
 }
@@ -79,14 +79,14 @@ pub fn generate_r1cs_witness()
     {
         for i in 0..digest_size
         {
-            self.pb.val(right.bits[i]) = self.pb.val(input.bits[i]);
+            self.pb.borrow().val(&right.bits[i]) = self.pb.borrow().val(&input.bits[i]);
         }
     }
     else
     {
         for i in 0..digest_size
         {
-            self.pb.val(left.bits[i]) = self.pb.val(input.bits[i]);
+            self.pb.borrow().val(&left.bits[i]) = self.pb.borrow().val(&input.bits[i]);
         }
     }
 }

@@ -115,10 +115,10 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
     }
 
     intermediate.resize(intermed_count);
-    intermediate[0].reset(Fpk_variableT::<FpkT>::new(pb, FpkT::one(), FMT(annotation_prefix, " intermediate_0")));
+    intermediate[0]=RcCell::new(Fpk_variableT::<FpkT>::new(pb, FpkT::one(), FMT(annotation_prefix, " intermediate_0")));
     for i in 1..intermed_count
     {
-        intermediate[i].reset(Fpk_variableT::<FpkT>::new(pb, FMT(annotation_prefix, " intermediate_{}", i)));
+        intermediate[i]=RcCell::new(Fpk_variableT::<FpkT>::new(pb, FMT(annotation_prefix, " intermediate_{}", i)));
     }
     addition_steps.resize(add_count);
     subtraction_steps.resize(sub_count);
@@ -132,7 +132,7 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
     {
         if found_nonzero
         {
-            doubling_steps[dbl_id].reset(Fpk_sqr_gadgetT::<FpkT>::new(pb,
+            doubling_steps[dbl_id]=RcCell::new(Fpk_sqr_gadgetT::<FpkT>::new(pb,
                                                                    *intermediate[intermed_id],
                                                                    if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
                                                                  FMT(annotation_prefix, " doubling_steps_{}", dbl_count)));
@@ -147,7 +147,7 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
             if NAF[i] > 0
             {
                 /* next = cur * elt */
-                addition_steps[add_id].reset(Fpk_mul_gadgetT::<FpkT>::new(pb,
+                addition_steps[add_id]=RcCell::new(Fpk_mul_gadgetT::<FpkT>::new(pb,
                                                                        *intermediate[intermed_id],
                                                                        elt,
                                                                        if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
@@ -158,7 +158,7 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
             else
             {
                 /* next = cur / elt, i.e. next * elt = cur */
-                subtraction_steps[sub_id].reset(Fpk_mul_gadgetT::<FpkT>::new(pb,
+                subtraction_steps[sub_id]=RcCell::new(Fpk_mul_gadgetT::<FpkT>::new(pb,
                                                                           if intermed_id + 1 == intermed_count {result} else{*intermediate[intermed_id+1]},
                                                                           elt,
                                                                           *intermediate[intermed_id],

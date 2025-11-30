@@ -157,7 +157,7 @@ public class CBCBlockCipher
         System.arraycopy(IV, 0, cbcV, 0, IV.length);
         Arrays.fill(cbcNextV, (byte)0);
 
-        cipher.reset();
+        cipher=RcCell::new();
     }
 
     /**

@@ -33,4 +33,5 @@ pub trait FieldTConfig:
     fn multiplicative_generator() -> Self;
     fn from_int(i: u64, signed: bool) -> Self;
     fn capacity() -> usize;
+    fn as_ulong(&self) -> usize;
 }

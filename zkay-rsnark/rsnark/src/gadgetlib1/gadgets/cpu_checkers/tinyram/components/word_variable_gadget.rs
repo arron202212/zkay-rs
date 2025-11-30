@@ -1,67 +1,114 @@
-/** @file
- *****************************************************************************
+// Declaration of interfaces for (single and double) word gadgets.
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets::dual_variable_gadget;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard::tinyram_protoboard;
+use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::relations::FieldTConfig;
+use crate::relations::variable::variable;
+use rccell::RcCell;
+use std::marker::PhantomData;
+//Holds both binary and field representaton of a word.
 
- Declaration of interfaces for (single and double) word gadgets.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef WORD_VARIABLE_GADGET_HPP_
-// #define WORD_VARIABLE_GADGET_HPP_
-
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
-
-
-
-/**
- * Holds both binary and field representaton of a word.
- */
-// 
-pub struct word_variable_gadget;
-impl word_variable_gadget {
-// : public dual_variable_gadget<FieldT> 
-    pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
-        {
-//  dual_variable_gadget<FieldT>(&pb, pb.ap.w, annotation_prefix)
-    Self
+#[derive(Clone, Default)]
+pub struct word_variable_gadget<FieldT: FieldTConfig> {
+    _t: PhantomData<FieldT>,
 }
-    pub fn new1(pb:tinyram_protoboard<FieldT>, bits:pb_variable_array<FieldT>, annotation_prefix:String) ->Self
-        {
-// dual_variable_gadget<FieldT>(&pb, bits, annotation_prefix) 
-    Self
+pub type word_variable_gadgets<FieldT> = gadget<
+    FieldT,
+    tinyram_protoboard<FieldT>,
+    dual_variable_gadget<FieldT, tinyram_protoboard<FieldT>, word_variable_gadget<FieldT>>,
+>;
+impl<FieldT: FieldTConfig> word_variable_gadget<FieldT> {
+    // : public dual_variable_gadget<FieldT>
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        annotation_prefix: String,
+    ) -> word_variable_gadgets<FieldT> {
+        let w = pb.borrow().t.ap.w;
+        dual_variable_gadget::<FieldT, tinyram_protoboard<FieldT>, Self>::new(
+            pb,
+            w,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
+    }
+    pub fn new1(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        bits: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
+        annotation_prefix: String,
+    ) -> word_variable_gadgets<FieldT> {
+        dual_variable_gadget::<FieldT, tinyram_protoboard<FieldT>, Self>::new_with_bits(
+            pb,
+            bits,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
+    }
+    pub fn new2(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        packed: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> word_variable_gadgets<FieldT> {
+        let w = pb.borrow().t.ap.w;
+        dual_variable_gadget::<FieldT, tinyram_protoboard<FieldT>, Self>::new_with_width(
+            pb,
+            packed,
+            w,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
+    }
+}
 
+pub type doubleword_variable_gadgets<FieldT> = gadget<
+    FieldT,
+    tinyram_protoboard<FieldT>,
+    dual_variable_gadget<FieldT, tinyram_protoboard<FieldT>, doubleword_variable_gadget<FieldT>>,
+>;
+// Holds both binary and field representaton of a double word.
+#[derive(Clone, Default)]
+pub struct doubleword_variable_gadget<FieldT: FieldTConfig> {
+    _t: PhantomData<FieldT>,
 }
-    pub fn new2(pb:tinyram_protoboard<FieldT>, packed:pb_variable<FieldT>, annotation_prefix:String) ->Self
-        {
-//  dual_variable_gadget<FieldT>(&pb, packed, pb.ap.w, annotation_prefix)
-        Self
+impl<FieldT: FieldTConfig> doubleword_variable_gadget<FieldT> {
+    // : public dual_variable_gadget<FieldT>
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        annotation_prefix: String,
+    ) -> doubleword_variable_gadgets {
+        let w = pb.borrow().t.ap.w;
+        dual_variable_gadget::<FieldT, tinyram_protoboard<FieldT>, Self>::new(
+            pb,
+            2 * w,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
+    }
+    pub fn new1(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        bits: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
+        annotation_prefix: String,
+    ) -> doubleword_variable_gadgets {
+        dual_variable_gadget::<FieldT, tinyram_protoboard<FieldT>, Self>::new_with_bits(
+            pb,
+            bits,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
+    }
+    pub fn new2(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        packed: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> doubleword_variable_gadgets {
+        let w = pb.borrow().t.ap.w;
+        dual_variable_gadget::<FieldT, tinyram_protoboard<FieldT>, Self>::new_with_width(
+            pb,
+            packed,
+            2 * w,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
+    }
 }
-}
-
-/**
- * Holds both binary and field representaton of a double word.
- */
-// 
-pub struct doubleword_variable_gadget;
-impl doubleword_variable_gadget  {
-// : public dual_variable_gadget<FieldT>
-    pub fn new(pb:tinyram_protoboard<FieldT>, annotation_prefix:String) ->Self
-        {
-// dual_variable_gadget<FieldT>(&pb, 2*pb.ap.w, annotation_prefix) 
-}
-    pub fn new1(pb:tinyram_protoboard<FieldT>, bits:pb_variable_array<FieldT>, annotation_prefix:String) ->Self
-       {
-//  dual_variable_gadget<FieldT>(&pb, bits, annotation_prefix) 
-}
-    pub fn new2(pb:tinyram_protoboard<FieldT>, packed:pb_variable<FieldT>, annotation_prefix:String) ->Self
-         {
-// dual_variable_gadget<FieldT>(&pb, packed, 2*pb.ap.w, annotation_prefix)
-}
-}
-
-
-
-//#endif // WORD_VARIABLE_GADGET_HPP_

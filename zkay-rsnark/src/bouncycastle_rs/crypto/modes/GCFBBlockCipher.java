@@ -115,6 +115,6 @@ public class GCFBBlockCipher
     public void reset()
     {
         counter = 0;
-        cfbEngine.reset();
+        cfbEngine=RcCell::new();
     }
 }

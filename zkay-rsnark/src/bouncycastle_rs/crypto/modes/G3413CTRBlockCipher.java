@@ -222,7 +222,7 @@ public class G3413CTRBlockCipher
                 CTR[i] = 0;
             }
             byteCount = 0;
-            cipher.reset();
+            cipher=RcCell::new();
         }
     }
 }

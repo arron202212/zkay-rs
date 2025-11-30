@@ -295,7 +295,7 @@ fn compile_zkay(code: &str, output_dir: &str, import_keys: bool) {
 //     from zkay.transaction.runtime::Runtime
 //     manifest = Manifest.load(contract_dir)
 //     Manifest.import_manifest_config(manifest)
-//     Runtime.reset()
+//     Runtime=RcCell::new()
 
 // """
 // Load transaction interface module for contracts in contract_dir

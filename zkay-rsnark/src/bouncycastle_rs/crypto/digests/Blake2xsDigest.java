@@ -209,7 +209,7 @@ public class Blake2xsDigest
      */
     public void reset()
     {
-        hash.reset();
+        hash=RcCell::new();
 
         h0 = null;
         bufPos = Blake2xsDigest.DIGEST_LENGTH;

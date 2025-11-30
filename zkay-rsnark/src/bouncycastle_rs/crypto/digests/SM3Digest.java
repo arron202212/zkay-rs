@@ -103,7 +103,7 @@ public class SM3Digest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         this.V[0] = 0x7380166F;
         this.V[1] = 0x4914B2B9;

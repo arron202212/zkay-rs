@@ -117,7 +117,7 @@ public class KCTRBlockCipher
         {
             engine.processBlock(this.iv, 0, ofbV, 0);
         }
-        engine.reset();
+        engine=RcCell::new();
         byteCount = 0;
     }
 

@@ -511,7 +511,7 @@ public class GCMBlockCipher
     private void reset(
         boolean clearMac)
     {
-        cipher.reset();
+        cipher=RcCell::new();
 
         // note: we do not reset the nonce.
 

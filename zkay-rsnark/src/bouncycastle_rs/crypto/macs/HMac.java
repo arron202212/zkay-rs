@@ -109,7 +109,7 @@ public class HMac
     public void init(
         CipherParameters params)
     {
-        digest.reset();
+        digest=RcCell::new();
 
         byte[] key = ((KeyParameter)params).getKey();
         int keyLength = key.length;
@@ -178,7 +178,7 @@ public class HMac
 
         if (opadState != null)
         {
-            ((Memoable)digest).reset(opadState);
+            ((Memoable)digest)=RcCell::new(opadState);
             digest.update(outputBuf, blockLength, digest.getDigestSize());
         }
         else
@@ -195,7 +195,7 @@ public class HMac
 
         if (ipadState != null)
         {
-            ((Memoable)digest).reset(ipadState);
+            ((Memoable)digest)=RcCell::new(ipadState);
         }
         else
         {
@@ -213,7 +213,7 @@ public class HMac
         /*
          * reset the underlying digest.
          */
-        digest.reset();
+        digest=RcCell::new();
 
         /*
          * reinitialize the digest.

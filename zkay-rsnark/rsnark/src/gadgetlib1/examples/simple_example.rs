@@ -59,8 +59,8 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 //     /* fill in random example */
 //     for i in 0..new_num_constraints
 //     {
-//         pb.val(A[i]) = FieldT::random_element();
-//         pb.val(B[i]) = FieldT::random_element();
+//         pb.borrow().val(&A[i]) = FieldT::random_element();
+//         pb.borrow().val(&B[i]) = FieldT::random_element();
 //     }
 
 //     compute_inner_product.generate_r1cs_witness();

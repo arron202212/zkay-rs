@@ -269,6 +269,6 @@ public class CFBBlockCipher
         Arrays.fill(inBuf, (byte)0);
         byteCount = 0;
 
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

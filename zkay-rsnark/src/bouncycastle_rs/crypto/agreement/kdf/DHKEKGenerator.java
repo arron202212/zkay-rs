@@ -125,7 +125,7 @@ public class DHKEKGenerator
             counter++;
         }
 
-        digest.reset();
+        digest=RcCell::new();
 
         return (int)oBytes;
     }

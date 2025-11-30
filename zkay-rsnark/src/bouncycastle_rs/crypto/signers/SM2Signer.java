@@ -138,7 +138,7 @@ public class SM2Signer
 
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
 
         if (z != null)
         {
@@ -251,7 +251,7 @@ public class SM2Signer
 
     private byte[] getZ(byte[] userID)
     {
-        digest.reset();
+        digest=RcCell::new();
 
         addUserID(digest, userID);
 

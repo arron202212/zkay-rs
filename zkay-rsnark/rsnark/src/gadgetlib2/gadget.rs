@@ -903,7 +903,7 @@
 // GadgetPtr AND_Gadget::create(ProtoboardPtr pb, input:VariableArray&, result:&Variable){
 //     GadgetPtr pGadget;
 //     if pb->fieldType_ == R1P {
-//         pGadget.reset(new R1P_AND_Gadget(&pb, input, result));
+//         pGadget=RcCell::new(new R1P_AND_Gadget(&pb, input, result));
 //     } else {
 //         GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");
 //     }
@@ -1009,7 +1009,7 @@
 // GadgetPtr OR_Gadget::create(ProtoboardPtr pb, input:VariableArray&, result:&Variable) {
 //     GadgetPtr pGadget;
 //     if pb->fieldType_ == R1P {
-//         pGadget.reset(new R1P_OR_Gadget(&pb, input, result));
+//         pGadget=RcCell::new(new R1P_OR_Gadget(&pb, input, result));
 //     } else {
 //         GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");
 //     }
@@ -1187,7 +1187,7 @@
 //                                   successFlag:&Variable) {
 //     GadgetPtr pGadget;
 //     if pb->fieldType_ == R1P {
-//         pGadget.reset(new R1P_LooseMUX_Gadget(&pb, inputs, index, output, successFlag));
+//         pGadget=RcCell::new(new R1P_LooseMUX_Gadget(&pb, inputs, index, output, successFlag));
 //     } else {
 //         GADGETLIB_FATAL("Attempted to create gadget of undefined Protoboard type.");
 //     }

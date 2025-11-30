@@ -156,7 +156,7 @@ class MacCFBBlockCipher
     {
         System.arraycopy(IV, 0, cfbV, 0, IV.length);
 
-        cipher.reset();
+        cipher=RcCell::new();
     }
 
     void getMacBlock(
@@ -384,6 +384,6 @@ public class CFBBlockCipherMac
         /*
          * reset the underlying cipher.
          */
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

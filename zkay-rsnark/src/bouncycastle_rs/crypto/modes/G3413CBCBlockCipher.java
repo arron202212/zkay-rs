@@ -171,7 +171,7 @@ public class G3413CBCBlockCipher
         if (initialized)
         {
             System.arraycopy(R_init, 0, R, 0, R_init.length);
-            cipher.reset();
+            cipher=RcCell::new();
         }
     }
 }

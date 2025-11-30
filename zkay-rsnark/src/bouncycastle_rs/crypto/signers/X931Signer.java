@@ -149,7 +149,7 @@ public class X931Signer
      */
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
     }
 
     /**

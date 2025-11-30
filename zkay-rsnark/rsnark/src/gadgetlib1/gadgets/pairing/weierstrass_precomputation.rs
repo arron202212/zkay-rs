@@ -68,8 +68,8 @@ precomp:                         G1_precomputation<ppT>, // will allocate this i
         c0.assign(&pb, P.Y * ((ffec::mnt4_twist).squared().c0));
         c1.assign(&pb, P.Y * ((ffec::mnt4_twist).squared().c1));
 
-        precomp.P.reset(G1_variable::<ppT>::new(P));
-        precomp.PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, c0, c1, FMT(annotation_prefix, " PY_twist_squared")));
+        precomp.P=RcCell::new(G1_variable::<ppT>::new(P));
+        precomp.PY_twist_squared=RcCell::new(Fqe_variable::<ppT>::new(pb, c0, c1, FMT(annotation_prefix, " PY_twist_squared")));
         //  gadget<FieldT>(&pb, annotation_prefix),
             Self{precomp}
     }
@@ -88,8 +88,8 @@ precomp:                         G1_precomputation<ppT>, // will allocate this i
         c1.assign(&pb, P.Y * ((ffec::mnt6_twist).squared().c1));
         c2.assign(&pb, P.Y * ((ffec::mnt6_twist).squared().c2));
 
-        precomp.P.reset(G1_variable::<ppT>::new(P));
-        precomp.PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, c0, c1, c2, FMT(annotation_prefix, " PY_twist_squared")));
+        precomp.P=RcCell::new(G1_variable::<ppT>::new(P));
+        precomp.PY_twist_squared=RcCell::new(Fqe_variable::<ppT>::new(pb, c0, c1, c2, FMT(annotation_prefix, " PY_twist_squared")));
         // gadget<FieldT>(&pb, annotation_prefix),
            Self{ precomp}
     }
@@ -289,8 +289,8 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 {
 let P_val_copy= P_val;
     P_val_copy.to_affine_coordinates();
-    P.reset(G1_variable::<ppT>::new(pb, P_val_copy, FMT(annotation_prefix, " P")));
-    PY_twist_squared.reset(Fqe_variable::<ppT>::new(pb, P_val_copy.Y() * ffec::G2::<other_curve::<ppT> >::twist.squared(), " PY_twist_squared"));
+    P=RcCell::new(G1_variable::<ppT>::new(pb, P_val_copy, FMT(annotation_prefix, " P")));
+    PY_twist_squared=RcCell::new(Fqe_variable::<ppT>::new(pb, P_val_copy.Y() * ffec::G2::<other_curve::<ppT> >::twist.squared(), " PY_twist_squared"));
 }
 
 
@@ -339,17 +339,17 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                           Q_val:&ffec::G2::<other_curve::<ppT> >,
                                           annotation_prefix:&String)->Self
 {
-    Q.reset(G2_variable::<ppT>::new(pb, Q_val, FMT(annotation_prefix, " Q")));
+    Q=RcCell::new(G2_variable::<ppT>::new(pb, Q_val, FMT(annotation_prefix, " Q")));
     let  native_precomp = other_curve::<ppT>::affine_ate_precompute_G2(Q_val);
 
     coeffs.resize(native_precomp.coeffs.len() + 1); // the last precomp remains for convenient programming
     for i in 0..native_precomp.coeffs.len()
     {
-        coeffs[i].reset(precompute_G2_gadget_coeffs::<ppT>::new());
-        coeffs[i].RX.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].old_RX, FMT(annotation_prefix, " RX")));
-        coeffs[i].RY.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].old_RY, FMT(annotation_prefix, " RY")));
-        coeffs[i].gamma.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].gamma, FMT(annotation_prefix, " gamma")));
-        coeffs[i].gamma_X.reset(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].gamma_X, FMT(annotation_prefix, " gamma_X")));
+        coeffs[i]=RcCell::new(precompute_G2_gadget_coeffs::<ppT>::new());
+        coeffs[i].RX=RcCell::new(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].old_RX, FMT(annotation_prefix, " RX")));
+        coeffs[i].RY=RcCell::new(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].old_RY, FMT(annotation_prefix, " RY")));
+        coeffs[i].gamma=RcCell::new(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].gamma, FMT(annotation_prefix, " gamma")));
+        coeffs[i].gamma_X=RcCell::new(Fqe_variable::<ppT>::new(pb, native_precomp.coeffs[i].gamma_X, FMT(annotation_prefix, " gamma_X")));
     }
 }
 
@@ -364,10 +364,10 @@ impl precompute_G2_gadget_coeffs<ppT>{
 pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                               annotation_prefix:&String)->Self
 {
-    RX.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RX")));
-    RY.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RY")));
-    gamma.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma")));
-    gamma_X.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_X")));
+    RX=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RX")));
+    RY=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RY")));
+    gamma=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma")));
+    gamma_X=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_X")));
     Self{}
 }
 
@@ -377,10 +377,10 @@ pub fn new2(pb:RcCell<protoboard<FieldT>>,
                                                               Q:&G2_variable<ppT>,
                                                               annotation_prefix:&String)->Self
 {
-    RX.reset(Fqe_variable::<ppT>::new(*(Q.X)));
-    RY.reset(Fqe_variable::<ppT>::new(*(Q.Y)));
-    gamma.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma")));
-    gamma_X.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_X")));
+    RX=RcCell::new(Fqe_variable::<ppT>::new(*(Q.X)));
+    RY=RcCell::new(Fqe_variable::<ppT>::new(*(Q.Y)));
+    gamma=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma")));
+    gamma_X=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_X")));
 }
 }
 
@@ -409,20 +409,20 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                             annotation_prefix:&String)->Self
     
 {
-    RXsquared.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RXsquared")));
-    compute_RXsquared.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.RX), *RXsquared, FMT(annotation_prefix, " compute_RXsquared")));
-    three_RXsquared_plus_a.reset(Fqe_variable::<ppT>::new((*RXsquared) * FieldT(3) + ffec::G2::<other_curve::<ppT> >::coeff_a));
-    two_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) * FieldT(2)));
+    RXsquared=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " RXsquared")));
+    compute_RXsquared=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.RX), *RXsquared, FMT(annotation_prefix, " compute_RXsquared")));
+    three_RXsquared_plus_a=RcCell::new(Fqe_variable::<ppT>::new((*RXsquared) * FieldT(3) + ffec::G2::<other_curve::<ppT> >::coeff_a));
+    two_RY=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RY) * FieldT(2)));
 
-    compute_gamma.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *two_RY, *three_RXsquared_plus_a, FMT(annotation_prefix, " compute_gamma")));
-    compute_gamma_X.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *(cur.RX), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
+    compute_gamma=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *two_RY, *three_RXsquared_plus_a, FMT(annotation_prefix, " compute_gamma")));
+    compute_gamma_X=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *(cur.RX), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
 
-    next_RX_plus_two_RX.reset(Fqe_variable::<ppT>::new(*(next.RX) + *(cur.RX) * FieldT(2)));
-    compute_next_RX.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.gamma), *next_RX_plus_two_RX, FMT(annotation_prefix, " compute_next_RX")));
+    next_RX_plus_two_RX=RcCell::new(Fqe_variable::<ppT>::new(*(next.RX) + *(cur.RX) * FieldT(2)));
+    compute_next_RX=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.gamma), *next_RX_plus_two_RX, FMT(annotation_prefix, " compute_next_RX")));
 
-    RX_minus_next_RX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
-    RY_plus_next_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
-    compute_next_RY.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
+    RX_minus_next_RX=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
+    RY_plus_next_RY=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
+    compute_next_RY=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
     // gadget<FieldT>(&pb, annotation_prefix),
    Self{cur,
     next}
@@ -492,18 +492,18 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                             annotation_prefix:&String)->Self
    
 {
-    RY_minus_QY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()})));
+    RY_minus_QY=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RY) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()})));
 
-    RX_minus_QX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(Q.X) * (-FieldT::one())));
-    compute_gamma.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_QX, *RY_minus_QY, FMT(annotation_prefix, " compute_gamma")));
-    compute_gamma_X.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *(Q.X), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
+    RX_minus_QX=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RX) + *(Q.X) * (-FieldT::one())));
+    compute_gamma=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_QX, *RY_minus_QY, FMT(annotation_prefix, " compute_gamma")));
+    compute_gamma_X=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *(Q.X), *(cur.gamma_X), FMT(annotation_prefix, " compute_gamma_X")));
 
-    next_RX_plus_RX_plus_QX.reset(Fqe_variable::<ppT>::new(*(next.RX) + *(cur.RX) + *(Q.X)));
-    compute_next_RX.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.gamma), *next_RX_plus_RX_plus_QX, FMT(annotation_prefix, " compute_next_RX")));
+    next_RX_plus_RX_plus_QX=RcCell::new(Fqe_variable::<ppT>::new(*(next.RX) + *(cur.RX) + *(Q.X)));
+    compute_next_RX=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(cur.gamma), *next_RX_plus_RX_plus_QX, FMT(annotation_prefix, " compute_next_RX")));
 
-    RX_minus_next_RX.reset(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
-    RY_plus_next_RY.reset(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
-    compute_next_RY.reset(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
+    RX_minus_next_RX=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RX) + *(next.RX) * (-FieldT::one())));
+    RY_plus_next_RY=RcCell::new(Fqe_variable::<ppT>::new(*(cur.RY) + *(next.RY)));
+    compute_next_RY=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(cur.gamma), *RX_minus_next_RX, *RY_plus_next_RY, FMT(annotation_prefix, " compute_next_RY")));
     //  gadget<FieldT>(&pb, annotation_prefix),
    Self{invert_Q,
    cur,
@@ -560,7 +560,7 @@ precomp:                                                G2_precomputation<ppT>, 
                                                 annotation_prefix:&String)->Self
   
 {
-    precomp.Q.reset(G2_variable::<ppT>::new(Q));
+    precomp.Q=RcCell::new(G2_variable::<ppT>::new(Q));
 
     let loop_count = pairing_selector::<ppT>::pairing_loop_count;
     let coeff_count= 1; // the last RX/RY are unused in Miller loop, but will need to get allocated somehow
@@ -592,10 +592,10 @@ let NAF= find_wnaf(1, loop_count);
     addition_steps.resize(add_count);
     doubling_steps.resize(dbl_count);
 
-    precomp.coeffs[0].reset(precompute_G2_gadget_coeffs::<ppT>::new(pb, Q, FMT(annotation_prefix, " coeffs_0")));
+    precomp.coeffs[0]=RcCell::new(precompute_G2_gadget_coeffs::<ppT>::new(pb, Q, FMT(annotation_prefix, " coeffs_0")));
     for i in 1..coeff_count
     {
-        precomp.coeffs[i].reset(precompute_G2_gadget_coeffs::<ppT>::new(pb, FMT(annotation_prefix, " coeffs_{}", i)));
+        precomp.coeffs[i]=RcCell::new(precompute_G2_gadget_coeffs::<ppT>::new(pb, FMT(annotation_prefix, " coeffs_{}", i)));
     }
 
 let add_id= 0;
@@ -612,14 +612,14 @@ let coeff_id= 0;
             continue;
         }
 
-        doubling_steps[dbl_id].reset(precompute_G2_gadget_doubling_step::<ppT>::new(pb, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]),
+        doubling_steps[dbl_id]=RcCell::new(precompute_G2_gadget_doubling_step::<ppT>::new(pb, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]),
                                                                                FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
         dbl_id+=1;
         coeff_id+=1;
 
         if NAF[i] != 0
         {
-            addition_steps[add_id].reset(precompute_G2_gadget_addition_step::<ppT>::new(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
+            addition_steps[add_id]=RcCell::new(precompute_G2_gadget_addition_step::<ppT>::new(pb, NAF[i] < 0, *(precomp.coeffs[coeff_id]), *(precomp.coeffs[coeff_id+1]), Q,
                                                                                    FMT(annotation_prefix, " addition_steps_{}", add_id)));
             add_id+=1;
             coeff_id+=1;

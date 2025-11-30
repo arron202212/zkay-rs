@@ -6,8 +6,8 @@
 // Above, R1CS stands for "Rank-1 Constraint System".
 
 use crate::relations::FieldTConfig;
-use crate::relations::variable::linear_combination;
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use crate::relations::variable::{linear_combination, linear_term};
 use ffec::algebra::scalar_multiplication::multiexp::inhibit_profiling_info;
 use ffec::common::profiling::print_indent;
 use ffec::common::profiling::{enter_block, leave_block};
@@ -163,25 +163,29 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         Self { a, b, c }
     }
 
-    // pub fn new2(A:Vec<linear_combination<FieldT> >,
-    //                                          B:Vec<linear_combination<FieldT> >,
-    //                                          C:Vec<linear_combination<FieldT> >)->Self
-    // {
-
-    //     for lc_A in &A
-    //     {
-    //         a.terms.insert(a.terms.end(), lc_A.terms.begin(), lc_A.terms.end());
-    //     }
-    //     for lc_B in &B
-    //     {
-    //         b.terms.insert(b.terms.end(), lc_B.terms.begin(), lc_B.terms.end());
-    //     }
-    //     for lc_C in &C
-    //     {
-    //         c.terms.insert(c.terms.end(), lc_C.terms.begin(), lc_C.terms.end());
-    //     }
-    //     Self{a,b,c}
-    // }
+    pub fn new_with_vec(
+        a: Vec<linear_combination<FieldT, SV, SLC>>,
+        b: Vec<linear_combination<FieldT, SV, SLC>>,
+        c: Vec<linear_combination<FieldT, SV, SLC>>,
+    ) -> Self {
+        Self {
+            a: linear_combination::<FieldT, SV, SLC>::new(
+                a.into_iter()
+                    .flat_map(|mut v| v.terms.drain(..).collect::<Vec<_>>())
+                    .collect(),
+            ),
+            b: linear_combination::<FieldT, SV, SLC>::new(
+                b.into_iter()
+                    .flat_map(|mut v| v.terms.drain(..).collect::<Vec<_>>())
+                    .collect(),
+            ),
+            c: linear_combination::<FieldT, SV, SLC>::new(
+                c.into_iter()
+                    .flat_map(|mut v| v.terms.drain(..).collect::<Vec<_>>())
+                    .collect(),
+            ),
+        }
+    }
 }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> PartialEq
     for r1cs_constraint<FieldT, SV, SLC>

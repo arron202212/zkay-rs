@@ -66,18 +66,18 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                             annotation_prefix:&String)->Self
    
 {
-    element_block.reset(block_variable::<FieldT>::new(pb, { element_bits }, FMT(annotation_prefix, " element_block")));
+    element_block=RcCell::new(block_variable::<FieldT>::new(pb, { element_bits }, FMT(annotation_prefix, " element_block")));
 
     if tree_depth == 0
     {
-        hash_element.reset(HashT::new(pb, element_bits.len(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
+        hash_element=RcCell::new(HashT::new(pb, element_bits.len(), *element_block, root_digest, FMT(annotation_prefix, " hash_element")));
     }
     else
     {
-        element_digest.reset(digest_variable::<FieldT>::new(pb, HashT::get_digest_len(),
+        element_digest=RcCell::new(digest_variable::<FieldT>::new(pb, HashT::get_digest_len(),
                                                        FMT(annotation_prefix, " element_digest")));
-        hash_element.reset(HashT::new(pb, element_bits.len(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
-        check_membership.reset(merkle_tree_check_read_gadget::<FieldT, HashT>::new(pb,
+        hash_element=RcCell::new(HashT::new(pb, element_bits.len(), *element_block, *element_digest, FMT(annotation_prefix, " hash_element")));
+        check_membership=RcCell::new(merkle_tree_check_read_gadget::<FieldT, HashT>::new(pb,
                                                                                 tree_depth,
                                                                                 proof.address_bits,
                                                                                 *element_digest,
@@ -155,7 +155,7 @@ pub fn  test_set_commitment_gadget()
     for i in 0..max_set_size
     {
         element_bits.fill_with_bits(&pb, set_elems[i]);
-        pb.val(check_succesful) = FieldT::one();
+        pb.borrow().val(&check_succesful) = FieldT::one();
         proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[i]));
         sc.generate_r1cs_witness();
         root_digest.generate_r1cs_witness(accumulator.get_commitment());
@@ -166,16 +166,16 @@ pub fn  test_set_commitment_gadget()
     /* test an element not in set */
     for i in 0..value_size
     {
-        pb.val(element_bits[i]) = FieldT(rand::random() % 2);
+        pb.borrow().val(&element_bits[i]) = FieldT(rand::random() % 2);
     }
 
-    pb.val(check_succesful) = FieldT::zero(); /* do not require the check result to be successful */
+    pb.borrow().val(&check_succesful) = FieldT::zero(); /* do not require the check result to be successful */
     proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[0])); /* try it with invalid proof */
     sc.generate_r1cs_witness();
     root_digest.generate_r1cs_witness(accumulator.get_commitment());
     assert!(pb.is_satisfied());
 
-    pb.val(check_succesful) = FieldT::one(); /* now require the check result to be succesful */
+    pb.borrow().val(&check_succesful) = FieldT::one(); /* now require the check result to be succesful */
     proof.generate_r1cs_witness(accumulator.get_membership_proof(set_elems[0])); /* try it with invalid proof */
     sc.generate_r1cs_witness();
     root_digest.generate_r1cs_witness(accumulator.get_commitment());

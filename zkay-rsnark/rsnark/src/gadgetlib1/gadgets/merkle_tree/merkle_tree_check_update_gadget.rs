@@ -113,7 +113,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
         next_internal_output.push(digest_variable::<FieldT>(&pb, digest_size, FMT(self.annotation_prefix, " next_internal_output_{}", i)));
     }
 
-    computed_next_root.reset(digest_variable::<FieldT>::new(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
+    computed_next_root=RcCell::new(digest_variable::<FieldT>::new(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
 
     for i in 0..tree_depth
     {
@@ -138,7 +138,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                    FMT(self.annotation_prefix, " next_propagators_{}", i)));
     }
 
-    check_next_root.reset(bit_vector_copy_gadget::<FieldT>::new(pb, computed_next_root.bits, next_root_digest.bits, update_successful, FieldT::capacity(), FMT(annotation_prefix, " check_next_root")));
+    check_next_root=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(pb, computed_next_root.bits, next_root_digest.bits, update_successful, FieldT::capacity(), FMT(annotation_prefix, " check_next_root")));
     // gadget<FieldT>(&pb, annotation_prefix),
     Self{digest_size:HashT::get_digest_len(),
    tree_depth,
@@ -178,7 +178,7 @@ pub fn generate_r1cs_constraints()
               addr * (prev_left - next_left) + (1 - addr) * (prev_right - next_right) = 0
               addr * (prev_left - next_left - prev_right + next_right) = next_right - prev_right
             */
-            self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(address_bits[tree_depth-1-i],
+            self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(address_bits[tree_depth-1-i],
                                                                  prev_path.left_digests[i].bits[j] - next_path.left_digests[i].bits[j] - prev_path.right_digests[i].bits[j] + next_path.right_digests[i].bits[j],
                                                                  next_path.right_digests[i].bits[j] - prev_path.right_digests[i].bits[j]),
                                        FMT(self.annotation_prefix, " aux_check_{}_{}", i, j));
@@ -208,7 +208,7 @@ pub fn generate_r1cs_witness()
     for i in ( 0..=tree_depth-1).rev()
     {
         /* ensure consistency of prev_path and next_path */
-        if self.pb.val(address_bits[tree_depth-1-i]) == FieldT::one()
+        if self.pb.borrow().val(&address_bits[tree_depth-1-i]) == FieldT::one()
         {
             next_path.left_digests[i].generate_r1cs_witness(prev_path.left_digests[i].get_digest());
         }

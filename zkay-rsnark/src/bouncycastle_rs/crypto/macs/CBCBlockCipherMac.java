@@ -224,6 +224,6 @@ public class CBCBlockCipherMac
         /*
          * reset the underlying cipher.
          */
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

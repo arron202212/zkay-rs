@@ -360,7 +360,7 @@ public class ISO9796d2PSSSigner
      */
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
         messageLength = 0;
         if (mBuf != null)
         {
@@ -650,7 +650,7 @@ public class ISO9796d2PSSSigner
         byte[] C = new byte[4];
         int counter = 0;
 
-        digest.reset();
+        digest=RcCell::new();
 
         while (counter < (length / hLen))
         {

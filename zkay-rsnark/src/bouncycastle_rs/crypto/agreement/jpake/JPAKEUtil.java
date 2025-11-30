@@ -152,7 +152,7 @@ public class JPAKEUtil
         String participantId,
         Digest digest)
     {
-        digest.reset();
+        digest=RcCell::new();
 
         updateDigestIncludingSize(digest, g);
 
@@ -379,7 +379,7 @@ public class JPAKEUtil
      */
     private static byte[] calculateMacKey(BigInteger keyingMaterial, Digest digest)
     {
-        digest.reset();
+        digest=RcCell::new();
 
         updateDigest(digest, keyingMaterial);
         /*

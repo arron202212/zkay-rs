@@ -357,7 +357,7 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(pk:&ram_zksnark_proving_key<ram_zksna
         ffec::enter_block("Execute witness map");
 
         let  local_data=r1cs_pcd_local_data::<FieldT> ::new();
-        local_data.reset(ram_pcd_local_data::<ramT>::new(want_halt, mem, aux_it, auxiliary_input.end()));
+        local_data=RcCell::new(ram_pcd_local_data::<ramT>::new(want_halt, mem, aux_it, auxiliary_input.end()));
 
         cp_handler.generate_r1cs_witness([msg], local_data);
 
@@ -388,7 +388,7 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(pk:&ram_zksnark_proving_key<ram_zksna
     ffec::enter_block("Execute witness map");
 
     let mut local_data=r1cs_pcd_local_data::<FieldT>::new();
-    local_data.reset(ram_pcd_local_data::<ramT>::new(want_halt, mem, aux_it, auxiliary_input.end()));
+    local_data=RcCell::new(ram_pcd_local_data::<ramT>::new(want_halt, mem, aux_it, auxiliary_input.end()));
 
     cp_handler.generate_r1cs_witness([msg], local_data);
 

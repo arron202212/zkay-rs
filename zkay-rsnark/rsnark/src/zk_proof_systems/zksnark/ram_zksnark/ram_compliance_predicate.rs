@@ -379,7 +379,7 @@ pub fn allocate_unpacked_part()
     all_unpacked_vars.extend(& cpu_state_initial);
     all_unpacked_vars.push( has_accepted);
 
-    unpack_payload.reset(multipacking_gadget::<FieldT>::new(self.pb, all_unpacked_vars, packed_payload, FieldT::capacity(), FMT(self.annotation_prefix, " unpack_payload")));
+    unpack_payload=RcCell::new(multipacking_gadget::<FieldT>::new(self.pb, all_unpacked_vars, packed_payload, FieldT::capacity(), FMT(self.annotation_prefix, " unpack_payload")));
 }
 
 
@@ -403,7 +403,7 @@ pub fn generate_r1cs_constraints()
 
 pub fn get_message() ->RcCell<r1cs_pcd_message<ram_base_field<ramT> > > 
 {
-    let type_val = self.pb.val(self.types).as_ulong();
+    let type_val = self.pb.borrow().val(&self.types).as_ulong();
     let timestamp_val = timestamp.get_field_element_from_bits(self.pb).as_ulong();
     let root_initial_val = root_initial.get_bits(self.pb);
     let root_val = root.get_bits(self.pb);
@@ -411,10 +411,10 @@ pub fn get_message() ->RcCell<r1cs_pcd_message<ram_base_field<ramT> > >
     let cpu_state_val = cpu_state.get_bits(self.pb);
     let pc_addr_initial_val = pc_addr_initial.get_field_element_from_bits(self.pb).as_ulong();
     let cpu_state_initial_val = cpu_state_initial.get_bits(self.pb);
-    let has_accepted_val = (self.pb.val(has_accepted) == FieldT::one());
+    let has_accepted_val = (self.pb.borrow().val(&has_accepted) == FieldT::one());
 
     let mut result=r1cs_pcd_message::<FieldT>::new();
-    result.reset(ram_pcd_message::<ramT>::new(type_val,
+    result=RcCell::new(ram_pcd_message::<ramT>::new(type_val,
                                            ap,
                                            timestamp_val,
                                            root_initial_val,
@@ -498,10 +498,10 @@ pub fn new(ap:&ram_architecture_params<ramT>) ->Self
 
     // the variables allocated are: next, cur, local data (nil for us), is_base_case, witness
 
-    self.outgoing_message.reset(ram_pcd_message_variable::<ramT>::new(self.pb, ap, "outgoing_message"));
+    self.outgoing_message=RcCell::new(ram_pcd_message_variable::<ramT>::new(self.pb, ap, "outgoing_message"));
     self.arity.allocate(self.pb, "arity");
-    self.incoming_messages[0].reset(ram_pcd_message_variable::<ramT>::new(self.pb, ap, "incoming_message"));
-    self.local_data.reset(ram_pcd_local_data_variable::<ramT>::new(self.pb, "local_data"));
+    self.incoming_messages[0]=RcCell::new(ram_pcd_message_variable::<ramT>::new(self.pb, ap, "incoming_message"));
+    self.local_data=RcCell::new(ram_pcd_local_data_variable::<ramT>::new(self.pb, "local_data"));
 
     is_base_case.allocate(self.pb, "is_base_case");
 
@@ -525,9 +525,9 @@ pub fn new(ap:&ram_architecture_params<ramT>) ->Self
       next.pc_addr_init = cur.pc_addr_initial
       next.cpu_state_initial = cur.cpu_state_initial
     */
-    copy_root_initial.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.root_initial, next.root_initial, ONE, chunk_size, "copy_root_initial"));
-    copy_pc_addr_initial.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.pc_addr_initial, next.pc_addr_initial, ONE, chunk_size, "copy_pc_addr_initial"));
-    copy_cpu_state_initial.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.cpu_state_initial, next.cpu_state_initial, ONE, chunk_size, "copy_cpu_state_initial"));
+    copy_root_initial=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.root_initial, next.root_initial, ONE, chunk_size, "copy_root_initial"));
+    copy_pc_addr_initial=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.pc_addr_initial, next.pc_addr_initial, ONE, chunk_size, "copy_pc_addr_initial"));
+    copy_cpu_state_initial=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.cpu_state_initial, next.cpu_state_initial, ONE, chunk_size, "copy_cpu_state_initial"));
 
     /*
       If is_base_case = 1: (base case)
@@ -535,15 +535,15 @@ pub fn new(ap:&ram_architecture_params<ramT>) ->Self
       that cur.root = cur.root_initial
     */
     packed_cur_timestamp.allocate(self.pb, "packed_cur_timestamp");
-    pack_cur_timestamp.reset(packing_gadget::<FieldT>::new(self.pb, cur.timestamp, packed_cur_timestamp, "pack_cur_timestamp"));
+    pack_cur_timestamp=RcCell::new(packing_gadget::<FieldT>::new(self.pb, cur.timestamp, packed_cur_timestamp, "pack_cur_timestamp"));
 
     zero_cpu_state = pb_variable_array::<FieldT>(cur.cpu_state.len(), zero);
     zero_pc_addr = pb_variable_array::<FieldT>(cur.pc_addr.len(), zero);
 
-    initialize_cur_cpu_state.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.cpu_state_initial, cur.cpu_state, is_base_case, chunk_size, "initialize_cur_cpu_state"));
-    initialize_prev_pc_addr.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.pc_addr_initial, cur.pc_addr, is_base_case, chunk_size, "initialize_prev_pc_addr"));
+    initialize_cur_cpu_state=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.cpu_state_initial, cur.cpu_state, is_base_case, chunk_size, "initialize_cur_cpu_state"));
+    initialize_prev_pc_addr=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.pc_addr_initial, cur.pc_addr, is_base_case, chunk_size, "initialize_prev_pc_addr"));
 
-    initialize_root.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.root_initial, cur.root, is_base_case, chunk_size, "initialize_root"));
+    initialize_root=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, cur.root_initial, cur.root, is_base_case, chunk_size, "initialize_root"));
     /*
       If do_halt = 0: (regular case)
       that instruction fetch was correctly executed
@@ -554,10 +554,10 @@ pub fn new(ap:&ram_architecture_params<ramT>) ->Self
     is_not_halt_case.allocate(self.pb, "is_not_halt_case");
     // for performing instruction fetch
     prev_pc_val.allocate(self.pb, value_size, "prev_pc_val");
-    prev_pc_val_digest.reset(digest_variable::<FieldT>::new(self.pb, digest_size, prev_pc_val, zero, "prev_pc_val_digest"));
-    cur_root_digest.reset(digest_variable::<FieldT>::new(self.pb, digest_size, cur.root, zero, "cur_root_digest"));
-    instruction_fetch_merkle_proof.reset(merkle_authentication_path_variable::<FieldT, HashT>::new(self.pb, addr_size, "instruction_fetch_merkle_proof"));
-    instruction_fetch.reset(memory_load_gadget::<FieldT, HashT>::new(self.pb, addr_size,
+    prev_pc_val_digest=RcCell::new(digest_variable::<FieldT>::new(self.pb, digest_size, prev_pc_val, zero, "prev_pc_val_digest"));
+    cur_root_digest=RcCell::new(digest_variable::<FieldT>::new(self.pb, digest_size, cur.root, zero, "cur_root_digest"));
+    instruction_fetch_merkle_proof=RcCell::new(merkle_authentication_path_variable::<FieldT, HashT>::new(self.pb, addr_size, "instruction_fetch_merkle_proof"));
+    instruction_fetch=RcCell::new(memory_load_gadget::<FieldT, HashT>::new(self.pb, addr_size,
                                                                   cur.pc_addr,
                                                                   *prev_pc_val_digest,
                                                                   *cur_root_digest,
@@ -567,24 +567,24 @@ pub fn new(ap:&ram_architecture_params<ramT>) ->Self
 
     // for next.timestamp = cur.timestamp + 1
     packed_next_timestamp.allocate(self.pb, "packed_next_timestamp");
-    pack_next_timestamp.reset(packing_gadget::<FieldT>::new(self.pb, next.timestamp, packed_next_timestamp, "pack_next_timestamp"));
+    pack_next_timestamp=RcCell::new(packing_gadget::<FieldT>::new(self.pb, next.timestamp, packed_next_timestamp, "pack_next_timestamp"));
 
     // that CPU accepted on (cur, temp)
     ls_addr.allocate(self.pb, addr_size, "ls_addr");
     ls_prev_val.allocate(self.pb, value_size, "ls_prev_val");
     ls_next_val.allocate(self.pb, value_size, "ls_next_val");
-    cpu_checker.reset(ram_cpu_checker::<ramT>::new(self.pb, cur.pc_addr, prev_pc_val, cur.cpu_state,
+    cpu_checker=RcCell::new(ram_cpu_checker::<ramT>::new(self.pb, cur.pc_addr, prev_pc_val, cur.cpu_state,
                                                 ls_addr, ls_prev_val, ls_next_val,
                                                 temp_next_cpu_state, temp_next_pc_addr, next.has_accepted,
                                                 "cpu_checker"));
 
     // that load-then-store was correctly handled
-    ls_prev_val_digest.reset(digest_variable::<FieldT>::new(self.pb, digest_size, ls_prev_val, zero, "ls_prev_val_digest"));
-    ls_next_val_digest.reset(digest_variable::<FieldT>::new(self.pb, digest_size, ls_next_val, zero, "ls_next_val_digest"));
-    next_root_digest.reset(digest_variable::<FieldT>::new(self.pb, digest_size, next.root, zero, "next_root_digest"));
-    load_merkle_proof.reset(merkle_authentication_path_variable::<FieldT, HashT>::new(self.pb, addr_size, "load_merkle_proof"));
-    store_merkle_proof.reset(merkle_authentication_path_variable::<FieldT, HashT>::new(self.pb, addr_size, "store_merkle_proof"));
-    load_store_checker.reset(memory_load_store_gadget::<FieldT, HashT>::new(self.pb, addr_size, ls_addr,
+    ls_prev_val_digest=RcCell::new(digest_variable::<FieldT>::new(self.pb, digest_size, ls_prev_val, zero, "ls_prev_val_digest"));
+    ls_next_val_digest=RcCell::new(digest_variable::<FieldT>::new(self.pb, digest_size, ls_next_val, zero, "ls_next_val_digest"));
+    next_root_digest=RcCell::new(digest_variable::<FieldT>::new(self.pb, digest_size, next.root, zero, "next_root_digest"));
+    load_merkle_proof=RcCell::new(merkle_authentication_path_variable::<FieldT, HashT>::new(self.pb, addr_size, "load_merkle_proof"));
+    store_merkle_proof=RcCell::new(merkle_authentication_path_variable::<FieldT, HashT>::new(self.pb, addr_size, "store_merkle_proof"));
+    load_store_checker=RcCell::new(memory_load_store_gadget::<FieldT, HashT>::new(self.pb, addr_size, ls_addr,
                                                                          *ls_prev_val_digest, *cur_root_digest, *load_merkle_proof,
                                                                          *ls_next_val_digest, *next_root_digest, *store_merkle_proof, is_not_halt_case,
                                                                          "load_store_checker"));
@@ -596,12 +596,12 @@ pub fn new(ap:&ram_architecture_params<ramT>) ->Self
     */
     do_halt.allocate(self.pb, "do_halt");
     zero_root = pb_variable_array::<FieldT>(next.root.len(), zero);
-    clear_next_root.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, zero_root, next.root, do_halt, chunk_size, "clear_next_root"));
-    clear_next_pc_addr.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, zero_pc_addr, next.pc_addr, do_halt, chunk_size, "clear_next_pc_addr"));
-    clear_next_cpu_state.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, zero_cpu_state, next.cpu_state, do_halt, chunk_size, "clear_cpu_state"));
+    clear_next_root=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, zero_root, next.root, do_halt, chunk_size, "clear_next_root"));
+    clear_next_pc_addr=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, zero_pc_addr, next.pc_addr, do_halt, chunk_size, "clear_next_pc_addr"));
+    clear_next_cpu_state=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, zero_cpu_state, next.cpu_state, do_halt, chunk_size, "clear_cpu_state"));
 
-    copy_temp_next_pc_addr.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, temp_next_pc_addr, next.pc_addr, is_not_halt_case, chunk_size, "copy_temp_next_pc_addr"));
-    copy_temp_next_cpu_state.reset(bit_vector_copy_gadget::<FieldT>::new(self.pb, temp_next_cpu_state, next.cpu_state, is_not_halt_case, chunk_size, "copy_temp_next_cpu_state"));
+    copy_temp_next_pc_addr=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, temp_next_pc_addr, next.pc_addr, is_not_halt_case, chunk_size, "copy_temp_next_pc_addr"));
+    copy_temp_next_cpu_state=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(self.pb, temp_next_cpu_state, next.cpu_state, is_not_halt_case, chunk_size, "copy_temp_next_cpu_state"));
 
 
     Self{
@@ -630,7 +630,7 @@ pub fn generate_r1cs_constraints()
     {
         generate_r1cs_equals_const_constraint::<FieldT>(self.pb, next.types, FieldT::one(), "next_type");
         generate_r1cs_equals_const_constraint::<FieldT>(self.pb, self.arity, FieldT::one(), "arity");
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_base_case, cur.types, 0), "nonzero_cur_type_implies_base_case_0");
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(is_base_case, cur.types, 0), "nonzero_cur_type_implies_base_case_0");
         generate_boolean_r1cs_constraint::<FieldT>(self.pb, cur.types, "cur_type_boolean");
         generate_boolean_r1cs_constraint::<FieldT>(self.pb, is_base_case, "is_base_case_boolean");
     }
@@ -670,13 +670,13 @@ pub fn generate_r1cs_constraints()
       that cur.root = cur.root_initial
     */
     pack_cur_timestamp.generate_r1cs_constraints(false);
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_base_case, packed_cur_timestamp, 0), "clear_ts_on_is_base_case");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(is_base_case, packed_cur_timestamp, 0), "clear_ts_on_is_base_case");
     PROFILE_CONSTRAINTS(self.pb, "copy cur_cpu_state and prev_pc_addr");
     {
         initialize_cur_cpu_state.generate_r1cs_constraints(false, false);
         initialize_prev_pc_addr.generate_r1cs_constraints(false, false);
     }
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_base_case, cur.has_accepted, 0), "is_base_case_is_not_accepting");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(is_base_case, cur.has_accepted, 0), "is_base_case_is_not_accepting");
     PROFILE_CONSTRAINTS(self.pb, "initialize root");
     {
         initialize_root.generate_r1cs_constraints(false, false);
@@ -690,14 +690,14 @@ pub fn generate_r1cs_constraints()
       that load-then-store was correctly handled
       that next.root = temp.root, next.cpu_state = temp.cpu_state, next.pc_addr = temp.pc_addr
     */
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, 1 - do_halt, is_not_halt_case), "is_not_halt_case");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, 1 - do_halt, is_not_halt_case), "is_not_halt_case");
     PROFILE_CONSTRAINTS(self.pb, "instruction fetch");
     {
         instruction_fetch_merkle_proof.generate_r1cs_constraints();
         instruction_fetch.generate_r1cs_constraints();
     }
     pack_next_timestamp.generate_r1cs_constraints(false);
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(is_not_halt_case, (packed_cur_timestamp + 1) - packed_next_timestamp, 0), "increment_timestamp");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(is_not_halt_case, (packed_cur_timestamp + 1) - packed_next_timestamp, 0), "increment_timestamp");
     PROFILE_CONSTRAINTS(self.pb, "CPU checker");
     {
         cpu_checker.generate_r1cs_constraints();
@@ -721,7 +721,7 @@ pub fn generate_r1cs_constraints()
       that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
       that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
     */
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(do_halt, 1 - cur.has_accepted, 0), "final_case_must_be_accepting");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(do_halt, 1 - cur.has_accepted, 0), "final_case_must_be_accepting");
 
     PROFILE_CONSTRAINTS(self.pb, "clear next root");
     {
@@ -734,7 +734,7 @@ pub fn generate_r1cs_constraints()
         clear_next_cpu_state.generate_r1cs_constraints(false, false);
     }
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(do_halt,  packed_cur_timestamp - packed_next_timestamp, 0), "equal_ts_on_halt");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(do_halt,  packed_cur_timestamp - packed_next_timestamp, 0), "equal_ts_on_halt");
 
     let accounted = PRINT_CONSTRAINT_PROFILING();
     let total = self.pb.num_constraints();
@@ -752,11 +752,11 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
     base_handler::generate_r1cs_witness(incoming_message_values, local_data_value);
     cur.generate_r1cs_witness_from_packed();
 
-    self.pb.val(next.types) = FieldT::one();
-    self.pb.val(self.arity) = FieldT::one();
-    self.pb.val(is_base_case)=  ( if self.pb.val(cur.types) == FieldT::zero() {FieldT::one()} else{FieldT::zero()});
+    self.pb.borrow().val(&next.types) = FieldT::one();
+    self.pb.borrow().val(&self.arity) = FieldT::one();
+    self.pb.borrow().val(&is_base_case)=  ( if self.pb.borrow().val(&cur.types) == FieldT::zero() {FieldT::one()} else{FieldT::zero()});
 
-    self.pb.val(zero) = FieldT::zero();
+    self.pb.borrow().val(&zero) = FieldT::zero();
     /*
       Always:
       next.root_initial = cur.root_initial
@@ -766,9 +766,9 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
     copy_root_initial.generate_r1cs_witness();
     for i in 0 ..next.root_initial.len()
     {
-        self.pb.val(cur.root_initial[i]).print();
-        self.pb.val(next.root_initial[i]).print();
-        assert!(self.pb.val(cur.root_initial[i]) == self.pb.val(next.root_initial[i]));
+        self.pb.borrow().val(&cur.root_initial[i]).print();
+        self.pb.borrow().val(&next.root_initial[i]).print();
+        assert!(self.pb.borrow().val(&cur.root_initial[i]) == self.pb.borrow().val(&next.root_initial[i]));
     }
 
     copy_pc_addr_initial.generate_r1cs_witness();
@@ -780,15 +780,15 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
       that cur.root = cur.root_initial
     */
     let base_case = (incoming_message_values[0].types == 0);
-    self.pb.val(is_base_case)=  if base_case {FieldT::one()} else{FieldT::zero()};
+    self.pb.borrow().val(&is_base_case)=  if base_case {FieldT::one()} else{FieldT::zero()};
 
     initialize_cur_cpu_state.generate_r1cs_witness();
     initialize_prev_pc_addr.generate_r1cs_witness();
 
     if base_case
     {
-        self.pb.val(packed_cur_timestamp) = FieldT::zero();
-        self.pb.val(cur.has_accepted) = FieldT::zero();
+        self.pb.borrow().val(&packed_cur_timestamp) = FieldT::zero();
+        self.pb.borrow().val(&cur.has_accepted) = FieldT::zero();
         pack_cur_timestamp.generate_r1cs_witness_from_packed();
     }
     else
@@ -805,8 +805,8 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
       that CPU accepted on (cur, temp)
       that load-then-store was correctly handled
     */
-    self.pb.val(do_halt)=  if ram_local_data_value.is_halt_case {FieldT::one()} else{FieldT::zero()};
-    self.pb.val(is_not_halt_case) = FieldT::one() - self.pb.val(do_halt);
+    self.pb.borrow().val(&do_halt)=  if ram_local_data_value.is_halt_case {FieldT::one()} else{FieldT::zero()};
+    self.pb.borrow().val(&is_not_halt_case) = FieldT::one() - self.pb.borrow().val(&do_halt);
 
     // that instruction fetch was correctly executed
     let int_pc_addr = convert_bit_vector_to_field_element::<FieldT>(cur.pc_addr.get_bits(self.pb)).as_ulong();
@@ -823,7 +823,7 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
     instruction_fetch.generate_r1cs_witness();
 
     // next.timestamp = cur.timestamp + 1 (or cur.timestamp if do_halt)
-    self.pb.val(packed_next_timestamp) = self.pb.val(packed_cur_timestamp) + self.pb.val(is_not_halt_case);
+    self.pb.borrow().val(&packed_next_timestamp) = self.pb.borrow().val(&packed_cur_timestamp) + self.pb.borrow().val(&is_not_halt_case);
     pack_next_timestamp.generate_r1cs_witness_from_packed();
 
     // that CPU accepted on (cur, temp)
@@ -860,7 +860,7 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
     // one that does not set values must be executed the last, so its
     // auxiliary variables are filled in correctly according to values
     // actually set by the other witness map.
-    if self.pb.val(do_halt).is_zero()
+    if self.pb.borrow().val(&do_halt).is_zero()
     {
         copy_temp_next_pc_addr.generate_r1cs_witness();
         copy_temp_next_cpu_state.generate_r1cs_witness();
@@ -881,7 +881,7 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
 
 // #ifdef DEBUG
     print!("next.has_accepted: ");
-    self.pb.val(next.has_accepted).print();
+    self.pb.borrow().val(&next.has_accepted).print();
 //#endif
 
     next.generate_r1cs_witness_from_bits();
@@ -911,7 +911,7 @@ pub fn get_base_case_message(ap:&ram_architecture_params<ramT>,
     let has_accepted = false;
 
     let  result=r1cs_pcd_message::<FieldT>::new();
-    result.reset(ram_pcd_message::<ramT>::new(types, ap, timestamp, root_initial, root, pc_addr, cpu_state, pc_addr_initial, cpu_state_initial, has_accepted));
+    result=RcCell::new(ram_pcd_message::<ramT>::new(types, ap, timestamp, root_initial, root, pc_addr, cpu_state, pc_addr_initial, cpu_state_initial, has_accepted));
     leave_block("Call to ram_compliance_predicate_handler::get_base_case_message");
     return result;
 }
@@ -941,7 +941,7 @@ pub fn get_final_case_msg(ap:&ram_architecture_params<ramT>,
     let has_accepted = true;
 
     let mut  result=r1cs_pcd_message::<FieldT> ::new();
-    result.reset( ram_pcd_message::<ramT>::new(types, ap, timestamp, root_initial, root, pc_addr, cpu_state, pc_addr_initial, cpu_state_initial, has_accepted));
+    result=RcCell::new( ram_pcd_message::<ramT>::new(types, ap, timestamp, root_initial, root, pc_addr, cpu_state, pc_addr_initial, cpu_state_initial, has_accepted));
     leave_block("Call to ram_compliance_predicate_handler::get_final_case_msg");
 
     return result;

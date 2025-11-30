@@ -154,7 +154,7 @@ public class SHA256Digest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         /* SHA-256 initial hash value
          * The first 32 bits of the fractional parts of the square roots

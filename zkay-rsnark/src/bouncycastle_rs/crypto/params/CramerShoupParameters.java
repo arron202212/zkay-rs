@@ -21,7 +21,7 @@ public class CramerShoupParameters
         this.g1 = g1;
         this.g2 = g2;
         this.H = (Digest)((Memoable)H).copy();
-        this.H.reset();
+        this.H=RcCell::new();
     }
 
     public boolean equals(Object obj)

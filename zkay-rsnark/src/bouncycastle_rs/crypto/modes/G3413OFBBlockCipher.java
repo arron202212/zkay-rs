@@ -167,7 +167,7 @@ public class G3413OFBBlockCipher
             System.arraycopy(R_init, 0, R, 0, R_init.length);
             Arrays.clear(Y);
             byteCount = 0;
-            cipher.reset();
+            cipher=RcCell::new();
         }
     }
 }

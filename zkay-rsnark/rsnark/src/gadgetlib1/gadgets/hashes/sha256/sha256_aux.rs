@@ -140,8 +140,8 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
         full_bits.push(full_bits_overflow);
     }
 
-    unpack_bits.reset(packing_gadget::<FieldT>::new(pb, full_bits, X, FMT(self.annotation_prefix, " unpack_bits")));
-    pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
+    unpack_bits=RcCell::new(packing_gadget::<FieldT>::new(pb, full_bits, X, FMT(self.annotation_prefix, " unpack_bits")));
+    pack_result=RcCell::new(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
     Self{
     // gadget<FieldT>(&pb, annotation_prefix),
     X,
@@ -199,12 +199,12 @@ pub fn generate_r1cs_constraints()
     */
     if assume_C_is_zero
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(2*A, B, A + B - out), FMT(self.annotation_prefix, " implicit_tmp_equals_out"));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(2*A, B, A + B - out), FMT(self.annotation_prefix, " implicit_tmp_equals_out"));
     }
     else
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(2*A, B, A + B - tmp), FMT(self.annotation_prefix, " tmp"));
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(2 * tmp, C, tmp + C - out), FMT(self.annotation_prefix, " out"));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(2*A, B, A + B - tmp), FMT(self.annotation_prefix, " tmp"));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(2 * tmp, C, tmp + C - out), FMT(self.annotation_prefix, " out"));
     }
 }
 
@@ -217,8 +217,8 @@ pub fn generate_r1cs_witness()
     }
     else
     {
-        self.pb.val(tmp) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
-        self.pb.lc_val(out) = self.pb.val(tmp) + self.pb.lc_val(C) - FieldT(2) * self.pb.val(tmp) * self.pb.lc_val(C);
+        self.pb.borrow().val(&tmp) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
+        self.pb.lc_val(out) = self.pb.borrow().val(&tmp) + self.pb.lc_val(C) - FieldT(2) * self.pb.borrow().val(&tmp) * self.pb.lc_val(C);
     }
 }
 }
@@ -239,12 +239,12 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
     compute_bits.resize(32);
     for i in 0..32
     {
-        compute_bits[i].reset(XOR3_gadget::<FieldT>::new(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2),
+        compute_bits[i]=RcCell::new(XOR3_gadget::<FieldT>::new(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2),
                                               if i + shift < 32 {W[i+shift]} else{ONE},
                                               (i + shift >= 32), result_bits[i],
                                             FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
-    pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
+    pack_result=RcCell::new(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
     //  gadget<FieldT>(&pb, annotation_prefix),
     Self{
     W,
@@ -289,11 +289,11 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
     compute_bits.resize(32);
     for i in 0..32
     {
-        compute_bits[i].reset(XOR3_gadget::<FieldT>::new(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2), SHA256_GADGET_ROTR(W, i, rot3), false, result_bits[i],
+        compute_bits[i]=RcCell::new(XOR3_gadget::<FieldT>::new(pb, SHA256_GADGET_ROTR(W, i, rot1), SHA256_GADGET_ROTR(W, i, rot2), SHA256_GADGET_ROTR(W, i, rot3), false, result_bits[i],
                                                     FMT(self.annotation_prefix, " compute_bits_{}", i)));
     }
 
-    pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
+    pack_result=RcCell::new(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " pack_result")));
     Self{
     //  gadget<FieldT>(&pb, annotation_prefix),
     W,
@@ -335,7 +335,7 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
     
 {
     result_bits.allocate(&pb, 32, FMT(self.annotation_prefix, " result_bits"));
-    pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
+    pack_result=RcCell::new(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
     // gadget<FieldT>(&pb, annotation_prefix),
     Self{X,
     Y,
@@ -352,7 +352,7 @@ pub fn generate_r1cs_constraints()
           result = x * y + (1-x) * z
           result - z = x * (y - z)
         */
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(X[i], Y[i] - Z[i], result_bits[i] - Z[i]), FMT(self.annotation_prefix, " result_bits_{}", i));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(X[i], Y[i] - Z[i], result_bits[i] - Z[i]), FMT(self.annotation_prefix, " result_bits_{}", i));
     }
     pack_result.generate_r1cs_constraints(false);
 }
@@ -362,7 +362,7 @@ pub fn generate_r1cs_witness()
 {
     for i in 0..32
     {
-        self.pb.val(result_bits[i]) = self.pb.lc_val(X[i]) * self.pb.lc_val(Y[i]) + (FieldT::one() - self.pb.lc_val(X[i])) * self.pb.lc_val(Z[i]);
+        self.pb.borrow().val(&result_bits[i]) = self.pb.lc_val(X[i]) * self.pb.lc_val(Y[i]) + (FieldT::one() - self.pb.lc_val(X[i])) * self.pb.lc_val(Z[i]);
     }
     pack_result.generate_r1cs_witness_from_bits();
 }
@@ -380,7 +380,7 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
 
 {
     result_bits.allocate(&pb, 32, FMT(self.annotation_prefix, " result_bits"));
-    pack_result.reset(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
+    pack_result=RcCell::new(packing_gadget::<FieldT>::new(pb, result_bits, result, FMT(self.annotation_prefix, " result")));
         // gadget<FieldT>(&pb, annotation_prefix),
     Self{X,
     Y,
@@ -399,7 +399,7 @@ pub fn generate_r1cs_constraints()
           aux = x + y + z - 2*result
         */
         generate_boolean_r1cs_constraint::<FieldT>(self.pb, result_bits[i], FMT(self.annotation_prefix, " result_{}", i));
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(X[i] + Y[i] + Z[i] - 2 * result_bits[i],
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(X[i] + Y[i] + Z[i] - 2 * result_bits[i],
                                                              1 - (X[i] + Y[i] + Z[i] -  2 * result_bits[i]),
                                                              0),
                                    FMT(self.annotation_prefix, " result_bits_{}", i));
@@ -413,7 +413,7 @@ pub fn generate_r1cs_witness()
     for i in 0..32
     {
         let  v = (self.pb.lc_val(X[i]) + self.pb.lc_val(Y[i]) + self.pb.lc_val(Z[i])).as_ulong();
-        self.pb.val(result_bits[i]) = FieldT(v / 2);
+        self.pb.borrow().val(&result_bits[i]) = FieldT(v / 2);
     }
 
     pack_result.generate_r1cs_witness_from_bits();

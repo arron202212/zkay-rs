@@ -58,7 +58,7 @@ public class SkeinDigest
     public void reset(Memoable other)
     {
         SkeinDigest d = (SkeinDigest)other;
-        engine.reset(d.engine);
+        engine=RcCell::new(d.engine);
     }
 
     public Memoable copy()
@@ -94,7 +94,7 @@ public class SkeinDigest
 
     public void reset()
     {
-        engine.reset();
+        engine=RcCell::new();
     }
 
     public void update(byte in)

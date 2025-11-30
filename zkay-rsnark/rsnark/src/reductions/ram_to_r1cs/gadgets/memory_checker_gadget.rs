@@ -36,7 +36,7 @@ impl memory_checker_gadget<ramT> {
         /* compare the two timestamps */
         timestamps_leq.allocate(&pb, FMT(self.annotation_prefix, " timestamps_leq"));
         timestamps_less.allocate(&pb, FMT(self.annotation_prefix, " timestamps_less"));
-        compare_timestamps.reset(comparison_gadget::<FieldT>::new(
+        compare_timestamps=RcCell::new(comparison_gadget::<FieldT>::new(
             pb,
             timestamp_size,
             line1.timestamp.packed,
@@ -51,7 +51,7 @@ impl memory_checker_gadget<ramT> {
         addresses_eq.allocate(&pb, FMT(self.annotation_prefix, " addresses_eq"));
         addresses_leq.allocate(&pb, FMT(self.annotation_prefix, " addresses_leq"));
         addresses_less.allocate(&pb, FMT(self.annotation_prefix, " addresses_less"));
-        compare_addresses.reset(comparison_gadget::<FieldT>::new(
+        compare_addresses=RcCell::new(comparison_gadget::<FieldT>::new(
             pb,
             address_size,
             line1.address.packed,
@@ -93,13 +93,13 @@ impl memory_checker_gadget<ramT> {
         }
     }
 
-    pub fn generate_r1cs_constraints() {
+    pub fn generate_r1cs_constraints(&self) {
         /* compare the two timestamps */
         compare_timestamps.generate_r1cs_constraints();
 
         /* compare the two addresses */
         compare_addresses.generate_r1cs_constraints();
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(addresses_leq, 1 - addresses_less, addresses_eq),
             FMT(self.annotation_prefix, " addresses_eq"),
         );
@@ -110,7 +110,7 @@ impl memory_checker_gadget<ramT> {
           - loose_contents_before2_equals_zero;
           - loose_timestamp2_is_zero.
         */
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(
                 loose_contents_after1_equals_contents_before2,
                 line1.contents_after.packed - line2.contents_before.packed,
@@ -130,7 +130,7 @@ impl memory_checker_gadget<ramT> {
             ),
         );
 
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(
                 loose_contents_before2_equals_zero,
                 line2.contents_before.packed,
@@ -150,7 +150,7 @@ impl memory_checker_gadget<ramT> {
             ),
         );
 
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(loose_timestamp2_is_zero, line2.timestamp.packed, 0),
             FMT(self.annotation_prefix, " loose_timestamp2_is_zero"),
         );
@@ -176,7 +176,7 @@ impl memory_checker_gadget<ramT> {
 
           As usual, we implement "A => B" as "NOT (A AND (NOT B))".
         */
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(
                 addresses_eq,
                 1 - loose_contents_after1_equals_contents_before2,
@@ -187,21 +187,21 @@ impl memory_checker_gadget<ramT> {
                 " memory_retains_contents_between_accesses",
             ),
         );
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(addresses_less, 1 - loose_contents_before2_equals_zero, 0),
             FMT(self.annotation_prefix, " new_address_starts_at_zero"),
         );
-        self.pb.add_r1cs_constraint(
+        self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT>(1 - addresses_leq, 1 - loose_timestamp2_is_zero, 0),
             FMT(self.annotation_prefix, " only_one_cycle"),
         );
     }
 
-    pub fn generate_r1cs_witness() {
+    pub fn generate_r1cs_witness(&self) {
         /* compare the two addresses */
         compare_addresses.generate_r1cs_witness();
-        self.pb.val(addresses_eq) =
-            self.pb.val(addresses_leq) * (FieldT::one() - self.pb.val(addresses_less));
+        self.pb.borrow().val(&addresses_eq) =
+            self.pb.borrow().val(&addresses_leq) * (FieldT::one() - self.pb.borrow().val(&addresses_less));
 
         /* compare the two timestamps */
         compare_timestamps.generate_r1cs_witness();
@@ -212,22 +212,22 @@ impl memory_checker_gadget<ramT> {
          - loose_contents_before2_equals_zero;
          - loose_timestamp2_is_zero.
         */
-        self.pb.val(loose_contents_after1_equals_contents_before2) =
-            if (self.pb.val(line1.contents_after.packed)
-                == self.pb.val(line2.contents_before.packed))
+        self.pb.borrow().val(&loose_contents_after1_equals_contents_before2) =
+            if (self.pb.borrow().val(&line1.contents_after.packed)
+                == self.pb.borrow().val(&line2.contents_before.packed))
             {
                 FieldT::one()
             } else {
                 FieldT::zero()
             };
-        self.pb.val(loose_contents_before2_equals_zero) =
-            if self.pb.val(line2.contents_before.packed).is_zero() {
+        self.pb.borrow().val(&loose_contents_before2_equals_zero) =
+            if self.pb.borrow().val(&line2.contents_before.packed).is_zero() {
                 FieldT::one()
             } else {
                 FieldT::zero()
             };
-        self.pb.val(loose_timestamp2_is_zero) =
-            (if self.pb.val(line2.timestamp.packed) == FieldT::zero() {
+        self.pb.borrow().val(&loose_timestamp2_is_zero) =
+            (if self.pb.borrow().val(&line2.timestamp.packed) == FieldT::zero() {
                 FieldT::one()
             } else {
                 FieldT::zero()

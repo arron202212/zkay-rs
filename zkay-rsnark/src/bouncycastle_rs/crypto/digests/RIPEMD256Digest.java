@@ -125,7 +125,7 @@ public class RIPEMD256Digest
     */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         H0 = 0x67452301;
         H1 = 0xefcdab89;

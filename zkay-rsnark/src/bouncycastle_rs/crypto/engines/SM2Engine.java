@@ -264,7 +264,7 @@ public class SM2Engine
         {
             if (memo != null)
             {
-                memo.reset(copy);
+                memo=RcCell::new(copy);
             }
             else
             {

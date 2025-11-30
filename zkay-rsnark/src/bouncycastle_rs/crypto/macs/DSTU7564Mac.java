@@ -124,7 +124,7 @@ public class DSTU7564Mac
     public void reset()
     {
         inputLength = 0;
-        engine.reset();
+        engine=RcCell::new();
         if (paddedKey != null)
         {
             engine.update(paddedKey, 0, paddedKey.length);

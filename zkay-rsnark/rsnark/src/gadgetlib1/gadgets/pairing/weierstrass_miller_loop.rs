@@ -260,29 +260,29 @@ g_RR_at_P:&                                                                  RcC
                                                                   annotation_prefix:&String)->Self
     
 {
-    gamma_twist.reset(Fqe_variable::<ppT>::new(c.gamma.mul_by_X()));
+    gamma_twist=RcCell::new(Fqe_variable::<ppT>::new(c.gamma.mul_by_X()));
     // prec_P.PX * c.gamma_twist = c.gamma_X - c.old_RY - g_RR_at_P_c1
     if gamma_twist.is_constant()
     {
         gamma_twist.evaluate();
         let gamma_twist_const= gamma_twist.get_element();
-        g_RR_at_P_c1.reset(Fqe_variable::<ppT>::new(Fqe_variable::<ppT>(self.pb, -gamma_twist_const, prec_P.P.X, FMT(annotation_prefix, " tmp")) +
+        g_RR_at_P_c1=RcCell::new(Fqe_variable::<ppT>::new(Fqe_variable::<ppT>(self.pb, -gamma_twist_const, prec_P.P.X, FMT(annotation_prefix, " tmp")) +
                                                  *(c.gamma_X) + *(c.RY) * (-FieldT::one())));
     }
     else if prec_P.P.X.is_constant()
     {
         prec_P.P.X.evaluate(pb);
         let P_X_const= prec_P.P.X.constant_term();
-        g_RR_at_P_c1.reset(Fqe_variable::<ppT>::new(*gamma_twist * (-P_X_const) + *(c.gamma_X) + *(c.RY) * (-FieldT::one())));
+        g_RR_at_P_c1=RcCell::new(Fqe_variable::<ppT>::new(*gamma_twist * (-P_X_const) + *(c.gamma_X) + *(c.RY) * (-FieldT::one())));
     }
     else
     {
-        g_RR_at_P_c1.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_RR_at_P_c1")));
-        compute_g_RR_at_P_c1.reset(Fqe_mul_by_lc_gadget::<ppT>::new(pb, *gamma_twist, prec_P.P.X,
+        g_RR_at_P_c1=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_RR_at_P_c1")));
+        compute_g_RR_at_P_c1=RcCell::new(Fqe_mul_by_lc_gadget::<ppT>::new(pb, *gamma_twist, prec_P.P.X,
                                                                  *(c.gamma_X) + *(c.RY) * (-FieldT::one()) + (*g_RR_at_P_c1) * (-FieldT::one()),
                                                                FMT(annotation_prefix, " compute_g_RR_at_P_c1")));
     }
-    g_RR_at_P.reset(Fqk_variable::<ppT>::new(pb, *(prec_P.PY_twist_squared), *g_RR_at_P_c1, FMT(annotation_prefix, " g_RR_at_P")));
+    g_RR_at_P=RcCell::new(Fqk_variable::<ppT>::new(pb, *(prec_P.PY_twist_squared), *g_RR_at_P_c1, FMT(annotation_prefix, " g_RR_at_P")));
     // gadget<FieldT>(&pb, annotation_prefix),
     Self{prec_P,c,g_RR_at_P}
 }
@@ -335,29 +335,29 @@ g_RQ_at_P:&                                                                  RcC
                                                                   annotation_prefix:&String)->Self
 
 {
-    gamma_twist.reset(Fqe_variable::<ppT>::new(c.gamma.mul_by_X()));
+    gamma_twist=RcCell::new(Fqe_variable::<ppT>::new(c.gamma.mul_by_X()));
     // prec_P.PX * c.gamma_twist = c.gamma_X - prec_Q.QY - g_RQ_at_P_c1
     if gamma_twist.is_constant()
     {
         gamma_twist.evaluate();
         let gamma_twist_const= gamma_twist.get_element();
-        g_RQ_at_P_c1.reset(Fqe_variable::<ppT>::new(Fqe_variable::<ppT>(self.pb, -gamma_twist_const, prec_P.P.X, FMT(annotation_prefix, " tmp")) +
+        g_RQ_at_P_c1=RcCell::new(Fqe_variable::<ppT>::new(Fqe_variable::<ppT>(self.pb, -gamma_twist_const, prec_P.P.X, FMT(annotation_prefix, " tmp")) +
                                                  *(c.gamma_X) + *(Q.Y) * (if !invert_Q  {-FieldT::one()} else {FieldT::one()})));
     }
     else if prec_P.P.X.is_constant()
     {
         prec_P.P.X.evaluate(pb);
         let P_X_const= prec_P.P.X.constant_term();
-        g_RQ_at_P_c1.reset(Fqe_variable::<ppT>::new(*gamma_twist * (-P_X_const) + *(c.gamma_X) + *(Q.Y) * (if !invert_Q {-FieldT::one() }else {FieldT::one()})));
+        g_RQ_at_P_c1=RcCell::new(Fqe_variable::<ppT>::new(*gamma_twist * (-P_X_const) + *(c.gamma_X) + *(Q.Y) * (if !invert_Q {-FieldT::one() }else {FieldT::one()})));
     }
     else
     {
-        g_RQ_at_P_c1.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_RQ_at_Q_c1")));
-        compute_g_RQ_at_P_c1.reset(Fqe_mul_by_lc_gadget::<ppT>::new(pb, *gamma_twist, prec_P.P.X,
+        g_RQ_at_P_c1=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_RQ_at_Q_c1")));
+        compute_g_RQ_at_P_c1=RcCell::new(Fqe_mul_by_lc_gadget::<ppT>::new(pb, *gamma_twist, prec_P.P.X,
                                                                  *(c.gamma_X) + *(Q.Y) * (if !invert_Q { -FieldT::one()} else {FieldT::one()}) + (*g_RQ_at_P_c1) * (-FieldT::one()),
                                                                FMT(annotation_prefix, " compute_g_RQ_at_P_c1")));
     }
-    g_RQ_at_P.reset(Fqk_variable::<ppT>::new(pb, *(prec_P.PY_twist_squared), *g_RQ_at_P_c1, FMT(annotation_prefix, " g_RQ_at_P")));
+    g_RQ_at_P=RcCell::new(Fqk_variable::<ppT>::new(pb, *(prec_P.PY_twist_squared), *g_RQ_at_P_c1, FMT(annotation_prefix, " g_RQ_at_P")));
     // gadget<FieldT>(&pb, annotation_prefix),
     Self{invert_Q,prec_P,c,Q,g_RQ_at_P}
 }
@@ -432,7 +432,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 
     for i in 0..f_count
     {
-        fs[i].reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " fs_{}", i)));
+        fs[i]=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
 
     dbl_sqrs.resize(dbl_count);
@@ -454,26 +454,26 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
             continue;
         }
 
-        doubling_steps[dbl_id].reset(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
+        doubling_steps[dbl_id]=RcCell::new(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
                                                                             prec_P, *prec_Q.coeffs[prec_id],
                                                                             g_RR_at_Ps[dbl_id],
                                                                           FMT(annotation_prefix, " doubling_steps_{}", dbl_id)));
         prec_id+=1;
-        dbl_sqrs[dbl_id].reset(Fqk_sqr_gadget::<ppT>::new(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
+        dbl_sqrs[dbl_id]=RcCell::new(Fqk_sqr_gadget::<ppT>::new(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
         f_id+=1;
-        dbl_muls[dbl_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_Ps[dbl_id],  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), FMT(annotation_prefix, " dbl_muls_{}", dbl_id)));
+        dbl_muls[dbl_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_Ps[dbl_id],  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), FMT(annotation_prefix, " dbl_muls_{}", dbl_id)));
         f_id+=1;
         dbl_id+=1;
 
         if NAF[i] != 0
         {
-            addition_steps[add_id].reset(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
+            addition_steps[add_id]=RcCell::new(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
                                                                                 NAF[i] < 0,
                                                                                 prec_P, *prec_Q.coeffs[prec_id], *prec_Q.Q,
                                                                                 g_RQ_at_Ps[add_id],
                                                                               FMT(annotation_prefix, " addition_steps_{}", add_id)));
             prec_id+=1;
-            add_muls[add_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_Ps[add_id],  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), FMT(annotation_prefix, " add_muls_{}", add_id)));
+            add_muls[add_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_Ps[add_id],  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), FMT(annotation_prefix, " add_muls_{}", add_id)));
             f_id+=1;
             add_id+=1;
         }
@@ -632,7 +632,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 
     for i in 0..f_count
     {
-        fs[i].reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " fs_{}", i)));
+        fs[i]=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
 
     dbl_sqrs.resize(dbl_count);
@@ -656,40 +656,40 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
             continue;
         }
 
-        doubling_steps1[dbl_id].reset(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
+        doubling_steps1[dbl_id]=RcCell::new(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
                                                                              prec_P1, *prec_Q1.coeffs[prec_id],
                                                                              g_RR_at_P1s[dbl_id],
                                                                            FMT(annotation_prefix, " doubling_steps1_{}", dbl_id)));
-        doubling_steps2[dbl_id].reset(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
+        doubling_steps2[dbl_id]=RcCell::new(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
                                                                              prec_P2, *prec_Q2.coeffs[prec_id],
                                                                              g_RR_at_P2s[dbl_id],
                                                                            FMT(annotation_prefix, " doubling_steps2_{}", dbl_id)));
         prec_id+=1;
 
-        dbl_sqrs[dbl_id].reset(Fqk_sqr_gadget::<ppT>::new(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
+        dbl_sqrs[dbl_id]=RcCell::new(Fqk_sqr_gadget::<ppT>::new(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
         f_id+=1;
-        dbl_muls1[dbl_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_mul1s_{}", dbl_id)));
+        dbl_muls1[dbl_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_mul1s_{}", dbl_id)));
         f_id+=1;
-        dbl_muls2[dbl_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RR_at_P2s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_mul2s_{}", dbl_id)));
+        dbl_muls2[dbl_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RR_at_P2s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_mul2s_{}", dbl_id)));
         f_id+=1;
         dbl_id+=1;
 
         if NAF[i] != 0
         {
-            addition_steps1[add_id].reset(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
+            addition_steps1[add_id]=RcCell::new(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P1, *prec_Q1.coeffs[prec_id], *prec_Q1.Q,
                                                                                  g_RQ_at_P1s[add_id],
                                                                                FMT(annotation_prefix, " addition_steps1_{}", add_id)));
-            addition_steps2[add_id].reset(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
+            addition_steps2[add_id]=RcCell::new(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P2, *prec_Q2.coeffs[prec_id], *prec_Q2.Q,
                                                                                  g_RQ_at_P2s[add_id],
                                                                                FMT(annotation_prefix, " addition_steps2_{}", add_id)));
             prec_id+=1;
-            add_muls1[add_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_mul1s_{}", add_id)));
+            add_muls1[add_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_mul1s_{}", add_id)));
             f_id+=1;
-            add_muls2[add_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RQ_at_P2s[add_id], *fs[f_id], FMT(annotation_prefix, " add_mul2s_{}", add_id)));
+            add_muls2[add_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RQ_at_P2s[add_id], *fs[f_id], FMT(annotation_prefix, " add_mul2s_{}", add_id)));
             f_id+=1;
             add_id+=1;
         }
@@ -886,7 +886,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 
     for i in 0..f_count
     {
-        fs[i].reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " fs_{}", i)));
+        fs[i]=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " fs_{}", i)));
     }
 
     dbl_sqrs.resize(dbl_count);
@@ -912,53 +912,53 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
             continue;
         }
 
-        doubling_steps1[dbl_id].reset(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
+        doubling_steps1[dbl_id]=RcCell::new(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
                                                                              prec_P1, *prec_Q1.coeffs[prec_id],
                                                                              g_RR_at_P1s[dbl_id],
                                                                            FMT(annotation_prefix, " doubling_steps1_{}", dbl_id)));
-        doubling_steps2[dbl_id].reset(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
+        doubling_steps2[dbl_id]=RcCell::new(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
                                                                              prec_P2, *prec_Q2.coeffs[prec_id],
                                                                              g_RR_at_P2s[dbl_id],
                                                                            FMT(annotation_prefix, " doubling_steps2_{}", dbl_id)));
-        doubling_steps3[dbl_id].reset(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
+        doubling_steps3[dbl_id]=RcCell::new(mnt_miller_loop_dbl_line_eval::<ppT>::new(pb,
                                                                              prec_P3, *prec_Q3.coeffs[prec_id],
                                                                              g_RR_at_P3s[dbl_id],
                                                                            FMT(annotation_prefix, " doubling_steps3_{}", dbl_id)));
         prec_id+=1;
 
-        dbl_sqrs[dbl_id].reset(Fqk_sqr_gadget::<ppT>::new(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
+        dbl_sqrs[dbl_id]=RcCell::new(Fqk_sqr_gadget::<ppT>::new(pb, *fs[f_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_sqrs_{}", dbl_id)));
         f_id+=1;
-        dbl_muls1[dbl_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls1_{}", dbl_id)));
+        dbl_muls1[dbl_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_P1s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls1_{}", dbl_id)));
         f_id+=1;
-        dbl_muls2[dbl_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_P2s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls2_{}", dbl_id)));
+        dbl_muls2[dbl_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RR_at_P2s[dbl_id], *fs[f_id+1], FMT(annotation_prefix, " dbl_muls2_{}", dbl_id)));
         f_id+=1;
-        dbl_muls3[dbl_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RR_at_P3s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_muls3_{}", dbl_id)));
+        dbl_muls3[dbl_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RR_at_P3s[dbl_id], *fs[f_id], FMT(annotation_prefix, " dbl_muls3_{}", dbl_id)));
         f_id+=1;
         dbl_id+=1;
 
         if NAF[i] != 0
         {
-            addition_steps1[add_id].reset(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
+            addition_steps1[add_id]=RcCell::new(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P1, *prec_Q1.coeffs[prec_id], *prec_Q1.Q,
                                                                                  g_RQ_at_P1s[add_id],
                                                                                FMT(annotation_prefix, " addition_steps1_{}", add_id)));
-            addition_steps2[add_id].reset(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
+            addition_steps2[add_id]=RcCell::new(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P2, *prec_Q2.coeffs[prec_id], *prec_Q2.Q,
                                                                                  g_RQ_at_P2s[add_id],
                                                                                FMT(annotation_prefix, " addition_steps2_{}", add_id)));
-            addition_steps3[add_id].reset(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
+            addition_steps3[add_id]=RcCell::new(mnt_miller_loop_add_line_eval::<ppT>::new(pb,
                                                                                  NAF[i] < 0,
                                                                                  prec_P3, *prec_Q3.coeffs[prec_id], *prec_Q3.Q,
                                                                                  g_RQ_at_P3s[add_id],
                                                                                FMT(annotation_prefix, " addition_steps3_{}", add_id)));
             prec_id+=1;
-            add_muls1[add_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls1_{}", add_id)));
+            add_muls1[add_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_P1s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls1_{}", add_id)));
             f_id+=1;
-            add_muls2[add_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_P2s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls2_{}", add_id)));
+            add_muls2[add_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb, *fs[f_id], *g_RQ_at_P2s[add_id], *fs[f_id+1], FMT(annotation_prefix, " add_muls2_{}", add_id)));
             f_id+=1;
-            add_muls3[add_id].reset(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RQ_at_P3s[add_id], *fs[f_id], FMT(annotation_prefix, " add_muls3_{}", add_id)));
+            add_muls3[add_id]=RcCell::new(Fqk_special_mul_gadget::<ppT>::new(pb,  (if f_id + 1 == f_count {result} else{*fs[f_id+1]}), *g_RQ_at_P3s[add_id], *fs[f_id], FMT(annotation_prefix, " add_muls3_{}", add_id)));
             f_id+=1;
             add_id+=1;
         }

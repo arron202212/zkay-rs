@@ -137,7 +137,7 @@ public class BaseKDFBytesGenerator
             }
         }
 
-        digest.reset();
+        digest=RcCell::new();
 
         return (int)oBytes;
     }

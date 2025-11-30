@@ -639,7 +639,7 @@ impl<
         // """Override zkay configuration with values from the manifest file in project_dir."""
         let manifest = Manifest::load(project_dir);
         Manifest::import_manifest_config(manifest);
-        // self.runtime.lock().reset();
+        // self.runtime.lock()=RcCell::new();
     }
 
     // @staticmethod

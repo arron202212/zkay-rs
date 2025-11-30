@@ -72,7 +72,7 @@ public class Ed25519Signer
 
     public void reset()
     {
-        buffer.reset();
+        buffer=RcCell::new();
     }
 
     private static class Buffer extends ByteArrayOutputStream

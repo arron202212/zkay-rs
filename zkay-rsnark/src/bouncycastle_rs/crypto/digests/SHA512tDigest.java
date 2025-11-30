@@ -100,7 +100,7 @@ public class SHA512tDigest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         /*
          * initial hash values use the iv generation algorithm for t.

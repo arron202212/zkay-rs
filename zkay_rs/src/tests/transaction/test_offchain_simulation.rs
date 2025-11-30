@@ -37,7 +37,7 @@
 //         return d
 
 //     def run_scenario(self, *, suffix: str = '', use_cache: bool = False):
-//         Runtime.reset()
+//         Runtime=RcCell::new()
 
 //         c = self.scenario.code()
 //         d = self.get_directory(suffix, use_cache)

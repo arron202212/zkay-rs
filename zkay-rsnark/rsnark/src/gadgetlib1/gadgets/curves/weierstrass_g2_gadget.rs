@@ -97,8 +97,8 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
                               annotation_prefix:&String)->Self
     
 {
-    X.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " X")));
-    Y.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Y")));
+    X=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " X")));
+    Y=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Y")));
 
     all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
     all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
@@ -114,8 +114,8 @@ pub fn new2(pb:&RcCell<protoboard<FieldT>>,
     let  Q_copy = Q.clone();
     Q_copy.to_affine_coordinates();
 
-    X.reset(Fqe_variable::<ppT>::new(pb, Q_copy.X(), FMT(annotation_prefix, " X")));
-    Y.reset(Fqe_variable::<ppT>::new(pb, Q_copy.Y(), FMT(annotation_prefix, " Y")));
+    X=RcCell::new(Fqe_variable::<ppT>::new(pb, Q_copy.X(), FMT(annotation_prefix, " X")));
+    Y=RcCell::new(Fqe_variable::<ppT>::new(pb, Q_copy.Y(), FMT(annotation_prefix, " Y")));
 
     all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
     all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
@@ -151,16 +151,16 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                           annotation_prefix:&String)->Self
   
 {
-    Xsquared.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Xsquared")));
-    Ysquared.reset(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Ysquared")));
+    Xsquared=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Xsquared")));
+    Ysquared=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Ysquared")));
 
-    compute_Xsquared.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.X), *Xsquared, FMT(annotation_prefix, " compute_Xsquared")));
-    compute_Ysquared.reset(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.Y), *Ysquared, FMT(annotation_prefix, " compute_Ysquared")));
+    compute_Xsquared=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.X), *Xsquared, FMT(annotation_prefix, " compute_Xsquared")));
+    compute_Ysquared=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.Y), *Ysquared, FMT(annotation_prefix, " compute_Ysquared")));
 
-    Xsquared_plus_a.reset(Fqe_variable::<ppT>::new((*Xsquared) + ffec::G2::<other_curve::<ppT> >::coeff_a));
-    Ysquared_minus_b.reset(Fqe_variable::<ppT>::new((*Ysquared) + (-ffec::G2::<other_curve::<ppT> >::coeff_b)));
+    Xsquared_plus_a=RcCell::new(Fqe_variable::<ppT>::new((*Xsquared) + ffec::G2::<other_curve::<ppT> >::coeff_a));
+    Ysquared_minus_b=RcCell::new(Fqe_variable::<ppT>::new((*Ysquared) + (-ffec::G2::<other_curve::<ppT> >::coeff_b)));
 
-    curve_equation.reset(Fqe_mul_gadget::<ppT>::new(pb, *(Q.X), *Xsquared_plus_a, *Ysquared_minus_b, FMT(annotation_prefix, " curve_equation")));
+    curve_equation=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(Q.X), *Xsquared_plus_a, *Ysquared_minus_b, FMT(annotation_prefix, " curve_equation")));
     Self{
     //   gadget<FieldT>(&pb, annotation_prefix),
     Q

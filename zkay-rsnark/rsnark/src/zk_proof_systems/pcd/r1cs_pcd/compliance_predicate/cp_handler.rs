@@ -185,8 +185,8 @@ pub fn generate_r1cs_witness(incoming_message_values:&Vec<RcCell<r1cs_pcd_messag
                                                                               local_data_value:&RcCell<r1cs_pcd_local_data<FieldT> >)
 {
     pb.clear_values();
-    pb.val(outgoing_message.types) = FieldT(types);
-    pb.val(arity) = FieldT(incoming_message_values.len());
+    pb.borrow().val(&outgoing_message.types) = FieldT(types);
+    pb.borrow().val(&arity) = FieldT(incoming_message_values.len());
 
     for i in 0..incoming_message_values.len()
     {
@@ -248,7 +248,7 @@ pub fn get_outgoing_message()->RcCell<r1cs_pcd_message<FieldT>>
 
 pub fn get_arity()->usize
 {
-    return pb.val(arity).as_ulong();
+    return pb.borrow().val(&arity).as_ulong();
 }
 
 

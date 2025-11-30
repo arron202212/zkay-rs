@@ -70,7 +70,7 @@ public class ShortenedDigest
 
     public void reset()
     {
-        baseDigest.reset();
+        baseDigest=RcCell::new();
     }
 
     public int getByteLength()

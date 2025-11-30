@@ -87,7 +87,7 @@ public class ConcatenationKDFGenerator
         int     counter = 1;
         int     outputLen = 0;
 
-        digest.reset();
+        digest=RcCell::new();
 
         if (len > hLen)
         {

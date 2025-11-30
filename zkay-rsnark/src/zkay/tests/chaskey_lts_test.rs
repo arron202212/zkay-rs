@@ -86,7 +86,7 @@ mod test {
         crypto.process_block(&PLAIN.to_vec(), 0, &out, 0);
         assert_eq!(CIPHER.to_vec(), out, "Wrong encryption output");
 
-        // crypto.reset();
+        // crypto=RcCell::new();
 
         // Test decrypt
         // crypto.init(false, KeyParameter::new(KEY));

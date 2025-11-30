@@ -215,7 +215,7 @@ pub fn generate_r1cs_constraints()
                     let straight_edge = neighbors[column_idx][switch_input].first;
                     let cross_edge = neighbors[column_idx][switch_input].second;
 
-                    self.pb.add_r1cs_constraint(
+                    self.pb.borrow_mut().add_r1cs_constraint(
                         r1cs_constraint::<FieldT>(routed_packets[column_idx][switch_input][0] - routed_packets[column_idx+1][straight_edge][0],
                                                 routed_packets[column_idx][switch_input][0] - routed_packets[column_idx+1][cross_edge][0],
                                                 0),
@@ -240,7 +240,7 @@ pub fn generate_r1cs_constraints()
                         let straight_edge = neighbors[column_idx][switch_input].first;
                         let cross_edge = neighbors[column_idx][switch_input].second;
 
-                        self.pb.add_r1cs_constraint(
+                        self.pb.borrow_mut().add_r1cs_constraint(
                             r1cs_constraint::<FieldT>(
                                 asw_switch_bits[column_idx][row_idx],
                                 routed_packets[column_idx+1][cross_edge][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx],
@@ -279,7 +279,7 @@ pub fn generate_r1cs_witness(permutation:&integer_permutation)
 
                 for subpacket_idx in 0..num_subpackets
                 {
-                    self.pb.val(routed_packets[column_idx+1][next][subpacket_idx]) = self.pb.val(routed_packets[column_idx][row_idx][subpacket_idx]);
+                    self.pb.borrow().val(&routed_packets[column_idx+1][next][subpacket_idx]) = self.pb.borrow().val(&routed_packets[column_idx][row_idx][subpacket_idx]);
                 }
             }
             else
@@ -287,7 +287,7 @@ pub fn generate_r1cs_witness(permutation:&integer_permutation)
                 if num_subpackets > 1
                 {
                     /* update the switch bit */
-                    self.pb.val(asw_switch_bits[column_idx][row_idx]) = FieldT(if routing[column_idx][row_idx]  {1 }else {0});
+                    self.pb.borrow().val(&asw_switch_bits[column_idx][row_idx]) = FieldT(if routing[column_idx][row_idx]  {1 }else {0});
                 }
 
                 /* route according to the switch bit */
@@ -302,7 +302,7 @@ pub fn generate_r1cs_witness(permutation:&integer_permutation)
 
                     for subpacket_idx in 0..num_subpackets
                     {
-                        self.pb.val(routed_packets[column_idx+1][switched_edge][subpacket_idx]) = self.pb.val(routed_packets[column_idx][switch_input][subpacket_idx]);
+                        self.pb.borrow().val(&routed_packets[column_idx+1][switched_edge][subpacket_idx]) = self.pb.borrow().val(&routed_packets[column_idx][switch_input][subpacket_idx]);
                     }
                 }
 
@@ -337,7 +337,7 @@ pub fn  test_as_waksman_routing_gadget(num_packets:usize, packet_size:usize)
 
         for bit_idx in 0..packet_size
         {
-            pb.val(randbits[packet_idx][bit_idx])=  if (rand() % 2) {FieldT::one()} else{FieldT::zero()};
+            pb.borrow().val(&randbits[packet_idx][bit_idx])=  if (rand() % 2) {FieldT::one()} else{FieldT::zero()};
         }
     }
     ffec::print_time("generated bits to be routed");
@@ -355,12 +355,12 @@ pub fn  test_as_waksman_routing_gadget(num_packets:usize, packet_size:usize)
     {
         for bit_idx in 0..packet_size
         {
-            assert!(pb.val(outbits[permutation.get(packet_idx)][bit_idx]) == pb.val(randbits[packet_idx][bit_idx]));
+            assert!(pb.borrow().val(&outbits[permutation.get(packet_idx)][bit_idx]) == pb.borrow().val(&randbits[packet_idx][bit_idx]));
         }
     }
 
     print!("negative test\n");
-    pb.val(variable::<FieldT,pb_variable>(10)) = FieldT(12345);
+    pb.borrow().val(&variable::<FieldT,pb_variable>(10)) = FieldT(12345);
     assert!(!pb.is_satisfied());
 
     print!("num_constraints = {}, num_variables = {}\n",

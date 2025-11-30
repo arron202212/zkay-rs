@@ -107,7 +107,7 @@ public class OpenPGPCFBBlockCipher
 
         System.arraycopy(IV, 0, FR, 0, FR.length);
 
-        cipher.reset();
+        cipher=RcCell::new();
     }
 
     /**

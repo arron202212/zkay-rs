@@ -482,14 +482,14 @@ pub fn mapValuesToProtoboard(&self) {
 
 	let mut  zeropGateIndex = 0;
 	for (wireId,v) in variableMap.keys() {
-		pb.val(variables[v]) = wireValues[wireId];
+		pb.borrow().val(&variables[v]) = wireValues[wireId];
 		if let Some(z)=zeropMap.get(wireId) {
 			let  l = zeroPwires[zeropGateIndex];
             zeropGateIndex+=1;
-			if pb.val(l) == FieldT::zero() {
-				pb.val(variables[z]) = FieldT::zero();
+			if pb.borrow().val(&l) == FieldT::zero() {
+				pb.borrow().val(&variables[z]) = FieldT::zero();
 			} else {
-				pb.val(variables[z]) = pb.val(l).inverse(
+				pb.borrow().val(&variables[z]) = pb.borrow().val(&l).inverse(
 						pb.fieldType_);
 			}
 		}
@@ -526,7 +526,7 @@ pub fn find(&self, wireId:Wire,  lc:&mut LinearCombinationPtr,
 
 pub fn clean(&mut self) {
 	for  wireId in  toClean {
-		wireLinearCombinations[wireId].reset();
+		wireLinearCombinations[wireId]=RcCell::new();
 	}
 	toClean.clear();
 }

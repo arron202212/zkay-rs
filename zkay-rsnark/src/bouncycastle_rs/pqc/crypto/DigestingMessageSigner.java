@@ -86,7 +86,7 @@ public class DigestingMessageSigner
 
     public void reset()
     {
-        messDigest.reset();
+        messDigest=RcCell::new();
     }
 
     /**

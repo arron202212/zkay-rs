@@ -166,8 +166,8 @@ public class EAXBlockCipher
     private void reset(
         boolean clearMac)
     {
-        cipher.reset(); // TODO Redundant since the mac will reset it?
-        mac.reset();
+        cipher=RcCell::new(); // TODO Redundant since the mac will reset it?
+        mac=RcCell::new();
 
         bufOff = 0;
         Arrays.fill(bufBlock, (byte)0);

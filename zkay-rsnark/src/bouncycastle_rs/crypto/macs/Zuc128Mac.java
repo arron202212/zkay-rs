@@ -229,7 +229,7 @@ public final class Zuc128Mac
     {
         if (theState != null)
         {
-            theEngine.reset(theState);
+            theEngine=RcCell::new(theState);
         }
         initKeyStream();
     }

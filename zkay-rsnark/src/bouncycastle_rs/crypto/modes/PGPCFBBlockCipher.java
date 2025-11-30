@@ -134,7 +134,7 @@ public class PGPCFBBlockCipher
             }
         }
 
-        cipher.reset();
+        cipher=RcCell::new();
     }
 
     /**

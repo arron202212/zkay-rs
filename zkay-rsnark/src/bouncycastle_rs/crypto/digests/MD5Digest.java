@@ -133,7 +133,7 @@ public class MD5Digest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         H1 = 0x67452301;
         H2 = 0xefcdab89;

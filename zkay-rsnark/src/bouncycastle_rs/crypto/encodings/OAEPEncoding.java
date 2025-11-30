@@ -56,7 +56,7 @@ public class OAEPEncoding
         this.mgf1Hash = mgf1Hash;
         this.defHash = new byte[hash.getDigestSize()];
 
-        hash.reset();
+        hash=RcCell::new();
 
         if (encodingParams != null)
         {
@@ -328,7 +328,7 @@ public class OAEPEncoding
         byte[]  C = new byte[4];
         int     counter = 0;
 
-        mgf1Hash.reset();
+        mgf1Hash=RcCell::new();
 
         while (counter < (length / hashBuf.length))
         {

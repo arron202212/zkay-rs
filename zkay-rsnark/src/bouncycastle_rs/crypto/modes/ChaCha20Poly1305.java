@@ -601,7 +601,7 @@ public class ChaCha20Poly1305
 
         if (resetCipher)
         {
-            chacha20.reset();
+            chacha20=RcCell::new();
         }
 
         initMAC();

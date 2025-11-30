@@ -167,7 +167,7 @@ public class GOFBBlockCipher
         N4 = 0;
         System.arraycopy(IV, 0, ofbV, 0, IV.length);
         byteCount = 0;
-        cipher.reset();
+        cipher=RcCell::new();
     }
 
     //array of bytes to type int

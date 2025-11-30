@@ -46,7 +46,7 @@ implements Mac
     public void init(
         CipherParameters params)
     {
-        digest.reset();
+        digest=RcCell::new();
 
         byte[] key = ((KeyParameter)params).getKey();
 
@@ -128,7 +128,7 @@ implements Mac
         /*
          * reset the underlying digest.
          */
-        digest.reset();
+        digest=RcCell::new();
 
         /*
          * reinitialize the digest.

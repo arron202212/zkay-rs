@@ -158,7 +158,7 @@ public class KMAC
 
     public void reset()
     {
-        cshake.reset();
+        cshake=RcCell::new();
 
         if (key != null)
         {

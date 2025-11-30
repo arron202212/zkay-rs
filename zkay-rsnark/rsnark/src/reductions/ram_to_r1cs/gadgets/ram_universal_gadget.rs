@@ -227,7 +227,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     ffec::leave_block("Collect inputs/outputs for the routing network");
 
     ffec::enter_block("Allocate routing network");
-    routing_network.reset( as_waksman_routing_gadget::<FieldT>::new(pb, num_memory_lines, routing_inputs, routing_outputs, FMT(self.annotation_prefix, " routing_network")));
+    routing_network=RcCell::new( as_waksman_routing_gadget::<FieldT>::new(pb, num_memory_lines, routing_inputs, routing_outputs, FMT(self.annotation_prefix, " routing_network")));
     ffec::leave_block("Allocate routing network");
 
     /* deal with all checkers */
@@ -311,7 +311,7 @@ pub fn generate_r1cs_constraints()
     /* ensure that load instruction lines really do loads */
     for i in 0..time_bound
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, load_instruction_lines[i].contents_before.packed,
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, load_instruction_lines[i].contents_before.packed,
                                                              load_instruction_lines[i].contents_after.packed),
                                    FMT(self.annotation_prefix, " load_instruction_{}_is_a_load", i));
     }
@@ -358,7 +358,7 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
     /* assign correct timestamps to all lines */
     for i in 0..num_memory_lines
     {
-        self.pb.val(unrouted_memory_lines[i].timestamp.packed) = FieldT(i);
+        self.pb.borrow().val(&unrouted_memory_lines[i].timestamp.packed) = FieldT(i);
         unrouted_memory_lines[i].timestamp.generate_r1cs_witness_from_packed();
     }
 
@@ -376,8 +376,8 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
         let address = it.second.first;
         let contents = it.second.second;
 
-        self.pb.val(boot_lines[boot_pos].address.packed) = FieldT(address, true);
-        self.pb.val(boot_lines[boot_pos].contents_after.packed) = FieldT(contents, true);
+        self.pb.borrow().val(&boot_lines[boot_pos].address.packed) = FieldT(address, true);
+        self.pb.borrow().val(&boot_lines[boot_pos].contents_after.packed) = FieldT(contents, true);
         boot_lines[boot_pos].generate_r1cs_witness_from_packed();
 
         memory_after_boot[address] = contents;
@@ -387,17 +387,17 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
     let  mem_backend=ra_memory(1u64<<(self.pb.ap.address_size()), self.pb.ap.value_size(), memory_after_boot);
     let  auxiliary_input_it = auxiliary_input.begin();
 
-    self.pb.val(load_instruction_lines[0].address.packed) = FieldT(self.pb.ap.initial_pc_addr(), true);
+    self.pb.borrow().val(&load_instruction_lines[0].address.packed) = FieldT(self.pb.ap.initial_pc_addr(), true);
     load_instruction_lines[0].address.generate_r1cs_witness_from_packed();
 
     for i in 0..time_bound
     {
         /* load instruction */
-        let pc_addr = self.pb.val(load_instruction_lines[i].address.packed).as_ulong();
+        let pc_addr = self.pb.borrow().val(&load_instruction_lines[i].address.packed).as_ulong();
         let pc_val = mem_backend.get_value(pc_addr);
 
-        self.pb.val(load_instruction_lines[i].contents_before.packed) = FieldT(pc_val, true);
-        self.pb.val(load_instruction_lines[i].contents_after.packed) = FieldT(pc_val, true);
+        self.pb.borrow().val(&load_instruction_lines[i].contents_before.packed) = FieldT(pc_val, true);
+        self.pb.borrow().val(&load_instruction_lines[i].contents_after.packed) = FieldT(pc_val, true);
         load_instruction_lines[i].generate_r1cs_witness_from_packed();
 
         /* first fetch the address part of the memory */
@@ -405,10 +405,10 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
         execution_lines[i+1].address.generate_r1cs_witness_from_bits();
 
         /* fill it in */
-        let load_store_addr = self.pb.val(execution_lines[i+1].address.packed).as_ulong();
+        let load_store_addr = self.pb.borrow().val(&execution_lines[i+1].address.packed).as_ulong();
         let load_store_prev_val = mem_backend.get_value(load_store_addr);
 
-        self.pb.val(execution_lines[i+1].contents_before.packed) = FieldT(load_store_prev_val, true);
+        self.pb.borrow().val(&execution_lines[i+1].contents_before.packed) = FieldT(load_store_prev_val, true);
         execution_lines[i+1].contents_before.generate_r1cs_witness_from_packed();
 
         /* then execute the rest of the instruction */
@@ -416,7 +416,7 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
 
         /* update the memory possibly changed by the CPU checker */
         execution_lines[i+1].contents_after.generate_r1cs_witness_from_bits();
-        let load_store_next_val = self.pb.val(execution_lines[i+1].contents_after.packed).as_ulong();
+        let load_store_next_val = self.pb.borrow().val(&execution_lines[i+1].contents_after.packed).as_ulong();
         mem_backend.set_value(load_store_addr, load_store_next_val);
 
         /* the next PC address was passed in a bit form, so maintain packed form as well */
@@ -440,8 +440,8 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
 
     for i in 0..self.num_memory_lines
     {
-        mem_pairs.push(std::make_pair(self.pb.val(unrouted_memory_lines[i].address.packed).as_ulong(),
-                                              self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong()));
+        mem_pairs.push(std::make_pair(self.pb.borrow().val(&unrouted_memory_lines[i].address.packed).as_ulong(),
+                                              self.pb.borrow().val(&unrouted_memory_lines[i].timestamp.packed).as_ulong()));
     }
 
     std::sort(mem_pairs.begin(), mem_pairs.end());
@@ -449,8 +449,8 @@ pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
      let mut pi=integer_permutation::new(self.num_memory_lines);
     for i in 0..self.num_memory_lines
     {
-        let timestamp = self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong();
-        let address = self.pb.val(unrouted_memory_lines[i].address.packed).as_ulong();
+        let timestamp = self.pb.borrow().val(&unrouted_memory_lines[i].timestamp.packed).as_ulong();
+        let address = self.pb.borrow().val(&unrouted_memory_lines[i].address.packed).as_ulong();
 
         let it = std::upper_bound(mem_pairs.begin(), mem_pairs.end(), std::make_pair(address, timestamp));
         let prev = if it == mem_pairs.end() {0} else{it.1};
@@ -492,27 +492,27 @@ pub fn print_execution_trace()
     {
         print!("Boot process at t=#{}: store {} at {}\n",
                i,
-               self.pb.val(boot_lines[i].contents_after.packed).as_ulong(),
-               self.pb.val(boot_lines[i].address.packed).as_ulong());
+               self.pb.borrow().val(&boot_lines[i].contents_after.packed).as_ulong(),
+               self.pb.borrow().val(&boot_lines[i].address.packed).as_ulong());
     }
 
     for i in 0..time_bound
     {
         print!("Execution step {}:\n", i);
         print!("  Loaded instruction {} from address {} (ts = {})\n",
-               self.pb.val(load_instruction_lines[i].contents_after.packed).as_ulong(),
-               self.pb.val(load_instruction_lines[i].address.packed).as_ulong(),
-               self.pb.val(load_instruction_lines[i].timestamp.packed).as_ulong());
+               self.pb.borrow().val(&load_instruction_lines[i].contents_after.packed).as_ulong(),
+               self.pb.borrow().val(&load_instruction_lines[i].address.packed).as_ulong(),
+               self.pb.borrow().val(&load_instruction_lines[i].timestamp.packed).as_ulong());
 
         print!("  Debugging information from the transition function:\n");
         execution_checkers[i].dump();
 
         print!("  Memory operation executed: addr = {}, contents_before = {}, contents_after = {} (ts_before = {}, ts_after = {})\n",
-               self.pb.val(execution_lines[i+1].address.packed).as_ulong(),
-               self.pb.val(execution_lines[i+1].contents_before.packed).as_ulong(),
-               self.pb.val(execution_lines[i+1].contents_after.packed).as_ulong(),
-               self.pb.val(execution_lines[i].timestamp.packed).as_ulong(),
-               self.pb.val(execution_lines[i+1].timestamp.packed).as_ulong());
+               self.pb.borrow().val(&execution_lines[i+1].address.packed).as_ulong(),
+               self.pb.borrow().val(&execution_lines[i+1].contents_before.packed).as_ulong(),
+               self.pb.borrow().val(&execution_lines[i+1].contents_after.packed).as_ulong(),
+               self.pb.borrow().val(&execution_lines[i].timestamp.packed).as_ulong(),
+               self.pb.borrow().val(&execution_lines[i+1].timestamp.packed).as_ulong());
     }
 }
 
@@ -523,15 +523,15 @@ pub fn print_memory_trace()
     {
         print!("Memory access #{}:\n", i);
         print!("  Time side  : ts = {}, address = {}, contents_before = {}, contents_after = {}\n",
-               self.pb.val(unrouted_memory_lines[i].timestamp.packed).as_ulong(),
-               self.pb.val(unrouted_memory_lines[i].address.packed).as_ulong(),
-               self.pb.val(unrouted_memory_lines[i].contents_before.packed).as_ulong(),
-               self.pb.val(unrouted_memory_lines[i].contents_after.packed).as_ulong());
+               self.pb.borrow().val(&unrouted_memory_lines[i].timestamp.packed).as_ulong(),
+               self.pb.borrow().val(&unrouted_memory_lines[i].address.packed).as_ulong(),
+               self.pb.borrow().val(&unrouted_memory_lines[i].contents_before.packed).as_ulong(),
+               self.pb.borrow().val(&unrouted_memory_lines[i].contents_after.packed).as_ulong());
         print!("  Memory side: ts = {}, address = {}, contents_before = {}, contents_after = {}\n",
-               self.pb.val(routed_memory_lines[i].timestamp.packed).as_ulong(),
-               self.pb.val(routed_memory_lines[i].address.packed).as_ulong(),
-               self.pb.val(routed_memory_lines[i].contents_before.packed).as_ulong(),
-               self.pb.val(routed_memory_lines[i].contents_after.packed).as_ulong());
+               self.pb.borrow().val(&routed_memory_lines[i].timestamp.packed).as_ulong(),
+               self.pb.borrow().val(&routed_memory_lines[i].address.packed).as_ulong(),
+               self.pb.borrow().val(&routed_memory_lines[i].contents_before.packed).as_ulong(),
+               self.pb.borrow().val(&routed_memory_lines[i].contents_after.packed).as_ulong());
     }
 }
 

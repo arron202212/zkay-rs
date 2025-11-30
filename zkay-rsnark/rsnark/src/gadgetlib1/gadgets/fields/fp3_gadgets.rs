@@ -183,11 +183,11 @@ pub fn new4(pb:&RcCell<protoboard<FieldT>>,
 
 pub fn generate_r1cs_equals_const_constraints(el:&Fp3T)
 {
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c0, c0),
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c0, c0),
                                FMT(self.annotation_prefix, " c0"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c1, c1),
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c1, c1),
                                FMT(self.annotation_prefix, " c1"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c2, c2),
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, el.c2, c2),
                                FMT(self.annotation_prefix, " c2"));
 }
 
@@ -299,20 +299,20 @@ pub fn generate_r1cs_constraints()
                 c2 == -v0 + (1/2) v1 + (1/2) v2 - v4}, #] // FullSimplify) & /@
     Subsets[{v0, v1, v2, v3, v4}, {3}]
 */
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, B.c0, v0), FMT(self.annotation_prefix, " v0"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c2, B.c2, v4), FMT(self.annotation_prefix, " v4"));
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, B.c0, v0), FMT(self.annotation_prefix, " v0"));
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c2, B.c2, v4), FMT(self.annotation_prefix, " v4"));
 
     let beta = Fp3T::non_residue;
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + A.c1 + A.c2,
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + A.c1 + A.c2,
                                                          B.c0 + B.c1 + B.c2,
                                                          result.c1 + result.c2 + result.c0 * beta.inverse() + v0 * (FieldT(1) - beta.inverse()) + v4 * (FieldT(1) - beta)),
                                FMT(self.annotation_prefix, " v1"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 - A.c1 + A.c2,
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 - A.c1 + A.c2,
                                                          B.c0 - B.c1 + B.c2,
                                                          -result.c1 + result.c2 + v0 * (FieldT(1) + beta.inverse()) - result.c0 * beta.inverse() + v4 * (FieldT(1) + beta)),
                                FMT(self.annotation_prefix, " v2"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + 2 * A.c1 + 4 * A.c2,
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0 + 2 * A.c1 + 4 * A.c2,
                                                          B.c0 + 2 * B.c1 + 4 * B.c2,
                                                          2 * result.c1 + 4 * result.c2 + result.c0 * (FieldT(8) * beta.inverse()) + v0 * (FieldT(1) - FieldT(8) * beta.inverse()) + v4 * (FieldT(16) - FieldT(2) * beta)),
                                FMT(self.annotation_prefix, " v3"));
@@ -321,8 +321,8 @@ pub fn generate_r1cs_constraints()
 
 pub fn generate_r1cs_witness()
 {
-    self.pb.val(v0) = self.pb.lc_val(A.c0) * self.pb.lc_val(B.c0);
-    self.pb.val(v4) = self.pb.lc_val(A.c2) * self.pb.lc_val(B.c2);
+    self.pb.borrow().val(&v0) = self.pb.lc_val(A.c0) * self.pb.lc_val(B.c0);
+    self.pb.borrow().val(&v4) = self.pb.lc_val(A.c2) * self.pb.lc_val(B.c2);
 
     let Aval = A.get_element();
     let Bval = B.get_element();
@@ -346,11 +346,11 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
 
 pub fn generate_r1cs_constraints()
 {
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, lc, result.c0),
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c0, lc, result.c0),
                                FMT(self.annotation_prefix, " result.c0"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c1, lc, result.c1),
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c1, lc, result.c1),
                                FMT(self.annotation_prefix, " result.c1"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c2, lc, result.c2),
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(A.c2, lc, result.c2),
                                FMT(self.annotation_prefix, " result.c2"));
 }
 
@@ -371,7 +371,7 @@ pub fn new(pb:&RcCell<protoboard<FieldT>>,
                                      annotation_prefix:&String)->Self
     
 {
-    mul.reset(Fp3_mul_gadget::<Fp3T>::new(pb, A, A, result, FMT(annotation_prefix, " mul")));
+    mul=RcCell::new(Fp3_mul_gadget::<Fp3T>::new(pb, A, A, result, FMT(annotation_prefix, " mul")));
 // gadget<FieldT>(&pb, annotation_prefix),A,result
 }
 

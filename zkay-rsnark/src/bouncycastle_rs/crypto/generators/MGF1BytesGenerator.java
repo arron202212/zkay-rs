@@ -82,7 +82,7 @@ public class MGF1BytesGenerator
         byte[]  C = new byte[4];
         int     counter = 0;
 
-        digest.reset();
+        digest=RcCell::new();
 
         if (len > hLen)
         {

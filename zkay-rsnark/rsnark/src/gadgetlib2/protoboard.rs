@@ -35,7 +35,6 @@ use crate::gadgetlib2::variable;
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 pub struct Protoboard {
-// 
     assignment_:VariableAssignment,
     constraintSystem_:ConstraintSystem,
     numInputs_:usize,

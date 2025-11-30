@@ -303,6 +303,6 @@ public class CMac implements Mac
         /*
          * reset the underlying cipher.
          */
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

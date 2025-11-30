@@ -236,7 +236,7 @@ public class SICBlockCipher
     {
         Arrays.fill(counter, (byte)0);
         System.arraycopy(IV, 0, counter, 0, IV.length);
-        cipher.reset();
+        cipher=RcCell::new();
         this.byteCount = 0;
     }
 

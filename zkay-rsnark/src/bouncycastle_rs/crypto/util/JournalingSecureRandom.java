@@ -123,7 +123,7 @@ public class JournalingSecureRandom
         {
             transcript = tOut.toByteArray();
         }
-        tOut.reset();
+        tOut=RcCell::new();
     }
 
     /**

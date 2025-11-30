@@ -243,7 +243,7 @@ public class RSADigestSigner
 
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
     }
 
     private byte[] derEncode(

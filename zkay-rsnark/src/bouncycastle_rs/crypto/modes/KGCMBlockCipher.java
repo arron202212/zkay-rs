@@ -312,10 +312,10 @@ public class KGCMBlockCipher
     {
         Arrays.fill(b, 0L);
 
-        engine.reset();
+        engine=RcCell::new();
 
-        data.reset();
-        associatedText.reset();
+        data=RcCell::new();
+        associatedText=RcCell::new();
 
         if (initialAssociatedText != null)
         {

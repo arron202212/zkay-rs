@@ -193,7 +193,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
             proofs.resize(tree_arity[i]);
 
             let mut ld=r1cs_pcd_local_data::<FieldT>::new();
-            ld.reset(tally_pcd_local_data::<FieldT>::new(tree_elems[cur_idx]));
+            ld=RcCell::new(tally_pcd_local_data::<FieldT>::new(tree_elems[cur_idx]));
             cur_tally.generate_r1cs_witness(msgs, ld);
 
             let   tally_primary_input=r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(cur_tally.get_outgoing_message());

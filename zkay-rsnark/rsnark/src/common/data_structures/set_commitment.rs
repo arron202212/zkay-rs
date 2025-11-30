@@ -137,7 +137,7 @@ pub fn new(max_entries:usize, value_size:usize) ->Self
     let depth = ffec::log2(max_entries);
     let digest_size = HashT::get_digest_len();
 
-    tree.reset( merkle_tree::<HashT>::new(depth, digest_size));
+    tree=RcCell::new( merkle_tree::<HashT>::new(depth, digest_size));
     Self{value_size}
 }
 

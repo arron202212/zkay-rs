@@ -81,7 +81,7 @@ public class SHA512Digest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         /* SHA-512 initial hash value
          * The first 64 bits of the fractional parts of the square roots

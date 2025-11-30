@@ -222,7 +222,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
         incoming_messages_concat.insert(incoming_messages_concat.end(), incoming_message_vars[i].begin(), incoming_message_vars[i].end());
     }
 
-    compliance_predicate_as_gadget.reset(gadget_from_r1cs::<FieldT>::new(pb,
+    compliance_predicate_as_gadget=RcCell::new(gadget_from_r1cs::<FieldT>::new(pb,
         [outgoing_message_vars,
           pb_variable_array::<FieldT>(1, arity),
           incoming_messages_concat,
@@ -232,7 +232,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
 
     /* unpack messages to bits */
     outgoing_message_bits.allocate(&pb, msg_size_in_bits, "outgoing_message_bits");
-    unpack_outgoing_message.reset(multipacking_gadget::<FieldT>(&pb, outgoing_message_bits, outgoing_message_vars, field_logsize(), "unpack_outgoing_message"));
+    unpack_outgoing_message=RcCell::new(multipacking_gadget::<FieldT>(&pb, outgoing_message_bits, outgoing_message_vars, field_logsize(), "unpack_outgoing_message"));
 
     incoming_messages_bits.resize(compliance_predicate_arity);
     for i in 0..compliance_predicate_arity
@@ -251,7 +251,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
     /* allocate blocks */
     sp_translation_step_vk_bits.allocate(&pb, sp_translation_step_vk_size_in_bits, "sp_translation_step_vk_bits");
 
-    block_for_outgoing_message.reset(block_variable::<FieldT>::new(pb, 
+    block_for_outgoing_message=RcCell::new(block_variable::<FieldT>::new(pb, 
                 [sp_translation_step_vk_bits,
                 outgoing_message_bits ], "block_for_outgoing_message"));
 
@@ -263,7 +263,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
     }
 
     /* allocate hash checkers */
-    hash_outgoing_message.reset(CRH_with_field_out_gadget::<FieldT>::new(pb, block_size, *block_for_outgoing_message, sp_compliance_step_pcd_circuit_input, "hash_outgoing_message"));
+    hash_outgoing_message=RcCell::new(CRH_with_field_out_gadget::<FieldT>::new(pb, block_size, *block_for_outgoing_message, sp_compliance_step_pcd_circuit_input, "hash_outgoing_message"));
 
     for i in 0..compliance_predicate_arity
     {
@@ -274,7 +274,7 @@ pub fn new(compliance_predicate:&r1cs_pcd_compliance_predicate<FieldT>) ->Self
     zero.allocate(&pb, "zero");
 
     /* prepare arguments for the verifier */
-    sp_translation_step_vk.reset(r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, sp_translation_step_vk_bits, sp_translation_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_elts(), "sp_translation_step_vk"));
+    sp_translation_step_vk=RcCell::new(r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, sp_translation_step_vk_bits, sp_translation_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_elts(), "sp_translation_step_vk"));
 
     verification_result.allocate(&pb, "verification_result");
     sp_translation_step_vk_and_incoming_message_payload_digest_bits.resize(compliance_predicate_arity);
@@ -432,11 +432,11 @@ pub fn generate_r1cs_witness(sp_translation_step_pcd_circuit_vk:&r1cs_ppzksnark_
 {
     let compliance_predicate_arity = compliance_predicate.max_arity;
     self.pb.clear_values();
-    self.pb.val(zero) = FieldT::zero();
+    self.pb.borrow().val(&zero) = FieldT::zero();
 
     compliance_predicate_as_gadget.generate_r1cs_witness(compliance_predicate_primary_input.as_r1cs_primary_input(),
                                                           compliance_predicate_auxiliary_input.as_r1cs_auxiliary_input(compliance_predicate.incoming_message_payload_lengths));
-    self.pb.val(arity) = FieldT(compliance_predicate_arity);
+    self.pb.borrow().val(&arity) = FieldT(compliance_predicate_arity);
     unpack_outgoing_message.generate_r1cs_witness_from_packed();
     for i in 0..compliance_predicate_arity
     {
@@ -457,9 +457,9 @@ pub fn generate_r1cs_witness(sp_translation_step_pcd_circuit_vk:&r1cs_ppzksnark_
         verifiers[i].generate_r1cs_witness();
     }
 
-    if self.pb.val(incoming_message_types[0]) != FieldT::zero()
+    if self.pb.borrow().val(&incoming_message_types[0]) != FieldT::zero()
     {
-        self.pb.val(verification_result) = FieldT::one();
+        self.pb.borrow().val(&verification_result) = FieldT::one();
     }
 
 // #ifdef DEBUG
@@ -509,14 +509,14 @@ pub fn new(sp_compliance_step_vk:&r1cs_ppzksnark_verification_key<other_curve<pp
 
     /* unpack translation step PCD circuit input */
     unpacked_sp_translation_step_pcd_circuit_input.allocate(&pb, sp_compliance_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_bits(), "unpacked_sp_translation_step_pcd_circuit_input");
-    unpack_sp_translation_step_pcd_circuit_input.reset(multipacking_gadget::<FieldT>::new(pb, unpacked_sp_translation_step_pcd_circuit_input, sp_translation_step_pcd_circuit_input, field_capacity(), "unpack_sp_translation_step_pcd_circuit_input"));
+    unpack_sp_translation_step_pcd_circuit_input=RcCell::new(multipacking_gadget::<FieldT>::new(pb, unpacked_sp_translation_step_pcd_circuit_input, sp_translation_step_pcd_circuit_input, field_capacity(), "unpack_sp_translation_step_pcd_circuit_input"));
 
     /* prepare arguments for the verifier */
-    hardcoded_sp_compliance_step_vk.reset(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, sp_compliance_step_vk, "hardcoded_sp_compliance_step_vk"));
-    proof.reset(r1cs_ppzksnark_proof_variable::<ppT>::new(pb, "proof"));
+    hardcoded_sp_compliance_step_vk=RcCell::new(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, sp_compliance_step_vk, "hardcoded_sp_compliance_step_vk"));
+    proof=RcCell::new(r1cs_ppzksnark_proof_variable::<ppT>::new(pb, "proof"));
 
     /* verify previous proof */
-    online_verifier.reset(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb,
+    online_verifier=RcCell::new(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb,
                                                           *hardcoded_sp_compliance_step_vk,
                                                           unpacked_sp_translation_step_pcd_circuit_input,
                                                           sp_compliance_step_pcd_circuit_maker::<other_curve::<ppT> >::field_logsize(),
@@ -573,7 +573,7 @@ pub fn generate_r1cs_witness(sp_translation_step_input:r1cs_primary_input<ffec::
     print!("Input to the translation circuit:\n");
     for i in 0..self.pb.num_inputs()
     {
-        self.pb.val(variable::<FieldT,pb_variable>(i+1)).print();
+        self.pb.borrow().val(&variable::<FieldT,pb_variable>(i+1)).print();
     }
 
     assert!(self.pb.is_satisfied());

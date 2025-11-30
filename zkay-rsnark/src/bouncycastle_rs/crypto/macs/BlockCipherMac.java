@@ -169,6 +169,6 @@ public class BlockCipherMac
         /*
          * reset the underlying cipher.
          */
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

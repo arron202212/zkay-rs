@@ -85,14 +85,14 @@ pub fn  test_verifier(annotation_A:&String, annotation_B:&String)
     vk.generate_r1cs_witness(keypair.vk);
     proof.generate_r1cs_witness(pi);
     verifier.generate_r1cs_witness();
-    pb.val(result) = FieldT_B::one();
+    pb.borrow().val(&result) = FieldT_B::one();
 
     print!("positive test:\n");
     assert!(pb.is_satisfied());
 
-    pb.val(primary_input_bits[0]) = FieldT_B::one() - pb.val(primary_input_bits[0]);
+    pb.borrow().val(&primary_input_bits[0]) = FieldT_B::one() - pb.borrow().val(&primary_input_bits[0]);
     verifier.generate_r1cs_witness();
-    pb.val(result) = FieldT_B::one();
+    pb.borrow().val(&result) = FieldT_B::one();
 
     print!("negative test:\n");
     assert!(!pb.is_satisfied());
@@ -151,14 +151,14 @@ pub fn  test_hardcoded_verifier(annotation_A:&String, annotation_B:&String)
 
     proof.generate_r1cs_witness(pi);
     online_verifier.generate_r1cs_witness();
-    pb.val(result) = FieldT_B::one();
+    pb.borrow().val(&result) = FieldT_B::one();
 
     print!("positive test:\n");
     assert!(pb.is_satisfied());
 
-    pb.val(primary_input_bits[0]) = FieldT_B::one() - pb.val(primary_input_bits[0]);
+    pb.borrow().val(&primary_input_bits[0]) = FieldT_B::one() - pb.borrow().val(&primary_input_bits[0]);
     online_verifier.generate_r1cs_witness();
-    pb.val(result) = FieldT_B::one();
+    pb.borrow().val(&result) = FieldT_B::one();
 
     print!("negative test:\n");
     assert!(!pb.is_satisfied());

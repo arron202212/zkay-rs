@@ -55,7 +55,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     if tree_depth > 0
     {
         address_bits.allocate(&pb, tree_depth, FMT(annotation_prefix, " address_bits"));
-        merkle_path.reset(merkle_authentication_path_variable::<FieldT, HashT>::new(pb, tree_depth, FMT(annotation_prefix, " merkle_path")));
+        merkle_path=RcCell::new(merkle_authentication_path_variable::<FieldT, HashT>::new(pb, tree_depth, FMT(annotation_prefix, " merkle_path")));
     }
     // gadget<FieldT>(&pb, annotation_prefix),
    Self{max_entries,

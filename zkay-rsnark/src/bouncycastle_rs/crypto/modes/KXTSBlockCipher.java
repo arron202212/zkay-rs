@@ -177,8 +177,8 @@ public class KXTSBlockCipher
 
     public void reset()
     {
-//        super.reset();
-        cipher.reset();
+//        super=RcCell::new();
+        cipher=RcCell::new();
 
         System.arraycopy(tw_init, 0, tw_current, 0, tw_init.length);
         counter = 0;

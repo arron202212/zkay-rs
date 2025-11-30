@@ -238,7 +238,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
         incoming_messages_concat.insert(incoming_messages_concat.end(), incoming_message_vars[i].begin(), incoming_message_vars[i].end());
     }
 
-    compliance_predicate_as_gadget.reset(gadget_from_r1cs::<FieldT>::new(pb,
+    compliance_predicate_as_gadget=RcCell::new(gadget_from_r1cs::<FieldT>::new(pb,
         [ outgoing_message_vars,
           pb_variable_array::<FieldT>(1, arity),
           incoming_messages_concat,
@@ -248,7 +248,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
 
     /* unpack messages to bits */
     outgoing_message_bits.allocate(&pb, outgoing_msg_size_in_bits, "outgoing_message_bits");
-    unpack_outgoing_message.reset(multipacking_gadget::<FieldT>::new(pb, outgoing_message_bits, outgoing_message_vars, field_logsize(), "unpack_outgoing_message"));
+    unpack_outgoing_message=RcCell::new(multipacking_gadget::<FieldT>::new(pb, outgoing_message_bits, outgoing_message_vars, field_logsize(), "unpack_outgoing_message"));
 
     incoming_messages_bits.resize(compliance_predicate.max_arity);
     for i in 0..compliance_predicate.max_arity
@@ -267,7 +267,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
     }
 
     /* allocate commitment, verification key(s) and membership checker(s)/proof(s) */
-    commitment.reset( set_commitment_variable::<FieldT, CRH_with_bit_out_gadget::<FieldT> >::new(pb, commitment_size, "commitment"));
+    commitment=RcCell::new( set_commitment_variable::<FieldT, CRH_with_bit_out_gadget::<FieldT> >::new(pb, commitment_size, "commitment"));
 
     ffec::print_indent(); print!("* {} perform same type optimization for compliance predicate with type {}\n",
                            if compliance_predicate.relies_on_same_type_inputs {"Will"} else{"Will NOT"},
@@ -316,7 +316,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
     }
 
     /* allocate blocks */
-    block_for_outgoing_message.reset(block_variable::<FieldT>::new(pb,  [commitment.bits, outgoing_message_bits] , "block_for_outgoing_message"));
+    block_for_outgoing_message=RcCell::new(block_variable::<FieldT>::new(pb,  [commitment.bits, outgoing_message_bits] , "block_for_outgoing_message"));
 
     for i in 0..compliance_predicate.max_arity
     {
@@ -324,7 +324,7 @@ pub fn new(compliance_predicate:r1cs_pcd_compliance_predicate<FieldT>,
     }
 
     /* allocate hash checkers */
-    hash_outgoing_message.reset(CRH_with_field_out_gadget::<FieldT>::new(pb, output_block_size, *block_for_outgoing_message, mp_compliance_step_pcd_circuit_input, "hash_outgoing_message"));
+    hash_outgoing_message=RcCell::new(CRH_with_field_out_gadget::<FieldT>::new(pb, output_block_size, *block_for_outgoing_message, mp_compliance_step_pcd_circuit_input, "hash_outgoing_message"));
 
     for i in 0..compliance_predicate.max_arity
     {
@@ -563,7 +563,7 @@ pub fn generate_r1cs_witness(commitment_to_translation_step_r1cs_vks:set_commitm
                                                                       translation_step_proofs:Vec<r1cs_ppzksnark_proof<other_curve<ppT> > >)
 {
     self.pb.clear_values();
-    self.pb.val(zero) = FieldT::zero();
+    self.pb.borrow().val(&zero) = FieldT::zero();
 
     compliance_predicate_as_gadget.generate_r1cs_witness(compliance_predicate_primary_input.as_r1cs_primary_input(),
                                                           compliance_predicate_auxiliary_input.as_r1cs_auxiliary_input(compliance_predicate.incoming_message_payload_lengths));
@@ -584,42 +584,42 @@ pub fn generate_r1cs_witness(commitment_to_translation_step_r1cs_vks:set_commitm
     if compliance_predicate.relies_on_same_type_inputs
     {
         /* all messages (except base case) must be of the same type */
-        self.pb.val(common_type) = FieldT::zero();
+        self.pb.borrow().val(&common_type) = FieldT::zero();
         let mut  nonzero_type_idx = 0;
         for i in 0..compliance_predicate.max_arity
         {
-            if self.pb.val(incoming_message_types[i]) == 0
+            if self.pb.borrow().val(&incoming_message_types[i]) == 0
             {
                 continue;
             }
 
-            if self.pb.val(common_type).is_zero()
+            if self.pb.borrow().val(&common_type).is_zero()
             {
-                self.pb.val(common_type) = self.pb.val(incoming_message_types[i]);
+                self.pb.borrow().val(&common_type) = self.pb.borrow().val(&incoming_message_types[i]);
                 nonzero_type_idx = i;
             }
             else
             {
-                assert!(self.pb.val(common_type) == self.pb.val(incoming_message_types[i]));
+                assert!(self.pb.borrow().val(&common_type) == self.pb.borrow().val(&incoming_message_types[i]));
             }
         }
 
-        self.pb.val(membership_check_results[0]) = if self.pb.val(common_type).is_zero() {FieldT::zero()} else{FieldT::one()};
+        self.pb.borrow().val(&membership_check_results[0]) = if self.pb.borrow().val(&common_type).is_zero() {FieldT::zero()} else{FieldT::one()};
         membership_proofs[0].generate_r1cs_witness(vk_membership_proofs[nonzero_type_idx]);
         membership_checkers[0].generate_r1cs_witness();
 
        
         for (i,it) in compliance_predicate.accepted_input_types.iter().enumerate()
         {
-            pb.val(common_type_check_aux[i]) = ((if i == 0 ? {pb.val(common_type)} else {pb.val(common_type_check_aux[i-1])}) *
-                                                (pb.val(common_type) - FieldT(*it)));
+            pb.borrow().val(&common_type_check_aux[i]) = ((if i == 0 ? {pb.borrow().val(&common_type)} else {pb.borrow().val(&common_type_check_aux[i-1])}) *
+                                                (pb.borrow().val(&common_type) - FieldT(*it)));
         }
     }
     else
     {
         for i in 0..membership_checkers.len()
         {
-            self.pb.val(membership_check_results[i])=  (if self.pb.val(incoming_message_types[i]).is_zero() {FieldT::zero()} else{FieldT::one()});
+            self.pb.borrow().val(&membership_check_results[i])=  (if self.pb.borrow().val(&incoming_message_types[i]).is_zero() {FieldT::zero()} else{FieldT::one()});
             membership_proofs[i].generate_r1cs_witness(vk_membership_proofs[i]);
             membership_checkers[i].generate_r1cs_witness();
         }
@@ -685,14 +685,14 @@ pub fn new(compliance_step_vk:r1cs_ppzksnark_verification_key<other_curve<ppT> >
 
     /* unpack translation step MP_PCD circuit input */
     unpacked_mp_translation_step_pcd_circuit_input.allocate(&pb, mp_compliance_step_pcd_circuit_maker::<other_curve::<ppT> >::input_size_in_bits(), "unpacked_mp_translation_step_pcd_circuit_input");
-    unpack_mp_translation_step_pcd_circuit_input.reset(multipacking_gadget::<FieldT>::new(pb, unpacked_mp_translation_step_pcd_circuit_input, mp_translation_step_pcd_circuit_input, field_capacity(), "unpack_mp_translation_step_pcd_circuit_input"));
+    unpack_mp_translation_step_pcd_circuit_input=RcCell::new(multipacking_gadget::<FieldT>::new(pb, unpacked_mp_translation_step_pcd_circuit_input, mp_translation_step_pcd_circuit_input, field_capacity(), "unpack_mp_translation_step_pcd_circuit_input"));
 
     /* prepare arguments for the verifier */
-    hardcoded_compliance_step_vk.reset(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, compliance_step_vk, "hardcoded_compliance_step_vk"));
-    proof.reset(r1cs_ppzksnark_proof_variable::<ppT>::new(pb, "proof"));
+    hardcoded_compliance_step_vk=RcCell::new(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new(pb, compliance_step_vk, "hardcoded_compliance_step_vk"));
+    proof=RcCell::new(r1cs_ppzksnark_proof_variable::<ppT>::new(pb, "proof"));
 
     /* verify previous proof */
-    online_verifier.reset(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb,
+    online_verifier=RcCell::new(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb,
                                                                          *hardcoded_compliance_step_vk,
                                                                          unpacked_mp_translation_step_pcd_circuit_input,
                                                                          mp_compliance_step_pcd_circuit_maker::<other_curve::<ppT> >::field_logsize(),

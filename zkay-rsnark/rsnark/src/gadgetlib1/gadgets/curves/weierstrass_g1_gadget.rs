@@ -211,17 +211,17 @@ pb:&RcCell<protoboard<FieldT>>, P:&G1_variable<ppT>, annotation_prefix:&String)-
 
 pub fn  generate_r1cs_constraints()
 {
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![P.X],
         vec![P.X],
         vec![P_X_squared]),
       FMT(self.annotation_prefix, " P_X_squared"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![P.Y ],
         vec![P.Y ],
         vec![P_Y_squared ]),
       FMT(self.annotation_prefix, " P_Y_squared"));
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![P.X ],
         vec![P_X_squared, ONE * ffec::G1::<other_curve::<ppT> >::coeff_a],
         vec![P_Y_squared, ONE * (-ffec::G1::<other_curve::<ppT> >::coeff_b)]),
@@ -231,8 +231,8 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    self.pb.val(P_X_squared) = self.pb.lc_val(P.X).squared();
-    self.pb.val(P_Y_squared) = self.pb.lc_val(P.Y).squared();
+    self.pb.borrow().val(&P_X_squared) = self.pb.lc_val(P.X).squared();
+    self.pb.borrow().val(&P_Y_squared) = self.pb.lc_val(P.Y).squared();
 }
 }
 impl G1_add_gadget<ppT>{
@@ -275,25 +275,25 @@ pb:&RcCell<protoboard<FieldT>>,
 
 pub fn  generate_r1cs_constraints()
 {
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![B.X, A.X * (-1)],
         vec![B.Y, A.Y * (-1)]),
       FMT(self.annotation_prefix, " calc_lambda"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda ],
         vec![lambda],
         vec![C.X, A.X, B.X]),
       FMT(self.annotation_prefix, " calc_X"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![A.X, C.X * (-1)],
         vec![C.Y, A.Y ]),
       FMT(self.annotation_prefix, " calc_Y"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![inv],
         vec![B.X, A.X * (-1)],
         vec![ONE]),
@@ -303,10 +303,10 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    self.pb.val(inv) = (self.pb.lc_val(B.X) - self.pb.lc_val(A.X)).inverse();
-    self.pb.val(lambda) = (self.pb.lc_val(B.Y) - self.pb.lc_val(A.Y)) * self.pb.val(inv);
-    self.pb.lc_val(C.X) = self.pb.val(lambda).squared() - self.pb.lc_val(A.X) - self.pb.lc_val(B.X);
-    self.pb.lc_val(C.Y) = self.pb.val(lambda) * (self.pb.lc_val(A.X) - self.pb.lc_val(C.X)) - self.pb.lc_val(A.Y);
+    self.pb.borrow().val(&inv) = (self.pb.lc_val(B.X) - self.pb.lc_val(A.X)).inverse();
+    self.pb.borrow().val(&lambda) = (self.pb.lc_val(B.Y) - self.pb.lc_val(A.Y)) * self.pb.borrow().val(&inv);
+    self.pb.lc_val(C.X) = self.pb.borrow().val(&lambda).squared() - self.pb.lc_val(A.X) - self.pb.lc_val(B.X);
+    self.pb.lc_val(C.Y) = self.pb.borrow().val(&lambda) * (self.pb.lc_val(A.X) - self.pb.lc_val(C.X)) - self.pb.lc_val(A.Y);
 }
 }
 impl G1_dbl_gadget<ppT>{
@@ -330,25 +330,25 @@ pb:&RcCell<protoboard<FieldT>>,
 
 pub fn  generate_r1cs_constraints()
 {
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![A.X ],
         vec![A.X ],
         vec![Xsquared ]),
        FMT(self.annotation_prefix, " calc_Xsquared"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda * 2 ],
         vec![A.Y ],
         vec![Xsquared * 3, ONE * ffec::G1::<other_curve::<ppT> >::coeff_a]),
       FMT(self.annotation_prefix, " calc_lambda"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![lambda],
         vec![B.X, A.X * 2]),
       FMT(self.annotation_prefix, " calc_X"));
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
         vec![lambda],
         vec![A.X, B.X * (-1) ],
         vec![B.Y, A.Y ]),
@@ -358,10 +358,10 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    self.pb.val(Xsquared) = self.pb.lc_val(A.X).squared();
-    self.pb.val(lambda) = (FieldT(3) * self.pb.val(Xsquared) + ffec::G1::<other_curve::<ppT> >::coeff_a) * (FieldT(2) * self.pb.lc_val(A.Y)).inverse();
-    self.pb.lc_val(B.X) = self.pb.val(lambda).squared() - FieldT(2) * self.pb.lc_val(A.X);
-    self.pb.lc_val(B.Y) = self.pb.val(lambda) * (self.pb.lc_val(A.X) - self.pb.lc_val(B.X)) - self.pb.lc_val(A.Y);
+    self.pb.borrow().val(&Xsquared) = self.pb.lc_val(A.X).squared();
+    self.pb.borrow().val(&lambda) = (FieldT(3) * self.pb.borrow().val(&Xsquared) + ffec::G1::<other_curve::<ppT> >::coeff_a) * (FieldT(2) * self.pb.lc_val(A.Y)).inverse();
+    self.pb.lc_val(B.X) = self.pb.borrow().val(&lambda).squared() - FieldT(2) * self.pb.lc_val(A.X);
+    self.pb.lc_val(B.Y) = self.pb.borrow().val(&lambda) * (self.pb.lc_val(A.X) - self.pb.lc_val(B.X)) - self.pb.lc_val(A.Y);
 }
 }
 
@@ -435,11 +435,11 @@ pub fn  generate_r1cs_constraints()
           chosen_results[i+1].X = scalars[i] * computed_results[i].X + (1-scalars[i]) *  chosen_results[i].X
           chosen_results[i+1].X - chosen_results[i].X = scalars[i] * (computed_results[i].X - chosen_results[i].X)
         */
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
                                                              computed_results[i].X - chosen_results[i].X,
                                                              chosen_results[i+1].X - chosen_results[i].X),
                                    FMT(self.annotation_prefix, " chosen_results_{}_X", i+1));
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
                                                              computed_results[i].Y - chosen_results[i].Y,
                                                              chosen_results[i+1].Y - chosen_results[i].Y),
                                    FMT(self.annotation_prefix, " chosen_results_{}_Y", i+1));
@@ -460,8 +460,8 @@ pub fn  generate_r1cs_witness()
     for i in 0..scalar_size
     {
         adders[i].generate_r1cs_witness();
-        self.pb.lc_val(chosen_results[i+1].X) = if self.pb.val(scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].X)} else{self.pb.lc_val(computed_results[i].X)};
-        self.pb.lc_val(chosen_results[i+1].Y) = if self.pb.val(scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].Y)} else{self.pb.lc_val(computed_results[i].Y)};
+        self.pb.lc_val(chosen_results[i+1].X) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].X)} else{self.pb.lc_val(computed_results[i].X)};
+        self.pb.lc_val(chosen_results[i+1].Y) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].Y)} else{self.pb.lc_val(computed_results[i].Y)};
     }
 }
 }

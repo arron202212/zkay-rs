@@ -152,9 +152,9 @@ public class CCMBlockCipher
 
     public void reset()
     {
-        cipher.reset();
-        associatedText.reset();
-        data.reset();
+        cipher=RcCell::new();
+        associatedText=RcCell::new();
+        data=RcCell::new();
     }
 
     /**

@@ -140,7 +140,7 @@ public class DSADigestSigner
 
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
     }
 
     protected BigInteger getOrder()

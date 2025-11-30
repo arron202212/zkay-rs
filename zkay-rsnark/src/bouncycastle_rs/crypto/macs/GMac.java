@@ -110,6 +110,6 @@ public class GMac implements Mac
 
     public void reset()
     {
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

@@ -154,7 +154,7 @@ public class GMSSSigner
      */
     private void initSign()
     {
-        messDigestTrees.reset();
+        messDigestTrees=RcCell::new();
         // set private key and take from it ots key, auth, tree and key
         // counter, rootSign
         GMSSPrivateKeyParameters gmssPrivateKey = (GMSSPrivateKeyParameters)key;
@@ -284,7 +284,7 @@ public class GMSSSigner
      */
     private void initVerify()
     {
-        messDigestTrees.reset();
+        messDigestTrees=RcCell::new();
 
         GMSSPublicKeyParameters gmssPublicKey = (GMSSPublicKeyParameters)key;
         pubKeyBytes = gmssPublicKey.getPublicKey();
@@ -308,7 +308,7 @@ public class GMSSSigner
 
         boolean success = false;
         // int halfSigLength = signature.length >>> 1;
-        messDigestOTS.reset();
+        messDigestOTS=RcCell::new();
         WinternitzOTSVerify otsVerify;
         int otsSigLength;
 

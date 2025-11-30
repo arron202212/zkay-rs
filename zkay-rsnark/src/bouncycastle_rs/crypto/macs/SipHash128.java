@@ -78,7 +78,7 @@ public class SipHash128
 
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
         v1 ^= 0xeeL;
     }
 

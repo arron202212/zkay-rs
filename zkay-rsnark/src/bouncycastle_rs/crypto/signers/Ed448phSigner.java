@@ -86,6 +86,6 @@ public class Ed448phSigner
 
     public void reset()
     {
-        prehash.reset();
+        prehash=RcCell::new();
     }
 }

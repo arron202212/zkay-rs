@@ -247,7 +247,7 @@ public class CipherOutputStream
             }
             else if (streamCipher != null)
             {
-                streamCipher.reset();
+                streamCipher=RcCell::new();
             }
         }
         catch (final InvalidCipherTextException e)

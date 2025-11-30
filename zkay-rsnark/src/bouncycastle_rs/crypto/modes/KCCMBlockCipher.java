@@ -432,8 +432,8 @@ public class KCCMBlockCipher
         Arrays.fill(counter, (byte)0);
         Arrays.fill(macBlock, (byte)0);
         counter[0] = 0x01;
-        data.reset();
-        associatedText.reset();
+        data=RcCell::new();
+        associatedText=RcCell::new();
 
         if (initialAssociatedText != null)
         {

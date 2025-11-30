@@ -139,6 +139,6 @@ public class GenericSigner
 
     public void reset()
     {
-        digest.reset();
+        digest=RcCell::new();
     }
 }

@@ -300,6 +300,6 @@ public class ISO9797Alg3Mac
         /*
          * reset the underlying cipher.
          */
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

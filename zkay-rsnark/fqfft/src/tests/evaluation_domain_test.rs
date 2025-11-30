@@ -47,11 +47,11 @@ use crate::tools::exceptions;
     {
       try
       {
-        if key == 0) domain.reset(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain.reset(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain.reset(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain.reset(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain.reset(arithmetic_sequence_domain::<TypeParam>::new(m);
+        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
+        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
+        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
+        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
+        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
 
         Vec<TypeParam> a(f);
         domain->FFT(a);
@@ -89,11 +89,11 @@ use crate::tools::exceptions;
     {
       try
       {
-        if key == 0) domain.reset(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain.reset(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain.reset(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain.reset(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain.reset(arithmetic_sequence_domain::<TypeParam>::new(m);
+        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
+        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
+        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
+        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
+        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
 
         Vec<TypeParam> a(f);
         domain->FFT(a);
@@ -127,11 +127,11 @@ use crate::tools::exceptions;
     {
       try
       {
-        if key == 0) domain.reset(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain.reset(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain.reset(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain.reset(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain.reset(arithmetic_sequence_domain::<TypeParam>::new(m);
+        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
+        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
+        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
+        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
+        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
 
         Vec<TypeParam> a(f);
         domain->cosetFFT(a, coset);
@@ -164,11 +164,11 @@ use crate::tools::exceptions;
 
       try
       {
-        if key == 0) domain.reset(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain.reset(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain.reset(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain.reset(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain.reset(arithmetic_sequence_domain::<TypeParam>::new(m);
+        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
+        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
+        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
+        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
+        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
 
         Vec<TypeParam> a;
         a = domain->evaluate_all_lagrange_polynomials(t);
@@ -207,11 +207,11 @@ use crate::tools::exceptions;
     {
       try
       {
-        if key == 0) domain.reset(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain.reset(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain.reset(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain.reset(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain.reset(arithmetic_sequence_domain::<TypeParam>::new(m);
+        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
+        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
+        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
+        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
+        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
 
         TypeParam a;
         a = domain->compute_vanishing_polynomial(t);

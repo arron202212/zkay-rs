@@ -100,7 +100,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 {
     /* message schedule and inputs for it */
     packed_W.allocate(&pb, 64, FMT(self.annotation_prefix, " packed_W"));
-    message_schedule.reset(sha256_message_schedule_gadget::<FieldT>::new(pb, new_block, packed_W, FMT(self.annotation_prefix, " message_schedule")));
+    message_schedule=RcCell::new(sha256_message_schedule_gadget::<FieldT>::new(pb, new_block, packed_W, FMT(self.annotation_prefix, " message_schedule")));
 
     /* initalize */
     round_a.push_back(pb_linear_combination_array::<FieldT>::new(prev_output.rbegin() + 7*32, prev_output.rbegin() + 8*32));
@@ -166,12 +166,12 @@ pub fn generate_r1cs_constraints()
 
     for i in 0..4
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                              round_functions[3-i].packed_d + round_functions[63-i].packed_new_a,
                                                              unreduced_output[i]),
           FMT(self.annotation_prefix, " unreduced_output_{}", i));
 
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1,
                                                              round_functions[3-i].packed_h + round_functions[63-i].packed_new_e,
                                                              unreduced_output[4+i]),
           FMT(self.annotation_prefix, " unreduced_output_{}", 4+i));
@@ -192,7 +192,7 @@ pub fn generate_r1cs_witness()
     print!("Input:\n");
     for j in 0..16
     {
-        print!("{} ", self.pb.val(packed_W[j]).as_ulong());
+        print!("{} ", self.pb.borrow().val(&packed_W[j]).as_ulong());
     }
     print!("\n");
 //#endif
@@ -204,8 +204,8 @@ pub fn generate_r1cs_witness()
 
     for i in 0..4
     {
-        self.pb.val(unreduced_output[i]) = self.pb.val(round_functions[3-i].packed_d) + self.pb.val(round_functions[63-i].packed_new_a);
-        self.pb.val(unreduced_output[4+i]) = self.pb.val(round_functions[3-i].packed_h) + self.pb.val(round_functions[63-i].packed_new_e);
+        self.pb.borrow().val(&unreduced_output[i]) = self.pb.borrow().val(&round_functions[3-i].packed_d) + self.pb.borrow().val(&round_functions[63-i].packed_new_a);
+        self.pb.borrow().val(&unreduced_output[4+i]) = self.pb.borrow().val(&round_functions[3-i].packed_h) + self.pb.borrow().val(&round_functions[63-i].packed_new_e);
     }
 
     for i in 0..8
@@ -217,7 +217,7 @@ pub fn generate_r1cs_witness()
     print!("Output:\n");
     for j in 0..8
     {
-        print!("{} ", self.pb.val(reduced_output[j]).as_ulong());
+        print!("{} ", self.pb.borrow().val(&reduced_output[j]).as_ulong());
     }
     print!("\n");
 //#endif
@@ -238,7 +238,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     block.insert(block.end(), right.bits.begin(), right.bits.end());
 
     /* compute the hash itself */
-    f.reset(sha256_compression_function_gadget::<FieldT>::new(pb, SHA256_default_IV::<FieldT>(pb), block, output, FMT(self.annotation_prefix, " f")));
+    f=RcCell::new(sha256_compression_function_gadget::<FieldT>::new(pb, SHA256_default_IV::<FieldT>(pb), block, output, FMT(self.annotation_prefix, " f")));
     //  gadget<FieldT>(&pb, annotation_prefix)
 }
 
@@ -253,7 +253,7 @@ pub fn new2(pb:RcCell<protoboard<FieldT>>,
 // gadget<FieldT>(&pb, annotation_prefix)
     assert!(block_length == SHA256_block_size);
     assert!(input_block.bits.len() == block_length);
-    f.reset(sha256_compression_function_gadget::<FieldT>::new(pb, SHA256_default_IV::<FieldT>(pb), input_block.bits, output, FMT(self.annotation_prefix, " f")));
+    f=RcCell::new(sha256_compression_function_gadget::<FieldT>::new(pb, SHA256_default_IV::<FieldT>(pb), input_block.bits, output, FMT(self.annotation_prefix, " f")));
 }
 
 

@@ -99,9 +99,9 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                       annotation_prefix:&String)->Self
   
 {
-    ratio.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
-    compute_ratio.reset(e_over_e_miller_loop_gadget::<ppT>::new(pb, lhs_G1, lhs_G2, rhs_G1, rhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
-    check_finexp.reset(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
+    ratio=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
+    compute_ratio=RcCell::new(e_over_e_miller_loop_gadget::<ppT>::new(pb, lhs_G1, lhs_G2, rhs_G1, rhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
+    check_finexp=RcCell::new(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
     //   gadget<FieldT>(&pb, annotation_prefix),
    Self{lhs_G1,
    lhs_G2,
@@ -138,9 +138,9 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                         annotation_prefix:&String)->Self
     
 {
-    ratio.reset(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
-    compute_ratio.reset(e_times_e_over_e_miller_loop_gadget::<ppT>::new(pb, rhs1_G1, rhs1_G2, rhs2_G1, rhs2_G2, lhs_G1, lhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
-    check_finexp.reset(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
+    ratio=RcCell::new(Fqk_variable::<ppT>::new(pb, FMT(annotation_prefix, " ratio")));
+    compute_ratio=RcCell::new(e_times_e_over_e_miller_loop_gadget::<ppT>::new(pb, rhs1_G1, rhs1_G2, rhs2_G1, rhs2_G2, lhs_G1, lhs_G2, *ratio, FMT(annotation_prefix, " compute_ratio")));
+    check_finexp=RcCell::new(final_exp_gadget::<ppT>::new(pb, *ratio, result, FMT(annotation_prefix, " check_finexp")));
     // gadget<FieldT>(&pb, annotation_prefix),
    Self{lhs_G1,
    lhs_G2,

@@ -111,6 +111,6 @@ public class KGMac
 
     public void reset()
     {
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

@@ -253,7 +253,7 @@ public final class Zuc256Mac
     {
         if (theState != null)
         {
-            theEngine.reset(theState);
+            theEngine=RcCell::new(theState);
         }
         initKeyStream();
     }

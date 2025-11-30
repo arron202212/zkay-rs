@@ -397,12 +397,12 @@ public class SkeinEngine
             currentBlock = Arrays.clone(ubi.currentBlock, currentBlock);
             currentOffset = ubi.currentOffset;
             message = Arrays.clone(ubi.message, this.message);
-            tweak.reset(ubi.tweak);
+            tweak=RcCell::new(ubi.tweak);
         }
 
         public void reset(int type)
         {
-            tweak.reset();
+            tweak=RcCell::new();
             tweak.setType(type);
             currentOffset = 0;
         }
@@ -538,7 +538,7 @@ public class SkeinEngine
 
     private void copyIn(SkeinEngine engine)
     {
-        this.ubi.reset(engine.ubi);
+        this.ubi=RcCell::new(engine.ubi);
         this.chain = Arrays.clone(engine.chain, this.chain);
         this.initialState = Arrays.clone(engine.initialState, this.initialState);
         this.key = Arrays.clone(engine.key, this.key);
@@ -724,7 +724,7 @@ public class SkeinEngine
 
     private void ubiInit(int type)
     {
-        this.ubi.reset(type);
+        this.ubi=RcCell::new(type);
     }
 
     private void ubiFinal()

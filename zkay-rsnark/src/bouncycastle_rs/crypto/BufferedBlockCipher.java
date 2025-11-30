@@ -315,6 +315,6 @@ public class BufferedBlockCipher
         //
         // reset the underlying cipher.
         //
-        cipher.reset();
+        cipher=RcCell::new();
     }
 }

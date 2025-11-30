@@ -56,7 +56,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> packing_gadget<FieldT, PB> {
     // pub fn generate_r1cs_witness_from_bits();
 }
 
-//
+#[derive(Clone, Default)]
 pub struct multipacking_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub packers: Vec<gadget<FieldT, PB, packing_gadget<FieldT, PB>>>,
     pub bits: pb_linear_combination_array<FieldT, PB>,
@@ -76,7 +76,7 @@ pub struct multipacking_gadget<FieldT: FieldTConfig, PB: PBConfig> {
 //     // pub fn generate_r1cs_witness_from_bits();
 // }
 
-//
+#[derive(Clone, Default)]
 pub struct field_vector_copy_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub source: pb_variable_array<FieldT, PB>,
     pub target: pb_variable_array<FieldT, PB>,
@@ -90,7 +90,7 @@ pub struct field_vector_copy_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // pub fn generate_r1cs_witness(&self);
 }
 
-//
+#[derive(Clone, Default)]
 pub struct bit_vector_copy_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub source_bits: pb_variable_array<FieldT, PB>,
     pub target_bits: pb_variable_array<FieldT, PB>,
@@ -112,17 +112,19 @@ pub struct bit_vector_copy_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // pub fn generate_r1cs_witness(&self);
 }
 
-//
-pub struct dual_variable_gadget<FieldT: FieldTConfig, PB: PBConfig> {
+#[derive(Clone, Default)]
+pub struct dual_variable_gadget<FieldT: FieldTConfig, PB: PBConfig, T> {
     pub consistency_check: RcCell<gadget<FieldT, PB, packing_gadget<FieldT, PB>>>,
     pub packed: variable<FieldT, pb_variable>,
     pub bits: pb_variable_array<FieldT, PB>,
+    pub t: T,
 }
-impl<FieldT: FieldTConfig, PB: PBConfig> dual_variable_gadget<FieldT, PB> {
+impl<FieldT: FieldTConfig, PB: PBConfig, T> dual_variable_gadget<FieldT, PB, T> {
     pub fn new(
         mut pb: RcCell<protoboard<FieldT, PB>>,
         width: usize,
         annotation_prefix: String,
+        t: T,
     ) -> gadget<FieldT, PB, Self> {
         let mut packed = variable::<FieldT, pb_variable>::default();
         packed.allocate(&pb, prefix_format!(annotation_prefix, " packed"));
@@ -141,14 +143,16 @@ impl<FieldT: FieldTConfig, PB: PBConfig> dual_variable_gadget<FieldT, PB> {
                 consistency_check,
                 packed,
                 bits,
+                t,
             },
         )
     }
 
-    pub fn new2(
+    pub fn new_with_bits(
         pb: RcCell<protoboard<FieldT, PB>>,
         bits: pb_variable_array<FieldT, PB>,
         annotation_prefix: String,
+        t: T,
     ) -> gadget<FieldT, PB, Self> {
         let mut packed = variable::<FieldT, pb_variable>::default();
         packed.allocate(&pb, prefix_format!(annotation_prefix, " packed"));
@@ -165,15 +169,17 @@ impl<FieldT: FieldTConfig, PB: PBConfig> dual_variable_gadget<FieldT, PB> {
                 consistency_check,
                 packed,
                 bits,
+                t,
             },
         )
     }
 
-    pub fn new3(
+    pub fn new_with_width(
         pb: RcCell<protoboard<FieldT, PB>>,
         packed: variable<FieldT, pb_variable>,
         width: usize,
         annotation_prefix: String,
+        t: T,
     ) -> gadget<FieldT, PB, Self> {
         let mut bits = pb_variable_array::<FieldT, PB>::default();
         bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " bits"));
@@ -190,6 +196,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> dual_variable_gadget<FieldT, PB> {
                 consistency_check,
                 packed,
                 bits,
+                t,
             },
         )
     }
@@ -207,7 +214,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> dual_variable_gadget<FieldT, PB> {
   if X = 0 then R = 0
   if X != 0 then R = 1 and I = X^{-1}
 */
-
+#[derive(Clone, Default)]
 pub struct disjunction_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub inv: variable<FieldT, pb_variable>,
     pub inputs: pb_variable_array<FieldT, PB>,
@@ -237,7 +244,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> disjunction_gadget<FieldT, PB> {
     // pub fn generate_r1cs_constraints(&self);
     // pub fn generate_r1cs_witness(&self);
 }
-
+#[derive(Clone, Default)]
 pub struct conjunction_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub inv: variable<FieldT, pb_variable>,
     pub inputs: pb_variable_array<FieldT, PB>,
@@ -267,7 +274,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> conjunction_gadget<FieldT, PB> {
     //     pub fn generate_r1cs_constraints(&self);
     //     pub fn generate_r1cs_witness(&self);
 }
-
+#[derive(Clone, Default)]
 pub struct comparison_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub alpha: pb_variable_array<FieldT, PB>,
     pub alpha_packed: variable<FieldT, pb_variable>,
@@ -332,7 +339,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> comparison_gadget<FieldT, PB> {
     // pub fn generate_r1cs_constraints(&self);
     // pub fn generate_r1cs_witness(&self);
 }
-
+#[derive(Clone, Default)]
 pub struct inner_product_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     /* S_i = \sum_{k=0}^{i+1} A[i] * B[i] */
     pub S: pb_variable_array<FieldT, PB>,
@@ -360,6 +367,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> inner_product_gadget<FieldT, PB> {
     // pub fn generate_r1cs_witness(&self);
 }
 
+#[derive(Clone, Default)]
 pub struct loose_multiplexing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //   this implements loose multiplexer:
     //   index not in bounds -> success_flag = 0
@@ -714,7 +722,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, bit_vector_copy_gadg
     }
 }
 
-impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, dual_variable_gadget<FieldT, PB>> {
+impl<FieldT: FieldTConfig, PB: PBConfig, T>
+    gadget<FieldT, PB, dual_variable_gadget<FieldT, PB, T>>
+{
     pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
         self.t
             .consistency_check

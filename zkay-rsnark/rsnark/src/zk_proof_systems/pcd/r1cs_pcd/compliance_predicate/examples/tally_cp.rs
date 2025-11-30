@@ -194,12 +194,12 @@ pb:&        RcCell<protoboard<FieldT>>,
 
     pub fn get_message() -> RcCell<r1cs_pcd_message<FieldT> >
     {
-        let  type_val = self.pb.val(self.types).as_ulong();
+        let  type_val = self.pb.borrow().val(&self.types).as_ulong();
         let sum_val = sum_bits.get_field_element_from_bits(self.pb).as_ulong();
         let count_val = count_bits.get_field_element_from_bits(self.pb).as_ulong();
 
         let mut  result=r1cs_pcd_message::<FieldT>::new();
-        result.reset(tally_pcd_message::<FieldT>::new(type_val, wordsize, sum_val, count_val));
+        result=RcCell::new(tally_pcd_message::<FieldT>::new(type_val, wordsize, sum_val, count_val));
         return result;
     }
 
@@ -226,10 +226,10 @@ pb:&    RcCell<protoboard<FieldT>>,
 
     pub fn get_local_data() ->RcCell<r1cs_pcd_local_data<FieldT> > 
     {
-        let summand_val = self.pb.val(summand).as_ulong();
+        let summand_val = self.pb.borrow().val(&summand).as_ulong();
 
         let mut  result=r1cs_pcd_local_data::<FieldT>::new();
-        result.reset(tally_pcd_local_data::<FieldT>::new(summand_val));
+        result=RcCell::new(tally_pcd_local_data::<FieldT>::new(summand_val));
         return result;
     }
 
@@ -243,15 +243,15 @@ pub fn new(types:usize, max_arity:usize, wordsize:usize,
                                            accepted_input_types:BTreeSet<usize>) ->Self
     
 {
-    self.outgoing_message.reset(tally_pcd_message_variable::<FieldT>::new(self.pb, wordsize, "outgoing_message"));
+    self.outgoing_message=RcCell::new(tally_pcd_message_variable::<FieldT>::new(self.pb, wordsize, "outgoing_message"));
     self.arity.allocate(self.pb, "arity");
 
     for i in 0..max_arity
     {
-        self.incoming_messages[i].reset(tally_pcd_message_variable::<FieldT>::new(self.pb, wordsize, FMT("", "incoming_messages_{}", i)));
+        self.incoming_messages[i]=RcCell::new(tally_pcd_message_variable::<FieldT>::new(self.pb, wordsize, FMT("", "incoming_messages_{}", i)));
     }
 
-    self.local_data.reset(tally_pcd_local_data_variable::<FieldT>::new(self.pb, "local_data"));
+    self.local_data=RcCell::new(tally_pcd_local_data_variable::<FieldT>::new(self.pb, "local_data"));
 
     sum_out_packed.allocate(self.pb, "sum_out_packed");
     count_out_packed.allocate(self.pb, "count_out_packed");
@@ -268,10 +268,10 @@ pub fn new(types:usize, max_arity:usize, wordsize:usize,
         incoming_types.push(msg.types);
     }
 
-    compute_type_val_inner_product.reset(inner_product_gadget::<FieldT>::new(self.pb, incoming_types, sum_in_packed, type_val_inner_product, "compute_type_val_inner_product"));
+    compute_type_val_inner_product=RcCell::new(inner_product_gadget::<FieldT>::new(self.pb, incoming_types, sum_in_packed, type_val_inner_product, "compute_type_val_inner_product"));
 
-    unpack_sum_out.reset(packing_gadget::<FieldT>::new(self.pb, tally_pcd_message_variable::<FieldT>(self.outgoing_message).sum_bits, sum_out_packed, "pack_sum_out"));
-    unpack_count_out.reset(packing_gadget::<FieldT>::new(self.pb, tally_pcd_message_variable::<FieldT>(self.outgoing_message).count_bits, count_out_packed, "pack_count_out"));
+    unpack_sum_out=RcCell::new(packing_gadget::<FieldT>::new(self.pb, tally_pcd_message_variable::<FieldT>(self.outgoing_message).sum_bits, sum_out_packed, "pack_sum_out"));
+    unpack_count_out=RcCell::new(packing_gadget::<FieldT>::new(self.pb, tally_pcd_message_variable::<FieldT>(self.outgoing_message).count_bits, count_out_packed, "pack_count_out"));
 
     for i in 0..max_arity
     {
@@ -306,30 +306,30 @@ pub fn  generate_r1cs_constraints()
 
     for i in 0..self.max_arity
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(incoming_types[i], sum_in_packed_aux[i], sum_in_packed[i]), FMT("", "initial_sum_{}_is_zero", i));
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(incoming_types[i], count_in_packed_aux[i], count_in_packed[i]), FMT("", "initial_sum_{}_is_zero", i));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(incoming_types[i], sum_in_packed_aux[i], sum_in_packed[i]), FMT("", "initial_sum_{}_is_zero", i));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(incoming_types[i], count_in_packed_aux[i], count_in_packed[i]), FMT("", "initial_sum_{}_is_zero", i));
     }
 
     /* constrain arity indicator variables so that arity_indicators[arity] = 1 and arity_indicators[i] = 0 for any other i */
     for i in 0..self.max_arity
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(self.arity - FieldT(i), arity_indicators[i], 0), FMT("", "arity_indicators_{}", i));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(self.arity - FieldT(i), arity_indicators[i], 0), FMT("", "arity_indicators_{}", i));
     }
 
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum::<FieldT>(arity_indicators), 1), "arity_indicators");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, pb_sum::<FieldT>(arity_indicators), 1), "arity_indicators");
 
     /* require that types of messages that are past arity (i.e. unbound wires) carry 0 */
     for i in 0..self.max_arity
     {
-        self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(0 + pb_sum::<FieldT>(pb_variable_array::<FieldT>(arity_indicators.begin(), arity_indicators.begin() + i)), incoming_types[i], 0), FMT("", "unbound_types_{}", i));
+        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(0 + pb_sum::<FieldT>(pb_variable_array::<FieldT>(arity_indicators.begin(), arity_indicators.begin() + i)), incoming_types[i], 0), FMT("", "unbound_types_{}", i));
     }
 
     /* sum_out = local_data + \sum_i.types[i] * sum_in[i] */
     compute_type_val_inner_product.generate_r1cs_constraints();
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, type_val_inner_product + tally_pcd_local_data_variable::<FieldT>(self.local_data).summand, sum_out_packed), "update_sum");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, type_val_inner_product + tally_pcd_local_data_variable::<FieldT>(self.local_data).summand, sum_out_packed), "update_sum");
 
     /* count_out = 1 + \sum_i count_in[i] */
-    self.pb.add_r1cs_constraint(r1cs_constraint::<FieldT>(1, 1 + pb_sum::<FieldT>(count_in_packed), count_out_packed), "update_count");
+    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(1, 1 + pb_sum::<FieldT>(count_in_packed), count_out_packed), "update_count");
 }
 
 
@@ -343,25 +343,25 @@ pub fn  generate_r1cs_witness(incoming_messages:&Vec<RcCell<r1cs_pcd_message<Fie
         pack_sum_in[i].generate_r1cs_witness_from_bits();
         pack_count_in[i].generate_r1cs_witness_from_bits();
 
-        if !self.pb.val(incoming_types[i]).is_zero()
+        if !self.pb.borrow().val(&incoming_types[i]).is_zero()
         {
-            self.pb.val(sum_in_packed_aux[i]) = self.pb.val(sum_in_packed[i]) * self.pb.val(incoming_types[i]).inverse();
-            self.pb.val(count_in_packed_aux[i]) = self.pb.val(count_in_packed[i]) * self.pb.val(incoming_types[i]).inverse();
+            self.pb.borrow().val(&sum_in_packed_aux[i]) = self.pb.borrow().val(&sum_in_packed[i]) * self.pb.borrow().val(&incoming_types[i]).inverse();
+            self.pb.borrow().val(&count_in_packed_aux[i]) = self.pb.borrow().val(&count_in_packed[i]) * self.pb.borrow().val(&incoming_types[i]).inverse();
         }
     }
 
     for i in 0..self.max_arity + 1
     {
-        self.pb.val(arity_indicators[i]) = if incoming_messages.len() == i {FieldT::one()} else{FieldT::zero()};
+        self.pb.borrow().val(&arity_indicators[i]) = if incoming_messages.len() == i {FieldT::one()} else{FieldT::zero()};
     }
 
     compute_type_val_inner_product.generate_r1cs_witness();
-    self.pb.val(sum_out_packed) = self.pb.val(tally_pcd_local_data_variable::<FieldT>(self.local_data).summand) + self.pb.val(type_val_inner_product);
+    self.pb.borrow().val(&sum_out_packed) = self.pb.borrow().val(&tally_pcd_local_data_variable::<FieldT>(self.local_data).summand) + self.pb.borrow().val(&type_val_inner_product);
 
-    self.pb.val(count_out_packed) = FieldT::one();
+    self.pb.borrow().val(&count_out_packed) = FieldT::one();
     for i in 0..self.max_arity
     {
-        self.pb.val(count_out_packed) += self.pb.val(count_in_packed[i]);
+        self.pb.borrow().val(&count_out_packed) += self.pb.borrow().val(&count_in_packed[i]);
     }
 
     unpack_sum_out.generate_r1cs_witness_from_packed();
@@ -376,7 +376,7 @@ pub fn get_base_case_message() ->RcCell<r1cs_pcd_message<FieldT> >
     let count = 0;
 
     let  result=r1cs_pcd_message::<FieldT>::new();
-    result.reset(tally_pcd_message::<FieldT>::new(types, wordsize, sum, count));
+    result=RcCell::new(tally_pcd_message::<FieldT>::new(types, wordsize, sum, count));
 
     return result;
 }

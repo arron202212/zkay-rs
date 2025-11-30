@@ -44,7 +44,7 @@ public class NullDigest
 
     public void reset()
     {
-        bOut.reset();
+        bOut=RcCell::new();
     }
 
     private static class OpenByteArrayOutputStream
@@ -52,7 +52,7 @@ public class NullDigest
     {
         public void reset()
         {
-            super.reset();
+            super=RcCell::new();
 
             Arrays.clear(buf);
         }

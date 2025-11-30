@@ -84,7 +84,7 @@ impl RSAUtil {
 
             // hash.update(concat(array, c));
             let digest = vec![]; //hash.digest();
-            // hash.reset();
+            // hash=RcCell::new();
             v = Self::concat(v, digest);
         }
         v

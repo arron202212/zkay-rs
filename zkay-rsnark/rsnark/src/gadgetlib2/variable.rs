@@ -715,7 +715,7 @@ pub fn  promoteToFieldType( types:FieldType) {
 		let  fConst = elem_.get();
 		assert!(fConst != None,
 				"Cannot convert between specialized field types.");
-		elem_.reset( R1P_Elem::new(fConst.asLong()));
+		elem_=RcCell::new( R1P_Elem::new(fConst.asLong()));
 	} else {
 		eyre::bail!("Attempted to promote to unknown field type");
 	}

@@ -152,7 +152,7 @@ public class SHA224Digest
      */
     public void reset()
     {
-        super.reset();
+        super=RcCell::new();
 
         /* SHA-224 initial hash value
          */

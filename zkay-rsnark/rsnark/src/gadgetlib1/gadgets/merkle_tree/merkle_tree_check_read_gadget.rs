@@ -104,7 +104,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
         internal_output.push(digest_variable::<FieldT>(&pb, digest_size, FMT(self.annotation_prefix, " internal_output_{}", i)));
     }
 
-    computed_root.reset(digest_variable::<FieldT>::new(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
+    computed_root=RcCell::new(digest_variable::<FieldT>::new(pb, digest_size, FMT(self.annotation_prefix, " computed_root")));
 
     for i in 0..tree_depth
     {
@@ -126,7 +126,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                               FMT(self.annotation_prefix, " digest_selector_{}", i)));
     }
 
-    check_root.reset(bit_vector_copy_gadget::<FieldT>::new(pb, computed_root.bits, root.bits, read_successful, FieldT::capacity(), FMT(annotation_prefix, " check_root")));
+    check_root=RcCell::new(bit_vector_copy_gadget::<FieldT>::new(pb, computed_root.bits, root.bits, read_successful, FieldT::capacity(), FMT(annotation_prefix, " check_root")));
     //  gadget<FieldT>(&pb, annotation_prefix),
    Self{ digest_size:HashT::get_digest_len(),
    tree_depth,

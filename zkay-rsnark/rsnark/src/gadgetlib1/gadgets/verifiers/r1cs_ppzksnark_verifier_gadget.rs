@@ -233,14 +233,14 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     let num_G1 = 7;
     let num_G2 = 1;
 
-    g_A_g.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_A_g")));
-    g_A_h.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_A_h")));
-    g_B_g.reset(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_B_g")));
-    g_B_h.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_B_h")));
-    g_C_g.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_C_g")));
-    g_C_h.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_C_h")));
-    g_H.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_H")));
-    g_K.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_K")));
+    g_A_g=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_A_g")));
+    g_A_h=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_A_h")));
+    g_B_g=RcCell::new(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_B_g")));
+    g_B_h=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_B_h")));
+    g_C_g=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_C_g")));
+    g_C_h=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_C_h")));
+    g_H=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_H")));
+    g_K=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " g_K")));
 
     all_G1_vars =  vec![g_A_g, g_A_h, g_B_h, g_C_g, g_C_h, g_H,g_K ];
     all_G2_vars =  vec![g_B_g] ;
@@ -249,9 +249,9 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 
     for i in 0..all_G1_vars.len()
     {
-        all_G1_checkers[i].reset(G1_checker_gadget::<ppT>::new(pb, *all_G1_vars[i], FMT(annotation_prefix, " all_G1_checkers_{}", i)));
+        all_G1_checkers[i]=RcCell::new(G1_checker_gadget::<ppT>::new(pb, *all_G1_vars[i], FMT(annotation_prefix, " all_G1_checkers_{}", i)));
     }
-    G2_checker.reset(G2_checker_gadget::<ppT>::new(pb, *g_B_g, FMT(annotation_prefix, " G2_checker")));
+    G2_checker=RcCell::new(G2_checker_gadget::<ppT>::new(pb, *g_B_g, FMT(annotation_prefix, " G2_checker")));
 
     assert!(all_G1_vars.len() == num_G1);
     assert!(all_G2_vars.len() == num_G2);
@@ -318,24 +318,24 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
 
     assert!(all_bits.len() == (G1_variable::<ppT>::size_in_bits() * num_G1 + G2_variable::<ppT>::size_in_bits() * num_G2));
 
-    self.alphaA_g2.reset(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " alphaA_g2")));
-    self.alphaB_g1.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " alphaB_g1")));
-    self.alphaC_g2.reset(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " alphaC_g2")));
-    self.gamma_g2.reset(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_g2")));
-    self.gamma_beta_g1.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_beta_g1")));
-    self.gamma_beta_g2.reset(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_beta_g2")));
-    self.rC_Z_g2.reset(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " rC_Z_g2")));
+    self.alphaA_g2=RcCell::new(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " alphaA_g2")));
+    self.alphaB_g1=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " alphaB_g1")));
+    self.alphaC_g2=RcCell::new(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " alphaC_g2")));
+    self.gamma_g2=RcCell::new(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_g2")));
+    self.gamma_beta_g1=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_beta_g1")));
+    self.gamma_beta_g2=RcCell::new(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " gamma_beta_g2")));
+    self.rC_Z_g2=RcCell::new(G2_variable::<ppT>::new(pb, FMT(annotation_prefix, " rC_Z_g2")));
 
     all_G1_vars =  vec![self.alphaB_g1, self.gamma_beta_g1 ];
     all_G2_vars =  vec![self.alphaA_g2, self.alphaC_g2, self.gamma_g2, self.gamma_beta_g2, self.rC_Z_g2] ;
 
     self.encoded_IC_query.resize(input_size);
-    self.encoded_IC_base.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " encoded_IC_base")));
+    self.encoded_IC_base=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " encoded_IC_base")));
     self.all_G1_vars.push(self.encoded_IC_base);
 
     for i in 0..input_size
     {
-        self.encoded_IC_query[i].reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " encoded_IC_query_{}", i)));
+        self.encoded_IC_query[i]=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " encoded_IC_query_{}", i)));
         all_G1_vars.push(self.encoded_IC_query[i]);
     }
 
@@ -353,7 +353,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     assert!(all_G2_vars.len() == num_G2);
     assert!(all_vars.len() == (num_G1 * G1_variable::<ppT>::num_variables() + num_G2 * G2_variable::<ppT>::num_variables()));
 
-    packer.reset(multipacking_gadget::<FieldT>::new(pb, all_bits, all_vars, FieldT::size_in_bits(), FMT(annotation_prefix, " packer")));
+    packer=RcCell::new(multipacking_gadget::<FieldT>::new(pb, all_bits, all_vars, FieldT::size_in_bits(), FMT(annotation_prefix, " packer")));
     //  gadget<FieldT>(&pb, annotation_prefix),
    Self{all_bits,
     input_size}
@@ -453,23 +453,23 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                                                                                                 r1cs_vk:&r1cs_ppzksnark_verification_key<other_curve::<ppT> >,
                                                                                                                                                 annotation_prefix:&String)
 {
-    encoded_IC_base.reset(G1_variable::<ppT>::new(pb, r1cs_vk.encoded_IC_query.first, FMT(annotation_prefix, " encoded_IC_base")));
+    encoded_IC_base=RcCell::new(G1_variable::<ppT>::new(pb, r1cs_vk.encoded_IC_query.first, FMT(annotation_prefix, " encoded_IC_base")));
     encoded_IC_query.resize(r1cs_vk.encoded_IC_query.rest.indices.len());
     for i in 0..r1cs_vk.encoded_IC_query.rest.indices.len()
     {
         assert!(r1cs_vk.encoded_IC_query.rest.indices[i] == i);
-        encoded_IC_query[i].reset(G1_variable::<ppT>::new(pb, r1cs_vk.encoded_IC_query.rest.values[i], FMT(annotation_prefix, " encoded_IC_query")));
+        encoded_IC_query[i]=RcCell::new(G1_variable::<ppT>::new(pb, r1cs_vk.encoded_IC_query.rest.values[i], FMT(annotation_prefix, " encoded_IC_query")));
     }
 
-    vk_alphaB_g1_precomp.reset(G1_precomputation::<ppT>::new(pb, r1cs_vk.alphaB_g1, FMT(annotation_prefix, " vk_alphaB_g1_precomp")));
-    vk_gamma_beta_g1_precomp.reset(G1_precomputation::<ppT>::new(pb, r1cs_vk.gamma_beta_g1, FMT(annotation_prefix, " vk_gamma_beta_g1_precomp")));
+    vk_alphaB_g1_precomp=RcCell::new(G1_precomputation::<ppT>::new(pb, r1cs_vk.alphaB_g1, FMT(annotation_prefix, " vk_alphaB_g1_precomp")));
+    vk_gamma_beta_g1_precomp=RcCell::new(G1_precomputation::<ppT>::new(pb, r1cs_vk.gamma_beta_g1, FMT(annotation_prefix, " vk_gamma_beta_g1_precomp")));
 
-    pp_G2_one_precomp.reset(G2_precomputation::<ppT>::new(pb, ffec::G2::<other_curve::<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
-    vk_alphaA_g2_precomp.reset(G2_precomputation::<ppT>::new(pb, r1cs_vk.alphaA_g2, FMT(annotation_prefix, " vk_alphaA_g2_precomp")));
-    vk_alphaC_g2_precomp.reset(G2_precomputation::<ppT>::new(pb, r1cs_vk.alphaC_g2, FMT(annotation_prefix, " vk_alphaC_g2_precomp")));
-    vk_gamma_beta_g2_precomp.reset(G2_precomputation::<ppT>::new(pb, r1cs_vk.gamma_beta_g2, FMT(annotation_prefix, " vk_gamma_beta_g2_precomp")));
-    vk_gamma_g2_precomp.reset(G2_precomputation::<ppT>::new(pb, r1cs_vk.gamma_g2, FMT(annotation_prefix, " vk_gamma_g2_precomp")));
-    vk_rC_Z_g2_precomp.reset(G2_precomputation::<ppT>::new(pb, r1cs_vk.rC_Z_g2, FMT(annotation_prefix, " vk_rC_Z_g2_precomp")));
+    pp_G2_one_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, ffec::G2::<other_curve::<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
+    vk_alphaA_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, r1cs_vk.alphaA_g2, FMT(annotation_prefix, " vk_alphaA_g2_precomp")));
+    vk_alphaC_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, r1cs_vk.alphaC_g2, FMT(annotation_prefix, " vk_alphaC_g2_precomp")));
+    vk_gamma_beta_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, r1cs_vk.gamma_beta_g2, FMT(annotation_prefix, " vk_gamma_beta_g2_precomp")));
+    vk_gamma_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, r1cs_vk.gamma_g2, FMT(annotation_prefix, " vk_gamma_g2_precomp")));
+    vk_rC_Z_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, r1cs_vk.rC_Z_g2, FMT(annotation_prefix, " vk_rC_Z_g2_precomp")));
 }
 }
 impl r1cs_ppzksnark_verifier_process_vk_gadget<ppT> {
@@ -483,25 +483,25 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     pvk.encoded_IC_base = vk.encoded_IC_base;
     pvk.encoded_IC_query = vk.encoded_IC_query;
 
-    pvk.vk_alphaB_g1_precomp.reset(G1_precomputation::<ppT>::new());
-    pvk.vk_gamma_beta_g1_precomp.reset(G1_precomputation::<ppT>::new());
+    pvk.vk_alphaB_g1_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    pvk.vk_gamma_beta_g1_precomp=RcCell::new(G1_precomputation::<ppT>::new());
 
-    pvk.pp_G2_one_precomp.reset(G2_precomputation::<ppT>::new());
-    pvk.vk_alphaA_g2_precomp.reset(G2_precomputation::<ppT>::new());
-    pvk.vk_alphaC_g2_precomp.reset(G2_precomputation::<ppT>::new());
-    pvk.vk_gamma_beta_g2_precomp.reset(G2_precomputation::<ppT>::new());
-    pvk.vk_gamma_g2_precomp.reset(G2_precomputation::<ppT>::new());
-    pvk.vk_rC_Z_g2_precomp.reset(G2_precomputation::<ppT>::new());
+    pvk.pp_G2_one_precomp=RcCell::new(G2_precomputation::<ppT>::new());
+    pvk.vk_alphaA_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new());
+    pvk.vk_alphaC_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new());
+    pvk.vk_gamma_beta_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new());
+    pvk.vk_gamma_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new());
+    pvk.vk_rC_Z_g2_precomp=RcCell::new(G2_precomputation::<ppT>::new());
 
-    compute_vk_alphaB_g1_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *vk.alphaB_g1, *pvk.vk_alphaB_g1_precomp, FMT(annotation_prefix, " compute_vk_alphaB_g1_precomp")));
-    compute_vk_gamma_beta_g1_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *vk.gamma_beta_g1, *pvk.vk_gamma_beta_g1_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g1_precomp")));
+    compute_vk_alphaB_g1_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *vk.alphaB_g1, *pvk.vk_alphaB_g1_precomp, FMT(annotation_prefix, " compute_vk_alphaB_g1_precomp")));
+    compute_vk_gamma_beta_g1_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *vk.gamma_beta_g1, *pvk.vk_gamma_beta_g1_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g1_precomp")));
 
-    pvk.pp_G2_one_precomp.reset(G2_precomputation::<ppT>::new(pb, ffec::G2::<other_curve::<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
-    compute_vk_alphaA_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.alphaA_g2, *pvk.vk_alphaA_g2_precomp, FMT(annotation_prefix, " compute_vk_alphaA_g2_precomp")));
-    compute_vk_alphaC_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.alphaC_g2, *pvk.vk_alphaC_g2_precomp, FMT(annotation_prefix, " compute_vk_alphaC_g2_precomp")));
-    compute_vk_gamma_beta_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.gamma_beta_g2, *pvk.vk_gamma_beta_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g2_precomp")));
-    compute_vk_gamma_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.gamma_g2, *pvk.vk_gamma_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_g2_precomp")));
-    compute_vk_rC_Z_g2_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *vk.rC_Z_g2, *pvk.vk_rC_Z_g2_precomp, FMT(annotation_prefix, " compute_vk_rC_Z_g2_precomp")));
+    pvk.pp_G2_one_precomp=RcCell::new(G2_precomputation::<ppT>::new(pb, ffec::G2::<other_curve::<ppT> >::one(), FMT(annotation_prefix, " pp_G2_one_precomp")));
+    compute_vk_alphaA_g2_precomp=RcCell::new(precompute_G2_gadget::<ppT>::new(pb, *vk.alphaA_g2, *pvk.vk_alphaA_g2_precomp, FMT(annotation_prefix, " compute_vk_alphaA_g2_precomp")));
+    compute_vk_alphaC_g2_precomp=RcCell::new(precompute_G2_gadget::<ppT>::new(pb, *vk.alphaC_g2, *pvk.vk_alphaC_g2_precomp, FMT(annotation_prefix, " compute_vk_alphaC_g2_precomp")));
+    compute_vk_gamma_beta_g2_precomp=RcCell::new(precompute_G2_gadget::<ppT>::new(pb, *vk.gamma_beta_g2, *pvk.vk_gamma_beta_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_beta_g2_precomp")));
+    compute_vk_gamma_g2_precomp=RcCell::new(precompute_G2_gadget::<ppT>::new(pb, *vk.gamma_g2, *pvk.vk_gamma_g2_precomp, FMT(annotation_prefix, " compute_vk_gamma_g2_precomp")));
+    compute_vk_rC_Z_g2_precomp=RcCell::new(precompute_G2_gadget::<ppT>::new(pb, *vk.rC_Z_g2, *pvk.vk_rC_Z_g2_precomp, FMT(annotation_prefix, " compute_vk_rC_Z_g2_precomp")));
     //   gadget<FieldT>(&pb, annotation_prefix),
    Self{vk,
     pvk}
@@ -545,66 +545,66 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     
 {
     // accumulate input and store base in acc
-    acc.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " acc")));
+    acc=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " acc")));
     let mut  IC_terms=vec![];
     for i in 0..pvk.encoded_IC_query.len()
     {
         IC_terms.push(*(pvk.encoded_IC_query[i]));
     }
-    accumulate_input.reset(G1_multiscalar_mul_gadget::<ppT>::new(pb, *(pvk.encoded_IC_base), input, elt_size, IC_terms, *acc, FMT(annotation_prefix, " accumulate_input")));
+    accumulate_input=RcCell::new(G1_multiscalar_mul_gadget::<ppT>::new(pb, *(pvk.encoded_IC_base), input, elt_size, IC_terms, *acc, FMT(annotation_prefix, " accumulate_input")));
 
     // allocate results for precomputation
-    proof_g_A_h_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_A_g_acc_C_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_A_g_acc_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_A_g_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_B_h_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_C_h_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_C_g_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_K_precomp.reset(G1_precomputation::<ppT>::new());
-    proof_g_H_precomp.reset(G1_precomputation::<ppT>::new());
+    proof_g_A_h_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_A_g_acc_C_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_A_g_acc_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_A_g_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_B_h_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_C_h_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_C_g_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_K_precomp=RcCell::new(G1_precomputation::<ppT>::new());
+    proof_g_H_precomp=RcCell::new(G1_precomputation::<ppT>::new());
 
-    proof_g_B_g_precomp.reset(G2_precomputation::<ppT>::new());
+    proof_g_B_g_precomp=RcCell::new(G2_precomputation::<ppT>::new());
 
     // do the necessary precomputations
     // compute things not available in plain from proof/vk
-    proof_g_A_g_acc.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " proof_g_A_g_acc")));
-    compute_proof_g_A_g_acc.reset(G1_add_gadget::<ppT>::new(pb, *(proof.g_A_g), *acc , *proof_g_A_g_acc, FMT(annotation_prefix, " compute_proof_g_A_g_acc")));
-    proof_g_A_g_acc_C.reset(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " proof_g_A_g_acc_C")));
-    compute_proof_g_A_g_acc_C.reset(G1_add_gadget::<ppT>::new(pb, *proof_g_A_g_acc, *(proof.g_C_g) , *proof_g_A_g_acc_C, FMT(annotation_prefix, " compute_proof_g_A_g_acc_C")));
+    proof_g_A_g_acc=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " proof_g_A_g_acc")));
+    compute_proof_g_A_g_acc=RcCell::new(G1_add_gadget::<ppT>::new(pb, *(proof.g_A_g), *acc , *proof_g_A_g_acc, FMT(annotation_prefix, " compute_proof_g_A_g_acc")));
+    proof_g_A_g_acc_C=RcCell::new(G1_variable::<ppT>::new(pb, FMT(annotation_prefix, " proof_g_A_g_acc_C")));
+    compute_proof_g_A_g_acc_C=RcCell::new(G1_add_gadget::<ppT>::new(pb, *proof_g_A_g_acc, *(proof.g_C_g) , *proof_g_A_g_acc_C, FMT(annotation_prefix, " compute_proof_g_A_g_acc_C")));
 
-    compute_proof_g_A_g_acc_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *proof_g_A_g_acc, *proof_g_A_g_acc_precomp, FMT(annotation_prefix, " compute_proof_g_A_g_acc_precomp")));
-    compute_proof_g_A_g_acc_C_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *proof_g_A_g_acc_C, *proof_g_A_g_acc_C_precomp, FMT(annotation_prefix, " compute_proof_g_A_g_acc_C_precomp")));
+    compute_proof_g_A_g_acc_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *proof_g_A_g_acc, *proof_g_A_g_acc_precomp, FMT(annotation_prefix, " compute_proof_g_A_g_acc_precomp")));
+    compute_proof_g_A_g_acc_C_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *proof_g_A_g_acc_C, *proof_g_A_g_acc_C_precomp, FMT(annotation_prefix, " compute_proof_g_A_g_acc_C_precomp")));
 
     // do other precomputations
-    compute_proof_g_A_h_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_A_h), *proof_g_A_h_precomp, FMT(annotation_prefix, " compute_proof_g_A_h_precomp")));
-    compute_proof_g_A_g_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_A_g), *proof_g_A_g_precomp, FMT(annotation_prefix, " compute_proof_g_A_g_precomp")));
-    compute_proof_g_B_h_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_B_h), *proof_g_B_h_precomp, FMT(annotation_prefix, " compute_proof_g_B_h_precomp")));
-    compute_proof_g_C_h_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_C_h), *proof_g_C_h_precomp, FMT(annotation_prefix, " compute_proof_g_C_h_precomp")));
-    compute_proof_g_C_g_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_C_g), *proof_g_C_g_precomp, FMT(annotation_prefix, " compute_proof_g_C_g_precomp")));
-    compute_proof_g_H_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_H), *proof_g_H_precomp, FMT(annotation_prefix, " compute_proof_g_H_precomp")));
-    compute_proof_g_K_precomp.reset(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_K), *proof_g_K_precomp, FMT(annotation_prefix, " compute_proof_g_K_precomp")));
-    compute_proof_g_B_g_precomp.reset(precompute_G2_gadget::<ppT>::new(pb, *(proof.g_B_g), *proof_g_B_g_precomp, FMT(annotation_prefix, " compute_proof_g_B_g_precomp")));
+    compute_proof_g_A_h_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_A_h), *proof_g_A_h_precomp, FMT(annotation_prefix, " compute_proof_g_A_h_precomp")));
+    compute_proof_g_A_g_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_A_g), *proof_g_A_g_precomp, FMT(annotation_prefix, " compute_proof_g_A_g_precomp")));
+    compute_proof_g_B_h_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_B_h), *proof_g_B_h_precomp, FMT(annotation_prefix, " compute_proof_g_B_h_precomp")));
+    compute_proof_g_C_h_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_C_h), *proof_g_C_h_precomp, FMT(annotation_prefix, " compute_proof_g_C_h_precomp")));
+    compute_proof_g_C_g_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_C_g), *proof_g_C_g_precomp, FMT(annotation_prefix, " compute_proof_g_C_g_precomp")));
+    compute_proof_g_H_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_H), *proof_g_H_precomp, FMT(annotation_prefix, " compute_proof_g_H_precomp")));
+    compute_proof_g_K_precomp=RcCell::new(precompute_G1_gadget::<ppT>::new(pb, *(proof.g_K), *proof_g_K_precomp, FMT(annotation_prefix, " compute_proof_g_K_precomp")));
+    compute_proof_g_B_g_precomp=RcCell::new(precompute_G2_gadget::<ppT>::new(pb, *(proof.g_B_g), *proof_g_B_g_precomp, FMT(annotation_prefix, " compute_proof_g_B_g_precomp")));
 
     // check validity of A knowledge commitment
     kc_A_valid.allocate(&pb, FMT(annotation_prefix, " kc_A_valid"));
-    check_kc_A_valid.reset(check_e_equals_e_gadget::<ppT>::new(pb, *proof_g_A_g_precomp, *(pvk.vk_alphaA_g2_precomp), *proof_g_A_h_precomp, *(pvk.pp_G2_one_precomp), kc_A_valid, FMT(annotation_prefix, " check_kc_A_valid")));
+    check_kc_A_valid=RcCell::new(check_e_equals_e_gadget::<ppT>::new(pb, *proof_g_A_g_precomp, *(pvk.vk_alphaA_g2_precomp), *proof_g_A_h_precomp, *(pvk.pp_G2_one_precomp), kc_A_valid, FMT(annotation_prefix, " check_kc_A_valid")));
 
     // check validity of B knowledge commitment
     kc_B_valid.allocate(&pb, FMT(annotation_prefix, " kc_B_valid"));
-    check_kc_B_valid.reset(check_e_equals_e_gadget::<ppT>::new(pb, *(pvk.vk_alphaB_g1_precomp), *proof_g_B_g_precomp, *proof_g_B_h_precomp, *(pvk.pp_G2_one_precomp), kc_B_valid, FMT(annotation_prefix, " check_kc_B_valid")));
+    check_kc_B_valid=RcCell::new(check_e_equals_e_gadget::<ppT>::new(pb, *(pvk.vk_alphaB_g1_precomp), *proof_g_B_g_precomp, *proof_g_B_h_precomp, *(pvk.pp_G2_one_precomp), kc_B_valid, FMT(annotation_prefix, " check_kc_B_valid")));
 
     // check validity of C knowledge commitment
     kc_C_valid.allocate(&pb, FMT(annotation_prefix, " kc_C_valid"));
-    check_kc_C_valid.reset(check_e_equals_e_gadget::<ppT>::new(pb, *proof_g_C_g_precomp, *(pvk.vk_alphaC_g2_precomp), *proof_g_C_h_precomp, *(pvk.pp_G2_one_precomp), kc_C_valid, FMT(annotation_prefix, " check_kc_C_valid")));
+    check_kc_C_valid=RcCell::new(check_e_equals_e_gadget::<ppT>::new(pb, *proof_g_C_g_precomp, *(pvk.vk_alphaC_g2_precomp), *proof_g_C_h_precomp, *(pvk.pp_G2_one_precomp), kc_C_valid, FMT(annotation_prefix, " check_kc_C_valid")));
 
     // check QAP divisibility
     QAP_valid.allocate(&pb, FMT(annotation_prefix, " QAP_valid"));
-    check_QAP_valid.reset(check_e_equals_ee_gadget::<ppT>::new(pb, *proof_g_A_g_acc_precomp, *proof_g_B_g_precomp, *proof_g_H_precomp, *(pvk.vk_rC_Z_g2_precomp), *proof_g_C_g_precomp, *(pvk.pp_G2_one_precomp), QAP_valid, FMT(annotation_prefix, " check_QAP_valid")));
+    check_QAP_valid=RcCell::new(check_e_equals_ee_gadget::<ppT>::new(pb, *proof_g_A_g_acc_precomp, *proof_g_B_g_precomp, *proof_g_H_precomp, *(pvk.vk_rC_Z_g2_precomp), *proof_g_C_g_precomp, *(pvk.pp_G2_one_precomp), QAP_valid, FMT(annotation_prefix, " check_QAP_valid")));
 
     // check coefficients
     CC_valid.allocate(&pb, FMT(annotation_prefix, " CC_valid"));
-    check_CC_valid.reset(check_e_equals_ee_gadget::<ppT>::new(pb, *proof_g_K_precomp, *(pvk.vk_gamma_g2_precomp), *proof_g_A_g_acc_C_precomp, *(pvk.vk_gamma_beta_g2_precomp), *(pvk.vk_gamma_beta_g1_precomp), *proof_g_B_g_precomp, CC_valid, FMT(annotation_prefix, " check_CC_valid")));
+    check_CC_valid=RcCell::new(check_e_equals_ee_gadget::<ppT>::new(pb, *proof_g_K_precomp, *(pvk.vk_gamma_g2_precomp), *proof_g_A_g_acc_C_precomp, *(pvk.vk_gamma_beta_g2_precomp), *(pvk.vk_gamma_beta_g1_precomp), *proof_g_B_g_precomp, CC_valid, FMT(annotation_prefix, " check_CC_valid")));
 
     // final constraint
     all_test_results.push(kc_A_valid);
@@ -613,7 +613,7 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
     all_test_results.push(QAP_valid);
     all_test_results.push(CC_valid);
 
-    all_tests_pass.reset(conjunction_gadget::<FieldT>::new(pb, all_test_results, result, FMT(annotation_prefix, " all_tests_pass")));
+    all_tests_pass=RcCell::new(conjunction_gadget::<FieldT>::new(pb, all_test_results, result, FMT(annotation_prefix, " all_tests_pass")));
     // gadget<FieldT>(&pb, annotation_prefix),
    Self{pvk,
    input,
@@ -701,9 +701,9 @@ pub fn new(pb:RcCell<protoboard<FieldT>>,
                                                                     annotation_prefix:&String)->Self
     
 {
-    pvk.reset(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new());
-    compute_pvk.reset(r1cs_ppzksnark_verifier_process_vk_gadget::<ppT>::new(pb, vk, *pvk, FMT(annotation_prefix, " compute_pvk")));
-    online_verifier.reset(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb, *pvk, input, elt_size, proof, result, FMT(annotation_prefix, " online_verifier")));
+    pvk=RcCell::new(r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new());
+    compute_pvk=RcCell::new(r1cs_ppzksnark_verifier_process_vk_gadget::<ppT>::new(pb, vk, *pvk, FMT(annotation_prefix, " compute_pvk")));
+    online_verifier=RcCell::new(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(pb, *pvk, input, elt_size, proof, result, FMT(annotation_prefix, " online_verifier")));
     // gadget<FieldT>(&pb, annotation_prefix)
     Self{}
 }

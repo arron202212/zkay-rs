@@ -253,7 +253,7 @@ public class EthereumIESEngine
         // Old code: mac.init(new KeyParameter(K2));
         Digest hash = new SHA256Digest();
         byte[] K2hash = new byte[hash.getDigestSize()];
-        hash.reset();
+        hash=RcCell::new();
         hash.update(K2, 0, K2.length);
         hash.doFinal(K2hash, 0);
 
@@ -369,7 +369,7 @@ public class EthereumIESEngine
         // Old code: mac.init(new KeyParameter(K2));
         Digest hash = new SHA256Digest();
         byte[] K2hash = new byte[hash.getDigestSize()];
-        hash.reset();
+        hash=RcCell::new();
         hash.update(K2, 0, K2.length);
         hash.doFinal(K2hash, 0);
         mac.init(new KeyParameter(K2hash));
@@ -611,7 +611,7 @@ public class EthereumIESEngine
                 }
             }
 
-            digest.reset();
+            digest=RcCell::new();
 
             return (int)oBytes;
         }
