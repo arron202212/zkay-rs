@@ -1,4 +1,7 @@
 use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::{
+    tinyram_inner_product_gadget, tinyram_loose_multiplexing_gadget,
+};
 use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
     pb_variable_array,
@@ -119,6 +122,12 @@ pub struct dual_variable_gadget<FieldT: FieldTConfig, PB: PBConfig, T> {
     pub bits: pb_variable_array<FieldT, PB>,
     pub t: T,
 }
+
+#[derive(Clone, Default)]
+pub struct DefaultDualVariableGadget;
+pub type dual_variable_gadgets<FieldT, PB, T> =
+    gadget<FieldT, PB, dual_variable_gadget<FieldT, PB, T>>;
+
 impl<FieldT: FieldTConfig, PB: PBConfig, T> dual_variable_gadget<FieldT, PB, T> {
     pub fn new(
         mut pb: RcCell<protoboard<FieldT, PB>>,

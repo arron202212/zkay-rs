@@ -9,6 +9,9 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_proto
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget::{
     doubleword_variable_gadget, doubleword_variable_gadgets, word_variable_gadget,
 };
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::{
+    tinyram_inner_product_gadget, tinyram_loose_multiplexing_gadget, tinyram_packing_gadget,
+};
 use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_sum, pb_variable,
     pb_variable_array,

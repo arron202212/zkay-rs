@@ -1,3 +1,4 @@
+use crate::gadgetlib1::gadget::gadget;
 /** @file
 *****************************************************************************
 
@@ -13,168 +14,218 @@ These gadget check the correct execution of control-flow TinyRAM instructions.
 //#ifndef ALU_CONTROL_FLOW_HPP_
 // #define ALU_CONTROL_FLOW_HPP_
 use crate::gadgetlib1::gadgets::basic_gadgets;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget;
-
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::SubTinyRamGadgetConfig;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::ArithmeticGadgetConfig;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget::{
+    word_variable_gadget, word_variable_gadgets,
+};
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::{
+    tinyram_gadget, tinyram_protoboard, tinyram_standard_gadget,
+};
+use crate::gadgetlib1::pb_variable::{
+    ONE, pb_linear_combination, pb_packing_sum, pb_variable, pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
+    generate_tinyram_prelude, tinyram_architecture_params, tinyram_program,
+};
+use crate::relations::variable::{linear_combination, variable};
+use ffec::common::profiling::print_time;
+use rccell::RcCell;
+use std::marker::PhantomData;
 /* control flow gadgets */
-//
-pub struct ALU_control_flow_gadget<FieldT> {
+#[derive(Clone, Default)]
+pub struct ALU_control_flow_gadget<FieldT: FieldTConfig, T: Default + Clone> {
     // : public tinyram_standard_gadget<FieldT>
     pc: word_variable_gadgets<FieldT>,
     argval2: word_variable_gadgets<FieldT>,
-    flag: variable<FieldT,pb_variable>,
-    result: variable<FieldT,pb_variable>,
+    flag: variable<FieldT, pb_variable>,
+    result: variable<FieldT, pb_variable>,
+    t: T,
 }
-impl ALU_control_flow_gadget<FieldT> {
+impl<FieldT: FieldTConfig, T: Default + Clone> SubTinyRamGadgetConfig
+    for ALU_control_flow_gadget<FieldT, T>
+{
+}
+pub type ALU_control_flow_gadgets<FieldT, T> = gadget<
+    FieldT,
+    tinyram_protoboard<FieldT>,
+    tinyram_gadget<FieldT, tinyram_standard_gadget<FieldT, ALU_control_flow_gadget<FieldT, T>>>,
+>;
+impl<FieldT: FieldTConfig, T: Default + Clone> ALU_control_flow_gadget<FieldT, T> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
         pc: word_variable_gadgets<FieldT>,
         argval2: word_variable_gadgets<FieldT>,
-        flag: variable<FieldT,pb_variable>,
-        result: variable<FieldT,pb_variable>,
+        flag: variable<FieldT, pb_variable>,
+        result: variable<FieldT, pb_variable>,
         annotation_prefix: String,
-    ) -> Self {
-        // tinyram_standard_gadget<FieldT>(&pb, annotation_prefix),
-        Self {
+        t: T,
+    ) -> ALU_control_flow_gadgets<FieldT, T> {
+        tinyram_standard_gadget::<FieldT, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                pc,
+                argval2,
+                flag,
+                result,
+                t,
+            },
+        )
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct ALU_jmp_gadget<FieldT: FieldTConfig> {
+    _t: PhantomData<FieldT>,
+}
+pub type ALU_jmp_gadgets<FieldT> = ALU_control_flow_gadgets<FieldT, ALU_jmp_gadget<FieldT>>;
+impl<FieldT: FieldTConfig> ALU_jmp_gadget<FieldT> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
+        pc: word_variable_gadgets<FieldT>,
+        argval2: word_variable_gadgets<FieldT>,
+        flag: variable<FieldT, pb_variable>,
+        result: variable<FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> ALU_jmp_gadgets<FieldT> {
+        ALU_control_flow_gadget::<FieldT, Self>::new(
+            pb,
             pc,
             argval2,
             flag,
             result,
-        }
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
     }
 }
 
-//
-pub struct ALU_jmp_gadget {}
-impl ALU_jmp_gadget {
+#[derive(Clone, Default)]
+pub struct ALU_cjmp_gadget<FieldT: FieldTConfig> {
+    _t: PhantomData<FieldT>,
+}
+pub type ALU_cjmp_gadgets<FieldT> = ALU_control_flow_gadgets<FieldT, ALU_cjmp_gadget<FieldT>>;
+impl<FieldT: FieldTConfig> ALU_cjmp_gadget<FieldT> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
         pc: word_variable_gadgets<FieldT>,
         argval2: word_variable_gadgets<FieldT>,
-        flag: variable<FieldT,pb_variable>,
-        result: variable<FieldT,pb_variable>,
+        flag: variable<FieldT, pb_variable>,
+        result: variable<FieldT, pb_variable>,
         annotation_prefix: String,
-    ) -> Self {
-        // ALU_control_flow_gadget<FieldT>(&pb, pc, argval2, flag, result, annotation_prefix)
-        Self {}
+    ) -> ALU_cjmp_gadgets<FieldT> {
+        ALU_control_flow_gadget::<FieldT, Self>::new(
+            pb,
+            pc,
+            argval2,
+            flag,
+            result,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
     }
 }
 
-//
-// pub fn test_ALU_jmp_gadget();
-
-//
-pub struct ALU_cjmp_gadget {}
-impl ALU_cjmp_gadget {
+#[derive(Clone, Default)]
+pub struct ALU_cnjmp_gadget<FieldT: FieldTConfig> {
+    _t: PhantomData<FieldT>,
+}
+pub type ALU_cnjmp_gadgets<FieldT> = ALU_control_flow_gadgets<FieldT, ALU_cnjmp_gadget<FieldT>>;
+impl<FieldT: FieldTConfig> ALU_cnjmp_gadget<FieldT> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
         pc: word_variable_gadgets<FieldT>,
         argval2: word_variable_gadgets<FieldT>,
-        flag: variable<FieldT,pb_variable>,
-        result: variable<FieldT,pb_variable>,
+        flag: variable<FieldT, pb_variable>,
+        result: variable<FieldT, pb_variable>,
         annotation_prefix: String,
-    ) -> Self {
-        // ALU_control_flow_gadget<FieldT>(&pb, pc, argval2, flag, result, annotation_prefix)
-        Self {}
+    ) -> ALU_cnjmp_gadgets<FieldT> {
+        ALU_control_flow_gadget::<FieldT, Self>::new(
+            pb,
+            pc,
+            argval2,
+            flag,
+            result,
+            annotation_prefix,
+            Self { _t: PhantomData },
+        )
     }
 }
-
-//
-// pub fn test_ALU_cjmp_gadget();
-
-//
-pub struct ALU_cnjmp_gadget {}
-//
-impl ALU_cnjmp_gadget {
-    pub fn new(
-        pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
-        pc: word_variable_gadgets<FieldT>,
-        argval2: word_variable_gadgets<FieldT>,
-        flag: variable<FieldT,pb_variable>,
-        result: variable<FieldT,pb_variable>,
-        annotation_prefix: String,
-    ) -> Self {
-        //   ALU_control_flow_gadget<FieldT>(&pb, pc, argval2, flag, result, annotation_prefix)
-        Self {}
-    }
-}
-
-//
-// pub fn test_ALU_cnjmp_gadget();
-
-// use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_control_flow;
-
-//#endif // ALU_CONTROL_FLOW_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for the TinyRAM ALU control-flow gadgets.
-
-See alu_control_flow.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef ALU_CONTROL_FLOW_TCC_
-// #define ALU_CONTROL_FLOW_TCC_
-use ffec::common::profiling;
 
 /* jmp */
-impl ALU_jmp_gadget<FieldT> {
-    pub fn generate_r1cs_constraints(&self) {
+impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_jmp_gadgets<FieldT> {
+    fn generate_r1cs_constraints(&self) {
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>({ ONE }, { self.argval2.packed }, { self.result }),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![variable::<FieldT, pb_variable>::from(ONE).into()],
+                vec![self.t.t.t.argval2.t.packed.clone().into()],
+                vec![self.t.t.t.result.clone().into()],
+            ),
             format!("{} jmp_result", self.annotation_prefix),
         );
     }
 
-    pub fn generate_r1cs_witness(&self) {
-        self.pb.borrow().val(&self.result) = self.pb.borrow().val(&self.argval2.packed);
+    fn generate_r1cs_witness(&self) {
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.result) =
+            self.pb.borrow().val(&self.t.t.t.argval2.t.packed);
     }
 }
 
-pub fn test_ALU_jmp_gadget() {
-    ffec::print_time("starting jmp test");
+pub fn test_ALU_jmp_gadget<FieldT: FieldTConfig>()
+where
+    [(); { FieldT::num_limbs as usize }]:,
+{
+    print_time("starting jmp test");
 
     let mut ap = tinyram_architecture_params::new(16, 16);
-    let mut P = tinyram_program::new();
-    P.instructions = generate_tinyram_prelude(ap);
-    let mut pb = tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
+    let mut P = tinyram_program::default();
+    P.instructions = generate_tinyram_prelude(&ap);
+    let mut pb = RcCell::new(tinyram_protoboard::<FieldT>::new(ap.clone())); // P.len(), 0, 10);
 
-    let mut pc = word_variable_gadget::<FieldT>::new(pb, "pc");
-    let mut argval2 = word_variable_gadget::<FieldT>::new(pb, "argval2");
+    let mut pc = word_variable_gadget::<FieldT>::new(pb.clone(), "pc".to_owned());
+    let mut argval2 = word_variable_gadget::<FieldT>::new(pb.clone(), "argval2".to_owned());
     let (mut flag, mut result) = (
-        variable::<FieldT, pb_variable>::new(),
-        variable::<FieldT, pb_variable>::new(),
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
     );
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
-    flag.allocate(&pb, "flag");
-    result.allocate(&pb, "result");
+    flag.allocate(&pb, "flag".to_owned());
+    result.allocate(&pb, "result".to_owned());
 
-    let mut jmp = ALU_jmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "jmp");
+    let mut jmp = ALU_jmp_gadget::<FieldT>::new(
+        pb.clone(),
+        pc.clone(),
+        argval2.clone(),
+        flag.clone(),
+        result.clone(),
+        "jmp".to_owned(),
+    );
     jmp.generate_r1cs_constraints();
 
-    pb.borrow().val(&argval2.packed) = FieldT(123);
+    *pb.borrow_mut().val_ref(&argval2.t.packed) = FieldT::from(123);
     argval2.generate_r1cs_witness_from_packed();
 
     jmp.generate_r1cs_witness();
 
-    assert!(pb.borrow().val(&result) == FieldT(123));
-    assert!(pb.is_satisfied());
-    ffec::print_time("positive jmp test successful");
+    assert!(pb.borrow().val(&result) == FieldT::from(123));
+    assert!(pb.borrow().is_satisfied());
+    print_time("positive jmp test successful");
 
-    pb.borrow().val(&result) = FieldT(1);
-    assert!(!pb.is_satisfied());
-    ffec::print_time("negative jmp test successful");
+    *pb.borrow_mut().val_ref(&result) = FieldT::from(1);
+    assert!(!pb.borrow().is_satisfied());
+    print_time("negative jmp test successful");
 }
 
 /* cjmp */
-impl ALU_cjmp_gadget<FieldT> {
-    pub fn generate_r1cs_constraints(&self) {
+impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cjmp_gadgets<FieldT> {
+    fn generate_r1cs_constraints(&self) {
         /*
           flag1 * argval2 + (1-flag1) * (pc1 + 1) = cjmp_result
           flag1 * (argval2 - pc1 - 1) = cjmp_result - pc1 - 1
@@ -186,83 +237,107 @@ impl ALU_cjmp_gadget<FieldT> {
           the byte address of the PC.
         */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                self.flag,
-                pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(
-                    self.argval2.bits.begin() + self.pb.ap.subaddr_len(),
-                    self.argval2.bits.end(),
-                )) - self.pc.packed
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.flag.clone().into(),
+                (pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                    &pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                        self.t.t.t.argval2.t.bits.contents[self.pb.borrow().t.ap.subaddr_len()..]
+                            .to_vec(),
+                    )
+                    .into(),
+                ) - self.t.t.t.pc.t.packed.clone()
+                    - 1)
+                .into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.result.clone(),
+                ) - self.t.t.t.pc.t.packed.clone()
                     - 1,
-                self.result - self.pc.packed - 1,
             ),
             format!("{} cjmp_result", self.annotation_prefix),
         );
     }
 
-    pub fn generate_r1cs_witness(&self) {
-        self.pb.borrow().val(&self.result) = (if (self.pb.borrow().val(&self.flag) == FieldT::one()) {
-            FieldT(self.pb.borrow().val(&self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len())
-        } else {
-            self.pb.borrow().val(&self.pc.packed) + FieldT::one()
-        });
+    fn generate_r1cs_witness(&self) {
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.result) =
+            (if (self.pb.borrow().val(&self.t.t.t.flag) == FieldT::one()) {
+                FieldT::from(
+                    self.pb
+                        .borrow()
+                        .val(&self.t.t.t.argval2.t.packed)
+                        .as_ulong()
+                        >> self.pb.borrow().t.ap.subaddr_len(),
+                )
+            } else {
+                self.pb.borrow().val(&self.t.t.t.pc.t.packed) + FieldT::one()
+            });
     }
 }
 
-pub fn test_ALU_cjmp_gadget() {
+pub fn test_ALU_cjmp_gadget<FieldT: FieldTConfig>()
+where
+    [(); { FieldT::num_limbs as usize }]:,
+{
     // TODO: update
-    ffec::print_time("starting cjmp test");
+    print_time("starting cjmp test");
 
     let mut ap = tinyram_architecture_params::new(16, 16);
-    let mut P = tinyram_program::new();
-    P.instructions = generate_tinyram_prelude(ap);
-    let mut pb = tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
+    let mut P = tinyram_program::default();
+    P.instructions = generate_tinyram_prelude(&ap);
+    let mut pb = RcCell::new(tinyram_protoboard::<FieldT>::new(ap.clone())); // P.len(), 0, 10);
 
-    let mut pc = word_variable_gadget::<FieldT>::new(pb, "pc");
-    let mut argval2 = word_variable_gadget::<FieldT>::new(pb, "argval2");
+    let mut pc = word_variable_gadget::<FieldT>::new(pb.clone(), "pc".to_owned());
+    let mut argval2 = word_variable_gadget::<FieldT>::new(pb.clone(), "argval2".to_owned());
     let (mut flag, mut result) = (
-        variable::<FieldT, pb_variable>::new(),
-        variable::<FieldT, pb_variable>::new(),
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
     );
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
-    flag.allocate(&pb, "flag");
-    result.allocate(&pb, "result");
+    flag.allocate(&pb, "flag".to_owned());
+    result.allocate(&pb, "result".to_owned());
 
-    let mut cjmp = ALU_cjmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "cjmp");
+    let mut cjmp = ALU_cjmp_gadget::<FieldT>::new(
+        pb.clone(),
+        pc.clone(),
+        argval2.clone(),
+        flag.clone(),
+        result.clone(),
+        "cjmp".to_owned(),
+    );
     cjmp.generate_r1cs_constraints();
 
-    pb.borrow().val(&argval2.packed) = FieldT(123);
+    *pb.borrow_mut().val_ref(&argval2.t.packed) = FieldT::from(123);
     argval2.generate_r1cs_witness_from_packed();
-    pb.borrow().val(&pc.packed) = FieldT(456);
+    *pb.borrow_mut().val_ref(&pc.t.packed) = FieldT::from(456);
     pc.generate_r1cs_witness_from_packed();
 
-    pb.borrow().val(&flag) = FieldT(1);
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(1);
     cjmp.generate_r1cs_witness();
 
-    assert!(pb.borrow().val(&result) == FieldT(123));
-    assert!(pb.is_satisfied());
-    ffec::print_time("positive cjmp test successful");
+    assert!(pb.borrow().val(&result) == FieldT::from(123));
+    assert!(pb.borrow().is_satisfied());
+    print_time("positive cjmp test successful");
 
-    pb.borrow().val(&flag) = FieldT(0);
-    assert!(!pb.is_satisfied());
-    ffec::print_time("negative cjmp test successful");
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(0);
+    assert!(!pb.borrow().is_satisfied());
+    print_time("negative cjmp test successful");
 
-    pb.borrow().val(&flag) = FieldT(0);
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(0);
     cjmp.generate_r1cs_witness();
 
-    assert!(pb.borrow().val(&result) == FieldT(456 + 2 * ap.w / 8));
-    assert!(pb.is_satisfied());
-    ffec::print_time("positive cjmp test successful");
+    assert!(pb.borrow().val(&result) == FieldT::from(456 + 2 * ap.w / 8));
+    assert!(pb.borrow().is_satisfied());
+    print_time("positive cjmp test successful");
 
-    pb.borrow().val(&flag) = FieldT(1);
-    assert!(!pb.is_satisfied());
-    ffec::print_time("negative cjmp test successful");
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(1);
+    assert!(!pb.borrow().is_satisfied());
+    print_time("negative cjmp test successful");
 }
 
 /* cnjmp */
-impl ALU_cnjmp_gadget<FieldT> {
-    pub fn generate_r1cs_constraints(&self) {
+impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cnjmp_gadgets<FieldT> {
+    fn generate_r1cs_constraints(&self) {
         /*
           flag1 * (pc1 + inc) + (1-flag1) * argval2 = cnjmp_result
           flag1 * (pc1 + inc - argval2) = cnjmp_result - argval2
@@ -274,82 +349,107 @@ impl ALU_cnjmp_gadget<FieldT> {
           the byte address of the PC.
         */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                self.flag,
-                self.pc.packed + 1
-                    - pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(
-                        self.argval2.bits.begin() + self.pb.ap.subaddr_len(),
-                        self.argval2.bits.end(),
-                    )),
-                self.result
-                    - pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(
-                        self.argval2.bits.begin() + self.pb.ap.subaddr_len(),
-                        self.argval2.bits.end(),
-                    )),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.flag.clone().into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.pc.t.packed.clone(),
+                ) + 1
+                    - pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                        &(pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                            self.t.t.t.argval2.t.bits.contents
+                                [self.pb.borrow().t.ap.subaddr_len()..]
+                                .to_vec(),
+                        )
+                        .into()),
+                    ),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.result.clone(),
+                ) - pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                    &(pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                        self.t.t.t.argval2.t.bits.contents[self.pb.borrow().t.ap.subaddr_len()..]
+                            .to_vec(),
+                    )
+                    .into()),
+                ),
             ),
             format!("{} cnjmp_result", self.annotation_prefix),
         );
     }
 
-    pub fn generate_r1cs_witness(&self) {
-        self.pb.borrow().val(&self.result) = (if (self.pb.borrow().val(&self.flag) == FieldT::one()) {
-            self.pb.borrow().val(&self.pc.packed) + FieldT::one()
-        } else {
-            FieldT(self.pb.borrow().val(&self.argval2.packed).as_ulong() >> self.pb.ap.subaddr_len())
-        });
+    fn generate_r1cs_witness(&self) {
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.result) =
+            (if (self.pb.borrow().val(&self.t.t.t.flag) == FieldT::one()) {
+                self.pb.borrow().val(&self.t.t.t.pc.t.packed) + FieldT::one()
+            } else {
+                FieldT::from(
+                    self.pb
+                        .borrow()
+                        .val(&self.t.t.t.argval2.t.packed)
+                        .as_ulong()
+                        >> self.pb.borrow().t.ap.subaddr_len(),
+                )
+            });
     }
 }
 
-pub fn test_ALU_cnjmp_gadget() {
+pub fn test_ALU_cnjmp_gadget<FieldT: FieldTConfig>()
+where
+    [(); { FieldT::num_limbs as usize }]:,
+{
     // TODO: update
-    ffec::print_time("starting cnjmp test");
+    print_time("starting cnjmp test");
 
     let mut ap = tinyram_architecture_params::new(16, 16);
-    let mut P = tinyram_program::new();
-    P.instructions = generate_tinyram_prelude(ap);
-    let mut pb = tinyram_protoboard::<FieldT>::new(ap, P.len(), 0, 10);
+    let mut P = tinyram_program::default();
+    P.instructions = generate_tinyram_prelude(&ap);
+    let mut pb = RcCell::new(tinyram_protoboard::<FieldT>::new(ap.clone())); //, P.len(), 0, 10);
 
-    let mut pc = word_variable_gadget::<FieldT>::new(pb, "pc");
-    let mut argval2 = word_variable_gadget::<FieldT>::new(pb, "argval2");
+    let mut pc = word_variable_gadget::<FieldT>::new(pb.clone(), "pc".to_owned());
+    let mut argval2 = word_variable_gadget::<FieldT>::new(pb.clone(), "argval2".to_owned());
     let (mut flag, mut result) = (
-        variable::<FieldT, pb_variable>::new(),
-        variable::<FieldT, pb_variable>::new(),
+        variable::<FieldT, pb_variable>::default(),
+        variable::<FieldT, pb_variable>::default(),
     );
 
     pc.generate_r1cs_constraints(true);
     argval2.generate_r1cs_constraints(true);
-    flag.allocate(&pb, "flag");
-    result.allocate(&pb, "result");
+    flag.allocate(&pb, "flag".to_owned());
+    result.allocate(&pb, "result".to_owned());
 
-    let mut cnjmp = ALU_cnjmp_gadget::<FieldT>::new(pb, pc, argval2, flag, result, "cjmp");
+    let mut cnjmp = ALU_cnjmp_gadget::<FieldT>::new(
+        pb.clone(),
+        pc.clone(),
+        argval2.clone(),
+        flag.clone(),
+        result.clone(),
+        "cjmp".to_owned(),
+    );
     cnjmp.generate_r1cs_constraints();
 
-    pb.borrow().val(&argval2.packed) = FieldT(123);
+    *pb.borrow_mut().val_ref(&argval2.t.packed) = FieldT::from(123);
     argval2.generate_r1cs_witness_from_packed();
-    pb.borrow().val(&pc.packed) = FieldT(456);
+    *pb.borrow_mut().val_ref(&pc.t.packed) = FieldT::from(456);
     pc.generate_r1cs_witness_from_packed();
 
-    pb.borrow().val(&flag) = FieldT(0);
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(0);
     cnjmp.generate_r1cs_witness();
 
-    assert!(pb.borrow().val(&result) == FieldT(123));
-    assert!(pb.is_satisfied());
-    ffec::print_time("positive cnjmp test successful");
+    assert!(pb.borrow().val(&result) == FieldT::from(123));
+    assert!(pb.borrow().is_satisfied());
+    print_time("positive cnjmp test successful");
 
-    pb.borrow().val(&flag) = FieldT(1);
-    assert!(!pb.is_satisfied());
-    ffec::print_time("negative cnjmp test successful");
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(1);
+    assert!(!pb.borrow().is_satisfied());
+    print_time("negative cnjmp test successful");
 
-    pb.borrow().val(&flag) = FieldT(1);
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(1);
     cnjmp.generate_r1cs_witness();
 
-    assert!(pb.borrow().val(&result) == FieldT(456 + (2 * pb.ap.w / 8)));
-    assert!(pb.is_satisfied());
-    ffec::print_time("positive cnjmp test successful");
+    assert!(pb.borrow().val(&result) == FieldT::from(456 + (2 * pb.borrow().t.ap.w / 8)));
+    assert!(pb.borrow().is_satisfied());
+    print_time("positive cnjmp test successful");
 
-    pb.borrow().val(&flag) = FieldT(0);
-    assert!(!pb.is_satisfied());
-    ffec::print_time("negative cnjmp test successful");
+    *pb.borrow_mut().val_ref(&flag) = FieldT::from(0);
+    assert!(!pb.borrow().is_satisfied());
+    print_time("negative cnjmp test successful");
 }
-
-//#endif // ALU_CONTROL_FLOW_TCC_

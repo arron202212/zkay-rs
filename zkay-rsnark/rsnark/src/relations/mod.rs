@@ -10,6 +10,7 @@ pub trait FieldTConfig:
     + std::ops::Neg<Output = Self>
     + From<i64>
     + From<i32>
+    + From<u32>
     + From<usize>
     + ffec::Zero
     + std::cmp::PartialEq

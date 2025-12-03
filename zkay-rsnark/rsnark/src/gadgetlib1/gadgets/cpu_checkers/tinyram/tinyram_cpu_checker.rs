@@ -1,40 +1,41 @@
+// Declaration of interfaces for the TinyRAM CPU checker gadget.
+
+// The gadget checks the correct operation for the CPU of the TinyRAM architecture.
+
 use crate::gadgetlib1::gadget::gadget;
-use crate::gadgetlib1::gadgets::basic_gadgets::packing_gadget;
-use crate::gadgetlib1::gadgets::cpu_checkers::fooram::components::bar_gadget::bar_gadget;
-use crate::gadgetlib1::gadgets::cpu_checkers::fooram::components::fooram_protoboard::{
-    SubFooRamConfig, fooram_gadget, fooram_protoboard,
+use crate::gadgetlib1::gadgets::basic_gadgets::{
+    DefaultDualVariableGadget, dual_variable_gadget, dual_variable_gadgets,
 };
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for the TinyRAM CPU checker gadget.
-
-The gadget checks the correct operation for the CPU of the TinyRAM architecture.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef TINYRAM_CPU_CHECKER_HPP_
-// #define TINYRAM_CPU_CHECKER_HPP_
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::alu_gadget;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::argument_decoder_gadget;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::consistency_enforcer_gadget;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::memory_masking_gadget;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard;
-use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::{
+    ArithmeticGadgetConfig,
+    alu_gadget::{ALU_gadget, ALU_gadgets},
+    argument_decoder_gadget::{argument_decoder_gadget, argument_decoder_gadgets},
+    consistency_enforcer_gadget::{consistency_enforcer_gadget, consistency_enforcer_gadgets},
+    memory_masking_gadget::{memory_masking_gadget, memory_masking_gadgets},
+    word_variable_gadget::{
+        doubleword_variable_gadget, doubleword_variable_gadgets, word_variable_gadget,
+        word_variable_gadgets,
+    },
+};
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::{
+    SubTinyRamGadgetConfig, tinyram_gadget, tinyram_protoboard, tinyram_standard_gadget,
+};
 use crate::gadgetlib1::pb_variable::{
-    pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
+    pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_sum, pb_variable,
+    pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::memory::memory_interface;
+use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
+    tinyram_opcode, tinyram_opcode_names,
+};
 use crate::relations::variable::{linear_combination, variable};
 use ffec::common::serialization;
 use rccell::RcCell;
-
+use std::collections::HashMap;
 #[derive(Clone, Default)]
 pub struct tinyram_cpu_checker<FieldT: FieldTConfig> {
     // : public tinyram_standard_gadget<FieldT>
@@ -43,99 +44,31 @@ pub struct tinyram_cpu_checker<FieldT: FieldTConfig> {
     desidx: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
     arg1idx: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
     arg2idx: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
-
-    prev_registers: Vec<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    next_registers: Vec<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
+    prev_registers: Vec<word_variable_gadgets<FieldT>>,
+    next_registers: Vec<word_variable_gadgets<FieldT>>,
     prev_flag: variable<FieldT, pb_variable>,
     next_flag: variable<FieldT, pb_variable>,
     prev_tape1_exhausted: variable<FieldT, pb_variable>,
     next_tape1_exhausted: variable<FieldT, pb_variable>,
-
-    prev_pc_addr_as_word_variable: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    desval: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    arg1val: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    arg2val: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-
-    decode_arguments: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            argument_decoder_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
+    prev_pc_addr_as_word_variable: RcCell<word_variable_gadgets<FieldT>>,
+    desval: RcCell<word_variable_gadgets<FieldT>>,
+    arg1val: RcCell<word_variable_gadgets<FieldT>>,
+    arg2val: RcCell<word_variable_gadgets<FieldT>>,
+    decode_arguments: RcCell<argument_decoder_gadgets<FieldT>>,
     opcode_indicators: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
-    ALU: RcCell<ALU_gadget<FieldT>>,
-
-    ls_prev_val_as_doubleword_variable: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            doubleword_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    ls_next_val_as_doubleword_variable: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            doubleword_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    memory_subaddress: RcCell<dual_variable_gadget<FieldT>>,
+    ALU: RcCell<ALU_gadgets<FieldT>>,
+    ls_prev_val_as_doubleword_variable: RcCell<doubleword_variable_gadgets<FieldT>>,
+    ls_next_val_as_doubleword_variable: RcCell<doubleword_variable_gadgets<FieldT>>,
+    memory_subaddress: RcCell<word_variable_gadgets<FieldT>>,
     memory_subcontents: variable<FieldT, pb_variable>,
-    memory_access_is_word: pb_linear_combination<FieldT>,
-    memory_access_is_byte: pb_linear_combination<FieldT>,
-    check_memory: RcCell<memory_masking_gadget<FieldT>>,
-
-    next_pc_addr_as_word_variable: RcCell<
-        gadget<
-            FieldT,
-            tinyram_protoboard<FieldT>,
-            word_variable_gadget<FieldT, tinyram_protoboard<FieldT>>,
-        >,
-    >,
-    consistency_enforcer: RcCell<consistency_enforcer_gadget<FieldT>>,
-
+    memory_access_is_word: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    memory_access_is_byte: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    check_memory: RcCell<memory_masking_gadgets<FieldT>>,
+    next_pc_addr_as_word_variable: RcCell<word_variable_gadgets<FieldT>>,
+    consistency_enforcer: RcCell<consistency_enforcer_gadgets<FieldT>>,
     instruction_results: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
     instruction_flags: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
-
     read_not1: variable<FieldT, pb_variable>,
-    //
     prev_pc_addr: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
     prev_pc_val: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
     prev_state: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
@@ -183,7 +116,12 @@ See tinyram_cpu_checker.hpp .
 //#ifndef TINYRAM_CPU_CHECKER_TCC_
 // #define TINYRAM_CPU_CHECKER_TCC_
 use ffec::algebra::field_utils::field_utils;
-
+pub type tinyram_cpu_checkers<FieldT> = gadget<
+    FieldT,
+    tinyram_protoboard<FieldT>,
+    tinyram_gadget<FieldT, tinyram_standard_gadget<FieldT, tinyram_cpu_checker<FieldT>>>,
+>;
+impl<FieldT: FieldTConfig> SubTinyRamGadgetConfig for tinyram_cpu_checker<FieldT> {}
 impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,
@@ -197,197 +135,259 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         next_pc_addr: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
         next_has_accepted: variable<FieldT, pb_variable>,
         annotation_prefix: String,
-    ) -> gadget<FieldT, tinyram_protoboard<FieldT>, tinyram_standard_gadget<FieldT, Self>> {
+    ) -> tinyram_cpu_checkers<FieldT> {
         /* parse previous PC value as an instruction (note that we start
         parsing from LSB of the instruction doubleword and go to the
         MSB) */
-        let pc_val_it = prev_pc_val.begin();
+        let prev_pc_val_contents = &prev_pc_val.contents;
+        let mut pc_val_it = 0;
 
-        arg2idx = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_or_imm_width());
-        std::advance(pc_val_it, pb.ap.reg_arg_or_imm_width());
-        std::advance(pc_val_it, pb.ap.instruction_padding_width());
-        arg1idx = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_width());
-        std::advance(pc_val_it, pb.ap.reg_arg_width());
-        desidx = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.reg_arg_width());
-        std::advance(pc_val_it, pb.ap.reg_arg_width());
-        arg2_is_imm = *pc_val_it;
-        std::advance(pc_val_it, 1);
-        opcode = pb_variable_array::<FieldT>(pc_val_it, pc_val_it + pb.ap.opcode_width());
-        std::advance(pc_val_it, pb.ap.opcode_width());
+        let arg2idx = pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+            prev_pc_val_contents[pc_val_it..pc_val_it + pb.borrow().t.ap.reg_arg_or_imm_width()]
+                .to_vec(),
+        );
+        pc_val_it += pb.borrow().t.ap.reg_arg_or_imm_width();
+        pc_val_it += pb.borrow().t.ap.instruction_padding_width();
+        let arg1idx = pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+            prev_pc_val_contents[pc_val_it..pc_val_it + pb.borrow().t.ap.reg_arg_width()].to_vec(),
+        );
+        pc_val_it += pb.borrow().t.ap.reg_arg_width();
+        let desidx = pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+            prev_pc_val_contents[pc_val_it..pc_val_it + pb.borrow().t.ap.reg_arg_width()].to_vec(),
+        );
+        pc_val_it += pb.borrow().t.ap.reg_arg_width();
+        let arg2_is_imm = variable::<FieldT, pb_variable>::from(pc_val_it);
+        pc_val_it += 1;
+        let opcode = pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+            prev_pc_val_contents[pc_val_it..pc_val_it + pb.borrow().t.ap.opcode_width()].to_vec(),
+        );
+        pc_val_it += pb.borrow().t.ap.opcode_width();
 
-        assert!(pc_val_it == prev_pc_val.end());
+        assert!(pc_val_it == prev_pc_val_contents.len());
 
         /* parse state as registers + flags */
-        let (packed_prev_registers, packed_next_registers) = (
-            pb_variable_array::<FieldT>::new(),
-            pb_variable_array::<FieldT>::new(),
+        let (mut packed_prev_registers, mut packed_next_registers) = (
+            pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default(),
+            pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default(),
         );
-        for i in 0..pb.ap.k {
-            prev_registers.push(word_variable_gadget::<FieldT>(
-                &pb,
-                pb_variable_array::<FieldT>(
-                    prev_state.begin() + i * pb.ap.w,
-                    prev_state.begin() + (i + 1) * pb.ap.w,
+        let (mut prev_registers, mut next_registers) = (vec![], vec![]);
+        for i in 0..pb.borrow().t.ap.k {
+            prev_registers.push(word_variable_gadget::<FieldT>::new_with_bits(
+                pb.clone(),
+                pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                    prev_state.contents[i * pb.borrow().t.ap.w..(i + 1) * pb.borrow().t.ap.w]
+                        .to_vec(),
                 ),
                 format!("{annotation_prefix} prev_registers_{}", i),
             ));
-            next_registers.push(word_variable_gadget::<FieldT>(
-                &pb,
-                pb_variable_array::<FieldT>(
-                    next_state.begin() + i * pb.ap.w,
-                    next_state.begin() + (i + 1) * pb.ap.w,
+            next_registers.push(word_variable_gadget::<FieldT>::new_with_bits(
+                pb.clone(),
+                pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                    next_state.contents[i * pb.borrow().t.ap.w..(i + 1) * pb.borrow().t.ap.w]
+                        .to_vec(),
                 ),
                 format!("{annotation_prefix} next_registers_{}", i),
             ));
 
-            packed_prev_registers.push(prev_registers[i].packed);
-            packed_next_registers.push(next_registers[i].packed);
+            packed_prev_registers
+                .contents
+                .push(prev_registers[i].t.packed.clone());
+            packed_next_registers
+                .contents
+                .push(next_registers[i].t.packed.clone());
         }
-        prev_state.next_back();
-        prev_flag = *(prev_state.next_back().unwrap());
-        next_state.next_back();
-        next_flag = *(next_state.next_back().unwrap());
-        prev_tape1_exhausted = *(prev_state.last().unwrap());
-        next_tape1_exhausted = *(next_state.lat().unwrap());
+        let prev_flag = prev_state.contents[prev_state.contents.len() - 2].clone();
+        let next_flag = next_state.contents[next_state.contents.len() - 2].clone();
+        let prev_tape1_exhausted = prev_state.iter().last().unwrap().clone();
+        let next_tape1_exhausted = next_state.iter().last().unwrap().clone();
 
         /* decode arguments */
-        prev_pc_addr_as_word_variable = RcCell::new(word_variable_gadget::<FieldT>::new(
-            pb,
-            prev_pc_addr,
-            format!("{annotation_prefix} prev_pc_addr_as_word_variable"),
-        ));
-        desval = RcCell::new(word_variable_gadget::<FieldT>::new(
-            pb,
+        let prev_pc_addr_as_word_variable =
+            RcCell::new(word_variable_gadget::<FieldT>::new_with_bits(
+                pb.clone(),
+                prev_pc_addr.clone(),
+                format!("{annotation_prefix} prev_pc_addr_as_word_variable"),
+            ));
+        let desval = RcCell::new(word_variable_gadget::<FieldT>::new(
+            pb.clone(),
             format!("{annotation_prefix} desval"),
         ));
-        arg1val = RcCell::new(word_variable_gadget::<FieldT>::new(
-            pb,
+        let arg1val = RcCell::new(word_variable_gadget::<FieldT>::new(
+            pb.clone(),
             format!("{annotation_prefix} arg1val"),
         ));
-        arg2val = RcCell::new(word_variable_gadget::<FieldT>::new(
-            pb,
+        let arg2val = RcCell::new(word_variable_gadget::<FieldT>::new(
+            pb.clone(),
             format!("{annotation_prefix} arg2val"),
         ));
 
-        decode_arguments = RcCell::new(argument_decoder_gadget::<FieldT>::new(
-            pb,
-            arg2_is_imm,
-            desidx,
-            arg1idx,
-            arg2idx,
-            packed_prev_registers,
-            desval.packed,
-            arg1val.packed,
-            arg2val.packed,
+        let decode_arguments = RcCell::new(argument_decoder_gadget::<FieldT>::new(
+            pb.clone(),
+            arg2_is_imm.clone(),
+            desidx.clone(),
+            arg1idx.clone(),
+            arg2idx.clone(),
+            packed_prev_registers.clone(),
+            desval.borrow().t.packed.clone(),
+            arg1val.borrow().t.packed.clone(),
+            arg2val.borrow().t.packed.clone(),
             format!("{annotation_prefix} decode_arguments"),
         ));
 
         /* create indicator variables for opcodes */
+        let mut opcode_indicators =
+            pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         opcode_indicators.allocate(
             &pb,
-            1u64 << pb.ap.opcode_width(),
-            format!("{annotation_prefix} opcode_indicators"),
+            1usize << pb.borrow().t.ap.opcode_width(),
+            &format!("{annotation_prefix} opcode_indicators"),
         );
 
         /* perform the ALU operations */
+        let mut instruction_results =
+            pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         instruction_results.allocate(
             &pb,
-            1u64 << pb.ap.opcode_width(),
-            format!("{annotation_prefix} instruction_results"),
+            1usize << pb.borrow().t.ap.opcode_width(),
+            &format!("{annotation_prefix} instruction_results"),
         );
+        let mut instruction_flags =
+            pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         instruction_flags.allocate(
             &pb,
-            1u64 << pb.ap.opcode_width(),
-            format!("{annotation_prefix} instruction_flags"),
+            1usize << pb.borrow().t.ap.opcode_width(),
+            &format!("{annotation_prefix} instruction_flags"),
         );
 
-        ALU = RcCell::new(ALU_gadget::<FieldT>::new(
-            pb,
-            opcode_indicators,
-            *prev_pc_addr_as_word_variable,
-            *desval,
-            *arg1val,
-            *arg2val,
-            prev_flag,
-            instruction_results,
-            instruction_flags,
+        let ALU = RcCell::new(ALU_gadget::<FieldT>::new(
+            pb.clone(),
+            opcode_indicators.clone(),
+            prev_pc_addr_as_word_variable.borrow().clone(),
+            desval.borrow().clone(),
+            arg1val.borrow().clone(),
+            arg2val.borrow().clone(),
+            prev_flag.clone(),
+            instruction_results.clone(),
+            instruction_flags.clone(),
             format!("{annotation_prefix} ALU"),
         ));
 
         /* check correctness of memory operations */
-        ls_prev_val_as_doubleword_variable =
-            RcCell::new(doubleword_variable_gadget::<FieldT>::new(
-                pb,
-                ls_prev_val,
+        let ls_prev_val_as_doubleword_variable =
+            RcCell::new(doubleword_variable_gadget::<FieldT>::new_with_bits(
+                pb.clone(),
+                ls_prev_val.clone(),
                 format!("{annotation_prefix} ls_prev_val_as_doubleword_variable"),
             ));
-        ls_next_val_as_doubleword_variable =
-            RcCell::new(doubleword_variable_gadget::<FieldT>::new(
-                pb,
-                ls_next_val,
+        let ls_next_val_as_doubleword_variable =
+            RcCell::new(doubleword_variable_gadget::<FieldT>::new_with_bits(
+                pb.clone(),
+                ls_next_val.clone(),
                 format!("{annotation_prefix} ls_next_val_as_doubleword_variable"),
             ));
-        memory_subaddress = RcCell::new(dual_variable_gadget::<FieldT>::new(
-            pb,
-            pb_variable_array::<FieldT>(
-                arg2val.bits.begin(),
-                arg2val.bits.begin() + pb.ap.subaddr_len(),
+        let memory_subaddress = RcCell::new(word_variable_gadget::<FieldT>::new_with_bits(
+            pb.clone(),
+            pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                arg2val.borrow().t.bits.contents[..pb.borrow().t.ap.subaddr_len()].to_vec(),
             ),
             format!("{annotation_prefix} memory_subaddress"),
         ));
-
+        let mut memory_subcontents = variable::<FieldT, pb_variable>::default();
         memory_subcontents.allocate(&pb, format!("{annotation_prefix} memory_subcontents"));
+        let mut memory_access_is_word =
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
         memory_access_is_word.assign(
             &pb,
-            1 - (opcode_indicators[tinyram_opcode_LOADB]
-                + opcode_indicators[tinyram_opcode_STOREB]),
+            &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                - (opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
+                    .clone()
+                    + opcode_indicators[tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
+                        .clone()
+                        .into())),
         );
+        let mut memory_access_is_byte =
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
         memory_access_is_byte.assign(
             &pb,
-            opcode_indicators[tinyram_opcode_LOADB] + opcode_indicators[tinyram_opcode_STOREB],
+            &(opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize].clone()
+                + opcode_indicators[tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
+                    .clone()
+                    .into()),
         );
 
-        check_memory = RcCell::new(memory_masking_gadget::<FieldT>::new(
-            pb,
-            *ls_prev_val_as_doubleword_variable,
-            *memory_subaddress,
-            memory_subcontents,
-            memory_access_is_word,
-            memory_access_is_byte,
-            *ls_next_val_as_doubleword_variable,
+        let check_memory = RcCell::new(memory_masking_gadget::<FieldT>::new(
+            pb.clone(),
+            ls_prev_val_as_doubleword_variable.borrow().clone(),
+            memory_subaddress.borrow().clone(),
+            memory_subcontents.clone().into(),
+            memory_access_is_word.clone(),
+            memory_access_is_byte.clone(),
+            ls_next_val_as_doubleword_variable.borrow().clone(),
             format!("{annotation_prefix} check_memory"),
         ));
 
         /* handle reads */
+        let mut read_not1 = variable::<FieldT, pb_variable>::default();
         read_not1.allocate(&pb, format!("{annotation_prefix} read_not1"));
 
         /* check consistency of the states according to the ALU results */
-        next_pc_addr_as_word_variable = RcCell::new(word_variable_gadget::<FieldT>::new(
-            pb,
-            next_pc_addr,
-            format!("{annotation_prefix} next_pc_addr_as_word_variable"),
-        ));
+        let next_pc_addr_as_word_variable =
+            RcCell::new(word_variable_gadget::<FieldT>::new_with_bits(
+                pb.clone(),
+                next_pc_addr.clone(),
+                format!("{annotation_prefix} next_pc_addr_as_word_variable"),
+            ));
 
-        consistency_enforcer = RcCell::new(consistency_enforcer_gadget::<FieldT>::new(
-            pb,
-            opcode_indicators,
-            instruction_results,
-            instruction_flags,
-            desidx,
-            prev_pc_addr_as_word_variable.packed,
-            packed_prev_registers,
-            desval.packed,
-            prev_flag,
-            next_pc_addr_as_word_variable.packed,
-            packed_next_registers,
-            next_flag,
+        let consistency_enforcer = RcCell::new(consistency_enforcer_gadget::<FieldT>::new(
+            pb.clone(),
+            opcode_indicators.clone(),
+            instruction_results.clone(),
+            instruction_flags.clone(),
+            desidx.clone(),
+            prev_pc_addr_as_word_variable.borrow().t.packed.clone(),
+            packed_prev_registers.clone(),
+            desval.borrow().t.packed.clone(),
+            prev_flag.clone(),
+            next_pc_addr_as_word_variable.borrow().t.packed.clone(),
+            packed_next_registers.clone(),
+            next_flag.clone(),
             format!("{annotation_prefix} consistency_enforcer"),
         ));
 
-        tinyram_standard_gadget::<FieldT>::new(
-            &pb,
+        tinyram_standard_gadget::<FieldT, Self>::new(
+            pb,
             annotation_prefix,
             Self {
+                opcode,
+                arg2_is_imm,
+                desidx,
+                arg1idx,
+                arg2idx,
+                prev_registers,
+                next_registers,
+                prev_flag,
+                next_flag,
+                prev_tape1_exhausted,
+                next_tape1_exhausted,
+                prev_pc_addr_as_word_variable,
+                desval,
+                arg1val,
+                arg2val,
+                decode_arguments,
+                opcode_indicators,
+                ALU,
+                ls_prev_val_as_doubleword_variable,
+                ls_next_val_as_doubleword_variable,
+                memory_subaddress,
+                memory_subcontents,
+                memory_access_is_word,
+                memory_access_is_byte,
+                check_memory,
+                next_pc_addr_as_word_variable,
+                consistency_enforcer,
+                instruction_results,
+                instruction_flags,
+                read_not1,
                 prev_pc_addr,
                 prev_pc_val,
                 prev_state,
@@ -401,55 +401,120 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         )
     }
 }
-impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
+
+impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
     pub fn generate_r1cs_constraints(&self) {
-        decode_arguments.generate_r1cs_constraints();
+        self.t
+            .t
+            .t
+            .decode_arguments
+            .borrow()
+            .generate_r1cs_constraints();
 
         /* generate indicator variables for opcode */
-        for i in 0..1u64 << self.pb.ap.opcode_width() {
+        for i in 0..1usize << self.pb.borrow().t.ap.opcode_width() {
             self.pb.borrow_mut().add_r1cs_constraint(
-                r1cs_constraint::<FieldT>(
-                    opcode_indicators[i],
-                    pb_packing_sum::<FieldT>(opcode) - i,
-                    0,
+                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                    self.t.t.t.opcode_indicators[i].clone().into(),
+                    pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                        &(self.t.t.t.opcode.clone().into()),
+                    ) - variable::<FieldT, pb_variable>::from(i),
+                    0.into(),
                 ),
                 format!("{} opcode_indicators_{}", self.annotation_prefix, i),
             );
         }
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(1, pb_sum::<FieldT>(opcode_indicators), 1),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                1.into(),
+                pb_sum::<FieldT, tinyram_protoboard<FieldT>, pb_variable>(
+                    &(self.t.t.t.opcode_indicators.clone().into()),
+                ),
+                1.into(),
+            ),
             format!("{} opcode_indicators_sum_to_1", self.annotation_prefix),
         );
 
         /* consistency checks for repacked variables */
-        for i in 0..self.pb.ap.k {
-            prev_registers[i].generate_r1cs_constraints(true);
-            next_registers[i].generate_r1cs_constraints(true);
+        for i in 0..self.pb.borrow().t.ap.k {
+            self.t.t.t.prev_registers[i].generate_r1cs_constraints(true);
+            self.t.t.t.next_registers[i].generate_r1cs_constraints(true);
         }
-        prev_pc_addr_as_word_variable.generate_r1cs_constraints(true);
-        next_pc_addr_as_word_variable.generate_r1cs_constraints(true);
-        ls_prev_val_as_doubleword_variable.generate_r1cs_constraints(true);
-        ls_next_val_as_doubleword_variable.generate_r1cs_constraints(true);
+        self.t
+            .t
+            .t
+            .prev_pc_addr_as_word_variable
+            .borrow()
+            .generate_r1cs_constraints(true);
+        self.t
+            .t
+            .t
+            .next_pc_addr_as_word_variable
+            .borrow()
+            .generate_r1cs_constraints(true);
+        self.t
+            .t
+            .t
+            .ls_prev_val_as_doubleword_variable
+            .borrow()
+            .generate_r1cs_constraints(true);
+        self.t
+            .t
+            .t
+            .ls_next_val_as_doubleword_variable
+            .borrow()
+            .generate_r1cs_constraints(true);
 
         /* main consistency checks */
-        decode_arguments.generate_r1cs_constraints();
-        ALU.generate_r1cs_constraints();
-        consistency_enforcer.generate_r1cs_constraints();
+        self.t
+            .t
+            .t
+            .decode_arguments
+            .borrow()
+            .generate_r1cs_constraints();
+        self.t.t.t.ALU.borrow().generate_r1cs_constraints();
+        self.t
+            .t
+            .t
+            .consistency_enforcer
+            .borrow()
+            .generate_r1cs_constraints();
 
         /* check correct access to memory */
-        ls_prev_val_as_doubleword_variable.generate_r1cs_constraints(false);
-        ls_next_val_as_doubleword_variable.generate_r1cs_constraints(false);
-        memory_subaddress.generate_r1cs_constraints(false);
-        check_memory.generate_r1cs_constraints();
+        self.t
+            .t
+            .t
+            .ls_prev_val_as_doubleword_variable
+            .borrow()
+            .generate_r1cs_constraints(false);
+        self.t
+            .t
+            .t
+            .ls_next_val_as_doubleword_variable
+            .borrow()
+            .generate_r1cs_constraints(false);
+        self.t
+            .t
+            .t
+            .memory_subaddress
+            .borrow()
+            .generate_r1cs_constraints(false);
+        self.t.t.t.check_memory.borrow().generate_r1cs_constraints();
 
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                1,
-                pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(
-                    arg2val.bits.begin() + self.pb.ap.subaddr_len(),
-                    arg2val.bits.end(),
-                )),
-                pb_packing_sum::<FieldT>(ls_addr),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                1.into(),
+                pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                    &(pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                        self.t.t.t.arg2val.borrow().t.bits.contents
+                            [self.pb.borrow().t.ap.subaddr_len()..]
+                            .to_vec(),
+                    )
+                    .into()),
+                ),
+                pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                    &(self.t.t.t.ls_addr.clone().into()),
+                ),
             ),
             format!(
                 "{} ls_addr_is_arg2val_minus_subaddress",
@@ -466,48 +531,94 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         instruction is a non-memory instruction, we will treat it as a
         load from that memory location. */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                opcode_indicators[tinyram_opcode_LOADB],
-                memory_subcontents - instruction_results[tinyram_opcode_LOADB],
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
+                    .clone()
+                    .into(),
+                (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.memory_subcontents.clone(),
+                ) - self.t.t.t.instruction_results
+                    [tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
+                    .clone())
+                .into(),
+                0.into(),
             ),
             format!("{} handle_loadb", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                opcode_indicators[tinyram_opcode_LOADW],
-                memory_subcontents - instruction_results[tinyram_opcode_LOADW],
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_LOADW.clone() as usize]
+                    .clone()
+                    .into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.memory_subcontents.clone(),
+                ) - self.t.t.t.instruction_results
+                    [tinyram_opcode::tinyram_opcode_LOADW.clone() as usize]
+                    .clone(),
+                0.into(),
             ),
             format!("{} handle_loadw", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                opcode_indicators[tinyram_opcode_STOREB],
-                memory_subcontents
-                    - pb_packing_sum::<FieldT>(pb_variable_array::<FieldT>(
-                        desval.bits.begin(),
-                        desval.bits.begin() + 8,
-                    )),
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.opcode_indicators
+                    [tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
+                    .clone()
+                    .into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.memory_subcontents.clone(),
+                ) - pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
+                    &(pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                        self.t.t.t.desval.borrow().t.bits.contents[..8].to_vec(),
+                    )
+                    .into()),
+                ),
+                0.into(),
             ),
             format!("{} handle_storeb", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                opcode_indicators[tinyram_opcode_STOREW],
-                memory_subcontents - desval.packed,
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.opcode_indicators
+                    [tinyram_opcode::tinyram_opcode_STOREW.clone() as usize]
+                    .clone()
+                    .into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t.t.t.memory_subcontents.clone(),
+                ) - self.t.t.t.desval.borrow().t.packed.clone(),
+                0.into(),
             ),
             format!("{} handle_storew", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                1 - (opcode_indicators[tinyram_opcode_STOREB]
-                    + opcode_indicators[tinyram_opcode_STOREW]),
-                ls_prev_val_as_doubleword_variable.packed
-                    - ls_next_val_as_doubleword_variable.packed,
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                    - (self.t.t.t.opcode_indicators
+                        [tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
+                        .clone()
+                        + self.t.t.t.opcode_indicators
+                            [tinyram_opcode::tinyram_opcode_STOREW.clone() as usize]
+                            .clone()
+                            .into()),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    self.t
+                        .t
+                        .t
+                        .ls_prev_val_as_doubleword_variable
+                        .borrow()
+                        .t
+                        .packed
+                        .clone(),
+                ) - self
+                    .t
+                    .t
+                    .t
+                    .ls_next_val_as_doubleword_variable
+                    .borrow()
+                    .t
+                    .packed
+                    .clone(),
+                0.into(),
             ),
             format!(
                 "{} non_store_instructions_dont_change_memory",
@@ -517,15 +628,22 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
 
         /* specify that accepting state implies opcode = answer && arg2val == 0 */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                next_has_accepted,
-                1 - opcode_indicators[tinyram_opcode_ANSWER],
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.next_has_accepted.clone().into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                    - self.t.t.t.opcode_indicators
+                        [tinyram_opcode::tinyram_opcode_ANSWER.clone() as usize]
+                        .clone(),
+                0.into(),
             ),
             format!("{} accepting_requires_answer", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(next_has_accepted, arg2val.packed, 0),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.next_has_accepted.clone().into(),
+                self.t.t.t.arg2val.borrow().t.packed.clone().into(),
+                0.into(),
+            ),
             format!(
                 "{} accepting_requires_arg2val_equal_zero",
                 self.annotation_prefix
@@ -542,17 +660,25 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
            flag implies result to be 0
         */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(prev_tape1_exhausted, 1 - next_tape1_exhausted, 0),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.prev_tape1_exhausted.clone().into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                    - self.t.t.t.next_tape1_exhausted.clone(),
+                0.into(),
+            ),
             format!(
                 "{} prev_tape1_exhausted_implies_next_tape1_exhausted",
                 self.annotation_prefix
             ),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                prev_tape1_exhausted,
-                1 - instruction_flags[tinyram_opcode_READ],
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.prev_tape1_exhausted.clone().into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                    - self.t.t.t.instruction_flags
+                        [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                        .clone(),
+                0.into(),
             ),
             format!(
                 "{} prev_tape1_exhausted_implies_flag",
@@ -560,56 +686,117 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
             ),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                opcode_indicators[tinyram_opcode_READ],
-                1 - arg2val.packed,
-                read_not1,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                    .clone()
+                    .into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                    - self.t.t.t.arg2val.borrow().t.packed.clone(),
+                self.t.t.t.read_not1.clone().into(),
             ),
             format!("{} read_not1", self.annotation_prefix),
         ); /* will be nonzero for read X for X != 1 */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(read_not1, 1 - instruction_flags[tinyram_opcode_READ], 0),
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.read_not1.clone().into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
+                    - self.t.t.t.instruction_flags
+                        [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                        .clone(),
+                0.into(),
+            ),
             format!("{} other_reads_imply_flag", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                instruction_flags[tinyram_opcode_READ],
-                instruction_results[tinyram_opcode_READ],
-                0,
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                self.t.t.t.instruction_flags[tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                    .clone()
+                    .into(),
+                self.t.t.t.instruction_results
+                    [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                    .clone()
+                    .into(),
+                0.into(),
             ),
             format!("{} read_flag_implies_result_0", self.annotation_prefix),
         );
     }
 
-    pub fn generate_r1cs_witness_address(&self) {
+    pub fn generate_r1cs_witness_address(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
         /* decode instruction and arguments */
-        prev_pc_addr_as_word_variable.generate_r1cs_witness_from_bits();
-        for i in 0..self.pb.ap.k {
-            prev_registers[i].generate_r1cs_witness_from_bits();
+        self.t
+            .t
+            .t
+            .prev_pc_addr_as_word_variable
+            .borrow()
+            .generate_r1cs_witness_from_bits();
+        for i in 0..self.pb.borrow().t.ap.k {
+            self.t.t.t.prev_registers[i].generate_r1cs_witness_from_bits();
         }
 
-        decode_arguments.generate_r1cs_witness();
+        self.t.t.t.decode_arguments.borrow().generate_r1cs_witness();
 
-        desval.generate_r1cs_witness_from_packed();
-        arg1val.generate_r1cs_witness_from_packed();
-        arg2val.generate_r1cs_witness_from_packed();
+        self.t
+            .t
+            .t
+            .desval
+            .borrow()
+            .generate_r1cs_witness_from_packed();
+        self.t
+            .t
+            .t
+            .arg1val
+            .borrow()
+            .generate_r1cs_witness_from_packed();
+        self.t
+            .t
+            .t
+            .arg2val
+            .borrow()
+            .generate_r1cs_witness_from_packed();
 
         /* clear out ls_addr and fill with everything of arg2val except the subaddress */
-        ls_addr.fill_with_bits_of_field_element(
-            self.pb,
-            self.pb.borrow().val(&arg2val.packed).as_ulong() >> self.pb.ap.subaddr_len(),
+        self.t.t.t.ls_addr.fill_with_bits_of_field_element(
+            &self.pb,
+            &FieldT::from(
+                self.pb
+                    .borrow()
+                    .val(&self.t.t.t.arg2val.borrow().t.packed)
+                    .as_ulong()
+                    >> self.pb.borrow().t.ap.subaddr_len(),
+            ),
         );
     }
 
-    pub fn generate_r1cs_witness_other(&self, aux: &[usize]) {
+    pub fn generate_r1cs_witness_other(&self, aux: &[usize])
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
         /* now ls_prev_val is filled with memory contents at ls_addr. we
         now ensure consistency with its doubleword representation */
-        ls_prev_val_as_doubleword_variable.generate_r1cs_witness_from_bits();
+        self.t
+            .t
+            .t
+            .ls_prev_val_as_doubleword_variable
+            .borrow()
+            .generate_r1cs_witness_from_bits();
 
         /* fill in the opcode indicators */
-        let opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
-        for i in 0..1u64 << self.pb.ap.opcode_width() {
-            self.pb.borrow().val(&opcode_indicators[i]) = if i == opcode_val {
+        let opcode_val = self
+            .t
+            .t
+            .t
+            .opcode
+            .get_field_element_from_bits(&self.pb)
+            .as_ulong();
+        for i in 0..1usize << self.pb.borrow().t.ap.opcode_width() {
+            *self
+                .pb
+                .borrow_mut()
+                .val_ref(&self.t.t.t.opcode_indicators[i]) = if i == opcode_val {
                 FieldT::one()
             } else {
                 FieldT::zero()
@@ -617,18 +804,23 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         }
 
         /* execute the ALU */
-        ALU.generate_r1cs_witness();
+        self.t.t.t.ALU.borrow().generate_r1cs_witness();
 
         /* fill memory_subaddress */
-        memory_subaddress.bits.fill_with_bits(
-            self.pb,
-            pb_variable_array::<FieldT>(
-                arg2val.bits.begin(),
-                arg2val.bits.begin() + self.pb.ap.subaddr_len(),
+        self.t.t.t.memory_subaddress.borrow().t.bits.fill_with_bits(
+            &self.pb,
+            &pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
+                self.t.t.t.arg2val.borrow().t.bits.contents[..self.pb.borrow().t.ap.subaddr_len()]
+                    .to_vec(),
             )
-            .get_bits(self.pb),
+            .get_bits(&self.pb),
         );
-        memory_subaddress.generate_r1cs_witness_from_bits();
+        self.t
+            .t
+            .t
+            .memory_subaddress
+            .borrow()
+            .generate_r1cs_witness_from_bits();
 
         /* we distinguish four cases for memory handling:
         a) load.b
@@ -637,55 +829,128 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         d) load.w or any non-memory instruction */
         let prev_doubleword = self
             .pb
-            .val(ls_prev_val_as_doubleword_variable.packed)
+            .borrow()
+            .val(
+                &self
+                    .t
+                    .t
+                    .t
+                    .ls_prev_val_as_doubleword_variable
+                    .borrow()
+                    .t
+                    .packed,
+            )
             .as_ulong();
-        let subaddress = self.pb.borrow().val(&memory_subaddress.packed).as_ulong();
+        let subaddress = self
+            .pb
+            .borrow()
+            .val(&self.t.t.t.memory_subaddress.borrow().t.packed)
+            .as_ulong();
 
-        if self.pb.borrow().val(&opcode_indicators[tinyram_opcode_LOADB]) == FieldT::one() {
+        if self.pb.borrow().val(
+            &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize],
+        ) == FieldT::one()
+        {
             let loaded_byte = (prev_doubleword >> (8 * subaddress)) & 0xFF;
-            self.pb.borrow().val(&instruction_results[tinyram_opcode_LOADB]) = FieldT(loaded_byte);
-            self.pb.borrow().val(&memory_subcontents) = FieldT(loaded_byte);
-        } else if self.pb.borrow().val(&opcode_indicators[tinyram_opcode_STOREB]) == FieldT::one() {
-            let stored_byte = (self.pb.borrow().val(&desval.packed).as_ulong()) & 0xFF;
-            self.pb.borrow().val(&memory_subcontents) = FieldT(stored_byte);
-        } else if self.pb.borrow().val(&opcode_indicators[tinyram_opcode_STOREW]) == FieldT::one() {
-            let stored_word = (self.pb.borrow().val(&desval.packed).as_ulong());
-            self.pb.borrow().val(&memory_subcontents) = FieldT(stored_word);
+            *self.pb.borrow_mut().val_ref(
+                &self.t.t.t.instruction_results
+                    [tinyram_opcode::tinyram_opcode_LOADB.clone() as usize],
+            ) = FieldT::from(loaded_byte);
+            *self.pb.borrow_mut().val_ref(&self.t.t.t.memory_subcontents) =
+                FieldT::from(loaded_byte);
+        } else if self.pb.borrow().val(
+            &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_STOREB.clone() as usize],
+        ) == FieldT::one()
+        {
+            let stored_byte = (self
+                .pb
+                .borrow()
+                .val(&self.t.t.t.desval.borrow().t.packed)
+                .as_ulong())
+                & 0xFF;
+            *self.pb.borrow_mut().val_ref(&self.t.t.t.memory_subcontents) =
+                FieldT::from(stored_byte);
+        } else if self.pb.borrow().val(
+            &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_STOREW.clone() as usize],
+        ) == FieldT::one()
+        {
+            let stored_word = (self
+                .pb
+                .borrow()
+                .val(&self.t.t.t.desval.borrow().t.packed)
+                .as_ulong());
+            *self.pb.borrow_mut().val_ref(&self.t.t.t.memory_subcontents) =
+                FieldT::from(stored_word);
         } else {
-            let access_is_word0 = (self.pb.borrow().val(&*memory_subaddress.bits.rbegin()) == FieldT::zero());
-            let loaded_word = (prev_doubleword >> (if access_is_word0 { 0 } else { self.pb.ap.w }))
-                & ((1u64 << self.pb.ap.w) - 1);
-            self.pb.borrow().val(&instruction_results[tinyram_opcode_LOADW]) = FieldT(loaded_word); /* does not hurt even for non-memory instructions */
-            self.pb.borrow().val(&memory_subcontents) = FieldT(loaded_word);
+            let access_is_word0 = (self.pb.borrow().val(
+                &*self
+                    .t
+                    .t
+                    .t
+                    .memory_subaddress
+                    .borrow()
+                    .t
+                    .bits
+                    .iter()
+                    .last()
+                    .unwrap(),
+            ) == FieldT::zero());
+            let loaded_word = (prev_doubleword
+                >> (if access_is_word0 {
+                    0
+                } else {
+                    self.pb.borrow().t.ap.w
+                }))
+                & ((1usize << self.pb.borrow().t.ap.w) - 1);
+            *self.pb.borrow_mut().val_ref(
+                &self.t.t.t.instruction_results
+                    [tinyram_opcode::tinyram_opcode_LOADW.clone() as usize],
+            ) = FieldT::from(loaded_word); /* does not hurt even for non-memory instructions */
+            *self.pb.borrow_mut().val_ref(&self.t.t.t.memory_subcontents) =
+                FieldT::from(loaded_word);
         }
 
-        memory_access_is_word.evaluate(self.pb);
-        memory_access_is_byte.evaluate(self.pb);
+        self.t.t.t.memory_access_is_word.evaluate_pb(&self.pb);
+        self.t.t.t.memory_access_is_byte.evaluate_pb(&self.pb);
 
-        check_memory.generate_r1cs_witness();
+        self.t.t.t.check_memory.borrow().generate_r1cs_witness();
 
         /* handle reads */
-        if self.pb.borrow().val(&prev_tape1_exhausted) == FieldT::one() {
+        if self.pb.borrow().val(&self.t.t.t.prev_tape1_exhausted) == FieldT::one() {
             /* if tape was exhausted before, it will always be
             exhausted. we also need to only handle reads from tape 1,
             so we can safely set flag here */
-            self.pb.borrow().val(&next_tape1_exhausted) = FieldT::one();
-            self.pb.borrow().val(&instruction_flags[tinyram_opcode_READ]) = FieldT::one();
+            *self
+                .pb
+                .borrow_mut()
+                .val_ref(&self.t.t.t.next_tape1_exhausted) = FieldT::one();
+            *self.pb.borrow_mut().val_ref(
+                &self.t.t.t.instruction_flags[tinyram_opcode::tinyram_opcode_READ.clone() as usize],
+            ) = FieldT::one();
         }
 
-        self.pb.borrow().val(&read_not1) = self.pb.borrow().val(&opcode_indicators[tinyram_opcode_READ])
-            * (FieldT::one() - self.pb.borrow().val(&arg2val.packed));
-        if self.pb.borrow().val(&read_not1) != FieldT::one() {
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.read_not1) = self.pb.borrow().val(
+            &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_READ.clone() as usize],
+        ) * (FieldT::one()
+            - self.pb.borrow().val(&self.t.t.t.arg2val.borrow().t.packed));
+        if self.pb.borrow().val(&self.t.t.t.read_not1) != FieldT::one() {
             /* reading from tape other than 0 raises the flag */
-            self.pb.borrow().val(&instruction_flags[tinyram_opcode_READ]) = FieldT::one();
+            *self.pb.borrow_mut().val_ref(
+                &self.t.t.t.instruction_flags[tinyram_opcode::tinyram_opcode_READ.clone() as usize],
+            ) = FieldT::one();
         } else {
             /* otherwise perform the actual read */
-            if aux_it != aux_end {
-                self.pb.borrow().val(&instruction_results[tinyram_opcode_READ]) = FieldT(*aux_it);
-                aux_it += 1;
-                if aux_it == aux_end {
+            if !aux.is_empty() {
+                *self.pb.borrow_mut().val_ref(
+                    &self.t.t.t.instruction_results
+                        [tinyram_opcode::tinyram_opcode_READ.clone() as usize],
+                ) = FieldT::from(aux[0]);
+                if aux.len() == 1 {
                     /* tape has ended! */
-                    self.pb.borrow().val(&next_tape1_exhausted) = FieldT::one();
+                    *self
+                        .pb
+                        .borrow_mut()
+                        .val_ref(&self.t.t.t.next_tape1_exhausted) = FieldT::one();
                 }
             } else {
                 /* handled above, so nothing to do here */
@@ -693,22 +958,39 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         }
 
         /* flag implies result zero */
-        if self.pb.borrow().val(&instruction_flags[tinyram_opcode_READ]) == FieldT::one() {
-            self.pb.borrow().val(&instruction_results[tinyram_opcode_READ]) = FieldT::zero();
+        if self.pb.borrow().val(
+            &self.t.t.t.instruction_flags[tinyram_opcode::tinyram_opcode_READ.clone() as usize],
+        ) == FieldT::one()
+        {
+            *self.pb.borrow_mut().val_ref(
+                &self.t.t.t.instruction_results
+                    [tinyram_opcode::tinyram_opcode_READ.clone() as usize],
+            ) = FieldT::zero();
         }
 
         /* execute consistency enforcer */
-        consistency_enforcer.generate_r1cs_witness();
-        next_pc_addr_as_word_variable.generate_r1cs_witness_from_packed();
+        self.t
+            .t
+            .t
+            .consistency_enforcer
+            .borrow()
+            .generate_r1cs_witness();
+        self.t
+            .t
+            .t
+            .next_pc_addr_as_word_variable
+            .borrow()
+            .generate_r1cs_witness_from_packed();
 
-        for i in 0..self.pb.ap.k {
-            next_registers[i].generate_r1cs_witness_from_packed();
+        for i in 0..self.pb.borrow().t.ap.k {
+            self.t.t.t.next_registers[i].generate_r1cs_witness_from_packed();
         }
 
         /* finally set has_accepted to 1 if both the opcode is ANSWER and arg2val is 0 */
-        self.pb.borrow().val(&next_has_accepted) = if (self.pb.borrow().val(&opcode_indicators[tinyram_opcode_ANSWER])
-            == FieldT::one()
-            && self.pb.borrow().val(&arg2val.packed) == FieldT::zero())
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.next_has_accepted) = if (self.pb.borrow().val(
+            &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_ANSWER.clone() as usize],
+        ) == FieldT::one()
+            && self.pb.borrow().val(&self.t.t.t.arg2val.borrow().t.packed) == FieldT::zero())
         {
             FieldT::one()
         } else {
@@ -719,34 +1001,61 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
     pub fn dump(&self) {
         print!(
             "   pc = {}, flag = {}\n",
-            self.pb.borrow().val(&prev_pc_addr_as_word_variable.packed).as_ulong(),
-            self.pb.borrow().val(&prev_flag).as_ulong()
+            self.pb
+                .borrow()
+                .val(&self.t.t.t.prev_pc_addr_as_word_variable.borrow().t.packed)
+                .as_ulong(),
+            self.pb.borrow().val(&self.t.t.t.prev_flag).as_ulong()
         );
         print!("   ");
 
-        for j in 0..self.pb.ap.k {
+        for j in 0..self.pb.borrow().t.ap.k {
             print!(
                 "r{} = {:2} ",
                 j,
-                self.pb.borrow().val(&prev_registers[j].packed).as_ulong()
+                self.pb
+                    .borrow()
+                    .val(&self.t.t.t.prev_registers[j].t.packed)
+                    .as_ulong()
             );
         }
         print!("\n");
 
-        let opcode_val = opcode.get_field_element_from_bits(self.pb).as_ulong();
+        let opcode_val = self
+            .t
+            .t
+            .t
+            .opcode
+            .get_field_element_from_bits(&self.pb)
+            .as_ulong();
+        let tinyram_opcode_names_map: HashMap<_, _> =
+            tinyram_opcode_names.iter().cloned().collect();
         print!(
             "   {} r{}, r{}, {}{}\n",
-            tinyram_opcode_names[(opcode_val)],
-            desidx.get_field_element_from_bits(self.pb).as_ulong(),
-            arg1idx.get_field_element_from_bits(self.pb).as_ulong(),
-            if self.pb.borrow().val(&arg2_is_imm) == FieldT::one() {
+            tinyram_opcode_names_map[&((opcode_val as u8).into())],
+            self.t
+                .t
+                .t
+                .desidx
+                .get_field_element_from_bits(&self.pb)
+                .as_ulong(),
+            self.t
+                .t
+                .t
+                .arg1idx
+                .get_field_element_from_bits(&self.pb)
+                .as_ulong(),
+            if self.pb.borrow().val(&self.t.t.t.arg2_is_imm) == FieldT::one() {
                 ""
             } else {
                 "r"
             },
-            arg2idx.get_field_element_from_bits(self.pb).as_ulong()
+            self.t
+                .t
+                .t
+                .arg2idx
+                .get_field_element_from_bits(&self.pb)
+                .as_ulong()
         );
     }
 }
-
-//#endif // TINYRAM_CPU_CHECKER_TCC_

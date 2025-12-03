@@ -12,6 +12,7 @@ Declaration of interfaces for a protoboard for TinyRAM.
 // #define TINYRAM_PROTOBOARD_HPP_
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets;
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::tinyram_packing_gadget;
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::relations::FieldTConfig;
@@ -19,7 +20,6 @@ use crate::relations::ram_computations::rams::ram_params;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_architecture_params;
 use rccell::RcCell;
 use std::marker::PhantomData;
-
 #[derive(Clone, Default)]
 pub struct tinyram_protoboard<FieldT: FieldTConfig> {
     // : public RcCell<protoboard<FieldT>>
@@ -76,6 +76,11 @@ impl<FieldT: FieldTConfig, T: SubTinyRamConfig> tinyram_gadget<FieldT, T> {
         )
     }
 }
+pub type tinyram_standard_gadgets<FieldT, T> = gadget<
+    FieldT,
+    tinyram_protoboard<FieldT>,
+    tinyram_gadget<FieldT, tinyram_standard_gadget<FieldT, T>>,
+>;
 impl<FieldT: FieldTConfig, T: SubTinyRamGadgetConfig> tinyram_standard_gadget<FieldT, T> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>,

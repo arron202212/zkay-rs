@@ -1,13 +1,14 @@
+// Declaration of interfaces for the TinyRAM memory masking gadget.
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::{dual_variable_gadget, inner_product_gadget};
-// Declaration of interfaces for the TinyRAM memory masking gadget.
-
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::ArithmeticGadgetConfig;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard::{
     SubTinyRamGadgetConfig, tinyram_gadget, tinyram_protoboard, tinyram_standard_gadget,
 };
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::word_variable_gadget::{
     doubleword_variable_gadget, doubleword_variable_gadgets, word_variable_gadget,
 };
+use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::tinyram_inner_product_gadget;
 use crate::gadgetlib1::pb_variable::{
     pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_sum,
 };
@@ -20,7 +21,6 @@ use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
 use rccell::RcCell;
 use std::marker::PhantomData;
-
 /**
  * The memory masking gadget checks if a specified part of a double
  * word is correctly modified. In TinyRAM CPU checker we use this to
@@ -287,16 +287,16 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
     }
 }
 impl<FieldT: FieldTConfig> SubTinyRamGadgetConfig for memory_masking_gadget<FieldT> {}
-impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
+impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         /* get indicator variables for is_subaddress[i] by adding constraints
         is_subaddress[i] * (subaddress - i) = 0 and \sum_i is_subaddress[i] = 1 */
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                    self.t.t.is_subaddress[i].clone().into(),
+                    self.t.t.t.is_subaddress[i].clone().into(),
                     linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                        self.t.t.subaddress.t.packed.clone(),
+                        self.t.t.t.subaddress.t.packed.clone(),
                     ) - variable::<FieldT, pb_variable>::from(i),
                     0.into(),
                 ),
@@ -307,7 +307,7 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 1.into(),
                 pb_sum::<FieldT, tinyram_protoboard<FieldT>, pb_variable>(
-                    &self.t.t.is_subaddress.clone().into(),
+                    &self.t.t.t.is_subaddress.clone().into(),
                 ),
                 1.into(),
             ),
@@ -318,9 +318,9 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                    self.t.t.access_is_byte.clone().into(),
-                    self.t.t.is_subaddress[i].clone().into(),
-                    self.t.t.is_byte[i].clone().into(),
+                    self.t.t.t.access_is_byte.clone().into(),
+                    self.t.t.t.is_subaddress[i].clone().into(),
+                    self.t.t.t.is_byte[i].clone().into(),
                 ),
                 format!("{} is_byte_{}", self.annotation_prefix, i),
             );
@@ -329,26 +329,27 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
         /* get indicator variables is_word_0/is_word_1 */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                self.t.t.access_is_word.clone().into(),
+                self.t.t.t.access_is_word.clone().into(),
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1].clone(),
-                self.t.t.is_word0.clone().into(),
+                    - self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1].clone(),
+                self.t.t.t.is_word0.clone().into(),
             ),
             format!("{} is_word_0", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                self.t.t.access_is_word.clone().into(),
-                self.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1]
+                self.t.t.t.access_is_word.clone().into(),
+                self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1]
                     .clone()
                     .into(),
-                self.t.t.is_word1.clone().into(),
+                self.t.t.t.is_word1.clone().into(),
             ),
             format!("{} is_word_1", self.annotation_prefix),
         );
 
         /* compute masked_out_dw_contents_prev */
         self.t
+            .t
             .t
             .get_masked_out_dw_contents_prev
             .borrow_mut()
@@ -359,11 +360,11 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
         */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                self.t.t.shift.clone().into(),
-                self.t.t.subcontents.clone().into(),
+                self.t.t.t.shift.clone().into(),
+                self.t.t.t.subcontents.clone().into(),
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                    self.t.t.dw_contents_next.t.packed.clone(),
-                ) - self.t.t.masked_out_dw_contents_prev.clone(),
+                    self.t.t.t.dw_contents_next.t.packed.clone(),
+                ) - self.t.t.t.masked_out_dw_contents_prev.clone(),
             ),
             format!("{} mask_difference", self.annotation_prefix),
         );
@@ -375,8 +376,8 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
     {
         /* get indicator variables is_subaddress */
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
-            *self.pb.borrow_mut().val_ref(&self.t.t.is_subaddress[i]) =
-                if (self.pb.borrow().val(&self.t.t.subaddress.t.packed) == FieldT::from(i)) {
+            *self.pb.borrow_mut().val_ref(&self.t.t.t.is_subaddress[i]) =
+                if (self.pb.borrow().val(&self.t.t.t.subaddress.t.packed) == FieldT::from(i)) {
                     FieldT::one()
                 } else {
                     FieldT::zero()
@@ -385,32 +386,33 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
 
         /* get indicator variables is_byte_X */
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
-            *self.pb.borrow_mut().val_ref(&self.t.t.is_byte[i]) =
-                self.pb.borrow().val(&self.t.t.is_subaddress[i])
-                    * self.pb.borrow().lc_val(&self.t.t.access_is_byte);
+            *self.pb.borrow_mut().val_ref(&self.t.t.t.is_byte[i]) =
+                self.pb.borrow().val(&self.t.t.t.is_subaddress[i])
+                    * self.pb.borrow().lc_val(&self.t.t.t.access_is_byte);
         }
 
         /* get indicator variables is_word_0/is_word_1 */
-        *self.pb.borrow_mut().val_ref(&self.t.t.is_word0) = (FieldT::one()
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.is_word0) = (FieldT::one()
             - self
                 .pb
                 .borrow()
-                .val(&self.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1]))
-            * self.pb.borrow().lc_val(&self.t.t.access_is_word);
-        *self.pb.borrow_mut().val_ref(&self.t.t.is_word1) = self
+                .val(&self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1]))
+            * self.pb.borrow().lc_val(&self.t.t.t.access_is_word);
+        *self.pb.borrow_mut().val_ref(&self.t.t.t.is_word1) = self
             .pb
             .borrow()
-            .val(&self.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1])
-            * self.pb.borrow().lc_val(&self.t.t.access_is_word);
+            .val(&self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1])
+            * self.pb.borrow().lc_val(&self.t.t.t.access_is_word);
 
         /* calculate shift and masked out words/bytes */
-        self.t.t.shift.evaluate_pb(&self.pb);
-        self.t.t.masked_out_word0.evaluate_pb(&self.pb);
-        self.t.t.masked_out_word1.evaluate_pb(&self.pb);
-        self.t.t.masked_out_bytes.evaluate(&self.pb);
+        self.t.t.t.shift.evaluate_pb(&self.pb);
+        self.t.t.t.masked_out_word0.evaluate_pb(&self.pb);
+        self.t.t.t.masked_out_word1.evaluate_pb(&self.pb);
+        self.t.t.t.masked_out_bytes.evaluate(&self.pb);
 
         /* get masked_out dw/word0/word1/bytes */
         self.t
+            .t
             .t
             .get_masked_out_dw_contents_prev
             .borrow()
@@ -420,11 +422,14 @@ impl<FieldT: FieldTConfig> memory_masking_gadgets<FieldT> {
         *self
             .pb
             .borrow_mut()
-            .val_ref(&self.t.t.dw_contents_next.t.packed) =
-            self.pb.borrow().val(&self.t.t.masked_out_dw_contents_prev)
-                + self.pb.borrow().lc_val(&self.t.t.shift)
-                    * self.pb.borrow().lc_val(&self.t.t.subcontents);
+            .val_ref(&self.t.t.t.dw_contents_next.t.packed) = self
+            .pb
+            .borrow()
+            .val(&self.t.t.t.masked_out_dw_contents_prev)
+            + self.pb.borrow().lc_val(&self.t.t.t.shift)
+                * self.pb.borrow().lc_val(&self.t.t.t.subcontents);
         self.t
+            .t
             .t
             .dw_contents_next
             .generate_r1cs_witness_from_packed();

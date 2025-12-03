@@ -28,7 +28,7 @@ use ffec::common::utils::log2;
 use num_enum::{FromPrimitive, IntoPrimitive};
 use std::collections::BTreeMap;
 use strum::Display;
-#[derive(Display, Debug, Default, Clone, FromPrimitive, IntoPrimitive)]
+#[derive(Display, Hash, PartialEq, Eq, Debug, Default, Clone, FromPrimitive, IntoPrimitive)]
 #[repr(u8)]
 pub enum tinyram_opcode {
     #[default]
@@ -70,7 +70,11 @@ pub enum tinyram_opcode {
     tinyram_opcode_READ = 0b11110,
     tinyram_opcode_ANSWER = 0b11111,
 }
-
+impl tinyram_opcode {
+    pub fn usize(self) -> usize {
+        self as _
+    }
+}
 pub enum tinyram_opcode_args {
     tinyram_opcode_args_des_arg1_arg2 = 1,
     tinyram_opcode_args_des_arg2 = 2,
@@ -154,8 +158,12 @@ pub struct tinyram_architecture_params {
     pub k: reg_count_t, /* number of registers */
 }
 //     tinyram_architecture_params() {};
-//     tinyram_architecture_params(w:reg_width_t, const reg_count_t k)->Selfw,k { assert!(w == 1usize << log2(w)); };
-
+impl tinyram_architecture_params {
+    pub fn new(w: reg_width_t, k: reg_count_t) -> Self {
+        assert!(w == 1usize << log2(w));
+        Self { w, k }
+    }
+}
 //     usize address_size() const;
 //     usize value_size() const;
 //     usize cpu_state_size() const;
@@ -253,7 +261,7 @@ use ffec::common::profiling;
 
 // tinyram_instruction tinyram_default_instruction = tinyram_instruction::new(tinyram_opcode_ANSWER, true, 0, 0, 1);
 
-const tinyram_opcode_names: [(tinyram_opcode, &str); 32] = [
+pub const tinyram_opcode_names: [(tinyram_opcode, &str); 32] = [
     (tinyram_opcode::tinyram_opcode_AND, "and"),
     (tinyram_opcode::tinyram_opcode_OR, "or"),
     (tinyram_opcode::tinyram_opcode_XOR, "xor"),
