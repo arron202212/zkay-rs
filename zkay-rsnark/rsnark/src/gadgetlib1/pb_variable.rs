@@ -265,7 +265,7 @@ impl pb_linear_combination {
         linear_combination { terms: vec![], t }
     }
 
-    pub fn new2<FieldT: FieldTConfig>(
+    pub fn new_with_var<FieldT: FieldTConfig>(
         var: variable<FieldT, pb_variable>,
     ) -> linear_combination<FieldT, pb_variable, Self> {
         let t = Self {

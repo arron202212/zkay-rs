@@ -1,10 +1,10 @@
 pub mod cpu_checkers;
 //  pub mod curves ;
 //  pub mod delegated_ra_memory ;
-//  pub mod fields ;
+pub mod fields;
 //  pub mod hashes ;
 //  pub mod merkle_tree ;
-//  pub mod pairing ;
+// pub mod pairing;
 //  pub mod routing ;
 //  pub mod set_commitment ;
 //  pub mod verifiers ;

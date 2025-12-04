@@ -1,18 +1,4 @@
-/** @file
- *****************************************************************************
-
- Declaration of selector for the pairing gadget.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef PAIRING_PARAMS_HPP_
-// #define PAIRING_PARAMS_HPP_
-
-
+//  Declaration of selector for the pairing gadget.
 
 /**
  * The interfaces of pairing gadgets are templatized via the parameter
@@ -79,38 +65,39 @@
 /**
  * Below are various template aliases (used for convenience).
  */
+pub trait pairing_selector<my_ec_pp> {
+    type FieldT;
+    type FqeT;
+    type FqkT;
+    type Fqe_variable_type;
+    type Fqe_mul_gadget_type;
+    type Fqe_mul_by_lc_gadget_type;
+    type Fqe_sqr_gadget_type;
+    type Fqk_variable_type;
+    type Fqk_mul_gadget_type;
+    type Fqk_special_mul_gadget_type;
+    type Fqk_sqr_gadget_type;
+    type other_curve_type;
+    type e_over_e_miller_loop_gadget_type;
+    type e_times_e_over_e_miller_loop_gadget_type;
+    type final_exp_gadget_type;
+    const pairing_loop_count: u128;
+}
 
-
-type  FqkT = pairing_selector<ppT>::FqkT; // TODO: better name when stable
-
-
-type  Fqe_variable = pairing_selector<ppT>::Fqe_variable_type;
-
-type  Fqe_mul_gadget = pairing_selector<ppT>::Fqe_mul_gadget_type;
-
-type  Fqe_mul_by_lc_gadget = pairing_selector<ppT>::Fqe_mul_by_lc_gadget_type;
-
-type  Fqe_sqr_gadget = pairing_selector<ppT>::Fqe_sqr_gadget_type;
-
-
-type  Fqk_variable = pairing_selector<ppT>::Fqk_variable_type;
-
-type  Fqk_mul_gadget = pairing_selector<ppT>::Fqk_mul_gadget_type;
-
-type  Fqk_special_mul_gadget = pairing_selector<ppT>::Fqk_special_mul_gadget_type;
-
-type  Fqk_sqr_gadget = pairing_selector<ppT>::Fqk_sqr_gadget_type;
-
-
-type  other_curve = pairing_selector<ppT>::other_curve_type;
-
-
-type  e_over_e_miller_loop_gadget = pairing_selector<ppT>::e_over_e_miller_loop_gadget_type;
-
-type  e_times_e_over_e_miller_loop_gadget = pairing_selector<ppT>::e_times_e_over_e_miller_loop_gadget_type;
-
-type  final_exp_gadget = pairing_selector<ppT>::final_exp_gadget_type;
-
-
+pub type FqkT<ppT, P> = <P as pairing_selector<ppT>>::FqkT; // TODO: better name when stable
+pub type Fqe_variable<ppT, P> = <P as pairing_selector<ppT>>::Fqe_variable_type;
+pub type Fqe_mul_gadget<ppT, P> = <P as pairing_selector<ppT>>::Fqe_mul_gadget_type;
+pub type Fqe_mul_by_lc_gadget<ppT, P> = <P as pairing_selector<ppT>>::Fqe_mul_by_lc_gadget_type;
+pub type Fqe_sqr_gadget<ppT, P> = <P as pairing_selector<ppT>>::Fqe_sqr_gadget_type;
+pub type Fqk_variable<ppT, P> = <P as pairing_selector<ppT>>::Fqk_variable_type;
+pub type Fqk_mul_gadget<ppT, P> = <P as pairing_selector<ppT>>::Fqk_mul_gadget_type;
+pub type Fqk_special_mul_gadget<ppT, P> = <P as pairing_selector<ppT>>::Fqk_special_mul_gadget_type;
+pub type Fqk_sqr_gadget<ppT, P> = <P as pairing_selector<ppT>>::Fqk_sqr_gadget_type;
+pub type other_curve<ppT, P> = <P as pairing_selector<ppT>>::other_curve_type;
+pub type e_over_e_miller_loop_gadget<ppT, P> =
+    <P as pairing_selector<ppT>>::e_over_e_miller_loop_gadget_type;
+pub type e_times_e_over_e_miller_loop_gadget<ppT, P> =
+    <P as pairing_selector<ppT>>::e_times_e_over_e_miller_loop_gadget_type;
+pub type final_exp_gadget<ppT, P> = <P as pairing_selector<ppT>>::final_exp_gadget_type;
 
 //#endif // PAIRING_PARAMS_HPP_

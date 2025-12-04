@@ -35,4 +35,5 @@ pub trait FieldTConfig:
     fn from_int(i: u64, signed: bool) -> Self;
     fn capacity() -> usize;
     fn as_ulong(&self) -> usize;
+    fn size_in_bits() -> usize;
 }
