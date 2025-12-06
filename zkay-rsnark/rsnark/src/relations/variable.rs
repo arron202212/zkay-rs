@@ -498,6 +498,16 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         self - linear_combination::<FieldT, SV, SLC>::from(rhs)
     }
 }
+
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Sub<linear_term<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = linear_combination<FieldT, SV, SLC>;
+
+    fn sub(self, rhs: linear_term<FieldT, SV>) -> Self::Output {
+        self - linear_combination::<FieldT, SV, SLC>::from(rhs)
+    }
+}
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Sub
     for linear_combination<FieldT, SV, SLC>
 {
@@ -531,6 +541,15 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     type Output = Self;
 
     fn mul(self, rhs: integer_coeff_t) -> Self::Output {
+        self
+    }
+}
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    Mul<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
+{
+    type Output = Self;
+
+    fn mul(self, rhs: variable<FieldT, SV>) -> Self::Output {
         self
     }
 }

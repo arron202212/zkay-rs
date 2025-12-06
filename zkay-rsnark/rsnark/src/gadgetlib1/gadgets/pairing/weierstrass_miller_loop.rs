@@ -301,7 +301,7 @@ pub fn generate_r1cs_witness()
 {
     gamma_twist.evaluate();
     let gamma_twist_val= gamma_twist.get_element();
-    let PX_val= self.pb.lc_val(prec_P.P.X);
+    let PX_val= self.pb.borrow().lc_val(prec_P.P.X);
     let gamma_X_val= c.gamma_X.get_element();
     let RY_val= c.RY.get_element();
     let g_RR_at_P_c1_val= -PX_val * gamma_twist_val + gamma_X_val - RY_val;
@@ -376,7 +376,7 @@ pub fn generate_r1cs_witness()
 {
     gamma_twist.evaluate();
     let gamma_twist_val= gamma_twist.get_element();
-    let PX_val= self.pb.lc_val(prec_P.P.X);
+    let PX_val= self.pb.borrow().lc_val(prec_P.P.X);
     let gamma_X_val= c.gamma_X.get_element();
     let QY_val= Q.Y.get_element();
     let g_RQ_at_P_c1_val= -PX_val * gamma_twist_val + gamma_X_val +  (if !invert_Q {-QY_val} else{QY_val});

@@ -180,8 +180,8 @@ pub fn  generate_r1cs_witness(el:&ffec::G1::<other_curve::<ppT> >)
    let mut el_normalized = el.clone();
     el_normalized.to_affine_coordinates();
 
-    self.pb.lc_val(X) = el_normalized.X();
-    self.pb.lc_val(Y) = el_normalized.Y();
+    self.pb.borrow().lc_val(X) = el_normalized.X();
+    self.pb.borrow().lc_val(Y) = el_normalized.Y();
 }
 
 
@@ -231,8 +231,8 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    self.pb.borrow().val(&P_X_squared) = self.pb.lc_val(P.X).squared();
-    self.pb.borrow().val(&P_Y_squared) = self.pb.lc_val(P.Y).squared();
+    self.pb.borrow().val(&P_X_squared) = self.pb.borrow().lc_val(P.X).squared();
+    self.pb.borrow().val(&P_Y_squared) = self.pb.borrow().lc_val(P.Y).squared();
 }
 }
 impl G1_add_gadget<ppT>{
@@ -303,10 +303,10 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    self.pb.borrow().val(&inv) = (self.pb.lc_val(B.X) - self.pb.lc_val(A.X)).inverse();
-    self.pb.borrow().val(&lambda) = (self.pb.lc_val(B.Y) - self.pb.lc_val(A.Y)) * self.pb.borrow().val(&inv);
-    self.pb.lc_val(C.X) = self.pb.borrow().val(&lambda).squared() - self.pb.lc_val(A.X) - self.pb.lc_val(B.X);
-    self.pb.lc_val(C.Y) = self.pb.borrow().val(&lambda) * (self.pb.lc_val(A.X) - self.pb.lc_val(C.X)) - self.pb.lc_val(A.Y);
+    self.pb.borrow().val(&inv) = (self.pb.borrow().lc_val(B.X) - self.pb.borrow().lc_val(A.X)).inverse();
+    self.pb.borrow().val(&lambda) = (self.pb.borrow().lc_val(B.Y) - self.pb.borrow().lc_val(A.Y)) * self.pb.borrow().val(&inv);
+    self.pb.borrow().lc_val(C.X) = self.pb.borrow().val(&lambda).squared() - self.pb.borrow().lc_val(A.X) - self.pb.borrow().lc_val(B.X);
+    self.pb.borrow().lc_val(C.Y) = self.pb.borrow().val(&lambda) * (self.pb.borrow().lc_val(A.X) - self.pb.borrow().lc_val(C.X)) - self.pb.borrow().lc_val(A.Y);
 }
 }
 impl G1_dbl_gadget<ppT>{
@@ -358,10 +358,10 @@ pub fn  generate_r1cs_constraints()
 
 pub fn  generate_r1cs_witness()
 {
-    self.pb.borrow().val(&Xsquared) = self.pb.lc_val(A.X).squared();
-    self.pb.borrow().val(&lambda) = (FieldT(3) * self.pb.borrow().val(&Xsquared) + ffec::G1::<other_curve::<ppT> >::coeff_a) * (FieldT(2) * self.pb.lc_val(A.Y)).inverse();
-    self.pb.lc_val(B.X) = self.pb.borrow().val(&lambda).squared() - FieldT(2) * self.pb.lc_val(A.X);
-    self.pb.lc_val(B.Y) = self.pb.borrow().val(&lambda) * (self.pb.lc_val(A.X) - self.pb.lc_val(B.X)) - self.pb.lc_val(A.Y);
+    self.pb.borrow().val(&Xsquared) = self.pb.borrow().lc_val(A.X).squared();
+    self.pb.borrow().val(&lambda) = (FieldT(3) * self.pb.borrow().val(&Xsquared) + ffec::G1::<other_curve::<ppT> >::coeff_a) * (FieldT(2) * self.pb.borrow().lc_val(A.Y)).inverse();
+    self.pb.borrow().lc_val(B.X) = self.pb.borrow().val(&lambda).squared() - FieldT(2) * self.pb.borrow().lc_val(A.X);
+    self.pb.borrow().lc_val(B.Y) = self.pb.borrow().val(&lambda) * (self.pb.borrow().lc_val(A.X) - self.pb.borrow().lc_val(B.X)) - self.pb.borrow().lc_val(A.Y);
 }
 }
 
@@ -460,8 +460,8 @@ pub fn  generate_r1cs_witness()
     for i in 0..scalar_size
     {
         adders[i].generate_r1cs_witness();
-        self.pb.lc_val(chosen_results[i+1].X) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].X)} else{self.pb.lc_val(computed_results[i].X)};
-        self.pb.lc_val(chosen_results[i+1].Y) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.lc_val(chosen_results[i].Y)} else{self.pb.lc_val(computed_results[i].Y)};
+        self.pb.borrow().lc_val(chosen_results[i+1].X) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.borrow().lc_val(chosen_results[i].X)} else{self.pb.borrow().lc_val(computed_results[i].X)};
+        self.pb.borrow().lc_val(chosen_results[i+1].Y) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.borrow().lc_val(chosen_results[i].Y)} else{self.pb.borrow().lc_val(computed_results[i].Y)};
     }
 }
 }

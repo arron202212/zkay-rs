@@ -179,7 +179,7 @@ pub fn generate_r1cs_witness()
             }
         }
 
-        self.pb.lc_val(output[i]) = sum;
+        self.pb.borrow().lc_val(output[i]) = sum;
     }
 }
 
@@ -295,7 +295,7 @@ pub fn generate_r1cs_witness()
     {
        let mut  va=pb_variable_array::<FieldT> (output_digest.bits.begin() + i * FieldT::size_in_bits(),
                                      output_digest.bits.begin() + (i + 1) * FieldT::size_in_bits());
-        va.fill_with_bits_of_field_element(self.pb, self.pb.lc_val(output[i]));
+        va.fill_with_bits_of_field_element(self.pb, self.pb.borrow().lc_val(output[i]));
     }
 }
 

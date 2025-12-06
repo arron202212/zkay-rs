@@ -74,8 +74,8 @@ pub fn generate_r1cs_witness()
 {
     is_right.evaluate(self.pb);
 
-    assert!(self.pb.lc_val(is_right) == FieldT::one() || self.pb.lc_val(is_right) == FieldT::zero());
-    if self.pb.lc_val(is_right) == FieldT::one()
+    assert!(self.pb.borrow().lc_val(is_right) == FieldT::one() || self.pb.borrow().lc_val(is_right) == FieldT::zero());
+    if self.pb.borrow().lc_val(is_right) == FieldT::one()
     {
         for i in 0..digest_size
         {

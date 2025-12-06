@@ -1,3 +1,4 @@
+use crate::gadgetlib1::gadget::gadget;
 /** @file
 *****************************************************************************
 
@@ -13,363 +14,503 @@ Fp2 = Fp[U]/(U^2-non_residue) and non_residue is in Fp.
 *****************************************************************************/
 //#ifndef FP4_GADGETS_HPP_
 // #define FP4_GADGETS_HPP_
-use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets::fields::fp2_gadgets;
+use crate::gadgetlib1::gadgets::fields::fp2_gadgets::{
+    Fp2_mul_gadget, Fp2_mul_gadgets, Fp2_sqr_gadget, Fp2_sqr_gadgets, Fp2_variable, Fp2_variables,
+    Fp2TConfig,
+};
+use crate::gadgetlib1::pb_variable::{
+    pb_linear_combination, pb_linear_combination_array, pb_variable,
+};
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
+use ffec::One;
+use rccell::RcCell;
+use std::marker::PhantomData;
 
+pub type pb_linear_combinations<FieldT> =
+    linear_combination<FieldT, pb_variable, pb_linear_combination>;
+
+#[inline]
+pub fn default_pb_lc<Fp4T: Fp4TConfig>() -> linear_combination<
+    <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+    pb_variable,
+    pb_linear_combination,
+> {
+    linear_combination::<
+        <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+        pb_variable,
+        pb_linear_combination,
+    >::default()
+}
+
+#[inline]
+pub fn i64_to_pb_lc<Fp4T: Fp4TConfig>(
+    d: i64,
+) -> linear_combination<
+    <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+    pb_variable,
+    pb_linear_combination,
+> {
+    linear_combination::<
+        <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+        pb_variable,
+        pb_linear_combination,
+    >::from(d)
+}
+
+#[inline]
+pub fn field_to_pb_lc<Fp4T: Fp4TConfig>(
+    f: <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+) -> linear_combination<
+    <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+    pb_variable,
+    pb_linear_combination,
+> {
+    linear_combination::<
+        <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+        pb_variable,
+        pb_linear_combination,
+    >::from(f)
+}
+
+#[inline]
+pub fn inverse<Fp4T: Fp4TConfig>(d: i32) -> <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT {
+    <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT::from(d)
+}
 /**
  * Gadget that represents an Fp4 variable.
  */
-//
-pub struct Fp4_variable<Fp4T> {
+pub trait Fp4TConfig: FieldTConfig + Default + Clone + std::ops::Mul<Output = Self> {
+    type FieldT: FieldTConfig;
+    type Fp2T: Fp2TConfig;
+    fn c0(&self) -> Self::Fp2T;
+    fn c1(&self) -> Self::Fp2T;
+    fn c0_mut(&mut self) -> &mut Self::Fp2T;
+    fn c1_mut(&mut self) -> &mut Self::Fp2T;
+    const non_residue: Self::FieldT;
+    const Frobenius_coeffs_c1: [Self::FieldT; 2];
+}
+
+#[derive(Clone, Default)]
+pub struct Fp4_variable<Fp4T: Fp4TConfig, PB: PBConfig> {
     // : public gadget<Fp4T::my_Fp>
     //     type FieldT=Fp4T::my_Fp;
     //     type Fp2T=Fp4T::my_Fpe;
-    c0: Fp2_variable<Fp2T>,
-    c1: Fp2_variable<Fp2T>,
+    pub c0: Fp2_variables<Fp4T::Fp2T, PB>,
+    pub c1: Fp2_variables<Fp4T::Fp2T, PB>,
 }
 
 /**
  * Gadget that creates constraints for Fp4 multiplication (towering formulas).
  */
-
-pub struct Fp4_tower_mul_gadget<Fp4T> {
+#[derive(Clone, Default)]
+pub struct Fp4_tower_mul_gadget<Fp4T: Fp4TConfig, PB: PBConfig> {
     // : public gadget<Fp4T::my_Fp>
     // type FieldT=Fp4T::my_Fp;
     // type Fp2T=Fp4T::my_Fpe;
-    A: Fp4_variable<Fp4T>,
-    B: Fp4_variable<Fp4T>,
-    result: Fp4_variable<Fp4T>,
-
-    v0_c0: pb_linear_combination<FieldT>,
-    v0_c1: pb_linear_combination<FieldT>,
-
-    Ac0_plus_Ac1_c0: pb_linear_combination<FieldT>,
-    Ac0_plus_Ac1_c1: pb_linear_combination<FieldT>,
-    Ac0_plus_Ac1: RcCell<Fp2_variable<Fp2T>>,
-
-    v0: RcCell<Fp2_variable<Fp2T>>,
-    v1: RcCell<Fp2_variable<Fp2T>>,
-
-    Bc0_plus_Bc1_c0: pb_linear_combination<FieldT>,
-    Bc0_plus_Bc1_c1: pb_linear_combination<FieldT>,
-    Bc0_plus_Bc1: RcCell<Fp2_variable<Fp2T>>,
-
-    result_c1_plus_v0_plus_v1_c0: pb_linear_combination<FieldT>,
-    result_c1_plus_v0_plus_v1_c1: pb_linear_combination<FieldT>,
-
-    result_c1_plus_v0_plus_v1: RcCell<Fp2_variable<Fp2T>>,
-
-    compute_v0: RcCell<Fp2_mul_gadget<Fp2T>>,
-    compute_v1: RcCell<Fp2_mul_gadget<Fp2T>>,
-    compute_result_c1: RcCell<Fp2_mul_gadget<Fp2T>>,
+    pub A: Fp4_variables<Fp4T, PB>,
+    pub B: Fp4_variables<Fp4T, PB>,
+    pub result: Fp4_variables<Fp4T, PB>,
+    pub v0_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub v0_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Ac0_plus_Ac1_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Ac0_plus_Ac1_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Ac0_plus_Ac1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub v0: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub v1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub Bc0_plus_Bc1_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Bc0_plus_Bc1_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Bc0_plus_Bc1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub result_c1_plus_v0_plus_v1_c0:
+        pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub result_c1_plus_v0_plus_v1_c1:
+        pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub result_c1_plus_v0_plus_v1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub compute_v0: RcCell<Fp2_mul_gadgets<Fp4T::Fp2T, PB>>,
+    pub compute_v1: RcCell<Fp2_mul_gadgets<Fp4T::Fp2T, PB>>,
+    pub compute_result_c1: RcCell<Fp2_mul_gadgets<Fp4T::Fp2T, PB>>,
 }
 
 /**
  * Gadget that creates constraints for Fp4 multiplication (direct formulas).
  */
-
-pub struct Fp4_direct_mul_gadget<Fp4T> {
+#[derive(Clone, Default)]
+pub struct Fp4_direct_mul_gadget<Fp4T: Fp4TConfig, PB: PBConfig> {
     // : public gadget<Fp4T::my_Fp>
     //     type FieldT=Fp4T::my_Fp;
     //     type Fp2T=Fp4T::my_Fpe;
-    A: Fp4_variable<Fp4T>,
-    B: Fp4_variable<Fp4T>,
-    result: Fp4_variable<Fp4T>,
-
-    v1: pb_variable<FieldT>,
-    v2: pb_variable<FieldT>,
-    v6: pb_variable<FieldT>,
+    pub A: Fp4_variables<Fp4T, PB>,
+    pub B: Fp4_variables<Fp4T, PB>,
+    pub result: Fp4_variables<Fp4T, PB>,
+    pub v1: variable<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, pb_variable>,
+    pub v2: variable<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, pb_variable>,
+    pub v6: variable<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, pb_variable>,
 }
 
 /**
  * Alias default multiplication gadget
  */
 //
-type Fp4_mul_gadget<Fp4T> = Fp4_direct_mul_gadget<Fp4T>;
+pub type Fp4_mul_gadget<Fp4T, PB> = Fp4_direct_mul_gadget<Fp4T, PB>;
 
 /**
  * Gadget that creates constraints for Fp4 squaring.
  */
-
-pub struct Fp4_sqr_gadget<Fp4T> {
+#[derive(Clone, Default)]
+pub struct Fp4_sqr_gadget<Fp4T: Fp4TConfig, PB: PBConfig> {
     // : public gadget<Fp4T::my_Fp>
     //     type FieldT=Fp4T::my_Fp;
     //     type Fp2T=Fp4T::my_Fpe;
-    A: Fp4_variable<Fp4T>,
-    result: Fp4_variable<Fp4T>,
-
-    v1: RcCell<Fp2_variable<Fp2T>>,
-
-    v0_c0: pb_linear_combination<FieldT>,
-    v0_c1: pb_linear_combination<FieldT>,
-    v0: RcCell<Fp2_variable<Fp2T>>,
-
-    compute_v0: RcCell<Fp2_sqr_gadget<Fp2T>>,
-    compute_v1: RcCell<Fp2_sqr_gadget<Fp2T>>,
-
-    Ac0_plus_Ac1_c0: pb_linear_combination<FieldT>,
-    Ac0_plus_Ac1_c1: pb_linear_combination<FieldT>,
-    Ac0_plus_Ac1: RcCell<Fp2_variable<Fp2T>>,
-
-    result_c1_plus_v0_plus_v1_c0: pb_linear_combination<FieldT>,
-    result_c1_plus_v0_plus_v1_c1: pb_linear_combination<FieldT>,
-
-    result_c1_plus_v0_plus_v1: RcCell<Fp2_variable<Fp2T>>,
-
-    compute_result_c1: RcCell<Fp2_sqr_gadget<Fp2T>>,
+    pub A: Fp4_variables<Fp4T, PB>,
+    pub result: Fp4_variables<Fp4T, PB>,
+    pub v1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub v0_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub v0_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub v0: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub compute_v0: RcCell<Fp2_sqr_gadgets<Fp4T::Fp2T, PB>>,
+    pub compute_v1: RcCell<Fp2_sqr_gadgets<Fp4T::Fp2T, PB>>,
+    pub Ac0_plus_Ac1_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Ac0_plus_Ac1_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub Ac0_plus_Ac1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub result_c1_plus_v0_plus_v1_c0:
+        pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub result_c1_plus_v0_plus_v1_c1:
+        pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub result_c1_plus_v0_plus_v1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub compute_result_c1: RcCell<Fp2_sqr_gadgets<Fp4T::Fp2T, PB>>,
 }
 
 /**
  * Gadget that creates constraints for Fp4 cyclotomic squaring
  */
-
-pub struct Fp4_cyclotomic_sqr_gadget<Fp4T> {
+#[derive(Clone, Default)]
+pub struct Fp4_cyclotomic_sqr_gadget<Fp4T: Fp4TConfig, PB: PBConfig> {
     // : public gadget<Fp4T::my_Fp>
     //     type FieldT=Fp4T::my_Fp;
     //     type Fp2T=Fp4T::my_Fpe;
-    A: Fp4_variable<Fp4T>,
-    result: Fp4_variable<Fp4T>,
-
-    c0_expr_c0: pb_linear_combination<FieldT>,
-    c0_expr_c1: pb_linear_combination<FieldT>,
-    c0_expr: RcCell<Fp2_variable<Fp2T>>,
-    compute_c0_expr: RcCell<Fp2_sqr_gadget<Fp2T>>,
-
-    A_c0_plus_A_c1_c0: pb_linear_combination<FieldT>,
-    A_c0_plus_A_c1_c1: pb_linear_combination<FieldT>,
-    A_c0_plus_A_c1: RcCell<Fp2_variable<Fp2T>>,
-
-    c1_expr_c0: pb_linear_combination<FieldT>,
-    c1_expr_c1: pb_linear_combination<FieldT>,
-    c1_expr: RcCell<Fp2_variable<Fp2T>>,
-    compute_c1_expr: RcCell<Fp2_sqr_gadget<Fp2T>>,
+    pub A: Fp4_variables<Fp4T, PB>,
+    pub result: Fp4_variables<Fp4T, PB>,
+    pub c0_expr_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub c0_expr_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub c0_expr: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub compute_c0_expr: RcCell<Fp2_sqr_gadgets<Fp4T::Fp2T, PB>>,
+    pub A_c0_plus_A_c1_c0:
+        pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub A_c0_plus_A_c1_c1:
+        pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub A_c0_plus_A_c1: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub c1_expr_c0: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub c1_expr_c1: pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>,
+    pub c1_expr: RcCell<Fp2_variables<Fp4T::Fp2T, PB>>,
+    pub compute_c1_expr: RcCell<Fp2_sqr_gadgets<Fp4T::Fp2T, PB>>,
 }
 
-// use crate::gadgetlib1::gadgets::fields::fp4_gadgets;
-
-//#endif // FP4_GADGETS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for Fp4 gadgets.
-
-See fp4_gadgets.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef FP4_GADGETS_TCC_
-// #define FP4_GADGETS_TCC_
-
-impl Fp4_variable<Fp4T> {
-    pub fn new(pb: &RcCell<protoboard<FieldT>>, annotation_prefix: &String) -> Self {
-        //  gadget<FieldT>(&pb, annotation_prefix),
-        Self {
-            c0: Fp2_variable::<Fp2T>::new(pb, FMT(annotation_prefix, " c0")),
-            c1: Fp2_variable::<Fp2T>::new(pb, FMT(annotation_prefix, " c1")),
-        }
+pub type Fp4_variables<Fp4T, PB> =
+    gadget<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Fp4_variable<Fp4T, PB>>;
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_variable<Fp4T, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        annotation_prefix: String,
+    ) -> Fp4_variables<Fp4T, PB> {
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb.clone(),
+            annotation_prefix.clone(),
+            Self {
+                c0: Fp2_variable::<Fp4T::Fp2T, PB>::new(
+                    pb.clone(),
+                    prefix_format!(annotation_prefix, " c0"),
+                ),
+                c1: Fp2_variable::<Fp4T::Fp2T, PB>::new(
+                    pb.clone(),
+                    prefix_format!(annotation_prefix, " c1"),
+                ),
+            },
+        )
     }
 
-    pub fn new2(pb: &RcCell<protoboard<FieldT>>, el: &Fp4T, annotation_prefix: &String) -> Self {
-        // gadget<FieldT>(&pb, annotation_prefix),
-        Self {
-            c0: Fp2_variable::<Fp2T>::new(pb, el.c0, FMT(annotation_prefix, " c0")),
-            c1: Fp2_variable::<Fp2T>::new(pb, el.c1, FMT(annotation_prefix, " c1")),
-        }
+    pub fn new2(
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        el: Fp4T,
+        annotation_prefix: String,
+    ) -> Fp4_variables<Fp4T, PB> {
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb.clone(),
+            annotation_prefix.clone(),
+            Self {
+                c0: Fp2_variable::<Fp4T::Fp2T, PB>::new2(
+                    pb.clone(),
+                    el.c0(),
+                    prefix_format!(annotation_prefix, " c0"),
+                ),
+                c1: Fp2_variable::<Fp4T::Fp2T, PB>::new2(
+                    pb.clone(),
+                    el.c1(),
+                    prefix_format!(annotation_prefix, " c1"),
+                ),
+            },
+        )
     }
 
     pub fn new3(
-        pb: &RcCell<protoboard<FieldT>>,
-        c0: &Fp2_variable<Fp2T>,
-        c1: &Fp2_variable<Fp2T>,
-        annotation_prefix: &String,
-    ) -> Self {
-        // gadget<FieldT>(&pb, annotation_prefix),
-
-        Self { c0, c1 }
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        c0: Fp2_variables<Fp4T::Fp2T, PB>,
+        c1: Fp2_variables<Fp4T::Fp2T, PB>,
+        annotation_prefix: String,
+    ) -> Fp4_variables<Fp4T, PB> {
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self { c0, c1 },
+        )
+    }
+}
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_variables<Fp4T, PB> {
+    pub fn generate_r1cs_equals_const_constraints(&self, el: &Fp4T) {
+        self.t.c0.generate_r1cs_equals_const_constraints(&el.c0());
+        self.t.c1.generate_r1cs_equals_const_constraints(&el.c1());
     }
 
-    pub fn generate_r1cs_equals_const_constraints(el: &Fp4T) {
-        c0.generate_r1cs_equals_const_constraints(el.c0);
-        c1.generate_r1cs_equals_const_constraints(el.c1);
+    pub fn generate_r1cs_witness(&self, el: &Fp4T) {
+        self.t.c0.generate_r1cs_witness(&el.c0());
+        self.t.c1.generate_r1cs_witness(&el.c1());
     }
 
-    pub fn generate_r1cs_witness(el: &Fp4T) {
-        c0.generate_r1cs_witness(el.c0);
-        c1.generate_r1cs_witness(el.c1);
-    }
-
-    pub fn get_element() -> Fp4T {
+    pub fn get_element(&self) -> Fp4T {
         let mut el = Fp4T::default();
-        el.c0 = c0.get_element();
-        el.c1 = c1.get_element();
+        *el.c0_mut() = self.t.c0.get_element();
+        *el.c1_mut() = self.t.c1.get_element();
         return el;
     }
 
-    pub fn Frobenius_map(power: usize) -> Fp4_variable<Fp4T> {
-        let (new_c0c0, new_c0c1, new_c1c0, new_c1c1) = (
-            pb_linear_combination::<FieldT>::new(),
-            pb_linear_combination::<FieldT>::new(),
-            pb_linear_combination::<FieldT>::new(),
-            pb_linear_combination::<FieldT>::new(),
+    pub fn Frobenius_map(&self, power: usize) -> Fp4_variables<Fp4T, PB> {
+        let (mut new_c0c0, mut new_c0c1, mut new_c1c0, mut new_c1c1) = (
+            default_pb_lc::<Fp4T>(),
+            default_pb_lc::<Fp4T>(),
+            default_pb_lc::<Fp4T>(),
+            default_pb_lc::<Fp4T>(),
         );
-        new_c0c0.assign(self.pb, c0.c0);
-        new_c0c1.assign(self.pb, c0.c1 * Fp2T::Frobenius_coeffs_c1[power % 2]);
-        new_c1c0.assign(self.pb, c1.c0 * Fp4T::Frobenius_coeffs_c1[power % 4]);
+        new_c0c0.assign(&self.pb, &self.t.c0.t.c0);
+        new_c0c1.assign(
+            &self.pb,
+            &(self.t.c0.t.c1.clone() * Fp4T::Fp2T::Frobenius_coeffs_c1[power % 2].clone()),
+        );
+        new_c1c0.assign(
+            &self.pb,
+            &(self.t.c1.t.c0.clone() * Fp4T::Fp2T::Frobenius_coeffs_c1[power % 4].clone()),
+        );
         new_c1c1.assign(
-            self.pb,
-            c1.c1 * Fp4T::Frobenius_coeffs_c1[power % 4] * Fp2T::Frobenius_coeffs_c1[power % 2],
+            &self.pb,
+            &(self.t.c1.t.c1.clone()
+                * Fp4T::Fp2T::Frobenius_coeffs_c1[power % 4].clone()
+                * Fp4T::Fp2T::Frobenius_coeffs_c1[power % 2].clone()),
         );
 
-        return Fp4_variable::<Fp4T>(
-            self.pb,
-            Fp2_variable::<Fp2T>(
-                self.pb,
-                new_c0c0,
-                new_c0c1,
-                FMT(self.annotation_prefix, " Frobenius_map_c0"),
+        return Fp4_variable::<Fp4T, PB>::new3(
+            self.pb.clone(),
+            Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+                self.pb.clone(),
+                new_c0c0.clone(),
+                new_c0c1.clone(),
+                prefix_format!(self.annotation_prefix, " Frobenius_map_c0"),
             ),
-            Fp2_variable::<Fp2T>(
-                self.pb,
+            Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+                self.pb.clone(),
                 new_c1c0,
                 new_c1c1,
-                FMT(self.annotation_prefix, " Frobenius_map_c1"),
+                prefix_format!(self.annotation_prefix, " Frobenius_map_c1"),
             ),
-            FMT(self.annotation_prefix, " Frobenius_map"),
+            prefix_format!(self.annotation_prefix, " Frobenius_map"),
         );
     }
 
-    pub fn evaluate() {
-        c0.evaluate();
-        c1.evaluate();
+    pub fn evaluate(&self) {
+        self.t.c0.evaluate();
+        self.t.c1.evaluate();
     }
 }
-impl Fp4_tower_mul_gadget<Fp4T> {
+
+pub type Fp4_tower_mul_gadgets<Fp4T, PB> =
+    gadget<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Fp4_tower_mul_gadget<Fp4T, PB>>;
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_tower_mul_gadget<Fp4T, PB> {
     pub fn new(
-        pb: &RcCell<protoboard<FieldT>>,
-        A: &Fp4_variable<Fp4T>,
-        B: &Fp4_variable<Fp4T>,
-        result: &Fp4_variable<Fp4T>,
-        annotation_prefix: &String,
-    ) -> Self {
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        A: Fp4_variables<Fp4T, PB>,
+        B: Fp4_variables<Fp4T, PB>,
+        result: Fp4_variables<Fp4T, PB>,
+        annotation_prefix: String,
+    ) -> Fp4_tower_mul_gadgets<Fp4T, PB> {
         /*
           Karatsuba multiplication for Fp4 as a quadratic extension of Fp2:
-          v0 = A.c0 * B.c0
-          v1 = A.c1 * B.c1
-          result.c0 = v0 + non_residue * v1
-          result.c1 = (A.c0 + A.c1) * (B.c0 + B.c1) - v0 - v1
+          v0 = A.t.c0 * B.t.c0
+          v1 = A.t.c1 * B.t.c1
+          self.t.result.t.c0 = v0 + non_residue * v1
+          self.t.result.t.c1 = (A.t.c0 + A.t.c1) * (B.t.c0 + B.t.c1) - v0 - v1
           where "non_residue * elem" := (non_residue * elt.c1, elt.c0)
 
           Enforced with 3 Fp2_mul_gadget's that ensure that:
-          A.c1 * B.c1 = v1
-          A.c0 * B.c0 = v0
-          (A.c0+A.c1)*(B.c0+B.c1) = result.c1 + v0 + v1
+          A.t.c1 * B.t.c1 = v1
+          A.t.c0 * B.t.c0 = v0
+          (A.t.c0+A.t.c1)*(B.t.c0+B.t.c1) = self.t.result.t.c1 + v0 + v1
 
           Reference:
           "Multiplication and Squaring on Pairing-Friendly Fields"
           Devegili, OhEigeartaigh, Scott, Dahab
         */
-        v1 = RcCell::new(Fp2_variable::<Fp2T>::new(pb, FMT(annotation_prefix, " v1")));
-
-        compute_v1 = RcCell::new(Fp2_mul_gadget::<Fp2T>::new(
-            pb,
-            A.c1,
-            B.c1,
-            *v1,
-            FMT(annotation_prefix, " compute_v1"),
+        let v1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            prefix_format!(annotation_prefix, " v1"),
         ));
 
-        v0_c0.assign(&pb, result.c0.c0 - Fp4T::non_residue * v1.c1);
-        v0_c1.assign(&pb, result.c0.c1 - v1.c0);
-        v0 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            v0_c0,
-            v0_c1,
-            FMT(annotation_prefix, " v0"),
+        let compute_v1 = RcCell::new(Fp2_mul_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            A.t.c1.clone(),
+            B.t.c1.clone(),
+            v1.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_v1"),
+        ));
+        let mut v0_c0 = default_pb_lc::<Fp4T>();
+
+        let mut v0_c0 = default_pb_lc::<Fp4T>();
+        let mut v0_c1 = default_pb_lc::<Fp4T>();
+        let mut Ac0_plus_Ac1_c0 = default_pb_lc::<Fp4T>();
+        let mut Ac0_plus_Ac1_c1 = default_pb_lc::<Fp4T>();
+        let mut Bc0_plus_Bc1_c0 = default_pb_lc::<Fp4T>();
+        let mut Bc0_plus_Bc1_c1 = default_pb_lc::<Fp4T>();
+        let mut result_c1_plus_v0_plus_v1_c0 = default_pb_lc::<Fp4T>();
+        let mut result_c1_plus_v0_plus_v1_c1 = default_pb_lc::<Fp4T>();
+
+        v0_c0.assign(
+            &pb,
+            &(result.t.c0.t.c0.clone() - v1.borrow().t.c1.clone() * Fp4T::Fp2T::non_residue),
+        );
+        v0_c1.assign(&pb, &(result.t.c0.t.c1.clone() - v1.borrow().t.c0.clone()));
+        let v0 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            v0_c0.clone(),
+            v0_c1.clone(),
+            prefix_format!(annotation_prefix, " v0"),
         ));
 
-        compute_v0 = RcCell::new(Fp2_mul_gadget::<Fp2T>::new(
-            pb,
-            A.c0,
-            B.c0,
-            *v0,
-            FMT(annotation_prefix, " compute_v0"),
+        let compute_v0 = RcCell::new(Fp2_mul_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            A.t.c0.clone(),
+            B.t.c0.clone(),
+            v0.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_v0"),
         ));
 
-        Ac0_plus_Ac1_c0.assign(&pb, A.c0.c0 + A.c1.c0);
-        Ac0_plus_Ac1_c1.assign(&pb, A.c0.c1 + A.c1.c1);
-        Ac0_plus_Ac1 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            Ac0_plus_Ac1_c0,
-            Ac0_plus_Ac1_c1,
-            FMT(annotation_prefix, " Ac0_plus_Ac1"),
+        Ac0_plus_Ac1_c0.assign(&pb, &(A.t.c0.t.c0.clone() + A.t.c1.t.c0.clone()));
+        Ac0_plus_Ac1_c1.assign(&pb, &(A.t.c0.t.c1.clone() + A.t.c1.t.c1.clone()));
+        let Ac0_plus_Ac1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            Ac0_plus_Ac1_c0.clone(),
+            Ac0_plus_Ac1_c1.clone(),
+            prefix_format!(annotation_prefix, " Ac0_plus_Ac1"),
         ));
 
-        Bc0_plus_Bc1_c0.assign(&pb, B.c0.c0 + B.c1.c0);
-        Bc0_plus_Bc1_c1.assign(&pb, B.c0.c1 + B.c1.c1);
-        Bc0_plus_Bc1 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            Bc0_plus_Bc1_c0,
-            Bc0_plus_Bc1_c1,
-            FMT(annotation_prefix, " Bc0_plus_Bc1"),
+        Bc0_plus_Bc1_c0.assign(&pb, &(B.t.c0.t.c0.clone() + B.t.c1.t.c0.clone()));
+        Bc0_plus_Bc1_c1.assign(&pb, &(B.t.c0.t.c1.clone() + B.t.c1.t.c1.clone()));
+        let Bc0_plus_Bc1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            Bc0_plus_Bc1_c0.clone(),
+            Bc0_plus_Bc1_c1.clone(),
+            prefix_format!(annotation_prefix, " Bc0_plus_Bc1"),
         ));
 
-        result_c1_plus_v0_plus_v1_c0.assign(&pb, result.c1.c0 + v0.c0 + v1.c0);
-        result_c1_plus_v0_plus_v1_c1.assign(&pb, result.c1.c1 + v0.c1 + v1.c1);
-        result_c1_plus_v0_plus_v1 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            result_c1_plus_v0_plus_v1_c0,
-            result_c1_plus_v0_plus_v1_c1,
-            FMT(annotation_prefix, " result_c1_plus_v0_plus_v1"),
+        result_c1_plus_v0_plus_v1_c0.assign(
+            &pb,
+            &(result.t.c1.t.c0.clone() + v0.borrow().t.c0.clone() + v1.borrow().t.c0.clone()),
+        );
+        result_c1_plus_v0_plus_v1_c1.assign(
+            &pb,
+            &(result.t.c1.t.c1.clone() + v0.borrow().t.c1.clone() + v1.borrow().t.c1.clone()),
+        );
+        let result_c1_plus_v0_plus_v1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            result_c1_plus_v0_plus_v1_c0.clone(),
+            result_c1_plus_v0_plus_v1_c1.clone(),
+            prefix_format!(annotation_prefix, " result_c1_plus_v0_plus_v1"),
         ));
 
-        compute_result_c1 = RcCell::new(Fp2_mul_gadget::<Fp2T>::new(
-            pb,
-            *Ac0_plus_Ac1,
-            *Bc0_plus_Bc1,
-            *result_c1_plus_v0_plus_v1,
-            FMT(annotation_prefix, " compute_result_c1"),
+        let compute_result_c1 = RcCell::new(Fp2_mul_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            Ac0_plus_Ac1.borrow().clone(),
+            Bc0_plus_Bc1.borrow().clone(),
+            result_c1_plus_v0_plus_v1.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_result_c1"),
         ));
-        // gadget<FieldT>(&pb, annotation_prefix),
-        Self { A, B, result }
-    }
-
-    pub fn generate_r1cs_constraints() {
-        compute_v0.generate_r1cs_constraints();
-        compute_v1.generate_r1cs_constraints();
-        compute_result_c1.generate_r1cs_constraints();
-    }
-
-    pub fn generate_r1cs_witness() {
-        compute_v0.generate_r1cs_witness();
-        compute_v1.generate_r1cs_witness();
-
-        Ac0_plus_Ac1_c0.evaluate(self.pb);
-        Ac0_plus_Ac1_c1.evaluate(self.pb);
-
-        Bc0_plus_Bc1_c0.evaluate(self.pb);
-        Bc0_plus_Bc1_c1.evaluate(self.pb);
-
-        compute_result_c1.generate_r1cs_witness();
-
-        let Aval = A.get_element();
-        let Bval = B.get_element();
-        let Rval = Aval * Bval;
-
-        result.generate_r1cs_witness(Rval);
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                A,
+                B,
+                result,
+                v0_c0,
+                v0_c1,
+                Ac0_plus_Ac1_c0,
+                Ac0_plus_Ac1_c1,
+                Ac0_plus_Ac1,
+                v0,
+                v1,
+                Bc0_plus_Bc1_c0,
+                Bc0_plus_Bc1_c1,
+                Bc0_plus_Bc1,
+                result_c1_plus_v0_plus_v1_c0,
+                result_c1_plus_v0_plus_v1_c1,
+                result_c1_plus_v0_plus_v1,
+                compute_v0,
+                compute_v1,
+                compute_result_c1,
+            },
+        )
     }
 }
-impl Fp4_direct_mul_gadget<Fp4T> {
+
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_tower_mul_gadgets<Fp4T, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        self.t.compute_v0.borrow().generate_r1cs_constraints();
+        self.t.compute_v1.borrow().generate_r1cs_constraints();
+        self.t
+            .compute_result_c1
+            .borrow()
+            .generate_r1cs_constraints();
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        self.t.compute_v0.borrow().generate_r1cs_witness();
+        self.t.compute_v1.borrow().generate_r1cs_witness();
+
+        self.t.Ac0_plus_Ac1_c0.evaluate_pb(&self.pb);
+        self.t.Ac0_plus_Ac1_c1.evaluate_pb(&self.pb);
+
+        self.t.Bc0_plus_Bc1_c0.evaluate_pb(&self.pb);
+        self.t.Bc0_plus_Bc1_c1.evaluate_pb(&self.pb);
+
+        self.t.compute_result_c1.borrow().generate_r1cs_witness();
+
+        let Aval = self.t.A.get_element();
+        let Bval = self.t.B.get_element();
+        let Rval = Aval * Bval;
+
+        self.t.result.generate_r1cs_witness(&Rval);
+    }
+}
+
+pub type Fp4_direct_mul_gadgets<Fp4T, PB> =
+    gadget<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Fp4_direct_mul_gadget<Fp4T, PB>>;
+
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_direct_mul_gadget<Fp4T, PB> {
     pub fn new(
-        pb: &RcCell<protoboard<FieldT>>,
-        A: &Fp4_variable<Fp4T>,
-        B: &Fp4_variable<Fp4T>,
-        result: &Fp4_variable<Fp4T>,
-        annotation_prefix: &String,
-    ) -> Self {
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        A: Fp4_variables<Fp4T, PB>,
+        B: Fp4_variables<Fp4T, PB>,
+        result: Fp4_variables<Fp4T, PB>,
+        annotation_prefix: String,
+    ) -> Fp4_direct_mul_gadgets<Fp4T, PB> {
         /*
             Tom-Cook-4x for Fp4 (beta is the quartic non-residue):
                 v0 = a0*b0,
@@ -380,13 +521,13 @@ impl Fp4_direct_mul_gadget<Fp4T> {
                 v5 = (a0+3a1+9a2+27a3)*(b0+3b1+9b2+27b3),
                 v6 = a3*b3
 
-                result.c0 = v0+beta((1/4)v0-(1/6)(v1+v2)+(1/24)(v3+v4)-5v6),
-                result.c1 = -(1/3)v0+v1-(1/2)v2-(1/4)v3+(1/20)v4+(1/30)v5-12v6+beta(-(1/12)(v0-v1)+(1/24)(v2-v3)-(1/120)(v4-v5)-3v6),
-                result.c2 = -(5/4)v0+(2/3)(v1+v2)-(1/24)(v3+v4)+4v6+beta v6,
-                result.c3 = (1/12)(5v0-7v1)-(1/24)(v2-7v3+v4+v5)+15v6
+                self.t.result.t.c0 = v0+beta((1/4)v0-(1/6)(v1+v2)+(1/24)(v3+v4)-5v6),
+                self.t.result.t.c1 = -(1/3)v0+v1-(1/2)v2-(1/4)v3+(1/20)v4+(1/30)v5-12v6+beta(-(1/12)(v0-v1)+(1/24)(v2-v3)-(1/120)(v4-v5)-3v6),
+                self.t.result.c2 = -(5/4)v0+(2/3)(v1+v2)-(1/24)(v3+v4)+4v6+beta v6,
+                self.t.result.c3 = (1/12)(5v0-7v1)-(1/24)(v2-7v3+v4+v5)+15v6
 
             Enforced with 7 constraints. Doing so requires some care, as we first
-            compute three of the v_i explicitly, and then "inline" result.c0/c1/c2/c3
+            compute three of the v_i explicitly, and then "inline" self.t.result.t.c0/c1/c2/c3
             in computations of the remaining four v_i.
 
             Concretely, we first compute v1, v2 and v6 explicitly, via 3 constraints as above.
@@ -401,7 +542,7 @@ impl Fp4_direct_mul_gadget<Fp4T> {
                 (1-beta) v5 = -80 c0 - 240 c1 - 8 (9 + beta) c2 - 24 (9 + beta) c3 - 2 (-81 + beta) v1 + (-81 + beta) v2 + 8 (-81 + beta) (-1 + beta) v6
 
             The isomorphism between the representation above and towering is:
-                (a0, a1, a2, a3) <-> (a.c0.c0, a.c1.c0, a.c0.c1, a.c1.c1)
+                (a0, a1, a2, a3) <-> (a.c0.t.c0, a.c1.t.c0, a.c0.t.c1, a.c1.t.c1)
 
             Reference:
                 "Multiplication and Squaring on Pairing-Friendly Fields"
@@ -417,237 +558,361 @@ impl Fp4_direct_mul_gadget<Fp4T> {
 
             and simplified by multiplying the selected result by (1-beta)
         */
-        v1.allocate(&pb, FMT(annotation_prefix, " v1"));
-        v2.allocate(&pb, FMT(annotation_prefix, " v2"));
-        v6.allocate(&pb, FMT(annotation_prefix, " v6"));
-        //  gadget<FieldT>(&pb, annotation_prefix),
-        Self { A, B, result }
-    }
-
-    pub fn generate_r1cs_constraints() {
-        let beta = Fp4T::non_residue;
-        let u = (FieldT::one() - beta).inverse();
-
-        // const pb_linear_combination<FieldT>
-        let a0 = &A.c0.c0;
-        let a1 = &A.c1.c0;
-        let a2 = &A.c0.c1;
-        let a3 = &A.c1.c1;
-        let b0 = &B.c0.c0;
-        let b1 = &B.c1.c0;
-        let b2 = &B.c0.c1;
-        let b3 = &B.c1.c1;
-        let c0 = &result.c0.c0;
-        let c1 = &result.c1.c0;
-        let c2 = &result.c0.c1;
-        let c3 = &result.c1.c1;
-
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(a0 + a1 + a2 + a3, b0 + b1 + b2 + b3, v1),
-            FMT(self.annotation_prefix, " v1"),
-        );
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(a0 - a1 + a2 - a3, b0 - b1 + b2 - b3, v2),
-            FMT(self.annotation_prefix, " v2"),
-        );
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(a3, b3, v6),
-            FMT(self.annotation_prefix, " v6"),
-        );
-
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                a0,
-                b0,
-                u * c0 + beta * u * c2
-                    - beta * u * FieldT(2).inverse() * v1
-                    - beta * u * FieldT(2).inverse() * v2
-                    + beta * v6,
-            ),
-            FMT(self.annotation_prefix, " v0"),
-        );
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                a0 + FieldT(2) * a1 + FieldT(4) * a2 + FieldT(8) * a3,
-                b0 + FieldT(2) * b1 + FieldT(4) * b2 + FieldT(8) * b3,
-                -FieldT(15) * u * c0
-                    - FieldT(30) * u * c1
-                    - FieldT(3) * (FieldT(4) + beta) * u * c2
-                    - FieldT(6) * (FieldT(4) + beta) * u * c3
-                    + (FieldT(24) - FieldT(3) * beta * FieldT(2).inverse()) * u * v1
-                    + (-FieldT(8) + beta * FieldT(2).inverse()) * u * v2
-                    - FieldT(3) * (-FieldT(16) + beta) * v6,
-            ),
-            FMT(self.annotation_prefix, " v3"),
-        );
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                a0 - FieldT(2) * a1 + FieldT(4) * a2 - FieldT(8) * a3,
-                b0 - FieldT(2) * b1 + FieldT(4) * b2 - FieldT(8) * b3,
-                -FieldT(15) * u * c0 + FieldT(30) * u * c1
-                    - FieldT(3) * (FieldT(4) + beta) * u * c2
-                    + FieldT(6) * (FieldT(4) + beta) * u * c3
-                    + (FieldT(24) - FieldT(3) * beta * FieldT(2).inverse()) * u * v2
-                    + (-FieldT(8) + beta * FieldT(2).inverse()) * u * v1
-                    - FieldT(3) * (-FieldT(16) + beta) * v6,
-            ),
-            FMT(self.annotation_prefix, " v4"),
-        );
-        self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<FieldT>(
-                a0 + FieldT(3) * a1 + FieldT(9) * a2 + FieldT(27) * a3,
-                b0 + FieldT(3) * b1 + FieldT(9) * b2 + FieldT(27) * b3,
-                -FieldT(80) * u * c0
-                    - FieldT(240) * u * c1
-                    - FieldT(8) * (FieldT(9) + beta) * u * c2
-                    - FieldT(24) * (FieldT(9) + beta) * u * c3
-                    - FieldT(2) * (-FieldT(81) + beta) * u * v1
-                    + (-FieldT(81) + beta) * u * v2
-                    - FieldT(8) * (-FieldT(81) + beta) * v6,
-            ),
-            FMT(self.annotation_prefix, " v5"),
-        );
-    }
-
-    pub fn generate_r1cs_witness() {
-        // const pb_linear_combination<FieldT>
-        let a0 = &A.c0.c0;
-        let a1 = &A.c1.c0;
-        let a2 = &A.c0.c1;
-        let a3 = &A.c1.c1;
-        let b0 = &B.c0.c0;
-        let b1 = &B.c1.c0;
-        let b2 = &B.c0.c1;
-        let b3 = &B.c1.c1;
-
-        self.pb.borrow().val(&v1) = ((self.pb.lc_val(a0)
-            + self.pb.lc_val(a1)
-            + self.pb.lc_val(a2)
-            + self.pb.lc_val(a3))
-            * (self.pb.lc_val(b0) + self.pb.lc_val(b1) + self.pb.lc_val(b2) + self.pb.lc_val(b3)));
-        self.pb.borrow().val(&v2) = ((self.pb.lc_val(a0) - self.pb.lc_val(a1)
-            + self.pb.lc_val(a2)
-            - self.pb.lc_val(a3))
-            * (self.pb.lc_val(b0) - self.pb.lc_val(b1) + self.pb.lc_val(b2) - self.pb.lc_val(b3)));
-        self.pb.borrow().val(&v6) = self.pb.lc_val(a3) * self.pb.lc_val(b3);
-
-        let Aval = A.get_element();
-        let Bval = B.get_element();
-        let Rval = Aval * Bval;
-
-        result.generate_r1cs_witness(Rval);
+        let mut v1 =
+            variable::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, pb_variable>::default();
+        let mut v2 =
+            variable::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, pb_variable>::default();
+        let mut v6 =
+            variable::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, pb_variable>::default();
+        v1.allocate(&pb, prefix_format!(annotation_prefix, " v1"));
+        v2.allocate(&pb, prefix_format!(annotation_prefix, " v2"));
+        v6.allocate(&pb, prefix_format!(annotation_prefix, " v6"));
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                A,
+                B,
+                result,
+                v1,
+                v2,
+                v6,
+            },
+        )
     }
 }
-impl Fp4_sqr_gadget<Fp4T> {
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_direct_mul_gadgets<Fp4T, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        let beta = Fp4T::Fp2T::non_residue;
+        let u =
+            (<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT::one() - beta.clone()).inverse();
+
+        // const pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>
+        let a0 = &self.t.A.t.c0.t.c0;
+        let a1 = &self.t.A.t.c1.t.c0;
+        let a2 = &self.t.A.t.c0.t.c1;
+        let a3 = &self.t.A.t.c1.t.c1;
+        let b0 = &self.t.B.t.c0.t.c0;
+        let b1 = &self.t.B.t.c1.t.c0;
+        let b2 = &self.t.B.t.c0.t.c1;
+        let b3 = &self.t.B.t.c1.t.c1;
+        let c0 = &self.t.result.t.c0.t.c0;
+        let c1 = &self.t.result.t.c1.t.c0;
+        let c2 = &self.t.result.t.c0.t.c1;
+        let c3 = &self.t.result.t.c1.t.c1;
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(
+                a0.clone() + a1.clone() + a2.clone() + a3.clone(),
+                b0.clone() + b1.clone() + b2.clone() + b3.clone(),
+                self.t.v1.clone().into(),
+            ),
+            prefix_format!(self.annotation_prefix, " v1"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(
+                a0.clone() - a1.clone() + a2.clone() - a3.clone(),
+                b0.clone() - b1.clone() + b2.clone() - b3.clone(),
+                self.t.v2.clone().into(),
+            ),
+            prefix_format!(self.annotation_prefix, " v2"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(a3.clone(), b3.clone(), self.t.v6.clone().into()),
+            prefix_format!(self.annotation_prefix, " v6"),
+        );
+        let beta_lc = linear_combination::<
+            <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+            pb_variable,
+            pb_linear_combination,
+        >::from(beta.clone());
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(
+                a0.clone(),
+                b0.clone(),
+                c0.clone() * u.clone() + c2.clone() * beta.clone() * u.clone()
+                    - beta_lc.clone() * u.clone() * inverse::<Fp4T>(2) * self.t.v1.clone()
+                    - beta_lc.clone() * u.clone() * inverse::<Fp4T>(2) * self.t.v2.clone()
+                    + self.t.v6.clone() * beta.clone(),
+            ),
+            prefix_format!(self.annotation_prefix, " v0"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(
+                a0.clone() + a1.clone() * 2 + a2.clone() * 4 + a3.clone() * 8,
+                b0.clone() + b1.clone() * 2 + b2.clone() * 4 + b3.clone() * 8,
+                c0.clone() * u.clone() * (-15)
+                    - c1.clone() * 30 * u.clone()
+                    - c2.clone() * 3 * (beta.clone() + 4) * u.clone()
+                    - c3.clone() * 6 * (beta.clone() + 4) * u.clone()
+                    + self.t.v1.clone() * (-beta.clone() * 3 * inverse::<Fp4T>(2) + 24) * u.clone()
+                    + self.t.v2.clone() * (beta.clone() * inverse::<Fp4T>(2) - 8) * u.clone()
+                    - (self.t.v6.clone() * ((beta.clone() - 16) * 3)),
+            ),
+            prefix_format!(self.annotation_prefix, " v3"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(
+                a0.clone() - a1.clone() * 2 + a2.clone() * 4 - a3.clone() * 8,
+                b0.clone() - b1.clone() * 2 + b2.clone() * 4 - b3.clone() * 8,
+                -c0.clone() * 15 * u.clone() + c1.clone() * 30 * u.clone()
+                    - c2.clone() * 3 * (beta.clone() + 4) * u.clone()
+                    + c3.clone() * 6 * (beta.clone() + 4) * u.clone()
+                    + linear_combination::<
+                        <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                        pb_variable,
+                        pb_linear_combination,
+                    >::from(-(beta.clone() * 3 * inverse::<Fp4T>(2)) + 24)
+                        * u.clone()
+                        * self.t.v2.clone()
+                    + self.t.v1.clone() * (beta.clone() * inverse::<Fp4T>(2) - 8) * u.clone()
+                    - self.t.v6.clone() * 3 * (beta.clone() - 16),
+            ),
+            prefix_format!(self.annotation_prefix, " v4"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<
+                <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+                pb_variable,
+                pb_linear_combination,
+            >::new(
+                a0.clone() + a1.clone() * 3 + a2.clone() * 9 + a3.clone() * 27,
+                b0.clone() + b1.clone() * 3 + b2.clone() * 9 + b3.clone() * 27,
+                -c0.clone() * 80 * u.clone()
+                    - c1.clone() * 240 * u.clone()
+                    - c2.clone() * 8 * (beta.clone() + 9) * u.clone()
+                    - c3.clone() * 24 * (beta.clone() + 9) * u.clone()
+                    - self.t.v1.clone() * 2 * (beta.clone() - 81) * u.clone()
+                    + self.t.v2.clone() * (beta.clone() - 81) * u.clone()
+                    - self.t.v6.clone() * 8 * (beta.clone() - 81),
+            ),
+            prefix_format!(self.annotation_prefix, " v5"),
+        );
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        // const pb_linear_combinations<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT>
+        let a0 = &self.t.A.t.c0.t.c0;
+        let a1 = &self.t.A.t.c1.t.c0;
+        let a2 = &self.t.A.t.c0.t.c1;
+        let a3 = &self.t.A.t.c1.t.c1;
+        let b0 = &self.t.B.t.c0.t.c0;
+        let b1 = &self.t.B.t.c1.t.c0;
+        let b2 = &self.t.B.t.c0.t.c1;
+        let b3 = &self.t.B.t.c1.t.c1;
+
+        *self.pb.borrow_mut().val_ref(&self.t.v1) = ((self.pb.borrow().lc_val(a0)
+            + self.pb.borrow().lc_val(a1)
+            + self.pb.borrow().lc_val(a2)
+            + self.pb.borrow().lc_val(a3))
+            * (self.pb.borrow().lc_val(b0)
+                + self.pb.borrow().lc_val(b1)
+                + self.pb.borrow().lc_val(b2)
+                + self.pb.borrow().lc_val(b3)));
+        *self.pb.borrow_mut().val_ref(&self.t.v2) = ((self.pb.borrow().lc_val(a0)
+            - self.pb.borrow().lc_val(a1)
+            + self.pb.borrow().lc_val(a2)
+            - self.pb.borrow().lc_val(a3))
+            * (self.pb.borrow().lc_val(b0) - self.pb.borrow().lc_val(b1)
+                + self.pb.borrow().lc_val(b2)
+                - self.pb.borrow().lc_val(b3)));
+        *self.pb.borrow_mut().val_ref(&self.t.v6) =
+            self.pb.borrow().lc_val(a3) * self.pb.borrow().lc_val(b3);
+
+        let Aval = self.t.A.get_element();
+        let Bval = self.t.B.get_element();
+        let Rval = Aval * Bval;
+
+        self.t.result.generate_r1cs_witness(&Rval);
+    }
+}
+
+pub type Fp4_sqr_gadgets<Fp4T, PB> =
+    gadget<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Fp4_sqr_gadget<Fp4T, PB>>;
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_sqr_gadget<Fp4T, PB> {
     pub fn new(
-        pb: &RcCell<protoboard<FieldT>>,
-        A: &Fp4_variable<Fp4T>,
-        result: &Fp4_variable<Fp4T>,
-        annotation_prefix: &String,
-    ) -> Self {
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        A: Fp4_variables<Fp4T, PB>,
+        result: Fp4_variables<Fp4T, PB>,
+        annotation_prefix: String,
+    ) -> Fp4_sqr_gadgets<Fp4T, PB> {
         /*
           Karatsuba squaring for Fp4 as a quadratic extension of Fp2:
-          v0 = A.c0^2
-          v1 = A.c1^2
-          result.c0 = v0 + non_residue * v1
-          result.c1 = (A.c0 + A.c1)^2 - v0 - v1
+          v0 = A.t.c0^2
+          v1 = A.t.c1^2
+          self.t.result.t.c0 = v0 + non_residue * v1
+          self.t.result.t.c1 = (A.t.c0 + A.t.c1)^2 - v0 - v1
           where "non_residue * elem" := (non_residue * elt.c1, elt.c0)
 
           Enforced with 3 Fp2_sqr_gadget's that ensure that:
-          A.c1^2 = v1
-          A.c0^2 = v0
-          (A.c0+A.c1)^2 = result.c1 + v0 + v1
+          A.t.c1^2 = v1
+          A.t.c0^2 = v0
+          (A.t.c0+A.t.c1)^2 = self.t.result.t.c1 + v0 + v1
 
           Reference:
           "Multiplication and Squaring on Pairing-Friendly Fields"
           Devegili, OhEigeartaigh, Scott, Dahab
         */
-        v1 = RcCell::new(Fp2_variable::<Fp2T>::new(pb, FMT(annotation_prefix, " v1")));
-        compute_v1 = RcCell::new(Fp2_sqr_gadget::<Fp2T>::new(
-            pb,
-            A.c1,
-            *v1,
-            FMT(annotation_prefix, " compute_v1"),
+        let mut v0_c0 = default_pb_lc::<Fp4T>();
+        let mut v0_c1 = default_pb_lc::<Fp4T>();
+        let mut Ac0_plus_Ac1_c0 = default_pb_lc::<Fp4T>();
+        let mut Ac0_plus_Ac1_c1 = default_pb_lc::<Fp4T>();
+        let mut result_c1_plus_v0_plus_v1_c0 = default_pb_lc::<Fp4T>();
+        let mut result_c1_plus_v0_plus_v1_c1 = default_pb_lc::<Fp4T>();
+
+        let v1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            prefix_format!(annotation_prefix, " v1"),
+        ));
+        let compute_v1 = RcCell::new(Fp2_sqr_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            A.t.c1.clone(),
+            v1.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_v1"),
         ));
 
-        v0_c0.assign(&pb, result.c0.c0 - Fp4T::non_residue * v1.c1);
-        v0_c1.assign(&pb, result.c0.c1 - v1.c0);
-        v0 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            v0_c0,
-            v0_c1,
-            FMT(annotation_prefix, " v0"),
+        v0_c0.assign(
+            &pb,
+            &(result.t.c0.t.c0.clone() - v1.borrow().t.c1.clone() * Fp4T::Fp2T::non_residue),
+        );
+        v0_c1.assign(&pb, &(result.t.c0.t.c1.clone() - v1.borrow().t.c0.clone()));
+        let v0 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            v0_c0.clone(),
+            v0_c1.clone(),
+            prefix_format!(annotation_prefix, " v0"),
         ));
 
-        compute_v0 = RcCell::new(Fp2_sqr_gadget::<Fp2T>::new(
-            pb,
-            A.c0,
-            *v0,
-            FMT(annotation_prefix, " compute_v0"),
+        let compute_v0 = RcCell::new(Fp2_sqr_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            A.t.c0.clone(),
+            v0.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_v0"),
         ));
 
-        Ac0_plus_Ac1_c0.assign(&pb, A.c0.c0 + A.c1.c0);
-        Ac0_plus_Ac1_c1.assign(&pb, A.c0.c1 + A.c1.c1);
-        Ac0_plus_Ac1 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            Ac0_plus_Ac1_c0,
-            Ac0_plus_Ac1_c1,
-            FMT(annotation_prefix, " Ac0_plus_Ac1"),
+        Ac0_plus_Ac1_c0.assign(&pb, &(A.t.c0.t.c0.clone() + A.t.c1.t.c0.clone()));
+        Ac0_plus_Ac1_c1.assign(&pb, &(A.t.c0.t.c1.clone() + A.t.c1.t.c1.clone()));
+        let Ac0_plus_Ac1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            Ac0_plus_Ac1_c0.clone(),
+            Ac0_plus_Ac1_c1.clone(),
+            prefix_format!(annotation_prefix, " Ac0_plus_Ac1"),
         ));
 
-        result_c1_plus_v0_plus_v1_c0.assign(&pb, result.c1.c0 + v0.c0 + v1.c0);
-        result_c1_plus_v0_plus_v1_c1.assign(&pb, result.c1.c1 + v0.c1 + v1.c1);
-        result_c1_plus_v0_plus_v1 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            result_c1_plus_v0_plus_v1_c0,
-            result_c1_plus_v0_plus_v1_c1,
-            FMT(annotation_prefix, " result_c1_plus_v0_plus_v1"),
+        result_c1_plus_v0_plus_v1_c0.assign(
+            &pb,
+            &(result.t.c1.t.c0.clone() + v0.borrow().t.c0.clone() + v1.borrow().t.c0.clone()),
+        );
+        result_c1_plus_v0_plus_v1_c1.assign(
+            &pb,
+            &(result.t.c1.t.c1.clone() + v0.borrow().t.c1.clone() + v1.borrow().t.c1.clone()),
+        );
+        let result_c1_plus_v0_plus_v1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            result_c1_plus_v0_plus_v1_c0.clone(),
+            result_c1_plus_v0_plus_v1_c1.clone(),
+            prefix_format!(annotation_prefix, " result_c1_plus_v0_plus_v1"),
         ));
 
-        compute_result_c1 = RcCell::new(Fp2_sqr_gadget::<Fp2T>::new(
-            pb,
-            *Ac0_plus_Ac1,
-            *result_c1_plus_v0_plus_v1,
-            FMT(annotation_prefix, " compute_result_c1"),
+        let compute_result_c1 = RcCell::new(Fp2_sqr_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            Ac0_plus_Ac1.borrow().clone(),
+            result_c1_plus_v0_plus_v1.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_result_c1"),
         ));
-        //  gadget<FieldT>(&pb, annotation_prefix),
-        Self { A, result }
-    }
-
-    pub fn generate_r1cs_constraints() {
-        compute_v1.generate_r1cs_constraints();
-        compute_v0.generate_r1cs_constraints();
-        compute_result_c1.generate_r1cs_constraints();
-    }
-
-    pub fn generate_r1cs_witness() {
-        compute_v1.generate_r1cs_witness();
-
-        v0_c0.evaluate(self.pb);
-        v0_c1.evaluate(self.pb);
-        compute_v0.generate_r1cs_witness();
-
-        Ac0_plus_Ac1_c0.evaluate(self.pb);
-        Ac0_plus_Ac1_c1.evaluate(self.pb);
-        compute_result_c1.generate_r1cs_witness();
-
-        let Aval = A.get_element();
-        let Rval = Aval.squared();
-        result.generate_r1cs_witness(Rval);
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                A,
+                result,
+                v1,
+                v0_c0,
+                v0_c1,
+                v0,
+                compute_v0,
+                compute_v1,
+                Ac0_plus_Ac1_c0,
+                Ac0_plus_Ac1_c1,
+                Ac0_plus_Ac1,
+                result_c1_plus_v0_plus_v1_c0,
+                result_c1_plus_v0_plus_v1_c1,
+                result_c1_plus_v0_plus_v1,
+                compute_result_c1,
+            },
+        )
     }
 }
-impl Fp4_cyclotomic_sqr_gadget<Fp4T> {
+
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_sqr_gadgets<Fp4T, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        self.t.compute_v1.borrow().generate_r1cs_constraints();
+        self.t.compute_v0.borrow().generate_r1cs_constraints();
+        self.t
+            .compute_result_c1
+            .borrow()
+            .generate_r1cs_constraints();
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        self.t.compute_v1.borrow().generate_r1cs_witness();
+
+        self.t.v0_c0.evaluate_pb(&self.pb);
+        self.t.v0_c1.evaluate_pb(&self.pb);
+        self.t.compute_v0.borrow().generate_r1cs_witness();
+
+        self.t.Ac0_plus_Ac1_c0.evaluate_pb(&self.pb);
+        self.t.Ac0_plus_Ac1_c1.evaluate_pb(&self.pb);
+        self.t.compute_result_c1.borrow().generate_r1cs_witness();
+
+        let Aval = self.t.A.get_element();
+        let Rval = Aval.squared();
+        self.t.result.generate_r1cs_witness(&Rval);
+    }
+}
+
+pub type Fp4_cyclotomic_sqr_gadgets<Fp4T, PB> = gadget<
+    <<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT,
+    PB,
+    Fp4_cyclotomic_sqr_gadget<Fp4T, PB>,
+>;
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_cyclotomic_sqr_gadget<Fp4T, PB> {
     pub fn new(
-        pb: &RcCell<protoboard<FieldT>>,
-        A: &Fp4_variable<Fp4T>,
-        result: &Fp4_variable<Fp4T>,
-        annotation_prefix: &String,
-    ) -> Self {
+        pb: RcCell<protoboard<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB>>,
+        A: Fp4_variables<Fp4T, PB>,
+        result: Fp4_variables<Fp4T, PB>,
+        annotation_prefix: String,
+    ) -> Fp4_cyclotomic_sqr_gadgets<Fp4T, PB> {
         /*
           A = elt.c1 ^ 2
           B = elt.c1 + elt.c0;
           C = B ^ 2 - A
-          D = Fp2(A.c1 * non_residue, A.c0)
+          D = Fp2(A.t.c1 * non_residue, A.t.c0)
           E = C - D
           F = D + D + Fp2::one()
           G = E - Fp2::one()
@@ -656,90 +921,117 @@ impl Fp4_cyclotomic_sqr_gadget<Fp4T> {
 
           Enforced with 2 Fp2_sqr_gadget's that ensure that:
 
-          elt.c1 ^ 2 = Fp2(result.c0.c1 / 2, (result.c0.c0 - 1) / (2 * non_residue)) = A
-          (elt.c1 + elt.c0) ^ 2 = A + result.c1 + Fp2(A.c1 * non_residue + 1, A.c0)
+          elt.c1 ^ 2 = Fp2(self.t.result.t.c0.t.c1 / 2, (self.t.result.t.c0.t.c0 - 1) / (2 * non_residue)) = A
+          (elt.c1 + elt.c0) ^ 2 = A + self.t.result.t.c1 + Fp2(A.t.c1 * non_residue + 1, A.t.c0)
 
-          (elt.c1 + elt.c0) ^ 2 = Fp2(result.c0.c1 / 2 + result.c1.c0 + (result.c0.c0 - 1) / 2 + 1,
-                                      (result.c0.c0 - 1) / (2 * non_residue) + result.c1.c1 + result.c0.c1 / 2)
+          (elt.c1 + elt.c0) ^ 2 = Fp2(self.t.result.t.c0.t.c1 / 2 + self.t.result.t.c1.t.c0 + (self.t.result.t.c0.t.c0 - 1) / 2 + 1,
+                                      (self.t.result.t.c0.t.c0 - 1) / (2 * non_residue) + self.t.result.t.c1.t.c1 + self.t.result.t.c0.t.c1 / 2)
 
           Corresponding test code:
 
-            assert!(B.squared() == A + G + my_Fp2(A.c1 * non_residue + my_Fp::one(), A.c0));
+            assert!(B.squared() == A + G + my_Fp2(A.t.c1 * non_residue + my_Fp::one(), A.t.c0));
             assert!(self.c1.squared().c0 == F.c1 * my_Fp(2).inverse());
             assert!(self.c1.squared().c1 == (F.c0 - my_Fp(1)) * (my_Fp(2) * non_residue).inverse());
         */
-        c0_expr_c0.assign(&pb, result.c0.c1 * FieldT(2).inverse());
+        let mut c0_expr_c0 = default_pb_lc::<Fp4T>();
+        let mut c0_expr_c1 = default_pb_lc::<Fp4T>();
+        let mut A_c0_plus_A_c1_c0 = default_pb_lc::<Fp4T>();
+        let mut A_c0_plus_A_c1_c1 = default_pb_lc::<Fp4T>();
+        let mut c1_expr_c0 = default_pb_lc::<Fp4T>();
+        let mut c1_expr_c1 = default_pb_lc::<Fp4T>();
+
+        c0_expr_c0.assign(
+            &pb,
+            &(result.t.c0.t.c1.clone() * field_to_pb_lc::<Fp4T>(inverse::<Fp4T>(2))),
+        );
         c0_expr_c1.assign(
             &pb,
-            (result.c0.c0 - FieldT(1)) * (FieldT(2) * Fp4T::non_residue).inverse(),
+            &((result.t.c0.t.c0.clone() - 1) * (Fp4T::Fp2T::non_residue * 2).inverse()),
         );
-        c0_expr = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            c0_expr_c0,
-            c0_expr_c1,
-            FMT(annotation_prefix, " c0_expr"),
+        let c0_expr = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            c0_expr_c0.clone(),
+            c0_expr_c1.clone(),
+            prefix_format!(annotation_prefix, " c0_expr"),
         ));
-        compute_c0_expr = RcCell::new(Fp2_sqr_gadget::<Fp2T>::new(
-            pb,
-            A.c1,
-            *c0_expr,
-            FMT(annotation_prefix, " compute_c0_expr"),
+        let compute_c0_expr = RcCell::new(Fp2_sqr_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            A.t.c1.clone(),
+            c0_expr.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_c0_expr"),
         ));
 
-        A_c0_plus_A_c1_c0.assign(&pb, A.c0.c0 + A.c1.c0);
-        A_c0_plus_A_c1_c1.assign(&pb, A.c0.c1 + A.c1.c1);
-        A_c0_plus_A_c1 = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            A_c0_plus_A_c1_c0,
-            A_c0_plus_A_c1_c1,
-            FMT(annotation_prefix, " A_c0_plus_A_c1"),
+        A_c0_plus_A_c1_c0.assign(&pb, &(A.t.c0.t.c0.clone() + A.t.c1.t.c0.clone()));
+        A_c0_plus_A_c1_c1.assign(&pb, &(A.t.c0.t.c1.clone() + A.t.c1.t.c1.clone()));
+        let A_c0_plus_A_c1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            A_c0_plus_A_c1_c0.clone(),
+            A_c0_plus_A_c1_c1.clone(),
+            prefix_format!(annotation_prefix, " A_c0_plus_A_c1"),
         ));
 
         c1_expr_c0.assign(
             &pb,
-            (result.c0.c1 + result.c0.c0 - FieldT(1)) * FieldT(2).inverse()
-                + result.c1.c0
-                + FieldT(1),
+            &((result.t.c0.t.c1.clone() + result.t.c0.t.c0.clone() - 1) * inverse::<Fp4T>(2)
+                + result.t.c1.t.c0.clone()
+                + i64_to_pb_lc::<Fp4T>(1)),
         );
         c1_expr_c1.assign(
             &pb,
-            (result.c0.c0 - FieldT(1)) * (FieldT(2) * Fp4T::non_residue).inverse()
-                + result.c1.c1
-                + result.c0.c1 * FieldT(2).inverse(),
+            &((result.t.c0.t.c0.clone() - 1) * (Fp4T::Fp2T::non_residue * 2).inverse()
+                + result.t.c1.t.c1.clone()
+                + result.t.c0.t.c1.clone() * inverse::<Fp4T>(2)),
         );
-        c1_expr = RcCell::new(Fp2_variable::<Fp2T>::new(
-            pb,
-            c1_expr_c0,
-            c1_expr_c1,
-            FMT(annotation_prefix, " c1_expr"),
+        let c1_expr = RcCell::new(Fp2_variable::<Fp4T::Fp2T, PB>::new4(
+            pb.clone(),
+            c1_expr_c0.clone(),
+            c1_expr_c1.clone(),
+            prefix_format!(annotation_prefix, " c1_expr"),
         ));
 
-        compute_c1_expr = RcCell::new(Fp2_sqr_gadget::<Fp2T>::new(
-            pb,
-            *A_c0_plus_A_c1,
-            *c1_expr,
-            FMT(annotation_prefix, " compute_c1_expr"),
+        let compute_c1_expr = RcCell::new(Fp2_sqr_gadget::<Fp4T::Fp2T, PB>::new(
+            pb.clone(),
+            A_c0_plus_A_c1.borrow().clone(),
+            c1_expr.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_c1_expr"),
         ));
-        //  gadget<FieldT>(&pb, annotation_prefix),
-        Self { A, result }
-    }
-
-    pub fn generate_r1cs_constraints() {
-        compute_c0_expr.generate_r1cs_constraints();
-        compute_c1_expr.generate_r1cs_constraints();
-    }
-
-    pub fn generate_r1cs_witness() {
-        compute_c0_expr.generate_r1cs_witness();
-
-        A_c0_plus_A_c1_c0.evaluate(self.pb);
-        A_c0_plus_A_c1_c1.evaluate(self.pb);
-        compute_c1_expr.generate_r1cs_witness();
-
-        let Aval = A.get_element();
-        let Rval = Aval.squared();
-        result.generate_r1cs_witness(Rval);
+        gadget::<<<Fp4T as Fp4TConfig>::Fp2T as Fp2TConfig>::FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                A,
+                result,
+                c0_expr_c0,
+                c0_expr_c1,
+                c0_expr,
+                compute_c0_expr,
+                A_c0_plus_A_c1_c0,
+                A_c0_plus_A_c1_c1,
+                A_c0_plus_A_c1,
+                c1_expr_c0,
+                c1_expr_c1,
+                c1_expr,
+                compute_c1_expr,
+            },
+        )
     }
 }
 
-//#endif // FP4_GADGETS_TCC_
+impl<Fp4T: Fp4TConfig, PB: PBConfig> Fp4_cyclotomic_sqr_gadgets<Fp4T, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        self.t.compute_c0_expr.borrow().generate_r1cs_constraints();
+        self.t.compute_c1_expr.borrow().generate_r1cs_constraints();
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        self.t.compute_c0_expr.borrow().generate_r1cs_witness();
+
+        self.t.A_c0_plus_A_c1_c0.evaluate_pb(&self.pb);
+        self.t.A_c0_plus_A_c1_c1.evaluate_pb(&self.pb);
+        self.t.compute_c1_expr.borrow().generate_r1cs_witness();
+
+        let Aval = self.t.A.get_element();
+        let Rval = Aval.squared();
+        self.t.result.generate_r1cs_witness(&Rval);
+    }
+}

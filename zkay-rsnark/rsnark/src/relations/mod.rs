@@ -20,12 +20,15 @@ pub trait FieldTConfig:
     + ffec::scalar_multiplication::multiexp::AsBigint
     + ffec::scalar_multiplication::wnaf::Config
     + std::ops::Mul<Output = Self>
+    + std::ops::Mul<i32, Output = Self>
     + ffec::Zero
     + Clone
     + Default
     + std::ops::BitXor<usize, Output = Self>
     + std::ops::Sub<Output = Self>
+    + std::ops::Sub<i32, Output = Self>
     + std::ops::Add<Output = Self>
+    + std::ops::Add<i32, Output = Self>
 {
     fn random_element() -> Self;
     fn squared(&self) -> Self;

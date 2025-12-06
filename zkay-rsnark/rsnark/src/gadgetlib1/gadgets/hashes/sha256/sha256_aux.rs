@@ -213,12 +213,12 @@ pub fn generate_r1cs_witness()
 {
     if assume_C_is_zero
     {
-        self.pb.lc_val(out) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
+        self.pb.borrow().lc_val(out) = self.pb.borrow().lc_val(A) + self.pb.borrow().lc_val(B) - FieldT(2) * self.pb.borrow().lc_val(A) * self.pb.borrow().lc_val(B);
     }
     else
     {
-        self.pb.borrow().val(&tmp) = self.pb.lc_val(A) + self.pb.lc_val(B) - FieldT(2) * self.pb.lc_val(A) * self.pb.lc_val(B);
-        self.pb.lc_val(out) = self.pb.borrow().val(&tmp) + self.pb.lc_val(C) - FieldT(2) * self.pb.borrow().val(&tmp) * self.pb.lc_val(C);
+        self.pb.borrow().val(&tmp) = self.pb.borrow().lc_val(A) + self.pb.borrow().lc_val(B) - FieldT(2) * self.pb.borrow().lc_val(A) * self.pb.borrow().lc_val(B);
+        self.pb.borrow().lc_val(out) = self.pb.borrow().val(&tmp) + self.pb.borrow().lc_val(C) - FieldT(2) * self.pb.borrow().val(&tmp) * self.pb.borrow().lc_val(C);
     }
 }
 }
@@ -362,7 +362,7 @@ pub fn generate_r1cs_witness()
 {
     for i in 0..32
     {
-        self.pb.borrow().val(&result_bits[i]) = self.pb.lc_val(X[i]) * self.pb.lc_val(Y[i]) + (FieldT::one() - self.pb.lc_val(X[i])) * self.pb.lc_val(Z[i]);
+        self.pb.borrow().val(&result_bits[i]) = self.pb.borrow().lc_val(X[i]) * self.pb.borrow().lc_val(Y[i]) + (FieldT::one() - self.pb.borrow().lc_val(X[i])) * self.pb.borrow().lc_val(Z[i]);
     }
     pack_result.generate_r1cs_witness_from_bits();
 }
@@ -412,7 +412,7 @@ pub fn generate_r1cs_witness()
 {
     for i in 0..32
     {
-        let  v = (self.pb.lc_val(X[i]) + self.pb.lc_val(Y[i]) + self.pb.lc_val(Z[i])).as_ulong();
+        let  v = (self.pb.borrow().lc_val(X[i]) + self.pb.borrow().lc_val(Y[i]) + self.pb.borrow().lc_val(Z[i])).as_ulong();
         self.pb.borrow().val(&result_bits[i]) = FieldT(v / 2);
     }
 
