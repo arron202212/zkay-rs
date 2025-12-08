@@ -144,5 +144,3 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, bar_gadget<FieldT, P
         self.t.pack_Z.borrow().generate_r1cs_witness_from_bits();
     }
 }
-
-//#endif // BAR_GADGET_TCC_

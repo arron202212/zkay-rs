@@ -18,90 +18,92 @@ use std::marker::PhantomData;
 /**
  * Gadget that represents an Fp3 variable.
  */
-trait Fp3TConfig: Default + Clone + std::ops::Mul<Output = Self> {
-    type FieldT: FieldTConfig;
-    fn c0(&self) -> Self::FieldT;
-    fn c1(&self) -> Self::FieldT;
-    fn c2(&self) -> Self::FieldT;
-    fn c0_mut(&mut self) -> &mut Self::FieldT;
-    fn c1_mut(&mut self) -> &mut Self::FieldT;
-    fn c2_mut(&mut self) -> &mut Self::FieldT;
-    const non_residue: Self::FieldT;
+pub trait Fp3TConfig<FieldT: FieldTConfig>: Default + Clone + std::ops::Mul<Output = Self> {
+    // type FieldT: FieldTConfig;
+    fn c0(&self) -> FieldT;
+    fn c1(&self) -> FieldT;
+    fn c2(&self) -> FieldT;
+    fn c0_mut(&mut self) -> &mut FieldT;
+    fn c1_mut(&mut self) -> &mut FieldT;
+    fn c2_mut(&mut self) -> &mut FieldT;
+    const non_residue: FieldT;
+    const Frobenius_coeffs_c1: [FieldT; 3];
+    const Frobenius_coeffs_c2: [FieldT; 3];
 }
 #[derive(Clone, Default)]
-pub struct Fp3_variable<Fp3T: Fp3TConfig, PB: PBConfig> {
+pub struct Fp3_variable<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     //->Self public gadget<Fp3T::my_Fp>
     // type FieldT=Fp3T::my_Fp;
-    pub c0: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-    pub c1: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-    pub c2: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-    pub all_vars: pb_linear_combination_array<Fp3T::FieldT, PB>,
-    _t: PhantomData<PB>,
+    pub c0: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub c1: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub c2: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub all_vars: pb_linear_combination_array<FieldT, PB>,
+    _t: PhantomData<(Fp3T, PB)>,
 }
 
 /**
  * Gadget that creates constraints for Fp3 by Fp3 multiplication.
  */
 #[derive(Clone, Default)]
-pub struct Fp3_mul_gadget<Fp3T: Fp3TConfig, PB: PBConfig> {
+pub struct Fp3_mul_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp3T::my_Fp>
     //     type FieldT=Fp3T::my_Fp;
-    pub A: Fp3_variables<Fp3T, PB>,
-    pub B: Fp3_variables<Fp3T, PB>,
-    pub result: Fp3_variables<Fp3T, PB>,
-    pub v0: variable<Fp3T::FieldT, pb_variable>,
-    pub v4: variable<Fp3T::FieldT, pb_variable>,
+    pub A: Fp3_variables<Fp3T, FieldT, PB>,
+    pub B: Fp3_variables<Fp3T, FieldT, PB>,
+    pub result: Fp3_variables<Fp3T, FieldT, PB>,
+    pub v0: variable<FieldT, pb_variable>,
+    pub v4: variable<FieldT, pb_variable>,
 }
 
 /**
  * Gadget that creates constraints for Fp3 multiplication by a linear combination.
  */
 #[derive(Clone, Default)]
-pub struct Fp3_mul_by_lc_gadget<Fp3T: Fp3TConfig, PB: PBConfig> {
+pub struct Fp3_mul_by_lc_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp3T::my_Fp>
     //     type FieldT=Fp3T::my_Fp;
-    pub A: Fp3_variables<Fp3T, PB>,
-    pub lc: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-    pub result: Fp3_variables<Fp3T, PB>,
+    pub A: Fp3_variables<Fp3T, FieldT, PB>,
+    pub lc: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub result: Fp3_variables<Fp3T, FieldT, PB>,
 }
 
 /**
  * Gadget that creates constraints for Fp3 squaring.
  */
 #[derive(Clone, Default)]
-pub struct Fp3_sqr_gadget<Fp3T: Fp3TConfig, PB: PBConfig> {
+pub struct Fp3_sqr_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp3T::my_Fp>
     //     type FieldT=Fp3T::my_Fp;
-    pub A: Fp3_variables<Fp3T, PB>,
-    pub result: Fp3_variables<Fp3T, PB>,
-    pub mul: RcCell<Fp3_mul_gadgets<Fp3T, PB>>,
+    pub A: Fp3_variables<Fp3T, FieldT, PB>,
+    pub result: Fp3_variables<Fp3T, FieldT, PB>,
+    pub mul: RcCell<Fp3_mul_gadgets<Fp3T, FieldT, PB>>,
 }
 
-pub type Fp3_variables<Fp3T, PB> = gadget<<Fp3T as Fp3TConfig>::FieldT, PB, Fp3_variable<Fp3T, PB>>;
+pub type Fp3_variables<Fp3T, FieldT, PB> = gadget<FieldT, PB, Fp3_variable<Fp3T, FieldT, PB>>;
 
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variable<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp3_variable<Fp3T, FieldT, PB> {
     pub fn new(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
+        pb: RcCell<protoboard<FieldT, PB>>,
         annotation_prefix: String,
-    ) -> Fp3_variables<Fp3T, PB> {
+    ) -> Fp3_variables<Fp3T, FieldT, PB> {
         let (mut c0_var, mut c1_var, mut c2_var) = (
-            variable::<Fp3T::FieldT, pb_variable>::default(),
-            variable::<Fp3T::FieldT, pb_variable>::default(),
-            variable::<Fp3T::FieldT, pb_variable>::default(),
+            variable::<FieldT, pb_variable>::default(),
+            variable::<FieldT, pb_variable>::default(),
+            variable::<FieldT, pb_variable>::default(),
         );
         c0_var.allocate(&pb, prefix_format!(annotation_prefix, " c0"));
         c1_var.allocate(&pb, prefix_format!(annotation_prefix, " c1"));
         c2_var.allocate(&pb, prefix_format!(annotation_prefix, " c2"));
-        let mut c0 = pb_linear_combination::new_with_var::<Fp3T::FieldT>(c0_var);
-        let mut c1 = pb_linear_combination::new_with_var::<Fp3T::FieldT>(c1_var.clone());
-        let mut c2 = pb_linear_combination::new_with_var::<Fp3T::FieldT>(c1_var);
-        let all_vars = pb_linear_combination_array::<Fp3T::FieldT, PB>::new(vec![
+        let mut c0 = pb_linear_combination::new_with_var::<FieldT>(c0_var);
+        let mut c1 = pb_linear_combination::new_with_var::<FieldT>(c1_var.clone());
+        let mut c2 = pb_linear_combination::new_with_var::<FieldT>(c1_var);
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(vec![
             c0.clone(),
             c1.clone(),
             c2.clone(),
         ]);
 
-        gadget::<Fp3T::FieldT, PB, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
@@ -115,16 +117,13 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variable<Fp3T, PB> {
     }
 
     pub fn new2(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
+        pb: RcCell<protoboard<FieldT, PB>>,
         el: Fp3T,
         annotation_prefix: String,
-    ) -> Fp3_variables<Fp3T, PB> {
-        let mut c0 =
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default();
-        let mut c1 =
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default();
-        let mut c2 =
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default();
+    ) -> Fp3_variables<Fp3T, FieldT, PB> {
+        let mut c0 = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
+        let mut c1 = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
+        let mut c2 = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
 
         c0.assign(&pb, &(el.c0().into()));
         c1.assign(&pb, &(el.c1().into()));
@@ -134,13 +133,13 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variable<Fp3T, PB> {
         c1.evaluate_pb(&pb);
         c2.evaluate_pb(&pb);
 
-        let all_vars = pb_linear_combination_array::<Fp3T::FieldT, PB>::new(vec![
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(vec![
             c0.clone(),
             c1.clone(),
             c2.clone(),
         ]);
 
-        gadget::<Fp3T::FieldT, PB, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
@@ -154,44 +153,38 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variable<Fp3T, PB> {
     }
 
     pub fn new3(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
+        pb: RcCell<protoboard<FieldT, PB>>,
         el: Fp3T,
-        coeff: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
+        coeff: linear_combination<FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> Fp3_variables<Fp3T, PB> {
-        let mut c0 =
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default();
-        let mut c1 =
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default();
-        let mut c2 =
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default();
+    ) -> Fp3_variables<Fp3T, FieldT, PB> {
+        let mut c0 = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
+        let mut c1 = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
+        let mut c2 = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
 
         c0.assign(
             &pb,
-            &(linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::from(
-                el.c0(),
-            ) * coeff.clone()),
+            &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(el.c0())
+                * coeff.clone()),
         );
         c1.assign(
             &pb,
-            &(linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::from(
-                el.c1(),
-            ) * coeff.clone()),
+            &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(el.c1())
+                * coeff.clone()),
         );
         c2.assign(
             &pb,
-            &(linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::from(
-                el.c2(),
-            ) * coeff),
+            &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(el.c2())
+                * coeff),
         );
 
-        let all_vars = pb_linear_combination_array::<Fp3T::FieldT, PB>::new(vec![
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(vec![
             c0.clone(),
             c1.clone(),
             c2.clone(),
         ]);
 
-        gadget::<Fp3T::FieldT, PB, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
@@ -205,19 +198,19 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variable<Fp3T, PB> {
     }
 
     pub fn new4(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
-        c0: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-        c1: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-        c2: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
+        pb: RcCell<protoboard<FieldT, PB>>,
+        c0: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        c1: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        c2: linear_combination<FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> Fp3_variables<Fp3T, PB> {
-        let all_vars = pb_linear_combination_array::<Fp3T::FieldT, PB>::new(vec![
+    ) -> Fp3_variables<Fp3T, FieldT, PB> {
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(vec![
             c0.clone(),
             c1.clone(),
             c2.clone(),
         ]);
 
-        gadget::<Fp3T::FieldT, PB, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
@@ -230,10 +223,10 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variable<Fp3T, PB> {
         )
     }
 }
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variables<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp3_variables<Fp3T, FieldT, PB> {
     pub fn generate_r1cs_equals_const_constraints(&self, el: &Fp3T) {
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 1.into(),
                 el.c0().into(),
                 self.t.c0.clone().into(),
@@ -241,7 +234,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variables<Fp3T, PB> {
             prefix_format!(self.annotation_prefix, " c0"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 1.into(),
                 el.c1().into(),
                 self.t.c1.clone().into(),
@@ -249,7 +242,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variables<Fp3T, PB> {
             prefix_format!(self.annotation_prefix, " c1"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 1.into(),
                 el.c2().into(),
                 self.t.c2.clone().into(),
@@ -272,16 +265,16 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variables<Fp3T, PB> {
         return el;
     }
 
-    pub fn mul_by_X(&self) -> Fp3_variables<Fp3T, PB> {
+    pub fn mul_by_X(&self) -> Fp3_variables<Fp3T, FieldT, PB> {
         let (mut new_c0, mut new_c1, mut new_c2) = (
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default(),
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default(),
-            linear_combination::<Fp3T::FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
+            linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
         );
         new_c0.assign(&self.pb, &(self.t.c2.clone() * Fp3T::non_residue));
         new_c1.assign(&self.pb, &self.t.c0);
         new_c2.assign(&self.pb, &self.t.c1);
-        return Fp3_variable::<Fp3T, PB>::new4(
+        return Fp3_variable::<Fp3T, FieldT, PB>::new4(
             self.pb.clone(),
             new_c0,
             new_c1,
@@ -301,7 +294,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variables<Fp3T, PB> {
     }
 
     pub fn size_in_bits(&self) -> usize {
-        return 3 * <Fp3T as Fp3TConfig>::FieldT::size_in_bits();
+        return 3 * FieldT::size_in_bits();
     }
 
     pub fn num_variables(&self) -> usize {
@@ -309,23 +302,24 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_variables<Fp3T, PB> {
     }
 }
 
-pub type Fp3_mul_gadgets<Fp3T, PB> =
-    gadget<<Fp3T as Fp3TConfig>::FieldT, PB, Fp3_mul_gadget<Fp3T, PB>>;
+pub type Fp3_mul_gadgets<Fp3T, FieldT, PB> = gadget<FieldT, PB, Fp3_mul_gadget<Fp3T, FieldT, PB>>;
 
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadget<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    Fp3_mul_gadget<Fp3T, FieldT, PB>
+{
     pub fn new(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
-        A: Fp3_variables<Fp3T, PB>,
-        B: Fp3_variables<Fp3T, PB>,
-        result: Fp3_variables<Fp3T, PB>,
+        pb: RcCell<protoboard<FieldT, PB>>,
+        A: Fp3_variables<Fp3T, FieldT, PB>,
+        B: Fp3_variables<Fp3T, FieldT, PB>,
+        result: Fp3_variables<Fp3T, FieldT, PB>,
         annotation_prefix: String,
-    ) -> Fp3_mul_gadgets<Fp3T, PB> {
-        let mut v0 = variable::<Fp3T::FieldT, pb_variable>::default();
+    ) -> Fp3_mul_gadgets<Fp3T, FieldT, PB> {
+        let mut v0 = variable::<FieldT, pb_variable>::default();
         v0.allocate(&pb, prefix_format!(annotation_prefix, " v0"));
-        let mut v4 = variable::<Fp3T::FieldT, pb_variable>::default();
+        let mut v4 = variable::<FieldT, pb_variable>::default();
         v4.allocate(&pb, prefix_format!(annotation_prefix, " v4"));
 
-        gadget::<Fp3T::FieldT, PB, Self>::new(
+        gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
             Self {
@@ -338,7 +332,9 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadget<Fp3T, PB> {
         )
     }
 }
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadgets<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    Fp3_mul_gadgets<Fp3T, FieldT, PB>
+{
     pub fn generate_r1cs_constraints(&self) {
         /*
             Tom-Cook-3x for Fp3:
@@ -376,7 +372,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadgets<Fp3T, PB> {
             Subsets[{v0, v1, v2, v3, v4}, {3}]
         */
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c0.clone().into(),
                 self.t.B.t.c0.clone().into(),
                 self.t.v0.clone().into(),
@@ -384,7 +380,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadgets<Fp3T, PB> {
             prefix_format!(self.annotation_prefix, " v0"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c2.clone().into(),
                 self.t.B.t.c2.clone().into(),
                 self.t.v4.clone().into(),
@@ -395,39 +391,38 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadgets<Fp3T, PB> {
         let beta = Fp3T::non_residue;
 
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c0.clone() + self.t.A.t.c1.clone() + self.t.A.t.c2.clone(),
                 self.t.B.t.c0.clone() + self.t.B.t.c1.clone() + self.t.B.t.c2.clone(),
                 self.t.result.t.c1.clone()
                     + self.t.result.t.c2.clone()
                     + self.t.result.t.c0.clone() * beta.inverse()
-                    + self.t.v0.clone() * (Fp3T::FieldT::from(1) - beta.inverse())
-                    + self.t.v4.clone() * (Fp3T::FieldT::from(1) - beta.clone()),
+                    + self.t.v0.clone() * (FieldT::from(1) - beta.inverse())
+                    + self.t.v4.clone() * (FieldT::from(1) - beta.clone()),
             ),
             prefix_format!(self.annotation_prefix, " v1"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c0.clone() - self.t.A.t.c1.clone() + self.t.A.t.c2.clone(),
                 self.t.B.t.c0.clone() - self.t.B.t.c1.clone() + self.t.B.t.c2.clone(),
                 -self.t.result.t.c1.clone()
                     + self.t.result.t.c2.clone()
-                    + self.t.v0.clone() * (Fp3T::FieldT::from(1) + beta.inverse())
+                    + self.t.v0.clone() * (FieldT::from(1) + beta.inverse())
                     - self.t.result.t.c0.clone() * beta.inverse()
-                    + self.t.v4.clone() * (Fp3T::FieldT::from(1) + beta.clone()),
+                    + self.t.v4.clone() * (FieldT::from(1) + beta.clone()),
             ),
             prefix_format!(self.annotation_prefix, " v2"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c0.clone() + self.t.A.t.c1.clone() * 2 + self.t.A.t.c2.clone() * 4,
                 self.t.B.t.c0.clone() + self.t.B.t.c1.clone() * 2 + self.t.B.t.c2.clone() * 4,
                 self.t.result.t.c1.clone() * 2
                     + self.t.result.t.c2.clone() * 2
-                    + self.t.result.t.c0.clone() * (Fp3T::FieldT::from(8) * beta.inverse())
-                    + self.t.v0.clone()
-                        * (Fp3T::FieldT::from(1) - Fp3T::FieldT::from(8) * beta.inverse())
-                    + self.t.v4.clone() * (Fp3T::FieldT::from(16) - Fp3T::FieldT::from(2) * beta),
+                    + self.t.result.t.c0.clone() * (FieldT::from(8) * beta.inverse())
+                    + self.t.v0.clone() * (FieldT::from(1) - FieldT::from(8) * beta.inverse())
+                    + self.t.v4.clone() * (FieldT::from(16) - FieldT::from(2) * beta),
             ),
             prefix_format!(self.annotation_prefix, " v3"),
         );
@@ -445,24 +440,28 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_gadgets<Fp3T, PB> {
         self.t.result.generate_r1cs_witness(&Rval);
     }
 }
-pub type Fp3_mul_by_lc_gadgets<Fp3T, PB> =
-    gadget<<Fp3T as Fp3TConfig>::FieldT, PB, Fp3_mul_by_lc_gadget<Fp3T, PB>>;
+pub type Fp3_mul_by_lc_gadgets<Fp3T, FieldT, PB> =
+    gadget<FieldT, PB, Fp3_mul_by_lc_gadget<Fp3T, FieldT, PB>>;
 
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_by_lc_gadget<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    Fp3_mul_by_lc_gadget<Fp3T, FieldT, PB>
+{
     pub fn new(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
-        A: Fp3_variables<Fp3T, PB>,
-        lc: linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination>,
-        result: Fp3_variables<Fp3T, PB>,
+        pb: RcCell<protoboard<FieldT, PB>>,
+        A: Fp3_variables<Fp3T, FieldT, PB>,
+        lc: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        result: Fp3_variables<Fp3T, FieldT, PB>,
         annotation_prefix: String,
-    ) -> Fp3_mul_by_lc_gadgets<Fp3T, PB> {
-        gadget::<Fp3T::FieldT, PB, Self>::new(pb, annotation_prefix, Self { A, lc, result })
+    ) -> Fp3_mul_by_lc_gadgets<Fp3T, FieldT, PB> {
+        gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { A, lc, result })
     }
 }
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_by_lc_gadgets<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    Fp3_mul_by_lc_gadgets<Fp3T, FieldT, PB>
+{
     pub fn generate_r1cs_constraints(&self) {
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c0.clone(),
                 self.t.lc.clone(),
                 self.t.result.t.c0.clone(),
@@ -470,7 +469,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_by_lc_gadgets<Fp3T, PB> {
             prefix_format!(self.annotation_prefix, " result.c0"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c1.clone(),
                 self.t.lc.clone(),
                 self.t.result.t.c1.clone(),
@@ -478,7 +477,7 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_by_lc_gadgets<Fp3T, PB> {
             prefix_format!(self.annotation_prefix, " result.c1"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
-            r1cs_constraint::<Fp3T::FieldT, pb_variable, pb_linear_combination>::new(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c2.clone(),
                 self.t.lc.clone(),
                 self.t.result.t.c2.clone(),
@@ -496,27 +495,30 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_mul_by_lc_gadgets<Fp3T, PB> {
             self.pb.borrow().lc_val(&self.t.A.t.c2) * self.pb.borrow().lc_val(&self.t.lc);
     }
 }
-pub type Fp3_sqr_gadgets<Fp3T, PB> =
-    gadget<<Fp3T as Fp3TConfig>::FieldT, PB, Fp3_sqr_gadget<Fp3T, PB>>;
+pub type Fp3_sqr_gadgets<Fp3T, FieldT, PB> = gadget<FieldT, PB, Fp3_sqr_gadget<Fp3T, FieldT, PB>>;
 
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_sqr_gadget<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    Fp3_sqr_gadget<Fp3T, FieldT, PB>
+{
     pub fn new(
-        pb: RcCell<protoboard<Fp3T::FieldT, PB>>,
-        A: Fp3_variables<Fp3T, PB>,
-        result: Fp3_variables<Fp3T, PB>,
+        pb: RcCell<protoboard<FieldT, PB>>,
+        A: Fp3_variables<Fp3T, FieldT, PB>,
+        result: Fp3_variables<Fp3T, FieldT, PB>,
         annotation_prefix: String,
-    ) -> Fp3_sqr_gadgets<Fp3T, PB> {
-        let mul = RcCell::new(Fp3_mul_gadget::<Fp3T, PB>::new(
+    ) -> Fp3_sqr_gadgets<Fp3T, FieldT, PB> {
+        let mul = RcCell::new(Fp3_mul_gadget::<Fp3T, FieldT, PB>::new(
             pb.clone(),
             A.clone(),
             A.clone(),
             result.clone(),
             prefix_format!(annotation_prefix, " mul"),
         ));
-        gadget::<Fp3T::FieldT, PB, Self>::new(pb, annotation_prefix, Self { A, mul, result })
+        gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { A, mul, result })
     }
 }
-impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_sqr_gadgets<Fp3T, PB> {
+impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    Fp3_sqr_gadgets<Fp3T, FieldT, PB>
+{
     pub fn generate_r1cs_constraints(&self) {
         // We can't do better than 5 constraints for squaring, so we just use multiplication.
         self.t.mul.borrow().generate_r1cs_constraints();
@@ -528,31 +530,31 @@ impl<Fp3T: Fp3TConfig, PB: PBConfig> Fp3_sqr_gadgets<Fp3T, PB> {
 }
 
 //
-// Fp3_variable<Fp3T, PB> pub fn operator*(coeff:&FieldT) const
+// Fp3_variable<Fp3T,FieldT, PB> pub fn operator*(coeff:&FieldT) const
 // {
-//     linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
+//     linear_combination<FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
 //     new_c0.assign(self.pb, self.c0 * coeff);
 //     new_c1.assign(self.pb, self.c1 * coeff);
 //     new_c2.assign(self.pb, self.c2 * coeff);
-//     return Fp3_variable<Fp3T, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator*"));
+//     return Fp3_variable<Fp3T,FieldT, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator*"));
 // }
 
 //
-// Fp3_variable<Fp3T, PB> pub fn operator+(other:&Fp3_variable<Fp3T, PB> ) const
+// Fp3_variable<Fp3T,FieldT, PB> pub fn operator+(other:&Fp3_variable<Fp3T,FieldT, PB> ) const
 // {
-//     linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
+//     linear_combination<FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
 //     new_c0.assign(self.pb, self.c0 + other.c0);
 //     new_c1.assign(self.pb, self.c1 + other.c1);
 //     new_c2.assign(self.pb, self.c2 + other.c2);
-//     return Fp3_variable<Fp3T, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator+"));
+//     return Fp3_variable<Fp3T,FieldT, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator+"));
 // }
 
 //
-// Fp3_variable<Fp3T, PB> pub fn operator+(other:&Fp3T) const
+// Fp3_variable<Fp3T,FieldT, PB> pub fn operator+(other:&Fp3T) const
 // {
-//     linear_combination<Fp3T::FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
+//     linear_combination<FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
 //     new_c0.assign(self.pb, self.c0 + other.c0);
 //     new_c1.assign(self.pb, self.c1 + other.c1);
 //     new_c2.assign(self.pb, self.c2 + other.c2);
-//     return Fp3_variable<Fp3T, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator+"));
+//     return Fp3_variable<Fp3T,FieldT, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator+"));
 // }
