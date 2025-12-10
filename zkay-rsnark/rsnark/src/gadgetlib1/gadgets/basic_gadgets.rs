@@ -42,7 +42,7 @@ pub struct packing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub bits: pb_linear_combination_array<FieldT, PB>,
     pub packed: linear_combination<FieldT, pb_variable, pb_linear_combination>,
 }
-
+pub type packing_gadgets<FieldT, PB> = gadget<FieldT, PB, packing_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> packing_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,

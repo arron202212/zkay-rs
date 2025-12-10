@@ -1,470 +1,616 @@
-/** @file
- *****************************************************************************
+// Declaration of interfaces for G1 gadgets.
 
- Declaration of interfaces for G1 gadgets.
+// The gadgets verify curve arithmetic in G1 = E(F) where E/F: y^2 = x^3 + A * X + B
+// is an elliptic curve over F in short Weierstrass form.
 
- The gadgets verify curve arithmetic in G1 = E(F) where E/F: y^2 = x^3 + A * X + B
- is an elliptic curve over F in short Weierstrass form.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef WEIERSTRASS_G1_GADGET_HPP_
-// #define WEIERSTRASS_G1_GADGET_HPP_
-
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
+use crate::gadgetlib1::pb_variable::{
+    ONE, pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
 use ff_curves::algebra::curves::public_params;
+use ffec::Zero;
+use rccell::RcCell;
+use std::marker::PhantomData;
 
-use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets::pairing::pairing_params;
-
-
-
+const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_a;
+const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_b;
+pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
 /**
  * Gadget that represents a G1 variable.
  */
-// 
-type FieldT=ffec::Fr<ppT> ;
-pub struct  G1_variable{
-//  : public gadget<ffec::Fr<ppT> > 
-    
+pub trait ppTConfig<FieldT: FieldTConfig>: Clone + Default {
+    type Fr: FieldTConfig;
+    fn X(&self) -> FieldT;
+    fn Y(&self) -> FieldT;
+    fn to_affine_coordinates(&self);
+}
 
-X:    pb_linear_combination<FieldT>,
-Y:    pb_linear_combination<FieldT>,
-
-all_vars:    pb_linear_combination_array<FieldT>,
-
-   
+// type FieldT = ffec::Fr<ppT>;
+#[derive(Clone, Default)]
+pub struct G1_variable<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+    //  : public gadget<ffec::Fr<ppT> >
+    pub X: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub Y: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub all_vars: pb_linear_combination_array<FieldT, PB>,
+    _t: PhantomData<(ppT, PB)>,
 }
 
 /**
  * Gadget that creates constraints for the validity of a G1 variable.
  */
-// 
-pub struct  G1_checker_gadget<ppT>  {
-// : public gadget<ffec::Fr<ppT> > 
+
+#[derive(Clone, Default)]
+pub struct G1_checker_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+    // : public gadget<ffec::Fr<ppT> >
     // type FieldT=ffec::Fr<ppT>;
-
-P:    G1_variable<ppT>,
-P_X_squared:    pb_variable<FieldT>,
-P_Y_squared:    pb_variable<FieldT>,
-
-   
+    pub P: G1_variables<ppT, FieldT, PB>,
+    pub P_X_squared: variable<FieldT, pb_variable>,
+    pub P_Y_squared: variable<FieldT, pb_variable>,
 }
 
 /**
  * Gadget that creates constraints for G1 addition.
  */
-// 
-pub struct  G1_add_gadget {
-// : public gadget<ffec::Fr<ppT> > 
+
+#[derive(Clone, Default)]
+pub struct G1_add_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+    // : public gadget<ffec::Fr<ppT> >
     // type FieldT=ffec::Fr<ppT>;
-
-lambda:    pb_variable<FieldT>,
-inv:    pb_variable<FieldT>,
-
-A:    G1_variable<ppT>,
-B:    G1_variable<ppT>,
-C:    G1_variable<ppT>,
-
+    pub lambda: variable<FieldT, pb_variable>,
+    pub inv: variable<FieldT, pb_variable>,
+    pub A: G1_variables<ppT, FieldT, PB>,
+    pub B: G1_variables<ppT, FieldT, PB>,
+    pub C: G1_variables<ppT, FieldT, PB>,
 }
 
 /**
  * Gadget that creates constraints for G1 doubling.
  */
-// 
-pub struct  G1_dbl_gadget<ppT> {
-// : public gadget<ffec::Fr<ppT> >
+#[derive(Clone, Default)]
+pub struct G1_dbl_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+    // : public gadget<ffec::Fr<ppT> >
     // type FieldT=ffec::Fr<ppT>;
-
-Xsquared:    pb_variable<FieldT>,
-lambda:    pb_variable<FieldT>,
-
-A:    G1_variable<ppT>,
-B:    G1_variable<ppT>,
-
-    
+    pub Xsquared: variable<FieldT, pb_variable>,
+    pub lambda: variable<FieldT, pb_variable>,
+    pub A: G1_variables<ppT, FieldT, PB>,
+    pub B: G1_variables<ppT, FieldT, PB>,
 }
 
 /**
  * Gadget that creates constraints for G1 multi-scalar multiplication.
  */
-// 
-pub struct  G1_multiscalar_mul_gadget{
-//  : public gadget<ffec::Fr<ppT> > 
-//     type FieldT=ffec::Fr<ppT>;
-
-computed_results:    Vec<G1_variable<ppT> >,
-chosen_results:    Vec<G1_variable<ppT> >,
-adders:    Vec<G1_add_gadget<ppT> >,
-doublers:    Vec<G1_dbl_gadget<ppT> >,
-
-base:    G1_variable<ppT>,
-scalars:    pb_variable_array<FieldT>,
-points:    Vec<G1_variable<ppT> >,
-points_and_powers:    Vec<G1_variable<ppT> >,
-result:    G1_variable<ppT>,
-
-elt_size:     usize,
-num_points:     usize,
-scalar_size:     usize,
-
+#[derive(Clone, Default)]
+pub struct G1_multiscalar_mul_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+    //  : public gadget<ffec::Fr<ppT> >
+    //     type FieldT=ffec::Fr<ppT>;
+    pub computed_results: Vec<G1_variables<ppT, FieldT, PB>>,
+    pub chosen_results: Vec<G1_variables<ppT, FieldT, PB>>,
+    pub adders: Vec<G1_add_gadgets<ppT, FieldT, PB>>,
+    pub doublers: Vec<G1_dbl_gadgets<ppT, FieldT, PB>>,
+    pub base: G1_variables<ppT, FieldT, PB>,
+    pub scalars: pb_variable_array<FieldT, PB>,
+    pub points: Vec<G1_variables<ppT, FieldT, PB>>,
+    pub points_and_powers: Vec<G1_variables<ppT, FieldT, PB>>,
+    pub result: G1_variables<ppT, FieldT, PB>,
+    pub elt_size: usize,
+    pub num_points: usize,
+    pub scalar_size: usize,
 }
 
+pub type G1_variables<ppT, FieldT, PB> = gadget<FieldT, PB, G1_variable<ppT, FieldT, PB>>;
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_variable<ppT, FieldT, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        annotation_prefix: String,
+    ) -> G1_variables<ppT, FieldT, PB> {
+        let (mut X_var, mut Y_var) = (
+            variable::<FieldT, pb_variable>::default(),
+            variable::<FieldT, pb_variable>::default(),
+        );
 
+        X_var.allocate(&pb, prefix_format!(annotation_prefix, " X"));
+        Y_var.allocate(&pb, prefix_format!(annotation_prefix, " Y"));
 
-// use crate::gadgetlib1::gadgets::curves::weierstrass_g1_gadget;
+        let X = linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(X_var);
+        let Y = linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(Y_var);
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(vec![X.clone(), Y.clone()]);
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                X,
+                Y,
+                all_vars,
+                _t: PhantomData,
+            },
+        )
+    }
 
-//#endif // WEIERSTRASS_G1_GADGET_TCC_
-/** @file
- *****************************************************************************
-
- Implementation of interfaces for G1 gadgets.
-
- See weierstrass_g1_gadgets.hpp .
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef WEIERSTRASS_G1_GADGET_TCC_
-// #define WEIERSTRASS_G1_GADGET_TCC_
-
-
-impl G1_variable<ppT>{
-
-pub fn new(
-pb:&RcCell<protoboard<FieldT>>,
-                              annotation_prefix:&String) ->Self
-   
-{
-    let (X_var, Y_var)=( variable::<FieldT,pb_variable>::new(),variable::<FieldT,pb_variable>::new());
-
-    X_var.allocate(&pb, FMT(annotation_prefix, " X"));
-    Y_var.allocate(&pb, FMT(annotation_prefix, " Y"));
-
-    X = pb_linear_combination::<FieldT>(X_var);
-    Y = pb_linear_combination::<FieldT>(Y_var);
-
-    all_vars.push(X);
-    all_vars.push(Y);
-    //  gadget<FieldT>(&pb, annotation_prefix)
-}
-
-
-pub fn new2(
-pb:&RcCell<protoboard<FieldT>>,
-                              P:&ffec::G1::<other_curve::<ppT> >,
-                              annotation_prefix:&String)->Self
-    
-{
-    let  Pcopy = P.clone();
-    Pcopy.to_affine_coordinates();
-
-    X.assign(&pb, Pcopy.X());
-    Y.assign(&pb, Pcopy.Y());
-    X.evaluate(pb);
-    Y.evaluate(pb);
-    all_vars.push(X);
-    all_vars.push(Y);
-    // gadget<FieldT>(&pb, annotation_prefix)
-}
-
-
-pub fn  generate_r1cs_witness(el:&ffec::G1::<other_curve::<ppT> >)
-{
-   let mut el_normalized = el.clone();
-    el_normalized.to_affine_coordinates();
-
-    self.pb.borrow().lc_val(X) = el_normalized.X();
-    self.pb.borrow().lc_val(Y) = el_normalized.Y();
-}
-
-
-pub fn size_in_bits()->usize
-{
-    return 2 * FieldT::size_in_bits();
-}
-
-
-pub fn num_variables(&self)->usize
-{
-    return 2;
-}
-}
-impl G1_checker_gadget<ppT>{
-
-pub fn new(
-pb:&RcCell<protoboard<FieldT>>, P:&G1_variable<ppT>, annotation_prefix:&String)->Self
-    
-{
-    P_X_squared.allocate(&pb, FMT(annotation_prefix, " P_X_squared"));
-    P_Y_squared.allocate(&pb, FMT(annotation_prefix, " P_Y_squared"));
-    // gadget<FieldT>(&pb, annotation_prefix),
-    Self {P}
-}
-
-
-pub fn  generate_r1cs_constraints()
-{
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![P.X],
-        vec![P.X],
-        vec![P_X_squared]),
-      FMT(self.annotation_prefix, " P_X_squared"));
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![P.Y ],
-        vec![P.Y ],
-        vec![P_Y_squared ]),
-      FMT(self.annotation_prefix, " P_Y_squared"));
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![P.X ],
-        vec![P_X_squared, ONE * ffec::G1::<other_curve::<ppT> >::coeff_a],
-        vec![P_Y_squared, ONE * (-ffec::G1::<other_curve::<ppT> >::coeff_b)]),
-      FMT(self.annotation_prefix, " curve_equation"));
-}
-
-
-pub fn  generate_r1cs_witness()
-{
-    self.pb.borrow().val(&P_X_squared) = self.pb.borrow().lc_val(P.X).squared();
-    self.pb.borrow().val(&P_Y_squared) = self.pb.borrow().lc_val(P.Y).squared();
-}
-}
-impl G1_add_gadget<ppT>{
-
-pub fn new(
-pb:&RcCell<protoboard<FieldT>>,
-                                  A:&G1_variable<ppT>,
-                                  B:&G1_variable<ppT>,
-                                  C:&G1_variable<ppT>,
-                                  annotation_prefix:&String)->Self
-    
-{
-    /*
-      lambda = (B.y - A.y)/(B.x - A.x)
-      C.x = lambda^2 - A.x - B.x
-      C.y = lambda(A.x - C.x) - A.y
-
-      Special cases:
-
-      doubling: if B.y = A.y and B.x = A.x then lambda is unbound and
-      C = (lambda^2, lambda^3)
-
-      addition of negative point: if B.y = -A.y and B.x = A.x then no
-      lambda can satisfy the first equation unless B.y - A.y = 0. But
-      then this reduces to doubling.
-
-      So we need to check that A.x - B.x != 0, which can be done by
-      enforcing I * (B.x - A.x) = 1
-    */
-    lambda.allocate(&pb, FMT(annotation_prefix, " lambda"));
-    inv.allocate(&pb, FMT(annotation_prefix, " inv"));
-    Self{
-    // gadget<FieldT>(&pb, annotation_prefix),
-    A,
-    B,
-    C
+    pub fn new2(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        P: G1<ppT>,
+        annotation_prefix: String,
+    ) -> G1_variables<ppT, FieldT, PB> {
+        let Pcopy = P.clone();
+        Pcopy.to_affine_coordinates();
+        let mut X = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
+        let mut Y = linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
+        X.assign(&pb, &(Pcopy.X().into()));
+        Y.assign(&pb, &(Pcopy.Y().into()));
+        X.evaluate_pb(&pb);
+        Y.evaluate_pb(&pb);
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(vec![X.clone(), Y.clone()]);
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                X,
+                Y,
+                all_vars,
+                _t: PhantomData,
+            },
+        )
     }
 }
 
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_variables<ppT, FieldT, PB> {
+    pub fn generate_r1cs_witness(&self, el: &G1<ppT>) {
+        let mut el_normalized = el.clone();
+        el_normalized.to_affine_coordinates();
 
-pub fn  generate_r1cs_constraints()
-{
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![lambda],
-        vec![B.X, A.X * (-1)],
-        vec![B.Y, A.Y * (-1)]),
-      FMT(self.annotation_prefix, " calc_lambda"));
+        *self.pb.borrow_mut().lc_val_ref(&self.t.X) = el_normalized.X();
+        *self.pb.borrow_mut().lc_val_ref(&self.t.Y) = el_normalized.Y();
+    }
 
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![lambda ],
-        vec![lambda],
-        vec![C.X, A.X, B.X]),
-      FMT(self.annotation_prefix, " calc_X"));
+    pub fn size_in_bits(&self) -> usize {
+        return 2 * FieldT::size_in_bits();
+    }
 
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![lambda],
-        vec![A.X, C.X * (-1)],
-        vec![C.Y, A.Y ]),
-      FMT(self.annotation_prefix, " calc_Y"));
-
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![inv],
-        vec![B.X, A.X * (-1)],
-        vec![ONE]),
-      FMT(self.annotation_prefix, " no_special_cases"));
-}
-
-
-pub fn  generate_r1cs_witness()
-{
-    self.pb.borrow().val(&inv) = (self.pb.borrow().lc_val(B.X) - self.pb.borrow().lc_val(A.X)).inverse();
-    self.pb.borrow().val(&lambda) = (self.pb.borrow().lc_val(B.Y) - self.pb.borrow().lc_val(A.Y)) * self.pb.borrow().val(&inv);
-    self.pb.borrow().lc_val(C.X) = self.pb.borrow().val(&lambda).squared() - self.pb.borrow().lc_val(A.X) - self.pb.borrow().lc_val(B.X);
-    self.pb.borrow().lc_val(C.Y) = self.pb.borrow().val(&lambda) * (self.pb.borrow().lc_val(A.X) - self.pb.borrow().lc_val(C.X)) - self.pb.borrow().lc_val(A.Y);
-}
-}
-impl G1_dbl_gadget<ppT>{
-
-pub fn new(
-pb:&RcCell<protoboard<FieldT>>,
-                                  A:&G1_variable<ppT>,
-                                  B:&G1_variable<ppT>,
-                                  annotation_prefix:&String)->Self
-  
-{
-    Xsquared.allocate(&pb, FMT(annotation_prefix, " X_squared"));
-    lambda.allocate(&pb, FMT(annotation_prefix, " lambda"));
-    Self{
-    //   gadget<FieldT>(&pb, annotation_prefix),
-    A,
-    B
+    pub fn num_variables(&self) -> usize {
+        return 2;
     }
 }
 
-
-pub fn  generate_r1cs_constraints()
+pub type G1_checker_gadgets<ppT, FieldT, PB> =
+    gadget<FieldT, PB, G1_checker_gadget<ppT, FieldT, PB>>;
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_checker_gadget<ppT, FieldT, PB>
 {
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![A.X ],
-        vec![A.X ],
-        vec![Xsquared ]),
-       FMT(self.annotation_prefix, " calc_Xsquared"));
-
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![lambda * 2 ],
-        vec![A.Y ],
-        vec![Xsquared * 3, ONE * ffec::G1::<other_curve::<ppT> >::coeff_a]),
-      FMT(self.annotation_prefix, " calc_lambda"));
-
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![lambda],
-        vec![lambda],
-        vec![B.X, A.X * 2]),
-      FMT(self.annotation_prefix, " calc_X"));
-
-    self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(
-        vec![lambda],
-        vec![A.X, B.X * (-1) ],
-        vec![B.Y, A.Y ]),
-      FMT(self.annotation_prefix, " calc_Y"));
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        P: G1_variables<ppT, FieldT, PB>,
+        annotation_prefix: String,
+    ) -> G1_checker_gadgets<ppT, FieldT, PB> {
+        let mut P_X_squared = variable::<FieldT, pb_variable>::default();
+        let mut P_Y_squared = variable::<FieldT, pb_variable>::default();
+        P_X_squared.allocate(&pb, prefix_format!(annotation_prefix, " P_X_squared"));
+        P_Y_squared.allocate(&pb, prefix_format!(annotation_prefix, " P_Y_squared"));
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                P,
+                P_X_squared,
+                P_Y_squared,
+            },
+        )
+    }
 }
-
-
-pub fn  generate_r1cs_witness()
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_checker_gadgets<ppT, FieldT, PB>
 {
-    self.pb.borrow().val(&Xsquared) = self.pb.borrow().lc_val(A.X).squared();
-    self.pb.borrow().val(&lambda) = (FieldT(3) * self.pb.borrow().val(&Xsquared) + ffec::G1::<other_curve::<ppT> >::coeff_a) * (FieldT(2) * self.pb.borrow().lc_val(A.Y)).inverse();
-    self.pb.borrow().lc_val(B.X) = self.pb.borrow().val(&lambda).squared() - FieldT(2) * self.pb.borrow().lc_val(A.X);
-    self.pb.borrow().lc_val(B.Y) = self.pb.borrow().val(&lambda) * (self.pb.borrow().lc_val(A.X) - self.pb.borrow().lc_val(B.X)) - self.pb.borrow().lc_val(A.Y);
-}
-}
-
-impl G1_multiscalar_mul_gadget<ppT>{
-
-pub fn new(
-    pb:&RcCell<protoboard<FieldT>>,
-                                                          base:&G1_variable<ppT>,
-                                                          scalars:&pb_variable_array<FieldT>,
-                                                          elt_size:usize,
-                                                          points:&Vec<G1_variable<ppT> >,
-                                                          result: &G1_variable<ppT> ,
-                                                          annotation_prefix:&String)->Self
-    
-{
-    assert!(num_points >= 1);
-    assert!(num_points * elt_size == scalar_size);
-
-    for i in 0..num_points
-    {
-        points_and_powers.push(points[i]);
-        for j in 0..elt_size - 1
-        {
-            points_and_powers.push(G1_variable::<ppT>(&pb, FMT(annotation_prefix, " points_{}_times_2_to_{}", i, j+1)));
-            doublers.push(G1_dbl_gadget::<ppT>(&pb, points_and_powers[i*elt_size + j], points_and_powers[i*elt_size + j + 1], FMT(annotation_prefix, " double_{}_to_2_to_{}", i, j+1)));
-        }
+    pub fn generate_r1cs_constraints(&self) {
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.P.t.X.clone().into()],
+                vec![self.t.P.t.X.clone().into()],
+                vec![self.t.P_X_squared.clone().into()],
+            ),
+            prefix_format!(self.annotation_prefix, " P_X_squared"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.P.t.Y.clone().into()],
+                vec![self.t.P.t.Y.clone().into()],
+                vec![self.t.P_Y_squared.clone().into()],
+            ),
+            prefix_format!(self.annotation_prefix, " P_Y_squared"),
+        );
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.P.t.X.clone().into()],
+                vec![
+                    self.t.P_X_squared.clone().into(),
+                    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        variable::<FieldT, pb_variable>::from(ONE),
+                    ) * coeff_a,
+                ],
+                vec![
+                    self.t.P_Y_squared.clone().into(),
+                    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        variable::<FieldT, pb_variable>::from(ONE),
+                    ) * (-coeff_b),
+                ],
+            ),
+            prefix_format!(self.annotation_prefix, " curve_equation"),
+        );
     }
 
-    chosen_results.push(base);
-    for i in 0..scalar_size
-    {
-        computed_results.push(G1_variable::<ppT>(&pb, FMT(annotation_prefix, " computed_results_{}")));
-        if i < scalar_size-1
-        {
-            chosen_results.push(G1_variable::<ppT>(&pb, FMT(annotation_prefix, " chosen_results_{}")));
-        }
-        else
-        {
-            chosen_results.push(result);
-        }
-
-        adders.push(G1_add_gadget::<ppT>(&pb, chosen_results[i], points_and_powers[i], computed_results[i], FMT(annotation_prefix, " adders_{}")));
-    }
-    Self{
-    // gadget<FieldT>(&pb, annotation_prefix),
-    base,
-    scalars,
-    points,
-    result,
-    elt_size,
-    num_points,
-    scalar_size
+    pub fn generate_r1cs_witness(&self) {
+        *self.pb.borrow_mut().val_ref(&self.t.P_X_squared) =
+            self.pb.borrow().lc_val(&self.t.P.t.X).squared();
+        *self.pb.borrow_mut().val_ref(&self.t.P_Y_squared) =
+            self.pb.borrow().lc_val(&self.t.P.t.Y).squared();
     }
 }
 
-
-pub fn  generate_r1cs_constraints()
-{
-    let  num_constraints_before = self.pb.num_constraints();
-
-    for i in 0..scalar_size - num_points
-    {
-        doublers[i].generate_r1cs_constraints();
-    }
-
-    for i in 0..scalar_size
-    {
-        adders[i].generate_r1cs_constraints();
-
+pub type G1_add_gadgets<ppT, FieldT, PB> = gadget<FieldT, PB, G1_add_gadget<ppT, FieldT, PB>>;
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_add_gadget<ppT, FieldT, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        A: G1_variables<ppT, FieldT, PB>,
+        B: G1_variables<ppT, FieldT, PB>,
+        C: G1_variables<ppT, FieldT, PB>,
+        annotation_prefix: String,
+    ) -> G1_add_gadgets<ppT, FieldT, PB> {
         /*
-          chosen_results[i+1].X = scalars[i] * computed_results[i].X + (1-scalars[i]) *  chosen_results[i].X
-          chosen_results[i+1].X - chosen_results[i].X = scalars[i] * (computed_results[i].X - chosen_results[i].X)
+          lambda = (B.y - A.y)/(B.x - A.x)
+          C.x = lambda^2 - A.x - B.x
+          C.y = lambda(A.x - C.x) - A.y
+
+          Special cases:
+
+          doubling: if B.y = A.y and B.x = A.x then lambda is unbound and
+          C = (lambda^2, lambda^3)
+
+          addition of negative point: if B.y = -A.y and B.x = A.x then no
+          lambda can satisfy the first equation unless B.y - A.y = 0. But
+          then this reduces to doubling.
+
+          So we need to check that A.x - B.x != 0, which can be done by
+          enforcing I * (B.x - A.x) = 1
         */
-        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
-                                                             computed_results[i].X - chosen_results[i].X,
-                                                             chosen_results[i+1].X - chosen_results[i].X),
-                                   FMT(self.annotation_prefix, " chosen_results_{}_X", i+1));
-        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(scalars[i],
-                                                             computed_results[i].Y - chosen_results[i].Y,
-                                                             chosen_results[i+1].Y - chosen_results[i].Y),
-                                   FMT(self.annotation_prefix, " chosen_results_{}_Y", i+1));
+        let mut lambda = variable::<FieldT, pb_variable>::default();
+        let mut inv = variable::<FieldT, pb_variable>::default();
+        lambda.allocate(&pb, prefix_format!(annotation_prefix, " lambda"));
+        inv.allocate(&pb, prefix_format!(annotation_prefix, " inv"));
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                lambda,
+                inv,
+                A,
+                B,
+                C,
+            },
+        )
+    }
+}
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_add_gadgets<ppT, FieldT, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.lambda.clone().into()],
+                vec![
+                    self.t.B.t.X.clone().into(),
+                    (self.t.A.t.X.clone() * (-1)).into(),
+                ],
+                vec![
+                    self.t.B.t.Y.clone().into(),
+                    (self.t.A.t.Y.clone() * (-1)).into(),
+                ],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_lambda"),
+        );
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.lambda.clone().into()],
+                vec![self.t.lambda.clone().into()],
+                vec![
+                    self.t.C.t.X.clone().into(),
+                    self.t.A.t.X.clone().into(),
+                    self.t.B.t.X.clone().into(),
+                ],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_X"),
+        );
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.lambda.clone().into()],
+                vec![
+                    self.t.A.t.X.clone().into(),
+                    (self.t.C.t.X.clone() * (-1)).into(),
+                ],
+                vec![self.t.C.t.Y.clone().into(), self.t.A.t.Y.clone().into()],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_Y"),
+        );
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.inv.clone().into()],
+                vec![
+                    self.t.B.t.X.clone().into(),
+                    (self.t.A.t.X.clone() * (-1)).into(),
+                ],
+                vec![variable::<FieldT, pb_variable>::from(ONE).into()],
+            ),
+            prefix_format!(self.annotation_prefix, " no_special_cases"),
+        );
     }
 
-    let  num_constraints_after = self.pb.num_constraints();
-    assert!(num_constraints_after - num_constraints_before == 4 * (scalar_size-num_points) + (4 + 2) * scalar_size);
+    pub fn generate_r1cs_witness(&self) {
+        *self.pb.borrow_mut().val_ref(&self.t.inv) = (self.pb.borrow().lc_val(&self.t.B.t.X)
+            - self.pb.borrow().lc_val(&self.t.A.t.X))
+        .inverse();
+        *self.pb.borrow_mut().val_ref(&self.t.lambda) = (self.pb.borrow().lc_val(&self.t.B.t.Y)
+            - self.pb.borrow().lc_val(&self.t.A.t.Y))
+            * self.pb.borrow().val(&self.t.inv);
+        *self.pb.borrow_mut().lc_val_ref(&self.t.C.t.X) =
+            self.pb.borrow().val(&self.t.lambda).squared()
+                - self.pb.borrow().lc_val(&self.t.A.t.X)
+                - self.pb.borrow().lc_val(&self.t.B.t.X);
+        *self.pb.borrow_mut().lc_val_ref(&self.t.C.t.Y) = self.pb.borrow().val(&self.t.lambda)
+            * (self.pb.borrow().lc_val(&self.t.A.t.X) - self.pb.borrow().lc_val(&self.t.C.t.X))
+            - self.pb.borrow().lc_val(&self.t.A.t.Y);
+    }
 }
 
+pub type G1_dbl_gadgets<ppT, FieldT, PB> = gadget<FieldT, PB, G1_dbl_gadget<ppT, FieldT, PB>>;
 
-pub fn  generate_r1cs_witness()
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_dbl_gadget<ppT, FieldT, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        A: G1_variables<ppT, FieldT, PB>,
+        B: G1_variables<ppT, FieldT, PB>,
+        annotation_prefix: String,
+    ) -> G1_dbl_gadgets<ppT, FieldT, PB> {
+        let mut Xsquared = variable::<FieldT, pb_variable>::default();
+        let mut lambda = variable::<FieldT, pb_variable>::default();
+        Xsquared.allocate(&pb, prefix_format!(annotation_prefix, " X_squared"));
+        lambda.allocate(&pb, prefix_format!(annotation_prefix, " lambda"));
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                Xsquared,
+                lambda,
+                A,
+                B,
+            },
+        )
+    }
+}
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_dbl_gadgets<ppT, FieldT, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.A.t.X.clone().into()],
+                vec![self.t.A.t.X.clone().into()],
+                vec![self.t.Xsquared.clone().into()],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_Xsquared"),
+        );
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![(self.t.lambda.clone() * 2).into()],
+                vec![self.t.A.t.Y.clone().into()],
+                vec![
+                    (self.t.Xsquared.clone() * 3).into(),
+                    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        variable::<FieldT, pb_variable>::from(ONE),
+                    ) * coeff_a,
+                ],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_lambda"),
+        );
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.lambda.clone().into()],
+                vec![self.t.lambda.clone().into()],
+                vec![
+                    self.t.B.t.X.clone().into(),
+                    (self.t.A.t.X.clone() * 2).into(),
+                ],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_X"),
+        );
+
+        self.pb.borrow_mut().add_r1cs_constraint(
+            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
+                vec![self.t.lambda.clone().into()],
+                vec![
+                    self.t.A.t.X.clone().into(),
+                    (self.t.B.t.X.clone() * (-1)).into(),
+                ],
+                vec![self.t.B.t.Y.clone().into(), self.t.A.t.Y.clone().into()],
+            ),
+            prefix_format!(self.annotation_prefix, " calc_Y"),
+        );
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        *self.pb.borrow_mut().val_ref(&self.t.Xsquared) =
+            self.pb.borrow().lc_val(&self.t.A.t.X).squared();
+        *self.pb.borrow_mut().val_ref(&self.t.lambda) =
+            (self.pb.borrow().val(&self.t.Xsquared) * FieldT::from(3) + FieldT::from(coeff_a))
+                * (FieldT::from(2) * self.pb.borrow().lc_val(&self.t.A.t.Y)).inverse();
+        *self.pb.borrow_mut().lc_val_ref(&self.t.B.t.X) =
+            self.pb.borrow().val(&self.t.lambda).squared()
+                - FieldT::from(2) * self.pb.borrow().lc_val(&self.t.A.t.X);
+        *self.pb.borrow_mut().lc_val_ref(&self.t.B.t.Y) = self.pb.borrow().val(&self.t.lambda)
+            * (self.pb.borrow().lc_val(&self.t.A.t.X) - self.pb.borrow().lc_val(&self.t.B.t.X))
+            - self.pb.borrow().lc_val(&self.t.A.t.Y);
+    }
+}
+
+pub type G1_multiscalar_mul_gadgets<ppT, FieldT, PB> =
+    gadget<FieldT, PB, G1_multiscalar_mul_gadget<ppT, FieldT, PB>>;
+
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_multiscalar_mul_gadget<ppT, FieldT, PB>
 {
-    for i in 0..scalar_size - num_points
-    {
-        doublers[i].generate_r1cs_witness();
-    }
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        base: G1_variables<ppT, FieldT, PB>,
+        scalars: pb_variable_array<FieldT, PB>,
+        elt_size: usize,
+        points: Vec<G1_variables<ppT, FieldT, PB>>,
+        result: G1_variables<ppT, FieldT, PB>,
+        annotation_prefix: String,
+    ) -> G1_multiscalar_mul_gadgets<ppT, FieldT, PB> {
+        let num_points = points.len();
+        let scalar_size = scalars.len();
+        assert!(num_points >= 1);
+        assert!(num_points * elt_size == scalar_size);
+        let mut points_and_powers = vec![];
+        let mut doublers = vec![];
+        for i in 0..num_points {
+            points_and_powers.push(points[i].clone());
+            for j in 0..elt_size - 1 {
+                points_and_powers.push(G1_variable::<ppT, FieldT, PB>::new(
+                    pb.clone(),
+                    prefix_format!(annotation_prefix, " points_{}_times_2_to_{}", i, j + 1),
+                ));
+                doublers.push(G1_dbl_gadget::<ppT, FieldT, PB>::new(
+                    pb.clone(),
+                    points_and_powers[i * elt_size + j].clone(),
+                    points_and_powers[i * elt_size + j + 1].clone(),
+                    prefix_format!(annotation_prefix, " double_{}_to_2_to_{}", i, j + 1),
+                ));
+            }
+        }
+        let mut computed_results = vec![];
+        let mut chosen_results = vec![];
+        let mut adders = vec![];
+        chosen_results.push(base.clone());
+        for i in 0..scalar_size {
+            computed_results.push(G1_variable::<ppT, FieldT, PB>::new(
+                pb.clone(),
+                prefix_format!(annotation_prefix, " computed_results_"),
+            ));
+            if i < scalar_size - 1 {
+                chosen_results.push(G1_variable::<ppT, FieldT, PB>::new(
+                    pb.clone(),
+                    prefix_format!(annotation_prefix, " chosen_results_"),
+                ));
+            } else {
+                chosen_results.push(result.clone());
+            }
 
-    for i in 0..scalar_size
-    {
-        adders[i].generate_r1cs_witness();
-        self.pb.borrow().lc_val(chosen_results[i+1].X) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.borrow().lc_val(chosen_results[i].X)} else{self.pb.borrow().lc_val(computed_results[i].X)};
-        self.pb.borrow().lc_val(chosen_results[i+1].Y) = if self.pb.borrow().val(&scalars[i]) == ppT::Fr::zero() {self.pb.borrow().lc_val(chosen_results[i].Y)} else{self.pb.borrow().lc_val(computed_results[i].Y)};
+            adders.push(G1_add_gadget::<ppT, FieldT, PB>::new(
+                pb.clone(),
+                chosen_results[i].clone(),
+                points_and_powers[i].clone(),
+                computed_results[i].clone(),
+                prefix_format!(annotation_prefix, " adders_"),
+            ));
+        }
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                computed_results,
+                chosen_results,
+                adders,
+                doublers,
+                base,
+                scalars,
+                points,
+                points_and_powers,
+                result,
+                elt_size,
+                num_points,
+                scalar_size,
+            },
+        )
     }
 }
+
+impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_multiscalar_mul_gadgets<ppT, FieldT, PB>
+{
+    pub fn generate_r1cs_constraints(&self) {
+        let num_constraints_before = self.pb.borrow().num_constraints();
+
+        for i in 0..self.t.scalar_size - self.t.num_points {
+            self.t.doublers[i].generate_r1cs_constraints();
+        }
+
+        for i in 0..self.t.scalar_size {
+            self.t.adders[i].generate_r1cs_constraints();
+
+            /*
+              chosen_results[i+1].X = scalars[i] * computed_results[i].X + (1-scalars[i]) *  chosen_results[i].X
+              chosen_results[i+1].X - chosen_results[i].X = scalars[i] * (computed_results[i].X - chosen_results[i].X)
+            */
+            self.pb.borrow_mut().add_r1cs_constraint(
+                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                    self.t.scalars[i].clone().into(),
+                    (self.t.computed_results[i].t.X.clone() - self.t.chosen_results[i].t.X.clone())
+                        .into(),
+                    (self.t.chosen_results[i + 1].t.X.clone()
+                        - self.t.chosen_results[i].t.X.clone())
+                    .into(),
+                ),
+                prefix_format!(self.annotation_prefix, " chosen_results_{}_X", i + 1),
+            );
+            self.pb.borrow_mut().add_r1cs_constraint(
+                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                    self.t.scalars[i].clone().into(),
+                    (self.t.computed_results[i].t.Y.clone() - self.t.chosen_results[i].t.Y.clone())
+                        .into(),
+                    (self.t.chosen_results[i + 1].t.Y.clone()
+                        - self.t.chosen_results[i].t.Y.clone())
+                    .into(),
+                ),
+                prefix_format!(self.annotation_prefix, " chosen_results_{}_Y", i + 1),
+            );
+        }
+
+        let num_constraints_after = self.pb.borrow().num_constraints();
+        assert!(
+            num_constraints_after - num_constraints_before
+                == 4 * (self.t.scalar_size - self.t.num_points) + (4 + 2) * self.t.scalar_size
+        );
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        for i in 0..self.t.scalar_size - self.t.num_points {
+            self.t.doublers[i].generate_r1cs_witness();
+        }
+
+        for i in 0..self.t.scalar_size {
+            self.t.adders[i].generate_r1cs_witness();
+            *self
+                .pb
+                .borrow_mut()
+                .lc_val_ref(&self.t.chosen_results[i + 1].t.X) =
+                if self.pb.borrow().val(&self.t.scalars[i]) == FieldT::zero() {
+                    self.pb.borrow().lc_val(&self.t.chosen_results[i].t.X)
+                } else {
+                    self.pb.borrow().lc_val(&self.t.computed_results[i].t.X)
+                };
+            *self
+                .pb
+                .borrow_mut()
+                .lc_val_ref(&self.t.chosen_results[i + 1].t.Y) =
+                if self.pb.borrow().val(&self.t.scalars[i]) == FieldT::zero() {
+                    self.pb.borrow().lc_val(&self.t.chosen_results[i].t.Y)
+                } else {
+                    self.pb.borrow().lc_val(&self.t.computed_results[i].t.Y)
+                };
+        }
+    }
 }
-
-
-//#endif // WEIERSTRASS_G1_GADGET_TCC_

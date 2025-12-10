@@ -65,7 +65,7 @@ pub struct pb_linear_combination {
     // FieldT constant_term() ;
 }
 // impl ContentsConfig for pb_linear_combination_array<FieldT,PB> {
-//     type contents = Vec<pb_linear_combination<FieldT>>;
+//     type contents = Vec<linear_combination<FieldT, pb_variable, pb_linear_combination>>;
 // }
 //
 impl<FieldT: FieldTConfig, PB: PBConfig> From<pb_variable_array<FieldT, PB>>
@@ -89,9 +89,9 @@ pub struct pb_linear_combination_array<FieldT: FieldTConfig, PB: PBConfig> {
     pub contents: Vec<linear_combination<FieldT, pb_variable, pb_linear_combination>>,
     _pb: PhantomData<PB>,
     // pb_linear_combination_array()->Self contents() {};
-    // pb_linear_combination_array(arr:&arr:&pb_variable_array<FieldT,PB>) { for v in self.push(pb_linear_combination<FieldT>(v)); };
+    // pb_linear_combination_array(arr:&arr:&pb_variable_array<FieldT,PB>) { for v in self.push(linear_combination<FieldT, pb_variable, pb_linear_combination>(v)); };
     // pb_linear_combination_array(usize count)->Self contents(count) {};
-    // pb_linear_combination_array(usize count, value:&pb_linear_combination<FieldT>)->Self contents(count, value) {};
+    // pb_linear_combination_array(usize count, value:&linear_combination<FieldT, pb_variable, pb_linear_combination>)->Self contents(count, value) {};
     // pb_linear_combination_array(contents::const_iterator first, contents::const_iterator last)->Self contents(first, last) {};
     // pb_linear_combination_array(contents::const_reverse_iterator first, contents::const_reverse_iterator last)->Self contents(first, last) {};
 

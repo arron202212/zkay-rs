@@ -1,96 +1,97 @@
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef DIGEST_SELECTOR_GADGET_HPP_
-// #define DIGEST_SELECTOR_GADGET_HPP_
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
+use crate::gadgetlib1::gadgets::hashes::hash_io::digest_variable;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
+use ffec::common::utils::bit_vector;
+use rccell::RcCell;
 
-// 
-
-use crate::gadgetlib1::gadgets::basic_gadgets;
-use crate::gadgetlib1::gadgets::hashes::hash_io;
-
-
-
-
-pub struct digest_selector_gadget {//gadget<FieldT>
-
-digest_size:    usize,
-input:    digest_variable<FieldT>,
-is_right:    pb_linear_combination<FieldT>,
-left:    digest_variable<FieldT>,
-right:    digest_variable<FieldT>,
-
+#[derive(Clone, Default)]
+pub struct digest_selector_gadget<FieldT: FieldTConfig, PB: PBConfig> {
+    //gadget<FieldT>
+    pub digest_size: usize,
+    pub input: digest_variable<FieldT, PB>,
+    pub is_right: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+    pub left: digest_variable<FieldT, PB>,
+    pub right: digest_variable<FieldT, PB>,
 }
 
-
-
-// use crate::gadgetlib1::gadgets::hashes::digest_selector_gadget;
-
-//#endif // DIGEST_SELECTOR_GADGET_HPP_
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef DIGEST_SELECTOR_GADGET_TCC_
-// #define DIGEST_SELECTOR_GADGET_TCC_
-
-
-impl digest_selector_gadget<FieldT>{
-
-pub fn new(pb:RcCell<protoboard<FieldT>>,
-                                                       digest_size:usize,
-                                                       input:&digest_variable<FieldT>,
-                                                       is_right:&pb_linear_combination<FieldT>,
-                                                       left:&digest_variable<FieldT>,
-                                                       right:&digest_variable<FieldT>,
-                                                       annotation_prefix:&String)->Self
-
-{
-    // gadget<FieldT>(&pb, annotation_prefix),
-    Self{digest_size,input,is_right,left,right}
-}
-
-
-pub fn generate_r1cs_constraints()
-{
-    for i in 0..digest_size
-    {
-        /*
-          input = is_right * right + (1-is_right) * left
-          input - left = is_right(right - left)
-        */
-        self.pb.borrow_mut().add_r1cs_constraint(r1cs_constraint::<FieldT>(is_right, right.bits[i] - left.bits[i], input.bits[i] - left.bits[i]),
-                                   FMT(self.annotation_prefix, " propagate_{}", i));
+pub type digest_selector_gadgets<FieldT, PB> =
+    gadget<FieldT, PB, digest_selector_gadget<FieldT, PB>>;
+impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadget<FieldT, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        digest_size: usize,
+        input: digest_variable<FieldT, PB>,
+        is_right: linear_combination<FieldT, pb_variable, pb_linear_combination>,
+        left: digest_variable<FieldT, PB>,
+        right: digest_variable<FieldT, PB>,
+        annotation_prefix: String,
+    ) -> digest_selector_gadgets<FieldT, PB> {
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                digest_size,
+                input,
+                is_right,
+                left,
+                right,
+            },
+        )
     }
 }
 
-
-pub fn generate_r1cs_witness()
-{
-    is_right.evaluate(self.pb);
-
-    assert!(self.pb.borrow().lc_val(is_right) == FieldT::one() || self.pb.borrow().lc_val(is_right) == FieldT::zero());
-    if self.pb.borrow().lc_val(is_right) == FieldT::one()
-    {
-        for i in 0..digest_size
-        {
-            self.pb.borrow().val(&right.bits[i]) = self.pb.borrow().val(&input.bits[i]);
+impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadgets<FieldT, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        for i in 0..self.t.digest_size {
+            /*
+              input = is_right * right + (1-is_right) * left
+              input - left = is_right(right - left)
+            */
+            self.pb.borrow_mut().add_r1cs_constraint(
+                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                    self.t.is_right.clone().into(),
+                    (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        self.t.right.bits[i].clone(),
+                    ) - linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        self.t.left.bits[i].clone(),
+                    ))
+                    .into(),
+                    (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        self.t.input.bits[i].clone(),
+                    ) - linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        self.t.left.bits[i].clone(),
+                    ))
+                    .into(),
+                ),
+                prefix_format!(self.annotation_prefix, " propagate_{}", i),
+            );
         }
     }
-    else
-    {
-        for i in 0..digest_size
-        {
-            self.pb.borrow().val(&left.bits[i]) = self.pb.borrow().val(&input.bits[i]);
+
+    pub fn generate_r1cs_witness(&self) {
+        self.t.is_right.evaluate_pb(&self.pb);
+
+        assert!(
+            self.pb.borrow().lc_val(&self.t.is_right) == FieldT::one()
+                || self.pb.borrow().lc_val(&self.t.is_right) == FieldT::zero()
+        );
+        if self.pb.borrow().lc_val(&self.t.is_right) == FieldT::one() {
+            for i in 0..self.t.digest_size {
+                *self.pb.borrow_mut().val_ref(&self.t.right.bits[i]) =
+                    self.pb.borrow().val(&self.t.input.bits[i]);
+            }
+        } else {
+            for i in 0..self.t.digest_size {
+                *self.pb.borrow_mut().val_ref(&self.t.left.bits[i]) =
+                    self.pb.borrow().val(&self.t.input.bits[i]);
+            }
         }
     }
 }
-
-}
-
-//#endif // DIGEST_SELECTOR_GADGET_TCC_

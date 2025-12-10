@@ -1,23 +1,6 @@
-// /** @file
-//  *****************************************************************************
+
 //  Declaration of the low level objects needed for field arithmetization.
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
 
-// //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
-// // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
-
-// use  <cstddef>
-// use  <iostream>
-// use  <map>
-// use  <set>
-// use  <string>
-// use  <unordered_set>
-// use  <utility>
-// 
 
 use crate::gadgetlib2::infrastructure;
 use crate::gadgetlib2::pp;

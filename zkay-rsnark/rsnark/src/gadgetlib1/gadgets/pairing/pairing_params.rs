@@ -99,5 +99,3 @@ pub type e_over_e_miller_loop_gadget<ppT, P> =
 pub type e_times_e_over_e_miller_loop_gadget<ppT, P> =
     <P as pairing_selector<ppT>>::e_times_e_over_e_miller_loop_gadget_type;
 pub type final_exp_gadget<ppT, P> = <P as pairing_selector<ppT>>::final_exp_gadget_type;
-
-//#endif // PAIRING_PARAMS_HPP_

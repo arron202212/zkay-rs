@@ -1,18 +1,8 @@
-/** @file
- *****************************************************************************
 
- Declaration of interfaces for gadgets for Miller loops.
+//  Declaration of interfaces for gadgets for Miller loops.
 
- The gadgets verify computations of (single or multiple simultaneous) Miller loops.
+//  The gadgets verify computations of (single or multiple simultaneous) Miller loops.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef WEIERSTRASS_MILLER_LOOP_HPP_
-// #define WEIERSTRASS_MILLER_LOOP_HPP_
 
 
 

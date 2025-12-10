@@ -1,211 +1,305 @@
-/** @file
- *****************************************************************************
+// Declaration of interfaces for G2 gadgets.
 
- Declaration of interfaces for G2 gadgets.
-
- The gadgets verify curve arithmetic in G2 = E'(F) where E'/F^e: y^2 = x^3 + A' * X + B'
- is an elliptic curve over F^e in short Weierstrass form.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef WEIERSTRASS_G2_GADGET_HPP_
-// #define WEIERSTRASS_G2_GADGET_HPP_
-
-// 
-
+// The gadgets verify curve arithmetic in G2 = E'(F) where E'/F^e: y^2 = x^3 + A' * X + B'
+// is an elliptic curve over F^e in short Weierstrass form.
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
+use crate::gadgetlib1::pb_variable::{
+    ONE, pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
 use ff_curves::algebra::curves::public_params;
+use ffec::{One, Zero};
+use rccell::RcCell;
+use std::marker::PhantomData;
+use std::ops::Add;
 
-use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets::pairing::pairing_params;
+const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_a;
+const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_b;
+pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
+pub type G2<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
+pub type Fqe_variable<ppT, FieldT, PB> = <ppT as ppTConfig<FieldT, PB>>::Fpk_variableT;
+pub type Fqe_sqr_gadget<ppT, FieldT, PB> = <ppT as ppTConfig<FieldT, PB>>::Fpk_sqr_gadgetT;
+pub type Fqe_mul_gadget<ppT, FieldT, PB> = <ppT as ppTConfig<FieldT, PB>>::Fpk_mul_gadgetT;
 
-
+pub trait VariableTConfig<FieldT: FieldTConfig, PB: PBConfig, FpkT>:
+    Default + Clone + Add<i64, Output = Self>
+{
+    fn X(&self) -> FieldT;
+    fn Y(&self) -> FieldT;
+    fn all_vars(&self) -> pb_linear_combination_array<FieldT, PB>;
+    fn size_in_bits() -> usize;
+    fn num_variables() -> usize;
+    fn get_element(&self) -> FpkT;
+    fn evaluate(&self);
+    fn new(pb: RcCell<protoboard<FieldT, PB>>, annotation_prefix: String) -> Self;
+    fn new2(pb: RcCell<protoboard<FieldT, PB>>, f: FieldT, annotation_prefix: String) -> Self;
+    fn generate_r1cs_constraints(&self);
+    fn generate_r1cs_witness(&self, f: &FieldT);
+}
+pub trait MulTConfig<FieldT: FieldTConfig, PB: PBConfig, Fpk_variableT>: Default + Clone {
+    fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        v: Fpk_variableT,
+        v2: Fpk_variableT,
+        v3: Fpk_variableT,
+        annotation_prefix: String,
+    ) -> Self;
+    fn generate_r1cs_constraints(&self);
+    fn generate_r1cs_witness(&self);
+}
+pub trait SqrTConfig<FieldT: FieldTConfig, PB: PBConfig, Fpk_variableT>: Default + Clone {
+    fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        s: RcCell<Fpk_variableT>,
+        s2: Fpk_variableT,
+        annotation_prefix: String,
+    ) -> Self;
+    fn generate_r1cs_constraints(&self);
+    fn generate_r1cs_witness(&self);
+}
+pub trait ppTConfig<FieldT: FieldTConfig, PB: PBConfig>: Clone + Default + One + Zero {
+    type Fr: FieldTConfig;
+    type Fpk_variableT: VariableTConfig<FieldT, PB, Self>;
+    type Fpk_mul_gadgetT: MulTConfig<FieldT, PB, Self::Fpk_variableT>;
+    type Fpk_sqr_gadgetT: SqrTConfig<FieldT, PB, Self::Fpk_variableT>;
+    fn X(&self) -> FieldT;
+    fn Y(&self) -> FieldT;
+    fn to_affine_coordinates(&self);
+}
 
 /**
  * Gadget that represents a G2 variable.
  */
-
-pub struct G2_variable  {
-// : public gadget<ffec::Fr<ppT> >
-//     type FieldT=ffec::Fr<ppT>;
-//     type FqeT=ffec::Fqe<other_curve<ppT> >;
-//     type FqkT=ffec::Fqk<other_curve<ppT> >;
-
-X:    RcCell<Fqe_variable<ppT> >,
-Y:    RcCell<Fqe_variable<ppT> >,
-
-all_vars:    pb_linear_combination_array<FieldT>,
-
-
-
+#[derive(Clone, Default)]
+pub struct G2_variable<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> {
+    // : public gadget<ffec::Fr<ppT> >
+    //     type FieldT=ffec::Fr<ppT>;
+    //     type FqeT=ffec::Fqe<other_curve<ppT> >;
+    //     type FqkT=ffec::Fqk<other_curve<ppT> >;
+    X: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    Y: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    all_vars: pb_linear_combination_array<FieldT, PB>,
+    _t: PhantomData<(ppT, PB)>,
 }
 
 /**
  * Gadget that creates constraints for the validity of a G2 variable.
  */
-
-pub struct G2_checker_gadget{
-//  : public gadget<ffec::Fr<ppT> > 
-//     type FieldT=ffec::Fr<ppT>;
-//     type FqeT=ffec::Fqe<other_curve<ppT> >;
-//     type FqkT=ffec::Fqk<other_curve<ppT> >;
-
-Q:    G2_variable<ppT>,
-
-Xsquared:    RcCell<Fqe_variable<ppT> >,
-Ysquared:    RcCell<Fqe_variable<ppT> >,
-Xsquared_plus_a:    RcCell<Fqe_variable<ppT> >,
-Ysquared_minus_b:    RcCell<Fqe_variable<ppT> >,
-
-compute_Xsquared:    RcCell<Fqe_sqr_gadget<ppT> >,
-compute_Ysquared:    RcCell<Fqe_sqr_gadget<ppT> >,
-curve_equation:    RcCell<Fqe_mul_gadget<ppT> >,
-
-
+#[derive(Clone, Default)]
+pub struct G2_checker_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> {
+    //  : public gadget<ffec::Fr<ppT> >
+    //     type FieldT=ffec::Fr<ppT>;
+    //     type FqeT=ffec::Fqe<other_curve<ppT> >;
+    //     type FqkT=ffec::Fqk<other_curve<ppT> >;
+    Q: G2_variables<ppT, FieldT, PB>,
+    Xsquared: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    Ysquared: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    Xsquared_plus_a: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    Ysquared_minus_b: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    compute_Xsquared: RcCell<Fqe_sqr_gadget<ppT, FieldT, PB>>,
+    compute_Ysquared: RcCell<Fqe_sqr_gadget<ppT, FieldT, PB>>,
+    curve_equation: RcCell<Fqe_mul_gadget<ppT, FieldT, PB>>,
 }
 
+use ffec::algebra::scalar_multiplication::wnaf;
 
+pub type G2_variables<ppT, FieldT, PB> = gadget<FieldT, PB, G2_variable<ppT, FieldT, PB>>;
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G2_variable<ppT, FieldT, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        annotation_prefix: String,
+    ) -> G2_variables<ppT, FieldT, PB> {
+        let X = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            prefix_format!(annotation_prefix, " X"),
+        ));
+        let Y = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            prefix_format!(annotation_prefix, " Y"),
+        ));
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(
+            X.borrow()
+                .all_vars()
+                .iter()
+                .chain(Y.borrow().all_vars().iter())
+                .cloned()
+                .collect(),
+        );
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                X,
+                Y,
+                all_vars,
+                _t: PhantomData,
+            },
+        )
+    }
 
-// use crate::gadgetlib1::gadgets::curves::weierstrass_g2_gadget;
+    pub fn new2(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        Q: G2<ppT>,
+        annotation_prefix: String,
+    ) -> G2_variables<ppT, FieldT, PB> {
+        let Q_copy = Q.clone();
+        Q_copy.to_affine_coordinates();
 
-//#endif // WEIERSTRASS_G2_GADGET_HPP_
-/** @file
- *****************************************************************************
+        let X = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::new2(
+            pb.clone(),
+            Q_copy.X(),
+            prefix_format!(annotation_prefix, " X"),
+        ));
+        let Y = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::new2(
+            pb.clone(),
+            Q_copy.Y(),
+            prefix_format!(annotation_prefix, " Y"),
+        ));
 
- Implementation of interfaces for G2 gadgets.
-
- See weierstrass_g2_gadgets.hpp .
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef WEIERSTRASS_G2_GADGET_TCC_
-// #define WEIERSTRASS_G2_GADGET_TCC_
-
- use ffec::algebra::scalar_multiplication::wnaf;
-
-impl G2_variable<ppT>{
-
-
-pub fn new(pb:&RcCell<protoboard<FieldT>>,
-                              annotation_prefix:&String)->Self
-    
-{
-    X=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " X")));
-    Y=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Y")));
-
-    all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
-    all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
-    // gadget<FieldT>(&pb, annotation_prefix)
+        let all_vars = pb_linear_combination_array::<FieldT, PB>::new(
+            X.borrow()
+                .all_vars()
+                .iter()
+                .chain(Y.borrow().all_vars().iter())
+                .cloned()
+                .collect(),
+        );
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                X,
+                Y,
+                all_vars,
+                _t: PhantomData,
+            },
+        )
+    }
 }
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G2_variables<ppT, FieldT, PB> {
+    pub fn generate_r1cs_witness(&self, Q: &ppT) {
+        let mut Qcopy = Q.clone();
+        Qcopy.to_affine_coordinates();
 
+        self.t.X.borrow().generate_r1cs_witness(&Qcopy.X());
+        self.t.Y.borrow().generate_r1cs_witness(&Qcopy.Y());
+    }
 
-pub fn new2(pb:&RcCell<protoboard<FieldT>>,
-                              Q:&ffec::G2<other_curve<ppT> >,
-                              annotation_prefix:&String)->Self
-    
-{
-    let  Q_copy = Q.clone();
-    Q_copy.to_affine_coordinates();
+    pub fn size_in_bits(&self) -> usize {
+        return 2 * Fqe_variable::<ppT, FieldT, PB>::size_in_bits();
+    }
 
-    X=RcCell::new(Fqe_variable::<ppT>::new(pb, Q_copy.X(), FMT(annotation_prefix, " X")));
-    Y=RcCell::new(Fqe_variable::<ppT>::new(pb, Q_copy.Y(), FMT(annotation_prefix, " Y")));
-
-    all_vars.insert(all_vars.end(), X.all_vars.begin(), X.all_vars.end());
-    all_vars.insert(all_vars.end(), Y.all_vars.begin(), Y.all_vars.end());
-    // gadget<FieldT>(&pb, annotation_prefix)
-}
-
-
-pub fn generate_r1cs_witness(Q:&ffec::G2<other_curve<ppT> >)
-{
-    let mut  Qcopy = Q.clone();
-    Qcopy.to_affine_coordinates();
-
-    X.generate_r1cs_witness(Qcopy.X());
-    Y.generate_r1cs_witness(Qcopy.Y());
-}
-
-
-pub fn size_in_bits()->usize
-{
-    return 2 * Fqe_variable::<ppT>::size_in_bits();
-}
-
-
-pub fn num_variables(&self)->usize
-{
-    return 2 * Fqe_variable::<ppT>::num_variables();
-}
-}
-impl G2_checker_gadget<ppT>{
-
-pub fn new(pb:&RcCell<protoboard<FieldT>>,
-                                          Q:&G2_variable<ppT>,
-                                          annotation_prefix:&String)->Self
-  
-{
-    Xsquared=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Xsquared")));
-    Ysquared=RcCell::new(Fqe_variable::<ppT>::new(pb, FMT(annotation_prefix, " Ysquared")));
-
-    compute_Xsquared=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.X), *Xsquared, FMT(annotation_prefix, " compute_Xsquared")));
-    compute_Ysquared=RcCell::new(Fqe_sqr_gadget::<ppT>::new(pb, *(Q.Y), *Ysquared, FMT(annotation_prefix, " compute_Ysquared")));
-
-    Xsquared_plus_a=RcCell::new(Fqe_variable::<ppT>::new((*Xsquared) + ffec::G2::<other_curve::<ppT> >::coeff_a));
-    Ysquared_minus_b=RcCell::new(Fqe_variable::<ppT>::new((*Ysquared) + (-ffec::G2::<other_curve::<ppT> >::coeff_b)));
-
-    curve_equation=RcCell::new(Fqe_mul_gadget::<ppT>::new(pb, *(Q.X), *Xsquared_plus_a, *Ysquared_minus_b, FMT(annotation_prefix, " curve_equation")));
-    Self{
-    //   gadget<FieldT>(&pb, annotation_prefix),
-    Q
+    pub fn num_variables(&self) -> usize {
+        return 2 * Fqe_variable::<ppT, FieldT, PB>::num_variables();
     }
 }
 
-
-pub fn generate_r1cs_constraints()
+pub type G2_checker_gadgets<ppT, FieldT, PB> =
+    gadget<FieldT, PB, G2_checker_gadget<ppT, FieldT, PB>>;
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+    G2_checker_gadget<ppT, FieldT, PB>
 {
-    compute_Xsquared.generate_r1cs_constraints();
-    compute_Ysquared.generate_r1cs_constraints();
-    curve_equation.generate_r1cs_constraints();
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        Q: G2_variables<ppT, FieldT, PB>,
+        annotation_prefix: String,
+    ) -> G2_checker_gadgets<ppT, FieldT, PB> {
+        let Xsquared = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            prefix_format!(annotation_prefix, " Xsquared"),
+        ));
+        let Ysquared = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            prefix_format!(annotation_prefix, " Ysquared"),
+        ));
+
+        let compute_Xsquared = RcCell::new(Fqe_sqr_gadget::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            Q.t.X.clone(),
+            Xsquared.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_Xsquared"),
+        ));
+        let compute_Ysquared = RcCell::new(Fqe_sqr_gadget::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            Q.t.Y.clone(),
+            Ysquared.borrow().clone(),
+            prefix_format!(annotation_prefix, " compute_Ysquared"),
+        ));
+
+        let Xsquared_plus_a = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::from(
+            Xsquared.borrow().clone() + coeff_a,
+        ));
+        let Ysquared_minus_b = RcCell::new(Fqe_variable::<ppT, FieldT, PB>::from(
+            Ysquared.borrow().clone() + (-coeff_b),
+        ));
+
+        let curve_equation = RcCell::new(Fqe_mul_gadget::<ppT, FieldT, PB>::new(
+            pb.clone(),
+            Q.t.X.borrow().clone(),
+            Xsquared_plus_a.borrow().clone(),
+            Ysquared_minus_b.borrow().clone(),
+            prefix_format!(annotation_prefix, " curve_equation"),
+        ));
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                Q,
+                Xsquared,
+                Ysquared,
+                Xsquared_plus_a,
+                Ysquared_minus_b,
+                compute_Xsquared,
+                compute_Ysquared,
+                curve_equation,
+            },
+        )
+    }
+}
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+    G2_checker_gadgets<ppT, FieldT, PB>
+{
+    pub fn generate_r1cs_constraints(&self) {
+        self.t.compute_Xsquared.borrow().generate_r1cs_constraints();
+        self.t.compute_Ysquared.borrow().generate_r1cs_constraints();
+        self.t.curve_equation.borrow().generate_r1cs_constraints();
+    }
+
+    pub fn generate_r1cs_witness(&self) {
+        self.t.compute_Xsquared.borrow().generate_r1cs_witness();
+        self.t.compute_Ysquared.borrow().generate_r1cs_witness();
+        self.t.Xsquared_plus_a.borrow().evaluate();
+        self.t.curve_equation.borrow().generate_r1cs_witness();
+    }
 }
 
-
-pub fn generate_r1cs_witness()
-{
-    compute_Xsquared.generate_r1cs_witness();
-    compute_Ysquared.generate_r1cs_witness();
-    Xsquared_plus_a.evaluate();
-    curve_equation.generate_r1cs_witness();
-}
-}
-
-
-pub fn  test_G2_checker_gadget(annotation:&String)
-{
-    let mut  pb=protoboard::<ppT::Fr >::new();
-    let mut  g=G2_variable::<ppT>::new(pb, "g");
-    let mut g_check= G2_checker_gadget::<ppT>::new(pb, g, "g_check");
+pub fn test_G2_checker_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>(
+    annotation: String,
+) {
+    let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
+    let mut g = G2_variable::<ppT, FieldT, PB>::new(pb.clone(), "g".to_owned());
+    let mut g_check =
+        G2_checker_gadget::<ppT, FieldT, PB>::new(pb.clone(), g.clone(), "g_check".to_owned());
     g_check.generate_r1cs_constraints();
 
     print!("positive test\n");
-    g.generate_r1cs_witness(ffec::G2::<other_curve::<ppT> >::one());
+    g.generate_r1cs_witness(&ppT::one());
     g_check.generate_r1cs_witness();
-    assert!(pb.is_satisfied());
+    assert!(pb.borrow().is_satisfied());
 
     print!("negative test\n");
-    g.generate_r1cs_witness(ffec::G2::<other_curve::<ppT> >::zero());
+    g.generate_r1cs_witness(&ppT::zero());
     g_check.generate_r1cs_witness();
-    assert!(!pb.is_satisfied());
+    assert!(!pb.borrow().is_satisfied());
 
-    print!("number of constraints for G2 checker (Fr is {})  = {}\n", annotation, pb.num_constraints());
+    print!(
+        "number of constraints for G2 checker (Fr is {})  = {}\n",
+        annotation,
+        pb.borrow().num_constraints()
+    );
 }
-
-
-
-//#endif // WEIERSTRASS_G2_GADGET_TCC_
