@@ -99,7 +99,8 @@ pub trait HashTConfig: Default + Clone {
         s: String,
     ) -> Self;
     fn get_digest_len() -> usize;
-    fn get_hash(input: bit_vector) -> bit_vector;
+    fn get_block_len() -> usize;
+    fn get_hash(input: &bit_vector) -> bit_vector;
     fn generate_r1cs_constraints(&self, b: bool);
     fn generate_r1cs_witness(&self);
     fn expected_constraints(b: bool) -> usize;
@@ -117,7 +118,7 @@ pub fn two_to_one_CRH<HashT: HashTConfig>(
     assert!(l.len() == digest_size);
     assert!(r.len() == digest_size);
 
-    return HashT::get_hash(new_input);
+    return HashT::get_hash(&new_input);
 }
 
 impl<HashT: HashTConfig> merkle_tree<HashT> {

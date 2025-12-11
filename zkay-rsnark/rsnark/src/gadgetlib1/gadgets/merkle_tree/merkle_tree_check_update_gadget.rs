@@ -397,8 +397,8 @@ pub fn test_merkle_tree_check_update_gadget<
             store_block.extend(other.clone());
         }
 
-        let mut load_h = HashT::get_hash(load_block);
-        let mut store_h = HashT::get_hash(store_block);
+        let mut load_h = HashT::get_hash(&load_block);
+        let mut store_h = HashT::get_hash(&store_block);
 
         prev_path[level] = other;
 

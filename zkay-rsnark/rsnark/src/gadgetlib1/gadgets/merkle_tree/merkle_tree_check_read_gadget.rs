@@ -277,7 +277,7 @@ pub fn test_merkle_tree_check_read_gadget<
             block.extend(other.clone());
         }
 
-        let mut h = HashT::get_hash(block);
+        let mut h = HashT::get_hash(&block);
 
         path[level] = other;
 
