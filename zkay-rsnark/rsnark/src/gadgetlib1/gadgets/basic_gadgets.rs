@@ -508,7 +508,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, packing_gadget<Field
             self.t.bits.get_field_element_from_bits(&self.pb);
     }
 }
-
+pub type multipacking_gadgets<FieldT, PB> = gadget<FieldT, PB, multipacking_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> multipacking_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,

@@ -1,1 +1,1 @@
-pub mod   profile_routing_gadgets;
+pub mod profile_routing_gadgets;

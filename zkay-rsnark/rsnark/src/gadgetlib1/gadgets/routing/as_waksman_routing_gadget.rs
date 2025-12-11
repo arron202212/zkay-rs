@@ -1,29 +1,29 @@
-/** @file
- *****************************************************************************
+//  Declaration of interfaces for the AS-Waksman routing gadget.
 
- Declaration of interfaces for the AS-Waksman routing gadget.
-
- The gadget verifies that the outputs are a permutation of the inputs,
- by use of an AS-Waksman network.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef AS_WAKSMAN_ROUTING_GADGET_HPP_
-// #define AS_WAKSMAN_ROUTING_GADGET_HPP_
-
-use crate::common::data_structures::integer_permutation;
-use crate::common::routing_algorithms::as_waksman_routing_algorithm;
-use crate::gadgetlib1::gadgets::basic_gadgets;
-use crate::gadgetlib1::protoboard;
-
-
-
-
-pub struct as_waksman_routing_gadget<FieldT> {//gadget<FieldT>
+//  The gadget verifies that the outputs are a permutation of the inputs,
+//  by use of an AS-Waksman network.
+use crate::common::data_structures::integer_permutation::integer_permutation;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm::{
+    as_waksman_num_columns, as_waksman_topology, generate_as_waksman_topology,
+    get_as_waksman_routing,
+};
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets::{
+    generate_boolean_r1cs_constraint, multipacking_gadget, multipacking_gadgets,
+};
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
+use ffec::common::profiling::print_time;
+use ffec::common::utils::div_ceil;
+use rccell::RcCell;
+use std::collections::BTreeMap;
+#[derive(Clone, Default)]
+pub struct as_waksman_routing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
+    //gadget<FieldT>
 
     /*
       Indexing conventions:
@@ -41,9 +41,9 @@ pub struct as_waksman_routing_gadget<FieldT> {//gadget<FieldT>
       allocated variables.
 
     */
-routed_packets:    Vec<Vec<pb_variable_array<FieldT> > >,
-unpack_outputs:    Vec<multipacking_gadget<FieldT> >, 
-    pack_inputs:    Vec<multipacking_gadget<FieldT> >,
+    routed_packets: Vec<Vec<pb_variable_array<FieldT, PB>>>,
+    unpack_outputs: Vec<multipacking_gadgets<FieldT, PB>>,
+    pack_inputs: Vec<multipacking_gadgets<FieldT, PB>>,
 
     /*
       If #packets = 1 then we can route without explicit switch bits
@@ -54,320 +54,437 @@ unpack_outputs:    Vec<multipacking_gadget<FieldT> >,
       connection), and 1 corresponds to switch on (crossed
       connection).
     */
-asw_switch_bits:    Vec<BTreeMap<usize, pb_variable<FieldT> > >,
-neighbors:    as_waksman_topology,
+    asw_switch_bits: Vec<BTreeMap<usize, variable<FieldT, pb_variable>>>,
+    neighbors: as_waksman_topology,
 
-    num_packets:usize,
-    num_columns:usize,
-    routing_input_bits:Vec<pb_variable_array<FieldT>>,
-    routing_output_bits:Vec<pb_variable_array<FieldT>>,
+    num_packets: usize,
+    num_columns: usize,
+    routing_input_bits: Vec<pb_variable_array<FieldT, PB>>,
+    routing_output_bits: Vec<pb_variable_array<FieldT, PB>>,
 
-    packet_size:usize, 
-    num_subpackets:usize,
-
-  
+    packet_size: usize,
+    num_subpackets: usize,
 }
 
+pub type as_waksman_routing_gadgets<FieldT, PB> =
+    gadget<FieldT, PB, as_waksman_routing_gadget<FieldT, PB>>;
 
+impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        num_packets: usize,
+        routing_input_bits: Vec<pb_variable_array<FieldT, PB>>,
+        routing_output_bits: Vec<pb_variable_array<FieldT, PB>>,
+        annotation_prefix: String,
+    ) -> as_waksman_routing_gadgets<FieldT, PB> {
+        let packet_size = routing_input_bits[0].len();
+        let num_subpackets = div_ceil(packet_size, FieldT::capacity()).unwrap();
+        let num_columns = as_waksman_num_columns(num_packets);
+        let mut neighbors = generate_as_waksman_topology(num_packets);
+        let mut routed_packets = vec![vec![]; num_columns + 1];
 
-// use crate::gadgetlib1::gadgets::routing::as_waksman_routing_gadget;
-
-//#endif // AS_WAKSMAN_ROUTING_GADGET_HPP_
-/** @file
- *****************************************************************************
-
- Implementation of interfaces for the AS-Waksman routing gadget.
-
- See as_waksman_routing_gadget.hpp .
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef AS_WAKSMAN_ROUTING_GADGET_TCC_
-// #define AS_WAKSMAN_ROUTING_GADGET_TCC_
-
-// use  <algorithm>
-
-use ffec::common::profiling;
-
-// use crate::common::routing_algorithms::as_waksman_routing_algorithm;
-
-
-impl as_waksman_routing_gadget<FieldT>{
-
-pub fn new(pb:RcCell<protoboard<FieldT>>,
-                                                             num_packets:usize,
-                                                             routing_input_bits:&Vec<pb_variable_array<FieldT> >,
-                                                             routing_output_bits:&Vec<pb_variable_array<FieldT> >,
-                                                             annotation_prefix:&String)->Self
-    
-{
-    neighbors = generate_as_waksman_topology(num_packets);
-    routed_packets.resize(num_columns+1);
-
-    /* Two pass allocation. First allocate LHS packets, then for every
-       switch either copy over the variables from previously allocated
-       to allocate target packets */
-    routed_packets[0].resize(num_packets);
-    for packet_idx in 0..num_packets
-    {
-        routed_packets[0][packet_idx].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_0_{}", packet_idx));
-    }
-
-    for column_idx in 0..num_columns
-    {
-        routed_packets[column_idx+1].resize(num_packets);
-
-        for row_idx in 0..num_packets
-        {
-            if neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second
-            {
-                /* This is a straight edge, so just copy over the previously allocated subpackets */
-                routed_packets[column_idx+1][neighbors[column_idx][row_idx].first] = routed_packets[column_idx][row_idx];
-            }
-            else
-            {
-                let straight_edge = neighbors[column_idx][row_idx].first;
-                let cross_edge = neighbors[column_idx][row_idx].second;
-                routed_packets[column_idx+1][straight_edge].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx+1, straight_edge));
-                routed_packets[column_idx+1][cross_edge].allocate(&pb, num_subpackets, FMT(annotation_prefix, " routed_packets_{}_{}", column_idx+1, cross_edge));
-                row_idx+=1; /* skip the next idx, as it to refers to the same packets */
-            }
+        /* Two pass allocation. First allocate LHS packets, then for every
+        switch either copy over the variables from previously allocated
+        to allocate target packets */
+        routed_packets[0] = vec![pb_variable_array::<FieldT, PB>::default(); num_packets];
+        for packet_idx in 0..num_packets {
+            routed_packets[0][packet_idx].allocate(
+                &pb,
+                num_subpackets,
+                &prefix_format!(annotation_prefix, " routed_packets_0_{}", packet_idx),
+            );
         }
-    }
 
-    /* create packing/unpacking gadgets */
-    pack_inputs.reserve(num_packets); unpack_outputs.reserve(num_packets);
-    for packet_idx in 0..num_packets
-    {
-        pack_inputs.push(
-            multipacking_gadget::<FieldT>(&pb,
-                                        pb_variable_array::<FieldT>(routing_input_bits[packet_idx].begin(), routing_input_bits[packet_idx].end()),
-                                        routed_packets[0][packet_idx],
-                                        FieldT::capacity(),
-                                      FMT(self.annotation_prefix, " pack_inputs_{}", packet_idx)));
-        unpack_outputs.push(
-            multipacking_gadget::<FieldT>(&pb,
-                                        pb_variable_array::<FieldT>(routing_output_bits[packet_idx].begin(), routing_output_bits[packet_idx].end()),
-                                        routed_packets[num_columns][packet_idx],
-                                        FieldT::capacity(),
-                                      FMT(self.annotation_prefix, " unpack_outputs_{}", packet_idx)));
-    }
+        for column_idx in 0..num_columns {
+            routed_packets[column_idx + 1] =
+                vec![pb_variable_array::<FieldT, PB>::default(); num_packets];
 
-    /* allocate switch bits */
-    if num_subpackets > 1
-    {
-        asw_switch_bits.resize(num_columns);
-
-        for column_idx in 0..num_columns
-        {
-            for row_idx in 0..num_packets
-            {
-                if neighbors[column_idx][row_idx].first != neighbors[column_idx][row_idx].second
-                {
-                    asw_switch_bits[column_idx][row_idx].allocate(&pb, FMT(annotation_prefix, " asw_switch_bits_{}_{}", column_idx, row_idx));
-                    row_idx+=1; /* next row_idx corresponds to the same switch, so skip it */
+            for row_idx in 0..num_packets {
+                if neighbors[column_idx][row_idx].0 == neighbors[column_idx][row_idx].1 {
+                    /* This is a straight edge, so just copy over the previously allocated subpackets */
+                    routed_packets[column_idx + 1][neighbors[column_idx][row_idx].0] =
+                        routed_packets[column_idx][row_idx].clone();
+                } else {
+                    let straight_edge = neighbors[column_idx][row_idx].0;
+                    let cross_edge = neighbors[column_idx][row_idx].1;
+                    routed_packets[column_idx + 1][straight_edge].allocate(
+                        &pb,
+                        num_subpackets,
+                        &prefix_format!(
+                            annotation_prefix,
+                            " routed_packets_{}_{}",
+                            column_idx + 1,
+                            straight_edge,
+                        ),
+                    );
+                    routed_packets[column_idx + 1][cross_edge].allocate(
+                        &pb,
+                        num_subpackets,
+                        &prefix_format!(
+                            annotation_prefix,
+                            " routed_packets_{}_{}",
+                            column_idx + 1,
+                            cross_edge,
+                        ),
+                    );
+                    // row_idx += 1; /* skip the next idx, as it to refers to the same packets */
                 }
             }
         }
-    }
-    // gadget<FieldT>(&pb, annotation_prefix),
-   Self{num_packets,
-    num_columns:as_waksman_num_columns(num_packets),
-   routing_input_bits,
-   routing_output_bits,
-    packet_size:routing_input_bits[0].len(),
-    num_subpackets:ffec::div_ceil(packet_size, FieldT::capacity())
-    }
-}
 
+        /* create packing/unpacking gadgets */
+        let mut pack_inputs = Vec::with_capacity(num_packets);
+        let mut unpack_outputs = Vec::with_capacity(num_packets);
+        for packet_idx in 0..num_packets {
+            pack_inputs.push(multipacking_gadget::<FieldT, PB>::new(
+                pb.clone(),
+                pb_variable_array::<FieldT, PB>::new(
+                    routing_input_bits[packet_idx].contents.clone(),
+                )
+                .into(),
+                routed_packets[0][packet_idx].clone().into(),
+                FieldT::capacity(),
+                prefix_format!(annotation_prefix, " pack_inputs_{}", packet_idx),
+            ));
+            unpack_outputs.push(multipacking_gadget::<FieldT, PB>::new(
+                pb.clone(),
+                pb_variable_array::<FieldT, PB>::new(
+                    routing_output_bits[packet_idx].contents.clone(),
+                )
+                .into(),
+                routed_packets[num_columns][packet_idx].clone().into(),
+                FieldT::capacity(),
+                prefix_format!(annotation_prefix, " unpack_outputs_{}", packet_idx),
+            ));
+        }
+        let mut asw_switch_bits: Vec<BTreeMap<_, _>> = vec![];
+        /* allocate switch bits */
+        if num_subpackets > 1 {
+            asw_switch_bits.resize(
+                num_columns,
+                BTreeMap::<usize, variable<FieldT, pb_variable>>::default(),
+            );
 
-pub fn generate_r1cs_constraints()
-{
-    /* packing/unpacking */
-    for packet_idx in 0..num_packets
-    {
-        pack_inputs[packet_idx].generate_r1cs_constraints(false);
-        unpack_outputs[packet_idx].generate_r1cs_constraints(true);
-    }
-
-    /* actual routing constraints */
-    for column_idx in 0..num_columns
-    {
-        for row_idx in 0..num_packets
-        {
-            if neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second
-            {
-                /* if there is no switch at this position, then just continue with next row_idx */
-                continue;
-            }
-
-            if num_subpackets == 1
-            {
-                /* easy case: require that
-                   (cur-straight_edge)*(cur-cross_edge) = 0 for both
-                   switch inputs */
-                for switch_input in row_idx..=row_idx+1 
-                {
-                    let straight_edge = neighbors[column_idx][switch_input].first;
-                    let cross_edge = neighbors[column_idx][switch_input].second;
-
-                    self.pb.borrow_mut().add_r1cs_constraint(
-                        r1cs_constraint::<FieldT>(routed_packets[column_idx][switch_input][0] - routed_packets[column_idx+1][straight_edge][0],
-                                                routed_packets[column_idx][switch_input][0] - routed_packets[column_idx+1][cross_edge][0],
-                                                0),
-                      FMT(self.annotation_prefix, " easy_route_{}_{}", column_idx, switch_input));
-                }
-            }
-            else
-            {
-                /* require switching bit to be boolean */
-                generate_boolean_r1cs_constraint::<FieldT>(self.pb, asw_switch_bits[column_idx][row_idx],
-                                                       FMT(self.annotation_prefix, " asw_switch_bits_{}_{}", column_idx, row_idx));
-
-                /* route forward according to the switch bit */
-                for subpacket_idx in 0..num_subpackets
-                {
-                    /*
-                      (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
-                      switch_bit * (cross_edge-straight_edge) = cur-straight_edge
-                     */
-                    for switch_input in & [row_idx, row_idx+1 ]
-                    {
-                        let straight_edge = neighbors[column_idx][switch_input].first;
-                        let cross_edge = neighbors[column_idx][switch_input].second;
-
-                        self.pb.borrow_mut().add_r1cs_constraint(
-                            r1cs_constraint::<FieldT>(
-                                asw_switch_bits[column_idx][row_idx],
-                                routed_packets[column_idx+1][cross_edge][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx],
-                                routed_packets[column_idx][switch_input][subpacket_idx] - routed_packets[column_idx+1][straight_edge][subpacket_idx]),
-                          FMT(self.annotation_prefix, " route_forward_{}_{}_{}", column_idx, switch_input, subpacket_idx));
+            for column_idx in 0..num_columns {
+                for row_idx in 0..num_packets {
+                    if neighbors[column_idx][row_idx].0 != neighbors[column_idx][row_idx].1 {
+                        asw_switch_bits[column_idx]
+                            .get_mut(&row_idx)
+                            .unwrap()
+                            .allocate(
+                                &pb,
+                                prefix_format!(
+                                    annotation_prefix,
+                                    " asw_switch_bits_{}_{}",
+                                    column_idx,
+                                    row_idx,
+                                ),
+                            );
+                        // row_idx += 1; /* next row_idx corresponds to the same switch, so skip it */
                     }
                 }
             }
-
-            /* we processed both switch inputs at once, so skip the next iteration */
-            row_idx+=1;
         }
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                routed_packets,
+                unpack_outputs,
+                pack_inputs,
+                asw_switch_bits,
+                neighbors,
+                num_packets,
+                num_columns,
+                routing_input_bits,
+                routing_output_bits,
+                packet_size,
+                num_subpackets,
+            },
+        )
     }
 }
+impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> {
+    pub fn generate_r1cs_constraints(&self) {
+        /* packing/unpacking */
+        for packet_idx in 0..self.t.num_packets {
+            self.t.pack_inputs[packet_idx].generate_r1cs_constraints(false);
+            self.t.unpack_outputs[packet_idx].generate_r1cs_constraints(true);
+        }
 
-
-pub fn generate_r1cs_witness(permutation:&integer_permutation)
-{
-    /* pack inputs */
-    for packet_idx in 0..num_packets
-    {
-        pack_inputs[packet_idx].generate_r1cs_witness_from_bits();
-    }
-
-    /* do the routing */
-    let  routing = get_as_waksman_routing(permutation);
-
-    for column_idx in 0..num_columns
-    {
-        for row_idx in 0..num_packets
-        {
-            if neighbors[column_idx][row_idx].first == neighbors[column_idx][row_idx].second
-            {
-                /* this is a straight edge, so just pass the values forward */
-                let next = neighbors[column_idx][row_idx].first;
-
-                for subpacket_idx in 0..num_subpackets
+        /* actual routing constraints */
+        for column_idx in 0..self.t.num_columns {
+            for row_idx in 0..self.t.num_packets {
+                if self.t.neighbors[column_idx][row_idx].0
+                    == self.t.neighbors[column_idx][row_idx].1
                 {
-                    self.pb.borrow().val(&routed_packets[column_idx+1][next][subpacket_idx]) = self.pb.borrow().val(&routed_packets[column_idx][row_idx][subpacket_idx]);
-                }
-            }
-            else
-            {
-                if num_subpackets > 1
-                {
-                    /* update the switch bit */
-                    self.pb.borrow().val(&asw_switch_bits[column_idx][row_idx]) = FieldT(if routing[column_idx][row_idx]  {1 }else {0});
+                    /* if there is no switch at this position, then just continue with next row_idx */
+                    continue;
                 }
 
-                /* route according to the switch bit */
-                let mut switch_val = routing[column_idx][row_idx];
+                if self.t.num_subpackets == 1 {
+                    /* easy case: require that
+                    (cur-straight_edge)*(cur-cross_edge) = 0 for both
+                    switch inputs */
+                    for switch_input in row_idx..=row_idx + 1 {
+                        let straight_edge = self.t.neighbors[column_idx][switch_input].0.clone();
+                        let cross_edge = self.t.neighbors[column_idx][switch_input].1.clone();
 
-                for switch_input in & [row_idx, row_idx+1 ]
-                {
-                    let straight_edge = neighbors[column_idx][switch_input].first;
-                    let cross_edge = neighbors[column_idx][switch_input].second;
+                        self.pb.borrow_mut().add_r1cs_constraint(
+                            r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                                (self.t.routed_packets[column_idx][switch_input][0].clone()
+                                    - linear_combination::<
+                                        FieldT,
+                                        pb_variable,
+                                        pb_linear_combination,
+                                    >::from(
+                                        self.t.routed_packets[column_idx + 1][straight_edge][0]
+                                            .clone(),
+                                    ))
+                                .into(),
+                                (self.t.routed_packets[column_idx][switch_input][0].clone()
+                                    - linear_combination::<
+                                        FieldT,
+                                        pb_variable,
+                                        pb_linear_combination,
+                                    >::from(
+                                        self.t.routed_packets[column_idx + 1][cross_edge][0]
+                                            .clone(),
+                                    ))
+                                .into(),
+                                0.into(),
+                            ),
+                            prefix_format!(
+                                self.annotation_prefix,
+                                " easy_route_{}_{}",
+                                column_idx,
+                                switch_input,
+                            ),
+                        );
+                    }
+                } else {
+                    /* require switching bit to be boolean */
+                    generate_boolean_r1cs_constraint::<FieldT, PB>(
+                        &self.pb,
+                        &(self.t.asw_switch_bits[column_idx][&row_idx].clone().into()),
+                        prefix_format!(
+                            self.annotation_prefix,
+                            " asw_switch_bits_{}_{}",
+                            column_idx,
+                            row_idx,
+                        ),
+                    );
 
-                    let switched_edge = if switch_val {cross_edge} else{straight_edge};
+                    /* route forward according to the switch bit */
+                    for subpacket_idx in 0..self.t.num_subpackets {
+                        /*
+                         (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
+                         switch_bit * (cross_edge-straight_edge) = cur-straight_edge
+                        */
+                        for &switch_input in &[row_idx, row_idx + 1] {
+                            let (straight_edge, cross_edge) =
+                                self.t.neighbors[column_idx][switch_input];
 
-                    for subpacket_idx in 0..num_subpackets
-                    {
-                        self.pb.borrow().val(&routed_packets[column_idx+1][switched_edge][subpacket_idx]) = self.pb.borrow().val(&routed_packets[column_idx][switch_input][subpacket_idx]);
+                            self.pb.borrow_mut().add_r1cs_constraint(
+                                r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
+                                    self.t.asw_switch_bits[column_idx][&row_idx].clone().into(),
+                                    (self.t.routed_packets[column_idx + 1][cross_edge]
+                                        [subpacket_idx]
+                                        .clone()
+                                        - linear_combination::<
+                                            FieldT,
+                                            pb_variable,
+                                            pb_linear_combination,
+                                        >::from(
+                                            self.t.routed_packets[column_idx + 1][straight_edge]
+                                                [subpacket_idx]
+                                                .clone(),
+                                        ))
+                                    .into(),
+                                    (self.t.routed_packets[column_idx][switch_input]
+                                        [subpacket_idx]
+                                        .clone()
+                                        - linear_combination::<
+                                            FieldT,
+                                            pb_variable,
+                                            pb_linear_combination,
+                                        >::from(
+                                            self.t.routed_packets[column_idx + 1][straight_edge]
+                                                [subpacket_idx]
+                                                .clone(),
+                                        ))
+                                    .into(),
+                                ),
+                                prefix_format!(
+                                    self.annotation_prefix,
+                                    " route_forward_{}_{}_{}",
+                                    column_idx,
+                                    switch_input,
+                                    subpacket_idx,
+                                ),
+                            );
+                        }
                     }
                 }
 
                 /* we processed both switch inputs at once, so skip the next iteration */
-                row_idx+=1;
+                // row_idx += 1;
             }
         }
     }
 
-    /* unpack outputs */
-    for packet_idx in 0..num_packets
+    pub fn generate_r1cs_witness(&self, permutation: &integer_permutation)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
     {
-        unpack_outputs[packet_idx].generate_r1cs_witness_from_packed();
-    }
-}
+        /* pack inputs */
+        for packet_idx in 0..self.t.num_packets {
+            self.t.pack_inputs[packet_idx].generate_r1cs_witness_from_bits();
+        }
 
-}
+        /* do the routing */
+        let routing = get_as_waksman_routing(permutation);
 
-pub fn  test_as_waksman_routing_gadget(num_packets:usize, packet_size:usize)
-{
-    print!("testing as_waksman_routing_gadget by routing {} element vector of {} bits (Fp fits all {} bit integers)\n", num_packets, packet_size, FieldT::capacity());
-    let mut  pb=protoboard::<FieldT> ::new();
-    let mut  permutation=integer_permutation::new(num_packets);
-    permutation.random_shuffle();
-    ffec::print_time("generated permutation");
+        for column_idx in 0..self.t.num_columns {
+            for row_idx in 0..self.t.num_packets {
+                if self.t.neighbors[column_idx][row_idx].0
+                    == self.t.neighbors[column_idx][row_idx].1
+                {
+                    /* this is a straight edge, so just pass the values forward */
+                    let next = self.t.neighbors[column_idx][row_idx].0;
 
-    let  (randbits, outbits)=(vec![vec![];num_packets],vec![vec![];num_packets]);
-    for packet_idx in 0..num_packets
-    {
-        randbits[packet_idx].allocate(&pb, packet_size, FMT("", "randbits_{}", packet_idx));
-        outbits[packet_idx].allocate(&pb, packet_size, FMT("", "outbits_{}", packet_idx));
+                    for subpacket_idx in 0..self.t.num_subpackets {
+                        *self
+                            .pb
+                            .borrow_mut()
+                            .val_ref(&self.t.routed_packets[column_idx + 1][next][subpacket_idx]) =
+                            self.pb
+                                .borrow()
+                                .val(&self.t.routed_packets[column_idx][row_idx][subpacket_idx]);
+                    }
+                } else {
+                    if self.t.num_subpackets > 1 {
+                        /* update the switch bit */
+                        *self
+                            .pb
+                            .borrow_mut()
+                            .val_ref(&self.t.asw_switch_bits[column_idx][&row_idx]) =
+                            FieldT::from(if routing[column_idx][row_idx] { 1 } else { 0 });
+                    }
 
-        for bit_idx in 0..packet_size
-        {
-            pb.borrow().val(&randbits[packet_idx][bit_idx])=  if (rand() % 2) {FieldT::one()} else{FieldT::zero()};
+                    /* route according to the switch bit */
+                    let mut switch_val = routing[column_idx][row_idx];
+
+                    for &switch_input in &[row_idx, row_idx + 1] {
+                        let straight_edge = self.t.neighbors[column_idx][switch_input].0.clone();
+                        let cross_edge = self.t.neighbors[column_idx][switch_input].1.clone();
+
+                        let switched_edge = if switch_val {
+                            cross_edge
+                        } else {
+                            straight_edge
+                        };
+
+                        for subpacket_idx in 0..self.t.num_subpackets {
+                            *self.pb.borrow_mut().val_ref(
+                                &self.t.routed_packets[column_idx + 1][switched_edge]
+                                    [subpacket_idx],
+                            ) = self.pb.borrow().val(
+                                &self.t.routed_packets[column_idx][switch_input][subpacket_idx],
+                            );
+                        }
+                    }
+
+                    /* we processed both switch inputs at once, so skip the next iteration */
+                    // row_idx += 1;
+                }
+            }
+        }
+
+        /* unpack outputs */
+        for packet_idx in 0..self.t.num_packets {
+            self.t.unpack_outputs[packet_idx].generate_r1cs_witness_from_packed();
         }
     }
-    ffec::print_time("generated bits to be routed");
+}
 
-   let mut  r=as_waksman_routing_gadget::<FieldT>::new (&pb, num_packets, randbits, outbits, "main_routing_gadget");
+pub fn test_as_waksman_routing_gadget<FieldT: FieldTConfig, PB: PBConfig>(
+    num_packets: usize,
+    packet_size: usize,
+) where
+    [(); { FieldT::num_limbs as usize }]:,
+{
+    print!(
+        "testing as_waksman_routing_gadget by routing {} element vector of {} bits (Fp fits all {} bit integers)\n",
+        num_packets,
+        packet_size,
+        FieldT::capacity()
+    );
+    let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
+    let mut permutation = integer_permutation::new(num_packets);
+    permutation.random_shuffle();
+    print_time("generated permutation");
+
+    let (mut randbits, mut outbits) = (
+        vec![pb_variable_array::<FieldT, PB>::default(); num_packets],
+        vec![pb_variable_array::<FieldT, PB>::default(); num_packets],
+    );
+    for packet_idx in 0..num_packets {
+        randbits[packet_idx].allocate(
+            &pb,
+            packet_size,
+            &prefix_format!("", "randbits_{}", packet_idx),
+        );
+        outbits[packet_idx].allocate(
+            &pb,
+            packet_size,
+            &prefix_format!("", "outbits_{}", packet_idx),
+        );
+
+        for bit_idx in 0..packet_size {
+            *pb.borrow_mut().val_ref(&randbits[packet_idx][bit_idx]) =
+                if (rand::random::<usize>() % 2 != 0) {
+                    FieldT::one()
+                } else {
+                    FieldT::zero()
+                };
+        }
+    }
+    print_time("generated bits to be routed");
+
+    let mut r = as_waksman_routing_gadget::<FieldT, PB>::new(
+        pb.clone(),
+        num_packets,
+        randbits.clone(),
+        outbits.clone(),
+        "main_routing_gadget".to_owned(),
+    );
     r.generate_r1cs_constraints();
-    ffec::print_time("generated routing constraints");
+    print_time("generated routing constraints");
 
-    r.generate_r1cs_witness(permutation);
-    ffec::print_time("generated routing assignment");
+    r.generate_r1cs_witness(&permutation);
+    print_time("generated routing assignment");
 
     print!("positive test\n");
-    assert!(pb.is_satisfied());
-    for packet_idx in 0..num_packets
-    {
-        for bit_idx in 0..packet_size
-        {
-            assert!(pb.borrow().val(&outbits[permutation.get(packet_idx)][bit_idx]) == pb.borrow().val(&randbits[packet_idx][bit_idx]));
+    assert!(pb.borrow().is_satisfied());
+    for packet_idx in 0..num_packets {
+        for bit_idx in 0..packet_size {
+            assert!(
+                pb.borrow()
+                    .val(&outbits[permutation.get(packet_idx)][bit_idx])
+                    == pb.borrow().val(&randbits[packet_idx][bit_idx])
+            );
         }
     }
 
     print!("negative test\n");
-    pb.borrow().val(&variable::<FieldT,pb_variable>(10)) = FieldT(12345);
-    assert!(!pb.is_satisfied());
+    *pb.borrow_mut()
+        .val_ref(&variable::<FieldT, pb_variable>::from(10)) = FieldT::from(12345);
+    assert!(!pb.borrow().is_satisfied());
 
-    print!("num_constraints = {}, num_variables = {}\n",
-           pb.num_constraints(),
-           pb.constraint_system.num_variables);
+    print!(
+        "num_constraints = {}, num_variables = {}\n",
+        pb.borrow().num_constraints(),
+        pb.borrow().constraint_system.num_variables()
+    );
 }
-
-
-
-//#endif // AS_WAKSMAN_ROUTING_GADGET_TCC_

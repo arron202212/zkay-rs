@@ -5,7 +5,7 @@ pub mod fields;
 pub mod hashes;
 pub mod merkle_tree;
 pub mod pairing;
-//  pub mod routing ;
+pub mod routing;
 //  pub mod set_commitment ;
 //  pub mod verifiers ;
 pub mod basic_gadgets;

@@ -1,30 +1,18 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for functionality for routing on a Benes network.
 
-Declaration of interfaces for functionality for routing on a Benes network.
+// Routing is performed via the standard algorithm that computes a
+// routing by first computing the switch settings for the left and right
+// columns of the network and then recursively computing routings for
+// the top half and the bottom half of the network (each of which is a
+// Benes network of smaller size).
 
-Routing is performed via the standard algorithm that computes a
-routing by first computing the switch settings for the left and right
-columns of the network and then recursively computing routings for
-the top half and the bottom half of the network (each of which is a
-Benes network of smaller size).
+// References:
 
-References:
+// \[Ben65]:
+// "Mathematical theory of connecting networks and telephone traffic",
+// Václav E. Beneš,
+// Academic Press 1965
 
-\[Ben65]:
-"Mathematical theory of connecting networks and telephone traffic",
-Václav E. Beneš,
-Academic Press 1965
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BENES_ROUTING_ALGORITHM_HPP_
-// #define BENES_ROUTING_ALGORITHM_HPP_
-
-//
 use ffec::common::utils::bit_vector;
 use ffec::common::utils::log2;
 
@@ -44,7 +32,7 @@ use crate::common::data_structures::integer_permutation::integer_permutation;
  * queried at an arbitrary position, see implementation of
  * generate_benes_topology for details.)
  */
-type benes_topology = Vec<Vec<(usize, usize)>>;
+pub type benes_topology = Vec<Vec<(usize, usize)>>;
 
 /**
  * A routing assigns a bit to each switch in a Benes network.
