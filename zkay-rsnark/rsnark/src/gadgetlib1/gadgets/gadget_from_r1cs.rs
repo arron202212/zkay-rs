@@ -14,6 +14,7 @@ use rccell::RcCell;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
+#[derive(Clone, Default)]
 pub struct gadget_from_r1cs<
     FieldT: FieldTConfig,
     PB: PBConfig,

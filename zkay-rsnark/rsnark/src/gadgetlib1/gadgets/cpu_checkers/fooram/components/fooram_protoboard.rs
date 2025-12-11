@@ -15,6 +15,8 @@ pub struct fooram_protoboard<FieldT: FieldTConfig> {
     // fooram_protoboard(ap:&fooram_architecture_params);
 }
 pub trait SubFooRamConfig: Default + Clone {}
+
+#[derive(Clone, Default)]
 pub struct fooram_gadget<FieldT: FieldTConfig, T: SubFooRamConfig> {
     _t: PhantomData<FieldT>,
     pub t: T,

@@ -79,18 +79,30 @@ See merkle_tree.hpp .
 
 // #include <algorithm>
 use ffec::common::profiling;
+use rccell::RcCell;
 // use ffec::common::utils;
 pub trait VecConfig {
     fn len(&self) -> usize;
     fn with_capacity(len: usize) -> Self;
 }
-// namespace libsnark {
-pub trait HashTConfig {
+pub trait GConfig: Default + Clone {}
+pub trait PConfig: Default + Clone {}
+pub trait HashTConfig: Default + Clone {
     // type hash_value_type=hash_value_type;
     // type merkle_authentication_path_type=merkle_authentication_path_type;
     fn new() -> Self;
+    fn new5<P: PConfig, G: GConfig, G2: GConfig>(
+        pb: RcCell<P>,
+        sz: usize,
+        g: G,
+        a: G2,
+        s: String,
+    ) -> Self;
     fn get_digest_len() -> usize;
     fn get_hash(input: bit_vector) -> bit_vector;
+    fn generate_r1cs_constraints(&self, b: bool);
+    fn generate_r1cs_witness(&self);
+    fn expected_constraints(b: bool) -> usize;
 }
 
 pub fn two_to_one_CRH<HashT: HashTConfig>(

@@ -29,6 +29,7 @@
 // "Collision-free hashing from lattice problems",
 // Oded Goldreich, Shafi Goldwasser, Shai Halevi,
 // ECCC TR95-042
+use crate::common::data_structures::merkle_tree::merkle_authentication_path;
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
 use crate::gadgetlib1::gadgets::hashes::hash_io::{
@@ -70,6 +71,7 @@ trait knapsack_coefficientsConfig<FieldT: FieldTConfig> {
 }
 pub static num_cached_coefficients: AtomicUsize = AtomicUsize::new(0);
 
+#[derive(Clone, Default)]
 pub struct knapsack_dimension<FieldT: FieldTConfig>(PhantomData<FieldT>);
 impl<FieldT: FieldTConfig> knapsack_dimension<FieldT> {
     // the size of FieldT should be (approximately) at least 200 bits
@@ -77,7 +79,7 @@ impl<FieldT: FieldTConfig> knapsack_dimension<FieldT> {
 }
 
 /*********************** Knapsack with field output **************************/
-
+#[derive(Clone, Default)]
 pub struct knapsack_CRH_with_field_out_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<FieldT>
     input_len: usize,
@@ -88,7 +90,9 @@ pub struct knapsack_CRH_with_field_out_gadget<FieldT: FieldTConfig, PB: PBConfig
 
 /********************** Knapsack with binary output **************************/
 type hash_value_type = bit_vector;
-// type merkle_authentication_path_type=merkle_authentication_path;
+type merkle_authentication_path_type = merkle_authentication_path;
+
+#[derive(Clone, Default)]
 pub struct knapsack_CRH_with_bit_out_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //  : public gadget<FieldT>
     input_len: usize,

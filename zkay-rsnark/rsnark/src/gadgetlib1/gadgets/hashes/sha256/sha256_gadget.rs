@@ -1,7 +1,6 @@
 // Declaration of interfaces for top-level SHA256 gadgets.
 
-use crate::common::data_structures::merkle_tree;
-
+use crate::common::data_structures::merkle_tree::merkle_authentication_path;
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::{
     generate_boolean_r1cs_constraint, packing_gadget, packing_gadgets,
@@ -13,8 +12,12 @@ use crate::gadgetlib1::gadgets::hashes::sha256::sha256_aux::{
     big_sigma_gadget, big_sigma_gadgets, choice_gadget, choice_gadgets, lastbits_gadget,
     lastbits_gadgets, majority_gadget, majority_gadgets, small_sigma_gadget, small_sigma_gadgets,
 };
- use crate::gadgetlib1::gadgets::hashes::sha256::sha256_components::{SHA256_digest_size,SHA256_block_size,SHA256_default_IV,SHA256_K,sha256_message_schedule_gadgets,sha256_message_schedule_gadget,sha256_round_function_gadgets,sha256_round_function_gadget};
 use crate::gadgetlib1::gadgets::hashes::sha256::sha256_components;
+use crate::gadgetlib1::gadgets::hashes::sha256::sha256_components::{
+    SHA256_K, SHA256_block_size, SHA256_default_IV, SHA256_digest_size,
+    sha256_message_schedule_gadget, sha256_message_schedule_gadgets, sha256_round_function_gadget,
+    sha256_round_function_gadgets,
+};
 use crate::gadgetlib1::pb_variable::pb_coeff_sum;
 use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
@@ -35,29 +38,29 @@ use std::marker::PhantomData;
 /**
  * Gadget for the SHA256 compression function.
  */
-
+#[derive(Clone, Default)]
 pub struct sha256_compression_function_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //gadget<FieldT>
-pub  round_a: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_b: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_c: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_d: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_e: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_f: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_g: Vec<pb_linear_combination_array<FieldT, PB>>,
-pub  round_h: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_a: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_b: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_c: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_d: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_e: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_f: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_g: Vec<pb_linear_combination_array<FieldT, PB>>,
+    pub round_h: Vec<pb_linear_combination_array<FieldT, PB>>,
 
-pub  packed_W: pb_variable_array<FieldT, PB>,
-pub  message_schedule: RcCell<sha256_message_schedule_gadgets<FieldT, PB>>,
-pub  round_functions: Vec<sha256_round_function_gadgets<FieldT, PB>>,
+    pub packed_W: pb_variable_array<FieldT, PB>,
+    pub message_schedule: RcCell<sha256_message_schedule_gadgets<FieldT, PB>>,
+    pub round_functions: Vec<sha256_round_function_gadgets<FieldT, PB>>,
 
-pub  unreduced_output: pb_variable_array<FieldT, PB>,
-pub  reduced_output: pb_variable_array<FieldT, PB>,
-pub  reduce_output: Vec<lastbits_gadgets<FieldT, PB>>,
+    pub unreduced_output: pb_variable_array<FieldT, PB>,
+    pub reduced_output: pb_variable_array<FieldT, PB>,
+    pub reduce_output: Vec<lastbits_gadgets<FieldT, PB>>,
 
-pub  prev_output: pb_linear_combination_array<FieldT, PB>,
-pub  new_block: pb_variable_array<FieldT, PB>,
-pub  output: digest_variables<FieldT, PB>,
+    pub prev_output: pb_linear_combination_array<FieldT, PB>,
+    pub new_block: pb_variable_array<FieldT, PB>,
+    pub output: digest_variables<FieldT, PB>,
 }
 
 /**
@@ -69,14 +72,15 @@ pub  output: digest_variables<FieldT, PB>,
  */
 
 type hash_value_type = bit_vector;
-// type merkle_authentication_path_type = merkle_authentication_path;
+type merkle_authentication_path_type = merkle_authentication_path;
+#[derive(Clone, Default)]
 pub struct sha256_two_to_one_hash_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //gadget<FieldT>
- pub    f: RcCell<sha256_compression_function_gadgets<FieldT, PB>>,
+    pub f: RcCell<sha256_compression_function_gadgets<FieldT, PB>>,
 }
 
 pub type sha256_compression_function_gadgets<FieldT, PB> =
-    gadget<FieldT, PB, sha256_compression_function_gadget<FieldT, PB> >;
+    gadget<FieldT, PB, sha256_compression_function_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
@@ -102,7 +106,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
 
         /* message schedule and inputs for it */
         packed_W.allocate(&pb, 64, &prefix_format!(annotation_prefix, " packed_W"));
-        let message_schedule = RcCell::new(sha256_message_schedule_gadget::<FieldT,PB>::new(
+        let message_schedule = RcCell::new(sha256_message_schedule_gadget::<FieldT, PB>::new(
             pb.clone(),
             new_block.clone(),
             packed_W.clone(),
@@ -110,7 +114,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
         ));
 
         /* initalize */
-        round_a.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_a.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -119,7 +123,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_b.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_b.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -128,7 +132,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_c.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_c.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -137,7 +141,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_d.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_d.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -146,7 +150,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_e.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_e.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -155,7 +159,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_f.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_f.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -164,7 +168,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_g.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_g.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -173,7 +177,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .cloned()
                 .collect::<Vec<_>>(),
         ));
-        round_h.push(pb_linear_combination_array::<FieldT,PB>::new(
+        round_h.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
                 .rev()
@@ -191,7 +195,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             round_c.push(round_b[i].clone());
             round_b.push(round_a[i].clone());
 
-            let mut new_round_a_variables = pb_variable_array::<FieldT,PB>::default();
+            let mut new_round_a_variables = pb_variable_array::<FieldT, PB>::default();
             new_round_a_variables.allocate(
                 &pb,
                 32,
@@ -199,7 +203,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             );
             round_a.push(new_round_a_variables.into());
 
-            let mut new_round_e_variables = pb_variable_array::<FieldT,PB>::default();
+            let mut new_round_e_variables = pb_variable_array::<FieldT, PB>::default();
             new_round_e_variables.allocate(
                 &pb,
                 32,
@@ -231,7 +235,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             8,
             &prefix_format!(annotation_prefix, " unreduced_output"),
         );
-        reduced_output.allocate(&pb, 8, &prefix_format!(annotation_prefix, " reduced_output"));
+        reduced_output.allocate(
+            &pb,
+            8,
+            &prefix_format!(annotation_prefix, " reduced_output"),
+        );
         for i in 0..8 {
             reduce_output.push(lastbits_gadget::<FieldT, PB>::new(
                 pb.clone(),
@@ -240,14 +248,16 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 reduced_output[i].clone(),
                 pb_variable_array::<FieldT, PB>::new(
                     output
-                        .t.bits
+                        .t
+                        .bits
                         .iter()
                         .rev()
                         .skip((7 - i) * 32)
                         .take(32)
                         .cloned()
                         .collect::<Vec<_>>(),
-                ).into(),
+                )
+                .into(),
                 prefix_format!(annotation_prefix, " reduce_output_{}", i),
             ));
         }
@@ -280,8 +290,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
     pub fn generate_r1cs_constraints(&self) {
         self.t.message_schedule.borrow().generate_r1cs_constraints();
         for i in 0..64 {
-            self.t.round_functions[i]
-                .generate_r1cs_constraints();
+            self.t.round_functions[i].generate_r1cs_constraints();
         }
 
         for i in 0..4 {
@@ -289,7 +298,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     1.into(),
                     (self.t.round_functions[3 - i].t.packed_d.clone()
-                        + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(self.t.round_functions[63 - i].t.packed_new_a.clone()))
+                        + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                            self.t.round_functions[63 - i].t.packed_new_a.clone(),
+                        ))
                     .into(),
                     self.t.unreduced_output[i].clone().into(),
                 ),
@@ -300,7 +311,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     1.into(),
                     (self.t.round_functions[3 - i].t.packed_h.clone()
-                        + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(self.t.round_functions[63 - i].t.packed_new_e.clone()))
+                        + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                            self.t.round_functions[63 - i].t.packed_new_e.clone(),
+                        ))
                     .into(),
                     self.t.unreduced_output[4 + i].clone().into(),
                 ),
@@ -313,7 +326,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
         }
     }
 
-    pub fn generate_r1cs_witness(&self)  where [(); { FieldT::num_limbs as usize }]:{
+    pub fn generate_r1cs_witness(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
         self.t.message_schedule.borrow().generate_r1cs_witness();
 
         // #ifdef DEBUG
@@ -368,7 +384,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
 }
 
 pub type sha256_two_to_one_hash_gadgets<FieldT, PB> =
-    gadget<FieldT, PB, sha256_two_to_one_hash_gadget<FieldT, PB> >;
+    gadget<FieldT, PB, sha256_two_to_one_hash_gadget<FieldT, PB>>;
 
 impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, PB> {
     pub fn new(
@@ -380,7 +396,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
     ) -> sha256_two_to_one_hash_gadgets<FieldT, PB> {
         /* concatenate block = left || right */
         let mut block = pb_variable_array::<FieldT, PB>::new(
-            left.t.bits.iter().chain(right.t.bits.iter()).cloned().collect(),
+            left.t
+                .bits
+                .iter()
+                .chain(right.t.bits.iter())
+                .cloned()
+                .collect(),
         );
 
         /* compute the hash itself */
@@ -397,10 +418,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
     pub fn new2(
         pb: RcCell<protoboard<FieldT, PB>>,
         block_length: usize,
-        input_block: block_variables<FieldT,PB>,
+        input_block: block_variables<FieldT, PB>,
         output: digest_variables<FieldT, PB>,
         annotation_prefix: String,
-    ) -> sha256_two_to_one_hash_gadgets<FieldT, PB>  {
+    ) -> sha256_two_to_one_hash_gadgets<FieldT, PB> {
         assert!(block_length == SHA256_block_size);
         assert!(input_block.t.bits.len() == block_length);
         let f = RcCell::new(sha256_compression_function_gadget::<FieldT, PB>::new(
@@ -421,7 +442,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
         return SHA256_digest_size;
     }
 
-    pub fn get_hash(input: &bit_vector) -> bit_vector  where [(); { FieldT::num_limbs as usize }]:{
+    pub fn get_hash(input: &bit_vector) -> bit_vector
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
         let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
 
         let mut input_variable =
@@ -453,7 +477,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadgets<FieldT, 
         self.t.f.borrow().generate_r1cs_constraints();
     }
 
-    pub fn generate_r1cs_witness(&self) where [(); { FieldT::num_limbs as usize }]:{
+    pub fn generate_r1cs_witness(&self)
+    where
+        [(); { FieldT::num_limbs as usize }]:,
+    {
         self.t.f.borrow().generate_r1cs_witness();
     }
 }

@@ -16,7 +16,7 @@ use std::marker::PhantomData;
  * Note that the power is a constant (i.e., hardcoded into the gadget).
  */
 //
-pub trait EConfig<FieldT: FieldTConfig>: One {
+pub trait EConfig<FieldT: FieldTConfig>: One + Default + Clone {
     type FpkT;
     type Fpk_variableT;
     type Fpk_mul_gadgetT;
@@ -54,6 +54,8 @@ pub trait SqrTConfig<FieldT: FieldTConfig, PB: PBConfig, Fpk_variableT>: Default
     fn generate_r1cs_constraints(&self);
     fn generate_r1cs_witness(&self);
 }
+
+#[derive(Clone, Default)]
 pub struct exponentiation_gadget<
     FieldT: FieldTConfig,
     PB: PBConfig,

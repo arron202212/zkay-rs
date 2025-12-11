@@ -116,7 +116,7 @@ pub struct bit_vector_copy_gadget<FieldT: FieldTConfig, PB: PBConfig> {
 }
 
 #[derive(Clone, Default)]
-pub struct dual_variable_gadget<FieldT: FieldTConfig, PB: PBConfig, T> {
+pub struct dual_variable_gadget<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone> {
     pub consistency_check: RcCell<gadget<FieldT, PB, packing_gadget<FieldT, PB>>>,
     pub packed: variable<FieldT, pb_variable>,
     pub bits: pb_variable_array<FieldT, PB>,
@@ -128,7 +128,7 @@ pub struct DefaultDualVariableGadget;
 pub type dual_variable_gadgets<FieldT, PB, T> =
     gadget<FieldT, PB, dual_variable_gadget<FieldT, PB, T>>;
 
-impl<FieldT: FieldTConfig, PB: PBConfig, T> dual_variable_gadget<FieldT, PB, T> {
+impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone> dual_variable_gadget<FieldT, PB, T> {
     pub fn new(
         mut pb: RcCell<protoboard<FieldT, PB>>,
         width: usize,
@@ -625,7 +625,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, field_vector_copy_ga
         }
     }
 }
-
+pub type bit_vector_copy_gadgets<FieldT, PB> =
+    gadget<FieldT, PB, bit_vector_copy_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> bit_vector_copy_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
@@ -731,7 +732,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, bit_vector_copy_gadg
     }
 }
 
-impl<FieldT: FieldTConfig, PB: PBConfig, T>
+impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone>
     gadget<FieldT, PB, dual_variable_gadget<FieldT, PB, T>>
 {
     pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {

@@ -1,3 +1,4 @@
+use crate::common::data_structures::merkle_tree::GConfig;
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
 use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
@@ -52,6 +53,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> digest_variable<FieldT, PB> {
         gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { digest_size, bits })
     }
 }
+impl<FieldT: FieldTConfig, PB: PBConfig> GConfig for digest_variables<FieldT, PB> {}
 impl<FieldT: FieldTConfig, PB: PBConfig> digest_variables<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
         for i in 0..self.t.digest_size {
@@ -122,6 +124,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> block_variable<FieldT, PB> {
         gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { block_size, bits })
     }
 }
+impl<FieldT: FieldTConfig, PB: PBConfig> GConfig for block_variables<FieldT, PB> {}
 impl<FieldT: FieldTConfig, PB: PBConfig> block_variables<FieldT, PB> {
     pub fn generate_r1cs_witness(&self, contents: &bit_vector) {
         self.t.bits.fill_with_bits(&self.pb, contents);

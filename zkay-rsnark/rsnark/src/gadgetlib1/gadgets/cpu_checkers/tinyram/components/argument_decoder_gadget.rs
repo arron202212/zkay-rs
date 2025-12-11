@@ -293,7 +293,7 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
     }
 }
 
-pub fn test_argument_decoder_gadget<FieldT: FieldTConfig, T: Default>()
+pub fn test_argument_decoder_gadget<FieldT: FieldTConfig, T: Default + Clone>()
 where
     [(); { FieldT::num_limbs as usize }]:,
 {

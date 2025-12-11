@@ -1,109 +1,117 @@
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef MERKLE_AUTHENTICATION_PATH_VARIABLE_HPP_
-// #define MERKLE_AUTHENTICATION_PATH_VARIABLE_HPP_
-
-use crate::common::data_structures::merkle_tree;
-use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets::hashes::hash_io;
-
-
-
-
-pub struct merkle_authentication_path_variable {//gadget<FieldT>
-
-
-    tree_depth:usize,
-left_digests:    Vec<digest_variable<FieldT> >,
-right_digests:    Vec<digest_variable<FieldT> >,
-
-    
+use crate::common::data_structures::merkle_tree::{HashTConfig, merkle_authentication_path};
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets::{
+    generate_boolean_r1cs_constraint, packing_gadget, packing_gadgets,
+};
+use crate::gadgetlib1::gadgets::hashes::hash_io::{
+    block_variable, block_variables, digest_variable, digest_variables,
+};
+use crate::gadgetlib1::gadgets::hashes::sha256::sha256_aux::{
+    big_sigma_gadget, big_sigma_gadgets, choice_gadget, choice_gadgets, lastbits_gadget,
+    lastbits_gadgets, majority_gadget, majority_gadgets, small_sigma_gadget, small_sigma_gadgets,
+};
+use crate::gadgetlib1::gadgets::hashes::sha256::sha256_components;
+use crate::gadgetlib1::gadgets::hashes::sha256::sha256_components::{
+    SHA256_K, SHA256_block_size, SHA256_default_IV, SHA256_digest_size,
+    sha256_message_schedule_gadget, sha256_message_schedule_gadgets, sha256_round_function_gadget,
+    sha256_round_function_gadgets,
+};
+use crate::gadgetlib1::pb_variable::pb_coeff_sum;
+use crate::gadgetlib1::pb_variable::{
+    ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
+    pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::prefix_format;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
+use crate::relations::variable::{linear_combination, variable};
+use ffec::common::utils::bit_vector;
+use ffec::field_utils::field_utils::convert_field_element_to_bit_vector;
+use parking_lot::Mutex;
+use rccell::RcCell;
+use std::marker::PhantomData;
+#[derive(Clone, Default)]
+pub struct merkle_authentication_path_variable<
+    FieldT: FieldTConfig,
+    PB: PBConfig,
+    HashT: HashTConfig,
+> {
+    //gadget<FieldT>
+    pub tree_depth: usize,
+    pub left_digests: Vec<digest_variables<FieldT, PB>>,
+    pub right_digests: Vec<digest_variables<FieldT, PB>>,
+    _t: PhantomData<HashT>,
 }
 
-
-
-// use crate::gadgetlib1::gadgets::merkle_tree::merkle_authentication_path_variable;
-
-//#endif // MERKLE_AUTHENTICATION_PATH_VARIABLE_HPP
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef MERKLE_AUTHENTICATION_PATH_VARIABLE_TCC_
-// #define MERKLE_AUTHENTICATION_PATH_VARIABLE_TCC_
-
-
-
-impl merkle_authentication_path_variable<FieldT, HashT>{
-pub fn new(pb:RcCell<protoboard<FieldT>>,
-                                                                                        tree_depth:usize,
-                                                                                        annotation_prefix:&String)->Self
-   
+pub type merkle_authentication_path_variables<FieldT, PB, HashT> =
+    gadget<FieldT, PB, merkle_authentication_path_variable<FieldT, PB, HashT>>;
+impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
+    merkle_authentication_path_variable<FieldT, PB, HashT>
 {
-    for i in 0..tree_depth
-    {
-        left_digests.push(digest_variable::<FieldT>(&pb, HashT::get_digest_len(), FMT(annotation_prefix, " left_digests_{}", i)));
-        right_digests.push(digest_variable::<FieldT>(&pb, HashT::get_digest_len(), FMT(annotation_prefix, " right_digests_{}", i)));
-    }
-    //  gadget<FieldT>(&pb, annotation_prefix),
-    Self{tree_depth}
-}
-
-
-pub fn generate_r1cs_constraints()
-{
-    for i in 0..tree_depth
-    {
-        left_digests[i].generate_r1cs_constraints();
-        right_digests[i].generate_r1cs_constraints();
-    }
-}
-
-
-pub fn generate_r1cs_witness(address:&usize , path: merkle_authentication_path)
-{
-    assert!(path.len() == tree_depth);
-
-    for i in 0..tree_depth
-    {
-        if address & (1u64 << (tree_depth-1-i))
-        {
-            left_digests[i].generate_r1cs_witness(path[i]);
+    pub fn new(
+        pb: RcCell<protoboard<FieldT, PB>>,
+        tree_depth: usize,
+        annotation_prefix: String,
+    ) -> merkle_authentication_path_variables<FieldT, PB, HashT> {
+        let (mut left_digests, mut right_digests) = (vec![], vec![]);
+        for i in 0..tree_depth {
+            left_digests.push(digest_variable::<FieldT, PB>::new(
+                pb.clone(),
+                HashT::get_digest_len(),
+                prefix_format!(annotation_prefix, " left_digests_{}", i),
+            ));
+            right_digests.push(digest_variable::<FieldT, PB>::new(
+                pb.clone(),
+                HashT::get_digest_len(),
+                prefix_format!(annotation_prefix, " right_digests_{}", i),
+            ));
         }
-        else
-        {
-            right_digests[i].generate_r1cs_witness(path[i]);
-        }
+        gadget::<FieldT, PB, Self>::new(
+            pb,
+            annotation_prefix,
+            Self {
+                left_digests,
+                right_digests,
+                tree_depth,
+                _t: PhantomData,
+            },
+        )
     }
 }
-
-
- pub fn get_authentication_path(address:usize) ->merkle_authentication_path
+impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
+    merkle_authentication_path_variables<FieldT, PB, HashT>
 {
-     let mut result=merkle_authentication_path::new();
-    for i in 0..tree_depth
-    {
-        if address & (1u64 << (tree_depth-1-i))
-        {
-            result.push(left_digests[i].get_digest());
-        }
-        else
-        {
-            result.push(right_digests[i].get_digest());
+    pub fn generate_r1cs_constraints(&self) {
+        for i in 0..self.t.tree_depth {
+            self.t.left_digests[i].generate_r1cs_constraints();
+            self.t.right_digests[i].generate_r1cs_constraints();
         }
     }
 
-    return result;
-}
+    pub fn generate_r1cs_witness(&self, address: usize, path: merkle_authentication_path) {
+        assert!(path.len() == self.t.tree_depth);
 
-}
+        for i in 0..self.t.tree_depth {
+            if address & (1usize << (self.t.tree_depth - 1 - i)) != 0 {
+                self.t.left_digests[i].generate_r1cs_witness(&path[i]);
+            } else {
+                self.t.right_digests[i].generate_r1cs_witness(&path[i]);
+            }
+        }
+    }
 
-//#endif // MERKLE_AUTHENTICATION_PATH_VARIABLE_TCC
+    pub fn get_authentication_path(&self, address: usize) -> merkle_authentication_path {
+        let mut result = merkle_authentication_path::new();
+        for i in 0..self.t.tree_depth {
+            if address & (1usize << (self.t.tree_depth - 1 - i)) != 0 {
+                result.push(self.t.left_digests[i].get_digest());
+            } else {
+                result.push(self.t.right_digests[i].get_digest());
+            }
+        }
+
+        return result;
+    }
+}

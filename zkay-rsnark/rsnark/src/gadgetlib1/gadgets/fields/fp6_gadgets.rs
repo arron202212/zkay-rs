@@ -104,7 +104,7 @@ pub struct Fp6_variable<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBCo
 /**
  * Gadget that creates constraints for Fp6 multiplication.
  */
-
+#[derive(Clone, Default)]
 pub struct Fp6_mul_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp6T::my_Fp>
     //     type FieldT=Fp6T::my_Fp;
@@ -137,7 +137,7 @@ pub struct Fp6_mul_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PB
 /**
  * Gadget that creates constraints for Fp6 multiplication by a Fp6 element B for which B.t.c0.t.c0 = B.t.c0.t.c1 = 0.
  */
-
+#[derive(Clone, Default)]
 pub struct Fp6_mul_by_2345_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp6T::my_Fp>
     //     type FieldT=Fp6T::my_Fp;
@@ -169,7 +169,7 @@ pub struct Fp6_mul_by_2345_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig
 /**
  * Gadget that creates constraints for Fp6 squaring.
  */
-
+#[derive(Clone, Default)]
 pub struct Fp6_sqr_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp6T::my_Fp>
     //     type FieldT=Fp6T::my_Fp;
@@ -181,7 +181,7 @@ pub struct Fp6_sqr_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PB
 /**
  * Gadget that creates constraints for Fp6 cyclotomic squaring
  */
-
+#[derive(Clone, Default)]
 pub struct Fp6_cyclotomic_sqr_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<Fp6T::my_Fp>
     //     type FieldT=Fp6T::my_Fp;

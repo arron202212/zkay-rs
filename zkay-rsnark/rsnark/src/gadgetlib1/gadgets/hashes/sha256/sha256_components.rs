@@ -33,56 +33,56 @@ pub const SHA256_block_size: usize = 512;
 
 //
 // pb_linear_combination_array<FieldT,PB> SHA256_default_IV(pb:RcCell<protoboard<FieldT,PB>> );
-
+#[derive(Clone, Default)]
 pub struct sha256_message_schedule_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //  : public gadget
-pub  W_bits: Vec<pb_variable_array<FieldT, PB>>,
-pub  pack_W: Vec<RcCell<packing_gadgets<FieldT, PB>>>,
+    pub W_bits: Vec<pb_variable_array<FieldT, PB>>,
+    pub pack_W: Vec<RcCell<packing_gadgets<FieldT, PB>>>,
 
-pub  sigma0: Vec<variable<FieldT, pb_variable>>,
-pub  sigma1: Vec<variable<FieldT, pb_variable>>,
-pub  compute_sigma0: Vec<RcCell<small_sigma_gadgets<FieldT, PB>>>,
-pub  compute_sigma1: Vec<RcCell<small_sigma_gadgets<FieldT, PB>>>,
-pub  unreduced_W: Vec<variable<FieldT, pb_variable>>,
-pub  mod_reduce_W: Vec<RcCell<lastbits_gadgets<FieldT, PB>>>,
+    pub sigma0: Vec<variable<FieldT, pb_variable>>,
+    pub sigma1: Vec<variable<FieldT, pb_variable>>,
+    pub compute_sigma0: Vec<RcCell<small_sigma_gadgets<FieldT, PB>>>,
+    pub compute_sigma1: Vec<RcCell<small_sigma_gadgets<FieldT, PB>>>,
+    pub unreduced_W: Vec<variable<FieldT, pb_variable>>,
+    pub mod_reduce_W: Vec<RcCell<lastbits_gadgets<FieldT, PB>>>,
 
-pub  M: pb_variable_array<FieldT, PB>,
-pub  packed_W: pb_variable_array<FieldT, PB>,
+    pub M: pb_variable_array<FieldT, PB>,
+    pub packed_W: pb_variable_array<FieldT, PB>,
 }
-
+#[derive(Clone, Default)]
 pub struct sha256_round_function_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget
-pub  sigma0: variable<FieldT, pb_variable>,
-pub  sigma1: variable<FieldT, pb_variable>,
-pub  compute_sigma0: RcCell<big_sigma_gadgets<FieldT, PB>>,
-pub  compute_sigma1: RcCell<big_sigma_gadgets<FieldT, PB>>,
-pub  choice: variable<FieldT, pb_variable>,
-pub  majority: variable<FieldT, pb_variable>,
-pub  compute_choice: RcCell<choice_gadgets<FieldT, PB>>,
-pub  compute_majority: RcCell<majority_gadgets<FieldT, PB>>,
-pub  packed_d: variable<FieldT, pb_variable>,
-pub  pack_d: RcCell<packing_gadgets<FieldT, PB>>,
-pub  packed_h: variable<FieldT, pb_variable>,
-pub  pack_h: RcCell<packing_gadgets<FieldT, PB>>,
-pub  unreduced_new_a: variable<FieldT, pb_variable>,
-pub  unreduced_new_e: variable<FieldT, pb_variable>,
-pub  mod_reduce_new_a: RcCell<lastbits_gadgets<FieldT, PB>>,
-pub  mod_reduce_new_e: RcCell<lastbits_gadgets<FieldT, PB>>,
-pub  packed_new_a: variable<FieldT, pb_variable>,
-pub  packed_new_e: variable<FieldT, pb_variable>,
+    pub sigma0: variable<FieldT, pb_variable>,
+    pub sigma1: variable<FieldT, pb_variable>,
+    pub compute_sigma0: RcCell<big_sigma_gadgets<FieldT, PB>>,
+    pub compute_sigma1: RcCell<big_sigma_gadgets<FieldT, PB>>,
+    pub choice: variable<FieldT, pb_variable>,
+    pub majority: variable<FieldT, pb_variable>,
+    pub compute_choice: RcCell<choice_gadgets<FieldT, PB>>,
+    pub compute_majority: RcCell<majority_gadgets<FieldT, PB>>,
+    pub packed_d: variable<FieldT, pb_variable>,
+    pub pack_d: RcCell<packing_gadgets<FieldT, PB>>,
+    pub packed_h: variable<FieldT, pb_variable>,
+    pub pack_h: RcCell<packing_gadgets<FieldT, PB>>,
+    pub unreduced_new_a: variable<FieldT, pb_variable>,
+    pub unreduced_new_e: variable<FieldT, pb_variable>,
+    pub mod_reduce_new_a: RcCell<lastbits_gadgets<FieldT, PB>>,
+    pub mod_reduce_new_e: RcCell<lastbits_gadgets<FieldT, PB>>,
+    pub packed_new_a: variable<FieldT, pb_variable>,
+    pub packed_new_e: variable<FieldT, pb_variable>,
 
-pub  a: pb_linear_combination_array<FieldT, PB>,
-pub  b: pb_linear_combination_array<FieldT, PB>,
-pub  c: pb_linear_combination_array<FieldT, PB>,
-pub  d: pb_linear_combination_array<FieldT, PB>,
-pub  e: pb_linear_combination_array<FieldT, PB>,
-pub  f: pb_linear_combination_array<FieldT, PB>,
-pub  g: pb_linear_combination_array<FieldT, PB>,
-pub  h: pb_linear_combination_array<FieldT, PB>,
-pub  W: variable<FieldT, pb_variable>,
-pub  K: i64,
-pub  new_a: pb_linear_combination_array<FieldT, PB>,
-pub  new_e: pb_linear_combination_array<FieldT, PB>,
+    pub a: pb_linear_combination_array<FieldT, PB>,
+    pub b: pb_linear_combination_array<FieldT, PB>,
+    pub c: pb_linear_combination_array<FieldT, PB>,
+    pub d: pb_linear_combination_array<FieldT, PB>,
+    pub e: pb_linear_combination_array<FieldT, PB>,
+    pub f: pb_linear_combination_array<FieldT, PB>,
+    pub g: pb_linear_combination_array<FieldT, PB>,
+    pub h: pb_linear_combination_array<FieldT, PB>,
+    pub W: variable<FieldT, pb_variable>,
+    pub K: i64,
+    pub new_a: pb_linear_combination_array<FieldT, PB>,
+    pub new_e: pb_linear_combination_array<FieldT, PB>,
 }
 
 pub const SHA256_K: [u64; 64] = [

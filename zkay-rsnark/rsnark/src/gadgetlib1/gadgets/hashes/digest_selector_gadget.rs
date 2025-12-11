@@ -1,6 +1,6 @@
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
-use crate::gadgetlib1::gadgets::hashes::hash_io::digest_variable;
+use crate::gadgetlib1::gadgets::hashes::hash_io::{digest_variable, digest_variables};
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
@@ -15,10 +15,10 @@ use rccell::RcCell;
 pub struct digest_selector_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //gadget<FieldT>
     pub digest_size: usize,
-    pub input: digest_variable<FieldT, PB>,
+    pub input: digest_variables<FieldT, PB>,
     pub is_right: linear_combination<FieldT, pb_variable, pb_linear_combination>,
-    pub left: digest_variable<FieldT, PB>,
-    pub right: digest_variable<FieldT, PB>,
+    pub left: digest_variables<FieldT, PB>,
+    pub right: digest_variables<FieldT, PB>,
 }
 
 pub type digest_selector_gadgets<FieldT, PB> =
@@ -27,10 +27,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
         digest_size: usize,
-        input: digest_variable<FieldT, PB>,
+        input: digest_variables<FieldT, PB>,
         is_right: linear_combination<FieldT, pb_variable, pb_linear_combination>,
-        left: digest_variable<FieldT, PB>,
-        right: digest_variable<FieldT, PB>,
+        left: digest_variables<FieldT, PB>,
+        right: digest_variables<FieldT, PB>,
         annotation_prefix: String,
     ) -> digest_selector_gadgets<FieldT, PB> {
         gadget::<FieldT, PB, Self>::new(
@@ -58,15 +58,15 @@ impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadgets<FieldT, PB> {
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     self.t.is_right.clone().into(),
                     (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                        self.t.right.bits[i].clone(),
+                        self.t.right.t.bits[i].clone(),
                     ) - linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                        self.t.left.bits[i].clone(),
+                        self.t.left.t.bits[i].clone(),
                     ))
                     .into(),
                     (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                        self.t.input.bits[i].clone(),
+                        self.t.input.t.bits[i].clone(),
                     ) - linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                        self.t.left.bits[i].clone(),
+                        self.t.left.t.bits[i].clone(),
                     ))
                     .into(),
                 ),
@@ -84,13 +84,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadgets<FieldT, PB> {
         );
         if self.pb.borrow().lc_val(&self.t.is_right) == FieldT::one() {
             for i in 0..self.t.digest_size {
-                *self.pb.borrow_mut().val_ref(&self.t.right.bits[i]) =
-                    self.pb.borrow().val(&self.t.input.bits[i]);
+                *self.pb.borrow_mut().val_ref(&self.t.right.t.bits[i]) =
+                    self.pb.borrow().val(&self.t.input.t.bits[i]);
             }
         } else {
             for i in 0..self.t.digest_size {
-                *self.pb.borrow_mut().val_ref(&self.t.left.bits[i]) =
-                    self.pb.borrow().val(&self.t.input.bits[i]);
+                *self.pb.borrow_mut().val_ref(&self.t.left.t.bits[i]) =
+                    self.pb.borrow().val(&self.t.input.t.bits[i]);
             }
         }
     }

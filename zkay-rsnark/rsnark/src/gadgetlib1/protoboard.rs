@@ -12,6 +12,7 @@ use ffec::common::utils;
 
 pub trait PBConfig: Default + Clone {}
 
+#[derive(Clone)]
 pub struct protoboard<FieldT: FieldTConfig, T: PBConfig> {
     pub constant_term: FieldT, /* only here, because pb.borrow().val(&) needs to be able to return reference to the constant 1 term */
     pub values: r1cs_variable_assignment<FieldT>, /* values[0] will hold the value of the first allocated variable of the protoboard, *NOT* constant 1 */
@@ -57,7 +58,9 @@ pub struct protoboard<FieldT: FieldTConfig, T: PBConfig> {
 //     lc_index_t allocate_lc_index();
 // };
 
+use crate::common::data_structures::merkle_tree::PConfig;
 use ffec::common::profiling;
+impl<FieldT: FieldTConfig, T: PBConfig> PConfig for protoboard<FieldT, T> {}
 
 impl<FieldT: FieldTConfig, T: PBConfig> Default for protoboard<FieldT, T> {
     fn default() -> Self {
