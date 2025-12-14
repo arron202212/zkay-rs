@@ -2,6 +2,10 @@
 
 // The gadgets verify curve arithmetic in G2 = E'(F) where E'/F^e: y^2 = x^3 + A' * X + B'
 // is an elliptic curve over F^e in short Weierstrass form.
+use super::{
+    Fqe_mul_gadget, Fqe_sqr_gadget, Fqe_variable, G1, G2, MulTConfig, SqrTConfig, VariableTConfig,
+    coeff_a, coeff_b, ppTConfig,
+};
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
 use crate::gadgetlib1::pb_variable::{
@@ -17,61 +21,6 @@ use ffec::{One, Zero};
 use rccell::RcCell;
 use std::marker::PhantomData;
 use std::ops::Add;
-
-const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_a;
-const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_b;
-pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
-pub type G2<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
-pub type Fqe_variable<ppT, FieldT, PB> = <ppT as ppTConfig<FieldT, PB>>::Fpk_variableT;
-pub type Fqe_sqr_gadget<ppT, FieldT, PB> = <ppT as ppTConfig<FieldT, PB>>::Fpk_sqr_gadgetT;
-pub type Fqe_mul_gadget<ppT, FieldT, PB> = <ppT as ppTConfig<FieldT, PB>>::Fpk_mul_gadgetT;
-
-pub trait VariableTConfig<FieldT: FieldTConfig, PB: PBConfig, FpkT>:
-    Default + Clone + Add<i64, Output = Self>
-{
-    fn X(&self) -> FieldT;
-    fn Y(&self) -> FieldT;
-    fn all_vars(&self) -> pb_linear_combination_array<FieldT, PB>;
-    fn size_in_bits() -> usize;
-    fn num_variables() -> usize;
-    fn get_element(&self) -> FpkT;
-    fn evaluate(&self);
-    fn new(pb: RcCell<protoboard<FieldT, PB>>, annotation_prefix: String) -> Self;
-    fn new2(pb: RcCell<protoboard<FieldT, PB>>, f: FieldT, annotation_prefix: String) -> Self;
-    fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness(&self, f: &FieldT);
-}
-pub trait MulTConfig<FieldT: FieldTConfig, PB: PBConfig, Fpk_variableT>: Default + Clone {
-    fn new(
-        pb: RcCell<protoboard<FieldT, PB>>,
-        v: Fpk_variableT,
-        v2: Fpk_variableT,
-        v3: Fpk_variableT,
-        annotation_prefix: String,
-    ) -> Self;
-    fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness(&self);
-}
-pub trait SqrTConfig<FieldT: FieldTConfig, PB: PBConfig, Fpk_variableT>: Default + Clone {
-    fn new(
-        pb: RcCell<protoboard<FieldT, PB>>,
-        s: RcCell<Fpk_variableT>,
-        s2: Fpk_variableT,
-        annotation_prefix: String,
-    ) -> Self;
-    fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness(&self);
-}
-pub trait ppTConfig<FieldT: FieldTConfig, PB: PBConfig>: Clone + Default + One + Zero {
-    type Fr: FieldTConfig;
-    type Fpk_variableT: VariableTConfig<FieldT, PB, Self>;
-    type Fpk_mul_gadgetT: MulTConfig<FieldT, PB, Self::Fpk_variableT>;
-    type Fpk_sqr_gadgetT: SqrTConfig<FieldT, PB, Self::Fpk_variableT>;
-    fn X(&self) -> FieldT;
-    fn Y(&self) -> FieldT;
-    fn to_affine_coordinates(&self);
-}
-
 /**
  * Gadget that represents a G2 variable.
  */
@@ -81,9 +30,9 @@ pub struct G2_variable<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBC
     //     type FieldT=ffec::Fr<ppT>;
     //     type FqeT=ffec::Fqe<other_curve<ppT> >;
     //     type FqkT=ffec::Fqk<other_curve<ppT> >;
-    X: RcCell<Fqe_variable<ppT, FieldT, PB>>,
-    Y: RcCell<Fqe_variable<ppT, FieldT, PB>>,
-    all_vars: pb_linear_combination_array<FieldT, PB>,
+    pub X: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    pub Y: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    pub all_vars: pb_linear_combination_array<FieldT, PB>,
     _t: PhantomData<(ppT, PB)>,
 }
 
@@ -96,14 +45,14 @@ pub struct G2_checker_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, P
     //     type FieldT=ffec::Fr<ppT>;
     //     type FqeT=ffec::Fqe<other_curve<ppT> >;
     //     type FqkT=ffec::Fqk<other_curve<ppT> >;
-    Q: G2_variables<ppT, FieldT, PB>,
-    Xsquared: RcCell<Fqe_variable<ppT, FieldT, PB>>,
-    Ysquared: RcCell<Fqe_variable<ppT, FieldT, PB>>,
-    Xsquared_plus_a: RcCell<Fqe_variable<ppT, FieldT, PB>>,
-    Ysquared_minus_b: RcCell<Fqe_variable<ppT, FieldT, PB>>,
-    compute_Xsquared: RcCell<Fqe_sqr_gadget<ppT, FieldT, PB>>,
-    compute_Ysquared: RcCell<Fqe_sqr_gadget<ppT, FieldT, PB>>,
-    curve_equation: RcCell<Fqe_mul_gadget<ppT, FieldT, PB>>,
+    pub Q: G2_variables<ppT, FieldT, PB>,
+    pub Xsquared: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    pub Ysquared: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    pub Xsquared_plus_a: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    pub Ysquared_minus_b: RcCell<Fqe_variable<ppT, FieldT, PB>>,
+    pub compute_Xsquared: RcCell<Fqe_sqr_gadget<ppT, FieldT, PB>>,
+    pub compute_Ysquared: RcCell<Fqe_sqr_gadget<ppT, FieldT, PB>>,
+    pub curve_equation: RcCell<Fqe_mul_gadget<ppT, FieldT, PB>>,
 }
 
 use ffec::algebra::scalar_multiplication::wnaf;
@@ -180,6 +129,16 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G2_variable
             },
         )
     }
+    pub fn size_in_bits() -> usize {
+        return 2 * Fqe_variable::<ppT, FieldT, PB>::size_in_bits();
+    }
+
+    pub fn num_variables() -> usize {
+        return 2 * Fqe_variable::<ppT, FieldT, PB>::num_variables();
+    }
+    pub fn num_field_elems() -> usize {
+        return 2;
+    }
 }
 impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G2_variables<ppT, FieldT, PB> {
     pub fn generate_r1cs_witness(&self, Q: &ppT) {
@@ -188,14 +147,6 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G2_variable
 
         self.t.X.borrow().generate_r1cs_witness(&Qcopy.X());
         self.t.Y.borrow().generate_r1cs_witness(&Qcopy.Y());
-    }
-
-    pub fn size_in_bits(&self) -> usize {
-        return 2 * Fqe_variable::<ppT, FieldT, PB>::size_in_bits();
-    }
-
-    pub fn num_variables(&self) -> usize {
-        return 2 * Fqe_variable::<ppT, FieldT, PB>::num_variables();
     }
 }
 

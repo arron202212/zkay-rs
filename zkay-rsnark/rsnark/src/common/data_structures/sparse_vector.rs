@@ -22,11 +22,11 @@ use ffec::scalar_multiplication::multiexp::{multi_exp, multi_exp_method};
  * A sparse vector is a list of indices along with corresponding values.
  * The indices are selected from the set {0,1,...,domain_size-1}.
  */
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct sparse_vector<T: SparseVectorConfig> {
-    indices: Vec<usize>,
-    values: Vec<T>,
-    domain_size_: usize,
+    pub indices: Vec<usize>,
+    pub values: Vec<T>,
+    pub domain_size_: usize,
     // sparse_vector() = default;
     // sparse_vector(&other:sparse_vector<T>) = default;
     // sparse_vector(sparse_vector<T> &&other) = default;

@@ -1,71 +1,48 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef SIMPLE_EXAMPLE_HPP_
-// #define SIMPLE_EXAMPLE_HPP_
-
-use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
-
-
-
-// 
-// r1cs_example<FieldT> gen_r1cs_example_from_protoboard(num_constraints:usize,
-//                                                       num_inputs:usize);
-
-
-
-// use crate::gadgetlib1::examples::simple_example;
-
-//#endif // SIMPLE_EXAMPLE_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef SIMPLE_EXAMPLE_TCC_
-// #define SIMPLE_EXAMPLE_TCC_
-
-use crate::gadgetlib1::gadgets::basic_gadgets;
-
-
-
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
+use crate::gadgetlib1::gadgets::basic_gadgets::inner_product_gadget;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
+use crate::relations::variable::variable;
+use rccell::RcCell;
 
-// 
-// r1cs_example<FieldT> gen_r1cs_example_from_protoboard(num_constraints:usize)
-// {
-//     let new_num_constraints = num_constraints - 1;
+pub fn gen_r1cs_example_from_protoboard<FieldT: FieldTConfig, PB: PBConfig>(
+    num_constraints: usize,
+) -> r1cs_example<FieldT, pb_variable, pb_linear_combination> {
+    let new_num_constraints = num_constraints - 1;
 
-//     /* construct dummy example: inner products of two vectors */
-//     let mut  pb=protoboard::<FieldT> ::new();
-//     pb_variable_array<FieldT> A;
-//     pb_variable_array<FieldT> B;
-//     pb_variable<FieldT> res;
+    /* construct dummy example: inner products of two vectors */
+    let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
+    let mut A = pb_variable_array::<FieldT, PB>::default();
+    let mut B = pb_variable_array::<FieldT, PB>::default();
+    let mut res = variable::<FieldT, pb_variable>::default();
 
-//     // the variables on the protoboard are (ONE (constant 1 term), res, A[0], ..., A[num_constraints-1], B[0], ..., B[num_constraints-1])
-//     res.allocate(&pb, "res");
-//     A.allocate(&pb, new_num_constraints, "A");
-//     B.allocate(&pb, new_num_constraints, "B");
+    // the variables on the protoboard are (ONE (constant 1 term), res, A[0], ..., A[num_constraints-1], B[0], ..., B[num_constraints-1])
+    res.allocate(&pb, "res".to_owned());
+    A.allocate(&pb, new_num_constraints, "A");
+    B.allocate(&pb, new_num_constraints, "B");
 
-//     inner_product_gadget<FieldT> compute_inner_product(&pb, A, B, res, "compute_inner_product");
-//     compute_inner_product.generate_r1cs_constraints();
+    let mut compute_inner_product = inner_product_gadget::<FieldT, PB>::new(
+        pb.clone(),
+        A.clone().into(),
+        B.clone().into(),
+        res,
+        "compute_inner_product".to_owned(),
+    );
+    compute_inner_product.generate_r1cs_constraints();
 
-//     /* fill in random example */
-//     for i in 0..new_num_constraints
-//     {
-//         pb.borrow().val(&A[i]) = FieldT::random_element();
-//         pb.borrow().val(&B[i]) = FieldT::random_element();
-//     }
+    /* fill in random example */
+    for i in 0..new_num_constraints {
+        *pb.borrow_mut().val_ref(&A[i]) = FieldT::random_element();
+        *pb.borrow_mut().val_ref(&B[i]) = FieldT::random_element();
+    }
 
-//     compute_inner_product.generate_r1cs_witness();
-//     return r1cs_example<FieldT>(pb.get_constraint_system(), pb.primary_input(), pb.auxiliary_input());
-// }
-
-
-//#endif // R1CS_EXAMPLES_TCC_
+    compute_inner_product.generate_r1cs_witness();
+    r1cs_example::<FieldT, pb_variable, pb_linear_combination>::new(
+        pb.borrow().get_constraint_system(),
+        pb.borrow().primary_input(),
+        pb.borrow().auxiliary_input(),
+    )
+}

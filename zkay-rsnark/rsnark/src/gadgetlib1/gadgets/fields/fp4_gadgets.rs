@@ -1,19 +1,9 @@
+// Declaration of interfaces for Fp4 gadgets.
+
+// The gadgets verify field arithmetic in Fp4 = Fp2[V]/(V^2-U) where
+// Fp2 = Fp[U]/(U^2-non_residue) and non_residue is in Fp.
+
 use crate::gadgetlib1::gadget::gadget;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for Fp4 gadgets.
-
-The gadgets verify field arithmetic in Fp4 = Fp2[V]/(V^2-U) where
-Fp2 = Fp[U]/(U^2-non_residue) and non_residue is in Fp.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef FP4_GADGETS_HPP_
-// #define FP4_GADGETS_HPP_
 use crate::gadgetlib1::gadgets::fields::fp2_gadgets::{
     Fp2_mul_gadget, Fp2_mul_gadgets, Fp2_sqr_gadget, Fp2_sqr_gadgets, Fp2_variable, Fp2_variables,
     Fp2TConfig,

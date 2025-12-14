@@ -1,52 +1,40 @@
-/** @file
- *****************************************************************************
 
- Declaration of interfaces for a ppzkSNARK for R1CS.
+//  Declaration of interfaces for a ppzkSNARK for R1CS.
 
- This includes:
- - pub struct for proving key
- - pub struct for verification key
- - pub struct for processed verification key
- - pub struct for key pair (proving key & verification key)
- - pub struct for proof
- - generator algorithm
- - prover algorithm
- - verifier algorithm (with strong or weak input consistency)
- - online verifier algorithm (with strong or weak input consistency)
+//  This includes:
+//  - pub struct for proving key
+//  - pub struct for verification key
+//  - pub struct for processed verification key
+//  - pub struct for key pair (proving key & verification key)
+//  - pub struct for proof
+//  - generator algorithm
+//  - prover algorithm
+//  - verifier algorithm (with strong or weak input consistency)
+//  - online verifier algorithm (with strong or weak input consistency)
 
- The implementation instantiates (a modification of) the protocol of \[PGHR13],
- by following extending, and optimizing the approach described in \[BCTV14].
+//  The implementation instantiates (a modification of) the protocol of \[PGHR13],
+//  by following extending, and optimizing the approach described in \[BCTV14].
 
 
- Acronyms:
+//  Acronyms:
 
- - R1CS = "Rank-1 Constraint Systems"
- - ppzkSNARK = "PreProcessing Zero-Knowledge Succinct Non-interactive ARgument of Knowledge"
+//  - R1CS = "Rank-1 Constraint Systems"
+//  - ppzkSNARK = "PreProcessing Zero-Knowledge Succinct Non-interactive ARgument of Knowledge"
 
- References:
+//  References:
 
- \[BCTV14]:
- "Succinct Non-Interactive Zero Knowledge for a von Neumann Architecture",
- Eli Ben-Sasson, Alessandro Chiesa, Eran Tromer, Madars Virza,
- USENIX Security 2014,
- <http://eprint.iacr.org/2013/879>
+//  \[BCTV14]:
+//  "Succinct Non-Interactive Zero Knowledge for a von Neumann Architecture",
+//  Eli Ben-Sasson, Alessandro Chiesa, Eran Tromer, Madars Virza,
+//  USENIX Security 2014,
+//  <http://eprint.iacr.org/2013/879>
 
- \[PGHR13]:
- "Pinocchio: Nearly practical verifiable computation",
- Bryan Parno, Craig Gentry, Jon Howell, Mariana Raykova,
- IEEE S&P 2013,
- <https://eprint.iacr.org/2013/279>
+//  \[PGHR13]:
+//  "Pinocchio: Nearly practical verifiable computation",
+//  Bryan Parno, Craig Gentry, Jon Howell, Mariana Raykova,
+//  IEEE S&P 2013,
+//  <https://eprint.iacr.org/2013/279>
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-// //#ifndef R1CS_PPZKSNARK_HPP_
-// // #define R1CS_PPZKSNARK_HPP_
-
-// 
 
 use ff_curves::algebra::curves::public_params;
 

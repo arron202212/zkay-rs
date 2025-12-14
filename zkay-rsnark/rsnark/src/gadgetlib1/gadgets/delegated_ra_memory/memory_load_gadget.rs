@@ -1,25 +1,9 @@
-/** @file
- *****************************************************************************
+//  Declaration of interfaces for the memory load gadget.
+//  The gadget can be used to verify a memory load from a "delegated memory".
 
- Declaration of interfaces for the memory load gadget.
- The gadget can be used to verify a memory load from a "delegated memory".
+use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_read_gadget::{
+    merkle_tree_check_read_gadget, merkle_tree_check_read_gadgets,
+};
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef MEMORY_LOAD_GADGET_HPP_
-// #define MEMORY_LOAD_GADGET_HPP_
-
-use crate::gadgetlib1::gadgets::merkle_tree::merkle_tree_check_read_gadget;
-
-
-
-// 
-type memory_load_gadget< FieldT,  HashT> = merkle_tree_check_read_gadget<FieldT, HashT>;
-
-
-
-//#endif // MEMORY_LOAD_GADGET_HPP_
+pub type memory_load_gadget<FieldT, PB, HashT> = merkle_tree_check_read_gadget<FieldT, PB, HashT>;
+pub type memory_load_gadgets<FieldT, PB, HashT> = merkle_tree_check_read_gadgets<FieldT, PB, HashT>;

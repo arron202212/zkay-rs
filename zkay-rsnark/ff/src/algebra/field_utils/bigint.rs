@@ -136,7 +136,7 @@ impl<const N: usize> bigint<N> {
             .map_err(|v| eyre::eyre!(format!("{v:?}")))
     }
 
-    pub fn one() -> Self {
+    pub const fn one() -> Self {
         Self(BigInt::<N>::one())
     }
 

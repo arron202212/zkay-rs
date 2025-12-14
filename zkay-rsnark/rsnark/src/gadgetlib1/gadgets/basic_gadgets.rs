@@ -259,6 +259,7 @@ pub struct conjunction_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub inputs: pb_variable_array<FieldT, PB>,
     pub output: variable<FieldT, pb_variable>,
 }
+pub type conjunction_gadgets<FieldT, PB> = gadget<FieldT, PB, conjunction_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> conjunction_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
@@ -867,7 +868,7 @@ pub fn test_disjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
     print_time("disjunction tests successful");
 }
 
-impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, conjunction_gadget<FieldT, PB>> {
+impl<FieldT: FieldTConfig, PB: PBConfig> conjunction_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
         /* inv * (n-sum) = 1-output */
         let (mut a1, mut b1, mut c1) = (

@@ -1,4 +1,4 @@
-//  pub mod examples ;
+pub mod examples;
 pub mod gadgets;
 //  pub mod tests ;
 pub mod constraint_profiling;

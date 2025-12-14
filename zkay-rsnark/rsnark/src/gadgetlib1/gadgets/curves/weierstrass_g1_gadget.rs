@@ -3,6 +3,10 @@
 // The gadgets verify curve arithmetic in G1 = E(F) where E/F: y^2 = x^3 + A * X + B
 // is an elliptic curve over F in short Weierstrass form.
 
+use super::{
+    Fqe_mul_gadget, Fqe_sqr_gadget, Fqe_variable, G1, G2, MulTConfig, SqrTConfig, VariableTConfig,
+    coeff_a, coeff_b, ppTConfig,
+};
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
 use crate::gadgetlib1::pb_variable::{
@@ -18,22 +22,22 @@ use ffec::Zero;
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_a;
-const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_b;
-pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
+// const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_a;
+// const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_b;
+// pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
 /**
  * Gadget that represents a G1 variable.
  */
-pub trait ppTConfig<FieldT: FieldTConfig>: Clone + Default {
-    type Fr: FieldTConfig;
-    fn X(&self) -> FieldT;
-    fn Y(&self) -> FieldT;
-    fn to_affine_coordinates(&self);
-}
+// pub trait ppTConfig<FieldT: FieldTConfig>: Clone + Default {
+//     type Fr: FieldTConfig;
+//     fn X(&self) -> FieldT;
+//     fn Y(&self) -> FieldT;
+//     fn to_affine_coordinates(&self);
+// }
 
 // type FieldT = ffec::Fr<ppT>;
 #[derive(Clone, Default)]
-pub struct G1_variable<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+pub struct G1_variable<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> {
     //  : public gadget<ffec::Fr<ppT> >
     pub X: linear_combination<FieldT, pb_variable, pb_linear_combination>,
     pub Y: linear_combination<FieldT, pb_variable, pb_linear_combination>,
@@ -46,7 +50,7 @@ pub struct G1_variable<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfi
  */
 
 #[derive(Clone, Default)]
-pub struct G1_checker_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+pub struct G1_checker_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<ffec::Fr<ppT> >
     // type FieldT=ffec::Fr<ppT>;
     pub P: G1_variables<ppT, FieldT, PB>,
@@ -59,7 +63,7 @@ pub struct G1_checker_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: P
  */
 
 #[derive(Clone, Default)]
-pub struct G1_add_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+pub struct G1_add_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<ffec::Fr<ppT> >
     // type FieldT=ffec::Fr<ppT>;
     pub lambda: variable<FieldT, pb_variable>,
@@ -73,7 +77,7 @@ pub struct G1_add_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBCon
  * Gadget that creates constraints for G1 doubling.
  */
 #[derive(Clone, Default)]
-pub struct G1_dbl_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+pub struct G1_dbl_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<ffec::Fr<ppT> >
     // type FieldT=ffec::Fr<ppT>;
     pub Xsquared: variable<FieldT, pb_variable>,
@@ -86,7 +90,8 @@ pub struct G1_dbl_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBCon
  * Gadget that creates constraints for G1 multi-scalar multiplication.
  */
 #[derive(Clone, Default)]
-pub struct G1_multiscalar_mul_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
+pub struct G1_multiscalar_mul_gadget<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+{
     //  : public gadget<ffec::Fr<ppT> >
     //     type FieldT=ffec::Fr<ppT>;
     pub computed_results: Vec<G1_variables<ppT, FieldT, PB>>,
@@ -104,7 +109,7 @@ pub struct G1_multiscalar_mul_gadget<ppT: ppTConfig<FieldT>, FieldT: FieldTConfi
 }
 
 pub type G1_variables<ppT, FieldT, PB> = gadget<FieldT, PB, G1_variable<ppT, FieldT, PB>>;
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_variable<ppT, FieldT, PB> {
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G1_variable<ppT, FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
         annotation_prefix: String,
@@ -157,9 +162,19 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_variable<ppT
             },
         )
     }
+    pub fn size_in_bits() -> usize {
+        return 2 * FieldT::size_in_bits();
+    }
+
+    pub fn num_variables() -> usize {
+        return 2;
+    }
+    pub fn num_field_elems() -> usize {
+        return 2;
+    }
 }
 
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_variables<ppT, FieldT, PB> {
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig> G1_variables<ppT, FieldT, PB> {
     pub fn generate_r1cs_witness(&self, el: &G1<ppT>) {
         let mut el_normalized = el.clone();
         el_normalized.to_affine_coordinates();
@@ -167,19 +182,11 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_variables<pp
         *self.pb.borrow_mut().lc_val_ref(&self.t.X) = el_normalized.X();
         *self.pb.borrow_mut().lc_val_ref(&self.t.Y) = el_normalized.Y();
     }
-
-    pub fn size_in_bits(&self) -> usize {
-        return 2 * FieldT::size_in_bits();
-    }
-
-    pub fn num_variables(&self) -> usize {
-        return 2;
-    }
 }
 
 pub type G1_checker_gadgets<ppT, FieldT, PB> =
     gadget<FieldT, PB, G1_checker_gadget<ppT, FieldT, PB>>;
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
     G1_checker_gadget<ppT, FieldT, PB>
 {
     pub fn new(
@@ -202,7 +209,7 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         )
     }
 }
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
     G1_checker_gadgets<ppT, FieldT, PB>
 {
     pub fn generate_r1cs_constraints(&self) {
@@ -251,7 +258,9 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
 }
 
 pub type G1_add_gadgets<ppT, FieldT, PB> = gadget<FieldT, PB, G1_add_gadget<ppT, FieldT, PB>>;
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_add_gadget<ppT, FieldT, PB> {
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_add_gadget<ppT, FieldT, PB>
+{
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
         A: G1_variables<ppT, FieldT, PB>,
@@ -293,7 +302,9 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_add_gadget<p
         )
     }
 }
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_add_gadgets<ppT, FieldT, PB> {
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_add_gadgets<ppT, FieldT, PB>
+{
     pub fn generate_r1cs_constraints(&self) {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
@@ -367,7 +378,9 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_add_gadgets<
 
 pub type G1_dbl_gadgets<ppT, FieldT, PB> = gadget<FieldT, PB, G1_dbl_gadget<ppT, FieldT, PB>>;
 
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_dbl_gadget<ppT, FieldT, PB> {
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_dbl_gadget<ppT, FieldT, PB>
+{
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
         A: G1_variables<ppT, FieldT, PB>,
@@ -390,7 +403,9 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_dbl_gadget<p
         )
     }
 }
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_dbl_gadgets<ppT, FieldT, PB> {
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
+    G1_dbl_gadgets<ppT, FieldT, PB>
+{
     pub fn generate_r1cs_constraints(&self) {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
@@ -458,7 +473,7 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> G1_dbl_gadgets<
 pub type G1_multiscalar_mul_gadgets<ppT, FieldT, PB> =
     gadget<FieldT, PB, G1_multiscalar_mul_gadget<ppT, FieldT, PB>>;
 
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
     G1_multiscalar_mul_gadget<ppT, FieldT, PB>
 {
     pub fn new(
@@ -538,7 +553,7 @@ impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
     }
 }
 
-impl<ppT: ppTConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
+impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
     G1_multiscalar_mul_gadgets<ppT, FieldT, PB>
 {
     pub fn generate_r1cs_constraints(&self) {

@@ -1,11 +1,19 @@
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::protoboard;
+use crate::relations::FieldTConfig;
 use ffec::common::profiling::print_indent;
-
+use rccell::RcCell;
 pub struct constraint_profiling_entry {
     indent: usize,
     annotation: String,
     count: usize,
 }
 
+pub fn PROFILE_CONSTRAINTS<FieldT: FieldTConfig, PB: PBConfig>(
+    pb: &RcCell<protoboard<FieldT, PB>>,
+    annotation: &str,
+) {
+}
 // extern Vec<constraint_profiling_entry> constraint_profiling_table;
 
 // #define PROFILE_CONSTRAINTS(&pb, annotation)                             \;

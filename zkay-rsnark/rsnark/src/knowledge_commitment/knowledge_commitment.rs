@@ -23,7 +23,9 @@ use ffec::field_utils::BigInteger;
 use ffec::scalar_multiplication::multiexp::AsBigint;
 use ffec::{Fp_model, Fp_modelConfig};
 pub trait TConfig<const N: usize>:
-    BigInteger
+    Default
+    + Clone
+    + BigInteger
     + One
     + AsBigint
     + std::ops::Add<Output = Self>
@@ -47,9 +49,10 @@ pub trait TConfig<const N: usize>:
  * - a * (g,h) + b * (g',h')->Self= ( a * g + b * g', a * h + b * h').
  */
 
+#[derive(Default, Clone)]
 pub struct knowledge_commitment<const N: usize, T1: TConfig<N>, T2: TConfig<N>> {
-    g: T1,
-    h: T2,
+    pub g: T1,
+    pub h: T2,
 }
 // impl<const N:usize,T1:TConfig<N>,T2:TConfig<N>> knowledge_commitment<T1,T2>{
 //     // knowledge_commitment<T1,T2>() = default;

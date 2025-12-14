@@ -10,6 +10,7 @@
 #![feature(generic_const_items)]
 #![feature(generic_const_exprs)]
 #![feature(non_lifetime_binders)]
+#![feature(associated_type_defaults)]
 #[macro_use]
 extern crate scan_fmt;
 pub mod common;

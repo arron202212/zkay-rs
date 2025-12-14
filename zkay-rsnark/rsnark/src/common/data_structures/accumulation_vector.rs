@@ -24,15 +24,21 @@ use ffec::common::serialization::OUTPUT_NEWLINE;
  * vector into the accumualation value.
  */
 pub trait AccumulationVectorConfig:
-    std::cmp::PartialEq + std::fmt::Display + std::ops::Add + Sized + SparseVectorConfig
+    Clone
+    + Default
+    + std::cmp::PartialEq
+    + std::fmt::Display
+    + std::ops::Add
+    + Sized
+    + SparseVectorConfig
 {
     // fn zero()->Self;
     // fn size_in_bits()->usize;
 }
-
+#[derive(Clone, Default)]
 pub struct accumulation_vector<T: AccumulationVectorConfig> {
-    first: T,
-    rest: sparse_vector<T>,
+    pub first: T,
+    pub rest: sparse_vector<T>,
 }
 impl<T: AccumulationVectorConfig> accumulation_vector<T> {
     // accumulation_vector() = default;

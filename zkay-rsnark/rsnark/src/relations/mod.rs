@@ -4,6 +4,7 @@ pub mod constraint_satisfaction_problems;
 pub mod ram_computations;
 pub mod variable;
 use ffec::One;
+
 pub trait FieldTConfig:
     One
     + std::fmt::Display

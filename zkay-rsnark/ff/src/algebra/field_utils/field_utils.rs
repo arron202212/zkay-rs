@@ -1,14 +1,5 @@
 #![allow(incomplete_features, dead_code, non_upper_case_globals)]
 // #![feature(generic_const_exprs, generic_const_items)]
-// /** @file
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef FIELD_UTILS_HPP_
-// #define FIELD_UTILS_HPP_
-//#include <cstdint>
 
 use crate::algebra::field_utils::bigint::GMP_NUMB_BITS;
 use crate::algebra::field_utils::bigint::bigint;
@@ -385,6 +376,3 @@ pub fn batch_invert<FieldT: One + Clone>(vec: &mut Vec<FieldT>) {
         acc_inverse = acc_inverse * old_el;
     }
 }
-
-// } // namespace libff
-//#endif // FIELD_UTILS_TCC_
