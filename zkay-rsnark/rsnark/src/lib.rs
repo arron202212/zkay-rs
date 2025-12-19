@@ -15,7 +15,7 @@
 extern crate scan_fmt;
 pub mod common;
 pub mod gadgetlib1;
-// pub mod        gadgetlib2;
+pub mod gadgetlib2;
 pub mod knowledge_commitment;
 pub mod reductions;
 pub mod relations;

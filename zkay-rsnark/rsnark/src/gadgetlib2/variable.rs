@@ -1,12 +1,11 @@
-
 //  Declaration of the low level objects needed for field arithmetization.
-
-
-use crate::gadgetlib2::infrastructure;
-use crate::gadgetlib2::pp;
-
-// namespace gadgetlib2 {
-
+use super::pp::Fp;
+use super::variable_operators::*;
+use enum_dispatch::enum_dispatch;
+use rccell::RcCell;
+use std::collections::{BTreeMap, BTreeSet};
+use std::ops::{AddAssign, MulAssign, Neg, SubAssign};
+use std::ops::{Index, IndexMut};
 // pub struct GadgetLibAdapter;
 
 // // Forward declarations
@@ -16,17 +15,76 @@ use crate::gadgetlib2::pp;
 // pub struct FConst;
 // pub struct Variable;
 // pub struct VariableArray;
+#[derive(Default, Clone, PartialEq, Eq, Ord, PartialOrd)]
+pub enum FieldType {
+    R1P,
+    #[default]
+    AGNOSTIC,
+}
+use strum_macros::{EnumIs, EnumTryAs};
+#[enum_dispatch(FElemInterface)]
+#[derive(EnumIs, EnumTryAs, Clone, PartialEq)]
+pub enum ElemType {
+    Const(FConst),
+    Elem(R1P_Elem),
+}
+impl Default for ElemType {
+    fn default() -> Self {
+        Self::Const(FConst::default())
+    }
+}
 
- enum FieldType{R1P, AGNOSTIC} 
+impl AddAssign<&Self> for ElemType {
+    #[inline]
+    fn add_assign(&mut self, other: &Self) {
+        match self {
+            Self::Const(self_) => {
+                *self_ += other;
+            }
+            Self::Elem(self_) => {
+                *self_ += other;
+            }
+        }
+    }
+}
 
-type VariablePtr=RcCell<Variable> ;
-type VariableArrayPtr=RcCell<VariableArray> ;
-type FElemInterfacePtr=RcCell<FElemInterface> ;
-type ProtoboardPtr=RcCell<Protoboard> ;
-type VarIndex_t=u64 ;
+impl SubAssign<&Self> for ElemType {
+    #[inline]
+    fn sub_assign(&mut self, other: &Self) {
+        match self {
+            Self::Const(self_) => {
+                *self_ -= other;
+            }
+            Self::Elem(self_) => {
+                *self_ -= other;
+            }
+        }
+    }
+}
+
+impl MulAssign<&Self> for ElemType {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &Self) {
+        match self {
+            Self::Const(self_) => {
+                *self_ *= other;
+            }
+            Self::Elem(self_) => {
+                *self_ *= other;
+            }
+        }
+    }
+}
+
+pub type VariablePtr = RcCell<Variable>;
+pub type VariableArrayPtr<T> = RcCell<VariableArray<T>>;
+pub type FElemInterfacePtr = RcCell<ElemType>;
+// pub type ProtoboardPtr = RcCell<Protoboard>;
+pub type VarIndex_t = u64;
 
 // Naming Conventions:
-// R1P == Rank 1 Prime characteristic
+//FieldType::R1P == Rank 1 Prime characteristic
 
 // /*************************************************************************************************/
 // /*************************************************************************************************/
@@ -35,45 +93,55 @@ type VarIndex_t=u64 ;
 // /*******************                                                            ******************/
 // /*************************************************************************************************/
 // /*************************************************************************************************/
+//    An interface pub struct for field elements.
+//    Currently 2 classes will derive from this interface:
+//    R1P_Elem - Elements of a field of prime characteristic
+//    FConst - Formally not a field, only placeholders for field agnostic constants, such as 0 and 1.
+//             Can be used for -1 or any other constant which makes semantic sense in all fields.
 
-/**
-    An interface pub struct for field elements.
-    Currently 2 classes will derive from this interface:
-    R1P_Elem - Elements of a field of prime characteristic
-    FConst - Formally not a field, only placeholders for field agnostic constants, such as 0 and 1.
-             Can be used for -1 or any other constant which makes semantic sense in all fields.
- */
-pub trait FElemInterface {
-// 
-    // virtual FElemInterface& operator=(0:n:u64) =,
+#[enum_dispatch]
+pub trait FElemInterface: Default + Clone {
+    //
+    // fn  FElemInterface& operator=(n:u64) =,
     // /// FConst will be field agnostic, allowing us to hold values such as 0 and 1 without knowing
     // /// the underlying field. This assignment operator will convert to the correct field element.
-    // virtual FElemInterface& operator=(src:&FConst) = 0;
-    // virtual String asString() 0:=,
-    // virtual FieldType fieldType() 0:=,
-    // virtual FElemInterface& operator+=(other:&FElemInterface) = 0;
-    // virtual FElemInterface& operator-=(other:&FElemInterface) = 0;
-    // virtual FElemInterface& operator*=(other:&FElemInterface) = 0;
-    // virtual bool operator==(other:&FElemInterface) 0:=,
-    // virtual bool operator==(other:&FConst) 0:=,
+    // fn  FElemInterface& operator=(src:&FConst) = 0;
+    fn asString(&self) -> String {
+        String::new()
+    }
+    fn fieldType(&self) -> FieldType {
+        FieldType::AGNOSTIC
+    }
+    // fn  FElemInterface& operator+=(other:&FElemInterface) = 0;
+    // fn  FElemInterface& operator-=(other:&FElemInterface) = 0;
+    // fn  FElemInterface& operator*=(other:&FElemInterface) = 0;
+    // fn  bool operator==(other:&FElemInterface) 0:=,
+    // fn  bool operator==(other:&FConst) 0:=,
     // /// This operator is not always mathematically well defined. 'n' will be checked in runtime
     // /// for fields in which integer values are not well defined.
-    // virtual bool operator==(0:n:u64) const =,
+    // fn  bool operator==(0:n:u64) const =,
     //  @returns a unique_ptr to a copy of the current element.
-    // virtual FElemInterfacePtr clone() 0:=,
-    // virtual FElemInterfacePtr inverse() 0:=,
-    // virtual asLong:u64() 0:=,
-    // virtual int getBit(i:u32) 0:=,
-    // virtual FElemInterface& power(exponent:u64) = 0;
-    // virtual ~FElemInterface(){};
+    // fn  FElemInterfacePtr clone() 0:=,
+    fn inverse(&self) -> Self {
+        panic!("")
+    }
+    fn asLong(&self) -> i64 {
+        0
+    }
+    fn getBit(&self, i: u32) -> bool {
+        false
+    }
+    fn power(&self, exponent: u64) -> Self {
+        self.clone()
+    }
+    // fn  ~FElemInterface(){};
 }
-//; // pub struct FElemInterface
 
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
 
-// inline bool operator==(first:first:u64, second:&FElemInterface) {return second ==,}
+// inline bool operator==(first:u64, second:&FElemInterface) {return second ==first:,}
 // inline bool operator!=(const first:u64, second:&FElemInterface) {return !(first == second);}
 // inline bool operator!=(first:FElemInterface&, const second:u64) {return !(first == second);}
 // inline bool operator!=(first:FElemInterface&, second:&FElemInterface) {
@@ -88,17 +156,26 @@ pub trait FElemInterface {
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-/// A wrapper pub struct for field elements. Can hold any derived type of FieldElementInterface
+/// A wrapper pub struct for field elements. Can hold any derived pub type of FieldElementInterface
+
+#[derive(Clone, PartialEq)]
 pub struct FElem {
-// //
-     elem_:FElemInterfacePtr,
+    pub elem_: RcCell<ElemType>,
 }
-// 
+impl PartialEq<i32> for FElem {
+    #[inline]
+    fn eq(&self, other: &i32) -> bool {
+        self.elem_.borrow().asLong() == *other as i64
+    }
+}
+
+impl FElemInterface for FElem {}
+//
 //     explicit FElem(elem:&FElemInterface);
 //     /// Helper method. When doing arithmetic between a constant and a field specific element
 //     /// we want to "promote" the constant to the same field. This function changes the unique_ptr
 //     /// to point to a field specific element with the same value as the constant which it held.
-//     pub fn  promoteToFieldType(FieldType type);
+//     pub fn  promoteToFieldType(FieldType pub type);
 //     FElem();
 //     FElem(const n:u64);
 //     FElem(i:i32);
@@ -133,7 +210,7 @@ pub struct FElem {
 // /// These operators are not always mathematically well defined. The will:u64 be checked in runtime
 // /// for fields in which values other than 0 and 1 are not well defined.
 // inline bool operator==(first:&FElem, const second:u64) {return first == FElem(second);}
-// inline bool operator==(first:first:u64, second:&FElem) {return second ==,}
+// inline bool operator==(first:u64, second:&FElem) {return second ==first:,}
 // inline bool operator!=(first:&FElem, const second:u64) {return !(first == second);}
 // inline bool operator!=(const first:u64, second:&FElem) {return !(first == second);}
 
@@ -159,29 +236,30 @@ pub struct FElem {
     over a GF2 extension field in which '42' has no obvious meaning, other than being the answer to
     life, the universe and everything.
 */
-pub struct FConst {//: public FElemInterface 
-// //
-     contents_:i64,
+#[derive(Default, Clone)]
+pub struct FConst {
+    //: public FElemInterface
+    pub contents_: i64,
 }
-    // explicit FConst(const n:u64)->Self contents_(n) {}
-// 
-//     virtual FConst& operator=(n:n:u64) {contents_ =, return self;}
-//     virtual FConst& operator=(src:&FConst) {contents_ = src.contents_; return self;}
-//     virtual String asString() const {return format!("{}",contents_);}
-//     virtual FieldType fieldType() AGNOSTIC:{return,}
-//     virtual FConst& operator+=(other:&FElemInterface);
-//     virtual FConst& operator-=(other:&FElemInterface);
-//     virtual FConst& operator*=(other:&FElemInterface);
-//     virtual bool operator==(other:&FElemInterface) self:{return other ==,}
-//     virtual bool operator==(other:&FConst) const {return contents_ == other.contents_;}
-//     virtual bool operator==(n:n:u64) const {return contents_ ==,}
+// explicit FConst(const n:u64)->Self contents_(n) {}
+//
+//     fn  FConst& operator=(n:n:u64) {contents_ =, return self;}
+//     fn  FConst& operator=(src:&FConst) {contents_ = src.contents_; return self;}
+//     fn  String asString() const {return format!("{}",contents_);}
+//     fn  FieldType fieldType()FieldType::AGNOSTIC:{return,}
+//     fn  FConst& operator+=(other:&FElemInterface);
+//     fn  FConst& operator-=(other:&FElemInterface);
+//     fn  FConst& operator*=(other:&FElemInterface);
+//     fn  bool operator==(other:&FElemInterface) self:{return other ==,}
+//     fn  bool operator==(other:&FConst) const {return contents_ == other.contents_;}
+//     fn  bool operator==(n:n:u64) const {return contents_ ==,}
 //     /// @return a unique_ptr to a new copy of the element
-//     virtual FElemInterfacePtr clone() const {return FElemInterfacePtr(new FConst(self));}
+//     fn  FElemInterfacePtr clone() const {return FElemInterfacePtr(new FConst(self));}
 //     /// @return a unique_ptr to a new copy of the element's multiplicative inverse
-//     virtual FElemInterfacePtr inverse() const;
+//     fn  FElemInterfacePtr inverse() const;
 //     asLong:u64() contents_:{return,}
 //     int getBit(i:u32) const { //ffec::UNUSED(i); eyre::bail!("Cannot get bit from FConst."); }
-//     virtual FElemInterface& power(exponent:u64);
+//     fn  FElemInterface& power(exponent:u64);
 
 //     friend pub struct FElem; // allow constructor call
 // }; // pub struct FConst
@@ -198,33 +276,34 @@ pub struct FConst {//: public FElemInterface
 /*************************************************************************************************/
 /*************************************************************************************************/
 /**
-    Holds elements of a prime characteristic field. Currently implemented using the gmp (Linux) and
-    mpir (Windows) libraries.
- */
+   Holds elements of a prime characteristic field. Currently implemented using the gmp (Linux) and
+   mpir (Windows) libraries.
+*/
+#[derive(Default, Clone, PartialEq)]
 pub struct R1P_Elem {
-// ///: public FElemInterface 
-         elem_:Fp,
+    // ///: public FElemInterface
+    pub elem_: Fp,
 }
-// 
+//
 
 //     explicit R1P_Elem(elem:&Fp)->Self elem_(elem) {}
-//     virtual R1P_Elem& operator=(src:&FConst) {elem_ = src.asLong(); return self;}
-//     virtual R1P_Elem& operator=(self:n:u64) {elem_ = Fp(n); return,}
-//     virtual String asString() const {return format!("{}", elem_.as_ulong());}
-//     virtual FieldType fieldType() R1P:{return,}
-//     virtual R1P_Elem& operator+=(other:&FElemInterface);
-//     virtual R1P_Elem& operator-=(other:&FElemInterface);
-//     virtual R1P_Elem& operator*=(other:&FElemInterface);
-//     virtual bool operator==(other:&FElemInterface) const;
-//     virtual bool operator==(other:&FConst) const {return elem_ == Fp(other.asLong());}
-//     virtual bool operator==(const n:u64) const {return elem_ == Fp(n);}
+//     fn  R1P_Elem& operator=(src:&FConst) {elem_ = src.asLong(); return self;}
+//     fn  R1P_Elem& operator=(self:n:u64) {elem_ = Fp(n); return,}
+//     fn  String asString() const {return format!("{}", elem_.as_ulong());}
+//     fn  FieldType fieldType()FieldType::R1P:{return,}
+//     fn  R1P_Elem& operator+=(other:&FElemInterface);
+//     fn  R1P_Elem& operator-=(other:&FElemInterface);
+//     fn  R1P_Elem& operator*=(other:&FElemInterface);
+//     fn  bool operator==(other:&FElemInterface) const;
+//     fn  bool operator==(other:&FConst) const {return elem_ == Fp(other.asLong());}
+//     fn  bool operator==(const n:u64) const {return elem_ == Fp(n);}
 //     /// @return a unique_ptr to a new copy of the element
-//     virtual FElemInterfacePtr clone() const {return FElemInterfacePtr(new R1P_Elem(self));}
+//     fn  FElemInterfacePtr clone() const {return FElemInterfacePtr(new R1P_Elem(self));}
 //     /// @return a unique_ptr to a new copy of the element's multiplicative inverse
-//     virtual FElemInterfacePtr inverse() const;
+//     fn  FElemInterfacePtr inverse() const;
 //     asLong:u64() const;
 //     int getBit(i:u32) const {return elem_.as_bigint().test_bit(i);}
-//     virtual FElemInterface& power(exponent:u64) {elem_^= exponent; return self;}
+//     fn  FElemInterface& power(exponent:u64) {elem_^= exponent; return self;}
 
 //     friend pub struct FElem; // allow constructor call
 //     friend pub struct GadgetLibAdapter;
@@ -241,8 +320,8 @@ pub struct R1P_Elem {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-    type set=BTreeSet<Variable, VariableStrictOrder>;
-    type multiset=BTreeMap<Variable, VariableStrictOrder>;
+pub type set = BTreeSet<Variable>; //VariableStrictOrder
+pub type multiset = BTreeMap<Variable, i32>; //use std::collections::BTreeMap;
 
 // /**
 //     @brief A formal variable, field agnostic.
@@ -255,21 +334,22 @@ pub struct R1P_Elem {
 //     Variables are field agnostic, this means they can be used regardless of the context field,
 //     which will also be determined by the assignment.
 //  */
-type VariableAssignment=HashMap<Variable, FElem, VariableStrictOrder>;
+pub type VariableAssignment = HashMap<Variable, FElem>; //VariableStrictOrder
+#[derive(Default, Clone, Eq, Hash, Ord)]
 pub struct Variable {
-// //
-    index_:VarIndex_t,  ///< This index differentiates and identifies Variable instances.
-     nextFreeIndex_:VarIndex_t, //static///< Monotonically-increasing counter to allocate disinct indices.
-// #ifdef DEBUG
-     name_:String,
-//#endif
+    pub index_: VarIndex_t,
+    ///< This index differentiates and identifies Variable instances.
+    // nextFreeIndex_: VarIndex_t, //static///< Monotonically-increasing counter to allocate disinct indices.
+    // #ifdef DEBUG
+    pub name_: String,
+    //#endif
 }
 //    /**
 //     * @brief allocates the variable
 //     */
-// 
+//
 //     explicit Variable(name:&String = "");
-//     virtual ~Variable();
+//     fn  ~Variable();
 
 //     String name() const;
 
@@ -280,8 +360,13 @@ pub struct Variable {
 //             return first.index_ < second.index_;
 //         }
 //     };
-
-//     
+impl PartialEq for Variable {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.index_ == other.index_
+    }
+}
+//
 //     FElem eval(assignment:&VariableAssignment) const;
 
 //     /// A set of Variables should be declared as follows:    pub fn set s1;
@@ -295,7 +380,7 @@ pub struct Variable {
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
 use std::collections::HashMap;
-// type VariableAssignment =HashMap<Variable, FElem,VariableStrictOrder> ;
+// pub type VariableAssignment =HashMap<Variable, FElem> ;
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -305,26 +390,31 @@ use std::collections::HashMap;
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-type VariableArrayContents =Vec<Variable> ;
+pub type VariableArrayContents = Vec<Variable>;
+pub trait SubVariableArrayConfig: Default + Clone + Ord {
+    fn resize(&mut self, numBits: usize) -> usize {
+        numBits
+    }
+}
 
-pub struct VariableArray {
-// //: public VariableArrayContents 
-// #   ifdef DEBUG
-//     String name_;
-// #   endif
-// 
-//     explicit VariableArray(name:&String = "");
-//     explicit VariableArray(size:i32, name:&String = "");
-//     explicit VariableArray(size:usize, name:&String = "");
-//     explicit VariableArray(size:usize, contents:&Variable)
-//             : VariableArrayContents(size, contents) {}
+#[derive(Default, Clone)]
+pub struct VariableArray<T: SubVariableArrayConfig> {
+    // //: public VariableArrayContents
+    pub contents: VariableArrayContents,
+    pub name_: String,
+    pub t: T,
+    //     explicit VariableArray(name:&String = "");
+    //     explicit VariableArray(size:i32, name:&String = "");
+    //     explicit VariableArray(size:usize, name:&String = "");
+    //     explicit VariableArray(size:usize, contents:&Variable)
+    //             : VariableArrayContents(size, contents) {}
 
-//     using VariableArrayContents::operator[];
-//     using VariableArrayContents::at;
-//     using VariableArrayContents::push_back;
-//     using VariableArrayContents::size;
+    //     using VariableArrayContents::operator[];
+    //     using VariableArrayContents::at;
+    //     using VariableArrayContents::push;
+    //     using VariableArrayContents::size;
 
-//     String name() const;
+    //     String name() const;
 } // pub struct VariableArray
 
 /***********************************/
@@ -339,77 +429,82 @@ pub struct VariableArray {
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-type FlagVariable=Variable ; ///< Holds variable whose purpose is to be populated with a boolean
-                               ///< value, Field(0) or Field(1)
-type FlagVariableArray=VariableArray;
-type PackedWord=Variable;   ///< Represents a packed word that can fit in a field element.
-                               ///< For a word representing an unsigned integer for instance this
-                               ///< means we require (int < fieldSize)
-type PackedWordArray=VariableArray;
+pub type FlagVariable = Variable;
+///< Holds variable whose purpose is to be populated with a boolean
+///< value, Field(0) or Field(1)
+pub type FlagVariableArray<T> = VariableArray<T>;
+pub type PackedWord = Variable;
+///< Represents a packed word that can fit in a field element.
+///< For a word representing an unsigned integer for instance this
+///< means we require (int < fieldSize)
+pub type PackedWordArray<T> = VariableArray<T>;
 
 /// Holds variables whose purpose is to be populated with the unpacked form of some word, bit by bit
-pub struct UnpackedWord {
-// : public VariableArray 
-    // UnpackedWord()->Self VariableArray() {}
-    // UnpackedWord(numBits:usize, name:&String)->Self VariableArray(numBits, name) {}
-} // pub struct UnpackedWord
 
-type UnpackedWordArray=Vec<UnpackedWord>;
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct UnpackedWord;
+//  {
+// : public VariableArray
+// UnpackedWord()->Self VariableArray() {}
+// UnpackedWord(numBits:usize, name:&String)->Self VariableArray(numBits, name) {}
+// } // pub struct UnpackedWord
+
+pub type UnpackedWordArray = Vec<VariableArray<UnpackedWord>>;
 
 /// Holds variables whose purpose is to be populated with the packed form of some word.
 /// word representation can be larger than a single field element in small enough fields
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MultiPackedWord {
-// //: public VariableArray 
-    numBits_:usize,
-    fieldType_:FieldType,
+    // //: public VariableArray
+    pub numBits_: usize,
+    pub fieldType_: FieldType,
 }
-    // usize getMultipackedSize() const;
-// 
-//     MultiPackedWord(fieldType:&FieldType = AGNOSTIC);
+// usize getMultipackedSize() const;
+//
+//     MultiPackedWord(fieldType:&FieldType =FieldType::AGNOSTIC);
 //     MultiPackedWord(numBits:usize, fieldType:&FieldType, name:&String);
 //     pub fn  resize(numBits:usize);
 //     String name() const {return pub fn name();}
 // }; // pub struct MultiPackedWord
 
-type MultiPackedWordArray=Vec<MultiPackedWord>;
+pub type MultiPackedWordArray = Vec<VariableArray<MultiPackedWord>>;
 
 /// Holds both representations of a word, both multipacked and unpacked
+#[derive(Default, Clone)]
 pub struct DualWord {
-// //
-    multipacked_:MultiPackedWord,
-    unpacked_:UnpackedWord,
-// }
-// 
-//     DualWord(fieldType:&FieldType)->Self multipacked_(fieldType), unpacked_() {}
-//     DualWord(numBits:usize, fieldType:&FieldType, name:&String);
-//     DualWord(multipacked:&MultiPackedWord, unpacked:&UnpackedWord);
-//     MultiPackedWord multipacked() multipacked_:{return,}
-//     UnpackedWord unpacked() unpacked_:{return,}
-//     FlagVariable bit(i:usize) sugar:{return unpacked_[i];} //syntactic, same as unpacked()[i]
-//     usize numBits() const { return unpacked_.len(); }
-//     pub fn  resize(newSize:usize);
+    pub multipacked_: VariableArray<MultiPackedWord>,
+    pub unpacked_: VariableArray<UnpackedWord>,
+    // }
+    //
+    //     DualWord(fieldType:&FieldType)->Self multipacked_(fieldType), unpacked_() {}
+    //     DualWord(numBits:usize, fieldType:&FieldType, name:&String);
+    //     DualWord(multipacked:&MultiPackedWord, unpacked:&UnpackedWord);
+    //     MultiPackedWord multipacked() multipacked_:{return,}
+    //     UnpackedWord unpacked() unpacked_:{return,}
+    //     FlagVariable bit(i:usize) sugar:{return unpacked_[i];} //syntactic, same as unpacked()[i]
+    //     usize numBits() const { return unpacked_.len(); }
+    //     pub fn  resize(newSize:usize);
 } // pub struct DualWord
 
+#[derive(Default, Clone)]
 pub struct DualWordArray {
-// //
     // kept as 2 separate arrays because the more common usecase will be to request one of these,
     // and not dereference a specific DualWord
-    multipackedContents_:MultiPackedWordArray,
-    unpackedContents_:UnpackedWordArray,
-    numElements_:usize,
-// 
-//     DualWordArray(fieldType:&FieldType);
-//     DualWordArray(multipackedContents:MultiPackedWordArray&, // TODO delete, for dev
-//                   unpackedContents:&UnpackedWordArray);
-//     MultiPackedWordArray multipacked() const;
-//     UnpackedWordArray unpacked() const;
-//     PackedWordArray packed() const; //< For cases in which we can assume each unpacked value fits
-//                                     //< in 1 packed Variable
-//     pub fn  push_back(dualWord:&DualWorddualWord);
-//     DualWord at(i:usize) const;
-//     size:usize() const;
+    pub multipackedContents_: MultiPackedWordArray,
+    pub unpackedContents_: UnpackedWordArray,
+    pub numElements_: usize,
+    //
+    //     DualWordArray(fieldType:&FieldType);
+    //     DualWordArray(multipackedContents:MultiPackedWordArray&, // TODO delete, for dev
+    //                   unpackedContents:&UnpackedWordArray);
+    //     MultiPackedWordArray multipacked() const;
+    //     UnpackedWordArray unpacked() const;
+    //     PackedWordArray packed() const; //< For cases in which we can assume each unpacked value fits
+    //                                     //< in 1 packed Variable
+    //     pub fn  push(dualWord:&DualWorddualWord);
+    //     DualWord at(i:usize) const;
+    //     size:usize() const;
 } // pub struct DualWordArray
-
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -418,39 +513,36 @@ pub struct DualWordArray {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-
+#[derive(Default, Clone)]
 pub struct LinearTerm {
-//
-    variable_:Variable,
-    coeff_:FElem,
-// 
-//     LinearTerm(v:&Variable)->Self variable_(v), coeff_(1) {}
-//     LinearTerm(v:Variable&, coeff:&FElem)->Self variable_(v), coeff_(coeff) {}
-//     LinearTerm(v:Variable&, n:u64)->Self variable_(v), coeff_(n) {}
-//     LinearTerm operator-() const {return LinearTerm(variable_, -coeff_);}
+    pub variable_: Variable,
+    pub coeff_: FElem,
+    //
+    //     LinearTerm(v:&Variable)->Self variable_(v), coeff_(1) {}
+    //     LinearTerm(v:Variable&, coeff:&FElem)->Self variable_(v), coeff_(coeff) {}
+    //     LinearTerm(v:Variable&, n:u64)->Self variable_(v), coeff_(n) {}
+    //     LinearTerm operator-() const {return LinearTerm(variable_, -coeff_);}
 
-//     // jSNARK-edit: These two operators are overloaded to support combining common factors for the same variables.
-//     LinearTerm& operator-=(other:&FElem) {coeff_ -= other; return self;}
-//     LinearTerm& operator+=(other:&FElem) {coeff_ += other; return self;}
+    //     // jSNARK-edit: These two operators are overloaded to support combining common factors for the same variables.
+    //     LinearTerm& operator-=(other:&FElem) {coeff_ -= other; return self;}
+    //     LinearTerm& operator+=(other:&FElem) {coeff_ += other; return self;}
 
-//     LinearTerm& operator*=(other:&FElem) {coeff_ *= other; return self;}
-//     FieldType fieldtype() const {return coeff_.fieldType();}
-//     String asString() const;
-//     FElem eval(assignment:&VariableAssignment) const;
-//     Variable variable() variable_:{return,}
+    //     LinearTerm& operator*=(other:&FElem) {coeff_ *= other; return self;}
+    //     FieldType fieldtype() const {return coeff_.fieldType();}
+    //     String asString() const;
+    //     FElem eval(assignment:&VariableAssignment) const;
+    //     Variable variable() variable_:{return,}
 
-//     // jSNARK-edit: A simple getter for the coefficient
-//     FElem coeff() coeff_:{return,}
+    //     // jSNARK-edit: A simple getter for the coefficient
+    //     FElem coeff() coeff_:{return,}
 
-//     friend pub struct Monomial;
-//     friend pub struct GadgetLibAdapter;
+    //     friend pub struct Monomial;
+    //     friend pub struct GadgetLibAdapter;
 } // pub struct LinearTerm
 
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
-
-
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -459,29 +551,28 @@ pub struct LinearTerm {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-//  type size_type=Vec<LinearTerm>::size_type;
+//  pub type size_type=Vec<LinearTerm>::size_type;
+#[derive(Clone)]
 pub struct LinearCombination {
-// 
-    linearTerms_: Vec<LinearTerm>,
-     indexMap_:HashMap<i32,i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
-     constant_:FElem,
-   
-// 
-//     LinearCombination()->Self linearTerms_(), constant_(0) {}
-//     LinearCombination(var:&Variable)->Self linearTerms_(1,var), constant_(0) {}
-//     LinearCombination(linTerm:&LinearTerm)->Self linearTerms_(1,linTerm), constant_(0) {}
-//     LinearCombination(i:u64)->Self linearTerms_(), constant_(i) {}
-//     LinearCombination(elem:&FElem)->Self linearTerms_(), constant_(elem) {}
+    pub linearTerms_: Vec<LinearTerm>,
+    pub indexMap_: HashMap<i32, i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
+    pub constant_: FElem,
+    //
+    //     LinearCombination()->Self linearTerms_(), constant_(0) {}
+    //     LinearCombination(var:&Variable)->Self linearTerms_(1,var), constant_(0) {}
+    //     LinearCombination(linTerm:&LinearTerm)->Self linearTerms_(1,linTerm), constant_(0) {}
+    //     LinearCombination(i:u64)->Self linearTerms_(), constant_(i) {}
+    //     LinearCombination(elem:&FElem)->Self linearTerms_(), constant_(elem) {}
 
-//     LinearCombination& operator+=(other:&LinearCombination);
-//     LinearCombination& operator-=(other:&LinearCombination);
-//     LinearCombination& operator*=(other:&FElem);
-//     FElem eval(assignment:&VariableAssignment) const;
-//     String asString() const;
-//     set  getUsedVariables() const;
+    //     LinearCombination& operator+=(other:&LinearCombination);
+    //     LinearCombination& operator-=(other:&LinearCombination);
+    //     LinearCombination& operator*=(other:&FElem);
+    //     FElem eval(assignment:&VariableAssignment) const;
+    //     String asString() const;
+    //     set  getUsedVariables() const;
 
-//     friend pub struct Polynomial;
-//     friend pub struct GadgetLibAdapter;
+    //     friend pub struct Polynomial;
+    //     friend pub struct GadgetLibAdapter;
 } // pub struct LinearCombination
 
 /***********************************/
@@ -501,33 +592,32 @@ pub struct LinearCombination {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-
+#[derive(Default, Clone)]
 pub struct Monomial {
-//
-    coeff_:FElem,
-     variables_:BTreeMap<i32,i32>, //multiset// currently just a vector of variables. This can
-                                   // surely be optimized e.g. hold a variable-degree pair
-                                   // but is not needed for concrete efficiency as we will
-                                   // only be invoking degree 2 constraints in the near
-                                   // future.
-// 
-//     Monomial(var:&Variable)->Self coeff_(1), variables_() {variables_.insert(var);}
-//     Monomial(var:Variable&, coeff:&FElem)->Self coeff_(coeff), variables_() {variables_.insert(var);}
-//     Monomial(val:&FElem)->Self coeff_(val), variables_() {}
-//     Monomial(linearTerm:&LinearTerm);
+    pub coeff_: FElem,
+    pub variables_: BTreeMap<Variable, i32>,
+    //multiset// currently just a vector of variables. This can
+    // surely be optimized e.g. hold a variable-degree pair
+    // but is not needed for concrete efficiency as we will
+    // only be invoking degree 2 constraints in the near
+    // future.
+    //
+    //     Monomial(var:&Variable)->Self coeff_(1), variables_() {variables_.insert(var);}
+    //     Monomial(var:Variable&, coeff:&FElem)->Self coeff_(coeff), variables_() {variables_.insert(var);}
+    //     Monomial(val:&FElem)->Self coeff_(val), variables_() {}
+    //     Monomial(linearTerm:&LinearTerm);
 
-//     FElem eval(assignment:&VariableAssignment) const;
-//     set  getUsedVariables() const;
-//     const:FElem getCoefficient(),
-//     String asString() const;
-//     Monomial operator-() const;
-//     Monomial& operator*=(other:&Monomial);
+    //     FElem eval(assignment:&VariableAssignment) const;
+    //     set  getUsedVariables() const;
+    //     const:FElem getCoefficient(),
+    //     String asString() const;
+    //     Monomial operator-() const;
+    //     Monomial& operator*=(other:&Monomial);
 } // pub struct Monomial
 
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
-
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -536,13 +626,12 @@ pub struct Monomial {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-
+#[derive(Clone)]
 pub struct Polynomial {
-// //
-     monomials_:Vec<Monomial>,
-     constant_:FElem,
+    pub monomials_: Vec<Monomial>,
+    pub constant_: FElem,
 }
-// 
+//
 //     Polynomial()->Self monomials_(), constant_(0) {}
 //     Polynomial(monomial:&Monomial)->Self monomials_(1, monomial), constant_(0) {}
 //     Polynomial(var:&Variable)->Self monomials_(1, Monomial(var)), constant_(0) {}
@@ -568,29 +657,9 @@ pub struct Polynomial {
 
 // inline Polynomial operator-(src:&Polynomial) {return Polynomial(FElem(0)) -= src;}
 
-// } // namespace gadgetlib2
-
-use crate::gadgetlib2::variable_operators;
-
-//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_VARIABLE_HPP_
-/** @file
- *****************************************************************************
- Implementation of the low level objects needed for field arithmetization.
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-// use  <climits>
-// use  <iostream>
-// use  <set>
-// use  <stdexcept>
-// 
-
 // use crate::gadgetlib2::infrastructure;
 // use crate::gadgetlib2::pp;
-use crate::gadgetlib2::variable;
+// use crate::gadgetlib2::variable;
 
 // using String;
 // using ::std::stringstream;
@@ -600,8 +669,6 @@ use crate::gadgetlib2::variable;
 // using ::std::cout;
 // using ::std::endl;
 // using ::std::dynamic_pointer_cast;
-
-// namespace gadgetlib2 {
 
 // Optimization: In the future we may want to port most of the member functions  from this file to
 // the .hpp files in order to allow for compiler inlining. As inlining has tradeoffs this should be
@@ -616,28 +683,40 @@ use crate::gadgetlib2::variable;
 /*************************************************************************************************/
 
 // FElem& pub fn operator=(other:&FElem) {
-// 	if fieldType() == other.fieldType() || fieldType() == AGNOSTIC {
+// 	if fieldType() == other.fieldType() || fieldType() ==FieldType::AGNOSTIC {
 // 		elem_ = other.elem_.clone();
-// 	} else if other.fieldType() != AGNOSTIC {
-// 		eyre::bail!("Attempted to assign field element of incorrect type");
+// 	} else if other.fieldType() !=FieldType::AGNOSTIC {
+// 		eyre::bail!("Attempted to assign field element of incorrect pub type");
 // 	} else {
 // 		*elem_ = dynamic_cast<FConst*>(other.elem_.get())->asLong();
 // 	}
 // 	return self;
 // }
 
-// FElem& pub fn operator=(FElem&& other) {
-// 	if fieldType() == other.fieldType() || fieldType() == AGNOSTIC {
-// 		elem_ = ::(other.elem_);
-// 	} else if other.elem_.fieldType() != AGNOSTIC {
-// 		eyre::bail!(
-// 				"Attempted to move assign field element of incorrect type");
-// 	} else {
-// 		*elem_ = dynamic_cast<FConst*>(other.elem_.get())->asLong();
-// 	}
-// 	return self;
-// // }
+impl AddAssign<&Self> for FElem {
+    #[inline]
+    fn add_assign(&mut self, other: &Self) {
+        self.promoteToFieldType(other.fieldType());
+        *self.elem_.borrow_mut() += &other.elem_.borrow();
+    }
+}
 
+impl SubAssign<&Self> for FElem {
+    #[inline]
+    fn sub_assign(&mut self, other: &Self) {
+        self.promoteToFieldType(other.fieldType());
+        *self.elem_.borrow_mut() -= &other.elem_.borrow();
+    }
+}
+
+impl MulAssign<&Self> for FElem {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &Self) {
+        self.promoteToFieldType(other.fieldType());
+        *self.elem_.borrow_mut() *= &other.elem_.borrow();
+    }
+}
 // FElem& pub fn operator*=(other:&FElem) {
 // 	promoteToFieldType(other.fieldType());
 // 	*elem_ *= *other.elem_;
@@ -655,75 +734,125 @@ use crate::gadgetlib2::variable;
 // 	*elem_ -= *other.elem_;
 // 	return self;
 // }
+//   bool operator==(other:&FElem) const {return *elem_ == *other.elem_;}
 
-impl FElem{
+//     FElem operator-() {FElem retval(0); retval -= FElem(*elem_); return retval:,}
+impl Neg for FElem {
+    type Output = Self;
 
-// pub fn FElem(elem:&FElemInterface)->Self
-// 		elem_(elem.clone()) {
-// }
-// pub fn FElem()->Self
-// 		elem_(new FConst(0)) {
-// }
-// pub fn FElem(const n:u64)->Self
-// 		elem_(new FConst(n)) {
-// }
-// pub fn FElem(i:i32)->Self
-// 		elem_(new FConst(i)) {
-// }
-// pub fn FElem(n:usize)->Self
-// 		elem_(new FConst(n)) {
-// }
-// pub fn FElem(elem:&Fp)->Self
-// 		elem_(new R1P_Elem(elem)) {
-// }
-// pub fn FElem(src:&FElem)->Self
-// 		elem_(src.elem_.clone()) {
-// }
-
-
- pub fn fieldMustBePromotedForArithmetic(lhsField:&FieldType,
-		rhsField:&FieldType)->bool {
-	if lhsField == rhsField
-		{return false;}
-	if rhsField == AGNOSTIC
-		{return false;}
-	return true;
-}
-
-pub fn  promoteToFieldType( types:FieldType) {
-	if !fieldMustBePromotedForArithmetic(self.fieldType(), types) {
-		return;
-	}
-	if types == R1P {
-		let  fConst = elem_.get();
-		assert!(fConst != None,
-				"Cannot convert between specialized field types.");
-		elem_=RcCell::new( R1P_Elem::new(fConst.asLong()));
-	} else {
-		eyre::bail!("Attempted to promote to unknown field type");
-	}
-}
-
-pub fn inverse(fieldType:&FieldType)->FElem{
-	let promoteToFieldType=fieldType.clone();
-	return FElem::new((elem_.inverse()));
-}
-
-pub fn getBit(i:u32, fieldType:&FieldType)->int{
-    promoteToFieldType=fieldType.clone();
-    if self.fieldType() == fieldType {
-        return elem_.getBit(i);
-    } else {
-        eyre::bail!("Attempted to extract bits from incompatible field type.");
+    fn neg(self) -> Self::Output {
+        let mut retval = FElem::from(0);
+        retval -= &FElem::from(self.elem_.borrow().clone());
+        retval
     }
 }
 
- pub fn power(base:&FElem, exponent:u64)->FElem { // TODO .cpp
-	let  retval=base.clone();
-	retval.elem_.power(exponent);
-	return retval;
+impl From<ElemType> for FElem {
+    fn from(rhs: ElemType) -> Self {
+        Self {
+            elem_: RcCell::new(rhs),
+        }
+    }
 }
+
+impl Default for FElem {
+    fn default() -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Const(FConst::from(0))),
+        }
+    }
 }
+impl From<u64> for FElem {
+    fn from(rhs: u64) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Const(FConst::from(rhs))),
+        }
+    }
+}
+impl From<i64> for FElem {
+    fn from(rhs: i64) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Const(FConst::from(rhs))),
+        }
+    }
+}
+impl From<i32> for FElem {
+    fn from(rhs: i32) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Const(FConst::from(rhs))),
+        }
+    }
+}
+impl From<usize> for FElem {
+    fn from(rhs: usize) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Const(FConst::from(rhs))),
+        }
+    }
+}
+impl From<Fp> for FElem {
+    fn from(rhs: Fp) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Elem(R1P_Elem::from(rhs))),
+        }
+    }
+}
+
+impl FElem {
+    pub fn assignment(&mut self, other: Self) {
+        if self.fieldType() == other.fieldType() || self.fieldType() == FieldType::AGNOSTIC {
+            self.elem_ = other.elem_.clone();
+            return;
+        }
+        assert!(
+            other.fieldType() == FieldType::AGNOSTIC,
+            "Attempted to assign field element of incorrect pub type"
+        );
+
+        self.elem_ = RcCell::new(ElemType::Const(FConst::from(other.elem_.borrow().asLong())));
+    }
+    pub fn fieldMustBePromotedForArithmetic(lhsField: &FieldType, rhsField: &FieldType) -> bool {
+        lhsField != rhsField && rhsField != &FieldType::AGNOSTIC
+    }
+
+    pub fn promoteToFieldType(&mut self, types: FieldType) {
+        if !Self::fieldMustBePromotedForArithmetic(&self.fieldType(), &types) {
+            return;
+        }
+        assert!(
+            types == FieldType::R1P,
+            "Attempted to promote to unknown field pub type"
+        );
+        let fConst = self.elem_.try_borrow();
+        assert!(
+            fConst.is_ok(),
+            "Cannot convert between specialized field types."
+        );
+        *self.elem_.borrow_mut() = ElemType::Elem(R1P_Elem::from(fConst.unwrap().asLong()));
+    }
+
+    pub fn inverse(&self, fieldType: &FieldType) -> Self {
+        let promoteToFieldType = fieldType.clone();
+        FElem::from((self.elem_.borrow().inverse()))
+    }
+
+    pub fn getBit(&self, i: u32, fieldType: &FieldType) -> bool {
+        // let promoteToFieldType = fieldType.clone();
+        assert!(
+            &self.fieldType() == fieldType,
+            "Attempted to extract bits from incompatible field pub type."
+        );
+        self.elem_.borrow().getBit(i)
+    }
+
+    pub fn power(base: &Self, exponent: u64) -> Self {
+        // TODO .cpp
+        let retval = base.clone();
+        retval.elem_.borrow().power(exponent);
+        retval
+    }
+}
+
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
@@ -735,6 +864,27 @@ pub fn getBit(i:u32, fieldType:&FieldType)->int{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+impl AddAssign<&ElemType> for FConst {
+    #[inline]
+    fn add_assign(&mut self, other: &ElemType) {
+        self.contents_ += other.try_as_const_ref().unwrap().contents_;
+    }
+}
+
+impl SubAssign<&ElemType> for FConst {
+    #[inline]
+    fn sub_assign(&mut self, other: &ElemType) {
+        self.contents_ -= other.try_as_const_ref().unwrap().contents_;
+    }
+}
+
+impl MulAssign<&ElemType> for FConst {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &ElemType) {
+        self.contents_ *= other.try_as_const_ref().unwrap().contents_;
+    }
+}
 // FConst& pub fn operator+=(other:&FElemInterface) {
 // 	contents_ += dynamic_cast<const FConst&>(other).contents_;
 // 	return self;
@@ -749,17 +899,67 @@ pub fn getBit(i:u32, fieldType:&FieldType)->int{
 // 	contents_ *= dynamic_cast<const FConst&>(other).contents_;
 // 	return self;
 // }
-impl FConst{
-
-
-pub fn inverse() ->FElemInterfacePtr{
-	eyre::bail!("Attempted to invert an FConst element.");
+impl From<u64> for FConst {
+    fn from(rhs: u64) -> Self {
+        Self {
+            contents_: rhs as i64,
+        }
+    }
+}
+impl From<i64> for FConst {
+    fn from(rhs: i64) -> Self {
+        Self { contents_: rhs }
+    }
+}
+impl From<i32> for FConst {
+    fn from(rhs: i32) -> Self {
+        Self {
+            contents_: rhs as i64,
+        }
+    }
+}
+impl From<usize> for FConst {
+    fn from(rhs: usize) -> Self {
+        Self {
+            contents_: rhs as i64,
+        }
+    }
 }
 
-pub fn power(&self,exponent:u64)->&FElemInterface{
-	let contents_ = 0.5 + ::std::pow(double(contents_), double(exponent));
-	self
+impl PartialEq for FConst {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.contents_ == other.contents_
+    }
 }
+impl PartialEq<u64> for FConst {
+    #[inline]
+    fn eq(&self, other: &u64) -> bool {
+        self.contents_ == *other as i64
+    }
+}
+impl FElemInterface for FConst {
+    fn asString(&self) -> String {
+        format!("{}", self.contents_)
+    }
+    fn fieldType(&self) -> FieldType {
+        FieldType::AGNOSTIC
+    }
+    fn asLong(&self) -> i64 {
+        self.contents_
+    }
+    fn getBit(&self, i: u32) -> bool {
+        panic!("Cannot get bit from FConst.");
+    }
+    fn inverse(&self) -> Self {
+        panic!("Attempted to invert an FConst element.");
+    }
+
+    fn power(&self, exponent: u64) -> Self {
+        let mut res = self.clone();
+        res.contents_ = ((self.contents_ as f64).powf((exponent as f64)) + 0.5) as i64;
+        res
+    }
 }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
@@ -772,36 +972,78 @@ pub fn power(&self,exponent:u64)->&FElemInterface{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+impl AddAssign<u64> for R1P_Elem {
+    #[inline]
+    fn add_assign(&mut self, other: u64) {}
+}
+impl AddAssign<&ElemType> for R1P_Elem {
+    #[inline]
+    fn add_assign(&mut self, other: &ElemType) {
+        if other.fieldType() == FieldType::R1P {
+            self.elem_ += &other.try_as_elem_ref().unwrap().elem_;
+        } else if other.fieldType() == FieldType::AGNOSTIC {
+            self.elem_ += other.try_as_elem_ref().unwrap().asLong();
+        } else {
+            panic!("Attempted to add incompatible pub type to R1P_Elem.");
+        }
+    }
+}
 
+impl SubAssign<&ElemType> for R1P_Elem {
+    #[inline]
+    fn sub_assign(&mut self, other: &ElemType) {
+        if other.fieldType() == FieldType::R1P {
+            self.elem_ -= &other.try_as_elem_ref().unwrap().elem_;
+        } else if other.fieldType() == FieldType::AGNOSTIC {
+            self.elem_ -= other.try_as_const_ref().unwrap().asLong();
+        } else {
+            panic!("Attempted to add incompatible pub type to R1P_Elem.");
+        }
+    }
+}
+
+impl MulAssign<&ElemType> for R1P_Elem {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &ElemType) {
+        if other.fieldType() == FieldType::R1P {
+            self.elem_ *= &other.try_as_elem_ref().unwrap().elem_;
+        } else if other.fieldType() == FieldType::AGNOSTIC {
+            self.elem_ *= other.try_as_const_ref().unwrap().asLong();
+        } else {
+            panic!("Attempted to add incompatible pub type to R1P_Elem.");
+        }
+    }
+}
 // R1P_Elem& pub fn operator+=(other:&FElemInterface) {
-// 	if other.fieldType() == R1P {
+// 	if other.fieldType() ==FieldType::R1P {
 // 		elem_ += dynamic_cast<const R1P_Elem&>(other).elem_;
-// 	} else if other.fieldType() == AGNOSTIC {
+// 	} else if other.fieldType() ==FieldType::AGNOSTIC {
 // 		elem_ += dynamic_cast<const FConst&>(other).asLong();
 // 	} else {
-// 		eyre::bail!("Attempted to add incompatible type to R1P_Elem.");
+// 		eyre::bail!("Attempted to add incompatible pub type to R1P_Elem.");
 // 	}
 // 	return self;
 // }
 
 // R1P_Elem& pub fn operator-=(other:&FElemInterface) {
-// 	if other.fieldType() == R1P {
+// 	if other.fieldType() ==FieldType::R1P {
 // 		elem_ -= dynamic_cast<const R1P_Elem&>(other).elem_;
-// 	} else if other.fieldType() == AGNOSTIC {
+// 	} else if other.fieldType() ==FieldType::AGNOSTIC {
 // 		elem_ -= dynamic_cast<const FConst&>(other).asLong();
 // 	} else {
-// 		eyre::bail!("Attempted to add incompatible type to R1P_Elem.");
+// 		eyre::bail!("Attempted to add incompatible pub type to R1P_Elem.");
 // 	}
 // 	return self;
 // }
 
 // R1P_Elem& pub fn operator*=(other:&FElemInterface) {
-// 	if other.fieldType() == R1P {
+// 	if other.fieldType() ==FieldType::R1P {
 // 		elem_ *= dynamic_cast<const R1P_Elem&>(other).elem_;
-// 	} else if other.fieldType() == AGNOSTIC {
+// 	} else if other.fieldType() ==FieldType::AGNOSTIC {
 // 		elem_ *= dynamic_cast<const FConst&>(other).asLong();
 // 	} else {
-// 		eyre::bail!("Attempted to add incompatible type to R1P_Elem.");
+// 		eyre::bail!("Attempted to add incompatible pub type to R1P_Elem.");
 // 	}
 // 	return self;
 // }
@@ -815,18 +1057,71 @@ pub fn power(&self,exponent:u64)->&FElemInterface{
 // 	if pConst {
 // 		return self == *pConst;
 // 	}
-// 	eyre::bail!("Attempted to Compare R1P_Elem with incompatible type.");
+// 	eyre::bail!("Attempted to Compare R1P_Elem with incompatible pub type.");
 // }
-impl R1P_Elem{
 
-pub fn inverse() ->FElemInterfacePtr{
-	return FElemInterfacePtr(R1P_Elem::new(elem_.inverse()));
+impl From<u64> for R1P_Elem {
+    fn from(rhs: u64) -> Self {
+        Self {
+            elem_: Fp::from(rhs),
+        }
+    }
 }
+impl From<i64> for R1P_Elem {
+    fn from(rhs: i64) -> Self {
+        Self {
+            elem_: Fp::from(rhs),
+        }
+    }
+}
+impl From<FConst> for R1P_Elem {
+    fn from(rhs: FConst) -> Self {
+        Self {
+            elem_: Fp::from(rhs.asLong()),
+        }
+    }
+}
+impl From<Fp> for R1P_Elem {
+    fn from(rhs: Fp) -> Self {
+        Self { elem_: rhs }
+    }
+}
+impl PartialEq<FConst> for R1P_Elem {
+    #[inline]
+    fn eq(&self, other: &FConst) -> bool {
+        self.elem_ == Fp::from(other.asLong())
+    }
+}
+impl PartialEq<u64> for R1P_Elem {
+    #[inline]
+    fn eq(&self, other: &u64) -> bool {
+        self.elem_ == Fp::from(*other)
+    }
+}
+impl FElemInterface for R1P_Elem {
+    fn inverse(&self) -> Self {
+        R1P_Elem::from(self.elem_.inverse())
+    }
 
-pub fn asLong() ->u64{
-	//assert!(elem_.as_ulong() <= LONG_MAX, "overflow:u64 occured.");
-	return elem_.as_ulong() as u64;
-}
+    fn asLong(&self) -> i64 {
+        //assert!(elem_.as_ulong() <= LONG_MAX, "overflow:u64 occured.");
+        self.elem_.as_ulong() as _
+    }
+    fn asString(&self) -> String {
+        format!("{}", self.elem_.as_ulong())
+    }
+    fn fieldType(&self) -> FieldType {
+        FieldType::R1P
+    }
+
+    fn getBit(&self, i: u32) -> bool {
+        self.elem_.as_bigint().test_bit(i)
+    }
+    fn power(&self, exponent: u64) -> Self {
+        let mut res = self.clone();
+        res.elem_ ^= exponent;
+        res
+    }
 }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
@@ -839,46 +1134,53 @@ pub fn asLong() ->u64{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-// nextFreeIndex_:VarIndex_t = 0;
-impl Variable{
+use std::sync::atomic::{self, AtomicUsize, Ordering};
+static nextFreeIndex_: AtomicUsize = AtomicUsize::new(0); //VarIndex_t
+impl Variable {
+    pub fn new(name: String) -> Self {
+        let index_ = nextFreeIndex_.load(Ordering::Relaxed) as u64;
+        nextFreeIndex_.fetch_add(1, Ordering::Relaxed);
+        assert!(
+            nextFreeIndex_.load(Ordering::Relaxed) > 0,
+            "Variable index overflow has occured, maximum number of Variables is {}",
+            u64::MAX
+        );
+        Self {
+            index_,
+            name_: name,
+        }
+    }
 
-// #ifdef DEBUG
-// pub fn Variable(name:&String)->Self index_(nextFreeIndex_++), name_(name) {
-// 	assert!(nextFreeIndex_ > 0, format!("Variable index overflow has occured, maximum number of "
-// 					"Variables is {}", ULONG_MAX));
-// }
-// #else
-pub fn Variable(name:&String)->Self{
-    let index_=nextFreeIndex_;
-        nextFreeIndex_+=1;
-    // //ffec::UNUSED(name);
-    assert!(nextFreeIndex_ > 0, "Variable index overflow has occured, maximum number of Variables is {}", u64::MAX);
-    
+    pub fn name(&self) -> String {
+        self.name_.clone()
+    }
+
+    pub fn eval(&self, assignment: &VariableAssignment) -> FElem {
+        // try {
+        assignment
+            .get(self)
+            .expect(&format!(
+                "Attempted to evaluate unassigned Variable \"{}\", idx:{}",
+                self.name(),
+                self.index_
+            ))
+            .clone()
+        // } catch (::std::out_of_range) {
+        // eyre::bail!(
+        // 		format!(
+        // 				"Attempted to evaluate unassigned Variable \"{}\", idx:{}",
+        // 				name(), index_));
+        // }
+    }
+    // jSNARK-edit: A simple getter for the Variable index
+    pub fn getIndex(&self) -> VarIndex_t {
+        self.index_
+    }
 }
-//#endif
-
-// pub fn ~Variable() {
-// }
-// ;
-
-pub fn name() ->string{
-// #    ifdef DEBUG
-// 	return name_;
-// #    else
-	return "".to_owned();
-// #    endif
-}
-
-pub fn eval(assignment:&VariableAssignment) ->FElem{
-	// try {
-		return assignment.at(self);
-	// } catch (::std::out_of_range) {
-		// eyre::bail!(
-		// 		format!(
-		// 				"Attempted to evaluate unassigned Variable \"{}\", idx:{}",
-		// 				name(), index_));
-	// }
-}
+impl PartialOrd for Variable {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.index_.cmp(&other.index_))
+    }
 }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
@@ -891,43 +1193,109 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-impl VariableArray{
-// #ifdef DEBUG
-// pub fn new(name:&String) ->Self{ VariableArrayContents(), name_(name) }
-// pub fn new2(size:i32, name:&String)->Self {
-//     // : VariableArrayContents() 
-//     for i in 0..size {
-//         push_back(Variable(format!("{}[{}]", name, i)));
-//     }
-// }
 
-// pub fn new3(size:usize, name:&String)->Self {// : VariableArrayContents()
-//     for i in 0..size {
-//         push_back(Variable(format!("{}[{}]", name, i)));
-//     }
-// }
-// pub fn name() ->String{
-// 	return name_;
-// }
-
-// #else
-pub fn name() ->String{
-	return "".to_owned();
+impl<T: SubVariableArrayConfig> From<String> for VariableArray<T> {
+    fn from(rhs: String) -> Self {
+        Self {
+            contents: vec![],
+            name_: rhs,
+            t: T::default(),
+        }
+    }
+}
+impl<T: SubVariableArrayConfig> From<i32> for VariableArray<T> {
+    fn from(rhs: i32) -> Self {
+        Self {
+            contents: vec![],
+            name_: String::new(),
+            t: T::default(),
+        }
+    }
+}
+impl<T: SubVariableArrayConfig> From<usize> for VariableArray<T> {
+    fn from(rhs: usize) -> Self {
+        Self {
+            contents: vec![],
+            name_: String::new(),
+            t: T::default(),
+        }
+    }
 }
 
+impl<T: SubVariableArrayConfig> Index<usize> for VariableArray<T> {
+    type Output = Variable;
 
-pub fn new(name:&String)->Self { 
-// //ffec::UNUSED(name); : VariableArrayContents() 
+    fn index(&self, index: usize) -> &Self::Output {
+        self.contents.get(index).unwrap()
+    }
 }
-pub fn new(size:i32, name:&String)
-    ->Self { VariableArrayContents(size) }
-pub fn new(size:usize, name:&String) ->Self
-    {  VariableArrayContents(size) }
-//#endif
+
+impl<T: SubVariableArrayConfig> IndexMut<usize> for VariableArray<T> {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.contents.get_mut(index).unwrap()
+    }
+}
+impl<T: SubVariableArrayConfig> IntoIterator for VariableArray<T> {
+    type Item = Variable;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.contents.into_iter()
+    }
+}
+impl<T: SubVariableArrayConfig> VariableArray<T> {
+    pub fn new(size: usize, name: String, t: T) -> Self {
+        // : VariableArrayContents()
+        let mut contents = VariableArrayContents::default();
+        for i in 0..size {
+            contents.push(Variable::new(format!("{}[{}]", name, i)));
+        }
+        Self {
+            contents,
+            name_: name,
+            t,
+        }
+    }
+    pub fn new_with_variable(size: i32, contents: Variable, t: T) -> Self {
+        Self {
+            contents: vec![contents; size as usize],
+            name_: String::new(),
+            t,
+        }
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<Variable> {
+        self.contents.iter()
+    }
+    pub fn name(&self) -> &String {
+        &self.name_
+    }
+    pub fn at(&self, i: usize) -> &Variable {
+        &self.contents[i]
+    }
+    pub fn push(&mut self, val: Variable) {
+        self.contents.push(val)
+    }
+    pub fn len(&self) -> usize {
+        self.contents.len()
+    }
+    fn resize(&mut self, numBits: usize) {
+        let sz = self.t.resize(numBits);
+        self.contents.resize(sz, Variable::default());
+    }
 }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
+impl SubVariableArrayConfig for UnpackedWord {}
+impl UnpackedWord {
+    pub fn new(numBits: usize, name: String) -> VariableArray<Self> {
+        VariableArray::<Self>::new(numBits, name, Self)
+    }
+    pub fn into_va(self) -> VariableArray<Self> {
+        VariableArray::<Self>::new(0, String::new(), self)
+    }
+}
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -936,113 +1304,173 @@ pub fn new(size:usize, name:&String) ->Self
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-impl MultiPackedWord{
-pub fn new(fieldType:&FieldType) ->Self{
-		// {VariableArray(), numBits_(0), fieldType_(fieldType) 
+impl From<FieldType> for MultiPackedWord {
+    fn from(rhs: FieldType) -> Self {
+        Self {
+            numBits_: 0,
+            fieldType_: rhs,
+        }
+    }
+}
+impl SubVariableArrayConfig for MultiPackedWord {
+    fn resize(&mut self, numBits: usize) -> usize {
+        self.numBits_ = numBits;
+        Self::getMultipackedSize(&self.fieldType_)
+        // self.resize(packedSize);
+    }
 }
 
-pub fn new2(numBits:usize,
-		fieldType:&FieldType, name:&String) ->Self
-	{	
-    // VariableArray(), numBits_(numBits), fieldType_(fieldType) 
-	let  packedSize = getMultipackedSize();
-	let  varArray=VariableArray::new(packedSize, name);
-	Self::swap(varArray)
+impl MultiPackedWord {
+    pub fn new(numBits: usize, fieldType: &FieldType, name: &String) -> VariableArray<Self> {
+        // VariableArray(), numBits_(numBits), fieldType_(fieldType)
+        let packedSize = Self::getMultipackedSize(fieldType);
+        VariableArray::<Self>::new(
+            packedSize,
+            name.clone(),
+            Self {
+                numBits_: numBits,
+                fieldType_: fieldType.clone(),
+            },
+        )
+    }
+    pub fn into_va(self) -> VariableArray<Self> {
+        VariableArray::<Self>::new(0, String::new(), self)
+    }
+
+    pub fn getMultipackedSize(fieldType: &FieldType) -> usize {
+        let mut packedSize = 0;
+        assert!(
+            fieldType == &FieldType::R1P,
+            "Unknown field pub type for packed variable."
+        );
+        packedSize = 1; // TODO add assertion that numBits can fit in the field characteristic
+
+        return packedSize;
+    }
 }
 
-pub fn  resize(numBits:usize) {
-	let numBits_ = numBits;
-	let packedSize = getMultipackedSize();
-	// Self::resize(packedSize);
+impl From<FieldType> for DualWord {
+    fn from(rhs: FieldType) -> Self {
+        Self {
+            multipacked_: MultiPackedWord::from(rhs).into_va(),
+            unpacked_: VariableArray::<UnpackedWord>::default(),
+        }
+    }
 }
+impl DualWord {
+    pub fn new(numBits: usize, fieldType: &FieldType, name: &String) -> Self {
+        Self {
+            multipacked_: MultiPackedWord::new(numBits, fieldType, &(name.to_owned() + "_p")),
+            unpacked_: UnpackedWord::new(numBits, (name.to_owned() + "_u")),
+        }
+    }
 
-pub fn getMultipackedSize() ->usize{
-	let  mut packedSize = 0;
-	if fieldType_ == R1P {
-		packedSize = 1; // TODO add assertion that numBits can fit in the field characteristic
-	} else {
-		eyre::bail!("Unknown field type for packed variable.");
-	}
-	return packedSize;
+    pub fn new2(
+        multipacked: &VariableArray<MultiPackedWord>,
+        unpacked: &VariableArray<UnpackedWord>,
+    ) -> Self {
+        Self {
+            multipacked_: multipacked.clone(),
+            unpacked_: unpacked.clone(),
+        }
+    }
+    pub fn multipacked(&self) -> VariableArray<MultiPackedWord> {
+        self.multipacked_.clone()
+    }
+    pub fn unpacked(&self) -> VariableArray<UnpackedWord> {
+        self.unpacked_.clone()
+    }
+    pub fn bit(&self, i: usize) -> FlagVariable {
+        self.unpacked_[i].clone()
+    } //syntactic sugar, same as unpacked()[i]
+    pub fn numBits(&self) -> usize {
+        self.unpacked_.len()
+    }
+    pub fn resize(&mut self, newSize: usize) {
+        self.multipacked_.resize(newSize);
+        self.unpacked_.resize(newSize);
+    }
 }
+impl From<FieldType> for DualWordArray {
+    fn from(rhs: FieldType) -> Self {
+        Self {
+            multipackedContents_: vec![MultiPackedWord::from(rhs).into_va()],
+            unpackedContents_: vec![],
+            numElements_: 0,
+        }
+    }
 }
-impl DualWord{
-pub fn new(numBits:usize, fieldType:&FieldType,
-		name:&String) ->Self
-		 {
-Self{multipacked_:MultiPackedWord::new(numBits, fieldType, name + "_p"), unpacked_:UnpackedWord::new(numBits,
-				name + "_u")}
-}
+impl DualWordArray {
+    pub fn new(
+        multipackedContents: MultiPackedWordArray, // TODO delete, for dev
+        unpackedContents: UnpackedWordArray,
+    ) -> Self {
+        let multipackedContents_ = multipackedContents;
+        let unpackedContents_ = unpackedContents;
+        let numElements_ = multipackedContents_.len();
+        assert!(
+            multipackedContents_.len() == numElements_,
+            "Dual Variable multipacked contents size mismatch"
+        );
+        assert!(
+            unpackedContents_.len() == numElements_,
+            "Dual Variable packed contents size mismatch"
+        );
+        Self {
+            multipackedContents_,
+            unpackedContents_,
+            numElements_,
+        }
+    }
 
-pub fn new(multipacked:&MultiPackedWord,
-		unpacked:&UnpackedWord) ->Self{
-		Self{multipacked_:MultiPackedWord::new(multipacked), unpacked_:UnpackedWord::new(unpacked) }
-}
+    pub fn multipacked(&self) -> &MultiPackedWordArray {
+        &self.multipackedContents_
+    }
+    pub fn unpacked(&self) -> &UnpackedWordArray {
+        &self.unpackedContents_
+    }
+    pub fn packed<T: SubVariableArrayConfig>(&self) -> PackedWordArray<T> {
+        assert!(
+            self.numElements_ == self.multipackedContents_.len(),
+            "multipacked contents size mismatch"
+        );
+        let mut retval = PackedWordArray::<T>::from(self.numElements_);
+        for i in 0..self.numElements_ {
+            let element = self.multipackedContents_[i].clone();
+            assert!(
+                element.len() == 1,
+                "Cannot convert from multipacked to packed"
+            );
+            retval[i] = element[0].clone();
+        }
+        return retval;
+    }
 
-pub fn  resize(newSize:usize) {
-	multipacked_.resize(newSize);
-	unpacked_.resize(newSize);
-}
-}
-impl DualWordArray{
-pub fn DualWordArray(fieldType:&FieldType) ->Self
-		 {
-Self{multipackedContents_:vec![0, MultiPackedWord::new(fieldType)], unpackedContents_:
-				0, numElements_:0}
-}
+    pub fn push(&mut self, dualWord: &DualWord) {
+        self.multipackedContents_.push(dualWord.multipacked());
+        self.unpackedContents_.push(dualWord.unpacked());
+        self.numElements_ += 1;
+    }
 
-pub fn DualWordArray(  multipackedContents:&MultiPackedWordArray, // TODO delete, for dev
-		 unpackedContents:&UnpackedWordArray) ->Self
-		 {
-	assert!(multipackedContents_.len() == numElements_,
-			"Dual Variable multipacked contents size mismatch");
-	assert!(unpackedContents_.len() == numElements_,
-			"Dual Variable packed contents size mismatch");
-Self{
-multipackedContents_:multipackedContents, unpackedContents_:
-				unpackedContents, numElements_:multipackedContents_.len()}
-}
+    pub fn at(&self, i: usize) -> DualWord {
+        //let multipackedRep= multipacked()[i];
+        //let unpackedRep= unpacked()[i];
+        //const DualWord retval(multipackedRep, unpackedRep);
+        //return retval;
+        DualWord::new2(&self.multipacked()[i], &self.unpacked()[i])
+    }
 
-pub fn multipacked() ->MultiPackedWordArray{
-	return multipackedContents_;
-}
-pub fn unpacked() ->UnpackedWordArray{
-	return unpackedContents_;
-}
- pub fn packed() ->PackedWordArray {
-	assert!(numElements_ == multipackedContents_.len(),
-			"multipacked contents size mismatch");
-	let  retval=PackedWordArray(numElements_);
-	for i in 0..numElements_ {
-		let element = multipackedContents_[i];
-		assert!(element.len() == 1,
-				"Cannot convert from multipacked to packed");
-		retval[i] = element[0];
-	}
-	return retval;
-}
-
-pub fn  push_back(dualWord:&DualWorddualWord) {
-	multipackedContents_.push_back(dualWord.multipacked());
-	unpackedContents_.push_back(dualWord.unpacked());
-	numElements_+=1;
-}
-
-pub fn at(i:usize) ->DualWord{
-	//let multipackedRep= multipacked()[i];
-	//let unpackedRep= unpacked()[i];
-	//const DualWord retval(multipackedRep, unpackedRep);
-	//return retval;
-	return DualWord::new(multipacked()[i], unpacked()[i]);
-}
-
-pub fn size() ->usize{
-	assert!(multipackedContents_.len() == numElements_,
-			"Dual Variable multipacked contents size mismatch");
-	assert!(unpackedContents_.len() == numElements_,
-			"Dual Variable packed contents size mismatch");
-	return numElements_;
-}
+    pub fn len(&self) -> usize {
+        assert!(
+            self.multipackedContents_.len() == self.numElements_,
+            "Dual Variable multipacked contents size mismatch"
+        );
+        assert!(
+            self.unpackedContents_.len() == self.numElements_,
+            "Dual Variable packed contents size mismatch"
+        );
+        return self.numElements_;
+    }
 }
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -1052,23 +1480,92 @@ pub fn size() ->usize{
 /*************************************************************************************************/
 /*************************************************************************************************/
 
-impl LinearTerm{
-pub fn asString() ->String{
-	if coeff_ == 1 {
-		return variable_.name();
-	} else if coeff_ == -1 {
-		return format!("-1 * {}", variable_.name());
-	} else if coeff_ == 0 {
-		return format!("0 * {}", variable_.name());
-	} else {
-		return format!("{} * {}", coeff_.asString(),
-				variable_.name());
-	}
+//     LinearTerm operator-() const {return LinearTerm(variable_, -coeff_);}
+
+//     // jSNARK-edit: These two operators are overloaded to support combining common factors for the same variables.
+//     LinearTerm& operator-=(other:&FElem) {coeff_ -= other; return self;}
+//     LinearTerm& operator+=(other:&FElem) {coeff_ += other; return self;}
+
+//     LinearTerm& operator*=(other:&FElem) {coeff_ *= other; return self;}
+
+impl Neg for LinearTerm {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        LinearTerm::new(self.variable_.clone(), -self.coeff_.clone())
+    }
+}
+impl AddAssign<&FElem> for LinearTerm {
+    #[inline]
+    fn add_assign(&mut self, other: &FElem) {
+        self.coeff_ += other;
+    }
 }
 
-pub fn eval(assignment:&VariableAssignment) ->FElem{
-	return FElem::new(coeff_) *= variable_.eval(assignment);
+impl SubAssign<&FElem> for LinearTerm {
+    #[inline]
+    fn sub_assign(&mut self, other: &FElem) {
+        self.coeff_ -= other;
+    }
 }
+
+impl MulAssign<&FElem> for LinearTerm {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &FElem) {
+        self.coeff_ *= other;
+    }
+}
+
+impl From<Variable> for LinearTerm {
+    fn from(rhs: Variable) -> Self {
+        Self {
+            variable_: rhs,
+            coeff_: 1.into(),
+        }
+    }
+}
+impl LinearTerm {
+    pub fn new(v: Variable, coeff: FElem) -> Self {
+        Self {
+            variable_: v,
+            coeff_: coeff,
+        }
+    }
+    pub fn new2(v: Variable, n: i64) -> Self {
+        Self {
+            variable_: v,
+            coeff_: n.into(),
+        }
+    }
+    // jSNARK-edit: A simple getter for the coefficient
+    pub fn coeff(&self) -> FElem {
+        self.coeff_.clone()
+    }
+    pub fn fieldtype(&self) -> FieldType {
+        self.coeff_.fieldType()
+    }
+    pub fn variable(&self) -> Variable {
+        self.variable_.clone()
+    }
+    pub fn asString(&self) -> String {
+        match self.coeff_.asLong() {
+            1 => self.variable_.name(),
+            -1 => {
+                format!("-1 * {}", self.variable_.name())
+            }
+            0 => {
+                format!("0 * {}", self.variable_.name())
+            }
+            _ => {
+                format!("{} * {}", self.coeff_.asString(), self.variable_.name())
+            }
+        }
+    }
+
+    pub fn eval(&self, assignment: &VariableAssignment) -> FElem {
+        FElem::from(self.coeff_.clone()) * &self.variable_.eval(assignment)
+    }
 }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
@@ -1081,6 +1578,105 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+
+impl AddAssign<&Self> for LinearCombination {
+    #[inline]
+    fn add_assign(&mut self, other: &Self) {
+        // jSNARK-edit: This method is modified in order to reduce memory consumption when the same variable is
+        // being added to a linear combination object multiple times.
+        // This can be helpful for some of the circuits produced by the Pinocchio compiler in some cases.
+
+        if self.indexMap_.len() == 0 {
+            self.linearTerms_.extend(other.linearTerms_.clone());
+            self.constant_ += &other.constant_;
+        } else {
+            for lt in other.linearTerms_.iter() {
+                if let Some(v) = self.indexMap_.get(&(lt.variable().getIndex() as i32)) {
+                    self.linearTerms_[(*v) as usize] += &lt.coeff();
+                } else {
+                    self.linearTerms_.push(lt.clone());
+                    let k = self.indexMap_.len();
+                    self.indexMap_
+                        .insert(lt.variable().getIndex() as i32, k as i32);
+                }
+            }
+            self.constant_ += &other.constant_;
+        }
+
+        // heuristic threshold
+        if self.linearTerms_.len() > 10 && self.indexMap_.len() == 0 {
+            let mut i = 0;
+            let mut newVec = vec![];
+            let mut it = self.linearTerms_.iter();
+            while let Some(lt) = it.next() {
+                if let Some(v) = self.indexMap_.get(&(lt.variable().getIndex() as i32)) {
+                    newVec[(*v) as usize] += &lt.coeff();
+                } else {
+                    newVec.push(lt.clone());
+                    self.indexMap_.insert(lt.variable().getIndex() as i32, i);
+                    i += 1;
+                }
+            }
+            self.linearTerms_ = newVec;
+        }
+    }
+}
+
+impl SubAssign<&Self> for LinearCombination {
+    #[inline]
+    fn sub_assign(&mut self, other: &Self) {
+        // jSNARK-edit: This method is rewritten in order to reduce memory consumption when the same variable is
+        // being added to a linear combination object multiple times.
+        // This can be helpful for some of the circuits produced by the Pinocchio compiler in some cases.
+        if self.indexMap_.len() == 0 {
+            for lt in other.linearTerms_.iter() {
+                self.linearTerms_.push(-lt.clone());
+            }
+            self.constant_ -= &other.constant_;
+        } else {
+            for lt in &other.linearTerms_ {
+                if let Some(v) = self.indexMap_.get(&(lt.variable().getIndex() as i32)) {
+                    self.linearTerms_[(*v) as usize] -= &lt.coeff();
+                } else {
+                    self.linearTerms_.push(-lt.clone());
+                    let k = self.indexMap_.len();
+                    self.indexMap_
+                        .insert(lt.variable().getIndex() as i32, k as i32);
+                }
+            }
+            self.constant_ -= &other.constant_;
+        }
+
+        // heuristic threshold
+        if self.linearTerms_.len() > 10 && self.indexMap_.len() == 0 {
+            let mut i = 0;
+            let mut newVec = vec![];
+            let mut it = self.linearTerms_.iter();
+
+            while let Some(lt) = it.next() {
+                if let Some(v) = self.indexMap_.get(&(lt.variable().getIndex() as i32)) {
+                    newVec[(*v) as usize] += &lt.coeff();
+                } else {
+                    newVec.push(lt.clone());
+                    self.indexMap_.insert(lt.variable().getIndex() as i32, i);
+                    i += 1;
+                }
+            }
+            self.linearTerms_ = newVec;
+        }
+    }
+}
+
+impl MulAssign<&FElem> for LinearCombination {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &FElem) {
+        self.constant_ *= other;
+        for lt in self.linearTerms_.iter_mut() {
+            *lt *= other;
+        }
+    }
+}
 
 // LinearCombination& pub fn operator+=(
 // 		other:&LinearCombination) {
@@ -1098,7 +1694,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // 			if indexMap_.find(lt.variable().getIndex()) != indexMap_.end() {
 // 				linearTerms_[indexMap_[lt.variable().getIndex()]] += lt.coeff();
 // 			} else {
-// 				linearTerms_.push_back(lt);
+// 				linearTerms_.push(lt);
 // 				int k = indexMap_.len();
 // 				indexMap_[lt.variable().getIndex()] = k;
 // 			}
@@ -1116,7 +1712,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // 			if indexMap_.find(lt->variable().getIndex()) != indexMap_.end() {
 // 				newVec[indexMap_[lt->variable().getIndex()]] += lt->coeff();
 // 			} else {
-// 				newVec.push_back(*lt);
+// 				newVec.push(*lt);
 // 				indexMap_[lt->variable().getIndex()] = i++;
 
 // 			}
@@ -1136,7 +1732,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // 	// This can be helpful for some of the circuits produced by the Pinocchio compiler in some cases.
 // 	if indexMap_.len() == 0 {
 // 		for lt in &other.linearTerms_ {
-// 			linearTerms_.push_back(-lt);
+// 			linearTerms_.push(-lt);
 // 		}
 // 		constant_ -= other.constant_;
 // 	} else {
@@ -1144,7 +1740,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // 			if indexMap_.find(lt.variable().getIndex()) != indexMap_.end() {
 // 				linearTerms_[indexMap_[lt.variable().getIndex()]] -= lt.coeff();
 // 			} else {
-// 				linearTerms_.push_back(-lt);
+// 				linearTerms_.push(-lt);
 // 				int k = indexMap_.len();
 // 				indexMap_[lt.variable().getIndex()] = k;
 // 			}
@@ -1163,7 +1759,7 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // 			if indexMap_.find(lt->variable().getIndex()) != indexMap_.end() {
 // 				newVec[indexMap_[lt->variable().getIndex()]] += lt->coeff();
 // 			} else {
-// 				newVec.push_back(*lt);
+// 				newVec.push(*lt);
 // 				indexMap_[lt->variable().getIndex()] = i++;
 // 			}
 // 			lt+=1;
@@ -1182,61 +1778,110 @@ pub fn eval(assignment:&VariableAssignment) ->FElem{
 // 	}
 // 	return self;
 // }
+impl Neg for LinearCombination {
+    type Output = Self;
 
-impl LinearCombination{
-pub fn eval(assignment:&VariableAssignment) ->FElem{
-	let mut  evaluation = constant_;
-	for lt in &linearTerms_ {
-		evaluation += lt.eval(assignment);
-	}
-	return evaluation;
+    fn neg(self) -> Self::Output {
+        LinearCombination::from(0) - &self
+    }
 }
 
-pub fn asString() ->String{
-// #ifdef DEBUG
-// 	let mut  retval;
-// 	let mut  it = linearTerms_.iter();
-// 	if it == linearTerms_.end() {
-// 		return constant_.asString();
-// 	} else {
-// 		retval += it->asString();
-// 	}
-// 	for (it+=1; it != linearTerms_.end(); ++it) {
-// 		retval += " + " + it->asString();
-// 	}
-// 	if constant_ != 0 {
-// 		retval += " + " + constant_.asString();
-// 	}
-// 	return retval;
-// #else // ifdef DEBUG
-	return "".to_owned();
-//#endif // ifdef DEBUG
+impl Default for LinearCombination {
+    fn default() -> Self {
+        Self {
+            linearTerms_: vec![],
+            indexMap_: HashMap::new(),
+            constant_: FElem::from(0),
+        }
+    }
+}
+impl From<Variable> for LinearCombination {
+    fn from(rhs: Variable) -> Self {
+        Self {
+            linearTerms_: vec![rhs.into()],
+            indexMap_: HashMap::new(),
+            constant_: FElem::from(0),
+        }
+    }
+}
+impl From<LinearTerm> for LinearCombination {
+    fn from(rhs: LinearTerm) -> Self {
+        Self {
+            linearTerms_: vec![rhs],
+            indexMap_: HashMap::new(),
+            constant_: FElem::from(0),
+        }
+    }
+}
+impl From<u64> for LinearCombination {
+    fn from(rhs: u64) -> Self {
+        Self {
+            linearTerms_: vec![],
+            indexMap_: HashMap::new(),
+            constant_: FElem::from(rhs),
+        }
+    }
+}
+impl From<FElem> for LinearCombination {
+    fn from(rhs: FElem) -> Self {
+        Self {
+            linearTerms_: vec![],
+            indexMap_: HashMap::new(),
+            constant_: rhs,
+        }
+    }
+}
+impl LinearCombination {
+    pub fn eval(&self, assignment: &VariableAssignment) -> FElem {
+        let mut evaluation = self.constant_.clone();
+        for lt in &self.linearTerms_ {
+            evaluation += &lt.eval(assignment);
+        }
+        return evaluation;
+    }
+
+    pub fn asString(&self) -> String {
+        let mut retval = String::new();
+        let mut it = self.linearTerms_.iter();
+        if let Some(v) = it.next() {
+            retval += &v.asString();
+        } else {
+            return self.constant_.asString();
+        }
+        for v in it {
+            retval += &(" + ".to_owned() + &v.asString());
+        }
+        if self.constant_.asLong() != 0 {
+            retval += &(" + ".to_owned() + &self.constant_.asString());
+        }
+        retval
+    }
+
+    pub fn getUsedVariables(&self) -> BTreeSet<Variable> {
+        let mut retSet = BTreeSet::new();
+        for lt in &self.linearTerms_ {
+            retSet.insert(lt.variable());
+        }
+        return retSet;
+    }
+
+    /***********************************/
+    /***   END OF CLASS DEFINITION   ***/
+    /***********************************/
+
+    pub fn sum<T: SubVariableArrayConfig>(inputs: &VariableArray<T>) -> LinearCombination {
+        let mut retval = LinearCombination::default();
+        for var in inputs.iter() {
+            retval += &(var.clone().into());
+        }
+        return retval;
+    }
+
+    pub fn negate(lc: &LinearCombination) -> LinearCombination {
+        LinearCombination::from(1) - lc
+    }
 }
 
- pub fn getUsedVariables()-> BTreeSet<i32> {
-	let mut  retSet=BTreeSet::new();
-	for lt in &linearTerms_ {
-		retSet.insert(lt.variable());
-	}
-	return retSet;
-}
-
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
- pub fn sum(inputs:&VariableArray)->LinearCombination {
-	let mut  retval=LinearCombination::new(0);
-	for var in &inputs {
-		retval += var;
-	}
-	return retval;
-}
-
- pub fn negate(lc:&LinearCombination)->LinearCombination {
-	return (1 - lc);
-}
-}
 /*************************************************************************************************/
 /*************************************************************************************************/
 /*******************                                                            ******************/
@@ -1244,51 +1889,72 @@ pub fn asString() ->String{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-impl Monomial{
-pub fn new(linearTerm:&LinearTerm) ->Self
-		{
-    //coeff_(linearTerm.coeff_), variables_() 
-	variables_.insert(linearTerm.variable_);
+
+impl From<Variable> for Monomial {
+    fn from(rhs: Variable) -> Self {
+        Self {
+            variables_: BTreeMap::from([(rhs, 1)]),
+            coeff_: FElem::from(1),
+        }
+    }
+}
+impl From<LinearTerm> for Monomial {
+    fn from(rhs: LinearTerm) -> Self {
+        Self {
+            coeff_: rhs.coeff_.clone(),
+            variables_: BTreeMap::from([(rhs.variable_.clone(), 1)]),
+        }
+    }
 }
 
-pub fn eval(assignment:&VariableAssignment) ->FElem{
-	let mut  retval = coeff_;
-	for var in &variables_ {
-		retval *= var.eval(assignment);
-	}
-	return retval;
+impl From<FElem> for Monomial {
+    fn from(rhs: FElem) -> Self {
+        Self {
+            variables_: BTreeMap::new(),
+            coeff_: rhs,
+        }
+    }
 }
+impl Monomial {
+    pub fn new(var: Variable, coeff: FElem) -> Self {
+        Self {
+            coeff_: coeff,
+            variables_: BTreeMap::from([(var, 1)]),
+        }
+    }
 
-pub fn getUsedVariables() ->set{
-	return set::new(variables_);
+    pub fn eval(&self, assignment: &VariableAssignment) -> FElem {
+        let mut retval = self.coeff_.clone();
+        for var in &self.variables_ {
+            retval *= &var.0.eval(assignment);
+        }
+        return retval;
+    }
+
+    pub fn getUsedVariables(&self) -> BTreeMap<Variable, i32> {
+        self.variables_.clone()
+    }
+
+    pub fn getCoefficient(&self) -> FElem {
+        self.coeff_.clone()
+    }
+
+    pub fn asString(&self) -> String {
+        if self.variables_.len() == 0 {
+            return self.coeff_.asString();
+        }
+        let mut retval = String::new();
+        if self.coeff_ != 1 {
+            retval += &(self.coeff_.asString() + "*");
+        }
+        let mut iter = self.variables_.iter();
+        retval += &iter.next().unwrap().0.name();
+        while let Some(v) = iter.next() {
+            retval += &("*".to_owned() + &v.0.name());
+        }
+        retval
+    }
 }
-
- pub fn getCoefficient() ->FElem{
-	return coeff_;
-}
-
-pub fn asString() ->String{
-// #ifdef DEBUG
-// 	if variables_.len() == 0 {
-// 		return coeff_.asString();
-// 	}
-// 	string retval;
-// 	if coeff_ != 1 {
-// 		retval += coeff_.asString() + "*";
-// 	}
-// 	auto iter = variables_.begin();
-// 	retval += iter->name();
-// 	for(iter+=1; iter != variables_.end(); ++iter) {
-// 		retval += "*" + iter->name();
-// 	}
-// 	return retval;
-// #else // ifdef DEBUG
-	return "".to_owned();
-//#endif // ifdef DEBUG
-}
-
-}
-
 
 // Monomial pub fn operator-() const {
 // 	Monomial retval = self;
@@ -1301,6 +1967,34 @@ pub fn asString() ->String{
 // 	variables_.insert(other.variables_.begin(), other.variables_.end());
 // 	return self;
 // }
+impl Neg for Monomial {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let mut retval = self;
+        retval.coeff_ = -retval.coeff_;
+        retval
+    }
+}
+impl AddAssign<&Self> for Monomial {
+    #[inline]
+    fn add_assign(&mut self, other: &Self) {}
+}
+
+impl SubAssign<&Self> for Monomial {
+    #[inline]
+    fn sub_assign(&mut self, other: &Self) {}
+}
+
+impl MulAssign<&Self> for Monomial {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &Self) {
+        self.coeff_ *= &other.coeff_;
+        self.variables_.extend(other.variables_.clone());
+    }
+}
+
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
@@ -1312,60 +2006,107 @@ pub fn asString() ->String{
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-impl Polynomial{
-pub fn new(linearCombination:&LinearCombination) ->Self
-		 {
-        let mut monomials_=vec![];
-	for linearTerm in &linearCombination.linearTerms_ {
-		monomials_.push_back(Monomial(linearTerm));
-	}
-Self{monomials_, constant_:linearCombination.constant_.clone()}
+impl Default for Polynomial {
+    fn default() -> Self {
+        Self {
+            monomials_: vec![],
+            constant_: FElem::from(0),
+        }
+    }
 }
-
-pub fn eval(assignment:&VariableAssignment) ->FElem{
-	let mut  retval = constant_;
-	for monomial in &monomials_ {
-		retval += monomial.eval(assignment);
-	}
-	return retval;
+impl From<Monomial> for Polynomial {
+    fn from(rhs: Monomial) -> Self {
+        Self {
+            monomials_: vec![rhs],
+            constant_: FElem::from(0),
+        }
+    }
 }
-
-  pub fn getUsedVariables() ->set {
-	let mut   retset=set::new();
-	for monomial in &monomials_ {
-		let   curSet = monomial.getUsedVariables();
-		retset.insert(curSet.begin(), curSet.end());
-	}
-	return retset;
+impl From<Variable> for Polynomial {
+    fn from(rhs: Variable) -> Self {
+        Self {
+            monomials_: vec![Monomial::from(rhs)],
+            constant_: FElem::from(0),
+        }
+    }
 }
-
-pub fn getMonomials() ->Vec<Monomial>  {
-	return monomials_;
+impl From<LinearCombination> for Polynomial {
+    fn from(rhs: LinearCombination) -> Self {
+        let mut monomials_ = vec![];
+        for linearTerm in &rhs.linearTerms_ {
+            monomials_.push(Monomial::from(linearTerm.clone()));
+        }
+        Self {
+            monomials_,
+            constant_: rhs.constant_.clone(),
+        }
+    }
 }
-
- pub fn getConstant() ->FElem{
-	return constant_;
+impl From<LinearTerm> for Polynomial {
+    fn from(rhs: LinearTerm) -> Self {
+        Self {
+            monomials_: vec![Monomial::from(rhs)],
+            constant_: FElem::from(0),
+        }
+    }
 }
-
-pub fn asString() ->String{
-// #   ifndef DEBUG
-	return "".to_owned();
-// #   endif
-	// if monomials_.len() == 0 {
-	// 	return constant_.asString();
-	// }
-	// string retval;
-	// auto iter = monomials_.begin();
-	// retval += iter->asString();
-	// for (iter+=1; iter != monomials_.end(); ++iter) {
-	// 	retval += " + " + iter->asString();
-	// }
-	// if constant_ != 0 {
-	// 	retval += " + " + constant_.asString();
-	// }
-	// return retval;
+impl From<i32> for Polynomial {
+    fn from(rhs: i32) -> Self {
+        Self {
+            monomials_: vec![],
+            constant_: FElem::from(rhs),
+        }
+    }
 }
+impl From<FElem> for Polynomial {
+    fn from(rhs: FElem) -> Self {
+        Self {
+            monomials_: vec![],
+            constant_: rhs,
+        }
+    }
+}
+impl Polynomial {
+    pub fn eval(&self, assignment: &VariableAssignment) -> FElem {
+        let mut retval = self.constant_.clone();
+        for monomial in &self.monomials_ {
+            retval += &monomial.eval(assignment);
+        }
+        return retval;
+    }
 
+    pub fn getUsedVariables(&self) -> BTreeMap<Variable, i32> {
+        let mut retset = BTreeMap::new();
+        for monomial in &self.monomials_ {
+            let mut curSet = monomial.getUsedVariables();
+            retset.append(&mut curSet);
+        }
+        retset
+    }
+
+    pub fn getMonomials(&self) -> Vec<Monomial> {
+        self.monomials_.clone()
+    }
+
+    pub fn getConstant(&self) -> FElem {
+        self.constant_.clone()
+    }
+
+    pub fn asString(&self) -> String {
+        if self.monomials_.len() == 0 {
+            return self.constant_.asString();
+        }
+        let mut retval = String::new();
+        let mut iter = self.monomials_.iter();
+        retval += &iter.next().unwrap().asString();
+        while let Some(v) = iter.next() {
+            retval += &(" + ".to_owned() + &v.asString());
+        }
+        if self.constant_ != 0 {
+            retval += &(" + ".to_owned() + &self.constant_.asString());
+        }
+        return retval;
+    }
 }
 
 // Polynomial& pub fn operator+=(other:&Polynomial) {
@@ -1379,12 +2120,12 @@ pub fn asString() ->String{
 // 	vector<Monomial> newMonomials;
 // 	for thisMonomial in &monomials_ {
 // 		for otherMonomial in &other.monomials_ {
-// 			newMonomials.push_back(thisMonomial * otherMonomial);
+// 			newMonomials.push(thisMonomial * otherMonomial);
 // 		}
-// 		newMonomials.push_back(thisMonomial * other.constant_);
+// 		newMonomials.push(thisMonomial * other.constant_);
 // 	}
 // 	for otherMonomial in &other.monomials_ {
-// 		newMonomials.push_back(otherMonomial * self.constant_);
+// 		newMonomials.push(otherMonomial * self.constant_);
 // 	}
 // 	constant_ *= other.constant_;
 // 	monomials_ = ::(newMonomials);
@@ -1394,12 +2135,60 @@ pub fn asString() ->String{
 // Polynomial& pub fn operator-=(other:&Polynomial) {
 // 	constant_ -= other.constant_;
 // 	for otherMonomial in &other.monomials_ {
-// 		monomials_.push_back(-otherMonomial);
+// 		monomials_.push(-otherMonomial);
 // 	}
 // 	return self;
 // }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
+impl Neg for Polynomial {
+    type Output = Self;
 
-// } // namespace gadgetlib2
+    fn neg(self) -> Self::Output {
+        Polynomial::from(FElem::from(0)) - &self
+    }
+}
+impl AddAssign<&LinearTerm> for Polynomial {
+    #[inline]
+    fn add_assign(&mut self, other: &LinearTerm) {
+        *self += &Polynomial::from(Monomial::from(other.clone()));
+    }
+}
+
+impl AddAssign<&Self> for Polynomial {
+    #[inline]
+    fn add_assign(&mut self, other: &Self) {
+        self.constant_ += &other.constant_;
+        self.monomials_.extend(other.monomials_.clone());
+    }
+}
+
+impl SubAssign<&Self> for Polynomial {
+    #[inline]
+    fn sub_assign(&mut self, other: &Self) {
+        self.constant_ -= &other.constant_.clone();
+        for otherMonomial in &other.monomials_ {
+            self.monomials_.push(-otherMonomial.clone());
+        }
+    }
+}
+
+impl MulAssign<&Self> for Polynomial {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &Self) {
+        let mut newMonomials = vec![];
+        for thisMonomial in &self.monomials_ {
+            for otherMonomial in &other.monomials_ {
+                newMonomials.push(thisMonomial.clone() * otherMonomial);
+            }
+            newMonomials.push(thisMonomial.clone() * &other.constant_);
+        }
+        for otherMonomial in &other.monomials_ {
+            newMonomials.push(otherMonomial.clone() * &self.constant_);
+        }
+        self.constant_ *= &other.constant_;
+        self.monomials_ = newMonomials;
+    }
+}

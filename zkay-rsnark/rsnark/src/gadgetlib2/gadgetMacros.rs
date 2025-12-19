@@ -1,15 +1,6 @@
-// /** @file
-//  *****************************************************************************
-//  Macros for quick construction of interface and factory classes for non field
-//  agnostic gadgets.
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-
-// //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGETMACROS_HPP_
-// // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGETMACROS_HPP_
+// //  *****************************************************************************
+// //  Macros for quick construction of interface and factory classes for non field
+// //  agnostic gadgets.
 
 // // The macro below counts the number of arguments sent with __VA_ARGS__
 // // it has not been tested yet. Due to a current MSVC bug it is not in use yet.
@@ -17,7 +8,6 @@
 // ///* The PP_NARG macro returns the number of arguments that have been
 // // * passed to it.
 // // */
-
 // /*
 // //// #define PP_NARG(...)                          \
 // //         PP_NARG_(__VA_ARGS__,PP_RSEQ_N())
@@ -40,7 +30,6 @@
 // //         19,18,17,16,15,14,13,12,11,10, \
 // //         9,8,7,6,5,4,3,2,1,0
 // */
-
 // /**
 //     Macro which creates Base classes for function specific gadgets. For instance
 //     CREATE_GADGET_BASE_CLASS(AND_GadgetBase) will create a base pub struct which should be inherited by
@@ -58,8 +47,6 @@
 //     DISALLOW_COPY_AND_ASSIGN(GadgetBase);        \
 // }; // pub struct GadgetBase
 
-
-
 // /**
 //     Macro for creating gadget factory classes. For instance
 //     CREATE_GADGET_FACTORY_CLASS(AND_Gadget, 2, VariableArray, input, Variable, result); creates a
@@ -71,36 +58,36 @@
 //     This macro implements the factory design pattern.
 // */
 // // #define ADD_ELLIPSES_1(Type1, name1)                                                              \
-//     const Type1 & name1
+//     // const Type1 & name1
 
 // // #define ADD_ELLIPSES_2(Type1, name1, Type2, name2)                                                \
-//     name1:Type1 &, const Type2 & name2
+//     // name1:Type1 &, const Type2 & name2
 
 // // #define ADD_ELLIPSES_3(Type1, name1, Type2, name2, Type3, name3)                                  \
-//     name1:Type1 &, name2:Type2 &, const Type3 & name3
+//     // name1:Type1 &, name2:Type2 &, const Type3 & name3
 
 // // #define ADD_ELLIPSES_4(Type1, name1, Type2, name2, Type3, name3, Type4, name4)                    \
-//     name1:Type1 &, name2:Type2 &, name3:Type3 &, const Type4 & name4
+// //     name1:Type1 &, name2:Type2 &, name3:Type3 &, const Type4 & name4
 
-// // #define ADD_ELLIPSES_5(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5)      \
-//     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
-//     const Type5 & name5
+// // // #define ADD_ELLIPSES_5(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5)      \
+// //     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
+// //     const Type5 & name5
 
-// // #define ADD_ELLIPSES_7(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5,      \
-//                        Type6, name6, Type7, name7, Type8, name8, Type9, name9)                    \
-//     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
-//     name5:Type5 &, name6:Type6 &, const Type7 & name7
+// // // #define ADD_ELLIPSES_7(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5,      \
+// //                        Type6, name6, Type7, name7, Type8, name8, Type9, name9)                    \
+// //     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
+// //     name5:Type5 &, name6:Type6 &, const Type7 & name7
 
-// // #define ADD_ELLIPSES_8(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5,      \
-//                        Type6, name6, Type7, name7, Type8, name8)                                  \
-//     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
-//     name5:Type5 &, name6:Type6 &, name7:Type7 &, const Type8 & name8
+// // // #define ADD_ELLIPSES_8(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5,      \
+// //                        Type6, name6, Type7, name7, Type8, name8)                                  \
+// //     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
+// //     name5:Type5 &, name6:Type6 &, name7:Type7 &, const Type8 & name8
 
-// // #define ADD_ELLIPSES_9(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5,      \
-//                        Type6, name6, Type7, name7, Type8, name8, Type9, name9)                    \
-//     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
-//     name5:Type5 &, name6:Type6 &, name7:Type7 &, name8:Type8 &,           \
-//     const Type9 & name9
+// // // #define ADD_ELLIPSES_9(Type1, name1, Type2, name2, Type3, name3, Type4, name4, Type5, name5,      \
+// //                        Type6, name6, Type7, name7, Type8, name8, Type9, name9)                    \
+// //     name1:Type1 &, name2:Type2 &, name3:Type3 &, name4:Type4 &,           \
+// //     name5:Type5 &, name6:Type6 &, name7:Type7 &, name8:Type8 &,           \
+// //     const Type9 & name9
 
 // /*
 //     This was supposed to be a variadic macro CREATE_GADGET_FACTORY_CLASS(...) which invokes the
@@ -233,7 +220,6 @@
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // pub struct GadgetType
 
-
 // // #define CREATE_GADGET_FACTORY_CLASS_8(GadgetType, Type1, name1, Type2, name2, Type3, name3,       \
 //                                       Type4, name4, Type5, name5, Type6, name6, Type7, name7,     \
 //                                       Type8, name8)                                               \
@@ -280,5 +266,3 @@
 //     DISALLOW_CONSTRUCTION(GadgetType);                                                            \
 //     DISALLOW_COPY_AND_ASSIGN(GadgetType);                                                         \
 // }; // pub struct GadgetType
-
-// //#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_GADGETMACROS_HPP_
