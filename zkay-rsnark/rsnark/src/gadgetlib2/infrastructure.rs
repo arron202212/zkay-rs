@@ -56,11 +56,12 @@ use ffec::common::utils;
  * The ErrorHandling pub struct containimplements the functionality of displaying the content of error
  * messages (including content of call stack when error happened), and exiting the program.
  */
-pub struct ErrorHandling {
-    //  pub fn   fatalError<T:Borrow<String>>(msg:T);
-    //  pub fn   fatalErrors<T:AsRef<String>>(msg:T);
-    //  pub fn  printStacktrace();
-}
+pub struct ErrorHandling;
+//  {
+//  pub fn   fatalError<T:Borrow<String>>(msg:T);
+//  pub fn   fatalErrors<T:AsRef<String>>(msg:T);
+//  pub fn  printStacktrace();
+// }
 
 // #define GADGETLIB_FATAL(msg) do {  \
 //     ::std::stringstream msgStream; \
@@ -90,10 +91,12 @@ pub struct ErrorHandling {
 //// #define POW(a,b) ((int64_t)(pow((float)(a),(int)(b))))
 
 // Returns 2^exponent
-// /*constexpr*/ inline int64_t POW2(int exponent) {
-//     //assert!(exponent>=0);
-//     return ((int64_t)1) << exponent;
-// }
+/*constexpr*/
+#[inline]
+pub fn POW2(exponent: i32) -> i64 {
+    //assert!(exponent>=0);
+    1 << exponent
+}
 
 //Returns the ceiling of a when a is of type double.
 // /*constexpr*/ inline int64_t CEIL(double a) {
@@ -202,7 +205,7 @@ impl ErrorHandling {
 /*****************************************************************************/
 
 pub fn Log2(n: f64) -> f64 {
-    log(n) / log(2.0)
+    n.ln() / 2.0f64.ln()
 }
 
 /// Returns an upper bound on ffec::log2(i). Namely, returns the number of binary digits needed to store
@@ -213,7 +216,7 @@ pub fn Log2ceil(mut i: u64) -> u32 {
         retval += 1;
         i >>= 1;
     }
-    return retval;
+    retval
 }
 
 ///Returns true iff x is a power of 2

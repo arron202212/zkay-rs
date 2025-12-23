@@ -1,6 +1,7 @@
 //  Declaration of the low level objects needed for field arithmetization.
 use super::pp::Fp;
 use super::variable_operators::*;
+use crate::gadgetlib2::protoboard::Protoboard;
 use enum_dispatch::enum_dispatch;
 use rccell::RcCell;
 use std::collections::{BTreeMap, BTreeSet};
@@ -23,11 +24,12 @@ pub enum FieldType {
 }
 use strum_macros::{EnumIs, EnumTryAs};
 #[enum_dispatch(FElemInterface)]
-#[derive(EnumIs, EnumTryAs, Clone, PartialEq)]
+#[derive(Debug, EnumIs, EnumTryAs, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub enum ElemType {
     Const(FConst),
     Elem(R1P_Elem),
 }
+
 impl Default for ElemType {
     fn default() -> Self {
         Self::Const(FConst::default())
@@ -78,9 +80,9 @@ impl MulAssign<&Self> for ElemType {
 }
 
 pub type VariablePtr = RcCell<Variable>;
-pub type VariableArrayPtr<T> = RcCell<VariableArray<T>>;
+pub type VariableArrayPtr = RcCell<VariableArrayType>;
 pub type FElemInterfacePtr = RcCell<ElemType>;
-// pub type ProtoboardPtr = RcCell<Protoboard>;
+pub type ProtoboardPtr = Option<RcCell<Protoboard>>;
 pub type VarIndex_t = u64;
 
 // Naming Conventions:
@@ -128,8 +130,8 @@ pub trait FElemInterface: Default + Clone {
     fn asLong(&self) -> i64 {
         0
     }
-    fn getBit(&self, i: u32) -> bool {
-        false
+    fn getBit(&self, i: u32) -> i32 {
+        0
     }
     fn power(&self, exponent: u64) -> Self {
         self.clone()
@@ -158,7 +160,7 @@ pub trait FElemInterface: Default + Clone {
 
 /// A wrapper pub struct for field elements. Can hold any derived pub type of FieldElementInterface
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FElem {
     pub elem_: RcCell<ElemType>,
 }
@@ -169,7 +171,6 @@ impl PartialEq<i32> for FElem {
     }
 }
 
-impl FElemInterface for FElem {}
 //
 //     explicit FElem(elem:&FElemInterface);
 //     /// Helper method. When doing arithmetic between a constant and a field specific element
@@ -236,7 +237,7 @@ impl FElemInterface for FElem {}
     over a GF2 extension field in which '42' has no obvious meaning, other than being the answer to
     life, the universe and everything.
 */
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone, PartialOrd, Ord, Eq)]
 pub struct FConst {
     //: public FElemInterface
     pub contents_: i64,
@@ -279,7 +280,7 @@ pub struct FConst {
    Holds elements of a prime characteristic field. Currently implemented using the gmp (Linux) and
    mpir (Windows) libraries.
 */
-#[derive(Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct R1P_Elem {
     // ///: public FElemInterface
     pub elem_: Fp,
@@ -320,7 +321,7 @@ pub struct R1P_Elem {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-pub type set = BTreeSet<Variable>; //VariableStrictOrder
+pub type VariableSet = BTreeSet<Variable>; //VariableStrictOrder
 pub type multiset = BTreeMap<Variable, i32>; //use std::collections::BTreeMap;
 
 // /**
@@ -335,7 +336,7 @@ pub type multiset = BTreeMap<Variable, i32>; //use std::collections::BTreeMap;
 //     which will also be determined by the assignment.
 //  */
 pub type VariableAssignment = HashMap<Variable, FElem>; //VariableStrictOrder
-#[derive(Default, Clone, Eq, Hash, Ord)]
+#[derive(Default, Clone, Hash, Ord, Eq)]
 pub struct Variable {
     pub index_: VarIndex_t,
     ///< This index differentiates and identifies Variable instances.
@@ -397,7 +398,7 @@ pub trait SubVariableArrayConfig: Default + Clone + Ord {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct VariableArray<T: SubVariableArrayConfig> {
     // //: public VariableArrayContents
     pub contents: VariableArrayContents,
@@ -428,16 +429,74 @@ pub struct VariableArray<T: SubVariableArrayConfig> {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct VariableArrayBase;
+impl SubVariableArrayConfig for VariableArrayBase {}
 pub type FlagVariable = Variable;
 ///< Holds variable whose purpose is to be populated with a boolean
 ///< value, Field(0) or Field(1)
-pub type FlagVariableArray<T> = VariableArray<T>;
+pub type FlagVariableArray = VariableArray<VariableArrayBase>;
 pub type PackedWord = Variable;
 ///< Represents a packed word that can fit in a field element.
 ///< For a word representing an unsigned integer for instance this
 ///< means we require (int < fieldSize)
-pub type PackedWordArray<T> = VariableArray<T>;
+pub type PackedWordArray = VariableArray<VariableArrayBase>;
+#[enum_dispatch]
+pub trait VariableArrayConfig {
+    fn iter(&self) -> std::slice::Iter<Variable>;
+    fn name(&self) -> &String;
+    fn at(&self, i: usize) -> &Variable;
+    fn push(&mut self, val: Variable);
+    fn len(&self) -> usize;
+    fn resize(&mut self, numBits: usize);
+}
+#[enum_dispatch(VariableArrayConfig)]
+#[derive(EnumIs, EnumTryAs, Clone, PartialOrd, Ord, Eq, PartialEq)]
+pub enum VariableArrayType {
+    Base(VariableArray<VariableArrayBase>),
+    UnpackedWord(VariableArray<UnpackedWord>),
+    MultiPackedWord(VariableArray<MultiPackedWord>),
+}
+
+impl Default for VariableArrayType {
+    fn default() -> Self {
+        Self::Base(VariableArray::<VariableArrayBase>::default())
+    }
+}
+
+impl Index<usize> for VariableArrayType {
+    type Output = Variable;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match self {
+            Self::Base(_self) => _self.contents.get(index).unwrap(),
+            Self::UnpackedWord(_self) => _self.contents.get(index).unwrap(),
+            Self::MultiPackedWord(_self) => _self.contents.get(index).unwrap(),
+        }
+    }
+}
+
+impl IndexMut<usize> for VariableArrayType {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        match self {
+            Self::Base(_self) => _self.contents.get_mut(index).unwrap(),
+            Self::UnpackedWord(_self) => _self.contents.get_mut(index).unwrap(),
+            Self::MultiPackedWord(_self) => _self.contents.get_mut(index).unwrap(),
+        }
+    }
+}
+impl IntoIterator for VariableArrayType {
+    type Item = Variable;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        match self {
+            Self::Base(_self) => _self.contents.into_iter(),
+            Self::UnpackedWord(_self) => _self.contents.into_iter(),
+            Self::MultiPackedWord(_self) => _self.contents.into_iter(),
+        }
+    }
+}
 
 /// Holds variables whose purpose is to be populated with the unpacked form of some word, bit by bit
 
@@ -470,7 +529,7 @@ pub struct MultiPackedWord {
 pub type MultiPackedWordArray = Vec<VariableArray<MultiPackedWord>>;
 
 /// Holds both representations of a word, both multipacked and unpacked
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct DualWord {
     pub multipacked_: VariableArray<MultiPackedWord>,
     pub unpacked_: VariableArray<UnpackedWord>,
@@ -486,7 +545,7 @@ pub struct DualWord {
     //     pub fn  resize(newSize:usize);
 } // pub struct DualWord
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct DualWordArray {
     // kept as 2 separate arrays because the more common usecase will be to request one of these,
     // and not dereference a specific DualWord
@@ -513,7 +572,7 @@ pub struct DualWordArray {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct LinearTerm {
     pub variable_: Variable,
     pub coeff_: FElem,
@@ -552,7 +611,7 @@ pub struct LinearTerm {
 /*************************************************************************************************/
 /*************************************************************************************************/
 //  pub type size_type=Vec<LinearTerm>::size_type;
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct LinearCombination {
     pub linearTerms_: Vec<LinearTerm>,
     pub indexMap_: HashMap<i32, i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
@@ -592,7 +651,7 @@ pub struct LinearCombination {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct Monomial {
     pub coeff_: FElem,
     pub variables_: BTreeMap<Variable, i32>,
@@ -626,7 +685,7 @@ pub struct Monomial {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Polynomial {
     pub monomials_: Vec<Monomial>,
     pub constant_: FElem,
@@ -696,7 +755,7 @@ pub struct Polynomial {
 impl AddAssign<&Self> for FElem {
     #[inline]
     fn add_assign(&mut self, other: &Self) {
-        self.promoteToFieldType(other.fieldType());
+        self.promoteToFieldType(&other.fieldType());
         *self.elem_.borrow_mut() += &other.elem_.borrow();
     }
 }
@@ -704,7 +763,7 @@ impl AddAssign<&Self> for FElem {
 impl SubAssign<&Self> for FElem {
     #[inline]
     fn sub_assign(&mut self, other: &Self) {
-        self.promoteToFieldType(other.fieldType());
+        self.promoteToFieldType(&other.fieldType());
         *self.elem_.borrow_mut() -= &other.elem_.borrow();
     }
 }
@@ -713,7 +772,7 @@ impl MulAssign<&Self> for FElem {
     #[inline]
     #[allow(clippy::many_single_char_names)]
     fn mul_assign(&mut self, other: &Self) {
-        self.promoteToFieldType(other.fieldType());
+        self.promoteToFieldType(&other.fieldType());
         *self.elem_.borrow_mut() *= &other.elem_.borrow();
     }
 }
@@ -797,6 +856,40 @@ impl From<Fp> for FElem {
         }
     }
 }
+impl From<R1P_Elem> for FElem {
+    fn from(rhs: R1P_Elem) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Elem(rhs)),
+        }
+    }
+}
+impl FElemInterface for FElem {
+    fn asString(&self) -> String {
+        self.elem_.borrow().asString()
+    }
+    fn fieldType(&self) -> FieldType {
+        self.elem_.borrow().fieldType()
+    }
+
+    fn asLong(&self) -> i64 {
+        self.elem_.borrow().asLong()
+    }
+    fn inverse(&self) -> Self {
+        self.elem_.borrow().inverse().into()
+    }
+    fn getBit(&self, i: u32) -> i32 {
+        self.elem_.borrow().getBit(i)
+    }
+    fn power(&self, exponent: u64) -> Self {
+        self.elem_.borrow().power(exponent).into()
+    }
+}
+use std::fmt;
+impl fmt::Display for FElem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.elem_.borrow().asString())
+    }
+}
 
 impl FElem {
     pub fn assignment(&mut self, other: Self) {
@@ -815,12 +908,12 @@ impl FElem {
         lhsField != rhsField && rhsField != &FieldType::AGNOSTIC
     }
 
-    pub fn promoteToFieldType(&mut self, types: FieldType) {
+    pub fn promoteToFieldType(&self, types: &FieldType) {
         if !Self::fieldMustBePromotedForArithmetic(&self.fieldType(), &types) {
             return;
         }
         assert!(
-            types == FieldType::R1P,
+            types == &FieldType::R1P,
             "Attempted to promote to unknown field pub type"
         );
         let fConst = self.elem_.try_borrow();
@@ -831,13 +924,13 @@ impl FElem {
         *self.elem_.borrow_mut() = ElemType::Elem(R1P_Elem::from(fConst.unwrap().asLong()));
     }
 
-    pub fn inverse(&self, fieldType: &FieldType) -> Self {
-        let promoteToFieldType = fieldType.clone();
+    pub fn inverses(&self, fieldType: &FieldType) -> Self {
+        self.promoteToFieldType(fieldType);
         FElem::from((self.elem_.borrow().inverse()))
     }
 
-    pub fn getBit(&self, i: u32, fieldType: &FieldType) -> bool {
-        // let promoteToFieldType = fieldType.clone();
+    pub fn getBits(&self, i: u32, fieldType: &FieldType) -> i32 {
+        self.promoteToFieldType(fieldType);
         assert!(
             &self.fieldType() == fieldType,
             "Attempted to extract bits from incompatible field pub type."
@@ -845,7 +938,7 @@ impl FElem {
         self.elem_.borrow().getBit(i)
     }
 
-    pub fn power(base: &Self, exponent: u64) -> Self {
+    pub fn powers(base: &Self, exponent: u64) -> Self {
         // TODO .cpp
         let retval = base.clone();
         retval.elem_.borrow().power(exponent);
@@ -948,7 +1041,7 @@ impl FElemInterface for FConst {
     fn asLong(&self) -> i64 {
         self.contents_
     }
-    fn getBit(&self, i: u32) -> bool {
+    fn getBit(&self, i: u32) -> i32 {
         panic!("Cannot get bit from FConst.");
     }
     fn inverse(&self) -> Self {
@@ -1114,8 +1207,8 @@ impl FElemInterface for R1P_Elem {
         FieldType::R1P
     }
 
-    fn getBit(&self, i: u32) -> bool {
-        self.elem_.as_bigint().test_bit(i)
+    fn getBit(&self, i: u32) -> i32 {
+        self.elem_.as_bigint().test_bit(i) as _
     }
     fn power(&self, exponent: u64) -> Self {
         let mut res = self.clone();
@@ -1135,9 +1228,9 @@ impl FElemInterface for R1P_Elem {
 /*************************************************************************************************/
 /*************************************************************************************************/
 use std::sync::atomic::{self, AtomicUsize, Ordering};
-static nextFreeIndex_: AtomicUsize = AtomicUsize::new(0); //VarIndex_t
+pub static nextFreeIndex_: AtomicUsize = AtomicUsize::new(0); //VarIndex_t
 impl Variable {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: &str) -> Self {
         let index_ = nextFreeIndex_.load(Ordering::Relaxed) as u64;
         nextFreeIndex_.fetch_add(1, Ordering::Relaxed);
         assert!(
@@ -1147,7 +1240,7 @@ impl Variable {
         );
         Self {
             index_,
-            name_: name,
+            name_: name.to_owned(),
         }
     }
 
@@ -1243,12 +1336,13 @@ impl<T: SubVariableArrayConfig> IntoIterator for VariableArray<T> {
         self.contents.into_iter()
     }
 }
+
 impl<T: SubVariableArrayConfig> VariableArray<T> {
     pub fn new(size: usize, name: String, t: T) -> Self {
         // : VariableArrayContents()
         let mut contents = VariableArrayContents::default();
         for i in 0..size {
-            contents.push(Variable::new(format!("{}[{}]", name, i)));
+            contents.push(Variable::new(&format!("{}[{}]", name, i)));
         }
         Self {
             contents,
@@ -1263,20 +1357,22 @@ impl<T: SubVariableArrayConfig> VariableArray<T> {
             t,
         }
     }
+}
 
-    pub fn iter(&self) -> std::slice::Iter<Variable> {
+impl<T: SubVariableArrayConfig> VariableArrayConfig for VariableArray<T> {
+    fn iter(&self) -> std::slice::Iter<Variable> {
         self.contents.iter()
     }
-    pub fn name(&self) -> &String {
+    fn name(&self) -> &String {
         &self.name_
     }
-    pub fn at(&self, i: usize) -> &Variable {
+    fn at(&self, i: usize) -> &Variable {
         &self.contents[i]
     }
-    pub fn push(&mut self, val: Variable) {
+    fn push(&mut self, val: Variable) {
         self.contents.push(val)
     }
-    pub fn len(&self) -> usize {
+    fn len(&self) -> usize {
         self.contents.len()
     }
     fn resize(&mut self, numBits: usize) {
@@ -1289,8 +1385,8 @@ impl<T: SubVariableArrayConfig> VariableArray<T> {
 /***********************************/
 impl SubVariableArrayConfig for UnpackedWord {}
 impl UnpackedWord {
-    pub fn new(numBits: usize, name: String) -> VariableArray<Self> {
-        VariableArray::<Self>::new(numBits, name, Self)
+    pub fn new(numBits: usize, name: &str) -> VariableArray<Self> {
+        VariableArray::<Self>::new(numBits, name.to_owned(), Self)
     }
     pub fn into_va(self) -> VariableArray<Self> {
         VariableArray::<Self>::new(0, String::new(), self)
@@ -1304,11 +1400,15 @@ impl UnpackedWord {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-impl From<FieldType> for MultiPackedWord {
+impl From<FieldType> for VariableArray<MultiPackedWord> {
     fn from(rhs: FieldType) -> Self {
         Self {
-            numBits_: 0,
-            fieldType_: rhs,
+            contents: vec![],
+            name_: String::new(),
+            t: MultiPackedWord {
+                numBits_: 0,
+                fieldType_: rhs,
+            },
         }
     }
 }
@@ -1321,12 +1421,12 @@ impl SubVariableArrayConfig for MultiPackedWord {
 }
 
 impl MultiPackedWord {
-    pub fn new(numBits: usize, fieldType: &FieldType, name: &String) -> VariableArray<Self> {
+    pub fn new(numBits: usize, fieldType: &FieldType, name: &str) -> VariableArray<Self> {
         // VariableArray(), numBits_(numBits), fieldType_(fieldType)
         let packedSize = Self::getMultipackedSize(fieldType);
         VariableArray::<Self>::new(
             packedSize,
-            name.clone(),
+            name.to_owned(),
             Self {
                 numBits_: numBits,
                 fieldType_: fieldType.clone(),
@@ -1352,7 +1452,7 @@ impl MultiPackedWord {
 impl From<FieldType> for DualWord {
     fn from(rhs: FieldType) -> Self {
         Self {
-            multipacked_: MultiPackedWord::from(rhs).into_va(),
+            multipacked_: VariableArray::<MultiPackedWord>::from(rhs),
             unpacked_: VariableArray::<UnpackedWord>::default(),
         }
     }
@@ -1361,17 +1461,17 @@ impl DualWord {
     pub fn new(numBits: usize, fieldType: &FieldType, name: &String) -> Self {
         Self {
             multipacked_: MultiPackedWord::new(numBits, fieldType, &(name.to_owned() + "_p")),
-            unpacked_: UnpackedWord::new(numBits, (name.to_owned() + "_u")),
+            unpacked_: UnpackedWord::new(numBits, &(name.to_owned() + "_u")),
         }
     }
 
     pub fn new2(
-        multipacked: &VariableArray<MultiPackedWord>,
-        unpacked: &VariableArray<UnpackedWord>,
+        multipacked: VariableArray<MultiPackedWord>,
+        unpacked: VariableArray<UnpackedWord>,
     ) -> Self {
         Self {
-            multipacked_: multipacked.clone(),
-            unpacked_: unpacked.clone(),
+            multipacked_: multipacked,
+            unpacked_: unpacked,
         }
     }
     pub fn multipacked(&self) -> VariableArray<MultiPackedWord> {
@@ -1394,7 +1494,7 @@ impl DualWord {
 impl From<FieldType> for DualWordArray {
     fn from(rhs: FieldType) -> Self {
         Self {
-            multipackedContents_: vec![MultiPackedWord::from(rhs).into_va()],
+            multipackedContents_: vec![VariableArray::<MultiPackedWord>::from(rhs)],
             unpackedContents_: vec![],
             numElements_: 0,
         }
@@ -1429,12 +1529,12 @@ impl DualWordArray {
     pub fn unpacked(&self) -> &UnpackedWordArray {
         &self.unpackedContents_
     }
-    pub fn packed<T: SubVariableArrayConfig>(&self) -> PackedWordArray<T> {
+    pub fn packed(&self) -> PackedWordArray {
         assert!(
             self.numElements_ == self.multipackedContents_.len(),
             "multipacked contents size mismatch"
         );
-        let mut retval = PackedWordArray::<T>::from(self.numElements_);
+        let mut retval = PackedWordArray::from(self.numElements_);
         for i in 0..self.numElements_ {
             let element = self.multipackedContents_[i].clone();
             assert!(
@@ -1457,7 +1557,7 @@ impl DualWordArray {
         //let unpackedRep= unpacked()[i];
         //const DualWord retval(multipackedRep, unpackedRep);
         //return retval;
-        DualWord::new2(&self.multipacked()[i], &self.unpacked()[i])
+        DualWord::new2(self.multipacked()[i].clone(), self.unpacked()[i].clone())
     }
 
     pub fn len(&self) -> usize {
@@ -1864,24 +1964,22 @@ impl LinearCombination {
         }
         return retSet;
     }
+}
+/***********************************/
+/***   END OF CLASS DEFINITION   ***/
+/***********************************/
 
-    /***********************************/
-    /***   END OF CLASS DEFINITION   ***/
-    /***********************************/
-
-    pub fn sum<T: SubVariableArrayConfig>(inputs: &VariableArray<T>) -> LinearCombination {
-        let mut retval = LinearCombination::default();
-        for var in inputs.iter() {
-            retval += &(var.clone().into());
-        }
-        return retval;
+pub fn sum(inputs: &VariableArrayType) -> LinearCombination {
+    let mut retval = LinearCombination::default();
+    for var in inputs.iter() {
+        retval += &(var.clone().into());
     }
-
-    pub fn negate(lc: &LinearCombination) -> LinearCombination {
-        LinearCombination::from(1) - lc
-    }
+    return retval;
 }
 
+pub fn negate(lc: &LinearCombination) -> LinearCombination {
+    LinearCombination::from(1) - lc
+}
 /*************************************************************************************************/
 /*************************************************************************************************/
 /*******************                                                            ******************/

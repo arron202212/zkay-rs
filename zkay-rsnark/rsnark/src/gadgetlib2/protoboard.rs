@@ -1,8 +1,14 @@
 //  Definition of Protoboard, a "memory manager" for building arithmetic constraints
-
-use crate::gadgetlib2::constraint;
-use crate::gadgetlib2::pp;
-use crate::gadgetlib2::variable;
+use crate::gadgetlib2::constraint::{
+    ConstraintSystem, PolynomialConstraint, PrintOptions, Rank1Constraint,
+};
+use crate::gadgetlib2::infrastructure::Log2ceil;
+use crate::gadgetlib2::variable::{
+    DualWord, FElem, FElemInterface, FieldType, FlagVariable, LinearCombination, MultiPackedWord,
+    Polynomial, ProtoboardPtr, SubVariableArrayConfig, UnpackedWord, Variable, VariableArray,
+    VariableArrayConfig, VariableAssignment,
+};
+use rccell::RcCell;
 
 // #define ASSERT_CONSTRAINTS_SATISFIED(pb) \
 // ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED))
@@ -10,10 +16,8 @@ use crate::gadgetlib2::variable;
 // #define ASSERT_CONSTRAINTS_NOT_SATISFIED(pb) \
 // ASSERT_FALSE(pb->isSatisfied(PrintOptions::NO_DBG_PRINT))
 
-// namespace gadgetlib2 {
-
 // pub struct ProtoboardParams; // Forward declaration
-// type ParamsCPtr=::RcCell<const ProtoboardParams>;
+pub type ParamsCPtr = Option<RcCell<ProtoboardParams>>;
 
 // /*************************************************************************************************/
 // /*************************************************************************************************/
@@ -23,66 +27,85 @@ use crate::gadgetlib2::variable;
 // /*************************************************************************************************/
 // /*************************************************************************************************/
 pub struct Protoboard {
-    assignment_: VariableAssignment,
-    constraintSystem_: ConstraintSystem,
-    numInputs_: usize,
-    pParams_: ParamsCPtr,
-    fieldType_: FieldType,
+    pub assignment_: VariableAssignment,
+    pub constraintSystem_: ConstraintSystem,
+    pub numInputs_: usize,
+    pub pParams_: ParamsCPtr,
+    pub fieldType_: FieldType,
     // TODO try to refactor this out and use inheritance for different types
     // of protoboards, for instance TinyRAMProtoboard : public Protoboard
     // This may not be trivial because of Gadget multiple inheritance scheme
 }
 //     Protoboard(fieldType:FieldType&, ParamsCPtr pParams);
 //
-//
-//     static ProtoboardPtr create(fieldType:FieldType&, ParamsCPtr pParams = NULL) {
-//         return ProtoboardPtr(new Protoboard(fieldType, pParams));
-//     }
-//     usize numVars() const {return assignment_.len();} // TODO change to take num from constraintSys_
-//     //usize numVars() const {return constraintSystem_.getUsedVariables().len();} // TODO change to take num from constraintSys_
+impl Protoboard {
+    pub fn create(fieldType: FieldType, pParams: ParamsCPtr) -> ProtoboardPtr {
+        Some(RcCell::new(Protoboard::new(fieldType, pParams)))
+    }
+    pub fn numVars(&self) -> usize {
+        self.assignment_.len()
+    } // TODO change to take num from constraintSys_
+    pub fn numVarss(&self) -> usize {
+        self.constraintSystem_.getUsedVariables().len()
+    } // TODO change to take num from constraintSys_
 
-//     usize numInputs() numInputs_:{return,} // TODO Madars How do we book keep this?
-//     ParamsCPtr params() pParams_:{return,}
-//     FElem& val(var:&Variable);
-//     FElem val(lc:&LinearCombination) const;
-//     pub fn  setValuesAsBitArray(varArray:&VariableArray, srcValue:usize);
-//     pub fn  setDualWordValue(dualWord:&DualWord, srcValue:usize);
-//     pub fn  setMultipackedWordValue(multipackedWord:&MultiPackedWord, srcValue:usize);
+    pub fn numInputs(&self) -> usize {
+        self.numInputs_
+    } // TODO Madars How do we book keep this?
+    pub fn params(&self) -> &ParamsCPtr {
+        &self.pParams_
+    }
+    //     FElem& val(var:&Variable);
+    //     FElem val(lc:&LinearCombination) const;
+    //     pub fn  setValuesAsBitArray(varArray:&VariableArray, srcValue:usize);
+    //     pub fn  setDualWordValue(dualWord:&DualWord, srcValue:usize);
+    //     pub fn  setMultipackedWordValue(multipackedWord:&MultiPackedWord, srcValue:usize);
 
-//     // The following 3 methods are purposely not overloaded to the same name in order to reduce
-//     // programmer error. We want the programmer to explicitly code what type of constraint
-//     // she wants.
-//     pub fn  addRank1Constraint(a:&LinearCombination,
-//                             b:&LinearCombination,
-//                             c:&LinearCombination,
-//                             name:&String);
-//     pub fn  addGeneralConstraint(a:&Polynomial,
-//                               b:&Polynomial,
-//                               name:&String);
-//     /// adds a constraint of the form (a == 0)
-//     pub fn  addUnaryConstraint(a:&LinearCombination, name:&String);
-//     bool isSatisfied(printOnFail:PrintOptions = PrintOptions::NO_DBG_PRINT);
-//     bool flagIsSet(flag:&FlagVariable) 1:{return val(flag) ==,}
-//     pub fn  setFlag(flag:&FlagVariable, bool newFlagState = true);
-//     pub fn  clearFlag(flag:&FlagVariable) {val(flag) = 0;}
-//     pub fn  flipFlag(flag:&FlagVariable) {val(flag) = 1 - val(flag);}
-//     pub fn  enforceBooleanity(var:&Variable);
-//     ::String annotation() const;
-//     ConstraintSystem constraintSystem() constraintSystem_:{return,}
-//     VariableAssignment assignment() assignment_:{return,}
-//     bool dualWordAssignmentEqualsValue(
-//             dualWord:&DualWord,
-//             expectedValue:usize,
-//             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-//     bool multipackedWordAssignmentEqualsValue(
-//             multipackedWord:&MultiPackedWord,
-//             expectedValue:usize,
-//             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-//     bool unpackedWordAssignmentEqualsValue(
-//             unpackedWord:&UnpackedWord,
-//             expectedValue:usize,
-//             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-// };
+    //     // The following 3 methods are purposely not overloaded to the same name in order to reduce
+    //     // programmer error. We want the programmer to explicitly code what type of constraint
+    //     // she wants.
+    //     pub fn  addRank1Constraint(a:&LinearCombination,
+    //                             b:&LinearCombination,
+    //                             c:&LinearCombination,
+    //                             name:&String);
+    //     pub fn  addGeneralConstraint(a:&Polynomial,
+    //                               b:&Polynomial,
+    //                               name:&String);
+    //     /// adds a constraint of the form (a == 0)
+    //     pub fn  addUnaryConstraint(a:&LinearCombination, name:&String);
+    //     bool isSatisfied(printOnFail:PrintOptions = PrintOptions::NO_DBG_PRINT);
+    pub fn flagIsSet(&mut self, flag: &FlagVariable) -> bool {
+        *self.val(flag) == 1
+    }
+    // pub fn  setFlag(flag:&FlagVariable, bool newFlagState = true);
+    pub fn clearFlag(&mut self, flag: &FlagVariable) {
+        *self.val(flag) = FElem::from(0);
+    }
+    pub fn flipFlag(&mut self, flag: &FlagVariable) {
+        *self.val(flag) = FElem::from(1) - &*self.val(flag);
+    }
+    //     pub fn  enforceBooleanity(var:&Variable);
+    //     ::String annotation() const;
+    pub fn constraintSystem(&self) -> &ConstraintSystem {
+        &self.constraintSystem_
+    }
+    pub fn assignment(&self) -> &VariableAssignment {
+        &self.assignment_
+    }
+    //     bool dualWordAssignmentEqualsValue(
+    //             dualWord:&DualWord,
+    //             expectedValue:usize,
+    //             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+    //     bool multipackedWordAssignmentEqualsValue(
+    //             multipackedWord:&MultiPackedWord,
+    //             expectedValue:usize,
+    //             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+    //     bool unpackedWordAssignmentEqualsValue(
+    //             unpackedWord:&UnpackedWord,
+    //             expectedValue:usize,
+    //             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+}
+
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
@@ -99,32 +122,11 @@ pub struct Protoboard {
     example a Protoboard specific to TinyRAM will have a pub struct ArchParams which will inherit from
     this class.
 */
-// pub struct ProtoboardParams {
+pub struct ProtoboardParams;
+//  {
 //
 //     virtual ~ProtoboardParams() = 0;
 // };
-
-// } // namespace gadgetlib2
-
-//#endif // LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_PROTOBOARD_HPP_
-/** @file
-*****************************************************************************
-Implementation of Protoboard, a "memory manager" for building arithmetic constraints
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-// use  <cstdio>
-
-// use crate::gadgetlib2::protoboard;
-
-// using ::String;
-// using ::std::cout;
-// using ::std::endl;
-
-// namespace gadgetlib2 {
 
 /*************************************************************************************************/
 /*************************************************************************************************/
@@ -134,8 +136,10 @@ Implementation of Protoboard, a "memory manager" for building arithmetic constra
 /*************************************************************************************************/
 /*************************************************************************************************/
 impl Protoboard {
-    pub fn new(fieldType: &FieldType, pParams: ParamsCPtr) -> Self {
+    pub fn new(fieldType: FieldType, pParams: ParamsCPtr) -> Self {
         Self {
+            assignment_: VariableAssignment::default(),
+            constraintSystem_: ConstraintSystem::default(),
             numInputs_: 0,
             pParams_: pParams,
             fieldType_: fieldType,
@@ -143,121 +147,131 @@ impl Protoboard {
     }
 
     pub fn val(&mut self, var: &Variable) -> &mut FElem {
-        let retval = &assignment_[var];
+        let retval = self.assignment_.get_mut(var).unwrap();
         assert!(
-            retval.fieldType() == fieldType_ || retval.fieldType() == AGNOSTIC,
+            retval.fieldType() == self.fieldType_ || retval.fieldType() == FieldType::AGNOSTIC,
             "Assigned field element of incorrect field type in Variable \"{}\"",
             var.name()
         );
         return retval;
     }
 
-    pub fn val(lc: &LinearCombination) -> FElem {
-        return lc.eval(assignment_);
+    pub fn val_lc(&self, lc: &LinearCombination) -> FElem {
+        lc.eval(&self.assignment_)
     }
 
-    pub fn setValuesAsBitArray(varArray: &VariableArray, srcValue: usize) {
+    pub fn setValuesAsBitArray<T: SubVariableArrayConfig>(
+        &mut self,
+        varArray: &VariableArray<T>,
+        srcValue: usize,
+    ) {
         assert!(
-            varArray.len() >= Log2ceil(srcValue),
+            varArray.len() >= Log2ceil(srcValue as u64) as usize,
             "Variable array of size {} too small to hold value {}. Array must be of size at least {}",
             varArray.len(),
             srcValue,
-            Log2ceil(srcValue)
+            Log2ceil(srcValue as u64)
         );
         let i = 0;
-        for i in 0..Log2ceil(srcValue) {
-            val(varArray[i]) = if srcValue & (1usize << i) { 1 } else { 0 };
+        for i in 0..Log2ceil(srcValue as u64) as usize {
+            *self.val(&varArray[i]) =
+                FElem::from(if srcValue & (1usize << i) != 0 { 1 } else { 0 });
         }
         for j in i..varArray.len() {
-            val(varArray[j]) = 0;
+            *self.val(&varArray[j]) = FElem::from(0);
         }
     }
 
-    pub fn setDualWordValue(dualWord: &DualWord, srcValue: usize) {
-        setMultipackedWordValue(dualWord.multipacked(), srcValue);
-        setValuesAsBitArray(dualWord.unpacked(), srcValue);
+    pub fn setDualWordValue(&mut self, dualWord: &DualWord, srcValue: usize) {
+        self.setMultipackedWordValue(&dualWord.multipacked(), srcValue);
+        self.setValuesAsBitArray(&dualWord.unpacked(), srcValue);
     }
 
     pub fn setMultipackedWordValue(
-        multipackedWord: &MultiPackedWord,
+        &mut self,
+        multipackedWord: &VariableArray<MultiPackedWord>,
         srcValue: usize,
-    ) -> eyre::Result<()> {
-        if fieldType_ == R1P {
-            assert!(
-                multipackedWord.len() == 1,
-                "Multipacked word size mismatch in R1P"
-            );
-            val(multipackedWord[0]) = srcValue;
-        } else {
-            eyre::bail!("Unknown protoboard type in pub fn setMultipackedWordValue");
-        }
-        Ok(())
+    ) {
+        assert!(
+            self.fieldType_ == FieldType::R1P,
+            "Unknown protoboard type in pub fn setMultipackedWordValue"
+        );
+
+        assert!(
+            multipackedWord.len() == 1,
+            "Multipacked word size mismatch in R1P"
+        );
+        *self.val(&multipackedWord[0]) = FElem::from(srcValue);
     }
 
     // The following 3 methods are purposely not overloaded to the same name in order to reduce
     // programmer error. We want the programmer to explicitly code what type of constraint
     // she wants.
     pub fn addRank1Constraint(
-        a: &LinearCombination,
-        b: &LinearCombination,
-        c: &LinearCombination,
-        name: &String,
+        &mut self,
+        a: LinearCombination,
+        b: LinearCombination,
+        c: LinearCombination,
+        name: String,
     ) {
-        constraintSystem_.addConstraint(Rank1Constraint(a, b, c, name));
+        self.constraintSystem_
+            .addConstraint1(Rank1Constraint::new(a, b, c, name));
     }
 
-    pub fn addGeneralConstraint(a: &Polynomial, b: &Polynomial, name: &String) {
-        constraintSystem_.addConstraint(PolynomialConstraint(a, b, name));
+    pub fn addGeneralConstraint(&mut self, a: Polynomial, b: Polynomial, name: String) {
+        self.constraintSystem_
+            .addConstraint(PolynomialConstraint::new(a, b, name));
     }
 
-    pub fn addUnaryConstraint(a: &LinearCombination, name: &String) {
-        addRank1Constraint(a, 1, 0, name);
+    pub fn addUnaryConstraint(&mut self, a: LinearCombination, name: String) {
+        self.addRank1Constraint(a, 1.into(), 0.into(), name);
     }
 
-    pub fn isSatisfied(printOnFail: PrintOptions) -> bool {
-        return constraintSystem_.isSatisfied(assignment_, printOnFail);
+    pub fn isSatisfied(&self, printOnFail: &PrintOptions) -> bool {
+        self.constraintSystem_
+            .isSatisfied(&self.assignment_, printOnFail)
     }
 
-    pub fn setFlag(flag: &FlagVariable, newFlagState: bool) {
-        val(flag) = if newFlagState { 1 } else { 0 };
+    pub fn setFlag(&mut self, flag: &FlagVariable, newFlagState: bool) {
+        *self.val(flag) = FElem::from(if newFlagState { 1 } else { 0 });
     }
 
-    pub fn enforceBooleanity(var: &Variable) {
-        addRank1Constraint(
-            var,
-            var - 1,
-            0,
+    pub fn enforceBooleanity(&mut self, var: &Variable) {
+        self.addRank1Constraint(
+            var.clone().into(),
+            var.clone() - 1,
+            0.into(),
             format!("enforceBooleanity({})", var.name()),
         );
     }
 
-    pub fn annotation() -> String {
-        // #   ifdef DEBUG
-        //         string retVal = constraintSystem_.annotation();
-        //         retVal += "Variable Assignments:\n";
-        //         for(assignmentPair:&auto : assignment_) {
-        //             let varName= assignmentPair.first.name();
-        //             let varAssignedValue= assignmentPair.second.asString();
-        //             retVal +=  varName + ": " + varAssignedValue + "\n";
-        //         }
-        //         return retVal;
-        // #   else // not DEBUG
-        return "".to_owned();
-        // #   endif
+    pub fn annotation(&self) -> String {
+        let mut retVal = self.constraintSystem_.annotation();
+        retVal += "Variable Assignments:\n";
+        for assignmentPair in &self.assignment_ {
+            let varName = assignmentPair.0.name();
+            let varAssignedValue = assignmentPair.1.asString();
+            retVal += &format!("{varName} : {varAssignedValue} \n");
+        }
+        retVal
     }
 
     pub fn dualWordAssignmentEqualsValue(
+        &mut self,
         dualWord: &DualWord,
         expectedValue: usize,
-        printOption: PrintOptions,
+        printOption: &PrintOptions,
     ) -> bool {
-        let multipackedEqualsValue = multipackedWordAssignmentEqualsValue(
-            dualWord.multipacked(),
+        let multipackedEqualsValue = self.multipackedWordAssignmentEqualsValue(
+            &dualWord.multipacked(),
             expectedValue,
             printOption,
         );
-        let unpackedEqualsValue =
-            unpackedWordAssignmentEqualsValue(dualWord.unpacked(), expectedValue, printOption);
+        let unpackedEqualsValue = self.unpackedWordAssignmentEqualsValue(
+            &dualWord.unpacked(),
+            expectedValue,
+            printOption,
+        );
         if multipackedAndUnpackedValuesDisagree(multipackedEqualsValue, unpackedEqualsValue) {
             printInformativeNoticeMessage(multipackedEqualsValue, unpackedEqualsValue);
         }
@@ -265,41 +279,44 @@ impl Protoboard {
     }
 
     pub fn multipackedWordAssignmentEqualsValue(
-        multipackedWord: &MultiPackedWord,
+        &mut self,
+        multipackedWord: &VariableArray<MultiPackedWord>,
         expectedValue: usize,
-        printOption: PrintOptions,
-    ) -> eyre::Result<bool> {
+        printOption: &PrintOptions,
+    ) -> bool {
         let mut retval = true;
-        if fieldType_ == R1P {
-            assert!(multipackedWord.len() == 1, "R1P multipacked size mismatch");
-            if val(multipackedWord[0]) == expectedValue {
-                retval = true;
-            } else {
-                retval = false;
-            }
-            if expectedToPrintValues(retval, printOption) {
-                cout << "Expected value for multipacked word \""
-                    << multipackedWord.name()
-                    << "\" is: "
-                    << expectedValue
-                    << endl;
-                cout << "Actual value is: " << val(multipackedWord[0]) << endl;
-            }
+        assert!(
+            self.fieldType_ == FieldType::R1P,
+            "Unknown field type in pub fn multipackedWordAssignmentEqualsValue(...)"
+        );
+        assert!(multipackedWord.len() == 1, "R1P multipacked size mismatch");
+        if *self.val(&multipackedWord[0]) == FElem::from(expectedValue) {
+            retval = true;
         } else {
-            eyre::bail!("Unknown field type in pub fn multipackedWordAssignmentEqualsValue(...)");
+            retval = false;
         }
-        return Ok(retval);
+        if expectedToPrintValues(retval, printOption) {
+            println!(
+                "Expected value for multipacked word \"{}\" is: {}\nActual value is: {}",
+                multipackedWord.name(),
+                expectedValue,
+                *self.val(&multipackedWord[0])
+            );
+        }
+
+        retval
     }
 
     pub fn unpackedWordAssignmentEqualsValue(
-        unpackedWord: &UnpackedWord,
+        &mut self,
+        unpackedWord: &VariableArray<UnpackedWord>,
         expectedValue: usize,
-        printOption: PrintOptions,
+        printOption: &PrintOptions,
     ) -> bool {
-        let retval = true;
-        let expectedValueCopy = expectedValue;
+        let mut retval = true;
+        let mut expectedValueCopy = expectedValue;
         for i in 0..unpackedWord.len() {
-            if val(unpackedWord[i]) != (expectedValueCopy & 1usize) {
+            if *self.val(&unpackedWord[i]) != FElem::from(expectedValueCopy & 1usize) {
                 retval = false;
                 break;
             }
@@ -315,10 +332,10 @@ impl Protoboard {
             );
             println!("Actual values are: ");
             for i in 0..unpackedWord.len() {
-                println!("bit {i} : {}", val(unpackedWord[i]));
+                println!("bit {i} : {}", self.val(&unpackedWord[i]));
             }
         }
-        return retval;
+        retval
     }
 }
 
@@ -332,7 +349,7 @@ pub fn multipackedAndUnpackedValuesDisagree(
     multipackedEqualsValue: bool,
     unpackedEqualsValue: bool,
 ) -> bool {
-    return multipackedEqualsValue != unpackedEqualsValue;
+    multipackedEqualsValue != unpackedEqualsValue
 }
 
 pub fn printInformativeNoticeMessage(multipackedEqualsValue: bool, unpackedEqualsValue: bool) {
@@ -347,7 +364,7 @@ pub fn printInformativeNoticeMessage(multipackedEqualsValue: bool, unpackedEqual
     }
 }
 
-pub fn expectedToPrintValues(boolValue: bool, printOption: PrintOptions) -> bool {
-    return ((boolValue && printOption == PrintOptions::DBG_PRINT_IF_TRUE)
-        || (!boolValue && printOption == PrintOptions::DBG_PRINT_IF_FALSE));
+pub fn expectedToPrintValues(boolValue: bool, printOption: &PrintOptions) -> bool {
+    ((boolValue && printOption == &PrintOptions::DBG_PRINT_IF_TRUE)
+        || (!boolValue && printOption == &PrintOptions::DBG_PRINT_IF_FALSE))
 }

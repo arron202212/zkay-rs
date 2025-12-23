@@ -3,14 +3,36 @@
 //  A constraint is an algebraic equation which can be either satisfied by an assignment,
 //  (the equation is true with that assignment) or unsatisfied. For instance the rank-1
 //  constraint (X * Y = 15) is satisfied by {X=5 Y=3} or {X=3 Y=5}
-
-enum PrintOptions {
+use crate::gadgetlib2::variable::{
+    FElemInterface, LinearCombination, Polynomial, Variable, VariableAssignment, VariableSet,
+};
+use enum_dispatch::enum_dispatch;
+use rccell::RcCell;
+use std::collections::BTreeSet;
+use strum_macros::{EnumIs, EnumTryAs};
+#[derive(PartialEq, Clone)]
+pub enum PrintOptions {
     DBG_PRINT_IF_NOT_SATISFIED,
     DBG_PRINT_IF_TRUE,
     DBG_PRINT_IF_FALSE,
     NO_DBG_PRINT,
 }
 
+#[enum_dispatch(ConstraintConfig)]
+#[derive(EnumIs, EnumTryAs)]
+pub enum ConstraintType {
+    Rank1(Constraint<Rank1Constraint>),
+    Polynomial(Constraint<PolynomialConstraint>),
+}
+
+#[enum_dispatch]
+pub trait ConstraintConfig {
+    fn name(&self) -> &String;
+    fn isSatisfied(&self, assignment: &VariableAssignment, printOnFail: &PrintOptions) -> bool;
+    fn annotation(&self) -> String;
+    fn getUsedVariables(&self) -> VariableSet;
+    fn asPolynomial(&self) -> Polynomial;
+}
 /*************************************************************************************************/
 /*************************************************************************************************/
 /*******************                                                            ******************/
@@ -20,7 +42,7 @@ enum PrintOptions {
 /*************************************************************************************************/
 
 /// An abstract pub struct for a field agnostic constraint. The derived classes will be field specific.
-pub struct Constraint {
+pub struct Constraint<T> {
     // explicit Constraint(const ::String& name); // casting disallowed by 'explicit'
     // ::String name() const; ///< @returns name of the constraint as a String
     // /**
@@ -33,11 +55,12 @@ pub struct Constraint {
     //                              printOnFail:&PrintOptions) 0:=,
     //     /// @returns the constraint in a human readable String format
     //     virtual ::String annotation() 0:=,
-    //     virtual 0:Variable::set getUsedVariables() const =,
+    //     virtual 0:VariableSet getUsedVariables() const =,
     //     virtual Polynomial asPolynomial() 0:=,
 
     // #   ifdef DEBUG
-    //     ::String name_;
+    pub name_: String,
+    pub t: T,
     // #   endif
 } // pub struct Constraint
 
@@ -56,25 +79,25 @@ pub struct Constraint {
 /// where x is an assignment of field elements to the variables.
 pub struct Rank1Constraint {
     //Constraint
-    a_: LinearCombination,
-    b_: LinearCombination,
-    c_: LinearCombination, // <a,x> * <b,x> = <c,x>
+    pub a_: LinearCombination,
+    pub b_: LinearCombination,
+    pub c_: LinearCombination, // <a,x> * <b,x> = <c,x>
 
-                           // Rank1Constraint(a:LinearCombination,
-                           //                 b:LinearCombination,
-                           //                 c:LinearCombination,
-                           //                 const ::String& name);
+                               // Rank1Constraint(a:LinearCombination,
+                               //                 b:LinearCombination,
+                               //                 c:LinearCombination,
+                               //                 const ::String& name);
 
-                           // LinearCombination a() const;
-                           // LinearCombination b() const;
-                           // LinearCombination c() const;
+                               // LinearCombination a() const;
+                               // LinearCombination b() const;
+                               // LinearCombination c() const;
 
-                           // virtual bool isSatisfied(assignment:VariableAssignment,
-                           //                          printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-                           // virtual ::String annotation() const;
-                           // virtual const:Variable::set getUsedVariables(), /**< @returns a list of all variables
-                           //                                                                   used in the constraint */
-                           // virtual Polynomial asPolynomial() c_:{return a_ * b_ -,}
+                               // virtual bool isSatisfied(assignment:VariableAssignment,
+                               //                          printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+                               // virtual ::String annotation() const;
+                               // virtual const:VariableSet getUsedVariables(), /**< @returns a list of all variables
+                               //                                                                   used in the constraint */
+                               // virtual Polynomial asPolynomial() c_:{return a_ * b_ -,}
 } // pub struct Rank1Constraint
 
 /***********************************/
@@ -91,23 +114,20 @@ pub struct Rank1Constraint {
 
 pub struct PolynomialConstraint {
     //Constraint
-    a_: Polynomial,
-    b_: Polynomial,
+    pub a_: Polynomial,
+    pub b_: Polynomial,
 }
-impl PolynomialConstraint {
-    // PolynomialConstraint(a:Polynomial,
-    //                      b:Polynomial,
-    //                      const ::String& name);
+// impl PolynomialConstraint {
+// PolynomialConstraint(a:Polynomial,
+//                      b:Polynomial,
+//                      const ::String& name);
 
-    // bool isSatisfied(assignment:VariableAssignment,
-    //                  printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-    // ::String annotation() const;
-    // virtual const:Variable::set getUsedVariables(), /**< @returns a list of all variables
-    //                                                                     used in the constraint */
-    pub fn asPolynomial() -> Polynomial {
-        return (a_, b_);
-    }
-} // pub struct PolynomialConstraint
+// bool isSatisfied(assignment:VariableAssignment,
+//                  printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+// ::String annotation() const;
+// virtual const:VariableSet getUsedVariables(), /**< @returns a list of all variables
+//                                                                     used in the constraint */
+// } // pub struct PolynomialConstraint
 
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
@@ -120,11 +140,12 @@ impl PolynomialConstraint {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-
+pub type ConstraintPtr = RcCell<ConstraintType>;
+#[derive(Default, Clone)]
 pub struct ConstraintSystem {
-    // type ConstraintPtr=RcCell::<Constraint>::new;
-    constraintsPtrs_: Vec<ConstraintPtr>,
+    pub constraintsPtrs_: Vec<ConstraintPtr>,
 }
+pub type PolyPtrSet = BTreeSet<RcCell<Polynomial>>;
 impl ConstraintSystem {
     // ConstraintSystem()->Self constraintsPtrs_() {};
 
@@ -140,22 +161,22 @@ impl ConstraintSystem {
     // pub fn  addConstraint(c:&Rank1Constraint);
     // pub fn  addConstraint(c:&PolynomialConstraint);
     // ::String annotation() const;
-    // Variable::set getUsedVariables() const;
+    // VariableSet getUsedVariables() const;
 
-    // type PolyPtrSet=::BTreeSet< ::std::unique_ptr<Polynomial> >;
+    //
     // /// Required for interfacing with BREX. Should be optimized in the future
-    pub fn getConstraintPolynomials() -> PolyPtrSet {
+    pub fn getConstraintPolynomials(&self) -> PolyPtrSet {
         let mut retset = PolyPtrSet::new();
-        for pConstraint in constraintsPtrs_ {
-            retset.insert(Polynomial::new(pConstraint.asPolynomial()));
+        for pConstraint in &self.constraintsPtrs_ {
+            retset.insert(RcCell::new(pConstraint.borrow().asPolynomial()));
         }
-        return retset;
+        retset
     }
-    pub fn getNumberOfConstraints() -> usize {
-        return constraintsPtrs_.len();
+    pub fn getNumberOfConstraints(&self) -> usize {
+        self.constraintsPtrs_.len()
     }
-    pub fn getConstraint(idx: usize) -> ConstraintPtr {
-        return constraintsPtrs_[idx];
+    pub fn getConstraint(&self, idx: usize) -> &ConstraintPtr {
+        &self.constraintsPtrs_[idx]
     }
     // friend pub struct GadgetLibAdapter;
 } // pub struct ConstraintSystem
@@ -171,21 +192,23 @@ impl ConstraintSystem {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
+impl<T> Constraint<T> {
+    // #ifdef DEBUG
+    pub fn new(name: String, t: T) -> Self {
+        Self { name_: name, t }
+    }
+    // #else
+    // pub fn new(name:&String) { //ffec::UNUSED(name); }
+    // //#endif
 
-// #ifdef DEBUG
-// pub fn new(name:&String)->Self name_(name) {}
-// #else
-// pub fn new(name:&String) { //ffec::UNUSED(name); }
-// //#endif
-
-// pub fn name()->String {
-// #   ifdef DEBUG
-//         return name_;
-// #   else
-//         return "";
-// #   endif
-// }
-
+    // pub fn name(&self) -> &String {
+    //     // #   ifdef DEBUG
+    //     &self.name_
+    //     // #   else
+    //     //         return "";
+    //     // #   endif
+    // }
+}
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
@@ -200,70 +223,89 @@ impl ConstraintSystem {
 
 impl Rank1Constraint {
     pub fn new(
-        a: &LinearCombination,
-        b: &LinearCombination,
-        c: &LinearCombination,
-        name: &String,
-    ) -> Self {
-        // : Constraint(name), a_(a), b_(b), c_(c)
+        a: LinearCombination,
+        b: LinearCombination,
+        c: LinearCombination,
+        name: String,
+    ) -> Constraint<Self> {
+        Constraint::<Self>::new(
+            name,
+            Self {
+                a_: a,
+                b_: b,
+                c_: c,
+            },
+        )
     }
 
-    pub fn a() -> LinearCombination {
-        return a_;
+    pub fn a(&self) -> &LinearCombination {
+        &self.a_
     }
-    pub fn b() -> LinearCombination {
-        return b_;
+    pub fn b(&self) -> &LinearCombination {
+        &self.b_
     }
-    pub fn c() -> LinearCombination {
-        return c_;
+    pub fn c(&self) -> &LinearCombination {
+        &self.c_
     }
+}
 
-    pub fn isSatisfied(assignment: VariableAssignment, printOnFail: &PrintOptions) -> bool {
-        let ares = a_.eval(assignment);
-        let bres = b_.eval(assignment);
-        let cres = c_.eval(assignment);
-        if ares * bres != cres {
-            // #       ifdef DEBUG
-            if printOnFail == PrintOptions::DBG_PRINT_IF_NOT_SATISFIED {
-                println!(
-                    "Constraint named \"{}\" not satisfied. Constraint is:",
-                    name()
-                );
-                println!("{}", annotation());
-                println!("Variable assignments are:");
-                let varSet = getUsedVariables();
-                for var in varSet {
-                    println!("{}: {}", var.name(), assignment.at(var).asString());
-                }
-                println!("a: {}", ares.asString());
-                println!("b:   {}", bres.asString());
-                println!("a*b: {}", (ares * bres).asString());
-                println!("c:   {}", cres.asString());
-            }
-            // #       else
-            //         //ffec::UNUSED(printOnFail);
-            // #       endif
-            return false;
+impl ConstraintConfig for Constraint<Rank1Constraint> {
+    fn name(&self) -> &String {
+        &self.name_
+    }
+    fn isSatisfied(&self, assignment: &VariableAssignment, printOnFail: &PrintOptions) -> bool {
+        let ares = self.t.a_.eval(assignment);
+        let bres = self.t.b_.eval(assignment);
+        let cres = self.t.c_.eval(assignment);
+        if ares.clone() * &bres == cres {
+            return true;
         }
-        return true;
+        // #       ifdef DEBUG
+        if printOnFail == &PrintOptions::DBG_PRINT_IF_NOT_SATISFIED {
+            println!(
+                "Constraint named \"{}\" not satisfied. Constraint is:",
+                self.name()
+            );
+            println!("{}", self.annotation());
+            println!("Variable assignments are:");
+            let varSet = self.getUsedVariables();
+            for var in varSet {
+                println!(
+                    "{}: {}",
+                    var.name(),
+                    assignment.get(&var).unwrap().asString()
+                );
+            }
+            println!("a: {}", ares.asString());
+            println!("b:   {}", bres.asString());
+            println!("a*b: {}", (ares * &bres).asString());
+            println!("c:   {}", cres.asString());
+        }
+
+        false
     }
 
-    pub fn annotation() -> String {
-        // #   ifndef DEBUG
-        //         return "";
-        // #   endif
-        return String("( ") + a_.asString() + " ) * ( " + b_.asString() + " ) = " + c_.asString();
+    fn annotation(&self) -> String {
+        format!(
+            "( {} )*( {} ) = {}",
+            self.t.a_.asString(),
+            self.t.b_.asString(),
+            self.t.c_.asString()
+        )
     }
 
-    pub fn getUsedVariables() -> Variable::set {
-        let mut retSet = Variable::set::new();
-        let aSet = a_.getUsedVariables();
-        retSet.insert(aSet.clone());
-        let bSet = b_.getUsedVariables();
-        retSet.insert(bSet.clone());
-        let cSet = c_.getUsedVariables();
-        retSet.insert(cSet.clone());
-        return retSet;
+    fn getUsedVariables(&self) -> VariableSet {
+        let mut retSet = VariableSet::new();
+        let aSet = self.t.a_.getUsedVariables();
+        retSet.append(&mut aSet.clone());
+        let bSet = self.t.b_.getUsedVariables();
+        retSet.append(&mut bSet.clone());
+        let cSet = self.t.c_.getUsedVariables();
+        retSet.append(&mut cSet.clone());
+        retSet
+    }
+    fn asPolynomial(&self) -> Polynomial {
+        self.t.a_.clone() * &self.t.b_ - &self.t.c_
     }
 }
 
@@ -279,89 +321,97 @@ impl Rank1Constraint {
 /*************************************************************************************************/
 /*************************************************************************************************/
 impl PolynomialConstraint {
-    pub fn new(a: Polynomial, b: Polynomial, name: &String) -> Self {
-        //  Constraint(name), a_(a), b_(b)
-        Self {}
+    pub fn new(a: Polynomial, b: Polynomial, name: String) -> Constraint<Self> {
+        Constraint::<Self>::new(name, Self { a_: a, b_: b })
     }
-
-    pub fn isSatisfied(assignment: VariableAssignment, printOnFail: &PrintOptions) -> bool {
-        let aEval = a_.eval(assignment);
-        let bEval = b_.eval(assignment);
-        if aEval != bEval {
-            // #       ifdef DEBUG
-            if (printOnFail == PrintOptions::DBG_PRINT_IF_NOT_SATISFIED) {
-                println!(
-                    "Constraint named \"{}\" not satisfied. Constraint is:",
-                    name()
-                );
-                println!("{}", annotation());
-                println!("Expecting: {} == {}", "", aEval, bEval);
-                println!("Variable assignments are:");
-                let varSet = getUsedVariables();
-                for var in varSet {
-                    println!("{}: {}", var.name(), assignment.at(var).asString());
-                }
-            }
-            // #       else
-            //             //ffec::UNUSED(printOnFail);
-            // #       endif
-
-            return false;
+}
+impl ConstraintConfig for Constraint<PolynomialConstraint> {
+    fn name(&self) -> &String {
+        &self.name_
+    }
+    fn isSatisfied(&self, assignment: &VariableAssignment, printOnFail: &PrintOptions) -> bool {
+        let aEval = self.t.a_.eval(assignment);
+        let bEval = self.t.b_.eval(assignment);
+        if aEval == bEval {
+            return true;
         }
-        return true;
+        if (printOnFail == &PrintOptions::DBG_PRINT_IF_NOT_SATISFIED) {
+            println!(
+                "Constraint named \"{}\" not satisfied. Constraint is:",
+                self.name()
+            );
+            println!("{}", self.annotation());
+            println!("Expecting: {} == {}", aEval, bEval);
+            println!("Variable assignments are:");
+            let varSet = self.getUsedVariables();
+            for var in varSet {
+                println!(
+                    "{}: {}",
+                    var.name(),
+                    assignment.get(&var).unwrap().asString()
+                );
+            }
+        }
+
+        false
     }
 
-    pub fn annotation() -> String {
-        // #   ifndef DEBUG
-        //         return "";
-        // #   endif
-        return a_.asString() + " == " + b_.asString();
+    fn annotation(&self) -> String {
+        format!("{} == {}", self.t.a_.asString(), self.t.b_.asString())
     }
 
-    pub fn getUsedVariables() -> Variable::set {
-        let mut retSet = Variable::set::new();
-        let aSet = a_.getUsedVariables();
-        retSet.insert(aSet.clone());
-        let bSet = b_.getUsedVariables();
-        retSet.insert(bSet.clone());
-        return retSet;
+    fn getUsedVariables(&self) -> VariableSet {
+        let mut retSet = VariableSet::new();
+        let aSet = self.t.a_.getUsedVariables();
+        retSet.append(&mut aSet.keys().cloned().collect::<VariableSet>());
+        let bSet = self.t.b_.getUsedVariables();
+        retSet.append(&mut bSet.keys().cloned().collect::<VariableSet>());
+        retSet
+    }
+    fn asPolynomial(&self) -> Polynomial {
+        self.t.a_.clone() - &self.t.b_
     }
 }
 /***********************************/
 /***   END OF CLASS DEFINITION   ***/
 /***********************************/
-
-pub fn addConstraint(c: &Rank1Constraint) {
-    constraintsPtrs_.push(RcCell::<Constraint>::new(Rank1Constraint::new(c)));
-}
-
-pub fn addConstraint(c: &PolynomialConstraint) {
-    constraintsPtrs_.push(RcCell::<Constraint>::new(PolynomialConstraint::new(c)));
-}
 impl ConstraintSystem {
-    pub fn isSatisfied(assignment: VariableAssignment, printOnFail: &PrintOptions) -> bool {
-        for i in 0..constraintsPtrs_.len() {
-            if !constraintsPtrs_[i].isSatisfied(assignment, printOnFail) {
+    pub fn addConstraint1(&mut self, c: Constraint<Rank1Constraint>) {
+        self.constraintsPtrs_
+            .push(RcCell::new(ConstraintType::Rank1(c)));
+    }
+
+    pub fn addConstraint(&mut self, c: Constraint<PolynomialConstraint>) {
+        self.constraintsPtrs_
+            .push(RcCell::new(ConstraintType::Polynomial(c)));
+    }
+
+    pub fn isSatisfied(&self, assignment: &VariableAssignment, printOnFail: &PrintOptions) -> bool {
+        for i in 0..self.constraintsPtrs_.len() {
+            if !self.constraintsPtrs_[i]
+                .borrow()
+                .isSatisfied(assignment, printOnFail)
+            {
                 return false;
             }
         }
-        return true;
+        true
     }
 
-    pub fn annotation() -> String {
+    pub fn annotation(&self) -> String {
         let mut retVal = "\n".to_owned();
-        for i in constraintsPtrs {
-            retVal += i.annotation() + "\n";
+        for i in &self.constraintsPtrs_ {
+            retVal += &(i.borrow().annotation() + "\n");
         }
-        return retVal;
+        retVal
     }
 
-    pub fn getUsedVariables() -> Variable::set {
-        let mut retSet = Variable::set::new();
-        for pConstraint in constraintsPtrs_ {
-            let curSet = pConstraint.getUsedVariables();
-            retSet.insert(curSet.clone());
+    pub fn getUsedVariables(&self) -> VariableSet {
+        let mut retSet = VariableSet::new();
+        for pConstraint in &self.constraintsPtrs_ {
+            let curSet = pConstraint.borrow().getUsedVariables();
+            retSet.append(&mut curSet.clone());
         }
-        return retSet;
+        retSet
     }
 }

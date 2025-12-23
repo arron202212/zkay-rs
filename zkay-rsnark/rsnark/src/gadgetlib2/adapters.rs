@@ -1,35 +1,17 @@
-// /** @file
-//  *****************************************************************************
 //  Declaration of an adapter to POD types for interfacing to SNARKs
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
-// // #define LIBSNARK_GADGETLIB2_INCLUDE_GADGETLIB2_ADAPTERS_HPP_
-
-// use  <map>
-// use  <tuple>
-// use  <utility>
-
-// use crate::gadgetlib2::constraint;
-// use crate::gadgetlib2::pp;
-// use crate::gadgetlib2::protoboard;
-// use crate::gadgetlib2::variable;
-
-// // using gadgetlib2::LinearTerm;
-// // using gadgetlib2::LinearCombination;
-// // using gadgetlib2::Constraint;
-// // using gadgetlib2::ConstraintSystem;
-// // using gadgetlib2::VariableAssignment;
-// // using gadgetlib2::Protoboard;
-// // using gadgetlib2::FElem;
+use crate::gadgetlib2::constraint::{Constraint, ConstraintSystem, Rank1Constraint};
+use crate::gadgetlib2::pp::Fp;
+use crate::gadgetlib2::protoboard::Protoboard;
+use crate::gadgetlib2::variable::{
+    FElem, FieldType, LinearCombination, LinearTerm, Variable, VariableAssignment, nextFreeIndex_,
+};
+use crate::relations::FieldTConfig;
+use std::collections::HashMap;
+use std::sync::atomic::{self, AtomicUsize, Ordering};
 
 pub trait ConvertConfig<T, R> {
     fn convert(t: T) -> R;
 }
-// namespace gadgetlib2 {
 
 // /**
 //  * This pub struct is a temporary hack for quick integration of Fp constraints with ppsnark. It is the
@@ -39,17 +21,17 @@ pub trait ConvertConfig<T, R> {
 pub trait GadgetLibAdapter {
     type variable_index_t = u64;
     type Fp_elem_t = Fp;
-    type linear_term_t = (variable_index_t, Fp_elem_t);
-    type sparse_vec_t = Vec<linear_term_t>;
-    type linear_combination_t = (sparse_vec_t, Fp_elem_t);
+    type linear_term_t = (Self::variable_index_t, Self::Fp_elem_t);
+    type sparse_vec_t = Vec<Self::linear_term_t>;
+    type linear_combination_t = (Self::sparse_vec_t, Self::Fp_elem_t);
     type constraint_t = (
-        linear_combination_t,
-        linear_combination_t,
-        linear_combination_t,
+        Self::linear_combination_t,
+        Self::linear_combination_t,
+        Self::linear_combination_t,
     );
-    type constraint_sys_t = Vec<constraint_t>;
-    type assignment_t = HashMap<variable_index_t, Fp_elem_t>;
-    type protoboard_t = (constraint_sys_t, assignment_t);
+    type constraint_sys_t = Vec<Self::constraint_t>;
+    type assignment_t = HashMap<Self::variable_index_t, Self::Fp_elem_t>;
+    type protoboard_t = (Self::constraint_sys_t, Self::assignment_t);
 
     //    fn  convert(lt:&LinearTerm)->linear_term_t;
     //    fn  convert(lc:&LinearCombination)->linear_combination_t;
@@ -60,41 +42,53 @@ pub trait GadgetLibAdapter {
     ///< Resets variable index to 0 to make variable indices deterministic.
     //TODO: Kill GadgetLibAdapter::resetVariableIndex()
     fn getNextFreeIndex() -> usize {
-        return Variable::nextFreeIndex_;
+        nextFreeIndex_.load(Ordering::Relaxed)
     }
     //    fn  convert(pb:&Protoboard)->protoboard_t;
     //    fn  convert(fElem:FElem)->Fp_elem_t;
     fn getVariableIndex(v: &Variable) -> usize {
-        return v.index_;
+        v.index_ as _
     }
 }
-
-// bool operator==(lhs:GadgetLibAdapter::linear_combination_t&,
-//                 const GadgetLibAdapter::linear_term_t& rhs);
-
-// }
-
-// using gadgetlib2::Variable;
-// using gadgetlib2::Rank1Constraint;
 
 pub struct GLA;
-impl GLA {
-    pub fn new() -> Self {
-        Self
-    }
-}
-// type GLA=GadgetLibAdapter;
+
+// pub type GLA=GadgetLibAdapter;
 impl GadgetLibAdapter for GLA {
+    type variable_index_t = u64;
+    type Fp_elem_t = Fp;
+    type linear_term_t = (Self::variable_index_t, Self::Fp_elem_t);
+    type sparse_vec_t = Vec<Self::linear_term_t>;
+    type linear_combination_t = (Self::sparse_vec_t, Self::Fp_elem_t);
+    type constraint_t = (
+        Self::linear_combination_t,
+        Self::linear_combination_t,
+        Self::linear_combination_t,
+    );
+    type constraint_sys_t = Vec<Self::constraint_t>;
+    type assignment_t = HashMap<Self::variable_index_t, Self::Fp_elem_t>;
+    type protoboard_t = (Self::constraint_sys_t, Self::assignment_t);
     fn resetVariableIndex() {
         // This is a hack, used for testing
-        Variable::nextFreeIndex_ = 0;
+        // Variable::nextFreeIndex_ = 0;
+        nextFreeIndex_.store(0, Ordering::Relaxed);
     }
 }
+
+pub type variable_index_t = <GLA as GadgetLibAdapter>::variable_index_t;
+pub type Fp_elem_t = <GLA as GadgetLibAdapter>::Fp_elem_t;
+pub type linear_term_t = <GLA as GadgetLibAdapter>::linear_term_t;
+pub type sparse_vec_t = <GLA as GadgetLibAdapter>::sparse_vec_t;
+pub type linear_combination_t = <GLA as GadgetLibAdapter>::linear_combination_t;
+pub type constraint_t = <GLA as GadgetLibAdapter>::constraint_t;
+pub type constraint_sys_t = <GLA as GadgetLibAdapter>::constraint_sys_t;
+pub type assignment_t = <GLA as GadgetLibAdapter>::assignment_t;
+pub type protoboard_t = <GLA as GadgetLibAdapter>::protoboard_t;
 
 impl ConvertConfig<&LinearTerm, linear_term_t> for GLA {
     fn convert(lt: &LinearTerm) -> linear_term_t {
         let var = lt.variable_.index_;
-        let coeff = convert(lt.coeff_);
+        let coeff = Self::convert(&lt.coeff_);
         (var, coeff)
     }
 }
@@ -104,19 +98,19 @@ impl ConvertConfig<&LinearCombination, linear_combination_t> for GLA {
         let mut sparse_vec = sparse_vec_t::with_capacity(lc.linearTerms_.len());
         // sparse_vec.reserve(lc.linearTerms_.len());
         for lt in &lc.linearTerms_ {
-            sparse_vec.push(convert(lt));
+            sparse_vec.push(Self::convert(lt));
         }
-        let offset = convert(lc.constant_);
+        let offset = Self::convert(&lc.constant_);
         (sparse_vec, offset)
     }
 }
-impl ConvertConfig<&Constraint, constraint_t> for GLA {
-    fn convert(constraint: &Constraint) -> constraint_t {
-        let rank1_constraint = &constraint;
+impl ConvertConfig<&Constraint<Rank1Constraint>, constraint_t> for GLA {
+    fn convert(constraint: &Constraint<Rank1Constraint>) -> constraint_t {
+        let rank1_constraint = constraint;
         (
-            convert(rank1_constraint.a()),
-            convert(rank1_constraint.b()),
-            convert(rank1_constraint.c()),
+            Self::convert(rank1_constraint.t.a()),
+            Self::convert(rank1_constraint.t.b()),
+            Self::convert(rank1_constraint.t.c()),
         )
     }
 }
@@ -125,7 +119,9 @@ impl ConvertConfig<&ConstraintSystem, constraint_sys_t> for GLA {
         let mut retval = constraint_sys_t::with_capacity(constraint_sys.constraintsPtrs_.len());
         // retval.reserve(constraint_sys.constraintsPtrs_.len());
         for constraintPtr in &constraint_sys.constraintsPtrs_ {
-            retval.push(convert(*constraintPtr));
+            retval.push(Self::convert(
+                constraintPtr.borrow().try_as_rank_1_ref().unwrap(),
+            ));
         }
         return retval;
     }
@@ -133,10 +129,10 @@ impl ConvertConfig<&ConstraintSystem, constraint_sys_t> for GLA {
 impl ConvertConfig<&VariableAssignment, assignment_t> for GLA {
     fn convert(assignment: &VariableAssignment) -> assignment_t {
         let mut retval = assignment_t::new();
-        for assignmentPair in &assignment {
-            let var = assignmentPair.first.index_;
-            let elem = convert(assignmentPair.second);
-            retval[var] = elem;
+        for assignmentPair in assignment {
+            let var = assignmentPair.0.index_;
+            let elem = Self::convert(assignmentPair.1);
+            retval.insert(var, elem);
         }
         return retval;
     }
@@ -155,24 +151,47 @@ impl ConvertConfig<&VariableAssignment, assignment_t> for GLA {
 impl ConvertConfig<&Protoboard, protoboard_t> for GLA {
     fn convert(pb: &Protoboard) -> protoboard_t {
         //GADGETLIB_ASSERT(pb.numVars()==getNextFreeIndex(), "Some Variables were created and not used, or, more than one protoboard was used.");
-        return protoboard_t(convert(pb.constraintSystem()), convert(pb.assignment()));
+        return (
+            Self::convert(pb.constraintSystem()),
+            Self::convert(pb.assignment()),
+        );
     }
 }
-impl ConvertConfig<FElem, Fp_elem_t> for GLA {
-    fn convert(fElem: FElem) -> Fp_elem_t {
+impl ConvertConfig<&FElem, Fp_elem_t> for GLA {
+    fn convert(fElem: &FElem) -> Fp_elem_t {
         // using gadgetlib2::R1P_Elem;
-        fElem.promoteToFieldType(gadgetlib2::R1P); // convert fElem from FConst to R1P_Elem
-        let pR1P = fElem.elem_.get();
-        return pR1P.elem_.clone();
+        fElem.promoteToFieldType(&FieldType::R1P); // convert fElem from FConst to R1P_Elem
+        fElem
+            .elem_
+            .borrow()
+            .try_as_elem_ref()
+            .unwrap()
+            .elem_
+            .clone()
     }
 }
 
-impl PartialEq for linear_combination_t {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.0.len() == 1 && self.0.at(0) == rhs && self.1 == Fp::from(0)
+impl<FieldT: FieldTConfig> ConvertConfig<&FElem, FieldT> for GLA {
+    fn convert(fElem: &FElem) -> FieldT {
+        // using gadgetlib2::R1P_Elem;
+        // fElem.promoteToFieldType(&FieldType::R1P); // convert fElem from FConst to R1P_Elem
+        // fElem
+        //     .elem_
+        //     .borrow()
+        //     .try_as_elem_ref()
+        //     .unwrap()
+        //     .elem_
+        //     .clone()
+        FieldT::default()
     }
 }
+
+// impl PartialEq <&linear_term_t> for linear_combination_t {
+//     #[inline]
+//     fn eq(&self, other: &linear_term_t) -> bool {
+//         self.0.len() == 1 && &self.0[0] == other && self.1 == Fp::from(0i64)
+//     }
+// }
 
 // bool operator==(lhs:linear_combination_t&,
 //     rhs:&linear_term_t) {

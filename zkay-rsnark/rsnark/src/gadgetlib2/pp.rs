@@ -1,28 +1,33 @@
 //  Declaration of PublicParams for Fp field arithmetic
-
+use crate::gadgetlib2::variable::FElemInterface;
+use crate::relations::{
+    FieldTConfig,
+    variable::{SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable},
+};
 use ffec::common::default_types::ec_pp;
+use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::ops::{AddAssign, BitXorAssign, MulAssign, Neg, SubAssign};
+use std::ops::{Add, AddAssign, BitXorAssign, Mul, MulAssign, Neg, SubAssign};
 // /*******************                        R1P World                           ******************/
 /* curve-specific public parameters */
-#[derive(Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct default_ec_pp;
 
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct bigint;
 impl bigint {
     pub fn test_bit(&self, i: u32) -> bool {
         false
     }
 }
-pub trait FrConfig: Default + Clone {
+pub trait FrConfig: Default + Clone + Debug {
     fn size_in_bits() -> usize {
         0
     }
 }
 impl FrConfig for default_ec_pp {}
 
-#[derive(Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct Fr<T: FrConfig>(PhantomData<T>);
 pub type Fp = Fr<default_ec_pp>;
 impl Fp {
@@ -32,9 +37,29 @@ impl Fp {
     pub fn as_bigint(&self) -> bigint {
         bigint::default()
     }
+    pub fn into_lc<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>(
+        self,
+    ) -> linear_combination<FieldT, SV, SLC> {
+        linear_combination::<FieldT, SV, SLC>::default()
+    }
 }
-use crate::gadgetlib2::variable::FElemInterface;
+
 impl FElemInterface for Fp {}
+
+impl Add for Fp {
+    type Output = Self;
+    #[inline]
+    fn add(self, other: Self) -> Self::Output {
+        self
+    }
+}
+impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<&variable<FieldT, SV>> for Fp {
+    type Output = Self;
+    #[inline]
+    fn mul(self, other: &variable<FieldT, SV>) -> Self::Output {
+        self
+    }
+}
 
 impl BitXorAssign<u64> for Fp {
     #[inline]

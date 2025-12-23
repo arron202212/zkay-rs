@@ -111,28 +111,11 @@ pub fn print_vector<T: std::fmt::Display>(vec: &Vec<T>) {
 
 // #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 
-// } // namespace libff
 
-// use crate::common::utils.tcc; /* note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) */
-//#endif // UTILS_HPP_
-/** @file
-*****************************************************************************
-Implementation of misc math and serialization utility functions.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#include <algorithm>
-//#include <cassert>
-//#include <cstdarg>
-//#include <cstdint>
+//  note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) 
 
-// use crate::common::utils;
+// Implementation of misc math and serialization utility functions.
 
-// namespace libff {
-
-// using std::usize;
 
 /**
  * Round n to the next power of two.
@@ -300,6 +283,3 @@ pub fn random_element_exclude<T: CConfig + std::cmp::PartialEq>(y: T) -> T {
     return x;
 }
 
-// } // namespace libff
-
-//#endif // UTILS_TCC_
