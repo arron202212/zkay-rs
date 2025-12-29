@@ -1,5 +1,10 @@
+use ffec::Fp_modelConfig;
 use ffec::field_utils::bigint::GMP_NUMB_BITS;
 use ffec::field_utils::field_utils::batch_invert;
+use ffec::{
+    Fp_model, Fp2_model, Fp2_modelConfig, Fp3_modelConfig, Fp6_3over2_model, Fp6_modelConfig,
+    Fp12_2over3over2_model, Fp12_modelConfig,
+};
 // use ffec::algebra::fields::prime_base::fp;
 // use ffec::algebra::fields::prime_extension::fp12_2over3over2;
 // use ffec::algebra::fields::prime_extension::fp2;
@@ -17,8 +22,23 @@ const alt_bn128_q_limbs: usize = (alt_bn128_q_bitcount + GMP_NUMB_BITS - 1) / GM
 
 // extern bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
 // extern bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
-
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub struct Backend;
+impl Fp_modelConfig<1> for Backend {}
+impl Fp2_modelConfig<1> for Backend {
+    type Fp_modelConfig = Self;
+}
+impl Fp3_modelConfig<1> for Backend {
+    type Fp_modelConfig = Self;
+}
+impl Fp6_modelConfig<1> for Backend {
+    type Fp_modelConfig = Self;
+    type Fp2_modelConfig = Self;
+}
+impl Fp12_modelConfig<1> for Backend {
+    type Fp_modelConfig = Self;
+    type Fp6_modelConfig = Self;
+}
 pub type alt_bn128_Fr = Fp_model<1, Backend>;
 
 pub type alt_bn128_Fq = Fp_model<1, Backend>;

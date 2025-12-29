@@ -301,7 +301,7 @@ const fn check(method: multi_exp_method) -> u8 {
 pub trait AsBigint {
     const num_limbs: i32 = 0;
     fn as_bigint<const N: usize>(&self) -> bigint<N>;
-    fn dbl<T>(&self) -> T;
+    fn dbl(&self) -> Self;
     fn fixed_base_exp_window_table() -> Vec<usize>;
     fn batch_to_special_all_non_zeros<T>(t: Vec<T>);
     fn to_special(&self);

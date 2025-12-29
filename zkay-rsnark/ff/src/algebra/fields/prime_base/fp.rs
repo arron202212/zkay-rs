@@ -37,24 +37,29 @@ use std::marker::PhantomData;
  */
 
 pub trait Fp_modelConfig<const N: usize>:
-    Send + Sync + 'static + Sized + Default + Clone + Copy
+    Send + Sync + 'static + Sized + Default + Clone + Copy + Eq
 {
-    const num_limbs: usize;
-    const modulus: bigint<N>;
-    const num_bits: usize;
-    const euler: bigint<N>; // (modulus-1)/2
-    const s: usize; // modulus = 2^s * t + 1
-    const t: bigint<N>; // with t odd
-    const t_minus_1_over_2: bigint<N>; // (t-1)/2
-    const nqr: Fp_model<N, Self>; // a quadratic nonresidue
-    const nqr_to_t: Fp_model<N, Self>; // nqr^t
-    const multiplicative_generator: Fp_model<N, Self>; // generator of Fp^*
-    const root_of_unity: Fp_model<N, Self>; // generator^((modulus-1)/2^s)
-    const inv: u64; // modulus^(-1) mod W, where W = 2^(word size)
-    const Rsquared: bigint<N>; // R^2, where R = W^k, where k = ??
-    const Rcubed: bigint<N>; // R^3
+    const num_limbs: usize = 42;
+    const modulus: bigint<N> = bigint::<N>::one();
+    const num_bits: usize = 42;
+    const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
+    const s: usize = 42; // modulus = 2^s * t + 1
+    const t: bigint<N> = bigint::<N>::one(); // with t odd
+    const t_minus_1_over_2: bigint<N> = bigint::<N>::one(); // (t-1)/2
+    const nqr: Fp_model<N, Self> = const_new_fp_model::<N, Self>(); // a quadratic nonresidue
+    const nqr_to_t: Fp_model<N, Self> = const_new_fp_model::<N, Self>(); // nqr^t
+    const multiplicative_generator: Fp_model<N, Self> = const_new_fp_model::<N, Self>(); // generator of Fp^*
+    const root_of_unity: Fp_model<N, Self> = const_new_fp_model::<N, Self>(); // generator^((modulus-1)/2^s)
+    const inv: u64 = 42; // modulus^(-1) mod W, where W = 2^(word size)
+    const Rsquared: bigint<N> = bigint::<N>::one(); // R^2, where R = W^k, where k = ??
+    const Rcubed: bigint<N> = bigint::<N>::one(); // R^3
 }
-
+pub const fn const_new_fp_model<const N: usize, T: Fp_modelConfig<N>>() -> Fp_model<N, T> {
+    Fp_model::<N, T> {
+        mont_repr: bigint::<N>::one(),
+        t: PhantomData,
+    }
+}
 #[derive(Educe)]
 #[educe(Default, Hash, Clone, Copy, Eq)] // PartialEq,
 pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
@@ -186,6 +191,13 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> 
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
+    pub const fn const_new(b: BigInt<N>) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>(b),
+            t: PhantomData,
+        }
+    }
+
     pub fn mul_reduce(&mut self, other: &bigint<N>) {}
 
     pub const fn new(b: bigint<N>) -> Self {
@@ -254,11 +266,11 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 
         tmp.mont_repr.print();
     }
-    pub fn ceil_size_in_bits(&self) -> usize {
-        self.mont_repr.num_bits()
+    pub fn ceil_size_in_bits() -> usize {
+        T::num_bits
     }
-    pub fn floor_size_in_bits(&self) -> usize {
-        self.mont_repr.num_bits() - 1
+    pub fn floor_size_in_bits() -> usize {
+        T::num_bits - 1
     }
 
     pub fn extension_degree() -> usize {

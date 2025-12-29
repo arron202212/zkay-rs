@@ -2,6 +2,10 @@
 
 // use crate::algebra::fields::prime_base::fp;
 // use crate::algebra::fields::prime_extension::fp2;
+use crate::Fp_model;
+use crate::Fp_modelConfig;
+use crate::Fp2_model;
+use crate::Fp2_modelConfig;
 use crate::algebra::{
     field_utils::{
         BigInteger,
@@ -15,14 +19,10 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use crate::const_new_fp_model;
+use num_traits::{One, Zero};
 use std::borrow::Borrow;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-
-use crate::Fp_model;
-use crate::Fp_modelConfig;
-use crate::Fp2_model;
-use crate::Fp2_modelConfig;
-
 // /**
 //  * Arithmetic in the finite field F[(p^2)^3].
 //  *
@@ -34,30 +34,43 @@ use crate::Fp2_modelConfig;
 //
 
 pub trait Fp6_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
 {
     type Fp_modelConfig: Fp_modelConfig<N>;
     type Fp2_modelConfig: Fp2_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
 
-    const non_residue: my_Fp<N, Self::Fp_modelConfig>;
+    const non_residue: my_Fp<N, Self::Fp_modelConfig> =
+        const_new_fp_model::<N, Self::Fp_modelConfig>();
 
     const nqr: (
         my_Fp<N, Self::Fp_modelConfig>,
         my_Fp<N, Self::Fp_modelConfig>,
+    ) = (
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
     );
     const nqr_to_t: (
         my_Fp<N, Self::Fp_modelConfig>,
         my_Fp<N, Self::Fp_modelConfig>,
+    ) = (
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
     );
     /// T::non_residue^((modulus^i-1)/2)
-    const Frobenius_coeffs_c1: [my_Fp<N, Self::Fp_modelConfig>; 2];
-    const Frobenius_coeffs_c2: [my_Fp<N, Self::Fp_modelConfig>; 2];
+    const Frobenius_coeffs_c1: [my_Fp<N, Self::Fp_modelConfig>; 2] = [
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+    ];
+    const Frobenius_coeffs_c2: [my_Fp<N, Self::Fp_modelConfig>; 2] = [
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+    ];
 }
 
 type my_Fp<const N: usize, T> = Fp_model<N, T>;
 type my_Fp2<const N: usize, T> = Fp2_model<N, T>;
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Eq)]
 pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
     // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     //     static i64 add_cnt;
@@ -143,6 +156,12 @@ pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
 
 // use crate::algebra::field_utils::field_utils;
 impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
+    pub fn ceil_size_in_bits() -> usize {
+        3 * my_Fp2::<N, T::Fp2_modelConfig>::ceil_size_in_bits()
+    }
+    pub fn floor_size_in_bits() -> usize {
+        3 * my_Fp2::<N, T::Fp2_modelConfig>::floor_size_in_bits()
+    }
     pub fn new(
         c0: my_Fp2<N, T::Fp2_modelConfig>,
         c1: my_Fp2<N, T::Fp2_modelConfig>,
@@ -268,6 +287,25 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
         self.c0.from_words(&words[0..n])
             && self.c1.from_words(&words[n..n * 2])
             && self.c2.from_words(&words[n * 2..])
+    }
+
+    pub fn clear(&mut self) {
+        self.c0.clear();
+        self.c1.clear();
+    }
+    pub fn print(&self) {
+        print!("c0/c1:\n");
+        self.c0.print();
+        self.c1.print();
+    }
+    pub fn is_zero(&self) -> bool {
+        self.c0.is_zero() && self.c1.is_zero()
+    }
+    pub fn extension_degree() -> usize {
+        2
+    }
+    pub fn field_char() -> bigint<N> {
+        T::Fp_modelConfig::modulus
     }
 }
 
@@ -543,6 +581,21 @@ impl<const N: usize, T: Fp6_modelConfig<N>> fmt::Display for Fp6_3over2_model<N,
         write!(f, "{}", self.c0)
     }
 }
+
+impl<const N: usize, T: Fp6_modelConfig<N>> One for Fp6_3over2_model<N, T> {
+    fn one() -> Self {
+        Self::one()
+    }
+}
+
+impl<const N: usize, T: Fp6_modelConfig<N>> Zero for Fp6_3over2_model<N, T> {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
 //
 // std::istream& operator>>(std::istream& in, Vec<Fp6_3over2_model<n, modulus> > &v)
 // {
@@ -572,7 +625,7 @@ use crate::algebra::fields::{
     prime_extension::fp2::{Fp2, Fp2Config},
 };
 //  use crate::algebra::{fields::PrimeField, cyclotomic::CyclotomicMultSubgroup};
-use ark_std::Zero;
+
 use core::marker::PhantomData;
 
 pub trait Fp6Config: 'static + Send + Sync + Copy {

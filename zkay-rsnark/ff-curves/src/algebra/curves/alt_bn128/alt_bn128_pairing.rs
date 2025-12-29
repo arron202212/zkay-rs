@@ -373,8 +373,9 @@ pub fn alt_bn128_ate_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_ate_G1_precomp
 
     // leave_block("Call to alt_bn128_ate_precompute_G1");
     // return result;
-    let g: G1Affine = (*P).into();
-    alt_bn128_ate_G1_precomp::from(g)
+    // let g: G1Affine = (*P).into();
+    // alt_bn128_ate_G1_precomp::from(g)
+    alt_bn128_ate_G1_precomp::default()
 }
 
 pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp {
@@ -437,8 +438,9 @@ pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp
 
     // leave_block("Call to alt_bn128_ate_precompute_G2");
     // return result;
-    let g: G2Affine = (*Q).into();
-    alt_bn128_ate_G2_precomp::from(g)
+    // let g: G2Affine = (*Q).into();
+    // alt_bn128_ate_G2_precomp::from(g)
+    alt_bn128_ate_G2_precomp::default()
 }
 
 pub fn alt_bn128_ate_miller_loop(

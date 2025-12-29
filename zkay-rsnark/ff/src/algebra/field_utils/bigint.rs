@@ -117,6 +117,11 @@ impl<const N: usize> Default for bigint<N> {
         Self(BigInt::default())
     }
 }
+impl<const N: usize> AsRef<[u64]> for bigint<N> {
+    fn as_ref(&self) -> &[u64] {
+        &self.0.0
+    }
+}
 
 // // using usize;
 use std::mem;

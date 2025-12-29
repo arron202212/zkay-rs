@@ -1,4 +1,5 @@
 // use crate::algebra::curves::curve_utils;
+use crate::KCConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
     alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr,
 };
@@ -8,13 +9,134 @@ use crate::algebra::curves::alt_bn128::alt_bn128_init::{
 };
 use crate::algebra::curves::alt_bn128::curves::Bn254;
 use crate::algebra::curves::pairing::Pairing;
+use ffec::Fp_modelConfig;
 use ffec::field_utils::bigint::GMP_NUMB_BITS;
 use ffec::field_utils::bigint::bigint;
 use ffec::field_utils::field_utils::batch_invert;
+use ffec::scalar_multiplication::multiexp::AsBigint;
 use ffec::{One, Zero};
+use num_bigint::BigUint;
+use std::borrow::Borrow;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+impl AsBigint for alt_bn128_G2 {
+    fn as_bigint<const N: usize>(&self) -> bigint<N> {
+        bigint::<N>::default()
+    }
+    fn dbl(&self) -> Self {
+        self.clone()
+    }
+    fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
+        vec![]
+    }
+    fn batch_to_special_all_non_zeros<T>(_: std::vec::Vec<T>) {}
+    fn to_special(&self) {}
+}
+
+// impl One for alt_bn128_G2 {
+// fn one() -> Self { Self::G1_zero() }
+// }
+// impl BigInteger for alt_bn128_G2 {}
+impl From<BigUint> for alt_bn128_G2 {
+    fn from(_: BigUint) -> Self {
+        Default::default()
+    }
+}
+
+// impl AsRef<[u64]> for bigint<1> {
+//     fn as_ref(&self) -> &[u64] {
+//         &self.0
+//     }
+// }
+
+impl KCConfig for alt_bn128_G2 {
+    type T = bigint<1>;
+    fn zero() -> Self {
+        alt_bn128_G2::default()
+    }
+    fn mixed_add(&self, other: &Self) -> Self {
+        alt_bn128_G2::default()
+    }
+    fn is_special(&self) -> bool {
+        false
+    }
+    fn print(&self) {}
+    fn size_in_bits() -> usize {
+        0
+    }
+}
+
+impl<O: Borrow<Self>> Add<O> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn add(self, other: O) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
+impl Sub for alt_bn128_G2 {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> <alt_bn128_G2 as Sub>::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
+
+impl<const N: usize> Mul<bigint<N>> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<O: Borrow<Self>> Mul<O> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn mul(self, rhs: O) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl Neg for alt_bn128_G2 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self
+    }
+}
+
+use std::fmt;
+impl fmt::Display for alt_bn128_G2 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Self::one())
+    }
+}
+
+impl One for alt_bn128_G2 {
+    fn one() -> Self {
+        Self::one()
+    }
+}
+
+impl Zero for alt_bn128_G2 {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
 
 // pub type alt_bn128_G2 = <Bn254 as Pairing>::G2;
-
+#[derive(Clone, Default)]
 pub struct alt_bn128_G2 {
     // #ifdef PROFILE_OP_COUNTS
     // static i64 add_cnt;
@@ -106,22 +228,39 @@ pub trait alt_bn128_G2Config: Send + Sync + Sized + 'static {
 type base_field = alt_bn128_Fq;
 type twist_field = alt_bn128_Fq2;
 type scalar_field = alt_bn128_Fr;
+
 impl alt_bn128_G2 {
     const h_bitcount: usize = 256;
     const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
     pub fn size_in_bits() -> usize {
         twist_field::ceil_size_in_bits() + 1
     }
-    pub fn field_char() -> bigint<{ base_field::num_limbs }> {
-        base_field::field_char()
+    pub fn field_char() -> Vec<u64> {
+        base_field::field_char().as_ref().to_vec()
     }
-    pub fn order() -> bigint<{ scalar_field::num_limbs }> {
-        scalar_field::field_char()
+    pub fn order() -> Vec<u64> {
+        scalar_field::field_char().as_ref().to_vec()
     }
 
-    pub fn h() -> bigint<{ Self::h_limbs }> {}
+    pub fn h<const N: usize>() -> bigint<N> {
+        bigint::<N>::default()
+    }
     pub fn new(X: alt_bn128_Fq2, Y: alt_bn128_Fq2, Z: alt_bn128_Fq2) -> Self {
         Self { X, Y, Z }
+    }
+    fn G2_zero() -> Self {
+        Self::new(
+            alt_bn128_Fq2::zero(),
+            alt_bn128_Fq2::one(),
+            alt_bn128_Fq2::zero(),
+        )
+    }
+    fn G2_one() -> Self {
+        Self::new(
+            alt_bn128_Fq2::zero(),
+            alt_bn128_Fq2::one(),
+            alt_bn128_Fq2::zero(),
+        )
     }
     pub fn initialize() {
         // if initialized
@@ -147,10 +286,10 @@ impl alt_bn128_G2 {
             copy.to_affine_coordinates();
             print!(
                 "({:N$}*z + {:N$} , {:N$}*z + {:N$})\n",
-                copy.X.c1.as_bigint().0.0,
-                copy.X.c0.as_bigint().0.0,
-                copy.Y.c1.as_bigint().0.0,
-                copy.Y.c0.as_bigint().0.0,
+                copy.X.c1.as_bigint().0,
+                copy.X.c0.as_bigint().0,
+                copy.Y.c1.as_bigint().0,
+                copy.Y.c0.as_bigint().0,
                 N = alt_bn128_Fq::num_limbs
             );
         }
@@ -162,18 +301,18 @@ impl alt_bn128_G2 {
         } else {
             print!(
                 "({:N$}*z + {:N$} : {:N$}*z + {:N$} : {:N$}*z + {:N$})\n",
-                self.X.c1.as_bigint().0.0,
-                self.X.c0.as_bigint().0.0,
-                self.Y.c1.as_bigint().0.0,
-                self.Y.c0.as_bigint().0.0,
-                self.Z.c1.as_bigint().0.0,
-                self.Z.c0.as_bigint().0.0,
+                self.X.c1.as_bigint().0,
+                self.X.c0.as_bigint().0,
+                self.Y.c1.as_bigint().0,
+                self.Y.c0.as_bigint().0,
+                self.Z.c1.as_bigint().0,
+                self.Z.c0.as_bigint().0,
                 N = alt_bn128_Fq::num_limbs
             );
         }
     }
 
-    pub fn to_affine_coordinates(&self) {
+    pub fn to_affine_coordinates(&mut self) {
         if self.is_zero() {
             self.X = alt_bn128_Fq2::zero();
             self.Y = alt_bn128_Fq2::one();
@@ -188,7 +327,7 @@ impl alt_bn128_G2 {
         }
     }
 
-    pub fn to_special(&self) {
+    pub fn to_special(&mut self) {
         self.to_affine_coordinates();
     }
 
@@ -211,7 +350,7 @@ impl alt_bn128_G2 {
 
         // handle special cases having to do with O
         if self.is_zero() {
-            return other;
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -252,14 +391,14 @@ impl alt_bn128_G2 {
 
         let H = U2 - (self.X); // H = U2-X1
         let HH = H.squared(); // HH = H^2
-        let I = HH + HH; // I = 4*HH
+        let mut I = HH + HH; // I = 4*HH
         I = I + I;
         let J = H * I; // J = H*I
-        let r = S2 - (self.Y); // r = 2*(S2-Y1)
+        let mut r = S2 - (self.Y); // r = 2*(S2-Y1)
         r = r + r;
         let V = (self.X) * I; // V = X1*I
         let X3 = r.squared() - J - V - V; // X3 = r^2-J-2*V
-        let Y3 = (self.Y) * J; // Y3 = r*(V-X3)-2*Y1*J
+        let mut Y3 = (self.Y) * J; // Y3 = r*(V-X3)-2*Y1*J
         Y3 = r * (V - X3) - Y3 - Y3;
         let Z3 = ((self.Z) + H).squared() - Z1Z1 - HH; // Z3 = (Z1+H)^2-Z1Z1-HH
 
@@ -284,19 +423,19 @@ impl alt_bn128_G2 {
         let A = (self.X).squared(); // A = X1^2
         let B = (self.Y).squared(); // B = Y1^2
         let C = B.squared(); // C = B^2
-        let D = (self.X + B).squared() - A - C;
+        let mut D = (self.X + B).squared() - A - C;
         D = D + D; // D = 2 * ((X1 + B)^2 - A - C)
         let E = A + A + A; // E = 3 * A
         let F = E.squared(); // F = E^2
         let X3 = F - (D + D); // X3 = F - 2 D
-        let eightC = C + C;
+        let mut eightC = C + C;
         eightC = eightC + eightC;
         eightC = eightC + eightC;
         let Y3 = E * (D - X3) - eightC; // Y3 = E * (D - X3) - 8 * C
         let Y1Z1 = (self.Y) * (self.Z);
         let Z3 = Y1Z1 + Y1Z1; // Z3 = 2 * Y1 * Z1
 
-        Self(X3, Y3, Z3)
+        Self::new(X3, Y3, Z3)
     }
 
     pub fn mul_by_q(&self) -> Self {
@@ -308,7 +447,7 @@ impl alt_bn128_G2 {
     }
 
     pub fn mul_by_cofactor(&self) -> Self {
-        Self::h * self.clone()
+        self.clone() * Self::h::<4>()
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -336,24 +475,24 @@ impl alt_bn128_G2 {
     }
 
     pub fn zero() -> Self {
-        G2_zero()
+        Self::G2_zero()
     }
 
     pub fn one() -> Self {
-        G2_one()
+        Self::G2_one()
     }
 
     pub fn random_element() -> Self {
-        (alt_bn128_Fr::random_element().as_bigint()) * G2_one()
+        Self::G2_one() * (alt_bn128_Fr::random_element().as_bigint())
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<alt_bn128_G2>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<alt_bn128_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in &vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z);
         }
-        batch_invert::<alt_bn128_Fq2>(Z_vec);
+        batch_invert::<alt_bn128_Fq2>(&mut Z_vec);
 
         let one = alt_bn128_Fq2::one();
 

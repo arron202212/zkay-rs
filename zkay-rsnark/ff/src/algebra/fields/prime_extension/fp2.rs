@@ -1,4 +1,7 @@
 // Implementation of arithmetic in the finite field F[p^2].
+use crate::Fp_model;
+use crate::Fp_modelConfig as FpmConfig;
+use crate::Fp3_modelConfig;
 use crate::algebra::{
     field_utils::{
         BigInteger,
@@ -12,14 +15,11 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use crate::const_new_fp_model;
 use std::borrow::Borrow;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use crate::Fp_model;
-use crate::Fp_modelConfig as FpmConfig;
-use crate::Fp3_modelConfig;
-
-use num_traits::One;
+use num_traits::{One, Zero};
 /**
  * Arithmetic in the field F[p^2].
  *
@@ -32,25 +32,35 @@ use num_traits::One;
 type Fp_modelConfig<const N: usize, T> = <T as Fp2_modelConfig<N>>::Fp_modelConfig;
 
 pub trait Fp2_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
 {
     type Fp_modelConfig: FpmConfig<N>;
-    const non_residue: my_Fp<N, Fp_modelConfig<N, Self>>;
+    const non_residue: my_Fp<N, Fp_modelConfig<N, Self>> =
+        const_new_fp_model::<N, Self::Fp_modelConfig>();
 
     const nqr: (
         my_Fp<N, Fp_modelConfig<N, Self>>,
         my_Fp<N, Fp_modelConfig<N, Self>>,
+    ) = (
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
     );
     const nqr_to_t: (
         my_Fp<N, Fp_modelConfig<N, Self>>,
         my_Fp<N, Fp_modelConfig<N, Self>>,
+    ) = (
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
     );
     /// non_residue^((modulus^i-1)/2)
-    const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, Self>>; 2];
+    const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, Self>>; 2] = [
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+    ];
 }
 
 type my_Fp<const N: usize, T> = Fp_model<N, T>;
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Eq)]
 pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
     // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     // static i64 add_cnt;
@@ -119,7 +129,7 @@ pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
 // Fp2_model squared_karatsuba() const;
 // Fp2_model squared_complex() const;
 
-// static std::usize ceil_size_in_bits() { return 2 * my_Fp::<T::Fp_modelConfig>ceil_size_in_bits(); }
+// static std::usize ceil_size_in_bits() { return 2 * my_Fp::<N,T::Fp_modelConfig>::ceil_size_in_bits(); }
 // static std::usize floor_size_in_bits() { return 2 * my_Fp::<N,T::Fp_modelConfig>::floor_size_in_bits(); }
 
 // static constexpr std::usize extension_degree() { return 2; }
@@ -136,7 +146,14 @@ pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
 // use crate::algebra::field_utils::field_utils;
 
 impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
-    pub fn new(c0: my_Fp<N, T::Fp_modelConfig>, c1: my_Fp<N, T::Fp_modelConfig>) -> Self {
+    pub fn ceil_size_in_bits() -> usize {
+        2 * my_Fp::<N, T::Fp_modelConfig>::ceil_size_in_bits()
+    }
+    pub fn floor_size_in_bits() -> usize {
+        2 * my_Fp::<N, T::Fp_modelConfig>::floor_size_in_bits()
+    }
+
+    pub const fn new(c0: my_Fp<N, T::Fp_modelConfig>, c1: my_Fp<N, T::Fp_modelConfig>) -> Self {
         Self {
             c0,
             c1,
@@ -250,6 +267,24 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
         let n = words.len() / 2;
         // Fp_model's from_words() takes care of asserts about vector length.
         self.c0.clone().from_words(&words[0..n]) && self.c1.clone().from_words(&words[n..])
+    }
+    pub fn clear(&mut self) {
+        self.c0.clear();
+        self.c1.clear();
+    }
+    pub fn print(&self) {
+        print!("c0/c1:\n");
+        self.c0.print();
+        self.c1.print();
+    }
+    pub fn is_zero(&self) -> bool {
+        self.c0.is_zero() && self.c1.is_zero()
+    }
+    pub fn extension_degree() -> usize {
+        2
+    }
+    pub fn field_char() -> bigint<N> {
+        T::Fp_modelConfig::modulus
     }
 }
 
@@ -471,6 +506,20 @@ impl<const N: usize, T: Fp2_modelConfig<N>> fmt::Display for Fp2_model<N, T> {
     }
 }
 
+impl<const N: usize, T: Fp2_modelConfig<N>> One for Fp2_model<N, T> {
+    fn one() -> Self {
+        Self::one()
+    }
+}
+
+impl<const N: usize, T: Fp2_modelConfig<N>> Zero for Fp2_model<N, T> {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
 //
 // std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
 // {
@@ -515,7 +564,6 @@ impl<const N: usize, T: Fp2_modelConfig<N>> fmt::Display for Fp2_model<N, T> {
 
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
 use crate::algebra::fields::cyclotomic::CyclotomicMultSubgroup;
-use ark_std::Zero;
 use core::{marker::PhantomData, ops::Not};
 
 /// Trait that specifies constants and methods for defining degree-two extension fields.

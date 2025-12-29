@@ -8,7 +8,6 @@ use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
     alt_bn128_G1_precomp, alt_bn128_G2_precomp,
 };
-// namespace libff {
 
 // // parameters for Barreto--Naehrig curve E/Fq : y^2 = x^3 + b
 // extern alt_bn128_Fq alt_bn128_coeff_b;
@@ -34,16 +33,27 @@ use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
 // use crate::algebra::curves::alt_bn128::alt_bn128_g1;
 // use crate::algebra::curves::alt_bn128::alt_bn128_g2;
 use crate::algebra::curves::alt_bn128::alt_bn128_init;
+use ffec::BigInt;
 use ffec::MontFp;
-pub const alt_bn128_coeff_b: alt_bn128_Fq = MontFp!("3");
-pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::new(MontFp!("3"), MontFp!("3"));
-pub const alt_bn128_twist_coeff_b: alt_bn128_Fq2 = alt_bn128_Fq2::new(MontFp!("3"), MontFp!("3"));
-pub const alt_bn128_twist_mul_by_b_c0: alt_bn128_Fq = MontFp!("3");
-pub const alt_bn128_twist_mul_by_b_c1: alt_bn128_Fq = MontFp!("3");
-pub const alt_bn128_twist_mul_by_q_X: alt_bn128_Fq2 =
-    alt_bn128_Fq2::new(MontFp!("3"), MontFp!("3"));
-pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 =
-    alt_bn128_Fq2::new(MontFp!("3"), MontFp!("3"));
+pub const alt_bn128_coeff_b: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
+pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::new(
+    alt_bn128_Fq::const_new(BigInt!("3")),
+    alt_bn128_Fq::const_new(BigInt!("3")),
+);
+pub const alt_bn128_twist_coeff_b: alt_bn128_Fq2 = alt_bn128_Fq2::new(
+    alt_bn128_Fq::const_new(BigInt!("3")),
+    alt_bn128_Fq::const_new(BigInt!("3")),
+);
+pub const alt_bn128_twist_mul_by_b_c0: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
+pub const alt_bn128_twist_mul_by_b_c1: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
+pub const alt_bn128_twist_mul_by_q_X: alt_bn128_Fq2 = alt_bn128_Fq2::new(
+    alt_bn128_Fq::const_new(BigInt!("3")),
+    alt_bn128_Fq::const_new(BigInt!("3")),
+);
+pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 = alt_bn128_Fq2::new(
+    alt_bn128_Fq::const_new(BigInt!("3")),
+    alt_bn128_Fq::const_new(BigInt!("3")),
+);
 
 // bigint<alt_bn128_q_limbs> alt_bn128_ate_loop_count;
 // bool alt_bn128_ate_is_loop_count_neg;
@@ -76,10 +86,10 @@ pub fn init_alt_bn128_params() {
     // // Cofactor
     // alt_bn128_G1::h = bigint<alt_bn128_G1::h_limbs>("1");
     // alt_bn128_G1::wnaf_window_table.resize(0);
-    const alt_bn128_G1_wnaf_window_table: &'static [usize] = [11, 24, 60, 127];
+    const alt_bn128_G1_wnaf_window_table: &'static [usize] = &[11, 24, 60, 127];
 
     // alt_bn128_G1::fixed_base_exp_window_table.resize(0);
-    const alt_bn128_G1_fixed_base_exp_window_table: &'static [usize] = [
+    const alt_bn128_G1_fixed_base_exp_window_table: &'static [usize] = &[
         // window 1 is unbeaten in [-inf, 4.99]
         1,       // window 2 is unbeaten in [4.99, 10.99]
         5,       // window 3 is unbeaten in [10.99, 32.29]
@@ -126,10 +136,10 @@ pub fn init_alt_bn128_params() {
     // alt_bn128_G2::h = bigint<alt_bn128_G2::h_limbs>("21888242871839275222246405745257275088844257914179612981679871602714643921549");
 
     // alt_bn128_G2::wnaf_window_table.resize(0);
-    const alt_bn128_G2_wnaf_window_table: &'static [usize] = [5, 15, 39, 109];
+    const alt_bn128_G2_wnaf_window_table: &'static [usize] = &[5, 15, 39, 109];
 
     // alt_bn128_G2::fixed_base_exp_window_table.resize(0);
-    const alt_bn128_G2_fixed_base_exp_window_table: &'static [usize] = [
+    const alt_bn128_G2_fixed_base_exp_window_table: &'static [usize] = &[
         // window 1 is unbeaten in [-inf, 5.10]
         1,       // window 2 is unbeaten in [5.10, 10.43]
         5,       // window 3 is unbeaten in [10.43, 25.28]

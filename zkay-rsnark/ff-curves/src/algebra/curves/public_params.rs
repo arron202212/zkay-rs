@@ -64,7 +64,6 @@ use ffec::scalar_multiplication::multiexp::AsBigint;
 pub trait KCConfig:
     Default
     + Clone
-    + BigInteger
     + One
     + AsBigint
     + std::ops::Add<Output = Self>
