@@ -1,100 +1,78 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef R1CS_PCD_PARAMS_HPP_
-// #define R1CS_PCD_PARAMS_HPP_
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_auxiliary_input, r1cs_primary_input,
+};
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
+    R1csPcdLocalDataConfig, r1cs_pcd_local_data, r1cs_pcd_message, r1cs_pcd_witness,
+};
+use rccell::RcCell;
 
-// 
-// 
-
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
-
-
-
-
-pub struct  r1cs_pcd_compliance_predicate_primary_input<FieldT> {
-
-outgoing_message:    RcCell<r1cs_pcd_message<FieldT> >,
+pub struct r1cs_pcd_compliance_predicate_primary_input<FieldT: FieldTConfig> {
+    outgoing_message: RcCell<r1cs_pcd_message<FieldT>>,
 }
-impl r1cs_pcd_compliance_predicate_primary_input<FieldT> {
-    pub fn new(outgoing_message:&RcCell<r1cs_pcd_message<FieldT> >) ->Self {
-    Self{outgoing_message}}
-}
-
-
-pub struct  r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> {
-
-incoming_messages:    Vec<RcCell<r1cs_pcd_message<FieldT> > >,
-local_data:    RcCell<r1cs_pcd_local_data<FieldT> >,
-witness:    r1cs_pcd_witness<FieldT>,
-}
-impl r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> {
-    pub fn new(incoming_messages:&Vec<RcCell<r1cs_pcd_message<FieldT> > >,
-                                                  local_data:&RcCell<r1cs_pcd_local_data<FieldT> >,
-                                                  witness:&r1cs_pcd_witness<FieldT>) ->Self
-        {
-        Self{incoming_messages ,local_data, witness
-    }}
-
-}
-
-
-
-// use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params;
-
-//#endif // R1CS_PCD_PARAMS_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef R1CS_PCD_PARAMS_TCC_
-// #define R1CS_PCD_PARAMS_TCC_
-
-
-impl r1cs_pcd_compliance_predicate_primary_input<FieldT>{
-
-pub fn as_r1cs_primary_input() ->r1cs_primary_input<FieldT>
-{
-    return outgoing_message.as_r1cs_variable_assignment();
-}
-}
-impl r1cs_pcd_compliance_predicate_auxiliary_input<FieldT>{
-
-pub fn as_r1cs_auxiliary_input(incoming_message_payload_lengths:&Vec<usize>) ->r1cs_auxiliary_input<FieldT> 
-{
-   let  arity = incoming_messages.len();
-
-    let mut  result=r1cs_auxiliary_input::<FieldT>::new();
-    result.push(FieldT(arity));
-
-   let max_arity = incoming_message_payload_lengths.len();
-    assert!(arity <= max_arity);
-
-    for i in 0..arity
-    {
-        letmsg_as_r1cs_va = incoming_messages[i].as_r1cs_variable_assignment();
-        assert!(msg_as_r1cs_va.len() == (1 + incoming_message_payload_lengths[i]));
-        result.insert(result.end(), msg_as_r1cs_va.begin(), msg_as_r1cs_va.end());
+impl<FieldT: FieldTConfig> r1cs_pcd_compliance_predicate_primary_input<FieldT> {
+    pub fn new(outgoing_message: RcCell<r1cs_pcd_message<FieldT>>) -> Self {
+        Self { outgoing_message }
     }
+}
 
-    /* pad with dummy messages of appropriate size */
-    for i in arity..max_arity
-    {
-        result.resize(result.len() + (1 + incoming_message_payload_lengths[i]), FieldT::zero());
+pub struct r1cs_pcd_compliance_predicate_auxiliary_input<FieldT: FieldTConfig> {
+    incoming_messages: Vec<RcCell<r1cs_pcd_message<FieldT>>>,
+    local_data: RcCell<r1cs_pcd_local_data<FieldT>>,
+    witness: r1cs_pcd_witness<FieldT>,
+}
+impl<FieldT: FieldTConfig> r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> {
+    pub fn new(
+        incoming_messages: Vec<RcCell<r1cs_pcd_message<FieldT>>>,
+        local_data: RcCell<r1cs_pcd_local_data<FieldT>>,
+        witness: r1cs_pcd_witness<FieldT>,
+    ) -> Self {
+        Self {
+            incoming_messages,
+            local_data,
+            witness,
+        }
     }
-
-    let  local_data_as_r1cs_va = local_data.as_r1cs_variable_assignment();
-    result.insert(result.end(), local_data_as_r1cs_va.begin(), local_data_as_r1cs_va.end());
-    result.insert(result.end(), witness.begin(), witness.end());
-
-    return result;
-}
 }
 
+impl<FieldT: FieldTConfig> r1cs_pcd_compliance_predicate_primary_input<FieldT> {
+    pub fn as_r1cs_primary_input(&self) -> r1cs_primary_input<FieldT> {
+        return self.outgoing_message.borrow().as_r1cs_variable_assignment();
+    }
+}
+impl<FieldT: FieldTConfig> r1cs_pcd_compliance_predicate_auxiliary_input<FieldT> {
+    pub fn as_r1cs_auxiliary_input(
+        &self,
+        incoming_message_payload_lengths: &Vec<usize>,
+    ) -> r1cs_auxiliary_input<FieldT> {
+        let arity = self.incoming_messages.len();
 
-//#endif // R1CS_PCD_PARAMS_TCC_
+        let mut result = r1cs_auxiliary_input::<FieldT>::default();
+        result.push(FieldT::from(arity));
+
+        let max_arity = incoming_message_payload_lengths.len();
+        assert!(arity <= max_arity);
+
+        for i in 0..arity {
+            let msg_as_r1cs_va = self.incoming_messages[i]
+                .borrow()
+                .as_r1cs_variable_assignment();
+            assert!(msg_as_r1cs_va.len() == (1 + incoming_message_payload_lengths[i]));
+            result.extend(msg_as_r1cs_va);
+        }
+
+        /* pad with dummy messages of appropriate size */
+        for i in arity..max_arity {
+            result.resize(
+                result.len() + (1 + incoming_message_payload_lengths[i]),
+                FieldT::zero(),
+            );
+        }
+
+        let local_data_as_r1cs_va = self.local_data.borrow().as_r1cs_variable_assignment();
+        result.extend(local_data_as_r1cs_va);
+        result.extend(self.witness.clone());
+
+        result
+    }
+}

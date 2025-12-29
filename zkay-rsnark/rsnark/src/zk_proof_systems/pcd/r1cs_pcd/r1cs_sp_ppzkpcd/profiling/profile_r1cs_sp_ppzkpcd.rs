@@ -8,9 +8,7 @@ use crate::common::default_types::r1cs_ppzkpcd_pp;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::examples::run_r1cs_sp_ppzkpcd;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
 
-
-
-// 
+//
 // pub fn  profile_tally(arity:usize, max_layer:usize)
 // {
 //     let wordsize = 32;

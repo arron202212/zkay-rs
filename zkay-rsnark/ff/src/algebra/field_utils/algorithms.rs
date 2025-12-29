@@ -171,7 +171,7 @@ impl PowerConfig<Vec<u128>> for Powers {
 }
 
 //
-pub fn tonelli_shanks_sqrt<FieldT: FTConfig + Clone>(value: &FieldT) -> FieldT {
+pub fn tonelli_shanks_sqrt<FieldT: Clone>(value: &FieldT) -> FieldT {
     // A few assertions to make sure s, t, and nqr are initialized.
     // assert!(FieldT::s != 0);
     // assert!(!FieldT::t.is_even()); // Check that t is odd.

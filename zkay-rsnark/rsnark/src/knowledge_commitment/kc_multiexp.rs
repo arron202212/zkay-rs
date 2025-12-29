@@ -1,12 +1,3 @@
-// /** @file
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef KC_MULTIEXP_HPP_
-// #define KC_MULTIEXP_HPP_
-
 /*
   Split out from multiexp to prevent cyclical
   dependencies. I.e. previously multiexp dependend on
@@ -44,17 +35,6 @@ use crate::knowledge_commitment::knowledge_commitment;
 //                                                  suggested_num_chunks:usize);
 
 // use crate::knowledge_commitment::kc_multiexp;
-
-//#endif // KC_MULTIEXP_HPP_
-
-// /** @file
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef KC_MULTIEXP_TCC_
-// #define KC_MULTIEXP_TCC_
 
 //
 // knowledge_commitment<T1,T2> opt_window_wnaf_exp(base:&knowledge_commitment<T1,T2>
@@ -243,5 +223,3 @@ use crate::knowledge_commitment::knowledge_commitment;
 //         return res;
 //     }
 // }
-
-//#endif // KC_MULTIEXP_TCC_

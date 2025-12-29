@@ -1,20 +1,16 @@
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- Declaration of public-parameter selector for the RAM ppzkSNARK.
+Declaration of public-parameter selector for the RAM ppzkSNARK.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef RAM_PPZKSNARK_PARAMS_HPP_
 // #define RAM_PPZKSNARK_PARAMS_HPP_
-
 use crate::relations::ram_computations::rams::ram_params;
-
-
 
 /**
  * The interfaces of the RAM ppzkSNARK are templatized via the parameter
@@ -54,21 +50,17 @@ use crate::relations::ram_computations::rams::ram_params;
  * Below are various template aliases (used for convenience).
  */
 
+type ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> = ram_ppzksnark_ppT::snark_pp;
 
-type  ram_ppzksnark_snark_pp<ram_ppzksnark_ppT> =  ram_ppzksnark_ppT::snark_pp;
+type ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> = ram_ppzksnark_ppT::machine_pp;
 
+type ram_ppzksnark_architecture_params<ram_ppzksnark_ppT> =
+    ram_architecture_params<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>>;
 
-type  ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> =  ram_ppzksnark_ppT::machine_pp;
+type ram_ppzksnark_primary_input<ram_ppzksnark_ppT> =
+    ram_boot_trace<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>>;
 
-
-type  ram_ppzksnark_architecture_params<ram_ppzksnark_ppT> = ram_architecture_params<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
-
-
-type  ram_ppzksnark_primary_input<ram_ppzksnark_ppT> = ram_boot_trace<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
-
-
-type  ram_ppzksnark_auxiliary_input<ram_ppzksnark_ppT> = ram_input_tape<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >;
-
-
+type ram_ppzksnark_auxiliary_input<ram_ppzksnark_ppT> =
+    ram_input_tape<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>>;
 
 //#endif // RAM_PPZKSNARK_PARAMS_HPP_

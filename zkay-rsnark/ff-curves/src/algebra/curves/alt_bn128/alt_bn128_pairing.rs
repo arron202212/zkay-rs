@@ -1,19 +1,12 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef ALT_BN128_PAIRING_HPP_
-// #define ALT_BN128_PAIRING_HPP_
-//#include <vector>
 // use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G2,alt_bn128_G1};
+
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
-    alt_bn128_Fq, alt_bn128_Fq12, alt_bn128_GT,
+    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT,
 };
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
-// namespace libff {
+use crate::algebra::curves::alt_bn128::alt_bn128_pairing;
+use ffec::common::profiling;
 
 /* final exponentiation */
 
@@ -22,39 +15,39 @@ use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 /* ate pairing */
 use crate::algebra::curves::alt_bn128::curves::{Bn254, Config, G1Affine, G2Affine};
 use crate::algebra::curves::pairing::{Pairing, prepare_g1, prepare_g2};
-pub type alt_bn128_ate_G1_precomp = <Bn254 as Pairing>::G1Prepared;
+// pub type alt_bn128_ate_G1_precomp = <Bn254 as Pairing>::G1Prepared;
 use ffec::One;
-// struct alt_bn128_ate_G1_precomp {
-//     alt_bn128_Fq PX;
-//     alt_bn128_Fq PY;
-
-//     // bool operator==(other:&alt_bn128_ate_G1_precomp) const;
-//     // friend std::ostream& operator<<(std::ostream &out, prec_P:&alt_bn128_ate_G1_precomp);
-//     // friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P);
-// }
+#[derive(Clone, Default, PartialEq, Eq)]
+pub struct alt_bn128_ate_G1_precomp {
+    PX: alt_bn128_Fq,
+    PY: alt_bn128_Fq,
+    // bool operator==(other:&alt_bn128_ate_G1_precomp) const;
+    // friend std::ostream& operator<<(std::ostream &out, prec_P:&alt_bn128_ate_G1_precomp);
+    // friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P);
+}
 use crate::algebra::curves::bn128::bn::g2::EllCoeff;
-pub type alt_bn128_ate_ell_coeffs = EllCoeff<Config>;
-// struct alt_bn128_ate_ell_coeffs {
-//     alt_bn128_Fq2 ell_0;
-//     alt_bn128_Fq2 ell_VW;
-//     alt_bn128_Fq2 ell_VV;
-
-//     // bool operator==(other:&alt_bn128_ate_ell_coeffs) const;
-//     // friend std::ostream& operator<<(std::ostream &out, c:&alt_bn128_ate_ell_coeffs);
-//     // friend std::istream& operator>>(std::istream &in, c:&alt_bn128_ate_ell_coeffs);
-// }
+// pub type alt_bn128_ate_ell_coeffs = EllCoeff<Config>;
+#[derive(Clone, Default, PartialEq, Eq)]
+pub struct alt_bn128_ate_ell_coeffs {
+    ell_0: alt_bn128_Fq2,
+    ell_VW: alt_bn128_Fq2,
+    ell_VV: alt_bn128_Fq2,
+    // bool operator==(other:&alt_bn128_ate_ell_coeffs) const;
+    // friend std::ostream& operator<<(std::ostream &out, c:&alt_bn128_ate_ell_coeffs);
+    // friend std::istream& operator>>(std::istream &in, c:&alt_bn128_ate_ell_coeffs);
+}
 
 use crate::algebra::curves::bn128::bn::g2::G2Prepared;
-pub type alt_bn128_ate_G2_precomp = <Bn254 as Pairing>::G2Prepared;
-// struct alt_bn128_ate_G2_precomp {
-//     alt_bn128_Fq2 QX;
-//     alt_bn128_Fq2 QY;
-//     Vec<alt_bn128_ate_ell_coeffs> coeffs;
-
-//     // bool operator==(other:&alt_bn128_ate_G2_precomp) const;
-//     // friend std::ostream& operator<<(std::ostream &out, prec_Q:&alt_bn128_ate_G2_precomp);
-//     // friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G2_precomp &prec_Q);
-// }
+// pub type alt_bn128_ate_G2_precomp = <Bn254 as Pairing>::G2Prepared;
+#[derive(Clone, Default, PartialEq, Eq)]
+pub struct alt_bn128_ate_G2_precomp {
+    QX: alt_bn128_Fq2,
+    QY: alt_bn128_Fq2,
+    coeffs: Vec<alt_bn128_ate_ell_coeffs>,
+    // bool operator==(other:&alt_bn128_ate_G2_precomp) const;
+    // friend std::ostream& operator<<(std::ostream &out, prec_Q:&alt_bn128_ate_G2_precomp);
+    // friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G2_precomp &prec_Q);
+}
 
 // alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(P:&alt_bn128_G1);
 // alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(Q:&alt_bn128_G2);
@@ -97,25 +90,6 @@ pub type alt_bn128_G2_precomp = alt_bn128_ate_G2_precomp;
 // alt_bn128_GT alt_bn128_affine_reduced_pairing(P:&alt_bn128_G1,
 //                                     Q:&alt_bn128_G2);
 
-// } // namespace libff
-//#endif // ALT_BN128_PAIRING_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#include <cassert>
-// use crate::algebra::curves::alt_bn128::alt_bn128_g1;
-// use crate::algebra::curves::alt_bn128::alt_bn128_g2;
-// use crate::algebra::curves::alt_bn128::alt_bn128_init;
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing;
-use ffec::common::profiling;
-
-// namespace libff {
-
-// using std::usize;
-
 // bool alt_bn128_ate_G1_precomp::operator==(other:&alt_bn128_ate_G1_precomp) const
 // {
 //     return (this->PX == other.PX &&
@@ -126,7 +100,7 @@ use ffec::common::profiling;
 // {
 //     out << prec_P.PX << OUTPUT_SEPARATOR << prec_P.PY;
 
-//     return out;
+//    out
 // }
 
 // std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P)
@@ -135,7 +109,7 @@ use ffec::common::profiling;
 //     consume_OUTPUT_SEPARATOR(in);
 //     in >> prec_P.PY;
 
-//     return in;
+//     in
 // }
 
 // bool  alt_bn128_ate_ell_coeffs::operator==(other:&alt_bn128_ate_ell_coeffs) const
@@ -148,7 +122,7 @@ use ffec::common::profiling;
 // std::ostream& operator<<(std::ostream &out, c:&alt_bn128_ate_ell_coeffs)
 // {
 //     out << c.ell_0 << OUTPUT_SEPARATOR << c.ell_VW << OUTPUT_SEPARATOR << c.ell_VV;
-//     return out;
+//    out
 // }
 
 // std::istream& operator>>(std::istream &in, c:&alt_bn128_ate_ell_coeffs)
@@ -159,7 +133,7 @@ use ffec::common::profiling;
 //     consume_OUTPUT_SEPARATOR(in);
 //     in >> c.ell_VV;
 
-//     return in;
+//     in
 // }
 
 // bool alt_bn128_ate_G2_precomp::operator==(other:&alt_bn128_ate_G2_precomp) const
@@ -177,7 +151,7 @@ use ffec::common::profiling;
 //     {
 //         out << c << OUTPUT_NEWLINE;
 //     }
-//     return out;
+//    out
 // }
 
 // std::istream& operator>>(std::istream& in, alt_bn128_ate_G2_precomp &prec_Q)
@@ -203,7 +177,7 @@ use ffec::common::profiling;
 //         prec_Q.coeffs.emplace_back(c);
 //     }
 
-//     return in;
+//     in
 // }
 
 /* final exponentiations */
@@ -644,4 +618,3 @@ pub fn alt_bn128_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_Fq12 {
 pub fn alt_bn128_reduced_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_GT {
     alt_bn128_ate_reduced_pairing(P, Q)
 }
-// } // namespace libff

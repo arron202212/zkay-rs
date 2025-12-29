@@ -299,8 +299,8 @@ impl<P: CubicExtConfig> Field for CubicExtField<P> {
             let t1 = self.c1.square();
             let t2 = self.c2.square();
             let t3 = self.c0 * &self.c1;
-            let t4 = self.c0 * &self.c2;
-            let t5 = self.c1 * &self.c2;
+            let t4 = self.c0 * self.c2;
+            let t5 = self.c1 * self.c2;
             let n5 = P::mul_base_field_by_nonresidue(t5);
 
             let s0 = t0 - &n5;

@@ -1,29 +1,20 @@
-/** @file
- *****************************************************************************
- Profiling program that exercises the ppzkSNARK (first generator, then prover,
- then verifier) on a synthetic R1CS instance.
 
- The command
+//  Profiling program that exercises the ppzkSNARK (first generator, then prover,
+//  then verifier) on a synthetic R1CS instance.
 
-     $ libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/profiling/profile_r1cs_gg_ppzksnark 1000 10 Fr
+//  The command
 
- exercises the ppzkSNARK (first generator, then prover, then verifier) on an R1CS instance with 1000 equations and an input consisting of 10 field elements.
+//      $ libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/profiling/profile_r1cs_gg_ppzksnark 1000 10 Fr
 
- (If you get the error `zmInit ERR:can't protect`, see the discussion [above](#elliptic-curve-choices).)
+//  exercises the ppzkSNARK (first generator, then prover, then verifier) on an R1CS instance with 1000 equations and an input consisting of 10 field elements.
 
- The command
+//  (If you get the error `zmInit ERR:can't protect`, see the discussion [above](#elliptic-curve-choices).)
 
-     $ libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/profiling/profile_r1cs_gg_ppzksnark 1000 10 bytes
+//  The command
 
- does the same but now the input consists of 10 bytes.
+//      $ libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/profiling/profile_r1cs_gg_ppzksnark 1000 10 bytes
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use  <cassert>
-use  <cstdio>
+//  does the same but now the input consists of 10 bytes.
 
 use ffec::common::profiling;
 use ffec::common::utils;

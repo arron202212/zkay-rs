@@ -11,6 +11,7 @@
 #![feature(generic_const_exprs)]
 #![feature(non_lifetime_binders)]
 #![feature(associated_type_defaults)]
+#![allow(incomplete_features)]
 #[macro_use]
 extern crate scan_fmt;
 pub mod common;
@@ -19,5 +20,5 @@ pub mod gadgetlib2;
 pub mod knowledge_commitment;
 pub mod reductions;
 pub mod relations;
-// pub mod    zk_proof_systems;
+pub mod zk_proof_systems;
 // pub mod    jsnark_interface ;

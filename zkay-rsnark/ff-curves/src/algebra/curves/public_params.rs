@@ -55,10 +55,33 @@
                                     Q:&G2<EC_ppT>);
 */
 
+use ffec::One;
+use ffec::algebra::scalar_multiplication::multiexp;
+use ffec::field_utils::BigInteger;
+use ffec::field_utils::bigint::bigint;
+use ffec::scalar_multiplication::multiexp::AsBigint;
+
+pub trait KCConfig:
+    Default
+    + Clone
+    + BigInteger
+    + One
+    + AsBigint
+    + std::ops::Add<Output = Self>
+    + std::ops::Mul<Self::T, Output = Self>
+{
+    type T: AsRef<[u64]>;
+    fn zero() -> Self;
+    fn mixed_add(&self, other: &Self) -> Self;
+    fn is_special(&self) -> bool;
+    fn print(&self);
+    fn size_in_bits() -> usize;
+}
+
 pub trait PublicParamsType {
     type Fp_type;
-    type G1_type;
-    type G2_type;
+    type G1_type: KCConfig;
+    type G2_type: KCConfig;
     type G1_precomp_type;
     type G2_precomp_type;
     type affine_ate_G1_precomp_type = ();
@@ -67,6 +90,7 @@ pub trait PublicParamsType {
     type Fqe_type;
     type Fqk_type;
     type GT_type;
+    const N: usize = 4;
 }
 
 pub trait PublicParams: PublicParamsType {
@@ -127,3 +151,19 @@ pub trait PublicParams: PublicParamsType {
     fn reduced_pairing(P: &Self::G1, Q: &Self::G2) -> Self::GT;
     fn affine_reduced_pairing(P: &Self::G1, Q: &Self::G2) -> Self::GT;
 }
+
+pub type Fr<Ppt> = <Ppt as PublicParamsType>::Fp_type;
+pub type G1<Ppt> = <Ppt as PublicParamsType>::G1_type;
+pub type G2<Ppt> = <Ppt as PublicParamsType>::G2_type;
+pub type G1_precomp<Ppt> = <Ppt as PublicParamsType>::G1_precomp_type;
+pub type G2_precomp<Ppt> = <Ppt as PublicParamsType>::G2_precomp_type;
+pub type affine_ate_G1_precomp<Ppt> = <Ppt as PublicParamsType>::affine_ate_G1_precomp_type;
+pub type affine_ate_G2_precomp<Ppt> = <Ppt as PublicParamsType>::affine_ate_G2_precomp_type;
+pub type Fq<Ppt> = <Ppt as PublicParamsType>::Fq_type;
+pub type Fqe<Ppt> = <Ppt as PublicParamsType>::Fqe_type;
+pub type Fqk<Ppt> = <Ppt as PublicParamsType>::Fqk_type;
+pub type GT<Ppt> = <Ppt as PublicParamsType>::GT_type;
+
+pub type Fr_vector<Ppt> = Vec<<Ppt as PublicParams>::Fr>;
+pub type G1_vector<Ppt> = Vec<<Ppt as PublicParams>::G1>;
+pub type G2_vector<Ppt> = Vec<<Ppt as PublicParams>::G2>;

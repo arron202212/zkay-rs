@@ -1,32 +1,18 @@
-/** @file
- *****************************************************************************
+// Declaration of public-parameter selector for the R1CS GG-ppzkSNARK.
 
- Declaration of public-parameter selector for the R1CS GG-ppzkSNARK.
+// use ff_curves::algebra::curves::public_params:*;
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-// //#ifndef R1CS_GG_PPZKSNARK_PARAMS_HPP_
-// // #define R1CS_GG_PPZKSNARK_PARAMS_HPP_
-
-use ff_curves::algebra::curves::public_params;
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-
-
-
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
+};
+use ff_curves::Fr;
 /**
  * Below are various template aliases (used for convenience).
  */
 
-type r1cs_gg_ppzksnark_constraint_system = r1cs_constraint_system<ffec::Fr<ppT> >;
+pub type r1cs_gg_ppzksnark_constraint_system<ppT, SV, SLC> =
+    r1cs_constraint_system<Fr<ppT>, SV, SLC>;
 
-type r1cs_gg_ppzksnark_primary_input = r1cs_primary_input<ffec::Fr<ppT> >;
+pub type r1cs_gg_ppzksnark_primary_input<ppT> = r1cs_primary_input<Fr<ppT>>;
 
-type r1cs_gg_ppzksnark_auxiliary_input = r1cs_auxiliary_input<ffec::Fr<ppT> >;
-
-
-
-// //#endif // R1CS_GG_PPZKSNARK_PARAMS_HPP_
+pub type r1cs_gg_ppzksnark_auxiliary_input<ppT> = r1cs_auxiliary_input<Fr<ppT>>;

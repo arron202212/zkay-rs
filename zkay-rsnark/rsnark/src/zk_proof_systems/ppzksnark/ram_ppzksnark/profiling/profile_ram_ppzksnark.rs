@@ -10,15 +10,12 @@
 // use  <iostream>
 // use  <sstream>
 // use  <string>
-
 use ffec::common::profiling;
 
 use crate::common::default_types::ram_ppzksnark_pp;
 use crate::relations::ram_computations::rams::examples::ram_examples;
 use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
-
-
 
 // int main(int argc, const char * argv[])
 // {

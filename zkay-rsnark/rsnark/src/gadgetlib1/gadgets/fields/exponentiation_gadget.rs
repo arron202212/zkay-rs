@@ -31,7 +31,7 @@ use std::marker::PhantomData;
 //     const M: usize;
 //     fn inverse(&self) -> Self;
 //     fn random_element() -> Self;
-//     fn Frobenius_map(&self, power: u64) -> Self;
+//     fn Frobenius_map(&self, power: usize) -> Self;
 //     fn to_field(&self) -> FieldT;
 //     fn c0(&self) -> FieldT;
 //     fn c1(&self) -> FieldT;

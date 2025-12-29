@@ -1,22 +1,22 @@
+// Declaration of interfaces for a sparse vector.
+
 use ffec::common::serialization::OUTPUT_NEWLINE;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a sparse vector.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef SPARSE_VECTOR_HPP_
-// // #define SPARSE_VECTOR_HPP_
-
-// use  <iostream>
-//
 use ffec::scalar_multiplication::multiexp::{multi_exp, multi_exp_method};
-// pub fn
-// pub struct sparse_vector<T>;
+
+pub trait SparseVectorConfig:
+    Default
+    + std::fmt::Display
+    + std::cmp::PartialEq
+    + std::ops::Add<Output = Self>
+    + ffec::Zero
+    + Clone
+    + std::ops::Sub<Output = Self>
+    + ffec::scalar_multiplication::wnaf::Config
+    + ffec::scalar_multiplication::multiexp::AsBigint
+{
+    fn size_in_bits() -> usize;
+    // fn zero()->Self;
+}
 
 /**
  * A sparse vector is a list of indices along with corresponding values.
@@ -52,49 +52,6 @@ pub struct sparse_vector<T: SparseVectorConfig> {
     // std::pair<T, sparse_vector<T> > accumulate(it_begin:&Vec<FieldT>::const_iterator
     //                                            it_end:&Vec<FieldT>::const_iterator
     //                                            offset:usize) const;
-}
-
-// pub fn
-// std::istream& operator>>(std::istream& in, sparse_vector<T> &v);
-
-// use crate::common::data_structures::sparse_vector;
-
-// //#endif // SPARSE_VECTOR_HPP_
-
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a sparse vector.
-
-See sparse_vector.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef SPARSE_VECTOR_TCC_
-// // #define SPARSE_VECTOR_TCC_
-
-// use  <numeric>
-
-// // #ifdef MULTICORE
-// use  <omp.h>
-// //#endif
-use ffec::algebra::scalar_multiplication::multiexp;
-pub trait SparseVectorConfig:
-    Default
-    + std::fmt::Display
-    + std::cmp::PartialEq
-    + std::ops::Add<Output = Self>
-    + ffec::Zero
-    + Clone
-    + std::ops::Sub<Output = Self>
-    + ffec::scalar_multiplication::wnaf::Config
-    + ffec::scalar_multiplication::multiexp::AsBigint
-{
-    fn size_in_bits() -> usize;
-    // fn zero()->Self;
 }
 
 impl<T: SparseVectorConfig> sparse_vector<T> {
@@ -225,8 +182,6 @@ impl<T: SparseVectorConfig> sparse_vector<T> {
         (accumulated_value, resulting_vector)
     }
 }
-
-// //#endif // SPARSE_VECTOR_TCC_
 
 use std::ops::Index;
 impl<T: SparseVectorConfig> Index<usize> for sparse_vector<T> {

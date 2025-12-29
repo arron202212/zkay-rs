@@ -1,18 +1,8 @@
+// Declaration of interfaces for:
+// - a knowledge commitment, and
+// - a knowledge commitment vector.
+
 use crate::common::data_structures::sparse_vector::sparse_vector;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for:
-- a knowledge commitment, and
-- a knowledge commitment vector.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef KNOWLEDGE_COMMITMENT_HPP_
-// // #define KNOWLEDGE_COMMITMENT_HPP_
 use ffec::algebra::fields::prime_base::fp;
 use ffec::common::serialization::{OUTPUT_NEWLINE, OUTPUT_SEPARATOR};
 use ffec::field_utils::bigint::bigint;
@@ -22,21 +12,7 @@ use ffec::One;
 use ffec::field_utils::BigInteger;
 use ffec::scalar_multiplication::multiexp::AsBigint;
 use ffec::{Fp_model, Fp_modelConfig};
-pub trait TConfig<const N: usize>:
-    Default
-    + Clone
-    + BigInteger
-    + One
-    + AsBigint
-    + std::ops::Add<Output = Self>
-    + for<'a> std::ops::Mul<&'a bigint<{ N }>, Output = Self>
-{
-    fn zero() -> Self;
-    fn mixed_add(&self, other: &Self) -> Self;
-    fn is_special(&self) -> bool;
-    fn print(&self);
-    fn size_in_bits() -> usize;
-}
+
 /********************** Knowledge commitment *********************************/
 
 /**
@@ -50,11 +26,11 @@ pub trait TConfig<const N: usize>:
  */
 
 #[derive(Default, Clone)]
-pub struct knowledge_commitment<const N: usize, T1: TConfig<N>, T2: TConfig<N>> {
+pub struct knowledge_commitment<T1: KCConfig, T2: KCConfig> {
     pub g: T1,
     pub h: T2,
 }
-// impl<const N:usize,T1:TConfig<N>,T2:TConfig<N>> knowledge_commitment<T1,T2>{
+// impl<const N:usize,T1:KCConfig,T2:KCConfig> knowledge_commitment<T1,T2>{
 //     // knowledge_commitment<T1,T2>() = default;
 //     // knowledge_commitment<T1,T2>(&other:knowledge_commitment<T1,T2>) = default;
 //     // knowledge_commitment<T1,T2>(knowledge_commitment<T1,T2> &&other) = default;
@@ -107,32 +83,9 @@ pub struct knowledge_commitment<const N: usize, T1: TConfig<N>, T2: TConfig<N>> 
  * A knowledge commitment vector is a sparse vector of knowledge commitments.
  */
 //
-type knowledge_commitment_vector<const N: usize, T1, T2> =
-    sparse_vector<knowledge_commitment<N, T1, T2>>;
+pub type knowledge_commitment_vector<T1, T2> = sparse_vector<knowledge_commitment<T1, T2>>;
 
-// use crate::knowledge_commitment::knowledge_commitment;
-
-// //#endif // KNOWLEDGE_COMMITMENT_HPP_
-
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for:
-- a knowledge commitment, and
-- a knowledge commitment vector.
-
-See knowledge_commitment.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-// //#ifndef KNOWLEDGE_COMMITMENT_TCC_
-// // #define KNOWLEDGE_COMMITMENT_TCC_
-
-impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> knowledge_commitment<N, T1, T2> {
+impl<T1: KCConfig, T2: KCConfig> knowledge_commitment<T1, T2> {
     pub fn new(g: T1, h: T2) -> Self {
         Self { g, h }
     }
@@ -145,7 +98,7 @@ impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> knowledge_commitment<N, T1,
         return Self::new(T1::one(), T2::one());
     }
 
-    pub fn mixed_add(&self, other: &knowledge_commitment<N, T1, T2>) -> Self {
+    pub fn mixed_add(&self, other: &knowledge_commitment<T1, T2>) -> Self {
         return Self::new(self.g.mixed_add(&other.g), self.h.mixed_add(&other.h));
     }
 
@@ -171,10 +124,6 @@ impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> knowledge_commitment<N, T1,
         self.g.print();
         print!("knowledge_commitment.h:\n");
         self.h.print();
-    }
-
-    pub fn size_in_bits(&self) -> usize {
-        return T1::size_in_bits() + T2::size_in_bits();
     }
 
     pub fn batch_to_special_all_non_zeros(vec: &mut Vec<Self>) {
@@ -233,7 +182,13 @@ impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> knowledge_commitment<N, T1,
     }
 }
 
-impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> PartialEq for knowledge_commitment<N, T1, T2> {
+impl<T1: KCConfig, T2: KCConfig> SparseVectorConfig for knowledge_commitment<T1, T2> {
+    fn size_in_bits(&self) -> usize {
+        return T1::size_in_bits() + T2::size_in_bits();
+    }
+}
+
+impl<T1: KCConfig, T2: KCConfig> PartialEq for knowledge_commitment<T1, T2> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.g == other.g && self.h == other.h
@@ -241,9 +196,7 @@ impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> PartialEq for knowledge_com
 }
 
 use std::fmt;
-impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> fmt::Display
-    for knowledge_commitment<N, T1, T2>
-{
+impl<T1: KCConfig, T2: KCConfig> fmt::Display for knowledge_commitment<T1, T2> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{OUTPUT_SEPARATOR}{}", self.g, self.h)
     }
@@ -263,7 +216,7 @@ impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> fmt::Display
 //     return !((*this) == other);
 // }
 
-impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> Add for knowledge_commitment<N, T1, T2> {
+impl<T1: KCConfig, T2: KCConfig> Add for knowledge_commitment<T1, T2> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -271,18 +224,16 @@ impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> Add for knowledge_commitmen
     }
 }
 
-impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>> Mul<&bigint<N>>
-    for knowledge_commitment<N, T1, T2>
-{
+impl<T1: KCConfig, T2: KCConfig> Mul<impl AsRef<[u64]>> for knowledge_commitment<T1, T2> {
     type Output = Self;
 
-    fn mul(self, rhs: &bigint<N>) -> Self {
+    fn mul(self, rhs: impl AsRef<[u64]>) -> Self {
         Self::new(self.g * rhs, self.h * rhs)
     }
 }
 
-impl<const N: usize, T1: TConfig<N>, T2: TConfig<N>, T: Fp_modelConfig<N>> Mul<&Fp_model<N, T>>
-    for knowledge_commitment<N, T1, T2>
+impl<const N: usize, T1: KCConfig, T2: KCConfig, T: Fp_modelConfig<N>> Mul<&Fp_model<N, T>>
+    for knowledge_commitment<T1, T2>
 {
     type Output = Self;
 

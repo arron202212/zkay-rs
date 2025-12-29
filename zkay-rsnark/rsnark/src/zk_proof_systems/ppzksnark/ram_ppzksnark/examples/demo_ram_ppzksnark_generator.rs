@@ -9,7 +9,6 @@
 //#ifndef MINDEPS
 // use boost/program_options;
 //#endif
-
 use crate::common::default_types::ram_ppzksnark_pp;
 use crate::relations::ram_computations::rams::tinyram::tinyram_params;
 use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
@@ -53,8 +52,6 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 //     return true;
 // }
 //#endif
-
-
 
 // int main(int argc, const char * argv[])
 // {

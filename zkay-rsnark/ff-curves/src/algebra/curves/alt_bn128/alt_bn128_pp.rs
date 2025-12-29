@@ -1,11 +1,3 @@
-/** @file
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef ALT_BN128_PP_HPP_
-// #define ALT_BN128_PP_HPP_
 // use crate::algebra::curves::alt_bn128::alt_bn128_g1;
 // use crate::algebra::curves::alt_bn128::alt_bn128_g2;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
@@ -48,14 +40,6 @@ use crate::algebra::curves::public_params;
 
 // } // namespace libff
 
-//#endif // ALT_BN128_PP_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-// use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
 
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;

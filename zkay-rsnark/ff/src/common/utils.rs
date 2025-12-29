@@ -111,11 +111,9 @@ pub fn print_vector<T: std::fmt::Display>(vec: &Vec<T>) {
 
 // #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 
-
-//  note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp) 
+//  note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp)
 
 // Implementation of misc math and serialization utility functions.
-
 
 /**
  * Round n to the next power of two.
@@ -282,4 +280,3 @@ pub fn random_element_exclude<T: CConfig + std::cmp::PartialEq>(y: T) -> T {
     }
     return x;
 }
-

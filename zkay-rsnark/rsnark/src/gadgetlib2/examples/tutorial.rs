@@ -451,7 +451,7 @@ pub fn TEST_HashDifficultyEnforcer_Gadget<
             .borrow()
             .isSatisfied(&PrintOptions::DBG_PRINT_IF_NOT_SATISFIED)
     );
-    *pb.as_ref().unwrap().borrow_mut().val(&hashValue[0]) = 1000000000000000000.into();
+    *pb.as_ref().unwrap().borrow_mut().val(&hashValue[0]) = 1000000000000000000i64.into();
     // This is a value > 2^54 so we expect constraint system not to be satisfied.
     difficultyEnforcer.borrow().generateWitness(); // This would have failed had we put an assertion
     assert!(

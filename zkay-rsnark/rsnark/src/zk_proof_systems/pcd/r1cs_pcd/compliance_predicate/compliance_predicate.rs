@@ -1,28 +1,20 @@
-/** @file
- *****************************************************************************
+// Declaration of interfaces for a compliance predicate for R1CS PCD.
 
- Declaration of interfaces for a compliance predicate for R1CS PCD.
-
- A compliance predicate specifies a local invariant to be enforced, by PCD,
- throughout a dynamic distributed computation. A compliance predicate
- receives input messages, local data, and an output message (and perhaps some
- other auxiliary information), and then either accepts or rejects.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef COMPLIANCE_PREDICATE_HPP_
-// #define COMPLIANCE_PREDICATE_HPP_
-
-// 
-
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-
-
-
+// A compliance predicate specifies a local invariant to be enforced, by PCD,
+// throughout a dynamic distributed computation. A compliance predicate
+// receives input messages, local data, and an output message (and perhaps some
+// other auxiliary information), and then either accepts or rejects.
+use crate::relations::FieldTConfig;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_constraint_system, r1cs_variable_assignment,
+};
+use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
+    r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
+};
+use rccell::RcCell;
+use std::collections::BTreeSet;
+use std::marker::PhantomData;
 /********************************* Message ***********************************/
 
 /**
@@ -32,12 +24,13 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
  * - a type (a positive integer), and
  * - a payload (a vector of field elements).
  */
-// 
-pub struct   r1cs_pcd_message<FieldT> {
-
-types:    usize,
-
-
+//
+pub struct r1cs_pcd_message<FieldT: FieldTConfig> {
+    types: usize,
+    _t: PhantomData<FieldT>,
+}
+pub trait R1csPcdMessageConfig<FieldT: FieldTConfig> {
+    fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT>;
 }
 
 /******************************* Local data **********************************/
@@ -45,17 +38,21 @@ types:    usize,
 /**
  * A local data for R1CS PCD.
  */
-// 
-pub struct   r1cs_pcd_local_data<FieldT> {
 
+pub struct r1cs_pcd_local_data<FieldT: FieldTConfig>(PhantomData<FieldT>);
+pub trait R1csPcdLocalDataConfig<FieldT: FieldTConfig> {
+    fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT>;
+}
+impl<FieldT: FieldTConfig> R1csPcdLocalDataConfig<FieldT> for r1cs_pcd_local_data<FieldT> {
+    fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT> {
+        panic!("")
+    }
 }
 /******************************** Witness ************************************/
 
-// 
-type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
+pub type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
 
 /*************************** Compliance predicate ****************************/
-
 
 /**
  * A compliance predicate for R1CS PCD.
@@ -89,265 +86,271 @@ type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
  * relies_on_same_type_inputs=false).
  */
 
-// 
-pub struct   r1cs_pcd_compliance_predicate<FieldT>  {
+pub struct r1cs_pcd_compliance_predicate<
+    FieldT: FieldTConfig,
+    SV: SubVariableConfig,
+    SLC: SubLinearCombinationConfig,
+> {
+    name: usize,
+    types: usize,
 
+    constraint_system: r1cs_constraint_system<FieldT, SV, SLC>,
 
-name:    usize,
-types:    usize,
+    outgoing_message_payload_length: usize,
+    max_arity: usize,
+    incoming_message_payload_lengths: Vec<usize>,
+    local_data_length: usize,
+    witness_length: usize,
 
-constraint_system:    r1cs_constraint_system<FieldT,SLC>,
-
-outgoing_message_payload_length:    usize,
-max_arity:    usize,
-incoming_message_payload_lengths:    Vec<usize>,
-local_data_length:    usize,
-witness_length:    usize,
-
-relies_on_same_type_inputs:    bool,
-accepted_input_types:    BTreeSet<usize>,
-
+    relies_on_same_type_inputs: bool,
+    accepted_input_types: BTreeSet<usize>,
 }
 
-
-
-
-// use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate;
-
-//#endif // COMPLIANCE_PREDICATE_HPP_
-/** @file
- *****************************************************************************
-
- Implementation of interfaces for a compliance predicate for R1CS PCD.
-
- See compliance_predicate.hpp .
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef COMPLIANCE_PREDICATE_TCC_
-// #define COMPLIANCE_PREDICATE_TCC_
-
-use ffec::common::utils;
-
-
-
-impl r1cs_pcd_message<FieldT>{
-
- pub fn as_r1cs_variable_assignment() ->r1cs_variable_assignment<FieldT>
-{
-    let mut  result = self.payload_as_r1cs_variable_assignment();
-    result.insert(result.begin(), FieldT(self.types));
-    return result;
-}
-
-
-pub fn new(types:usize) ->Self
-{
-    Self{types}
-}
-
-
-pub fn print() 
-{
-    print!("PCD message (default print routines):\n");
-    print!("  Type: {}\n", self.types);
-
-    print!("  Payload\n");
-    let  payload = self.payload_as_r1cs_variable_assignment();
-    for elt in &payload
-    {
-        elt.print();
+impl<FieldT: FieldTConfig> R1csPcdMessageConfig<FieldT> for r1cs_pcd_message<FieldT> {
+    fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT> {
+        panic!("");
     }
 }
-}
-
-impl r1cs_pcd_compliance_predicate<FieldT>{
-
-pub fn new(name:&usize,
-                                                                     types:&usize,
-                                                                     constraint_system:r1cs_constraint_system<FieldT,SLC>,
-                                                                     outgoing_message_payload_length:&usize,
-                                                                     max_arity:&usize,
-                                                                     incoming_message_payload_lengths:Vec<usize>,
-                                                                     local_data_length:&usize,
-                                                                     witness_length:&usize,
-                                                                     relies_on_same_type_inputs:&bool,
-                                                                     accepted_input_types:&BTreeSet<usize>) ->Self
-    
-{
-    assert!(max_arity == incoming_message_payload_lengths.len());
-    Self{name,
-    types,
-    constraint_system,
-    outgoing_message_payload_length,
-    max_arity,
-    incoming_message_payload_lengths,
-    local_data_length,
-    witness_length,
-    relies_on_same_type_inputs,
-    accepted_input_types
+impl<FieldT: FieldTConfig> r1cs_pcd_message<FieldT> {
+    pub fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT> {
+        let mut result = self.payload_as_r1cs_variable_assignment();
+        result.insert(0, FieldT::from(self.types));
+        return result;
     }
-}
 
-
-pub fn is_well_formed() ->bool
-{
-    let  type_not_zero = (types != 0);
-    let incoming_message_payload_lengths_well_specified = (incoming_message_payload_lengths.len() == max_arity);
-
-    let  all_message_payload_lengths = outgoing_message_payload_length;
-    for i in 0..incoming_message_payload_lengths.len()
-    {
-        all_message_payload_lengths += incoming_message_payload_lengths[i];
-    }
-    let type_vec_length = max_arity+1;
-    let arity_length = 1;
-
-    let correct_num_inputs = ((outgoing_message_payload_length + 1) == constraint_system.num_inputs());
-    let correct_num_variables = ((all_message_payload_lengths + local_data_length + type_vec_length + arity_length + witness_length) == constraint_system.num_variables());
-
-// #ifdef DEBUG
-    print!("outgoing_message_payload_length: {}\n", outgoing_message_payload_length);
-    print!("incoming_message_payload_lengths:");
-    for l in &incoming_message_payload_lengths
-    {
-        print!(" {}", l);
-    }
-    print!("\n");
-    print!("type_not_zero: {}\n", type_not_zero);
-    print!("incoming_message_payload_lengths_well_specified: {}\n", incoming_message_payload_lengths_well_specified);
-    print!("correct_num_inputs: {} (outgoing_message_payload_length = {}, constraint_system.num_inputs() = {})\n",
-           correct_num_inputs, outgoing_message_payload_length, constraint_system.num_inputs());
-    print!("correct_num_variables: {} (all_message_payload_lengths = {}, local_data_length = {}, type_vec_length = {}, arity_length = {}, witness_length = {}, constraint_system.num_variables() = {})\n",
-           correct_num_variables,
-           all_message_payload_lengths, local_data_length, type_vec_length, arity_length, witness_length,
-           constraint_system.num_variables());
-//#endif
-
-    return (type_not_zero && incoming_message_payload_lengths_well_specified && correct_num_inputs && correct_num_variables);
-}
-
-
-pub fn has_equal_input_and_output_lengths() ->bool
-{
-    for i in 0..incoming_message_payload_lengths.len()
-    {
-        if incoming_message_payload_lengths[i] != outgoing_message_payload_length
-        {
-            return false;
+    pub fn new(types: usize) -> Self {
+        Self {
+            types,
+            _t: PhantomData,
         }
     }
 
-    return true;
+    pub fn print(&self) {
+        print!("PCD message (default print routines):\n");
+        print!("  Type: {}\n", self.types);
+
+        print!("  Payload\n");
+        let payload = self.payload_as_r1cs_variable_assignment();
+        for elt in &payload {
+            elt.print();
+        }
+    }
 }
 
-
-pub fn has_equal_input_lengths() ->bool
+impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+    r1cs_pcd_compliance_predicate<FieldT, SV, SLC>
 {
-    for i in 1..incoming_message_payload_lengths.len()
-    {
-        if incoming_message_payload_lengths[i] != incoming_message_payload_lengths[0]
-        {
-            return false;
+    pub fn new(
+        name: usize,
+        types: usize,
+        constraint_system: r1cs_constraint_system<FieldT, SV, SLC>,
+        outgoing_message_payload_length: usize,
+        max_arity: usize,
+        incoming_message_payload_lengths: Vec<usize>,
+        local_data_length: usize,
+        witness_length: usize,
+        relies_on_same_type_inputs: bool,
+        accepted_input_types: BTreeSet<usize>,
+    ) -> Self {
+        assert!(max_arity == incoming_message_payload_lengths.len());
+        Self {
+            name,
+            types,
+            constraint_system,
+            outgoing_message_payload_length,
+            max_arity,
+            incoming_message_payload_lengths,
+            local_data_length,
+            witness_length,
+            relies_on_same_type_inputs,
+            accepted_input_types,
         }
     }
 
-    return true;
-}
+    pub fn is_well_formed(&self) -> bool {
+        let type_not_zero = (self.types != 0);
+        let incoming_message_payload_lengths_well_specified =
+            (self.incoming_message_payload_lengths.len() == self.max_arity);
 
+        let mut all_message_payload_lengths = self.outgoing_message_payload_length;
+        for i in 0..self.incoming_message_payload_lengths.len() {
+            all_message_payload_lengths += self.incoming_message_payload_lengths[i];
+        }
+        let type_vec_length = self.max_arity + 1;
+        let arity_length = 1;
 
-// 
-// bool r1cs_pcd_compliance_predicate<FieldT>::operator==(other:r1cs_pcd_compliance_predicate<FieldT>) const
-// {
-//     return (self.name == other.name &&
-//             self.types == other.types &&
-//             self.constraint_system == other.constraint_system &&
-//             self.outgoing_message_payload_length == other.outgoing_message_payload_length &&
-//             self.max_arity == other.max_arity &&
-//             self.incoming_message_payload_lengths == other.incoming_message_payload_lengths &&
-//             self.local_data_length == other.local_data_length &&
-//             self.witness_length == other.witness_length &&
-//             self.relies_on_same_type_inputs == other.relies_on_same_type_inputs &&
-//             self.accepted_input_types == other.accepted_input_types);
-// }
+        let correct_num_inputs =
+            ((self.outgoing_message_payload_length + 1) == self.constraint_system.num_inputs());
+        let correct_num_variables = ((all_message_payload_lengths
+            + self.local_data_length
+            + type_vec_length
+            + arity_length
+            + self.witness_length)
+            == self.constraint_system.num_variables());
 
-// 
-// std::ostream& operator<<(std::ostream &out, cp:r1cs_pcd_compliance_predicate<FieldT>)
-// {
-//     out << cp.name << "\n";
-//     out << cp.types << "\n";
-//     out << cp.max_arity << "\n";
-//     assert!(cp.max_arity == cp.incoming_message_payload_lengths.len());
-//     for i in 0..cp.max_arity
-//     {
-//         out << cp.incoming_message_payload_lengths[i] << "\n";
-//     }
-//     out << cp.outgoing_message_payload_length << "\n";
-//     out << cp.local_data_length << "\n";
-//     out << cp.witness_length << "\n";
-//     ffec::output_bool(out, cp.relies_on_same_type_inputs);
-//     ffec::operator<<(out, cp.accepted_input_types);
-//     out << "\n" << cp.constraint_system << "\n";
+        // #ifdef DEBUG
+        print!(
+            "outgoing_message_payload_length: {}\n",
+            self.outgoing_message_payload_length
+        );
+        print!("incoming_message_payload_lengths:");
+        for l in &self.incoming_message_payload_lengths {
+            print!(" {}", l);
+        }
+        print!("\n");
+        print!("type_not_zero: {}\n", type_not_zero);
+        print!(
+            "incoming_message_payload_lengths_well_specified: {}\n",
+            incoming_message_payload_lengths_well_specified
+        );
+        print!(
+            "correct_num_inputs: {} (outgoing_message_payload_length = {}, constraint_system.num_inputs() = {})\n",
+            correct_num_inputs,
+            self.outgoing_message_payload_length,
+            self.constraint_system.num_inputs()
+        );
+        print!(
+            "correct_num_variables: {} (all_message_payload_lengths = {}, local_data_length = {}, type_vec_length = {}, arity_length = {}, witness_length = {}, constraint_system.num_variables() = {})\n",
+            correct_num_variables,
+            all_message_payload_lengths,
+            self.local_data_length,
+            type_vec_length,
+            arity_length,
+            self.witness_length,
+            self.constraint_system.num_variables()
+        );
+        //#endif
 
-//     return out;
-// }
-
-// 
-// std::istream& operator>>(std::istream &in, r1cs_pcd_compliance_predicate<FieldT> &cp)
-// {
-//     in >> cp.name;
-//     ffec::consume_newline(in);
-//     in >> cp.types;
-//     ffec::consume_newline(in);
-//     in >> cp.max_arity;
-//     ffec::consume_newline(in);
-//     cp.incoming_message_payload_lengths.resize(cp.max_arity);
-//     for i in 0..cp.max_arity
-//     {
-//         in >> cp.incoming_message_payload_lengths[i];
-//         ffec::consume_newline(in);
-//     }
-//     in >> cp.outgoing_message_payload_length;
-//     ffec::consume_newline(in);
-//     in >> cp.local_data_length;
-//     ffec::consume_newline(in);
-//     in >> cp.witness_length;
-//     ffec::consume_newline(in);
-//     ffec::input_bool(in, cp.relies_on_same_type_inputs);
-//     ffec::operator>>(in, cp.accepted_input_types);
-//     ffec::consume_newline(in);
-//     in >> cp.constraint_system;
-//     ffec::consume_newline(in);
-
-//     return in;
-// }
-
-
-
-pub fn is_satisfied(outgoing_message:&RcCell<r1cs_pcd_message<FieldT> >,
-                                                         incoming_messages:&Vec<RcCell<r1cs_pcd_message<FieldT> > >,
-                                                         local_data:&RcCell<r1cs_pcd_local_data<FieldT> >,
-                                                         witness:&r1cs_pcd_witness<FieldT>) ->bool
-{
-    assert!(outgoing_message.payload_as_r1cs_variable_assignment().len() == outgoing_message_payload_length);
-    assert!(incoming_messages.len() <= max_arity);
-    for i in 0..incoming_messages.len()
-    {
-        assert!(incoming_messages[i].payload_as_r1cs_variable_assignment().len() == incoming_message_payload_lengths[i]);
+        return (type_not_zero
+            && incoming_message_payload_lengths_well_specified
+            && correct_num_inputs
+            && correct_num_variables);
     }
-    assert!(local_data.as_r1cs_variable_assignment().len() == local_data_length);
 
-     let cp_primary_input=r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(outgoing_message);
-     let cp_auxiliary_input=r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT>::new(incoming_messages, local_data, witness);
+    pub fn has_equal_input_and_output_lengths(&self) -> bool {
+        for i in 0..self.incoming_message_payload_lengths.len() {
+            if self.incoming_message_payload_lengths[i] != self.outgoing_message_payload_length {
+                return false;
+            }
+        }
 
-    return constraint_system.is_satisfied(cp_primary_input.as_r1cs_primary_input(),
-                                          cp_auxiliary_input.as_r1cs_auxiliary_input(incoming_message_payload_lengths));
+        return true;
+    }
+
+    pub fn has_equal_input_lengths(&self) -> bool {
+        for i in 1..self.incoming_message_payload_lengths.len() {
+            if self.incoming_message_payload_lengths[i] != self.incoming_message_payload_lengths[0]
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    //
+    // bool r1cs_pcd_compliance_predicate<FieldT>::operator==(other:r1cs_pcd_compliance_predicate<FieldT>) const
+    // {
+    //     return (self.name == other.name &&
+    //             self.types == other.types &&
+    //             self.constraint_system == other.constraint_system &&
+    //             self.outgoing_message_payload_length == other.outgoing_message_payload_length &&
+    //             self.max_arity == other.max_arity &&
+    //             self.incoming_message_payload_lengths == other.incoming_message_payload_lengths &&
+    //             self.local_data_length == other.local_data_length &&
+    //             self.witness_length == other.witness_length &&
+    //             self.relies_on_same_type_inputs == other.relies_on_same_type_inputs &&
+    //             self.accepted_input_types == other.accepted_input_types);
+    // }
+
+    //
+    // std::ostream& operator<<(std::ostream &out, cp:r1cs_pcd_compliance_predicate<FieldT>)
+    // {
+    //     out << cp.name << "\n";
+    //     out << cp.types << "\n";
+    //     out << cp.max_arity << "\n";
+    //     assert!(cp.max_arity == cp.incoming_message_payload_lengths.len());
+    //     for i in 0..cp.max_arity
+    //     {
+    //         out << cp.incoming_message_payload_lengths[i] << "\n";
+    //     }
+    //     out << cp.outgoing_message_payload_length << "\n";
+    //     out << cp.local_data_length << "\n";
+    //     out << cp.witness_length << "\n";
+    //     ffec::output_bool(out, cp.relies_on_same_type_inputs);
+    //     ffec::operator<<(out, cp.accepted_input_types);
+    //     out << "\n" << cp.constraint_system << "\n";
+
+    //     return out;
+    // }
+
+    //
+    // std::istream& operator>>(std::istream &in, r1cs_pcd_compliance_predicate<FieldT> &cp)
+    // {
+    //     in >> cp.name;
+    //     ffec::consume_newline(in);
+    //     in >> cp.types;
+    //     ffec::consume_newline(in);
+    //     in >> cp.max_arity;
+    //     ffec::consume_newline(in);
+    //     cp.incoming_message_payload_lengths.resize(cp.max_arity);
+    //     for i in 0..cp.max_arity
+    //     {
+    //         in >> cp.incoming_message_payload_lengths[i];
+    //         ffec::consume_newline(in);
+    //     }
+    //     in >> cp.outgoing_message_payload_length;
+    //     ffec::consume_newline(in);
+    //     in >> cp.local_data_length;
+    //     ffec::consume_newline(in);
+    //     in >> cp.witness_length;
+    //     ffec::consume_newline(in);
+    //     ffec::input_bool(in, cp.relies_on_same_type_inputs);
+    //     ffec::operator>>(in, cp.accepted_input_types);
+    //     ffec::consume_newline(in);
+    //     in >> cp.constraint_system;
+    //     ffec::consume_newline(in);
+
+    //     return in;
+    // }
+
+    pub fn is_satisfied(
+        &self,
+        outgoing_message: &RcCell<r1cs_pcd_message<FieldT>>,
+        incoming_messages: &Vec<RcCell<r1cs_pcd_message<FieldT>>>,
+        local_data: &RcCell<r1cs_pcd_local_data<FieldT>>,
+        witness: &r1cs_pcd_witness<FieldT>,
+    ) -> bool {
+        assert!(
+            outgoing_message
+                .borrow()
+                .payload_as_r1cs_variable_assignment()
+                .len()
+                == self.outgoing_message_payload_length
+        );
+        assert!(incoming_messages.len() <= self.max_arity);
+        for i in 0..incoming_messages.len() {
+            assert!(
+                incoming_messages[i]
+                    .borrow()
+                    .payload_as_r1cs_variable_assignment()
+                    .len()
+                    == self.incoming_message_payload_lengths[i]
+            );
+        }
+        assert!(local_data.borrow().as_r1cs_variable_assignment().len() == self.local_data_length);
+
+        let cp_primary_input =
+            r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(outgoing_message.clone());
+        let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT>::new(
+            incoming_messages.clone(),
+            local_data.clone(),
+            witness.clone(),
+        );
+
+        self.constraint_system.is_satisfied(
+            &cp_primary_input.as_r1cs_primary_input(),
+            &cp_auxiliary_input.as_r1cs_auxiliary_input(&self.incoming_message_payload_lengths),
+        )
+    }
 }
-
-}
-
-//#endif //  COMPLIANCE_PREDICATE_TCC_

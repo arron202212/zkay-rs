@@ -31,7 +31,7 @@ pub trait VariableTConfig<FieldT: FieldTConfig, PB: PBConfig, FpkT>:
     + Add<i64, Output = Self>
     + Mul<FieldT, Output = Self>
 {
-    fn Frobenius_map(&self, power: u64) -> Self;
+    fn Frobenius_map(&self, power: usize) -> Self;
     fn X(&self) -> FieldT;
     fn Y(&self) -> FieldT;
     fn old_RX(&self) -> FieldT;
@@ -146,7 +146,7 @@ pub trait ppTConfig<FieldT: FieldTConfig, PB: PBConfig>:
     fn random_element() -> Self;
     fn squared(&self) -> Self;
     fn to_affine_coordinates(&self);
-    fn Frobenius_map(&self, power: u64) -> Self;
+    fn Frobenius_map(&self, power: usize) -> Self;
     fn twist() -> FieldT;
     fn coeffs(&self) -> Vec<Self::Fpk_variableT>;
     fn PY_twist_squared(&self) -> Self::Fpk_variableT;

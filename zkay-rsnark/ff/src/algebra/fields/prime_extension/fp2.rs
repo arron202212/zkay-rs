@@ -1,178 +1,269 @@
-/** @file
-*****************************************************************************
-Implementation of arithmetic in the finite field F[p^2].
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef FP2_HPP_
-// #define FP2_HPP_
-//#include <vector>
-use crate::algebra::fields::prime_base::fp::Fp_modelConfig;
-// namespace libff {
+// Implementation of arithmetic in the finite field F[p^2].
+use crate::algebra::{
+    field_utils::{
+        BigInteger,
+        algorithms::{PowerConfig, Powers, tonelli_shanks_sqrt},
+        bigint::{GMP_NUMB_BITS, bigint},
+        field_utils, fp_aux, {BigInt, algorithms},
+    },
+    fields::{
+        field::{AdditiveGroup, Field},
+        fpn_field::PrimeField,
+        sqrt::SqrtPrecomputation,
+    },
+};
+use std::borrow::Borrow;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-//
-// pub struct Fp2_model;
+use crate::Fp_model;
+use crate::Fp_modelConfig as FpmConfig;
+use crate::Fp3_modelConfig;
 
-//
-// std::ostream& operator<<(std::ostream &, const Fp2_model<n, modulus> &);
-
-//
-// std::istream& operator>>(std::istream &, Fp2_model<n, modulus> &);
-
+use num_traits::One;
 /**
  * Arithmetic in the field F[p^2].
  *
  * Let p := modulus. This interface provides arithmetic for the extension field
- * Fp2 = Fp[U]/(U^2-non_residue), where non_residue is in Fp.
+ * Fp2 = Fp[U]/(U^2-T::non_residue), where T::non_residue is in Fp.
  *
  * ASSUMPTION: p = 1 (mod 6)
  */
 //
-pub trait Fp2_modelConfig: 'static + Send + Sync + Sized {
-    type my_Fp: PrimeField;
-    const non_residue: Self::my_Fp;
+type Fp_modelConfig<const N: usize, T> = <T as Fp2_modelConfig<N>>::Fp_modelConfig;
 
-    const nqr: (Self::my_Fp, Self::my_Fp);
-    const nqr_to_t: (Self::my_Fp, Self::my_Fp);
+pub trait Fp2_modelConfig<const N: usize>:
+    'static + Send + Sync + Sized + Default + Clone + Copy
+{
+    type Fp_modelConfig: FpmConfig<N>;
+    const non_residue: my_Fp<N, Fp_modelConfig<N, Self>>;
+
+    const nqr: (
+        my_Fp<N, Fp_modelConfig<N, Self>>,
+        my_Fp<N, Fp_modelConfig<N, Self>>,
+    );
+    const nqr_to_t: (
+        my_Fp<N, Fp_modelConfig<N, Self>>,
+        my_Fp<N, Fp_modelConfig<N, Self>>,
+    );
     /// non_residue^((modulus^i-1)/2)
-    const Frobenius_coeffs_c1: [Self::my_Fp; 2];
+    const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, Self>>; 2];
 }
 
-// pub struct  Fp2_model {
-//
-// type my_Fp=Fp_model<n, modulus>;
-// // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
-//     static i64 add_cnt;
-//     static i64 sub_cnt;
-//     static i64 mul_cnt;
-//     static i64 sqr_cnt;
-//     static i64 inv_cnt;
-// //#endif
+type my_Fp<const N: usize, T> = Fp_model<N, T>;
+#[derive(Default, Clone, Copy)]
+pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
+    // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
+    // static i64 add_cnt;
+    // static i64 sub_cnt;
+    // static i64 mul_cnt;
+    // static i64 sqr_cnt;
+    // static i64 inv_cnt;
+    //#endif
 
-//     static bigint<2*n> euler; // (modulus^2-1)/2
-//     static std::usize s;       // modulus^2 = 2^s * t + 1
-//     static bigint<2*n> t;  // with t odd
-//     static bigint<2*n> t_minus_1_over_2; // (t-1)/2
-//     static my_Fp non_residue; // X^4-non_residue irreducible over Fp; used for constructing Fp2 = Fp[X] / (X^2 - non_residue)
-//     static Fp2_model<n, modulus> nqr; // a quadratic nonresidue in Fp2
-//     static Fp2_model<n, modulus> nqr_to_t; // nqr^t
-//     static my_Fp Frobenius_coeffs_c1[2]; // non_residue^((modulus^i-1)/2)
+    // static bigint<2*n> euler; // (modulus^2-1)/2
+    // static std::usize s;       // modulus^2 = 2^s * t + 1
+    // static bigint<2*n> t;  // with t odd
+    // static bigint<2*n> t_minus_1_over_2; // (t-1)/2
+    // static my_Fp<N,T::Fp_modelConfig> non_residue; // X^4-non_residue irreducible over Fp; used for constructing Fp2 = Fp[X] / (X^2 - non_residue)
+    // static Fp2_model<n, modulus> nqr; // a quadratic nonresidue in Fp2
+    // static Fp2_model<n, modulus> nqr_to_t; // nqr^t
+    // static my_Fp<N,T::Fp_modelConfig> T::Frobenius_coeffs_c1[2]; // non_residue^((modulus^i-1)/2)
+    pub c0: my_Fp<N, T::Fp_modelConfig>,
+    pub c1: my_Fp<N, T::Fp_modelConfig>,
+    _t: PhantomData<T>,
+}
+// Fp2_model() {};
+// Fp2_model(c0:my_Fp<N,T::Fp_modelConfig>&, c1:&my_Fp<N,T::Fp_modelConfig>)->Selfc0,c1 {};
 
-//  c0:my_Fp, c1:my_Fp;
-// }
-//     Fp2_model() {};
-//     Fp2_model(c0:my_Fp&, c1:&my_Fp)->Selfc0,c1 {};
+// pub fn  clear() { c0.clear(); c1.clear(); }
+// pub fn  print() const { print!("c0/c1:\n"); c0.print(); c1.print(); }
+// pub fn  randomize();
 
-//     pub fn  clear() { c0.clear(); c1.clear(); }
-//     pub fn  print() const { print!("c0/c1:\n"); c0.print(); c1.print(); }
-//     pub fn  randomize();
+// /**
+//  * Returns the constituent bits in 64 bit words, in little-endian order.
+//  * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
+//  */
+// Vec<u64> to_words() const;
+// /**
+//  * Sets the field element from the given bits in 64 bit words, in little-endian order.
+//  * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
+//  * Returns true when the right-most bits of each element represent a value less than the modulus.
+//  */
+// bool from_words(Vec<u64> words);
 
-//     /**
-//      * Returns the constituent bits in 64 bit words, in little-endian order.
-//      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
-//      */
-//     Vec<uint64_t> to_words() const;
-//     /**
-//      * Sets the field element from the given bits in 64 bit words, in little-endian order.
-//      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
-//      * Returns true when the right-most bits of each element represent a value less than the modulus.
-//      */
-//     bool from_words(Vec<uint64_t> words);
+// bool is_zero() const { return c0.is_zero() && c1.is_zero(); }
+// bool operator==(other:&Fp2_model) const;
+// bool operator!=(other:&Fp2_model) const;
 
-//     bool is_zero() const { return c0.is_zero() && c1.is_zero(); }
-//     bool operator==(other:&Fp2_model) const;
-//     bool operator!=(other:&Fp2_model) const;
+// Fp2_model& operator+=(other:&Fp2_model);
+// Fp2_model& operator-=(other:&Fp2_model);
+// Fp2_model& operator*=(other:&Fp2_model);
+// Fp2_model& operator^=(const u64 pow);
 
-//     Fp2_model& operator+=(other:&Fp2_model);
-//     Fp2_model& operator-=(other:&Fp2_model);
-//     Fp2_model& operator*=(other:&Fp2_model);
-//     Fp2_model& operator^=(const u64 pow);
-//
-//     Fp2_model& operator^=(pow:&bigint<m>);
+// Fp2_model& operator^=(pow:&bigint<m>);
 
-//     Fp2_model operator+(other:&Fp2_model) const;
-//     Fp2_model operator-(other:&Fp2_model) const;
-//     Fp2_model operator*(other:&Fp2_model) const;
-//     Fp2_model operator^(const:u64 pow),
-//
-//     Fp2_model operator^(other:&bigint<m>) const;
-//     Fp2_model operator-() const;
+// Fp2_model operator+(other:&Fp2_model) const;
+// Fp2_model operator-(other:&Fp2_model) const;
+// Fp2_model operator*(other:&Fp2_model) const;
+// Fp2_model operator^(const:u64 pow),
 
-//     Fp2_model& square(); // default is squared_complex
-//     Fp2_model squared() const; // default is squared_complex
-//     Fp2_model& invert();
-//     Fp2_model inverse() const;
-//     Fp2_model Frobenius_map(u64 power) const;
-//     Fp2_model sqrt() const; // HAS TO BE A SQUARE (else does not terminate)
-//     Fp2_model squared_karatsuba() const;
-//     Fp2_model squared_complex() const;
+// Fp2_model operator^(other:&bigint<m>) const;
+// Fp2_model operator-() const;
 
-//     static std::usize ceil_size_in_bits() { return 2 * my_Fp::ceil_size_in_bits(); }
-//     static std::usize floor_size_in_bits() { return 2 * my_Fp::floor_size_in_bits(); }
+// Fp2_model& square(); // default is squared_complex
+// Fp2_model squared() const; // default is squared_complex
+// Fp2_model& invert();
+// Fp2_model inverse() const;
+// Fp2_model Frobenius_map(u64 power) const;
+// Fp2_model sqrt() const; // HAS TO BE A SQUARE (else does not terminate)
+// Fp2_model squared_karatsuba() const;
+// Fp2_model squared_complex() const;
 
-//     static constexpr std::usize extension_degree() { return 2; }
-//     static constexpr bigint<n> field_char() { return modulus; }
+// static std::usize ceil_size_in_bits() { return 2 * my_Fp::<T::Fp_modelConfig>ceil_size_in_bits(); }
+// static std::usize floor_size_in_bits() { return 2 * my_Fp::<N,T::Fp_modelConfig>::floor_size_in_bits(); }
 
-//     static Fp2_model<n, modulus> zero();
-//     static Fp2_model<n, modulus> one();
-//     static Fp2_model<n, modulus> random_element();
+// static constexpr std::usize extension_degree() { return 2; }
+// static constexpr bigint<n> field_char() { return modulus; }
 
-//     friend std::ostream& operator<< <n, modulus>(std::ostream &out, el:&Fp2_model<n, modulus>);
-//     friend std::istream& operator>> <n, modulus>(std::istream &in, Fp2_model<n, modulus> &el);
-// };
+// static Fp2_model<n, modulus> zero();
+// static Fp2_model<n, modulus> one();
+// static Fp2_model<n, modulus> random_element();
 
-//#endif // FP2_HPP_
-/** @file
-*****************************************************************************
-Implementation of arithmetic in the finite field F[p^2].
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef FP2_TCC_
-// #define FP2_TCC_
-use crate::algebra::field_utils::field_utils;
-
-// namespace libff {
-
-// using std::usize;
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::zero()
-// {
-//     return Fp2_model<n, modulus>(my_Fp::zero(), my_Fp::zero());
+// friend std::ostream& operator<< <n, modulus>(std::ostream &out, el:&Fp2_model<n, modulus>);
+// friend std::istream& operator>> <n, modulus>(std::istream &in, Fp2_model<n, modulus> &el);
 // }
 
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::one()
-// {
-//     return Fp2_model<n, modulus>(my_Fp::one(), my_Fp::zero());
-// }
+// use crate::algebra::field_utils::field_utils;
 
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::random_element()
-// {
-//     Fp2_model<n, modulus> r;
-//     r.c0 = my_Fp::random_element();
-//     r.c1 = my_Fp::random_element();
+impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
+    pub fn new(c0: my_Fp<N, T::Fp_modelConfig>, c1: my_Fp<N, T::Fp_modelConfig>) -> Self {
+        Self {
+            c0,
+            c1,
+            _t: PhantomData,
+        }
+    }
 
-//     return r;
-// }
+    pub fn zero() -> Self {
+        Self::new(
+            my_Fp::<N, T::Fp_modelConfig>::zero(),
+            my_Fp::<N, T::Fp_modelConfig>::zero(),
+        )
+    }
 
-//
-// pub fn randomize()
-// {
-//     (*this) = Fp2_model<n, modulus>::random_element();
-// }
+    pub fn one() -> Self {
+        Self::new(
+            my_Fp::<N, T::Fp_modelConfig>::one(),
+            my_Fp::<N, T::Fp_modelConfig>::zero(),
+        )
+    }
+
+    pub fn random_element() -> Self {
+        Self {
+            c0: my_Fp::<N, T::Fp_modelConfig>::random_element(),
+            c1: my_Fp::<N, T::Fp_modelConfig>::random_element(),
+            _t: PhantomData,
+        }
+    }
+
+    pub fn randomize(&mut self) {
+        *self = Self::random_element();
+    }
+
+    pub fn squared(&self) -> Self {
+        self.squared_complex()
+    }
+
+    pub fn square(&mut self) -> &Self {
+        *self = self.squared();
+        &*self
+    }
+
+    pub fn squared_karatsuba(&self) -> Self {
+        // #ifdef PROFILE_OP_COUNTS
+        // self.sqr_cnt++;
+        //#endif
+        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
+        let (a, b) = (self.c0, self.c1);
+        let asq = a.squared();
+        let bsq = b.squared();
+
+        Self::new(asq + T::non_residue * bsq, (a + b).squared() - asq - bsq)
+    }
+
+    pub fn squared_complex(&self) -> Self {
+        // #ifdef PROFILE_OP_COUNTS
+        // self.sqr_cnt++;
+        //#endif
+        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
+        let (a, b) = (self.c0, self.c1);
+        let ab = a * b;
+
+        Self::new(
+            (a + b) * (a + T::non_residue * b) - ab - T::non_residue * ab,
+            ab + ab,
+        )
+    }
+
+    pub fn inverse(&self) -> Self {
+        // #ifdef PROFILE_OP_COUNTS
+        // self.inv_cnt++;
+        //#endif
+        let (a, b) = (self.c0, self.c1);
+
+        /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
+        let t0 = a.squared();
+        let t1 = b.squared();
+        let t2 = t0 - T::non_residue * t1;
+        let t3 = t2.inverse();
+        let c0 = a * t3;
+        let c1 = -(b * t3);
+
+        Self::new(c0, c1)
+    }
+
+    pub fn invert(&mut self) -> &Self {
+        *self = self.inverse();
+        &*self
+    }
+
+    pub fn Frobenius_map(&self, power: usize) -> Self {
+        Self::new(
+            self.c0,
+            T::Frobenius_coeffs_c1[power as usize % 2] * self.c1,
+        )
+    }
+
+    pub fn sqrt(self) -> Self {
+        tonelli_shanks_sqrt(&self)
+    }
+
+    pub fn to_words(&self) -> Vec<u64> {
+        self.c0
+            .to_words()
+            .into_iter()
+            .chain(self.c1.to_words())
+            .collect()
+    }
+
+    pub fn from_words(&self, words: &[u64]) -> bool {
+        let n = words.len() / 2;
+        // Fp_model's from_words() takes care of asserts about vector length.
+        self.c0.clone().from_words(&words[0..n]) && self.c1.clone().from_words(&words[n..])
+    }
+}
 
 //
 // bool Fp2_model<n,modulus>::operator==(other:&Fp2_model<n,modulus>) const
 // {
-//     return (this->c0 == other.c0 && this->c1 == other.c1);
+//     return (self.c0 == other.c0 && self.c1 == other.c1);
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>> PartialEq for Fp2_model<N, T> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        false
+    }
+}
 
 //
 // bool Fp2_model<n,modulus>::operator!=(other:&Fp2_model<n,modulus>) const
@@ -184,21 +275,39 @@ use crate::algebra::field_utils::field_utils;
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator+(other:&Fp2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
-//     this->add_cnt++;
+//     self.add_cnt++;
 // //#endif
-//     return Fp2_model<n,modulus>(this->c0 + other.c0,
-//                                 this->c1 + other.c1);
+//     return Fp2_model<n,modulus>(self.c0 + other.c0,
+//                                 self.c1 + other.c1);
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp2_model<N, T> {
+    type Output = Fp2_model<N, T>;
+
+    fn add(self, other: O) -> Self::Output {
+        let mut r = self;
+        r += *other.borrow();
+        r
+    }
+}
 
 //
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator-(other:&Fp2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
-//     this->sub_cnt++;
+//     self.sub_cnt++;
 // //#endif
-//     return Fp2_model<n,modulus>(this->c0 - other.c0,
-//                                 this->c1 - other.c1);
+//     return Fp2_model<n,modulus>(self.c0 - other.c0,
+//                                 self.c1 - other.c1);
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>> Sub for Fp2_model<N, T> {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> <Fp2_model<N, T> as Sub>::Output {
+        let mut r = self;
+        r -= other;
+        r
+    }
+}
 
 //
 // Fp2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp2_model<n, modulus>)
@@ -209,181 +318,144 @@ use crate::algebra::field_utils::field_utils;
 //     return Fp2_model<n,modulus>(lhs*rhs.c0,
 //                                 lhs*rhs.c1);
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
+    for &Fp2_model<N, T>
+{
+    type Output = Fp2_model<N, T>;
+
+    fn mul(self, rhs: &Fp_model<N, T::Fp_modelConfig>) -> Self::Output {
+        let rhs = *rhs;
+        Fp2_model::<N, T>::new(self.c0 * rhs, self.c1 * rhs)
+    }
+}
 
 //
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator*(other:&Fp2_model<n,modulus>) const
 // {
 // // #ifdef PROFILE_OP_COUNTS
-//     this->mul_cnt++;
+//     self.mul_cnt++;
 // //#endif
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
-//     const my_Fp
+//     const my_Fp<N,T::Fp2_modelConfig>
 //         &A = other.c0, &B = other.c1,
-//         &a = this->c0, &b = this->c1;
+//         &a = self.c0, &b = self.c1;
 //     let aA= a * A;
 //     let bB= b * B;
 
-//     return Fp2_model<n,modulus>(aA + non_residue * bB,
+//     return Fp2_model<n,modulus>(aA + T::non_residue * bB,
 //                                 (a + b)*(A+B) - aA - bB);
 // }
 
+impl<const N: usize, T: Fp2_modelConfig<N>, O: Borrow<Self>> Mul<O> for Fp2_model<N, T> {
+    type Output = Fp2_model<N, T>;
+
+    fn mul(self, rhs: O) -> Self::Output {
+        let mut r = self;
+        r *= *rhs.borrow();
+        r
+    }
+}
 //
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator-() const
 // {
-//     return Fp2_model<n,modulus>(-this->c0,
-//                                 -this->c1);
+//     return Fp2_model<n,modulus>(-self.c0,
+//                                 -self.c1);
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>> Neg for Fp2_model<N, T> {
+    type Output = Self;
 
+    fn neg(self) -> Self::Output {
+        let mut r = self;
+        // mpn_sub_n(r.mont_repr.0.0, modulus.0.0, self.mont_repr.0.0, n);
+        r
+    }
+}
 //
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator^(const u64 pow) const
 // {
 //     return power<Fp2_model<n, modulus>>(*this, pow);
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>> BitXor<u64> for Fp2_model<N, T> {
+    type Output = Self;
 
+    // rhs is the "right-hand side" of the expression `a ^ b`
+    fn bitxor(self, rhs: u64) -> Self::Output {
+        let mut r = self;
+        r ^= rhs;
+        r
+    }
+}
 //
 //
 // Fp2_model<n,modulus> Fp2_model<n,modulus>::operator^(pow:&bigint<m>) const
 // {
 //     return power<Fp2_model<n, modulus>, m>(*this, pow);
 // }
+impl<const N: usize, const M: usize, T: Fp2_modelConfig<N>> BitXor<&bigint<M>> for Fp2_model<N, T> {
+    type Output = Self;
 
+    // rhs is the "right-hand side" of the expression `a ^ b`
+    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+        let mut r = self;
+        r ^= rhs;
+        r
+    }
+}
 //
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator+=(const Fp2_model<n,modulus>& other)
 // {
-//     (*this) = *this + other;
-//     return (*this);
+//     *self = *this + other;
+//     return *self;
 // }
+impl<const N: usize, T: Fp2_modelConfig<N>, O: Borrow<Self>> AddAssign<O> for Fp2_model<N, T> {
+    fn add_assign(&mut self, other: O) {}
+}
 
 //
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator-=(const Fp2_model<n,modulus>& other)
 // {
-//     (*this) = *this - other;
-//     return (*this);
+//     *self = *this - other;
+//     return *self;
 // }
-
+impl<const N: usize, T: Fp2_modelConfig<N>, O: Borrow<Self>> SubAssign<O> for Fp2_model<N, T> {
+    fn sub_assign(&mut self, other: O) {}
+}
 //
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator*=(const Fp2_model<n,modulus>& other)
 // {
-//     (*this) = *this * other;
-//     return (*this);
+//     *self = *this * other;
+//     return *self;
 // }
-
+impl<const N: usize, T: Fp2_modelConfig<N>, O: Borrow<Self>> MulAssign<O> for Fp2_model<N, T> {
+    fn mul_assign(&mut self, rhs: O) {
+        let rhs = rhs.borrow();
+    }
+}
 //
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator^=(const u64 pow)
 // {
-//     (*this) = *this ^ pow;
-//     return (*this);
+//     *self = *this ^ pow;
+//     return *self;
 // }
-
+impl<const N: usize, T: Fp2_modelConfig<N>> BitXorAssign<u64> for Fp2_model<N, T> {
+    fn bitxor_assign(&mut self, rhs: u64) {
+        // *self = Powers::power::<Fp2_model<N, T>>(self, rhs);
+    }
+}
 //
 //
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator^=(pow:&bigint<m>)
 // {
-//     (*this) = *this ^ pow;
-//     return (*this);
+//     *self = *this ^ pow;
+//     return *self;
 // }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::squared() const
-// {
-//     return squared_complex();
-// }
-
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::square()
-// {
-//     (*this) = squared();
-//     return (*this);
-// }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::squared_karatsuba() const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     this->sqr_cnt++;
-// //#endif
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
-//     a:&my_Fp = this->c0, &b = this->c1;
-//     let asq= a.squared();
-//     let bsq= b.squared();
-
-//     return Fp2_model<n,modulus>(asq + non_residue * bsq,
-//                                 (a + b).squared() - asq - bsq);
-// }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::squared_complex() const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     this->sqr_cnt++;
-// //#endif
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
-//     a:&my_Fp = this->c0, &b = this->c1;
-//     let ab= a * b;
-
-//     return Fp2_model<n,modulus>((a + b) * (a + non_residue * b) - ab - non_residue * ab,
-//                                 ab + ab);
-// }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::inverse() const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     this->inv_cnt++;
-// //#endif
-//     a:&my_Fp = this->c0, &b = this->c1;
-
-//     /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
-//     let t0= a.squared();
-//     let t1= b.squared();
-//     let t2= t0 - non_residue * t1;
-//     let t3= t2.inverse();
-//     let c0= a * t3;
-//     let c1= - (b * t3);
-
-//     return Fp2_model<n,modulus>(c0, c1);
-// }
-
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::invert()
-// {
-//     (*this) = inverse();
-//     return (*this);
-// }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::Frobenius_map(u64 power) const
-// {
-//     return Fp2_model<n,modulus>(c0,
-//                                 Frobenius_coeffs_c1[power % 2] * c1);
-// }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::sqrt() const
-// {
-//     return tonelli_shanks_sqrt(*this);
-// }
-
-//
-// Vec<uint64_t> Fp2_model<n,modulus>::to_words() const
-// {
-//     Vec<uint64_t> words = c0.to_words();
-//     Vec<uint64_t> words1 = c1.to_words();
-//     words.insert(words.end(), words1.begin(), words1.end());
-//     return words;
-// }
-
-//
-// bool Fp2_model<n,modulus>::from_words(Vec<uint64_t> words)
-// {
-//     Vec<uint64_t>::const_iterator vec_start = words.begin();
-//     Vec<uint64_t>::const_iterator vec_center = words.begin() + words.len() / 2;
-//     Vec<uint64_t>::const_iterator vec_end = words.end();
-//     Vec<uint64_t> words0(vec_start, vec_center);
-//     Vec<uint64_t> words1(vec_center, vec_end);
-//     // Fp_model's from_words() takes care of asserts about vector length.
-//     return c0.from_words(words0) && c1.from_words(words1);
-// }
+impl<const N: usize, const M: usize, T: Fp2_modelConfig<N>> BitXorAssign<&bigint<M>>
+    for Fp2_model<N, T>
+{
+    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+        // *self = Powers::power::<Fp2_model<N, T>>(self, rhs);
+    }
+}
 
 //
 // std::ostream& operator<<(std::ostream &out, el:&Fp2_model<n, modulus>)
@@ -391,6 +463,13 @@ use crate::algebra::field_utils::field_utils;
 //     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
 //     return out;
 // }
+
+use std::fmt;
+impl<const N: usize, T: Fp2_modelConfig<N>> fmt::Display for Fp2_model<N, T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.c0)
+    }
+}
 
 //
 // std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
@@ -434,11 +513,8 @@ use crate::algebra::field_utils::field_utils;
 //     return in;
 // }
 
-// } // namespace libff
-//#endif // FP2_TCC_
-
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
-use crate::algebra::fields::{cyclotomic::CyclotomicMultSubgroup, fpn_field::PrimeField};
+use crate::algebra::fields::cyclotomic::CyclotomicMultSubgroup;
 use ark_std::Zero;
 use core::{marker::PhantomData, ops::Not};
 

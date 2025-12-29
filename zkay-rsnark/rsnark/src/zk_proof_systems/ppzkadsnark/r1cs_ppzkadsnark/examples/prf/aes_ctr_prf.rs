@@ -1,60 +1,55 @@
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- AES-Based PRF for ADSNARK.
+AES-Based PRF for ADSNARK.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 //#ifndef AESCTRPRF_HPP_
 // #define AESCTRPRF_HPP_
-
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf;
 
-
-
-pub struct  aesPrfKeyT {
-// 
-    key_bytes:[u8;32],
+pub struct aesPrfKeyT {
+    //
+    key_bytes: [u8; 32],
 }
-impl aesPrfKeyT{
-pub fn new()->Self{
-    Self{key_bytes:[0;32]}}}
-
+impl aesPrfKeyT {
+    pub fn new() -> Self {
+        Self { key_bytes: [0; 32] }
+    }
+}
 
 //#endif // AESCTRPRF_HPP_
 /** @file
- *****************************************************************************
+*****************************************************************************
 
- AES-Based PRF for ADSNARK.
+AES-Based PRF for ADSNARK.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
+*****************************************************************************
+* @author     This file is part of libsnark, developed by SCIPR Lab
+*             and contributors (see AUTHORS).
+* @copyright  MIT license (see LICENSE file)
+*****************************************************************************/
 // use  "gmp.h"
 // use  "depends/libsnark-supercop/include/crypto_core_aes128encrypt.h"
 // use  "depends/libsnark-supercop/include/randombytes.h"
-
 use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
-
-
 // template <>
- pub fn prfGen<default_r1cs_ppzkadsnark_pp>()->aesPrfKeyT {
-    let  key=aesPrfKeyT::new();
+pub fn prfGen<default_r1cs_ppzkadsnark_pp>() -> aesPrfKeyT {
+    let key = aesPrfKeyT::new();
     // randombytes(key.key_bytes,32);
     return key;
 }
 
-// 
+//
 pub fn prfCompute<default_r1cs_ppzkadsnark_pp>(
-    key:&aesPrfKeyT,  label:&labelT)->Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>  {
+    key: &aesPrfKeyT,
+    label: &labelT,
+) -> Fr<snark_pp<default_r1cs_ppzkadsnark_pp>> {
     // unsigned char seed_bytes[16];
     // mpz_t aux,Fr_mod;
     // unsigned char random_bytes[16*3];
@@ -93,5 +88,3 @@ pub fn prfCompute<default_r1cs_ppzkadsnark_pp>(
     // return Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>(
     //     bigint<Fr<snark_pp<default_r1cs_ppzkadsnark_pp>>::num_limbs>(aux));
 }
-
-

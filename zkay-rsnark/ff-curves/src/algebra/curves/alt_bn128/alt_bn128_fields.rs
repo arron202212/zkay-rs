@@ -1,11 +1,5 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef ALT_BN128_FIELDS_HPP_
-// #define ALT_BN128_FIELDS_HPP_
+use ffec::field_utils::bigint::GMP_NUMB_BITS;
+use ffec::field_utils::field_utils::batch_invert;
 // use ffec::algebra::fields::prime_base::fp;
 // use ffec::algebra::fields::prime_extension::fp12_2over3over2;
 // use ffec::algebra::fields::prime_extension::fp2;
@@ -14,39 +8,32 @@ use super::fields::{fq::Fq, fq2::Fq2, fq6::Fq6, fq12::Fq12, fr::Fr};
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 //  use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G2,alt_bn128_G1};
-// namespace libff {
 
-// const alt_bn128_r_bitcount:usize= 254;
-// const alt_bn128_q_bitcount:usize= 254;
+const alt_bn128_r_bitcount: usize = 254;
+const alt_bn128_q_bitcount: usize = 254;
 
-// const alt_bn128_r_limbs:usize= (alt_bn128_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-// const alt_bn128_q_limbs:usize= (alt_bn128_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+const alt_bn128_r_limbs: usize = (alt_bn128_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+const alt_bn128_q_limbs: usize = (alt_bn128_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 
 // extern bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
 // extern bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
 
-pub type alt_bn128_Fr = Fr; //Fp_model<alt_bn128_r_limbs, alt_bn128_modulus_r>;
-pub type alt_bn128_Fq = Fq; //qFp_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
-pub type alt_bn128_Fq2 = Fq2; //Fp2_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
-pub type alt_bn128_Fq6 = Fq6; //Fp6_3over2_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
-pub type alt_bn128_Fq12 = Fq12; //Fp12_2over3over2_model<alt_bn128_q_limbs, alt_bn128_modulus_q>;
+pub struct Backend;
+pub type alt_bn128_Fr = Fp_model<1, Backend>;
+
+pub type alt_bn128_Fq = Fp_model<1, Backend>;
+
+pub type alt_bn128_Fq2 = Fp2_model<1, Backend>;
+
+pub type alt_bn128_Fq6 = Fp6_3over2_model<1, Backend>;
+
+pub type alt_bn128_Fq12 = Fp12_2over3over2_model<1, Backend>;
+
 pub type alt_bn128_GT = alt_bn128_Fq12;
 
 // pub fn  init_alt_bn128_fields();
 
-// } // namespace libff
-
-//#endif // ALT_BN128_FIELDS_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
 // use crate::algebra::curves::alt_bn128::alt_bn128_fields;
-
-// namespace libff {
 
 // bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
 // bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
