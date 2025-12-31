@@ -6,6 +6,12 @@
 //  - r1cs_ppzksnark_online_verifier_gadget, which verifies correct computation of r1cs_ppzksnark_online_verifier_strong_IC.
 //  See r1cs_ppzksnark.hpp for description of the aforementioned functions.
 use crate::common::data_structures::accumulation_vector::accumulation_vector;
+use crate::gadgetlib1::constraint_profiling::{PRINT_CONSTRAINT_PROFILING, PROFILE_CONSTRAINTS};
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
+use crate::gadgetlib1::gadgets::basic_gadgets::{
+    conjunction_gadget, conjunction_gadgets, multipacking_gadget, multipacking_gadgets,
+};
 use crate::gadgetlib1::gadgets::curves::weierstrass_g1_gadget::{
     G1_add_gadget, G1_add_gadgets, G1_checker_gadget, G1_checker_gadgets,
     G1_multiscalar_mul_gadget, G1_multiscalar_mul_gadgets, G1_variable, G1_variables,
@@ -24,32 +30,26 @@ use crate::gadgetlib1::gadgets::pairing::pairing_checks::{
     check_e_equals_e_gadget, check_e_equals_e_gadgets, check_e_equals_ee_gadget,
     check_e_equals_ee_gadgets,
 };
+use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
 use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation::{
     G1_precomputation, G1_precomputations, G2_precomputation, G2_precomputations,
     affine_ate_miller_loop, affine_ate_precompute_G1, affine_ate_precompute_G2, pairing_loop_count,
     precompute_G1_gadget, precompute_G1_gadgets, precompute_G2_gadget,
     precompute_G2_gadget_coeffss, precompute_G2_gadgets,
 };
-use crate::knowledge_commitment::knowledge_commitment::{TConfig, knowledge_commitment};
-use ffec::common::profiling::print_indent;
-use ffec::common::utils::bit_vector;
-
-use crate::gadgetlib1::constraint_profiling::{PRINT_CONSTRAINT_PROFILING, PROFILE_CONSTRAINTS};
-use crate::gadgetlib1::gadget::gadget;
-use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
-use crate::gadgetlib1::gadgets::basic_gadgets::{
-    conjunction_gadget, conjunction_gadgets, multipacking_gadget, multipacking_gadgets,
-};
-use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
 use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
 use ff_curves::algebra::curves::public_params;
+use ffec::FieldTConfig;
+use ffec::PpConfig;
+use ffec::common::profiling::print_indent;
+use ffec::common::utils::bit_vector;
 use ffec::field_utils::bigint::bigint;
 use ffec::{One, Zero};
 use rccell::RcCell;
@@ -62,12 +62,12 @@ struct r1cs_ppzksnark_proof<
     FieldT: FieldTConfig,
     PB: PBConfig,
     const N: usize,
-    T1: TConfig<N>,
-    T2: TConfig<N>,
+    G1T: PpConfig,
+    G2T: PpConfig,
 > {
-    pub g_A: knowledge_commitment<N, T1, T1>,
-    pub g_B: knowledge_commitment<N, T2, T1>,
-    pub g_C: knowledge_commitment<N, T1, T1>,
+    pub g_A: knowledge_commitment<G1T, G1T>,
+    pub g_B: knowledge_commitment<G2T, G1T>,
+    pub g_C: knowledge_commitment<G1T, G1T>,
     pub g_H: G1<ppT>,
     pub g_K: G1<ppT>,
     _t: PhantomData<(FieldT, PB)>,
@@ -387,8 +387,8 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
 
     pub fn generate_r1cs_witness<
         const N: usize,
-        T1: TConfig<N> + ppTConfig<FieldT, PB> + From<ppT> + Into<ppT>,
-        T2: TConfig<N> + ppTConfig<FieldT, PB> + From<ppT> + Into<ppT>,
+        T1: PpConfig + ppTConfig<FieldT, PB> + From<ppT> + Into<ppT>,
+        T2: PpConfig + ppTConfig<FieldT, PB> + From<ppT> + Into<ppT>,
     >(
         &self,
         proof: &r1cs_ppzksnark_proof<ppT, FieldT, PB, N, T1, T2>,

@@ -14,9 +14,9 @@ use crate::gadgetlib1::gadgets::basic_gadgets::{
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use ffec::common::utils::div_ceil;
 use rccell::RcCell;
@@ -252,7 +252,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                                             .clone(),
                                     ))
                                 .into(),
-                                0.into(),
+                                FieldT::from(0).into(),
                             ),
                             prefix_format!(
                                 self.annotation_prefix,

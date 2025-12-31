@@ -17,9 +17,9 @@ use crate::gadgetlib1::gadgets::basic_gadgets::{
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use ffec::common::utils::{div_ceil, log2};
 use rccell::RcCell;
@@ -173,7 +173,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
                 for subpacket_idx in 0..self.t.num_subpackets {
                     self.pb.borrow_mut().add_r1cs_constraint(
                         r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                            1.into(),
+                            FieldT::from(1).into(),
                             self.t.routed_packets[0][packet_idx][subpacket_idx]
                                 .clone()
                                 .into(),
@@ -213,7 +213,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
                                         pb_variable,
                                         pb_linear_combination,
                                     >::from(self.t.routed_packets[column_idx + 1][cross_edge][0].clone())),
-                            0.into(),
+                            FieldT::from(0).into(),
                         ),
                         prefix_format!(
                             self.annotation_prefix,

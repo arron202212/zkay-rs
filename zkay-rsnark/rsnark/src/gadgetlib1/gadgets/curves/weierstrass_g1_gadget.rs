@@ -14,10 +14,10 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
 use ff_curves::algebra::curves::public_params;
+use ffec::FieldTConfig;
 use ffec::Zero;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -236,13 +236,13 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                     self.t.P_X_squared.clone().into(),
                     linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         variable::<FieldT, pb_variable>::from(ONE),
-                    ) * coeff_a,
+                    ) * FieldT::from(coeff_a),
                 ],
                 vec![
                     self.t.P_Y_squared.clone().into(),
                     linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         variable::<FieldT, pb_variable>::from(ONE),
-                    ) * (-coeff_b),
+                    ) * FieldT::from(-coeff_b),
                 ],
             ),
             prefix_format!(self.annotation_prefix, " curve_equation"),
@@ -311,11 +311,11 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 vec![self.t.lambda.clone().into()],
                 vec![
                     self.t.B.t.X.clone().into(),
-                    (self.t.A.t.X.clone() * (-1)).into(),
+                    (self.t.A.t.X.clone() * FieldT::from(-1)).into(),
                 ],
                 vec![
                     self.t.B.t.Y.clone().into(),
-                    (self.t.A.t.Y.clone() * (-1)).into(),
+                    (self.t.A.t.Y.clone() * FieldT::from(-1)).into(),
                 ],
             ),
             prefix_format!(self.annotation_prefix, " calc_lambda"),
@@ -339,7 +339,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 vec![self.t.lambda.clone().into()],
                 vec![
                     self.t.A.t.X.clone().into(),
-                    (self.t.C.t.X.clone() * (-1)).into(),
+                    (self.t.C.t.X.clone() * FieldT::from(-1)).into(),
                 ],
                 vec![self.t.C.t.Y.clone().into(), self.t.A.t.Y.clone().into()],
             ),
@@ -351,7 +351,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 vec![self.t.inv.clone().into()],
                 vec![
                     self.t.B.t.X.clone().into(),
-                    (self.t.A.t.X.clone() * (-1)).into(),
+                    (self.t.A.t.X.clone() * FieldT::from(-1)).into(),
                 ],
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
             ),
@@ -418,13 +418,13 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
 
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
-                vec![(self.t.lambda.clone() * 2).into()],
+                vec![(self.t.lambda.clone() * FieldT::from(2)).into()],
                 vec![self.t.A.t.Y.clone().into()],
                 vec![
-                    (self.t.Xsquared.clone() * 3).into(),
+                    (self.t.Xsquared.clone() * FieldT::from(3)).into(),
                     linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         variable::<FieldT, pb_variable>::from(ONE),
-                    ) * coeff_a,
+                    ) * FieldT::from(coeff_a),
                 ],
             ),
             prefix_format!(self.annotation_prefix, " calc_lambda"),
@@ -436,7 +436,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 vec![self.t.lambda.clone().into()],
                 vec![
                     self.t.B.t.X.clone().into(),
-                    (self.t.A.t.X.clone() * 2).into(),
+                    (self.t.A.t.X.clone() * FieldT::from(2)).into(),
                 ],
             ),
             prefix_format!(self.annotation_prefix, " calc_X"),
@@ -447,7 +447,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 vec![self.t.lambda.clone().into()],
                 vec![
                     self.t.A.t.X.clone().into(),
-                    (self.t.B.t.X.clone() * (-1)).into(),
+                    (self.t.B.t.X.clone() * FieldT::from(-1)).into(),
                 ],
                 vec![self.t.B.t.Y.clone().into(), self.t.A.t.Y.clone().into()],
             ),

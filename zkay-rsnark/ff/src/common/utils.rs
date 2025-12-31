@@ -6,25 +6,10 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-/** @file
-*****************************************************************************
-Declaration of miscellaneous math, serialization, and other common utility
-functions.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef UTILS_HPP_
-// // #define UTILS_HPP_
 
-//#include <cassert>
-//#include <iostream>
-//#include <sstream>
-//#include <string>
-//#include <vector>
-
-// namespace libff {
+// Declaration of miscellaneous math, serialization, and other common utility
+// functions.
+use crate::PpConfig;
 
 pub type bit_vector = Vec<bool>;
 
@@ -232,32 +217,16 @@ pub fn deserialize_bit_vector(ins: &String, v: &mut bit_vector) {
     }
 }
 
-// } // namespace libff
-/** @file
-*****************************************************************************
-Implementation of templatized utility functions.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef UTILS_TCC_
-// #define UTILS_TCC_
-
-// namespace libff {
-
-// using std::usize;
-
-trait CConfig {
-    fn size_in_bits() -> usize;
-    fn random_element<T>() -> T;
-    fn is_zero(&self) -> bool;
-}
-pub fn curve_size_in_bits<CurveT: CConfig>(v: &Vec<CurveT>) -> usize {
-    return v.len() * CurveT::size_in_bits();
+// trait PpConfig {
+//     fn size_in_bits() -> usize;
+//     fn random_element<T>() -> T;
+//     fn is_zero(&self) -> bool;
+// }
+pub fn size_in_bits<CurveT: PpConfig>(v: &Vec<CurveT>) -> usize {
+    v.len() * CurveT::size_in_bits()
 }
 
-pub fn random_element_non_zero_one<T: CConfig + num_traits::One + std::cmp::PartialEq>() -> T {
+pub fn random_element_non_zero_one<T: PpConfig>() -> T {
     let mut x: T = T::random_element();
     while x.is_zero() || x == T::one() {
         x = T::random_element();
@@ -265,7 +234,7 @@ pub fn random_element_non_zero_one<T: CConfig + num_traits::One + std::cmp::Part
     return x;
 }
 
-pub fn random_element_non_zero<T: CConfig>() -> T {
+pub fn random_element_non_zero<T: PpConfig>() -> T {
     let mut x: T = T::random_element();
     while x.is_zero() {
         x = T::random_element();
@@ -273,7 +242,7 @@ pub fn random_element_non_zero<T: CConfig>() -> T {
     return x;
 }
 
-pub fn random_element_exclude<T: CConfig + std::cmp::PartialEq>(y: T) -> T {
+pub fn random_element_exclude<T: PpConfig>(y: T) -> T {
     let mut x: T = T::random_element();
     while x == y {
         x = T::random_element();

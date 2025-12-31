@@ -1,3 +1,12 @@
+use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
+    bacs_auxiliary_input, bacs_circuit, bacs_primary_input,
+};
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_constraint, r1cs_constraint_system, r1cs_variable_assignment,
+};
+use crate::relations::variable::{
+    SubLinearCombinationConfig, SubVariableConfig, linear_combination,
+};
 /** @file
 *****************************************************************************
 
@@ -16,16 +25,7 @@ that the output is zero.
 *****************************************************************************/
 //#ifndef BACS_TO_R1CS_HPP_
 // #define BACS_TO_R1CS_HPP_
-use crate::relations::FieldTConfig;
-use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
-    bacs_auxiliary_input, bacs_circuit, bacs_primary_input,
-};
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
-    r1cs_constraint, r1cs_constraint_system, r1cs_variable_assignment,
-};
-use crate::relations::variable::{
-    SubLinearCombinationConfig, SubVariableConfig, linear_combination,
-};
+use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils::FMT;
 // /**
@@ -102,9 +102,9 @@ pub fn bacs_to_r1cs_instance_map<
             result
                 .constraints
                 .push(r1cs_constraint::<FieldT, SV, SLC>::new(
-                    linear_combination::<FieldT, SV, SLC>::from(1),
+                    linear_combination::<FieldT, SV, SLC>::from(FieldT::from(1)),
                     linear_combination::<FieldT, SV, SLC>::from(g.output.clone()),
-                    linear_combination::<FieldT, SV, SLC>::from(0),
+                    linear_combination::<FieldT, SV, SLC>::from(FieldT::from(0)),
                 ));
 
             // #ifdef DEBUG

@@ -12,6 +12,8 @@ use ffec::{
 use super::fields::{fq::Fq, fq2::Fq2, fq6::Fq6, fq12::Fq12, fr::Fr};
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
+use ffec::PpConfig;
+use ffec::field_utils::bigint::bigint;
 //  use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G2,alt_bn128_G1};
 
 const alt_bn128_r_bitcount: usize = 254;
@@ -39,6 +41,7 @@ impl Fp12_modelConfig<1> for Backend {
     type Fp_modelConfig = Self;
     type Fp6_modelConfig = Self;
 }
+
 pub type alt_bn128_Fr = Fp_model<1, Backend>;
 
 pub type alt_bn128_Fq = Fp_model<1, Backend>;

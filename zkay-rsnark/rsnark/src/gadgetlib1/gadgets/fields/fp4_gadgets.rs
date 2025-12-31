@@ -13,9 +13,9 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::One;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -33,7 +33,7 @@ pub fn default_pb_lc<FieldT: FieldTConfig>()
 pub fn i64_to_pb_lc<FieldT: FieldTConfig>(
     d: i64,
 ) -> linear_combination<FieldT, pb_variable, pb_linear_combination> {
-    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(d)
+    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(FieldT::from(d))
 }
 
 #[inline]
@@ -603,47 +603,70 @@ impl<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                a0.clone() + a1.clone() * 2 + a2.clone() * 4 + a3.clone() * 8,
-                b0.clone() + b1.clone() * 2 + b2.clone() * 4 + b3.clone() * 8,
-                c0.clone() * u.clone() * (-15)
-                    - c1.clone() * 30 * u.clone()
-                    - c2.clone() * 3 * (beta.clone() + 4) * u.clone()
-                    - c3.clone() * 6 * (beta.clone() + 4) * u.clone()
+                a0.clone()
+                    + a1.clone() * FieldT::from(2)
+                    + a2.clone() * FieldT::from(4)
+                    + a3.clone() * FieldT::from(8),
+                b0.clone()
+                    + b1.clone() * FieldT::from(2)
+                    + b2.clone() * FieldT::from(4)
+                    + b3.clone() * FieldT::from(8),
+                c0.clone() * u.clone() * FieldT::from(-15)
+                    - c1.clone() * FieldT::from(30) * u.clone()
+                    - c2.clone() * FieldT::from(3) * (beta.clone() + FieldT::from(4)) * u.clone()
+                    - c3.clone() * FieldT::from(6) * (beta.clone() + FieldT::from(4)) * u.clone()
                     + self.t.v1.clone()
-                        * (-beta.clone() * 3 * inverse::<FieldT>(2) + 24)
+                        * (-beta.clone() * FieldT::from(3) * inverse::<FieldT>(2)
+                            + FieldT::from(24))
                         * u.clone()
-                    + self.t.v2.clone() * (beta.clone() * inverse::<FieldT>(2) - 8) * u.clone()
-                    - (self.t.v6.clone() * ((beta.clone() - 16) * 3)),
+                    + self.t.v2.clone()
+                        * (beta.clone() * inverse::<FieldT>(2) - FieldT::from(8))
+                        * u.clone()
+                    - (self.t.v6.clone() * ((beta.clone() - FieldT::from(16)) * FieldT::from(3))),
             ),
             prefix_format!(self.annotation_prefix, " v3"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                a0.clone() - a1.clone() * 2 + a2.clone() * 4 - a3.clone() * 8,
-                b0.clone() - b1.clone() * 2 + b2.clone() * 4 - b3.clone() * 8,
-                -c0.clone() * 15 * u.clone() + c1.clone() * 30 * u.clone()
-                    - c2.clone() * 3 * (beta.clone() + 4) * u.clone()
-                    + c3.clone() * 6 * (beta.clone() + 4) * u.clone()
+                a0.clone() - a1.clone() * FieldT::from(2) + a2.clone() * FieldT::from(4)
+                    - a3.clone() * FieldT::from(8),
+                b0.clone() - b1.clone() * FieldT::from(2) + b2.clone() * FieldT::from(4)
+                    - b3.clone() * FieldT::from(8),
+                -c0.clone() * FieldT::from(15) * u.clone()
+                    + c1.clone() * FieldT::from(30) * u.clone()
+                    - c2.clone() * FieldT::from(3) * (beta.clone() + FieldT::from(4)) * u.clone()
+                    + c3.clone() * FieldT::from(6) * (beta.clone() + FieldT::from(4)) * u.clone()
                     + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
-                        -(beta.clone() * 3 * inverse::<FieldT>(2)) + 24,
+                        -(beta.clone() * FieldT::from(3) * inverse::<FieldT>(2)) + FieldT::from(24),
                     ) * u.clone()
                         * self.t.v2.clone()
-                    + self.t.v1.clone() * (beta.clone() * inverse::<FieldT>(2) - 8) * u.clone()
-                    - self.t.v6.clone() * 3 * (beta.clone() - 16),
+                    + self.t.v1.clone()
+                        * (beta.clone() * inverse::<FieldT>(2) - FieldT::from(8))
+                        * u.clone()
+                    - self.t.v6.clone() * FieldT::from(3) * (beta.clone() - FieldT::from(16)),
             ),
             prefix_format!(self.annotation_prefix, " v4"),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                a0.clone() + a1.clone() * 3 + a2.clone() * 9 + a3.clone() * 27,
-                b0.clone() + b1.clone() * 3 + b2.clone() * 9 + b3.clone() * 27,
-                -c0.clone() * 80 * u.clone()
-                    - c1.clone() * 240 * u.clone()
-                    - c2.clone() * 8 * (beta.clone() + 9) * u.clone()
-                    - c3.clone() * 24 * (beta.clone() + 9) * u.clone()
-                    - self.t.v1.clone() * 2 * (beta.clone() - 81) * u.clone()
-                    + self.t.v2.clone() * (beta.clone() - 81) * u.clone()
-                    - self.t.v6.clone() * 8 * (beta.clone() - 81),
+                a0.clone()
+                    + a1.clone() * FieldT::from(3)
+                    + a2.clone() * FieldT::from(9)
+                    + a3.clone() * FieldT::from(27),
+                b0.clone()
+                    + b1.clone() * FieldT::from(3)
+                    + b2.clone() * FieldT::from(9)
+                    + b3.clone() * FieldT::from(27),
+                -c0.clone() * FieldT::from(80) * u.clone()
+                    - c1.clone() * FieldT::from(240) * u.clone()
+                    - c2.clone() * FieldT::from(8) * (beta.clone() + FieldT::from(9)) * u.clone()
+                    - c3.clone() * FieldT::from(24) * (beta.clone() + FieldT::from(9)) * u.clone()
+                    - self.t.v1.clone()
+                        * FieldT::from(2)
+                        * (beta.clone() - FieldT::from(81))
+                        * u.clone()
+                    + self.t.v2.clone() * (beta.clone() - FieldT::from(81)) * u.clone()
+                    - self.t.v6.clone() * FieldT::from(8) * (beta.clone() - FieldT::from(81)),
             ),
             prefix_format!(self.annotation_prefix, " v5"),
         );

@@ -1,5 +1,5 @@
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 #[derive(Clone, Default)]
 pub struct gadget<FieldT: FieldTConfig, PB: PBConfig, T: Clone + Default> {

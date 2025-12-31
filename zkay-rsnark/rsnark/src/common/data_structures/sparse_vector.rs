@@ -1,29 +1,28 @@
 // Declaration of interfaces for a sparse vector.
 
+use ffec::PpConfig;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 use ffec::scalar_multiplication::multiexp::{multi_exp, multi_exp_method};
-
-pub trait SparseVectorConfig:
-    Default
-    + std::fmt::Display
-    + std::cmp::PartialEq
-    + std::ops::Add<Output = Self>
-    + ffec::Zero
-    + Clone
-    + std::ops::Sub<Output = Self>
-    + ffec::scalar_multiplication::wnaf::Config
-    + ffec::scalar_multiplication::multiexp::AsBigint
-{
-    fn size_in_bits() -> usize;
-    // fn zero()->Self;
-}
+// pub trait SparseVectorConfig:
+//     Default
+//     + std::fmt::Display
+//     + std::cmp::PartialEq
+//     + std::ops::Add<Output = Self>
+//     + ffec::Zero
+//     + Clone
+//     + std::ops::Sub<Output = Self>
+//     + ffec::scalar_multiplication::wnaf::Config
+// {
+//     fn size_in_bits() -> usize;
+//     // fn zero()->Self;
+// }
 
 /**
  * A sparse vector is a list of indices along with corresponding values.
  * The indices are selected from the set {0,1,...,domain_size-1}.
  */
 #[derive(Default, Clone)]
-pub struct sparse_vector<T: SparseVectorConfig> {
+pub struct sparse_vector<T: PpConfig> {
     pub indices: Vec<usize>,
     pub values: Vec<T>,
     pub domain_size_: usize,
@@ -54,7 +53,7 @@ pub struct sparse_vector<T: SparseVectorConfig> {
     //                                            offset:usize) const;
 }
 
-impl<T: SparseVectorConfig> sparse_vector<T> {
+impl<T: PpConfig> sparse_vector<T> {
     pub fn new(v: Vec<T>) -> Self {
         let domain_size_ = v.len();
         Self {
@@ -90,19 +89,15 @@ impl<T: SparseVectorConfig> sparse_vector<T> {
         return self.domain_size_;
     }
 
-    pub fn size(&self) -> usize {
-        return self.indices.len();
+    pub fn len(&self) -> usize {
+        self.indices.len()
     }
 
     pub fn size_in_bits(&self) -> usize {
-        return self.indices.len() * (std::mem::size_of::<usize>() * 8 + T::size_in_bits());
+        self.indices.len() * (std::mem::size_of::<usize>() * 8 + T::size_in_bits())
     }
 
-    pub fn accumulate<
-        FieldT: std::ops::Mul<Output = FieldT>
-            + std::clone::Clone
-            + ffec::scalar_multiplication::multiexp::AsBigint,
-    >(
+    pub fn accumulate<FieldT: PpConfig>(
         &self,
         it: &[FieldT],
         offset: usize,
@@ -184,7 +179,7 @@ impl<T: SparseVectorConfig> sparse_vector<T> {
 }
 
 use std::ops::Index;
-impl<T: SparseVectorConfig> Index<usize> for sparse_vector<T> {
+impl<T: PpConfig> Index<usize> for sparse_vector<T> {
     type Output = T;
 
     fn index(&self, idx: usize) -> &Self::Output {
@@ -204,7 +199,7 @@ impl<T: SparseVectorConfig> Index<usize> for sparse_vector<T> {
 //     return if (it != indices.end() && *it == idx) {values[it - indices.begin()]} else{T()};
 // }
 
-impl<T: SparseVectorConfig> PartialEq for sparse_vector<T> {
+impl<T: PpConfig> PartialEq for sparse_vector<T> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         if self.domain_size_ != other.domain_size_ {
@@ -251,7 +246,7 @@ impl<T: SparseVectorConfig> PartialEq for sparse_vector<T> {
     }
 }
 
-impl<T: SparseVectorConfig> PartialEq<Vec<T>> for sparse_vector<T> {
+impl<T: PpConfig> PartialEq<Vec<T>> for sparse_vector<T> {
     #[inline]
     fn eq(&self, other: &Vec<T>) -> bool {
         if self.domain_size_ < other.len() {
@@ -309,7 +304,7 @@ impl<T: SparseVectorConfig> PartialEq<Vec<T>> for sparse_vector<T> {
 
 use std::fmt;
 
-impl<ppT: SparseVectorConfig> fmt::Display for sparse_vector<ppT> {
+impl<ppT: PpConfig> fmt::Display for sparse_vector<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

@@ -10,6 +10,7 @@ use crate::Fp_model;
 use crate::Fp_modelConfig as FpmConfig;
 use crate::Fp2_model;
 use crate::Fp2_modelConfig;
+use crate::PpConfig;
 use crate::algebra::{
     field_utils::{
         BigInteger,
@@ -546,7 +547,19 @@ impl<const N: usize, const M: usize, T: Fp4_modelConfig<N>> BitXor<&bigint<M>> f
 // {
 //     return *self^(exponent.as_bigint());
 // }
+impl<const N: usize, T: Fp4_modelConfig<N>> PpConfig for Fp4_model<N, T> {
+    type T = bigint<N>;
+}
 
+impl<const N: usize, T: Fp4_modelConfig<N>> Mul<bigint<N>> for Fp4_model<N, T> {
+    type Output = Self;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
 impl<const N: usize, T: Fp4_modelConfig<N>> One for Fp4_model<N, T> {
     fn one() -> Self {
         Self::one()

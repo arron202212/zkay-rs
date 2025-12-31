@@ -3,6 +3,7 @@
 // use crate::algebra::fields::prime_base::fp;
 use crate::Fp_model;
 use crate::Fp_modelConfig as FpmConfig;
+use crate::PpConfig;
 use crate::algebra::{
     field_utils::{
         BigInteger,
@@ -546,7 +547,19 @@ impl<const N: usize, T: Fp3_modelConfig<N>> fmt::Display for Fp3_model<N, T> {
 
 //     return out;
 // }
+impl<const N: usize, T: Fp3_modelConfig<N>> PpConfig for Fp3_model<N, T> {
+    type T = bigint<N>;
+}
 
+impl<const N: usize, T: Fp3_modelConfig<N>> Mul<bigint<N>> for Fp3_model<N, T> {
+    type Output = Self;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
 impl<const N: usize, T: Fp3_modelConfig<N>> One for Fp3_model<N, T> {
     fn one() -> Self {
         Self::one()

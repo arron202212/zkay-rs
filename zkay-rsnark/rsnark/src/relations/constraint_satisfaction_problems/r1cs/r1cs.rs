@@ -5,9 +5,9 @@
 
 // Above, R1CS stands for "Rank-1 Constraint System".
 
-use crate::relations::FieldTConfig;
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use crate::relations::variable::{linear_combination, linear_term};
+use ffec::FieldTConfig;
 use ffec::algebra::scalar_multiplication::multiexp::inhibit_profiling_info;
 use ffec::common::profiling::print_indent;
 use ffec::common::profiling::{enter_block, leave_block};

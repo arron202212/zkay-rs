@@ -1,5 +1,4 @@
 use crate::gadgetlib1::pb_variable::{lc_index_t, pb_linear_combination, pb_variable};
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
@@ -7,6 +6,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, var_index_t, variable,
 };
+use ffec::FieldTConfig;
 
 use ffec::common::utils;
 

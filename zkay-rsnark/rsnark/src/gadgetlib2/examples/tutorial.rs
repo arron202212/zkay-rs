@@ -16,8 +16,8 @@ use crate::gadgetlib2::variable::{
     MultiPackedWord, ProtoboardPtr, UnpackedWord, Variable, VariableArray, VariableArrayBase,
     VariableArrayConfig, VariableArrayType, sum,
 };
-use crate::relations::FieldTConfig;
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use ffec::FieldTConfig;
 use rccell::RcCell;
 
 /*

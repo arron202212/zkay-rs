@@ -8,9 +8,9 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::One;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -200,7 +200,9 @@ impl<Fp2T: Fp2TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp2_variables
     pub fn generate_r1cs_equals_const_constraints(&self, el: &Fp2T) {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ),
                 el.c0().into(),
                 self.t.c0.clone().into(),
             ),
@@ -208,7 +210,9 @@ impl<Fp2T: Fp2TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp2_variables
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ),
                 el.c1().into(),
                 self.t.c1.clone().into(),
             ),
@@ -421,8 +425,9 @@ impl<Fp2T: Fp2TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(2)
-                    * self.t.A.t.c0.clone(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(2),
+                ) * self.t.A.t.c0.clone(),
                 self.t.A.t.c1.clone(),
                 self.t.result.t.c1.clone(),
             ),

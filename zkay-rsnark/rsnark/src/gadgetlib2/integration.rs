@@ -9,11 +9,10 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 // use crate::gadgetlib2::integration;
 use crate::gadgetlib2::adapters::{ConvertConfig, GLA, GadgetLibAdapter, linear_combination_t};
 use crate::gadgetlib2::protoboard::Protoboard;
-use crate::relations::{
-    FieldTConfig,
-    variable::{SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable},
+use crate::relations::variable::{
+    SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable,
 };
-
+use ffec::FieldTConfig;
 // type FieldT = Fr<default_ec_pp>;
 // type GLA = GadgetLibAdapter;
 pub fn convert_gadgetlib2_linear_combination<

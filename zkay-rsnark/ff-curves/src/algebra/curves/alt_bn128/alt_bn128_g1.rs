@@ -1,6 +1,5 @@
 // use crate::algebra::curves::alt_bn128::alt_bn128_init;
 // use crate::algebra::curves::curve_utils;
-use crate::KCConfig;
 use crate::algebra::curves::alt_bn128::curves::Bn254;
 use crate::algebra::curves::alt_bn128::{
     alt_bn128_fields::{alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr},
@@ -8,12 +7,13 @@ use crate::algebra::curves::alt_bn128::{
 };
 use crate::algebra::curves::pairing::Pairing;
 use ffec::Fp_modelConfig;
+use ffec::PpConfig;
 use ffec::field_utils::field_utils::batch_invert;
 use ffec::field_utils::{
     BigInteger,
     bigint::{GMP_NUMB_BITS, bigint},
 };
-use ffec::scalar_multiplication::multiexp::AsBigint;
+
 use ffec::{One, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -24,7 +24,7 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 // pub struct alt_bn128_G1;
 // std::ostream& operator<<(std::ostream &, const alt_bn128_G1&);
 // std::istream& operator>>(std::istream &, alt_bn128_G1&);
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq)]
 pub struct alt_bn128_G1 {
     // #ifdef PROFILE_OP_COUNTS
     // static i64 add_cnt;
@@ -118,19 +118,6 @@ pub trait alt_bn128_G1Config: Send + Sync + Sized + 'static {
 // bigint<alt_bn128_G1::h_limbs> alt_bn128_G1::h;
 pub type base_field = alt_bn128_Fq;
 pub type scalar_field = alt_bn128_Fr;
-impl AsBigint for alt_bn128_G1 {
-    fn as_bigint<const N: usize>(&self) -> bigint<N> {
-        bigint::<N>::default()
-    }
-    fn dbl(&self) -> Self {
-        self.clone()
-    }
-    fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
-        vec![]
-    }
-    fn batch_to_special_all_non_zeros<T>(_: std::vec::Vec<T>) {}
-    fn to_special(&self) {}
-}
 
 // impl One for alt_bn128_G1 {
 // fn one() -> Self { Self::G1_zero() }
@@ -148,21 +135,8 @@ impl From<BigUint> for alt_bn128_G1 {
 //     }
 // }
 
-impl KCConfig for alt_bn128_G1 {
+impl PpConfig for alt_bn128_G1 {
     type T = bigint<1>;
-    fn zero() -> Self {
-        alt_bn128_G1::default()
-    }
-    fn mixed_add(&self, other: &Self) -> Self {
-        alt_bn128_G1::default()
-    }
-    fn is_special(&self) -> bool {
-        false
-    }
-    fn print(&self) {}
-    fn size_in_bits() -> usize {
-        0
-    }
 }
 
 impl alt_bn128_G1 {

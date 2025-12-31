@@ -1,25 +1,10 @@
-use crate::relations::FieldTConfig;
+// Declaration of interfaces for:
+// - a variable (i.e., x_i),
+// - a linear term (i.e., a_i * x_i), and
+// - a linear combination (i.e., sum_i a_i * x_i).
+
+use ffec::FieldTConfig;
 use ffec::common::serialization::OUTPUT_NEWLINE;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for:
-- a variable (i.e., x_i),
-- a linear term (i.e., a_i * x_i), and
-- a linear combination (i.e., sum_i a_i * x_i).
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef VARIABLE_HPP_
-// #define VARIABLE_HPP_
-
-// use  <cstddef>
-// use  <map>
-// use  <string>
-//
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 use std::ops::{Add, Mul, Neg, Sub};
@@ -91,13 +76,13 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<FieldT> for variable<Field
     }
 }
 
-impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<integer_coeff_t> for variable<FieldT, SV> {
-    type Output = linear_term<FieldT, SV>;
+// impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<integer_coeff_t> for variable<FieldT, SV> {
+//     type Output = linear_term<FieldT, SV>;
 
-    fn mul(self, rhs: integer_coeff_t) -> Self::Output {
-        linear_term::<FieldT, SV>::new_with_int_coeff(self, rhs)
-    }
-}
+//     fn mul(self, rhs: integer_coeff_t) -> Self::Output {
+//         linear_term::<FieldT, SV>::new_with_int_coeff(self, rhs)
+//     }
+// }
 
 //     variable(index(index:var_index_t index = 0)->Self) {};
 
@@ -423,16 +408,16 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<variable<FieldT, SV>>
     }
 }
 
-impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<integer_coeff_t>
-    for linear_term<FieldT, SV>
-{
-    fn from(rhs: integer_coeff_t) -> Self {
-        linear_term::<FieldT, SV> {
-            index: variable::<FieldT, SV>::default(),
-            coeff: FieldT::from(rhs),
-        }
-    }
-}
+// impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<integer_coeff_t>
+//     for linear_term<FieldT, SV>
+// {
+//     fn from(rhs: integer_coeff_t) -> Self {
+//         linear_term::<FieldT, SV> {
+//             index: variable::<FieldT, SV>::default(),
+//             coeff: FieldT::from(rhs),
+//         }
+//     }
+// }
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig> From<FieldT> for linear_term<FieldT, SV> {
     fn from(rhs: FieldT) -> Self {
@@ -495,7 +480,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     type Output = linear_combination<FieldT, SV, SLC>;
 
     fn sub(self, rhs: integer_coeff_t) -> Self::Output {
-        self - linear_combination::<FieldT, SV, SLC>::from(rhs)
+        self - linear_combination::<FieldT, SV, SLC>::from(FieldT::from(rhs))
     }
 }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
@@ -544,15 +529,15 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         self
     }
 }
-impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    Mul<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
-{
-    type Output = Self;
+// impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+//     Mul<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+// {
+//     type Output = Self;
 
-    fn mul(self, rhs: integer_coeff_t) -> Self::Output {
-        self
-    }
-}
+//     fn mul(self, rhs: integer_coeff_t) -> Self::Output {
+//         self
+//     }
+// }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     Mul<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
 {
@@ -646,13 +631,13 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig> PartialEq for linear_term<Fiel
 //     return linear_term::<FieldT>(lt.index, field_coeff * lt.coeff);
 // }
 
-impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    From<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
-{
-    fn from(rhs: integer_coeff_t) -> Self {
-        linear_combination::<FieldT, SV, SLC>::from(linear_term::<FieldT, SV>::from(rhs))
-    }
-}
+// impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+//     From<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+// {
+//     fn from(rhs: integer_coeff_t) -> Self {
+//         linear_combination::<FieldT, SV, SLC>::from(linear_term::<FieldT, SV>::from(rhs))
+//     }
+// }
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> From<FieldT>
     for linear_combination<FieldT, SV, SLC>
@@ -997,15 +982,15 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    Add<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
-{
-    type Output = Self;
+// impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
+//     Add<integer_coeff_t> for linear_combination<FieldT, SV, SLC>
+// {
+//     type Output = Self;
 
-    fn add(self, rhs: integer_coeff_t) -> Self::Output {
-        self + linear_combination::<FieldT, SV, SLC>::from(rhs)
-    }
-}
+//     fn add(self, rhs: integer_coeff_t) -> Self::Output {
+//         self + linear_combination::<FieldT, SV, SLC>::from(rhs)
+//     }
+// }
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     Add<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>

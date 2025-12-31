@@ -18,7 +18,6 @@ use crate::gadgetlib1::pb_variable::{
     pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     generate_tinyram_prelude, tinyram_architecture_params, tinyram_program,
@@ -31,6 +30,7 @@ use crate::relations::ram_computations::rams::{
 };
 use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -221,13 +221,13 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.arg2_is_imm.clone() * (-1)).into(),
+                    (self.t.t.t.arg2_is_imm.clone() * (-1).into()).into(),
                 ],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.arg2_demux_success.clone() * (-1)).into(),
+                    (self.t.t.t.arg2_demux_success.clone() * (-1).into()).into(),
                 ],
-                vec![(variable::<FieldT, pb_variable>::from(ONE) * 0).into()],
+                vec![(variable::<FieldT, pb_variable>::from(ONE) * 0.into()).into()],
             ),
             format!("{} ensure_correc_demux", self.annotation_prefix),
         );
@@ -243,11 +243,11 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
                 vec![self.t.t.t.arg2_is_imm.clone().into()],
                 vec![
                     self.t.t.t.packed_arg2idx.clone().into(),
-                    (self.t.t.t.arg2_demux_result.clone() * (-1)).into(),
+                    (self.t.t.t.arg2_demux_result.clone() * (-1).into()).into(),
                 ],
                 vec![
                     self.t.t.t.packed_arg2val.clone().into(),
-                    (self.t.t.t.arg2_demux_result.clone() * (-1)).into(),
+                    (self.t.t.t.arg2_demux_result.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} compute_arg2val", self.annotation_prefix),

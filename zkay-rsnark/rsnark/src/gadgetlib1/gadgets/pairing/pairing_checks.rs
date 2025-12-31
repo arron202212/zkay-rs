@@ -24,8 +24,8 @@ use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation::{
 use crate::gadgetlib1::pb_variable::pb_variable;
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 
 pub type e_over_e_miller_loop_gadget<ppT, FieldT, PB> =

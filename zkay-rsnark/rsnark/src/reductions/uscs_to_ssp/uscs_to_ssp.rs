@@ -1,3 +1,10 @@
+use crate::relations::arithmetic_programs::ssp::ssp::{
+    ssp_instance, ssp_instance_evaluation, ssp_witness,
+};
+use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
+    uscs_auxiliary_input, uscs_constraint_system, uscs_primary_input,
+};
+use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 /** @file
 *****************************************************************************
 
@@ -30,14 +37,7 @@ ASIACRYPT 2014,
 *****************************************************************************/
 //#ifndef USCS_TO_SSP_HPP_
 // #define USCS_TO_SSP_HPP_
-use crate::relations::FieldTConfig;
-use crate::relations::arithmetic_programs::ssp::ssp::{
-    ssp_instance, ssp_instance_evaluation, ssp_witness,
-};
-use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
-    uscs_auxiliary_input, uscs_constraint_system, uscs_primary_input,
-};
-use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;
 use fqfft::evaluation_domain::{

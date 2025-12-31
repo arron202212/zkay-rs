@@ -44,6 +44,7 @@ use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
 
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::{PublicParams, PublicParamsType};
+#[derive(Default, Clone)]
 pub struct alt_bn128_pp;
 impl PublicParamsType for alt_bn128_pp {
     type Fp_type = alt_bn128_Fr;

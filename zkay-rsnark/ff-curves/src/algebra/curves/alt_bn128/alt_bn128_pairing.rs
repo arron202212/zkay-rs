@@ -6,8 +6,9 @@ use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing;
+use ffec::PpConfig;
 use ffec::common::profiling;
-
+use ffec::field_utils::bigint::bigint;
 /* final exponentiation */
 
 // alt_bn128_GT alt_bn128_final_exponentiation(elt:&alt_bn128_Fq12);
@@ -25,6 +26,9 @@ pub struct alt_bn128_ate_G1_precomp {
     // friend std::ostream& operator<<(std::ostream &out, prec_P:&alt_bn128_ate_G1_precomp);
     // friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P);
 }
+// impl<const N:usize> PpConfig for alt_bn128_ate_G1_precomp{
+//     type T=bigint<N>;
+// }
 use crate::algebra::curves::bn128::bn::g2::EllCoeff;
 // pub type alt_bn128_ate_ell_coeffs = EllCoeff<Config>;
 #[derive(Clone, Default, PartialEq, Eq)]
@@ -48,7 +52,9 @@ pub struct alt_bn128_ate_G2_precomp {
     // friend std::ostream& operator<<(std::ostream &out, prec_Q:&alt_bn128_ate_G2_precomp);
     // friend std::istream& operator>>(std::istream &in, alt_bn128_ate_G2_precomp &prec_Q);
 }
-
+// impl<const N:usize> PpConfig for alt_bn128_ate_G2_precomp{
+//     type T=bigint<N>;
+// }
 // alt_bn128_ate_G1_precomp alt_bn128_ate_precompute_G1(P:&alt_bn128_G1);
 // alt_bn128_ate_G2_precomp alt_bn128_ate_precompute_G2(Q:&alt_bn128_G2);
 
@@ -102,7 +108,12 @@ pub type alt_bn128_G2_precomp = alt_bn128_ate_G2_precomp;
 
 //    out
 // }
-
+use std::fmt;
+impl fmt::Display for alt_bn128_ate_G1_precomp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 // std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P)
 // {
 //     in >> prec_P.PX;
@@ -125,6 +136,11 @@ pub type alt_bn128_G2_precomp = alt_bn128_ate_G2_precomp;
 //    out
 // }
 
+impl fmt::Display for alt_bn128_ate_ell_coeffs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 // std::istream& operator>>(std::istream &in, c:&alt_bn128_ate_ell_coeffs)
 // {
 //     in >> c.ell_0;
@@ -153,7 +169,11 @@ pub type alt_bn128_G2_precomp = alt_bn128_ate_G2_precomp;
 //     }
 //    out
 // }
-
+impl fmt::Display for alt_bn128_ate_G2_precomp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 // std::istream& operator>>(std::istream& in, alt_bn128_ate_G2_precomp &prec_Q)
 // {
 //     in >> prec_Q.QX;

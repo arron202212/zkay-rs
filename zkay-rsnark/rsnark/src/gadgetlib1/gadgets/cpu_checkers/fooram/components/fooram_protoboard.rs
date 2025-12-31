@@ -3,9 +3,9 @@
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::ram_computations::rams::fooram::fooram_aux;
 use crate::relations::ram_computations::rams::fooram::fooram_aux::fooram_architecture_params;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
 #[derive(Clone, Default)]

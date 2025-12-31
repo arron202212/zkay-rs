@@ -50,7 +50,7 @@ pub enum ArithmeticOps<FieldT: FieldTConfig> {
     Cjmp(ALU_cjmp_gadgets<FieldT>),
     Cnjmp(ALU_cnjmp_gadgets<FieldT>),
 }
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 impl<FieldT: FieldTConfig> Default for ArithmeticOps<FieldT> {
     fn default() -> Self {
         Self::And(ALU_and_gadgets::<FieldT>::default())

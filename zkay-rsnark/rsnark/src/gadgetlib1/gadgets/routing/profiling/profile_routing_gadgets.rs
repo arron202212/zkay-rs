@@ -5,7 +5,7 @@ use crate::gadgetlib1::pb_variable::pb_variable_array;
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::common::utils::log2;
 use rccell::RcCell;
 

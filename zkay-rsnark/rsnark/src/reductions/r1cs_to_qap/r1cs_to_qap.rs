@@ -1,4 +1,3 @@
-use crate::relations::FieldTConfig;
 use crate::relations::arithmetic_programs::qap::qap::{
     qap_instance, qap_instance_evaluation, qap_witness,
 };
@@ -12,6 +11,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
+use ffec::FieldTConfig;
 use ffec::common::profiling;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;

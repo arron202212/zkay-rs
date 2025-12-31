@@ -7,9 +7,9 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
 /**
@@ -120,7 +120,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, bar_gadget<FieldT, P
 
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 pb_packing_sum::<FieldT, PB>(&self.t.X) * self.t.a.clone()
                     + pb_packing_sum::<FieldT, PB>(&self.t.Y) * self.t.b.clone(),
                 self.t.result.clone().into(),

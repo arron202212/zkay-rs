@@ -14,11 +14,11 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
 use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
 /**
@@ -254,7 +254,7 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
         */
         let mut shift_lc = linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
             is_word0.clone(),
-        ) * 1
+        ) * FieldT::from(1)
             + is_word1.clone() * (FieldT::from(2) ^ pb.borrow().t.ap.w);
         for i in 0..2 * pb.borrow().t.ap.bytes_in_word() {
             shift_lc = shift_lc.clone() + is_byte[i].clone() * (FieldT::from(2) ^ (8 * i));
@@ -298,18 +298,18 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
                     linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         self.t.t.t.subaddress.t.packed.clone(),
                     ) - variable::<FieldT, pb_variable>::from(i),
-                    0.into(),
+                    FieldT::from(0).into(),
                 ),
                 format!("{} is_subaddress_{}", self.annotation_prefix, i),
             );
         }
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 pb_sum::<FieldT, tinyram_protoboard<FieldT>, pb_variable>(
                     &self.t.t.t.is_subaddress.clone().into(),
                 ),
-                1.into(),
+                FieldT::from(1).into(),
             ),
             format!("{} is_subaddress", self.annotation_prefix),
         );
@@ -330,8 +330,9 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.access_is_word.clone().into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1].clone(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1].clone(),
                 self.t.t.t.is_word0.clone().into(),
             ),
             format!("{} is_word_0", self.annotation_prefix),

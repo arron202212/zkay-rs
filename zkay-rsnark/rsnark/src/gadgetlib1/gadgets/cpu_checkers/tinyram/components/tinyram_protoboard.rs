@@ -15,9 +15,9 @@ use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::tinyram_packing_gadget;
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::ram_computations::rams::ram_params;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_architecture_params;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
 #[derive(Clone, Default)]

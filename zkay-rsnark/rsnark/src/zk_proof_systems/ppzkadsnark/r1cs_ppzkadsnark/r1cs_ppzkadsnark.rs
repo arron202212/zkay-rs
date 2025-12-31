@@ -936,7 +936,7 @@ impl r1cs_ppzkadsnark_proof<ppT> {
 //     return in;
 // }
 
-impl<ppT> r1cs_ppzkadsnark_verification_key<ppT> {
+impl<ppT: PptConfig> r1cs_ppzkadsnark_verification_key<ppT> {
     //
     pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzkadsnark_verification_key<ppT> {
         let mut result = r1cs_ppzkadsnark_verification_key::<ppT>::new();
@@ -959,7 +959,7 @@ impl<ppT> r1cs_ppzkadsnark_verification_key<ppT> {
     }
 }
 
-pub fn r1cs_ppzkadsnark_auth_generator<ppT>() -> r1cs_ppzkadsnark_auth_keys<ppT> {
+pub fn r1cs_ppzkadsnark_auth_generator<ppT: PptConfig>() -> r1cs_ppzkadsnark_auth_keys<ppT> {
     let mut sigkp = sigGen::<ppT>();
     let mut prfseed = prfGen::<ppT>();
     let mut i = Fr::<snark_pp<ppT>>::random_element();
@@ -972,7 +972,7 @@ pub fn r1cs_ppzkadsnark_auth_generator<ppT>() -> r1cs_ppzkadsnark_auth_keys<ppT>
     );
 }
 
-pub fn r1cs_ppzkadsnark_auth_sign<ppT>(
+pub fn r1cs_ppzkadsnark_auth_sign<ppT: PptConfig>(
     ins: &Vec<Fr<snark_pp<ppT>>>,
     sk: &r1cs_ppzkadsnark_sec_auth_key<ppT>,
     labels: Vec<labelT>,
@@ -993,7 +993,7 @@ pub fn r1cs_ppzkadsnark_auth_sign<ppT>(
 
 // symmetric
 
-pub fn r1cs_ppzkadsnark_auth_verify<ppT>(
+pub fn r1cs_ppzkadsnark_auth_verify<ppT: PptConfig>(
     data: &Vec<Fr<snark_pp<ppT>>>,
     auth_data: &Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
     sak: &r1cs_ppzkadsnark_sec_auth_key<ppT>,
@@ -1013,7 +1013,7 @@ pub fn r1cs_ppzkadsnark_auth_verify<ppT>(
 
 // public
 
-pub fn r1cs_ppzkadsnark_auth_verify2<ppT>(
+pub fn r1cs_ppzkadsnark_auth_verify2<ppT: PptConfig>(
     data: &Vec<Fr<snark_pp<ppT>>>,
     auth_data: &Vec<r1cs_ppzkadsnark_auth_data<ppT>>,
     pak: &r1cs_ppzkadsnark_pub_auth_key<ppT>,
@@ -1031,7 +1031,7 @@ pub fn r1cs_ppzkadsnark_auth_verify2<ppT>(
     return res;
 }
 
-pub fn r1cs_ppzkadsnark_generator<ppT>(
+pub fn r1cs_ppzkadsnark_generator<ppT: PptConfig,const NN:usize>(
     cs: &r1cs_ppzkadsnark_constraint_system<ppT>,
     prms: &r1cs_ppzkadsnark_pub_auth_prms<ppT>,
 ) -> r1cs_ppzkadsnark_keypair<ppT> {

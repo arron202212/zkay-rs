@@ -11,7 +11,6 @@
 //  *****************************************************************************/
 //#ifndef R1CS_EXAMPLES_HPP_
 // #define R1CS_EXAMPLES_HPP_
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
@@ -19,6 +18,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
+use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block};
 use std::collections::BTreeMap;
 /**

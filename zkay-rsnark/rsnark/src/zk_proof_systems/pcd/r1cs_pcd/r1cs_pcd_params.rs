@@ -1,10 +1,10 @@
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_primary_input,
 };
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
     R1csPcdLocalDataConfig, r1cs_pcd_local_data, r1cs_pcd_message, r1cs_pcd_witness,
 };
+use ffec::FieldTConfig;
 use rccell::RcCell;
 
 pub struct r1cs_pcd_compliance_predicate_primary_input<FieldT: FieldTConfig> {

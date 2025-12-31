@@ -28,13 +28,14 @@
 //  <https://eprint.iacr.org/2016/260>
 
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
-use crate::knowledge_commitment::knowledge_commitment::{TConfig, knowledge_commitment_vector};
+use crate::knowledge_commitment::knowledge_commitment::{ knowledge_commitment_vector};
 use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_instance_map_with_evaluation;
 use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_witness_map;
 use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_params::{
     r1cs_gg_ppzksnark_auxiliary_input, r1cs_gg_ppzksnark_constraint_system,
     r1cs_gg_ppzksnark_primary_input,
 };
+ 
 use ff_curves::Fr;
 use ff_curves::GT;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
@@ -44,7 +45,7 @@ use ffec::scalar_multiplication::multiexp::{
 };
 
 use crate::common::data_structures::accumulation_vector::accumulation_vector;
-
+use ff_curves::PpConfig;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 
 use ff_curves::algebra::curves::public_params::{PublicParams, PublicParamsType};
@@ -58,7 +59,7 @@ const N: usize = 4;
 
 struct r1cs_gg_ppzksnark_proving_key<ppT: PublicParams>
 where
-    <ppT as ff_curves::PublicParams>::G2: TConfig<N>,
+    <ppT as ff_curves::PublicParams>::G2: PpConfig, <ppT as ff_curves::PublicParams>::G1: PpConfig
 {
     alpha_g1: ppT::G1,
     beta_g1: ppT::G1,
@@ -67,7 +68,7 @@ where
     delta_g2: ppT::G2,
 
     A_query: G1_vector<ppT>, // this could be a sparse vector if we had multiexp for those
-    B_query: knowledge_commitment_vector<N, ppT::G2, ppT::G1>,
+    B_query: knowledge_commitment_vector<ppT::G2, ppT::G1>,
     H_query: G1_vector<ppT>,
     L_query: G1_vector<ppT>,
 
@@ -82,7 +83,7 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proving_key<ppT> {
         delta_g1: ppT::G1,
         delta_g2: ppT::G2,
         A_query: G1_vector<ppT>,
-        B_query: knowledge_commitment_vector<N, ppT::G2, ppT::G1>,
+        B_query: knowledge_commitment_vector< ppT::G2, ppT::G1>,
         H_query: G1_vector<ppT>,
         L_query: G1_vector<ppT>,
         constraint_system: r1cs_gg_ppzksnark_constraint_system<
@@ -130,21 +131,21 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proving_key<ppT> {
     }
 
     pub fn size_in_bits(&self) -> usize {
-        return (size_in_bits(self.A_query)
+        self.A_query.size_in_bits()
             + self.B_query.size_in_bits()
-            + size_in_bits(self.H_query)
-            + size_in_bits(self.L_query)
+            + self.H_query.size_in_bits()
+            + self.L_query.size_in_bits()
             + 1 * ppT::G1::size_in_bits()
-            + 1 * ppT::G2::size_in_bits());
+            + 1 * ppT::G2::size_in_bits()
     }
 
     fn print_size(&self) {
         print_indent();
-        print!("* G1 elements in PK: {}\n", self.G1_size());
+        print!("* G1 elements in PK: {}\n", Self::g1_size());
         print_indent();
         print!("* Non-zero G1 elements in PK: {}\n", self.G1_sparse_size());
         print_indent();
-        print!("* G2 elements in PK: {}\n", self.G2_size());
+        print!("* G2 elements in PK: {}\n", Self::g2_size());
         print_indent();
         print!("* Non-zero G2 elements in PK: {}\n", self.G2_sparse_size());
         print_indent();
@@ -162,7 +163,7 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proving_key<ppT> {
  * A verification key for the R1CS GG-ppzkSNARK.
  */
 
-struct r1cs_gg_ppzksnark_verification_key<ppT: PublicParams> {
+struct r1cs_gg_ppzksnark_verification_key<ppT: PublicParams> where <ppT as ff_curves::PublicParams>::G1: PpConfig {
     alpha_g1_beta_g2: GT<ppT>,
     gamma_g2: ppT::G2,
     delta_g2: ppT::G2,
@@ -205,9 +206,9 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_verification_key<ppT> {
 
     fn print_size(&self) {
         print_indent();
-        print!("* G1 elements in VK: {}\n", self.G1_size());
+        print!("* G1 elements in VK: {}\n", Self::g1_size());
         print_indent();
-        print!("* G2 elements in VK: {}\n", self.G2_size());
+        print!("* G2 elements in VK: {}\n", Self::g2_size());
         print_indent();
         print!("* GT elements in VK: {}\n", self.GT_size());
         print_indent();
@@ -290,25 +291,25 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proof<ppT> {
         Self { g_A, g_B, g_C }
     }
 
-    pub fn g1_size(&self) -> usize {
-        return 2;
+    pub fn g1_size() -> usize {
+         2
     }
 
-    pub fn g2_size(&self) -> usize {
-        return 1;
+    pub fn g2_size() -> usize {
+         1
     }
 
-    pub fn size_in_bits(&self) -> usize {
-        return G1_size() * ppT::G1::size_in_bits() + G2_size() * ppT::G2::size_in_bits();
+    pub fn size_in_bits() -> usize {
+         Self::g1_size() * ppT::G1::size_in_bits() + Self::g2_size() * ppT::G2::size_in_bits()
     }
 
-    fn print_size(&self) {
+    fn print_size() {
         print_indent();
-        print!("* G1 elements in proof: {}\n", self.G1_size());
+        print!("* G1 elements in proof: {}\n", Self::g1_size());
         print_indent();
-        print!("* G2 elements in proof: {}\n", self.G2_size());
+        print!("* G2 elements in proof: {}\n", Self::g2_size());
         print_indent();
-        print!("* Proof size in bits: {}\n", self.size_in_bits());
+        print!("* Proof size in bits: {}\n", Self::size_in_bits());
     }
 
     fn is_well_formed(&self) -> bool {

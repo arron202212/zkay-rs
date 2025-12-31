@@ -22,7 +22,6 @@ use crate::gadgetlib1::pb_variable::{
     pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 /** @file
 *****************************************************************************
@@ -50,6 +49,7 @@ use crate::relations::ram_computations::rams::{
 };
 use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use ffec::common::utils::{from_twos_complement, log2, to_twos_complement};
 use rccell::RcCell;
@@ -1298,7 +1298,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_and_gadgets<Fi
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.result_flag.clone().into()],
             ),
@@ -1381,15 +1381,15 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<Fie
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                     vec![
                         variable::<FieldT, pb_variable>::from(ONE).into(),
-                        (self.t.t.t.arg1val.t.bits[i].clone() * (-1)).into(),
+                        (self.t.t.t.arg1val.t.bits[i].clone() * (-1).into()).into(),
                     ],
                     vec![
                         variable::<FieldT, pb_variable>::from(ONE).into(),
-                        (self.t.t.t.arg2val.t.bits[i].clone() * (-1)).into(),
+                        (self.t.t.t.arg2val.t.bits[i].clone() * (-1).into()).into(),
                     ],
                     vec![
                         variable::<FieldT, pb_variable>::from(ONE).into(),
-                        (self.t.t.t.t.res_word[i].clone() * (-1)).into(),
+                        (self.t.t.t.t.res_word[i].clone() * (-1).into()).into(),
                     ],
                 ),
                 format!("{} res_word_{}", self.annotation_prefix, i),
@@ -1418,7 +1418,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<Fie
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.result_flag.clone().into()],
             ),
@@ -1499,12 +1499,12 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<Fi
             /* a = b ^ c <=> a = b + c - 2*b*c, (2*b)*c = b+c - a */
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
-                    vec![(self.t.t.t.arg1val.t.bits[i].clone() * 2).into()],
+                    vec![(self.t.t.t.arg1val.t.bits[i].clone() * 2.into()).into()],
                     vec![self.t.t.t.arg2val.t.bits[i].clone().into()],
                     vec![
                         self.t.t.t.arg1val.t.bits[i].clone().into(),
                         self.t.t.t.arg2val.t.bits[i].clone().into(),
-                        (self.t.t.t.t.res_word[i].clone() * (-1)).into(),
+                        (self.t.t.t.t.res_word[i].clone() * (-1).into()).into(),
                     ],
                 ),
                 format!("{} res_word_{}", self.annotation_prefix, i),
@@ -1533,7 +1533,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<Fi
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.result_flag.clone().into()],
             ),
@@ -1616,7 +1616,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<Fi
                     vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                     vec![
                         variable::<FieldT, pb_variable>::from(ONE).into(),
-                        (self.t.t.t.arg2val.t.bits[i].clone() * (-1)).into(),
+                        (self.t.t.t.arg2val.t.bits[i].clone() * (-1).into()).into(),
                     ],
                     vec![self.t.t.t.t.res_word[i].clone().into()],
                 ),
@@ -1646,7 +1646,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<Fi
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.not_all_zeros_result.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.result_flag.clone().into()],
             ),
@@ -1862,7 +1862,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_sub_gadgets<Fi
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.negated_flag.clone() * (-1)).into(),
+                    (self.t.t.t.t.negated_flag.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.result_flag.clone().into()],
             ),
@@ -2029,11 +2029,11 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmov_gadgets<F
                 vec![self.t.t.t.flag.clone().into()],
                 vec![
                     self.t.t.t.arg2val.t.packed.clone().into(),
-                    (self.t.t.t.desval.t.packed.clone() * (-1)).into(),
+                    (self.t.t.t.desval.t.packed.clone() * (-1).into()).into(),
                 ],
                 vec![
                     self.t.t.t.result.clone().into(),
-                    (self.t.t.t.desval.t.packed.clone() * (-1)).into(),
+                    (self.t.t.t.desval.t.packed.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} cmov_result", self.annotation_prefix),
@@ -2113,7 +2113,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmp_gadgets<Fi
                 vec![self.t.t.t.t.cmpae_result_flag.clone().into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.cmpa_result_flag.clone() * (-1)).into(),
+                    (self.t.t.t.t.cmpa_result_flag.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.t.cmpe_result_flag.clone().into()],
             ),
@@ -2335,7 +2335,8 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.arg1val.t.bits[self.pb.borrow().t.ap.w - 1].clone() * (-1)).into(),
+                    (self.t.t.t.arg1val.t.bits[self.pb.borrow().t.ap.w - 1].clone() * (-1).into())
+                        .into(),
                 ],
                 vec![self.t.t.t.t.negated_arg1val_sign.clone().into()],
             ),
@@ -2346,7 +2347,8 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.arg2val.t.bits[self.pb.borrow().t.ap.w - 1].clone() * (-1)).into(),
+                    (self.t.t.t.arg2val.t.bits[self.pb.borrow().t.ap.w - 1].clone() * (-1).into())
+                        .into(),
                 ],
                 vec![self.t.t.t.t.negated_arg2val_sign.clone().into()],
             ),
@@ -2778,7 +2780,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
                 vec![self.t.t.t.t.top.clone().into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.is_top_empty.clone() * (-1)).into(),
+                    (self.t.t.t.t.is_top_empty.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} I*X=1-R (is_top_empty)", self.annotation_prefix),
@@ -2787,7 +2789,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![self.t.t.t.t.is_top_empty.clone().into()],
                 vec![self.t.t.t.t.top.clone().into()],
-                vec![(variable::<FieldT, pb_variable>::from(ONE) * 0).into()],
+                vec![(variable::<FieldT, pb_variable>::from(ONE) * 0.into()).into()],
             ),
             format!("{} R*X=0 (is_top_full)", self.annotation_prefix),
         );
@@ -2798,12 +2800,12 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
                 vec![
                     self.t.t.t.t.top.clone().into(),
                     (variable::<FieldT, pb_variable>::from(ONE)
-                        * (1i64 - (1i64 << (self.pb.borrow().t.ap.w + 1))))
-                        .into(),
+                        * (1i64 - (1i64 << (self.pb.borrow().t.ap.w + 1))).into())
+                    .into(),
                 ],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.is_top_full.clone() * (-1)).into(),
+                    (self.t.t.t.t.is_top_full.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} I*X=1-R (is_top_full)", self.annotation_prefix),
@@ -2814,10 +2816,10 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
                 vec![
                     self.t.t.t.t.top.clone().into(),
                     (variable::<FieldT, pb_variable>::from(ONE)
-                        * (1 - (1i64 << (self.pb.borrow().t.ap.w + 1))))
-                        .into(),
+                        * (1 - (1i64 << (self.pb.borrow().t.ap.w + 1))).into())
+                    .into(),
                 ],
-                vec![(variable::<FieldT, pb_variable>::from(ONE) * 0).into()],
+                vec![(variable::<FieldT, pb_variable>::from(ONE) * 0.into()).into()],
             ),
             format!("{} R*X=0 (is_top_full)", self.annotation_prefix),
         );
@@ -2828,8 +2830,8 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.is_top_full.clone() * (-1)).into(),
-                    (self.t.t.t.t.is_top_empty.clone() * (-1)).into(),
+                    (self.t.t.t.t.is_top_full.clone() * (-1).into()).into(),
+                    (self.t.t.t.t.is_top_empty.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.t.smulh_flag.clone().into()],
             ),
@@ -3195,7 +3197,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     self.t.t.t.arg1val.t.packed.clone().into(),
-                    (self.t.t.t.t.reversed_input.clone() * (-1)).into(),
+                    (self.t.t.t.t.reversed_input.clone() * (-1).into()).into(),
                 ],
                 vec![
                     self.t.t.t.opcode_indicators
@@ -3205,7 +3207,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
                 ],
                 vec![
                     self.t.t.t.t.barrel_right_internal[0].clone().into(),
-                    (self.t.t.t.t.reversed_input.clone() * (-1)).into(),
+                    (self.t.t.t.t.reversed_input.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} select_arg1val_or_reversed", self.annotation_prefix),
@@ -3278,7 +3280,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     variable::<FieldT, pb_variable>::from(ONE).into(),
-                    (self.t.t.t.t.is_oversize_shift.clone() * (-1)).into(),
+                    (self.t.t.t.t.is_oversize_shift.clone() * (-1).into()).into(),
                 ],
                 vec![
                     self.t.t.t.t.barrel_right_internal[self.t.t.t.t.logw]
@@ -3317,7 +3319,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     self.t.t.t.result.clone().into(),
-                    (self.t.t.t.t.reversed_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.reversed_result.clone() * (-1).into()).into(),
                 ],
                 vec![
                     self.t.t.t.opcode_indicators
@@ -3327,7 +3329,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
                 ],
                 vec![
                     self.t.t.t.t.shr_result.clone().into(),
-                    (self.t.t.t.t.reversed_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.reversed_result.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} shr_result", self.annotation_prefix),
@@ -3337,7 +3339,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     self.t.t.t.result.clone().into(),
-                    (self.t.t.t.t.reversed_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.reversed_result.clone() * (-1).into()).into(),
                 ],
                 vec![
                     self.t.t.t.opcode_indicators
@@ -3347,7 +3349,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
                 ],
                 vec![
                     self.t.t.t.t.shr_result.clone().into(),
-                    (self.t.t.t.t.reversed_result.clone() * (-1)).into(),
+                    (self.t.t.t.t.reversed_result.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} shl_result", self.annotation_prefix),

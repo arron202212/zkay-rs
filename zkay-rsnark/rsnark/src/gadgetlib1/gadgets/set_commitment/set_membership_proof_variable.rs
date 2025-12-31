@@ -27,10 +27,10 @@ use crate::gadgetlib1::pb_variable::{
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_variable_assignment;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::utils::bit_vector;
 use ffec::common::utils::log2;
 use ffec::field_utils::field_utils::convert_field_element_to_bit_vector;

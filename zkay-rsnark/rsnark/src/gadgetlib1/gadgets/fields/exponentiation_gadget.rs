@@ -5,7 +5,7 @@ use crate::gadgetlib1::gadgets::curves::{M, MulTConfig, SqrTConfig, VariableTCon
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::One;
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::scalar_multiplication::wnaf::find_wnaf;

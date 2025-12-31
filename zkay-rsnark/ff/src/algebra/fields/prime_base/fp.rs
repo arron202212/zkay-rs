@@ -1,7 +1,6 @@
 // Declaration of arithmetic in the finite field F[p], for prime p of fixed length.
-use std::borrow::Borrow;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-
+use crate::FieldTConfig;
+use crate::PpConfig;
 use crate::algebra::{
     field_utils::{
         BigInteger,
@@ -15,6 +14,8 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use std::borrow::Borrow;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use crate::common::utils::bit_vector;
 use num_traits::{One, Zero};
@@ -39,7 +40,7 @@ use std::marker::PhantomData;
 pub trait Fp_modelConfig<const N: usize>:
     Send + Sync + 'static + Sized + Default + Clone + Copy + Eq
 {
-    const num_limbs: usize = 42;
+    // const num_limbs: usize = 42;
     const modulus: bigint<N> = bigint::<N>::one();
     const num_bits: usize = 42;
     const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
@@ -173,7 +174,7 @@ pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
 // };
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> {
-    const num_limbs: usize = 1;
+    // const num_limbs: usize = 1;
     const modulus: bigint<N> = bigint::<N>::one();
     const num_bits: usize = 1;
     const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
@@ -190,6 +191,52 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> 
     const Rcubed: bigint<N> = bigint::<N>::one(); // R^3
 }
 
+// impl<const N: usize, T: Fp_modelConfig<N>> Borrow<Self> for Fp_model<N, T> {
+//     fn borrow(&self)->Self{
+//         *self
+//     }
+// }
+
+impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {}
+
+impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
+    type T = bigint<N>;
+}
+impl<const N: usize, T: Fp_modelConfig<N>> From<usize> for Fp_model<N, T> {
+    fn from(b: usize) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>::new(b as u64),
+            t: PhantomData,
+        }
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> From<u32> for Fp_model<N, T> {
+    fn from(b: u32) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>::new(b as u64),
+            t: PhantomData,
+        }
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> From<i32> for Fp_model<N, T> {
+    fn from(b: i32) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>::new(b as u64),
+            t: PhantomData,
+        }
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> From<i64> for Fp_model<N, T> {
+    fn from(b: i64) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>::new(b as u64),
+            t: PhantomData,
+        }
+    }
+}
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     pub const fn const_new(b: BigInt<N>) -> Self {
         Fp_model::<N, T> {
@@ -417,6 +464,15 @@ impl<const N: usize, const M: usize, T: Fp_modelConfig<N>> BitXorAssign<&bigint<
     }
 }
 
+impl<const N: usize, T: Fp_modelConfig<N>> Add<i32> for Fp_model<N, T> {
+    type Output = Fp_model<N, T>;
+
+    fn add(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
 impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp_model<N, T> {
     type Output = Fp_model<N, T>;
 
@@ -426,13 +482,41 @@ impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp_model<
         r
     }
 }
+impl<const N: usize, T: Fp_modelConfig<N>> Sub<i32> for Fp_model<N, T> {
+    type Output = Self;
 
+    fn sub(self, other: i32) -> <Fp_model<N, T> as Sub>::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
 impl<const N: usize, T: Fp_modelConfig<N>> Sub for Fp_model<N, T> {
     type Output = Self;
 
     fn sub(self, other: Self) -> <Fp_model<N, T> as Sub>::Output {
         let mut r = self;
         r -= other;
+        r
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<bigint<N>> for Fp_model<N, T> {
+    type Output = Fp_model<N, T>;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<i32> for Fp_model<N, T> {
+    type Output = Fp_model<N, T>;
+
+    fn mul(self, rhs: i32) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
         r
     }
 }
@@ -458,6 +542,16 @@ impl<const N: usize, T: Fp_modelConfig<N>> BitXor<u64> for Fp_model<N, T> {
     }
 }
 
+impl<const N: usize, T: Fp_modelConfig<N>> BitXor<usize> for Fp_model<N, T> {
+    type Output = Self;
+
+    // rhs is the "right-hand side" of the expression `a ^ b`
+    fn bitxor(self, rhs: usize) -> Self::Output {
+        let mut r = self;
+        // r ^= rhs;
+        r
+    }
+}
 impl<const N: usize, const M: usize, T: Fp_modelConfig<N>> BitXor<&bigint<M>> for Fp_model<N, T> {
     type Output = Self;
 

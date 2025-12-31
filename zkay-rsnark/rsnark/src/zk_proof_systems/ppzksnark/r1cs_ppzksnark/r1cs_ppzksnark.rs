@@ -33,52 +33,74 @@
 //  IEEE S&P 2013,
 //  <https://eprint.iacr.org/2013/279>
 
-use ff_curves::algebra::curves::public_params;
-
-use crate::common::data_structures::accumulation_vector;
-use crate::knowledge_commitment::knowledge_commitment;
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
-use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params;
-
-//
-
+// use ff_curves::algebra::curves::public_params;
+use crate::common::data_structures::accumulation_vector::accumulation_vector;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::knowledge_commitment::kc_multiexp::{kc_batch_exp, kc_multi_exp_with_mixed_addition};
+use crate::knowledge_commitment::knowledge_commitment::{
+    knowledge_commitment, knowledge_commitment_vector,
+};
+use crate::reductions::r1cs_to_qap::r1cs_to_qap::{
+    r1cs_to_qap_instance_map_with_evaluation, r1cs_to_qap_witness_map,
+};
+use crate::relations::arithmetic_programs::qap::qap::qap_instance_evaluation;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint_system;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params::{
+    r1cs_ppzksnark_auxiliary_input, r1cs_ppzksnark_constraint_system, r1cs_ppzksnark_primary_input,
+};
+use ff_curves::{
+    Fr, Fr_vector, G1, G1_precomp, G1_vector, G2, G2_precomp, PublicParams, PublicParamsType,
+};
+use ffec::FieldTConfig;
+use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::serialization::OUTPUT_NEWLINE;
+use ffec::scalar_multiplication::multiexp::{
+    batch_exp, get_exp_window_size, get_window_table, inhibit_profiling_info, multi_exp,
+    multi_exp_method, multi_exp_with_mixed_addition,
+};
+use ffec::{One, PpConfig, Zero};
+use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
+use std::fmt;
+use std::ops::{Add, Mul, Sub};
 /******************************** Proving key ********************************/
-
-// pub fn
-// pub struct r1cs_ppzksnark_proving_key;
-
-// pub fn
-// std::ostream& operator<<(std::ostream &out, &pk:r1cs_ppzksnark_proving_key<ppT>);
-
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_ppzksnark_proving_key<ppT> &pk);
 
 /**
  * A proving key for the R1CS ppzkSNARK.
  */
-
-struct r1cs_ppzksnark_proving_key<ppT> {
-    A_query: knowledge_commitment_vector<ffec::G1<ppT>, ffec::G1<ppT>>,
-    B_query: knowledge_commitment_vector<ffec::G2<ppT>, ffec::G1<ppT>>,
-    C_query: knowledge_commitment_vector<ffec::G1<ppT>, ffec::G1<ppT>>,
-    H_query: ffec::G1_vector<ppT>,
-    K_query: ffec::G1_vector<ppT>,
+pub trait PptConfig: PublicParamsType + PublicParams {}
+struct r1cs_ppzksnark_proving_key<ppT: PptConfig>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+{
+    A_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
+    B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
+    C_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
+    H_query: G1_vector<ppT>,
+    K_query: G1_vector<ppT>,
 
     constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
 }
-impl r1cs_ppzksnark_proving_key {
+impl<ppT: PptConfig> r1cs_ppzksnark_proving_key<ppT>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+{
     // r1cs_ppzksnark_proving_key() {};
     // r1cs_ppzksnark_proving_key<ppT>& operator=(&other:r1cs_ppzksnark_proving_key<ppT>) = default;
     // r1cs_ppzksnark_proving_key(&other:r1cs_ppzksnark_proving_key<ppT>) = default;
     // r1cs_ppzksnark_proving_key(r1cs_ppzksnark_proving_key<ppT> &&other) = default;
     pub fn new(
-        A_query: knowledge_commitment_vector<ffec::G1<ppT>, ffec::G1<ppT>>,
-        B_query: knowledge_commitment_vector<ffec::G2<ppT>, ffec::G1<ppT>>,
-        C_query: knowledge_commitment_vector<ffec::G1<ppT>, ffec::G1<ppT>>,
-        H_query: ffec::G1_vector<ppT>,
-        K_query: ffec::G1_vector<ppT>,
+        A_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
+        B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
+        C_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
+        H_query: G1_vector<ppT>,
+        K_query: G1_vector<ppT>,
         constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
-    ) -> Self {
+    ) -> Self
+    where
+        <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+    {
         Self {
             A_query,
             B_query,
@@ -90,42 +112,45 @@ impl r1cs_ppzksnark_proving_key {
     }
 
     pub fn g1_size(&self) -> usize {
-        return 2 * (A_query.domain_size() + C_query.domain_size())
-            + B_query.domain_size()
-            + H_query.len()
-            + K_query.len();
+        2 * (self.A_query.domain_size() + self.C_query.domain_size())
+            + self.B_query.domain_size()
+            + self.H_query.len()
+            + self.K_query.len()
     }
 
     pub fn g2_size(&self) -> usize {
-        return B_query.domain_size();
+        self.B_query.domain_size()
     }
 
     pub fn g1_sparse_size(&self) -> usize {
-        return 2 * (A_query.len() + C_query.len()) + B_query.len() + H_query.len() + K_query.len();
+        2 * (self.A_query.len() + self.C_query.len())
+            + self.B_query.len()
+            + self.H_query.len()
+            + self.K_query.len()
     }
 
     pub fn g2_sparse_size(&self) -> usize {
-        return B_query.len();
+        self.B_query.len()
     }
 
     pub fn size_in_bits(&self) -> usize {
-        return A_query.size_in_bits()
-            + B_query.size_in_bits()
-            + C_query.size_in_bits()
-            + ffec::size_in_bits(H_query)
-            + ffec::size_in_bits(K_query);
+        self.A_query.size_in_bits()
+            + self.B_query.size_in_bits()
+            + self.C_query.size_in_bits()
+            + ffec::size_in_bits(&self.H_query)
+            + ffec::size_in_bits(&self.K_query)
     }
 
     fn print_size(&self) {
-        ffec::print_indent();
-        print!("* G1 elements in PK: {}\n", self.G1_size());
-        ffec::print_indent();
-        print!("* Non-zero G1 elements in PK: {}\n", self.G1_sparse_size());
-        ffec::print_indent();
-        print!("* G2 elements in PK: {}\n", self.G2_size());
-        ffec::print_indent();
-        print!("* Non-zero G2 elements in PK: {}\n", self.G2_sparse_size());
-        ffec::print_indent();
+        print_indent();
+        print!("* G1 elements in PK: {}\n", self.g1_size());
+        print_indent();
+        print!("* Non-zero G1 elements in PK: {}\n", self.g1_sparse_size());
+        print_indent();
+        print!("* G2 elements in PK: {}\n", self.g2_size());
+        print_indent();
+        print!("* Non-zero G2 elements in PK: {}\n", self.g2_sparse_size());
+        print_indent();
         print!("* PK size in bits: {}\n", self.size_in_bits());
     }
 
@@ -136,40 +161,38 @@ impl r1cs_ppzksnark_proving_key {
 
 /******************************* Verification key ****************************/
 
-// pub fn
-// pub struct r1cs_ppzksnark_verification_key;
-
-// pub fn
-// std::ostream& operator<<(std::ostream &out, &vk:r1cs_ppzksnark_verification_key<ppT>);
-
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_ppzksnark_verification_key<ppT> &vk);
-
 /**
  * A verification key for the R1CS ppzkSNARK.
  */
-struct r1cs_ppzksnark_verification_key<ppT> {
-    alphaA_g2: ffec::G2<ppT>,
-    alphaB_g1: ffec::G1<ppT>,
-    alphaC_g2: ffec::G2<ppT>,
-    gamma_g2: ffec::G2<ppT>,
-    gamma_beta_g1: ffec::G1<ppT>,
-    gamma_beta_g2: ffec::G2<ppT>,
-    rC_Z_g2: ffec::G2<ppT>,
+#[derive(Default, Clone)]
+struct r1cs_ppzksnark_verification_key<ppT: PptConfig>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
+    alphaA_g2: G2<ppT>,
+    alphaB_g1: G1<ppT>,
+    alphaC_g2: G2<ppT>,
+    gamma_g2: G2<ppT>,
+    gamma_beta_g1: G1<ppT>,
+    gamma_beta_g2: G2<ppT>,
+    rC_Z_g2: G2<ppT>,
 
-    encoded_IC_query: accumulation_vector<ffec::G1<ppT>>,
+    encoded_IC_query: accumulation_vector<G1<ppT>>,
 }
-impl<ppT> r1cs_ppzksnark_verification_key<ppT> {
+impl<ppT: PptConfig> r1cs_ppzksnark_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     // r1cs_ppzksnark_verification_key() = default;
     pub fn new(
-        alphaA_g2: ffec::G2<ppT>,
-        alphaB_g1: ffec::G1<ppT>,
-        alphaC_g2: ffec::G2<ppT>,
-        gamma_g2: ffec::G2<ppT>,
-        gamma_beta_g1: ffec::G1<ppT>,
-        gamma_beta_g2: ffec::G2<ppT>,
-        rC_Z_g2: ffec::G2<ppT>,
-        eIC: accumulation_vector<ffec::G1<ppT>>,
+        alphaA_g2: G2<ppT>,
+        alphaB_g1: G1<ppT>,
+        alphaC_g2: G2<ppT>,
+        gamma_g2: G2<ppT>,
+        gamma_beta_g1: G1<ppT>,
+        gamma_beta_g2: G2<ppT>,
+        rC_Z_g2: G2<ppT>,
+        eIC: accumulation_vector<G1<ppT>>,
     ) -> Self {
         Self {
             alphaA_g2,
@@ -184,25 +207,25 @@ impl<ppT> r1cs_ppzksnark_verification_key<ppT> {
     }
 
     pub fn g1_size(&self) -> usize {
-        return 2 + encoded_IC_query.len();
+        2 + self.encoded_IC_query.len()
     }
 
     pub fn g2_size(&self) -> usize {
-        return 5;
+        5
     }
 
     pub fn size_in_bits(&self) -> usize {
-        return (2 * ppT::G1::size_in_bits()
-            + encoded_IC_query.size_in_bits()
-            + 5 * ppT::G2::size_in_bits());
+        (2 * G1::<ppT>::size_in_bits()
+            + self.encoded_IC_query.size_in_bits()
+            + 5 * G2::<ppT>::size_in_bits())
     }
 
     fn print_size(&self) {
-        ffec::print_indent();
-        print!("* G1 elements in VK: {}\n", self.G1_size());
-        ffec::print_indent();
-        print!("* G2 elements in VK: {}\n", self.G2_size());
-        ffec::print_indent();
+        print_indent();
+        print!("* G1 elements in VK: {}\n", self.g1_size());
+        print_indent();
+        print!("* G2 elements in VK: {}\n", self.g2_size());
+        print_indent();
         print!("* VK size in bits: {}\n", self.size_in_bits());
     }
 
@@ -215,15 +238,6 @@ impl<ppT> r1cs_ppzksnark_verification_key<ppT> {
 
 /************************ Processed verification key *************************/
 
-// pub fn
-// pub struct r1cs_ppzksnark_processed_verification_key;
-
-// pub fn
-// std::ostream& operator<<(std::ostream &out, &pvk:r1cs_ppzksnark_processed_verification_key<ppT>);
-
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_ppzksnark_processed_verification_key<ppT> &pvk);
-
 /**
  * A processed verification key for the R1CS ppzkSNARK.
  *
@@ -231,17 +245,21 @@ impl<ppT> r1cs_ppzksnark_verification_key<ppT> {
  * contains a small constant amount of additional pre-computed information that
  * enables a faster verification time.
  */
-struct r1cs_ppzksnark_processed_verification_key<ppT> {
-    pp_G2_one_precomp: ffec::G2_precomp<ppT>,
-    vk_alphaA_g2_precomp: ffec::G2_precomp<ppT>,
-    vk_alphaB_g1_precomp: ffec::G1_precomp<ppT>,
-    vk_alphaC_g2_precomp: ffec::G2_precomp<ppT>,
-    vk_rC_Z_g2_precomp: ffec::G2_precomp<ppT>,
-    vk_gamma_g2_precomp: ffec::G2_precomp<ppT>,
-    vk_gamma_beta_g1_precomp: ffec::G1_precomp<ppT>,
-    vk_gamma_beta_g2_precomp: ffec::G2_precomp<ppT>,
+#[derive(Default, Clone)]
+struct r1cs_ppzksnark_processed_verification_key<ppT: PptConfig>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
+    pp_G2_one_precomp: G2_precomp<ppT>,
+    vk_alphaA_g2_precomp: G2_precomp<ppT>,
+    vk_alphaB_g1_precomp: G1_precomp<ppT>,
+    vk_alphaC_g2_precomp: G2_precomp<ppT>,
+    vk_rC_Z_g2_precomp: G2_precomp<ppT>,
+    vk_gamma_g2_precomp: G2_precomp<ppT>,
+    vk_gamma_beta_g1_precomp: G1_precomp<ppT>,
+    vk_gamma_beta_g2_precomp: G2_precomp<ppT>,
 
-    encoded_IC_query: accumulation_vector<ffec::G1<ppT>>,
+    encoded_IC_query: accumulation_vector<G1<ppT>>,
     // bool operator==(&other:r1cs_ppzksnark_processed_verification_key) const;
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzksnark_processed_verification_key<ppT> &pvk);
@@ -252,11 +270,20 @@ struct r1cs_ppzksnark_processed_verification_key<ppT> {
 /**
  * A key pair for the R1CS ppzkSNARK, which consists of a proving key and a verification key.
  */
-struct r1cs_ppzksnark_keypair<ppT> {
+struct r1cs_ppzksnark_keypair<ppT: PptConfig>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+{
     pk: r1cs_ppzksnark_proving_key<ppT>,
     vk: r1cs_ppzksnark_verification_key<ppT>,
 }
-impl<ppT> r1cs_ppzksnark_keypair<ppT> {
+impl<ppT: PptConfig> r1cs_ppzksnark_keypair<ppT>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     // r1cs_ppzksnark_keypair() = default;
     // r1cs_ppzksnark_keypair(&other:r1cs_ppzksnark_keypair<ppT>) = default;
     pub fn new(
@@ -271,14 +298,6 @@ impl<ppT> r1cs_ppzksnark_keypair<ppT> {
 
 /*********************************** Proof ***********************************/
 
-// struct r1cs_ppzksnark_proof;
-
-// pub fn
-// std::ostream& operator<<(std::ostream &out, &proof:r1cs_ppzksnark_proof<ppT>);
-
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_ppzksnark_proof<ppT> &proof);
-
 /**
  * A proof for the R1CS ppzkSNARK.
  *
@@ -286,31 +305,34 @@ impl<ppT> r1cs_ppzksnark_keypair<ppT> {
  * serializes/deserializes, and verifies proofs. We only expose some information
  * about the structure for statistics purposes.
  */
-struct r1cs_ppzksnark_proof<ppT> {
-    g_A: knowledge_commitment<ffec::G1<ppT>, ffec::G1<ppT>>,
-    g_B: knowledge_commitment<ffec::G2<ppT>, ffec::G1<ppT>>,
-    g_C: knowledge_commitment<ffec::G1<ppT>, ffec::G1<ppT>>,
-    g_H: ffec::G1<ppT>,
-    g_K: ffec::G1<ppT>,
+struct r1cs_ppzksnark_proof<ppT: PptConfig> {
+    g_A: knowledge_commitment<G1<ppT>, G1<ppT>>,
+    g_B: knowledge_commitment<G2<ppT>, G1<ppT>>,
+    g_C: knowledge_commitment<G1<ppT>, G1<ppT>>,
+    g_H: G1<ppT>,
+    g_K: G1<ppT>,
 }
-impl<ppT> r1cs_ppzksnark_proof<ppT> {
+impl<ppT: PptConfig> r1cs_ppzksnark_proof<ppT> {
     pub fn default() -> Self {
         // invalid proof with valid curve points
         Self {
-            g_A: knowledge_commitment::new(ppT::G1::one(), ppT::G1::one()),
-            g_B: knowledge_commitment::new(ppT::G2::one(), ppT::G1::one()),
-            g_C: lknowledge_commitment::new(ppT::G1::one(), ppT::G1::one()),
-            g_H: ppT::G1::one(),
-            g_K: ppT::G1::one(),
+            g_A: knowledge_commitment::new(G1::<ppT>::one(), G1::<ppT>::one()),
+            g_B: knowledge_commitment::new(G2::<ppT>::one(), G1::<ppT>::one()),
+            g_C: knowledge_commitment::new(G1::<ppT>::one(), G1::<ppT>::one()),
+            g_H: G1::<ppT>::one(),
+            g_K: G1::<ppT>::one(),
         }
     }
-    pub fn new_paras(
-        g_A: knowledge_commitment<ffec::G1<ppT>, ffec::G1<ppT>>,
-        g_B: knowledge_commitment<ppT::G2, ffec::G1<ppT>>,
-        g_C: knowledge_commitment<ffec::G1<ppT>, ffec::G1<ppT>>,
-        g_H: ffec::G1<ppT>,
-        g_K: ffec::G1<ppT>,
-    ) -> Self {
+    pub fn new(
+        g_A: knowledge_commitment<G1<ppT>, G1<ppT>>,
+        g_B: knowledge_commitment<G2<ppT>, G1<ppT>>,
+        g_C: knowledge_commitment<G1<ppT>, G1<ppT>>,
+        g_H: G1<ppT>,
+        g_K: G1<ppT>,
+    ) -> Self
+    where
+        <ppT as ff_curves::PublicParams>::G2: PpConfig,
+    {
         Self {
             g_A,
             g_B,
@@ -320,36 +342,36 @@ impl<ppT> r1cs_ppzksnark_proof<ppT> {
         }
     }
 
-    pub fn g1_size(&self) -> usize {
-        return 7;
+    pub fn g1_size() -> usize {
+        7
     }
 
-    pub fn g2_size(&self) -> usize {
-        return 1;
+    pub fn g2_size() -> usize {
+        1
     }
 
-    pub fn size_in_bits(&self) -> usize {
-        return G1_size() * ppT::G1::size_in_bits() + G2_size() * ppT::G2::size_in_bits();
+    pub fn size_in_bits() -> usize {
+        Self::g1_size() * G1::<ppT>::size_in_bits() + Self::g2_size() * G2::<ppT>::size_in_bits()
     }
 
-    fn print_size(&self) {
-        ffec::print_indent();
-        print!("* G1 elements in proof: {}\n", self.G1_size());
-        ffec::print_indent();
-        print!("* G2 elements in proof: {}\n", self.G2_size());
-        ffec::print_indent();
-        print!("* Proof size in bits: {}\n", self.size_in_bits());
+    fn print_size() {
+        print_indent();
+        print!("* G1 elements in proof: {}\n", Self::g1_size());
+        print_indent();
+        print!("* G2 elements in proof: {}\n", Self::g2_size());
+        print_indent();
+        print!("* Proof size in bits: {}\n", Self::size_in_bits());
     }
 
     fn is_well_formed(&self) -> bool {
-        return (g_A.g.is_well_formed()
-            && g_A.h.is_well_formed()
-            && g_B.g.is_well_formed()
-            && g_B.h.is_well_formed()
-            && g_C.g.is_well_formed()
-            && g_C.h.is_well_formed()
-            && g_H.is_well_formed()
-            && g_K.is_well_formed());
+        self.g_A.g.is_well_formed()
+            && self.g_A.h.is_well_formed()
+            && self.g_B.g.is_well_formed()
+            && self.g_B.h.is_well_formed()
+            && self.g_C.g.is_well_formed()
+            && self.g_C.h.is_well_formed()
+            && self.g_H.is_well_formed()
+            && self.g_K.is_well_formed()
     }
 
     // bool operator==(&other:r1cs_ppzksnark_proof<ppT>) const;
@@ -365,33 +387,59 @@ impl<ppT> r1cs_ppzksnark_proof<ppT> {
  * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
  */
 
-pub fn r1cs_ppzksnark_generator<ppT>(
+pub fn r1cs_ppzksnark_generator<
+    ppT: PptConfig,
+    const NN: usize,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     cs: r1cs_ppzksnark_constraint_system<ppT>,
-) -> r1cs_ppzksnark_keypair<ppT> {
-    ffec::enter_block("Call to r1cs_ppzksnark_generator");
+) -> r1cs_ppzksnark_keypair<ppT>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+    for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+        Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+    <ppT as ff_curves::PublicParams>::Fr:
+        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+    <ppT as ff_curves::PublicParams>::Fr:
+        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+    ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
+            <ppT as ff_curves::PublicParams>::Fr,
+        >,
+{
+    enter_block("Call to r1cs_ppzksnark_generator", false);
 
     /* make the B_query "lighter" if possible */
-    let cs_copy = cs.clone();
+    let mut cs_copy = cs.clone();
     cs_copy.swap_AB_if_beneficial();
 
     /* draw random element at which the QAP is evaluated */
-    let t = ppT::Fr::random_element();
+    let t = Fr::<ppT>::random_element();
 
-    let qap_inst = r1cs_to_qap_instance_map_with_evaluation(cs_copy, t);
+    let qap_inst: qap_instance_evaluation<_, _> = r1cs_to_qap_instance_map_with_evaluation::<
+        Fr<ppT>,
+        ED,
+        pb_variable,
+        pb_linear_combination,
+    >(&cs_copy, &t);
 
-    ffec::print_indent();
+    print_indent();
     print!("* QAP number of variables: {}\n", qap_inst.num_variables());
-    ffec::print_indent();
+    print_indent();
     print!("* QAP pre degree: {}\n", cs_copy.constraints.len());
-    ffec::print_indent();
+    print_indent();
     print!("* QAP degree: {}\n", qap_inst.degree());
-    ffec::print_indent();
+    print_indent();
     print!(
         "* QAP number of input variables: {}\n",
         qap_inst.num_inputs()
     );
 
-    ffec::enter_block("Compute query densities");
+    enter_block("Compute query densities", false);
     let (mut non_zero_At, mut non_zero_Bt, mut non_zero_Ct, mut non_zero_Ht) = (0, 0, 0, 0);
     for i in 0..qap_inst.num_variables() + 1 {
         if !qap_inst.At[i].is_zero() {
@@ -409,46 +457,51 @@ pub fn r1cs_ppzksnark_generator<ppT>(
             non_zero_Ht += 1;
         }
     }
-    ffec::leave_block("Compute query densities");
+    leave_block("Compute query densities", false);
 
-    let mut At = qap_inst.At; // qap_inst.At is now in unspecified state, but we do not use it later
-    let mut Bt = qap_inst.Bt; // qap_inst.Bt is now in unspecified state, but we do not use it later
-    let mut Ct = qap_inst.Ct; // qap_inst.Ct is now in unspecified state, but we do not use it later
-    let mut Ht = qap_inst.Ht; // qap_inst.Ht is now in unspecified state, but we do not use it later
+    let mut At = qap_inst.At.clone(); // qap_inst.At is now in unspecified state, but we do not use it later
+    let mut Bt = qap_inst.Bt.clone(); // qap_inst.Bt is now in unspecified state, but we do not use it later
+    let mut Ct = qap_inst.Ct.clone(); // qap_inst.Ct is now in unspecified state, but we do not use it later
+    let mut Ht = qap_inst.Ht.clone(); // qap_inst.Ht is now in unspecified state, but we do not use it later
 
     /* append Zt to At,Bt,Ct with */
-    At.push(qap_inst.Zt);
-    Bt.push(qap_inst.Zt);
-    Ct.push(qap_inst.Zt);
+    At.push(qap_inst.Zt.clone());
+    Bt.push(qap_inst.Zt.clone());
+    Ct.push(qap_inst.Zt.clone());
 
     let (alphaA, alphaB, alphaC, rA, rB, beta, gamma) = (
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
     );
-    let rC = rA * rB;
+    let rC = rA.clone() * rB.clone();
 
     // consrtuct the same-coefficient-check query (must happen before zeroing out the prefix of At)
-    let mut Kt = ppT::Fr_vector::new();
+    let mut Kt = Fr_vector::<ppT>::default();
     Kt.reserve(qap_inst.num_variables() + 4);
     for i in 0..qap_inst.num_variables() + 1 {
-        Kt.push(beta * (rA * At[i] + rB * Bt[i] + rC * Ct[i]));
+        Kt.push(
+            beta.clone()
+                * (rA.clone() * At[i].clone()
+                    + rB.clone() * Bt[i].clone()
+                    + rC.clone() * Ct[i].clone()),
+        );
     }
-    Kt.push(beta * rA * qap_inst.Zt);
-    Kt.push(beta * rB * qap_inst.Zt);
-    Kt.push(beta * rC * qap_inst.Zt);
+    Kt.push(beta.clone() * rA.clone() * qap_inst.Zt.clone());
+    Kt.push(beta.clone() * rB.clone() * qap_inst.Zt.clone());
+    Kt.push(beta.clone() * rC.clone() * qap_inst.Zt.clone());
 
     /* zero out prefix of At and stick it into IC coefficients */
-    let mut IC_coefficients = ppT::Fr_vector::new();
+    let mut IC_coefficients = Fr_vector::<ppT>::default();
     IC_coefficients.reserve(qap_inst.num_inputs() + 1);
     for i in 0..qap_inst.num_inputs() + 1 {
-        IC_coefficients.push(At[i]);
+        IC_coefficients.push(At[i].clone());
         assert!(!IC_coefficients[i].is_zero());
-        At[i] = ppT::Fr::zero();
+        At[i] = Fr::<ppT>::zero();
     }
 
     let g1_exp_count = 2 * (non_zero_At - qap_inst.num_inputs() + non_zero_Ct)
@@ -457,120 +510,147 @@ pub fn r1cs_ppzksnark_generator<ppT>(
         + Kt.len();
     let g2_exp_count = non_zero_Bt;
 
-    let g1_window = ffec::get_exp_window_size::<ppT::G1>(g1_exp_count);
-    let g2_window = ffec::get_exp_window_size::<ppT::G2>(g2_exp_count);
-    ffec::print_indent();
+    let g1_window = get_exp_window_size::<G1<ppT>>(g1_exp_count);
+    let g2_window = get_exp_window_size::<G2<ppT>>(g2_exp_count);
+    print_indent();
     print!("* G1 window: {}\n", g1_window);
-    ffec::print_indent();
+    print_indent();
     print!("* G2 window: {}\n", g2_window);
 
     // // #ifdef MULTICORE
     //     let  chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
-    //     let  usize chunks = 1;
+    let chunks = 1;
     // //#endif
 
-    ffec::enter_block("Generating G1 multiexp table");
-    let g1_table = get_window_table(ppT::Fr::size_in_bits(), g1_window, ppT::G1::one());
-    ffec::leave_block("Generating G1 multiexp table");
+    enter_block("Generating G1 multiexp table", false);
+    let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, &G1::<ppT>::one());
+    leave_block("Generating G1 multiexp table", false);
 
-    ffec::enter_block("Generating G2 multiexp table");
-    let g2_table = get_window_table(ppT::Fr::size_in_bits(), g2_window, ppT::G2::one());
-    ffec::leave_block("Generating G2 multiexp table");
+    enter_block("Generating G2 multiexp table", false);
+    let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, &G2::<ppT>::one());
+    leave_block("Generating G2 multiexp table", false);
 
-    ffec::enter_block("Generate R1CS proving key");
+    enter_block("Generate R1CS proving key", false);
 
-    ffec::enter_block("Generate knowledge commitments");
-    ffec::enter_block("Compute the A-query", false);
-    let A_query = kc_batch_exp(
-        ppT::Fr::size_in_bits(),
+    enter_block("Generate knowledge commitments", false);
+    enter_block("Compute the A-query", false);
+    let A_query = kc_batch_exp::<
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::Fr,
+        NN,
+    >(
+        Fr::<ppT>::size_in_bits(),
         g1_window,
         g1_window,
-        g1_table,
-        g1_table,
-        rA,
-        rA * alphaA,
-        At,
+        &g1_table,
+        &g1_table,
+        &rA,
+        &(rA.clone() * alphaA.clone()),
+        &At,
         chunks,
     );
-    ffec::leave_block("Compute the A-query", false);
+    leave_block("Compute the A-query", false);
 
-    ffec::enter_block("Compute the B-query", false);
-    let B_query = kc_batch_exp(
-        ppT::Fr::size_in_bits(),
+    enter_block("Compute the B-query", false);
+    let B_query = kc_batch_exp::<
+        <ppT as ff_curves::PublicParams>::G2,
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::Fr,
+        NN,
+    >(
+        Fr::<ppT>::size_in_bits(),
         g2_window,
         g1_window,
-        g2_table,
-        g1_table,
-        rB,
-        rB * alphaB,
-        Bt,
+        &g2_table,
+        &g1_table,
+        &rB,
+        &(rB.clone() * alphaB.clone()),
+        &Bt,
         chunks,
     );
-    ffec::leave_block("Compute the B-query", false);
+    leave_block("Compute the B-query", false);
 
-    ffec::enter_block("Compute the C-query", false);
-    let C_query = kc_batch_exp(
-        ppT::Fr::size_in_bits(),
+    enter_block("Compute the C-query", false);
+    let C_query = kc_batch_exp::<
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::Fr,
+        NN,
+    >(
+        Fr::<ppT>::size_in_bits(),
         g1_window,
         g1_window,
-        g1_table,
-        g1_table,
-        rC,
-        rC * alphaC,
-        Ct,
+        &g1_table,
+        &g1_table,
+        &rC,
+        &(rC.clone() * alphaC.clone()),
+        &Ct,
         chunks,
     );
-    ffec::leave_block("Compute the C-query", false);
+    leave_block("Compute the C-query", false);
 
-    ffec::enter_block("Compute the H-query", false);
-    let H_query = batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_table, Ht);
+    enter_block("Compute the H-query", false);
+    let H_query = batch_exp::<
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::Fr,
+        NN,
+    >(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht);
     // // #ifdef USE_MIXED_ADDITION
-    //     ffec::batch_to_special<ffec::G1<ppT> >(H_query);
+    //     batch_to_special<G1<ppT> >(H_query);
     // //#endif
-    ffec::leave_block("Compute the H-query", false);
+    leave_block("Compute the H-query", false);
 
-    ffec::enter_block("Compute the K-query", false);
-    let K_query = batch_exp(ppT::Fr::size_in_bits(), g1_window, g1_table, Kt);
+    enter_block("Compute the K-query", false);
+    let K_query = batch_exp::<
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::Fr,
+        NN,
+    >(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Kt);
     // // #ifdef USE_MIXED_ADDITION
-    //     ffec::batch_to_special<ffec::G1<ppT> >(K_query);
+    //     batch_to_special<G1<ppT> >(K_query);
     // //#endif
-    ffec::leave_block("Compute the K-query", false);
+    leave_block("Compute the K-query", false);
 
-    ffec::leave_block("Generate knowledge commitments");
+    leave_block("Generate knowledge commitments", false);
 
-    ffec::leave_block("Generate R1CS proving key");
+    leave_block("Generate R1CS proving key", false);
 
-    ffec::enter_block("Generate R1CS verification key");
-    let alphaA_g2 = alphaA * ppT::G2::one();
-    let alphaB_g1 = alphaB * ppT::G1::one();
-    let alphaC_g2 = alphaC * ppT::G2::one();
-    let gamma_g2 = gamma * ppT::G2::one();
-    let gamma_beta_g1 = (gamma * beta) * ppT::G1::one();
-    let gamma_beta_g2 = (gamma * beta) * ppT::G2::one();
-    let rC_Z_g2 = (rC * qap_inst.Zt) * ppT::G2::one();
+    enter_block("Generate R1CS verification key", false);
+    let alphaA_g2 = alphaA.clone() * G2::<ppT>::one();
+    let alphaB_g1 = alphaB.clone() * G1::<ppT>::one();
+    let alphaC_g2 = alphaC.clone() * G2::<ppT>::one();
+    let gamma_g2 = gamma.clone() * G2::<ppT>::one();
+    let gamma_beta_g1 = (gamma.clone() * beta.clone()) * G1::<ppT>::one();
+    let gamma_beta_g2 = (gamma.clone() * beta.clone()) * G2::<ppT>::one();
+    let rC_Z_g2 = (rC.clone() * qap_inst.Zt.clone()) * G2::<ppT>::one();
 
-    ffec::enter_block("Encode IC query for R1CS verification key");
-    let encoded_IC_base = (rA * IC_coefficients[0]) * ppT::G1::one();
-    let mut multiplied_IC_coefficients = ppT::Fr_vector::new();
+    enter_block("Encode IC query for R1CS verification key", false);
+    let encoded_IC_base = (rA.clone() * IC_coefficients[0].clone()) * G1::<ppT>::one();
+    let mut multiplied_IC_coefficients = Fr_vector::<ppT>::default();
     multiplied_IC_coefficients.reserve(qap_inst.num_inputs());
     for i in 1..qap_inst.num_inputs() + 1 {
-        multiplied_IC_coefficients.push(rA * IC_coefficients[i]);
+        multiplied_IC_coefficients.push(rA.clone() * IC_coefficients[i].clone());
     }
-    let encoded_IC_values = batch_exp(
-        ppT::Fr::size_in_bits(),
+    let encoded_IC_values = batch_exp::<
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::Fr,
+        NN,
+    >(
+        Fr::<ppT>::size_in_bits(),
         g1_window,
-        g1_table,
-        multiplied_IC_coefficients,
+        &g1_table,
+        &multiplied_IC_coefficients,
     );
 
-    ffec::leave_block("Encode IC query for R1CS verification key");
-    ffec::leave_block("Generate R1CS verification key");
+    leave_block("Encode IC query for R1CS verification key", false);
+    leave_block("Generate R1CS verification key", false);
 
-    ffec::leave_block("Call to r1cs_ppzksnark_generator");
+    leave_block("Call to r1cs_ppzksnark_generator", false);
 
     let mut encoded_IC_query =
-        accumulation_vector::<ppT::G1>::new((encoded_IC_base), (encoded_IC_values));
+        accumulation_vector::<G1<ppT>>::new_with_vec((encoded_IC_base), (encoded_IC_values));
 
     let mut vk = r1cs_ppzksnark_verification_key::<ppT>::new(
         alphaA_g2,
@@ -601,47 +681,88 @@ pub fn r1cs_ppzksnark_generator<ppT>(
  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
  */
 
-pub fn r1cs_ppzksnark_prover<ppT>(
+pub fn r1cs_ppzksnark_prover<ppT: PptConfig, FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
     pk: r1cs_ppzksnark_proving_key<ppT>,
     primary_input: r1cs_ppzksnark_primary_input<ppT>,
     auxiliary_input: r1cs_ppzksnark_auxiliary_input<ppT>,
-) -> r1cs_ppzksnark_proof<ppT> {
-    ffec::enter_block("Call to r1cs_ppzksnark_prover");
+) -> r1cs_ppzksnark_proof<ppT>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+    <ppT as ff_curves::PublicParams>::Fr: Mul<
+            knowledge_commitment<
+                <ppT as ff_curves::PublicParams>::G1,
+                <ppT as ff_curves::PublicParams>::G1,
+            >,
+            Output = knowledge_commitment<
+                <ppT as ff_curves::PublicParams>::G1,
+                <ppT as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    <ppT as ff_curves::PublicParams>::Fr:
+        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+    <ppT as ff_curves::PublicParams>::Fr: Mul<
+            knowledge_commitment<
+                <ppT as ff_curves::PublicParams>::G2,
+                <ppT as ff_curves::PublicParams>::G1,
+            >,
+            Output = knowledge_commitment<
+                <ppT as ff_curves::PublicParams>::G2,
+                <ppT as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+{
+    enter_block("Call to r1cs_ppzksnark_prover", false);
 
     // // #ifdef DEBUG
     //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
     // //#endif
     let (d1, d2, d3) = (
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
-        ppT::Fr::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
+        Fr::<ppT>::random_element(),
     );
 
-    ffec::enter_block("Compute the polynomial H");
-    let qap_wit =
-        r1cs_to_qap_witness_map(pk.constraint_system, primary_input, auxiliary_input, d1, d3);
-    ffec::leave_block("Compute the polynomial H");
+    enter_block("Compute the polynomial H", false);
+    let qap_wit = r1cs_to_qap_witness_map::<
+        <ppT as ff_curves::PublicParams>::Fr,
+        ED,
+        pb_variable,
+        pb_linear_combination,
+    >(
+        &pk.constraint_system,
+        &primary_input,
+        &auxiliary_input,
+        &d1,
+        &d2,
+        &d3,
+    );
+    leave_block("Compute the polynomial H", false);
 
     // // #ifdef DEBUG
-    //     ppT::Fr::random_element(:ffec::Fr<ppT> t =);
-    //     qap_instance_evaluation<ffec::Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
+    //     Fr::<ppT>::random_element(:Fr<ppT> t =);
+    //     qap_instance_evaluation<Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
     //     assert!(qap_inst.is_satisfied(qap_wit));
     // //#endif
 
-    let g_A = pk.A_query[0] + qap_wit.d1 * pk.A_query[qap_wit.num_variables() + 1];
-    let g_B = pk.B_query[0] + qap_wit.d2 * pk.B_query[qap_wit.num_variables() + 1];
-    let g_C = pk.C_query[0] + qap_wit.d3 * pk.C_query[qap_wit.num_variables() + 1];
+    let mut g_A = pk.A_query[0].clone()
+        + qap_wit.d1.clone() * pk.A_query[qap_wit.num_variables() + 1].clone();
+    let mut g_B = pk.B_query[0].clone()
+        + qap_wit.d2.clone() * pk.B_query[qap_wit.num_variables() + 1].clone();
+    let mut g_C = pk.C_query[0].clone()
+        + qap_wit.d3.clone() * pk.C_query[qap_wit.num_variables() + 1].clone();
 
-    let g_H = ppT::G1::zero();
-    let g_K = (pk.K_query[0]
-        + qap_wit.d1 * pk.K_query[qap_wit.num_variables() + 1]
-        + qap_wit.d2 * pk.K_query[qap_wit.num_variables() + 2]
-        + qap_wit.d3 * pk.K_query[qap_wit.num_variables() + 3]);
+    let mut g_H = G1::<ppT>::zero();
+    let mut g_K = (pk.K_query[0].clone()
+        + qap_wit.d1.clone() * pk.K_query[qap_wit.num_variables() + 1].clone()
+        + qap_wit.d2.clone() * pk.K_query[qap_wit.num_variables() + 2].clone()
+        + qap_wit.d3.clone() * pk.K_query[qap_wit.num_variables() + 3].clone());
 
     // // #ifdef DEBUG
     //     for i in 0..qap_wit.num_inputs() + 1
     //     {
-    //         assert!(pk.A_query[i].g == ppT::G1::zero());
+    //         assert!(pk.A_query[i].g == G1::<ppT>::zero());
     //     }
     //     assert!(pk.A_query.domain_size() == qap_wit.num_variables()+2);
     //     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+2);
@@ -653,96 +774,89 @@ pub fn r1cs_ppzksnark_prover<ppT>(
     // // #ifdef MULTICORE
     //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
-    //     let chunks = 1;
+    let chunks = 1;
     // //#endif
 
-    ffec::enter_block("Compute the proof");
+    enter_block("Compute the proof", false);
 
-    ffec::enter_block("Compute answer to A-query", false);
+    enter_block("Compute answer to A-query", false);
     g_A = g_A
         + kc_multi_exp_with_mixed_addition::<
-            ppT::G1,
-            ppT::G1,
-            ppT::Fr,
-            ffec::multi_exp_method_bos_coster,
+            G1<ppT>,
+            G1<ppT>,
+            Fr<ppT>,
+            { multi_exp_method::multi_exp_method_bos_coster },
         >(
-            pk.A_query,
+            &pk.A_query,
             1,
             1 + qap_wit.num_variables(),
-            qap_wit.coefficients_for_ABCs.begin(),
-            qap_wit.coefficients_for_ABCs.begin() + qap_wit.num_variables(),
+            &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    ffec::leave_block("Compute answer to A-query", false);
+    leave_block("Compute answer to A-query", false);
 
-    ffec::enter_block("Compute answer to B-query", false);
+    enter_block("Compute answer to B-query", false);
     g_B = g_B
         + kc_multi_exp_with_mixed_addition::<
-            ffec::G2<ppT>,
-            ffec::G1<ppT>,
-            ffec::Fr<ppT>,
-            ffec::multi_exp_method_bos_coster,
+            G2<ppT>,
+            G1<ppT>,
+            Fr<ppT>,
+            { multi_exp_method::multi_exp_method_bos_coster },
         >(
-            pk.B_query,
+            &pk.B_query,
             1,
             1 + qap_wit.num_variables(),
-            qap_wit.coefficients_for_ABCs.begin(),
-            qap_wit.coefficients_for_ABCs.begin() + qap_wit.num_variables(),
+            &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    ffec::leave_block("Compute answer to B-query", false);
+    leave_block("Compute answer to B-query", false);
 
-    ffec::enter_block("Compute answer to C-query", false);
+    enter_block("Compute answer to C-query", false);
     g_C = g_C
         + kc_multi_exp_with_mixed_addition::<
-            ffec::G1<ppT>,
-            ffec::G1<ppT>,
-            ffec::Fr<ppT>,
-            ffec::multi_exp_method_bos_coster,
+            G1<ppT>,
+            G1<ppT>,
+            Fr<ppT>,
+            { multi_exp_method::multi_exp_method_bos_coster },
         >(
-            pk.C_query,
+            &pk.C_query,
             1,
             1 + qap_wit.num_variables(),
-            qap_wit.coefficients_for_ABCs.begin(),
-            qap_wit.coefficients_for_ABCs.begin() + qap_wit.num_variables(),
+            &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    ffec::leave_block("Compute answer to C-query", false);
+    leave_block("Compute answer to C-query", false);
 
-    ffec::enter_block("Compute answer to H-query", false);
+    enter_block("Compute answer to H-query", false);
     g_H = g_H
-        + ffec::multi_exp::<ffec::G1<ppT>, ffec::Fr<ppT>, ffec::multi_exp_method_BDLO12>(
-            pk.H_query.begin(),
-            pk.H_query.begin() + qap_wit.degree() + 1,
-            qap_wit.coefficients_for_H.begin(),
-            qap_wit.coefficients_for_H.begin() + qap_wit.degree() + 1,
+        + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
+            &pk.H_query[..qap_wit.degree() + 1],
+            &qap_wit.coefficients_for_H[..qap_wit.degree() + 1],
             chunks,
         );
-    ffec::leave_block("Compute answer to H-query", false);
+    leave_block("Compute answer to H-query", false);
 
-    ffec::enter_block("Compute answer to K-query", false);
+    enter_block("Compute answer to K-query", false);
     g_K = g_K
-        + ffec::multi_exp_with_mixed_addition::<
-            ffec::G1<ppT>,
-            ffec::Fr<ppT>,
-            ffec::multi_exp_method_bos_coster,
+        + multi_exp_with_mixed_addition::<
+            G1<ppT>,
+            Fr<ppT>,
+            { multi_exp_method::multi_exp_method_bos_coster },
         >(
-            pk.K_query.begin() + 1,
-            pk.K_query.begin() + 1 + qap_wit.num_variables(),
-            qap_wit.coefficients_for_ABCs.begin(),
-            qap_wit.coefficients_for_ABCs.begin() + qap_wit.num_variables(),
+            &pk.K_query[1..1 + qap_wit.num_variables()],
+            &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    ffec::leave_block("Compute answer to K-query", false);
+    leave_block("Compute answer to K-query", false);
 
-    ffec::leave_block("Compute the proof");
+    leave_block("Compute the proof", false);
 
-    ffec::leave_block("Call to r1cs_ppzksnark_prover");
+    leave_block("Call to r1cs_ppzksnark_prover", false);
 
-    let proof = r1cs_ppzksnark_proof::<ppT>(g_A, g_B, g_C, g_H, g_K);
-    proof.print_size();
+    let proof = r1cs_ppzksnark_proof::<ppT>::new(g_A, g_B, g_C, g_H, g_K);
+    r1cs_ppzksnark_proof::<ppT>::print_size();
 
-    return proof;
+    proof
 }
 
 /*
@@ -765,15 +879,25 @@ These are the four cases that arise from the following two choices:
  * (2) has weak input consistency.
  */
 
-pub fn r1cs_ppzksnark_verifier_weak_IC<ppT>(
+pub fn r1cs_ppzksnark_verifier_weak_IC<
+    ppT: PptConfig,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     vk: r1cs_ppzksnark_verification_key<ppT>,
     primary_input: r1cs_ppzksnark_primary_input<ppT>,
     proof: r1cs_ppzksnark_proof<ppT>,
-) -> bool {
-    ffec::enter_block("Call to r1cs_ppzksnark_verifier_weak_IC");
-    let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>::new(vk);
-    let result = r1cs_ppzksnark_online_verifier_weak_IC::<ppT>::new(pvk, primary_input, proof);
-    ffec::leave_block("Call to r1cs_ppzksnark_verifier_weak_IC");
+) -> bool
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+{
+    enter_block("Call to r1cs_ppzksnark_verifier_weak_IC", false);
+    let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT, FieldT, ED>(vk);
+    let result =
+        r1cs_ppzksnark_online_verifier_weak_IC::<ppT, FieldT, ED>(pvk, primary_input, proof);
+    leave_block("Call to r1cs_ppzksnark_verifier_weak_IC", false);
     return result;
 }
 
@@ -783,39 +907,56 @@ pub fn r1cs_ppzksnark_verifier_weak_IC<ppT>(
  * (2) has strong input consistency.
  */
 
-pub fn r1cs_ppzksnark_verifier_strong_IC<ppT>(
+pub fn r1cs_ppzksnark_verifier_strong_IC<
+    ppT: PptConfig,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     vk: r1cs_ppzksnark_verification_key<ppT>,
     primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    &proof: r1cs_ppzksnark_proof<ppT>,
-) -> bool {
-    ffec::enter_block("Call to r1cs_ppzksnark_verifier_strong_IC");
-    let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>::new(vk);
-    let result = r1cs_ppzksnark_online_verifier_strong_IC::<ppT>::new(pvk, primary_input, proof);
-    ffec::leave_block("Call to r1cs_ppzksnark_verifier_strong_IC");
+    proof: r1cs_ppzksnark_proof<ppT>,
+) -> bool
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+{
+    enter_block("Call to r1cs_ppzksnark_verifier_strong_IC", false);
+    let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT, FieldT, ED>(vk);
+    let result =
+        r1cs_ppzksnark_online_verifier_strong_IC::<ppT, FieldT, ED>(pvk, primary_input, proof);
+    leave_block("Call to r1cs_ppzksnark_verifier_strong_IC", false);
     return result;
 }
 
 /**
  * Convert a (non-processed) verification key into a processed verification key.
  */
-pub fn r1cs_ppzksnark_verifier_process_vk<ppT>(
+pub fn r1cs_ppzksnark_verifier_process_vk<
+    ppT: PptConfig,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     vk: r1cs_ppzksnark_verification_key<ppT>,
-) -> r1cs_ppzksnark_processed_verification_key<ppT> {
-    ffec::enter_block("Call to r1cs_ppzksnark_verifier_process_vk");
+) -> r1cs_ppzksnark_processed_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
+    enter_block("Call to r1cs_ppzksnark_verifier_process_vk", false);
 
-    let pvk = r1cs_ppzksnark_processed_verification_key::<ppT>::new();
-    pvk.pp_G2_one_precomp = ppT::precompute_G2(ppT::G2::one());
-    pvk.vk_alphaA_g2_precomp = ppT::precompute_G2(vk.alphaA_g2);
-    pvk.vk_alphaB_g1_precomp = ppT::precompute_G1(vk.alphaB_g1);
-    pvk.vk_alphaC_g2_precomp = ppT::precompute_G2(vk.alphaC_g2);
-    pvk.vk_rC_Z_g2_precomp = ppT::precompute_G2(vk.rC_Z_g2);
-    pvk.vk_gamma_g2_precomp = ppT::precompute_G2(vk.gamma_g2);
-    pvk.vk_gamma_beta_g1_precomp = ppT::precompute_G1(vk.gamma_beta_g1);
-    pvk.vk_gamma_beta_g2_precomp = ppT::precompute_G2(vk.gamma_beta_g2);
+    let mut pvk = r1cs_ppzksnark_processed_verification_key::<ppT>::default();
+    pvk.pp_G2_one_precomp = ppT::precompute_G2(&G2::<ppT>::one());
+    pvk.vk_alphaA_g2_precomp = ppT::precompute_G2(&vk.alphaA_g2);
+    pvk.vk_alphaB_g1_precomp = ppT::precompute_G1(&vk.alphaB_g1);
+    pvk.vk_alphaC_g2_precomp = ppT::precompute_G2(&vk.alphaC_g2);
+    pvk.vk_rC_Z_g2_precomp = ppT::precompute_G2(&vk.rC_Z_g2);
+    pvk.vk_gamma_g2_precomp = ppT::precompute_G2(&vk.gamma_g2);
+    pvk.vk_gamma_beta_g1_precomp = ppT::precompute_G1(&vk.gamma_beta_g1);
+    pvk.vk_gamma_beta_g2_precomp = ppT::precompute_G2(&vk.gamma_beta_g2);
 
     pvk.encoded_IC_query = vk.encoded_IC_query;
 
-    ffec::leave_block("Call to r1cs_ppzksnark_verifier_process_vk");
+    leave_block("Call to r1cs_ppzksnark_verifier_process_vk", false);
 
     return pvk;
 }
@@ -825,124 +966,131 @@ pub fn r1cs_ppzksnark_verifier_process_vk<ppT>(
  * (2) has weak input consistency.
  */
 
-pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT>(
+pub fn r1cs_ppzksnark_online_verifier_weak_IC<
+    ppT: PptConfig,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     pvk: r1cs_ppzksnark_processed_verification_key<ppT>,
     primary_input: r1cs_ppzksnark_primary_input<ppT>,
     proof: r1cs_ppzksnark_proof<ppT>,
-) -> bool {
-    ffec::enter_block("Call to r1cs_ppzksnark_online_verifier_weak_IC");
+) -> bool
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+    for<'a> &'a <ppT as ff_curves::PublicParams>::G1: Add<&'a <ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+{
+    enter_block("Call to r1cs_ppzksnark_online_verifier_weak_IC", false);
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    ffec::enter_block("Compute input-dependent part of A");
-    let accumulated_IC = pvk.encoded_IC_query.accumulate_chunk::<ppT::Fr>(
-        primary_input.begin(),
-        primary_input.end(),
-        0,
-    );
+    enter_block("Compute input-dependent part of A", false);
+    let accumulated_IC = pvk
+        .encoded_IC_query
+        .accumulate_chunk::<ppT::Fr>(&primary_input, 0);
     let acc = &accumulated_IC.first;
-    ffec::leave_block("Compute input-dependent part of A");
+    leave_block("Compute input-dependent part of A", false);
 
     let mut result = true;
 
-    ffec::enter_block("Check if the proof is well-formed");
+    enter_block("Check if the proof is well-formed", false);
     if !proof.is_well_formed() {
-        if !ffec::inhibit_profiling_info {
-            ffec::print_indent();
+        if !inhibit_profiling_info {
+            print_indent();
             print!("At least one of the proof elements does not lie on the curve.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check if the proof is well-formed");
+    leave_block("Check if the proof is well-formed", false);
 
-    ffec::enter_block("Online pairing computations");
-    ffec::enter_block("Check knowledge commitment for A is valid");
-    let proof_g_A_g_precomp = ppT::precompute_G1(proof.g_A.g);
-    let proof_g_A_h_precomp = ppT::precompute_G1(proof.g_A.h);
-    let kc_A_1 = ppT::miller_loop(proof_g_A_g_precomp, pvk.vk_alphaA_g2_precomp);
-    let kc_A_2 = ppT::miller_loop(proof_g_A_h_precomp, pvk.pp_G2_one_precomp);
-    let kc_A = ppT::final_exponentiation(kc_A_1 * kc_A_2.unitary_inverse());
+    enter_block("Online pairing computations", false);
+    enter_block("Check knowledge commitment for A is valid", false);
+    let proof_g_A_g_precomp = ppT::precompute_G1(&proof.g_A.g);
+    let proof_g_A_h_precomp = ppT::precompute_G1(&proof.g_A.h);
+    let kc_A_1 = ppT::miller_loop(&proof_g_A_g_precomp, &pvk.vk_alphaA_g2_precomp);
+    let kc_A_2 = ppT::miller_loop(&proof_g_A_h_precomp, &pvk.pp_G2_one_precomp);
+    let kc_A = ppT::final_exponentiation(&(kc_A_1 * kc_A_2.unitary_inverse()));
     if kc_A != ppT::GT::one() {
-        if !ffec::inhibit_profiling_info {
-            ffec::print_indent();
+        if !inhibit_profiling_info {
+            print_indent();
             print!("Knowledge commitment for A query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for A is valid");
+    leave_block("Check knowledge commitment for A is valid", false);
 
-    ffec::enter_block("Check knowledge commitment for B is valid");
-    let proof_g_B_g_precomp = ppT::precompute_G2(proof.g_B.g);
-    let proof_g_B_h_precomp = ppT::precompute_G1(proof.g_B.h);
-    let kc_B_1 = ppT::miller_loop(pvk.vk_alphaB_g1_precomp, proof_g_B_g_precomp);
-    let kc_B_2 = ppT::miller_loop(proof_g_B_h_precomp, pvk.pp_G2_one_precomp);
-    let kc_B = ppT::final_exponentiation(kc_B_1 * kc_B_2.unitary_inverse());
+    enter_block("Check knowledge commitment for B is valid", false);
+    let proof_g_B_g_precomp = ppT::precompute_G2(&proof.g_B.g);
+    let proof_g_B_h_precomp = ppT::precompute_G1(&proof.g_B.h);
+    let kc_B_1 = ppT::miller_loop(&pvk.vk_alphaB_g1_precomp, &proof_g_B_g_precomp);
+    let kc_B_2 = ppT::miller_loop(&proof_g_B_h_precomp, &pvk.pp_G2_one_precomp);
+    let kc_B = ppT::final_exponentiation(&(kc_B_1 * kc_B_2.unitary_inverse()));
     if kc_B != ppT::GT::one() {
-        if !ffec::inhibit_profiling_info {
-            ffec::print_indent();
+        if !inhibit_profiling_info {
+            print_indent();
             print!("Knowledge commitment for B query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for B is valid");
+    leave_block("Check knowledge commitment for B is valid", false);
 
-    ffec::enter_block("Check knowledge commitment for C is valid");
-    let proof_g_C_g_precomp = ppT::precompute_G1(proof.g_C.g);
-    let proof_g_C_h_precomp = ppT::precompute_G1(proof.g_C.h);
-    let kc_C_1 = ppT::miller_loop(proof_g_C_g_precomp, pvk.vk_alphaC_g2_precomp);
-    let kc_C_2 = ppT::miller_loop(proof_g_C_h_precomp, pvk.pp_G2_one_precomp);
-    let kc_C = ppT::final_exponentiation(kc_C_1 * kc_C_2.unitary_inverse());
+    enter_block("Check knowledge commitment for C is valid", false);
+    let proof_g_C_g_precomp = ppT::precompute_G1(&proof.g_C.g);
+    let proof_g_C_h_precomp = ppT::precompute_G1(&proof.g_C.h);
+    let kc_C_1 = ppT::miller_loop(&proof_g_C_g_precomp, &pvk.vk_alphaC_g2_precomp);
+    let kc_C_2 = ppT::miller_loop(&proof_g_C_h_precomp, &pvk.pp_G2_one_precomp);
+    let kc_C = ppT::final_exponentiation(&(kc_C_1 * kc_C_2.unitary_inverse()));
     if kc_C != ppT::GT::one() {
-        if !ffec::inhibit_profiling_info {
-            ffec::print_indent();
+        if !inhibit_profiling_info {
+            print_indent();
             print!("Knowledge commitment for C query incorrect.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for C is valid");
+    leave_block("Check knowledge commitment for C is valid", false);
 
-    ffec::enter_block("Check QAP divisibility");
+    enter_block("Check QAP divisibility", false);
     // check that g^((A+acc)*B)=g^(H*\Prod(t-\sigma)+C)
     // equivalently, via pairings, that e(g^(A+acc), g^B) = e(g^H, g^Z) + e(g^C, g^1)
-    let proof_g_A_g_acc_precomp = ppT::precompute_G1(proof.g_A.g + acc);
-    let proof_g_H_precomp = ppT::precompute_G1(proof.g_H);
-    let QAP_1 = ppT::miller_loop(proof_g_A_g_acc_precomp, proof_g_B_g_precomp);
+    let proof_g_A_g_acc_precomp = ppT::precompute_G1(&(proof.g_A.g.clone() + acc.clone()));
+    let proof_g_H_precomp = ppT::precompute_G1(&proof.g_H);
+    let QAP_1 = ppT::miller_loop(&proof_g_A_g_acc_precomp, &proof_g_B_g_precomp);
     let QAP_23 = ppT::double_miller_loop(
-        proof_g_H_precomp,
-        pvk.vk_rC_Z_g2_precomp,
-        proof_g_C_g_precomp,
-        pvk.pp_G2_one_precomp,
+        &proof_g_H_precomp,
+        &pvk.vk_rC_Z_g2_precomp,
+        &proof_g_C_g_precomp,
+        &pvk.pp_G2_one_precomp,
     );
-    let QAP = ppT::final_exponentiation(QAP_1 * QAP_23.unitary_inverse());
+    let QAP = ppT::final_exponentiation(&(QAP_1 * QAP_23.unitary_inverse()));
     if QAP != ppT::GT::one() {
-        if !ffec::inhibit_profiling_info {
-            ffec::print_indent();
+        if !inhibit_profiling_info {
+            print_indent();
             print!("QAP divisibility check failed.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check QAP divisibility");
+    leave_block("Check QAP divisibility", false);
 
-    ffec::enter_block("Check same coefficients were used");
-    let proof_g_K_precomp = ppT::precompute_G1(proof.g_K);
-    let proof_g_A_g_acc_C_precomp = ppT::precompute_G1((proof.g_A.g + acc) + proof.g_C.g);
-    let K_1 = ppT::miller_loop(proof_g_K_precomp, pvk.vk_gamma_g2_precomp);
+    enter_block("Check same coefficients were used", false);
+    let proof_g_K_precomp = ppT::precompute_G1(&proof.g_K);
+    let proof_g_A_g_acc_C_precomp =
+        ppT::precompute_G1(&((proof.g_A.g + acc.clone()) + proof.g_C.g));
+    let K_1 = ppT::miller_loop(&proof_g_K_precomp, &pvk.vk_gamma_g2_precomp);
     let K_23 = ppT::double_miller_loop(
-        proof_g_A_g_acc_C_precomp,
-        pvk.vk_gamma_beta_g2_precomp,
-        pvk.vk_gamma_beta_g1_precomp,
-        proof_g_B_g_precomp,
+        &proof_g_A_g_acc_C_precomp,
+        &pvk.vk_gamma_beta_g2_precomp,
+        &pvk.vk_gamma_beta_g1_precomp,
+        &proof_g_B_g_precomp,
     );
-    let K = ppT::final_exponentiation(K_1 * K_23.unitary_inverse());
+    let K = ppT::final_exponentiation(&(K_1 * K_23.unitary_inverse()));
     if K != ppT::GT::one() {
-        if !ffec::inhibit_profiling_info {
-            ffec::print_indent();
+        if !inhibit_profiling_info {
+            print_indent();
             print!("Same-coefficient check failed.\n");
         }
         result = false;
     }
-    ffec::leave_block("Check same coefficients were used");
-    ffec::leave_block("Online pairing computations");
-    ffec::leave_block("Call to r1cs_ppzksnark_online_verifier_weak_IC");
+    leave_block("Check same coefficients were used", false);
+    leave_block("Online pairing computations", false);
+    leave_block("Call to r1cs_ppzksnark_online_verifier_weak_IC", false);
 
     return result;
 }
@@ -953,16 +1101,25 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT>(
  * (2) has strong input consistency.
  */
 
-pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT>(
+pub fn r1cs_ppzksnark_online_verifier_strong_IC<
+    ppT: PptConfig,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     pvk: r1cs_ppzksnark_processed_verification_key<ppT>,
     primary_input: r1cs_ppzksnark_primary_input<ppT>,
     proof: r1cs_ppzksnark_proof<ppT>,
-) -> bool {
-    let result = true;
-    ffec::enter_block("Call to r1cs_ppzksnark_online_verifier_strong_IC");
+) -> bool
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+{
+    let mut result = true;
+    enter_block("Call to r1cs_ppzksnark_online_verifier_strong_IC", false);
 
     if pvk.encoded_IC_query.domain_size() != primary_input.len() {
-        ffec::print_indent();
+        print_indent();
         print!(
             "Input length differs from expected (got {}, expected {}).\n",
             primary_input.len(),
@@ -970,11 +1127,12 @@ pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT>(
         );
         result = false;
     } else {
-        result = r1cs_ppzksnark_online_verifier_weak_IC(pvk, primary_input, proof);
+        result =
+            r1cs_ppzksnark_online_verifier_weak_IC::<ppT, FieldT, ED>(pvk, primary_input, proof);
     }
 
-    ffec::leave_block("Call to r1cs_ppzksnark_online_verifier_strong_IC");
-    return result;
+    leave_block("Call to r1cs_ppzksnark_online_verifier_strong_IC", false);
+    result
 }
 
 /****************************** Miscellaneous ********************************/
@@ -988,170 +1146,154 @@ pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT>(
  * (3) uses affine coordinates for elliptic-curve computations.
  */
 
-pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT>(
+pub fn r1cs_ppzksnark_affine_verifier_weak_IC<
+    ppT: PptConfig,
+    FieldT: FieldTConfig,
+    ED: evaluation_domain<FieldT>,
+>(
     vk: r1cs_ppzksnark_verification_key<ppT>,
     primary_input: r1cs_ppzksnark_primary_input<ppT>,
     proof: r1cs_ppzksnark_proof<ppT>,
-) -> bool {
-    ffec::enter_block("Call to r1cs_ppzksnark_affine_verifier_weak_IC");
+) -> bool
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
+    enter_block("Call to r1cs_ppzksnark_affine_verifier_weak_IC", false);
     assert!(vk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    let pvk_pp_G2_one_precomp = ppT::affine_ate_precompute_G2(ppT::G2::one());
-    let pvk_vk_alphaA_g2_precomp = ppT::affine_ate_precompute_G2(vk.alphaA_g2);
-    let pvk_vk_alphaB_g1_precomp = ppT::affine_ate_precompute_G1(vk.alphaB_g1);
-    let pvk_vk_alphaC_g2_precomp = ppT::affine_ate_precompute_G2(vk.alphaC_g2);
-    let pvk_vk_rC_Z_g2_precomp = ppT::affine_ate_precompute_G2(vk.rC_Z_g2);
-    let pvk_vk_gamma_g2_precomp = ppT::affine_ate_precompute_G2(vk.gamma_g2);
-    let pvk_vk_gamma_beta_g1_precomp = ppT::affine_ate_precompute_G1(vk.gamma_beta_g1);
-    let pvk_vk_gamma_beta_g2_precomp = ppT::affine_ate_precompute_G2(vk.gamma_beta_g2);
+    let pvk_pp_G2_one_precomp = ppT::affine_ate_precompute_G2(&G2::<ppT>::one());
+    let pvk_vk_alphaA_g2_precomp = ppT::affine_ate_precompute_G2(&vk.alphaA_g2);
+    let pvk_vk_alphaB_g1_precomp = ppT::affine_ate_precompute_G1(&vk.alphaB_g1);
+    let pvk_vk_alphaC_g2_precomp = ppT::affine_ate_precompute_G2(&vk.alphaC_g2);
+    let pvk_vk_rC_Z_g2_precomp = ppT::affine_ate_precompute_G2(&vk.rC_Z_g2);
+    let pvk_vk_gamma_g2_precomp = ppT::affine_ate_precompute_G2(&vk.gamma_g2);
+    let pvk_vk_gamma_beta_g1_precomp = ppT::affine_ate_precompute_G1(&vk.gamma_beta_g1);
+    let pvk_vk_gamma_beta_g2_precomp = ppT::affine_ate_precompute_G2(&vk.gamma_beta_g2);
 
-    ffec::enter_block("Compute input-dependent part of A");
-    let accumulated_IC = vk.encoded_IC_query.accumulate_chunk::<ppT::Fr>(
-        primary_input.begin(),
-        primary_input.end(),
-        0,
-    );
+    enter_block("Compute input-dependent part of A", false);
+    let accumulated_IC = vk
+        .encoded_IC_query
+        .accumulate_chunk::<ppT::Fr>(&primary_input, 0);
     assert!(accumulated_IC.is_fully_accumulated());
     let acc = &accumulated_IC.first;
-    ffec::leave_block("Compute input-dependent part of A");
+    leave_block("Compute input-dependent part of A", false);
 
-    let result = true;
-    ffec::enter_block("Check knowledge commitment for A is valid");
-    let proof_g_A_g_precomp = ppT::affine_ate_precompute_G1(proof.g_A.g);
-    let proof_g_A_h_precomp = ppT::affine_ate_precompute_G1(proof.g_A.h);
+    let mut result = true;
+    enter_block("Check knowledge commitment for A is valid", false);
+    let proof_g_A_g_precomp = ppT::affine_ate_precompute_G1(&proof.g_A.g);
+    let proof_g_A_h_precomp = ppT::affine_ate_precompute_G1(&proof.g_A.h);
     let kc_A_miller = ppT::affine_ate_e_over_e_miller_loop(
-        proof_g_A_g_precomp,
-        pvk_vk_alphaA_g2_precomp,
-        proof_g_A_h_precomp,
-        pvk_pp_G2_one_precomp,
+        &proof_g_A_g_precomp,
+        &pvk_vk_alphaA_g2_precomp,
+        &proof_g_A_h_precomp,
+        &pvk_pp_G2_one_precomp,
     );
-    let kc_A = ppT::final_exponentiation(kc_A_miller);
+    let kc_A = ppT::final_exponentiation(&kc_A_miller);
 
     if kc_A != ppT::GT::one() {
-        ffec::print_indent();
+        print_indent();
         print!("Knowledge commitment for A query incorrect.\n");
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for A is valid");
+    leave_block("Check knowledge commitment for A is valid", false);
 
-    ffec::enter_block("Check knowledge commitment for B is valid");
-    let proof_g_B_g_precomp = ppT::affine_ate_precompute_G2(proof.g_B.g);
-    let proof_g_B_h_precomp = ppT::affine_ate_precompute_G1(proof.g_B.h);
+    enter_block("Check knowledge commitment for B is valid", false);
+    let proof_g_B_g_precomp = ppT::affine_ate_precompute_G2(&proof.g_B.g);
+    let proof_g_B_h_precomp = ppT::affine_ate_precompute_G1(&proof.g_B.h);
     let kc_B_miller = ppT::affine_ate_e_over_e_miller_loop(
-        pvk_vk_alphaB_g1_precomp,
-        proof_g_B_g_precomp,
-        proof_g_B_h_precomp,
-        pvk_pp_G2_one_precomp,
+        &pvk_vk_alphaB_g1_precomp,
+        &proof_g_B_g_precomp,
+        &proof_g_B_h_precomp,
+        &pvk_pp_G2_one_precomp,
     );
-    let kc_B = ppT::final_exponentiation(kc_B_miller);
+    let kc_B = ppT::final_exponentiation(&kc_B_miller);
     if kc_B != ppT::GT::one() {
-        ffec::print_indent();
+        print_indent();
         print!("Knowledge commitment for B query incorrect.\n");
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for B is valid");
+    leave_block("Check knowledge commitment for B is valid", false);
 
-    ffec::enter_block("Check knowledge commitment for C is valid");
-    let proof_g_C_g_precomp = ppT::affine_ate_precompute_G1(proof.g_C.g);
-    let proof_g_C_h_precomp = ppT::affine_ate_precompute_G1(proof.g_C.h);
+    enter_block("Check knowledge commitment for C is valid", false);
+    let proof_g_C_g_precomp = ppT::affine_ate_precompute_G1(&proof.g_C.g);
+    let proof_g_C_h_precomp = ppT::affine_ate_precompute_G1(&proof.g_C.h);
     let kc_C_miller = ppT::affine_ate_e_over_e_miller_loop(
-        proof_g_C_g_precomp,
-        pvk_vk_alphaC_g2_precomp,
-        proof_g_C_h_precomp,
-        pvk_pp_G2_one_precomp,
+        &proof_g_C_g_precomp,
+        &pvk_vk_alphaC_g2_precomp,
+        &proof_g_C_h_precomp,
+        &pvk_pp_G2_one_precomp,
     );
-    let kc_C = ppT::final_exponentiation(kc_C_miller);
+    let kc_C = ppT::final_exponentiation(&kc_C_miller);
     if kc_C != ppT::GT::one() {
-        ffec::print_indent();
+        print_indent();
         print!("Knowledge commitment for C query incorrect.\n");
         result = false;
     }
-    ffec::leave_block("Check knowledge commitment for C is valid");
+    leave_block("Check knowledge commitment for C is valid", false);
 
-    ffec::enter_block("Check QAP divisibility");
-    let proof_g_A_g_acc_precomp = ppT::affine_ate_precompute_G1(proof.g_A.g + acc);
-    let proof_g_H_precomp = ppT::affine_ate_precompute_G1(proof.g_H);
+    enter_block("Check QAP divisibility", false);
+    let proof_g_A_g_acc_precomp =
+        ppT::affine_ate_precompute_G1(&(proof.g_A.g.clone() + acc.clone()));
+    let proof_g_H_precomp = ppT::affine_ate_precompute_G1(&proof.g_H);
     let QAP_miller = ppT::affine_ate_e_times_e_over_e_miller_loop(
-        proof_g_H_precomp,
-        pvk_vk_rC_Z_g2_precomp,
-        proof_g_C_g_precomp,
-        pvk_pp_G2_one_precomp,
-        proof_g_A_g_acc_precomp,
-        proof_g_B_g_precomp,
+        &proof_g_H_precomp,
+        &pvk_vk_rC_Z_g2_precomp,
+        &proof_g_C_g_precomp,
+        &pvk_pp_G2_one_precomp,
+        &proof_g_A_g_acc_precomp,
+        &proof_g_B_g_precomp,
     );
-    let QAP = ppT::final_exponentiation(QAP_miller);
+    let QAP = ppT::final_exponentiation(&QAP_miller);
     if QAP != ppT::GT::one() {
-        ffec::print_indent();
+        print_indent();
         print!("QAP divisibility check failed.\n");
         result = false;
     }
-    ffec::leave_block("Check QAP divisibility");
+    leave_block("Check QAP divisibility", false);
 
-    ffec::enter_block("Check same coefficients were used");
-    let proof_g_K_precomp = ppT::affine_ate_precompute_G1(proof.g_K);
+    enter_block("Check same coefficients were used", false);
+    let proof_g_K_precomp = ppT::affine_ate_precompute_G1(&proof.g_K);
     let proof_g_A_g_acc_C_precomp =
-        ppT::affine_ate_precompute_G1((proof.g_A.g + acc) + proof.g_C.g);
+        ppT::affine_ate_precompute_G1(&((proof.g_A.g.clone() + acc.clone()) + proof.g_C.g.clone()));
     let K_miller = ppT::affine_ate_e_times_e_over_e_miller_loop(
-        proof_g_A_g_acc_C_precomp,
-        pvk_vk_gamma_beta_g2_precomp,
-        pvk_vk_gamma_beta_g1_precomp,
-        proof_g_B_g_precomp,
-        proof_g_K_precomp,
-        pvk_vk_gamma_g2_precomp,
+        &proof_g_A_g_acc_C_precomp,
+        &pvk_vk_gamma_beta_g2_precomp,
+        &pvk_vk_gamma_beta_g1_precomp,
+        &proof_g_B_g_precomp,
+        &proof_g_K_precomp,
+        &pvk_vk_gamma_g2_precomp,
     );
-    let K = ppT::final_exponentiation(K_miller);
+    let K = ppT::final_exponentiation(&K_miller);
     if K != ppT::GT::one() {
-        ffec::print_indent();
+        print_indent();
         print!("Same-coefficient check failed.\n");
         result = false;
     }
-    ffec::leave_block("Check same coefficients were used");
+    leave_block("Check same coefficients were used", false);
 
-    ffec::leave_block("Call to r1cs_ppzksnark_affine_verifier_weak_IC");
+    leave_block("Call to r1cs_ppzksnark_affine_verifier_weak_IC", false);
 
     return result;
 }
 
-//
+// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
-use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
-
-// //#endif // R1CS_PPZKSNARK_HPP_
-
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a ppzkSNARK for R1CS.
-
-See r1cs_ppzksnark.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef R1CS_PPZKSNARK_TCC_
-// // #define R1CS_PPZKSNARK_TCC_
-
-// use  <algorithm>
-// use  <cassert>
-// use  <functional>
-// use  <iostream>
-// use  <sstream>
-use ffec::algebra::scalar_multiplication::multiexp;
-use ffec::common::profiling;
-use ffec::common::utils;
+// use algebra::scalar_multiplication::multiexp;
+// use common::profiling;
+// use common::utils;
 
 // // #ifdef MULTICORE
 // use  <omp.h>
 // //#endif
 
-use crate::knowledge_commitment::kc_multiexp;
-use crate::reductions::r1cs_to_qap::r1cs_to_qap;
+// use crate::knowledge_commitment::kc_multiexp;
+// use crate::reductions::r1cs_to_qap::r1cs_to_qap;
 
-//
-
-impl<ppT> PartialEq for r1cs_ppzksnark_proving_key<ppT> {
+impl<ppT: PptConfig> PartialEq for r1cs_ppzksnark_proving_key<ppT>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.A_query == other.A_query
@@ -1163,12 +1305,29 @@ impl<ppT> PartialEq for r1cs_ppzksnark_proving_key<ppT> {
     }
 }
 
-impl<ppT> fmt::Display for r1cs_ppzksnark_proving_key<ppT> {
+impl<ppT: PptConfig> fmt::Display for r1cs_ppzksnark_proving_key<ppT>
+where
+    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}{}{}{}{}",
-            pk.A_query, pk.B_query, pk.C_query, pk.H_query, pk.K_query, pk.constraint_system,
+            self.A_query,
+            self.B_query,
+            self.C_query,
+            self.H_query
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .concat(),
+            self.K_query
+                .iter()
+                .map(|v| v.to_string())
+                .collect::<Vec<_>>()
+                .concat(),
+            self.constraint_system,
         )
     }
 }
@@ -1186,7 +1345,10 @@ impl<ppT> fmt::Display for r1cs_ppzksnark_proving_key<ppT> {
 //     return in;
 // }
 
-impl<ppT> PartialEq for r1cs_ppzksnark_verification_key<ppT> {
+impl<ppT: PptConfig> PartialEq for r1cs_ppzksnark_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.alphaA_g2 == other.alphaA_g2
@@ -1200,19 +1362,22 @@ impl<ppT> PartialEq for r1cs_ppzksnark_verification_key<ppT> {
     }
 }
 
-impl<ppT> fmt::Display for r1cs_ppzksnark_verification_key<ppT> {
+impl<ppT: PptConfig> fmt::Display for r1cs_ppzksnark_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}",
-            vk.alphaA_g2,
-            vk.alphaB_g1,
-            vk.alphaC_g2,
-            vk.gamma_g2,
-            vk.gamma_beta_g1,
-            vk.gamma_beta_g2,
-            vk.rC_Z_g2,
-            vk.encoded_IC_query,
+            self.alphaA_g2,
+            self.alphaB_g1,
+            self.alphaC_g2,
+            self.gamma_g2,
+            self.gamma_beta_g1,
+            self.gamma_beta_g2,
+            self.rC_Z_g2,
+            self.encoded_IC_query,
         )
     }
 }
@@ -1221,26 +1386,29 @@ impl<ppT> fmt::Display for r1cs_ppzksnark_verification_key<ppT> {
 // std::istream& operator>>(std::istream &in, r1cs_ppzksnark_verification_key<ppT> &vk)
 // {
 //     in >> vk.alphaA_g2;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.alphaB_g1;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.alphaC_g2;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.gamma_g2;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.gamma_beta_g1;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.gamma_beta_g2;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.rC_Z_g2;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> vk.encoded_IC_query;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 
 //     return in;
 // }
 
-impl<ppT> PartialEq for r1cs_ppzksnark_processed_verification_key<ppT> {
+impl<ppT: PptConfig> PartialEq for r1cs_ppzksnark_processed_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.pp_G2_one_precomp == other.pp_G2_one_precomp
@@ -1255,20 +1423,23 @@ impl<ppT> PartialEq for r1cs_ppzksnark_processed_verification_key<ppT> {
     }
 }
 
-impl<ppT> fmt::Display for r1cs_ppzksnark_processed_verification_key<ppT> {
+impl<ppT: PptConfig> fmt::Display for r1cs_ppzksnark_processed_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}",
-            pvk.pp_G2_one_precomp,
-            pvk.vk_alphaA_g2_precomp,
-            pvk.vk_alphaB_g1_precomp,
-            pvk.vk_alphaC_g2_precomp,
-            pvk.vk_rC_Z_g2_precomp,
-            pvk.vk_gamma_g2_precomp,
-            pvk.vk_gamma_beta_g1_precomp,
-            pvk.vk_gamma_beta_g2_precomp,
-            pvk.encoded_IC_query,
+            self.pp_G2_one_precomp,
+            self.vk_alphaA_g2_precomp,
+            self.vk_alphaB_g1_precomp,
+            self.vk_alphaC_g2_precomp,
+            self.vk_rC_Z_g2_precomp,
+            self.vk_gamma_g2_precomp,
+            self.vk_gamma_beta_g1_precomp,
+            self.vk_gamma_beta_g2_precomp,
+            self.encoded_IC_query,
         )
     }
 }
@@ -1277,28 +1448,31 @@ impl<ppT> fmt::Display for r1cs_ppzksnark_processed_verification_key<ppT> {
 // std::istream& operator>>(std::istream &in, r1cs_ppzksnark_processed_verification_key<ppT> &pvk)
 // {
 //     in >> pvk.pp_G2_one_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_alphaA_g2_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_alphaB_g1_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_alphaC_g2_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_rC_Z_g2_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_gamma_g2_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_gamma_beta_g1_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.vk_gamma_beta_g2_precomp;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> pvk.encoded_IC_query;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 
 //     return in;
 // }
 
-impl<ppT> PartialEq for r1cs_ppzksnark_proof<ppT> {
+impl<ppT: PptConfig> PartialEq for r1cs_ppzksnark_proof<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.g_A == other.g_A
@@ -1309,12 +1483,15 @@ impl<ppT> PartialEq for r1cs_ppzksnark_proof<ppT> {
     }
 }
 
-impl<ppT> fmt::Display for r1cs_ppzksnark_proof<ppT> {
+impl<ppT: PptConfig> fmt::Display for r1cs_ppzksnark_proof<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}{}{OUTPUT_NEWLINE}",
-            proof.g_A, proof.g_B, proof.g_C, proof.g_H, proof.g_K,
+            self.g_A, self.g_B, self.g_C, self.g_H, self.g_K,
         )
     }
 }
@@ -1323,41 +1500,45 @@ impl<ppT> fmt::Display for r1cs_ppzksnark_proof<ppT> {
 // std::istream& operator>>(std::istream &in, r1cs_ppzksnark_proof<ppT> &proof)
 // {
 //     in >> proof.g_A;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> proof.g_B;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> proof.g_C;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> proof.g_H;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 //     in >> proof.g_K;
-//     ffec::consume_OUTPUT_NEWLINE(in);
+//     consume_OUTPUT_NEWLINE(in);
 
 //     return in;
 // }
 
-impl<ppT> r1cs_ppzksnark_verification_key<ppT> {
-    pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzksnark_verification_key<ppT> {
-        let mut result = r1cs_ppzksnark_verification_key::<ppT>::new();
-        result.alphaA_g2 = ppT::Fr::random_element() * ppT::G2::one();
-        result.alphaB_g1 = ppT::Fr::random_element() * ppT::G1::one();
-        result.alphaC_g2 = ppT::Fr::random_element() * ppT::G2::one();
-        result.gamma_g2 = ppT::Fr::random_element() * ppT::G2::one();
-        result.gamma_beta_g1 = ppT::Fr::random_element() * ppT::G1::one();
-        result.gamma_beta_g2 = ppT::Fr::random_element() * ppT::G2::one();
-        result.rC_Z_g2 = ppT::Fr::random_element() * ppT::G2::one();
+impl<ppT: PptConfig> r1cs_ppzksnark_verification_key<ppT>
+where
+    <ppT as PublicParamsType>::G1_type: PpConfig,
+{
+    pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzksnark_verification_key<ppT>
+    where
+        <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+        <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+    {
+        let mut result = r1cs_ppzksnark_verification_key::<ppT>::default();
+        result.alphaA_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
+        result.alphaB_g1 = Fr::<ppT>::random_element() * G1::<ppT>::one();
+        result.alphaC_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
+        result.gamma_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
+        result.gamma_beta_g1 = Fr::<ppT>::random_element() * G1::<ppT>::one();
+        result.gamma_beta_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
+        result.rC_Z_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
 
-        let base = ppT::Fr::random_element() * ppT::G1::one();
-        let mut v = ppT::G1_vector::new();
+        let base = Fr::<ppT>::random_element() * G1::<ppT>::one();
+        let mut v = G1_vector::<ppT>::default();
         for i in 0..input_size {
-            v.push(ppT::Fr::random_element() * ppT::G1::one());
+            v.push(Fr::<ppT>::random_element() * G1::<ppT>::one());
         }
 
-        result.encoded_IC_query = accumulation_vector::<ppT::G1>(base, v);
+        result.encoded_IC_query = accumulation_vector::<G1<ppT>>::new_with_vec(base, v);
 
-        return result;
+        result
     }
 }
-
-//
-// //#endif // R1CS_PPZKSNARK_TCC_

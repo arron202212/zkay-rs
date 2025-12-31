@@ -26,13 +26,13 @@ use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_packing_sum, pb_variable, pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     generate_tinyram_prelude, tinyram_architecture_params, tinyram_program,
 };
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -353,7 +353,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cnjmp_gadgets<
                 self.t.t.t.flag.clone().into(),
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                     self.t.t.t.pc.t.packed.clone(),
-                ) + 1
+                ) + FieldT::from(1)
                     - pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
                         &(pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
                             self.t.t.t.argval2.t.bits.contents

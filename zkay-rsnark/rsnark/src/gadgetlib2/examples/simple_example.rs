@@ -8,12 +8,12 @@ use crate::gadgetlib2::integration::{
 };
 use crate::gadgetlib2::protoboard::Protoboard;
 use crate::gadgetlib2::variable::{FieldType, Variable, VariableArray, VariableArrayBase};
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::{
     examples::r1cs_examples::r1cs_example,
     r1cs::{r1cs_auxiliary_input, r1cs_primary_input},
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use ffec::FieldTConfig;
 
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
 pub fn gen_r1cs_example_from_gadgetlib2_protoboard<

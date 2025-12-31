@@ -6,21 +6,10 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-/** @file
-*****************************************************************************
-Declaration of interfaces for wNAF ("width-w Non-Adjacent Form") exponentiation routines.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef WNAF_HPP_
-// // #define WNAF_HPP_
 
-// //#include <vector>
+// Declaration of interfaces for wNAF ("width-w Non-Adjacent Form") exponentiation routines.
+use crate::PpConfig;
 use crate::algebra::field_utils::bigint::bigint;
-
-// // namespace libff {
 
 // /**
 //  * Find the wNAF representation of the given scalar relative to the given window size.
@@ -42,32 +31,12 @@ use crate::algebra::field_utils::bigint::bigint;
 
 // } // namespace libff
 
-// use crate::algebra::scalar_multiplication::wnaf.tcc;
-
-//#endif // WNAF_HPP_
-/** @file
-*****************************************************************************
-Implementation of interfaces for wNAF ("weighted Non-Adjacent Form") exponentiation routines.
-
-See wnaf.hpp .
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef WNAF_TCC_
-// #define WNAF_TCC_
-
-//#include <gmp.h>
-
-// namespace libff {
-
-// using std::usize;
+use crate::Zero;
 use std::ops::Mul;
-pub trait Config {
-    fn wnaf_window_table() -> Vec<usize>;
-    fn dbl<T>(&self) -> T;
-}
+// pub trait Config {
+//     fn wnaf_window_table() -> Vec<usize>;
+//     fn dbl<T:Zero>(&self) -> T;
+// }
 
 pub fn find_wnaf<const N: usize>(window_size: usize, scalar: &bigint<N>) -> Vec<i64> {
     let length = scalar.max_bits(); // upper bound
@@ -99,10 +68,7 @@ pub fn find_wnaf<const N: usize>(window_size: usize, scalar: &bigint<N>) -> Vec<
     return res;
 }
 
-pub fn fixed_window_wnaf_exp<
-    T: Config + Clone + num_traits::Zero + std::ops::Sub<Output = T>,
-    const N: usize,
->(
+pub fn fixed_window_wnaf_exp<T: PpConfig, const N: usize>(
     window_size: usize,
     base: &T,
     scalar: &bigint<N>,
@@ -136,10 +102,7 @@ pub fn fixed_window_wnaf_exp<
     return res;
 }
 
-pub fn opt_window_wnaf_exp<
-    T: Config + std::clone::Clone + num_traits::Zero + std::ops::Sub<Output = T>,
-    const N: usize,
->(
+pub fn opt_window_wnaf_exp<T: PpConfig, const N: usize>(
     base: &T,
     scalar: &bigint<N>,
     scalar_bits: usize,
@@ -160,7 +123,3 @@ pub fn opt_window_wnaf_exp<
         return T::zero(); // base*scalar;
     }
 }
-
-// } // namespace libff
-
-//#endif // WNAF_TCC_

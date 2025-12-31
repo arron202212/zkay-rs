@@ -5,6 +5,7 @@
 // use crate::algebra::fields::prime_extension::fp6_3over2;
 use crate::Fp_modelConfig;
 use crate::Fp2_model;
+use crate::PpConfig;
 use crate::algebra::{
     field_utils::{
         BigInteger,
@@ -809,7 +810,19 @@ impl<const N: usize, T: Fp12_modelConfig<N>> fmt::Display for Fp12_2over3over2_m
         write!(f, "{}", self.c0)
     }
 }
+impl<const N: usize, T: Fp12_modelConfig<N>> PpConfig for Fp12_2over3over2_model<N, T> {
+    type T = bigint<N>;
+}
 
+impl<const N: usize, T: Fp12_modelConfig<N>> Mul<bigint<N>> for Fp12_2over3over2_model<N, T> {
+    type Output = Self;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
 impl<const N: usize, T: Fp12_modelConfig<N>> One for Fp12_2over3over2_model<N, T> {
     fn one() -> Self {
         Self::one()

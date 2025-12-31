@@ -26,9 +26,9 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::{One, Zero};
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -54,7 +54,7 @@ pub fn default_pb_lc2<FieldT: FieldTConfig>()
 pub fn i64_to_pb_lc<FieldT: FieldTConfig>(
     d: i64,
 ) -> linear_combination<FieldT, pb_variable, pb_linear_combination> {
-    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(d)
+    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(FieldT::from(d))
 }
 
 #[inline]
@@ -848,30 +848,40 @@ impl<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         let mut csq_c1 = default_pb_lc2::<FieldT>();
         asq_c0.assign(
             &pb,
-            &((result.t.c0.t.c0.clone() + a.borrow().t.c0.clone()) * 2 * inverse::<FieldT>(3)),
+            &((result.t.c0.t.c0.clone() + a.borrow().t.c0.clone())
+                * FieldT::from(2)
+                * inverse::<FieldT>(3)),
         );
         asq_c1.assign(
             &pb,
-            &((result.t.c1.t.c1.clone() - a.borrow().t.c1.clone()) * 2 * inverse::<FieldT>(3)),
+            &((result.t.c1.t.c1.clone() - a.borrow().t.c1.clone())
+                * FieldT::from(2)
+                * inverse::<FieldT>(3)),
         );
 
         bsq_c0.assign(
             &pb,
-            &((result.t.c0.t.c1.clone() + c.borrow().t.c0.clone()) * 2 * inverse::<FieldT>(3)),
+            &((result.t.c0.t.c1.clone() + c.borrow().t.c0.clone())
+                * FieldT::from(2)
+                * inverse::<FieldT>(3)),
         );
         bsq_c1.assign(
             &pb,
-            &((result.t.c1.t.c2.clone() - c.borrow().t.c1.clone()) * 2 * inverse::<FieldT>(3)),
+            &((result.t.c1.t.c2.clone() - c.borrow().t.c1.clone())
+                * FieldT::from(2)
+                * inverse::<FieldT>(3)),
         );
 
         csq_c0.assign(
             &pb,
-            &((result.t.c0.t.c2.clone() + b.borrow().t.c1.clone()) * 2 * inverse::<FieldT>(3)),
+            &((result.t.c0.t.c2.clone() + b.borrow().t.c1.clone())
+                * FieldT::from(2)
+                * inverse::<FieldT>(3)),
         );
         csq_c1.assign(
             &pb,
             &((result.t.c1.t.c0.clone() - b.borrow().t.c0.clone())
-                * 2
+                * FieldT::from(2)
                 * (to_field::<FieldT>(3) * Fp6T::Fp3T::non_residue).inverse()),
         );
 

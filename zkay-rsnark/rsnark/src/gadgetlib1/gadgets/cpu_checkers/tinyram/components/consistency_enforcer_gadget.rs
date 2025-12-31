@@ -17,7 +17,6 @@ use crate::gadgetlib1::pb_variable::{
     pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::rams::{
     ram_params::ArchitectureParamsTypeConfig,
@@ -27,6 +26,7 @@ use crate::relations::ram_computations::rams::{
 };
 use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
 
@@ -325,13 +325,15 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.packed_incoming_pc.clone().into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.is_control_flow_instruction.clone(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.is_control_flow_instruction.clone(),
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                     self.t.t.t.packed_outgoing_pc.clone(),
                 ) - self.t.t.t.pc_from_cf_or_zero.clone()
-                    - (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                        - self.t.t.t.is_control_flow_instruction.clone()
+                    - (linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        FieldT::from(1),
+                    ) - self.t.t.t.is_control_flow_instruction.clone()
                         - self.t.t.t.is_stall_instruction.clone()),
             ),
             format!("{} packed_outgoing_pc", self.annotation_prefix),
@@ -347,12 +349,12 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     self.t.t.t.computed_flag.clone().into(),
-                    (self.t.t.t.incoming_flag.clone() * (-1)).into(),
+                    (self.t.t.t.incoming_flag.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.is_register_instruction.clone().into()],
                 vec![
                     self.t.t.t.outgoing_flag.clone().into(),
-                    (self.t.t.t.incoming_flag.clone() * (-1)).into(),
+                    (self.t.t.t.incoming_flag.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} outgoing_flag", self.annotation_prefix),
@@ -372,14 +374,14 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
                     vec![
                         variable::<FieldT, pb_variable>::from(ONE).into(),
                         (self.t.t.t.demux_packed_outgoing_desval.borrow().t.alpha[i].clone()
-                            * (-1))
-                            .into(),
+                            * (-1).into())
+                        .into(),
                     ],
                     vec![
                         self.t.t.t.packed_outgoing_registers[i].clone().into(),
-                        (self.t.t.t.packed_incoming_registers[i].clone() * (-1)).into(),
+                        (self.t.t.t.packed_incoming_registers[i].clone() * (-1).into()).into(),
                     ],
-                    vec![(variable::<FieldT, pb_variable>::from(ONE) * 0).into()],
+                    vec![(variable::<FieldT, pb_variable>::from(ONE) * 0.into()).into()],
                 ),
                 format!("{} register_carryover_{}", self.annotation_prefix, i),
             );
@@ -395,12 +397,12 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
                     self.t.t.t.computed_result.clone().into(),
-                    (self.t.t.t.packed_incoming_desval.clone() * (-1)).into(),
+                    (self.t.t.t.packed_incoming_desval.clone() * (-1).into()).into(),
                 ],
                 vec![self.t.t.t.is_register_instruction.clone().into()],
                 vec![
                     self.t.t.t.packed_outgoing_desval.clone().into(),
-                    (self.t.t.t.packed_incoming_desval.clone() * (-1)).into(),
+                    (self.t.t.t.packed_incoming_desval.clone() * (-1).into()).into(),
                 ],
             ),
             format!("{} packed_outgoing_desval", self.annotation_prefix),

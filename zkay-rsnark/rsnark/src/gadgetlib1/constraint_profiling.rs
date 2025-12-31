@@ -1,6 +1,6 @@
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_indent;
 use rccell::RcCell;
 pub struct constraint_profiling_entry {

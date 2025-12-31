@@ -30,10 +30,10 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
 use ff_curves::algebra::curves::public_params;
+use ffec::FieldTConfig;
 use ffec::field_utils::bigint::bigint;
 use ffec::{One, Zero};
 use rccell::RcCell;
@@ -304,7 +304,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 (-self.t.result.borrow().c0().c0().clone() + 1)
                     .to_field()
                     .into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c0.c0".to_owned(),
         );
@@ -312,7 +312,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c0().c1().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c0.c1".to_owned(),
         );
@@ -320,7 +320,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c0().c2().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c0.c2".to_owned(),
         );
@@ -328,7 +328,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c1().c0().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c1.c0".to_owned(),
         );
@@ -336,7 +336,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c1().c1().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c1.c1".to_owned(),
         );
@@ -344,7 +344,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c1().c2().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c1.c2".to_owned(),
         );
@@ -540,7 +540,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
                 (-self.t.result.borrow().c0().c0().clone() + 1)
                     .to_field()
                     .into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c0.c0".to_owned(),
         );
@@ -548,7 +548,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c0().c1().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c0.c1".to_owned(),
         );
@@ -556,7 +556,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c1().c0().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c1.c0".to_owned(),
         );
@@ -564,7 +564,7 @@ impl<ppT: ppTConfig<FieldT, PB>, FieldT: FieldTConfig, PB: PBConfig>
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.result_is_one.clone().into(),
                 self.t.result.borrow().c1().c1().clone().to_field().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             " check c1.c0".to_owned(),
         );

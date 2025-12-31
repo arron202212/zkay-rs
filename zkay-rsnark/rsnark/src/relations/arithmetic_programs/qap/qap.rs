@@ -1,4 +1,4 @@
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::algebra::scalar_multiplication::multiexp::inner_product;
 /** @file
 *****************************************************************************
@@ -45,16 +45,15 @@ use std::collections::HashMap;
  */
 //
 pub struct qap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
-    //
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    domain: RcCell<ED>,
+    pub domain: RcCell<ED>,
 
-    A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
 }
 // impl qap_instance<FieldT>{
 //     qap_instance(domain:&RcCell<ED>
@@ -98,21 +97,20 @@ pub struct qap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
  */
 //
 pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
-    //
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    domain: RcCell<ED>,
+    pub domain: RcCell<ED>,
 
-    t: FieldT,
+    pub t: FieldT,
 
-    At: Vec<FieldT>,
-    Bt: Vec<FieldT>,
-    Ct: Vec<FieldT>,
-    Ht: Vec<FieldT>,
+    pub At: Vec<FieldT>,
+    pub Bt: Vec<FieldT>,
+    pub Ct: Vec<FieldT>,
+    pub Ht: Vec<FieldT>,
 
-    Zt: FieldT,
+    pub Zt: FieldT,
 }
 
 //     qap_instance_evaluation(domain:&RcCell<ED>
@@ -153,17 +151,16 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<F
  */
 //
 pub struct qap_witness<FieldT> {
-    //
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    d1: FieldT,
-    d2: FieldT,
-    d3: FieldT,
+    pub d1: FieldT,
+    pub d2: FieldT,
+    pub d3: FieldT,
 
-    coefficients_for_ABCs: Vec<FieldT>,
-    coefficients_for_H: Vec<FieldT>,
+    pub coefficients_for_ABCs: Vec<FieldT>,
+    pub coefficients_for_H: Vec<FieldT>,
 }
 
 //     qap_witness(num_variables:usize
@@ -194,26 +191,9 @@ pub struct qap_witness<FieldT> {
 //     usize num_inputs() const;
 // };
 
-// use crate::relations::arithmetic_programs::qap::qap;
-
-//#endif // QAP_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a QAP ("Quadratic Arithmetic Program").
-
-See qap.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef QAP_TCC_
-// #define QAP_TCC_
-use ffec::algebra::scalar_multiplication::multiexp;
-use ffec::common::profiling;
-use ffec::common::utils;
+// use ffec::algebra::scalar_multiplication::multiexp;
+// use ffec::common::profiling;
+// use ffec::common::utils;
 
 impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> qap_instance<FieldT, ED> {
     pub fn new(

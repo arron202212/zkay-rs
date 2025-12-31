@@ -1,4 +1,3 @@
-use crate::relations::FieldTConfig;
 /** @file
 *****************************************************************************
 
@@ -15,6 +14,7 @@ Declaration of public parameters for FOORAM.
 use crate::relations::ram_computations::rams::fooram::fooram_aux::fooram_architecture_params;
 use crate::relations::ram_computations::rams::ram_params;
 use crate::relations::ram_computations::rams::ram_params::ram_params_type;
+use ffec::FieldTConfig;
 use std::marker::PhantomData;
 #[derive(Default)]
 pub struct ram_fooram<FieldT: FieldTConfig>(PhantomData<FieldT>);

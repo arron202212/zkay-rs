@@ -4,7 +4,6 @@
 // throughout a dynamic distributed computation. A compliance predicate
 // receives input messages, local data, and an output message (and perhaps some
 // other auxiliary information), and then either accepts or rejects.
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
 };
@@ -12,6 +11,7 @@ use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::marker::PhantomData;

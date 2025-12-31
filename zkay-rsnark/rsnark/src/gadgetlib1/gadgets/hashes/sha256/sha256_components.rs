@@ -19,9 +19,9 @@ use crate::gadgetlib1::pb_variable::{
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::utils::bit_vector;
 use ffec::field_utils::field_utils::convert_field_element_to_bit_vector;
 use parking_lot::Mutex;
@@ -236,7 +236,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_message_schedule_gadgets<FieldT,
 
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                    1.into(),
+                    FieldT::from(1).into(),
                     (self.t.sigma0[i].clone()
                         + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                             self.t.sigma1[i].clone(),
@@ -442,13 +442,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadgets<FieldT, P
 
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 (self.t.packed_h.clone()
                     + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         self.t.sigma1.clone(),
                     )
                     + self.t.choice.clone()
-                    + self.t.K.clone()
+                    + FieldT::from(self.t.K.clone())
                     + self.t.W.clone()
                     + self.t.sigma0.clone()
                     + self.t.majority.clone())
@@ -460,14 +460,14 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadgets<FieldT, P
 
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 (self.t.packed_d.clone()
                     + linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         self.t.packed_h.clone(),
                     )
                     + self.t.sigma1.clone()
                     + self.t.choice.clone()
-                    + self.t.K.clone()
+                    + FieldT::from(self.t.K.clone())
                     + self.t.W.clone())
                 .into(),
                 self.t.unreduced_new_e.clone().into(),

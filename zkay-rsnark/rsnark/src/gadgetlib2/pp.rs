@@ -1,9 +1,9 @@
 //  Declaration of PublicParams for Fp field arithmetic
 use crate::gadgetlib2::variable::FElemInterface;
-use crate::relations::{
-    FieldTConfig,
-    variable::{SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable},
+use crate::relations::variable::{
+    SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable,
 };
+use ffec::FieldTConfig;
 use ffec::common::default_types::ec_pp;
 use std::fmt::Debug;
 use std::marker::PhantomData;

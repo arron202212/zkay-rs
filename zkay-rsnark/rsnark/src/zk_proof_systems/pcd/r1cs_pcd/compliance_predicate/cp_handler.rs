@@ -6,7 +6,6 @@ use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
 };
@@ -15,6 +14,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_pre
     R1csPcdLocalDataConfig, r1cs_pcd_compliance_predicate, r1cs_pcd_local_data, r1cs_pcd_message,
     r1cs_pcd_witness,
 };
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 

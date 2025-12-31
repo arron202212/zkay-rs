@@ -1,4 +1,4 @@
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::scalar_multiplication::multiexp::inner_product;
 /** @file
 *****************************************************************************

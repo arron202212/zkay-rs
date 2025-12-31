@@ -4,8 +4,8 @@ use crate::gadgetlib1::gadgets::basic_gadgets::dual_variable_gadget;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard::tinyram_protoboard;
 use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
 //Holds both binary and field representaton of a word.

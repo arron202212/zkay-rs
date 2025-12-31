@@ -5,7 +5,7 @@ use crate::gadgetlib2::protoboard::Protoboard;
 use crate::gadgetlib2::variable::{
     FElem, FieldType, LinearCombination, LinearTerm, Variable, VariableAssignment, nextFreeIndex_,
 };
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use std::collections::HashMap;
 use std::sync::atomic::{self, AtomicUsize, Ordering};
 

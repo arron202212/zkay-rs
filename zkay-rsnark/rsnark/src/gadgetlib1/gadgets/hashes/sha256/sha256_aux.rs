@@ -15,9 +15,9 @@ use crate::gadgetlib1::pb_variable::{
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::utils::bit_vector;
 use ffec::field_utils::field_utils::convert_field_element_to_bit_vector;
 use parking_lot::Mutex;
@@ -197,7 +197,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> XOR3_gadgets<FieldT, PB> {
         if self.t.assume_C_is_zero {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                    (self.t.A.clone() * 2).into(),
+                    (self.t.A.clone() * FieldT::from(2)).into(),
                     self.t.B.clone(),
                     self.t.A.clone() + self.t.B.clone() - self.t.out.clone(),
                 ),
@@ -206,7 +206,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> XOR3_gadgets<FieldT, PB> {
         } else {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                    (self.t.A.clone() * 2).into(),
+                    (self.t.A.clone() * FieldT::from(2)).into(),
                     self.t.B.clone(),
                     self.t.A.clone() + self.t.B.clone() - self.t.tmp.clone(),
                 ),
@@ -214,7 +214,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> XOR3_gadgets<FieldT, PB> {
             );
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                    (self.t.tmp.clone() * 2).into(),
+                    (self.t.tmp.clone() * FieldT::from(2)).into(),
                     self.t.C.clone(),
                     self.t.tmp.clone() + self.t.C.clone() - self.t.out.clone(),
                 ),
@@ -514,11 +514,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig> majority_gadgets<FieldT, PB> {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     self.t.X[i].clone() + self.t.Y[i].clone() + self.t.Z[i].clone()
-                        - self.t.result_bits[i].clone() * 2,
-                    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                        - (self.t.X[i].clone() + self.t.Y[i].clone() + self.t.Z[i].clone()
-                            - self.t.result_bits[i].clone() * 2),
-                    0.into(),
+                        - self.t.result_bits[i].clone() * FieldT::from(2),
+                    linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                        FieldT::from(1),
+                    ) - (self.t.X[i].clone() + self.t.Y[i].clone() + self.t.Z[i].clone()
+                        - self.t.result_bits[i].clone() * FieldT::from(2)),
+                    FieldT::from(0).into(),
                 ),
                 prefix_format!(self.annotation_prefix, " result_bits_{}", i),
             );

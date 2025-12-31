@@ -1,5 +1,5 @@
-use crate::relations::FieldTConfig;
 use crate::relations::variable;
+use ffec::FieldTConfig;
 /** @file
 *****************************************************************************
 

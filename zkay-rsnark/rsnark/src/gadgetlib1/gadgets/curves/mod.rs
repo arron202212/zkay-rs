@@ -6,8 +6,8 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::variable::linear_combination;
+use ffec::FieldTConfig;
 use ffec::{One, Zero};
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
@@ -128,7 +128,7 @@ pub trait ppTConfig<FieldT: FieldTConfig, PB: PBConfig>:
     + Sub<Output = Self>
     + Mul<FieldT, Output = Self>
     + for<'a> std::ops::BitXor<&'a ffec::field_utils::bigint::bigint<M>, Output = Self>
-    + crate::common::data_structures::accumulation_vector::AccumulationVectorConfig
+    + ffec::PpConfig
 {
     type Fr: FieldTConfig;
     type Fpk_variableT: VariableTConfig<FieldT, PB, Self>;
@@ -143,7 +143,6 @@ pub trait ppTConfig<FieldT: FieldTConfig, PB: PBConfig>:
     fn c0(&self) -> Self;
     fn c1(&self) -> Self;
     fn c2(&self) -> Self;
-    fn random_element() -> Self;
     fn squared(&self) -> Self;
     fn to_affine_coordinates(&self);
     fn Frobenius_map(&self, power: usize) -> Self;

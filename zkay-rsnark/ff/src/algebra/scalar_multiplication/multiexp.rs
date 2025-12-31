@@ -7,21 +7,9 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 // #![feature(adt_const_params)]
-/** @file
-*****************************************************************************
-Declaration of interfaces for multi-exponentiation routines.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef MULTIEXP_HPP_
-// // #define MULTIEXP_HPP_
-//
-// //#include <cstddef>
-// //#include <vector>
-//
-// // namespace libff {
+
+// Declaration of interfaces for multi-exponentiation routines.
+use crate::PpConfig;
 pub const inhibit_profiling_info: bool = false;
 use std::io::Write;
 use std::marker::ConstParamTy;
@@ -98,7 +86,7 @@ pub enum multi_exp_method {
 //  * A window table stores window sizes for different instance sizes for fixed-base multi-scalar multiplications.
 //  */
 //
-type window_table<T> = Vec<Vec<T>>;
+pub type window_table<T> = Vec<Vec<T>>;
 //
 // /**
 //  * Compute window size for the given number of scalars.
@@ -136,36 +124,11 @@ type window_table<T> = Vec<Vec<T>>;
 //
 // pub fn  batch_to_special(Vec<T> &vec);
 
-// // } // namespace libff
-//
-// use crate::algebra::scalar_multiplication::multiexp.tcc;
-//
-// //#endif // MULTIEXP_HPP_
-/** @file
-*****************************************************************************
-Implementation of interfaces for multi-exponentiation routines.
-
-See multiexp.hpp .
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef MULTIEXP_TCC_
-// // #define MULTIEXP_TCC_
-//
-// //#include <algorithm>
-// //#include <cassert>
-// //#include <type_traits>
 use crate::algebra::field_utils::bigint::bigint;
 use crate::algebra::scalar_multiplication::multiexp;
 use crate::algebra::scalar_multiplication::wnaf::*;
 use crate::common::profiling::{enter_block, leave_block};
 use crate::common::utils::log2;
-
-// // namespace libff {
-
-// using std::usize;
 
 //
 #[derive(Clone)]
@@ -278,11 +241,7 @@ impl<const N: usize> PartialOrd for ordered_exponent<N> {
 struct MultiExpInner<const Method: multi_exp_method>;
 
 trait MultiExpInnerConfig {
-    fn multi_exp_inner<
-        T: num_traits::Zero + AsBigint + Config + Clone + std::ops::Sub<Output = T>,
-        FieldT: AsBigint + std::ops::Mul<Output = FieldT> + Clone,
-        const NN: usize,
-    >(
+    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         vec: &[T],
         scalar: &[FieldT],
     ) -> T;
@@ -298,14 +257,14 @@ const fn check(method: multi_exp_method) -> u8 {
 //          Item::<{ check(-1) }>::foo()); // C
 // }
 
-pub trait AsBigint {
-    const num_limbs: i32 = 0;
-    fn as_bigint<const N: usize>(&self) -> bigint<N>;
-    fn dbl(&self) -> Self;
-    fn fixed_base_exp_window_table() -> Vec<usize>;
-    fn batch_to_special_all_non_zeros<T>(t: Vec<T>);
-    fn to_special(&self);
-}
+// pub trait AsBigint {
+//     const num_limbs: i32 = 0;
+//     fn as_bigint<const N: usize>(&self) -> bigint<N>;
+//     fn dbl(&self) -> Self;
+//     fn fixed_base_exp_window_table() -> Vec<usize>;
+//     fn batch_to_special_all_non_zeros<T>(t: Vec<T>);
+//     fn to_special(&self);
+// }
 
 // template<T, FieldT, multi_exp_method Method,
 //     std::enable_if<(Method == multi_exp_method_naive), int>::type = 0>
@@ -315,11 +274,7 @@ pub trait AsBigint {
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_naive }> {
-    fn multi_exp_inner<
-        T: num_traits::Zero + Config + Clone + std::ops::Sub<Output = T>,
-        FieldT: AsBigint,
-        const NN: usize,
-    >(
+    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         vec: &[T],
         scalar: &[FieldT],
     ) -> T {
@@ -344,11 +299,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_naive_plain }> {
-    fn multi_exp_inner<
-        T: num_traits::Zero,
-        FieldT: std::ops::Mul<Output = FieldT>,
-        const NN: usize,
-    >(
+    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         vec: &[T],
         scalar: &[FieldT],
     ) -> T {
@@ -371,11 +322,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_bos_coster }> {
-    fn multi_exp_inner<
-        T: num_traits::Zero + Config + std::clone::Clone + std::ops::Sub<Output = T>,
-        FieldT: std::ops::Mul<Output = FieldT> + AsBigint + Clone,
-        const NN: usize,
-    >(
+    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         vec: &[T],
         scalar: &[FieldT],
     ) -> T {
@@ -494,11 +441,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 //     Vec<FieldT>::const_iterator exponents,
 //     Vec<FieldT>::const_iterator exponents_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_BDLO12 }> {
-    fn multi_exp_inner<
-        T: num_traits::Zero + AsBigint + Clone,
-        FieldT: AsBigint,
-        const NN: usize,
-    >(
+    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         bases: &[T],
         exponents: &[FieldT],
     ) -> T {
@@ -593,11 +536,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
     }
 }
 //
-pub fn multi_exp<
-    T: num_traits::Zero + std::clone::Clone + Config + AsBigint + std::ops::Sub<Output = T>,
-    FieldT: AsBigint + std::ops::Mul<Output = FieldT> + Clone,
-    const Method: multi_exp_method,
->(
+pub fn multi_exp<T: PpConfig, FieldT: PpConfig, const Method: multi_exp_method>(
     vec: &[T],
     scalar: &[FieldT],
     chunks: usize,
@@ -646,13 +585,8 @@ pub fn multi_exp<
 }
 use crate::common::profiling::print_indent;
 pub fn multi_exp_with_mixed_addition<
-    T: num_traits::Zero + AsBigint + std::ops::Sub<Output = T> + Config + std::clone::Clone,
-    FieldT: num_traits::Zero
-        + num_traits::One
-        + std::cmp::PartialEq
-        + Clone
-        + AsBigint
-        + std::ops::Mul<T, Output = T>,
+    T: PpConfig,
+    FieldT: PpConfig,
     const Method: multi_exp_method,
 >(
     vec: &[T],
@@ -723,21 +657,11 @@ pub fn multi_exp_with_mixed_addition<
     return acc + multi_exp::<T, FieldT, Method>(&g, &p, chunks);
 }
 
-pub fn inner_product<
-    T: num_traits::Zero
-        + std::clone::Clone
-        + Config
-        + AsBigint
-        + std::ops::Mul<T, Output = T>
-        + std::ops::Sub<Output = T>,
->(
-    a: &[T],
-    b: &[T],
-) -> T {
+pub fn inner_product<T: PpConfig>(a: &[T], b: &[T]) -> T {
     return multi_exp::<T, T, { multi_exp_method::multi_exp_method_naive_plain }>(a, b, 1);
 }
 
-pub fn get_exp_window_size<T: AsBigint + MultiExpInnerConfig>(num_scalars: usize) -> usize {
+pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
     if T::fixed_base_exp_window_table().is_empty() {
         // // #ifdef LOWMEM
         // return 14;
@@ -775,13 +699,9 @@ pub fn get_exp_window_size<T: AsBigint + MultiExpInnerConfig>(num_scalars: usize
     return window;
 }
 
-pub fn get_window_table<T: num_traits::Zero + std::clone::Clone>(
-    scalar_size: usize,
-    window: usize,
-    g: &T,
-) -> window_table<T>
+pub fn get_window_table<T: PpConfig>(scalar_size: usize, window: usize, g: &T) -> window_table<T>
 where
-    for<'a> &'a T: Add<&'a T, Output = &'a T>,
+    for<'a> &'a T: Add<&'a T, Output = T>,
 {
     let mut in_window = 1usize << window;
     let mut outerc = (scalar_size + window - 1) / window;
@@ -817,15 +737,12 @@ where
     return powers_of_g;
 }
 
-pub fn windowed_exp<T: AsBigint + Clone + std::ops::Add, FieldT: AsBigint, const NN: usize>(
+pub fn windowed_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
     scalar_size: usize,
     window: usize,
     powers_of_g: &window_table<T>,
     pow: &FieldT,
-) -> T
-where
-    T: Add<T, Output = T>,
-{
+) -> T {
     let mut outerc = (scalar_size + window - 1) / window;
     let pow_val = pow.as_bigint::<{ NN }>();
 
@@ -846,19 +763,12 @@ where
     return res;
 }
 
-pub fn batch_exp<
-    T: std::clone::Clone + std::ops::Add + AsBigint,
-    FieldT: AsBigint,
-    const NN: usize,
->(
+pub fn batch_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
     scalar_size: usize,
     window: usize,
     table: &window_table<T>,
     v: &Vec<FieldT>,
-) -> Vec<T>
-where
-    T: Add<T, Output = T>,
-{
+) -> Vec<T> {
     if !inhibit_profiling_info {
         print_indent();
     }
@@ -883,22 +793,13 @@ where
     return res;
 }
 
-pub fn batch_exp_with_coeff<
-    T: std::clone::Clone + AsBigint + std::ops::Add,
-    FieldT: AsBigint + Clone,
-    const NN: usize,
->(
+pub fn batch_exp_with_coeff<T: PpConfig, FieldT: PpConfig, const NN: usize>(
     scalar_size: usize,
     window: usize,
     table: &window_table<T>,
     coeff: &FieldT,
     v: &Vec<FieldT>,
-) -> Vec<T>
-where
-    for<'a> &'a FieldT: Mul<FieldT>,
-    for<'a> <&'a FieldT as Mul<FieldT>>::Output: AsBigint,
-    T: Add<T, Output = T>,
-{
+) -> Vec<T> {
     if !inhibit_profiling_info {
         print_indent();
     }
@@ -908,7 +809,7 @@ where
     // //#pragma omp parallel for
     // //#endif
     for i in 0..v.len() {
-        res[i] = windowed_exp::<_, _, { NN }>(scalar_size, window, table, &(coeff * v[i].clone()));
+        res[i] = windowed_exp::<_, _, { NN }>(scalar_size, window, table, &(v[i].clone() * coeff));
 
         if !inhibit_profiling_info && (i % 10000 == 0) {
             print!(".");
@@ -923,7 +824,7 @@ where
     return res;
 }
 
-pub fn batch_to_special<T: num_traits::Zero + AsBigint + Clone>(vec: &mut Vec<T>) {
+pub fn batch_to_special<T: PpConfig>(vec: &mut Vec<T>) {
     enter_block("Batch-convert elements to special form", false);
 
     let mut non_zero_vec = vec![];
@@ -947,10 +848,6 @@ pub fn batch_to_special<T: num_traits::Zero + AsBigint + Clone>(vec: &mut Vec<T>
     }
     leave_block("Batch-convert elements to special form", false);
 }
-
-// // } // namespace libff
-//
-// //#endif // MULTIEXP_TCC_
 
 // struct Item<const I: u8>;
 // #[derive(Debug)] struct A;

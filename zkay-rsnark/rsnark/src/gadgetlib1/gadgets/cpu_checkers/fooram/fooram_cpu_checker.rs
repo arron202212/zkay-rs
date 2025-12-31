@@ -23,10 +23,10 @@ use crate::gadgetlib1::pb_variable::{
     pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::memory::memory_interface;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::serialization;
 use rccell::RcCell;
 #[derive(Clone, Default)]
@@ -165,9 +165,9 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
         one_as_addr
             .contents
             .resize(next_pc_addr.len(), Default::default());
-        one_as_addr[0].assign(&pb, &1.into());
+        one_as_addr[0].assign(&pb, &(FieldT::from(1).into()));
         for i in 1..next_pc_addr.len() {
-            one_as_addr[i].assign(&pb, &0.into());
+            one_as_addr[i].assign(&pb, &(FieldT::from(0).into()));
         }
 
         /* packed_next_pc_addr = prev_pc_addr + one_as_addr */
@@ -440,9 +440,9 @@ impl<FieldT: FieldTConfig>
         /* next_has_accepted = 1 */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 self.t.t.next_has_accepted.clone().into(),
-                1.into(),
+                FieldT::from(1).into(),
             ),
             format!("{} always_accepted", self.annotation_prefix),
         );

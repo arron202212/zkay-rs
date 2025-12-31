@@ -1,3 +1,6 @@
+use crate::relations::variable::SubLinearCombinationConfig;
+use crate::relations::variable::SubVariableConfig;
+use crate::relations::variable::{linear_combination, variable};
 /** @file
 *****************************************************************************
 
@@ -17,10 +20,7 @@ Above, BACS stands for "Bilinear Arithmetic Circuit Satisfiability".
 *****************************************************************************/
 //#ifndef BACS_HPP_
 // #define BACS_HPP_
-use crate::relations::FieldTConfig;
-use crate::relations::variable::SubLinearCombinationConfig;
-use crate::relations::variable::SubVariableConfig;
-use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use std::collections::BTreeMap;
 /*********************** BACS variable assignment ****************************/
 

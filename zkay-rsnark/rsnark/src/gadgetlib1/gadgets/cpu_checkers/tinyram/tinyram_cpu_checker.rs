@@ -25,7 +25,6 @@ use crate::gadgetlib1::pb_variable::{
     pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::memory::memory_interface;
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
@@ -33,6 +32,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     tinyram_opcode, tinyram_opcode_names,
 };
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::serialization;
 use rccell::RcCell;
 use std::collections::HashMap;
@@ -298,12 +298,13 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
         memory_access_is_word.assign(
             &pb,
-            &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                - (opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
+            &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                FieldT::from(1),
+            ) - (opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
+                .clone()
+                + opcode_indicators[tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
                     .clone()
-                    + opcode_indicators[tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
-                        .clone()
-                        .into())),
+                    .into())),
         );
         let mut memory_access_is_byte =
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
@@ -419,18 +420,18 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                     pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
                         &(self.t.t.t.opcode.clone().into()),
                     ) - variable::<FieldT, pb_variable>::from(i),
-                    0.into(),
+                    FieldT::from(0).into(),
                 ),
                 format!("{} opcode_indicators_{}", self.annotation_prefix, i),
             );
         }
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 pb_sum::<FieldT, tinyram_protoboard<FieldT>, pb_variable>(
                     &(self.t.t.t.opcode_indicators.clone().into()),
                 ),
-                1.into(),
+                FieldT::from(1).into(),
             ),
             format!("{} opcode_indicators_sum_to_1", self.annotation_prefix),
         );
@@ -503,7 +504,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
 
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 pb_packing_sum::<FieldT, tinyram_protoboard<FieldT>>(
                     &(pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
                         self.t.t.t.arg2val.borrow().t.bits.contents
@@ -541,7 +542,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                     [tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
                     .clone())
                 .into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!("{} handle_loadb", self.annotation_prefix),
         );
@@ -555,7 +556,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                 ) - self.t.t.t.instruction_results
                     [tinyram_opcode::tinyram_opcode_LOADW.clone() as usize]
                     .clone(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!("{} handle_loadw", self.annotation_prefix),
         );
@@ -573,7 +574,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                     )
                     .into()),
                 ),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!("{} handle_storeb", self.annotation_prefix),
         );
@@ -586,20 +587,21 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                     self.t.t.t.memory_subcontents.clone(),
                 ) - self.t.t.t.desval.borrow().t.packed.clone(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!("{} handle_storew", self.annotation_prefix),
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - (self.t.t.t.opcode_indicators
-                        [tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - (self.t.t.t.opcode_indicators
+                    [tinyram_opcode::tinyram_opcode_STOREB.clone() as usize]
+                    .clone()
+                    + self.t.t.t.opcode_indicators
+                        [tinyram_opcode::tinyram_opcode_STOREW.clone() as usize]
                         .clone()
-                        + self.t.t.t.opcode_indicators
-                            [tinyram_opcode::tinyram_opcode_STOREW.clone() as usize]
-                            .clone()
-                            .into()),
+                        .into()),
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                     self.t
                         .t
@@ -618,7 +620,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                     .t
                     .packed
                     .clone(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!(
                 "{} non_store_instructions_dont_change_memory",
@@ -630,11 +632,12 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.next_has_accepted.clone().into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.opcode_indicators
-                        [tinyram_opcode::tinyram_opcode_ANSWER.clone() as usize]
-                        .clone(),
-                0.into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.opcode_indicators
+                    [tinyram_opcode::tinyram_opcode_ANSWER.clone() as usize]
+                    .clone(),
+                FieldT::from(0).into(),
             ),
             format!("{} accepting_requires_answer", self.annotation_prefix),
         );
@@ -642,7 +645,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.next_has_accepted.clone().into(),
                 self.t.t.t.arg2val.borrow().t.packed.clone().into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!(
                 "{} accepting_requires_arg2val_equal_zero",
@@ -662,9 +665,10 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.prev_tape1_exhausted.clone().into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.next_tape1_exhausted.clone(),
-                0.into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.next_tape1_exhausted.clone(),
+                FieldT::from(0).into(),
             ),
             format!(
                 "{} prev_tape1_exhausted_implies_next_tape1_exhausted",
@@ -674,11 +678,12 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.prev_tape1_exhausted.clone().into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.instruction_flags
-                        [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
-                        .clone(),
-                0.into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.instruction_flags
+                    [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                    .clone(),
+                FieldT::from(0).into(),
             ),
             format!(
                 "{} prev_tape1_exhausted_implies_flag",
@@ -690,8 +695,9 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                 self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_READ.clone() as usize]
                     .clone()
                     .into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.arg2val.borrow().t.packed.clone(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.arg2val.borrow().t.packed.clone(),
                 self.t.t.t.read_not1.clone().into(),
             ),
             format!("{} read_not1", self.annotation_prefix),
@@ -699,11 +705,12 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.read_not1.clone().into(),
-                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(1)
-                    - self.t.t.t.instruction_flags
-                        [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
-                        .clone(),
-                0.into(),
+                linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
+                    FieldT::from(1),
+                ) - self.t.t.t.instruction_flags
+                    [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
+                    .clone(),
+                FieldT::from(0).into(),
             ),
             format!("{} other_reads_imply_flag", self.annotation_prefix),
         );
@@ -716,7 +723,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                     [tinyram_opcode::tinyram_opcode_READ.clone() as usize]
                     .clone()
                     .into(),
-                0.into(),
+                FieldT::from(0).into(),
             ),
             format!("{} read_flag_implies_result_0", self.annotation_prefix),
         );

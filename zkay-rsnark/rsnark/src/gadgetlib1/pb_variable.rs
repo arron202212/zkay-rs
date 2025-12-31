@@ -1,8 +1,8 @@
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
-use crate::relations::FieldTConfig;
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, linear_term, variable,
 };
+use ffec::FieldTConfig;
 use ffec::common::utils;
 use ffec::common::utils::bit_vector;
 use rccell::RcCell;
@@ -463,7 +463,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
 pub fn pb_sum<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig>(
     v: &pb_linear_combination_array<FieldT, PB>,
 ) -> linear_combination<FieldT, pb_variable, pb_linear_combination> {
-    let mut result = linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(0);
+    let mut result =
+        linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(FieldT::from(0));
     for term in &v.contents {
         result = term.clone() + result;
     }

@@ -5,8 +5,8 @@ use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::gadgetlib1::protoboard::protoboard;
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use ffec::common::utils::bit_vector;
 use rccell::RcCell;
 #[derive(Clone, Default)]

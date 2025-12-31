@@ -1,4 +1,3 @@
-use crate::relations::FieldTConfig;
 /** @file
 *****************************************************************************
 
@@ -25,6 +24,7 @@ use crate::relations::variable;
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
+use ffec::FieldTConfig;
 use std::collections::BTreeMap;
 use std::fmt;
 /************************* USCS constraint ***********************************/

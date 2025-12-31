@@ -8,9 +8,9 @@ use crate::gadgetlib1::pb_variable::{
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
 use crate::prefix_format;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::One;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -227,7 +227,7 @@ impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp3_variables
     pub fn generate_r1cs_equals_const_constraints(&self, el: &Fp3T) {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 el.c0().into(),
                 self.t.c0.clone().into(),
             ),
@@ -235,7 +235,7 @@ impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp3_variables
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 el.c1().into(),
                 self.t.c1.clone().into(),
             ),
@@ -243,7 +243,7 @@ impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp3_variables
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 el.c2().into(),
                 self.t.c2.clone().into(),
             ),
@@ -416,10 +416,14 @@ impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         );
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                self.t.A.t.c0.clone() + self.t.A.t.c1.clone() * 2 + self.t.A.t.c2.clone() * 4,
-                self.t.B.t.c0.clone() + self.t.B.t.c1.clone() * 2 + self.t.B.t.c2.clone() * 4,
-                self.t.result.t.c1.clone() * 2
-                    + self.t.result.t.c2.clone() * 2
+                self.t.A.t.c0.clone()
+                    + self.t.A.t.c1.clone() * FieldT::from(2)
+                    + self.t.A.t.c2.clone() * FieldT::from(4),
+                self.t.B.t.c0.clone()
+                    + self.t.B.t.c1.clone() * FieldT::from(2)
+                    + self.t.B.t.c2.clone() * FieldT::from(4),
+                self.t.result.t.c1.clone() * FieldT::from(2)
+                    + self.t.result.t.c2.clone() * FieldT::from(2)
                     + self.t.result.t.c0.clone() * (FieldT::from(8) * beta.inverse())
                     + self.t.v0.clone() * (FieldT::from(1) - FieldT::from(8) * beta.inverse())
                     + self.t.v4.clone() * (FieldT::from(16) - FieldT::from(2) * beta),

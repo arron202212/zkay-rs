@@ -1,3 +1,8 @@
+use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
+    uscs_auxiliary_input, uscs_constraint, uscs_constraint_system, uscs_primary_input,
+    uscs_variable_assignment,
+};
+use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 /** @file
 
 Declaration of interfaces for a USCS example, as well as functions to sample
@@ -10,12 +15,7 @@ USCS examples with prescribed parameters (according to some distribution).
 *****************************************************************************/
 //#ifndef USCS_EXAMPLES_HPP_
 // #define USCS_EXAMPLES_HPP_
-use crate::relations::FieldTConfig;
-use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
-    uscs_auxiliary_input, uscs_constraint, uscs_constraint_system, uscs_primary_input,
-    uscs_variable_assignment,
-};
-use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block};
 /**
  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.

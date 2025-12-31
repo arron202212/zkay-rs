@@ -7,12 +7,12 @@ use crate::gadgetlib1::pb_variable::{
     pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
 };
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 use ffec::common::utils::div_ceil;
 use ffec::field_utils::bigint::bigint;
 use rccell::RcCell;
@@ -439,8 +439,8 @@ pub fn generate_boolean_r1cs_constraint<FieldT: FieldTConfig, PB: PBConfig>(
     pb.borrow_mut().add_r1cs_constraint(
         r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
             lc.clone(),
-            -lc.clone() + 1,
-            0.into(),
+            -lc.clone() + FieldT::from(1),
+            FieldT::from(0).into(),
         ),
         prefix_format!(annotation_prefix, " boolean_r1cs_constraint"),
     );
@@ -454,7 +454,7 @@ pub fn generate_r1cs_equals_const_constraint<FieldT: FieldTConfig, PB: PBConfig>
 ) {
     pb.borrow_mut().add_r1cs_constraint(
         r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-            1.into(),
+            FieldT::from(1).into(),
             lc.clone(),
             c.clone().into(),
         ),
@@ -467,7 +467,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, packing_gadget<Field
         /* adds constraint result = \sum  bits[i] * 2^i */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 pb_packing_sum::<FieldT, PB>(&self.t.bits),
                 self.t.packed.clone(),
             ),
@@ -605,7 +605,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, field_vector_copy_ga
                     ) - linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
                         self.t.target[i].clone(),
                     ),
-                    0.into(),
+                    FieldT::from(0).into(),
                 ),
                 prefix_format!(self.annotation_prefix, " copying_check_{}", i),
             );
@@ -1010,7 +1010,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
         self.t.pack_alpha.borrow().generate_r1cs_constraints(true);
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
-                1.into(),
+                FieldT::from(1).into(),
                 self.t.B.clone() + (FieldT::from(2) ^ self.t.n) - self.t.A.clone(),
                 self.t.alpha_packed.clone().into(),
             ),
@@ -1123,7 +1123,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, inner_product_gadget
                     (if i == self.t.A.len() - 1 {
                         linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(self.t.result.clone())
                     } else {
-                         (if i == 0 { linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(0)*linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(FieldT::one())} else { -linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(self.t.S[i - 1].clone()) })+self.t.S[i].clone()
+                         (if i == 0 { linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(FieldT::from(0))*linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(FieldT::one())} else { -linear_combination::<FieldT,pb_variable,pb_linear_combination>::from(self.t.S[i - 1].clone()) })+self.t.S[i].clone()
                     }),
                 ),
                 prefix_format!(self.annotation_prefix, " S_{}", i),
@@ -1217,7 +1217,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     self.t.alpha[i].clone().into(),
                     FieldT::from(self.t.index.index - i).into(),
-                    0.into(),
+                    FieldT::from(0).into(),
                 ),
                 prefix_format!(self.annotation_prefix, " alpha_{}", i),
             );

@@ -37,7 +37,6 @@ use crate::gadgetlib1::pb_variable::{
     pb_variable_array,
 };
 use crate::gadgetlib1::protoboard::protoboard;
-use crate::relations::FieldTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_opcode;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
@@ -51,6 +50,7 @@ use crate::relations::ram_computations::rams::{
 };
 use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
+use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use rccell::RcCell;
 use std::marker::PhantomData;

@@ -25,7 +25,7 @@
 // use  <map>
 //
 
-use crate::relations::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::scalar_multiplication::multiexp::inner_product;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use rccell::RcCell;

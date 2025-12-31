@@ -1,4 +1,3 @@
-use crate::relations::FieldTConfig;
 use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
     bacs_auxiliary_input, bacs_circuit, bacs_gate, bacs_primary_input, bacs_variable_assignment,
 };
@@ -18,6 +17,7 @@ BACS examples with prescribed parameters (according to some distribution).
 //#ifndef BACS_EXAMPLES_HPP_
 // #define BACS_EXAMPLES_HPP_
 use crate::relations::variable::{linear_combination, variable};
+use ffec::FieldTConfig;
 /**
  * A BACS example comprises a BACS circuit, BACS primary input, and BACS auxiliary input.
  */
@@ -97,7 +97,7 @@ pub fn random_linear_combination<
     num_variables: usize,
 ) -> linear_combination<FieldT, SV, SLC> {
     let terms = 1i32 + (rand::random::<i32>() % 3);
-    let mut result = linear_combination::<FieldT, SV, SLC>::from(0);
+    let mut result = linear_combination::<FieldT, SV, SLC>::from(FieldT::from(0));
 
     for i in 0..terms {
         let coeff = FieldT::random_element(); //FieldT(rand::random()); // TODO: replace with FieldT::random_element(), when it becomes faster...
