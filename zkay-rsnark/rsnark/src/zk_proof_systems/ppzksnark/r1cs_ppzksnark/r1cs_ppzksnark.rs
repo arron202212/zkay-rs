@@ -68,18 +68,19 @@ use std::ops::{Add, Mul, Sub};
  * A proving key for the R1CS ppzkSNARK.
  */
 pub trait PptConfig: PublicParamsType + PublicParams {}
-struct r1cs_ppzksnark_proving_key<ppT: PptConfig>
+#[derive(Clone, Default)]
+pub struct r1cs_ppzksnark_proving_key<ppT: PptConfig>
 where
     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
 {
-    A_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
-    B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
-    C_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
-    H_query: G1_vector<ppT>,
-    K_query: G1_vector<ppT>,
+    pub A_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
+    pub B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
+    pub C_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
+    pub H_query: G1_vector<ppT>,
+    pub K_query: G1_vector<ppT>,
 
-    constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
+    pub constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
 }
 impl<ppT: PptConfig> r1cs_ppzksnark_proving_key<ppT>
 where
@@ -165,19 +166,19 @@ where
  * A verification key for the R1CS ppzkSNARK.
  */
 #[derive(Default, Clone)]
-struct r1cs_ppzksnark_verification_key<ppT: PptConfig>
+pub struct r1cs_ppzksnark_verification_key<ppT: PptConfig>
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
-    alphaA_g2: G2<ppT>,
-    alphaB_g1: G1<ppT>,
-    alphaC_g2: G2<ppT>,
-    gamma_g2: G2<ppT>,
-    gamma_beta_g1: G1<ppT>,
-    gamma_beta_g2: G2<ppT>,
-    rC_Z_g2: G2<ppT>,
+    pub alphaA_g2: G2<ppT>,
+    pub alphaB_g1: G1<ppT>,
+    pub alphaC_g2: G2<ppT>,
+    pub gamma_g2: G2<ppT>,
+    pub gamma_beta_g1: G1<ppT>,
+    pub gamma_beta_g2: G2<ppT>,
+    pub rC_Z_g2: G2<ppT>,
 
-    encoded_IC_query: accumulation_vector<G1<ppT>>,
+    pub encoded_IC_query: accumulation_vector<G1<ppT>>,
 }
 impl<ppT: PptConfig> r1cs_ppzksnark_verification_key<ppT>
 where
@@ -246,20 +247,20 @@ where
  * enables a faster verification time.
  */
 #[derive(Default, Clone)]
-struct r1cs_ppzksnark_processed_verification_key<ppT: PptConfig>
+pub struct r1cs_ppzksnark_processed_verification_key<ppT: PptConfig>
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
-    pp_G2_one_precomp: G2_precomp<ppT>,
-    vk_alphaA_g2_precomp: G2_precomp<ppT>,
-    vk_alphaB_g1_precomp: G1_precomp<ppT>,
-    vk_alphaC_g2_precomp: G2_precomp<ppT>,
-    vk_rC_Z_g2_precomp: G2_precomp<ppT>,
-    vk_gamma_g2_precomp: G2_precomp<ppT>,
-    vk_gamma_beta_g1_precomp: G1_precomp<ppT>,
-    vk_gamma_beta_g2_precomp: G2_precomp<ppT>,
+    pub pp_G2_one_precomp: G2_precomp<ppT>,
+    pub vk_alphaA_g2_precomp: G2_precomp<ppT>,
+    pub vk_alphaB_g1_precomp: G1_precomp<ppT>,
+    pub vk_alphaC_g2_precomp: G2_precomp<ppT>,
+    pub vk_rC_Z_g2_precomp: G2_precomp<ppT>,
+    pub vk_gamma_g2_precomp: G2_precomp<ppT>,
+    pub vk_gamma_beta_g1_precomp: G1_precomp<ppT>,
+    pub vk_gamma_beta_g2_precomp: G2_precomp<ppT>,
 
-    encoded_IC_query: accumulation_vector<G1<ppT>>,
+    pub encoded_IC_query: accumulation_vector<G1<ppT>>,
     // bool operator==(&other:r1cs_ppzksnark_processed_verification_key) const;
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzksnark_processed_verification_key<ppT> &pvk);
@@ -270,14 +271,15 @@ where
 /**
  * A key pair for the R1CS ppzkSNARK, which consists of a proving key and a verification key.
  */
-struct r1cs_ppzksnark_keypair<ppT: PptConfig>
+#[derive(Clone, Default)]
+pub struct r1cs_ppzksnark_keypair<ppT: PptConfig>
 where
     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
     <ppT as PublicParamsType>::G1_type: PpConfig,
     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
 {
-    pk: r1cs_ppzksnark_proving_key<ppT>,
-    vk: r1cs_ppzksnark_verification_key<ppT>,
+    pub pk: r1cs_ppzksnark_proving_key<ppT>,
+    pub vk: r1cs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: PptConfig> r1cs_ppzksnark_keypair<ppT>
 where
@@ -305,12 +307,13 @@ where
  * serializes/deserializes, and verifies proofs. We only expose some information
  * about the structure for statistics purposes.
  */
-struct r1cs_ppzksnark_proof<ppT: PptConfig> {
-    g_A: knowledge_commitment<G1<ppT>, G1<ppT>>,
-    g_B: knowledge_commitment<G2<ppT>, G1<ppT>>,
-    g_C: knowledge_commitment<G1<ppT>, G1<ppT>>,
-    g_H: G1<ppT>,
-    g_K: G1<ppT>,
+#[derive(Clone, Default)]
+pub struct r1cs_ppzksnark_proof<ppT: PptConfig> {
+    pub g_A: knowledge_commitment<G1<ppT>, G1<ppT>>,
+    pub g_B: knowledge_commitment<G2<ppT>, G1<ppT>>,
+    pub g_C: knowledge_commitment<G1<ppT>, G1<ppT>>,
+    pub g_H: G1<ppT>,
+    pub g_K: G1<ppT>,
 }
 impl<ppT: PptConfig> r1cs_ppzksnark_proof<ppT> {
     pub fn default() -> Self {
@@ -393,7 +396,7 @@ pub fn r1cs_ppzksnark_generator<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    cs: r1cs_ppzksnark_constraint_system<ppT>,
+    cs: &r1cs_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_ppzksnark_keypair<ppT>
 where
     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
@@ -682,9 +685,9 @@ where
  */
 
 pub fn r1cs_ppzksnark_prover<ppT: PptConfig, FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
-    pk: r1cs_ppzksnark_proving_key<ppT>,
-    primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    auxiliary_input: r1cs_ppzksnark_auxiliary_input<ppT>,
+    pk: &r1cs_ppzksnark_proving_key<ppT>,
+    primary_input: &r1cs_ppzksnark_primary_input<ppT>,
+    auxiliary_input: &r1cs_ppzksnark_auxiliary_input<ppT>,
 ) -> r1cs_ppzksnark_proof<ppT>
 where
     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
@@ -884,9 +887,9 @@ pub fn r1cs_ppzksnark_verifier_weak_IC<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    vk: r1cs_ppzksnark_verification_key<ppT>,
-    primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    proof: r1cs_ppzksnark_proof<ppT>,
+    vk: &r1cs_ppzksnark_verification_key<ppT>,
+    primary_input: &r1cs_ppzksnark_primary_input<ppT>,
+    proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
@@ -896,7 +899,7 @@ where
     enter_block("Call to r1cs_ppzksnark_verifier_weak_IC", false);
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT, FieldT, ED>(vk);
     let result =
-        r1cs_ppzksnark_online_verifier_weak_IC::<ppT, FieldT, ED>(pvk, primary_input, proof);
+        r1cs_ppzksnark_online_verifier_weak_IC::<ppT, FieldT, ED>(&pvk, &primary_input, &proof);
     leave_block("Call to r1cs_ppzksnark_verifier_weak_IC", false);
     return result;
 }
@@ -912,9 +915,9 @@ pub fn r1cs_ppzksnark_verifier_strong_IC<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    vk: r1cs_ppzksnark_verification_key<ppT>,
-    primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    proof: r1cs_ppzksnark_proof<ppT>,
+    vk: &r1cs_ppzksnark_verification_key<ppT>,
+    primary_input: &r1cs_ppzksnark_primary_input<ppT>,
+    proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
@@ -924,7 +927,7 @@ where
     enter_block("Call to r1cs_ppzksnark_verifier_strong_IC", false);
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT, FieldT, ED>(vk);
     let result =
-        r1cs_ppzksnark_online_verifier_strong_IC::<ppT, FieldT, ED>(pvk, primary_input, proof);
+        r1cs_ppzksnark_online_verifier_strong_IC::<ppT, FieldT, ED>(&pvk, &primary_input, &proof);
     leave_block("Call to r1cs_ppzksnark_verifier_strong_IC", false);
     return result;
 }
@@ -937,7 +940,7 @@ pub fn r1cs_ppzksnark_verifier_process_vk<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    vk: r1cs_ppzksnark_verification_key<ppT>,
+    vk: &r1cs_ppzksnark_verification_key<ppT>,
 ) -> r1cs_ppzksnark_processed_verification_key<ppT>
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
@@ -954,11 +957,11 @@ where
     pvk.vk_gamma_beta_g1_precomp = ppT::precompute_G1(&vk.gamma_beta_g1);
     pvk.vk_gamma_beta_g2_precomp = ppT::precompute_G2(&vk.gamma_beta_g2);
 
-    pvk.encoded_IC_query = vk.encoded_IC_query;
+    pvk.encoded_IC_query = vk.encoded_IC_query.clone();
 
     leave_block("Call to r1cs_ppzksnark_verifier_process_vk", false);
 
-    return pvk;
+    pvk
 }
 /**
  * A verifier algorithm for the R1CS ppzkSNARK that:
@@ -971,9 +974,9 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    pvk: r1cs_ppzksnark_processed_verification_key<ppT>,
-    primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    proof: r1cs_ppzksnark_proof<ppT>,
+    pvk: &r1cs_ppzksnark_processed_verification_key<ppT>,
+    primary_input: &r1cs_ppzksnark_primary_input<ppT>,
+    proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
@@ -1072,7 +1075,7 @@ where
     enter_block("Check same coefficients were used", false);
     let proof_g_K_precomp = ppT::precompute_G1(&proof.g_K);
     let proof_g_A_g_acc_C_precomp =
-        ppT::precompute_G1(&((proof.g_A.g + acc.clone()) + proof.g_C.g));
+        ppT::precompute_G1(&((proof.g_A.g.clone() + acc.clone()) + proof.g_C.g.clone()));
     let K_1 = ppT::miller_loop(&proof_g_K_precomp, &pvk.vk_gamma_g2_precomp);
     let K_23 = ppT::double_miller_loop(
         &proof_g_A_g_acc_C_precomp,
@@ -1106,9 +1109,9 @@ pub fn r1cs_ppzksnark_online_verifier_strong_IC<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    pvk: r1cs_ppzksnark_processed_verification_key<ppT>,
-    primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    proof: r1cs_ppzksnark_proof<ppT>,
+    pvk: &r1cs_ppzksnark_processed_verification_key<ppT>,
+    primary_input: &r1cs_ppzksnark_primary_input<ppT>,
+    proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,
@@ -1151,9 +1154,9 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
-    vk: r1cs_ppzksnark_verification_key<ppT>,
-    primary_input: r1cs_ppzksnark_primary_input<ppT>,
-    proof: r1cs_ppzksnark_proof<ppT>,
+    vk: &r1cs_ppzksnark_verification_key<ppT>,
+    primary_input: &r1cs_ppzksnark_primary_input<ppT>,
+    proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool
 where
     <ppT as PublicParamsType>::G1_type: PpConfig,

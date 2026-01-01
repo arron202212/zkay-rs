@@ -30,9 +30,9 @@ pub struct r1cs_example<
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 > {
-    constraint_system: r1cs_constraint_system<FieldT, SV, SLC>,
-    primary_input: r1cs_primary_input<FieldT>,
-    auxiliary_input: r1cs_auxiliary_input<FieldT>,
+    pub constraint_system: r1cs_constraint_system<FieldT, SV, SLC>,
+    pub primary_input: r1cs_primary_input<FieldT>,
+    pub auxiliary_input: r1cs_auxiliary_input<FieldT>,
 }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     r1cs_example<FieldT, SV, SLC>

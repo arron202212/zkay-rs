@@ -57,7 +57,7 @@ use std::marker::PhantomData;
 use std::ops::Add;
 
 #[derive(Clone, Default)]
-struct r1cs_ppzksnark_proof<
+pub struct r1cs_ppzksnark_proof<
     ppT: ppTConfig<FieldT, PB>,
     FieldT: FieldTConfig,
     PB: PBConfig,
@@ -73,7 +73,7 @@ struct r1cs_ppzksnark_proof<
     _t: PhantomData<(FieldT, PB)>,
 }
 #[derive(Clone, Default)]
-struct r1cs_ppzksnark_verification_key<
+pub struct r1cs_ppzksnark_verification_key<
     ppT: ppTConfig<FieldT, PB>,
     FieldT: FieldTConfig,
     PB: PBConfig,
