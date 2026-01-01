@@ -5,8 +5,9 @@
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
+use crate::zk_proof_systems::PptConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
-    PptConfig, r1cs_ppzksnark_affine_verifier_weak_IC, r1cs_ppzksnark_generator,
+    r1cs_ppzksnark_affine_verifier_weak_IC, r1cs_ppzksnark_generator,
     r1cs_ppzksnark_online_verifier_strong_IC, r1cs_ppzksnark_processed_verification_key,
     r1cs_ppzksnark_proof, r1cs_ppzksnark_prover, r1cs_ppzksnark_proving_key,
     r1cs_ppzksnark_verification_key, r1cs_ppzksnark_verifier_process_vk,
@@ -15,6 +16,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params::r1cs_ppzksnark_primary_input;
 use ff_curves::Fr;
 use ff_curves::PublicParams;
+use ff_curves::{G1, G2};
 use ffec::FieldTConfig;
 use ffec::PpConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};

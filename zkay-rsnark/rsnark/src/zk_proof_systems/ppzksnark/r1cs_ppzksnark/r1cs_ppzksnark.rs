@@ -45,6 +45,7 @@ use crate::reductions::r1cs_to_qap::r1cs_to_qap::{
 };
 use crate::relations::arithmetic_programs::qap::qap::qap_instance_evaluation;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint_system;
+use crate::zk_proof_systems::PptConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params::{
     r1cs_ppzksnark_auxiliary_input, r1cs_ppzksnark_constraint_system, r1cs_ppzksnark_primary_input,
 };
@@ -67,7 +68,7 @@ use std::ops::{Add, Mul, Sub};
 /**
  * A proving key for the R1CS ppzkSNARK.
  */
-pub trait PptConfig: PublicParamsType + PublicParams {}
+
 #[derive(Clone, Default)]
 pub struct r1cs_ppzksnark_proving_key<ppT: PptConfig>
 where

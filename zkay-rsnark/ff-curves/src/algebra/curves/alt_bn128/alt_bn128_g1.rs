@@ -6,6 +6,7 @@ use crate::algebra::curves::alt_bn128::{
     alt_bn128_init::{alt_bn128_coeff_b, alt_bn128_twist_mul_by_b_c0, alt_bn128_twist_mul_by_b_c1},
 };
 use crate::algebra::curves::pairing::Pairing;
+use ffec::Fp_model;
 use ffec::Fp_modelConfig;
 use ffec::PpConfig;
 use ffec::field_utils::field_utils::batch_invert;
@@ -448,6 +449,16 @@ impl<const N: usize> Mul<bigint<N>> for alt_bn128_G1 {
     type Output = alt_bn128_G1;
 
     fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for alt_bn128_G1 {
+    type Output = alt_bn128_G1;
+
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
         let mut r = self;
         // r *= *rhs.borrow();
         r

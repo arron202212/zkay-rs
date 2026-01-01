@@ -60,7 +60,7 @@ use ffec::PpConfig;
 use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::field_utils::BigInteger;
 use ffec::field_utils::bigint::bigint;
-
+use std::ops::Mul;
 pub trait PublicParamsType: Default + Clone {
     type Fp_type: FieldTConfig;
     type G1_type: PpConfig;
@@ -75,7 +75,9 @@ pub trait PublicParamsType: Default + Clone {
     type GT_type: PpConfig;
     const N: usize = 4;
 }
-
+//where <Self as PublicParamsType>::G1_type: Mul<<Self as PublicParams>::G2,Output=<Self as PublicParams>::G2>,<Self as PublicParamsType>::G2_type: Mul<<Self as PublicParams>::G1,Output=<Self as PublicParams>::G1>
+// +Mul<Self::G2,Output=Self::G1>+Mul<Self::Fr,Output=Self::G1>
+// +Mul<Self::G1,Output=Self::G2>
 pub trait PublicParams: PublicParamsType {
     type Fr: FieldTConfig = Self::Fp_type;
     type G1: PpConfig = Self::G1_type;

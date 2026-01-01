@@ -8,6 +8,7 @@ use crate::algebra::curves::alt_bn128::alt_bn128_init::{
 };
 use crate::algebra::curves::alt_bn128::curves::Bn254;
 use crate::algebra::curves::pairing::Pairing;
+use ffec::Fp_model;
 use ffec::Fp_modelConfig;
 use ffec::PpConfig;
 use ffec::field_utils::bigint::GMP_NUMB_BITS;
@@ -68,7 +69,15 @@ impl<const N: usize> Mul<bigint<N>> for alt_bn128_G2 {
         r
     }
 }
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
 
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
 impl<O: Borrow<Self>> Mul<O> for alt_bn128_G2 {
     type Output = alt_bn128_G2;
 
