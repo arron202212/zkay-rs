@@ -50,7 +50,7 @@ Fast batch verification signature for ADSNARK.
 // use  "depends/libsnark-supercop/include/crypto_sign.h"
 use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
-//
+
 pub fn sigGen<default_r1cs_ppzkadsnark_pp>() -> kpT<default_r1cs_ppzkadsnark_pp> {
     let keys = kpT::<default_r1cs_ppzkadsnark_pp>::new();
     // crypto_sign_ed25519_amd64_51_30k_keypair(keys.vk.vk_bytes,keys.sk.sk_bytes);

@@ -1,6 +1,3 @@
-// /** @file
-//  *****************************************************************************
-
 //  Declaration of interfaces for a SAP ("Square Arithmetic Program").
 
 //  SAPs are defined in \[GM17].
@@ -13,17 +10,6 @@
 //  Jens Groth and Mary Maller,
 //  IACR-CRYPTO-2017,
 //  <https://eprint.iacr.org/2017/540>
-
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef SAP_HPP_
-// #define SAP_HPP_
-
-// use  <map>
-//
 
 use ffec::FieldTConfig;
 use ffec::scalar_multiplication::multiexp::inner_product;
@@ -45,18 +31,16 @@ use std::collections::HashMap;
  * There is no need to store the Z polynomial because it is uniquely
  * determined by the domain (as Z is its vanishing polynomial).
  */
-//
+#[derive(Default, Clone)]
 pub struct sap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
-    // //
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    // //
-    domain: RcCell<ED>,
+    pub domain: RcCell<ED>,
 
-    A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
 }
 
 //     sap_instance(domain:&RcCell<ED >,
@@ -96,22 +80,20 @@ pub struct sap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
  * - evaluations of all monomials of t;
  * - counts about how many of the above evaluations are in fact non-zero.
  */
-//
+#[derive(Default, Clone)]
 pub struct sap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
-    //
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
-    //
-    domain: RcCell<ED>,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
+    pub domain: RcCell<ED>,
 
-    t: FieldT,
+    pub t: FieldT,
 
-    Ht: Vec<FieldT>,
-    At: Vec<FieldT>,
-    Ct: Vec<FieldT>,
+    pub Ht: Vec<FieldT>,
+    pub At: Vec<FieldT>,
+    pub Ct: Vec<FieldT>,
 
-    Zt: FieldT,
+    pub Zt: FieldT,
 }
 
 //     sap_instance_evaluation(domain:&RcCell<ED >,
@@ -149,18 +131,17 @@ pub struct sap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<F
  * A SAP witness.
  */
 //
+#[derive(Default, Clone)]
 pub struct sap_witness<FieldT> {
-    //
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    //
-    d2: FieldT,
-    d1: FieldT,
+    pub d2: FieldT,
+    pub d1: FieldT,
 
-    coefficients_for_ACs: Vec<FieldT>,
-    coefficients_for_H: Vec<FieldT>,
+    pub coefficients_for_ACs: Vec<FieldT>,
+    pub coefficients_for_H: Vec<FieldT>,
 }
 
 //     sap_witness(num_variables:usize,
@@ -191,24 +172,9 @@ pub struct sap_witness<FieldT> {
 
 // use crate::relations::arithmetic_programs::sap::sap;
 
-//#endif // SAP_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a SAP ("Square Arithmetic Program").
-
-See sap.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef SAP_TCC_
-// #define SAP_TCC_
-use ffec::algebra::scalar_multiplication::multiexp;
-use ffec::common::profiling;
-use ffec::common::utils;
+// use ffec::algebra::scalar_multiplication::multiexp;
+// use ffec::common::profiling;
+// use ffec::common::utils;
 
 impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance<FieldT, ED> {
     pub fn new(
@@ -475,5 +441,3 @@ impl<FieldT> sap_witness<FieldT> {
         return self.num_inputs;
     }
 }
-
-//#endif // SAP_TCC_
