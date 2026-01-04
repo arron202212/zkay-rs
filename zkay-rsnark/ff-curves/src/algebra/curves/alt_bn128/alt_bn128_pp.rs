@@ -44,8 +44,82 @@ use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
 
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::{PublicParams, PublicParamsType};
-#[derive(Default, Clone)]
+use ffec::PpConfig;
+use ffec::field_utils::bigint::bigint;
+use ffec::{One, Zero};
+use std::fmt;
+use std::ops::{Add, Mul, Sub};
+#[derive(Default, Clone, PartialEq)]
 pub struct alt_bn128_pp;
+
+impl Add for alt_bn128_pp {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
+impl Sub for alt_bn128_pp {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
+impl Mul for alt_bn128_pp {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+impl Mul<&Self> for alt_bn128_pp {
+    type Output = Self;
+
+    fn mul(self, rhs: &Self) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+impl Mul<bigint<4>> for alt_bn128_pp {
+    type Output = Self;
+
+    fn mul(self, rhs: bigint<4>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+impl One for alt_bn128_pp {
+    fn one() -> Self {
+        Self::default()
+    }
+}
+
+impl Zero for alt_bn128_pp {
+    fn zero() -> Self {
+        Self::default()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
+impl std::fmt::Display for alt_bn128_pp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ", 1)
+    }
+}
+impl PpConfig for alt_bn128_pp {
+    type T = bigint<4>;
+}
+
 impl PublicParamsType for alt_bn128_pp {
     type Fp_type = alt_bn128_Fr;
     type G1_type = alt_bn128_G1;

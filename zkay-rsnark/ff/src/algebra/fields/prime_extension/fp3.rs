@@ -416,7 +416,7 @@ impl<const N: usize, T: Fp3_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp3_mode
 impl<const N: usize, T: Fp3_modelConfig<N>> Sub for Fp3_model<N, T> {
     type Output = Self;
 
-    fn sub(self, other: Self) -> <Fp3_model<N, T> as Sub>::Output {
+    fn sub(self, other: Self) -> Self::Output {
         let mut r = self;
         r -= other;
         r

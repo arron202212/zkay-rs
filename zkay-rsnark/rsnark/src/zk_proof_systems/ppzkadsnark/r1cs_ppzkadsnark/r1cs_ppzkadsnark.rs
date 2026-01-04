@@ -881,8 +881,8 @@ impl<ppT: r1cs_ppzkadsnark_ppTConfig> r1cs_ppzkadsnark_verification_key<ppT> {
 
 pub fn r1cs_ppzkadsnark_auth_generator<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Sig: SigConfig,
-    Prf: PrfConfig,
+    Sig: SigConfig<ppT>,
+    Prf: PrfConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
@@ -897,8 +897,8 @@ where
             Output = <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2,
         >,
 {
-    let mut sigkp = Sig::sigGen::<ppT>();
-    let mut prfseed = Prf::prfGen::<ppT>();
+    let mut sigkp = Sig::sigGen();
+    let mut prfseed = Prf::prfGen();
     let mut i = Fr::<snark_pp<ppT>>::random_element();
     let mut I1 = i.clone() * G1::<snark_pp<ppT>>::one();
     let mut minusI2 = G2::<snark_pp<ppT>>::zero() - i.clone() * G2::<snark_pp<ppT>>::one();
@@ -913,15 +913,15 @@ where
  */
 pub fn r1cs_ppzkadsnark_auth_sign<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Sig: SigConfig,
-    Prf: PrfConfig,
+    Sig: SigConfig<ppT>,
+    Prf: PrfConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
 >(
     ins: &Vec<Fr<snark_pp<ppT>>>,
     sk: &r1cs_ppzkadsnark_sec_auth_key<ppT>,
-    labels: Vec<labelT>,
+    labels: &Vec<labelT>,
 ) -> Vec<r1cs_ppzkadsnark_auth_data<ppT>>
 where
     <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
@@ -953,9 +953,9 @@ where
     assert!(labels.len() == ins.len());
     let mut res = Vec::with_capacity(ins.len());
     for i in 0..ins.len() {
-        let mut lambda = Prf::prfCompute::<ppT>(&sk.S, &labels[i]);
+        let mut lambda = Prf::prfCompute(&sk.S, &labels[i]);
         let mut Lambda = &lambda * &G2::<snark_pp<ppT>>::one();
-        let mut sig = Sig::sigSign::<ppT>(&sk.skp, &labels[i], &Lambda);
+        let mut sig = Sig::sigSign(&sk.skp, &labels[i], &Lambda);
         let mut val =
             r1cs_ppzkadsnark_auth_data::<ppT>::new((&lambda + &sk.i * &ins[i]), Lambda, sig);
         res.push(val);
@@ -970,7 +970,7 @@ where
  */
 pub fn r1cs_ppzkadsnark_auth_verify<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Prf: PrfConfig,
+    Prf: PrfConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
@@ -984,7 +984,7 @@ pub fn r1cs_ppzkadsnark_auth_verify<
     assert!((data.len() == labels.len()) && (auth_data.len() == labels.len()));
     let mut res = true;
     for i in 0..data.len() {
-        let mut lambda = Prf::prfCompute::<ppT>(&sak.S, &labels[i]);
+        let mut lambda = Prf::prfCompute(&sak.S, &labels[i]);
         let mut mup = lambda + sak.i.clone() * data[i].clone();
         res = res && (auth_data[i].mu == mup);
     }
@@ -996,7 +996,7 @@ pub fn r1cs_ppzkadsnark_auth_verify<
 
 pub fn r1cs_ppzkadsnark_auth_verify2<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Sig: SigConfig,
+    Sig: SigConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
@@ -1019,7 +1019,7 @@ where
         let mut Mup = auth_data[i].Lambda.clone() - data[i].clone() * pak.minusI2.clone();
         res = res && (auth_data[i].mu.clone() * G2::<snark_pp<ppT>>::one() == Mup);
         res = res
-            && Sig::sigVerif::<ppT>(
+            && Sig::sigVerif(
                 &pak.vkp,
                 &labels[i],
                 &auth_data[i].Lambda,
@@ -1060,12 +1060,12 @@ where
         >,
     <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
             <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-            Output = <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+            Output = <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2,
         >,
     <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2: FieldTConfig,
     <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
             <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G1,
-            Output = <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            Output = <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2,
         >,
     <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
             <<ppT as r1cs_ppzkadsnark_ppTConfig>::snark_pp as ff_curves::PublicParams>::Fr,
@@ -1667,7 +1667,7 @@ pub fn r1cs_ppzkadsnark_verifier_process_vk<
 //  */
 pub fn r1cs_ppzkadsnark_online_verifier<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Prf: PrfConfig,
+    Prf: PrfConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
@@ -1704,7 +1704,7 @@ where
     let mut lambdas = Vec::with_capacity(labels.len());
 
     for i in 0..labels.len() {
-        lambdas.push(Prf::prfCompute::<ppT>(&sak.S, &labels[i]));
+        lambdas.push(Prf::prfCompute(&sak.S, &labels[i]));
     }
     leave_block("Compute PRFs", false);
     let mut prodA = sak.i.clone() * proof.g_Aau.g.clone();
@@ -1848,7 +1848,7 @@ where
 //  */
 pub fn r1cs_ppzkadsnark_verifier<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Prf: PrfConfig,
+    Prf: PrfConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
@@ -1879,7 +1879,7 @@ where
 //  */
 pub fn r1cs_ppzkadsnark_online_verifier2<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Sig: SigConfig,
+    Sig: SigConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,
@@ -1916,7 +1916,7 @@ pub fn r1cs_ppzkadsnark_online_verifier2<
         Lambdas.push(auth_data[i].Lambda.clone());
         sigs.push(auth_data[i].sigma.clone());
     }
-    let mut result_auth = Sig::sigBatchVerif::<ppT>(&pak.vkp, &labels, &Lambdas, &sigs);
+    let mut result_auth = Sig::sigBatchVerif(&pak.vkp, &labels, &Lambdas, &sigs);
     if !result_auth {
         if !inhibit_profiling_info {
             print_indent();
@@ -2100,7 +2100,7 @@ pub fn r1cs_ppzkadsnark_online_verifier2<
 //  */
 pub fn r1cs_ppzkadsnark_verifier2<
     ppT: r1cs_ppzkadsnark_ppTConfig,
-    Sig: SigConfig,
+    Sig: SigConfig<ppT>,
     const NN: usize,
     FieldT: FieldTConfig,
     ED: evaluation_domain<FieldT>,

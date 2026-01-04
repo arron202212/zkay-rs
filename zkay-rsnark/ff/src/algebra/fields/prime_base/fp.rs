@@ -485,7 +485,7 @@ impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp_model<
 impl<const N: usize, T: Fp_modelConfig<N>> Sub<i32> for Fp_model<N, T> {
     type Output = Self;
 
-    fn sub(self, other: i32) -> <Fp_model<N, T> as Sub>::Output {
+    fn sub(self, other: i32) -> Self::Output {
         let mut r = self;
         // r -= other;
         r
@@ -494,7 +494,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Sub<i32> for Fp_model<N, T> {
 impl<const N: usize, T: Fp_modelConfig<N>> Sub for Fp_model<N, T> {
     type Output = Self;
 
-    fn sub(self, other: Self) -> <Fp_model<N, T> as Sub>::Output {
+    fn sub(self, other: Self) -> Self::Output {
         let mut r = self;
         r -= other;
         r

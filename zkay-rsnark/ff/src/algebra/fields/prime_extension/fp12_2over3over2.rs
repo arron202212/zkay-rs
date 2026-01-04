@@ -596,7 +596,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>, O: Borrow<Self>> Add<O>
 impl<const N: usize, T: Fp12_modelConfig<N>> Sub for Fp12_2over3over2_model<N, T> {
     type Output = Self;
 
-    fn sub(self, other: Self) -> <Fp12_2over3over2_model<N, T> as Sub>::Output {
+    fn sub(self, other: Self) -> Self::Output {
         let mut r = self;
         r -= other;
         r

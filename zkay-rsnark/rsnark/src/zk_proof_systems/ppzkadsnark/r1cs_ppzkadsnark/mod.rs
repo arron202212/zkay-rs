@@ -1,4 +1,4 @@
-// pub mod examples;
+pub mod examples;
 pub mod r1cs_ppzkadsnark;
 pub mod r1cs_ppzkadsnark_params;
 pub mod r1cs_ppzkadsnark_prf;

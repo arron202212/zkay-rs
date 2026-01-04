@@ -1,23 +1,36 @@
 // Declaration of public-parameter selector for the R1CS ppzkADSNARK.
 
-// use ff_curves::algebra::curves::public_params;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
 };
 use crate::zk_proof_systems::PptConfig;
 use ff_curves::Fr;
+use ff_curves::PublicParams;
+use ffec::PpConfig;
 
+#[derive(Default, Clone)]
 pub struct labelT {
-    label_bytes: [u8; 16],
-    // labelT() {};
+    pub label_bytes: Vec<u8>, //[u8; 16],
+                              // labelT() {};
 }
-pub trait r1cs_ppzkadsnark_ppTConfig: PptConfig + Sized {
-    type snark_pp: PptConfig;
+
+pub trait SigTConfig {
+    fn sig_bytes(&self) -> &[u8];
+    fn sig_bytes_mut(&mut self) -> &mut Vec<u8>;
+}
+
+pub trait VkTConfig {
+    fn vk_bytes(&self) -> &[u8];
+}
+
+pub trait r1cs_ppzkadsnark_ppTConfig: Sized + Default + Clone {
+    type snark_pp: PublicParams;
     type skT: Default + Clone;
-    type vkT: Default + Clone;
-    type sigT: Default + Clone;
+    type vkT: VkTConfig + Default + Clone;
+    type sigT: SigTConfig + Default + Clone;
     type prfKeyT: Default + Clone;
+    fn init_public_params();
 }
 /**
  * Below are various template aliases (used for convenience).

@@ -53,7 +53,7 @@ impl<O: Borrow<Self>> Add<O> for alt_bn128_G2 {
 impl Sub for alt_bn128_G2 {
     type Output = Self;
 
-    fn sub(self, other: Self) -> <alt_bn128_G2 as Sub>::Output {
+    fn sub(self, other: Self) -> Self::Output {
         let mut r = self;
         // r -= other;
         r

@@ -442,7 +442,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp6_2ove
 impl<const N: usize, T: Fp6_modelConfig<N>> Sub for Fp6_2over3_model<N, T> {
     type Output = Self;
 
-    fn sub(self, other: Self) -> <Fp6_2over3_model<N, T> as Sub>::Output {
+    fn sub(self, other: Self) -> Self::Output {
         let mut r = self;
         r -= other;
         r

@@ -12,23 +12,23 @@ pub struct kpT<ppT: r1cs_ppzkadsnark_ppTConfig> {
     pub vk: r1cs_ppzkadsnark_vkT<ppT>,
 }
 
-pub trait SigConfig {
-    fn sigGen<ppT: r1cs_ppzkadsnark_ppTConfig>() -> kpT<ppT>;
+pub trait SigConfig<ppT: r1cs_ppzkadsnark_ppTConfig> {
+    fn sigGen() -> kpT<ppT>;
 
-    fn sigSign<ppT: r1cs_ppzkadsnark_ppTConfig>(
+    fn sigSign(
         sk: &r1cs_ppzkadsnark_skT<ppT>,
         label: &labelT,
         Lambda: &G2<snark_pp<ppT>>,
     ) -> r1cs_ppzkadsnark_sigT<ppT>;
 
-    fn sigVerif<ppT: r1cs_ppzkadsnark_ppTConfig>(
+    fn sigVerif(
         vk: &r1cs_ppzkadsnark_vkT<ppT>,
         label: &labelT,
         Lambda: &G2<snark_pp<ppT>>,
         sig: &r1cs_ppzkadsnark_sigT<ppT>,
     ) -> bool;
 
-    fn sigBatchVerif<ppT: r1cs_ppzkadsnark_ppTConfig>(
+    fn sigBatchVerif(
         vk: &r1cs_ppzkadsnark_vkT<ppT>,
         labels: &Vec<labelT>,
         Lambdas: &Vec<G2<snark_pp<ppT>>>,

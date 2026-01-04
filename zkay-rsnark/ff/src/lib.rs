@@ -73,6 +73,10 @@ pub trait PpConfig:
     fn is_well_formed(&self) -> bool {
         false
     }
+    fn num_bits() -> usize {
+        1
+    }
+    fn to_affine_coordinates(&mut self) {}
 }
 
 pub trait FieldTConfig:
