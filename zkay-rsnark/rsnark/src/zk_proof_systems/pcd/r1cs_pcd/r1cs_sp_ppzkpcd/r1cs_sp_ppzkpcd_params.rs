@@ -1,31 +1,28 @@
-/** @file
-*****************************************************************************
+// Parameters for *single-predicate* ppzkPCD for R1CS.
 
-Parameters for *single-predicate* ppzkPCD for R1CS.
+use crate::gadgetlib1::gadgets::pairing::pairing_params::pairing_selector;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
+    r1cs_pcd_compliance_predicate, r1cs_pcd_local_data, r1cs_pcd_message,
+};
+use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdConfigPptConfig;
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
+    r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
+};
+use ff_curves::Fr;
 
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef R1CS_SP_PPZKPCD_PARAMS_HPP_
-// #define R1CS_SP_PPZKPCD_PARAMS_HPP_
-use ff_curves::algebra::curves::public_params;
+pub type r1cs_sp_ppzkpcd_compliance_predicate<PCD_ppT> = r1cs_pcd_compliance_predicate<PCD_ppT>;
 
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate;
-use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params;
+pub type r1cs_sp_ppzkpcd_message<PCD_ppT> = r1cs_pcd_message<<PCD_ppT as PcdConfigPptConfig>::M>;
 
-type r1cs_sp_ppzkpcd_compliance_predicate<PCD_ppT> =
-    r1cs_pcd_compliance_predicate<ffec::Fr<PCD_ppT::curve_A_pp>>;
+pub type r1cs_sp_ppzkpcd_local_data<PCD_ppT> =
+    r1cs_pcd_local_data<<PCD_ppT as PcdConfigPptConfig>::LD>;
 
-type r1cs_sp_ppzkpcd_message<PCD_ppT> = r1cs_pcd_message<ffec::Fr<PCD_ppT::curve_A_pp>>;
+pub type r1cs_sp_ppzkpcd_primary_input<PCD_ppT> =
+    r1cs_pcd_compliance_predicate_primary_input<<PCD_ppT as PcdConfigPptConfig>::M>;
 
-type r1cs_sp_ppzkpcd_local_data<PCD_ppT> = r1cs_pcd_local_data<ffec::Fr<PCD_ppT::curve_A_pp>>;
-
-type r1cs_sp_ppzkpcd_primary_input<PCD_ppT> =
-    r1cs_pcd_compliance_predicate_primary_input<ffec::Fr<PCD_ppT::curve_A_pp>>;
-
-type r1cs_sp_ppzkpcd_auxiliary_input<PCD_ppT> =
-    r1cs_pcd_compliance_predicate_auxiliary_input<ffec::Fr<PCD_ppT::curve_A_pp>>;
-
-//#endif // R1CS_SP_PPZKPCD_PARAMS_HPP_
+pub type r1cs_sp_ppzkpcd_auxiliary_input<PCD_ppT> = r1cs_pcd_compliance_predicate_auxiliary_input<
+    <PCD_ppT as PcdConfigPptConfig>::FieldT,
+    <PCD_ppT as PcdConfigPptConfig>::M,
+    <PCD_ppT as PcdConfigPptConfig>::LD,
+>;

@@ -24,9 +24,7 @@ use rccell::RcCell;
 #[enum_dispatch]
 pub trait ArithmeticGadgetConfig<FieldT: FieldTConfig>: Default + Clone {
     fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:;
+    fn generate_r1cs_witness(&self);
 }
 
 #[enum_dispatch(ArithmeticGadgetConfig<Field>)]

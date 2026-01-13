@@ -409,10 +409,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
         );
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         /* pack destination index */
         self.t
             .t

@@ -176,10 +176,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_jmp_gadgets<Fi
     }
 }
 
-pub fn test_ALU_jmp_gadget<FieldT: FieldTConfig>()
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_jmp_gadget<FieldT: FieldTConfig>() {
     print_time("starting jmp test");
 
     let mut ap = tinyram_architecture_params::new(16, 16);
@@ -273,10 +270,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cjmp_gadgets<F
     }
 }
 
-pub fn test_ALU_cjmp_gadget<FieldT: FieldTConfig>()
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cjmp_gadget<FieldT: FieldTConfig>() {
     // TODO: update
     print_time("starting cjmp test");
 
@@ -392,10 +386,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cnjmp_gadgets<
     }
 }
 
-pub fn test_ALU_cnjmp_gadget<FieldT: FieldTConfig>()
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cnjmp_gadget<FieldT: FieldTConfig>() {
     // TODO: update
     print_time("starting cnjmp test");
 

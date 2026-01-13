@@ -12,12 +12,12 @@
 // "Cluster Computing in Zero Knowledge",
 // Alessandro Chiesa, Eran Tromer, Madars Virza
 
-use crate::gadgetlib1::gadget;
-use crate::gadgetlib1::gadgets::gadget_from_r1cs;
-use crate::gadgetlib1::gadgets::hashes::crh_gadget;
-use crate::gadgetlib1::gadgets::set_commitment::set_commitment_gadget;
-use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget;
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
+// use crate::gadgetlib1::gadget;
+// use crate::gadgetlib1::gadgets::gadget_from_r1cs;
+// use crate::gadgetlib1::gadgets::hashes::crh_gadget;
+// use crate::gadgetlib1::gadgets::set_commitment::set_commitment_gadget;
+// use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget;
+// use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
 
 /**************************** Compliance step ********************************/
 
@@ -27,12 +27,12 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler;
  * The circuit is an R1CS that checks compliance (for the given compliance predicate)
  * and validity of previous proofs.
  */
-pub trait FieldTConfig {
-    type FieldT;
-}
-impl<ppT> FieldTConfig for mp_compliance_step_pcd_circuit_maker<ppT> {
-    type FieldT = ffec::Fr<ppT>;
-}
+// pub trait FieldTConfig {
+//     type FieldT;
+// }
+// impl<ppT> FieldTConfig for mp_compliance_step_pcd_circuit_maker<ppT> {
+//     type FieldT = ffec::Fr<ppT>;
+// }
 pub struct mp_compliance_step_pcd_circuit_maker<ppT> {
     compliance_predicate: r1cs_pcd_compliance_predicate<FieldT>,
 
@@ -96,9 +96,9 @@ pub struct mp_compliance_step_pcd_circuit_maker<ppT> {
  * The circuit is an R1CS that checks validity of previous proofs.
  */
 
-impl<ppT> FieldTConfig for mp_translation_step_pcd_circuit_maker<ppT> {
-    type FieldT = ffec::Fr<ppT>;
-}
+// impl<ppT> FieldTConfig for mp_translation_step_pcd_circuit_maker<ppT> {
+//     type FieldT = ffec::Fr<ppT>;
+// }
 pub struct mp_translation_step_pcd_circuit_maker<ppT> {
     pb: RcCell<protoboard<FieldT>>,
 
@@ -128,24 +128,6 @@ pub struct mp_translation_step_pcd_circuit_maker<ppT> {
 // r1cs_primary_input<ffec::Fr<ppT> > get_mp_translation_step_pcd_circuit_input(commitment_to_translation_step_r1cs_vks:set_commitment,
 //                                                                        primary_input:r1cs_pcd_compliance_predicate_primary_input<ffec::Fr<other_curve<ppT> > >);
 
-// use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::mp_pcd_circuits;
-
-//#endif // MP_PCD_CIRCUITS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of functionality for creating and using the two PCD circuits in
-a multi-predicate PCD construction.
-
-See mp_pcd_circuits.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef MP_PCD_CIRCUITS_TCC_
-// #define MP_PCD_CIRCUITS_TCC_
 
 // use  <algorithm>
 use ffec::common::utils;
@@ -941,10 +923,10 @@ impl mp_translation_step_pcd_circuit_maker<ppT> {
     }
 
     pub fn input_size_in_elts() -> usize {
-        return ffec::div_ceil(
+         div_ceil(
             mp_compliance_step_pcd_circuit_maker::<other_curve<ppT>>::input_size_in_bits(),
             Self::field_capacity(),
-        );
+        )
     }
 
     pub fn input_capacity_in_bits() -> usize {
@@ -1012,7 +994,7 @@ pub fn get_mp_translation_step_pcd_circuit_input(
 
     mp_compliance_step_pcd_circuit_input_bits.resize(Self::input_capacity_in_bits(), false);
 
-    let result = ffec::pack_bit_vector_into_field_element_vector::<FieldT>(
+    let result = pack_bit_vector_into_field_element_vector::<FieldT>(
         mp_compliance_step_pcd_circuit_input_bits,
         Self::field_capacity(),
     );

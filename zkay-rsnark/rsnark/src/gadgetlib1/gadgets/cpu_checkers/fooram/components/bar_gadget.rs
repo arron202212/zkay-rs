@@ -129,10 +129,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, bar_gadget<FieldT, P
         );
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         *self.pb.borrow_mut().val_ref(&self.t.result) =
             self.t.X.get_field_element_from_bits(&self.pb) * self.t.a.clone()
                 + self.t.Y.get_field_element_from_bits(&self.pb) * self.t.b.clone();

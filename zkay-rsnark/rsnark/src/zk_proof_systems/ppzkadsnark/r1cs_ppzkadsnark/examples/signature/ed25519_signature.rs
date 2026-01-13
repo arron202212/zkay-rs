@@ -1,8 +1,8 @@
 // Fast batch verification signature for ADSNARK.
 
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params::{
-    SigTConfig, VkTConfig, labelT, r1cs_ppzkadsnark_ppTConfig, r1cs_ppzkadsnark_sigT,
-    r1cs_ppzkadsnark_skT, r1cs_ppzkadsnark_vkT, snark_pp,
+    SigTConfig, VkTConfig, labelT, ppzkadsnarkConfig, r1cs_ppzkadsnark_sigT, r1cs_ppzkadsnark_skT,
+    r1cs_ppzkadsnark_vkT, snark_pp,
 };
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_signature::{
     SigConfig, kpT,
@@ -40,9 +40,9 @@ pub struct ed25519_skT {
 // use  "depends/libsnark-supercop/include/crypto_sign.h"
 // use crate::common::default_types::r1cs_ppzkadsnark_pp;
 
-pub struct Ed25519<ppT: r1cs_ppzkadsnark_ppTConfig>(PhantomData<ppT>);
+pub struct Ed25519<ppT: ppzkadsnarkConfig>(PhantomData<ppT>);
 
-impl<ppT: r1cs_ppzkadsnark_ppTConfig> SigConfig<ppT> for Ed25519<ppT> {
+impl<ppT: ppzkadsnarkConfig> SigConfig<ppT> for Ed25519<ppT> {
     fn sigGen() -> kpT<ppT> {
         let keys = kpT::<ppT>::default();
         // crypto_sign_ed25519_amd64_51_30k_keypair(keys.vk.vk_bytes,keys.sk.sk_bytes);

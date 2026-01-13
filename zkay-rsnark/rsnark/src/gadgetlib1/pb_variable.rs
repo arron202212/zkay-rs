@@ -203,11 +203,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
         }
     }
 
-    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT, PB>>, r: &FieldT)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
-        let rint = r.as_bigint::<{ FieldT::num_limbs as usize }>();
+    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT, PB>>, r: &FieldT) {
+        let rint = r.as_bigint::<4>(); //{ FieldT::num_limbs as usize }>
         for i in 0..self.contents.len() {
             *pb.borrow_mut().val_ref(&self.contents[i]) = if rint.test_bit(i) {
                 FieldT::one()
@@ -217,10 +214,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
         }
     }
 
-    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT, PB>>, i: u64)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT, PB>>, i: u64) {
         self.fill_with_bits_of_field_element(&pb, &FieldT::from_int(i, true));
     }
 
@@ -405,11 +399,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
         }
     }
 
-    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT, PB>>, r: &FieldT)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
-        let rint = r.as_bigint::<{ FieldT::num_limbs as usize }>();
+    pub fn fill_with_bits_of_field_element(&self, pb: &RcCell<protoboard<FieldT, PB>>, r: &FieldT) {
+        let rint = r.as_bigint::<4>(); //{ FieldT::num_limbs as usize }
         for i in 0..self.contents.len() {
             *pb.borrow_mut().lc_val_ref(&self.contents[i]) = if rint.test_bit(i) {
                 FieldT::one()
@@ -419,10 +410,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
         }
     }
 
-    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT, PB>>, i: usize)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn fill_with_bits_of_ulong(&self, pb: &RcCell<protoboard<FieldT, PB>>, i: usize) {
         self.fill_with_bits_of_field_element(&pb, &FieldT::from(i));
     }
 

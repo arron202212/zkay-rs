@@ -32,12 +32,12 @@ use std::collections::HashMap;
  * determined by the domain (as Z is its vanishing polynomial).
  */
 #[derive(Default, Clone)]
-pub struct sap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+pub struct sap_instance<FieldT: FieldTConfig, ED: Default+Clone> {
     pub num_variables: usize,
     pub degree: usize,
     pub num_inputs: usize,
 
-    pub domain: RcCell<ED>,
+    pub domain: RcCell<evaluation_domain<ED>>,
 
     pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
     pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
@@ -81,11 +81,11 @@ pub struct sap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
  * - counts about how many of the above evaluations are in fact non-zero.
  */
 #[derive(Default, Clone)]
-pub struct sap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+pub struct sap_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
     pub num_variables: usize,
     pub degree: usize,
     pub num_inputs: usize,
-    pub domain: RcCell<ED>,
+    pub domain: RcCell<evaluation_domain<ED>>,
 
     pub t: FieldT,
 
@@ -176,9 +176,9 @@ pub struct sap_witness<FieldT> {
 // use ffec::common::profiling;
 // use ffec::common::utils;
 
-impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance<FieldT, ED> {
+impl<FieldT: FieldTConfig, ED: Default+Clone> sap_instance<FieldT, ED> {
     pub fn new(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -196,7 +196,7 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance<FieldT, E
     }
 
     pub fn new2(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -267,9 +267,9 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance<FieldT, E
     }
 }
 
-impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance_evaluation<FieldT, ED> {
+impl<FieldT: FieldTConfig, ED: Default+Clone> sap_instance_evaluation<FieldT, ED> {
     pub fn new(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -293,7 +293,7 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> sap_instance_evaluatio
     }
 
     pub fn new1(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,

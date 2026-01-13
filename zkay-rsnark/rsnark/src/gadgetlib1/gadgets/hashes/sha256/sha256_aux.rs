@@ -143,10 +143,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> lastbits_gadgets<FieldT, PB> {
         self.t.pack_result.borrow().generate_r1cs_constraints(false);
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         self.t
             .unpack_bits
             .borrow()

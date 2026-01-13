@@ -10,10 +10,28 @@
 
 // Declaration of interfaces for multi-exponentiation routines.
 use crate::PpConfig;
-pub const inhibit_profiling_info: bool = false;
+use crate::field_utils::{BigInteger,BigInt};
+
 use std::io::Write;
+use num_traits::{Zero,One};
 use std::marker::ConstParamTy;
 use std::ops::{Add, Mul};
+use crate::algebra::field_utils::bigint::bigint;
+use crate::algebra::scalar_multiplication::{multiexp,wnaf::*};
+use crate::common::profiling::{enter_block, leave_block};
+use crate::common::utils::log2;
+use crate::FieldTConfig;
+
+pub trait KCConfig: Default + Clone {
+    type T: PpConfig;
+    type T2: PpConfig;
+    type FieldT: FieldTConfig+BigInteger;
+    type BigInt: BigInteger;
+}
+
+pub const inhibit_profiling_info: bool = false;
+
+
 #[derive(ConstParamTy, PartialEq, Eq)]
 pub enum multi_exp_method {
     /**
@@ -124,36 +142,31 @@ pub type window_table<T> = Vec<Vec<T>>;
 //
 // pub fn  batch_to_special(Vec<T> &vec);
 
-use crate::algebra::field_utils::bigint::bigint;
-use crate::algebra::scalar_multiplication::multiexp;
-use crate::algebra::scalar_multiplication::wnaf::*;
-use crate::common::profiling::{enter_block, leave_block};
-use crate::common::utils::log2;
 
 //
 #[derive(Clone)]
-pub struct ordered_exponent<const N: usize> {
+pub struct ordered_exponent<B:BigInteger> {
     // to use std::push_heap and friends later
     pub idx: usize,
-    pub r: bigint<N>,
+    pub r: B,
 }
 
-impl<const N: usize> ordered_exponent<N> {
-    pub fn new(idx: usize, r: bigint<N>) -> Self {
+impl<B:BigInteger> ordered_exponent<B> {
+    pub fn new(idx: usize, r: B) -> Self {
         Self { idx, r }
     }
 }
 use std::cmp::Ordering;
 
-impl<const N: usize> PartialEq for ordered_exponent<N> {
+impl<B:BigInteger> PartialEq for ordered_exponent<B>{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         false
     }
 }
-impl<const N: usize> PartialOrd for ordered_exponent<N> {
+impl<B:BigInteger> PartialOrd for ordered_exponent<B>{
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.r.0.0.cmp(&other.r.0.0))
+        Some(self.r.cmp(&other.r))
     }
 }
 
@@ -239,12 +252,17 @@ impl<const N: usize> PartialOrd for ordered_exponent<N> {
  */
 
 struct MultiExpInner<const Method: multi_exp_method>;
-
+// pub trait MEConfig {
+//     type T: PpConfig;
+//     type FieldT: PpConfig+BigInteger;
+//     // const NN: usize
+//     type BigInt:BigInteger;
+// }
 trait MultiExpInnerConfig {
-    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
-        vec: &[T],
-        scalar: &[FieldT],
-    ) -> T;
+    fn multi_exp_inner<KC:KCConfig>(
+        vec: &[KC::T],
+        scalar: &[KC::FieldT],
+    ) -> KC::T;
 }
 
 const fn check(method: multi_exp_method) -> u8 {
@@ -274,16 +292,16 @@ const fn check(method: multi_exp_method) -> u8 {
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_naive }> {
-    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
-        vec: &[T],
-        scalar: &[FieldT],
-    ) -> T {
+    fn multi_exp_inner<KC:KCConfig>(
+        vec: &[KC::T],
+        scalar: &[KC::FieldT],
+    ) -> KC::T  {
         // const NN:usize=const {FieldT::num_limbs};
         assert!(vec.len() == scalar.len());
-        let mut result = T::zero();
+        let mut result = KC::T::zero();
         for (v, s) in vec.iter().zip(scalar) {
-            let scalar_bigint = s.as_bigint::<{ NN }>();
-            result = result + opt_window_wnaf_exp(v, &scalar_bigint, scalar_bigint.num_bits());
+            let scalar_bigint:KC::FieldT = s.clone();
+            result = result + opt_window_wnaf_exp::<KC>(v, &scalar_bigint, scalar_bigint.num_bits() as usize);
         }
         // assert!(scalar_it == scalar_end);
 
@@ -299,12 +317,12 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_naive_plain }> {
-    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
-        vec: &[T],
-        scalar: &[FieldT],
-    ) -> T {
+    fn multi_exp_inner<KC:KCConfig>(
+        vec: &[KC::T],
+        scalar: &[KC::FieldT],
+    ) -> KC::T {
         assert!(vec.len() == scalar.len());
-        let mut result = T::zero();
+        let mut result = KC::T::zero();
         for (v, s) in vec.iter().zip(scalar) {
             result = result; //+ s * v;
         }
@@ -322,14 +340,14 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 //     Vec<FieldT>::const_iterator scalar_start,
 //     Vec<FieldT>::const_iterator scalar_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_bos_coster }> {
-    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
-        vec: &[T],
-        scalar: &[FieldT],
-    ) -> T {
+    fn multi_exp_inner<KC:KCConfig>(
+        vec: &[KC::T],
+        scalar: &[KC::FieldT],
+    ) -> KC::T {
         const n: usize = 0; //FieldT::num_limbs;//MYTODO
 
         if vec.is_empty() {
-            return T::zero();
+            return KC::T::zero();
         }
 
         // if vec.len()==1
@@ -345,21 +363,21 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
         assert!(vec.len() == scalar.len());
         for (i, (v, s)) in vec.iter().zip(scalar).enumerate() {
             g.push(v.clone());
-            opt_q.push(ordered_exponent::<n>::new(i, s.as_bigint()));
+            opt_q.push(ordered_exponent::<KC::FieldT>::new(i, s.clone()));
         }
         // std::make_heap(opt_q.begin(),opt_q.end());
 
         if vec_len != odd_vec_len {
-            g.push(T::zero());
-            opt_q.push(ordered_exponent::<n>::new(
+            g.push(KC::T::zero());
+            opt_q.push(ordered_exponent::<KC::FieldT>::new(
                 odd_vec_len - 1,
-                bigint::<n>::new(0u64),
+                KC::FieldT::from(0u8),
             ));
         }
         assert!(g.len() % 2 == 1);
         assert!(opt_q.len() == g.len());
 
-        let mut opt_result = T::zero();
+        let mut opt_result = KC::T::zero();
 
         //     loop
         //     {
@@ -429,7 +447,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
         //         }
         //     }
 
-        return opt_result;
+         opt_result
     }
 }
 
@@ -441,10 +459,10 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 //     Vec<FieldT>::const_iterator exponents,
 //     Vec<FieldT>::const_iterator exponents_end)
 impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_BDLO12 }> {
-    fn multi_exp_inner<T: PpConfig, FieldT: PpConfig, const NN: usize>(
-        bases: &[T],
-        exponents: &[FieldT],
-    ) -> T {
+    fn multi_exp_inner<KC:KCConfig>(
+        bases: &[KC::T],
+        exponents: &[KC::FieldT],
+    ) -> KC::T {
         // UNUSED(exponents_end);
         let length = bases.len();
 
@@ -453,17 +471,17 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
         let c = log2_length - (log2_length / 3 - 2);
 
         // let  exp_num_limbs =FieldT::num_limbs;
-        let mut bn_exponents = Vec::<bigint<{ NN }>>::with_capacity(length);
+        let mut bn_exponents = Vec::<KC::FieldT>::with_capacity(length);
         let mut num_bits = 0;
 
         for i in 0..length {
-            bn_exponents[i] = exponents[i].as_bigint::<{ NN }>();
+            bn_exponents[i] = exponents[i].clone();
             num_bits = std::cmp::max(num_bits, bn_exponents[i].num_bits());
         }
 
-        let num_groups = (num_bits + c - 1) / c;
+        let num_groups = (num_bits as usize + c - 1) / c;
 
-        let mut result = T::zero();
+        let mut result = KC::T::zero();
         let mut result_nonzero = false;
 
         for k in num_groups..=num_groups {
@@ -478,8 +496,8 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 
             for i in 0..length {
                 let mut id = 0;
-                for j in 0..c {
-                    if bn_exponents[i].test_bit(k * c + j) {
+                for j in 0..c  {
+                    if bn_exponents[i].get_bit(k * c + j) {
                         id |= 1 << j;
                     }
                 }
@@ -504,7 +522,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
             // batch_to_special(buckets);
             // //#endif
 
-            let mut running_sum = T::zero();
+            let mut running_sum = KC::T::zero();
             let mut running_sum_nonzero = false;
 
             for i in (0..1usize << c).rev() {
@@ -532,39 +550,32 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
             }
         }
 
-        return result;
+         result
     }
 }
-//
-pub fn multi_exp<T: PpConfig, FieldT: PpConfig, const Method: multi_exp_method>(
-    vec: &[T],
-    scalar: &[FieldT],
+
+
+pub fn multi_exp<KC:KCConfig, const Method: multi_exp_method>(
+    vec: &[KC::T],
+    scalar: &[KC::FieldT],
     chunks: usize,
-) -> T {
+) -> KC::T {
     let total = vec.len();
     if total < chunks || chunks == 1 {
         // no need to split into "chunks", can call implementation directly
-        return MultiExpInner::<{ multi_exp_method::multi_exp_method_BDLO12 }>::multi_exp_inner::<
-            T,
-            FieldT,
-            0,
-        >(vec, scalar);
+        return MultiExpInner::<{ multi_exp_method::multi_exp_method_BDLO12 }>::multi_exp_inner::<KC>(vec, scalar);
     }
 
     let one = total / chunks;
 
-    let mut partial = vec![T::zero(); chunks];
+    let mut partial = vec![KC::T::zero(); chunks];
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
     for i in 0..chunks {
         partial[i] =
-            MultiExpInner::<{ multi_exp_method::multi_exp_method_BDLO12 }>::multi_exp_inner::<
-                T,
-                FieldT,
-                0,
-            >(
+            MultiExpInner::<{ multi_exp_method::multi_exp_method_BDLO12 }>::multi_exp_inner::< KC>(
                 &vec[i * one..vec.len().min((i + 1) * one)],
                 &scalar[i * one..scalar.len().min((i + 1) * one)],
             );
@@ -575,24 +586,20 @@ pub fn multi_exp<T: PpConfig, FieldT: PpConfig, const Method: multi_exp_method>(
         //  if i == chunks-1 {scalar_end} else{scalar_start + (i+1)*one)};
     }
 
-    let mut finals = T::zero();
+    let mut finals = KC::T::zero();
 
     for i in 0..chunks {
         finals = finals + partial[i].clone();
     }
 
-    return finals;
+     finals
 }
 use crate::common::profiling::print_indent;
-pub fn multi_exp_with_mixed_addition<
-    T: PpConfig,
-    FieldT: PpConfig,
-    const Method: multi_exp_method,
->(
-    vec: &[T],
-    scalar: &[FieldT],
+pub fn multi_exp_with_mixed_addition<KC:KCConfig,const Method: multi_exp_method>(
+    vec: &[KC::T],
+    scalar: &[KC::FieldT],
     chunks: usize,
-) -> T {
+) -> KC::T {
     // //#ifndef NDEBUG
     // assert!(std::distance(vec_start, vec_end) == std::distance(scalar_start, scalar_end));
     // #else
@@ -602,12 +609,12 @@ pub fn multi_exp_with_mixed_addition<
     // auto value_it = vec_start;
     // auto scalar_it = scalar_start;
 
-    let zero = FieldT::zero();
-    let one = FieldT::one();
-    let mut p: Vec<FieldT> = vec![];
+    let zero = KC::FieldT::zero();
+    let one = KC::FieldT::one();
+    let mut p: Vec<KC::FieldT> = vec![];
     let mut g = vec![];
 
-    let acc = T::zero();
+    let acc = KC::T::zero();
 
     let mut num_skip = 0;
     let mut num_add = 0;
@@ -654,11 +661,11 @@ pub fn multi_exp_with_mixed_addition<
 
     leave_block("Process scalar vector", false);
 
-    return acc + multi_exp::<T, FieldT, Method>(&g, &p, chunks);
+     acc + multi_exp::<KC, Method>(&g, &p, chunks)
 }
 
-pub fn inner_product<T: PpConfig>(a: &[T], b: &[T]) -> T {
-    return multi_exp::<T, T, { multi_exp_method::multi_exp_method_naive_plain }>(a, b, 1);
+pub fn inner_product<KC: KCConfig>(a: &[KC::T], b: &[KC::FieldT]) -> KC::T {
+     multi_exp::<KC, { multi_exp_method::multi_exp_method_naive_plain }>(a, b, 1)
 }
 
 pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
@@ -696,7 +703,7 @@ pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
     // // #ifdef LOWMEM
     // window = std::min((usize)14, window);
     // //#endif
-    return window;
+     window
 }
 
 pub fn get_window_table<T: PpConfig>(scalar_size: usize, window: usize, g: &T) -> window_table<T>
@@ -737,14 +744,14 @@ where
     return powers_of_g;
 }
 
-pub fn windowed_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
+pub fn windowed_exp<KC:KCConfig>(
     scalar_size: usize,
     window: usize,
-    powers_of_g: &window_table<T>,
-    pow: &FieldT,
-) -> T {
+    powers_of_g: &window_table<KC::T>,
+    pow: &KC::FieldT,
+) -> KC::T {
     let mut outerc = (scalar_size + window - 1) / window;
-    let pow_val = pow.as_bigint::<{ NN }>();
+    let pow_val:KC::FieldT = pow.clone();
 
     /* exp */
     let mut res = powers_of_g[0][0].clone();
@@ -752,7 +759,7 @@ pub fn windowed_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
     for outer in 0..outerc {
         let mut inner = 0;
         for i in 0..window {
-            if pow_val.test_bit(outer * window + i) {
+            if pow_val.get_bit(outer * window + i) {
                 inner |= 1u32 << i;
             }
         }
@@ -760,15 +767,15 @@ pub fn windowed_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         res = res + powers_of_g[outer][inner as usize].clone();
     }
 
-    return res;
+     res
 }
 
-pub fn batch_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
+pub fn batch_exp<KC:KCConfig>(
     scalar_size: usize,
     window: usize,
-    table: &window_table<T>,
-    v: &Vec<FieldT>,
-) -> Vec<T> {
+    table: &window_table<KC::T>,
+    v: &Vec<KC::FieldT>,
+) -> Vec<KC::T>  {
     if !inhibit_profiling_info {
         print_indent();
     }
@@ -778,7 +785,7 @@ pub fn batch_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
     // //#pragma omp parallel for
     // //#endif
     for i in 0..v.len() {
-        res[i] = windowed_exp::<_, _, { NN }>(scalar_size, window, table, &v[i]);
+        res[i] = windowed_exp::<KC>(scalar_size, window, table, &v[i]);
 
         if !inhibit_profiling_info && (i % 10000 == 0) {
             print!(".");
@@ -790,16 +797,16 @@ pub fn batch_exp<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         print!(" DONE!\n");
     }
 
-    return res;
+     res
 }
 
-pub fn batch_exp_with_coeff<T: PpConfig, FieldT: PpConfig, const NN: usize>(
+pub fn batch_exp_with_coeff<KC:KCConfig>(
     scalar_size: usize,
     window: usize,
-    table: &window_table<T>,
-    coeff: &FieldT,
-    v: &Vec<FieldT>,
-) -> Vec<T> {
+    table: &window_table<KC::T>,
+    coeff: &KC::FieldT,
+    v: &Vec<KC::FieldT>,
+) -> Vec<KC::T>  {
     if !inhibit_profiling_info {
         print_indent();
     }
@@ -809,7 +816,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: PpConfig, const NN: usize>(
     // //#pragma omp parallel for
     // //#endif
     for i in 0..v.len() {
-        res[i] = windowed_exp::<_, _, { NN }>(scalar_size, window, table, &(v[i].clone() * coeff));
+        res[i] = windowed_exp::<KC>(scalar_size, window, table, &(v[i].clone() * coeff));
 
         if !inhibit_profiling_info && (i % 10000 == 0) {
             print!(".");
@@ -821,7 +828,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: PpConfig, const NN: usize>(
         print!(" DONE!\n");
     }
 
-    return res;
+     res
 }
 
 pub fn batch_to_special<T: PpConfig>(vec: &mut Vec<T>) {

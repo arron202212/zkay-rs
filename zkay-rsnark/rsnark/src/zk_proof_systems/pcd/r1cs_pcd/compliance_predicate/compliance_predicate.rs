@@ -4,6 +4,7 @@
 // throughout a dynamic distributed computation. A compliance predicate
 // receives input messages, local data, and an output message (and perhaps some
 // other auxiliary information), and then either accepts or rejects.
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
 };
@@ -24,13 +25,14 @@ use std::marker::PhantomData;
  * - a type (a positive integer), and
  * - a payload (a vector of field elements).
  */
-//
-pub struct r1cs_pcd_message<FieldT: FieldTConfig> {
-    types: usize,
-    _t: PhantomData<FieldT>,
+#[derive(Default, Clone)]
+pub struct r1cs_pcd_message<T: R1csPcdMessageConfig> {
+    pub types: usize,
+    pub t: T,
 }
-pub trait R1csPcdMessageConfig<FieldT: FieldTConfig> {
-    fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT>;
+pub trait R1csPcdMessageConfig: Default + Clone {
+    type FieldT: FieldTConfig;
+    fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
 }
 
 /******************************* Local data **********************************/
@@ -38,16 +40,22 @@ pub trait R1csPcdMessageConfig<FieldT: FieldTConfig> {
 /**
  * A local data for R1CS PCD.
  */
-
-pub struct r1cs_pcd_local_data<FieldT: FieldTConfig>(PhantomData<FieldT>);
-pub trait R1csPcdLocalDataConfig<FieldT: FieldTConfig> {
-    fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT>;
+#[derive(Default, Clone)]
+pub struct r1cs_pcd_local_data<T: R1csPcdLocalDataConfig> {
+    pub t: T,
 }
-impl<FieldT: FieldTConfig> R1csPcdLocalDataConfig<FieldT> for r1cs_pcd_local_data<FieldT> {
-    fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT> {
-        panic!("")
+pub trait R1csPcdLocalDataConfig {
+    type FieldT: FieldTConfig;
+    fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
+}
+
+impl<T: R1csPcdLocalDataConfig> R1csPcdLocalDataConfig for r1cs_pcd_local_data<T> {
+    type FieldT = T::FieldT;
+    fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<T::FieldT> {
+        self.t.as_r1cs_variable_assignment()
     }
 }
+
 /******************************** Witness ************************************/
 
 pub type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
@@ -85,44 +93,35 @@ pub type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
  * (accepted_input_types has no meaning if
  * relies_on_same_type_inputs=false).
  */
-
-pub struct r1cs_pcd_compliance_predicate<
-    FieldT: FieldTConfig,
-    SV: SubVariableConfig,
-    SLC: SubLinearCombinationConfig,
-> {
-    name: usize,
-    types: usize,
-
-    constraint_system: r1cs_constraint_system<FieldT, SV, SLC>,
-
-    outgoing_message_payload_length: usize,
-    max_arity: usize,
-    incoming_message_payload_lengths: Vec<usize>,
-    local_data_length: usize,
-    witness_length: usize,
-
-    relies_on_same_type_inputs: bool,
-    accepted_input_types: BTreeSet<usize>,
+#[derive(Default, Clone)]
+pub struct r1cs_pcd_compliance_predicate<ppT: ppTConfig> {
+    pub name: usize,
+    pub types: usize,
+    pub constraint_system: r1cs_constraint_system<ppT::FieldT, ppT::SV, ppT::SLC>,
+    pub outgoing_message_payload_length: usize,
+    pub max_arity: usize,
+    pub incoming_message_payload_lengths: Vec<usize>,
+    pub local_data_length: usize,
+    pub witness_length: usize,
+    pub relies_on_same_type_inputs: bool,
+    pub accepted_input_types: BTreeSet<usize>,
 }
 
-impl<FieldT: FieldTConfig> R1csPcdMessageConfig<FieldT> for r1cs_pcd_message<FieldT> {
-    fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT> {
-        panic!("");
+impl<T: R1csPcdMessageConfig> R1csPcdMessageConfig for r1cs_pcd_message<T> {
+    type FieldT = T::FieldT;
+    fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<T::FieldT> {
+        self.t.payload_as_r1cs_variable_assignment()
     }
 }
-impl<FieldT: FieldTConfig> r1cs_pcd_message<FieldT> {
-    pub fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<FieldT> {
-        let mut result = self.payload_as_r1cs_variable_assignment();
-        result.insert(0, FieldT::from(self.types));
-        return result;
-    }
 
-    pub fn new(types: usize) -> Self {
-        Self {
-            types,
-            _t: PhantomData,
-        }
+impl<T: R1csPcdMessageConfig> r1cs_pcd_message<T> {
+    pub fn new(types: usize, t: T) -> Self {
+        Self { types, t }
+    }
+    pub fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<T::FieldT> {
+        let mut result = self.t.payload_as_r1cs_variable_assignment();
+        result.insert(0, T::FieldT::from(self.types));
+        result
     }
 
     pub fn print(&self) {
@@ -130,20 +129,18 @@ impl<FieldT: FieldTConfig> r1cs_pcd_message<FieldT> {
         print!("  Type: {}\n", self.types);
 
         print!("  Payload\n");
-        let payload = self.payload_as_r1cs_variable_assignment();
+        let payload = self.t.payload_as_r1cs_variable_assignment();
         for elt in &payload {
             elt.print();
         }
     }
 }
 
-impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    r1cs_pcd_compliance_predicate<FieldT, SV, SLC>
-{
+impl<ppT: ppTConfig> r1cs_pcd_compliance_predicate<ppT> {
     pub fn new(
         name: usize,
         types: usize,
-        constraint_system: r1cs_constraint_system<FieldT, SV, SLC>,
+        constraint_system: r1cs_constraint_system<ppT::FieldT, ppT::SV, ppT::SLC>,
         outgoing_message_payload_length: usize,
         max_arity: usize,
         incoming_message_payload_lengths: Vec<usize>,
@@ -221,10 +218,10 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         );
         //#endif
 
-        return (type_not_zero
+        (type_not_zero
             && incoming_message_payload_lengths_well_specified
             && correct_num_inputs
-            && correct_num_variables);
+            && correct_num_variables)
     }
 
     pub fn has_equal_input_and_output_lengths(&self) -> bool {
@@ -234,7 +231,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             }
         }
 
-        return true;
+        true
     }
 
     pub fn has_equal_input_lengths(&self) -> bool {
@@ -245,7 +242,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             }
         }
 
-        return true;
+        true
     }
 
     //
@@ -316,10 +313,10 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 
     pub fn is_satisfied(
         &self,
-        outgoing_message: &RcCell<r1cs_pcd_message<FieldT>>,
-        incoming_messages: &Vec<RcCell<r1cs_pcd_message<FieldT>>>,
-        local_data: &RcCell<r1cs_pcd_local_data<FieldT>>,
-        witness: &r1cs_pcd_witness<FieldT>,
+        outgoing_message: &RcCell<r1cs_pcd_message<ppT::M>>,
+        incoming_messages: &Vec<RcCell<r1cs_pcd_message<ppT::M>>>,
+        local_data: &RcCell<r1cs_pcd_local_data<ppT::LD>>,
+        witness: &r1cs_pcd_witness<ppT::FieldT>,
     ) -> bool {
         assert!(
             outgoing_message
@@ -341,12 +338,13 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         assert!(local_data.borrow().as_r1cs_variable_assignment().len() == self.local_data_length);
 
         let cp_primary_input =
-            r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(outgoing_message.clone());
-        let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT>::new(
-            incoming_messages.clone(),
-            local_data.clone(),
-            witness.clone(),
-        );
+            r1cs_pcd_compliance_predicate_primary_input::<ppT::M>::new(outgoing_message.clone());
+        let cp_auxiliary_input =
+            r1cs_pcd_compliance_predicate_auxiliary_input::<ppT::M, ppT::LD>::new(
+                incoming_messages.clone(),
+                local_data.clone(),
+                witness.clone(),
+            );
 
         self.constraint_system.is_satisfied(
             &cp_primary_input.as_r1cs_primary_input(),

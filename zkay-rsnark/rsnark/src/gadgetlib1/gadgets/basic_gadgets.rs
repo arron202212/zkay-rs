@@ -485,19 +485,16 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, packing_gadget<Field
         }
     }
 
-    pub fn generate_r1cs_witness_from_packed(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_from_packed(&self) {
         self.t.packed.evaluate_pb(&self.pb);
         assert!(
             self.pb
                 .borrow()
                 .lc_val(&self.t.packed)
-                .as_bigint::<{ FieldT::num_limbs as usize }>()
+                .as_bigint::<4>()
                 .num_bits()
                 <= self.t.bits.len()
-        ); // `bits` is large enough to represent this packed value
+        ); // `bits` is large enough to represent this packed value//4
         self.t
             .bits
             .fill_with_bits_of_field_element(&self.pb, &self.pb.borrow().lc_val(&self.t.packed));
@@ -554,10 +551,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, multipacking_gadget<
         }
     }
 
-    pub fn generate_r1cs_witness_from_packed(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_from_packed(&self) {
         for i in 0..self.t.num_chunks {
             self.t.packers[i].generate_r1cs_witness_from_packed();
         }
@@ -743,10 +737,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone>
             .generate_r1cs_constraints(enforce_bitness);
     }
 
-    pub fn generate_r1cs_witness_from_packed(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_from_packed(&self) {
         self.t
             .consistency_check
             .borrow()
@@ -1029,10 +1020,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
         );
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         self.t.A.evaluate_pb(&self.pb);
         self.t.B.evaluate_pb(&self.pb);
 
@@ -1052,10 +1040,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
     }
 }
 
-pub fn test_comparison_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_comparison_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
     print!("testing comparison_gadget on all {} bit inputs\n", n);
 
     let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
@@ -1251,18 +1236,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
         self.t.compute_result.borrow().generate_r1cs_constraints();
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         /* assumes that idx can be fit in ulong; true for our purposes for now */
-        let mut valint = self
-            .pb
-            .borrow()
-            .val(&self.t.index)
-            .as_bigint::<{ FieldT::num_limbs as usize }>();
+        let mut valint = self.pb.borrow().val(&self.t.index).as_bigint::<4>();
         let mut idx = valint.as_ulong() as usize;
-        let arrsize = bigint::<{ FieldT::num_limbs as usize }>::new(self.t.arr.len() as u64);
+        let arrsize = bigint::<4>::new(self.t.arr.len() as u64);
 
         if idx >= self.t.arr.len()
             || &valint.0.0[..FieldT::num_limbs as usize]
@@ -1289,10 +1267,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
     }
 }
 
-pub fn test_loose_multiplexing_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_loose_multiplexing_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
     print!(
         "testing loose_multiplexing_gadget on 2**{} variable<FieldT,pb_variable> array inputs\n",
         n

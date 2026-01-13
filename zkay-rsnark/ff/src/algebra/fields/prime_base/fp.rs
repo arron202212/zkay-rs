@@ -200,7 +200,8 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> 
 impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {}
 
 impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
-    type T = bigint<N>;
+    type TT = bigint<N>;
+    // type Fr=Self;
 }
 impl<const N: usize, T: Fp_modelConfig<N>> From<usize> for Fp_model<N, T> {
     fn from(b: usize) -> Self {

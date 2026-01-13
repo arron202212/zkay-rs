@@ -1,18 +1,15 @@
 #![allow(incomplete_features, dead_code, non_upper_case_globals)]
 // #![feature(generic_const_exprs, generic_const_items)]
 
-use crate::algebra::field_utils::bigint::GMP_NUMB_BITS;
-use crate::algebra::field_utils::bigint::bigint;
-use crate::algebra::fields::binary::gf64;
-use crate::algebra::fields::binary::gf128;
-use crate::algebra::fields::binary::gf192;
-use crate::algebra::fields::binary::gf256;
+
+use crate::algebra::field_utils::{bigint::{bigint,GMP_NUMB_BITS},BigInteger};
+use crate::algebra::fields::binary::{gf64,gf128,gf192,gf256};
 use crate::algebra::fields::prime_base::fp;
 use crate::common::double;
 use crate::common::utils::{bit_vector, div_ceil, log2};
 use num_traits::{One, Zero};
 
-// namespace libff {
+
 
 pub trait is_additive {
     const value: bool = false;
@@ -153,9 +150,9 @@ Implementation of misc. math and serialization utility functions
 
 // using std::usize;
 
-trait FTConfig {
-    const NUM_LIMBS: usize;
-}
+// trait FTConfig {
+//     const NUM_LIMBS: usize;
+// }
 
 pub fn get_field_type_is_multiplicative<FieldT>(elem: FieldT) -> field_type {
     //UNUSED(elem); // only to identify field type
@@ -237,19 +234,17 @@ pub fn get_root_of_unity_is_not_same_double<FieldT: Default>(n: usize) -> eyre::
     Ok(omega)
 }
 
-pub fn pack_int_vector_into_field_element_vector<FieldT: FTConfig + Default>(
+pub fn pack_int_vector_into_field_element_vector<FieldT: Default,const N:usize>(
     v: &Vec<usize>,
     w: usize,
 ) -> Vec<FieldT>
-where
-    [(); FieldT::NUM_LIMBS]:,
 {
     let chunk_bits = 0usize; //FieldT::floor_size_in_bits();
     let repacked_size = div_ceil((v.len() * w), chunk_bits).unwrap();
     let mut result = Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size {
-        let mut b = bigint::<{ FieldT::NUM_LIMBS }>::new(0);
+        let mut b = bigint::<N>::new(0);
         for j in 0..chunk_bits {
             let word_index = (i * chunk_bits + j) / w;
             let pos_in_word = (i * chunk_bits + j) % w;
@@ -268,12 +263,10 @@ where
     return result;
 }
 
-pub fn pack_bit_vector_into_field_element_vector<FieldT: FTConfig + Default>(
+pub fn pack_bit_vector_into_field_element_vector<FieldT: Default+BigInteger>(
     v: &bit_vector,
     chunk_bits: usize,
 ) -> Vec<FieldT>
-where
-    [(); { FieldT::NUM_LIMBS }]:,
 {
     // assert!(chunk_bits <= FieldT::floor_size_in_bits());
 
@@ -281,9 +274,9 @@ where
     let mut result = Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size {
-        let mut b = bigint::<{ FieldT::NUM_LIMBS }>::new(0);
+        let mut b = FieldT::from(0u8);
         for j in 0..chunk_bits {
-            b.0.0[j / GMP_NUMB_BITS] |= (if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j]
+            b.as_mut()[j / GMP_NUMB_BITS] |= (if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j]
             {
                 1
             } else {
@@ -293,7 +286,7 @@ where
         result[i] = FieldT::default(); //(b);
     }
 
-    return result;
+     result
 }
 
 pub fn pack_bit_vector_into_field_element_vector1<FieldT>(v: &bit_vector) -> Vec<FieldT> {
@@ -310,7 +303,7 @@ pub fn convert_bit_vector_to_field_element_vector<FieldT: One + Zero>(
         result.push(if b { FieldT::one() } else { FieldT::zero() });
     }
 
-    return result;
+     result
 }
 
 pub fn convert_field_element_vector_to_bit_vector<FieldT>(v: &Vec<FieldT>) -> bit_vector {
@@ -321,7 +314,7 @@ pub fn convert_field_element_vector_to_bit_vector<FieldT>(v: &Vec<FieldT>) -> bi
         result.append(&mut el_bits);
     }
 
-    return result;
+     result
 }
 
 pub fn convert_field_element_to_bit_vector<FieldT>(el: &FieldT) -> bit_vector {
@@ -333,14 +326,14 @@ pub fn convert_field_element_to_bit_vector<FieldT>(el: &FieldT) -> bit_vector {
     //     result.push(b.test_bit(i));
     // }
 
-    return result;
+     result
 }
 
 pub fn convert_field_element_to_bit_vector1<FieldT>(el: FieldT, bitcount: usize) -> bit_vector {
     let mut result = convert_field_element_to_bit_vector(&el);
     result.resize(bitcount, false);
 
-    return result;
+     result
 }
 
 pub fn convert_bit_vector_to_field_element<FieldT: One + Zero + Clone + std::ops::AddAssign>(
@@ -354,7 +347,7 @@ pub fn convert_bit_vector_to_field_element<FieldT: One + Zero + Clone + std::ops
         res += if b { c.clone() } else { FieldT::zero() };
         c += c.clone();
     }
-    return res;
+     res
 }
 
 pub fn batch_invert<FieldT: One + Clone>(vec: &mut Vec<FieldT>) {

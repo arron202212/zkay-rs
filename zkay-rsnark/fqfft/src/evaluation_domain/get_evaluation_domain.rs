@@ -63,9 +63,9 @@ use ffec::common::utils::log2;
 use rccell::RcCell;
 // //namespace libfqfft {
 
-pub fn get_evaluation_domain<FieldT, ED: evaluation_domain<FieldT>>(
+pub fn get_evaluation_domain<FieldT, ED: Default + Clone>(
     min_size: usize,
-) -> eyre::Result<RcCell<ED>> {
+) -> eyre::Result<RcCell<evaluation_domain<ED>>> {
     // let mut  result; //RcCell::new( );//evaluation_domain::<FieldT>
 
     let big = 1usize << (log2(min_size) - 1);
@@ -83,7 +83,3 @@ pub fn get_evaluation_domain<FieldT, ED: evaluation_domain<FieldT>>(
     //      eyre::bail!("get_evaluation_domain: no matching domain")))))))))
     eyre::bail!("get_evaluation_domain: no matching domain")
 }
-
-// //} // libfqfft
-
-//#endif // GET_EVALUATION_DOMAIN_TCC_

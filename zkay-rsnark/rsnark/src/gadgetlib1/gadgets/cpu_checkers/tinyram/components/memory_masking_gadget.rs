@@ -371,10 +371,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         /* get indicator variables is_subaddress */
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             *self.pb.borrow_mut().val_ref(&self.t.t.t.is_subaddress[i]) =

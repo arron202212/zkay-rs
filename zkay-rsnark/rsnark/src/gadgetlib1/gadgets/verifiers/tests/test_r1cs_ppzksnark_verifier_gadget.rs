@@ -274,7 +274,7 @@ pub fn  test_full_pairing(annotation:&String)
     let mut  P_val = ffec::Fr::<other_curve::<ppT> >::random_element() * ffec::G1::<other_curve::<ppT> >::one();
     let mut  Q_val = ffec::Fr::<other_curve::<ppT> >::random_element() * ffec::G2::<other_curve::<ppT> >::one();
 
-    let mut P=G1_variable::<ppT>::new(pb, "P");
+    let mut P=G1_variable::<ppT,P>::new(pb, "P");
     let mut Q=G2_variable::<ppT>::new(pb, "Q");
     let mut prec_P=G1_precomputation::<ppT>::new();
     let mut prec_Q=G2_precomputation::<ppT>::new();

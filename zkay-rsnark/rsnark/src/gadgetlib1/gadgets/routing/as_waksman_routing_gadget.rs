@@ -333,10 +333,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
         }
     }
 
-    pub fn generate_r1cs_witness(&self, permutation: &integer_permutation)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self, permutation: &integer_permutation) {
         /* pack inputs */
         for packet_idx in 0..self.t.num_packets {
             self.t.pack_inputs[packet_idx].generate_r1cs_witness_from_bits();
@@ -411,9 +408,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
 pub fn test_as_waksman_routing_gadget<FieldT: FieldTConfig, PB: PBConfig>(
     num_packets: usize,
     packet_size: usize,
-) where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+) {
     print!(
         "testing as_waksman_routing_gadget by routing {} element vector of {} bits (Fp fits all {} bit integers)\n",
         num_packets,

@@ -253,10 +253,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_message_schedule_gadgets<FieldT,
         }
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         for i in 0..16 {
             self.t.pack_W[i].borrow().generate_r1cs_witness_from_bits();
         }
@@ -479,10 +476,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadgets<FieldT, P
         self.t.mod_reduce_new_e.borrow().generate_r1cs_constraints();
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         self.t.compute_sigma0.borrow().generate_r1cs_witness();
         self.t.compute_sigma1.borrow().generate_r1cs_witness();
 

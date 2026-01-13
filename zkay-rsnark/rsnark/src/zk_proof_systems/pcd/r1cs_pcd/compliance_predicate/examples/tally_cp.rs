@@ -166,10 +166,11 @@ impl tally_pcd_message_variable<FieldT> {
     ) -> Self {
         sum_bits.allocate(&pb, wordsize, FMT(annotation_prefix, " sum_bits"));
         count_bits.allocate(&pb, wordsize, FMT(annotation_prefix, " count_bits"));
-
-        self.update_all_vars();
-        //r1cs_pcd_message_variable<FieldT>(&pb, annotation_prefix),
-        Self { wordsize }
+       
+        let _self=r1cs_pcd_message_variable::<FieldT,Self>::new(pb, annotation_prefix, Self { wordsize });
+        _self.update_all_vars();
+        _self
+       
     }
 
     pub fn get_message() -> RcCell<r1cs_pcd_message<FieldT>> {

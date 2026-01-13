@@ -43,12 +43,12 @@ use std::collections::BTreeMap;
  * determined by the domain (as Z is its vanishing polynomial).
  */
 
-pub struct ssp_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+pub struct ssp_instance<FieldT: FieldTConfig, ED: Default+Clone> {
     num_variables: usize,
     degree: usize,
     num_inputs: usize,
 
-    domain: RcCell<ED>,
+    domain: RcCell<evaluation_domain<ED>>,
 
     V_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
@@ -64,12 +64,12 @@ pub struct ssp_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
  * - evaluations of all monomials of t.
  */
 
-pub struct ssp_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+pub struct ssp_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
     num_variables: usize,
     degree: usize,
     num_inputs: usize,
 
-    domain: RcCell<ED>,
+    domain: RcCell<evaluation_domain<ED>>,
 
     t: FieldT,
 
@@ -117,9 +117,9 @@ use ffec::common::profiling;
 use ffec::common::utils;
 // use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 
-impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> ssp_instance<FieldT, ED> {
+impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance<FieldT, ED> {
     pub fn new(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -135,7 +135,7 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> ssp_instance<FieldT, E
     }
 
     pub fn new2(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -197,9 +197,9 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> ssp_instance<FieldT, E
     }
 }
 
-impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> ssp_instance_evaluation<FieldT, ED> {
+impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance_evaluation<FieldT, ED> {
     pub fn new(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -221,7 +221,7 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> ssp_instance_evaluatio
     }
 
     pub fn new2(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,

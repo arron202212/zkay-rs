@@ -111,7 +111,7 @@ use std::collections::HashMap;
  */
 pub fn r1cs_to_qap_instance_map<
     FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
+    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -162,15 +162,15 @@ pub fn r1cs_to_qap_instance_map<
 
     leave_block("Call to r1cs_to_qap_instance_map", false);
 
-    return qap_instance::<FieldT, ED>::new(
+    qap_instance::<FieldT, ED>::new(
         domain.clone(),
         cs.num_variables(),
-        ED::M,
+        domain.m,
         cs.num_inputs(),
         A_in_Lagrange_basis,
         B_in_Lagrange_basis,
         C_in_Lagrange_basis,
-    );
+    )
 }
 
 /**
@@ -189,7 +189,7 @@ pub fn r1cs_to_qap_instance_map<
  */
 pub fn r1cs_to_qap_instance_map_with_evaluation<
     FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
+    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -205,7 +205,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
         vec![FieldT::zero(); cs.num_variables() + 1],
         vec![FieldT::zero(); cs.num_variables() + 1],
         vec![FieldT::zero(); cs.num_variables() + 1],
-        Vec::with_capacity(ED::M + 1),
+        Vec::with_capacity(domain.borrow().m + 1),
     );
 
     let Zt = domain.borrow().compute_vanishing_polynomial(t);
@@ -239,7 +239,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
     }
 
     let mut ti = FieldT::one();
-    for i in 0..ED::M + 1 {
+    for i in 0..domain.borrow().m + 1 {
         Ht.push(ti.clone());
         ti *= t.clone();
     }
@@ -250,7 +250,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
     return qap_instance_evaluation::<FieldT, ED>::new(
         domain,
         cs.num_variables(),
-        ED::M,
+        domain.borrow().m,
         cs.num_inputs(),
         t.clone(),
         At,
@@ -292,7 +292,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
  */
 pub fn r1cs_to_qap_witness_map<
     FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
+    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -318,7 +318,7 @@ pub fn r1cs_to_qap_witness_map<
         .collect();
 
     enter_block("Compute evaluation of polynomials A, B on set S", false);
-    let (mut aA, mut aB) = (vec![FieldT::zero(); ED::M], vec![FieldT::zero(); ED::M]);
+    let (mut aA, mut aB) = (vec![FieldT::zero(); domain.borrow().m], vec![FieldT::zero(); domain.borrow().m]);
 
     /* account for the additional constraints input_i * 0 = 0 */
     for i in 0..=cs.num_inputs() {
@@ -344,12 +344,12 @@ pub fn r1cs_to_qap_witness_map<
     leave_block("Compute coefficients of polynomial B", false);
 
     enter_block("Compute ZK-patch", false);
-    let mut coefficients_for_H = vec![FieldT::zero(); ED::M + 1];
+    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m + 1];
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
     /* add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z */
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         coefficients_for_H[i] = d2.clone() * aA[i].clone() + d1.clone() * aB[i].clone();
     }
     coefficients_for_H[0] -= d3.clone();
@@ -375,13 +375,13 @@ pub fn r1cs_to_qap_witness_map<
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         H_tmp[i] = aA[i].clone() * aB[i].clone();
     }
     // Vec<FieldT: FieldTConfig>().swap(aB); // destroy aB
 
     enter_block("Compute evaluation of polynomial C on set S", false);
-    let mut aC = vec![FieldT::zero(); ED::M];
+    let mut aC = vec![FieldT::zero(); domain.borrow().m];
     for i in 0..cs.num_constraints() {
         aC[i] += cs.constraints[i].c.evaluate(&full_variable_assignment);
     }
@@ -400,7 +400,7 @@ pub fn r1cs_to_qap_witness_map<
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
 
@@ -420,7 +420,7 @@ pub fn r1cs_to_qap_witness_map<
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
     leave_block("Compute sum of H and ZK-patch", false);
@@ -429,7 +429,7 @@ pub fn r1cs_to_qap_witness_map<
 
     return qap_witness::<FieldT>::new(
         cs.num_variables(),
-        ED::M,
+        domain.borrow().m,
         cs.num_inputs(),
         d1.clone(),
         d2.clone(),

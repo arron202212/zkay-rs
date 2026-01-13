@@ -547,8 +547,9 @@ impl<const N: usize, T: Fp3_modelConfig<N>> fmt::Display for Fp3_model<N, T> {
 
 //     return out;
 // }
-impl<const N: usize, T: Fp3_modelConfig<N>> PpConfig for Fp3_model<N, T> {
-    type T = bigint<N>;
+impl<const N: usize, T: Fp3_modelConfig<N>> PpConfig for Fp3_model<N, T> where <T as Fp3_modelConfig<N>>::Fp_modelConfig: PpConfig{
+    type TT = bigint<N>;
+    //  type Fr=T::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp3_modelConfig<N>> Mul<bigint<N>> for Fp3_model<N, T> {

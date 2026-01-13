@@ -2,6 +2,7 @@
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
 };
@@ -13,7 +14,6 @@ use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
-
 #[derive(Clone, Default)]
 pub struct gadget_from_r1cs<
     FieldT: FieldTConfig,
@@ -27,24 +27,8 @@ pub struct gadget_from_r1cs<
     cs_to_vars: BTreeMap<usize, usize>,
 }
 
-// use crate::gadgetlib1::gadgets::gadget_from_r1cs;
-
-//#endif // GADGET_FROM_R1CS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a gadget that can be created from an R1CS constraint system.
-
-See gadget_from_r1cs.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef GADGET_FROM_R1CS_TCC_
-// #define GADGET_FROM_R1CS_TCC_
-use crate::prefix_format;
+pub type gadget_from_r1css<FieldT, PB, SV, SLC> =
+    gadget<FieldT, PB, gadget_from_r1cs<FieldT, PB, SV, SLC>>;
 impl<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     gadget_from_r1cs<FieldT, PB, SV, SLC>
 {

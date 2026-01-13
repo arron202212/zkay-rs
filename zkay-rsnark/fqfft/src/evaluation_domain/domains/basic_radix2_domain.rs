@@ -1,25 +1,21 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for the "basic radix-2" evaluation domain.
+// Roughly, the domain has size m = 2^k and consists of the m-th roots of unity.
 
-Declaration of interfaces for the "basic radix-2" evaluation domain.
+use crate::evaluation_domain::domains::basic_radix2_domain_aux::{
+    _basic_radix2_FFT, _basic_radix2_evaluate_all_lagrange_polynomials, _multiply_by_coset,
+};
+use crate::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
+use ffec::FieldTConfig;
+use ffec::algebra::field_utils::field_utils;
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+use ffec::common::double;
+use ffec::common::utils::log2;
+use num_traits::One;
+use std::ops::BitXor;
+use std::ops::Sub;
 
-Roughly, the domain has size m = 2^k and consists of the m-th roots of unity.
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BASIC_RADIX2_DOMAIN_HPP_
-// #define BASIC_RADIX2_DOMAIN_HPP_
-
-//#include <vector>
-use crate::evaluation_domain::evaluation_domain;
-
-//namespace libfqfft {
-
-//
-pub struct basic_radix2_domain<FieldT> {
+#[derive(Default, Clone)]
+pub struct basic_radix2_domain<FieldT: FieldTConfig> {
     // : public evaluation_domain<FieldT>
     pub omega: FieldT,
     pub m: usize,
@@ -39,53 +35,24 @@ pub struct basic_radix2_domain<FieldT> {
 
 // };
 
-// //} // libfqfft
+//  std::default::Default
+//         + std::ops::Sub
+//         + One
+//         + std::ops::MulAssign
+//         + std::cmp::PartialEq
+//         + Clone
+//         + std::ops::Sub<Output = FieldT>
+//         + std::ops::MulAssign
+//         + std::ops::BitXor<Output = FieldT>
+//         + std::convert::From<usize>
+//         + num_traits::Zero
+//         + std::ops::SubAssign
+//         + std::ops::AddAssign<FieldT>,
 
-// use crate::evaluation_domain::domains::basic_radix2_domain.tcc;
-
-//#endif // BASIC_RADIX2_DOMAIN_HPP_
-use crate::evaluation_domain::domains::basic_radix2_domain_aux::{
-    _basic_radix2_FFT, _basic_radix2_evaluate_all_lagrange_polynomials, _multiply_by_coset,
-};
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for the "basic radix-2" evaluation domain.
-
-See basic_radix2_domain.hpp .
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BASIC_RADIX2_DOMAIN_TCC_
-// #define BASIC_RADIX2_DOMAIN_TCC_
-use ffec::algebra::field_utils::field_utils;
-use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
-use ffec::common::double;
-use ffec::common::utils::log2;
-use num_traits::One;
-use std::ops::BitXor;
-use std::ops::Sub;
-//namespace libfqfft {
-impl<
-    FieldT: std::default::Default
-        + std::ops::Sub
-        + One
-        + std::ops::MulAssign
-        + std::cmp::PartialEq
-        + Clone
-        + std::ops::Sub<Output = FieldT>
-        + std::ops::MulAssign
-        + std::ops::BitXor<Output = FieldT>
-        + std::convert::From<usize>
-        + num_traits::Zero
-        + std::ops::SubAssign
-        + std::ops::AddAssign<FieldT>,
-> basic_radix2_domain<FieldT>
-{
-    pub fn new(m: usize) -> eyre::Result<Self> {
+pub type basic_radix2_domains<FieldT> =
+    evaluation_domain<basic_radix2_domain<FieldT>>;
+impl<FieldT: FieldTConfig> basic_radix2_domain<FieldT> {
+    pub fn new(m: usize) -> eyre::Result<basic_radix2_domains<FieldT>> {
         // : evaluation_domain<FieldT>(m)
         if m <= 1 {
             eyre::bail!("basic_radix2(): expected m > 1");
@@ -96,28 +63,31 @@ impl<
             // if logm > (FieldT::s){eyre::bail!("basic_radix2(): expected logm <= FieldT::s");}
         }
 
-        Ok(Self {
+        Ok(evaluation_domain::<Self>::new(
+            m,Self {
             omega: get_root_of_unity_is_same_double::<FieldT>(m),
             m,
-        })
+        }))
         // catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
     }
+}
 
-    pub fn FFT(&self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
+impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for basic_radix2_domains<FieldT> {
+    fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("basic_radix2: expected a.len() == self.m");
         }
 
-        _basic_radix2_FFT(a, &self.omega);
+        _basic_radix2_FFT(a, &self.t.omega);
         Ok(())
     }
 
-    pub fn iFFT(&self, a: &Vec<FieldT>) -> eyre::Result<()> {
+    fn iFFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("basic_radix2: expected a.len() == self.m");
         }
 
-        // _basic_radix2_FFT(a, self.omega.inverse());
+        // _basic_radix2_FFT(a, self.t.omega.inverse());
 
         // let  sconst = FieldT::from(a.len()).inverse();
         // for i in 0..a.len()
@@ -127,33 +97,32 @@ impl<
         Ok(())
     }
 
-    pub fn cosetFFT(&self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()> {
+    fn cosetFFT(&mut self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()> {
         _multiply_by_coset(a, g);
         self.FFT(a)
     }
 
-    pub fn icosetFFT(&self, a: &Vec<FieldT>, g: &FieldT) -> eyre::Result<()> {
+    fn icosetFFT(&mut self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()> {
         self.iFFT(a);
         // _multiply_by_coset(a, g.inverse());
         Ok(())
     }
 
-    pub fn evaluate_all_lagrange_polynomials(&self, t: &FieldT) -> Vec<FieldT> {
+    fn evaluate_all_lagrange_polynomials(&mut self, t: &FieldT) -> Vec<FieldT> {
         return _basic_radix2_evaluate_all_lagrange_polynomials(self.m, t).unwrap();
     }
 
-    pub fn get_domain_element(&self, idx: usize) -> FieldT {
-        return self.omega.clone() ^ FieldT::from(idx);
+    fn get_domain_element(&mut self, idx: usize) -> FieldT {
+        self.t.omega.clone() ^ idx
     }
 
-    pub fn compute_vanishing_polynomial(&self, t: &FieldT) -> FieldT {
+    fn compute_vanishing_polynomial(&mut self, t: &FieldT) -> FieldT {
         let tt: FieldT = t.clone();
-        let mm: FieldT = self.m.into();
-        let tm: FieldT = tt ^ mm;
+        let tm: FieldT = tt ^ self.m;
         tm - FieldT::one()
     }
 
-    pub fn add_poly_Z(&self, coeff: &FieldT, H: &mut Vec<FieldT>) -> eyre::Result<()> {
+    fn add_poly_Z(&mut self, coeff: &FieldT, H: &mut Vec<FieldT>) -> eyre::Result<()> {
         if H.len() != self.m + 1 {
             eyre::bail!("basic_radix2: expected H.len() == self.m+1");
         }
@@ -163,7 +132,7 @@ impl<
         Ok(())
     }
 
-    pub fn divide_by_Z_on_coset(&self, P: &Vec<FieldT>) {
+    fn divide_by_Z_on_coset(&self, P: &mut Vec<FieldT>) {
         // let  coset = FieldT::multiplicative_generator.clone();
         // let  Z_inverse_at_coset = self.compute_vanishing_polynomial(coset).inverse();
         // for i in 0..self.m
@@ -172,6 +141,3 @@ impl<
         // }
     }
 }
-//} // libfqfft
-
-//#endif // BASIC_RADIX2_DOMAIN_TCC_

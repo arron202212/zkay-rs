@@ -104,10 +104,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
         }
     }
 
-    pub fn generate_r1cs_witness(&self, proof: &set_membership_proof)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self, proof: &set_membership_proof) {
         if self.t.tree_depth > 0 {
             self.t
                 .address_bits
@@ -143,10 +140,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     pub fn as_r1cs_variable_assignment(
         &self,
         proof: &set_membership_proof,
-    ) -> r1cs_variable_assignment<FieldT>
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    ) -> r1cs_variable_assignment<FieldT> {
         let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
         let max_entries = (1usize << (proof.merkle_path.len()));
         let mut proof_variable = set_membership_proof_variable::<FieldT, PB, HashT>::new(

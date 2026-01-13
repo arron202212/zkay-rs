@@ -448,10 +448,7 @@ impl<FieldT: FieldTConfig>
         );
     }
 
-    pub fn generate_r1cs_witness_address(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_address(&self) {
         self.t.t.one_as_addr.evaluate(&self.pb);
 
         /* packed_next_pc_addr = prev_pc_addr + one_as_addr */
@@ -493,10 +490,7 @@ impl<FieldT: FieldTConfig>
             .generate_r1cs_witness_from_packed();
     }
 
-    pub fn generate_r1cs_witness_other(&self, aux: &[usize])
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_other(&self, aux: &[usize]) {
         //_fooram_input_tape
         /* fooram memory contents do not depend on program/input. */
         // //ffec::UNUSED(aux_it, aux_end);

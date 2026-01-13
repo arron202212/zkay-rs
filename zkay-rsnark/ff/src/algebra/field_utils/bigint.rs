@@ -8,18 +8,13 @@
 #![allow(warnings, unused)]
 use super::BigInt;
 use crate::algebra::{field_utils::BigInteger, fields::fpn_field::PrimeField};
-/** @file
-*****************************************************************************
-Declaration of bigint wrapper pub struct around GMP's MPZ long integers.
 
-Notice that this pub struct has no arithmetic operators. This is deliberate. All
-bigints should either be hardcoded or operated on the bit level to ensure
-high performance.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
+// Declaration of bigint wrapper pub struct around GMP's MPZ long integers.
+
+// Notice that this pub struct has no arithmetic operators. This is deliberate. All
+// bigints should either be hardcoded or operated on the bit level to ensure
+// high performance.
+
 use ark_std::{
     UniformRand,
     Zero,
@@ -41,23 +36,17 @@ use ark_std::{
 use num_bigint::BigUint;
 use zeroize::Zeroize;
 
-// //#ifndef BIGINT_HPP_
-// // #define BIGINT_HPP_
-// //#include <cstddef>
-// //#include <iostream>
 
 // //#include <gmp.h>
 
 // use crate::common::serialization;
-
-// // // namespace libff {
 
 // // /**
 // //  * Wrapper pub struct around GMP's MPZ long integers. It supports arithmetic operations,
 // //  * serialization and randomization. Serialization is fragile, see common/serialization.hpp.
 // //  */
 pub const GMP_NUMB_BITS: usize = 64;
-// //
+
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Zeroize)]
 pub struct bigint<const N: usize>(pub BigInt<N>);
@@ -92,25 +81,12 @@ pub struct bigint<const N: usize>(pub BigInt<N>);
 //     // friend std::istream& operator>> <n>(std::istream &in, bigint<n> &b);
 // // }
 
-// // // } // namespace libff
-// // use ffec::algebra::field_utils::/bigint.tcc;
-// // //#endif
 
-// /** @file
-//  *****************************************************************************
-//  Implementation of bigint wrapper pub struct around GMP's MPZ long integers.
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// // //#ifndef BIGINT_TCC_
-// // // #define BIGINT_TCC_
-// // //#include <cassert>
-// // //#include <cstring>
-// // //#include <random>
-
-// // // namespace libff {
+impl<const N: usize> From<u128> for bigint<N> {
+    fn from(rhs:u128) -> Self {
+        Self(BigInt::from(rhs as u64))
+    }
+}
 
 impl<const N: usize> Default for bigint<N> {
     fn default() -> Self {
@@ -185,8 +161,7 @@ impl<const N: usize> bigint<N> {
     }
 }
 
-// // // } // namespace libff
-// //#endif // BIGINT_TCC_
+
 // use std::ops::Mul;
 // impl<const N:usize> Mul for bigint<N> {
 //     type Output =Self;

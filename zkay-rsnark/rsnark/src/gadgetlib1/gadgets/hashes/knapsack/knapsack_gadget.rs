@@ -75,7 +75,7 @@ pub static num_cached_coefficients: AtomicUsize = AtomicUsize::new(0);
 pub struct knapsack_dimension<FieldT: FieldTConfig>(PhantomData<FieldT>);
 impl<FieldT: FieldTConfig> knapsack_dimension<FieldT> {
     // the size of FieldT should be (approximately) at least 200 bits
-    const dimension: usize = 1;
+    pub const dimension: usize = 1;
 }
 
 /*********************** Knapsack with field output **************************/
@@ -125,7 +125,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadget<Fiel
         let dimension = knapsack_dimension::<FieldT>::dimension;
         assert!(input_block.t.bits.len() == input_len);
         if num_cached_coefficients.load(Ordering::Relaxed) < dimension * input_len {
-            knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::sample_randomness(input_len);
+            knapsack_CRH_with_field_out_gadget::<FieldT, PB>::sample_randomness(input_len);
         }
         assert!(output.len() == Self::get_digest_len());
         gadget::<FieldT, PB, Self>::new(
@@ -150,15 +150,19 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadget<Fiel
     pub fn expected_constraints() -> usize {
         return knapsack_dimension::<FieldT>::dimension;
     }
-}
-
-impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_coefficientsConfig<FieldT>
-    for knapsack_CRH_with_field_out_gadgets<FieldT, PB>
-{
-}
-
-impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<FieldT, PB> {
-    pub fn get_hash(&self, input: bit_vector) -> Vec<FieldT> {
+    pub fn sample_randomness(input_len: usize) {
+        let num_coefficients = knapsack_dimension::<FieldT>::dimension * input_len;
+        if num_coefficients > num_cached_coefficients.load(Ordering::Relaxed) {
+            Self::knapsack_coefficients()
+                .lock()
+                .resize(num_coefficients, FieldT::zero());
+            for i in num_cached_coefficients.load(Ordering::Relaxed)..num_coefficients {
+                Self::knapsack_coefficients().lock()[i] = SHA512_rng::<FieldT>(i);
+            }
+            num_cached_coefficients.store(num_coefficients, Ordering::Relaxed);
+        }
+    }
+    pub fn get_hash(input: bit_vector) -> Vec<FieldT> {
         let dimension = knapsack_dimension::<FieldT>::dimension;
         if num_cached_coefficients.load(Ordering::Relaxed) < dimension * input.len() {
             Self::sample_randomness(input.len());
@@ -176,20 +180,14 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<Fie
 
         return result;
     }
+}
 
-    pub fn sample_randomness(input_len: usize) {
-        let num_coefficients = knapsack_dimension::<FieldT>::dimension * input_len;
-        if num_coefficients > num_cached_coefficients.load(Ordering::Relaxed) {
-            Self::knapsack_coefficients()
-                .lock()
-                .resize(num_coefficients, FieldT::zero());
-            for i in num_cached_coefficients.load(Ordering::Relaxed)..num_coefficients {
-                Self::knapsack_coefficients().lock()[i] = SHA512_rng::<FieldT>(i);
-            }
-            num_cached_coefficients.store(num_coefficients, Ordering::Relaxed);
-        }
-    }
+impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_coefficientsConfig<FieldT>
+    for knapsack_CRH_with_field_out_gadget<FieldT, PB>
+{
+}
 
+impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
         for i in 0..self.t.dimension {
             self.pb.borrow_mut().add_r1cs_constraint(
@@ -197,8 +195,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<Fie
                     FieldT::from(1).into(),
                     pb_coeff_sum::<FieldT, PB>(
                         &(self.t.input_block.t.bits.clone().into()),
-                        &Self::knapsack_coefficients().lock()
-                            [self.t.input_len * i..self.t.input_len * (i + 1)]
+                        &knapsack_CRH_with_field_out_gadget::<FieldT, PB>::knapsack_coefficients()
+                            .lock()[self.t.input_len * i..self.t.input_len * (i + 1)]
                             .to_vec(),
                     ),
                     self.t.output[i].clone(),
@@ -215,7 +213,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<Fie
             let mut sum = FieldT::zero();
             for k in 0..self.t.input_len {
                 if input[k] {
-                    sum += Self::knapsack_coefficients().lock()[self.t.input_len * i + k].clone();
+                    sum +=
+                        knapsack_CRH_with_field_out_gadget::<FieldT, PB>::knapsack_coefficients()
+                            .lock()[self.t.input_len * i + k]
+                            .clone();
                 }
             }
 
@@ -305,7 +306,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadget<FieldT
     }
 
     pub fn sample_randomness(input_len: usize) {
-        knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::sample_randomness(input_len);
+        knapsack_CRH_with_field_out_gadget::<FieldT, PB>::sample_randomness(input_len);
     }
 }
 impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadgets<FieldT, PB> {
@@ -323,10 +324,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadgets<Field
         }
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         self.t.hasher.borrow().generate_r1cs_witness();
 
         /* do unpacking in place */
@@ -349,9 +347,7 @@ pub fn test_knapsack_CRH_with_bit_out_gadget_internal<FieldT: FieldTConfig, PB: 
     dimension: usize,
     digest_bits: bit_vector,
     input_bits: bit_vector,
-) where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+) {
     assert!(knapsack_dimension::<FieldT>::dimension == dimension);
     knapsack_CRH_with_bit_out_gadget::<FieldT, PB>::sample_randomness(input_bits.len());
     let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());

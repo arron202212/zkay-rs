@@ -33,7 +33,8 @@ use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment_vect
 use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_instance_map_with_evaluation;
 use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_witness_map;
 use crate::relations::arithmetic_programs::qap::qap::qap_instance_evaluation;
-use crate::zk_proof_systems::PptConfig;
+
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_params::{
     r1cs_gg_ppzksnark_auxiliary_input, r1cs_gg_ppzksnark_constraint_system,
     r1cs_gg_ppzksnark_primary_input,
@@ -63,10 +64,10 @@ use std::ops::{Add, Mul};
  * A proving key for the R1CS GG-ppzkSNARK.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_proving_key<ppT: PptConfig>
-where
-    <ppT as ff_curves::PublicParams>::G2: PpConfig,
-    <ppT as ff_curves::PublicParams>::G1: PpConfig,
+pub struct r1cs_gg_ppzksnark_proving_key<ppT: ppTConfig>
+// where
+//     <ppT as ff_curves::PublicParams>::G2: PpConfig,
+//     <ppT as ff_curves::PublicParams>::G1: PpConfig,
 {
     pub alpha_g1: G1<ppT>,
     pub beta_g1: G1<ppT>,
@@ -75,14 +76,14 @@ where
     pub delta_g2: G2<ppT>,
 
     pub A_query: G1_vector<ppT>, // this could be a sparse vector if we had multiexp for those
-    pub B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
+    pub B_query: knowledge_commitment_vector<ppT::KC2>,
     pub H_query: G1_vector<ppT>,
     pub L_query: G1_vector<ppT>,
 
     pub constraint_system: r1cs_gg_ppzksnark_constraint_system<ppT>,
 }
 
-impl<ppT: PptConfig> r1cs_gg_ppzksnark_proving_key<ppT> {
+impl<ppT: ppTConfig> r1cs_gg_ppzksnark_proving_key<ppT> {
     pub fn new(
         alpha_g1: G1<ppT>,
         beta_g1: G1<ppT>,
@@ -90,7 +91,7 @@ impl<ppT: PptConfig> r1cs_gg_ppzksnark_proving_key<ppT> {
         delta_g1: G1<ppT>,
         delta_g2: G2<ppT>,
         A_query: G1_vector<ppT>,
-        B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
+        B_query: knowledge_commitment_vector<ppT::KC2>,
         H_query: G1_vector<ppT>,
         L_query: G1_vector<ppT>,
         constraint_system: r1cs_gg_ppzksnark_constraint_system<ppT>,
@@ -161,9 +162,9 @@ impl<ppT: PptConfig> r1cs_gg_ppzksnark_proving_key<ppT> {
  * A verification key for the R1CS GG-ppzkSNARK.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_verification_key<ppT: PptConfig>
-where
-    <ppT as ff_curves::PublicParams>::G1: PpConfig,
+pub struct r1cs_gg_ppzksnark_verification_key<ppT: ppTConfig>
+// where
+//     <ppT as ff_curves::PublicParams>::G1: PpConfig,
 {
     pub alpha_g1_beta_g2: GT<ppT>,
     pub gamma_g2: G2<ppT>,
@@ -172,7 +173,7 @@ where
     pub gamma_ABC_g1: accumulation_vector<G1<ppT>>,
 }
 
-impl<ppT: PptConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
     // r1cs_gg_ppzksnark_verification_key() = default;
     pub fn new(
         alpha_g1_beta_g2: GT<ppT>,
@@ -233,7 +234,7 @@ impl<ppT: PptConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
  * enables a faster verification time.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_processed_verification_key<ppT: PptConfig> {
+pub struct r1cs_gg_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     pub vk_alpha_g1_beta_g2: GT<ppT>,
     pub vk_gamma_g2_precomp: G2_precomp<ppT>,
     pub vk_delta_g2_precomp: G2_precomp<ppT>,
@@ -250,11 +251,11 @@ pub struct r1cs_gg_ppzksnark_processed_verification_key<ppT: PptConfig> {
  * A key pair for the R1CS GG-ppzkSNARK, which consists of a proving key and a verification key.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_keypair<ppT: PptConfig> {
+pub struct r1cs_gg_ppzksnark_keypair<ppT: ppTConfig> {
     pub pk: r1cs_gg_ppzksnark_proving_key<ppT>,
     pub vk: r1cs_gg_ppzksnark_verification_key<ppT>,
 }
-impl<ppT: PptConfig> r1cs_gg_ppzksnark_keypair<ppT> {
+impl<ppT: ppTConfig> r1cs_gg_ppzksnark_keypair<ppT> {
     // r1cs_gg_ppzksnark_keypair() = default;
     // r1cs_gg_ppzksnark_keypair(&other:r1cs_gg_ppzksnark_keypair<ppT>) = default;
     pub fn new(
@@ -277,12 +278,12 @@ impl<ppT: PptConfig> r1cs_gg_ppzksnark_keypair<ppT> {
  * about the structure for statistics purposes.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_proof<ppT: PptConfig> {
+pub struct r1cs_gg_ppzksnark_proof<ppT: ppTConfig> {
     pub g_A: G1<ppT>,
     pub g_B: G2<ppT>,
     pub g_C: G1<ppT>,
 }
-impl<ppT: PptConfig> r1cs_gg_ppzksnark_proof<ppT> {
+impl<ppT: ppTConfig> r1cs_gg_ppzksnark_proof<ppT> {
     pub fn default() -> Self {
         // invalid proof with valid curve points
         Self {
@@ -335,26 +336,21 @@ impl<ppT: PptConfig> r1cs_gg_ppzksnark_proof<ppT> {
  * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
  */
 
-pub fn r1cs_gg_ppzksnark_generator<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
     r1cs: &r1cs_gg_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_gg_ppzksnark_keypair<ppT>
-where
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-        Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
-            <ppT as ff_curves::PublicParams>::Fr,
-        >,
+// where
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
+//             <ppT as ff_curves::PublicParams>::Fr,
+//         >,
 {
     enter_block("Call to r1cs_gg_ppzksnark_generator", false);
 
@@ -598,32 +594,27 @@ where
  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
  */
 
-pub fn r1cs_gg_ppzksnark_prover<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
     pk: &r1cs_gg_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_gg_ppzksnark_auxiliary_input<ppT>,
 ) -> r1cs_gg_ppzksnark_proof<ppT>
-where
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::Fr>,
-    <ppT as ff_curves::PublicParams>::G1:
-        Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::G1:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::G2:
-        Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::G1:
-        Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
-    ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
-            <ppT as ff_curves::PublicParams>::Fr,
-        >,
+// where
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::Fr>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::G2:
+//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
+//             <ppT as ff_curves::PublicParams>::Fr,
+//         >,
 {
     enter_block("Call to r1cs_gg_ppzksnark_prover", false);
 
@@ -769,12 +760,7 @@ where
  * (2) has weak input consistency.
  */
 
-pub fn r1cs_gg_ppzksnark_verifier_weak_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -796,12 +782,7 @@ pub fn r1cs_gg_ppzksnark_verifier_weak_IC<
  * (2) has strong input consistency.
  */
 
-pub fn r1cs_gg_ppzksnark_verifier_strong_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -821,12 +802,7 @@ pub fn r1cs_gg_ppzksnark_verifier_strong_IC<
  * Convert a (non-processed) verification key into a processed verification key.
  */
 
-pub fn r1cs_gg_ppzksnark_verifier_process_vk<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
 ) -> r1cs_gg_ppzksnark_processed_verification_key<ppT> {
     enter_block("Call to r1cs_gg_ppzksnark_verifier_process_vk", false);
@@ -848,12 +824,7 @@ pub fn r1cs_gg_ppzksnark_verifier_process_vk<
  * (2) has weak input consistency.
  */
 
-pub fn r1cs_gg_ppzksnark_online_verifier_weak_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     pvk: &r1cs_gg_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -916,12 +887,7 @@ pub fn r1cs_gg_ppzksnark_online_verifier_weak_IC<
  * (2) has strong input consistency.
  */
 
-pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     pvk: &r1cs_gg_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -960,12 +926,7 @@ pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<
  * (3) uses affine coordinates for elliptic-curve computations.
  */
 
-pub fn r1cs_gg_ppzksnark_affine_verifier_weak_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_gg_ppzksnark_affine_verifier_weak_IC<ppT: ppTConfig>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -1025,7 +986,7 @@ pub fn r1cs_gg_ppzksnark_affine_verifier_weak_IC<
     return result;
 }
 
-impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_proving_key<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_gg_ppzksnark_proving_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.alpha_g1 == other.alpha_g1
@@ -1041,7 +1002,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_proving_key<ppT> {
     }
 }
 
-impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_proving_key<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_gg_ppzksnark_proving_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -1094,7 +1055,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_proving_key<ppT> {
 //     return in;
 // }
 
-impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_gg_ppzksnark_verification_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.alpha_g1_beta_g2 == other.alpha_g1_beta_g2
@@ -1104,7 +1065,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_verification_key<ppT> {
     }
 }
 
-impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_gg_ppzksnark_verification_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -1129,7 +1090,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_verification_key<ppT> {
 //     return in;
 // }
 
-impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_processed_verification_key<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_gg_ppzksnark_processed_verification_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.vk_alpha_g1_beta_g2 == other.vk_alpha_g1_beta_g2
@@ -1139,7 +1100,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_processed_verification_key<
     }
 }
 
-impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_processed_verification_key<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_gg_ppzksnark_processed_verification_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -1167,7 +1128,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_processed_verification_k
 //     return in;
 // }
 
-impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_proof<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_gg_ppzksnark_proof<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.g_A == other.g_A && self.g_B == other.g_B && self.g_C == other.g_C
@@ -1175,7 +1136,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_gg_ppzksnark_proof<ppT> {
 }
 
 use std::fmt;
-impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_proof<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_gg_ppzksnark_proof<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -1198,7 +1159,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_gg_ppzksnark_proof<ppT> {
 //     return in;
 // }
 
-impl<ppT: PptConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
     pub fn dummy_verification_key(input_size: usize) -> r1cs_gg_ppzksnark_verification_key<ppT>
     where
         <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::GT, Output = <ppT as ff_curves::PublicParams>::GT>,

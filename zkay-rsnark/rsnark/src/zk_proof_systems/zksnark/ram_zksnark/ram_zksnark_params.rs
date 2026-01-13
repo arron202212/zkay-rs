@@ -1,16 +1,6 @@
-/** @file
-*****************************************************************************
+// Declaration of public-parameter selector for the RAM zkSNARK.
 
-Declaration of public-parameter selector for the RAM zkSNARK.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RAM_ZKSNARK_PARAMS_HPP_
-// #define RAM_ZKSNARK_PARAMS_HPP_
-use crate::relations::ram_computations::rams::ram_params;
+// use crate::relations::ram_computations::rams::ram_params;
 
 /**
  * The interfaces of the RAM zkSNARK are templatized via the parameter
@@ -50,18 +40,20 @@ use crate::relations::ram_computations::rams::ram_params;
 /*
  * Below are various template aliases (used for convenience).
  */
+pub trait ram_zksnark_ppTConfig {
+    type PCD_pp;
+    type machine_pp;
+}
+pub type ram_zksnark_PCD_pp<ram_zksnark_ppT> = <ram_zksnark_ppT as ram_zksnark_ppTConfig>::PCD_pp;
 
-type ram_zksnark_PCD_pp<ram_zksnark_ppT> = ram_zksnark_ppT::PCD_pp;
+pub type ram_zksnark_machine_pp<ram_zksnark_ppT> =
+    <ram_zksnark_ppT as ram_zksnark_ppTConfig>::machine_pp;
 
-type ram_zksnark_machine_pp<ram_zksnark_ppT> = ram_zksnark_ppT::machine_pp;
-
-type ram_zksnark_architecture_params<ram_zksnark_ppT> =
+pub type ram_zksnark_architecture_params<ram_zksnark_ppT> =
     ram_architecture_params<ram_zksnark_machine_pp<ram_zksnark_ppT>>;
 
-type ram_zksnark_primary_input<ram_zksnark_ppT> =
+pub type ram_zksnark_primary_input<ram_zksnark_ppT> =
     ram_boot_trace<ram_zksnark_machine_pp<ram_zksnark_ppT>>;
 
-type ram_zksnark_auxiliary_input<ram_zksnark_ppT> =
+pub type ram_zksnark_auxiliary_input<ram_zksnark_ppT> =
     ram_input_tape<ram_zksnark_machine_pp<ram_zksnark_ppT>>;
-
-//#endif // RAM_ZKSNARK_PARAMS_HPP_

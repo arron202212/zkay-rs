@@ -729,10 +729,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         );
     }
 
-    pub fn generate_r1cs_witness_address(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_address(&self) {
         /* decode instruction and arguments */
         self.t
             .t
@@ -778,10 +775,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         );
     }
 
-    pub fn generate_r1cs_witness_other(&self, aux: &[usize])
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness_other(&self, aux: &[usize]) {
         /* now ls_prev_val is filled with memory contents at ls_addr. we
         now ensure consistency with its doubleword representation */
         self.t

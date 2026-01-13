@@ -4,7 +4,7 @@
 
 // use ff_curves::algebra::curves::mnt::mnt4::mnt4_pp;
 // use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
-use crate::gadgetlib1::gadgets::curves::ppTConfig;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::gadgets::pairing::weierstrass_final_exponentiation::{
     mnt4_final_exp_gadget, mnt6_final_exp_gadget,
 };
@@ -27,21 +27,22 @@ use crate::gadgetlib1::gadgets::fields::fp4_gadgets::{
 use crate::gadgetlib1::gadgets::fields::fp6_gadgets::{
     Fp6_mul_by_2345_gadget, Fp6_mul_gadget, Fp6_sqr_gadget, Fp6_variable, Fp6TConfig,
 };
+use ff_curves::{Fqe, Fqk, PublicParams};
 use std::marker::PhantomData;
-pub struct FrT<T>(PhantomData<T>);
-pub type Fr<T> = FrT<T>;
-pub struct FqeT<T>(PhantomData<T>);
-pub type Fqe<T> = FqeT<T>;
-pub struct FqkT<T>(PhantomData<T>);
-pub type Fqk<T> = FqkT<T>;
+// pub struct FrT<T>(PhantomData<T>);
+// pub type Fr<T> = FrT<T>;
+// pub struct FqeT<T>(PhantomData<T>);
+// pub type Fqe<T> = FqeT<T>;
+// pub struct FqkT<T>(PhantomData<T>);
+// pub type Fqk<T> = FqkT<T>;
 /**
  * Specialization for MNT4.
  */
 
 pub trait pairing_selector4<
-    mnt4_pp,
-    mnt6_pp,
-    ppT: ppTConfig<FieldT, PB>,
+    mnt4_pp: PublicParams,
+    mnt6_pp: PublicParams,
+    ppT: ppTConfig,
     FieldT: FieldTConfig,
     PB: PBConfig,
     Fp3T: Fp3TConfig<FieldT>,
@@ -65,22 +66,25 @@ pub trait pairing_selector4<
 
     type other_curve_type = mnt6_pp;
 
-    type e_over_e_miller_loop_gadget_type = mnt_e_over_e_miller_loop_gadget<ppT, FieldT, PB>;
-    type e_times_e_over_e_miller_loop_gadget_type =
-        mnt_e_times_e_over_e_miller_loop_gadget<ppT, FieldT, PB>;
-    type final_exp_gadget_type = mnt4_final_exp_gadget<ppT, FieldT, PB>;
+    type e_over_e_miller_loop_gadget_type;
+    type e_times_e_over_e_miller_loop_gadget_type;
+    type final_exp_gadget_type;
 
     // static pairing_loop_count:&constexpr bigint<mnt6_Fr::num_limbs> = mnt6_ate_loop_count;
 }
 
+//  type e_over_e_miller_loop_gadget_type = mnt_e_over_e_miller_loop_gadget<ppT,  PB>;
+//     type e_times_e_over_e_miller_loop_gadget_type =
+//         mnt_e_times_e_over_e_miller_loop_gadget<ppT,  PB>;
+//     type final_exp_gadget_type = mnt4_final_exp_gadget<ppT,  PB>;
 /**
  * Specialization for MNT6.
  */
 
 pub trait pairing_selector6<
-    mnt6_pp,
-    mnt4_pp,
-    ppT: ppTConfig<FieldT, PB>,
+    mnt6_pp: PublicParams,
+    mnt4_pp: PublicParams,
+    ppT: ppTConfig,
     FieldT: FieldTConfig,
     PB: PBConfig,
     Fp2T: Fp2TConfig<FieldT>,
@@ -105,10 +109,13 @@ pub trait pairing_selector6<
 
     type other_curve_type = mnt4_pp;
 
-    type e_over_e_miller_loop_gadget_type = mnt_e_over_e_miller_loop_gadget<ppT, FieldT, PB>;
-    type e_times_e_over_e_miller_loop_gadget_type =
-        mnt_e_times_e_over_e_miller_loop_gadget<ppT, FieldT, PB>;
-    type final_exp_gadget_type = mnt6_final_exp_gadget<ppT, FieldT, PB>;
+    type e_over_e_miller_loop_gadget_type;
+    type e_times_e_over_e_miller_loop_gadget_type;
+    type final_exp_gadget_type;
 
     // static pairing_loop_count:&constexpr bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 }
+// type e_over_e_miller_loop_gadget_type = mnt_e_over_e_miller_loop_gadget<ppT, FieldT, PB>;
+//     type e_times_e_over_e_miller_loop_gadget_type =
+//         mnt_e_times_e_over_e_miller_loop_gadget<ppT, FieldT, PB>;
+//     type final_exp_gadget_type = mnt6_final_exp_gadget<ppT, FieldT, PB>;

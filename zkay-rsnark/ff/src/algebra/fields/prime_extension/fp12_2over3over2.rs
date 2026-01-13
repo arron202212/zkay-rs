@@ -810,8 +810,9 @@ impl<const N: usize, T: Fp12_modelConfig<N>> fmt::Display for Fp12_2over3over2_m
         write!(f, "{}", self.c0)
     }
 }
-impl<const N: usize, T: Fp12_modelConfig<N>> PpConfig for Fp12_2over3over2_model<N, T> {
-    type T = bigint<N>;
+impl<const N: usize, T: Fp12_modelConfig<N>> PpConfig for Fp12_2over3over2_model<N, T> where <T as Fp12_modelConfig<N>>::Fp_modelConfig: PpConfig{
+    type TT = bigint<N>;
+//  type Fr=T::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp12_modelConfig<N>> Mul<bigint<N>> for Fp12_2over3over2_model<N, T> {

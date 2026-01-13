@@ -28,13 +28,16 @@ pub trait PpConfig:
     + Zero
     + std::ops::Add<Output = Self>
     + std::ops::Sub<Output = Self>
-    + std::ops::Mul<Self::T, Output = Self>
+    + std::ops::Mul<Self::TT, Output = Self>
     + std::ops::Mul<Output = Self>
     + for<'a> std::ops::Mul<&'a Self, Output = Self>
 {
-    type T: AsRef<[u64]>;
+    type TT: AsRef<[u64]>;
+   
 
     const num_limbs: usize = 1;
+    const coeff_a: i64 = 1;
+    const coeff_b: i64 = 1;
 
     fn as_bigint<const N: usize>(&self) -> bigint<N> {
         bigint::<N>::default()
@@ -98,6 +101,9 @@ pub trait FieldTConfig:
     + std::ops::Add<i32, Output = Self>
     + PpConfig
 {
+    fn to_field<FieldTT:Default>(&self)->FieldTT{
+        FieldTT::default()
+    }
     fn squared(&self) -> Self {
         Default::default()
     }
@@ -115,5 +121,11 @@ pub trait FieldTConfig:
     }
     fn as_ulong(&self) -> usize {
         0
+    }
+    fn X(&self) -> Self{
+        Default::default()
+    }
+    fn Y(&self) -> Self{
+         Default::default()
     }
 }

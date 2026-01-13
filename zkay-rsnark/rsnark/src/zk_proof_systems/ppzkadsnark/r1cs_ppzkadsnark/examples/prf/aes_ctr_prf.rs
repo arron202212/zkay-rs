@@ -1,7 +1,7 @@
 // AES-Based PRF for ADSNARK.
 use crate::common::default_types::r1cs_ppzkadsnark_pp::default_r1cs_ppzkadsnark_pp;
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_params::{
-    labelT, r1cs_ppzkadsnark_ppTConfig, r1cs_ppzkadsnark_prfKeyT, snark_pp,
+    labelT, ppzkadsnarkConfig, r1cs_ppzkadsnark_prfKeyT, snark_pp,
 };
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf::PrfConfig;
 use ff_curves::Fr;
@@ -17,9 +17,9 @@ impl aesPrfKeyT {
     }
 }
 
-pub struct PrfAdsnark<ppT: r1cs_ppzkadsnark_ppTConfig>(PhantomData<ppT>);
+pub struct PrfAdsnark<ppT: ppzkadsnarkConfig>(PhantomData<ppT>);
 
-impl<ppT: r1cs_ppzkadsnark_ppTConfig<prfKeyT = aesPrfKeyT>> PrfConfig<ppT> for PrfAdsnark<ppT> {
+impl<ppT: ppzkadsnarkConfig<prfKeyT = aesPrfKeyT>> PrfConfig<ppT> for PrfAdsnark<ppT> {
     // template <>
     fn prfGen() -> r1cs_ppzkadsnark_prfKeyT<ppT> {
         let key = aesPrfKeyT::default();

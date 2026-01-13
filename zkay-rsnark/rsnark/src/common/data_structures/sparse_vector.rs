@@ -1,8 +1,8 @@
 // Declaration of interfaces for a sparse vector.
-
 use ffec::PpConfig;
+use ffec::Zero;
 use ffec::common::serialization::OUTPUT_NEWLINE;
-use ffec::scalar_multiplication::multiexp::{multi_exp, multi_exp_method};
+use ffec::scalar_multiplication::multiexp::{KCConfig, multi_exp, multi_exp_method};
 // pub trait SparseVectorConfig:
 //     Default
 //     + std::fmt::Display
@@ -22,9 +22,9 @@ use ffec::scalar_multiplication::multiexp::{multi_exp, multi_exp_method};
  * The indices are selected from the set {0,1,...,domain_size-1}.
  */
 #[derive(Default, Clone)]
-pub struct sparse_vector<T: PpConfig> {
+pub struct sparse_vector<KC: KCConfig> {
     pub indices: Vec<usize>,
-    pub values: Vec<T>,
+    pub values: Vec<KC::T>,
     pub domain_size_: usize,
     // sparse_vector() = default;
     // sparse_vector(&other:sparse_vector<T>) = default;
@@ -53,8 +53,8 @@ pub struct sparse_vector<T: PpConfig> {
     //                                            offset:usize) const;
 }
 
-impl<T: PpConfig> sparse_vector<T> {
-    pub fn new(v: Vec<T>) -> Self {
+impl<KC: KCConfig> sparse_vector<KC> {
+    pub fn new(v: Vec<KC::T>) -> Self {
         let domain_size_ = v.len();
         Self {
             values: v,
@@ -94,22 +94,18 @@ impl<T: PpConfig> sparse_vector<T> {
     }
 
     pub fn size_in_bits(&self) -> usize {
-        self.indices.len() * (std::mem::size_of::<usize>() * 8 + T::size_in_bits())
+        self.indices.len() * (std::mem::size_of::<usize>() * 8 + KC::T::size_in_bits())
     }
 
-    pub fn accumulate<FieldT: PpConfig>(
-        &self,
-        it: &[FieldT],
-        offset: usize,
-    ) -> (T, sparse_vector<T>) {
+    pub fn accumulate(&self, it: &[KC::FieldT], offset: usize) -> (KC::T, sparse_vector<KC>) {
         // // #ifdef MULTICORE
         //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
         // #else
         let mut chunks = 1;
         // //#endif
 
-        let mut accumulated_value = T::zero();
-        let mut resulting_vector = sparse_vector::<T>::default();
+        let mut accumulated_value = KC::T::zero();
+        let mut resulting_vector = sparse_vector::<KC::T>::default();
         resulting_vector.domain_size_ = self.domain_size_;
 
         let mut range_len = it.len();
@@ -136,7 +132,7 @@ impl<T: PpConfig> sparse_vector<T> {
                     //                 ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
                     // //#endif
                     accumulated_value = accumulated_value
-                        + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
+                        + multi_exp::<KC, { multi_exp_method::multi_exp_method_bos_coster }>(
                             &self.values[first_pos as usize..last_pos as usize + 1],
                             &it[(self.indices[first_pos as usize] - offset)
                                 ..(self.indices[last_pos as usize] - offset) + 1],
@@ -166,7 +162,7 @@ impl<T: PpConfig> sparse_vector<T> {
             //         ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
             // //#endif
             accumulated_value = accumulated_value
-                + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
+                + multi_exp::<KC, { multi_exp_method::multi_exp_method_bos_coster }>(
                     &self.values[first_pos as usize..last_pos as usize + 1],
                     &it[(self.indices[first_pos as usize] - offset)
                         ..(self.indices[last_pos as usize] - offset) + 1],
@@ -179,8 +175,8 @@ impl<T: PpConfig> sparse_vector<T> {
 }
 
 use std::ops::Index;
-impl<T: PpConfig> Index<usize> for sparse_vector<T> {
-    type Output = T;
+impl<KC: KCConfig> Index<usize> for sparse_vector<KC> {
+    type Output = KC::T;
 
     fn index(&self, idx: usize) -> &Self::Output {
         let it = self.indices.partition_point(|&v| v < idx);
@@ -199,7 +195,7 @@ impl<T: PpConfig> Index<usize> for sparse_vector<T> {
 //     return if (it != indices.end() && *it == idx) {values[it - indices.begin()]} else{T()};
 // }
 
-impl<T: PpConfig> PartialEq for sparse_vector<T> {
+impl<KC: KCConfig> PartialEq for sparse_vector<KC> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         if self.domain_size_ != other.domain_size_ {
@@ -242,13 +238,13 @@ impl<T: PpConfig> PartialEq for sparse_vector<T> {
             other_pos += 1;
         }
 
-        return true;
+        true
     }
 }
 
-impl<T: PpConfig> PartialEq<Vec<T>> for sparse_vector<T> {
+impl<KC: KCConfig> PartialEq<Vec<KC::T>> for sparse_vector<KC> {
     #[inline]
-    fn eq(&self, other: &Vec<T>) -> bool {
+    fn eq(&self, other: &Vec<KC::T>) -> bool {
         if self.domain_size_ < other.len() {
             return false;
         }
@@ -267,7 +263,7 @@ impl<T: PpConfig> PartialEq<Vec<T>> for sparse_vector<T> {
             }
         }
 
-        return true;
+        true
     }
 }
 
@@ -304,7 +300,7 @@ impl<T: PpConfig> PartialEq<Vec<T>> for sparse_vector<T> {
 
 use std::fmt;
 
-impl<ppT: PpConfig> fmt::Display for sparse_vector<ppT> {
+impl<KC: KCConfig> fmt::Display for sparse_vector<KC> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

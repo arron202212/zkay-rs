@@ -516,8 +516,9 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Mul<bigint<N>> for Fp2_model<N, T> {
         r
     }
 }
-impl<const N: usize, T: Fp2_modelConfig<N>> PpConfig for Fp2_model<N, T> {
-    type T = bigint<N>;
+impl<const N: usize, T: Fp2_modelConfig<N>> PpConfig for Fp2_model<N, T> where <T as Fp2_modelConfig<N>>::Fp_modelConfig: PpConfig{
+    type TT = bigint<N>;
+    // type Fr=T::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp2_modelConfig<N>> One for Fp2_model<N, T> {

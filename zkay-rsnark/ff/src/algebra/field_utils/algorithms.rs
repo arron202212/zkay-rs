@@ -1,28 +1,19 @@
 // #![feature(generic_const_exprs)]
 use crate::algebra::field_utils::bigint::bigint;
-/** @file
-*****************************************************************************
-Declaration of interfaces for (square-and-multiply) exponentiation and
-Tonelli-Shanks square root.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef ALGORITHMS_HPP_
-// #define ALGORITHMS_HPP_
 
-//#include <cstdint>
+// Declaration of interfaces for (square-and-multiply) exponentiation and
+// Tonelli-Shanks square root.
+
 use num_traits::One;
 // #![feature(generic_const_exprs)]
-trait FTConfig {
-    const num_limbs: usize;
-    const s: usize; // modulus^4 = 2^s * t + 1
-    // const  t:bigint<4>; // with t odd
-    // static bigint<4*n> t_minus_1_over_2; // (t-1)/2
-    // const  nqr:Fp4_model<n, modulus>; // a quadratic nonresidue in Fp4
-    // static Fp4_model<n, modulus> nqr_to_t; // nqr^t
-}
+// pub trait FTConfig {
+//     const num_limbs: usize;
+//     const s: usize; // modulus^4 = 2^s * t + 1
+//     // const  t:bigint<4>; // with t odd
+//     // static bigint<4*n> t_minus_1_over_2; // (t-1)/2
+//     // const  nqr:Fp4_model<n, modulus>; // a quadratic nonresidue in Fp4
+//     // static Fp4_model<n, modulus> nqr_to_t; // nqr^t
+// }
 // // namespace libff {
 
 // /** Repeated squaring. */
@@ -53,22 +44,7 @@ trait FTConfig {
 
 // } // namespace libff
 
-// use crate::algebra::field_utils::/algorithms.tcc;
-
-//#endif // ALGORITHMS_HPP_
-use crate::common::profiling;
-/** @file
-*****************************************************************************
-Declaration of interfaces for (square-and-multiply) exponentiation and
-Tonelli-Shanks square root.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef ALGORITHMS_TCC_
-// #define ALGORITHMS_TCC_
-use crate::common::utils;
+// use crate::common::utils;
 
 // namespace libff {
 pub struct Powers;
@@ -232,6 +208,3 @@ pub fn tonelli_shanks_sqrt<FieldT: Clone>(value: &FieldT) -> FieldT {
     value.clone()
 }
 
-// } // namespace libff
-
-//#endif // ALGORITHMS_TCC_

@@ -254,10 +254,7 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
         );
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         /* pack */
         self.t
             .t
@@ -293,10 +290,7 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
     }
 }
 
-pub fn test_argument_decoder_gadget<FieldT: FieldTConfig, T: Default + Clone>()
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_argument_decoder_gadget<FieldT: FieldTConfig, T: Default + Clone>() {
     print_time("starting argument_decoder_gadget test");
 
     let mut ap = tinyram_architecture_params::new(16, 16);

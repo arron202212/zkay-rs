@@ -282,7 +282,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Fp4_model<N, T> {
         let this_inverse = self.unitary_inverse();
 
         let mut found_nonzero = false;
-        let NAF = find_wnaf(1, exponent);
+        let NAF = find_wnaf(1, &exponent.0);
 
         for i in (0..=(NAF.len() - 1)).rev() {
             if found_nonzero {
@@ -547,8 +547,9 @@ impl<const N: usize, const M: usize, T: Fp4_modelConfig<N>> BitXor<&bigint<M>> f
 // {
 //     return *self^(exponent.as_bigint());
 // }
-impl<const N: usize, T: Fp4_modelConfig<N>> PpConfig for Fp4_model<N, T> {
-    type T = bigint<N>;
+impl<const N: usize, T: Fp4_modelConfig<N>> PpConfig for Fp4_model<N, T> where <<T as Fp4_modelConfig<N>>::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig: PpConfig{
+    type TT = bigint<N>;
+//  type Fr=<T::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp4_modelConfig<N>> Mul<bigint<N>> for Fp4_model<N, T> {

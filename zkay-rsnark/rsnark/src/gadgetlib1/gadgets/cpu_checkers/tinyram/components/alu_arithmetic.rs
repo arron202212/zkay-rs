@@ -1154,7 +1154,6 @@ pub fn brute_force_arithmetic_gadget<
     res_function: ResFn,
     flag_function: FlagFn,
 ) where
-    [(); { FieldT::num_limbs as usize }]:,
     ResFn: Fn(usize, bool, usize, usize) -> usize,
     FlagFn: Fn(usize, bool, usize, usize) -> bool,
 {
@@ -1306,10 +1305,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_and_gadgets<Fi
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
             let b1 = self.pb.borrow().val(&self.t.t.t.arg1val.t.bits[i]) == FieldT::one();
             let b2 = self.pb.borrow().val(&self.t.t.t.arg2val.t.bits[i]) == FieldT::one();
@@ -1334,10 +1330,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_and_gadgets<Fi
     }
 }
 
-pub fn test_ALU_and_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_and_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting and test");
     brute_force_arithmetic_gadget::<FieldT, ALU_and_gadgets<FieldT>, _, _>(
         w,
@@ -1426,10 +1419,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<Fie
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
             let b1 = self.pb.borrow().val(&self.t.t.t.arg1val.t.bits[i]) == FieldT::one();
             let b2 = self.pb.borrow().val(&self.t.t.t.arg2val.t.bits[i]) == FieldT::one();
@@ -1453,10 +1443,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<Fie
             FieldT::one() - self.pb.borrow().val(&self.t.t.t.t.not_all_zeros_result);
     }
 }
-pub fn test_ALU_or_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_or_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting or test");
     brute_force_arithmetic_gadget::<FieldT, ALU_or_gadgets<FieldT>, _, _>(
         w,
@@ -1541,10 +1528,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<Fi
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
             let b1 = self.pb.borrow().val(&self.t.t.t.arg1val.t.bits[i]) == FieldT::one();
             let b2 = self.pb.borrow().val(&self.t.t.t.arg2val.t.bits[i]) == FieldT::one();
@@ -1568,10 +1552,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<Fi
             FieldT::one() - self.pb.borrow().val(&self.t.t.t.t.not_all_zeros_result);
     }
 }
-pub fn test_ALU_xor_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_xor_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting xor test");
     brute_force_arithmetic_gadget::<FieldT, ALU_xor_gadgets<FieldT>, _, _>(
         w,
@@ -1654,10 +1635,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<Fi
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
             let b2 = self.pb.borrow().val(&self.t.t.t.arg2val.t.bits[i]) == FieldT::one();
 
@@ -1678,10 +1656,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<Fi
     }
 }
 
-pub fn test_ALU_not_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_not_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting not test");
     brute_force_arithmetic_gadget::<FieldT, ALU_not_gadgets<FieldT>, _, _>(
         w,
@@ -1752,10 +1727,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_add_gadgets<Fi
             .generate_r1cs_constraints(false);
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         *self.pb.borrow_mut().val_ref(&self.t.t.t.t.addition_result) =
             self.pb.borrow().val(&self.t.t.t.arg1val.t.packed)
                 + self.pb.borrow().val(&self.t.t.t.arg2val.t.packed);
@@ -1775,10 +1747,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_add_gadgets<Fi
             .generate_r1cs_witness_from_bits();
     }
 }
-pub fn test_ALU_add_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_add_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting add test");
     brute_force_arithmetic_gadget::<FieldT, ALU_add_gadgets<FieldT>, _, _>(
         w,
@@ -1870,10 +1839,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_sub_gadgets<Fi
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         let mut twoi = FieldT::one();
         for i in 0..self.pb.borrow().t.ap.w {
             twoi = twoi.clone() + twoi.clone();
@@ -1904,10 +1870,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_sub_gadgets<Fi
     }
 }
 
-pub fn test_ALU_sub_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_sub_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting sub test");
     brute_force_arithmetic_gadget::<FieldT, ALU_sub_gadgets<FieldT>, _, _>(
         w,
@@ -1967,10 +1930,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_mov_gadgets<Fi
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         *self.pb.borrow_mut().val_ref(&self.t.t.t.result) =
             self.pb.borrow().val(&self.t.t.t.arg2val.t.packed);
         *self.pb.borrow_mut().val_ref(&self.t.t.t.result_flag) =
@@ -1978,10 +1938,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_mov_gadgets<Fi
     }
 }
 
-pub fn test_ALU_mov_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_mov_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting mov test");
     brute_force_arithmetic_gadget::<FieldT, ALU_mov_gadgets<FieldT>, _, _>(
         w,
@@ -2049,10 +2006,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmov_gadgets<F
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         *self.pb.borrow_mut().val_ref(&self.t.t.t.result) =
             (if (self.pb.borrow().val(&self.t.t.t.flag) == FieldT::one()) {
                 self.pb.borrow().val(&self.t.t.t.arg2val.t.packed)
@@ -2064,10 +2018,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmov_gadgets<F
     }
 }
 
-pub fn test_ALU_cmov_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cmov_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting cmov test");
     brute_force_arithmetic_gadget::<FieldT, ALU_cmov_gadgets<FieldT>, _, _>(
         w,
@@ -2149,10 +2100,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmp_gadgets<Fi
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         self.t.t.t.t.comparator.generate_r1cs_witness();
 
         *self.pb.borrow_mut().val_ref(&self.t.t.t.t.cmpe_result) =
@@ -2173,10 +2121,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmp_gadgets<Fi
     }
 }
 
-pub fn test_ALU_cmpe_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cmpe_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting cmpe test");
     brute_force_arithmetic_gadget::<FieldT, ALU_cmp_gadgets<FieldT>, _, _>(
         w,
@@ -2224,10 +2169,7 @@ where
     print_time("cmpe tests successful");
 }
 
-pub fn test_ALU_cmpa_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cmpa_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting cmpa test");
     brute_force_arithmetic_gadget::<FieldT, ALU_cmp_gadgets<FieldT>, _, _>(
         w,
@@ -2275,10 +2217,7 @@ where
     print_time("cmpa tests successful");
 }
 
-pub fn test_ALU_cmpae_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cmpae_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting cmpae test");
     brute_force_arithmetic_gadget::<FieldT, ALU_cmp_gadgets<FieldT>, _, _>(
         w,
@@ -2394,10 +2333,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         /* negate sign bits */
         *self
             .pb
@@ -2441,10 +2377,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
             self.pb.borrow().val(&self.t.t.t.desval.t.packed);
     }
 }
-pub fn test_ALU_cmpg_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cmpg_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting cmpg test");
     brute_force_arithmetic_gadget::<FieldT, ALU_cmps_gadgets<FieldT>, _, _>(
         w,
@@ -2486,10 +2419,7 @@ where
     print_time("cmpg tests successful");
 }
 
-pub fn test_ALU_cmpge_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_cmpge_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting cmpge test");
     brute_force_arithmetic_gadget::<FieldT, ALU_cmps_gadgets<FieldT>, _, _>(
         w,
@@ -2588,10 +2518,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         /* do multiplication */
         *self
             .pb
@@ -2626,10 +2553,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
             self.pb.borrow().val(&self.t.t.t.result_flag);
     }
 }
-pub fn test_ALU_mull_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_mull_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting mull test");
     brute_force_arithmetic_gadget::<FieldT, ALU_umul_gadgets<FieldT>, _, _>(
         w,
@@ -2671,10 +2595,7 @@ where
     print_time("mull tests successful");
 }
 
-pub fn test_ALU_umulh_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_umulh_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting umulh test");
     brute_force_arithmetic_gadget::<FieldT, ALU_umul_gadgets<FieldT>, _, _>(
         w,
@@ -2839,10 +2760,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         /* do multiplication */
         /*
           from two's complement: (packed - 2^w * bits[w-1])
@@ -2913,10 +2831,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
                 + self.pb.borrow().val(&self.t.t.t.t.is_top_empty));
     }
 }
-pub fn test_ALU_smulh_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_smulh_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting smulh test");
     brute_force_arithmetic_gadget::<FieldT, ALU_smul_gadgets<FieldT>, _, _>(
         w,
@@ -3044,10 +2959,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets
         self.t.t.t.t.r_less_B.borrow().generate_r1cs_constraints();
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         if self.pb.borrow().val(&self.t.t.t.arg2val.t.packed) == FieldT::zero() {
             *self.pb.borrow_mut().val_ref(&self.t.t.t.t.B_inv) = FieldT::zero();
             *self.pb.borrow_mut().val_ref(&self.t.t.t.t.B_nonzero) = FieldT::zero();
@@ -3088,10 +3000,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets
         self.t.t.t.t.r_less_B.borrow().generate_r1cs_witness();
     }
 }
-pub fn test_ALU_udiv_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_udiv_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting udiv test");
     brute_force_arithmetic_gadget::<FieldT, ALU_divmod_gadgets<FieldT>, _, _>(
         w,
@@ -3133,10 +3042,7 @@ where
     print_time("udiv tests successful");
 }
 
-pub fn test_ALU_umod_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_umod_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting umod test");
     brute_force_arithmetic_gadget::<FieldT, ALU_divmod_gadgets<FieldT>, _, _>(
         w,
@@ -3378,10 +3284,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
         );
     }
 
-    fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    fn generate_r1cs_witness(&self) {
         /* select the input for barrel shifter */
         self.t
             .t
@@ -3501,10 +3404,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             .val(&self.t.t.t.arg1val.t.bits[self.pb.borrow().t.ap.w - 1]);
     }
 }
-pub fn test_ALU_shr_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_shr_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting shr test");
     brute_force_arithmetic_gadget::<FieldT, ALU_shr_shl_gadgets<FieldT>, _, _>(
         w,
@@ -3546,10 +3446,7 @@ where
     print_time("shr tests successful");
 }
 
-pub fn test_ALU_shl_gadget<FieldT: FieldTConfig>(w: usize)
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_ALU_shl_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("starting shl test");
     brute_force_arithmetic_gadget::<FieldT, ALU_shr_shl_gadgets<FieldT>, _, _>(
         w,

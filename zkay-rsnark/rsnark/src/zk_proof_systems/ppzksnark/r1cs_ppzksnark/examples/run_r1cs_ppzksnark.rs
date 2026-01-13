@@ -2,10 +2,11 @@
 // a given R1CS example.
 
 // use common::default_types::ec_pp;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
-use crate::zk_proof_systems::PptConfig;
+
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
     r1cs_ppzksnark_affine_verifier_weak_IC, r1cs_ppzksnark_generator,
     r1cs_ppzksnark_online_verifier_strong_IC, r1cs_ppzksnark_processed_verification_key,
@@ -45,7 +46,7 @@ pub trait IsTrue {}
 impl IsTrue for Assert<true> {}
 
 pub trait TestAffineVerifier {
-    fn test_affine_verifier<ppT: PptConfig, FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
+    fn test_affine_verifier<ppT: ppTConfig>(
         vk: &r1cs_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_ppzksnark_primary_input<ppT>,
         proof: &r1cs_ppzksnark_proof<ppT>,
@@ -56,21 +57,20 @@ pub struct has_affine_pairing_holder<const FLAG: bool>;
 
 impl TestAffineVerifier for has_affine_pairing_holder<true> {
     // std::enable_if<ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<ppT: PptConfig, FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
+    fn test_affine_verifier<ppT: ppTConfig>(
         vk: &r1cs_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_ppzksnark_primary_input<ppT>,
         proof: &r1cs_ppzksnark_proof<ppT>,
         expected_answer: bool,
     ) {
         println!("R1CS ppzkSNARK Affine Verifier");
-        let answer =
-            r1cs_ppzksnark_affine_verifier_weak_IC::<ppT, FieldT, ED>(vk, primary_input, proof);
+        let answer = r1cs_ppzksnark_affine_verifier_weak_IC::<ppT>(vk, primary_input, proof);
         assert!(answer == expected_answer);
     }
 }
 impl TestAffineVerifier for has_affine_pairing_holder<false> {
     // std::enable_if<!ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<ppT: PptConfig, FieldT: FieldTConfig, ED: evaluation_domain<FieldT>>(
+    fn test_affine_verifier<ppT: ppTConfig>(
         vk: &r1cs_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_ppzksnark_primary_input<ppT>,
         proof: &r1cs_ppzksnark_proof<ppT>,
@@ -95,57 +95,49 @@ impl TestAffineVerifier for has_affine_pairing_holder<false> {
  *     a primary input for CS, and a proof.
  */
 
-pub fn run_r1cs_ppzksnark<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn run_r1cs_ppzksnark<ppT: ppTConfig>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool
-where
-    ED: evaluation_domain<<ppT as PublicParams>::Fr>,
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr: Mul<
-            knowledge_commitment<
-                <ppT as ff_curves::PublicParams>::G2,
-                <ppT as ff_curves::PublicParams>::G1,
-            >,
-            Output = knowledge_commitment<
-                <ppT as ff_curves::PublicParams>::G2,
-                <ppT as ff_curves::PublicParams>::G1,
-            >,
-        >,
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-        Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr: Mul<
-            knowledge_commitment<
-                <ppT as ff_curves::PublicParams>::G1,
-                <ppT as ff_curves::PublicParams>::G1,
-            >,
-            Output = knowledge_commitment<
-                <ppT as ff_curves::PublicParams>::G1,
-                <ppT as ff_curves::PublicParams>::G1,
-            >,
-        >,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    [(); { ppT::has_affine_pairing } as usize]:,
+// where
+//     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr: Mul<
+//             knowledge_commitment<ppT>,
+//             Output = knowledge_commitment<
+//                 <ppT as ff_curves::PublicParams>::G2,
+//                 <ppT as ff_curves::PublicParams>::G1,
+//             >,
+//         >,
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr: Mul<
+//             knowledge_commitment<
+//                 <ppT as ff_curves::PublicParams>::G1,
+//                 <ppT as ff_curves::PublicParams>::G1,
+//             >,
+//             Output = knowledge_commitment<
+//                 <ppT as ff_curves::PublicParams>::G1,
+//                 <ppT as ff_curves::PublicParams>::G1,
+//             >,
+//         >,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     [(); { ppT::has_affine_pairing } as usize]:,
 {
     enter_block("Call to run_r1cs_ppzksnark", false);
 
     println!("R1CS ppzkSNARK Generator");
-    let mut keypair = r1cs_ppzksnark_generator::<ppT, NN, FieldT, ED>(&example.constraint_system);
+    let mut keypair = r1cs_ppzksnark_generator::<ppT>(&example.constraint_system);
     print!("\n");
     print_indent();
     println!("after generator");
 
     println!("Preprocess verification key");
-    let mut pvk = r1cs_ppzksnark_verifier_process_vk::<ppT, FieldT, ED>(&keypair.vk);
+    let mut pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
         enter_block("Test serialization of keys", false);
@@ -156,7 +148,7 @@ where
     }
 
     println!("R1CS ppzkSNARK Prover");
-    let mut proof = r1cs_ppzksnark_prover::<ppT, FieldT, ED>(
+    let mut proof = r1cs_ppzksnark_prover::<ppT>(
         &keypair.pk,
         &example.primary_input,
         &example.auxiliary_input,
@@ -172,11 +164,8 @@ where
     }
 
     println!("R1CS ppzkSNARK Verifier");
-    let mut ans = r1cs_ppzksnark_verifier_strong_IC::<ppT, FieldT, ED>(
-        &keypair.vk,
-        &example.primary_input,
-        &proof,
-    );
+    let mut ans =
+        r1cs_ppzksnark_verifier_strong_IC::<ppT>(&keypair.vk, &example.primary_input, &proof);
     print!("\n");
     print_indent();
     println!("after verifier");
@@ -186,22 +175,19 @@ where
     );
 
     println!("R1CS ppzkSNARK Online Verifier");
-    let mut ans2 = r1cs_ppzksnark_online_verifier_strong_IC::<ppT, FieldT, ED>(
-        &pvk,
-        &example.primary_input,
-        &proof,
-    );
+    let mut ans2 =
+        r1cs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &example.primary_input, &proof);
     assert!(ans == ans2);
 
     if ppT::has_affine_pairing {
-        has_affine_pairing_holder::<true>::test_affine_verifier::<ppT, FieldT, ED>(
+        has_affine_pairing_holder::<true>::test_affine_verifier::<ppT>(
             &keypair.vk,
             &example.primary_input,
             &proof,
             ans,
         );
     } else {
-        has_affine_pairing_holder::<false>::test_affine_verifier::<ppT, FieldT, ED>(
+        has_affine_pairing_holder::<false>::test_affine_verifier::<ppT>(
             &keypair.vk,
             &example.primary_input,
             &proof,

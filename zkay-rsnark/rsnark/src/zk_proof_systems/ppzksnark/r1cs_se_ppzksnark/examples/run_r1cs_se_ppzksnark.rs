@@ -4,14 +4,15 @@
 // use common::default_types::ec_pp;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
-use crate::zk_proof_systems::PptConfig;
+
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark::{
     r1cs_se_ppzksnark_generator, r1cs_se_ppzksnark_online_verifier_strong_IC,
     r1cs_se_ppzksnark_processed_verification_key, r1cs_se_ppzksnark_proof,
     r1cs_se_ppzksnark_prover, r1cs_se_ppzksnark_proving_key, r1cs_se_ppzksnark_verification_key,
     r1cs_se_ppzksnark_verifier_process_vk, r1cs_se_ppzksnark_verifier_strong_IC,
 };
-use ff_curves::Fr;
+use ff_curves::{Fr, PublicParams};
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
 use ffec::common::serialization::reserialize;
@@ -42,36 +43,37 @@ use std::ops::{Add, Mul};
  *     a primary input for CS, and a proof.
  */
 
-pub fn run_r1cs_se_ppzksnark<
-    ppT: PptConfig<Fr = FieldT>,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn run_r1cs_se_ppzksnark<ppT: ppTConfig>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool
-where
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-        Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+// where
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::G2:
+//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::Fr>,
 {
     enter_block("Call to run_r1cs_se_ppzksnark", false);
 
     println!("R1CS SEppzkSNARK Generator");
-    let mut keypair =
-        r1cs_se_ppzksnark_generator::<ppT, NN, FieldT, ED>(&example.constraint_system);
+    let mut keypair = r1cs_se_ppzksnark_generator::<ppT>(&example.constraint_system);
     print!("\n");
     print_indent();
     println!("after generator");
 
     println!("Preprocess verification key");
-    let mut pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT, NN, FieldT, ED>(&keypair.vk);
+    let mut pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
         enter_block("Test serialization of keys", false);
@@ -82,7 +84,7 @@ where
     }
 
     println!("R1CS SEppzkSNARK Prover");
-    let mut proof = r1cs_se_ppzksnark_prover::<ppT, NN, FieldT, ED>(
+    let mut proof = r1cs_se_ppzksnark_prover::<ppT>(
         &keypair.pk,
         &example.primary_input,
         &example.auxiliary_input,
@@ -98,11 +100,8 @@ where
     }
 
     println!("R1CS SEppzkSNARK Verifier");
-    let mut ans = r1cs_se_ppzksnark_verifier_strong_IC::<ppT, NN, FieldT, ED>(
-        &keypair.vk,
-        &example.primary_input,
-        &proof,
-    );
+    let mut ans =
+        r1cs_se_ppzksnark_verifier_strong_IC::<ppT>(&keypair.vk, &example.primary_input, &proof);
     print!("\n");
     print_indent();
     println!("after verifier");
@@ -112,11 +111,8 @@ where
     );
 
     println!("R1CS SEppzkSNARK Online Verifier");
-    let mut ans2 = r1cs_se_ppzksnark_online_verifier_strong_IC::<ppT, NN, FieldT, ED>(
-        &pvk,
-        &example.primary_input,
-        &proof,
-    );
+    let mut ans2 =
+        r1cs_se_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &example.primary_input, &proof);
     assert!(ans == ans2);
 
     leave_block("Call to run_r1cs_se_ppzksnark", false);

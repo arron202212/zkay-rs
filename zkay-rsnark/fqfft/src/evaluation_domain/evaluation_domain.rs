@@ -22,13 +22,23 @@
 // \f[   L_{idx,S}(z)->Self= prod_{k \neq idx} (z - a_k) / prod_{k \neq idx} (a_{idx} - a_k)   \f]
 // Note that, by construction:
 // \f[   \forall j \neq idx: L_{idx,S}(a_{idx}) = 1  \text{ and }  L_{idx,S}(a_j) = 0   \f]
+#[derive(Default, Clone)]
+pub struct evaluation_domain<T: Default + Clone> {
+    pub m: usize,
+    pub t: T,
+}
+impl<T: Default + Clone> evaluation_domain<T> {
+    pub fn new(m: usize, t: T) -> Self {
+        Self { m, t }
+    }
+}
 
 /**
  * An evaluation domain.
  */
 //
-pub trait evaluation_domain<FieldT> {
-    const M: usize;
+pub trait EvaluationDomainConfig<FieldT> {
+    // const M: usize = 0;
 
     /**
      * Construct an evaluation domain S of size m, if possible.
@@ -40,27 +50,27 @@ pub trait evaluation_domain<FieldT> {
     /**
      * Get the idx-th element in S.
      */
-    fn get_domain_element(&self, idx: usize) -> FieldT;
+    fn get_domain_element(&mut self, idx: usize) -> FieldT;
 
     /**
      * Compute the FFT, over the domain S, of the vector a.
      */
-    fn FFT(&self, a: &Vec<FieldT>);
+    fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()>;
 
     /**
      * Compute the inverse FFT, over the domain S, of the vector a.
      */
-    fn iFFT(&self, a: &Vec<FieldT>);
+    fn iFFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()>;
 
     /**
      * Compute the FFT, over the domain g*S, of the vector a.
      */
-    fn cosetFFT(&self, a: &Vec<FieldT>, g: &FieldT);
+    fn cosetFFT(&mut self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()>;
 
     /**
      * Compute the inverse FFT, over the domain g*S, of the vector a.
      */
-    fn icosetFFT(&self, a: &Vec<FieldT>, g: &FieldT);
+    fn icosetFFT(&mut self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()>;
 
     /**
      * Evaluate all Lagrange polynomials.
@@ -71,20 +81,20 @@ pub trait evaluation_domain<FieldT> {
      * The output is a vector (b_{0},...,b_{m-1})
      * where b_{i} is the evaluation of L_{i,S}(z) at z = t.
      */
-    fn evaluate_all_lagrange_polynomials(&self, t: &FieldT) -> Vec<FieldT>;
+    fn evaluate_all_lagrange_polynomials(&mut self, t: &FieldT) -> Vec<FieldT>;
 
     /**
      * Evaluate the vanishing polynomial of S at the field element t.
      */
-    fn compute_vanishing_polynomial(&self, t: &FieldT) -> FieldT;
+    fn compute_vanishing_polynomial(&mut self, t: &FieldT) -> FieldT;
 
     /**
      * Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.
      */
-    fn add_poly_Z(&self, coeff: &FieldT, H: &Vec<FieldT>);
+    fn add_poly_Z(&mut self, coeff: &FieldT, H: &mut Vec<FieldT>) -> eyre::Result<()>;
 
     /**
      * Multiply by the evaluation, on a coset of S, of the inverse of the vanishing polynomial of S.
      */
-    fn divide_by_Z_on_coset(&self, P: &Vec<FieldT>);
+    fn divide_by_Z_on_coset(&self, P: &mut Vec<FieldT>);
 }

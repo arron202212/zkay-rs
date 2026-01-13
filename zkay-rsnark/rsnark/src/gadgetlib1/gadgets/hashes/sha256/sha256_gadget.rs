@@ -326,10 +326,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
         }
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         self.t.message_schedule.borrow().generate_r1cs_witness();
 
         // #ifdef DEBUG
@@ -442,10 +439,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
         return SHA256_digest_size;
     }
 
-    pub fn get_hash(input: &bit_vector) -> bit_vector
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn get_hash(input: &bit_vector) -> bit_vector {
         let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
 
         let mut input_variable =
@@ -477,10 +471,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadgets<FieldT, 
         self.t.f.borrow().generate_r1cs_constraints();
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         self.t.f.borrow().generate_r1cs_witness();
     }
 }

@@ -1,60 +1,54 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for a zkSNARK for RAM.
 
-Declaration of interfaces for a zkSNARK for RAM.
+// This includes:
+// - the pub struct for a proving key;
+// - the pub struct for a verification key;
+// - the pub struct for a key pair (proving key & verification key);
+// - the pub struct for a proof;
+// - the generator algorithm;
+// - the prover algorithm;
+// - the verifier algorithm.
 
-This includes:
-- the pub struct for a proving key;
-- the pub struct for a verification key;
-- the pub struct for a key pair (proving key & verification key);
-- the pub struct for a proof;
-- the generator algorithm;
-- the prover algorithm;
-- the verifier algorithm.
+// The implementation follows, extends, and optimizes the approach described
+// in \[BCTV14]. Thus, the zkSNARK is constructed from a ppzkPCD for R1CS.
 
-The implementation follows, extends, and optimizes the approach described
-in \[BCTV14]. Thus, the zkSNARK is constructed from a ppzkPCD for R1CS.
+// Acronyms:
+
+// "R1CS" = "Rank-1 Constraint Systems"
+// "RAM" = "Random-Access Machines"
+// "zkSNARK" = "Zero-Knowledge Succinct Non-interactive ARgument of Knowledge"
+// "ppzkPCD" = "Pre-Processing Zero-Knowledge Proof-Carrying Data"
+
+// References:
+
+// \[BCTV14]:
+// "Scalable Zero Knowledge via Cycles of Elliptic Curves",
+// Eli Ben-Sasson, Alessandro Chiesa, Eran Tromer, Madars Virza,
+// CRYPTO 2014,
+// <http://eprint.iacr.org/2014/595>
 
 
-Acronyms:
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{ram_zksnark_auxiliary_input,ram_zksnark_architecture_params,ram_zksnark_PCD_pp};
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::ram_compliance_predicate_handler;
+use crate::relations::ram_computations::memory::delegated_ra_memory::delegated_ra_memory;
+ use crate::gadgetlib1::gadgets::hashes::crh_gadget::CRH_with_bit_out_gadget;
+use ffec::common::profiling::{enter_block,leave_block};
+ use ffec::log2;
 
-"R1CS" = "Rank-1 Constraint Systems"
-"RAM" = "Random-Access Machines"
-"zkSNARK" = "Zero-Knowledge Succinct Non-interactive ARgument of Knowledge"
-"ppzkPCD" = "Pre-Processing Zero-Knowledge Proof-Carrying Data"
 
-References:
-
-\[BCTV14]:
-"Scalable Zero Knowledge via Cycles of Elliptic Curves",
-Eli Ben-Sasson, Alessandro Chiesa, Eran Tromer, Madars Virza,
-CRYPTO 2014,
-<http://eprint.iacr.org/2014/595>
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RAM_ZKSNARK_HPP_
-// #define RAM_ZKSNARK_HPP_
-
-//
-use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd;
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate;
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params;
 
 /******************************** Proving key ********************************/
 
 /**
  * A proving key for the RAM zkSNARK.
  */
-//
+
+#[derive(Default, Clone)]
 pub struct ram_zksnark_proving_key<ram_zksnark_ppT> {
-    ap: ram_zksnark_architecture_params<ram_zksnark_ppT>,
-    pcd_pk: r1cs_sp_ppzkpcd_proving_key<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
+    pub ap: ram_zksnark_architecture_params<ram_zksnark_ppT>,
+    pub pcd_pk: r1cs_sp_ppzkpcd_proving_key<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
 }
-impl ram_zksnark_proving_key<ram_zksnark_ppT> {
+impl<ram_zksnark_ppT> ram_zksnark_proving_key<ram_zksnark_ppT> {
     pub fn new(
         ap: ram_zksnark_architecture_params<ram_zksnark_ppT>,
         pcd_pk: r1cs_sp_ppzkpcd_proving_key<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
@@ -68,12 +62,12 @@ impl ram_zksnark_proving_key<ram_zksnark_ppT> {
 /**
  * A verification key for the RAM zkSNARK.
  */
-//
+#[derive(Default, Clone)]
 pub struct ram_zksnark_verification_key<ram_zksnark_ppT> {
-    ap: ram_zksnark_architecture_params<ram_zksnark_ppT>,
-    pcd_vk: r1cs_sp_ppzkpcd_verification_key<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
+    pub ap: ram_zksnark_architecture_params<ram_zksnark_ppT>,
+    pub pcd_vk: r1cs_sp_ppzkpcd_verification_key<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
 }
-impl ram_zksnark_verification_key<ram_zksnark_ppT> {
+impl<ram_zksnark_ppT> ram_zksnark_verification_key<ram_zksnark_ppT> {
     pub fn new(
         ap: ram_zksnark_architecture_params<ram_zksnark_ppT>,
         pcd_vk: r1cs_sp_ppzkpcd_verification_key<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
@@ -87,12 +81,12 @@ impl ram_zksnark_verification_key<ram_zksnark_ppT> {
 /**
  * A key pair for the RAM zkSNARK, which consists of a proving key and a verification key.
  */
-//
+#[derive(Default, Clone)]
 pub struct ram_zksnark_keypair<ram_zksnark_ppT> {
-    pk: ram_zksnark_proving_key<ram_zksnark_ppT>,
-    vk: ram_zksnark_verification_key<ram_zksnark_ppT>,
+    pub pk: ram_zksnark_proving_key<ram_zksnark_ppT>,
+    pub vk: ram_zksnark_verification_key<ram_zksnark_ppT>,
 }
-impl ram_zksnark_keypair<ram_zksnark_ppT> {
+impl<ram_zksnark_ppT> ram_zksnark_keypair<ram_zksnark_ppT> {
     pub fn new(
         pk: ram_zksnark_proving_key<ram_zksnark_ppT>,
         vk: ram_zksnark_verification_key<ram_zksnark_ppT>,
@@ -106,12 +100,12 @@ impl ram_zksnark_keypair<ram_zksnark_ppT> {
 /**
  * A proof for the RAM zkSNARK.
  */
-//
+#[derive(Default, Clone)]
 pub struct ram_zksnark_proof<ram_zksnark_ppT> {
-    PCD_proof: r1cs_sp_ppzkpcd_proof<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
+    pub PCD_proof: r1cs_sp_ppzkpcd_proof<ram_zksnark_PCD_pp<ram_zksnark_ppT>>,
 }
 
-impl ram_zksnark_proof<ram_zksnark_ppT> {
+impl<ram_zksnark_ppT> ram_zksnark_proof<ram_zksnark_ppT> {
     pub fn new(PCD_proof: r1cs_sp_ppzkpcd_proof<ram_zksnark_PCD_pp<ram_zksnark_ppT>>) -> Self {
         Self { PCD_proof }
     }
@@ -157,24 +151,7 @@ impl ram_zksnark_proof<ram_zksnark_ppT> {
 //                           time_bound:&usize,
 //                           proof:&ram_zksnark_proof<ram_zksnark_ppT>);
 
-// use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark;
-
-//#endif // RAM_ZKSNARK_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a zkSNARK for RAM.
-
-See ram_zksnark.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RAM_ZKSNARK_TCC_
-// #define RAM_ZKSNARK_TCC_
-use ffec::common::profiling;
+// use common::profiling;
 
 //
 // bool ram_zksnark_proving_key<ram_zksnark_ppT>::operator==(other:&ram_zksnark_proving_key<ram_zksnark_ppT>) const
@@ -246,16 +223,16 @@ use ffec::common::profiling;
 //     return in;
 // }
 
-impl ram_zksnark_verification_key<ram_zksnark_ppT> {
+impl<ram_zksnark_ppT> ram_zksnark_verification_key<ram_zksnark_ppT> {
     pub fn dummy_verification_key(
         ap: &ram_zksnark_architecture_params<ram_zksnark_ppT>,
     ) -> ram_zksnark_verification_key<ram_zksnark_ppT> {
-        type pcdT = ram_zksnark_PCD_pp<ram_zksnark_ppT>;
+        // type pcdT = ram_zksnark_PCD_pp<ram_zksnark_ppT>;
 
-        return ram_zksnark_verification_key::<ram_zksnark_ppT>(
+        ram_zksnark_verification_key::<ram_zksnark_ppT>(
             ap,
-            r1cs_sp_ppzkpcd_verification_key::<pcdT>::dummy_verification_key(),
-        );
+            r1cs_sp_ppzkpcd_verification_key::<ram_zksnark_PCD_pp<ram_zksnark_ppT>>::dummy_verification_key(),
+        )
     }
 }
 
@@ -264,19 +241,19 @@ pub fn ram_zksnark_generator<ram_zksnark_ppT>(
 ) -> ram_zksnark_keypair<ram_zksnark_ppT> {
     // type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
     // type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
-    ffec::enter_block("Call to ram_zksnark_generator");
+    enter_block("Call to ram_zksnark_generator");
 
-    ffec::enter_block("Generate compliance predicate for RAM");
+    enter_block("Generate compliance predicate for RAM");
     let mut cp_handler = ram_compliance_predicate_handler::<ramT>::new(ap);
     cp_handler.generate_r1cs_constraints();
     let mut ram_compliance_predicate = cp_handler.get_compliance_predicate();
-    ffec::leave_block("Generate compliance predicate for RAM");
+    leave_block("Generate compliance predicate for RAM");
 
-    ffec::enter_block("Generate PCD key pair");
+    enter_block("Generate PCD key pair");
     let mut kp = r1cs_sp_ppzkpcd_generator::<pcdT>(ram_compliance_predicate);
-    ffec::leave_block("Generate PCD key pair");
+    leave_block("Generate PCD key pair");
 
-    ffec::leave_block("Call to ram_zksnark_generator");
+    leave_block("Call to ram_zksnark_generator");
 
     let pk = ram_zksnark_proving_key::<ram_zksnark_ppT>(ap, (kp.pk));
     let vk = ram_zksnark_verification_key::<ram_zksnark_ppT>(ap, (kp.vk));
@@ -292,40 +269,40 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(
 ) -> ram_zksnark_proof<ram_zksnark_ppT> {
     // type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
     // type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
-    // type FieldT=ffec::Fr< pcdT::curve_A_pp>; // XXX
+    // type FieldT=Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>; // XXX
 
-    assert!(ffec::log2(time_bound) <= ramT::timestamp_length);
+    assert!(log2(time_bound) <= ram_zksnark_machine_pp::<ram_zksnark_ppT>::timestamp_length);
 
-    ffec::enter_block("Call to ram_zksnark_prover");
-    ffec::enter_block("Generate compliance predicate for RAM");
-    let mut cp_handler = ram_compliance_predicate_handler::<ramT>::new(pk.ap);
-    ffec::leave_block("Generate compliance predicate for RAM");
+    enter_block("Call to ram_zksnark_prover");
+    enter_block("Generate compliance predicate for RAM");
+    let mut cp_handler = ram_compliance_predicate_handler::<ram_zksnark_machine_pp<ram_zksnark_ppT>>::new(pk.ap);
+    leave_block("Generate compliance predicate for RAM");
 
-    ffec::enter_block("Initialize the RAM computation");
-    let mut cur_proof = r1cs_sp_ppzkpcd_proof::<pcdT>::new(); // start out with an empty proof
+    enter_block("Initialize the RAM computation");
+    let mut cur_proof = r1cs_sp_ppzkpcd_proof::<ram_zksnark_PCD_pp<ram_zksnark_ppT>>::default(); // start out with an empty proof
 
     /* initialize memory with the correct values */
     let num_addresses = 1u64 << pk.ap.address_size();
     let value_size = pk.ap.value_size();
 
-    let mut mem = delegated_ra_memory::<CRH_with_bit_out_gadget<FieldT>>::new()(
+    let mut mem = delegated_ra_memory::<CRH_with_bit_out_gadget<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>>::new(
         num_addresses,
         value_size,
         primary_input.as_memory_contents(),
     );
-    let msg = ram_compliance_predicate_handler::<ramT>::get_base_case_message(pk.ap, primary_input);
+    let msg = ram_compliance_predicate_handler::<ram_zksnark_machine_pp<ram_zksnark_ppT>>::get_base_case_message(pk.ap, primary_input);
 
     let aux_it = auxiliary_input.begin();
-    ffec::leave_block("Initialize the RAM computation");
+    leave_block("Initialize the RAM computation");
 
-    ffec::enter_block("Execute and prove the computation");
+    enter_block("Execute and prove the computation");
     let mut want_halt = false;
     for step in 1..=time_bound {
-        ffec::enter_block(FMT("", "Prove step {} out of {}", step, time_bound));
+        enter_block(FMT("", "Prove step {} out of {}", step, time_bound));
 
-        ffec::enter_block("Execute witness map");
+        enter_block("Execute witness map");
 
-        let local_data = r1cs_pcd_local_data::<FieldT>::new();
+        let local_data = r1cs_pcd_local_data::<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>::new();
         local_data = RcCell::new(ram_pcd_local_data::<ramT>::new(
             want_halt,
             mem,
@@ -335,10 +312,10 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(
 
         cp_handler.generate_r1cs_witness([msg], local_data);
 
-        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(
+        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>::new(
             cp_handler.get_outgoing_message(),
         );
-        let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT>::new(
+        let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>::new(
             [msg],
             local_data,
             cp_handler.get_witness(),
@@ -355,25 +332,25 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(
         print!("Next state:\n");
         msg.print();
         //#endif
-        ffec::leave_block("Execute witness map");
+        leave_block("Execute witness map");
 
-        cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT>(
+        cur_proof = r1cs_sp_ppzkpcd_prover::<ram_zksnark_PCD_pp<ram_zksnark_ppT>>(
             pk.pcd_pk,
             cp_primary_input,
             cp_auxiliary_input,
             [cur_proof],
         );
-        ffec::leave_block(FMT("", "Prove step {} out of {}", step, time_bound));
+        leave_block(FMT("", "Prove step {} out of {}", step, time_bound));
     }
-    ffec::leave_block("Execute and prove the computation");
+    leave_block("Execute and prove the computation");
 
-    ffec::enter_block("Finalize the computation");
+    enter_block("Finalize the computation");
     want_halt = true;
 
-    ffec::enter_block("Execute witness map");
+    enter_block("Execute witness map");
 
-    let mut local_data = r1cs_pcd_local_data::<FieldT>::new();
-    local_data = RcCell::new(ram_pcd_local_data::<ramT>::new(
+    let mut local_data = r1cs_pcd_local_data::<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>::default();
+    local_data = RcCell::new(ram_pcd_local_data::<ram_zksnark_machine_pp<ram_zksnark_ppT>>::new(
         want_halt,
         mem,
         aux_it,
@@ -382,27 +359,27 @@ pub fn ram_zksnark_prover<ram_zksnark_ppT>(
 
     cp_handler.generate_r1cs_witness([msg], local_data);
 
-    let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(
+    let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>::new(
         cp_handler.get_outgoing_message(),
     );
-    let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT>::new(
+    let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<Fr< ram_zksnark_PCD_pp<ram_zksnark_ppT>::curve_A_pp>>::new(
         [msg],
         local_data,
         cp_handler.get_witness(),
     );
-    ffec::leave_block("Execute witness map");
+    leave_block("Execute witness map");
 
-    cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT>(
+    cur_proof = r1cs_sp_ppzkpcd_prover::<ram_zksnark_PCD_pp<ram_zksnark_ppT>>(
         pk.pcd_pk,
         cp_primary_input,
         cp_auxiliary_input,
         [cur_proof],
     );
-    ffec::leave_block("Finalize the computation");
+    leave_block("Finalize the computation");
 
-    ffec::leave_block("Call to ram_zksnark_prover");
+    leave_block("Call to ram_zksnark_prover");
 
-    return cur_proof;
+     cur_proof
 }
 
 pub fn ram_zksnark_verifier<ram_zksnark_ppT>(
@@ -413,9 +390,9 @@ pub fn ram_zksnark_verifier<ram_zksnark_ppT>(
 ) -> bool {
     // type ramT=ram_zksnark_machine_pp<ram_zksnark_ppT>;
     // type pcdT=ram_zksnark_PCD_pp<ram_zksnark_ppT>;
-    // type FieldT=ffec::Fr< pcdT::curve_A_pp>; // XXX
+    // type FieldT=Fr< pcdT::curve_A_pp>; // XXX
 
-    ffec::enter_block("Call to ram_zksnark_verifier");
+    enter_block("Call to ram_zksnark_verifier");
     let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(
         ram_compliance_predicate_handler::<ramT>::get_final_case_msg(
             vk.ap,
@@ -424,9 +401,7 @@ pub fn ram_zksnark_verifier<ram_zksnark_ppT>(
         ),
     );
     let ans = r1cs_sp_ppzkpcd_verifier::<pcdT>(vk.pcd_vk, cp_primary_input, proof.PCD_proof);
-    ffec::leave_block("Call to ram_zksnark_verifier");
+    leave_block("Call to ram_zksnark_verifier");
 
-    return ans;
+    ans
 }
-
-//#endif // RAM_ZKSNARK_TCC_

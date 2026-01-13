@@ -2,7 +2,8 @@
 // a given R1CS example.
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
-use crate::zk_proof_systems::PptConfig;
+
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark::{
     r1cs_gg_ppzksnark_affine_verifier_weak_IC, r1cs_gg_ppzksnark_generator,
     r1cs_gg_ppzksnark_online_verifier_strong_IC, r1cs_gg_ppzksnark_processed_verification_key,
@@ -19,12 +20,7 @@ use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
 
 pub trait TestAffineVerifier {
-    fn test_affine_verifier<
-        ppT: PptConfig,
-        const NN: usize,
-        FieldT: FieldTConfig,
-        ED: evaluation_domain<FieldT>,
-    >(
+    fn test_affine_verifier<ppT: ppTConfig>(
         vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
         proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -34,12 +30,7 @@ pub trait TestAffineVerifier {
 pub struct TestAffineVerifiers<const HAS_AFFINE_PAIRING: bool>;
 impl TestAffineVerifier for TestAffineVerifiers<true> {
     // std::enable_if<ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<
-        ppT: PptConfig,
-        const NN: usize,
-        FieldT: FieldTConfig,
-        ED: evaluation_domain<FieldT>,
-    >(
+    fn test_affine_verifier<ppT: ppTConfig>(
         vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
         proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -56,12 +47,7 @@ impl TestAffineVerifier for TestAffineVerifiers<true> {
 }
 impl TestAffineVerifier for TestAffineVerifiers<false> {
     // std::enable_if<!ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<
-        ppT: PptConfig,
-        const NN: usize,
-        FieldT: FieldTConfig,
-        ED: evaluation_domain<FieldT>,
-    >(
+    fn test_affine_verifier<ppT: ppTConfig>(
         vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
         proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -86,33 +72,28 @@ impl TestAffineVerifier for TestAffineVerifiers<false> {
  *     a primary input for CS, and a proof.
  */
 
-pub fn run_r1cs_gg_ppzksnark<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn run_r1cs_gg_ppzksnark<ppT: ppTConfig>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool
-where
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-        Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::G1:
-        Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::G1:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::G2:
-        Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G2>,
-    ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
-            <ppT as ff_curves::PublicParams>::Fr,
-        >,
+// where
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::G2:
+//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
+//             <ppT as ff_curves::PublicParams>::Fr,
+//         >,
 {
     enter_block("Call to run_r1cs_gg_ppzksnark", false);
 

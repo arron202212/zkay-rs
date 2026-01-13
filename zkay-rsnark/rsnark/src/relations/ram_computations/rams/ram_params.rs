@@ -1,15 +1,5 @@
-/** @file
-*****************************************************************************
+// Declaration of public-parameter selector for RAMs.
 
-Declaration of public-parameter selector for RAMs.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RAM_PARAMS_HPP_
-// #define RAM_PARAMS_HPP_
 use crate::relations::ram_computations::memory::memory_interface::memory_contents;
 use crate::relations::ram_computations::memory::memory_store_trace::memory_store_trace;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
@@ -152,5 +142,3 @@ pub type ram_input_tape = Vec<usize>;
   usize initial_pc_addr();
   bit_vector initial_cpu_state();
 */
-
-//#endif // RAM_PARAMS_HPP_

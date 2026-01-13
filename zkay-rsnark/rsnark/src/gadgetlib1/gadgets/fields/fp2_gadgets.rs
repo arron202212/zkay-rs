@@ -74,25 +74,6 @@ pub struct Fp2_sqr_gadget<Fp2T: Fp2TConfig<FieldT>, FieldT: FieldTConfig, PB: PB
     pub result: Fp2_variables<Fp2T, FieldT, PB>,
 }
 
-// use crate::gadgetlib1::gadgets::fields::fp2_gadgets;
-
-//#endif // FP2_GADGETS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for Fp2 gadgets.
-
-See fp2_gadgets.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef FP2_GADGETS_TCC_
-// #define FP2_GADGETS_TCC_
-
 pub type Fp2_variables<Fp2T, FieldT, PB> = gadget<FieldT, PB, Fp2_variable<Fp2T, FieldT, PB>>;
 impl<Fp2T: Fp2TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> Fp2_variable<Fp2T, FieldT, PB> {
     pub fn new(

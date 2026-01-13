@@ -96,7 +96,7 @@ See uscs_to_ssp.hpp .
 
 pub fn uscs_to_ssp_instance_map<
     FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
+    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -115,7 +115,7 @@ pub fn uscs_to_ssp_instance_map<
                 .or_insert(FieldT::zero()) += cs.constraints[i].terms[j].coeff.clone();
         }
     }
-    for i in cs.num_constraints()..ED::M {
+    for i in cs.num_constraints()..domain.borrow().m {
         *V_in_Lagrange_basis[0].entry(i).or_insert(FieldT::zero()) += FieldT::one();
     }
     leave_block("Compute polynomials V in Lagrange basis", false);
@@ -125,7 +125,7 @@ pub fn uscs_to_ssp_instance_map<
     return ssp_instance::<FieldT, ED>::new(
         domain,
         cs.num_variables(),
-        ED::M,
+        domain.borrow().m,
         cs.num_inputs(),
         (V_in_Lagrange_basis),
     );
@@ -146,7 +146,7 @@ pub fn uscs_to_ssp_instance_map<
 
 pub fn uscs_to_ssp_instance_map_with_evaluation<
     FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
+    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -158,7 +158,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     let domain = get_evaluation_domain::<FieldT, ED>(cs.num_constraints()).unwrap();
 
     let mut Vt = vec![FieldT::zero(); cs.num_variables() + 1];
-    let mut Ht = vec![FieldT::zero(); ED::M + 1];
+    let mut Ht = vec![FieldT::zero(); domain.borrow().m + 1];
 
     let Zt = domain.borrow().compute_vanishing_polynomial(t);
 
@@ -170,11 +170,11 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
                 u[i].clone() * cs.constraints[i].terms[j].coeff.clone();
         }
     }
-    for i in cs.num_constraints()..ED::M {
+    for i in cs.num_constraints()..domain.borrow().m {
         Vt[0] += u[i].clone(); /* dummy constraint: 1^2 = 1 */
     }
     let mut ti = FieldT::one();
-    for i in 0..ED::M + 1 {
+    for i in 0..domain.borrow().m + 1 {
         Ht[i] = ti.clone();
         ti *= t.clone();
     }
@@ -185,7 +185,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     return ssp_instance_evaluation::<FieldT, ED>::new(
         domain,
         cs.num_variables(),
-        ED::M,
+        domain.borrow().m,
         cs.num_inputs(),
         t.clone(),
         Vt,
@@ -224,7 +224,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 
 pub fn uscs_to_ssp_witness_map<
     FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
+    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -248,12 +248,12 @@ pub fn uscs_to_ssp_witness_map<
     let domain = get_evaluation_domain::<FieldT, ED>(cs.num_constraints()).unwrap();
 
     enter_block("Compute evaluation of polynomial V on set S", false);
-    let mut aA = vec![FieldT::zero(); ED::M];
-    assert!(ED::M >= cs.num_constraints());
+    let mut aA = vec![FieldT::zero(); domain.borrow().m];
+    assert!(domain.borrow().m >= cs.num_constraints());
     for i in 0..cs.num_constraints() {
         aA[i] += cs.constraints[i].evaluate(&full_variable_assignment);
     }
-    for i in cs.num_constraints()..ED::M {
+    for i in cs.num_constraints()..domain.borrow().m {
         aA[i] += FieldT::one();
     }
     leave_block("Compute evaluation of polynomial V on set S", false);
@@ -263,12 +263,12 @@ pub fn uscs_to_ssp_witness_map<
     leave_block("Compute coefficients of polynomial V", false);
 
     enter_block("Compute ZK-patch", false);
-    let mut coefficients_for_H = vec![FieldT::zero(); ED::M + 1];
+    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m + 1];
     // #ifdef MULTICORE
     //#pragma omp parallel for
     //#endif
     /* add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) */
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         coefficients_for_H[i] = FieldT::from(2i64) * d.clone() * aA[i].clone();
     }
     domain
@@ -287,7 +287,7 @@ pub fn uscs_to_ssp_witness_map<
     // #ifdef MULTICORE
     //#pragma omp parallel for
     //#endif
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         H_tmp[i] = aA[i].squared() - FieldT::one();
     }
 
@@ -307,7 +307,7 @@ pub fn uscs_to_ssp_witness_map<
     // #ifdef MULTICORE
     //#pragma omp parallel for
     //#endif
-    for i in 0..ED::M {
+    for i in 0..domain.borrow().m {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
     leave_block("Compute sum of H and ZK-patch", false);
@@ -316,7 +316,7 @@ pub fn uscs_to_ssp_witness_map<
 
     return ssp_witness::<FieldT>::new(
         cs.num_variables(),
-        ED::M,
+        domain.borrow().m,
         cs.num_inputs(),
         d.clone(),
         full_variable_assignment,

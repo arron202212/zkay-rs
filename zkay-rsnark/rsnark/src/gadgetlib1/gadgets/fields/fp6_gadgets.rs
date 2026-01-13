@@ -1,18 +1,8 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for Fp6 gadgets.
 
-Declaration of interfaces for Fp6 gadgets.
+// The gadgets verify field arithmetic in Fp6 = Fp3[Y]/(Y^2-X) where
+// Fp3 = Fp[X]/(X^3-non_residue) and non_residue is in Fp.
 
-The gadgets verify field arithmetic in Fp6 = Fp3[Y]/(Y^2-X) where
-Fp3 = Fp[X]/(X^3-non_residue) and non_residue is in Fp.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef FP6_GADGETS_HPP_
-// #define FP6_GADGETS_HPP_
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::fields::fp2_gadgets::{
     Fp2_mul_gadget, Fp2_mul_gadgets, Fp2_sqr_gadget, Fp2_sqr_gadgets, Fp2_variable, Fp2_variables,

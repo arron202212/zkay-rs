@@ -5,6 +5,7 @@ use crate::algebra::curves::alt_bn128::{
     alt_bn128_fields::{alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr},
     alt_bn128_init::{alt_bn128_coeff_b, alt_bn128_twist_mul_by_b_c0, alt_bn128_twist_mul_by_b_c1},
 };
+use crate::FpmConfig;
 use crate::algebra::curves::pairing::Pairing;
 use ffec::Fp_model;
 use ffec::Fp_modelConfig;
@@ -137,7 +138,8 @@ impl From<BigUint> for alt_bn128_G1 {
 // }
 
 impl PpConfig for alt_bn128_G1 {
-    type T = bigint<1>;
+    type TT = bigint<1>;
+    // type Fr=Self;
 }
 
 impl alt_bn128_G1 {
@@ -425,6 +427,16 @@ impl alt_bn128_G1 {
 //     return !(operator==(other));
 // }
 
+impl Add<i32> for alt_bn128_G1 {
+    type Output = alt_bn128_G1;
+
+    fn add(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
 impl<O: Borrow<Self>> Add<O> for alt_bn128_G1 {
     type Output = alt_bn128_G1;
 
@@ -465,6 +477,15 @@ impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for alt_bn128_G1 
     }
 }
 
+impl Mul<i32> for alt_bn128_G1 {
+    type Output = alt_bn128_G1;
+
+    fn mul(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
 impl<O: Borrow<Self>> Mul<O> for alt_bn128_G1 {
     type Output = alt_bn128_G1;
 
@@ -504,7 +525,9 @@ impl Zero for alt_bn128_G1 {
         false
     }
 }
-
+impl FpmConfig for alt_bn128_G1{
+    type Fr=alt_bn128_Fq;
+}
 // alt_bn128_G1 alt_bn128_G1::operator+(other:&alt_bn128_G1)
 // {
 //     // handle special cases having to do with O

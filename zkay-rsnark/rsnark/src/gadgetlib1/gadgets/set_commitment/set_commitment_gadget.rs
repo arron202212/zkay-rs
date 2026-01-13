@@ -160,10 +160,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     }
 }
 
-pub fn test_set_commitment_gadget<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>()
-where
-    [(); { FieldT::num_limbs as usize }]:,
-{
+pub fn test_set_commitment_gadget<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>() {
     let digest_len = HashT::get_digest_len();
     let max_set_size = 16;
     let value_size = (if HashT::get_block_len() > 0 {

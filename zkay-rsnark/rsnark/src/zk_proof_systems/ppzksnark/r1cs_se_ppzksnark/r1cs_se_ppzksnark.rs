@@ -36,11 +36,11 @@
 // <https://eprint.iacr.org/2017/540>
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_get_domain;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_instance_map_with_evaluation;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_witness_map;
 use crate::relations::arithmetic_programs::sap::sap::sap_instance_evaluation;
-use crate::zk_proof_systems::PptConfig;
 use ff_curves::PublicParams;
 
 use ff_curves::{Fqk, Fr, Fr_vector, G1, G1_precomp, G1_vector, G2, G2_precomp, G2_vector};
@@ -73,7 +73,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark_par
  * A proving key for the R1CS SEppzkSNARK.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_se_ppzksnark_proving_key<ppT: PptConfig> {
+pub struct r1cs_se_ppzksnark_proving_key<ppT: ppTConfig> {
     // G^{gamma * A_i(t)} for 0 <= i <= sap.num_variables()
     pub A_query: G1_vector<ppT>,
 
@@ -104,7 +104,7 @@ pub struct r1cs_se_ppzksnark_proving_key<ppT: PptConfig> {
 
     pub constraint_system: r1cs_se_ppzksnark_constraint_system<ppT>,
 }
-impl<ppT: PptConfig> r1cs_se_ppzksnark_proving_key<ppT> {
+impl<ppT: ppTConfig> r1cs_se_ppzksnark_proving_key<ppT> {
     // r1cs_se_ppzksnark_proving_key() {};
     // r1cs_se_ppzksnark_proving_key<ppT>& operator=(other:&r1cs_se_ppzksnark_proving_key<ppT>) = default;
     // r1cs_se_ppzksnark_proving_key(other:&r1cs_se_ppzksnark_proving_key<ppT>) = default;
@@ -167,7 +167,7 @@ impl<ppT: PptConfig> r1cs_se_ppzksnark_proving_key<ppT> {
  * A verification key for the R1CS SEppzkSNARK.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_se_ppzksnark_verification_key<ppT: PptConfig> {
+pub struct r1cs_se_ppzksnark_verification_key<ppT: ppTConfig> {
     // H
     pub H: G2<ppT>,
 
@@ -187,7 +187,7 @@ pub struct r1cs_se_ppzksnark_verification_key<ppT: PptConfig> {
     // for 0 <= i <= sap.num_inputs()
     pub query: G1_vector<ppT>,
 }
-impl<ppT: PptConfig> r1cs_se_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> r1cs_se_ppzksnark_verification_key<ppT> {
     // r1cs_se_ppzksnark_verification_key() = default;
     pub fn new(
         H: G2<ppT>,
@@ -239,7 +239,7 @@ impl<ppT: PptConfig> r1cs_se_ppzksnark_verification_key<ppT> {
  * enables a faster verification time.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_se_ppzksnark_processed_verification_key<ppT: PptConfig> {
+pub struct r1cs_se_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     pub G_alpha: G1<ppT>,
     pub H_beta: G2<ppT>,
     pub G_alpha_H_beta_ml: Fqk<ppT>,
@@ -256,11 +256,11 @@ pub struct r1cs_se_ppzksnark_processed_verification_key<ppT: PptConfig> {
  * A key pair for the R1CS SEppzkSNARK, which consists of a proving key and a verification key.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_se_ppzksnark_keypair<ppT: PptConfig> {
+pub struct r1cs_se_ppzksnark_keypair<ppT: ppTConfig> {
     pub pk: r1cs_se_ppzksnark_proving_key<ppT>,
     pub vk: r1cs_se_ppzksnark_verification_key<ppT>,
 }
-impl<ppT: PptConfig> r1cs_se_ppzksnark_keypair<ppT> {
+impl<ppT: ppTConfig> r1cs_se_ppzksnark_keypair<ppT> {
     // r1cs_se_ppzksnark_keypair() = default;
     // r1cs_se_ppzksnark_keypair(other:&r1cs_se_ppzksnark_keypair<ppT>) = default;
     pub fn new(
@@ -283,13 +283,13 @@ impl<ppT: PptConfig> r1cs_se_ppzksnark_keypair<ppT> {
  * about the structure for statistics purposes.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_se_ppzksnark_proof<ppT: PptConfig> {
+pub struct r1cs_se_ppzksnark_proof<ppT: ppTConfig> {
     pub A: G1<ppT>,
     pub B: G2<ppT>,
     pub C: G1<ppT>,
 }
 
-impl<ppT: PptConfig> r1cs_se_ppzksnark_proof<ppT> {
+impl<ppT: ppTConfig> r1cs_se_ppzksnark_proof<ppT> {
     // r1cs_se_ppzksnark_proof()
     // {}
     pub fn new(A: G1<ppT>, B: G2<ppT>, C: G1<ppT>) -> Self {
@@ -340,22 +340,17 @@ impl<ppT: PptConfig> r1cs_se_ppzksnark_proof<ppT> {
  *               ``there exists Y such that CS(X,Y)=0''.
  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
  */
-pub fn r1cs_se_ppzksnark_prover<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_se_ppzksnark_prover<ppT: ppTConfig>(
     pk: &r1cs_se_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_se_ppzksnark_auxiliary_input<ppT>,
 ) -> r1cs_se_ppzksnark_proof<ppT>
-where
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+// where
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
 {
     enter_block("Call to r1cs_se_ppzksnark_prover", false);
 
@@ -366,7 +361,7 @@ where
     let (d1, d2) = (ppT::Fr::random_element(), ppT::Fr::random_element());
 
     enter_block("Compute the polynomial H", false);
-    let sap_wit = r1cs_to_sap_witness_map::<Fr<ppT>, ED, pb_variable, pb_linear_combination>(
+    let sap_wit = r1cs_to_sap_witness_map::<Fr<ppT>, ppT::ED, pb_variable, pb_linear_combination>(
         &pk.constraint_system,
         &primary_input,
         &auxiliary_input,
@@ -409,8 +404,7 @@ where
     let A = r.clone() * pk.G_gamma_Z.clone() +
         pk.A_query[0].clone() + // i = 0 is a special case because input_i = 1
         sap_wit.d1.clone() * pk.G_gamma_Z.clone() + // ZK-patch
-        multi_exp::<G1<ppT>,
-                         Fr<ppT>,
+        multi_exp::<ppT,
                          {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.A_query[1..],
             &sap_wit.coefficients_for_ACs,
@@ -425,8 +419,7 @@ where
     let B = r.clone() * pk.H_gamma_Z.clone() +
         pk.B_query[0].clone() + // i = 0 is a special case because input_i = 1
         sap_wit.d1.clone() * pk.H_gamma_Z.clone() + // ZK-patch
-        multi_exp::<G2<ppT>,
-                         Fr<ppT>,
+        multi_exp::<ppT,
                          {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.B_query[1..],
             &sap_wit.coefficients_for_ACs,
@@ -444,8 +437,7 @@ where
      * and G^{2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t)} =
      *              = \prod_{i=0}^m C_query_2 * input_i
      */
-    let C = multi_exp::<ppT::G1,
-                                        ppT::Fr,
+    let C = multi_exp::<ppT,
                                         {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.C_query_1,
             &sap_wit.coefficients_for_ACs[sap_wit.num_inputs()..],
@@ -455,15 +447,13 @@ where
         sap_wit.d1.clone() * pk.G_ab_gamma_Z.clone() + // ZK-patch
         r.clone() * pk.C_query_2[0].clone() + // i = 0 is a special case for C_query_2
         (r.clone() + r.clone()) * sap_wit.d1.clone() * pk.G_gamma2_Z2.clone() + // ZK-patch for C_query_2
-        r.clone() * multi_exp::<G1<ppT>,
-                             Fr<ppT>,
+        r.clone() * multi_exp::<ppT,
                              {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.C_query_2[1..],
             &sap_wit.coefficients_for_ACs,
             chunks) +
         sap_wit.d2.clone() * pk.G_gamma2_Z_t[0].clone() + // ZK-patch
-        multi_exp::<G1<ppT>,
-                          Fr<ppT>,
+        multi_exp::<ppT,
                          { multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.G_gamma2_Z_t,
             &sap_wit.coefficients_for_H,
@@ -499,23 +489,14 @@ These are the four cases that arise from the following two choices:
  * (1) accepts a non-processed verification key, and
  * (2) has weak input consistency.
  */
-pub fn r1cs_se_ppzksnark_verifier_weak_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_se_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
     enter_block("Call to r1cs_se_ppzksnark_verifier_weak_IC", false);
-    let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT, NN, FieldT, ED>(&vk);
-    let result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT, NN, FieldT, ED>(
-        &pvk,
-        &primary_input,
-        &proof,
-    );
+    let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&vk);
+    let result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
     leave_block("Call to r1cs_se_ppzksnark_verifier_weak_IC", false);
     result
 }
@@ -525,23 +506,14 @@ pub fn r1cs_se_ppzksnark_verifier_weak_IC<
  * (1) accepts a non-processed verification key, and
  * (2) has strong input consistency.
  */
-pub fn r1cs_se_ppzksnark_verifier_strong_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_se_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
     enter_block("Call to r1cs_se_ppzksnark_verifier_strong_IC", false);
-    let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT, NN, FieldT, ED>(&vk);
-    let result = r1cs_se_ppzksnark_online_verifier_strong_IC::<ppT, NN, FieldT, ED>(
-        &pvk,
-        &primary_input,
-        &proof,
-    );
+    let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&vk);
+    let result = r1cs_se_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &primary_input, &proof);
     leave_block("Call to r1cs_se_ppzksnark_verifier_strong_IC", false);
     result
 }
@@ -549,12 +521,7 @@ pub fn r1cs_se_ppzksnark_verifier_strong_IC<
 /**
  * Convert a (non-processed) verification key into a processed verification key.
  */
-pub fn r1cs_se_ppzksnark_verifier_process_vk<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_se_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
 ) -> r1cs_se_ppzksnark_processed_verification_key<ppT> {
     enter_block("Call to r1cs_se_ppzksnark_verifier_process_vk", false);
@@ -582,12 +549,7 @@ pub fn r1cs_se_ppzksnark_verifier_process_vk<
  * (1) accepts a processed verification key, and
  * (2) has weak input consistency.
  */
-fn r1cs_se_ppzksnark_online_verifier_weak_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     pvk: &r1cs_se_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
@@ -621,7 +583,7 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<
      * where psi = \sum_{i=0}^l input_i pvk.query[i]
      */
     let G_psi = pvk.query[0].clone()
-        + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_bos_coster }>(
+        + multi_exp::<ppT, { multi_exp_method::multi_exp_method_bos_coster }>(
             &pvk.query[1..],
             &primary_input,
             chunks,
@@ -673,12 +635,7 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<
  * (1) accepts a processed verification key, and
  * (2) has strong input consistency.
  */
-pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<
-    ppT: PptConfig,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     pvk: &r1cs_se_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
@@ -695,11 +652,7 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<
         );
         result = false;
     } else {
-        result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT, NN, FieldT, ED>(
-            pvk,
-            primary_input,
-            proof,
-        );
+        result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT>(pvk, primary_input, proof);
     }
 
     leave_block("Call to r1cs_se_ppzksnark_online_verifier_strong_IC", false);
@@ -719,7 +672,7 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<
 
 //
 
-impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.A_query == other.A_query
@@ -736,7 +689,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
 }
 
 use std::fmt;
-impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -792,7 +745,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
 //     return in;
 // }
 
-impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_se_ppzksnark_verification_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.H == other.H
@@ -804,7 +757,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_verification_key<ppT> {
     }
 }
 
-impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_se_ppzksnark_verification_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -842,7 +795,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_verification_key<ppT> {
 //     return in;
 // }
 
-impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_processed_verification_key<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_se_ppzksnark_processed_verification_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.G_alpha == other.G_alpha
@@ -855,7 +808,7 @@ impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_processed_verification_key<
     }
 }
 
-impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_processed_verification_key<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_se_ppzksnark_processed_verification_key<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -900,14 +853,14 @@ impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_processed_verification_k
 //     return in;
 // }
 
-impl<ppT: PptConfig> PartialEq for r1cs_se_ppzksnark_proof<ppT> {
+impl<ppT: ppTConfig> PartialEq for r1cs_se_ppzksnark_proof<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.A == other.A && self.B == other.B && self.C == other.C
     }
 }
 
-impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_proof<ppT> {
+impl<ppT: ppTConfig> fmt::Display for r1cs_se_ppzksnark_proof<ppT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}{}", self.A, self.B, self.C,)
     }
@@ -926,7 +879,7 @@ impl<ppT: PptConfig> fmt::Display for r1cs_se_ppzksnark_proof<ppT> {
 //     return in;
 // }
 
-impl<ppT: PptConfig> r1cs_se_ppzksnark_verification_key<ppT> {
+impl<ppT: ppTConfig> r1cs_se_ppzksnark_verification_key<ppT> {
     pub fn dummy_verification_key(
         &self,
         input_size: usize,
@@ -951,23 +904,24 @@ impl<ppT: PptConfig> r1cs_se_ppzksnark_verification_key<ppT> {
         return result;
     }
 }
-pub fn r1cs_se_ppzksnark_generator<
-    ppT: PptConfig<Fr = FieldT>,
-    const NN: usize,
-    FieldT: FieldTConfig,
-    ED: evaluation_domain<FieldT>,
->(
+pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
     cs: &r1cs_se_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_se_ppzksnark_keypair<ppT>
-where
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-        Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    <ppT as ff_curves::PublicParams>::Fr:
-        Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-        Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+// where
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+//     <ppT as ff_curves::PublicParams>::Fr:
+//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::Fr>,
+//     <ppT as ff_curves::PublicParams>::G1:
+//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
+//     <ppT as ff_curves::PublicParams>::G2:
+//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
 {
     enter_block("Call to r1cs_se_ppzksnark_generator", false);
 
@@ -975,7 +929,7 @@ where
      * draw random element t at which the SAP is evaluated.
      * it should be the case that Z(t) != 0
      */
-    let domain: RcCell<ED> = r1cs_to_sap_get_domain(&cs);
+    let domain: RcCell<ppT::ED> = r1cs_to_sap_get_domain(&cs);
     let mut t;
     loop {
         t = Fr::<ppT>::random_element();
@@ -984,7 +938,7 @@ where
         }
     }
 
-    let sap_inst: sap_instance_evaluation<_, ED> =
+    let sap_inst: sap_instance_evaluation<_, ppT::ED> =
         r1cs_to_sap_instance_map_with_evaluation(&cs, &t);
 
     print_indent();
@@ -1057,12 +1011,8 @@ where
         tmp_exponents
             .push(gamma.clone() * Ct[i].clone() + (alpha.clone() + beta.clone()) * At[i].clone());
     }
-    let verifier_query = batch_exp::<G1<ppT>, Fr<ppT>, NN>(
-        ppT::Fr::size_in_bits(),
-        G_window,
-        &G_table,
-        &tmp_exponents,
-    );
+    let verifier_query =
+        batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
 
     leave_block("Generate R1CS verification key", false);
@@ -1075,12 +1025,7 @@ where
         tmp_exponents.push(gamma.clone() * At[i].clone());
     }
 
-    let A_query = batch_exp::<G1<ppT>, Fr<ppT>, NN>(
-        ppT::Fr::size_in_bits(),
-        G_window,
-        &G_table,
-        &tmp_exponents,
-    );
+    let A_query = batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
@@ -1088,12 +1033,7 @@ where
     leave_block("Compute the A-query", false);
 
     enter_block("Compute the B-query", false);
-    let B_query = batch_exp::<G2<ppT>, Fr<ppT>, NN>(
-        ppT::Fr::size_in_bits(),
-        H_gamma_window,
-        &H_gamma_table,
-        &At,
-    );
+    let B_query = batch_exp::<ppT>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G2<ppT> >(B_query);
     // //#endif
@@ -1101,25 +1041,21 @@ where
 
     enter_block("Compute the G_gamma-query", false);
     let G_gamma = gamma.clone() * G.clone();
-    let G_gamma_Z = sap_inst.Zt.clone() * G_gamma.clone();
-    let H_gamma_Z = sap_inst.Zt.clone() * H_gamma.clone();
+    let G_gamma_Z = G_gamma.clone() * sap_inst.Zt.clone();
+    let H_gamma_Z = H_gamma.clone() * sap_inst.Zt.clone();
     let G_ab_gamma_Z = (alpha.clone() + beta.clone()) * G_gamma_Z.clone();
-    let G_gamma2_Z2 = (sap_inst.Zt.clone() * gamma.clone()) * G_gamma_Z.clone();
+    let G_gamma2_Z2 = (gamma.clone() * sap_inst.Zt.clone()) * G_gamma_Z.clone();
 
     tmp_exponents.reserve(sap_inst.degree() + 1);
 
     /* Compute the vector G_gamma2_Z_t := Z(t) * t^i * gamma^2 * G */
-    let mut gamma2_Z_t = sap_inst.Zt.clone() * gamma.squared();
+    let mut gamma2_Z_t = gamma.squared() * sap_inst.Zt.clone();
     for i in 0..sap_inst.degree() + 1 {
         tmp_exponents.push(gamma2_Z_t.clone());
         gamma2_Z_t *= t.clone();
     }
-    let G_gamma2_Z_t = batch_exp::<G1<ppT>, Fr<ppT>, NN>(
-        ppT::Fr::size_in_bits(),
-        G_window,
-        &G_table,
-        &tmp_exponents,
-    );
+    let G_gamma2_Z_t =
+        batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(G_gamma2_Z_t);
@@ -1134,12 +1070,7 @@ where
                 * (gamma.clone() * Ct[i].clone() + (alpha.clone() + beta.clone()) * At[i].clone()),
         );
     }
-    let C_query_1 = batch_exp::<ppT::G1, ppT::Fr, NN>(
-        ppT::Fr::size_in_bits(),
-        G_window,
-        &G_table,
-        &tmp_exponents,
-    );
+    let C_query_1 = batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_1);
@@ -1153,12 +1084,7 @@ where
     for i in 0..=sap_inst.num_variables() {
         tmp_exponents.push(double_gamma2_Z.clone() * At[i].clone());
     }
-    let C_query_2 = batch_exp::<ppT::G1, ppT::Fr, NN>(
-        ppT::Fr::size_in_bits(),
-        G_window,
-        &G_table,
-        &tmp_exponents,
-    );
+    let C_query_2 = batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_2);

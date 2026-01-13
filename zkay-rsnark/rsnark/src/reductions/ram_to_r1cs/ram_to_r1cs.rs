@@ -131,9 +131,9 @@ pub fn print_memory_trace()
     trace_element_bits.insert(trace_element_bits.end(), address_bits.begin(), address_bits.end());
     trace_element_bits.insert(trace_element_bits.end(), contents_bits.begin(), contents_bits.end());
 
-    let trace_element = ffec::pack_bit_vector_into_field_element_vector::<FieldT>(trace_element_bits);
+    let trace_element = pack_bit_vector_into_field_element_vector::<FieldT>(trace_element_bits);
 
-    return trace_element;
+     trace_element
 }
 
 

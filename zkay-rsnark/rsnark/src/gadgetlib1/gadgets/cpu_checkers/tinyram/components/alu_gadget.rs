@@ -350,10 +350,7 @@ impl<FieldT: FieldTConfig> ALU_gadgets<FieldT> {
         }
     }
 
-    pub fn generate_r1cs_witness(&self)
-    where
-        [(); { FieldT::num_limbs as usize }]:,
-    {
+    pub fn generate_r1cs_witness(&self) {
         for i in 0..1usize << self.pb.borrow().t.ap.opcode_width() {
             // if self.t.t.t.components[i] {
             self.t.t.t.components[i].borrow().generate_r1cs_witness();

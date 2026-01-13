@@ -44,19 +44,19 @@ use std::collections::HashMap;
  * determined by the domain (as Z is its vanishing polynomial).
  */
 //
-pub struct qap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+pub struct qap_instance<FieldT: FieldTConfig, ED: Default+Clone> {
     pub num_variables: usize,
     pub degree: usize,
     pub num_inputs: usize,
 
-    pub domain: RcCell<ED>,
+    pub domain: RcCell<evaluation_domain<ED>>,
 
     pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
     pub B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
     pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
 }
 // impl qap_instance<FieldT>{
-//     qap_instance(domain:&RcCell<ED>
+//     qap_instance(domain:&RcCell<evaluation_domain<ED>>
 //                  num_variables:usize
 //                  degree:usize
 //                  num_inputs:usize
@@ -64,7 +64,7 @@ pub struct qap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
 //                  B_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >
 //                  &C_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >);
 
-//     qap_instance(domain:&RcCell<ED>
+//     qap_instance(domain:&RcCell<evaluation_domain<ED>>
 //                  num_variables:usize
 //                  degree:usize
 //                  num_inputs:usize
@@ -96,12 +96,12 @@ pub struct qap_instance<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
  * - counts about how many of the above evaluations are in fact non-zero.
  */
 //
-pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> {
+pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
     pub num_variables: usize,
     pub degree: usize,
     pub num_inputs: usize,
 
-    pub domain: RcCell<ED>,
+    pub domain: RcCell<evaluation_domain<ED>>,
 
     pub t: FieldT,
 
@@ -113,7 +113,7 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<F
     pub Zt: FieldT,
 }
 
-//     qap_instance_evaluation(domain:&RcCell<ED>
+//     qap_instance_evaluation(domain:&RcCell<evaluation_domain<ED>>
 //                             num_variables:usize
 //                             degree:usize
 //                             num_inputs:usize
@@ -123,7 +123,7 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: evaluation_domain<F
 //                             Ct:&Vec<FieldT>
 //                             Ht:&Vec<FieldT>
 //                             &Zt:FieldT);
-//     qap_instance_evaluation(domain:&RcCell<ED>
+//     qap_instance_evaluation(domain:&RcCell<evaluation_domain<ED>>
 //                             num_variables:usize
 //                             degree:usize
 //                             num_inputs:usize
@@ -195,9 +195,9 @@ pub struct qap_witness<FieldT> {
 // use ffec::common::profiling;
 // use ffec::common::utils;
 
-impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> qap_instance<FieldT, ED> {
+impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance<FieldT, ED> {
     pub fn new(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -217,7 +217,7 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> qap_instance<FieldT, E
     }
 
     pub fn new2(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -296,9 +296,9 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> qap_instance<FieldT, E
     }
 }
 
-impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> qap_instance_evaluation<FieldT, ED> {
+impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance_evaluation<FieldT, ED> {
     pub fn new(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -324,7 +324,7 @@ impl<FieldT: FieldTConfig, ED: evaluation_domain<FieldT>> qap_instance_evaluatio
     }
 
     pub fn qap_instance_evaluation(
-        domain: RcCell<ED>,
+        domain: RcCell<evaluation_domain<ED>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
