@@ -50,8 +50,8 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 use crate::relations::variable::linear_combination;
 use crate::relations::variable::variable;
 
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::R1csPcdLocalDataConfig;
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::R1csPcdMessageConfig;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::LocalDataConfig;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::MessageConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::r1cs_pcd_compliance_predicate;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::r1cs_pcd_compliance_predicate_auxiliary_input;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::r1cs_pcd_compliance_predicate_primary_input;
@@ -84,7 +84,7 @@ use std::ops::Mul;
 type FieldT<ppT> = Fr<ppT>;
 
 pub struct sp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
-    pub compliance_predicate: r1cs_pcd_compliance_predicate<ppT>,
+    pub compliance_predicate: r1cs_pcd_compliance_predicate<ppT::FieldT, ppT>,
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
     pub zero: variable<ppT::FieldT, pb_variable>,
     pub block_for_outgoing_message: RcCell<block_variables<ppT::FieldT, ppT::PB>>,
@@ -108,8 +108,7 @@ pub struct sp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub incoming_message_vars: Vec<pb_variable_array<ppT::FieldT, ppT::PB>>,
     pub local_data: pb_variable_array<ppT::FieldT, ppT::PB>,
     pub cp_witness: pb_variable_array<ppT::FieldT, ppT::PB>,
-    pub compliance_predicate_as_gadget:
-        RcCell<gadget_from_r1css<ppT::FieldT, ppT::PB, pb_variable, pb_linear_combination>>,
+    pub compliance_predicate_as_gadget: RcCell<gadget_from_r1css<ppT::FieldT, ppT::PB>>,
     pub outgoing_message_bits: pb_variable_array<ppT::FieldT, ppT::PB>,
     pub unpack_outgoing_message: RcCell<multipacking_gadgets<ppT::FieldT, ppT::PB>>,
     pub incoming_messages_bits: Vec<pb_variable_array<ppT::FieldT, ppT::PB>>,
@@ -135,13 +134,11 @@ pub struct sp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
 // type FieldT<ppT>=Fr<ppT>;
 pub struct sp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
-
     pub sp_translation_step_pcd_circuit_input: pb_variable_array<ppT::FieldT, ppT::PB>,
     pub unpacked_sp_translation_step_pcd_circuit_input: pb_variable_array<ppT::FieldT, ppT::PB>,
     pub verifier_input: pb_variable_array<ppT::FieldT, ppT::PB>,
     pub unpack_sp_translation_step_pcd_circuit_input:
         RcCell<multipacking_gadgets<ppT::FieldT, ppT::PB>>,
-
     pub hardcoded_sp_compliance_step_vk:
         RcCell<r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variables<ppT>>,
     pub proof: RcCell<r1cs_ppzksnark_proof_variables<ppT>>,
@@ -169,7 +166,7 @@ pub struct sp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
 // use crate::gadgetlib1::constraint_profiling;
 
 impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
-    pub fn new(compliance_predicate: r1cs_pcd_compliance_predicate<ppT>) -> Self {
+    pub fn new(compliance_predicate: r1cs_pcd_compliance_predicate<ppT::FieldT, ppT>) -> Self {
         /* calculate some useful sizes */
         let pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
         assert!(compliance_predicate.is_well_formed());
@@ -266,23 +263,19 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
                 .extend(incoming_message_vars[i].clone());
         }
 
-        let compliance_predicate_as_gadget = RcCell::new(gadget_from_r1cs::<
-            ppT::FieldT,
-            ppT::PB,
-            pb_variable,
-            pb_linear_combination,
-        >::new(
-            pb.clone(),
-            vec![
-                outgoing_message_vars.clone(),
-                pb_variable_array::<ppT::FieldT, ppT::PB>::new(vec![arity.clone()]),
-                incoming_messages_concat.clone(),
-                local_data.clone(),
-                cp_witness.clone(),
-            ],
-            compliance_predicate.constraint_system.clone(),
-            "compliance_predicate_as_gadget".to_owned(),
-        ));
+        let compliance_predicate_as_gadget =
+            RcCell::new(gadget_from_r1cs::<ppT::FieldT, ppT::PB>::new(
+                pb.clone(),
+                vec![
+                    outgoing_message_vars.clone(),
+                    pb_variable_array::<ppT::FieldT, ppT::PB>::new(vec![arity.clone()]),
+                    incoming_messages_concat.clone(),
+                    local_data.clone(),
+                    cp_witness.clone(),
+                ],
+                compliance_predicate.constraint_system.clone(),
+                "compliance_predicate_as_gadget".to_owned(),
+            ));
 
         /* unpack messages to bits */
         let mut outgoing_message_bits = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
@@ -668,7 +661,10 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
     pub fn generate_r1cs_witness(
         &self,
         sp_translation_step_pcd_circuit_vk: &r1cs_ppzksnark_verification_key<other_curve<ppT>>,
-        compliance_predicate_primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::M>,
+        compliance_predicate_primary_input: &r1cs_pcd_compliance_predicate_primary_input<
+            ppT::FieldT,
+            ppT::M,
+        >,
         compliance_predicate_auxiliary_input: &r1cs_pcd_compliance_predicate_auxiliary_input<
             ppT::FieldT,
             ppT::M,
@@ -678,8 +674,8 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
     )
     // where
     //     <P as pairing_selector<ppT>>::other_curve_type: ppTConfig + PublicParams,
-    //     LD: R1csPcdLocalDataConfig<<P as pairing_selector<ppT>>::FieldT>,
-    //     M: R1csPcdMessageConfig<<P as pairing_selector<ppT>>::FieldT>,
+    //     LD: LocalDataConfig<<P as pairing_selector<ppT>>::FieldT>,
+    //     M: MessageConfig<<P as pairing_selector<ppT>>::FieldT>,
     {
         let compliance_predicate_arity = self.compliance_predicate.max_arity;
         self.pb.borrow_mut().clear_values();
@@ -923,7 +919,7 @@ impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
 
 pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     sp_translation_step_vk_bits: &bit_vector,
-    primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::M>,
+    primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::FieldT, ppT::M>,
 ) -> r1cs_primary_input<ppT::FieldT> {
     enter_block("Call to get_sp_compliance_step_pcd_circuit_input", false);
     // type FieldT<ppT>=ppT::FieldT;
@@ -954,11 +950,14 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
 
 pub fn get_sp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
     sp_translation_step_vk_bits: &bit_vector,
-    primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::M>,
-) -> r1cs_primary_input<ppT::FieldT>
+    primary_input: &r1cs_pcd_compliance_predicate_primary_input<
+        Fr<other_curve<ppT>>,
+        <<<ppT as ppTConfig>::P as pairing_selector>::other_curve_type as ppTConfig>::M,
+    >,
+) -> r1cs_primary_input<Fr<ppT>>
 // where
 //     <P as pairing_selector<ppT>>::other_curve_type: ff_curves::PublicParams,
-//     M: R1csPcdMessageConfig<
+//     M: MessageConfig<
 //         <<P as pairing_selector<ppT>>::other_curve_type as ff_curves::PublicParams>::Fr,
 //     >,
 {

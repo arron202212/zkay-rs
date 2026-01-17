@@ -1,3 +1,25 @@
+// Declaration of interfaces for a USCS-to-SSP reduction, that is, constructing
+// a SSP ("Square Span Program") from a USCS ("boolean circuit with 2-input gates").
+
+// SSPs are defined in \[DFGK14], and constructed for USCS also in \[DFGK14].
+
+// The implementation of the reduction adapts to \[DFGK14], extends, and optimizes
+// the efficient QAP-based approach described in Appendix E of \[BCGTV13].
+
+// References:
+
+// \[BCGTV13]
+// "SNARKs for C: Verifying Program Executions Succinctly and in Zero Knowledge",
+// Eli Ben-Sasson, Alessandro Chiesa, Daniel Genkin, Eran Tromer, Madars Virza,
+// CRYPTO 2013,
+// <http://eprint.iacr.org/2013/507>
+
+// \[DFGK14]:
+// "Square Span Programs with Applications to Succinct NIZK Arguments"
+// George Danezis, Cedric Fournet, Jens Groth, Markulf Kohlweiss,
+// ASIACRYPT 2014,
+// <http://eprint.iacr.org/2014/718>
+
 use crate::relations::arithmetic_programs::ssp::ssp::{
     ssp_instance, ssp_instance_evaluation, ssp_witness,
 };
@@ -5,43 +27,12 @@ use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
     uscs_auxiliary_input, uscs_constraint_system, uscs_primary_input,
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a USCS-to-SSP reduction, that is, constructing
-a SSP ("Square Span Program") from a USCS ("boolean circuit with 2-input gates").
-
-SSPs are defined in \[DFGK14], and constructed for USCS also in \[DFGK14].
-
-The implementation of the reduction adapts to \[DFGK14], extends, and optimizes
-the efficient QAP-based approach described in Appendix E of \[BCGTV13].
-
-References:
-
-\[BCGTV13]
-"SNARKs for C: Verifying Program Executions Succinctly and in Zero Knowledge",
-Eli Ben-Sasson, Alessandro Chiesa, Daniel Genkin, Eran Tromer, Madars Virza,
-CRYPTO 2013,
-<http://eprint.iacr.org/2013/507>
-
-\[DFGK14]:
-"Square Span Programs with Applications to Succinct NIZK Arguments"
-George Danezis, Cedric Fournet, Jens Groth, Markulf Kohlweiss,
-ASIACRYPT 2014,
-<http://eprint.iacr.org/2014/718>
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef USCS_TO_SSP_HPP_
-// #define USCS_TO_SSP_HPP_
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;
 use fqfft::evaluation_domain::{
-    evaluation_domain::evaluation_domain, get_evaluation_domain::get_evaluation_domain,
+    evaluation_domain::{EvaluationDomainConfig, evaluation_domain},
+    get_evaluation_domain::get_evaluation_domain,
 };
 use std::collections::BTreeMap;
 // /**
@@ -65,24 +56,6 @@ use std::collections::BTreeMap;
 //                                             auxiliary_input:&uscs_auxiliary_input<FieldT>,
 //                                             d:&FieldT);
 
-// use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
-
-//#endif // USCS_TO_SSP_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a USCS-to-SSP reduction.
-
-See uscs_to_ssp.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef USCS_TO_SSP_TCC_
-// #define USCS_TO_SSP_TCC_
-
 /**
  * Instance map for the USCS-to-SSP reduction.
  *
@@ -96,15 +69,14 @@ See uscs_to_ssp.hpp .
 
 pub fn uscs_to_ssp_instance_map<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
-) -> ssp_instance<FieldT, ED> {
+) -> ssp_instance<FieldT> {
     enter_block("Call to uscs_to_ssp_instance_map", false);
 
-    let domain = get_evaluation_domain::<FieldT, ED>(cs.num_constraints()).unwrap();
+    let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
     enter_block("Compute polynomials V in Lagrange basis", false);
     let mut V_in_Lagrange_basis = vec![BTreeMap::new(); cs.num_variables() + 1];
@@ -115,20 +87,20 @@ pub fn uscs_to_ssp_instance_map<
                 .or_insert(FieldT::zero()) += cs.constraints[i].terms[j].coeff.clone();
         }
     }
-    for i in cs.num_constraints()..domain.borrow().m {
+    for i in cs.num_constraints()..domain.borrow().m() {
         *V_in_Lagrange_basis[0].entry(i).or_insert(FieldT::zero()) += FieldT::one();
     }
     leave_block("Compute polynomials V in Lagrange basis", false);
 
     leave_block("Call to uscs_to_ssp_instance_map", false);
 
-    return ssp_instance::<FieldT, ED>::new(
-        domain,
+    ssp_instance::<FieldT>::new(
+        domain.clone(),
         cs.num_variables(),
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         (V_in_Lagrange_basis),
-    );
+    )
 }
 
 /**
@@ -146,35 +118,34 @@ pub fn uscs_to_ssp_instance_map<
 
 pub fn uscs_to_ssp_instance_map_with_evaluation<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
-) -> ssp_instance_evaluation<FieldT, ED> {
+) -> ssp_instance_evaluation<FieldT> {
     enter_block("Call to uscs_to_ssp_instance_map_with_evaluation", false);
 
-    let domain = get_evaluation_domain::<FieldT, ED>(cs.num_constraints()).unwrap();
+    let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
     let mut Vt = vec![FieldT::zero(); cs.num_variables() + 1];
-    let mut Ht = vec![FieldT::zero(); domain.borrow().m + 1];
+    let mut Ht = vec![FieldT::zero(); domain.borrow().m() + 1];
 
-    let Zt = domain.borrow().compute_vanishing_polynomial(t);
+    let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
     enter_block("Compute evaluations of V and H at t", false);
-    let u = domain.borrow().evaluate_all_lagrange_polynomials(t);
+    let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
             Vt[cs.constraints[i].terms[j].index.index] +=
                 u[i].clone() * cs.constraints[i].terms[j].coeff.clone();
         }
     }
-    for i in cs.num_constraints()..domain.borrow().m {
+    for i in cs.num_constraints()..domain.borrow().m() {
         Vt[0] += u[i].clone(); /* dummy constraint: 1^2 = 1 */
     }
     let mut ti = FieldT::one();
-    for i in 0..domain.borrow().m + 1 {
+    for i in 0..domain.borrow().m() + 1 {
         Ht[i] = ti.clone();
         ti *= t.clone();
     }
@@ -182,16 +153,16 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 
     leave_block("Call to uscs_to_ssp_instance_map_with_evaluation", false);
 
-    return ssp_instance_evaluation::<FieldT, ED>::new(
-        domain,
+    ssp_instance_evaluation::<FieldT>::new(
+        domain.clone(),
         cs.num_variables(),
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         t.clone(),
         Vt,
         Ht,
         Zt,
-    );
+    )
 }
 
 /**
@@ -224,7 +195,6 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 
 pub fn uscs_to_ssp_witness_map<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -245,41 +215,41 @@ pub fn uscs_to_ssp_witness_map<
         .cloned()
         .collect();
 
-    let domain = get_evaluation_domain::<FieldT, ED>(cs.num_constraints()).unwrap();
+    let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
     enter_block("Compute evaluation of polynomial V on set S", false);
-    let mut aA = vec![FieldT::zero(); domain.borrow().m];
-    assert!(domain.borrow().m >= cs.num_constraints());
+    let mut aA = vec![FieldT::zero(); domain.borrow().m()];
+    assert!(domain.borrow().m() >= cs.num_constraints());
     for i in 0..cs.num_constraints() {
         aA[i] += cs.constraints[i].evaluate(&full_variable_assignment);
     }
-    for i in cs.num_constraints()..domain.borrow().m {
+    for i in cs.num_constraints()..domain.borrow().m() {
         aA[i] += FieldT::one();
     }
     leave_block("Compute evaluation of polynomial V on set S", false);
 
     enter_block("Compute coefficients of polynomial V", false);
-    domain.borrow().iFFT(&aA);
+    domain.borrow_mut().iFFT(&mut aA);
     leave_block("Compute coefficients of polynomial V", false);
 
     enter_block("Compute ZK-patch", false);
-    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m + 1];
+    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // #ifdef MULTICORE
     //#pragma omp parallel for
     //#endif
     /* add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) */
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = FieldT::from(2i64) * d.clone() * aA[i].clone();
     }
     domain
-        .borrow()
-        .add_poly_Z(&d.squared(), &coefficients_for_H);
+        .borrow_mut()
+        .add_poly_Z(&d.squared(), &mut coefficients_for_H);
     leave_block("Compute ZK-patch", false);
 
     enter_block("Compute evaluation of polynomial V on set T", false);
     domain
-        .borrow()
-        .cosetFFT(&aA, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial V on set T", false);
 
     enter_block("Compute evaluation of polynomial H on set T", false);
@@ -287,27 +257,27 @@ pub fn uscs_to_ssp_witness_map<
     // #ifdef MULTICORE
     //#pragma omp parallel for
     //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].squared() - FieldT::one();
     }
 
     enter_block("Divide by Z on set T", false);
-    domain.borrow().divide_by_Z_on_coset(&H_tmp);
+    domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
     leave_block("Divide by Z on set T", false);
 
     leave_block("Compute evaluation of polynomial H on set T", false);
 
     enter_block("Compute coefficients of polynomial H", false);
     domain
-        .borrow()
-        .icosetFFT(&H_tmp, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
     leave_block("Compute coefficients of polynomial H", false);
 
     enter_block("Compute sum of H and ZK-patch", false);
     // #ifdef MULTICORE
     //#pragma omp parallel for
     //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
     leave_block("Compute sum of H and ZK-patch", false);
@@ -316,12 +286,10 @@ pub fn uscs_to_ssp_witness_map<
 
     return ssp_witness::<FieldT>::new(
         cs.num_variables(),
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         d.clone(),
         full_variable_assignment,
         coefficients_for_H,
     );
 }
-
-//#endif // USCS_TO_SSP_TCC_

@@ -1,4 +1,5 @@
 // Implementation of arithmetic in the finite field F[p^2].
+
 use crate::Fp_model;
 use crate::Fp_modelConfig as FpmConfig;
 use crate::Fp3_modelConfig;
@@ -18,9 +19,11 @@ use crate::algebra::{
 };
 use crate::const_new_fp_model;
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use num_traits::{One, Zero};
+
 /**
  * Arithmetic in the field F[p^2].
  *
@@ -33,7 +36,7 @@ use num_traits::{One, Zero};
 type Fp_modelConfig<const N: usize, T> = <T as Fp2_modelConfig<N>>::Fp_modelConfig;
 
 pub trait Fp2_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp_modelConfig: FpmConfig<N>;
     const non_residue: my_Fp<N, Fp_modelConfig<N, Self>> =
@@ -61,7 +64,7 @@ pub trait Fp2_modelConfig<const N: usize>:
 }
 
 type my_Fp<const N: usize, T> = Fp_model<N, T>;
-#[derive(Default, Clone, Copy, Eq)]
+#[derive(Default, Clone, Debug, Copy, Eq)]
 pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
     // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     // static i64 add_cnt;
@@ -516,7 +519,10 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Mul<bigint<N>> for Fp2_model<N, T> {
         r
     }
 }
-impl<const N: usize, T: Fp2_modelConfig<N>> PpConfig for Fp2_model<N, T> where <T as Fp2_modelConfig<N>>::Fp_modelConfig: PpConfig{
+impl<const N: usize, T: Fp2_modelConfig<N>> PpConfig for Fp2_model<N, T>
+where
+    <T as Fp2_modelConfig<N>>::Fp_modelConfig: PpConfig,
+{
     type TT = bigint<N>;
     // type Fr=T::Fp_modelConfig;
 }

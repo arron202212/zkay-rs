@@ -164,7 +164,7 @@ impl<T> RcCell<T> {
     /// let x_ref = x.try_borrow();
     /// assert!(x_ref.is_ok());
     /// ```
-    pub fn try_borrow(&self) -> Result<Ref<'_,T>, BorrowError> {
+    pub fn try_borrow(&self) -> Result<Ref<'_, T>, BorrowError> {
         self.0.try_borrow()
     }
 
@@ -180,7 +180,7 @@ impl<T> RcCell<T> {
     /// let mut x_ref = x.try_borrow_mut();
     /// assert!(x_ref.is_ok());
     /// ```
-    pub fn try_borrow_mut(&self) -> Result<RefMut<'_,T>, BorrowMutError> {
+    pub fn try_borrow_mut(&self) -> Result<RefMut<'_, T>, BorrowMutError> {
         self.0.try_borrow_mut()
     }
 
@@ -194,7 +194,7 @@ impl<T> RcCell<T> {
     /// let x = RcCell::new(1);
     /// let x_ref = x.borrow();
     /// ```
-    pub fn borrow(&self) -> Ref<'_,T> {
+    pub fn borrow(&self) -> Ref<'_, T> {
         self.0.borrow()
     }
 
@@ -208,7 +208,7 @@ impl<T> RcCell<T> {
     /// let x = RcCell::new(1);
     /// let x_ref = x.borrow_mut();
     /// ```
-    pub fn borrow_mut(&self) -> RefMut<'_,T> {
+    pub fn borrow_mut(&self) -> RefMut<'_, T> {
         self.0.borrow_mut()
     }
     pub fn ptr_string(&self) -> String {

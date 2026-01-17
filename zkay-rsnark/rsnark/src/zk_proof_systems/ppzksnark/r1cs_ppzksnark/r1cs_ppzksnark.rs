@@ -45,6 +45,7 @@ use crate::reductions::r1cs_to_qap::r1cs_to_qap::{
 };
 use crate::relations::arithmetic_programs::qap::qap::qap_instance_evaluation;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint_system;
+use ffec::scalar_multiplication::multiexp::KCConfig;
 
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_params::{
     r1cs_ppzksnark_auxiliary_input, r1cs_ppzksnark_constraint_system, r1cs_ppzksnark_primary_input,
@@ -71,37 +72,37 @@ use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Default)]
 pub struct r1cs_ppzksnark_proving_key<ppT: ppTConfig>
-where
-    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
-    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+// where
+//     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+//     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
 {
-    pub A_query: knowledge_commitment_vector<ppT::KC>,
-    pub B_query: knowledge_commitment_vector<ppT::KC2>,
-    pub C_query: knowledge_commitment_vector<ppT::KC>,
+    pub A_query: KnowledgeCommitmentVector<ppT>,
+    pub B_query: KnowledgeCommitmentVector2<ppT>,
+    pub C_query: KnowledgeCommitmentVector<ppT>,
     pub H_query: G1_vector<ppT>,
     pub K_query: G1_vector<ppT>,
 
     pub constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
 }
 impl<ppT: ppTConfig> r1cs_ppzksnark_proving_key<ppT>
-where
-    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
-    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+// where
+//     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+//     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
 {
     // r1cs_ppzksnark_proving_key() {};
     // r1cs_ppzksnark_proving_key<ppT>& operator=(&other:r1cs_ppzksnark_proving_key<ppT>) = default;
     // r1cs_ppzksnark_proving_key(&other:r1cs_ppzksnark_proving_key<ppT>) = default;
     // r1cs_ppzksnark_proving_key(r1cs_ppzksnark_proving_key<ppT> &&other) = default;
     pub fn new(
-        A_query: knowledge_commitment_vector<ppT::KC>,
-        B_query: knowledge_commitment_vector<ppT::KC2>,
-        C_query: knowledge_commitment_vector<ppT::KC>,
+        A_query: KnowledgeCommitmentVector<ppT>,
+        B_query: KnowledgeCommitmentVector2<ppT>,
+        C_query: KnowledgeCommitmentVector<ppT>,
         H_query: G1_vector<ppT>,
         K_query: G1_vector<ppT>,
         constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
     ) -> Self
-    where
-        <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+// where
+    //     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
     {
         Self {
             A_query,
@@ -168,8 +169,8 @@ where
  */
 #[derive(Default, Clone)]
 pub struct r1cs_ppzksnark_verification_key<ppT: ppTConfig>
-where
-    <ppT as PublicParamsType>::G1_type: PpConfig,
+// where
+//     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
     pub alphaA_g2: G2<ppT>,
     pub alphaB_g1: G1<ppT>,
@@ -179,11 +180,11 @@ where
     pub gamma_beta_g2: G2<ppT>,
     pub rC_Z_g2: G2<ppT>,
 
-    pub encoded_IC_query: accumulation_vector<G1<ppT>>,
+    pub encoded_IC_query: AccumulationVector<ppT>,
 }
 impl<ppT: ppTConfig> r1cs_ppzksnark_verification_key<ppT>
-where
-    <ppT as PublicParamsType>::G1_type: PpConfig,
+// where
+//     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
     // r1cs_ppzksnark_verification_key() = default;
     pub fn new(
@@ -194,7 +195,7 @@ where
         gamma_beta_g1: G1<ppT>,
         gamma_beta_g2: G2<ppT>,
         rC_Z_g2: G2<ppT>,
-        eIC: accumulation_vector<G1<ppT>>,
+        eIC: AccumulationVector<ppT>,
     ) -> Self {
         Self {
             alphaA_g2,
@@ -249,8 +250,8 @@ where
  */
 #[derive(Default, Clone)]
 pub struct r1cs_ppzksnark_processed_verification_key<ppT: ppTConfig>
-where
-    <ppT as PublicParamsType>::G1_type: PpConfig,
+// where
+//     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
     pub pp_G2_one_precomp: G2_precomp<ppT>,
     pub vk_alphaA_g2_precomp: G2_precomp<ppT>,
@@ -261,7 +262,7 @@ where
     pub vk_gamma_beta_g1_precomp: G1_precomp<ppT>,
     pub vk_gamma_beta_g2_precomp: G2_precomp<ppT>,
 
-    pub encoded_IC_query: accumulation_vector<G1<ppT>>,
+    pub encoded_IC_query: AccumulationVector<ppT>,
     // bool operator==(&other:r1cs_ppzksnark_processed_verification_key) const;
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzksnark_processed_verification_key<ppT> &pvk);
@@ -274,18 +275,18 @@ where
  */
 #[derive(Clone, Default)]
 pub struct r1cs_ppzksnark_keypair<ppT: ppTConfig>
-where
-    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
-    <ppT as PublicParamsType>::G1_type: PpConfig,
-    <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+// where
+//     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+//     <ppT as PublicParamsType>::G1_type: PpConfig,
+//     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
 {
     pub pk: r1cs_ppzksnark_proving_key<ppT>,
     pub vk: r1cs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: ppTConfig> r1cs_ppzksnark_keypair<ppT>
-where
-    <ppT as PublicParamsType>::Fp_type: FieldTConfig,
-    <ppT as PublicParamsType>::G1_type: PpConfig,
+// where
+//     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+//     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
     // r1cs_ppzksnark_keypair() = default;
     // r1cs_ppzksnark_keypair(&other:r1cs_ppzksnark_keypair<ppT>) = default;
@@ -299,6 +300,15 @@ where
     // r1cs_ppzksnark_keypair(r1cs_ppzksnark_keypair<ppT> &&other) = default;
 }
 
+pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
+pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
+pub type FieldT<PP> = <<PP as ppTConfig>::KC as KCConfig>::FieldT;
+pub type KnowledgeCommitmentVector<PP> = knowledge_commitment_vector<T1<PP>, T1<PP>>;
+pub type KnowledgeCommitmentVector2<PP> = knowledge_commitment_vector<T2<PP>, T1<PP>>;
+pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
+pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
+pub type AccumulationVector<PP> = accumulation_vector<T1<PP>>;
+
 /*********************************** Proof ***********************************/
 
 /**
@@ -310,9 +320,9 @@ where
  */
 #[derive(Clone, Default)]
 pub struct r1cs_ppzksnark_proof<ppT: ppTConfig> {
-    pub g_A: knowledge_commitment<ppT::KC>,
-    pub g_B: knowledge_commitment<ppT::KC2>,
-    pub g_C: knowledge_commitment<ppT::KC>,
+    pub g_A: KnowledgeCommitment<ppT>,
+    pub g_B: KnowledgeCommitment2<ppT>,
+    pub g_C: KnowledgeCommitment<ppT>,
     pub g_H: G1<ppT>,
     pub g_K: G1<ppT>,
 }
@@ -328,14 +338,14 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_proof<ppT> {
         }
     }
     pub fn new(
-        g_A: knowledge_commitment<ppT::KC>,
-        g_B: knowledge_commitment<ppT::KC>,
-        g_C: knowledge_commitment<ppT::KC>,
+        g_A: KnowledgeCommitment<ppT>,
+        g_B: KnowledgeCommitment2<ppT>,
+        g_C: KnowledgeCommitment<ppT>,
         g_H: G1<ppT>,
         g_K: G1<ppT>,
     ) -> Self
-    where
-        <ppT as ff_curves::PublicParams>::G2: PpConfig,
+// where
+    //     <ppT as ff_curves::PublicParams>::G2: PpConfig,
     {
         Self {
             g_A,
@@ -419,12 +429,10 @@ pub fn r1cs_ppzksnark_generator<ppT: ppTConfig>(
     /* draw random element at which the QAP is evaluated */
     let t = Fr::<ppT>::random_element();
 
-    let qap_inst: qap_instance_evaluation<_, _> = r1cs_to_qap_instance_map_with_evaluation::<
-        Fr<ppT>,
-        ppT::ED,
-        pb_variable,
-        pb_linear_combination,
-    >(&cs_copy, &t);
+    let qap_inst: qap_instance_evaluation<_> =
+        r1cs_to_qap_instance_map_with_evaluation::<Fr<ppT>, pb_variable, pb_linear_combination>(
+            &cs_copy, &t,
+        );
 
     print_indent();
     print!("* QAP number of variables: {}\n", qap_inst.num_variables());
@@ -523,18 +531,22 @@ pub fn r1cs_ppzksnark_generator<ppT: ppTConfig>(
     // //#endif
 
     enter_block("Generating G1 multiexp table", false);
-    let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, &G1::<ppT>::one());
+    let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, G1::<ppT>::one());
     leave_block("Generating G1 multiexp table", false);
 
     enter_block("Generating G2 multiexp table", false);
-    let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, &G2::<ppT>::one());
+    let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, G2::<ppT>::one());
     leave_block("Generating G2 multiexp table", false);
 
     enter_block("Generate R1CS proving key", false);
 
     enter_block("Generate knowledge commitments", false);
     enter_block("Compute the A-query", false);
-    let A_query = kc_batch_exp::<ppT>(
+    let A_query = kc_batch_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+    >(
         Fr::<ppT>::size_in_bits(),
         g1_window,
         g1_window,
@@ -548,7 +560,11 @@ pub fn r1cs_ppzksnark_generator<ppT: ppTConfig>(
     leave_block("Compute the A-query", false);
 
     enter_block("Compute the B-query", false);
-    let B_query = kc_batch_exp::<ppT>(
+    let B_query = kc_batch_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T2,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+    >(
         Fr::<ppT>::size_in_bits(),
         g2_window,
         g1_window,
@@ -562,7 +578,11 @@ pub fn r1cs_ppzksnark_generator<ppT: ppTConfig>(
     leave_block("Compute the B-query", false);
 
     enter_block("Compute the C-query", false);
-    let C_query = kc_batch_exp::<ppT>(
+    let C_query = kc_batch_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+    >(
         Fr::<ppT>::size_in_bits(),
         g1_window,
         g1_window,
@@ -576,14 +596,20 @@ pub fn r1cs_ppzksnark_generator<ppT: ppTConfig>(
     leave_block("Compute the C-query", false);
 
     enter_block("Compute the H-query", false);
-    let H_query = batch_exp::<ppT>(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht);
+    let H_query = batch_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+    >(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(H_query);
     // //#endif
     leave_block("Compute the H-query", false);
 
     enter_block("Compute the K-query", false);
-    let K_query = batch_exp::<ppT>(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Kt);
+    let K_query = batch_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+    >(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Kt);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(K_query);
     // //#endif
@@ -594,22 +620,25 @@ pub fn r1cs_ppzksnark_generator<ppT: ppTConfig>(
     leave_block("Generate R1CS proving key", false);
 
     enter_block("Generate R1CS verification key", false);
-    let alphaA_g2 = alphaA.clone() * G2::<ppT>::one();
-    let alphaB_g1 = alphaB.clone() * G1::<ppT>::one();
-    let alphaC_g2 = alphaC.clone() * G2::<ppT>::one();
-    let gamma_g2 = gamma.clone() * G2::<ppT>::one();
-    let gamma_beta_g1 = (gamma.clone() * beta.clone()) * G1::<ppT>::one();
-    let gamma_beta_g2 = (gamma.clone() * beta.clone()) * G2::<ppT>::one();
-    let rC_Z_g2 = (rC.clone() * qap_inst.Zt.clone()) * G2::<ppT>::one();
+    let alphaA_g2 = G2::<ppT>::one() * alphaA.clone();
+    let alphaB_g1 = G1::<ppT>::one() * alphaB.clone();
+    let alphaC_g2 = G2::<ppT>::one() * alphaC.clone();
+    let gamma_g2 = G2::<ppT>::one() * gamma.clone();
+    let gamma_beta_g1 = G1::<ppT>::one() * (gamma.clone() * beta.clone());
+    let gamma_beta_g2 = G2::<ppT>::one() * (gamma.clone() * beta.clone());
+    let rC_Z_g2 = G2::<ppT>::one() * (rC.clone() * qap_inst.Zt.clone());
 
     enter_block("Encode IC query for R1CS verification key", false);
-    let encoded_IC_base = (rA.clone() * IC_coefficients[0].clone()) * G1::<ppT>::one();
+    let encoded_IC_base = G1::<ppT>::one() * (rA.clone() * IC_coefficients[0].clone());
     let mut multiplied_IC_coefficients = Fr_vector::<ppT>::default();
     multiplied_IC_coefficients.reserve(qap_inst.num_inputs());
     for i in 1..qap_inst.num_inputs() + 1 {
         multiplied_IC_coefficients.push(rA.clone() * IC_coefficients[i].clone());
     }
-    let encoded_IC_values = batch_exp::<ppT>(
+    let encoded_IC_values = batch_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+    >(
         Fr::<ppT>::size_in_bits(),
         g1_window,
         &g1_table,
@@ -658,32 +687,52 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_ppzksnark_auxiliary_input<ppT>,
 ) -> r1cs_ppzksnark_proof<ppT>
-// where
-//     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
-//     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
-//     <ppT as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <ppT as ff_curves::PublicParams>::G1,
-//                 <ppT as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <ppT as ff_curves::PublicParams>::G1,
-//                 <ppT as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <ppT as ff_curves::PublicParams>::G2,
-//                 <ppT as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <ppT as ff_curves::PublicParams>::G2,
-//                 <ppT as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+where
+    knowledge_commitment<
+        <ppT as ff_curves::PublicParams>::G1,
+        <ppT as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <ppT as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <ppT as ff_curves::PublicParams>::G1,
+                <ppT as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <ppT as ff_curves::PublicParams>::G2,
+        <ppT as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <ppT as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <ppT as ff_curves::PublicParams>::G2,
+                <ppT as ff_curves::PublicParams>::G1,
+            >,
+        >, // where
+           //     <ppT as PublicParamsType>::Fp_type: FieldTConfig,
+           //     <ppT as ff_curves::PublicParams>::Fr: FieldTConfig,
+           //     <ppT as ff_curves::PublicParams>::Fr: Mul<
+           //             knowledge_commitment<
+           //                 <ppT as ff_curves::PublicParams>::G1,
+           //                 <ppT as ff_curves::PublicParams>::G1,
+           //             >,
+           //             Output = knowledge_commitment<
+           //                 <ppT as ff_curves::PublicParams>::G1,
+           //                 <ppT as ff_curves::PublicParams>::G1,
+           //             >,
+           //         >,
+           //     <ppT as ff_curves::PublicParams>::Fr:
+           //         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+           //     <ppT as ff_curves::PublicParams>::Fr: Mul<
+           //             knowledge_commitment<
+           //                 <ppT as ff_curves::PublicParams>::G2,
+           //                 <ppT as ff_curves::PublicParams>::G1,
+           //             >,
+           //             Output = knowledge_commitment<
+           //                 <ppT as ff_curves::PublicParams>::G2,
+           //                 <ppT as ff_curves::PublicParams>::G1,
+           //             >,
+           //         >,
+           //     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
 {
     enter_block("Call to r1cs_ppzksnark_prover", false);
 
@@ -699,7 +748,6 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
     enter_block("Compute the polynomial H", false);
     let qap_wit = r1cs_to_qap_witness_map::<
         <ppT as ff_curves::PublicParams>::Fr,
-        ppT::ED,
         pb_variable,
         pb_linear_combination,
     >(
@@ -719,17 +767,17 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
     // //#endif
 
     let mut g_A = pk.A_query[0].clone()
-        + qap_wit.d1.clone() * pk.A_query[qap_wit.num_variables() + 1].clone();
+        + pk.A_query[qap_wit.num_variables() + 1].clone() * qap_wit.d1.clone();
     let mut g_B = pk.B_query[0].clone()
-        + qap_wit.d2.clone() * pk.B_query[qap_wit.num_variables() + 1].clone();
+        + pk.B_query[qap_wit.num_variables() + 1].clone() * qap_wit.d2.clone();
     let mut g_C = pk.C_query[0].clone()
-        + qap_wit.d3.clone() * pk.C_query[qap_wit.num_variables() + 1].clone();
+        + pk.C_query[qap_wit.num_variables() + 1].clone() * qap_wit.d3.clone();
 
     let mut g_H = G1::<ppT>::zero();
-    let mut g_K = (pk.K_query[0].clone()
-        + qap_wit.d1.clone() * pk.K_query[qap_wit.num_variables() + 1].clone()
-        + qap_wit.d2.clone() * pk.K_query[qap_wit.num_variables() + 2].clone()
-        + qap_wit.d3.clone() * pk.K_query[qap_wit.num_variables() + 3].clone());
+    let mut g_K = pk.K_query[0].clone()
+        + pk.K_query[qap_wit.num_variables() + 1].clone() * qap_wit.d1.clone()
+        + pk.K_query[qap_wit.num_variables() + 2].clone() * qap_wit.d2.clone()
+        + pk.K_query[qap_wit.num_variables() + 3].clone() * qap_wit.d3.clone();
 
     // // #ifdef DEBUG
     //     for i in 0..qap_wit.num_inputs() + 1
@@ -753,7 +801,12 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute answer to A-query", false);
     g_A = g_A
-        + kc_multi_exp_with_mixed_addition::<ppT, { multi_exp_method::multi_exp_method_bos_coster }>(
+        + kc_multi_exp_with_mixed_addition::<
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(
             &pk.A_query,
             1,
             1 + qap_wit.num_variables(),
@@ -764,7 +817,12 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute answer to B-query", false);
     g_B = g_B
-        + kc_multi_exp_with_mixed_addition::<ppT, { multi_exp_method::multi_exp_method_bos_coster }>(
+        + kc_multi_exp_with_mixed_addition::<
+            <<ppT as ppTConfig>::KC as KCConfig>::T2,
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(
             &pk.B_query,
             1,
             1 + qap_wit.num_variables(),
@@ -775,7 +833,12 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute answer to C-query", false);
     g_C = g_C
-        + kc_multi_exp_with_mixed_addition::<ppT, { multi_exp_method::multi_exp_method_bos_coster }>(
+        + kc_multi_exp_with_mixed_addition::<
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(
             &pk.C_query,
             1,
             1 + qap_wit.num_variables(),
@@ -786,7 +849,11 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute answer to H-query", false);
     g_H = g_H
-        + multi_exp::<ppT, { multi_exp_method::multi_exp_method_BDLO12 }>(
+        + multi_exp::<
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_BDLO12 },
+        >(
             &pk.H_query[..qap_wit.degree() + 1],
             &qap_wit.coefficients_for_H[..qap_wit.degree() + 1],
             chunks,
@@ -795,7 +862,11 @@ pub fn r1cs_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute answer to K-query", false);
     g_K = g_K
-        + multi_exp_with_mixed_addition::<ppT, { multi_exp_method::multi_exp_method_bos_coster }>(
+        + multi_exp_with_mixed_addition::<
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(
             &pk.K_query[1..1 + qap_wit.num_variables()],
             &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
@@ -916,7 +987,7 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     enter_block("Compute input-dependent part of A", false);
     let accumulated_IC = pvk
         .encoded_IC_query
-        .accumulate_chunk::<ppT::Fr>(&primary_input, 0);
+        .accumulate_chunk::<ppT::Fr>(primary_input, 0);
     let acc = &accumulated_IC.first;
     leave_block("Compute input-dependent part of A", false);
 
@@ -1091,7 +1162,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: ppTConfig>(
     enter_block("Compute input-dependent part of A", false);
     let accumulated_IC = vk
         .encoded_IC_query
-        .accumulate_chunk::<ppT::Fr>(&primary_input, 0);
+        .accumulate_chunk::<ppT::Fr>(primary_input, 0);
     assert!(accumulated_IC.is_fully_accumulated());
     let acc = &accumulated_IC.first;
     leave_block("Compute input-dependent part of A", false);
@@ -1309,8 +1380,8 @@ impl<ppT: ppTConfig> fmt::Display for r1cs_ppzksnark_verification_key<ppT> {
 //     return in;
 // }
 impl<ppT: ppTConfig> r1cs_ppzksnark_processed_verification_key<ppT>
-where
-    <ppT as PublicParamsType>::G1_type: PpConfig,
+// where
+//     <ppT as PublicParamsType>::G1_type: PpConfig,
 {
     pub fn size_in_bits(&self) -> usize {
         0
@@ -1419,18 +1490,18 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_verification_key<ppT> {
     //     <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
     {
         let mut result = r1cs_ppzksnark_verification_key::<ppT>::default();
-        result.alphaA_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
-        result.alphaB_g1 = Fr::<ppT>::random_element() * G1::<ppT>::one();
-        result.alphaC_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
-        result.gamma_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
-        result.gamma_beta_g1 = Fr::<ppT>::random_element() * G1::<ppT>::one();
-        result.gamma_beta_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
-        result.rC_Z_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
+        result.alphaA_g2 = G2::<ppT>::one() * Fr::<ppT>::random_element();
+        result.alphaB_g1 = G1::<ppT>::one() * Fr::<ppT>::random_element();
+        result.alphaC_g2 = G2::<ppT>::one() * Fr::<ppT>::random_element();
+        result.gamma_g2 = G2::<ppT>::one() * Fr::<ppT>::random_element();
+        result.gamma_beta_g1 = G1::<ppT>::one() * Fr::<ppT>::random_element();
+        result.gamma_beta_g2 = G2::<ppT>::one() * Fr::<ppT>::random_element();
+        result.rC_Z_g2 = G2::<ppT>::one() * Fr::<ppT>::random_element();
 
-        let base = Fr::<ppT>::random_element() * G1::<ppT>::one();
+        let base = G1::<ppT>::one() * Fr::<ppT>::random_element();
         let mut v = G1_vector::<ppT>::default();
         for i in 0..input_size {
-            v.push(Fr::<ppT>::random_element() * G1::<ppT>::one());
+            v.push(G1::<ppT>::one() * Fr::<ppT>::random_element());
         }
 
         result.encoded_IC_query = accumulation_vector::<G1<ppT>>::new_with_vec(base, v);

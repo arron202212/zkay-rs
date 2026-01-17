@@ -34,14 +34,15 @@
 // Jens Groth and Mary Maller,
 // IACR-CRYPTO-2017,
 // <https://eprint.iacr.org/2017/540>
-use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_get_domain;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_instance_map_with_evaluation;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_witness_map;
 use crate::relations::arithmetic_programs::sap::sap::sap_instance_evaluation;
 use ff_curves::PublicParams;
+use ffec::scalar_multiplication::multiexp::KCConfig;
 
 use ff_curves::{Fqk, Fr, Fr_vector, G1, G1_precomp, G1_vector, G2, G2_precomp, G2_vector};
 use ffec::FieldTConfig;
@@ -53,7 +54,7 @@ use ffec::scalar_multiplication::multiexp::{
     multi_exp_method,
 };
 use ffec::{One, Zero};
-use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
+use fqfft::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
 use rccell::RcCell;
 use std::ops::{Add, Mul};
 // use crate::common::data_structures::accumulation_vector;
@@ -361,7 +362,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: ppTConfig>(
     let (d1, d2) = (ppT::Fr::random_element(), ppT::Fr::random_element());
 
     enter_block("Compute the polynomial H", false);
-    let sap_wit = r1cs_to_sap_witness_map::<Fr<ppT>, ppT::ED, pb_variable, pb_linear_combination>(
+    let sap_wit = r1cs_to_sap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
         &pk.constraint_system,
         &primary_input,
         &auxiliary_input,
@@ -401,10 +402,10 @@ pub fn r1cs_se_ppzksnark_prover<ppT: ppTConfig>(
      *             * (G^{gamma * Z(t)})^r
      *           = \prod_{i=0}^m A_query[i]^{input_i} * G_gamma_Z^r
      */
-    let A = r.clone() * pk.G_gamma_Z.clone() +
+    let A = pk.G_gamma_Z.clone()*r.clone() +
         pk.A_query[0].clone() + // i = 0 is a special case because input_i = 1
-        sap_wit.d1.clone() * pk.G_gamma_Z.clone() + // ZK-patch
-        multi_exp::<ppT,
+        pk.G_gamma_Z.clone()* sap_wit.d1.clone()  + // ZK-patch
+        multi_exp::<<<ppT as ppTConfig>::KC as KCConfig>::T,<<ppT as ppTConfig>::KC as KCConfig>::FieldT,
                          {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.A_query[1..],
             &sap_wit.coefficients_for_ACs,
@@ -416,10 +417,10 @@ pub fn r1cs_se_ppzksnark_prover<ppT: ppTConfig>(
     /**
      * compute B exactly as A, except with H as the base
      */
-    let B = r.clone() * pk.H_gamma_Z.clone() +
+    let B = pk.H_gamma_Z.clone()*r.clone()  +
         pk.B_query[0].clone() + // i = 0 is a special case because input_i = 1
-        sap_wit.d1.clone() * pk.H_gamma_Z.clone() + // ZK-patch
-        multi_exp::<ppT,
+         pk.H_gamma_Z.clone()*sap_wit.d1.clone()  + // ZK-patch
+        multi_exp::<<<ppT as ppTConfig>::KC as KCConfig>::T2,<<ppT as ppTConfig>::KC as KCConfig>::FieldT,
                          {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.B_query[1..],
             &sap_wit.coefficients_for_ACs,
@@ -437,23 +438,23 @@ pub fn r1cs_se_ppzksnark_prover<ppT: ppTConfig>(
      * and G^{2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t)} =
      *              = \prod_{i=0}^m C_query_2 * input_i
      */
-    let C = multi_exp::<ppT,
+    let C = multi_exp::<<<ppT as ppTConfig>::KC as KCConfig>::T,<<ppT as ppTConfig>::KC as KCConfig>::FieldT,
                                         {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.C_query_1,
             &sap_wit.coefficients_for_ACs[sap_wit.num_inputs()..],
             chunks) +
-        (r.clone() * r.clone()) * pk.G_gamma2_Z2.clone() +
-        r.clone() * pk.G_ab_gamma_Z.clone() +
-        sap_wit.d1.clone() * pk.G_ab_gamma_Z.clone() + // ZK-patch
-        r.clone() * pk.C_query_2[0].clone() + // i = 0 is a special case for C_query_2
-        (r.clone() + r.clone()) * sap_wit.d1.clone() * pk.G_gamma2_Z2.clone() + // ZK-patch for C_query_2
-        r.clone() * multi_exp::<ppT,
+         pk.G_gamma2_Z2.clone() *(r.clone() * r.clone()) +
+         pk.G_ab_gamma_Z.clone()*r.clone()  +
+         pk.G_ab_gamma_Z.clone()*sap_wit.d1.clone()  + // ZK-patch
+         pk.C_query_2[0].clone()*r.clone()  + // i = 0 is a special case for C_query_2
+        pk.G_gamma2_Z2.clone()* (r.clone() + r.clone()) * sap_wit.d1.clone()  + // ZK-patch for C_query_2
+         multi_exp::<<<ppT as ppTConfig>::KC as KCConfig>::T,<<ppT as ppTConfig>::KC as KCConfig>::FieldT,
                              {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.C_query_2[1..],
             &sap_wit.coefficients_for_ACs,
-            chunks) +
-        sap_wit.d2.clone() * pk.G_gamma2_Z_t[0].clone() + // ZK-patch
-        multi_exp::<ppT,
+            chunks) *r.clone() +
+         pk.G_gamma2_Z_t[0].clone()*sap_wit.d2.clone()  + // ZK-patch
+        multi_exp::<<<ppT as ppTConfig>::KC as KCConfig>::T,<<ppT as ppTConfig>::KC as KCConfig>::FieldT,
                          { multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.G_gamma2_Z_t,
             &sap_wit.coefficients_for_H,
@@ -583,11 +584,11 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
      * where psi = \sum_{i=0}^l input_i pvk.query[i]
      */
     let G_psi = pvk.query[0].clone()
-        + multi_exp::<ppT, { multi_exp_method::multi_exp_method_bos_coster }>(
-            &pvk.query[1..],
-            &primary_input,
-            chunks,
-        );
+        + multi_exp::<
+            <<ppT as ppTConfig>::KC as KCConfig>::T,
+            <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(&pvk.query[1..], primary_input, chunks);
 
     let test1_l = ppT::miller_loop(
         &ppT::precompute_G1(&(proof.A.clone() + pvk.G_alpha.clone())),
@@ -929,17 +930,20 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
      * draw random element t at which the SAP is evaluated.
      * it should be the case that Z(t) != 0
      */
-    let domain: RcCell<ppT::ED> = r1cs_to_sap_get_domain(&cs);
+    let domain = r1cs_to_sap_get_domain(&cs);
     let mut t;
     loop {
         t = Fr::<ppT>::random_element();
-        if !domain.borrow().compute_vanishing_polynomial(&t).is_zero() {
+        if !domain
+            .borrow_mut()
+            .compute_vanishing_polynomial(&t)
+            .is_zero()
+        {
             break;
         }
     }
 
-    let sap_inst: sap_instance_evaluation<_, ppT::ED> =
-        r1cs_to_sap_instance_map_with_evaluation(&cs, &t);
+    let sap_inst: sap_instance_evaluation<_> = r1cs_to_sap_instance_map_with_evaluation(&cs, &t);
 
     print_indent();
     print!("* SAP number of variables: {}\n", sap_inst.num_variables());
@@ -989,21 +993,22 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
     let G_window = get_exp_window_size::<ppT::G1>(G_exp_count);
     print_indent();
     print!("* G window: {}\n", G_window);
-    let G_table = get_window_table(ppT::Fr::size_in_bits(), G_window, &G);
+    let G_table = get_window_table(ppT::Fr::size_in_bits(), G_window, G.clone());
     leave_block("Generating G multiexp table", false);
 
     enter_block("Generating H_gamma multiexp table", false);
-    let mut H_gamma = gamma.clone() * H.clone();
+    let mut H_gamma = H.clone() * gamma.clone();
     let mut H_gamma_exp_count = non_zero_At; // B_query
     let mut H_gamma_window = get_exp_window_size::<ppT::G2>(H_gamma_exp_count);
     print_indent();
     print!("* H_gamma window: {}\n", H_gamma_window);
-    let mut H_gamma_table = get_window_table(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma);
+    let mut H_gamma_table =
+        get_window_table(ppT::Fr::size_in_bits(), H_gamma_window, H_gamma.clone());
     leave_block("Generating H_gamma multiexp table", false);
 
     enter_block("Generate R1CS verification key", false);
-    let mut G_alpha = alpha.clone() * G.clone();
-    let mut H_beta = beta.clone() * H.clone();
+    let mut G_alpha = G.clone() * alpha.clone();
+    let mut H_beta = H.clone() * beta.clone();
 
     let mut tmp_exponents = Fr_vector::<ppT>::default();
     tmp_exponents.reserve(sap_inst.num_inputs() + 1);
@@ -1012,7 +1017,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
             .push(gamma.clone() * Ct[i].clone() + (alpha.clone() + beta.clone()) * At[i].clone());
     }
     let verifier_query =
-        batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
+        batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
 
     leave_block("Generate R1CS verification key", false);
@@ -1025,7 +1030,8 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
         tmp_exponents.push(gamma.clone() * At[i].clone());
     }
 
-    let A_query = batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
+    let A_query =
+        batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
@@ -1033,18 +1039,19 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
     leave_block("Compute the A-query", false);
 
     enter_block("Compute the B-query", false);
-    let B_query = batch_exp::<ppT>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
+    let B_query =
+        batch_exp::<G2<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G2<ppT> >(B_query);
     // //#endif
     leave_block("Compute the B-query", false);
 
     enter_block("Compute the G_gamma-query", false);
-    let G_gamma = gamma.clone() * G.clone();
+    let G_gamma = G.clone() * gamma.clone();
     let G_gamma_Z = G_gamma.clone() * sap_inst.Zt.clone();
     let H_gamma_Z = H_gamma.clone() * sap_inst.Zt.clone();
-    let G_ab_gamma_Z = (alpha.clone() + beta.clone()) * G_gamma_Z.clone();
-    let G_gamma2_Z2 = (gamma.clone() * sap_inst.Zt.clone()) * G_gamma_Z.clone();
+    let G_ab_gamma_Z = G_gamma_Z.clone() * (alpha.clone() + beta.clone());
+    let G_gamma2_Z2 = G_gamma_Z.clone() * (gamma.clone() * sap_inst.Zt.clone());
 
     tmp_exponents.reserve(sap_inst.degree() + 1);
 
@@ -1055,7 +1062,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
         gamma2_Z_t *= t.clone();
     }
     let G_gamma2_Z_t =
-        batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
+        batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(G_gamma2_Z_t);
@@ -1070,7 +1077,8 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
                 * (gamma.clone() * Ct[i].clone() + (alpha.clone() + beta.clone()) * At[i].clone()),
         );
     }
-    let C_query_1 = batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
+    let C_query_1 =
+        batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_1);
@@ -1084,7 +1092,8 @@ pub fn r1cs_se_ppzksnark_generator<ppT: ppTConfig>(
     for i in 0..=sap_inst.num_variables() {
         tmp_exponents.push(double_gamma2_Z.clone() * At[i].clone());
     }
-    let C_query_2 = batch_exp::<ppT>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
+    let C_query_2 =
+        batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_2);

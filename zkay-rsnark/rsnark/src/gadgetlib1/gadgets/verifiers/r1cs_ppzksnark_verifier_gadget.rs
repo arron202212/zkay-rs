@@ -372,8 +372,8 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_proof_variables<ppT> {
         ];
         let G2_elems = vec![proof.g_B.g.clone()];
 
-        assert!(G1_elems.len() == self.t.all_G1_vars.len());
-        assert!(G2_elems.len() == self.t.all_G2_vars.len());
+        assert_eq!(G1_elems.len(), self.t.all_G1_vars.len());
+        assert_eq!(G2_elems.len(), self.t.all_G2_vars.len());
 
         for i in 0..G1_elems.len() {
             self.t.all_G1_vars[i]
@@ -384,7 +384,7 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_proof_variables<ppT> {
         for i in 0..G2_elems.len() {
             self.t.all_G2_vars[i]
                 .borrow()
-                .generate_r1cs_witness(&(G2_elems[i].clone().into()));
+                .generate_r1cs_witness(&(G2_elems[i]));
         }
 
         for G1_checker in &self.t.all_G1_checkers {

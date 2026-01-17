@@ -27,6 +27,7 @@ use crate::const_new_fp_model;
 use crate::scalar_multiplication::wnaf::find_wnaf;
 use num_traits::{One, Zero};
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 // /**
 //  * Arithmetic in the finite field F[(p^3)^2].
@@ -40,7 +41,7 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 
 // type Fp_modelConfig<const N:usize,T>=
 pub trait Fp6_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp_modelConfig: FpmConfig<N>;
     type Fp3_modelConfig: Fp3_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
@@ -68,7 +69,7 @@ type my_Fp2<const N: usize, T> = Fp2_model<N, T>;
 pub type my_Fp3<const N: usize, T> = Fp3_model<N, T>;
 type my_Fpe<const N: usize, T> = my_Fp3<N, T>;
 
-#[derive(Default, Clone, Copy, Eq)]
+#[derive(Default, Clone, Debug, Copy, Eq)]
 pub struct Fp6_2over3_model<const N: usize, T: Fp6_modelConfig<N>> {
     // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     // static i64 add_cnt;
@@ -630,9 +631,12 @@ impl<const N: usize, T: Fp6_modelConfig<N>> fmt::Display for Fp6_2over3_model<N,
         write!(f, "{}", self.c0)
     }
 }
-impl<const N: usize, T: Fp6_modelConfig<N>> PpConfig for Fp6_2over3_model<N, T> where <T as Fp6_modelConfig<N>>::Fp_modelConfig: PpConfig {
+impl<const N: usize, T: Fp6_modelConfig<N>> PpConfig for Fp6_2over3_model<N, T>
+where
+    <T as Fp6_modelConfig<N>>::Fp_modelConfig: PpConfig,
+{
     type TT = bigint<N>;
-//  type Fr=T::Fp_modelConfig;
+    //  type Fr=T::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp6_modelConfig<N>> Mul<bigint<N>> for Fp6_2over3_model<N, T> {

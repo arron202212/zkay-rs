@@ -14,11 +14,11 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
-use std::borrow::Borrow;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-
 use crate::common::utils::bit_vector;
 use num_traits::{One, Zero};
+use std::borrow::Borrow;
+use std::fmt::Debug;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use educe::Educe;
 use std::marker::PhantomData;
@@ -38,7 +38,7 @@ use std::marker::PhantomData;
  */
 
 pub trait Fp_modelConfig<const N: usize>:
-    Send + Sync + 'static + Sized + Default + Clone + Copy + Eq
+    Send + Sync + 'static + Sized + Default + Clone + Copy + Eq + Debug
 {
     // const num_limbs: usize = 42;
     const modulus: bigint<N> = bigint::<N>::one();
@@ -62,7 +62,7 @@ pub const fn const_new_fp_model<const N: usize, T: Fp_modelConfig<N>>() -> Fp_mo
     }
 }
 #[derive(Educe)]
-#[educe(Default, Hash, Clone, Copy, Eq)] // PartialEq,
+#[educe(Default, Clone, Debug, Hash, Copy, Eq)] // PartialEq,
 pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
     pub mont_repr: bigint<N>,
     pub t: PhantomData<T>,

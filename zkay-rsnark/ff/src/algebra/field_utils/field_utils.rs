@@ -1,15 +1,15 @@
 #![allow(incomplete_features, dead_code, non_upper_case_globals)]
 // #![feature(generic_const_exprs, generic_const_items)]
 
-
-use crate::algebra::field_utils::{bigint::{bigint,GMP_NUMB_BITS},BigInteger};
-use crate::algebra::fields::binary::{gf64,gf128,gf192,gf256};
+use crate::algebra::field_utils::{
+    BigInteger,
+    bigint::{GMP_NUMB_BITS, bigint},
+};
+use crate::algebra::fields::binary::{gf64, gf128, gf192, gf256};
 use crate::algebra::fields::prime_base::fp;
 use crate::common::double;
 use crate::common::utils::{bit_vector, div_ceil, log2};
 use num_traits::{One, Zero};
-
-
 
 pub trait is_additive {
     const value: bool = false;
@@ -234,11 +234,10 @@ pub fn get_root_of_unity_is_not_same_double<FieldT: Default>(n: usize) -> eyre::
     Ok(omega)
 }
 
-pub fn pack_int_vector_into_field_element_vector<FieldT: Default,const N:usize>(
+pub fn pack_int_vector_into_field_element_vector<FieldT: Default, const N: usize>(
     v: &Vec<usize>,
     w: usize,
-) -> Vec<FieldT>
-{
+) -> Vec<FieldT> {
     let chunk_bits = 0usize; //FieldT::floor_size_in_bits();
     let repacked_size = div_ceil((v.len() * w), chunk_bits).unwrap();
     let mut result = Vec::with_capacity(repacked_size);
@@ -263,30 +262,31 @@ pub fn pack_int_vector_into_field_element_vector<FieldT: Default,const N:usize>(
     return result;
 }
 
-pub fn pack_bit_vector_into_field_element_vector<FieldT: Default+BigInteger>(
+pub fn pack_bit_vector_into_field_element_vector<
+    FieldT: From<i32> + Default + std::convert::AsMut<[u64]>,
+>(
     v: &bit_vector,
     chunk_bits: usize,
-) -> Vec<FieldT>
-{
+) -> Vec<FieldT> {
     // assert!(chunk_bits <= FieldT::floor_size_in_bits());
 
     let repacked_size = div_ceil(v.len(), chunk_bits).unwrap();
     let mut result = Vec::with_capacity(repacked_size);
 
     for i in 0..repacked_size {
-        let mut b = FieldT::from(0u8);
+        let mut b = FieldT::from(0);
         for j in 0..chunk_bits {
-            b.as_mut()[j / GMP_NUMB_BITS] |= (if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j]
-            {
-                1
-            } else {
-                0
-            }) << (j % GMP_NUMB_BITS);
+            b.as_mut()[j / GMP_NUMB_BITS] |=
+                (if (i * chunk_bits + j) < v.len() && v[i * chunk_bits + j] {
+                    1
+                } else {
+                    0
+                }) << (j % GMP_NUMB_BITS);
         }
         result[i] = FieldT::default(); //(b);
     }
 
-     result
+    result
 }
 
 pub fn pack_bit_vector_into_field_element_vector1<FieldT>(v: &bit_vector) -> Vec<FieldT> {
@@ -303,7 +303,7 @@ pub fn convert_bit_vector_to_field_element_vector<FieldT: One + Zero>(
         result.push(if b { FieldT::one() } else { FieldT::zero() });
     }
 
-     result
+    result
 }
 
 pub fn convert_field_element_vector_to_bit_vector<FieldT>(v: &Vec<FieldT>) -> bit_vector {
@@ -314,7 +314,7 @@ pub fn convert_field_element_vector_to_bit_vector<FieldT>(v: &Vec<FieldT>) -> bi
         result.append(&mut el_bits);
     }
 
-     result
+    result
 }
 
 pub fn convert_field_element_to_bit_vector<FieldT>(el: &FieldT) -> bit_vector {
@@ -326,14 +326,14 @@ pub fn convert_field_element_to_bit_vector<FieldT>(el: &FieldT) -> bit_vector {
     //     result.push(b.test_bit(i));
     // }
 
-     result
+    result
 }
 
 pub fn convert_field_element_to_bit_vector1<FieldT>(el: FieldT, bitcount: usize) -> bit_vector {
     let mut result = convert_field_element_to_bit_vector(&el);
     result.resize(bitcount, false);
 
-     result
+    result
 }
 
 pub fn convert_bit_vector_to_field_element<FieldT: One + Zero + Clone + std::ops::AddAssign>(
@@ -347,7 +347,7 @@ pub fn convert_bit_vector_to_field_element<FieldT: One + Zero + Clone + std::ops
         res += if b { c.clone() } else { FieldT::zero() };
         c += c.clone();
     }
-     res
+    res
 }
 
 pub fn batch_invert<FieldT: One + Clone>(vec: &mut Vec<FieldT>) {

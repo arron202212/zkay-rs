@@ -90,7 +90,7 @@ pub fn _basic_serial_radix2_FFT<FieldT: FieldTConfig>(
     let omega: FieldT = omega.clone();
     let mut m = 1; // invariant: m = 2^{s-1}
     for s in 1..=logn {
-        let nm= (n / (2 * m));
+        let nm = (n / (2 * m));
         // w_m is 2^s-th root of unity now
         let w_m: FieldT = omega.clone() ^ nm;
 
@@ -281,7 +281,7 @@ pub fn _basic_radix2_evaluate_all_lagrange_polynomials<FieldT: FieldTConfig>(
     Below we use the fact that v_{0} = 1/m and v_{i+1} = \omega * v_{i}.
     */
 
-    let Z = (tt.clone() ^ m )- FieldT::one();
+    let Z = (tt.clone() ^ m) - FieldT::one();
     // let l = Z * FieldT::from(m).inverse();
     let mut r = FieldT::one();
     for i in 0..m {

@@ -446,7 +446,7 @@ pub struct LooseMUX_Gadget;
 /*************************************************************************************************/
 /*************************************************************************************************/
 // TODO change pub struct name to bitpacking
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub enum PackingMode {
     #[default]
     PACK,

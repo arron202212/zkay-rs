@@ -1,6 +1,7 @@
 // Declaration of functionality that runs the R1CS ppzkADSNARK for
 // a given R1CS example.
 
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
@@ -62,101 +63,122 @@ pub fn run_r1cs_ppzkadsnark<ppT: ppzkadsnarkConfig>(
     example: r1cs_example<Fr<snark_pp<ppT>>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool
-// where
-//     ED: evaluation_domain<<<ppT as ppzkadsnarkConfig>::snark_pp as PublicParams>::Fr>,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1: Add<
-//         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//     >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
-//         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//     >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: FieldTConfig,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-//     >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     for<'a> <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             &'a FieldT,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-//     >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//         >,
-//     for<'a> <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             &'a FieldT,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
-//             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//         >,
-//     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
-        //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-        //     Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-        // >,
+where
+    knowledge_commitment<
+        <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+        <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<ppT as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+                <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+        <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<ppT as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+                <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    // where
+    //     ED: evaluation_domain<<<ppT as ppzkadsnarkConfig>::snark_pp as PublicParams>::Fr>,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1: Add<
+    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //     >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
+    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //     >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: FieldTConfig,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //     >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     for<'a> <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             &'a FieldT,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //     >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    //         >,
+    //     for<'a> <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             &'a FieldT,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
+    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+    //         >,
+    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
+    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    //     Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
+    // >,
 {
     enter_block("Call to run_r1cs_ppzkadsnark", false);
 

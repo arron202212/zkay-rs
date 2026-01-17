@@ -45,8 +45,7 @@ pub struct geometric_sequence_domain<FieldT: FieldTConfig> {
 //         + std::ops::Sub<Output = FieldT>
 //         + std::cmp::PartialEq
 //         + std::ops::Neg<Output = FieldT>,
-pub type geometric_sequence_domains<FieldT> =
-    evaluation_domain<geometric_sequence_domain<FieldT>>;
+pub type geometric_sequence_domains<FieldT> = evaluation_domain<geometric_sequence_domain<FieldT>>;
 impl<FieldT: FieldTConfig> geometric_sequence_domain<FieldT> {
     pub fn new(m: usize) -> eyre::Result<geometric_sequence_domains<FieldT>> {
         //: evaluation_domain<FieldT>(m)
@@ -57,12 +56,14 @@ impl<FieldT: FieldTConfig> geometric_sequence_domain<FieldT> {
         //     {eyre::bail!("geometric(): expected FieldT::geometric_generator() != FieldT::zero()");}
 
         Ok(evaluation_domain::<Self>::new(
-            m,Self {
-            precomputation_sentinel: false,
-            geometric_sequence: vec![],
-            geometric_triangular_sequence: vec![],
             m,
-        }))
+            Self {
+                precomputation_sentinel: false,
+                geometric_sequence: vec![],
+                geometric_triangular_sequence: vec![],
+                m,
+            },
+        ))
     }
 }
 
@@ -305,4 +306,3 @@ impl<FieldT: FieldTConfig> geometric_sequence_domains<FieldT> {
         self.t.precomputation_sentinel = true;
     }
 }
-

@@ -57,7 +57,7 @@ impl<FpkT: ppTConfig> exponentiation_gadget<FpkT> {
         result: Fpk_variableT<FpkT>,
         annotation_prefix: String,
     ) -> exponentiation_gadgets<FpkT> {
-        let NAF = find_wnaf(1, &power);
+        let NAF = find_wnaf(1, &power.0);
 
         let mut intermed_count = 0;
         let mut add_count = 0;

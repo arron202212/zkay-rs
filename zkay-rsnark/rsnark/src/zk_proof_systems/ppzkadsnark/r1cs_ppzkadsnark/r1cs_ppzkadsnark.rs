@@ -39,6 +39,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_sig
 use ff_curves::algebra::curves::public_params::*;
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{One, PpConfig, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
@@ -197,14 +198,21 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_data<PP> {
  */
 #[derive(Default, Clone)]
 pub struct r1cs_ppzkadsnark_proving_key<PP: ppzkadsnarkConfig> {
-    pub A_query: knowledge_commitment_vector<<PP::ppT as ppTConfig>::KC>,
-    pub B_query: knowledge_commitment_vector<<PP::ppT as ppTConfig>::KC2>,
-    pub C_query: knowledge_commitment_vector<<PP::ppT as ppTConfig>::KC>,
+    pub A_query: KnowledgeCommitmentVector<snark_pp<PP>>,
+    pub B_query: KnowledgeCommitmentVector2<snark_pp<PP>>,
+    pub C_query: KnowledgeCommitmentVector<snark_pp<PP>>,
     pub H_query: G1_vector<snark_pp<PP>>, // t powers
     pub K_query: G1_vector<snark_pp<PP>>,
     pub rA_i_Z_g1: G1<snark_pp<PP>>, // Now come the additional elements for ad
     pub constraint_system: r1cs_ppzkadsnark_constraint_system<PP>,
 }
+pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
+pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
+pub type FieldT<PP> = <<PP as ppTConfig>::KC as KCConfig>::FieldT;
+pub type KnowledgeCommitmentVector<PP> = knowledge_commitment_vector<T1<PP>, T1<PP>>;
+pub type KnowledgeCommitmentVector2<PP> = knowledge_commitment_vector<T2<PP>, T1<PP>>;
+pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
+pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
 
 // r1cs_ppzkadsnark_proving_key() {};
 // r1cs_ppzkadsnark_proving_key<PP>& operator=(other:&r1cs_ppzkadsnark_proving_key<PP>) = default;
@@ -213,9 +221,9 @@ pub struct r1cs_ppzkadsnark_proving_key<PP: ppzkadsnarkConfig> {
 
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proving_key<PP> {
     pub fn new(
-        A_query: knowledge_commitment<<PP::ppT as ppTConfig>::KC>,
-        B_query: knowledge_commitment<<PP::ppT as ppTConfig>::KC2>,
-        C_query: knowledge_commitment<<PP::ppT as ppTConfig>::KC>,
+        A_query: KnowledgeCommitmentVector<snark_pp<PP>>,
+        B_query: KnowledgeCommitmentVector2<snark_pp<PP>>,
+        C_query: KnowledgeCommitmentVector<snark_pp<PP>>,
         H_query: G1_vector<snark_pp<PP>>,
         K_query: G1_vector<snark_pp<PP>>,
         rA_i_Z_g1: G1<snark_pp<PP>>,
@@ -420,32 +428,32 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_keypair<PP> {
  */
 #[derive(Default, Clone)]
 pub struct r1cs_ppzkadsnark_proof<PP: ppzkadsnarkConfig> {
-    pub g_A: knowledge_commitment<PP>,
-    pub g_B: knowledge_commitment<PP>,
-    pub g_C: knowledge_commitment<PP>,
+    pub g_A: KnowledgeCommitment<snark_pp<PP>>,
+    pub g_B: KnowledgeCommitment2<snark_pp<PP>>,
+    pub g_C: KnowledgeCommitment<snark_pp<PP>>,
     pub g_H: G1<snark_pp<PP>>,
     pub g_K: G1<snark_pp<PP>>,
-    pub g_Aau: knowledge_commitment<PP>,
+    pub g_Aau: KnowledgeCommitment<snark_pp<PP>>,
     pub muA: G1<snark_pp<PP>>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proof<PP> {
     pub fn default() -> Self {
         // invalid proof with valid curve points
-        let g_A = knowledge_commitment::<snark_pp<PP>>::new(
+        let g_A = knowledge_commitment::<G1<snark_pp<PP>>, G1<snark_pp<PP>>>::new(
             G1::<snark_pp<PP>>::one(),
             G1::<snark_pp<PP>>::one(),
         );
-        let g_B = knowledge_commitment::<snark_pp<PP>>::new(
+        let g_B = knowledge_commitment::<G2<snark_pp<PP>>, G1<snark_pp<PP>>>::new(
             G2::<snark_pp<PP>>::one(),
             G1::<snark_pp<PP>>::one(),
         );
-        let g_C = knowledge_commitment::<snark_pp<PP>>::new(
+        let g_C = knowledge_commitment::<G1<snark_pp<PP>>, G1<snark_pp<PP>>>::new(
             G1::<snark_pp<PP>>::one(),
             G1::<snark_pp<PP>>::one(),
         );
         let g_H = G1::<snark_pp<PP>>::one();
         let g_K = G1::<snark_pp<PP>>::one();
-        let g_Aau = knowledge_commitment::<snark_pp<PP>>::new(
+        let g_Aau = knowledge_commitment::<G1<snark_pp<PP>>, G1<snark_pp<PP>>>::new(
             G1::<snark_pp<PP>>::one(),
             G1::<snark_pp<PP>>::one(),
         );
@@ -461,12 +469,12 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proof<PP> {
         }
     }
     pub fn new(
-        g_A: knowledge_commitment<PP>,
-        g_B: knowledge_commitment<PP>,
-        g_C: knowledge_commitment<PP>,
+        g_A: KnowledgeCommitment<snark_pp<PP>>,
+        g_B: KnowledgeCommitment2<snark_pp<PP>>,
+        g_C: KnowledgeCommitment<snark_pp<PP>>,
         g_H: G1<snark_pp<PP>>,
         g_K: G1<snark_pp<PP>>,
-        g_Aau: knowledge_commitment<PP>,
+        g_Aau: KnowledgeCommitment<snark_pp<PP>>,
         muA: G1<snark_pp<PP>>,
     ) -> Self {
         Self {
@@ -857,22 +865,22 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_verification_key<PP> {
 // <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<<<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,Output=<<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1>
     {
         let mut result = r1cs_ppzkadsnark_verification_key::<PP>::default();
-        result.alphaA_g2 = Fr::<snark_pp<PP>>::random_element() * G2::<snark_pp<PP>>::one();
-        result.alphaB_g1 = Fr::<snark_pp<PP>>::random_element() * G1::<snark_pp<PP>>::one();
-        result.alphaC_g2 = Fr::<snark_pp<PP>>::random_element() * G2::<snark_pp<PP>>::one();
-        result.gamma_g2 = Fr::<snark_pp<PP>>::random_element() * G2::<snark_pp<PP>>::one();
-        result.gamma_beta_g1 = Fr::<snark_pp<PP>>::random_element() * G1::<snark_pp<PP>>::one();
-        result.gamma_beta_g2 = Fr::<snark_pp<PP>>::random_element() * G2::<snark_pp<PP>>::one();
-        result.rC_Z_g2 = Fr::<snark_pp<PP>>::random_element() * G2::<snark_pp<PP>>::one();
+        result.alphaA_g2 = G2::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
+        result.alphaB_g1 = G1::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
+        result.alphaC_g2 = G2::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
+        result.gamma_g2 = G2::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
+        result.gamma_beta_g1 = G1::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
+        result.gamma_beta_g2 = G2::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
+        result.rC_Z_g2 = G2::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
 
-        result.A0 = Fr::<snark_pp<PP>>::random_element() * G1::<snark_pp<PP>>::one();
+        result.A0 = G1::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
         for i in 0..input_size {
             result
                 .Ain
-                .push(Fr::<snark_pp<PP>>::random_element() * G1::<snark_pp<PP>>::one());
+                .push(G1::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element());
         }
 
-        return result;
+        result
     }
 }
 
@@ -894,8 +902,8 @@ pub fn r1cs_ppzkadsnark_auth_generator<PP: ppzkadsnarkConfig>() -> r1cs_ppzkadsn
     let mut sigkp = PP::Sig::sigGen();
     let mut prfseed = PP::Prf::prfGen();
     let mut i = Fr::<snark_pp<PP>>::random_element();
-    let mut I1 = i.clone() * G1::<snark_pp<PP>>::one();
-    let mut minusI2 = G2::<snark_pp<PP>>::zero() - i.clone() * G2::<snark_pp<PP>>::one();
+    let mut I1 = G1::<snark_pp<PP>>::one() * i.clone();
+    let mut minusI2 = G2::<snark_pp<PP>>::zero() - G2::<snark_pp<PP>>::one() * i.clone();
     r1cs_ppzkadsnark_auth_keys::<PP>::new(
         r1cs_ppzkadsnark_pub_auth_prms::<PP>::new(I1),
         r1cs_ppzkadsnark_pub_auth_key::<PP>::new(minusI2, (sigkp.vk.clone())),
@@ -941,10 +949,13 @@ pub fn r1cs_ppzkadsnark_auth_sign<PP: ppzkadsnarkConfig>(
     let mut res = Vec::with_capacity(ins.len());
     for i in 0..ins.len() {
         let mut lambda = PP::Prf::prfCompute(&sk.S, &labels[i]);
-        let mut Lambda = &lambda * &G2::<snark_pp<PP>>::one();
+        let mut Lambda = G2::<snark_pp<PP>>::one() * lambda.clone();
         let mut sig = PP::Sig::sigSign(&sk.skp, &labels[i], &Lambda);
-        let mut val =
-            r1cs_ppzkadsnark_auth_data::<PP>::new((&lambda + &sk.i * &ins[i]), Lambda, sig);
+        let mut val = r1cs_ppzkadsnark_auth_data::<PP>::new(
+            (lambda.clone() + sk.i.clone() * ins[i].clone()),
+            Lambda,
+            sig,
+        );
         res.push(val);
     }
     leave_block("Call to r1cs_ppzkadsnark_auth_sign", false);
@@ -991,8 +1002,8 @@ pub fn r1cs_ppzkadsnark_auth_verify2<PP: ppzkadsnarkConfig>(
     assert!((data.len() == labels.len()) && (data.len() == auth_data.len()));
     let mut res = true;
     for i in 0..auth_data.len() {
-        let mut Mup = auth_data[i].Lambda.clone() - data[i].clone() * pak.minusI2.clone();
-        res = res && (auth_data[i].mu.clone() * G2::<snark_pp<PP>>::one() == Mup);
+        let mut Mup = auth_data[i].Lambda.clone() - pak.minusI2.clone() * data[i].clone();
+        res = res && (G2::<snark_pp<PP>>::one() * auth_data[i].mu.clone() == Mup);
         res = res
             && PP::Sig::sigVerif(
                 &pak.vkp,
@@ -1080,9 +1091,8 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     /* draw random element at which the QAP is evaluated */
     let mut t = Fr::<snark_pp<PP>>::random_element();
 
-    let mut qap_inst: qap_instance_evaluation<_, PP::ED> = r1cs_to_qap_instance_map_with_evaluation::<
+    let mut qap_inst: qap_instance_evaluation<_> = r1cs_to_qap_instance_map_with_evaluation::<
         <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-        PP::ED,
         pb_variable,
         pb_linear_combination,
     >(&cs_copy, &t);
@@ -1139,17 +1149,22 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     let rB = Fr::<snark_pp<PP>>::random_element();
     let beta = Fr::<snark_pp<PP>>::random_element();
     let gamma = Fr::<snark_pp<PP>>::random_element();
-    let rC = &rA * &rB;
+    let rC = rA.clone() * rB.clone();
 
     // construct the same-coefficient-check query (must happen before zeroing out the prefix of At)
     let mut Kt = Vec::with_capacity(qap_inst.num_variables() + 4);
 
     for i in 0..qap_inst.num_variables() + 1 {
-        Kt.push(&beta * &(&rA * &At[i] + &rB * &Bt[i] + &rC * &Ct[i]));
+        Kt.push(
+            beta.clone()
+                * (rA.clone() * At[i].clone()
+                    + rB.clone() * Bt[i].clone()
+                    + rC.clone() * Ct[i].clone()),
+        );
     }
-    Kt.push(&beta * &rA * &qap_inst.Zt);
-    Kt.push(&beta * &rB * &qap_inst.Zt);
-    Kt.push(&beta * &rC * &qap_inst.Zt);
+    Kt.push(beta.clone() * rA.clone() * qap_inst.Zt.clone());
+    Kt.push(beta.clone() * rB.clone() * qap_inst.Zt.clone());
+    Kt.push(beta.clone() * rC.clone() * qap_inst.Zt.clone());
 
     let g1_exp_count = 2 * (non_zero_At - qap_inst.num_inputs() + non_zero_Ct)
         + non_zero_Bt
@@ -1174,7 +1189,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     let g1_table = get_window_table(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
-        &G1::<snark_pp<PP>>::one(),
+        G1::<snark_pp<PP>>::one(),
     );
     leave_block("Generating G1 multiexp table", false);
 
@@ -1182,7 +1197,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     let g2_table = get_window_table(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g2_window,
-        &G2::<snark_pp<PP>>::one(),
+        G2::<snark_pp<PP>>::one(),
     );
     leave_block("Generating G2 multiexp table", false);
 
@@ -1190,49 +1205,61 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
 
     enter_block("Generate knowledge commitments", false);
     enter_block("Compute the A-query", false);
-    let A_query = kc_batch_exp::<PP>(
+    let A_query = kc_batch_exp::<
+        G1<snark_pp<PP>>,
+        G1<snark_pp<PP>>,
+        <<PP as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+    >(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
         g1_window,
         &g1_table,
         &g1_table,
         &rA,
-        &(&rA * &alphaA),
+        &(rA.clone() * alphaA.clone()),
         &At,
         chunks,
     );
     leave_block("Compute the A-query", false);
 
     enter_block("Compute the B-query", false);
-    let B_query = kc_batch_exp::<PP>(
+    let B_query = kc_batch_exp::<
+        G2<snark_pp<PP>>,
+        G1<snark_pp<PP>>,
+        <<PP as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+    >(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g2_window,
         g1_window,
         &g2_table,
         &g1_table,
         &rB,
-        &(&rB * &alphaB),
+        &(rB.clone() * alphaB.clone()),
         &Bt,
         chunks,
     );
     leave_block("Compute the B-query", false);
 
     enter_block("Compute the C-query", false);
-    let C_query = kc_batch_exp::<PP>(
+    let C_query = kc_batch_exp::<
+        G1<snark_pp<PP>>,
+        G1<snark_pp<PP>>,
+        <<PP as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+    >(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
         g1_window,
         &g1_table,
         &g1_table,
         &rC,
-        &(&rC * &alphaC),
+        &(rC.clone() * alphaC.clone()),
         &Ct,
         chunks,
     );
     leave_block("Compute the C-query", false);
 
     enter_block("Compute the H-query", false);
-    let H_query = batch_exp::<PP>(
+    let H_query = batch_exp::<G1<snark_pp<PP>>, Fr<snark_pp<PP>>>(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
         &g1_table,
@@ -1244,7 +1271,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     leave_block("Compute the H-query", false);
 
     enter_block("Compute the K-query", false);
-    let K_query = batch_exp::<PP>(
+    let K_query = batch_exp::<G1<snark_pp<PP>>, Fr<snark_pp<PP>>>(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
         &g1_table,
@@ -1260,16 +1287,16 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     leave_block("Generate R1CS proving key", false);
 
     enter_block("Generate R1CS verification key", false);
-    let mut alphaA_g2 = &alphaA * &G2::<snark_pp<PP>>::one();
-    let mut alphaB_g1 = &alphaB * &G1::<snark_pp<PP>>::one();
-    let mut alphaC_g2 = &alphaC * &G2::<snark_pp<PP>>::one();
-    let mut gamma_g2 = &gamma * &G2::<snark_pp<PP>>::one();
-    let mut gamma_beta_g1 = (&gamma * &beta) * G1::<snark_pp<PP>>::one();
-    let mut gamma_beta_g2 = (&gamma * &beta) * G2::<snark_pp<PP>>::one();
-    let mut rC_Z_g2 = (&rC * &qap_inst.Zt) * G2::<snark_pp<PP>>::one();
+    let mut alphaA_g2 = G2::<snark_pp<PP>>::one() * alphaA.clone();
+    let mut alphaB_g1 = G1::<snark_pp<PP>>::one() * alphaB.clone();
+    let mut alphaC_g2 = G2::<snark_pp<PP>>::one() * alphaC.clone();
+    let mut gamma_g2 = G2::<snark_pp<PP>>::one() * gamma.clone();
+    let mut gamma_beta_g1 = G1::<snark_pp<PP>>::one() * (gamma.clone() * beta.clone());
+    let mut gamma_beta_g2 = G2::<snark_pp<PP>>::one() * (gamma.clone() * beta.clone());
+    let mut rC_Z_g2 = G2::<snark_pp<PP>>::one() * (rC.clone() * qap_inst.Zt.clone());
 
     enter_block("Generate extra authentication elements", false);
-    let rA_i_Z_g1 = (&rA * &qap_inst.Zt) * &prms.I1;
+    let rA_i_Z_g1 = prms.I1.clone() * (rA.clone() * qap_inst.Zt.clone());
     leave_block("Generate extra authentication elements", false);
 
     enter_block(
@@ -1325,32 +1352,52 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     auxiliary_input: &r1cs_ppzkadsnark_auxiliary_input<PP>,
     auth_data: &Vec<r1cs_ppzkadsnark_auth_data<PP>>,
 ) -> r1cs_ppzkadsnark_proof<PP>
-// where
-//     <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             Output = <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//         >,
-//     <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-//                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     PP::ED: evaluation_domain<<<PP as ppzkadsnarkConfig>::snark_pp as PublicParams>::Fr>,
+where
+    knowledge_commitment<
+        <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+        <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PP as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+                <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+        <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PP as ppzkadsnarkConfig>::snark_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+                <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >, // where
+           //     <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+           //             knowledge_commitment<
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //             >,
+           //             Output = knowledge_commitment<
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //             >,
+           //         >,
+           //     <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+           //             <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //             Output = <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //         >,
+           //     <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
+           //             knowledge_commitment<
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //             >,
+           //             Output = knowledge_commitment<
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
+           //                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
+           //             >,
+           //         >,
+           //     PP::ED: evaluation_domain<<<PP as ppzkadsnarkConfig>::snark_pp as PublicParams>::Fr>,
 {
     enter_block("Call to r1cs_ppzkadsnark_prover", false);
 
@@ -1369,7 +1416,6 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     enter_block("Compute the polynomial H", false);
     let mut qap_wit = r1cs_to_qap_witness_map::<
         <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-        PP::ED,
         pb_variable,
         pb_linear_combination,
     >(
@@ -1384,35 +1430,35 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
 
     // #ifdef DEBUG
     let mut t = Fr::<snark_pp<PP>>::random_element();
-    let mut qap_inst: qap_instance_evaluation<_, PP::ED> =
+    let mut qap_inst: qap_instance_evaluation<_> =
         r1cs_to_qap_instance_map_with_evaluation(&pk.constraint_system, &t);
     assert!(qap_inst.is_satisfied(&qap_wit));
     //#endif
 
     let mut g_A =
-        /* pk.A_query[0] + */ d1*pk.A_query[qap_wit.num_variables()+1].clone();
+        /* pk.A_query[0] + */ pk.A_query[qap_wit.num_variables()+1].clone()*d1;
     let mut g_B = pk.B_query[0].clone()
-        + qap_wit.d2.clone() * pk.B_query[qap_wit.num_variables() + 1].clone();
+        + pk.B_query[qap_wit.num_variables() + 1].clone() * qap_wit.d2.clone();
     let mut g_C = pk.C_query[0].clone()
-        + qap_wit.d3.clone() * pk.C_query[qap_wit.num_variables() + 1].clone();
+        + pk.C_query[qap_wit.num_variables() + 1].clone() * qap_wit.d3.clone();
 
-    let mut g_Ain = dauth.clone() * pk.A_query[qap_wit.num_variables() + 1].clone();
+    let mut g_Ain = pk.A_query[qap_wit.num_variables() + 1].clone() * dauth.clone();
 
     let mut g_H = G1::<snark_pp<PP>>::zero();
-    let mut g_K = (pk.K_query[0].clone()
-        + qap_wit.d1.clone() * pk.K_query[qap_wit.num_variables() + 1].clone()
-        + qap_wit.d2.clone() * pk.K_query[qap_wit.num_variables() + 2].clone()
-        + qap_wit.d3.clone() * pk.K_query[qap_wit.num_variables() + 3].clone());
+    let mut g_K = pk.K_query[0].clone()
+        + pk.K_query[qap_wit.num_variables() + 1].clone() * qap_wit.d1.clone()
+        + pk.K_query[qap_wit.num_variables() + 2].clone() * qap_wit.d2.clone()
+        + pk.K_query[qap_wit.num_variables() + 3].clone() * qap_wit.d3.clone();
 
     // #ifdef DEBUG
     for i in 0..qap_wit.num_inputs() + 1 {
-        assert!(pk.A_query[i].g == G1::<snark_pp::<PP>>::zero());
+        assert_eq!(pk.A_query[i].g, G1::<snark_pp::<PP>>::zero());
     }
-    assert!(pk.A_query.domain_size() == qap_wit.num_variables() + 2);
-    assert!(pk.B_query.domain_size() == qap_wit.num_variables() + 2);
-    assert!(pk.C_query.domain_size() == qap_wit.num_variables() + 2);
-    assert!(pk.H_query.len() == qap_wit.degree() + 1);
-    assert!(pk.K_query.len() == qap_wit.num_variables() + 4);
+    assert_eq!(pk.A_query.domain_size(), qap_wit.num_variables() + 2);
+    assert_eq!(pk.B_query.domain_size(), qap_wit.num_variables() + 2);
+    assert_eq!(pk.C_query.domain_size(), qap_wit.num_variables() + 2);
+    assert_eq!(pk.H_query.len(), qap_wit.degree() + 1);
+    assert_eq!(pk.K_query.len(), qap_wit.num_variables() + 4);
     //#endif
 
     // #ifdef MULTICORE
@@ -1426,7 +1472,9 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     enter_block("Compute answer to A-query", false);
     g_A = g_A
         + kc_multi_exp_with_mixed_addition::<
-            snark_pp<PP>,
+            G1<snark_pp<PP>>,
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
             { multi_exp_method::multi_exp_method_bos_coster },
         >(
             &pk.A_query,
@@ -1440,7 +1488,9 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     enter_block("Compute answer to Ain-query", false);
     g_Ain = g_Ain
         + kc_multi_exp_with_mixed_addition::<
-            snark_pp<PP>,
+            G1<snark_pp<PP>>,
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
             { multi_exp_method::multi_exp_method_bos_coster },
         >(
             &pk.A_query,
@@ -1455,7 +1505,9 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     enter_block("Compute answer to B-query", false);
     g_B = g_B
         + kc_multi_exp_with_mixed_addition::<
-            snark_pp<PP>,
+            G2<snark_pp<PP>>,
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
             { multi_exp_method::multi_exp_method_bos_coster },
         >(
             &pk.B_query,
@@ -1469,7 +1521,9 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     enter_block("Compute answer to C-query", false);
     g_C = g_C
         + kc_multi_exp_with_mixed_addition::<
-            snark_pp<PP>,
+            G1<snark_pp<PP>>,
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
             { multi_exp_method::multi_exp_method_bos_coster },
         >(
             &pk.C_query,
@@ -1482,7 +1536,11 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
 
     enter_block("Compute answer to H-query", false);
     g_H = g_H
-        + multi_exp::<snark_pp<PP>, { multi_exp_method::multi_exp_method_BDLO12 }>(
+        + multi_exp::<
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
+            { multi_exp_method::multi_exp_method_BDLO12 },
+        >(
             &pk.H_query[..qap_wit.degree() + 1],
             &qap_wit.coefficients_for_H[..qap_wit.degree() + 1],
             chunks,
@@ -1492,7 +1550,8 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
     enter_block("Compute answer to K-query", false);
     g_K = g_K
         + multi_exp_with_mixed_addition::<
-            snark_pp<PP>,
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
             { multi_exp_method::multi_exp_method_bos_coster },
         >(
             &pk.K_query[1..1 + qap_wit.num_variables()],
@@ -1509,9 +1568,13 @@ pub fn r1cs_ppzkadsnark_prover<PP: ppzkadsnarkConfig>(
         mus.push(auth_data[i].mu.clone());
         Ains.push(pk.A_query[i + 1].g.clone());
     }
-    let mut muA = dauth.clone() * pk.rA_i_Z_g1.clone();
+    let mut muA = pk.rA_i_Z_g1.clone() * dauth.clone();
     muA = muA
-        + multi_exp::<snark_pp<PP>, { multi_exp_method::multi_exp_method_bos_coster }>(
+        + multi_exp::<
+            G1<snark_pp<PP>>,
+            Fr<snark_pp<PP>>,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(
             &Ains[..qap_wit.num_inputs()],
             &mus[..qap_wit.num_inputs()],
             chunks,
@@ -1623,15 +1686,15 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
     leave_block("Compute PRFs", false);
     let mut prodA = sak.i.clone() * proof.g_Aau.g.clone();
     prodA = prodA
-        + multi_exp::<snark_pp<PP>, { multi_exp_method::multi_exp_method_bos_coster }>(
-            &pvk.Ain[..labels.len()],
-            &lambdas[..labels.len()],
-            1,
-        );
+        + multi_exp::<
+            <<snark_pp<PP> as ppTConfig>::KC as KCConfig>::T,
+            <<snark_pp<PP> as ppTConfig>::KC as KCConfig>::FieldT,
+            { multi_exp_method::multi_exp_method_bos_coster },
+        >(&pvk.Ain[..labels.len()], &lambdas[..labels.len()], 1);
 
     let mut result_auth = true;
 
-    if !(prodA == proof.muA) {
+    if proof.muA != prodA {
         if !inhibit_profiling_info {
             print_indent();
             print!("Authentication check failed.\n");

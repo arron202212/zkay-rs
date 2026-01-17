@@ -12,9 +12,9 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig, variable};
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::R1csPcdMessageConfig;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::MessageConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
-    R1csPcdLocalDataConfig, r1cs_pcd_compliance_predicate, r1cs_pcd_local_data, r1cs_pcd_message,
+    LocalDataConfig, r1cs_pcd_compliance_predicate, r1cs_pcd_local_data, r1cs_pcd_message,
     r1cs_pcd_witness,
 };
 use ffec::FieldTConfig;
@@ -27,7 +27,7 @@ use std::collections::BTreeSet;
  * A variable to represent an r1cs_pcd_message.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_pcd_message_variable<T: R1csPcdMessageVariableConfig> {
+pub struct r1cs_pcd_message_variable<T: MessageVariableConfig> {
     //  : public gadget
     pub num_vars_at_construction: usize,
     pub types: variable<T::FieldT, pb_variable>,
@@ -41,7 +41,7 @@ pub struct r1cs_pcd_message_variable<T: R1csPcdMessageVariableConfig> {
  */
 
 #[derive(Clone, Default)]
-pub struct r1cs_pcd_local_data_variable<T: R1csPcdLocalDataVariableConfig> {
+pub struct r1cs_pcd_local_data_variable<T: LocalDataVariableConfig> {
     // : public gadget
     pub num_vars_at_construction: usize,
     pub all_vars: pb_variable_array<T::FieldT, T::PB>,
@@ -66,15 +66,15 @@ pub trait ProtoboardConfig {
     ) -> r1cs_constraint_system<Self::FieldT, pb_variable, pb_linear_combination>;
 }
 
-pub trait compliance_predicate_handlerConfig: Default + Clone {
-    type ppT: ppTConfig;
-    type FieldT: FieldTConfig;
-    type PB: PBConfig;
+pub trait compliance_predicate_handlerConfig: ppTConfig {
+    // type ppT: ppTConfig;
+    // type FieldT: FieldTConfig;
+    // type PB: PBConfig;
     type protoboardT: ProtoboardConfig<FieldT = Self::FieldT, PB = Self::PB>;
-    type MV: R1csPcdMessageVariableConfig<Output = Self::M>;
-    type LDV: R1csPcdLocalDataVariableConfig<Output = Self::LD>;
-    type M: R1csPcdMessageConfig<FieldT = Self::FieldT>;
-    type LD: R1csPcdLocalDataConfig<FieldT = Self::FieldT>;
+    type MV: MessageVariableConfig<Output = Self::M, FieldT = Self::FieldT, PB = Self::PB>;
+    type LDV: LocalDataVariableConfig<Output = Self::LD, FieldT = Self::FieldT, PB = Self::PB>;
+    // type M: MessageConfig<FieldT = Self::FieldT>;
+    // type LD: LocalDataConfig<FieldT = Self::FieldT>;
     type T: Default + Clone;
 }
 #[derive(Clone, Default)]
@@ -93,11 +93,11 @@ pub struct compliance_predicate_handler<CPH: compliance_predicate_handlerConfig>
 }
 
 pub type r1cs_pcd_message_variables<T> = gadget<
-    <T as R1csPcdMessageVariableConfig>::FieldT,
-    <T as R1csPcdMessageVariableConfig>::PB,
+    <T as MessageVariableConfig>::FieldT,
+    <T as MessageVariableConfig>::PB,
     r1cs_pcd_message_variable<T>,
 >;
-impl<T: R1csPcdMessageVariableConfig> r1cs_pcd_message_variable<T> {
+impl<T: MessageVariableConfig> r1cs_pcd_message_variable<T> {
     pub fn new(
         pb: RcCell<protoboard<T::FieldT, T::PB>>,
         annotation_prefix: String,
@@ -121,13 +121,13 @@ impl<T: R1csPcdMessageVariableConfig> r1cs_pcd_message_variable<T> {
         )
     }
 }
-pub trait R1csPcdMessageVariableConfig: Default + Clone {
+pub trait MessageVariableConfig: Default + Clone {
     type FieldT: FieldTConfig;
     type PB: PBConfig;
-    type Output: R1csPcdMessageConfig;
-    fn get_message(&self) -> RcCell<r1cs_pcd_message<Self::Output>>;
+    type Output: MessageConfig<FieldT = Self::FieldT>;
+    fn get_message(&self) -> RcCell<r1cs_pcd_message<Self::FieldT, Self::Output>>;
 }
-// impl<FieldT: FieldTConfig, PB: PBConfig,T: R1csPcdMessageVariableConfig<FieldT>> R1csPcdMessageVariableConfig<FieldT>
+// impl<FieldT: FieldTConfig, PB: PBConfig,T: MessageVariableConfig<FieldT>> MessageVariableConfig<FieldT>
 //     for r1cs_pcd_message_variables<FieldT, PB,T>
 // {
 //     type Output=T;
@@ -135,7 +135,7 @@ pub trait R1csPcdMessageVariableConfig: Default + Clone {
 //        self.t.t.get_message()
 //     }
 // }
-impl<T: R1csPcdMessageVariableConfig> r1cs_pcd_message_variables<T> {
+impl<T: MessageVariableConfig> r1cs_pcd_message_variables<T> {
     pub fn update_all_vars(&mut self) {
         /* NOTE: this assumes that r1cs_pcd_message_variable has been the
          * only gadget allocating variables on the protoboard and needs to
@@ -149,18 +149,18 @@ impl<T: R1csPcdMessageVariableConfig> r1cs_pcd_message_variables<T> {
         }
     }
 
-    pub fn generate_r1cs_witness(&self, message: &RcCell<r1cs_pcd_message<T::Output>>) {
+    pub fn generate_r1cs_witness(&self, message: &RcCell<r1cs_pcd_message<T::FieldT, T::Output>>) {
         self.t
             .all_vars
             .fill_with_field_elements(&self.pb, &message.borrow().as_r1cs_variable_assignment());
     }
 }
 pub type r1cs_pcd_local_data_variables<T> = gadget<
-    <T as R1csPcdLocalDataVariableConfig>::FieldT,
-    <T as R1csPcdLocalDataVariableConfig>::PB,
+    <T as LocalDataVariableConfig>::FieldT,
+    <T as LocalDataVariableConfig>::PB,
     r1cs_pcd_local_data_variable<T>,
 >;
-impl<T: R1csPcdLocalDataVariableConfig> r1cs_pcd_local_data_variable<T> {
+impl<T: LocalDataVariableConfig> r1cs_pcd_local_data_variable<T> {
     pub fn new(
         pb: RcCell<protoboard<T::FieldT, T::PB>>,
         annotation_prefix: String,
@@ -179,21 +179,21 @@ impl<T: R1csPcdLocalDataVariableConfig> r1cs_pcd_local_data_variable<T> {
     }
 }
 
-pub trait R1csPcdLocalDataVariableConfig: Default + Clone {
+pub trait LocalDataVariableConfig: Default + Clone {
     type FieldT: FieldTConfig;
     type PB: PBConfig;
-    type Output: R1csPcdLocalDataConfig;
-    fn get_local_data(&self) -> RcCell<r1cs_pcd_local_data<Self::Output>>;
+    type Output: LocalDataConfig<FieldT = Self::FieldT>;
+    fn get_local_data(&self) -> RcCell<r1cs_pcd_local_data<Self::FieldT, Self::Output>>;
 }
 
-// impl<FieldT: FieldTConfig, PB: PBConfig> R1csPcdLocalDataVariableConfig<FieldT>
+// impl<FieldT: FieldTConfig, PB: PBConfig> LocalDataVariableConfig<FieldT>
 //     for r1cs_pcd_local_data_variables<FieldT, PB>
 // {
 //     fn get_local_data(&self) -> RcCell<r1cs_pcd_local_data<FieldT>> {
 //         panic!("");
 //     }
 // }
-impl<T: R1csPcdLocalDataVariableConfig> r1cs_pcd_local_data_variables<T> {
+impl<T: LocalDataVariableConfig> r1cs_pcd_local_data_variables<T> {
     pub fn update_all_vars(&mut self) {
         /* (the same NOTE as for r1cs_message_variable applies) */
         for var_idx in self.t.num_vars_at_construction + 1..=self.pb.borrow().num_variables() {
@@ -204,7 +204,10 @@ impl<T: R1csPcdLocalDataVariableConfig> r1cs_pcd_local_data_variables<T> {
         }
     }
 
-    pub fn generate_r1cs_witness(&self, local_data: &RcCell<r1cs_pcd_local_data<T::Output>>) {
+    pub fn generate_r1cs_witness(
+        &self,
+        local_data: &RcCell<r1cs_pcd_local_data<T::FieldT, T::Output>>,
+    ) {
         self.t
             .all_vars
             .fill_with_field_elements(&self.pb, &local_data.borrow().as_r1cs_variable_assignment());
@@ -240,8 +243,8 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
 
     pub fn generate_r1cs_witness(
         &mut self,
-        incoming_message_values: &Vec<RcCell<r1cs_pcd_message<CPH::M>>>,
-        local_data_value: &RcCell<r1cs_pcd_local_data<CPH::LD>>,
+        incoming_message_values: &Vec<RcCell<r1cs_pcd_message<CPH::FieldT, CPH::M>>>,
+        local_data_value: &RcCell<r1cs_pcd_local_data<CPH::FieldT, CPH::LD>>,
     ) {
         self.pb.clear_values();
         *self.pb.val_ref(&self.outgoing_message.borrow().t.types) = CPH::FieldT::from(self.types);
@@ -258,7 +261,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
             .generate_r1cs_witness(local_data_value);
     }
 
-    pub fn get_compliance_predicate(&self) -> r1cs_pcd_compliance_predicate<CPH::ppT> {
+    pub fn get_compliance_predicate(&self) -> r1cs_pcd_compliance_predicate<CPH::FieldT, CPH> {
         assert!(self.incoming_messages.len() == self.max_arity);
 
         let outgoing_message_payload_length = self.outgoing_message.borrow().t.all_vars.len() - 1;
@@ -282,7 +285,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
         constraint_system.auxiliary_input_size =
             self.pb.num_variables() - constraint_system.primary_input_size;
 
-        r1cs_pcd_compliance_predicate::<CPH::FieldT, pb_variable, pb_linear_combination>::new(
+        r1cs_pcd_compliance_predicate::<CPH::FieldT, CPH>::new(
             self.name.clone(),
             self.types.clone(),
             constraint_system,
@@ -300,7 +303,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
         self.pb.full_variable_assignment()
     }
 
-    pub fn get_outgoing_message(&self) -> RcCell<r1cs_pcd_message<CPH::M>> {
+    pub fn get_outgoing_message(&self) -> RcCell<r1cs_pcd_message<CPH::FieldT, CPH::M>> {
         self.outgoing_message.borrow().t.t.get_message()
     }
 
@@ -308,7 +311,10 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
         self.pb.val(&self.arity).as_ulong()
     }
 
-    pub fn get_incoming_message(&self, message_idx: usize) -> RcCell<r1cs_pcd_message<CPH::M>> {
+    pub fn get_incoming_message(
+        &self,
+        message_idx: usize,
+    ) -> RcCell<r1cs_pcd_message<CPH::FieldT, CPH::M>> {
         assert!(message_idx < self.max_arity);
         self.incoming_messages[message_idx]
             .borrow()
@@ -317,7 +323,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
             .get_message()
     }
 
-    pub fn get_local_data(&self) -> RcCell<r1cs_pcd_local_data<CPH::LD>> {
+    pub fn get_local_data(&self) -> RcCell<r1cs_pcd_local_data<CPH::FieldT, CPH::LD>> {
         self.local_data.borrow().t.t.get_local_data()
     }
 

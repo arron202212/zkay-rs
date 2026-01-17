@@ -7,7 +7,6 @@ use crate::relations::arithmetic_programs::sap::sap::{
 use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
     bacs_auxiliary_input, bacs_circuit, bacs_primary_input,
 };
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
@@ -16,12 +15,13 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use ffec::FieldTConfig;
-use ffec::common::profiling;
 use ffec::common::profiling::{enter_block, leave_block};
-use ffec::common::utils;
 use ffec::common::utils::FMT;
-use fqfft::evaluation_domain::get_evaluation_domain::get_evaluation_domain;
-use fqfft::evaluation_domain::{evaluation_domain::evaluation_domain, get_evaluation_domain};
+
+use fqfft::evaluation_domain::{
+    evaluation_domain::{EvaluationDomainConfig, EvaluationDomainType, evaluation_domain},
+    get_evaluation_domain::get_evaluation_domain,
+};
 use rccell::RcCell;
 /** @file
 *****************************************************************************
@@ -123,12 +123,11 @@ pub fn times_four<FieldT: FieldTConfig>(x: FieldT) -> FieldT {
 
 pub fn r1cs_to_sap_get_domain<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
-) -> RcCell<evaluation_domain<ED>> {
+) -> RcCell<EvaluationDomainType<FieldT>> {
     /*
      * the SAP instance will have:
      * - two constraints for every constraint in the original constraint system
@@ -137,7 +136,7 @@ pub fn r1cs_to_sap_get_domain<
      * see comments in r1cs_to_sap_instance_map for details on where these
      * constraints come from.
      */
-    return get_evaluation_domain::<FieldT, ED>(2 * cs.num_constraints() + 2 * cs.num_inputs() + 1)
+    return get_evaluation_domain::<FieldT>(2 * cs.num_constraints() + 2 * cs.num_inputs() + 1)
         .unwrap();
 }
 
@@ -146,12 +145,11 @@ pub fn r1cs_to_sap_get_domain<
  */
 pub fn r1cs_to_sap_instance_map<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
-) -> sap_instance<FieldT, ED> {
+) -> sap_instance<FieldT> {
     enter_block("Call to r1cs_to_sap_instance_map", false);
 
     let domain = r1cs_to_sap_get_domain(cs);
@@ -271,14 +269,14 @@ pub fn r1cs_to_sap_instance_map<
 
     leave_block("Call to r1cs_to_sap_instance_map", false);
 
-    return sap_instance::<FieldT, ED>::new(
-        domain,
+    sap_instance::<FieldT>::new(
+        domain.clone(),
         sap_num_variables,
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         A_in_Lagrange_basis,
         C_in_Lagrange_basis,
-    );
+    )
 }
 
 /**
@@ -287,29 +285,28 @@ pub fn r1cs_to_sap_instance_map<
  */
 pub fn r1cs_to_sap_instance_map_with_evaluation<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
-) -> sap_instance_evaluation<FieldT, ED> {
+) -> sap_instance_evaluation<FieldT> {
     enter_block("Call to r1cs_to_sap_instance_map_with_evaluation", false);
 
-    let domain: RcCell<evaluation_domain<ED>> = r1cs_to_sap_get_domain(cs);
+    let domain: RcCell<EvaluationDomainType<FieldT>> = r1cs_to_sap_get_domain(cs);
 
     let sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
 
     let (mut At, mut Ct, mut Ht) = (
         vec![FieldT::zero(); sap_num_variables + 1],
         vec![FieldT::zero(); sap_num_variables + 1],
-        Vec::with_capacity(domain.borrow().m + 1),
+        Vec::with_capacity(domain.borrow().m() + 1),
     );
 
-    let Zt = domain.borrow().compute_vanishing_polynomial(t);
+    let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
     enter_block("Compute evaluations of A, C, H at t", false);
-    let u = domain.borrow().evaluate_all_lagrange_polynomials(t);
+    let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
     /**
      * add and process all constraints as in r1cs_to_sap_instance_map
      */
@@ -356,7 +353,7 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     }
 
     let mut ti = FieldT::one();
-    for i in 0..domain.borrow().m + 1 {
+    for i in 0..domain.borrow().m() + 1 {
         Ht.push(ti.clone());
         ti *= t.clone();
     }
@@ -364,17 +361,17 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
 
     leave_block("Call to r1cs_to_sap_instance_map_with_evaluation", false);
 
-    return sap_instance_evaluation::<FieldT, ED>::new(
-        domain,
+    sap_instance_evaluation::<FieldT>::new(
+        domain.clone(),
         sap_num_variables,
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         t.clone(),
         At,
         Ct,
         Ht,
         Zt,
-    );
+    )
 }
 
 /**
@@ -408,7 +405,6 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
 */
 pub fn r1cs_to_sap_witness_map<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -423,7 +419,7 @@ pub fn r1cs_to_sap_witness_map<
     /* sanity check */
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
-    let domain: RcCell<evaluation_domain<ED>> = r1cs_to_sap_get_domain(cs);
+    let domain: RcCell<EvaluationDomainType<FieldT>> = r1cs_to_sap_get_domain(cs);
 
     let sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
 
@@ -465,7 +461,7 @@ pub fn r1cs_to_sap_witness_map<
     }
 
     enter_block("Compute evaluation of polynomial A on set S", false);
-    let mut aA = vec![FieldT::zero(); domain.borrow().m];
+    let mut aA = vec![FieldT::zero(); domain.borrow().m()];
 
     /* account for all constraints, as in r1cs_to_sap_instance_map */
     for i in 0..cs.num_constraints() {
@@ -491,28 +487,28 @@ pub fn r1cs_to_sap_witness_map<
     leave_block("Compute evaluation of polynomial A on set S", false);
 
     enter_block("Compute coefficients of polynomial A", false);
-    domain.borrow().iFFT(&aA);
+    domain.borrow_mut().iFFT(&mut aA);
     leave_block("Compute coefficients of polynomial A", false);
 
     enter_block("Compute ZK-patch", false);
-    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m + 1];
+    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
     /* add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z */
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = (d1.clone() * aA[i].clone()) + (d1.clone() * aA[i].clone());
     }
     coefficients_for_H[0] -= d2.clone();
     domain
-        .borrow()
-        .add_poly_Z(&(d1.clone() * d1.clone()), &coefficients_for_H);
+        .borrow_mut()
+        .add_poly_Z(&(d1.clone() * d1.clone()), &mut coefficients_for_H);
     leave_block("Compute ZK-patch", false);
 
     enter_block("Compute evaluation of polynomial A on set T", false);
     domain
-        .borrow()
-        .cosetFFT(&aA, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial A on set T", false);
 
     enter_block("Compute evaluation of polynomial H on set T", false);
@@ -520,12 +516,12 @@ pub fn r1cs_to_sap_witness_map<
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aA[i].clone();
     }
 
     enter_block("Compute evaluation of polynomial C on set S", false);
-    let mut aC = vec![FieldT::zero(); domain.borrow().m];
+    let mut aC = vec![FieldT::zero(); domain.borrow().m()];
     /* again, accounting for all constraints */
     let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints() {
@@ -550,39 +546,39 @@ pub fn r1cs_to_sap_witness_map<
     leave_block("Compute evaluation of polynomial C on set S", false);
 
     enter_block("Compute coefficients of polynomial C", false);
-    domain.borrow().iFFT(&aC);
+    domain.borrow_mut().iFFT(&mut aC);
     leave_block("Compute coefficients of polynomial C", false);
 
     enter_block("Compute evaluation of polynomial C on set T", false);
     domain
-        .borrow()
-        .cosetFFT(&aC, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial C on set T", false);
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
 
     enter_block("Divide by Z on set T", false);
-    domain.borrow().divide_by_Z_on_coset(&H_tmp);
+    domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
     leave_block("Divide by Z on set T", false);
 
     leave_block("Compute evaluation of polynomial H on set T", false);
 
     enter_block("Compute coefficients of polynomial H", false);
     domain
-        .borrow()
-        .icosetFFT(&H_tmp, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
     leave_block("Compute coefficients of polynomial H", false);
 
     enter_block("Compute sum of H and ZK-patch", false);
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
     leave_block("Compute sum of H and ZK-patch", false);
@@ -591,7 +587,7 @@ pub fn r1cs_to_sap_witness_map<
 
     return sap_witness::<FieldT>::new(
         sap_num_variables,
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         d1.clone(),
         d2.clone(),

@@ -16,10 +16,11 @@ pub mod algebra;
 pub use self::algebra::*;
 pub mod common;
 pub use self::common::utils::*;
-
+const D: &'static [u64] = &[0];
 use crate::field_utils::bigint::bigint;
 pub trait PpConfig:
     Default
+    + std::fmt::Debug
     + std::fmt::Display
     + std::ops::Mul
     + std::cmp::PartialEq
@@ -33,7 +34,6 @@ pub trait PpConfig:
     + for<'a> std::ops::Mul<&'a Self, Output = Self>
 {
     type TT: AsRef<[u64]>;
-   
 
     const num_limbs: usize = 1;
     const coeff_a: i64 = 1;
@@ -101,7 +101,13 @@ pub trait FieldTConfig:
     + std::ops::Add<i32, Output = Self>
     + PpConfig
 {
-    fn to_field<FieldTT:Default>(&self)->FieldTT{
+    fn as_ref_u64(&self) -> Vec<u64> {
+        vec![]
+    }
+    fn get_bit(&self, i: usize) -> bool {
+        false
+    }
+    fn to_field<FieldTT: Default>(&self) -> FieldTT {
         FieldTT::default()
     }
     fn squared(&self) -> Self {
@@ -122,10 +128,10 @@ pub trait FieldTConfig:
     fn as_ulong(&self) -> usize {
         0
     }
-    fn X(&self) -> Self{
+    fn X(&self) -> Self {
         Default::default()
     }
-    fn Y(&self) -> Self{
-         Default::default()
+    fn Y(&self) -> Self {
+        Default::default()
     }
 }

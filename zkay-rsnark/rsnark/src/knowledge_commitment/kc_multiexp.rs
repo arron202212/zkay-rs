@@ -12,6 +12,8 @@ use crate::knowledge_commitment::knowledge_commitment::{
 use ffec::FieldTConfig;
 use ffec::PpConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::field_utils::BigInt;
+use ffec::field_utils::BigInteger;
 use ffec::field_utils::bigint::bigint;
 use ffec::scalar_multiplication::multiexp::{
     KCConfig, batch_to_special, inhibit_profiling_info, multi_exp, multi_exp_method, window_table,
@@ -20,36 +22,41 @@ use ffec::scalar_multiplication::multiexp::{
 use ffec::scalar_multiplication::wnaf::opt_window_wnaf_exp;
 use ffec::{One, Zero};
 
-pub fn opt_window_wnaf_exps<KC: KCConfig>(
-    base: &knowledge_commitment<KC>,
-    scalar: &KC::BigInt,
+pub fn opt_window_wnaf_exps<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
+    base: &knowledge_commitment<T, T2>,
+    scalar: &FieldT,
     scalar_bits: usize,
-) -> knowledge_commitment<KC> {
-    knowledge_commitment::<KC>::new(
-        opt_window_wnaf_exp(&base.g, scalar, scalar_bits),
-        opt_window_wnaf_exp(&base.h, scalar, scalar_bits),
+) -> knowledge_commitment<T, T2> {
+    knowledge_commitment::<T, T2>::new(
+        opt_window_wnaf_exp::<T, FieldT>(&base.g, scalar, scalar_bits),
+        opt_window_wnaf_exp::<T2, FieldT>(&base.h, scalar, scalar_bits),
     )
 }
 
-pub fn kc_multi_exp_with_mixed_addition<KC: KCConfig, const Method: multi_exp_method>(
-    vec: &knowledge_commitment_vector<KC>,
+pub fn kc_multi_exp_with_mixed_addition<
+    T: PpConfig,
+    T2: PpConfig,
+    FieldT: FieldTConfig,
+    const Method: multi_exp_method,
+>(
+    vec: &knowledge_commitment_vector<T, T2>,
     min_idx: usize,
     max_idx: usize,
-    scalar: &[KC::FieldT],
+    scalar: &[FieldT],
     chunks: usize,
-) -> knowledge_commitment<KC> {
+) -> knowledge_commitment<T, T2> {
     enter_block("Process scalar vector", false);
     let index_it = vec.indices.partition_point(|&i| i < min_idx);
     let offset = index_it;
     let value_it = &vec.values[offset];
 
-    let zero = KC::FieldT::zero();
-    let one = KC::FieldT::one();
+    let zero = FieldT::zero();
+    let one = FieldT::one();
 
     let mut p = vec![];
     let mut g = vec![];
 
-    let mut acc = knowledge_commitment::<KC>::zero();
+    let mut acc = knowledge_commitment::<T, T2>::zero();
 
     let mut num_skip = 0;
     let mut num_add = 0;
@@ -65,7 +72,7 @@ pub fn kc_multi_exp_with_mixed_addition<KC: KCConfig, const Method: multi_exp_me
         let scalar_position = index_it - min_idx;
         assert!(scalar_position < scalar_length);
 
-        let scalar = KC::FieldT::from(scalar_position);
+        let scalar = FieldT::from(scalar_position);
 
         if scalar == zero {
             // do nothing
@@ -109,37 +116,37 @@ pub fn kc_multi_exp_with_mixed_addition<KC: KCConfig, const Method: multi_exp_me
     );
     leave_block("Process scalar vector", false);
 
-    acc + multi_exp::<KC, Method>(&g, &p, chunks)
+    acc + multi_exp::<knowledge_commitment<T, T2>, FieldT, Method>(&g, &p, chunks)
 }
 
-pub fn kc_batch_exp_internal<KC: KCConfig>(
+pub fn kc_batch_exp_internal<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
     scalar_size: usize,
     T1_window: usize,
     T2_window: usize,
-    T1_table: &window_table<KC::T>,
-    T2_table: &window_table<KC::T2>,
-    T1_coeff: &KC::FieldT,
-    T2_coeff: &KC::FieldT,
-    v: &Vec<KC::FieldT>,
+    T1_table: &window_table<T>,
+    T2_table: &window_table<T2>,
+    T1_coeff: &FieldT,
+    T2_coeff: &FieldT,
+    v: &Vec<FieldT>,
     start_pos: usize,
     end_pos: usize,
     expected_size: usize,
-) -> knowledge_commitment_vector<KC> {
-    let mut res = knowledge_commitment_vector::<KC>::default();
+) -> knowledge_commitment_vector<T, T2> {
+    let mut res = knowledge_commitment_vector::<T, T2>::default();
 
     res.values.reserve(expected_size);
     res.indices.reserve(expected_size);
 
     for pos in (start_pos..end_pos) {
         if !v[pos].is_zero() {
-            res.values.push(knowledge_commitment::<KC>::new(
-                windowed_exp::<KC>(
+            res.values.push(knowledge_commitment::<T, T2>::new(
+                windowed_exp::<T, FieldT>(
                     scalar_size,
                     T1_window,
                     T1_table,
                     &(v[pos].clone() * T1_coeff),
                 ),
-                windowed_exp::<KC>(
+                windowed_exp::<T2, FieldT>(
                     scalar_size,
                     T2_window,
                     T2_table,
@@ -153,18 +160,18 @@ pub fn kc_batch_exp_internal<KC: KCConfig>(
     res
 }
 
-pub fn kc_batch_exp<KC: KCConfig>(
+pub fn kc_batch_exp<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
     scalar_size: usize,
     T1_window: usize,
     T2_window: usize,
-    T1_table: &window_table<KC::T>,
-    T2_table: &window_table<KC::T2>,
-    T1_coeff: &KC::FieldT,
-    T2_coeff: &KC::FieldT,
-    v: &Vec<KC::FieldT>,
+    T1_table: &window_table<T>,
+    T2_table: &window_table<T2>,
+    T1_coeff: &FieldT,
+    T2_coeff: &FieldT,
+    v: &Vec<FieldT>,
     suggested_num_chunks: usize,
-) -> knowledge_commitment_vector<KC> {
-    let mut res = knowledge_commitment_vector::<KC>::default();
+) -> knowledge_commitment_vector<T, T2> {
+    let mut res = knowledge_commitment_vector::<T, T2>::default();
     res.domain_size_ = v.len();
 
     let mut nonzero = 0;
@@ -184,7 +191,7 @@ pub fn kc_batch_exp<KC: KCConfig>(
         );
     }
 
-    let mut tmp = vec![knowledge_commitment_vector::<KC>::default(); num_chunks];
+    let mut tmp = vec![knowledge_commitment_vector::<T, T2>::default(); num_chunks];
     let mut chunk_pos = vec![0; num_chunks + 1];
 
     let chunk_size = nonzero / num_chunks;
@@ -210,7 +217,7 @@ pub fn kc_batch_exp<KC: KCConfig>(
     //#pragma omp parallel for
     //#endif
     for i in 0..num_chunks {
-        tmp[i] = kc_batch_exp_internal::<KC>(
+        tmp[i] = kc_batch_exp_internal::<T, T2, FieldT>(
             scalar_size,
             T1_window,
             T2_window,
@@ -228,7 +235,7 @@ pub fn kc_batch_exp<KC: KCConfig>(
             },
         );
         // #ifdef USE_MIXED_ADDITION
-        batch_to_special::<knowledge_commitment<KC>>(&mut tmp[i].values.clone());
+        batch_to_special::<knowledge_commitment<T, T2>>(&mut tmp[i].values.clone());
         //#endif
     }
 

@@ -61,50 +61,50 @@ use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::field_utils::BigInteger;
 use ffec::field_utils::bigint::bigint;
 use std::ops::Mul;
-pub trait FpmConfig{
+pub trait FpmConfig {
     type Fr: FieldTConfig;
-    fn X(&self)->Self::Fr{
+    fn X(&self) -> Self::Fr {
         Default::default()
     }
-    fn Y(&self)->Self::Fr{
+    fn Y(&self) -> Self::Fr {
         Default::default()
     }
-    fn twist()->Self::Fr{
+    fn twist() -> Self::Fr {
         Default::default()
     }
 }
-pub trait CoeffsConfig:Default+Clone{
+pub trait CoeffsConfig: Default + Clone {
     // type FieldT:Default+Clone;
-    fn gamma<FieldT:Default+Clone>(&self) -> FieldT{
+    fn gamma<FieldT: Default + Clone>(&self) -> FieldT {
         Default::default()
     }
-    fn gamma_X<FieldT:Default+Clone>(&self) -> FieldT{
-     Default::default()
+    fn gamma_X<FieldT: Default + Clone>(&self) -> FieldT {
+        Default::default()
     }
-    fn old_RX<FieldT:Default+Clone>(&self) -> FieldT{
-     Default::default()
+    fn old_RX<FieldT: Default + Clone>(&self) -> FieldT {
+        Default::default()
     }
-    fn old_RY<FieldT:Default+Clone>(&self) -> FieldT{
-     Default::default()
+    fn old_RY<FieldT: Default + Clone>(&self) -> FieldT {
+        Default::default()
     }
-
 }
-pub trait affine_ate_G_precomp_typeConfig{
-    type CC:CoeffsConfig;
-    fn PY_twist_squared<FieldTT:Default>(&self)->FieldTT{
+pub trait affine_ate_G_precomp_typeConfig {
+    type CC: CoeffsConfig;
+    fn PY_twist_squared<FieldTT: Default>(&self) -> FieldTT {
         Default::default()
     }
-    fn coeffs(&self)->Vec<Self::CC>{
-    vec![]}
+    fn coeffs(&self) -> Vec<Self::CC> {
+        vec![]
+    }
 }
 pub trait PublicParamsType: Default + Clone {
     type Fp_type: FieldTConfig;
-    type G1_type: PpConfig+FpmConfig<Fr=Self::Fp_type>;
-    type G2_type: PpConfig+FpmConfig<Fr=Self::Fp_type>;
+    type G1_type: PpConfig + FpmConfig<Fr = Self::Fp_type>;
+    type G2_type: PpConfig + FpmConfig<Fr = Self::Fp_type>;
     type G1_precomp_type: std::fmt::Display + Default + Clone + PartialEq;
     type G2_precomp_type: std::fmt::Display + Default + Clone + PartialEq;
-    type affine_ate_G1_precomp_type:affine_ate_G_precomp_typeConfig;
-    type affine_ate_G2_precomp_type :affine_ate_G_precomp_typeConfig;
+    type affine_ate_G1_precomp_type: affine_ate_G_precomp_typeConfig;
+    type affine_ate_G2_precomp_type: affine_ate_G_precomp_typeConfig;
     type Fq_type: PpConfig;
     type Fqe_type: PpConfig;
     type Fqk_type: PpConfig;
@@ -115,17 +115,17 @@ pub trait PublicParamsType: Default + Clone {
 // +Mul<Self::G2,Output=Self::G1>+Mul<Self::Fr,Output=Self::G1>
 // +Mul<Self::G1,Output=Self::G2>
 pub trait PublicParams: PublicParamsType {
-    type Fr: FieldTConfig = Self::Fp_type;
-    type G1: PpConfig+FpmConfig<Fr=Self::Fr> ;
-    type G2: PpConfig+FpmConfig<Fr=Self::Fr>;
+    type Fr: FieldTConfig; //+ Mul<Self::G1,Output=Self::G1>+ Mul<Self::G2,Output=Self::G2> 
+    type G1: PpConfig + FpmConfig<Fr = Self::Fr> + Mul<Self::Fr, Output = Self::G1>;
+    type G2: PpConfig + FpmConfig<Fr = Self::Fr> + Mul<Self::Fr, Output = Self::G2>;
     type G1_precomp: std::fmt::Display + Default + Clone + PartialEq = Self::G1_precomp_type;
     type G2_precomp: std::fmt::Display + Default + Clone + PartialEq = Self::G2_precomp_type;
-    type affine_ate_G1_precomp:affine_ate_G_precomp_typeConfig ;
-    type affine_ate_G2_precomp:affine_ate_G_precomp_typeConfig;
+    type affine_ate_G1_precomp: affine_ate_G_precomp_typeConfig;
+    type affine_ate_G2_precomp: affine_ate_G_precomp_typeConfig;
     type Fq: PpConfig = Self::Fq_type;
     type Fqe: PpConfig = Self::Fqe_type;
     type Fqk: PpConfig = Self::Fqk_type;
-    type GT: PpConfig = Self::GT_type;
+    type GT: PpConfig + Mul<Self::Fr, Output = Self::GT>;
     type Fr_vector = Vec<Self::Fr>;
     type G1_vector = Vec<Self::G1>;
     type G2_vector = Vec<Self::G2>;

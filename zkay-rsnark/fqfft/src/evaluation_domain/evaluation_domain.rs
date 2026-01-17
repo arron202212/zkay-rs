@@ -22,6 +22,15 @@
 // \f[   L_{idx,S}(z)->Self= prod_{k \neq idx} (z - a_k) / prod_{k \neq idx} (a_{idx} - a_k)   \f]
 // Note that, by construction:
 // \f[   \forall j \neq idx: L_{idx,S}(a_{idx}) = 1  \text{ and }  L_{idx,S}(a_j) = 0   \f]
+
+use crate::evaluation_domain::domains::arithmetic_sequence_domain::arithmetic_sequence_domains;
+use crate::evaluation_domain::domains::basic_radix2_domain::basic_radix2_domains;
+use crate::evaluation_domain::domains::extended_radix2_domain::extended_radix2_domains;
+use crate::evaluation_domain::domains::geometric_sequence_domain::geometric_sequence_domains;
+use crate::evaluation_domain::domains::step_radix2_domain::step_radix2_domains;
+use enum_dispatch::enum_dispatch;
+use ffec::FieldTConfig;
+
 #[derive(Default, Clone)]
 pub struct evaluation_domain<T: Default + Clone> {
     pub m: usize,
@@ -33,11 +42,30 @@ impl<T: Default + Clone> evaluation_domain<T> {
     }
 }
 
+#[enum_dispatch(EvaluationDomainConfig<FieldT>)]
+#[derive(Clone)]
+pub enum EvaluationDomainType<FieldT: FieldTConfig> {
+    ArithmeticSequence(arithmetic_sequence_domains<FieldT>),
+    BasicRadix2(basic_radix2_domains<FieldT>),
+    GeometricSequence(geometric_sequence_domains<FieldT>),
+    ExtendedRadix2(extended_radix2_domains<FieldT>),
+    StepRadix2(step_radix2_domains<FieldT>),
+}
+
+impl<FieldT: FieldTConfig> Default for EvaluationDomainType<FieldT> {
+    fn default() -> Self {
+        Self::ArithmeticSequence(arithmetic_sequence_domains::<FieldT>::default())
+    }
+}
 /**
  * An evaluation domain.
  */
-//
+
+#[enum_dispatch]
 pub trait EvaluationDomainConfig<FieldT> {
+    fn m(&self) -> usize {
+        0
+    }
     // const M: usize = 0;
 
     /**

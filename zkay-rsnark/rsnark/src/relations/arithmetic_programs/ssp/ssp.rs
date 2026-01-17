@@ -1,32 +1,23 @@
+// Declaration of interfaces for a SSP ("Square Span Program").
+
+// SSPs are defined in \[DFGK14].
+
+// References:
+
+// \[DFGK14]:
+// "Square Span Programs with Applications to Succinct NIZK Arguments"
+// George Danezis, Cedric Fournet, Jens Groth, Markulf Kohlweiss,
+// ASIACRYPT 2014,
+// <http://eprint.iacr.org/2014/718>
+
 use ffec::FieldTConfig;
 use ffec::scalar_multiplication::multiexp::inner_product;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a SSP ("Square Span Program").
-
-SSPs are defined in \[DFGK14].
-
-References:
-
-\[DFGK14]:
-"Square Span Programs with Applications to Succinct NIZK Arguments"
-George Danezis, Cedric Fournet, Jens Groth, Markulf Kohlweiss,
-ASIACRYPT 2014,
-<http://eprint.iacr.org/2014/718>
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef SSP_HPP_
-// #define SSP_HPP_
-
-// use  <map>
-use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
+use fqfft::evaluation_domain::evaluation_domain::{
+    EvaluationDomainConfig, EvaluationDomainType, evaluation_domain,
+};
 use rccell::RcCell;
 use std::collections::BTreeMap;
+
 /* forward declaration */
 
 // pub struct ssp_witness;
@@ -43,12 +34,12 @@ use std::collections::BTreeMap;
  * determined by the domain (as Z is its vanishing polynomial).
  */
 
-pub struct ssp_instance<FieldT: FieldTConfig, ED: Default+Clone> {
+pub struct ssp_instance<FieldT: FieldTConfig> {
     num_variables: usize,
     degree: usize,
     num_inputs: usize,
 
-    domain: RcCell<evaluation_domain<ED>>,
+    domain: RcCell<EvaluationDomainType<FieldT>>,
 
     V_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
@@ -64,12 +55,12 @@ pub struct ssp_instance<FieldT: FieldTConfig, ED: Default+Clone> {
  * - evaluations of all monomials of t.
  */
 
-pub struct ssp_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
+pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
     num_variables: usize,
     degree: usize,
     num_inputs: usize,
 
-    domain: RcCell<evaluation_domain<ED>>,
+    domain: RcCell<EvaluationDomainType<FieldT>>,
 
     t: FieldT,
 
@@ -117,9 +108,9 @@ use ffec::common::profiling;
 use ffec::common::utils;
 // use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 
-impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance<FieldT, ED> {
+impl<FieldT: FieldTConfig> ssp_instance<FieldT> {
     pub fn new(
-        domain: RcCell<evaluation_domain<ED>>,
+        domain: RcCell<EvaluationDomainType<FieldT>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -135,7 +126,7 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance<FieldT, ED> {
     }
 
     pub fn new2(
-        domain: RcCell<evaluation_domain<ED>>,
+        domain: RcCell<EvaluationDomainType<FieldT>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -167,9 +158,12 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance<FieldT, ED> {
         let mut Vt = vec![FieldT::zero(); self.num_variables() + 1];
         let mut Ht = vec![FieldT::zero(); self.degree() + 1];
 
-        let mut Zt = self.domain.borrow().compute_vanishing_polynomial(&t);
+        let mut Zt = self.domain.borrow_mut().compute_vanishing_polynomial(&t);
 
-        let u = self.domain.borrow().evaluate_all_lagrange_polynomials(&t);
+        let u = self
+            .domain
+            .borrow_mut()
+            .evaluate_all_lagrange_polynomials(&t);
 
         for i in 0..self.num_variables() + 1 {
             for el in &self.V_in_Lagrange_basis[i] {
@@ -183,7 +177,7 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance<FieldT, ED> {
             ti *= t.clone();
         }
 
-        let eval_ssp_inst = ssp_instance_evaluation::<FieldT, ED>::new(
+        let eval_ssp_inst = ssp_instance_evaluation::<FieldT>::new(
             self.domain.clone(),
             self.num_variables(),
             self.degree(),
@@ -197,9 +191,9 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance<FieldT, ED> {
     }
 }
 
-impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance_evaluation<FieldT, ED> {
+impl<FieldT: FieldTConfig> ssp_instance_evaluation<FieldT> {
     pub fn new(
-        domain: RcCell<evaluation_domain<ED>>,
+        domain: RcCell<EvaluationDomainType<FieldT>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -221,7 +215,7 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance_evaluation<FieldT, ED
     }
 
     pub fn new2(
-        domain: RcCell<evaluation_domain<ED>>,
+        domain: RcCell<EvaluationDomainType<FieldT>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -283,7 +277,12 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance_evaluation<FieldT, ED
             return false;
         }
 
-        if self.Zt != self.domain.borrow().compute_vanishing_polynomial(&self.t) {
+        if self.Zt
+            != self
+                .domain
+                .borrow_mut()
+                .compute_vanishing_polynomial(&self.t)
+        {
             return false;
         }
 
@@ -291,12 +290,12 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> ssp_instance_evaluation<FieldT, ED
         let mut ans_H = FieldT::zero();
 
         ans_V = ans_V
-            + inner_product::<FieldT>(
+            + inner_product::<FieldT, FieldT>(
                 &self.Vt[1..1 + self.num_variables()],
                 &witness.coefficients_for_Vs[..self.num_variables()],
             );
         ans_H = ans_H
-            + inner_product::<FieldT>(
+            + inner_product::<FieldT, FieldT>(
                 &self.Ht[..self.degree() + 1],
                 &witness.coefficients_for_H[..self.degree() + 1],
             );

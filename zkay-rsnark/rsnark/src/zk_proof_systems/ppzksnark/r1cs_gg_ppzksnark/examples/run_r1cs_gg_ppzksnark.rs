@@ -37,11 +37,7 @@ impl TestAffineVerifier for TestAffineVerifiers<true> {
         expected_answer: bool,
     ) {
         println!("R1CS GG-ppzkSNARK Affine Verifier");
-        let answer = r1cs_gg_ppzksnark_affine_verifier_weak_IC::<ppT, NN, FieldT, ED>(
-            &vk,
-            &primary_input,
-            &proof,
-        );
+        let answer = r1cs_gg_ppzksnark_affine_verifier_weak_IC::<ppT>(&vk, &primary_input, &proof);
         assert!(answer == expected_answer);
     }
 }
@@ -98,14 +94,13 @@ pub fn run_r1cs_gg_ppzksnark<ppT: ppTConfig>(
     enter_block("Call to run_r1cs_gg_ppzksnark", false);
 
     println!("R1CS GG-ppzkSNARK Generator");
-    let mut keypair =
-        r1cs_gg_ppzksnark_generator::<ppT, NN, FieldT, ED>(&example.constraint_system);
+    let mut keypair = r1cs_gg_ppzksnark_generator::<ppT>(&example.constraint_system);
     print!("\n");
     print_indent();
     println!("after generator");
 
     println!("Preprocess verification key");
-    let mut pvk = r1cs_gg_ppzksnark_verifier_process_vk::<ppT, NN, FieldT, ED>(&keypair.vk);
+    let mut pvk = r1cs_gg_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
         enter_block("Test serialization of keys", false);
@@ -116,7 +111,7 @@ pub fn run_r1cs_gg_ppzksnark<ppT: ppTConfig>(
     }
 
     println!("R1CS GG-ppzkSNARK Prover");
-    let mut proof = r1cs_gg_ppzksnark_prover::<ppT, NN, FieldT, ED>(
+    let mut proof = r1cs_gg_ppzksnark_prover::<ppT>(
         &keypair.pk,
         &example.primary_input,
         &example.auxiliary_input,
@@ -132,11 +127,8 @@ pub fn run_r1cs_gg_ppzksnark<ppT: ppTConfig>(
     }
 
     println!("R1CS GG-ppzkSNARK Verifier");
-    let mut ans = r1cs_gg_ppzksnark_verifier_strong_IC::<ppT, NN, FieldT, ED>(
-        &keypair.vk,
-        &example.primary_input,
-        &proof,
-    );
+    let mut ans =
+        r1cs_gg_ppzksnark_verifier_strong_IC::<ppT>(&keypair.vk, &example.primary_input, &proof);
     print!("\n");
     print_indent();
     println!("after verifier");
@@ -146,21 +138,18 @@ pub fn run_r1cs_gg_ppzksnark<ppT: ppTConfig>(
     );
 
     println!("R1CS GG-ppzkSNARK Online Verifier");
-    let mut ans2 = r1cs_gg_ppzksnark_online_verifier_strong_IC::<ppT, NN, FieldT, ED>(
-        &pvk,
-        &example.primary_input,
-        &proof,
-    );
+    let mut ans2 =
+        r1cs_gg_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &example.primary_input, &proof);
     assert!(ans == ans2);
     if ppT::has_affine_pairing {
-        TestAffineVerifiers::<true>::test_affine_verifier::<ppT, NN, FieldT, ED>(
+        TestAffineVerifiers::<true>::test_affine_verifier::<ppT>(
             &keypair.vk,
             &example.primary_input,
             &proof,
             ans,
         );
     } else {
-        TestAffineVerifiers::<false>::test_affine_verifier::<ppT, NN, FieldT, ED>(
+        TestAffineVerifiers::<false>::test_affine_verifier::<ppT>(
             &keypair.vk,
             &example.primary_input,
             &proof,

@@ -48,10 +48,9 @@ pub struct step_radix2_domain<FieldT: FieldTConfig> {
 //         + num_traits::One
 //         + Clone,
 
-pub type step_radix2_domains<FieldT> =
-    evaluation_domain<step_radix2_domain<FieldT>>;
+pub type step_radix2_domains<FieldT> = evaluation_domain<step_radix2_domain<FieldT>>;
 impl<FieldT: FieldTConfig> step_radix2_domain<FieldT> {
-    pub fn new(m: usize) -> eyre::Result<step_radix2_domains<FieldT> > {
+    pub fn new(m: usize) -> eyre::Result<step_radix2_domains<FieldT>> {
         //: evaluation_domain<FieldT>(m)
         if m <= 1 {
             eyre::bail!("step_radix2(): expected m > 1");
@@ -66,14 +65,16 @@ impl<FieldT: FieldTConfig> step_radix2_domain<FieldT> {
         let omega = get_root_of_unity_is_same_double::<FieldT>(1usize << log2(m));
         let big_omega = FieldT::one(); //omega.squared();
         Ok(evaluation_domain::<Self>::new(
-            m,Self {
-            big_m: 0,
-            small_m: 0,
-            m: 0,
-            omega,
-            big_omega,
-            small_omega: get_root_of_unity_is_same_double::<FieldT>(small_m),
-        }))
+            m,
+            Self {
+                big_m: 0,
+                small_m: 0,
+                m: 0,
+                omega,
+                big_omega,
+                small_omega: get_root_of_unity_is_same_double::<FieldT>(small_m),
+            },
+        ))
         // catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
     }
 }
@@ -218,14 +219,14 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domain
             // result[self.t.big_m + i] = L1 * inner_small[i];
         }
 
-         result
+        result
     }
 
     fn get_domain_element(&mut self, idx: usize) -> FieldT {
         if idx < self.t.big_m {
-             self.t.big_omega.clone() ^ idx.into()
+            self.t.big_omega.clone() ^ idx.into()
         } else {
-             self.t.omega.clone() * (self.t.small_omega.clone() ^ (idx - self.t.big_m).into())
+            self.t.omega.clone() * (self.t.small_omega.clone() ^ (idx - self.t.big_m).into())
         }
     }
 
@@ -233,7 +234,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domain
         let tt: FieldT = t.clone();
         let bm = (self.t.big_m);
         let sm = (self.t.small_m);
-         ((tt.clone() ^ bm.clone()) - FieldT::one())
+        ((tt.clone() ^ bm.clone()) - FieldT::one())
             * ((tt.clone() ^ sm.clone()) - (self.t.omega.clone() ^ sm.clone()))
     }
 
@@ -255,7 +256,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domain
         // (c^{2^k}-1) * (c^{2^r} * w^{2^{r+1}*i) - w^{2^r})
         let coset = FieldT::one(); //multiplicative_generator;
         let sm = (self.t.small_m);
-        let bm =(self.t.big_m);
+        let bm = (self.t.big_m);
         let Z0 = (coset.clone() ^ bm.clone()) - FieldT::one();
         let coset_to_small_m_times_Z0 = (coset.clone() ^ sm.clone()) * Z0.clone();
         let omega_to_small_m_times_Z0 = (self.t.omega.clone() ^ sm.clone()) * Z0.clone();
@@ -279,4 +280,3 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domain
         }
     }
 }
-

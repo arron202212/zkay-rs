@@ -49,8 +49,7 @@ pub struct basic_radix2_domain<FieldT: FieldTConfig> {
 //         + std::ops::SubAssign
 //         + std::ops::AddAssign<FieldT>,
 
-pub type basic_radix2_domains<FieldT> =
-    evaluation_domain<basic_radix2_domain<FieldT>>;
+pub type basic_radix2_domains<FieldT> = evaluation_domain<basic_radix2_domain<FieldT>>;
 impl<FieldT: FieldTConfig> basic_radix2_domain<FieldT> {
     pub fn new(m: usize) -> eyre::Result<basic_radix2_domains<FieldT>> {
         // : evaluation_domain<FieldT>(m)
@@ -64,10 +63,12 @@ impl<FieldT: FieldTConfig> basic_radix2_domain<FieldT> {
         }
 
         Ok(evaluation_domain::<Self>::new(
-            m,Self {
-            omega: get_root_of_unity_is_same_double::<FieldT>(m),
             m,
-        }))
+            Self {
+                omega: get_root_of_unity_is_same_double::<FieldT>(m),
+                m,
+            },
+        ))
         // catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
     }
 }

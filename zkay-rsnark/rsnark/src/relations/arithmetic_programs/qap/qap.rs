@@ -1,31 +1,20 @@
+// Declaration of interfaces for a QAP ("Quadratic Arithmetic Program").
+
+// QAPs are defined in \[GGPR13].
+
+// References:
+
+// \[GGPR13]:
+// "Quadratic span programs and succinct NIZKs without PCPs",
+// Rosario Gennaro, Craig Gentry, Bryan Parno, Mariana Raykova,
+// EUROCRYPT 2013,
+// <http://eprint.iacr.org/2012/215>
+
 use ffec::FieldTConfig;
 use ffec::algebra::scalar_multiplication::multiexp::inner_product;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a QAP ("Quadratic Arithmetic Program").
-
-QAPs are defined in \[GGPR13].
-
-References:
-
-\[GGPR13]:
-"Quadratic span programs and succinct NIZKs without PCPs",
-Rosario Gennaro, Craig Gentry, Bryan Parno, Mariana Raykova,
-EUROCRYPT 2013,
-<http://eprint.iacr.org/2012/215>
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef QAP_HPP_
-// #define QAP_HPP_
-
-// use  <map>
-//
-use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
+use fqfft::evaluation_domain::evaluation_domain::{
+    EvaluationDomainConfig, EvaluationDomainType, evaluation_domain,
+};
 use rccell::RcCell;
 use std::collections::HashMap;
 /* forward declaration */
@@ -44,19 +33,19 @@ use std::collections::HashMap;
  * determined by the domain (as Z is its vanishing polynomial).
  */
 //
-pub struct qap_instance<FieldT: FieldTConfig, ED: Default+Clone> {
+pub struct qap_instance<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
     pub num_inputs: usize,
 
-    pub domain: RcCell<evaluation_domain<ED>>,
+    pub domain: RcCell<EvaluationDomainType<FieldT>>,
 
     pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
     pub B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
     pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
 }
 // impl qap_instance<FieldT>{
-//     qap_instance(domain:&RcCell<evaluation_domain<ED>>
+//     qap_instance(domain:&RcCell<EvaluationDomainType<FieldT>>
 //                  num_variables:usize
 //                  degree:usize
 //                  num_inputs:usize
@@ -64,7 +53,7 @@ pub struct qap_instance<FieldT: FieldTConfig, ED: Default+Clone> {
 //                  B_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >
 //                  &C_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >);
 
-//     qap_instance(domain:&RcCell<evaluation_domain<ED>>
+//     qap_instance(domain:&RcCell<EvaluationDomainType<FieldT>>
 //                  num_variables:usize
 //                  degree:usize
 //                  num_inputs:usize
@@ -96,12 +85,12 @@ pub struct qap_instance<FieldT: FieldTConfig, ED: Default+Clone> {
  * - counts about how many of the above evaluations are in fact non-zero.
  */
 //
-pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
+pub struct qap_instance_evaluation<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
     pub num_inputs: usize,
 
-    pub domain: RcCell<evaluation_domain<ED>>,
+    pub domain: RcCell<EvaluationDomainType<FieldT>>,
 
     pub t: FieldT,
 
@@ -113,7 +102,7 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
     pub Zt: FieldT,
 }
 
-//     qap_instance_evaluation(domain:&RcCell<evaluation_domain<ED>>
+//     qap_instance_evaluation(domain:&RcCell<EvaluationDomainType<FieldT>>
 //                             num_variables:usize
 //                             degree:usize
 //                             num_inputs:usize
@@ -123,7 +112,7 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig, ED: Default+Clone> {
 //                             Ct:&Vec<FieldT>
 //                             Ht:&Vec<FieldT>
 //                             &Zt:FieldT);
-//     qap_instance_evaluation(domain:&RcCell<evaluation_domain<ED>>
+//     qap_instance_evaluation(domain:&RcCell<EvaluationDomainType<FieldT>>
 //                             num_variables:usize
 //                             degree:usize
 //                             num_inputs:usize
@@ -195,29 +184,9 @@ pub struct qap_witness<FieldT> {
 // use ffec::common::profiling;
 // use ffec::common::utils;
 
-impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance<FieldT, ED> {
+impl<FieldT: FieldTConfig> qap_instance<FieldT> {
     pub fn new(
-        domain: RcCell<evaluation_domain<ED>>,
-        num_variables: usize,
-        degree: usize,
-        num_inputs: usize,
-        A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-        B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-        C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    ) -> Self {
-        Self {
-            num_variables,
-            degree,
-            num_inputs,
-            domain,
-            A_in_Lagrange_basis,
-            B_in_Lagrange_basis,
-            C_in_Lagrange_basis,
-        }
-    }
-
-    pub fn new2(
-        domain: RcCell<evaluation_domain<ED>>,
+        domain: RcCell<EvaluationDomainType<FieldT>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -256,9 +225,12 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance<FieldT, ED> {
         let mut Ct = vec![FieldT::zero(); self.num_variables() + 1];
         let mut Ht = vec![FieldT::zero(); self.degree() + 1];
 
-        let mut Zt = self.domain.borrow().compute_vanishing_polynomial(&t);
+        let mut Zt = self.domain.borrow_mut().compute_vanishing_polynomial(&t);
 
-        let u = self.domain.borrow().evaluate_all_lagrange_polynomials(&t);
+        let u = self
+            .domain
+            .borrow_mut()
+            .evaluate_all_lagrange_polynomials(&t);
 
         for i in 0..self.num_variables() + 1 {
             for el in &self.A_in_Lagrange_basis[i] {
@@ -280,7 +252,7 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance<FieldT, ED> {
             ti *= t.clone();
         }
 
-        let eval_qap_inst = qap_instance_evaluation::<FieldT, ED>::new(
+        let eval_qap_inst = qap_instance_evaluation::<FieldT>::new(
             self.domain.clone(),
             self.num_variables(),
             self.degree(),
@@ -292,39 +264,13 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance<FieldT, ED> {
             Ht,
             Zt,
         );
-        return eval_qap_inst.is_satisfied(witness);
+        eval_qap_inst.is_satisfied(witness)
     }
 }
 
-impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance_evaluation<FieldT, ED> {
+impl<FieldT: FieldTConfig> qap_instance_evaluation<FieldT> {
     pub fn new(
-        domain: RcCell<evaluation_domain<ED>>,
-        num_variables: usize,
-        degree: usize,
-        num_inputs: usize,
-        t: FieldT,
-        At: Vec<FieldT>,
-        Bt: Vec<FieldT>,
-        Ct: Vec<FieldT>,
-        Ht: Vec<FieldT>,
-        Zt: FieldT,
-    ) -> Self {
-        Self {
-            num_variables,
-            degree,
-            num_inputs,
-            domain,
-            t,
-            At,
-            Bt,
-            Ct,
-            Ht,
-            Zt,
-        }
-    }
-
-    pub fn qap_instance_evaluation(
-        domain: RcCell<evaluation_domain<ED>>,
+        domain: RcCell<EvaluationDomainType<FieldT>>,
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -393,7 +339,12 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance_evaluation<FieldT, ED
             return false;
         }
 
-        if self.Zt != self.domain.borrow().compute_vanishing_polynomial(&self.t) {
+        if self.Zt
+            != self
+                .domain
+                .borrow_mut()
+                .compute_vanishing_polynomial(&self.t)
+        {
             return false;
         }
 
@@ -403,22 +354,22 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance_evaluation<FieldT, ED
         let mut ans_H = FieldT::zero();
 
         ans_A = ans_A
-            + inner_product::<FieldT>(
+            + inner_product::<FieldT, FieldT>(
                 &self.At[1..1 + self.num_variables()],
                 &witness.coefficients_for_ABCs[..self.num_variables()],
             );
         ans_B = ans_B
-            + inner_product::<FieldT>(
+            + inner_product::<FieldT, FieldT>(
                 &self.Bt[1..1 + self.num_variables()],
                 &witness.coefficients_for_ABCs[..self.num_variables()],
             );
         ans_C = ans_C
-            + inner_product::<FieldT>(
+            + inner_product::<FieldT, FieldT>(
                 &self.Ct[1..1 + self.num_variables()],
                 &witness.coefficients_for_ABCs[..self.num_variables()],
             );
         ans_H = ans_H
-            + inner_product::<FieldT>(
+            + inner_product::<FieldT, FieldT>(
                 &self.Ht[..self.degree() + 1],
                 &witness.coefficients_for_H[..self.degree() + 1],
             );
@@ -427,34 +378,12 @@ impl<FieldT: FieldTConfig, ED: Default+Clone> qap_instance_evaluation<FieldT, ED
             return false;
         }
 
-        return true;
+        true
     }
 }
 
 impl<FieldT> qap_witness<FieldT> {
     pub fn new(
-        num_variables: usize,
-        degree: usize,
-        num_inputs: usize,
-        d1: FieldT,
-        d2: FieldT,
-        d3: FieldT,
-        coefficients_for_ABCs: Vec<FieldT>,
-        coefficients_for_H: Vec<FieldT>,
-    ) -> Self {
-        Self {
-            num_variables,
-            degree,
-            num_inputs,
-            d1,
-            d2,
-            d3,
-            coefficients_for_ABCs,
-            coefficients_for_H,
-        }
-    }
-
-    pub fn qap_witness(
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
@@ -488,5 +417,3 @@ impl<FieldT> qap_witness<FieldT> {
         self.num_inputs
     }
 }
-
-//#endif // QAP_TCC_

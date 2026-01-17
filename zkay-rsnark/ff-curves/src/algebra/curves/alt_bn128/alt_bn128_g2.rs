@@ -1,24 +1,22 @@
 // use crate::algebra::curves::curve_utils;
+use crate::FpmConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
     alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr,
 };
-use crate::FpmConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_init::{
     alt_bn128_coeff_b, alt_bn128_twist_coeff_b, alt_bn128_twist_mul_by_b_c0,
     alt_bn128_twist_mul_by_b_c1, alt_bn128_twist_mul_by_q_X, alt_bn128_twist_mul_by_q_Y,
 };
-use crate::algebra::curves::alt_bn128::curves::Bn254;
-use crate::algebra::curves::pairing::Pairing;
-use ffec::Fp_model;
-use ffec::Fp_modelConfig;
-use ffec::PpConfig;
-use ffec::field_utils::bigint::GMP_NUMB_BITS;
-use ffec::field_utils::bigint::bigint;
-use ffec::field_utils::field_utils::batch_invert;
 
-use ffec::{One, Zero};
+use crate::algebra::curves::{alt_bn128::curves::Bn254, pairing::Pairing};
+use ffec::field_utils::{
+    bigint::{GMP_NUMB_BITS, bigint},
+    field_utils::batch_invert,
+};
+use ffec::{Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 // impl One for alt_bn128_G2 {
@@ -142,7 +140,7 @@ impl Zero for alt_bn128_G2 {
 }
 
 // pub type alt_bn128_G2 = <Bn254 as Pairing>::G2;
-#[derive(Clone, Default, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct alt_bn128_G2 {
     // #ifdef PROFILE_OP_COUNTS
     // static i64 add_cnt;
@@ -512,8 +510,8 @@ impl alt_bn128_G2 {
         }
     }
 }
-impl FpmConfig for alt_bn128_G2{
-    type Fr=alt_bn128_Fq;
+impl FpmConfig for alt_bn128_G2 {
+    type Fr = alt_bn128_Fq;
 }
 // bool alt_bn128_G2::operator==(other:&alt_bn128_G2)
 // {

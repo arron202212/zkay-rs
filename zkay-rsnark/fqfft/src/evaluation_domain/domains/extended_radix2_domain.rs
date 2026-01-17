@@ -49,8 +49,7 @@ pub struct extended_radix2_domain<FieldT: FieldTConfig> {
 //         + num_traits::One
 //         + std::ops::BitXor<Output = FieldT>,
 
-pub type extended_radix2_domains<FieldT> =
-    evaluation_domain<extended_radix2_domain<FieldT>>;
+pub type extended_radix2_domains<FieldT> = evaluation_domain<extended_radix2_domain<FieldT>>;
 impl<FieldT: FieldTConfig> extended_radix2_domain<FieldT> {
     pub fn new(m: usize) -> eyre::Result<extended_radix2_domains<FieldT>> {
         // : evaluation_domain<FieldT>(m)
@@ -66,12 +65,14 @@ impl<FieldT: FieldTConfig> extended_radix2_domain<FieldT> {
         let small_m = m / 2;
 
         Ok(evaluation_domain::<Self>::new(
-            m,Self {
-            small_m,
-            omega: get_root_of_unity_is_same_double::<FieldT>(small_m),
-            shift: coset_shift::<FieldT>(),
             m,
-        }))
+            Self {
+                small_m,
+                omega: get_root_of_unity_is_same_double::<FieldT>(small_m),
+                shift: coset_shift::<FieldT>(),
+                m,
+            },
+        ))
         // catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
 
         // shift = coset_shift<FieldT>();
@@ -120,7 +121,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for extended_radix2_do
         // _basic_radix2_FFT(a0, omega_inverse);
         // _basic_radix2_FFT(a1, omega_inverse);
 
-        let shift_to_small_m = self.t.shift.clone() ^ (self.t.small_m );
+        let shift_to_small_m = self.t.shift.clone() ^ (self.t.small_m);
         // let sconst = (FieldT::from(self.t.small_m) * (FieldT::one()-shift_to_small_m)).inverse();
 
         // let shift_inverse = self.t.shift.inverse();
@@ -152,8 +153,8 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for extended_radix2_do
 
         let result = vec![FieldT::zero(); self.m];
         let tt: FieldT = t.clone();
-        let t_to_small_m = tt ^ (self.t.small_m );
-        let shift_to_small_m = self.t.shift.clone() ^ (self.t.small_m );
+        let t_to_small_m = tt ^ (self.t.small_m);
+        let shift_to_small_m = self.t.shift.clone() ^ (self.t.small_m);
         // let  one_over_denom = (shift_to_small_m - FieldT::one()).inverse();
         // let  T0_coeff = (t_to_small_m - shift_to_small_m) * (-one_over_denom);
         // let  T1_coeff = (t_to_small_m - FieldT::one()) * one_over_denom;

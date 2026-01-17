@@ -27,18 +27,20 @@
 //  EUROCRYPT 2016,
 //  <https://eprint.iacr.org/2016/260>
 
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::knowledge_commitment::kc_multiexp::{kc_batch_exp, kc_multi_exp_with_mixed_addition};
-use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment_vector;
+use crate::knowledge_commitment::knowledge_commitment::{
+    knowledge_commitment, knowledge_commitment_vector,
+};
 use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_instance_map_with_evaluation;
 use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_witness_map;
 use crate::relations::arithmetic_programs::qap::qap::qap_instance_evaluation;
-
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_params::{
     r1cs_gg_ppzksnark_auxiliary_input, r1cs_gg_ppzksnark_constraint_system,
     r1cs_gg_ppzksnark_primary_input,
 };
+use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{FieldTConfig, One, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 
@@ -60,6 +62,15 @@ const N: usize = 4;
 use std::ops::{Add, Mul};
 /******************************** Proving key ********************************/
 
+pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
+pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
+pub type FieldT<PP> = <<PP as ppTConfig>::KC as KCConfig>::FieldT;
+pub type KnowledgeCommitmentVector<PP> = knowledge_commitment_vector<T1<PP>, T1<PP>>;
+pub type KnowledgeCommitmentVector2<PP> = knowledge_commitment_vector<T2<PP>, T1<PP>>;
+pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
+pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
+pub type AccumulationVector<PP> = accumulation_vector<T1<PP>>;
+
 /**
  * A proving key for the R1CS GG-ppzkSNARK.
  */
@@ -76,7 +87,7 @@ pub struct r1cs_gg_ppzksnark_proving_key<ppT: ppTConfig>
     pub delta_g2: G2<ppT>,
 
     pub A_query: G1_vector<ppT>, // this could be a sparse vector if we had multiexp for those
-    pub B_query: knowledge_commitment_vector<ppT::KC2>,
+    pub B_query: KnowledgeCommitmentVector2<ppT>,
     pub H_query: G1_vector<ppT>,
     pub L_query: G1_vector<ppT>,
 
@@ -91,7 +102,7 @@ impl<ppT: ppTConfig> r1cs_gg_ppzksnark_proving_key<ppT> {
         delta_g1: G1<ppT>,
         delta_g2: G2<ppT>,
         A_query: G1_vector<ppT>,
-        B_query: knowledge_commitment_vector<ppT::KC2>,
+        B_query: KnowledgeCommitmentVector2<ppT>,
         H_query: G1_vector<ppT>,
         L_query: G1_vector<ppT>,
         constraint_system: r1cs_gg_ppzksnark_constraint_system<ppT>,
@@ -170,7 +181,7 @@ pub struct r1cs_gg_ppzksnark_verification_key<ppT: ppTConfig>
     pub gamma_g2: G2<ppT>,
     pub delta_g2: G2<ppT>,
 
-    pub gamma_ABC_g1: accumulation_vector<G1<ppT>>,
+    pub gamma_ABC_g1: AccumulationVector<ppT>,
 }
 
 impl<ppT: ppTConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
@@ -179,7 +190,7 @@ impl<ppT: ppTConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
         alpha_g1_beta_g2: GT<ppT>,
         gamma_g2: G2<ppT>,
         delta_g2: G2<ppT>,
-        gamma_ABC_g1: accumulation_vector<G1<ppT>>,
+        gamma_ABC_g1: AccumulationVector<ppT>,
     ) -> Self {
         Self {
             alpha_g1_beta_g2,
@@ -239,7 +250,7 @@ pub struct r1cs_gg_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     pub vk_gamma_g2_precomp: G2_precomp<ppT>,
     pub vk_delta_g2_precomp: G2_precomp<ppT>,
 
-    pub gamma_ABC_g1: accumulation_vector<G1<ppT>>,
+    pub gamma_ABC_g1: AccumulationVector<ppT>,
     // bool operator==(&other:r1cs_gg_ppzksnark_processed_verification_key) const;
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_gg_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_processed_verification_key<ppT> &pvk);
@@ -368,12 +379,9 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
     let delta_inverse = delta.inverse();
 
     /* A quadratic arithmetic program evaluated at t. */
-    let qap = r1cs_to_qap_instance_map_with_evaluation::<
-        Fr<ppT>,
-        ED,
-        pb_variable,
-        pb_linear_combination,
-    >(&r1cs_copy, &t);
+    let qap = r1cs_to_qap_instance_map_with_evaluation::<Fr<ppT>, pb_variable, pb_linear_combination>(
+        &r1cs_copy, &t,
+    );
 
     print_indent();
     print!("* QAP number of variables: {}\n", qap.num_variables());
@@ -456,7 +464,7 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
 
     print_indent();
     print!("* G1 window: {}\n", g1_window_size);
-    let g1_table = get_window_table(g1_scalar_size, g1_window_size, &g1_generator);
+    let g1_table = get_window_table(g1_scalar_size, g1_window_size, g1_generator.clone());
     leave_block("Generating G1 MSM window table", false);
 
     enter_block("Generating G2 MSM window table", false);
@@ -467,22 +475,21 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
 
     print_indent();
     print!("* G2 window: {}\n", g2_window_size);
-    let g2_table = get_window_table(g2_scalar_size, g2_window_size, &G2_gen);
+    let g2_table = get_window_table(g2_scalar_size, g2_window_size, G2_gen.clone());
     leave_block("Generating G2 MSM window table", false);
 
     enter_block("Generate R1CS proving key", false);
-    let mut alpha_g1 = alpha.clone() * g1_generator.clone();
-    let mut beta_g1 = beta.clone() * g1_generator.clone();
-    let mut beta_g2 = beta.clone() * G2_gen.clone();
-    let mut delta_g1 = delta.clone() * g1_generator.clone();
-    let mut delta_g2 = delta.clone() * G2_gen.clone();
+    let mut alpha_g1 = g1_generator.clone() * alpha.clone();
+    let mut beta_g1 = g1_generator.clone() * beta.clone();
+    let mut beta_g2 = G2_gen.clone() * beta.clone();
+    let mut delta_g1 = g1_generator.clone() * delta.clone();
+    let mut delta_g2 = G2_gen.clone() * delta.clone();
 
     enter_block("Generate queries", false);
     enter_block("Compute the A-query", false);
     let A_query = batch_exp::<
-        <ppT as ff_curves::PublicParams>::G1,
-        <ppT as ff_curves::PublicParams>::Fr,
-        NN,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
     >(g1_scalar_size, g1_window_size, &g1_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
@@ -491,10 +498,9 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
 
     enter_block("Compute the B-query", false);
     let mut B_query = kc_batch_exp::<
-        <ppT as ff_curves::PublicParams>::G2,
-        <ppT as ff_curves::PublicParams>::G1,
-        <ppT as ff_curves::PublicParams>::Fr,
-        NN,
+        <<ppT as ppTConfig>::KC as KCConfig>::T2,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
     >(
         Fr::<ppT>::size_in_bits(),
         g2_window_size,
@@ -512,9 +518,8 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
 
     enter_block("Compute the H-query", false);
     let mut H_query = batch_exp_with_coeff::<
-        <ppT as ff_curves::PublicParams>::G1,
-        <ppT as ff_curves::PublicParams>::Fr,
-        NN,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
     >(
         g1_scalar_size,
         g1_window_size,
@@ -529,9 +534,8 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
 
     enter_block("Compute the L-query", false);
     let mut L_query = batch_exp::<
-        <ppT as ff_curves::PublicParams>::G1,
-        <ppT as ff_curves::PublicParams>::Fr,
-        NN,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
     >(g1_scalar_size, g1_window_size, &g1_table, &Lt);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(L_query);
@@ -543,14 +547,13 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: ppTConfig>(
 
     enter_block("Generate R1CS verification key", false);
     let mut alpha_g1_beta_g2 = ppT::reduced_pairing(&alpha_g1, &beta_g2);
-    let mut gamma_g2 = gamma * G2_gen;
+    let mut gamma_g2 = G2_gen * gamma;
 
     enter_block("Encode gamma_ABC for R1CS verification key", false);
-    let mut gamma_ABC_g1_0 = gamma_ABC_0 * g1_generator;
+    let mut gamma_ABC_g1_0 = g1_generator * gamma_ABC_0;
     let mut gamma_ABC_g1_values = batch_exp::<
-        <ppT as ff_curves::PublicParams>::G1,
-        <ppT as ff_curves::PublicParams>::Fr,
-        NN,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
     >(g1_scalar_size, g1_window_size, &g1_table, &gamma_ABC);
     leave_block("Encode gamma_ABC for R1CS verification key", false);
     leave_block("Generate R1CS verification key", false);
@@ -623,7 +626,7 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
     // //#endif
 
     enter_block("Compute the polynomial H", false);
-    let qap_wit = r1cs_to_qap_witness_map::<Fr<ppT>, ED, pb_variable, pb_linear_combination>(
+    let qap_wit = r1cs_to_qap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
         &pk.constraint_system,
         &primary_input,
         &auxiliary_input,
@@ -671,8 +674,8 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
     const_padded_assignment.extend(qap_wit.coefficients_for_ABCs.clone());
 
     let evaluation_At = multi_exp_with_mixed_addition::<
-        G1<ppT>,
-        Fr<ppT>,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
         { multi_exp_method::multi_exp_method_BDLO12 },
     >(
         &pk.A_query[..qap_wit.num_variables() + 1],
@@ -683,9 +686,9 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute evaluation to B-query", false);
     let evaluation_Bt = kc_multi_exp_with_mixed_addition::<
-        G2<ppT>,
-        G1<ppT>,
-        Fr<ppT>,
+        <<ppT as ppTConfig>::KC as KCConfig>::T2,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
         { multi_exp_method::multi_exp_method_BDLO12 },
     >(
         &pk.B_query,
@@ -697,7 +700,11 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
     leave_block("Compute evaluation to B-query", false);
 
     enter_block("Compute evaluation to H-query", false);
-    let evaluation_Ht = multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
+    let evaluation_Ht = multi_exp::<
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
+        { multi_exp_method::multi_exp_method_BDLO12 },
+    >(
         &pk.H_query[..(qap_wit.degree() - 1)],
         &qap_wit.coefficients_for_H[..(qap_wit.degree() - 1)],
         chunks,
@@ -706,8 +713,8 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Compute evaluation to L-query", false);
     let evaluation_Lt = multi_exp_with_mixed_addition::<
-        G1<ppT>,
-        Fr<ppT>,
+        <<ppT as ppTConfig>::KC as KCConfig>::T,
+        <<ppT as ppTConfig>::KC as KCConfig>::FieldT,
         { multi_exp_method::multi_exp_method_BDLO12 },
     >(
         &pk.L_query,
@@ -717,7 +724,7 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
     leave_block("Compute evaluation to L-query", false);
 
     /* A = alpha + sum_i(a_i*A_i(t)) + r*delta */
-    let g1_A = pk.alpha_g1.clone() + evaluation_At.clone() + r.clone() * pk.delta_g1.clone();
+    let g1_A = pk.alpha_g1.clone() + evaluation_At.clone() + pk.delta_g1.clone() * r.clone();
 
     /* B = beta + sum_i(a_i*B_i(t)) + s*delta */
     let g1_B = pk.beta_g1.clone() + evaluation_Bt.h.clone() + pk.delta_g1.clone() * s.clone();
@@ -726,9 +733,9 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: ppTConfig>(
     /* C = sum_i(a_i*((beta*A_i(t) + alpha*B_i(t) + C_i(t)) + H(t)*Z(t))/delta) + A*s + r*b - r*s*delta */
     let g1_C = evaluation_Ht.clone()
         + evaluation_Lt.clone()
-        + s.clone() * g1_A.clone()
-        + r.clone() * g1_B.clone()
-        - (r.clone() * s.clone()) * pk.delta_g1.clone();
+        + g1_A.clone() * s.clone()
+        + g1_B.clone() * r.clone()
+        - pk.delta_g1.clone() * (r.clone() * s.clone());
 
     leave_block("Compute the proof", false);
 
@@ -766,12 +773,8 @@ pub fn r1cs_gg_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
 ) -> bool {
     enter_block("Call to r1cs_gg_ppzksnark_verifier_weak_IC", false);
-    let pvk = r1cs_gg_ppzksnark_verifier_process_vk::<ppT, NN, FieldT, ED>(&vk);
-    let result = r1cs_gg_ppzksnark_online_verifier_weak_IC::<ppT, NN, FieldT, ED>(
-        &pvk,
-        &primary_input,
-        &proof,
-    );
+    let pvk = r1cs_gg_ppzksnark_verifier_process_vk::<ppT>(&vk);
+    let result = r1cs_gg_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
     leave_block("Call to r1cs_gg_ppzksnark_verifier_weak_IC", false);
     return result;
 }
@@ -788,14 +791,10 @@ pub fn r1cs_gg_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
 ) -> bool {
     enter_block("Call to r1cs_gg_ppzksnark_verifier_strong_IC", false);
-    let pvk = r1cs_gg_ppzksnark_verifier_process_vk::<ppT, NN, FieldT, ED>(&vk);
-    let result = r1cs_gg_ppzksnark_online_verifier_strong_IC::<ppT, NN, FieldT, ED>(
-        &pvk,
-        &primary_input,
-        &proof,
-    );
+    let pvk = r1cs_gg_ppzksnark_verifier_process_vk::<ppT>(&vk);
+    let result = r1cs_gg_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &primary_input, &proof);
     leave_block("Call to r1cs_gg_ppzksnark_verifier_strong_IC", false);
-    return result;
+    result
 }
 
 /**
@@ -815,7 +814,7 @@ pub fn r1cs_gg_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
 
     leave_block("Call to r1cs_gg_ppzksnark_verifier_process_vk", false);
 
-    return pvk;
+    pvk
 }
 
 /**
@@ -879,7 +878,7 @@ pub fn r1cs_gg_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
 
     leave_block("Call to r1cs_gg_ppzksnark_online_verifier_weak_IC", false);
 
-    return result;
+    result
 }
 /**
  * A verifier algorithm for the R1CS GG-ppzkSNARK that:
@@ -904,15 +903,11 @@ pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
         );
         result = false;
     } else {
-        result = r1cs_gg_ppzksnark_online_verifier_weak_IC::<ppT, NN, FieldT, ED>(
-            &pvk,
-            &primary_input,
-            &proof,
-        );
+        result = r1cs_gg_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
     }
 
     leave_block("Call to r1cs_gg_ppzksnark_online_verifier_strong_IC", false);
-    return result;
+    result
 }
 
 /****************************** Miscellaneous ********************************/
@@ -983,7 +978,7 @@ pub fn r1cs_gg_ppzksnark_affine_verifier_weak_IC<ppT: ppTConfig>(
 
     leave_block("Call to r1cs_gg_ppzksnark_affine_verifier_weak_IC", false);
 
-    return result;
+    result
 }
 
 impl<ppT: ppTConfig> PartialEq for r1cs_gg_ppzksnark_proving_key<ppT> {
@@ -1161,11 +1156,11 @@ impl<ppT: ppTConfig> fmt::Display for r1cs_gg_ppzksnark_proof<ppT> {
 
 impl<ppT: ppTConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
     pub fn dummy_verification_key(input_size: usize) -> r1cs_gg_ppzksnark_verification_key<ppT>
-    where
-        <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::GT, Output = <ppT as ff_curves::PublicParams>::GT>,
+// where
+    //     <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::GT, Output = <ppT as ff_curves::PublicParams>::GT>,
     {
         let mut result = r1cs_gg_ppzksnark_verification_key::<ppT>::default();
-        result.alpha_g1_beta_g2 = Fr::<ppT>::random_element() * GT::<ppT>::random_element();
+        result.alpha_g1_beta_g2 = GT::<ppT>::random_element() * Fr::<ppT>::random_element();
         result.gamma_g2 = G2::<ppT>::random_element();
         result.delta_g2 = G2::<ppT>::random_element();
 
@@ -1177,6 +1172,6 @@ impl<ppT: ppTConfig> r1cs_gg_ppzksnark_verification_key<ppT> {
 
         result.gamma_ABC_g1 = accumulation_vector::<G1<ppT>>::new_with_vec(base, v);
 
-        return result;
+        result
     }
 }

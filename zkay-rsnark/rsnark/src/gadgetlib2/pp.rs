@@ -13,7 +13,7 @@ use std::ops::{Add, AddAssign, BitXorAssign, Mul, MulAssign, Neg, SubAssign};
 #[derive(Debug, Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 pub struct default_ec_pp;
 
-#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct bigint;
 impl bigint {
     pub fn test_bit(&self, i: u32) -> bool {

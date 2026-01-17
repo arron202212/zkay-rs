@@ -28,11 +28,12 @@ use crate::const_new_fp_model;
 use crate::scalar_multiplication::wnaf::find_wnaf;
 use num_traits::{One, Zero};
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 type Fp_modelConfig<const N: usize, T> =
     <<T as Fp4_modelConfig<N>>::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig;
 pub trait Fp4_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp2_modelConfig: Fp2_modelConfig<N>;
 
@@ -63,7 +64,7 @@ type my_Fp<const N: usize, T> = Fp_model<N, T>;
 pub type my_Fp2<const N: usize, T> = Fp2_model<N, T>;
 pub type my_Fpe<const N: usize, T> = my_Fp2<N, T>;
 
-#[derive(Default, Clone, Copy, Eq)]
+#[derive(Default, Clone, Debug, Copy, Eq)]
 pub struct Fp4_model<const N: usize, T: Fp4_modelConfig<N>> {
     // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     // static i64 add_cnt;
@@ -300,7 +301,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Fp4_model<N, T> {
             }
         }
 
-        return res;
+        res
     }
 
     pub fn sqrt(&self) -> Self {
@@ -547,9 +548,12 @@ impl<const N: usize, const M: usize, T: Fp4_modelConfig<N>> BitXor<&bigint<M>> f
 // {
 //     return *self^(exponent.as_bigint());
 // }
-impl<const N: usize, T: Fp4_modelConfig<N>> PpConfig for Fp4_model<N, T> where <<T as Fp4_modelConfig<N>>::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig: PpConfig{
+impl<const N: usize, T: Fp4_modelConfig<N>> PpConfig for Fp4_model<N, T>
+where
+    <<T as Fp4_modelConfig<N>>::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig: PpConfig,
+{
     type TT = bigint<N>;
-//  type Fr=<T::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig;
+    //  type Fr=<T::Fp2_modelConfig as Fp2_modelConfig<N>>::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp4_modelConfig<N>> Mul<bigint<N>> for Fp4_model<N, T> {

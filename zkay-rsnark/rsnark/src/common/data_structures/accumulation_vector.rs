@@ -1,6 +1,8 @@
 // Declaration of interfaces for an accumulation vector.
 use crate::common::data_structures::sparse_vector::sparse_vector;
+use ffec::FieldTConfig;
 use ffec::common::serialization::OUTPUT_NEWLINE;
+use ffec::field_utils::BigInteger;
 use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{One, PpConfig, Zero};
 
@@ -21,27 +23,27 @@ use ffec::{One, PpConfig, Zero};
 //     // fn size_in_bits()->usize;
 // }
 #[derive(Clone, Default)]
-pub struct accumulation_vector<KC: KCConfig> {
-    pub first: KC::T,
-    pub rest: sparse_vector<KC>,
+pub struct accumulation_vector<T: PpConfig> {
+    pub first: T,
+    pub rest: sparse_vector<T>,
 }
-impl<KC: KCConfig> From<Vec<KC::T>> for accumulation_vector<KC> {
-    fn from(v: Vec<KC::T>) -> Self {
+impl<T: PpConfig> From<Vec<T>> for accumulation_vector<T> {
+    fn from(v: Vec<T>) -> Self {
         Self {
-            first: KC::T::zero(),
+            first: T::zero(),
             rest: sparse_vector::new(v),
         }
     }
 }
 
-impl<KC: KCConfig> accumulation_vector<KC> {
+impl<T: PpConfig> accumulation_vector<T> {
     // accumulation_vector() = default;
     // accumulation_vector(&other:accumulation_vector<T>) = default;
     // accumulation_vector(accumulation_vector<T> &&other) = default;
-    pub fn new(first: KC::T, rest: sparse_vector<KC>) -> Self {
+    pub fn new(first: T, rest: sparse_vector<T>) -> Self {
         Self { first, rest }
     }
-    pub fn new_with_vec(first: KC::T, v: Vec<KC::T>) -> Self {
+    pub fn new_with_vec(first: T, v: Vec<T>) -> Self {
         Self {
             first,
             rest: sparse_vector::new(v),
@@ -69,14 +71,14 @@ impl<KC: KCConfig> accumulation_vector<KC> {
 
 //  Implementation of interfaces for an accumulation vector.
 
-impl<KC: KCConfig> PartialEq for accumulation_vector<KC> {
+impl<T: PpConfig> PartialEq for accumulation_vector<T> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.first == other.first && self.rest == other.rest
     }
 }
 
-impl<KC: KCConfig> accumulation_vector<KC> {
+impl<T: PpConfig> accumulation_vector<T> {
     pub fn is_fully_accumulated(&self) -> bool {
         self.rest.empty()
     }
@@ -90,20 +92,20 @@ impl<KC: KCConfig> accumulation_vector<KC> {
     }
 
     pub fn size_in_bits(&self) -> usize {
-        let first_size_in_bits = KC::T::size_in_bits();
+        let first_size_in_bits = T::size_in_bits();
         let rest_size_in_bits = self.rest.size_in_bits();
         first_size_in_bits + rest_size_in_bits
     }
 
-    pub fn accumulate_chunk(&self, it: &[KC::FieldT], offset: usize) -> Self {
-        let acc_result = self.rest.accumulate::<KC::FieldT>(it, offset);
-        let new_first: KC::T = self.first.clone() + acc_result.0;
+    pub fn accumulate_chunk<FieldT: FieldTConfig>(&self, it: &[FieldT], offset: usize) -> Self {
+        let acc_result = self.rest.accumulate(it, offset);
+        let new_first: T = self.first.clone() + acc_result.0;
         Self::new(new_first, acc_result.1)
     }
 }
 
 use std::fmt;
-impl<KC: KCConfig> fmt::Display for accumulation_vector<KC> {
+impl<T: PpConfig> fmt::Display for accumulation_vector<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

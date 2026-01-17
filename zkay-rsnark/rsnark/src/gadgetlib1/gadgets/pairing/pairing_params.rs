@@ -8,12 +8,12 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
-    R1csPcdLocalDataConfig, R1csPcdMessageConfig,
+    LocalDataConfig, MessageConfig,
 };
-use ff_curves::{Fr, PublicParams, PublicParamsType};
+use ff_curves::{FpmConfig, Fr, G1, G2, PublicParams, PublicParamsType};
 use ffec::scalar_multiplication::multiexp::KCConfig;
 
-use ffec::{FieldTConfig, One, Zero};
+use ffec::{FieldTConfig, One, PpConfig, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
@@ -154,42 +154,69 @@ pub trait ppTConfig:
     + Mul<Self::FieldT, Output = Self>
     + for<'a> std::ops::BitXor<&'a ffec::field_utils::bigint::bigint<M>, Output = Self>
     + PublicParamsType
-    + PublicParams
+    + PublicParams<Fqk = Self::FieldT, Fr = Self::FieldT>
     + FieldTConfig
 {
-    type P: pairing_selector<FieldT = Self::FieldT, PB = Self::PB>;
-    type FieldT: FieldTConfig;
+    type P: pairing_selector<
+            FieldT = Self::FieldT,
+            PB = Self::PB,
+            G1 = Self::G1,
+            G2 = Self::G2,
+            Fr = <Self as PublicParams>::Fr,
+        >;
+    type FieldT: FieldTConfig
+        + Mul<<Self as PublicParams>::G1, Output = <Self as PublicParams>::G1>
+        + Mul<<Self as PublicParams>::G2, Output = <Self as PublicParams>::G2>
+        + AsMut<[u64]>;
     type PB: PBConfig;
     type SV: SubVariableConfig;
     type SLC: SubLinearCombinationConfig;
     type my_Fp: FieldTConfig;
-    type Fr: FieldTConfig;
+    // type Fr: FieldTConfig;
     type Fpk_variableT: VariableTConfig<FieldT = Fr<Self>, PB = Self::PB, FpkT = Self, Fqe_variable = Self>;
-    type M: R1csPcdMessageConfig;
-    type LD: R1csPcdLocalDataConfig;
-    type KC: KCConfig;
-    type KC2: KCConfig;
+    type KC: KCConfig<FieldT = Self::FieldT, T = G1<Self>, T2 = G2<Self>>;
+    type M: MessageConfig<FieldT = Self::FieldT>;
+    type LD: LocalDataConfig<FieldT = Self::FieldT>;
+    // type KC2: KCConfig;
     // type Fpk_mul_gadgetT: MulTConfig<Fr<Self>, Self::PB, Self::Fpk_variableT>;
     // type Fpk_sqr_gadgetT: SqrTConfig<Fr<Self>, Self::PB, Self::Fpk_variableT>;
 
     // type Fqe_mul_by_lc_gadgets: MulTConfig<FieldT, PB, Self::Fpk_variableT>;
     // type Fqk_special_mul_gadget: SqrTConfig<FieldT, PB, Self::Fpk_variableT>;
-    const M: usize;
+    // const M: usize = 4;
     // fn X(&self) -> FieldT;
     // fn Y(&self) -> FieldT;
-    fn c0(&self) -> Self;
-    fn c1(&self) -> Self;
-    fn c2(&self) -> Self;
+    fn c0(&self) -> Self {
+        Default::default()
+    }
+    fn c1(&self) -> Self {
+        Default::default()
+    }
+    fn c2(&self) -> Self {
+        Default::default()
+    }
     // fn squared(&self) -> Self;
-    fn to_affine_coordinates(&self);
-    fn Frobenius_map(&self, power: usize) -> Self;
-    fn twist() -> Self::FieldT;
-    fn coeffs(&self) -> Vec<Self::Fpk_variableT>;
-    fn PY_twist_squared(&self) -> Self::Fpk_variableT;
-    fn coeff_a() -> i64;
+    fn to_affine_coordinates(&self) {}
+    fn Frobenius_map(&self, power: usize) -> Self {
+        Default::default()
+    }
+    fn twist() -> Self::FieldT {
+        Default::default()
+    }
+    fn coeffs(&self) -> Vec<Self::Fpk_variableT> {
+        vec![]
+    }
+    fn PY_twist_squared(&self) -> Self::Fpk_variableT {
+        Default::default()
+    }
+    fn coeff_a() -> i64 {
+        0
+    }
     // fn inverse(&self) -> Self;
     // fn to_field(&self) -> Self::FieldT;
-    fn from_field(t: &Self::FieldT) -> Self;
+    fn from_field(t: &Self::FieldT) -> Self {
+        Default::default()
+    }
 }
 
 /**
@@ -265,6 +292,9 @@ pub trait pairing_selector:
     + std::ops::Neg<Output = Self>
     + std::ops::Mul<Output = Self>
 {
+    type G1: PpConfig + FpmConfig<Fr = Self::Fr>;
+    type G2: PpConfig + FpmConfig<Fr = Self::Fr>;
+    type Fr: FieldTConfig;
     type my_ec_pp: ppTConfig;
     type PB: PBConfig;
     type FieldT: FieldTConfig + std::cmp::PartialEq<Self>;
@@ -288,7 +318,7 @@ pub trait pairing_selector:
     type Fqk_mul_gadget_type: MulTConfig<FieldT = Self::FieldT, PB = Self::PB, Fpk_variableT = Self::Fqk_variable_type>;
     type Fqk_special_mul_gadget_type: MulTConfig<FieldT = Self::FieldT, PB = Self::PB, Fpk_variableT = Self::Fqk_variable_type>;
     type Fqk_sqr_gadget_type: SqrTConfig<FieldT = Self::FieldT, PB = Self::PB, Fpk_variableT = Self::Fqk_variable_type>;
-    type other_curve_type: ppTConfig;
+    type other_curve_type: ppTConfig<G1 = Self::G1, G2 = Self::G2, Fr = Self::FieldT, FieldT = Self::FieldT>;
     type e_over_e_miller_loop_gadget_type;
     type e_times_e_over_e_miller_loop_gadget_type;
     type final_exp_gadget_type;

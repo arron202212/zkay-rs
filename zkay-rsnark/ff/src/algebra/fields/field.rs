@@ -1,22 +1,35 @@
-/** @file
-*****************************************************************************
-Declaration of common API for all finite fields.
+// Declaration of common API for all finite fields.
 
-Currently NOT used by the fields in this library. This pub struct is not actually
-the parent pub struct of any field. All APIs are enforced through tests instead.
+// Currently NOT used by the fields in this library. This pub struct is not actually
+// the parent pub struct of any field. All APIs are enforced through tests instead.
 
-The reason for this is to ensure high performance of all fields. This class
-exists as documentation for common API between fields.
+// The reason for this is to ensure high performance of all fields. This class
+// exists as documentation for common API between fields.
 
-Includes two types of fields, F[p^n] for selected n and F[2^n] for a separate
-range of n. All of these finite fields must implement all functions declared
-in this class.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
+// Includes two types of fields, F[p^n] for selected n and F[2^n] for a separate
+// range of n. All of these finite fields must implement all functions declared
+// in this class.
+
 use crate::algebra::field_utils::bigint;
+
+use super::fpn_field::PrimeField;
+use super::sqrt::{LegendreSymbol, SqrtPrecomputation};
+use crate::algebra::UniformRand;
+use ark_serialize::{
+    CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
+    CanonicalSerializeWithFlags, EmptyFlags, Flags,
+};
+use ark_std::{
+    fmt::{Debug, Display},
+    hash::Hash,
+    iter::*,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+    vec::*,
+};
+
+// pub use ff_macros;
+pub use num_traits::{One, Zero};
+use zeroize::Zeroize;
 
 /* The type parameter T is intended to be set to the child class
 when this pub struct is extended. For example,
@@ -67,27 +80,6 @@ pub struct Fp_model : public Field<Fp_model> ... */
 //      fn floor_size_in_bits()->usize;
 
 // }
-
-// } // namespace libff
-
-use super::fpn_field::PrimeField;
-use super::sqrt::{LegendreSymbol, SqrtPrecomputation};
-use crate::algebra::UniformRand;
-use ark_serialize::{
-    CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
-    CanonicalSerializeWithFlags, EmptyFlags, Flags,
-};
-use ark_std::{
-    fmt::{Debug, Display},
-    hash::Hash,
-    iter::*,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
-    vec::*,
-};
-
-// pub use ff_macros;
-pub use num_traits::{One, Zero};
-use zeroize::Zeroize;
 
 // #[cfg(feature = "parallel")]
 // use ark_std::cmp::max;

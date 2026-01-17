@@ -28,14 +28,15 @@
 // CRYPTO 2014,
 // <http://eprint.iacr.org/2014/595>
 
-use crate::gadgetlib1::gadgets::pairing::pairing_params::pairing_selector;
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::{
+    other_curve, pairing_selector, ppTConfig,
+};
 use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget::r1cs_ppzksnark_verification_key_variable;
 use crate::gadgetlib1::protoboard::PBConfig;
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::R1csPcdLocalDataConfig;
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::R1csPcdMessageConfig;
-use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
+    LocalDataConfig, MessageConfig,
+};
 use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdConfigPptConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_params::{
     r1cs_sp_ppzkpcd_auxiliary_input, r1cs_sp_ppzkpcd_compliance_predicate,
@@ -45,18 +46,16 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::sp_pcd_circuits::{
     get_sp_compliance_step_pcd_circuit_input, get_sp_translation_step_pcd_circuit_input,
     sp_compliance_step_pcd_circuit_maker, sp_translation_step_pcd_circuit_maker,
 };
-use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark_proof;
+
 use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
     r1cs_ppzksnark_generator, r1cs_ppzksnark_keypair, r1cs_ppzksnark_online_verifier_strong_IC,
-    r1cs_ppzksnark_processed_verification_key, r1cs_ppzksnark_prover, r1cs_ppzksnark_proving_key,
-    r1cs_ppzksnark_verification_key, r1cs_ppzksnark_verifier_process_vk,
-    r1cs_ppzksnark_verifier_strong_IC,
+    r1cs_ppzksnark_processed_verification_key, r1cs_ppzksnark_proof, r1cs_ppzksnark_prover,
+    r1cs_ppzksnark_proving_key, r1cs_ppzksnark_verification_key,
+    r1cs_ppzksnark_verifier_process_vk, r1cs_ppzksnark_verifier_strong_IC,
 };
 use ff_curves::Fr;
-use ffec::FieldTConfig;
-use ffec::PpConfig;
-use ffec::bit_vector;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::{FieldTConfig, PpConfig, bit_vector};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
 
@@ -72,10 +71,8 @@ type B_pp<PCD_ppT> = <PCD_ppT as PcdConfigPptConfig>::curve_B_pp;
 #[derive(Default, Clone)]
 pub struct r1cs_sp_ppzkpcd_proving_key<PCD_ppT: PcdConfigPptConfig> {
     pub compliance_predicate: r1cs_sp_ppzkpcd_compliance_predicate<PCD_ppT>,
-
     pub compliance_step_r1cs_pk: r1cs_ppzksnark_proving_key<A_pp<PCD_ppT>>,
     pub translation_step_r1cs_pk: r1cs_ppzksnark_proving_key<B_pp<PCD_ppT>>,
-
     pub compliance_step_r1cs_vk: r1cs_ppzksnark_verification_key<A_pp<PCD_ppT>>,
     pub translation_step_r1cs_vk: r1cs_ppzksnark_verification_key<B_pp<PCD_ppT>>,
 }
@@ -338,12 +335,11 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
         let mut result = r1cs_sp_ppzkpcd_verification_key::<PCD_ppT>::default();
         result.compliance_step_r1cs_vk =
             r1cs_ppzksnark_verification_key::<PCD_ppT::curve_A_pp>::dummy_verification_key(
-                sp_compliance_step_pcd_circuit_maker::<PCD_ppT::curve_A_pp, PCD_ppT::curve_A_pp>::input_size_in_elts(
-                ),
+                sp_compliance_step_pcd_circuit_maker::<PCD_ppT>::input_size_in_elts(),
             );
         result.translation_step_r1cs_vk =
             r1cs_ppzksnark_verification_key::<PCD_ppT::curve_B_pp>::dummy_verification_key(
-                sp_translation_step_pcd_circuit_maker::<PCD_ppT::curve_B_pp,PCD_ppT::curve_B_pp>::input_size_in_elts(),
+                sp_translation_step_pcd_circuit_maker::<PCD_ppT>::input_size_in_elts(),
             );
 
         result
@@ -431,9 +427,7 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdConfigPptConfig>(
 
     enter_block("Construct compliance step PCD circuit", false);
     let mut compliance_step_pcd_circuit =
-        sp_compliance_step_pcd_circuit_maker::<PCD_ppT::curve_A_pp>::new(
-            compliance_predicate.clone(),
-        );
+        sp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(compliance_predicate.clone());
     compliance_step_pcd_circuit.generate_r1cs_constraints();
     let compliance_step_pcd_circuit_cs = compliance_step_pcd_circuit.get_circuit();
     compliance_step_pcd_circuit_cs.report_linear_constraint_statistics();
@@ -441,13 +435,14 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdConfigPptConfig>(
 
     enter_block("Generate key pair for compliance step PCD circuit", false);
     let mut compliance_step_keypair =
-        r1cs_ppzksnark_generator::<PCD_ppT>(&compliance_step_pcd_circuit_cs);
+        r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&compliance_step_pcd_circuit_cs);
     leave_block("Generate key pair for compliance step PCD circuit", false);
 
     enter_block("Construct translation step PCD circuit", false);
-    let mut translation_step_pcd_circuit = sp_translation_step_pcd_circuit_maker::<
-        PCD_ppT::curve_B_pp,
-    >::new(compliance_step_keypair.vk.clone());
+    let mut translation_step_pcd_circuit =
+        sp_translation_step_pcd_circuit_maker::<B_pp<PCD_ppT>>::new(
+            compliance_step_keypair.vk.clone(),
+        );
     translation_step_pcd_circuit.generate_r1cs_constraints();
     let translation_step_pcd_circuit_cs = translation_step_pcd_circuit.get_circuit();
     translation_step_pcd_circuit_cs.report_linear_constraint_statistics();
@@ -455,7 +450,7 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdConfigPptConfig>(
 
     enter_block("Generate key pair for translation step PCD circuit", false);
     let translation_step_keypair =
-        r1cs_ppzksnark_generator::<PCD_ppT>(&translation_step_pcd_circuit_cs);
+        r1cs_ppzksnark_generator::<B_pp<PCD_ppT>>(&translation_step_pcd_circuit_cs);
     leave_block("Generate key pair for translation step PCD circuit", false);
 
     print_indent();
@@ -484,8 +479,8 @@ type curve_B_pp<PCD_ppT> = <PCD_ppT as PcdConfigPptConfig>::curve_B_pp;
 // pub trait sp_ppzkpcdConfig {
 //     type PCD_ppT: PcdConfigPptConfig<AP = Self::P>;
 //     type PB: PBConfig;
-//     type M: R1csPcdMessageConfig;
-//     type LD: R1csPcdLocalDataConfig;
+//     type M: MessageConfig;
+//     type LD: LocalDataConfig;
 //     type ED: evaluation_domain<Self::PCD_ppT::curve_B_pp::FieldT>;
 //     type P: pairing_selector;
 //     const N: usize;
@@ -496,76 +491,117 @@ pub fn r1cs_sp_ppzkpcd_prover<PCD_ppT: PcdConfigPptConfig>(
     auxiliary_input: &r1cs_sp_ppzkpcd_auxiliary_input<PCD_ppT>,
     incoming_proofs: &Vec<r1cs_sp_ppzkpcd_proof<PCD_ppT>>,
 ) -> r1cs_sp_ppzkpcd_proof<PCD_ppT>
-// where
-//     <PCD_ppT as PcdConfigPptConfig>::curve_A_pp: ppTConfig,
-//     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::Fr: Mul<
-//             <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//             Output = <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//         >,
-//     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     for<'a> &'a <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1:
-//         Add<Output = <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1>,
-//     <PCD_ppT as PcdConfigPptConfig>::curve_B_pp: ppTConfig,
-//     <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr: Mul<
-//             <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//             Output = <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//         >,
-//     <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr: Mul<
-//             knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//             >,
-//             Output = knowledge_commitment<
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
-//                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
-//             >,
-//         >,
-//     for<'a> &'a <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1:
-//         Add<Output = <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1>,
-//     <P as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>>::other_curve_type:
-//         ff_curves::PublicParams,
-//     PCD_ppT::M: R1csPcdMessageConfig<
-//         <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr,
-//     >,
-//     PCD_ppT::ED: evaluation_domain<
-//         <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr,
-//     >,
-//     P: pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>,
-//     <PCD_ppT as PcdConfigPptConfig>::curve_B_pp:
-//         pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>,
-//     PCD_ppT::M:R1csPcdMessageConfig<<<PCD_ppT as PcdConfigPptConfig>::AP as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>>::FieldT>,
-//     LD:R1csPcdLocalDataConfig<<<PCD_ppT as PcdConfigPptConfig>::AP as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>>::FieldT>,
-//     PCD_ppT::M:R1csPcdMessageConfig<<<P as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>>::other_curve_type as ff_curves::PublicParams>::Fr>,
-//   PCD_ppT::ED:evaluation_domain<ppT::FieldT>
+where
+    knowledge_commitment<
+        <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
+        <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
+                <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+        <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+                <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+        <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+                <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
+        <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
+                <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    // where
+    //     <PCD_ppT as PcdConfigPptConfig>::curve_A_pp: ppTConfig,
+    //     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //             Output = <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //         >,
+    //     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     for<'a> &'a <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1:
+    //         Add<Output = <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1>,
+    //     <PCD_ppT as PcdConfigPptConfig>::curve_B_pp: ppTConfig,
+    //     <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //             Output = <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //         >,
+    //     <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
+    //                 <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     for<'a> &'a <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1:
+    //         Add<Output = <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1>,
+    //     <P as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>>::other_curve_type:
+    //         ff_curves::PublicParams,
+    //     PCD_ppT::M: MessageConfig<
+    //         <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr,
+    //     >,
+    //     PCD_ppT::ED: evaluation_domain<
+    //         <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr,
+    //     >,
+    //     P: pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>,
+    //     <PCD_ppT as PcdConfigPptConfig>::curve_B_pp:
+    //         pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>,
+    //     PCD_ppT::M:MessageConfig<<<PCD_ppT as PcdConfigPptConfig>::AP as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>>::FieldT>,
+    //     LD:LocalDataConfig<<<PCD_ppT as PcdConfigPptConfig>::AP as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>>::FieldT>,
+    //     PCD_ppT::M:MessageConfig<<<P as pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>>::other_curve_type as ff_curves::PublicParams>::Fr>,
+    //   PCD_ppT::ED:evaluation_domain<ppT::FieldT>
 {
     // type FieldT_A=Fr< PCD_ppT::curve_A_pp>;
     // type FieldT_B=Fr< PCD_ppT::curve_B_pp>;
@@ -586,11 +622,11 @@ pub fn r1cs_sp_ppzkpcd_prover<PCD_ppT: PcdConfigPptConfig>(
 
     enter_block("Prove compliance step", false);
     let mut compliance_step_pcd_circuit =
-        sp_compliance_step_pcd_circuit_maker::<PCD_ppT::curve_A_pp>::new(pk.compliance_predicate);
+        sp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(pk.compliance_predicate.clone());
     compliance_step_pcd_circuit.generate_r1cs_witness(
         &pk.translation_step_r1cs_vk,
-        &primary_input,
-        &auxiliary_input,
+        primary_input,
+        auxiliary_input,
         incoming_proofs,
     );
 
@@ -607,7 +643,7 @@ pub fn r1cs_sp_ppzkpcd_prover<PCD_ppT: PcdConfigPptConfig>(
     // #ifdef DEBUG
     let compliance_step_input = get_sp_compliance_step_pcd_circuit_input::<PCD_ppT::curve_A_pp>(
         &translation_step_r1cs_vk_bits,
-        &primary_input,
+        primary_input,
     );
     let compliance_step_ok = r1cs_ppzksnark_verifier_strong_IC::<PCD_ppT::curve_A_pp>(
         &pk.compliance_step_r1cs_vk,
@@ -620,7 +656,7 @@ pub fn r1cs_sp_ppzkpcd_prover<PCD_ppT: PcdConfigPptConfig>(
     enter_block("Prove translation step", false);
     let translation_step_pcd_circuit =
         sp_translation_step_pcd_circuit_maker::<PCD_ppT::curve_B_pp>::new(
-            pk.compliance_step_r1cs_vk,
+            pk.compliance_step_r1cs_vk.clone(),
         );
 
     let translation_step_primary_input = get_sp_translation_step_pcd_circuit_input::<
@@ -665,19 +701,19 @@ pub fn r1cs_sp_ppzkpcd_online_verifier<PCD_ppT: PcdConfigPptConfig>(
 //         ff_curves::PublicParams,
 //     <PCD_ppT as PcdConfigPptConfig>::curve_B_pp:
 //         pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>,
-//     PCD_ppT::M: R1csPcdMessageConfig<
+//     PCD_ppT::M: MessageConfig<
 //         <<PCD_ppT as PcdConfigPptConfig>::AP as pairing_selector<
 //             <PCD_ppT as PcdConfigPptConfig>::curve_A_pp,
 //         >>::FieldT,
 //     >,
-//     PCD_ppT::M: R1csPcdMessageConfig<
+//     PCD_ppT::M: MessageConfig<
 //         <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::Fr,
 //     >,
 {
     // type curve_B_pp= PCD_ppT::curve_B_pp;
 
     enter_block("Call to r1cs_sp_ppzkpcd_online_verifier", false);
-    let r1cs_input = get_sp_translation_step_pcd_circuit_input::<PCD_ppT>(
+    let r1cs_input = get_sp_translation_step_pcd_circuit_input::<B_pp<PCD_ppT>>(
         &pvk.translation_step_r1cs_vk_bits,
         primary_input,
     );
@@ -745,7 +781,7 @@ pub fn r1cs_sp_ppzkpcd_verifier<PCD_ppT: PcdConfigPptConfig>(
 //         pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>,
 //     <PCD_ppT as PcdConfigPptConfig>::curve_A_pp:
 //         pairing_selector<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>,
-//     PCD_ppT::M: R1csPcdMessageConfig<
+//     PCD_ppT::M: MessageConfig<
 //         <<PCD_ppT as PcdConfigPptConfig>::AP as pairing_selector<
 //             <PCD_ppT as PcdConfigPptConfig>::curve_A_pp,
 //         >>::FieldT,

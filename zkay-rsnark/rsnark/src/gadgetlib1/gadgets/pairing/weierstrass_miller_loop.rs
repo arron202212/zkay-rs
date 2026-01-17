@@ -1,16 +1,17 @@
 //  Declaration of interfaces for gadgets for Miller loops.
 
 //  The gadgets verify computations of (single or multiple simultaneous) Miller loops.
+
 use crate::gadgetlib1::gadgets::curves::weierstrass_g1_gadget::{G1_variable, G1_variables};
 use crate::gadgetlib1::gadgets::curves::weierstrass_g2_gadget::{G2_variable, G2_variables};
 use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation::{
     G1_precomputation, G1_precomputations, G2_precomputation, G2_precomputations,
     precompute_G1_gadget, precompute_G2_gadget, precompute_G2_gadget_coeffss,
 };
-// affine_ate_miller_loop, affine_ate_precompute_G1, affine_ate_precompute_G2, ppT::pairing_loop_count,
-
+// affine_ate_miller_loop, affine_ate_precompute_G1, affine_ate_precompute_G2, ppT::P::pairing_loop_count,
 use ff_curves::{Fqe, G1, G2};
 use ffec::PpConfig;
+use ffec::scalar_multiplication::multiexp::KCConfig;
 use std::ops::{Add, Mul};
 // use ff_curves::algebra::curves::mnt::mnt4::mnt4_init;
 // use ff_curves::algebra::curves::mnt::mnt6::mnt6_init;
@@ -470,11 +471,11 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadget<ppT> {
         result: Fqk_variable<ppT>,
         annotation_prefix: String,
     ) -> mnt_miller_loop_gadgets<ppT> {
-        let loop_count = ppT::pairing_loop_count;
+        let loop_count = ppT::P::pairing_loop_count;
         let (mut f_count, mut add_count, mut dbl_count) = (0, 0, 0);
 
         let mut found_nonzero = false;
-        let mut NAF = find_wnaf_u::<4>(1, loop_count);
+        let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */
@@ -635,10 +636,10 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadgets<ppT> {
         let mut add_id = 0;
         let mut dbl_id = 0;
 
-        let loop_count = ppT::pairing_loop_count;
+        let loop_count = ppT::P::pairing_loop_count;
 
         let mut found_nonzero = false;
-        let mut NAF = find_wnaf_u::<4>(1, loop_count);
+        let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */
@@ -672,8 +673,8 @@ pub fn test_mnt_miller_loop<ppT: ppTConfig>(annotation: &String)
 //     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
-    let mut P_val = G1::<other_curve<ppT>>::one() * ppT::FieldT::random_element();
-    let mut Q_val = G2::<other_curve<ppT>>::one() * ppT::FieldT::random_element();
+    let mut P_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();
+    let mut Q_val = ppT::FieldT::random_element() * G2::<other_curve<ppT>>::one();
 
     let mut P = G1_variable::<ppT>::new(pb.clone(), "P".to_owned());
     let mut Q = G2_variable::<ppT>::new(pb.clone(), "Q".to_owned());
@@ -750,12 +751,12 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadget<ppT> {
         result: Fqk_variable<ppT>,
         annotation_prefix: String,
     ) -> mnt_e_over_e_miller_loop_gadgets<ppT> {
-        let loop_count = ppT::pairing_loop_count;
+        let loop_count = ppT::P::pairing_loop_count;
 
         let (mut f_count, mut add_count, mut dbl_count) = (0, 0, 0);
 
         let mut found_nonzero = false;
-        let mut NAF = find_wnaf_u::<4>(1, loop_count);
+        let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */
@@ -973,10 +974,10 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadgets<ppT> {
         let mut dbl_id = 0;
         let mut f_id = 0;
 
-        let loop_count = ppT::pairing_loop_count;
+        let loop_count = ppT::P::pairing_loop_count;
 
         let mut found_nonzero = false;
-        let mut NAF = find_wnaf_u::<4>(1, loop_count);
+        let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */
@@ -1043,11 +1044,11 @@ pub fn test_mnt_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &String)
 //     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
-    let mut P1_val = G1::<other_curve<ppT>>::one() * ppT::FieldT::random_element();
-    let mut Q1_val = G2::<other_curve<ppT>>::one() * ppT::FieldT::random_element();
+    let mut P1_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();
+    let mut Q1_val = ppT::FieldT::random_element() * G2::<other_curve<ppT>>::one();
 
-    let mut P2_val = G1::<other_curve<ppT>>::one() * ppT::FieldT::random_element();
-    let mut Q2_val = G2::<other_curve<ppT>>::one() * ppT::FieldT::random_element();
+    let mut P2_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();
+    let mut Q2_val = ppT::FieldT::random_element() * G2::<other_curve<ppT>>::one();
 
     let mut P1 = G1_variable::<ppT>::new(pb.clone(), "P1".to_owned());
     let mut Q1 = G2_variable::<ppT>::new(pb.clone(), "Q1".to_owned());
@@ -1153,12 +1154,12 @@ impl<ppT: ppTConfig> mnt_e_times_e_over_e_miller_loop_gadget<ppT> {
         result: Fqk_variable<ppT>,
         annotation_prefix: String,
     ) -> mnt_e_times_e_over_e_miller_loop_gadgets<ppT> {
-        let mut loop_count = ppT::pairing_loop_count;
+        let mut loop_count = ppT::P::pairing_loop_count;
 
         let (mut f_count, mut add_count, mut dbl_count) = (0, 0, 0);
 
         let mut found_nonzero = false;
-        let mut NAF = find_wnaf_u::<4>(1, loop_count);
+        let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */
@@ -1432,10 +1433,10 @@ impl<ppT: ppTConfig> mnt_e_times_e_over_e_miller_loop_gadgets<ppT> {
         let mut dbl_id = 0;
         let mut f_id = 0;
 
-        let loop_count = ppT::pairing_loop_count;
+        let loop_count = ppT::P::pairing_loop_count;
 
         let mut found_nonzero = false;
-        let mut NAF = find_wnaf_u::<4>(1, loop_count);
+        let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */

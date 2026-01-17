@@ -22,6 +22,7 @@ use crate::algebra::{
 use crate::const_new_fp_model;
 use ark_std::iterable::Iterable;
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 // use crate::Fp2_modelConfig;
 use crate::Fp_model;
@@ -40,7 +41,7 @@ use num_traits::{One, Zero};
 type Fp2_modelConfig<const N: usize, P> =
     <<P as Fp12_modelConfig<N>>::Fp6_modelConfig as Fp6_modelConfig<N>>::Fp2_modelConfig;
 pub trait Fp12_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp_modelConfig: Fp_modelConfig<N>;
     type Fp6_modelConfig: Fp6_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
@@ -72,7 +73,7 @@ type my_Fp<const N: usize, T> = Fp_model<N, T>;
 type my_Fp2<const N: usize, T> = Fp2_model<N, T>;
 type my_Fp6<const N: usize, T> = Fp6_3over2_model<N, T>;
 
-#[derive(Default, Clone, Copy, Eq)]
+#[derive(Default, Clone, Debug, Copy, Eq)]
 pub struct Fp12_2over3over2_model<const N: usize, T: Fp12_modelConfig<N>> {
     // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     //     static i64 add_cnt;
@@ -810,9 +811,24 @@ impl<const N: usize, T: Fp12_modelConfig<N>> fmt::Display for Fp12_2over3over2_m
         write!(f, "{}", self.c0)
     }
 }
-impl<const N: usize, T: Fp12_modelConfig<N>> PpConfig for Fp12_2over3over2_model<N, T> where <T as Fp12_modelConfig<N>>::Fp_modelConfig: PpConfig{
+impl<const N: usize, T: Fp12_modelConfig<N>> PpConfig for Fp12_2over3over2_model<N, T>
+where
+    <T as Fp12_modelConfig<N>>::Fp_modelConfig: PpConfig,
+{
     type TT = bigint<N>;
-//  type Fr=T::Fp_modelConfig;
+    //  type Fr=T::Fp_modelConfig;
+}
+
+impl<const N: usize, T12: Fp12_modelConfig<N>, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>>
+    for Fp12_2over3over2_model<N, T12>
+{
+    type Output = Fp12_2over3over2_model<N, T12>;
+
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
 }
 
 impl<const N: usize, T: Fp12_modelConfig<N>> Mul<bigint<N>> for Fp12_2over3over2_model<N, T> {

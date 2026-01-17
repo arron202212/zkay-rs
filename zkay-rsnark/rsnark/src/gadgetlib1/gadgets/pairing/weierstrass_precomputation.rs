@@ -10,13 +10,6 @@ use crate::gadgetlib1::gadgets::pairing::pairing_params::{
 use ff_curves::algebra::curves::mnt::mnt4::mnt4_init;
 use ff_curves::algebra::curves::mnt::mnt6::mnt6_init;
 
-use ff_curves::{
-    CoeffsConfig, FpmConfig, Fqe, Fqk, Fr, G1, G2, PublicParams, affine_ate_G_precomp_typeConfig,
-};
-use ffec::PpConfig;
-use ffec::scalar_multiplication::wnaf::find_wnaf_u;
-use std::ops::Mul;
-
 use crate::gadgetlib1::constraint_profiling::PRINT_CONSTRAINT_PROFILING;
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::other_curve;
@@ -28,6 +21,13 @@ use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
 use ff_curves::algebra::curves::public_params;
+use ff_curves::{
+    CoeffsConfig, FpmConfig, Fqe, Fqk, Fr, G1, G2, PublicParams, affine_ate_G_precomp_typeConfig,
+};
+use ffec::PpConfig;
+use ffec::scalar_multiplication::multiexp::KCConfig;
+use ffec::scalar_multiplication::wnaf::find_wnaf_u;
+use std::ops::Mul;
 
 use ffec::field_utils::bigint::bigint;
 use ffec::{FieldTConfig, One, Zero};
@@ -344,7 +344,7 @@ pub fn test_G1_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<Fpk_variabl
 //     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
-    let mut g_val = G1::<ppT>::one() * ppT::FieldT::random_element();
+    let mut g_val = ppT::FieldT::random_element() * G1::<ppT>::one();
 
     let mut g = G1_variable::<ppT>::new(pb.clone(), "g".to_owned());
     let mut precomp = G1_precomputations::<ppT>::default();
@@ -531,8 +531,9 @@ impl<ppT: ppTConfig> precompute_G2_gadget_doubling_step<ppT> {
             RXsquared.borrow().clone(),
             prefix_format!(annotation_prefix, " compute_RXsquared"),
         ));
+
         let three_RXsquared_plus_a = RcCell::new(
-            RXsquared.borrow().clone() * ppT::FieldT::from(3) + G2::<other_curve<ppT>>::coeff_a(),
+            RXsquared.borrow().clone() * ppT::FieldT::from(3) + G2::<other_curve<ppT>>::coeff_a,
         );
         let two_RY = RcCell::new(cur.t.RY.borrow().clone() * ppT::FieldT::from(2));
 
@@ -815,13 +816,13 @@ impl<ppT: ppTConfig> precompute_G2_gadget<ppT> {
     ) -> precompute_G2_gadgets<ppT> {
         precomp.t.Q = RcCell::new(Q.clone());
 
-        let mut loop_count = ppT::pairing_loop_count;
+        let mut loop_count = ppT::P::pairing_loop_count;
         let mut coeff_count = 1; // the last RX/RY are unused in Miller loop, but will need to get allocated somehow
         let mut add_count = 0;
         let mut dbl_count = 0;
 
         let mut found_nonzero = false;
-        let NAF = find_wnaf_u::<4>(1, loop_count);
+        let NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */
@@ -960,13 +961,13 @@ impl<ppT: ppTConfig> precompute_G2_gadgets<ppT> {
                     .to_field::<ppT::FieldT>(),
             );
 
-        let mut loop_count = ppT::pairing_loop_count;
+        let mut loop_count = ppT::P::pairing_loop_count;
 
         let mut add_id = 0;
         let mut dbl_id = 0;
 
         let mut found_nonzero = false;
-        let NAF = find_wnaf_u::<4>(1, loop_count);
+        let NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
                 /* this skips the MSB itself */

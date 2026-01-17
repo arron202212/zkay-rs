@@ -207,4 +207,3 @@ pub fn tonelli_shanks_sqrt<FieldT: Clone>(value: &FieldT) -> FieldT {
     // return x;
     value.clone()
 }
-

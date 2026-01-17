@@ -1,17 +1,17 @@
 // Declaration of public-parameter selector for the R1CS ppzkADSNARK.
 
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
 };
-
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf::PrfConfig;
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_signature::SigConfig;
 use ff_curves::Fr;
 use ff_curves::PublicParams;
 use ffec::FieldTConfig;
 use ffec::PpConfig;
+use ffec::scalar_multiplication::multiexp::KCConfig;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 
 #[derive(Default, Clone)]
@@ -20,7 +20,7 @@ pub struct labelT {
                               // labelT() {};
 }
 
-pub trait SigTConfig {
+pub trait SigTConfig: Default + Clone {
     fn sig_bytes(&self) -> &[u8];
     fn sig_bytes_mut(&mut self) -> &mut Vec<u8>;
 }
@@ -29,17 +29,16 @@ pub trait VkTConfig: Default + Clone {
     fn vk_bytes(&self) -> &[u8];
 }
 
-pub trait ppzkadsnarkConfig: Sized + Default + Clone {
-    type ppT: ppTConfig;
+pub trait ppzkadsnarkConfig: ppTConfig + Sized + Default + Clone {
     type Sig: SigConfig<Self>;
     type Prf: PrfConfig<Self>;
-    type FieldT: FieldTConfig;
-    type snark_pp: PublicParams;
+    type snark_pp: ppTConfig;
     type skT: Default + Clone;
     type vkT: VkTConfig;
     type sigT: SigTConfig;
     type prfKeyT: Default + Clone;
     const NN: usize = 4;
+
     fn init_public_params();
 }
 

@@ -5,6 +5,7 @@
 // receives input messages, local data, and an output message (and perhaps some
 // other auxiliary information), and then either accepts or rejects.
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
 };
@@ -13,6 +14,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
 use ffec::FieldTConfig;
+use ffec::PpConfig;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
@@ -26,11 +28,12 @@ use std::marker::PhantomData;
  * - a payload (a vector of field elements).
  */
 #[derive(Default, Clone)]
-pub struct r1cs_pcd_message<T: R1csPcdMessageConfig> {
+pub struct r1cs_pcd_message<FieldT: FieldTConfig, T: MessageConfig> {
     pub types: usize,
     pub t: T,
+    _t: PhantomData<FieldT>,
 }
-pub trait R1csPcdMessageConfig: Default + Clone {
+pub trait MessageConfig: Default + Clone {
     type FieldT: FieldTConfig;
     fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
 }
@@ -41,15 +44,16 @@ pub trait R1csPcdMessageConfig: Default + Clone {
  * A local data for R1CS PCD.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_pcd_local_data<T: R1csPcdLocalDataConfig> {
+pub struct r1cs_pcd_local_data<FieldT: FieldTConfig, T: LocalDataConfig> {
     pub t: T,
+    _t: PhantomData<FieldT>,
 }
-pub trait R1csPcdLocalDataConfig {
+pub trait LocalDataConfig {
     type FieldT: FieldTConfig;
     fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
 }
 
-impl<T: R1csPcdLocalDataConfig> R1csPcdLocalDataConfig for r1cs_pcd_local_data<T> {
+impl<FieldT: FieldTConfig, T: LocalDataConfig> LocalDataConfig for r1cs_pcd_local_data<FieldT, T> {
     type FieldT = T::FieldT;
     fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<T::FieldT> {
         self.t.as_r1cs_variable_assignment()
@@ -94,10 +98,10 @@ pub type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
  * relies_on_same_type_inputs=false).
  */
 #[derive(Default, Clone)]
-pub struct r1cs_pcd_compliance_predicate<ppT: ppTConfig> {
+pub struct r1cs_pcd_compliance_predicate<FieldT: FieldTConfig, ppT: ppTConfig> {
     pub name: usize,
     pub types: usize,
-    pub constraint_system: r1cs_constraint_system<ppT::FieldT, ppT::SV, ppT::SLC>,
+    pub constraint_system: r1cs_constraint_system<FieldT, pb_variable, pb_linear_combination>,
     pub outgoing_message_payload_length: usize,
     pub max_arity: usize,
     pub incoming_message_payload_lengths: Vec<usize>,
@@ -105,18 +109,23 @@ pub struct r1cs_pcd_compliance_predicate<ppT: ppTConfig> {
     pub witness_length: usize,
     pub relies_on_same_type_inputs: bool,
     pub accepted_input_types: BTreeSet<usize>,
+    _t: PhantomData<ppT>,
 }
 
-impl<T: R1csPcdMessageConfig> R1csPcdMessageConfig for r1cs_pcd_message<T> {
+impl<FieldT: FieldTConfig, T: MessageConfig> MessageConfig for r1cs_pcd_message<FieldT, T> {
     type FieldT = T::FieldT;
     fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<T::FieldT> {
         self.t.payload_as_r1cs_variable_assignment()
     }
 }
 
-impl<T: R1csPcdMessageConfig> r1cs_pcd_message<T> {
+impl<FieldT: FieldTConfig, T: MessageConfig> r1cs_pcd_message<FieldT, T> {
     pub fn new(types: usize, t: T) -> Self {
-        Self { types, t }
+        Self {
+            types,
+            t,
+            _t: PhantomData,
+        }
     }
     pub fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<T::FieldT> {
         let mut result = self.t.payload_as_r1cs_variable_assignment();
@@ -136,11 +145,13 @@ impl<T: R1csPcdMessageConfig> r1cs_pcd_message<T> {
     }
 }
 
-impl<ppT: ppTConfig> r1cs_pcd_compliance_predicate<ppT> {
+impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
+    r1cs_pcd_compliance_predicate<FieldT, ppT>
+{
     pub fn new(
         name: usize,
         types: usize,
-        constraint_system: r1cs_constraint_system<ppT::FieldT, ppT::SV, ppT::SLC>,
+        constraint_system: r1cs_constraint_system<FieldT, pb_variable, pb_linear_combination>,
         outgoing_message_payload_length: usize,
         max_arity: usize,
         incoming_message_payload_lengths: Vec<usize>,
@@ -161,6 +172,7 @@ impl<ppT: ppTConfig> r1cs_pcd_compliance_predicate<ppT> {
             witness_length,
             relies_on_same_type_inputs,
             accepted_input_types,
+            _t: PhantomData,
         }
     }
 
@@ -313,10 +325,10 @@ impl<ppT: ppTConfig> r1cs_pcd_compliance_predicate<ppT> {
 
     pub fn is_satisfied(
         &self,
-        outgoing_message: &RcCell<r1cs_pcd_message<ppT::M>>,
-        incoming_messages: &Vec<RcCell<r1cs_pcd_message<ppT::M>>>,
-        local_data: &RcCell<r1cs_pcd_local_data<ppT::LD>>,
-        witness: &r1cs_pcd_witness<ppT::FieldT>,
+        outgoing_message: &RcCell<r1cs_pcd_message<FieldT, ppT::M>>,
+        incoming_messages: &Vec<RcCell<r1cs_pcd_message<FieldT, ppT::M>>>,
+        local_data: &RcCell<r1cs_pcd_local_data<FieldT, ppT::LD>>,
+        witness: &r1cs_pcd_witness<FieldT>,
     ) -> bool {
         assert!(
             outgoing_message
@@ -337,10 +349,11 @@ impl<ppT: ppTConfig> r1cs_pcd_compliance_predicate<ppT> {
         }
         assert!(local_data.borrow().as_r1cs_variable_assignment().len() == self.local_data_length);
 
-        let cp_primary_input =
-            r1cs_pcd_compliance_predicate_primary_input::<ppT::M>::new(outgoing_message.clone());
+        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT, ppT::M>::new(
+            outgoing_message.clone(),
+        );
         let cp_auxiliary_input =
-            r1cs_pcd_compliance_predicate_auxiliary_input::<ppT::M, ppT::LD>::new(
+            r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT, ppT::M, ppT::LD>::new(
                 incoming_messages.clone(),
                 local_data.clone(),
                 witness.clone(),

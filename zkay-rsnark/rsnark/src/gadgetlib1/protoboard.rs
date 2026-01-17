@@ -7,8 +7,8 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, var_index_t, variable,
 };
 use ffec::FieldTConfig;
-
 use ffec::common::utils;
+use ffec::scalar_multiplication::multiexp::KCConfig;
 
 pub trait PBConfig: Default + Clone {}
 

@@ -16,8 +16,10 @@ use ffec::common::profiling;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;
 use ffec::common::utils::FMT;
-use fqfft::evaluation_domain::get_evaluation_domain::get_evaluation_domain;
-use fqfft::evaluation_domain::{evaluation_domain::evaluation_domain, get_evaluation_domain};
+use fqfft::evaluation_domain::{
+    evaluation_domain::{EvaluationDomainConfig, evaluation_domain},
+    get_evaluation_domain::get_evaluation_domain,
+};
 /**
  * Instance map for the R1CS-to-QAP reduction.
  */
@@ -111,16 +113,15 @@ use std::collections::HashMap;
  */
 pub fn r1cs_to_qap_instance_map<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
-) -> qap_instance<FieldT, ED> {
+) -> qap_instance<FieldT> {
     enter_block("Call to r1cs_to_qap_instance_map", false);
 
     let domain =
-        get_evaluation_domain::<FieldT, ED>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
+        get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
 
     let mut A_in_Lagrange_basis =
         Vec::<HashMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
@@ -162,10 +163,10 @@ pub fn r1cs_to_qap_instance_map<
 
     leave_block("Call to r1cs_to_qap_instance_map", false);
 
-    qap_instance::<FieldT, ED>::new(
+    qap_instance::<FieldT>::new(
         domain.clone(),
         cs.num_variables(),
-        domain.m,
+        domain.borrow().m(),
         cs.num_inputs(),
         A_in_Lagrange_basis,
         B_in_Lagrange_basis,
@@ -189,29 +190,28 @@ pub fn r1cs_to_qap_instance_map<
  */
 pub fn r1cs_to_qap_instance_map_with_evaluation<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
-) -> qap_instance_evaluation<FieldT, ED> {
+) -> qap_instance_evaluation<FieldT> {
     enter_block("Call to r1cs_to_qap_instance_map_with_evaluation", false);
 
     let domain =
-        get_evaluation_domain::<FieldT, ED>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
+        get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
 
     let (mut At, mut Bt, mut Ct, mut Ht) = (
         vec![FieldT::zero(); cs.num_variables() + 1],
         vec![FieldT::zero(); cs.num_variables() + 1],
         vec![FieldT::zero(); cs.num_variables() + 1],
-        Vec::with_capacity(domain.borrow().m + 1),
+        Vec::with_capacity(domain.borrow().m() + 1),
     );
 
-    let Zt = domain.borrow().compute_vanishing_polynomial(t);
+    let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
     enter_block("Compute evaluations of A, B, C, H at t", false);
-    let u = domain.borrow().evaluate_all_lagrange_polynomials(t);
+    let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
     /**
      * add and process the constraints
      *     input_i * 0 = 0
@@ -239,7 +239,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
     }
 
     let mut ti = FieldT::one();
-    for i in 0..domain.borrow().m + 1 {
+    for i in 0..domain.borrow().m() + 1 {
         Ht.push(ti.clone());
         ti *= t.clone();
     }
@@ -247,10 +247,10 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
 
     leave_block("Call to r1cs_to_qap_instance_map_with_evaluation", false);
 
-    return qap_instance_evaluation::<FieldT, ED>::new(
-        domain,
+    qap_instance_evaluation::<FieldT>::new(
+        domain.clone(),
         cs.num_variables(),
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         t.clone(),
         At,
@@ -258,7 +258,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
         Ct,
         Ht,
         Zt,
-    );
+    )
 }
 
 /**
@@ -292,7 +292,6 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
  */
 pub fn r1cs_to_qap_witness_map<
     FieldT: FieldTConfig,
-    ED: Default+Clone,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -309,7 +308,7 @@ pub fn r1cs_to_qap_witness_map<
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
     let domain =
-        get_evaluation_domain::<FieldT, ED>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
+        get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
 
     let mut full_variable_assignment: Vec<_> = primary_input
         .iter()
@@ -318,7 +317,10 @@ pub fn r1cs_to_qap_witness_map<
         .collect();
 
     enter_block("Compute evaluation of polynomials A, B on set S", false);
-    let (mut aA, mut aB) = (vec![FieldT::zero(); domain.borrow().m], vec![FieldT::zero(); domain.borrow().m]);
+    let (mut aA, mut aB) = (
+        vec![FieldT::zero(); domain.borrow().m()],
+        vec![FieldT::zero(); domain.borrow().m()],
+    );
 
     /* account for the additional constraints input_i * 0 = 0 */
     for i in 0..=cs.num_inputs() {
@@ -336,38 +338,38 @@ pub fn r1cs_to_qap_witness_map<
     leave_block("Compute evaluation of polynomials A, B on set S", false);
 
     enter_block("Compute coefficients of polynomial A", false);
-    domain.borrow().iFFT(&aA);
+    domain.borrow_mut().iFFT(&mut aA);
     leave_block("Compute coefficients of polynomial A", false);
 
     enter_block("Compute coefficients of polynomial B", false);
-    domain.borrow().iFFT(&aB);
+    domain.borrow_mut().iFFT(&mut aB);
     leave_block("Compute coefficients of polynomial B", false);
 
     enter_block("Compute ZK-patch", false);
-    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m + 1];
+    let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
     /* add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z */
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = d2.clone() * aA[i].clone() + d1.clone() * aB[i].clone();
     }
     coefficients_for_H[0] -= d3.clone();
     domain
-        .borrow()
-        .add_poly_Z(&(d1.clone() * d2.clone()), &coefficients_for_H);
+        .borrow_mut()
+        .add_poly_Z(&(d1.clone() * d2.clone()), &mut coefficients_for_H);
     leave_block("Compute ZK-patch", false);
 
     enter_block("Compute evaluation of polynomial A on set T", false);
     domain
-        .borrow()
-        .cosetFFT(&aA, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial A on set T", false);
 
     enter_block("Compute evaluation of polynomial B on set T", false);
     domain
-        .borrow()
-        .cosetFFT(&aB, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .cosetFFT(&mut aB, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial B on set T", false);
 
     enter_block("Compute evaluation of polynomial H on set T", false);
@@ -375,52 +377,52 @@ pub fn r1cs_to_qap_witness_map<
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aB[i].clone();
     }
     // Vec<FieldT: FieldTConfig>().swap(aB); // destroy aB
 
     enter_block("Compute evaluation of polynomial C on set S", false);
-    let mut aC = vec![FieldT::zero(); domain.borrow().m];
+    let mut aC = vec![FieldT::zero(); domain.borrow().m()];
     for i in 0..cs.num_constraints() {
         aC[i] += cs.constraints[i].c.evaluate(&full_variable_assignment);
     }
     leave_block("Compute evaluation of polynomial C on set S", false);
 
     enter_block("Compute coefficients of polynomial C", false);
-    domain.borrow().iFFT(&aC);
+    domain.borrow_mut().iFFT(&mut aC);
     leave_block("Compute coefficients of polynomial C", false);
 
     enter_block("Compute evaluation of polynomial C on set T", false);
     domain
-        .borrow()
-        .cosetFFT(&aC, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial C on set T", false);
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
 
     enter_block("Divide by Z on set T", false);
-    domain.borrow().divide_by_Z_on_coset(&H_tmp);
+    domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
     leave_block("Divide by Z on set T", false);
 
     leave_block("Compute evaluation of polynomial H on set T", false);
 
     enter_block("Compute coefficients of polynomial H", false);
     domain
-        .borrow()
-        .icosetFFT(&H_tmp, &FieldT::multiplicative_generator());
+        .borrow_mut()
+        .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
     leave_block("Compute coefficients of polynomial H", false);
 
     enter_block("Compute sum of H and ZK-patch", false);
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
     // //#endif
-    for i in 0..domain.borrow().m {
+    for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
     leave_block("Compute sum of H and ZK-patch", false);
@@ -429,7 +431,7 @@ pub fn r1cs_to_qap_witness_map<
 
     return qap_witness::<FieldT>::new(
         cs.num_variables(),
-        domain.borrow().m,
+        domain.borrow().m(),
         cs.num_inputs(),
         d1.clone(),
         d2.clone(),

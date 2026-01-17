@@ -5,9 +5,9 @@ use ffec::{
     Fp_model, Fp2_model, Fp2_modelConfig, Fp3_modelConfig, Fp6_3over2_model, Fp6_modelConfig,
     Fp12_2over3over2_model, Fp12_modelConfig,
 };
-use std::ops::{Add,Mul,Sub,Neg};
+use ffec::{One, Zero};
 use std::borrow::Borrow;
-use ffec::{One,Zero};
+use std::ops::{Add, Mul, Neg, Sub};
 // use ffec::algebra::fields::prime_base::fp;
 // use ffec::algebra::fields::prime_extension::fp12_2over3over2;
 // use ffec::algebra::fields::prime_extension::fp2;
@@ -27,7 +27,7 @@ const alt_bn128_q_limbs: usize = (alt_bn128_q_bitcount + GMP_NUMB_BITS - 1) / GM
 
 // extern bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
 // extern bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Default, Clone, Debug, Copy, PartialEq, Eq)]
 pub struct Backend;
 
 impl<O: Borrow<Self>> Add<O> for Backend {
@@ -110,7 +110,7 @@ impl Zero for Backend {
     }
 }
 
-impl PpConfig for Backend{
+impl PpConfig for Backend {
     type TT = bigint<1>;
     // type Fr=Self;
 }

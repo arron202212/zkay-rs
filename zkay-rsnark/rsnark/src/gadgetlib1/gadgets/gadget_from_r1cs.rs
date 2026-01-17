@@ -15,27 +15,19 @@ use rccell::RcCell;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 #[derive(Clone, Default)]
-pub struct gadget_from_r1cs<
-    FieldT: FieldTConfig,
-    PB: PBConfig,
-    SV: SubVariableConfig,
-    SLC: SubLinearCombinationConfig,
-> {
+pub struct gadget_from_r1cs<FieldT: FieldTConfig, PB: PBConfig> {
     //gadget<FieldT>
     vars: Vec<pb_variable_array<FieldT, PB>>,
-    cs: r1cs_constraint_system<FieldT, SV, SLC>,
+    cs: r1cs_constraint_system<FieldT, pb_variable, pb_linear_combination>,
     cs_to_vars: BTreeMap<usize, usize>,
 }
 
-pub type gadget_from_r1css<FieldT, PB, SV, SLC> =
-    gadget<FieldT, PB, gadget_from_r1cs<FieldT, PB, SV, SLC>>;
-impl<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    gadget_from_r1cs<FieldT, PB, SV, SLC>
-{
+pub type gadget_from_r1css<FieldT, PB> = gadget<FieldT, PB, gadget_from_r1cs<FieldT, PB>>;
+impl<FieldT: FieldTConfig, PB: PBConfig> gadget_from_r1cs<FieldT, PB> {
     pub fn new(
         mut pb: RcCell<protoboard<FieldT, PB>>,
         vars: Vec<pb_variable_array<FieldT, PB>>,
-        cs: r1cs_constraint_system<FieldT, SV, SLC>,
+        cs: r1cs_constraint_system<FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
     ) -> gadget<FieldT, PB, Self> {
         let mut cs_to_vars = BTreeMap::from([(0, 0)]); // constant term maps to constant term 
@@ -91,9 +83,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig, SLC: SubLinearCo
     }
 }
 
-impl<FieldT: FieldTConfig, PB: PBConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
-    gadget<FieldT, PB, gadget_from_r1cs<FieldT, PB, SV, SLC>>
-{
+impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, gadget_from_r1cs<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&mut self) {
         for i in 0..self.t.cs.num_constraints() {
             let constr = &self.t.cs.constraints[i];

@@ -685,17 +685,17 @@ uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(cs:&uscs_ppzksnark_constrai
     ffec::print_indent(); print!("* G2 window: {}\n", g2_window);
 
     ffec::enter_block("Generating G1 multiexp table");
-    ffec::window_table<ffec::G1<ppT> > g1_table = get_window_table(ffec::Fr<ppT>::size_in_bits(), g1_window, ffec::G1<ppT>::one());
+    ffec::window_table<ffec::G1<ppT> > g1_table = get_window_table(ffec::Fr<ppT>::size_in_bits(), g1_window, G1<ppT>::one());
     ffec::leave_block("Generating G1 multiexp table");
 
     ffec::enter_block("Generating G2 multiexp table");
-    ffec::window_table<ffec::G2<ppT> > g2_table = get_window_table(ffec::Fr<ppT>::size_in_bits(), g2_window, ffec::G2<ppT>::one());
+    ffec::window_table<ffec::G2<ppT> > g2_table = get_window_table(ffec::Fr<ppT>::size_in_bits(), g2_window, G2<ppT>::one());
     ffec::leave_block("Generating G2 multiexp table");
 
     ffec::enter_block("Generate proof components");
 
     ffec::enter_block("Compute the query for V_g1", false);
-    ffec::G1_vector<ppT> V_g1_query = batch_exp(ffec::Fr<ppT>::size_in_bits(), g1_window, g1_table, Vt_table_minus_Xt_table);
+    ffec::G1_vector<ppT> V_g1_query = batch_exp(Fr<ppT>::size_in_bits(), g1_window, g1_table, Vt_table_minus_Xt_table);
 // #ifdef USE_MIXED_ADDITION
     ffec::batch_to_special<ffec::G1<ppT> >(V_g1_query);
 //#endif

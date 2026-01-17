@@ -36,7 +36,6 @@ use ark_std::{
 use num_bigint::BigUint;
 use zeroize::Zeroize;
 
-
 // //#include <gmp.h>
 
 // use crate::common::serialization;
@@ -47,8 +46,7 @@ use zeroize::Zeroize;
 // //  */
 pub const GMP_NUMB_BITS: usize = 64;
 
-
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Zeroize)]
 pub struct bigint<const N: usize>(pub BigInt<N>);
 // // impl<const N:usize> bigint<N>{
 //     // n: N:usize =,
@@ -81,9 +79,8 @@ pub struct bigint<const N: usize>(pub BigInt<N>);
 //     // friend std::istream& operator>> <n>(std::istream &in, bigint<n> &b);
 // // }
 
-
 impl<const N: usize> From<u128> for bigint<N> {
-    fn from(rhs:u128) -> Self {
+    fn from(rhs: u128) -> Self {
         Self(BigInt::from(rhs as u64))
     }
 }
@@ -160,7 +157,6 @@ impl<const N: usize> bigint<N> {
         self
     }
 }
-
 
 // use std::ops::Mul;
 // impl<const N:usize> Mul for bigint<N> {

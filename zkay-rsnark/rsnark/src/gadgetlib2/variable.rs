@@ -16,7 +16,7 @@ use std::ops::{Index, IndexMut};
 // pub struct FConst;
 // pub struct Variable;
 // pub struct VariableArray;
-#[derive(Default, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum FieldType {
     R1P,
     #[default]
@@ -336,7 +336,7 @@ pub type multiset = BTreeMap<Variable, i32>; //use std::collections::BTreeMap;
 //     which will also be determined by the assignment.
 //  */
 pub type VariableAssignment = HashMap<Variable, FElem>; //VariableStrictOrder
-#[derive(Default, Clone, Hash, Ord, Eq)]
+#[derive(Default, Clone, Debug, Hash, Ord, Eq)]
 pub struct Variable {
     pub index_: VarIndex_t,
     ///< This index differentiates and identifies Variable instances.
@@ -398,7 +398,7 @@ pub trait SubVariableArrayConfig: Default + Clone + Ord {
     }
 }
 
-#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct VariableArray<T: SubVariableArrayConfig> {
     // //: public VariableArrayContents
     pub contents: VariableArrayContents,
@@ -429,7 +429,7 @@ pub struct VariableArray<T: SubVariableArrayConfig> {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VariableArrayBase;
 impl SubVariableArrayConfig for VariableArrayBase {}
 pub type FlagVariable = Variable;
@@ -500,7 +500,7 @@ impl IntoIterator for VariableArrayType {
 
 /// Holds variables whose purpose is to be populated with the unpacked form of some word, bit by bit
 
-#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UnpackedWord;
 //  {
 // : public VariableArray
@@ -512,7 +512,7 @@ pub type UnpackedWordArray = Vec<VariableArray<UnpackedWord>>;
 
 /// Holds variables whose purpose is to be populated with the packed form of some word.
 /// word representation can be larger than a single field element in small enough fields
-#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MultiPackedWord {
     // //: public VariableArray
     pub numBits_: usize,
@@ -529,7 +529,7 @@ pub struct MultiPackedWord {
 pub type MultiPackedWordArray = Vec<VariableArray<MultiPackedWord>>;
 
 /// Holds both representations of a word, both multipacked and unpacked
-#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct DualWord {
     pub multipacked_: VariableArray<MultiPackedWord>,
     pub unpacked_: VariableArray<UnpackedWord>,
@@ -545,7 +545,7 @@ pub struct DualWord {
     //     pub fn  resize(newSize:usize);
 } // pub struct DualWord
 
-#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct DualWordArray {
     // kept as 2 separate arrays because the more common usecase will be to request one of these,
     // and not dereference a specific DualWord
@@ -572,7 +572,7 @@ pub struct DualWordArray {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct LinearTerm {
     pub variable_: Variable,
     pub coeff_: FElem,
@@ -651,7 +651,7 @@ pub struct LinearCombination {
 /*******************                                                            ******************/
 /*************************************************************************************************/
 /*************************************************************************************************/
-#[derive(Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
+#[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct Monomial {
     pub coeff_: FElem,
     pub variables_: BTreeMap<Variable, i32>,

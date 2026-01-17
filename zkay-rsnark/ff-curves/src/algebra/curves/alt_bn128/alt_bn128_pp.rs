@@ -1,10 +1,10 @@
 // use crate::algebra::curves::alt_bn128::alt_bn128_g1;
 // use crate::algebra::curves::alt_bn128::alt_bn128_g2;
+use crate::CoeffsConfig;
+use crate::affine_ate_G_precomp_typeConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
     alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT,
 };
-use crate::CoeffsConfig;
-use crate::affine_ate_G_precomp_typeConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
 use crate::algebra::curves::alt_bn128::alt_bn128_init::init_alt_bn128_params;
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing::alt_bn128_precompute_G1;
@@ -51,7 +51,7 @@ use ffec::field_utils::bigint::bigint;
 use ffec::{One, Zero};
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, Debug, PartialEq)]
 pub struct alt_bn128_pp;
 
 impl Add for alt_bn128_pp {
@@ -122,14 +122,14 @@ impl PpConfig for alt_bn128_pp {
     type TT = bigint<4>;
     // type Fr=Self;
 }
- #[derive(Clone,Default)]
+#[derive(Clone, Default)]
 pub struct Coeffs;
-impl CoeffsConfig for Coeffs{
+impl CoeffsConfig for Coeffs {
     // type FieldT=alt_bn128_Fr;
 }
 pub struct affine_ate_precomp;
-impl affine_ate_G_precomp_typeConfig for affine_ate_precomp{
-    type CC=Coeffs;
+impl affine_ate_G_precomp_typeConfig for affine_ate_precomp {
+    type CC = Coeffs;
 }
 impl PublicParamsType for alt_bn128_pp {
     type Fp_type = alt_bn128_Fr;
@@ -141,15 +141,17 @@ impl PublicParamsType for alt_bn128_pp {
     type Fqe_type = alt_bn128_Fq2;
     type Fqk_type = alt_bn128_Fq12;
     type GT_type = alt_bn128_GT;
-    type affine_ate_G1_precomp_type=affine_ate_precomp;
-    type affine_ate_G2_precomp_type=affine_ate_precomp;
+    type affine_ate_G1_precomp_type = affine_ate_precomp;
+    type affine_ate_G2_precomp_type = affine_ate_precomp;
 }
 
 impl PublicParams for alt_bn128_pp {
-    type G1=alt_bn128_G1;
-    type G2=alt_bn128_G2;
-type affine_ate_G1_precomp=affine_ate_precomp;
-    type affine_ate_G2_precomp=affine_ate_precomp;
+    type Fr = alt_bn128_Fr;
+    type G1 = alt_bn128_G1;
+    type G2 = alt_bn128_G2;
+    type GT = alt_bn128_GT;
+    type affine_ate_G1_precomp = affine_ate_precomp;
+    type affine_ate_G2_precomp = affine_ate_precomp;
     const has_affine_pairing: bool = false;
 
     fn init_public_params() {

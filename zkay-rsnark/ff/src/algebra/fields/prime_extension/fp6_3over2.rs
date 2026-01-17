@@ -23,6 +23,7 @@ use crate::algebra::{
 use crate::const_new_fp_model;
 use num_traits::{One, Zero};
 use std::borrow::Borrow;
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 // /**
 //  * Arithmetic in the finite field F[(p^2)^3].
@@ -35,7 +36,7 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 //
 
 pub trait Fp6_modelConfig<const N: usize>:
-    'static + Send + Sync + Sized + Default + Clone + Copy + Eq
+    'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp_modelConfig: Fp_modelConfig<N>;
     type Fp2_modelConfig: Fp2_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
@@ -71,7 +72,7 @@ pub trait Fp6_modelConfig<const N: usize>:
 type my_Fp<const N: usize, T> = Fp_model<N, T>;
 type my_Fp2<const N: usize, T> = Fp2_model<N, T>;
 
-#[derive(Default, Clone, Copy, Eq)]
+#[derive(Default, Clone, Debug, Copy, Eq)]
 pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
     // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     //     static i64 add_cnt;
@@ -582,9 +583,12 @@ impl<const N: usize, T: Fp6_modelConfig<N>> fmt::Display for Fp6_3over2_model<N,
         write!(f, "{}", self.c0)
     }
 }
-impl<const N: usize, T: Fp6_modelConfig<N>> PpConfig for Fp6_3over2_model<N, T> where <T as Fp6_modelConfig<N>>::Fp_modelConfig: PpConfig{
+impl<const N: usize, T: Fp6_modelConfig<N>> PpConfig for Fp6_3over2_model<N, T>
+where
+    <T as Fp6_modelConfig<N>>::Fp_modelConfig: PpConfig,
+{
     type TT = bigint<N>;
-//  type Fr=T::Fp_modelConfig;
+    //  type Fr=T::Fp_modelConfig;
 }
 
 impl<const N: usize, T: Fp6_modelConfig<N>> Mul<bigint<N>> for Fp6_3over2_model<N, T> {
