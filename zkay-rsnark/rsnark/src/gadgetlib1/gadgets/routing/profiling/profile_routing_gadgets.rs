@@ -22,8 +22,8 @@ pub fn get_as_waksman_size<FieldT: FieldTConfig, PB: PBConfig>(
         vec![pb_variable_array::<FieldT, PB>::default(); n],
     );
     for y in 0..n {
-        randbits[y].allocate(&pb, l, &prefix_format!("", "randbits_{}", y));
-        outbits[y].allocate(&pb, l, &prefix_format!("", "outbits_{}", y));
+        randbits[y].allocate(&pb, l, prefix_format!("", "randbits_{}", y));
+        outbits[y].allocate(&pb, l, prefix_format!("", "outbits_{}", y));
     }
 
     let mut r = as_waksman_routing_gadget::<FieldT, PB>::new(
@@ -55,8 +55,8 @@ pub fn get_benes_size<FieldT: FieldTConfig, PB: PBConfig>(
         vec![pb_variable_array::<FieldT, PB>::default(); 1usize << t],
     );
     for y in 0..1usize << t {
-        randbits[y].allocate(&pb, l, &prefix_format!("", "randbits_{}", y));
-        outbits[y].allocate(&pb, l, &prefix_format!("", "outbits_{}", y));
+        randbits[y].allocate(&pb, l, prefix_format!("", "randbits_{}", y));
+        outbits[y].allocate(&pb, l, prefix_format!("", "outbits_{}", y));
     }
 
     let mut r = benes_routing_gadget::<FieldT, PB>::new(

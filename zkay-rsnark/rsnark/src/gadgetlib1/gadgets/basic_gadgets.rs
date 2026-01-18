@@ -138,7 +138,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone> dual_variable_gadge
         let mut packed = variable::<FieldT, pb_variable>::default();
         packed.allocate(&pb, prefix_format!(annotation_prefix, " packed"));
         let mut bits = pb_variable_array::<FieldT, PB>::default();
-        bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " bits"));
+        bits.allocate(&pb, width, prefix_format!(annotation_prefix, " bits"));
         let consistency_check = RcCell::new(packing_gadget::<FieldT, PB>::new(
             pb.clone(),
             bits.clone().into(),
@@ -191,7 +191,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone> dual_variable_gadge
         t: T,
     ) -> gadget<FieldT, PB, Self> {
         let mut bits = pb_variable_array::<FieldT, PB>::default();
-        bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " bits"));
+        bits.allocate(&pb, width, prefix_format!(annotation_prefix, " bits"));
         let consistency_check = RcCell::new(packing_gadget::<FieldT, PB>::new(
             pb.clone(),
             bits.clone().into(),
@@ -308,7 +308,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> comparison_gadget<FieldT, PB> {
         annotation_prefix: String,
     ) -> gadget<FieldT, PB, Self> {
         let mut alpha = pb_variable_array::<FieldT, PB>::default();
-        alpha.allocate(&pb, n, &prefix_format!(annotation_prefix, " alpha"));
+        alpha.allocate(&pb, n, prefix_format!(annotation_prefix, " alpha"));
         alpha.contents.push(less_or_eq.clone()); // alpha[n] is less_or_eq
         let mut alpha_packed = variable::<FieldT, pb_variable>::default();
         alpha_packed.allocate(&pb, prefix_format!(annotation_prefix, " alpha_packed"));
@@ -369,7 +369,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> inner_product_gadget<FieldT, PB> {
         assert!(A.len() >= 1);
         assert!(A.len() == B.len());
         let mut S = pb_variable_array::<FieldT, PB>::default();
-        S.allocate(&pb, A.len() - 1, &prefix_format!(annotation_prefix, " S"));
+        S.allocate(&pb, A.len() - 1, prefix_format!(annotation_prefix, " S"));
         gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { S, A, B, result })
     }
 
@@ -400,7 +400,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> loose_multiplexing_gadget<FieldT, PB> {
         annotation_prefix: String,
     ) -> gadget<FieldT, PB, Self> {
         let mut alpha = pb_variable_array::<FieldT, PB>::default();
-        alpha.allocate(&pb, arr.len(), &prefix_format!(annotation_prefix, " alpha"));
+        alpha.allocate(&pb, arr.len(), prefix_format!(annotation_prefix, " alpha"));
         let compute_result = RcCell::new(inner_product_gadget::<FieldT, PB>::new(
             pb.clone(),
             alpha.clone().into(),
@@ -637,7 +637,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> bit_vector_copy_gadget<FieldT, PB> {
         packed_source.allocate(
             &pb,
             num_chunks,
-            &prefix_format!(annotation_prefix, " packed_source"),
+            prefix_format!(annotation_prefix, " packed_source"),
         );
         let pack_source = RcCell::new(multipacking_gadget::<FieldT, PB>::new(
             pb.clone(),
@@ -650,7 +650,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> bit_vector_copy_gadget<FieldT, PB> {
         packed_target.allocate(
             &pb,
             num_chunks,
-            &prefix_format!(annotation_prefix, " packed_target"),
+            prefix_format!(annotation_prefix, " packed_target"),
         );
         let pack_target = RcCell::new(multipacking_gadget::<FieldT, PB>::new(
             pb.clone(),

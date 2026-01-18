@@ -148,13 +148,13 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
         is_subaddress.allocate(
             &pb,
             2 * pb.borrow().t.ap.bytes_in_word(),
-            &format!("{} is_sub_address", annotation_prefix),
+            format!("{} is_sub_address", annotation_prefix),
         );
         let mut is_byte = pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         is_byte.allocate(
             &pb,
             2 * pb.borrow().t.ap.bytes_in_word(),
-            &format!("{} is_byte", annotation_prefix),
+            format!("{} is_byte", annotation_prefix),
         );
 
         /*

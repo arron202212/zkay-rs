@@ -190,7 +190,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_message_schedule_gadget<FieldT, 
             unreduced_W[i].allocate(&pb, prefix_format!(annotation_prefix, " unreduced_W_{}", i));
 
             /* allocate the bit representation of packed_W[i] */
-            W_bits[i].allocate(&pb, 32, &prefix_format!(annotation_prefix, " W_bits_{}", i));
+            W_bits[i].allocate(&pb, 32, prefix_format!(annotation_prefix, " W_bits_{}", i));
 
             /* and finally reduce this into packed and bit representations */
             mod_reduce_W[i] = RcCell::new(lastbits_gadget::<FieldT, PB>::new(

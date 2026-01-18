@@ -1,5 +1,6 @@
 // Declaration of interfaces for top-level SHA256 gadgets.
 
+use crate::common::data_structures::merkle_tree::HashTConfig;
 use crate::common::data_structures::merkle_tree::merkle_authentication_path;
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::{
@@ -105,7 +106,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
         let mut reduce_output = vec![];
 
         /* message schedule and inputs for it */
-        packed_W.allocate(&pb, 64, &prefix_format!(annotation_prefix, " packed_W"));
+        packed_W.allocate(&pb, 64, prefix_format!(annotation_prefix, " packed_W"));
         let message_schedule = RcCell::new(sha256_message_schedule_gadget::<FieldT, PB>::new(
             pb.clone(),
             new_block.clone(),
@@ -199,7 +200,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             new_round_a_variables.allocate(
                 &pb,
                 32,
-                &prefix_format!(annotation_prefix, " new_round_a_variables_{}", i + 1),
+                prefix_format!(annotation_prefix, " new_round_a_variables_{}", i + 1),
             );
             round_a.push(new_round_a_variables.into());
 
@@ -207,7 +208,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             new_round_e_variables.allocate(
                 &pb,
                 32,
-                &prefix_format!(annotation_prefix, " new_round_e_variables_{}", i + 1),
+                prefix_format!(annotation_prefix, " new_round_e_variables_{}", i + 1),
             );
             round_e.push(new_round_e_variables.into());
 
@@ -233,13 +234,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
         unreduced_output.allocate(
             &pb,
             8,
-            &prefix_format!(annotation_prefix, " unreduced_output"),
+            prefix_format!(annotation_prefix, " unreduced_output"),
         );
-        reduced_output.allocate(
-            &pb,
-            8,
-            &prefix_format!(annotation_prefix, " reduced_output"),
-        );
+        reduced_output.allocate(&pb, 8, prefix_format!(annotation_prefix, " reduced_output"));
         for i in 0..8 {
             reduce_output.push(lastbits_gadget::<FieldT, PB>::new(
                 pb.clone(),
@@ -430,16 +427,19 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
         ));
         gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { f })
     }
-
-    pub fn get_block_len() -> usize {
-        return SHA256_block_size;
+}
+impl<FieldT: FieldTConfig, PB: PBConfig> HashTConfig
+    for sha256_two_to_one_hash_gadgets<FieldT, PB>
+{
+    fn get_block_len() -> usize {
+        SHA256_block_size
     }
 
-    pub fn get_digest_len() -> usize {
-        return SHA256_digest_size;
+    fn get_digest_len() -> usize {
+        SHA256_digest_size
     }
 
-    pub fn get_hash(input: &bit_vector) -> bit_vector {
+    fn get_hash(input: &bit_vector) -> bit_vector {
         let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
 
         let mut input_variable =
@@ -457,21 +457,20 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
         input_variable.generate_r1cs_witness(input);
         f.generate_r1cs_witness();
 
-        return output_variable.get_digest();
+        output_variable.get_digest()
     }
 
-    pub fn expected_constraints(ensure_output_bitness: bool) -> usize {
+    fn expected_constraints(ensure_output_bitness: bool) -> usize {
         //ffec::UNUSED(ensure_output_bitness);
-        return 27280; /* hardcoded for now */
+        27280 /* hardcoded for now */
     }
-}
-impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadgets<FieldT, PB> {
-    pub fn generate_r1cs_constraints(&self, ensure_output_bitness: bool) {
+
+    fn generate_r1cs_constraints(&self, ensure_output_bitness: bool) {
         // //ffec::UNUSED(ensure_output_bitness);
         self.t.f.borrow().generate_r1cs_constraints();
     }
 
-    pub fn generate_r1cs_witness(&self) {
+    fn generate_r1cs_witness(&self) {
         self.t.f.borrow().generate_r1cs_witness();
     }
 }

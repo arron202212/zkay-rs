@@ -16,16 +16,18 @@ pub trait PcdConfigPptConfig: ppTConfig {
     type BP: pairing_selector<my_ec_pp = Self::curve_B_pp, other_curve_type = Self::curve_A_pp>;
     const N: usize = 4;
 }
-type r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT> =
-    r1cs_pcd_compliance_predicate<Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>, PCD_ppT>;
-
-type r1cs_mp_ppzkpcd_message<PCD_ppT> =
-    r1cs_pcd_message<Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>, <PCD_ppT as ppTConfig>::M>;
-
-type r1cs_mp_ppzkpcd_local_data<PCD_ppT> = r1cs_pcd_local_data<
+pub type r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT> = r1cs_pcd_compliance_predicate<
     Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>,
-    <PCD_ppT as ppTConfig>::LD,
+    <PCD_ppT as PcdConfigPptConfig>::curve_A_pp,
 >;
 
-type r1cs_mp_ppzkpcd_variable_assignment<PCD_ppT> =
+// pub type r1cs_mp_ppzkpcd_message<PCD_ppT> =
+//     r1cs_pcd_message<Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>, <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp> as ppTConfig>::M>;
+
+// pub type r1cs_mp_ppzkpcd_local_data<PCD_ppT> = r1cs_pcd_local_data<
+//     Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>,
+//     <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp> as ppTConfig>::LD,
+// >;
+
+pub type r1cs_mp_ppzkpcd_variable_assignment<PCD_ppT> =
     r1cs_variable_assignment<Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>>;

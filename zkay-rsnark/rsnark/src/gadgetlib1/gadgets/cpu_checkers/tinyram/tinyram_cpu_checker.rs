@@ -240,7 +240,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         opcode_indicators.allocate(
             &pb,
             1usize << pb.borrow().t.ap.opcode_width(),
-            &format!("{annotation_prefix} opcode_indicators"),
+            format!("{annotation_prefix} opcode_indicators"),
         );
 
         /* perform the ALU operations */
@@ -249,14 +249,14 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         instruction_results.allocate(
             &pb,
             1usize << pb.borrow().t.ap.opcode_width(),
-            &format!("{annotation_prefix} instruction_results"),
+            format!("{annotation_prefix} instruction_results"),
         );
         let mut instruction_flags =
             pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         instruction_flags.allocate(
             &pb,
             1usize << pb.borrow().t.ap.opcode_width(),
-            &format!("{annotation_prefix} instruction_flags"),
+            format!("{annotation_prefix} instruction_flags"),
         );
 
         let ALU = RcCell::new(ALU_gadget::<FieldT>::new(

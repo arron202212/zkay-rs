@@ -30,11 +30,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> digest_variable<FieldT, PB> {
         annotation_prefix: String,
     ) -> digest_variables<FieldT, PB> {
         let mut bits = pb_variable_array::<FieldT, PB>::default();
-        bits.allocate(
-            &pb,
-            digest_size,
-            &prefix_format!(annotation_prefix, " bits"),
-        );
+        bits.allocate(&pb, digest_size, prefix_format!(annotation_prefix, " bits"));
         gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { digest_size, bits })
     }
 
@@ -82,7 +78,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> block_variable<FieldT, PB> {
         annotation_prefix: String,
     ) -> block_variables<FieldT, PB> {
         let mut bits = pb_variable_array::<FieldT, PB>::default();
-        bits.allocate(&pb, block_size, &prefix_format!(annotation_prefix, " bits"));
+        bits.allocate(&pb, block_size, prefix_format!(annotation_prefix, " bits"));
         gadget::<FieldT, PB, Self>::new(pb, annotation_prefix, Self { block_size, bits })
     }
 

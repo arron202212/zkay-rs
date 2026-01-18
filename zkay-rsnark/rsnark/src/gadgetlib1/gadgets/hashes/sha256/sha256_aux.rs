@@ -265,7 +265,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> small_sigma_gadget<FieldT, PB> {
         annotation_prefix: String,
     ) -> small_sigma_gadgets<FieldT, PB> {
         let mut result_bits = pb_variable_array::<FieldT, PB>::default();
-        result_bits.allocate(&pb, 32, &prefix_format!(annotation_prefix, " result_bits"));
+        result_bits.allocate(&pb, 32, prefix_format!(annotation_prefix, " result_bits"));
         let compute_bits: Vec<_> = (0..32)
             .map(|i| {
                 RcCell::new(XOR3_gadget::<FieldT, PB>::new(
@@ -335,7 +335,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> big_sigma_gadget<FieldT, PB> {
         annotation_prefix: String,
     ) -> big_sigma_gadgets<FieldT, PB> {
         let mut result_bits = pb_variable_array::<FieldT, PB>::default();
-        result_bits.allocate(&pb, 32, &prefix_format!(annotation_prefix, " result_bits"));
+        result_bits.allocate(&pb, 32, prefix_format!(annotation_prefix, " result_bits"));
         let compute_bits: Vec<_> = (0..32)
             .map(|i| {
                 RcCell::new(XOR3_gadget::<FieldT, PB>::new(
@@ -404,7 +404,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> choice_gadget<FieldT, PB> {
         annotation_prefix: String,
     ) -> choice_gadgets<FieldT, PB> {
         let mut result_bits = pb_variable_array::<FieldT, PB>::default();
-        result_bits.allocate(&pb, 32, &prefix_format!(annotation_prefix, " result_bits"));
+        result_bits.allocate(&pb, 32, prefix_format!(annotation_prefix, " result_bits"));
         let pack_result = RcCell::new(packing_gadget::<FieldT, PB>::new(
             pb.clone(),
             result_bits.clone().into(),
@@ -474,7 +474,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> majority_gadget<FieldT, PB> {
         annotation_prefix: String,
     ) -> majority_gadgets<FieldT, PB> {
         let mut result_bits = pb_variable_array::<FieldT, PB>::default();
-        result_bits.allocate(&pb, 32, &prefix_format!(annotation_prefix, " result_bits"));
+        result_bits.allocate(&pb, 32, prefix_format!(annotation_prefix, " result_bits"));
         let pack_result = RcCell::new(packing_gadget::<FieldT, PB>::new(
             pb.clone(),
             result_bits.clone().into(),

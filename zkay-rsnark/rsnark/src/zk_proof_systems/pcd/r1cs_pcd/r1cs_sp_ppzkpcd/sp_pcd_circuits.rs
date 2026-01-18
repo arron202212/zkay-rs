@@ -13,6 +13,7 @@
 // CRYPTO 2014,
 // <http://eprint.iacr.org/2014/595>
 
+use crate::common::data_structures::merkle_tree::HashTConfig;
 use crate::gadgetlib1::constraint_profiling::PRINT_CONSTRAINT_PROFILING;
 use crate::gadgetlib1::constraint_profiling::PROFILE_CONSTRAINTS;
 use crate::gadgetlib1::gadgets::basic_gadgets::{
@@ -173,7 +174,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
         assert!(compliance_predicate.has_equal_input_and_output_lengths());
 
         let compliance_predicate_arity = compliance_predicate.max_arity;
-        let digest_size = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_digest_len();
+        let digest_size = CRH_with_field_out_gadgets::<ppT::FieldT, ppT::PB>::get_digest_len();
         let msg_size_in_bits =
             Self::field_logsize() * (1 + compliance_predicate.outgoing_message_payload_length);
         let sp_translation_step_vk_size_in_bits =
@@ -239,7 +240,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             incoming_message_payloads[i].allocate(
                 &pb,
                 compliance_predicate.outgoing_message_payload_length,
-                &prefix_format!("", "incoming_message_payloads_{}", i),
+                prefix_format!("", "incoming_message_payloads_{}", i),
             );
 
             incoming_message_vars[i]
@@ -296,7 +297,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             incoming_messages_bits[i].allocate(
                 &pb,
                 msg_size_in_bits,
-                &prefix_format!("", "incoming_messages_bits_{}", i),
+                prefix_format!("", "incoming_messages_bits_{}", i),
             );
             unpack_incoming_messages.push(multipacking_gadget::<ppT::FieldT, ppT::PB>::new(
                 pb.clone(),
@@ -314,7 +315,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             sp_translation_step_vk_and_incoming_message_payload_digests[i].allocate(
                 &pb,
                 digest_size,
-                &prefix_format!(
+                prefix_format!(
                     "",
                     "sp_translation_step_vk_and_incoming_message_payload_digests_{}",
                     i,
@@ -396,7 +397,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             sp_translation_step_vk_and_incoming_message_payload_digest_bits[i].allocate(
                 &pb,
                 digest_size * Self::field_logsize(),
-                &prefix_format!(
+                prefix_format!(
                     "",
                     "sp_translation_step_vk_and_incoming_message_payload_digest_bits_{}",
                     i,
@@ -486,7 +487,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
     }
 
     pub fn generate_r1cs_constraints(&self) {
-        let digest_size = CRH_with_bit_out_gadget::<ppT::FieldT, ppT::PB>::get_digest_len();
+        let digest_size = CRH_with_bit_out_gadgets::<ppT::FieldT, ppT::PB>::get_digest_len();
         let dimension = knapsack_dimension::<FieldT<ppT>>::dimension;
         print_indent();
         print!("* Knapsack dimension: {}\n", dimension);
@@ -543,10 +544,10 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             print!("* Digest-size: {}\n", digest_size);
             self.hash_outgoing_message
                 .borrow()
-                .generate_r1cs_constraints();
+                .generate_r1cs_constraints(true);
 
             for i in 0..compliance_predicate_arity {
-                self.hash_incoming_messages[i].generate_r1cs_constraints();
+                self.hash_incoming_messages[i].generate_r1cs_constraints(true);
             }
         }
 
@@ -731,7 +732,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
     }
 
     pub fn input_size_in_elts() -> usize {
-        let digest_size = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_digest_len();
+        let digest_size = CRH_with_field_out_gadgets::<ppT::FieldT, ppT::PB>::get_digest_len();
         digest_size
     }
 
@@ -942,7 +943,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::sample_randomness(block.len());
     leave_block("Sample CRH randomness", false);
 
-    let digest = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_hash(block);
+    let digest = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_hash_for_field(&block);
     leave_block("Call to get_sp_compliance_step_pcd_circuit_input", false);
 
     digest

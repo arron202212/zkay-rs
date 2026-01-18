@@ -7,6 +7,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_pre
     r1cs_pcd_compliance_predicate, r1cs_pcd_local_data, r1cs_pcd_message,
 };
 use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdConfigPptConfig;
+use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd_params::r1cs_mp_ppzkpcd_primary_input;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };

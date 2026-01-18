@@ -175,7 +175,7 @@ impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
             _t: PhantomData,
         }
     }
-
+    pub fn size_in_bits(&self) -> usize{0}
     pub fn is_well_formed(&self) -> bool {
         let type_not_zero = (self.types != 0);
         let incoming_message_payload_lengths_well_specified =
@@ -349,7 +349,7 @@ impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
         }
         assert!(local_data.borrow().as_r1cs_variable_assignment().len() == self.local_data_length);
 
-        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT, ppT::M>::new(
+        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT, ppT::M>::from(
             outgoing_message.clone(),
         );
         let cp_auxiliary_input =

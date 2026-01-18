@@ -134,7 +134,7 @@ impl<FieldT: FieldTConfig> ALU_and_gadget<FieldT> {
         res_word.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} res_bit", annotation_prefix),
+            format!("{} res_bit", annotation_prefix),
         );
         let mut not_all_zeros_result = variable::<FieldT, pb_variable>::default();
         not_all_zeros_result.allocate(&pb, format!("{} not_all_zeros_result", annotation_prefix));
@@ -198,7 +198,7 @@ impl<FieldT: FieldTConfig> ALU_or_gadget<FieldT> {
         res_word.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} res_bit", annotation_prefix),
+            format!("{} res_bit", annotation_prefix),
         );
         let mut not_all_zeros_result = variable::<FieldT, pb_variable>::default();
         not_all_zeros_result.allocate(&pb, format!("{} not_all_zeros_result", annotation_prefix));
@@ -262,7 +262,7 @@ impl<FieldT: FieldTConfig> ALU_xor_gadget<FieldT> {
         res_word.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} res_bit", annotation_prefix),
+            format!("{} res_bit", annotation_prefix),
         );
         let mut not_all_zeros_result = variable::<FieldT, pb_variable>::default();
         not_all_zeros_result.allocate(&pb, format!("{} not_all_zeros_result", annotation_prefix));
@@ -326,7 +326,7 @@ impl<FieldT: FieldTConfig> ALU_not_gadget<FieldT> {
         res_word.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} res_bit", annotation_prefix),
+            format!("{} res_bit", annotation_prefix),
         );
         let mut not_all_zeros_result = variable::<FieldT, pb_variable>::default();
         not_all_zeros_result.allocate(&pb, format!("{} not_all_zeros_result", annotation_prefix));
@@ -392,7 +392,7 @@ impl<FieldT: FieldTConfig> ALU_add_gadget<FieldT> {
         res_word.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} res_word", annotation_prefix),
+            format!("{} res_word", annotation_prefix),
         );
 
         let mut res_word_and_flag = res_word.clone();
@@ -462,7 +462,7 @@ impl<FieldT: FieldTConfig> ALU_sub_gadget<FieldT> {
         res_word.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} res_word", annotation_prefix),
+            format!("{} res_word", annotation_prefix),
         );
 
         let mut res_word_and_negated_flag = res_word.clone();
@@ -1042,7 +1042,7 @@ impl<FieldT: FieldTConfig> ALU_shr_shl_gadget<FieldT> {
         barrel_right_internal.allocate(
             &pb,
             logw + 1,
-            &format!("{} barrel_right_internal", annotation_prefix),
+            format!("{} barrel_right_internal", annotation_prefix),
         );
 
         let mut shifted_out_bits =
@@ -1051,7 +1051,7 @@ impl<FieldT: FieldTConfig> ALU_shr_shl_gadget<FieldT> {
             shifted_out_bits[i].allocate(
                 &pb,
                 1usize << i,
-                &format!("{} shifted_out_bits_{}", annotation_prefix, i),
+                format!("{} shifted_out_bits_{}", annotation_prefix, i),
             );
         }
         let mut is_oversize_shift = variable::<FieldT, pb_variable>::default();
@@ -1073,7 +1073,7 @@ impl<FieldT: FieldTConfig> ALU_shr_shl_gadget<FieldT> {
         result_bits.allocate(
             &pb,
             pb.borrow().t.ap.w,
-            &format!("{} result_bits", annotation_prefix),
+            format!("{} result_bits", annotation_prefix),
         );
         let unpack_result = RcCell::new(packing_gadget::<FieldT, tinyram_protoboard<FieldT>>::new(
             pb.clone(),

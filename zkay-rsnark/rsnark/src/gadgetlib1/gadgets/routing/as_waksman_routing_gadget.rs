@@ -91,7 +91,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
             routed_packets[0][packet_idx].allocate(
                 &pb,
                 num_subpackets,
-                &prefix_format!(annotation_prefix, " routed_packets_0_{}", packet_idx),
+                prefix_format!(annotation_prefix, " routed_packets_0_{}", packet_idx),
             );
         }
 
@@ -110,7 +110,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
                     routed_packets[column_idx + 1][straight_edge].allocate(
                         &pb,
                         num_subpackets,
-                        &prefix_format!(
+                        prefix_format!(
                             annotation_prefix,
                             " routed_packets_{}_{}",
                             column_idx + 1,
@@ -120,7 +120,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
                     routed_packets[column_idx + 1][cross_edge].allocate(
                         &pb,
                         num_subpackets,
-                        &prefix_format!(
+                        prefix_format!(
                             annotation_prefix,
                             " routed_packets_{}_{}",
                             column_idx + 1,
@@ -428,12 +428,12 @@ pub fn test_as_waksman_routing_gadget<FieldT: FieldTConfig, PB: PBConfig>(
         randbits[packet_idx].allocate(
             &pb,
             packet_size,
-            &prefix_format!("", "randbits_{}", packet_idx),
+            prefix_format!("", "randbits_{}", packet_idx),
         );
         outbits[packet_idx].allocate(
             &pb,
             packet_size,
-            &prefix_format!("", "outbits_{}", packet_idx),
+            prefix_format!("", "outbits_{}", packet_idx),
         );
 
         for bit_idx in 0..packet_size {

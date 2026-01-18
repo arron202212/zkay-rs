@@ -93,7 +93,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadget<FieldT, PB> {
                 routed_packets[column_idx][packet_idx].allocate(
                     &pb,
                     num_subpackets,
-                    &prefix_format!(
+                    prefix_format!(
                         annotation_prefix,
                         " routed_packets_{}_{}",
                         column_idx,
@@ -138,7 +138,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadget<FieldT, PB> {
                 benes_switch_bits[column_idx].allocate(
                     &pb,
                     num_packets,
-                    &prefix_format!(annotation_prefix, " benes_switch_bits_{}", column_idx),
+                    prefix_format!(annotation_prefix, " benes_switch_bits_{}", column_idx),
                 );
             }
         }
@@ -361,12 +361,12 @@ pub fn test_benes_routing_gadget<FieldT: FieldTConfig, PB: PBConfig>(
         randbits[packet_idx].allocate(
             &pb,
             packet_size,
-            &prefix_format!("", "randbits_{}", packet_idx),
+            prefix_format!("", "randbits_{}", packet_idx),
         );
         outbits[packet_idx].allocate(
             &pb,
             packet_size,
-            &prefix_format!("", "outbits_{}", packet_idx),
+            prefix_format!("", "outbits_{}", packet_idx),
         );
 
         for bit_idx in 0..packet_size {

@@ -66,7 +66,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
             address_bits.allocate(
                 &pb,
                 tree_depth,
-                &prefix_format!(annotation_prefix, " address_bits"),
+                prefix_format!(annotation_prefix, " address_bits"),
             );
             merkle_path = RcCell::new(
                 merkle_authentication_path_variable::<FieldT, PB, HashT>::new(

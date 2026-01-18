@@ -1,21 +1,14 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for a Merkle tree.
 
-Declaration of interfaces for a Merkle tree.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef MERKLE_TREE_HPP_
-// #define MERKLE_TREE_HPP_
-
-// use  <map>
-//
+use ffec::FieldTConfig;
+use ffec::common::profiling;
 use ffec::common::utils;
+use ffec::common::utils::bit_vector;
 use ffec::common::utils::log2;
+use rccell::RcCell;
 use std::collections::BTreeMap;
+use std::marker::PhantomData;
+
 /**
  * A Merkle tree is maintained as two maps:
  * - a map from addresses to values, and
@@ -28,9 +21,7 @@ use std::collections::BTreeMap;
  * pub struct offers methods to retrieve the root of the Merkle tree and to
  * obtain the authentication paths for (the value at) a given address.
  */
-use std::marker::PhantomData;
 
-use ffec::common::utils::bit_vector;
 pub type merkle_authentication_node = bit_vector;
 pub type merkle_authentication_path = Vec<merkle_authentication_node>;
 pub type hash_value_type = bit_vector; //hash_value_type ;
@@ -59,28 +50,6 @@ pub struct merkle_tree<HashT: HashTConfig> {
     _t: PhantomData<HashT>,
 }
 
-// use crate::common::data_structures::merkle_tree;
-
-//#endif // MERKLE_TREE_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for Merkle tree.
-
-See merkle_tree.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// #ifndef MERKLE_TREE_TCC
-// #define MERKLE_TREE_TCC
-
-// #include <algorithm>
-use ffec::common::profiling;
-use rccell::RcCell;
-// use ffec::common::utils;
 pub trait VecConfig {
     fn len(&self) -> usize;
     fn with_capacity(len: usize) -> Self;
@@ -90,20 +59,32 @@ pub trait PConfig: Default + Clone {}
 pub trait HashTConfig: Default + Clone {
     // type hash_value_type=hash_value_type;
     // type merkle_authentication_path_type=merkle_authentication_path_type;
-    fn new() -> Self;
     fn new5<P: PConfig, G: GConfig, G2: GConfig>(
         pb: RcCell<P>,
         sz: usize,
         g: G,
         a: G2,
         s: String,
-    ) -> Self;
-    fn get_digest_len() -> usize;
-    fn get_block_len() -> usize;
-    fn get_hash(input: &bit_vector) -> bit_vector;
-    fn generate_r1cs_constraints(&self, b: bool);
-    fn generate_r1cs_witness(&self);
-    fn expected_constraints(b: bool) -> usize;
+    ) -> Self {
+        Default::default()
+    }
+    fn get_digest_len() -> usize {
+        0
+    }
+    fn get_block_len() -> usize {
+        0
+    }
+    fn get_hash(input: &bit_vector) -> bit_vector {
+        input.clone()
+    }
+    fn get_hash_for_field<FieldT: FieldTConfig>(input: &bit_vector) -> Vec<FieldT> {
+        vec![]
+    }
+    fn generate_r1cs_constraints(&self, b: bool) {}
+    fn generate_r1cs_witness(&self) {}
+    fn expected_constraints(b: bool) -> usize {
+        0
+    }
 }
 
 pub fn two_to_one_CRH<HashT: HashTConfig>(
@@ -118,7 +99,7 @@ pub fn two_to_one_CRH<HashT: HashTConfig>(
     assert!(l.len() == digest_size);
     assert!(r.len() == digest_size);
 
-    return HashT::get_hash(&new_input);
+    HashT::get_hash(&new_input)
 }
 
 impl<HashT: HashTConfig> merkle_tree<HashT> {

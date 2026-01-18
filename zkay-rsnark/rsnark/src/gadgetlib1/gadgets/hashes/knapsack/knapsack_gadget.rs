@@ -29,12 +29,14 @@
 // "Collision-free hashing from lattice problems",
 // Oded Goldreich, Shafi Goldwasser, Shai Halevi,
 // ECCC TR95-042
+use crate::common::data_structures::merkle_tree::HashTConfig;
 use crate::common::data_structures::merkle_tree::merkle_authentication_path;
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
 use crate::gadgetlib1::gadgets::hashes::hash_io::{
     block_variable, block_variables, digest_variable, digest_variables,
 };
+
 use crate::gadgetlib1::pb_variable::pb_coeff_sum;
 use crate::gadgetlib1::pb_variable::{
     pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
@@ -125,9 +127,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadget<Fiel
         let dimension = knapsack_dimension::<FieldT>::dimension;
         assert!(input_block.t.bits.len() == input_len);
         if num_cached_coefficients.load(Ordering::Relaxed) < dimension * input_len {
-            knapsack_CRH_with_field_out_gadget::<FieldT, PB>::sample_randomness(input_len);
+            Self::sample_randomness(input_len);
         }
-        assert!(output.len() == Self::get_digest_len());
+        assert!(
+            output.len() == knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::get_digest_len()
+        );
         gadget::<FieldT, PB, Self>::new(
             pb,
             annotation_prefix,
@@ -140,32 +144,23 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadget<Fiel
         )
     }
 
-    pub fn get_digest_len() -> usize {
-        return knapsack_dimension::<FieldT>::dimension;
-    }
-
-    pub fn get_block_len() -> usize {
-        return 0;
-    }
-    pub fn expected_constraints() -> usize {
-        return knapsack_dimension::<FieldT>::dimension;
-    }
     pub fn sample_randomness(input_len: usize) {
         let num_coefficients = knapsack_dimension::<FieldT>::dimension * input_len;
         if num_coefficients > num_cached_coefficients.load(Ordering::Relaxed) {
-            Self::knapsack_coefficients()
+            knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::knapsack_coefficients()
                 .lock()
                 .resize(num_coefficients, FieldT::zero());
             for i in num_cached_coefficients.load(Ordering::Relaxed)..num_coefficients {
-                Self::knapsack_coefficients().lock()[i] = SHA512_rng::<FieldT>(i);
+                knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::knapsack_coefficients().lock()
+                    [i] = SHA512_rng::<FieldT>(i);
             }
             num_cached_coefficients.store(num_coefficients, Ordering::Relaxed);
         }
     }
-    pub fn get_hash(input: bit_vector) -> Vec<FieldT> {
+    pub fn get_hash_for_field(input: &bit_vector) -> Vec<FieldT> {
         let dimension = knapsack_dimension::<FieldT>::dimension;
         if num_cached_coefficients.load(Ordering::Relaxed) < dimension * input.len() {
-            Self::sample_randomness(input.len());
+            knapsack_CRH_with_field_out_gadget::<FieldT, PB>::sample_randomness(input.len());
         }
 
         let mut result = vec![FieldT::zero(); dimension];
@@ -173,29 +168,39 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadget<Fiel
         for i in 0..dimension {
             for k in 0..input.len() {
                 if input[k] {
-                    result[i] += Self::knapsack_coefficients().lock()[input.len() * i + k].clone();
+                    result[i] +=
+                        knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::knapsack_coefficients()
+                            .lock()[input.len() * i + k]
+                            .clone();
                 }
             }
         }
 
-        return result;
+        result
     }
 }
-
-impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_coefficientsConfig<FieldT>
-    for knapsack_CRH_with_field_out_gadget<FieldT, PB>
+impl<FieldT: FieldTConfig, PB: PBConfig> HashTConfig
+    for knapsack_CRH_with_field_out_gadgets<FieldT, PB>
 {
-}
+    fn get_digest_len() -> usize {
+        knapsack_dimension::<FieldT>::dimension
+    }
 
-impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<FieldT, PB> {
-    pub fn generate_r1cs_constraints(&self) {
+    fn get_block_len() -> usize {
+        0
+    }
+    fn expected_constraints(b: bool) -> usize {
+        knapsack_dimension::<FieldT>::dimension
+    }
+
+    fn generate_r1cs_constraints(&self, b: bool) {
         for i in 0..self.t.dimension {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     FieldT::from(1).into(),
                     pb_coeff_sum::<FieldT, PB>(
                         &(self.t.input_block.t.bits.clone().into()),
-                        &knapsack_CRH_with_field_out_gadget::<FieldT, PB>::knapsack_coefficients()
+                        &knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::knapsack_coefficients()
                             .lock()[self.t.input_len * i..self.t.input_len * (i + 1)]
                             .to_vec(),
                     ),
@@ -206,7 +211,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<Fie
         }
     }
 
-    pub fn generate_r1cs_witness(&self) {
+    fn generate_r1cs_witness(&self) {
         let input = self.t.input_block.get_block();
 
         for i in 0..self.t.dimension {
@@ -214,7 +219,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<Fie
             for k in 0..self.t.input_len {
                 if input[k] {
                     sum +=
-                        knapsack_CRH_with_field_out_gadget::<FieldT, PB>::knapsack_coefficients()
+                        knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::knapsack_coefficients()
                             .lock()[self.t.input_len * i + k]
                             .clone();
                 }
@@ -223,6 +228,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_field_out_gadgets<Fie
             *self.pb.borrow_mut().lc_val_ref(&self.t.output[i]) = sum;
         }
     }
+}
+impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_coefficientsConfig<FieldT>
+    for knapsack_CRH_with_field_out_gadgets<FieldT, PB>
+{
 }
 
 pub type knapsack_CRH_with_bit_out_gadgets<FieldT, PB> =
@@ -236,7 +245,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadget<FieldT
         output_digest: digest_variables<FieldT, PB>,
         annotation_prefix: String,
     ) -> knapsack_CRH_with_bit_out_gadgets<FieldT, PB> {
-        assert!(output_digest.t.bits.len() == Self::get_digest_len());
+        assert!(
+            output_digest.t.bits.len()
+                == knapsack_CRH_with_bit_out_gadgets::<FieldT, PB>::get_digest_len()
+        );
         let dimension = knapsack_dimension::<FieldT>::dimension;
         let mut output = pb_linear_combination_array::<FieldT, PB>::default();
 
@@ -274,16 +286,23 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadget<FieldT
             },
         )
     }
-    pub fn get_digest_len() -> usize {
-        return knapsack_dimension::<FieldT>::dimension * FieldT::size_in_bits();
+    pub fn sample_randomness(input_len: usize) {
+        knapsack_CRH_with_field_out_gadget::<FieldT, PB>::sample_randomness(input_len);
+    }
+}
+impl<FieldT: FieldTConfig, PB: PBConfig> HashTConfig
+    for knapsack_CRH_with_bit_out_gadgets<FieldT, PB>
+{
+    fn get_digest_len() -> usize {
+        knapsack_dimension::<FieldT>::dimension * FieldT::size_in_bits()
     }
 
-    pub fn get_block_len() -> usize {
-        return 0;
+    fn get_block_len() -> usize {
+        0
     }
 
-    pub fn get_hash(input: bit_vector) -> bit_vector {
-        let hash_elems = Self::get_hash(input);
+    fn get_hash(input: &bit_vector) -> bit_vector {
+        let hash_elems = knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::get_hash(input);
         let mut result = hash_value_type::new();
 
         for elt in &hash_elems {
@@ -291,27 +310,27 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadget<FieldT
             result.extend(elt_bits);
         }
 
-        return result;
+        result
     }
 
-    pub fn expected_constraints(enforce_bitness: bool) -> usize {
+    fn expected_constraints(enforce_bitness: bool) -> usize {
         let hasher_constraints =
-            knapsack_CRH_with_field_out_gadget::<FieldT, PB>::expected_constraints();
+            knapsack_CRH_with_field_out_gadgets::<FieldT, PB>::expected_constraints(
+                enforce_bitness,
+            );
         let bitness_constraints = if enforce_bitness {
             Self::get_digest_len()
         } else {
             0
         };
-        return hasher_constraints + bitness_constraints;
+        hasher_constraints + bitness_constraints
     }
 
-    pub fn sample_randomness(input_len: usize) {
-        knapsack_CRH_with_field_out_gadget::<FieldT, PB>::sample_randomness(input_len);
-    }
-}
-impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadgets<FieldT, PB> {
-    pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
-        self.t.hasher.borrow().generate_r1cs_constraints();
+    fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
+        self.t
+            .hasher
+            .borrow()
+            .generate_r1cs_constraints(enforce_bitness);
 
         if enforce_bitness {
             for k in 0..self.t.output_digest.t.bits.len() {
@@ -324,7 +343,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> knapsack_CRH_with_bit_out_gadgets<Field
         }
     }
 
-    pub fn generate_r1cs_witness(&self) {
+    fn generate_r1cs_witness(&self) {
         self.t.hasher.borrow().generate_r1cs_witness();
 
         /* do unpacking in place */
@@ -356,7 +375,7 @@ pub fn test_knapsack_CRH_with_bit_out_gadget_internal<FieldT: FieldTConfig, PB: 
         block_variable::<FieldT, PB>::new(pb.clone(), input_bits.len(), "input_block".to_owned());
     let mut output_digest = digest_variable::<FieldT, PB>::new(
         pb.clone(),
-        knapsack_CRH_with_bit_out_gadget::<FieldT, PB>::get_digest_len(),
+        knapsack_CRH_with_bit_out_gadgets::<FieldT, PB>::get_digest_len(),
         "output_digest".to_owned(),
     );
     let mut H = knapsack_CRH_with_bit_out_gadget::<FieldT, PB>::new(
@@ -376,6 +395,6 @@ pub fn test_knapsack_CRH_with_bit_out_gadget_internal<FieldT: FieldTConfig, PB: 
 
     let num_constraints = pb.borrow().num_constraints();
     let expected_constraints =
-        knapsack_CRH_with_bit_out_gadget::<FieldT, PB>::expected_constraints(false);
+        knapsack_CRH_with_bit_out_gadgets::<FieldT, PB>::expected_constraints(false);
     assert!(num_constraints == expected_constraints);
 }

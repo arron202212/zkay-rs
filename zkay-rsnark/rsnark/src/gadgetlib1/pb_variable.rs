@@ -6,7 +6,9 @@ use ffec::FieldTConfig;
 use ffec::common::utils;
 use ffec::common::utils::bit_vector;
 use rccell::RcCell;
+use std::borrow::Borrow;
 use std::marker::PhantomData;
+
 pub type lc_index_t = usize;
 
 #[derive(Clone, Default, PartialEq)]
@@ -117,12 +119,14 @@ pub struct pb_linear_combination_array<FieldT: FieldTConfig, PB: PBConfig> {
 // use ffec::common::utils;
 
 impl<FieldT: FieldTConfig> variable<FieldT, pb_variable> {
-    pub fn allocate<PB: PBConfig>(
+    pub fn allocate<PB: PBConfig, T: Borrow<str>>(
         &mut self,
         pb: &RcCell<protoboard<FieldT, PB>>,
-        annotation: String,
+        annotation: T,
     ) {
-        self.index = pb.borrow_mut().allocate_var_index(annotation);
+        self.index = pb
+            .borrow_mut()
+            .allocate_var_index(annotation.borrow().to_string());
     }
 }
 
@@ -164,20 +168,20 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
             _pb: PhantomData,
         }
     }
-    pub fn allocate(
+    pub fn allocate<T: Borrow<str>>(
         &mut self,
         pb: &RcCell<protoboard<FieldT, PB>>,
         n: usize,
-        annotation_prefix: &str,
+        annotation_prefix: T,
     ) {
         // #ifdef DEBUG
-        assert!(!annotation_prefix.is_empty());
+        assert!(!annotation_prefix.borrow().is_empty());
         //#endif
         self.contents
             .resize(n, variable::<FieldT, pb_variable>::default());
 
         for i in 0..n {
-            self.contents[i].allocate(&pb, format!("{annotation_prefix}_{}", i));
+            self.contents[i].allocate(&pb, format!("{}_{}", annotation_prefix.borrow(), i));
         }
     }
 

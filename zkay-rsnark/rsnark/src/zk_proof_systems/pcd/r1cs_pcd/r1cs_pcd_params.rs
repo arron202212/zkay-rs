@@ -15,10 +15,11 @@ pub struct r1cs_pcd_compliance_predicate_primary_input<
 > {
     pub outgoing_message: RcCell<r1cs_pcd_message<FieldT, T>>,
 }
-impl<FieldT: FieldTConfig, T: MessageConfig<FieldT = FieldT>>
-    r1cs_pcd_compliance_predicate_primary_input<FieldT, T>
+
+impl<FieldT: FieldTConfig, T: MessageConfig<FieldT = FieldT>> From<RcCell<r1cs_pcd_message<FieldT, T>>>
+   for  r1cs_pcd_compliance_predicate_primary_input<FieldT, T>
 {
-    pub fn new(outgoing_message: RcCell<r1cs_pcd_message<FieldT, T>>) -> Self {
+     fn from(outgoing_message: RcCell<r1cs_pcd_message<FieldT, T>>) -> Self {
         Self { outgoing_message }
     }
 }
@@ -28,9 +29,9 @@ pub struct r1cs_pcd_compliance_predicate_auxiliary_input<
     M: MessageConfig<FieldT = FieldT>,
     LD: LocalDataConfig<FieldT = FieldT>,
 > {
-    incoming_messages: Vec<RcCell<r1cs_pcd_message<FieldT, M>>>,
-    local_data: RcCell<r1cs_pcd_local_data<FieldT, LD>>,
-    witness: r1cs_pcd_witness<FieldT>,
+    pub incoming_messages: Vec<RcCell<r1cs_pcd_message<FieldT, M>>>,
+    pub local_data: RcCell<r1cs_pcd_local_data<FieldT, LD>>,
+    pub witness: r1cs_pcd_witness<FieldT>,
 }
 impl<FieldT: FieldTConfig, M: MessageConfig<FieldT = FieldT>, LD: LocalDataConfig<FieldT = FieldT>>
     r1cs_pcd_compliance_predicate_auxiliary_input<FieldT, M, LD>

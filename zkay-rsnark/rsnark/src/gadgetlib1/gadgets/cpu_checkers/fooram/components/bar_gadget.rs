@@ -67,12 +67,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig> bar_gadget<FieldT, PB> {
         let mut result = variable::<FieldT, pb_variable>::default();
         result.allocate(&pb, prefix_format!(annotation_prefix, " result"));
         let mut Z_bits = pb_variable_array::<FieldT, PB>::default();
-        Z_bits.allocate(&pb, width, &prefix_format!(annotation_prefix, " Z_bits"));
+        Z_bits.allocate(&pb, width, prefix_format!(annotation_prefix, " Z_bits"));
         let mut overflow = pb_variable_array::<FieldT, PB>::default();
         overflow.allocate(
             &pb,
             2 * width,
-            &prefix_format!(annotation_prefix, " overflow"),
+            prefix_format!(annotation_prefix, " overflow"),
         );
         let mut unpacked_result = pb_variable_array::<FieldT, PB>::default();
         unpacked_result.contents.extend(Z_bits.clone());
