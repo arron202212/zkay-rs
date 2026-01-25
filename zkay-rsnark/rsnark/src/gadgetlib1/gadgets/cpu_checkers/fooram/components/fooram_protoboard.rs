@@ -1,8 +1,8 @@
 // Declaration of interfaces for a protoboard for the FOORAM CPU.
 
 use crate::gadgetlib1::gadget::gadget;
-use crate::gadgetlib1::protoboard::PBConfig;
-use crate::gadgetlib1::protoboard::protoboard;
+
+use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
 use crate::relations::ram_computations::rams::fooram::fooram_aux;
 use crate::relations::ram_computations::rams::fooram::fooram_aux::fooram_architecture_params;
 use ffec::FieldTConfig;

@@ -26,12 +26,12 @@ pub type merkle_authentication_node = bit_vector;
 pub type merkle_authentication_path = Vec<merkle_authentication_node>;
 pub type hash_value_type = bit_vector; //hash_value_type ;
 pub type merkle_authentication_path_type = merkle_authentication_path; //merkle_authentication_path_type ;
-//
+
+#[derive(Clone, Default)]
 pub struct merkle_tree<HashT: HashTConfig> {
     hash_defaults: Vec<hash_value_type>,
     values: Vec<bit_vector>,
     hashes: Vec<hash_value_type>,
-
     depth: usize,
     value_size: usize,
     digest_size: usize,

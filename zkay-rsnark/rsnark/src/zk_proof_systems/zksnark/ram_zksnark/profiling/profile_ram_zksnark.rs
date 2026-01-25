@@ -37,11 +37,11 @@ pub fn profile_ram_zksnark_verifier<ppT>(
     input_size: usize,
     program_size: usize,
 ) {
-    // type ramT=ram_zksnark_machine_pp<ppT> ;
+    // type RamT=ram_zksnark_machine_pp<ppT> ;
     let time_bound = 10;
 
     let boot_trace_size_bound = program_size + input_size;
-    let example = gen_ram_example_complex::<ramT>(ap, boot_trace_size_bound, time_bound, true);
+    let example = gen_ram_example_complex::<RamT>(ap, boot_trace_size_bound, time_bound, true);
 
     let mut pi = ram_zksnark_proof::<ppT>::new();
     let vk = ram_zksnark_verification_key::<ppT>::dummy_verification_key(ap);
@@ -111,10 +111,10 @@ pub fn profile_ram_zksnark<ppT>(
     input_size: usize,
     time_bound: usize,
 ) {
-    // type ramT=ram_zksnark_machine_pp<ppT> ;
+    // type RamT=ram_zksnark_machine_pp<ppT> ;
 
     let boot_trace_size_bound = program_size + input_size;
-    let example = gen_ram_example_complex::<ramT>(ap, boot_trace_size_bound, time_bound, true);
+    let example = gen_ram_example_complex::<RamT>(ap, boot_trace_size_bound, time_bound, true);
     let test_serialization = true;
     let bit = run_ram_zksnark::<ppT>(example, test_serialization);
     assert!(bit);

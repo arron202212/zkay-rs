@@ -203,6 +203,12 @@ impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
     type TT = bigint<N>;
     // type Fr=Self;
 }
+impl<const N: usize, T: Fp_modelConfig<N>> AsMut<[u64]> for Fp_model<N, T> {
+    fn as_mut(&mut self) -> &mut [u64] {
+        &mut self.mont_repr.0.0
+    }
+}
+
 impl<const N: usize, T: Fp_modelConfig<N>> From<usize> for Fp_model<N, T> {
     fn from(b: usize) -> Self {
         Fp_model::<N, T> {

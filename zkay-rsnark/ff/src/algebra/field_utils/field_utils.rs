@@ -262,7 +262,7 @@ pub fn pack_int_vector_into_field_element_vector<FieldT: Default, const N: usize
     return result;
 }
 
-pub fn pack_bit_vector_into_field_element_vector<
+pub fn pack_bit_vector_into_field_element_vector1<
     FieldT: From<i32> + Default + std::convert::AsMut<[u64]>,
 >(
     v: &bit_vector,
@@ -289,7 +289,7 @@ pub fn pack_bit_vector_into_field_element_vector<
     result
 }
 
-pub fn pack_bit_vector_into_field_element_vector1<FieldT>(v: &bit_vector) -> Vec<FieldT> {
+pub fn pack_bit_vector_into_field_element_vector<FieldT>(v: &bit_vector) -> Vec<FieldT> {
     // return pack_bit_vector_into_field_element_vector::<FieldT>(v, FieldT::floor_size_in_bits());
     vec![]
 }
@@ -329,8 +329,8 @@ pub fn convert_field_element_to_bit_vector<FieldT>(el: &FieldT) -> bit_vector {
     result
 }
 
-pub fn convert_field_element_to_bit_vector1<FieldT>(el: FieldT, bitcount: usize) -> bit_vector {
-    let mut result = convert_field_element_to_bit_vector(&el);
+pub fn convert_field_element_to_bit_vector1<FieldT>(el: &FieldT, bitcount: usize) -> bit_vector {
+    let mut result = convert_field_element_to_bit_vector(el);
     result.resize(bitcount, false);
 
     result

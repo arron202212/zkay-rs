@@ -99,7 +99,7 @@ pub trait FieldTConfig:
     + std::ops::Sub<i32, Output = Self>
     + std::ops::Add<Output = Self>
     + std::ops::Add<i32, Output = Self>
-    + PpConfig
+    + PpConfig+ AsMut<[u64]>
 {
     fn as_ref_u64(&self) -> Vec<u64> {
         vec![]

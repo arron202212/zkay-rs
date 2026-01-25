@@ -1,10 +1,18 @@
 // Declaration of public-parameter selector for the RAM zkSNARK.
 
-// use crate::relations::ram_computations::rams::ram_params;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::relations::ram_computations::rams::ram_params::ram_params_type;
+use crate::relations::ram_computations::rams::ram_params::{
+    ram_architecture_params, ram_boot_trace, ram_input_tape,
+};
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::{ram_pcd_local_data,ram_pcd_message};
+ use crate::gadgetlib1::protoboard::protoboard;
+use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPptConfig;
+
 
 /**
  * The interfaces of the RAM zkSNARK are templatized via the parameter
- * ram_zksnark_ppT. When used, the interfaces must be invoked with
+ * RamT. When used, the interfaces must be invoked with
  * a particular parameter choice; let 'my_ram_zksnark_pp' denote this choice.
  *
  * The pub struct my_ram_zksnark_pp must contain typedefs for the typenames
@@ -40,20 +48,17 @@
 /*
  * Below are various template aliases (used for convenience).
  */
-pub trait ram_zksnark_ppTConfig {
-    type PCD_pp;
-    type machine_pp;
+pub trait RamConfig: ppTConfig<FieldT=<Self::machine_pp as ram_params_type>::base_field_type> {
+    type PCD_pp: PcdPptConfig<curve_A_pp=Self::machine_pp,FieldT=<Self as ppTConfig>::FieldT,LD=ram_pcd_local_data<Self::machine_pp>,M=ram_pcd_message<Self::machine_pp>>;
+    type machine_pp: ram_params_type<CPH=<Self::PCD_pp as PcdPptConfig>::curve_A_pp,M=ram_pcd_message<Self::machine_pp>,LD=ram_pcd_local_data<Self::machine_pp>>;
 }
-pub type ram_zksnark_PCD_pp<ram_zksnark_ppT> = <ram_zksnark_ppT as ram_zksnark_ppTConfig>::PCD_pp;
+pub type ram_zksnark_PCD_pp<RamT> = <RamT as RamConfig>::PCD_pp;
 
-pub type ram_zksnark_machine_pp<ram_zksnark_ppT> =
-    <ram_zksnark_ppT as ram_zksnark_ppTConfig>::machine_pp;
+pub type ram_zksnark_machine_pp<RamT> = <RamT as RamConfig>::machine_pp;
 
-pub type ram_zksnark_architecture_params<ram_zksnark_ppT> =
-    ram_architecture_params<ram_zksnark_machine_pp<ram_zksnark_ppT>>;
+pub type ram_zksnark_architecture_params<RamT> =
+    ram_architecture_params<ram_zksnark_machine_pp<RamT>>;
 
-pub type ram_zksnark_primary_input<ram_zksnark_ppT> =
-    ram_boot_trace<ram_zksnark_machine_pp<ram_zksnark_ppT>>;
+pub type ram_zksnark_primary_input = ram_boot_trace;
 
-pub type ram_zksnark_auxiliary_input<ram_zksnark_ppT> =
-    ram_input_tape<ram_zksnark_machine_pp<ram_zksnark_ppT>>;
+pub type ram_zksnark_auxiliary_input = ram_input_tape;

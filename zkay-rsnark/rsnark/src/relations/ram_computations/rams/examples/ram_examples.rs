@@ -20,8 +20,8 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
 };
 use ffec::common::profiling::{enter_block, leave_block};
 #[derive(Default)]
-pub struct ram_example<ramT: ram_params_type> {
-    ap: ram_architecture_params<ramT>,
+pub struct ram_example<RamT: ram_params_type> {
+    ap: ram_architecture_params<RamT>,
     boot_trace_size_bound: usize,
     time_bound: usize,
     boot_trace: ram_boot_trace,
@@ -32,13 +32,13 @@ pub struct ram_example<ramT: ram_params_type> {
 //  * For now: only specialized to TinyRAM
 //  */
 //
-// ram_example<ramT> gen_ram_example_simple(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
+// ram_example<RamT> gen_ram_example_simple(ap:&ram_architecture_params<RamT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
 
 // /**
 //  * For now: only specialized to TinyRAM
 //  */
 //
-// ram_example<ramT> gen_ram_example_complex(ap:&ram_architecture_params<ramT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
+// ram_example<RamT> gen_ram_example_complex(ap:&ram_architecture_params<RamT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
 
 // use crate::relations::ram_computations::rams::examples::ram_examples;
 
@@ -60,18 +60,18 @@ See ram_examples.hpp .
 // #define RAM_EXAMPLES_TCC_
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_instruction;
 
-pub fn gen_ram_example_simple<ramT: ram_params_type>(
-    ap: ram_architecture_params<ramT>,
+pub fn gen_ram_example_simple<RamT: ram_params_type>(
+    ap: ram_architecture_params<RamT>,
     boot_trace_size_bound: usize,
     time_bound: usize,
     satisfiable: bool,
-) -> ram_example<ramT> {
+) -> ram_example<RamT> {
     enter_block("Call to gen_ram_example_simple", false);
 
     let program_size = boot_trace_size_bound / 2;
     let input_size = boot_trace_size_bound - program_size;
 
-    let mut result = ram_example::<ramT>::default();
+    let mut result = ram_example::<RamT>::default();
 
     result.ap = ap.clone();
     result.boot_trace_size_bound = boot_trace_size_bound;
@@ -125,12 +125,12 @@ pub fn gen_ram_example_simple<ramT: ram_params_type>(
     return result;
 }
 
-pub fn gen_ram_example_complex<ramT: ram_params_type>(
-    ap: ram_architecture_params<ramT>,
+pub fn gen_ram_example_complex<RamT: ram_params_type>(
+    ap: ram_architecture_params<RamT>,
     boot_trace_size_bound: usize,
     time_bound: usize,
     satisfiable: bool,
-) -> ram_example<ramT> {
+) -> ram_example<RamT> {
     enter_block("Call to gen_ram_example_complex", false);
 
     let program_size = boot_trace_size_bound / 2;
@@ -139,7 +139,7 @@ pub fn gen_ram_example_complex<ramT: ram_params_type>(
     assert!(2 * ap.w() / 8 * program_size < 1usize << (ap.w() - 1));
     assert!(ap.w() / 8 * input_size < 1usize << (ap.w() - 1));
 
-    let mut result = ram_example::<ramT>::default();
+    let mut result = ram_example::<RamT>::default();
 
     result.ap = ap.clone();
     result.boot_trace_size_bound = boot_trace_size_bound;

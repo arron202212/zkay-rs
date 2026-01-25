@@ -4,8 +4,8 @@
 
 use crate::reductions::ram_to_r1cs::gadgets::trace_lines;
 
-// type FieldT = ram_base_field<ramT>;
-pub struct memory_checker_gadget<FieldT::FieldTConfig,ramT> {
+// type FieldT = ram_base_field<RamT>;
+pub struct memory_checker_gadget<FieldT::FieldTConfig,RamT> {
     // : public ram_gadget_base
     timestamps_leq: pb_variable<FieldT>,
     timestamps_less: pb_variable<FieldT>,
@@ -20,17 +20,17 @@ pub struct memory_checker_gadget<FieldT::FieldTConfig,ramT> {
     loose_contents_before2_equals_zero: pb_variable<FieldT>,
     loose_timestamp2_is_zero: pb_variable<FieldT>,
 
-    line1: memory_line_variable_gadget<ramT>,
-    line2: memory_line_variable_gadget<ramT>,
+    line1: memory_line_variable_gadget<RamT>,
+    line2: memory_line_variable_gadget<RamT>,
 }
 
 
-impl memory_checker_gadget<ramT> {
+impl memory_checker_gadget<RamT> {
     pub fn new(
-        pb: ram_protoboard<ramT>,
+        pb: ram_protoboard<RamT>,
         timestamp_size: usize,
-        line1: memory_line_variable_gadget<ramT>,
-        line2: memory_line_variable_gadget<ramT>,
+        line1: memory_line_variable_gadget<RamT>,
+        line2: memory_line_variable_gadget<RamT>,
         annotation_prefix: String,
     ) -> Self {
         /* compare the two timestamps */
@@ -87,7 +87,7 @@ impl memory_checker_gadget<ramT> {
         loose_timestamp2_is_zero
             .allocate(&pb, FMT(self.annotation_prefix, " loose_timestamp2_is_zero"));
         Self {
-            // ram_gadget_base<ramT>(&pb, annotation_prefix),
+            // ram_gadget_base<RamT>(&pb, annotation_prefix),
             line1,
             line2,
         }

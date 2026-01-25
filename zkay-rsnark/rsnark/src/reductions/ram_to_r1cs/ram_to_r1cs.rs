@@ -20,12 +20,12 @@
 
 
 
-type FieldT=ram_base_field<ramT>;
-pub struct ram_to_r1cs<ramT> {
+type FieldT=ram_base_field<RamT>;
+pub struct ram_to_r1cs<RamT> {
 boot_trace_size_bound:    usize,
-main_protoboard:    ram_protoboard<ramT>,
+main_protoboard:    ram_protoboard<RamT>,
 r1cs_input:    pb_variable_array<FieldT>,
-universal_gadget:    RcCell<ram_universal_gadget<ramT> >,
+universal_gadget:    RcCell<ram_universal_gadget<RamT> >,
 }
 
 
@@ -55,16 +55,16 @@ universal_gadget:    RcCell<ram_universal_gadget<ramT> >,
 // use  <set>
 
 
-impl ram_to_r1cs<ramT>{
+impl ram_to_r1cs<RamT>{
 
-pub fn new(ap:&ram_architecture_params<ramT>,
+pub fn new(ap:&ram_architecture_params<RamT>,
                                boot_trace_size_bound:usize,
                                time_bound:usize) ->Self
    
 {
-    let  r1cs_input_size = ram_universal_gadget::<ramT>::packed_input_size(ap, boot_trace_size_bound);
+    let  r1cs_input_size = ram_universal_gadget::<RamT>::packed_input_size(ap, boot_trace_size_bound);
     r1cs_input.allocate(main_protoboard, r1cs_input_size, "r1cs_input");
-    universal_gadget=RcCell::new( ram_universal_gadget::<ramT>::new(main_protoboard,
+    universal_gadget=RcCell::new( ram_universal_gadget::<RamT>::new(main_protoboard,
                                                           boot_trace_size_bound,
                                                           time_bound,
                                                           r1cs_input,
@@ -83,14 +83,14 @@ pub fn instance_map()
 }
 
 
- pub fn get_constraint_system() ->r1cs_constraint_system<ram_base_field<ramT> >
+ pub fn get_constraint_system() ->r1cs_constraint_system<ram_base_field<RamT> >
 {
     return main_protoboard.get_constraint_system();
 }
 
 
-pub fn auxiliary_input_map(boot_trace:&ram_boot_trace<ramT>,
-                                                                                 auxiliary_input:&ram_input_tape<ramT>)->r1cs_primary_input<ram_base_field<ramT> > 
+pub fn auxiliary_input_map(boot_trace:&ram_boot_trace<RamT>,
+                                                                                 auxiliary_input:&ram_input_tape<RamT>)->r1cs_primary_input<ram_base_field<RamT> > 
 {
     ffec::enter_block("Call to witness_map of ram_to_r1cs");
     universal_gadget.generate_r1cs_witness(boot_trace, auxiliary_input);
@@ -116,10 +116,10 @@ pub fn print_memory_trace()
 }
 
 
- pub fn pack_primary_input_address_and_value(ap:&ram_architecture_params<ramT>,
-                                                                                           av:&address_and_value)->Vec<ram_base_field<ramT> >
+ pub fn pack_primary_input_address_and_value(ap:&ram_architecture_params<RamT>,
+                                                                                           av:&address_and_value)->Vec<ram_base_field<RamT> >
 {
-    type FieldT=ram_base_field<ramT>;
+    type FieldT=ram_base_field<RamT>;
 
     let address = av.0;
     let contents = av.1;
@@ -138,14 +138,14 @@ pub fn print_memory_trace()
 
 
 
- pub fn primary_input_map(ap:&ram_architecture_params<ramT>,
+ pub fn primary_input_map(ap:&ram_architecture_params<RamT>,
                                                                                boot_trace_size_bound:&usize,
-                                                                               boot_trace:&ram_boot_trace<ramT>)->r1cs_primary_input<ram_base_field<ramT> >
+                                                                               boot_trace:&ram_boot_trace<RamT>)->r1cs_primary_input<ram_base_field<RamT> >
 {
-    type FieldT=ram_base_field<ramT>;
+    type FieldT=ram_base_field<RamT>;
 
-    let packed_input_element_size = ram_universal_gadget::<ramT>::packed_input_element_size(ap);
-     let mut result=r1cs_primary_input::<FieldT >::new(ram_universal_gadget::<ramT>::packed_input_size(ap, boot_trace_size_bound));
+    let packed_input_element_size = ram_universal_gadget::<RamT>::packed_input_element_size(ap);
+     let mut result=r1cs_primary_input::<FieldT >::new(ram_universal_gadget::<RamT>::packed_input_size(ap, boot_trace_size_bound));
 
     let mut  bound_input_locations=BTreeSet::new();
 

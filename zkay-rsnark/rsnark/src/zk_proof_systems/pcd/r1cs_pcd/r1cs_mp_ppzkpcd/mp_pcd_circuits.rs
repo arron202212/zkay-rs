@@ -55,8 +55,7 @@ use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget::{
 use crate::gadgetlib1::pb_variable::ONE;
 use crate::gadgetlib1::pb_variable::pb_linear_combination;
 use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::PBConfig;
-use crate::gadgetlib1::protoboard::protoboard;
+use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
@@ -81,7 +80,7 @@ use ffec::bit_vector;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
 use ffec::div_ceil;
 use ffec::field_utils::field_utils::{
-    convert_field_element_to_bit_vector, pack_bit_vector_into_field_element_vector,
+    convert_field_element_to_bit_vector, pack_bit_vector_into_field_element_vector1,
 };
 use ffec::{One, Zero};
 use rccell::RcCell;
@@ -1287,7 +1286,7 @@ pub fn get_mp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
         false,
     );
 
-    let result = pack_bit_vector_into_field_element_vector::<ppT::FieldT>(
+    let result = pack_bit_vector_into_field_element_vector1::<ppT::FieldT>(
         &mp_compliance_step_pcd_circuit_input_bits,
         mp_compliance_step_pcd_circuit_maker::<ppT>::field_capacity(),
     );

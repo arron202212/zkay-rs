@@ -6,7 +6,7 @@ use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
     pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, protoboard,ProtoboardConfig};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,

@@ -16,10 +16,11 @@ pub struct r1cs_pcd_compliance_predicate_primary_input<
     pub outgoing_message: RcCell<r1cs_pcd_message<FieldT, T>>,
 }
 
-impl<FieldT: FieldTConfig, T: MessageConfig<FieldT = FieldT>> From<RcCell<r1cs_pcd_message<FieldT, T>>>
-   for  r1cs_pcd_compliance_predicate_primary_input<FieldT, T>
+impl<FieldT: FieldTConfig, T: MessageConfig<FieldT = FieldT>>
+    From<RcCell<r1cs_pcd_message<FieldT, T>>>
+    for r1cs_pcd_compliance_predicate_primary_input<FieldT, T>
 {
-     fn from(outgoing_message: RcCell<r1cs_pcd_message<FieldT, T>>) -> Self {
+    fn from(outgoing_message: RcCell<r1cs_pcd_message<FieldT, T>>) -> Self {
         Self { outgoing_message }
     }
 }

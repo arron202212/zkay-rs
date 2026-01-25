@@ -6,7 +6,7 @@
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
@@ -53,20 +53,8 @@ pub struct r1cs_pcd_local_data_variable<T: LocalDataVariableConfig> {
 /**
  * A base pub struct for creating compliance predicates.
  */
-pub trait ProtoboardConfig {
-    type FieldT: FieldTConfig;
-    type PB: PBConfig;
-    fn clear_values(&self);
-    fn val_ref(&mut self, var: &variable<Self::FieldT, pb_variable>) -> &mut Self::FieldT;
-    fn val(&self, var: &variable<Self::FieldT, pb_variable>) -> Self::FieldT;
-    fn num_variables(&self) -> usize;
-    fn full_variable_assignment(&self) -> Vec<Self::FieldT>;
-    fn get_constraint_system(
-        &self,
-    ) -> r1cs_constraint_system<Self::FieldT, pb_variable, pb_linear_combination>;
-}
 
-pub trait compliance_predicate_handlerConfig: ppTConfig {
+pub trait CPHConfig: ppTConfig {
     // type ppT: ppTConfig;
     // type FieldT: FieldTConfig;
     // type PB: PBConfig;
@@ -75,11 +63,10 @@ pub trait compliance_predicate_handlerConfig: ppTConfig {
     type LDV: LocalDataVariableConfig<Output = Self::LD, FieldT = Self::FieldT, PB = Self::PB>;
     // type M: MessageConfig<FieldT = Self::FieldT>;
     // type LD: LocalDataConfig<FieldT = Self::FieldT>;
-    type T: Default + Clone;
 }
 #[derive(Clone, Default)]
-pub struct compliance_predicate_handler<CPH: compliance_predicate_handlerConfig> {
-    pub pb: CPH::protoboardT,
+pub struct compliance_predicate_handler<CPH: CPHConfig, T: Default + Clone> {
+    pub pb: RcCell<CPH::protoboardT>,
     pub outgoing_message: RcCell<r1cs_pcd_message_variables<CPH::MV>>,
     pub arity: variable<CPH::FieldT, pb_variable>,
     pub incoming_messages: Vec<RcCell<r1cs_pcd_message_variables<CPH::MV>>>,
@@ -89,7 +76,7 @@ pub struct compliance_predicate_handler<CPH: compliance_predicate_handlerConfig>
     pub max_arity: usize,
     pub relies_on_same_type_inputs: bool,
     pub accepted_input_types: BTreeSet<usize>,
-    pub t: CPH::T,
+    pub t: T,
 }
 
 pub type r1cs_pcd_message_variables<T> = gadget<
@@ -214,15 +201,15 @@ impl<T: LocalDataVariableConfig> r1cs_pcd_local_data_variables<T> {
     }
 }
 
-impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> {
+impl<CPH: CPHConfig, T: Default + Clone> compliance_predicate_handler<CPH, T> {
     pub fn new(
-        pb: CPH::protoboardT,
+        pb: RcCell<CPH::protoboardT>,
         name: usize,
         types: usize,
         max_arity: usize,
         relies_on_same_type_inputs: bool,
         accepted_input_types: BTreeSet<usize>,
-        t: CPH::T,
+        t: T,
     ) -> Self {
         let mut incoming_messages =
             vec![RcCell::new(r1cs_pcd_message_variables::<CPH::MV>::default()); max_arity];
@@ -241,14 +228,14 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
         }
     }
 
-    pub fn generate_r1cs_witness(
+    pub fn generate_r1cs_witness_base(
         &mut self,
         incoming_message_values: &Vec<RcCell<r1cs_pcd_message<CPH::FieldT, CPH::M>>>,
         local_data_value: &RcCell<r1cs_pcd_local_data<CPH::FieldT, CPH::LD>>,
     ) {
-        self.pb.clear_values();
-        *self.pb.val_ref(&self.outgoing_message.borrow().t.types) = CPH::FieldT::from(self.types);
-        *self.pb.val_ref(&self.arity) = CPH::FieldT::from(incoming_message_values.len());
+        self.pb.borrow_mut().clear_values();
+        *self.pb.borrow_mut().val_ref(&self.outgoing_message.borrow().t.types) = CPH::FieldT::from(self.types);
+        *self.pb.borrow_mut().val_ref(&self.arity) = CPH::FieldT::from(incoming_message_values.len());
 
         for i in 0..incoming_message_values.len() {
             self.incoming_messages[i]
@@ -278,12 +265,12 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
             + 1
             + (self.max_arity + incoming_message_payload_lengths.iter().sum::<usize>())
             + local_data_length);
-        let witness_length = self.pb.num_variables() - all_but_witness_length;
+        let witness_length = self.pb.borrow().num_variables() - all_but_witness_length;
 
-        let mut constraint_system = self.pb.get_constraint_system();
+        let mut constraint_system = self.pb.borrow().get_constraint_system();
         constraint_system.primary_input_size = 1 + outgoing_message_payload_length;
         constraint_system.auxiliary_input_size =
-            self.pb.num_variables() - constraint_system.primary_input_size;
+            self.pb.borrow().num_variables() - constraint_system.primary_input_size;
 
         r1cs_pcd_compliance_predicate::<CPH::FieldT, CPH>::new(
             self.name.clone(),
@@ -300,7 +287,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
     }
 
     pub fn get_full_variable_assignment(&self) -> r1cs_variable_assignment<CPH::FieldT> {
-        self.pb.full_variable_assignment()
+        self.pb.borrow().full_variable_assignment()
     }
 
     pub fn get_outgoing_message(&self) -> RcCell<r1cs_pcd_message<CPH::FieldT, CPH::M>> {
@@ -308,7 +295,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
     }
 
     pub fn get_arity(&self) -> usize {
-        self.pb.val(&self.arity).as_ulong()
+        self.pb.borrow().val(&self.arity).as_ulong()
     }
 
     pub fn get_incoming_message(
@@ -328,7 +315,7 @@ impl<CPH: compliance_predicate_handlerConfig> compliance_predicate_handler<CPH> 
     }
 
     pub fn get_witness(&self) -> r1cs_pcd_witness<CPH::FieldT> {
-        let va = self.pb.full_variable_assignment();
+        let va = self.pb.borrow().full_variable_assignment();
         // outgoing_message + arity + incoming_messages + local_data
         let witness_pos = (self.outgoing_message.borrow().t.all_vars.len()
             + 1

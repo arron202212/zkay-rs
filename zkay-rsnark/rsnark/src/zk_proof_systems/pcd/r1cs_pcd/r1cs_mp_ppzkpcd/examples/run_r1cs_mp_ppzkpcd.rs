@@ -187,7 +187,7 @@ pub fn run_r1cs_mp_ppzkpcd_tally_example<PCD_ppT>(
             ld = RcCell::new(tally_pcd_local_data::<FieldT>::new(tree_elems[cur_idx]));
             cur_tally.generate_r1cs_witness(msgs, ld);
 
-            let tally_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new(
+            let tally_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT>::from(
                 cur_tally.get_outgoing_message(),
             );
             let tally_auxiliary_input =

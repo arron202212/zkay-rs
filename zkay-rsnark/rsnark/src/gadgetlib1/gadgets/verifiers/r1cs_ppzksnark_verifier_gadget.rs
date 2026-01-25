@@ -40,7 +40,7 @@ use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation::{
 use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;

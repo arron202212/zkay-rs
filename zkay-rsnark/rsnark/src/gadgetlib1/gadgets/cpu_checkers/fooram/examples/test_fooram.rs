@@ -39,10 +39,10 @@ pub trait  default_fooram_ppzksnark_pp {
 // 
 pub fn  profile_ram_zksnark<ppT>(w:usize)
 {
-    // type ramT=ram_zksnark_machine_pp<ppT>;
+    // type RamT=ram_zksnark_machine_pp<ppT>;
 
-    let  example=ram_example::<ramT>::new();
-    example.ap = ram_architecture_params::<ramT>(w);
+    let  example=ram_example::<RamT>::new();
+    example.ap = ram_architecture_params::<RamT>(w);
     example.boot_trace_size_bound = 0;
     example.time_bound = 10;
     let test_serialization = true;
@@ -53,10 +53,10 @@ pub fn  profile_ram_zksnark<ppT>(w:usize)
 // 
 pub fn profile_ram_ppzksnark<ppT>(w:usize)
 {
-    // type ramT=ram_ppzksnark_machine_pp<ppT>;
+    // type RamT=ram_ppzksnark_machine_pp<ppT>;
 
-    let  example=ram_example::<ramT>::new();
-    example.ap = ram_architecture_params::<ramT>(w);
+    let  example=ram_example::<RamT>::new();
+    example.ap = ram_architecture_params::<RamT>(w);
     example.boot_trace_size_bound = 0;
     example.time_bound = 100;
     let test_serialization = true;

@@ -13,6 +13,8 @@ use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
+use crate::relations::ram_computations::rams::ram_params::ram_input_tape;
+use crate::relations::ram_computations::memory::memory_interface::memory_interface;
 use ffec::FieldTConfig;
 use ffec::PpConfig;
 use rccell::RcCell;
@@ -48,9 +50,21 @@ pub struct r1cs_pcd_local_data<FieldT: FieldTConfig, T: LocalDataConfig> {
     pub t: T,
     _t: PhantomData<FieldT>,
 }
+impl<FieldT: FieldTConfig, T: LocalDataConfig> r1cs_pcd_local_data<FieldT, T> {
+    pub fn new(t: T) -> Self {
+        Self { t, _t: PhantomData }
+    }
+}
 pub trait LocalDataConfig {
     type FieldT: FieldTConfig;
     fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
+    fn mem<MI:memory_interface>(&self)->MI{
+        MI::default()
+    }
+    fn is_halt_case(&self)->bool{false}
+ fn aux(&self)-> ram_input_tape{
+    vec![]}
+   
 }
 
 impl<FieldT: FieldTConfig, T: LocalDataConfig> LocalDataConfig for r1cs_pcd_local_data<FieldT, T> {
@@ -175,7 +189,9 @@ impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
             _t: PhantomData,
         }
     }
-    pub fn size_in_bits(&self) -> usize{0}
+    pub fn size_in_bits(&self) -> usize {
+        0
+    }
     pub fn is_well_formed(&self) -> bool {
         let type_not_zero = (self.types != 0);
         let incoming_message_payload_lengths_well_specified =

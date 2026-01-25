@@ -34,17 +34,18 @@
 use crate::common::data_structures::set_commitment::set_commitment_accumulator;
 use crate::common::data_structures::set_commitment::{set_commitment, set_membership_proof};
 use crate::gadgetlib1::gadgets::hashes::crh_gadget::CRH_with_bit_out_gadget;
+use crate::gadgetlib1::gadgets::hashes::crh_gadget::CRH_with_bit_out_gadgets;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::{
     other_curve, pairing_selector, ppTConfig,
 };
 use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget::r1cs_ppzksnark_verification_key_variable;
-use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::prefix_format;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
     LocalDataConfig, MessageConfig,
 };
-use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdConfigPptConfig;
+use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPptConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::mp_pcd_circuits::{
     get_mp_compliance_step_pcd_circuit_input, get_mp_translation_step_pcd_circuit_input,
     mp_compliance_step_pcd_circuit_maker, mp_translation_step_pcd_circuit_maker,
@@ -73,22 +74,21 @@ use ffec::{FieldTConfig, PpConfig, bit_vector};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::collections::{BTreeMap, HashMap};
 use std::ops::{Add, Mul};
-use crate::gadgetlib1::gadgets::hashes::crh_gadget::CRH_with_bit_out_gadgets;
 /******************************** Proving key ********************************/
 
 /**
  * A proving key for the R1CS (multi-predicate) ppzkPCD.
  */
-type A_pp<PCD_ppT> = <PCD_ppT as PcdConfigPptConfig>::curve_A_pp;
-type B_pp<PCD_ppT> = <PCD_ppT as PcdConfigPptConfig>::curve_B_pp;
+type A_pp<PCD_ppT> = <PCD_ppT as PcdPptConfig>::curve_A_pp;
+type B_pp<PCD_ppT> = <PCD_ppT as PcdPptConfig>::curve_B_pp;
 
-type FieldT_A<PCD_ppT> = Fr<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp>;
-type FieldT_B<PCD_ppT> = Fr<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp>;
-type curve_A_pp<PCD_ppT> = <PCD_ppT as PcdConfigPptConfig>::curve_A_pp;
-type curve_B_pp<PCD_ppT> = <PCD_ppT as PcdConfigPptConfig>::curve_B_pp;
+type FieldT_A<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
+type FieldT_B<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_B_pp>;
+type curve_A_pp<PCD_ppT> = <PCD_ppT as PcdPptConfig>::curve_A_pp;
+type curve_B_pp<PCD_ppT> = <PCD_ppT as PcdPptConfig>::curve_B_pp;
 
 #[derive(Default, Clone)]
-pub struct r1cs_mp_ppzkpcd_proving_key<PCD_ppT: PcdConfigPptConfig> {
+pub struct r1cs_mp_ppzkpcd_proving_key<PCD_ppT: PcdPptConfig> {
     pub compliance_predicates: Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
     pub compliance_step_r1cs_pks: Vec<r1cs_ppzksnark_proving_key<A_pp<PCD_ppT>>>,
     pub translation_step_r1cs_pks: Vec<r1cs_ppzksnark_proving_key<B_pp<PCD_ppT>>>,
@@ -98,7 +98,7 @@ pub struct r1cs_mp_ppzkpcd_proving_key<PCD_ppT: PcdConfigPptConfig> {
     pub compliance_step_r1cs_vk_membership_proofs: Vec<set_membership_proof>,
     pub compliance_predicate_name_to_idx: BTreeMap<usize, usize>,
 }
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
     pub fn new(
         compliance_predicates: Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
         compliance_step_r1cs_pk: Vec<r1cs_ppzksnark_proving_key<A_pp<PCD_ppT>>>,
@@ -132,12 +132,12 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
 //     type B_pp= PCD_ppT::curve_B_pp ;
 
 #[derive(Default, Clone)]
-pub struct r1cs_mp_ppzkpcd_verification_key<PCD_ppT: PcdConfigPptConfig> {
+pub struct r1cs_mp_ppzkpcd_verification_key<PCD_ppT: PcdPptConfig> {
     pub compliance_step_r1cs_vks: Vec<r1cs_ppzksnark_verification_key<A_pp<PCD_ppT>>>,
     pub translation_step_r1cs_vks: Vec<r1cs_ppzksnark_verification_key<B_pp<PCD_ppT>>>,
     pub commitment_to_translation_step_r1cs_vks: set_commitment,
 }
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
     pub fn new(
         compliance_step_r1cs_vks: Vec<r1cs_ppzksnark_verification_key<A_pp<PCD_ppT>>>,
         translation_step_r1cs_vks: Vec<r1cs_ppzksnark_verification_key<B_pp<PCD_ppT>>>,
@@ -165,12 +165,12 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
 //     type B_pp= PCD_ppT::curve_B_pp ;
 
 #[derive(Default, Clone)]
-pub struct r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT: PcdConfigPptConfig> {
+pub struct r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT: PcdPptConfig> {
     pub compliance_step_r1cs_pvks: Vec<r1cs_ppzksnark_processed_verification_key<A_pp<PCD_ppT>>>,
     pub translation_step_r1cs_pvks: Vec<r1cs_ppzksnark_processed_verification_key<B_pp<PCD_ppT>>>,
     pub commitment_to_translation_step_r1cs_vks: set_commitment,
 }
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
     pub fn new(
         compliance_step_r1cs_pvks: Vec<r1cs_ppzksnark_processed_verification_key<A_pp<PCD_ppT>>>,
         translation_step_r1cs_pvks: Vec<r1cs_ppzksnark_processed_verification_key<B_pp<PCD_ppT>>>,
@@ -190,11 +190,11 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD
  * A key pair for the R1CS (multi-predicate) ppzkPC, which consists of a proving key and a verification key.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_mp_ppzkpcd_keypair<PCD_ppT: PcdConfigPptConfig> {
+pub struct r1cs_mp_ppzkpcd_keypair<PCD_ppT: PcdPptConfig> {
     pub pk: r1cs_mp_ppzkpcd_proving_key<PCD_ppT>,
     pub vk: r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
 }
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
     pub fn new(
         pk: r1cs_mp_ppzkpcd_proving_key<PCD_ppT>,
         vk: r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
@@ -209,11 +209,11 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
  * A proof for the R1CS (multi-predicate) ppzkPCD.
  */
 #[derive(Default, Clone)]
-pub struct r1cs_mp_ppzkpcd_proof<PCD_ppT: PcdConfigPptConfig> {
+pub struct r1cs_mp_ppzkpcd_proof<PCD_ppT: PcdPptConfig> {
     pub compliance_predicate_idx: usize,
     pub r1cs_proof: r1cs_ppzksnark_proof<PCD_ppT::curve_B_pp>,
 }
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_proof<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_proof<PCD_ppT> {
     pub fn new(
         compliance_predicate_idx: usize,
         r1cs_proof: r1cs_ppzksnark_proof<PCD_ppT::curve_B_pp>,
@@ -289,7 +289,7 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_proof<PCD_ppT> {
 // use crate::common::libsnark_serialization;
 // use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::mp_pcd_circuits;
 
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
     pub fn size_in_bits(&self) -> usize {
         let num_predicates = self.compliance_predicates.len();
 
@@ -362,7 +362,7 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
 
 //     in
 // }
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
     pub fn size_in_bits(&self) -> usize {
         let num_predicates = self.compliance_step_r1cs_vks.len();
 
@@ -406,7 +406,7 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
 //     in
 // }
 
-impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
+impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
     pub fn size_in_bits(&self) -> usize {
         let num_predicates = self.compliance_step_r1cs_pvks.len();
 
@@ -476,7 +476,7 @@ impl<PCD_ppT: PcdConfigPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD
 //     in
 // }
 
-pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdConfigPptConfig>(
+pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_predicates: &Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
 ) -> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
     // assert!(Fr::< PCD_ppT::curve_A_pp>::modulo == Fq::< PCD_ppT::curve_B_pp>::modulo);
@@ -499,7 +499,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdConfigPptConfig>(
     print!("{} {}\n", translation_input_size, vk_size_in_bits);
 
     let mut all_translation_vks = set_commitment_accumulator::<
-        CRH_with_bit_out_gadgets<FieldT_A<PCD_ppT>,PCD_ppT::PB>,
+        CRH_with_bit_out_gadgets<FieldT_A<PCD_ppT>, PCD_ppT::PB>,
     >::new(compliance_predicates.len(), vk_size_in_bits.clone());
 
     enter_block("Perform type checks", false);
@@ -656,17 +656,55 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdConfigPptConfig>(
     keypair
 }
 
-pub fn r1cs_mp_ppzkpcd_prover<PCD_ppT: PcdConfigPptConfig>(
+pub fn r1cs_mp_ppzkpcd_prover<PCD_ppT: PcdPptConfig>(
     pk: &r1cs_mp_ppzkpcd_proving_key<PCD_ppT>,
     compliance_predicate_name: usize,
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     auxiliary_input: &r1cs_mp_ppzkpcd_auxiliary_input<PCD_ppT>,
     prev_proofs: &Vec<r1cs_mp_ppzkpcd_proof<PCD_ppT>>,
-) -> r1cs_mp_ppzkpcd_proof<PCD_ppT> where knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1, <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1>: Mul<<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ppTConfig>::FieldT,Output=knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1, <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1>>,
-knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2, <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1>: Mul<<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ppTConfig>::FieldT,Output=knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2, <<PCD_ppT as PcdConfigPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1>>,
-knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1, <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1>: Mul<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ppTConfig>::FieldT,Output=knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1, <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1>>,
-knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2, <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1>: Mul<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ppTConfig>::FieldT,Output=knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2, <<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1>>  
- {
+) -> r1cs_mp_ppzkpcd_proof<PCD_ppT>
+where
+    knowledge_commitment<
+        <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+        <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdPptConfig>::curve_A_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+                <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
+        <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdPptConfig>::curve_A_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
+                <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+        <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdPptConfig>::curve_B_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+                <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
+        <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<PCD_ppT as PcdPptConfig>::curve_B_pp as ppTConfig>::FieldT,
+            Output = knowledge_commitment<
+                <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
+                <<PCD_ppT as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+{
     // type curve_A_pp= PCD_ppT::curve_A_pp;
     // type curve_B_pp= PCD_ppT::curve_B_pp;
 
@@ -821,7 +859,7 @@ knowledge_commitment<<<PCD_ppT as PcdConfigPptConfig>::curve_B_pp as ff_curves::
     result
 }
 
-pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdConfigPptConfig>(
+pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
     pvk: &r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>,
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_mp_ppzkpcd_proof<PCD_ppT>,
@@ -845,7 +883,7 @@ pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdConfigPptConfig>(
     result
 }
 
-pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdConfigPptConfig>(
+pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
 ) -> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
     // type curve_A_pp= PCD_ppT::curve_A_pp;
@@ -875,7 +913,7 @@ pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdConfigPptConfig>(
     result
 }
 
-pub fn r1cs_mp_ppzkpcd_verifier<PCD_ppT: PcdConfigPptConfig>(
+pub fn r1cs_mp_ppzkpcd_verifier<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_mp_ppzkpcd_proof<PCD_ppT>,

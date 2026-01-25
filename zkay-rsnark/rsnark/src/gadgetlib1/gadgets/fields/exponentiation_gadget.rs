@@ -4,7 +4,7 @@ use crate::gadgetlib1::gadgets::pairing::pairing_params::{
     Fpk_mul_gadgetT, Fpk_sqr_gadgetT, Fpk_variableT, M, MulTConfig, SqrTConfig, VariableTConfig,
     pairing_selector, ppTConfig,
 };
-use crate::gadgetlib1::protoboard::{PBConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::scalar_multiplication::wnaf::find_wnaf;

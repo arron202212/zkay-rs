@@ -1,15 +1,6 @@
-/** @file
-*****************************************************************************
 
-Declaration of interfaces for a random-access memory.
+// Declaration of interfaces for a random-access memory.
 
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RA_MEMORY_HPP_
-// #define RA_MEMORY_HPP_
 use crate::relations::ram_computations::memory::memory_interface::{
     memory_base, memory_contents, memory_interface,
 };
@@ -17,6 +8,7 @@ use crate::relations::ram_computations::memory::memory_interface::{
 /**
  * A random-access memory maintains the memory's contents via a map (from addresses to values).
  */
+#[derive(Clone,Default)]
 pub struct ra_memory {
     // //: public memory_interface
     contents: memory_contents,
@@ -29,24 +21,6 @@ pub struct ra_memory {
 //     pub fn  set_value(address:usize, value:usize);
 
 // };
-
-//#endif // RA_MEMORY_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a random-access memory.
-
-See ra_memory.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-// use  <cassert>
-
-// use crate::relations::ram_computations::memory::ra_memory;
 
 impl ra_memory {
     pub fn new(num_addresses: usize, value_size: usize) -> memory_base<Self> {

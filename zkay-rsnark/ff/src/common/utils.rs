@@ -163,14 +163,14 @@ pub fn bitreverse(mut n: usize, l: usize) -> usize {
     return r;
 }
 
-pub fn int_list_to_bits(l: &Vec<u64>, wordsize: usize) -> bit_vector {
+pub fn int_list_to_bits(l: &[usize], wordsize: usize) -> bit_vector {
     let mut res = Vec::with_capacity(wordsize * l.len());
     for i in 0..l.len() {
         for j in 0..wordsize {
-            res[i * wordsize + j] = (l[i] & (1u64 << (wordsize - 1 - j))) != 0;
+            res[i * wordsize + j] = (l[i] & (1usize << (wordsize - 1 - j))) != 0;
         }
     }
-    return res;
+     res
 }
 
 pub fn div_ceil(x: usize, y: usize) -> eyre::Result<usize> {

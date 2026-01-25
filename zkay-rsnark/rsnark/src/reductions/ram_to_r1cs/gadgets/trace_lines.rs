@@ -28,8 +28,8 @@ use crate::relations::ram_computations::rams::ram_params;
  */
 //
 
-// type FieldT = ram_base_field<ramT>;
-pub struct memory_line_variable_gadget<FieldT:FieldTConfig,ramT> {
+// type FieldT = ram_base_field<RamT>;
+pub struct memory_line_variable_gadget<FieldT:FieldTConfig,RamT> {
     //: public ram_gadget_base
     timestamp: RcCell<dual_variable_gadget<FieldT>>,
     address: RcCell<dual_variable_gadget<FieldT>>,
@@ -43,19 +43,19 @@ pub struct memory_line_variable_gadget<FieldT:FieldTConfig,ramT> {
  *
  * Execution lines are used by execution_checker_gadget.
  */
-// type FieldT=ram_base_field<ramT> ;
-pub struct execution_line_variable_gadget<FieldT:FieldTConfig,ramT> {
+// type FieldT=ram_base_field<RamT> ;
+pub struct execution_line_variable_gadget<FieldT:FieldTConfig,RamT> {
     // / : public memory_line_variable_gadget
     cpu_state: pb_variable_array<FieldT>,
     has_accepted: pb_variable<FieldT>,
 }
 
 
-impl<FieldT:FieldTConfig,ramT> memory_line_variable_gadget<FieldT,ramT> {
+impl<FieldT:FieldTConfig,RamT> memory_line_variable_gadget<FieldT,RamT> {
     pub fn new(
-        pb: ram_protoboard<ramT>,
+        pb: ram_protoboard<RamT>,
         timestamp_size: usize,
-        ap: ram_architecture_params<ramT>,
+        ap: ram_architecture_params<RamT>,
         annotation_prefix: String,
     ) -> Self {
         let address_size = ap.address_size();
@@ -81,7 +81,7 @@ impl<FieldT:FieldTConfig,ramT> memory_line_variable_gadget<FieldT,ramT> {
             value_size,
             FMT(self.annotation_prefix, " contents_after"),
         ));
-        // ram_gadget_base::<ramT>(&pb, annotation_prefix)
+        // ram_gadget_base::<RamT>(&pb, annotation_prefix)
         Self{timestamp,address,contents_before,contents_after}
     }
 
@@ -117,18 +117,18 @@ impl<FieldT:FieldTConfig,ramT> memory_line_variable_gadget<FieldT,ramT> {
         return r;
     }
 }
-impl<FieldT:FieldTConfig,ramT> execution_line_variable_gadget<FieldT,ramT> {
+impl<FieldT:FieldTConfig,RamT> execution_line_variable_gadget<FieldT,RamT> {
     pub fn new(
-        pb: ram_protoboard<ramT>,
+        pb: ram_protoboard<RamT>,
         timestamp_size: usize,
-        ap: ram_architecture_params<ramT>,
+        ap: ram_architecture_params<RamT>,
         annotation_prefix: String,
     ) -> Self {
         let cpu_state_size = ap.cpu_state_size();
 
         cpu_state.allocate(&pb, cpu_state_size, FMT(annotation_prefix, " cpu_state"));
         has_accepted.allocate(&pb, FMT(annotation_prefix, " has_accepted"));
-        // memory_line_variable_gadget<ramT>(&pb, timestamp_size, ap, annotation_prefix)
+        // memory_line_variable_gadget<RamT>(&pb, timestamp_size, ap, annotation_prefix)
         Self {}
     }
 }

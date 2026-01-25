@@ -1,3 +1,7 @@
+// Declaration of interfaces for the TinyRAM ALU arithmetic gadgets.
+
+// These gadget check the correct execution of arithmetic TinyRAM instructions.
+
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::basic_gadgets::{
@@ -21,22 +25,10 @@ use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_sum, pb_variable,
     pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::protoboard;
+use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
-/** @file
-*****************************************************************************
 
-Declaration of interfaces for the TinyRAM ALU arithmetic gadgets.
 
-These gadget check the correct execution of arithmetic TinyRAM instructions.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef ALU_ARITHMETIC_HPP_
-// #define ALU_ARITHMETIC_HPP_
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_opcode;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     generate_tinyram_prelude, tinyram_architecture_params, tinyram_program,

@@ -1,12 +1,27 @@
 // Declaration of public-parameter selector for RAMs.
 
+use crate::common::data_structures::merkle_tree::HashTConfig;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::relations::ram_computations::memory::memory_interface::memory_contents;
 use crate::relations::ram_computations::memory::memory_store_trace::memory_store_trace;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     tinyram_input_tape, tinyram_program,
 };
-use ffec::common::utils;
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::gadget::gadget;
+use crate::relations::variable::variable;
+use crate::gadgetlib1::pb_variable::{pb_variable_array,pb_variable};
+use crate::gadgetlib1::gadgets::cpu_checkers::fooram::components::fooram_protoboard::fooram_protoboard;
+ use crate::gadgetlib1::protoboard::{ProtoboardConfig,protoboard};
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::CPHConfig;
+use ffec::FieldTConfig;
 use ffec::common::utils::bit_vector;
+ use rccell::RcCell;
+
+
+
+
+
 pub trait InstructionConfig {
     fn as_dword<APT: ArchitectureParamsTypeConfig>(&self, ap: &APT) -> usize;
 }
@@ -14,7 +29,7 @@ pub trait ProgramConfig<IC: InstructionConfig> {
     fn instructions(&self) -> &Vec<IC>;
 }
 /*
-  When declaring a new ramT one should do a make it a pub struct that declares typedefs for:
+  When declaring a new RamT one should do a make it a pub struct that declares typedefs for:
 
   base_field_type
   ram_cpu_checker_type
@@ -25,7 +40,7 @@ pub trait ProgramConfig<IC: InstructionConfig> {
   gadget_base_type (e.g. tinyram_gadget<FieldT>)
   cpu_state_variable_type (must have pb_variable_array<FieldT> all_vars)
 
-  The ramT pub struct must also have a static usize variable
+  The RamT pub struct must also have a static usize variable
   timestamp_length, which specifies the zk-SNARK reduction timestamp
   length.
 */
@@ -68,7 +83,7 @@ pub trait ArchitectureParamsTypeConfig: Default + Clone {
         // remember that memory consists of 1u64<<dwaddr_len() double words (!)
         let mut m = memory_contents::new();
 
-        return m;
+        m
     }
 
     fn opcode_width(&self) -> usize {
@@ -104,27 +119,54 @@ pub trait ArchitectureParamsTypeConfig: Default + Clone {
     }
     fn print(&self) {}
 }
-pub trait ram_params_type: Default {
+pub trait CpuCheckConfig:Default+Clone{
+    type FieldT: FieldTConfig;
+    type PB: PBConfig;
+    type T:Default+Clone;
+    fn new(
+        pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
+        prev_pc_addr: pb_variable_array<Self::FieldT, Self::PB>,
+        prev_pc_val: pb_variable_array<Self::FieldT, Self::PB>,
+        prev_state: pb_variable_array<Self::FieldT, Self::PB>,
+        ls_addr: pb_variable_array<Self::FieldT, Self::PB>,
+        ls_prev_val: pb_variable_array<Self::FieldT, Self::PB>,
+        ls_next_val: pb_variable_array<Self::FieldT, Self::PB>,
+        next_state: pb_variable_array<Self::FieldT, Self::PB>,
+        next_pc_addr: pb_variable_array<Self::FieldT, Self::PB>,
+        next_has_accepted: variable<Self::FieldT, pb_variable>,
+        annotation_prefix: String,
+    ) -> Self;
+    fn generate_r1cs_constraints(&self);
+    fn generate_r1cs_witness_address(&self);
+    fn generate_r1cs_witness_other(&self,aut:&[usize]);
+    fn dump(&self);
+}
+// pub trait PBSubConfig{
+//     fn new_with_ap<RPT:ram_params_type>(ap:ram_architecture_params<RPT>)-> RPT::protoboard_type;
+// }
+pub trait ram_params_type: ppTConfig<FieldT=Self::base_field_type> {
     const timestamp_length: usize;
-    type base_field_type;
-    type protoboard_type;
+    type HashT: HashTConfig;
+    type CPH: CPHConfig<protoboardT=Self::protoboard_type,FieldT=Self::base_field_type,M=<Self as ppTConfig>::M,LD=<Self as ppTConfig>::LD>;
+    type base_field_type: FieldTConfig;
+    type protoboard_type:ProtoboardConfig<FieldT=Self::base_field_type,PB=<Self as ppTConfig>::PB>;
     type gadget_base_type;
-    type cpu_checker_type;
+    type cpu_checker_type: CpuCheckConfig<FieldT=Self::base_field_type,PB=<Self as ppTConfig>::PB>;
     type architecture_params_type: ArchitectureParamsTypeConfig;
 }
-pub type ram_base_field<ramT> = <ramT as ram_params_type>::base_field_type;
+pub type ram_base_field<RamT> = <RamT as ram_params_type>::base_field_type;
 
 pub type ram_cpu_state = bit_vector;
 
 pub type ram_boot_trace = memory_store_trace;
 
-pub type ram_protoboard<ramT> = <ramT as ram_params_type>::protoboard_type;
+pub type ram_protoboard<RamT> = <RamT as ram_params_type>::protoboard_type;
 
-pub type ram_gadget_base<ramT> = <ramT as ram_params_type>::gadget_base_type;
+pub type ram_gadget_base<RamT> = <RamT as ram_params_type>::gadget_base_type;
 
-pub type ram_cpu_checker<ramT> = <ramT as ram_params_type>::cpu_checker_type;
+pub type ram_cpu_checker<RamT> = <RamT as ram_params_type>::cpu_checker_type;
 
-pub type ram_architecture_params<ramT> = <ramT as ram_params_type>::architecture_params_type;
+pub type ram_architecture_params<RamT> = <RamT as ram_params_type>::architecture_params_type;
 
 pub type ram_input_tape = Vec<usize>;
 

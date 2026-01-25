@@ -1,3 +1,7 @@
+// Declaration of interfaces for a delegated random-access memory.
+
+
+
 use crate::common::data_structures::merkle_tree::{
     HashTConfig, hash_value_type, merkle_authentication_path_type, merkle_tree,
 };
@@ -6,21 +10,12 @@ use crate::relations::ram_computations::memory::memory_interface::{
 };
 use ffec::common::utils::bit_vector;
 use ffec::common::utils::log2;
-/** @file
-*****************************************************************************
 
-Declaration of interfaces for a delegated random-access memory.
 
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef DELEGATED_RA_MEMORY_HPP_
-// #define DELEGATED_RA_MEMORY_HPP_
 use rccell::RcCell;
 use std::collections::BTreeMap;
-//
+
+#[derive(Clone, Default)]
 pub struct delegated_ra_memory<HashT: HashTConfig> {
     // : public memory_interface
     // bit_vector int_to_tree_elem(i:&usize) const;
@@ -42,28 +37,9 @@ pub struct delegated_ra_memory<HashT: HashTConfig> {
 //     pub fn  dump() const;
 // };
 
-// use crate::relations::ram_computations::memory::delegated_ra_memory;
-
-//#endif // DELEGATED_RA_MEMORY_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a delegated random-access memory.
-
-See delegated_ra_memory.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef DELEGATED_RA_MEMORY_TCC
-// #define DELEGATED_RA_MEMORY_TCC
-
-// use  <algorithm>
-use ffec::common::profiling;
-use ffec::common::utils;
-
+// use ffec::common::profiling;
+// use ffec::common::utils;
+pub type delegated_ra_memorys<HashT>=memory_base<delegated_ra_memory<HashT>> ;
 impl<HashT: HashTConfig> delegated_ra_memory<HashT> {
     pub fn new(num_addresses: usize, value_size: usize) -> memory_base<Self> {
         //memory_interface(num_addresses, value_size)
@@ -144,11 +120,11 @@ impl<HashT: HashTConfig> delegated_ra_memory<HashT> {
 
 impl<HashT: HashTConfig> memory_base<delegated_ra_memory<HashT>> {
     pub fn get_root(&self) -> hash_value_type {
-        return self.t.contents.borrow().get_root();
+         self.t.contents.borrow().get_root()
     }
 
     pub fn get_path(&self, address: usize) -> merkle_authentication_path_type {
-        return self.t.contents.borrow().get_path(address);
+         self.t.contents.borrow().get_path(address)
     }
 
     pub fn dump(&self) {
@@ -171,4 +147,4 @@ impl<HashT: HashTConfig> memory_interface for memory_base<delegated_ra_memory<Ha
         );
     }
 }
-//#endif // DELEGATED_RA_MEMORY_TCC
+

@@ -36,8 +36,7 @@ use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
     pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::PBConfig;
-use crate::gadgetlib1::protoboard::protoboard;
+use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};

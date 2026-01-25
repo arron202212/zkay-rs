@@ -11,7 +11,7 @@ use crate::gadgetlib1::gadgets::pairing::weierstrass_final_exponentiation::{
 use crate::gadgetlib1::gadgets::pairing::weierstrass_miller_loop::{
     mnt_e_over_e_miller_loop_gadget, mnt_e_times_e_over_e_miller_loop_gadget,
 };
-use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
 use ffec::FieldTConfig;
 
 use crate::gadgetlib1::gadgets::fields::fp3_gadgets::{

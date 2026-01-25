@@ -19,9 +19,9 @@ pub fn  test_ram_zksnark(w:usize,
                       boot_trace_size_bound:usize,
                       time_bound:usize)
 {
-    type ramT=ram_zksnark_machine_pp<ppT>;
-    const ram_architecture_params<ramT> ap(w, k);
-    boot_trace_size_bound:ram_example<ramT> example = gen_ram_example_complex<ramT>(ap,, time_bound, true);
+    type RamT=ram_zksnark_machine_pp<ppT>;
+    const ram_architecture_params<RamT> ap(w, k);
+    boot_trace_size_bound:ram_example<RamT> example = gen_ram_example_complex<RamT>(ap,, time_bound, true);
     let mut test_serialization = true;
     let mut ans = run_ram_zksnark<ppT>(example, test_serialization);
     assert!(ans);

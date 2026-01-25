@@ -9,7 +9,7 @@
 
  The implementation follows, extends, and optimizes the approach described
  in \[BCTV14] (itself building on \[BCGTV13]). The code is parameterized by
- the template parameter ramT, in order to support any RAM that fits certain
+ the template parameter RamT, in order to support any RAM that fits certain
  abstract interfaces.
 
  Roughly, the gadget has three main components:
@@ -81,25 +81,25 @@ use crate::relations::ram_computations::rams::ram_params;
   verifier.
 */
 
-type FieldT=ram_base_field<ramT> ;
-pub struct  ram_universal_gadget <ramT> {
+type FieldT=ram_base_field<RamT> ;
+pub struct  ram_universal_gadget <RamT> {
 // : public ram_gadget_base
     
 
 num_memory_lines:    usize,
 
-boot_lines:    Vec<memory_line_variable_gadget<ramT> >,
+boot_lines:    Vec<memory_line_variable_gadget<RamT> >,
 boot_line_bits:    Vec<pb_variable_array<FieldT> >,
 unpack_boot_lines:    Vec<multipacking_gadget<FieldT> >,
 
-load_instruction_lines:    Vec<memory_line_variable_gadget<ramT> >,
-execution_lines:    Vec<execution_line_variable_gadget<ramT> >, /* including the initial execution line */
+load_instruction_lines:    Vec<memory_line_variable_gadget<RamT> >,
+execution_lines:    Vec<execution_line_variable_gadget<RamT> >, /* including the initial execution line */
 
-unrouted_memory_lines:    Vec<memory_line_variable_gadget<ramT> >,
-routed_memory_lines:    Vec<memory_line_variable_gadget<ramT> >,
+unrouted_memory_lines:    Vec<memory_line_variable_gadget<RamT> >,
+routed_memory_lines:    Vec<memory_line_variable_gadget<RamT> >,
 
-execution_checkers:    Vec<ram_cpu_checker<ramT> >,
-memory_checkers:    Vec<memory_checker_gadget<ramT> >,
+execution_checkers:    Vec<ram_cpu_checker<RamT> >,
+memory_checkers:    Vec<memory_checker_gadget<RamT> >,
 
 routing_inputs:    Vec<pb_variable_array<FieldT> >,
 routing_outputs:    Vec<pb_variable_array<FieldT> >,
@@ -144,9 +144,9 @@ use crate::common::data_structures::integer_permutation;
 use crate::relations::ram_computations::memory::ra_memory;
 
 
-impl ram_universal_gadget<ramT>{
+impl ram_universal_gadget<RamT>{
 
-pub fn new( pb:ram_protoboard<ramT>,
+pub fn new( pb:ram_protoboard<RamT>,
                                                  boot_trace_size_bound:usize,
                                                  time_bound:usize,
                                                  packed_input:&pb_variable_array<FieldT>,
@@ -159,7 +159,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     /* allocate all lines on the execution side of the routing network */
     ffec::enter_block("Allocate initial state line");
     execution_lines.reserve(1 + time_bound);
-    execution_lines.push(execution_line_variable_gadget::<ramT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", 0)));
+    execution_lines.push(execution_line_variable_gadget::<RamT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", 0)));
     unrouted_memory_lines.push(&execution_lines[0]);
     ffec::leave_block("Allocate initial state line");
 
@@ -167,7 +167,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     boot_lines.reserve(boot_trace_size_bound);
     for i in 0..boot_trace_size_bound
     {
-        boot_lines.push(memory_line_variable_gadget::<ramT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " boot_lines_{}", i)));
+        boot_lines.push(memory_line_variable_gadget::<RamT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " boot_lines_{}", i)));
         unrouted_memory_lines.push(&boot_lines[i]);
     }
     ffec::leave_block("Allocate boot lines");
@@ -176,13 +176,13 @@ pub fn new( pb:ram_protoboard<ramT>,
     load_instruction_lines.reserve(time_bound+1); /* the last line is NOT a memory line, but here just for uniform coding (i.e. the (unused) result of next PC) */
     for i in 0..time_bound
     {
-        load_instruction_lines.push(memory_line_variable_gadget::<ramT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", i)));
+        load_instruction_lines.push(memory_line_variable_gadget::<RamT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", i)));
         unrouted_memory_lines.push(&load_instruction_lines[i]);
 
-        execution_lines.push(execution_line_variable_gadget::<ramT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", i+1)));
+        execution_lines.push(execution_line_variable_gadget::<RamT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " execution_lines_{}", i+1)));
         unrouted_memory_lines.push(&execution_lines[i+1]);
     }
-    load_instruction_lines.push(memory_line_variable_gadget::<ramT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", time_bound)));
+    load_instruction_lines.push(memory_line_variable_gadget::<RamT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " load_instruction_lines_{}", time_bound)));
     ffec::leave_block("Allocate instruction fetch and execution lines");
 
     /* deal with packing of the input */
@@ -211,7 +211,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     ffec::enter_block("Allocate routed memory lines");
     for i in 0..num_memory_lines
     {
-        routed_memory_lines.push(memory_line_variable_gadget::<ramT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " routed_memory_lines_{}", i)));
+        routed_memory_lines.push(memory_line_variable_gadget::<RamT>(&pb, timestamp_size, pb.ap, FMT(annotation_prefix, " routed_memory_lines_{}", i)));
     }
     ffec::leave_block("Allocate routed memory lines");
 
@@ -235,7 +235,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     execution_checkers.reserve(time_bound);
     for i in 0..time_bound
     {
-        execution_checkers.push(ram_cpu_checker::<ramT>(&pb,
+        execution_checkers.push(ram_cpu_checker::<RamT>(&pb,
                                                               load_instruction_lines[i].address.bits, // prev_pc_addr
                                                               load_instruction_lines[i].contents_after.bits, // prev_pc_val
                                                               execution_lines[i].cpu_state, // prev_state
@@ -253,7 +253,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     memory_checkers.reserve(num_memory_lines);
     for i in 0..num_memory_lines
     {
-        memory_checkers.push(memory_checker_gadget::<ramT>(&pb,
+        memory_checkers.push(memory_checker_gadget::<RamT>(&pb,
                                                                  timestamp_size,
                                                                  *unrouted_memory_lines[i],
                                                                  routed_memory_lines[i],
@@ -262,7 +262,7 @@ pub fn new( pb:ram_protoboard<ramT>,
     ffec::leave_block("Allocate all memory checkers");
 
     /* done */
-    //  ram_gadget_base<ramT>(&pb, annotation_prefix),
+    //  ram_gadget_base<RamT>(&pb, annotation_prefix),
     Self{boot_trace_size_bound,
     time_bound,
     packed_input}
@@ -352,8 +352,8 @@ pub fn generate_r1cs_constraints()
 }
 
 
-pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<ramT>,
-                                                       auxiliary_input:&ram_input_tape<ramT>)
+pub fn generate_r1cs_witness(boot_trace:&ram_boot_trace<RamT>,
+                                                       auxiliary_input:&ram_input_tape<RamT>)
 {
     /* assign correct timestamps to all lines */
     for i in 0..num_memory_lines
@@ -536,7 +536,7 @@ pub fn print_memory_trace()
 }
 
 
-pub fn packed_input_element_size(ap:&ram_architecture_params<ramT>)->usize
+pub fn packed_input_element_size(ap:&ram_architecture_params<RamT>)->usize
 {
     let line_size_bits = ap.address_size() + ap.value_size();
     let max_chunk_size = FieldT::capacity();
@@ -546,7 +546,7 @@ pub fn packed_input_element_size(ap:&ram_architecture_params<ramT>)->usize
 }
 
 
-pub fn packed_input_size(ap:&ram_architecture_params<ramT>,
+pub fn packed_input_size(ap:&ram_architecture_params<RamT>,
                                                      boot_trace_size_bound:usize)->usize
 {
     return packed_input_element_size(ap) * boot_trace_size_bound;

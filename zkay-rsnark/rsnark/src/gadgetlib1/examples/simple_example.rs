@@ -1,8 +1,7 @@
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
 use crate::gadgetlib1::gadgets::basic_gadgets::inner_product_gadget;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::PBConfig;
-use crate::gadgetlib1::protoboard::protoboard;
+use crate::gadgetlib1::protoboard::{protoboard,ProtoboardConfig,PBConfig};
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
 use crate::relations::variable::variable;
 use ffec::FieldTConfig;

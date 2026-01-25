@@ -123,7 +123,7 @@ pub fn run_r1cs_sp_ppzkpcd_tally_example<PCD_ppT>(
             tally.generate_r1cs_witness(msgs, ld);
 
             let mut tally_primary_input =
-                r1cs_pcd_compliance_predicate_primary_input::<FieldT>::new()(
+                r1cs_pcd_compliance_predicate_primary_input::<FieldT>::from(
                     tally.get_outgoing_message(),
                 );
             let mut tally_auxiliary_input =
