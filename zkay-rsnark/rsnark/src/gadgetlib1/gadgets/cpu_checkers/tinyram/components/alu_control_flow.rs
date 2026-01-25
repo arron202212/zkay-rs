@@ -25,7 +25,7 @@ use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::{
 use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_packing_sum, pb_variable, pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{

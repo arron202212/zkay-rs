@@ -170,7 +170,7 @@ pub fn int_list_to_bits(l: &[usize], wordsize: usize) -> bit_vector {
             res[i * wordsize + j] = (l[i] & (1usize << (wordsize - 1 - j))) != 0;
         }
     }
-     res
+    res
 }
 
 pub fn div_ceil(x: usize, y: usize) -> eyre::Result<usize> {

@@ -9,7 +9,7 @@ use crate::gadgetlib1::gadgets::basic_gadgets::{
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::tinyram_protoboard::{
     SubTinyRamGadgetConfig, tinyram_gadget, tinyram_protoboard, tinyram_standard_gadget,
 };
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 pub type tinyram_packing_gadget<FieldT> =
     gadget<FieldT, tinyram_protoboard<FieldT>, packing_gadget<FieldT, tinyram_protoboard<FieldT>>>;
 pub type tinyram_loose_multiplexing_gadget<FieldT> = gadget<

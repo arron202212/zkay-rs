@@ -1,7 +1,7 @@
 // Declaration of interfaces for a gadget that can be created from an R1CS constraint system.
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,

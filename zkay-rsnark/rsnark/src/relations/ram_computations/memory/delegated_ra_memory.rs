@@ -1,7 +1,5 @@
 // Declaration of interfaces for a delegated random-access memory.
 
-
-
 use crate::common::data_structures::merkle_tree::{
     HashTConfig, hash_value_type, merkle_authentication_path_type, merkle_tree,
 };
@@ -10,7 +8,6 @@ use crate::relations::ram_computations::memory::memory_interface::{
 };
 use ffec::common::utils::bit_vector;
 use ffec::common::utils::log2;
-
 
 use rccell::RcCell;
 use std::collections::BTreeMap;
@@ -39,7 +36,7 @@ pub struct delegated_ra_memory<HashT: HashTConfig> {
 
 // use ffec::common::profiling;
 // use ffec::common::utils;
-pub type delegated_ra_memorys<HashT>=memory_base<delegated_ra_memory<HashT>> ;
+pub type delegated_ra_memorys<HashT> = memory_base<delegated_ra_memory<HashT>>;
 impl<HashT: HashTConfig> delegated_ra_memory<HashT> {
     pub fn new(num_addresses: usize, value_size: usize) -> memory_base<Self> {
         //memory_interface(num_addresses, value_size)
@@ -120,11 +117,11 @@ impl<HashT: HashTConfig> delegated_ra_memory<HashT> {
 
 impl<HashT: HashTConfig> memory_base<delegated_ra_memory<HashT>> {
     pub fn get_root(&self) -> hash_value_type {
-         self.t.contents.borrow().get_root()
+        self.t.contents.borrow().get_root()
     }
 
     pub fn get_path(&self, address: usize) -> merkle_authentication_path_type {
-         self.t.contents.borrow().get_path(address)
+        self.t.contents.borrow().get_path(address)
     }
 
     pub fn dump(&self) {
@@ -147,4 +144,3 @@ impl<HashT: HashTConfig> memory_interface for memory_base<delegated_ra_memory<Ha
         );
     }
 }
-

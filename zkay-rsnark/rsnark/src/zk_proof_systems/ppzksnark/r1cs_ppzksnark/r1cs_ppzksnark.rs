@@ -144,7 +144,7 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_proving_key<ppT>
             + ffec::size_in_bits(&self.K_query)
     }
 
-    fn print_size(&self) {
+    pub fn print_size(&self) {
         print_indent();
         print!("* G1 elements in PK: {}\n", self.g1_size());
         print_indent();

@@ -1,4 +1,4 @@
-use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use ffec::FieldTConfig;
 use rccell::RcCell;
 #[derive(Clone, Default)]

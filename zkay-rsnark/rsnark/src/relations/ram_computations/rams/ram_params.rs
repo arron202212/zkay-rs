@@ -1,26 +1,22 @@
 // Declaration of public-parameter selector for RAMs.
 
 use crate::common::data_structures::merkle_tree::HashTConfig;
+use crate::gadgetlib1::gadget::gadget;
+use crate::gadgetlib1::gadgets::cpu_checkers::fooram::components::fooram_protoboard::fooram_protoboard;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::gadgetlib1::protoboard::{ProtoboardConfig, protoboard};
 use crate::relations::ram_computations::memory::memory_interface::memory_contents;
 use crate::relations::ram_computations::memory::memory_store_trace::memory_store_trace;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     tinyram_input_tape, tinyram_program,
 };
-use crate::gadgetlib1::protoboard::PBConfig;
-use crate::gadgetlib1::gadget::gadget;
 use crate::relations::variable::variable;
-use crate::gadgetlib1::pb_variable::{pb_variable_array,pb_variable};
-use crate::gadgetlib1::gadgets::cpu_checkers::fooram::components::fooram_protoboard::fooram_protoboard;
- use crate::gadgetlib1::protoboard::{ProtoboardConfig,protoboard};
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::CPHConfig;
 use ffec::FieldTConfig;
 use ffec::common::utils::bit_vector;
- use rccell::RcCell;
-
-
-
-
+use rccell::RcCell;
 
 pub trait InstructionConfig {
     fn as_dword<APT: ArchitectureParamsTypeConfig>(&self, ap: &APT) -> usize;
@@ -119,10 +115,10 @@ pub trait ArchitectureParamsTypeConfig: Default + Clone {
     }
     fn print(&self) {}
 }
-pub trait CpuCheckConfig:Default+Clone{
+pub trait CpuCheckConfig: Default + Clone {
     type FieldT: FieldTConfig;
     type PB: PBConfig;
-    type T:Default+Clone;
+    type T: Default + Clone;
     fn new(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         prev_pc_addr: pb_variable_array<Self::FieldT, Self::PB>,
@@ -138,20 +134,25 @@ pub trait CpuCheckConfig:Default+Clone{
     ) -> Self;
     fn generate_r1cs_constraints(&self);
     fn generate_r1cs_witness_address(&self);
-    fn generate_r1cs_witness_other(&self,aut:&[usize]);
+    fn generate_r1cs_witness_other(&self, aut: &[usize]);
     fn dump(&self);
 }
 // pub trait PBSubConfig{
 //     fn new_with_ap<RPT:ram_params_type>(ap:ram_architecture_params<RPT>)-> RPT::protoboard_type;
 // }
-pub trait ram_params_type: ppTConfig<FieldT=Self::base_field_type> {
+pub trait ram_params_type: ppTConfig<FieldT = Self::base_field_type> {
     const timestamp_length: usize;
     type HashT: HashTConfig;
-    type CPH: CPHConfig<protoboardT=Self::protoboard_type,FieldT=Self::base_field_type,M=<Self as ppTConfig>::M,LD=<Self as ppTConfig>::LD>;
+    type CPH: CPHConfig<
+            protoboardT = Self::protoboard_type,
+            FieldT = Self::base_field_type,
+            M = <Self as ppTConfig>::M,
+            LD = <Self as ppTConfig>::LD,
+        >;
     type base_field_type: FieldTConfig;
-    type protoboard_type:ProtoboardConfig<FieldT=Self::base_field_type,PB=<Self as ppTConfig>::PB>;
+    type protoboard_type: ProtoboardConfig<FieldT = Self::base_field_type, PB = <Self as ppTConfig>::PB>;
     type gadget_base_type;
-    type cpu_checker_type: CpuCheckConfig<FieldT=Self::base_field_type,PB=<Self as ppTConfig>::PB>;
+    type cpu_checker_type: CpuCheckConfig<FieldT = Self::base_field_type, PB = <Self as ppTConfig>::PB>;
     type architecture_params_type: ArchitectureParamsTypeConfig;
 }
 pub type ram_base_field<RamT> = <RamT as ram_params_type>::base_field_type;

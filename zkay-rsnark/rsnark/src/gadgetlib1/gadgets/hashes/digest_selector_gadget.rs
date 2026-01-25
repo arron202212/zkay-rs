@@ -2,7 +2,7 @@ use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::generate_boolean_r1cs_constraint;
 use crate::gadgetlib1::gadgets::hashes::hash_io::{digest_variable, digest_variables};
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};

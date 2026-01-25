@@ -22,7 +22,7 @@ use crate::gadgetlib1::gadgets::pairing::weierstrass_precomputation::{
     G1_precomputations, G2_precomputations,
 };
 use crate::gadgetlib1::pb_variable::pb_variable;
-use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::variable::variable;
 use ff_curves::Fr;

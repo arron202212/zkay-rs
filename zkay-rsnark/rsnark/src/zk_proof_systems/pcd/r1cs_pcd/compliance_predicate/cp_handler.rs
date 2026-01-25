@@ -6,7 +6,7 @@
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
@@ -234,8 +234,12 @@ impl<CPH: CPHConfig, T: Default + Clone> compliance_predicate_handler<CPH, T> {
         local_data_value: &RcCell<r1cs_pcd_local_data<CPH::FieldT, CPH::LD>>,
     ) {
         self.pb.borrow_mut().clear_values();
-        *self.pb.borrow_mut().val_ref(&self.outgoing_message.borrow().t.types) = CPH::FieldT::from(self.types);
-        *self.pb.borrow_mut().val_ref(&self.arity) = CPH::FieldT::from(incoming_message_values.len());
+        *self
+            .pb
+            .borrow_mut()
+            .val_ref(&self.outgoing_message.borrow().t.types) = CPH::FieldT::from(self.types);
+        *self.pb.borrow_mut().val_ref(&self.arity) =
+            CPH::FieldT::from(incoming_message_values.len());
 
         for i in 0..incoming_message_values.len() {
             self.incoming_messages[i]

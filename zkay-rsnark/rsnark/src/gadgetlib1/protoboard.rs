@@ -3,7 +3,7 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
 };
- use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
+use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, var_index_t, variable,
 };
@@ -12,26 +12,23 @@ use ffec::common::utils;
 use ffec::scalar_multiplication::multiexp::KCConfig;
 use rccell::RcCell;
 
-
-
-
-pub trait PBConfig: Default + Clone+Sized {
-fn new_with_ap<APT:ArchitectureParamsTypeConfig>(ap:APT)-> Self{
-Default::default()
-}
+pub trait PBConfig: Default + Clone + Sized {
+    fn new_with_ap<APT: ArchitectureParamsTypeConfig>(ap: APT) -> Self {
+        Default::default()
+    }
 }
 
-pub trait ProtoboardConfig:Default+Clone +Sized{
+pub trait ProtoboardConfig: Default + Clone + Sized {
     type FieldT: FieldTConfig;
     type PB: PBConfig;
     fn clear_values(&mut self);
     fn val_ref(&mut self, var: &variable<Self::FieldT, pb_variable>) -> &mut Self::FieldT;
     fn val(&self, var: &variable<Self::FieldT, pb_variable>) -> Self::FieldT;
-fn lc_val_ref(
+    fn lc_val_ref(
         &mut self,
         lc: &linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
-    ) -> &mut Self::FieldT ;
-fn lc_val(
+    ) -> &mut Self::FieldT;
+    fn lc_val(
         &self,
         lc: &linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
     ) -> Self::FieldT;
@@ -46,10 +43,10 @@ fn lc_val(
         annotation: String,
     );
     fn num_constraints(&self) -> usize;
-    fn into_p(self)->RcCell<protoboard<Self::FieldT, Self::PB>>{
+    fn into_p(self) -> RcCell<protoboard<Self::FieldT, Self::PB>> {
         RcCell::new(Default::default())
     }
-    fn new_with_ap<APT:ArchitectureParamsTypeConfig>(ap:APT) -> Self ;
+    fn new_with_ap<APT: ArchitectureParamsTypeConfig>(ap: APT) -> Self;
 }
 
 #[derive(Clone)]
@@ -129,7 +126,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> Default for protoboard<FieldT, T> {
 //     fn from(rhs:P)->Self{
 //        RcCell::new (Default::default())
 //     }
-//  
+//
 impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
     pub fn new(t: T) -> Self {
         let mut constraint_system =
@@ -152,7 +149,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
             t,
         }
     }
-   
+
     pub fn allocate_var_index(&mut self, annotation: String) -> var_index_t {
         // #ifdef DEBUG
         assert!(!annotation.is_empty());
@@ -173,9 +170,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
         self.next_free_lc += 1;
         self.next_free_lc
     }
-
-
-   
 
     pub fn augment_variable_annotation(
         &mut self,
@@ -211,7 +205,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
         //#endif
     }
 
-   
     pub fn num_inputs(&self) -> usize {
         self.constraint_system.num_inputs()
     }
@@ -234,7 +227,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
     type FieldT = FieldT;
     type PB = T;
 
-     fn lc_val_ref(
+    fn lc_val_ref(
         &mut self,
         lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,
     ) -> &mut FieldT {
@@ -249,7 +242,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
         }
     }
 
-     fn lc_val(
+    fn lc_val(
         &self,
         lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,
     ) -> FieldT {
@@ -263,7 +256,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
             self.lc_values[lc.t.index].clone()
         }
     }
-    fn new_with_ap<APT:ArchitectureParamsTypeConfig>(ap:APT) -> Self {
+    fn new_with_ap<APT: ArchitectureParamsTypeConfig>(ap: APT) -> Self {
         let mut constraint_system =
             r1cs_constraint_system::<FieldT, pb_variable, pb_linear_combination>::default();
         // #ifdef DEBUG
@@ -281,7 +274,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
             next_free_lc: 0,
             lc_values: vec![],
             constraint_system,
-            t:T::new_with_ap(ap),
+            t: T::new_with_ap(ap),
         }
     }
     fn clear_values(&mut self) {
@@ -331,8 +324,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
         //#endif
         self.constraint_system.constraints.push(constr);
     }
-     fn num_constraints(&self) -> usize {
+    fn num_constraints(&self) -> usize {
         self.constraint_system.num_constraints()
     }
-
 }

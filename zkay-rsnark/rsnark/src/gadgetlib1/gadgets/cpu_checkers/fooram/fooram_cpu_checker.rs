@@ -22,7 +22,7 @@ use crate::gadgetlib1::gadgets::cpu_checkers::fooram::components::fooram_protobo
 use crate::gadgetlib1::pb_variable::{
     pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::{protoboard,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{ProtoboardConfig, protoboard};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::ram_computations::memory::memory_interface;
 use crate::relations::variable::{linear_combination, variable};

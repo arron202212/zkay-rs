@@ -9,12 +9,12 @@ use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint_system, r1cs_variable_assignment,
 };
+use crate::relations::ram_computations::memory::memory_interface::memory_interface;
+use crate::relations::ram_computations::rams::ram_params::ram_input_tape;
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
-use crate::relations::ram_computations::rams::ram_params::ram_input_tape;
-use crate::relations::ram_computations::memory::memory_interface::memory_interface;
 use ffec::FieldTConfig;
 use ffec::PpConfig;
 use rccell::RcCell;
@@ -58,13 +58,15 @@ impl<FieldT: FieldTConfig, T: LocalDataConfig> r1cs_pcd_local_data<FieldT, T> {
 pub trait LocalDataConfig {
     type FieldT: FieldTConfig;
     fn as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
-    fn mem<MI:memory_interface>(&self)->MI{
+    fn mem<MI: memory_interface>(&self) -> MI {
         MI::default()
     }
-    fn is_halt_case(&self)->bool{false}
- fn aux(&self)-> ram_input_tape{
-    vec![]}
-   
+    fn is_halt_case(&self) -> bool {
+        false
+    }
+    fn aux(&self) -> ram_input_tape {
+        vec![]
+    }
 }
 
 impl<FieldT: FieldTConfig, T: LocalDataConfig> LocalDataConfig for r1cs_pcd_local_data<FieldT, T> {

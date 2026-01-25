@@ -1,4 +1,4 @@
-use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, linear_term, variable,
 };
@@ -234,17 +234,17 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
         for i in 0..self.contents.len() {
             result[i] = pb.borrow().val(&self.contents[i]);
         }
-         result
+        result
     }
 
-    pub fn get_bitst<P:ProtoboardConfig<FieldT=FieldT>>(&self, pb: &RcCell<P>) -> bit_vector {
+    pub fn get_bitst<P: ProtoboardConfig<FieldT = FieldT>>(&self, pb: &RcCell<P>) -> bit_vector {
         let mut result = bit_vector::new();
         for i in 0..self.contents.len() {
             let v = pb.borrow().val(&self.contents[i]);
             assert!(v == FieldT::zero() || v == FieldT::one());
             result.push(v == FieldT::one());
         }
-         result
+        result
     }
     pub fn get_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> bit_vector {
         let mut result = bit_vector::new();
@@ -253,7 +253,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
             assert!(v == FieldT::zero() || v == FieldT::one());
             result.push(v == FieldT::one());
         }
-         result
+        result
     }
 
     pub fn get_field_element_from_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> FieldT {
@@ -266,7 +266,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
             result += result.clone() + v.clone();
         }
 
-         result
+        result
     }
 }
 
@@ -441,14 +441,14 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
         }
         result
     }
-    pub fn get_bitst<P:ProtoboardConfig<FieldT=FieldT>>(&self, pb: &RcCell<P>) -> bit_vector {
+    pub fn get_bitst<P: ProtoboardConfig<FieldT = FieldT>>(&self, pb: &RcCell<P>) -> bit_vector {
         let mut result = bit_vector::new();
         for i in 0..self.contents.len() {
             let v = pb.borrow().lc_val(&self.contents[i]);
             assert!(v == FieldT::zero() || v == FieldT::one());
             result.push(v == FieldT::one());
         }
-         result
+        result
     }
     pub fn get_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> bit_vector {
         let mut result = bit_vector::new();
@@ -457,7 +457,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
             assert!(v == FieldT::zero() || v == FieldT::one());
             result.push(v == FieldT::one());
         }
-         result
+        result
     }
 
     pub fn get_field_element_from_bits(&self, pb: &RcCell<protoboard<FieldT, PB>>) -> FieldT {
@@ -472,7 +472,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
             result += result.clone() + v.clone();
         }
 
-         result
+        result
     }
 }
 

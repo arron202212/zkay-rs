@@ -37,7 +37,7 @@ use crate::gadgetlib1::pb_variable::{
     ONE, pb_linear_combination, pb_linear_combination_array, pb_packing_sum, pb_variable,
     pb_variable_array,
 };
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};
@@ -233,7 +233,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     }
 
     pub fn root_size_in_bits() -> usize {
-         HashT::get_digest_len()
+        HashT::get_digest_len()
     }
 
     pub fn expected_constraints(tree_depth: usize) -> usize {
@@ -247,7 +247,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
             3 * div_ceil(HashT::get_digest_len(), FieldT::capacity()).unwrap();
         let aux_equality_constraints = tree_depth * HashT::get_digest_len();
 
-         prev_hasher_constraints
+        prev_hasher_constraints
             + next_hasher_constraints
             + prev_authentication_path_constraints
             + prev_propagator_constraints

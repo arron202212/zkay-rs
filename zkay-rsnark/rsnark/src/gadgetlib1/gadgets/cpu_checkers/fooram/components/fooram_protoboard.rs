@@ -2,7 +2,7 @@
 
 use crate::gadgetlib1::gadget::gadget;
 
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::relations::ram_computations::rams::fooram::fooram_aux;
 use crate::relations::ram_computations::rams::fooram::fooram_aux::fooram_architecture_params;
 use ffec::FieldTConfig;

@@ -27,29 +27,31 @@
 // CRYPTO 2014,
 // <http://eprint.iacr.org/2014/595>
 
-use crate::gadgetlib1::gadgets::hashes::crh_gadget::{CRH_with_bit_out_gadget,CRH_with_bit_out_gadgets};
+use crate::gadgetlib1::gadgets::hashes::crh_gadget::{
+    CRH_with_bit_out_gadget, CRH_with_bit_out_gadgets,
+};
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::prefix_format;
 use crate::relations::ram_computations::memory::delegated_ra_memory::delegated_ra_memory;
+use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
 use crate::relations::ram_computations::rams::ram_params::{
     ram_architecture_params, ram_boot_trace, ram_input_tape, ram_params_type,
 };
-use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::r1cs_pcd_local_data;
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::CPHConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPptConfig;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::CPHConfig;
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::ram_compliance_predicate_handlers;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_generator;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_prover;
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::{
     r1cs_sp_ppzkpcd_proof, r1cs_sp_ppzkpcd_proving_key, r1cs_sp_ppzkpcd_verification_key,
     r1cs_sp_ppzkpcd_verifier,
 };
-use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::ram_compliance_predicate_handler;
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::ram_compliance_predicate_handlers;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::ram_pcd_local_data;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::RamConfig;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{
@@ -59,8 +61,8 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{
 use ff_curves::Fr;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::log2;
-use std::ops::Mul;
 use rccell::RcCell;
+use std::ops::Mul;
 /******************************** Proving key ********************************/
 
 /**
@@ -264,12 +266,15 @@ impl<RamPpt: RamConfig> ram_zksnark_verification_key<RamPpt> {
 
 type RamT<RamPpt> = ram_zksnark_machine_pp<RamPpt>;
 type pcdT<RamPpt> = ram_zksnark_PCD_pp<RamPpt>;
-type A_pp<RamPpt>=<pcdT<RamPpt> as PcdPptConfig>::curve_A_pp;
+type A_pp<RamPpt> = <pcdT<RamPpt> as PcdPptConfig>::curve_A_pp;
 type FieldT<RamPpt> = Fr<<pcdT<RamPpt> as PcdPptConfig>::curve_A_pp>; // XXX
 
 pub fn ram_zksnark_generator<RamPpt: RamConfig>(
     ap: &ram_zksnark_architecture_params<RamPpt>,
-) -> ram_zksnark_keypair<RamPpt> where <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig {
+) -> ram_zksnark_keypair<RamPpt>
+where
+    <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig,
+{
     // type RamPpt=ram_zksnark_machine_pp<RamPpt>;
     // type pcdT=ram_zksnark_PCD_pp<RamPpt>;
     enter_block("Call to ram_zksnark_generator", false);
@@ -297,7 +302,8 @@ pub fn ram_zksnark_prover<RamPpt: RamConfig>(
     primary_input: &ram_zksnark_primary_input,
     time_bound: usize,
     auxiliary_input: &ram_zksnark_auxiliary_input,
-) -> ram_zksnark_proof<RamPpt> where
+) -> ram_zksnark_proof<RamPpt>
+where
     knowledge_commitment<
         <<RamPpt::PCD_pp as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G2,
         <<RamPpt::PCD_pp as PcdPptConfig>::curve_B_pp as ff_curves::PublicParams>::G1,
@@ -337,8 +343,9 @@ pub fn ram_zksnark_prover<RamPpt: RamConfig>(
                 <<RamPpt::PCD_pp as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G2,
                 <<RamPpt::PCD_pp as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
             >,
-        >, <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig,
-    {
+        >,
+    <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig,
+{
     assert!(log2(time_bound) <= RamT::<RamPpt>::timestamp_length);
 
     enter_block("Call to ram_zksnark_prover", false);
@@ -353,7 +360,12 @@ pub fn ram_zksnark_prover<RamPpt: RamConfig>(
     let num_addresses = 1usize << pk.ap.address_size();
     let value_size = pk.ap.value_size();
 
-    let mut mem = delegated_ra_memory::<CRH_with_bit_out_gadgets<FieldT<RamPpt>,<<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::PB>>::new3(
+    let mut mem = delegated_ra_memory::<
+        CRH_with_bit_out_gadgets<
+            FieldT<RamPpt>,
+            <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::PB,
+        >,
+    >::new3(
         num_addresses,
         value_size,
         primary_input.as_memory_contents(),
@@ -384,15 +396,16 @@ pub fn ram_zksnark_prover<RamPpt: RamConfig>(
 
         cp_handler.generate_r1cs_witness(&vec![msg.clone()], &local_data);
 
-        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<FieldT<RamPpt>,<<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M>::from(
-            cp_handler.get_outgoing_message(),
-        );
+        let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<
+            FieldT<RamPpt>,
+            <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
+        >::from(cp_handler.get_outgoing_message());
         let cp_auxiliary_input =
-            r1cs_pcd_compliance_predicate_auxiliary_input::<FieldT<RamPpt>,<<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,<<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::LD>::new(
-                vec![msg.clone()],
-                local_data,
-                cp_handler.get_witness(),
-            );
+            r1cs_pcd_compliance_predicate_auxiliary_input::<
+                FieldT<RamPpt>,
+                <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
+                <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::LD,
+            >::new(vec![msg.clone()], local_data, cp_handler.get_witness());
 
         // #ifdef DEBUG
         print!("Current state:\n");
@@ -425,7 +438,7 @@ pub fn ram_zksnark_prover<RamPpt: RamConfig>(
 
     enter_block("Execute witness map", false);
 
-     let mut local_data = RcCell::new(ram_pcd_local_data::<RamT<RamPpt>>::new(
+    let mut local_data = RcCell::new(ram_pcd_local_data::<RamT<RamPpt>>::new(
         want_halt,
         mem,
         auxiliary_input.clone(),
@@ -433,10 +446,10 @@ pub fn ram_zksnark_prover<RamPpt: RamConfig>(
 
     cp_handler.generate_r1cs_witness(&vec![msg.clone()], &local_data);
 
-    let cp_primary_input =
-        r1cs_pcd_compliance_predicate_primary_input::<FieldT<RamPpt>, <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M>::from(
-            cp_handler.get_outgoing_message(),
-        );
+    let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<
+        FieldT<RamPpt>,
+        <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
+    >::from(cp_handler.get_outgoing_message());
     let cp_auxiliary_input = r1cs_pcd_compliance_predicate_auxiliary_input::<
         FieldT<RamPpt>,
         <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
@@ -468,14 +481,16 @@ pub fn ram_zksnark_verifier<RamPpt: RamConfig>(
     // type FieldT=Fr< pcdT::curve_A_pp>; // XXX
 
     enter_block("Call to ram_zksnark_verifier", false);
-    let cp_primary_input =
-        r1cs_pcd_compliance_predicate_primary_input::<FieldT<RamPpt>, <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M>::from(
-            ram_compliance_predicate_handler::<RamT<RamPpt>>::get_final_case_msg(
-                &vk.ap,
-                primary_input,
-                time_bound,
-            ),
-        );
+    let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<
+        FieldT<RamPpt>,
+        <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
+    >::from(
+        ram_compliance_predicate_handler::<RamT<RamPpt>>::get_final_case_msg(
+            &vk.ap,
+            primary_input,
+            time_bound,
+        ),
+    );
     let ans =
         r1cs_sp_ppzkpcd_verifier::<pcdT<RamPpt>>(&vk.pcd_vk, &cp_primary_input, &proof.PCD_proof);
     leave_block("Call to ram_zksnark_verifier", false);

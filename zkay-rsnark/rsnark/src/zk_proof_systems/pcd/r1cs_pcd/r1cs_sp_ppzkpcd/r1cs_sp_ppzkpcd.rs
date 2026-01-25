@@ -32,7 +32,7 @@ use crate::gadgetlib1::gadgets::pairing::pairing_params::{
     other_curve, pairing_selector, ppTConfig,
 };
 use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget::r1cs_ppzksnark_verification_key_variable;
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
     LocalDataConfig, MessageConfig,

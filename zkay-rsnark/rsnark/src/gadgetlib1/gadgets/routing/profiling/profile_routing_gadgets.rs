@@ -2,7 +2,7 @@
 use crate::gadgetlib1::gadgets::routing::as_waksman_routing_gadget::as_waksman_routing_gadget;
 use crate::gadgetlib1::gadgets::routing::benes_routing_gadget::benes_routing_gadget;
 use crate::gadgetlib1::pb_variable::pb_variable_array;
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use ffec::FieldTConfig;
 use ffec::common::utils::log2;

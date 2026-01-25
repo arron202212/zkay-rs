@@ -1,7 +1,5 @@
 // Declaration of auxiliary functions for FOORAM.
 
-
-
 use crate::relations::ram_computations::memory::memory_interface::memory_contents;
 use crate::relations::ram_computations::rams::ram_params::{
     ArchitectureParamsTypeConfig, InstructionConfig, ProgramConfig,
@@ -16,7 +14,7 @@ pub type fooram_input_tape = Vec<usize>;
 
 #[derive(Default, Clone)]
 pub struct fooram_architecture_params {
-   pub  w: usize,
+    pub w: usize,
     // fooram_architecture_params(w:usize=16);
 
     // usize num_addresses() const;
@@ -36,9 +34,6 @@ pub struct fooram_architecture_params {
     // friend std::istream& operator>>(std::istream &in, fooram_architecture_params &ap);
 }
 
-
-
-
 impl fooram_architecture_params {
     pub fn new(w: usize) -> Self {
         Self { w }
@@ -46,23 +41,23 @@ impl fooram_architecture_params {
 }
 impl ArchitectureParamsTypeConfig for fooram_architecture_params {
     fn num_addresses(&self) -> usize {
-         1usize << self.w
+        1usize << self.w
     }
 
     fn address_size(&self) -> usize {
-         self.w
+        self.w
     }
 
     fn value_size(&self) -> usize {
-         self.w
+        self.w
     }
 
     fn cpu_state_size(&self) -> usize {
-         self.w
+        self.w
     }
 
     fn initial_pc_addr(&self) -> usize {
-         0
+        0
     }
 
     fn initial_memory_contents<IC: InstructionConfig, PC: ProgramConfig<IC>>(
@@ -73,13 +68,13 @@ impl ArchitectureParamsTypeConfig for fooram_architecture_params {
         let m = memory_contents::new();
         /* fooram memory contents do not depend on program/input. */
         // //ffec::UNUSED(program, primary_input);
-         m
+        m
     }
 
     fn initial_cpu_state(&self) -> bit_vector {
         let state = vec![false; self.w];
         // state.resize(w, false);
-         state
+        state
     }
 
     fn print(&self) {

@@ -1,4 +1,3 @@
-
 // Declaration of interfaces for a random-access memory.
 
 use crate::relations::ram_computations::memory::memory_interface::{
@@ -8,7 +7,7 @@ use crate::relations::ram_computations::memory::memory_interface::{
 /**
  * A random-access memory maintains the memory's contents via a map (from addresses to values).
  */
-#[derive(Clone,Default)]
+#[derive(Clone, Default)]
 pub struct ra_memory {
     // //: public memory_interface
     contents: memory_contents,

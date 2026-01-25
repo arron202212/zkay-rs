@@ -41,7 +41,7 @@ use crate::gadgetlib1::gadgets::verifiers::r1cs_ppzksnark_verifier_gadget::{
 use crate::gadgetlib1::pb_variable::ONE;
 use crate::gadgetlib1::pb_variable::pb_linear_combination;
 use crate::gadgetlib1::pb_variable::{pb_variable, pb_variable_array};
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{

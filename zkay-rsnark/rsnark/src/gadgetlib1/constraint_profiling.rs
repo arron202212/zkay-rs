@@ -1,5 +1,4 @@
-
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use ffec::FieldTConfig;
 use ffec::common::profiling::print_indent;
 use rccell::RcCell;
@@ -9,7 +8,11 @@ pub struct constraint_profiling_entry {
     count: usize,
 }
 
-pub fn PROFILE_CONSTRAINTST<FieldT: FieldTConfig, PB: PBConfig,P:ProtoboardConfig<FieldT=FieldT,PB=PB>>(
+pub fn PROFILE_CONSTRAINTST<
+    FieldT: FieldTConfig,
+    PB: PBConfig,
+    P: ProtoboardConfig<FieldT = FieldT, PB = PB>,
+>(
     pb: &RcCell<P>,
     annotation: &str,
 ) {

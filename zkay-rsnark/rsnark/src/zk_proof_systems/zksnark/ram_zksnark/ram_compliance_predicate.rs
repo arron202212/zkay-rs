@@ -27,8 +27,6 @@
 
 use crate::common::data_structures::merkle_tree::HashTConfig;
 use crate::gadgetlib1::constraint_profiling::{PRINT_CONSTRAINT_PROFILING, PROFILE_CONSTRAINTST};
-use crate::relations::variable::linear_combination;
-use crate::relations::ram_computations::memory::memory_interface::memory_interface;
 use crate::gadgetlib1::gadgets::basic_gadgets::{
     bit_vector_copy_gadget, bit_vector_copy_gadgets, generate_boolean_r1cs_constraint,
     generate_r1cs_equals_const_constraint, multipacking_gadget, multipacking_gadgets,
@@ -47,32 +45,41 @@ use crate::gadgetlib1::gadgets::hashes::hash_io::{digest_variable, digest_variab
 use crate::gadgetlib1::gadgets::merkle_tree::merkle_authentication_path_variable::{
     merkle_authentication_path_variable, merkle_authentication_path_variables,
 };
-use ffec::PpConfig;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
-use crate::gadgetlib1::pb_variable::{ONE, pb_variable, pb_linear_combination_array,pb_linear_combination,pb_variable_array};
-use crate::gadgetlib1::protoboard::{protoboard,PBConfig,ProtoboardConfig};
+use crate::gadgetlib1::pb_variable::{
+    ONE, pb_linear_combination, pb_linear_combination_array, pb_variable, pb_variable_array,
+};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
+use crate::relations::ram_computations::memory::memory_interface::memory_interface;
+use crate::relations::variable::linear_combination;
+use ffec::PpConfig;
 
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{r1cs_variable_assignment,r1cs_constraint};
-use crate::relations::ram_computations::memory::delegated_ra_memory::{delegated_ra_memory,delegated_ra_memorys};
-use crate::relations::ram_computations::rams::ram_params::{ArchitectureParamsTypeConfig,CpuCheckConfig,
-    ram_architecture_params, ram_base_field, ram_boot_trace, ram_cpu_checker, ram_input_tape,
-    ram_params_type, ram_protoboard,
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_constraint, r1cs_variable_assignment,
+};
+use crate::relations::ram_computations::memory::delegated_ra_memory::{
+    delegated_ra_memory, delegated_ra_memorys,
+};
+use crate::relations::ram_computations::rams::ram_params::{
+    ArchitectureParamsTypeConfig, CpuCheckConfig, ram_architecture_params, ram_base_field,
+    ram_boot_trace, ram_cpu_checker, ram_input_tape, ram_params_type, ram_protoboard,
 };
 use crate::relations::variable::variable;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
-    r1cs_pcd_local_data, r1cs_pcd_message,MessageConfig,LocalDataConfig
+    LocalDataConfig, MessageConfig, r1cs_pcd_local_data, r1cs_pcd_message,
 };
 
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::{MessageVariableConfig,LocalDataVariableConfig,
-    compliance_predicate_handler, r1cs_pcd_local_data_variable, r1cs_pcd_local_data_variables,
-    r1cs_pcd_message_variable, r1cs_pcd_message_variables,
+use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::{
+    LocalDataVariableConfig, MessageVariableConfig, compliance_predicate_handler,
+    r1cs_pcd_local_data_variable, r1cs_pcd_local_data_variables, r1cs_pcd_message_variable,
+    r1cs_pcd_message_variables,
 };
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::{
     r1cs_sp_ppzkpcd_proving_key, r1cs_sp_ppzkpcd_verification_key,
 };
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{RamConfig,
-    ram_zksnark_PCD_pp, ram_zksnark_architecture_params,
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{
+    RamConfig, ram_zksnark_PCD_pp, ram_zksnark_architecture_params,
 };
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
@@ -592,7 +599,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
         let addr_size = ap.address_size();
         let value_size = ap.value_size();
         let digest_size = CRH_with_bit_out_gadgets::<FieldT<RamT>, RamT::PB>::get_digest_len();
-        let pbt=ram_protoboard::<RamT>::new_with_ap::<ram_architecture_params<RamT>>(ap.clone());
+        let pbt = ram_protoboard::<RamT>::new_with_ap::<ram_architecture_params<RamT>>(ap.clone());
         let pb = pbt.clone().into_p();
         let outgoing_message = RcCell::new(ram_pcd_message_variable::<RamT>::new(
             pb.clone(),
@@ -849,20 +856,23 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
             >::new(
                 pb.clone(), addr_size, "store_merkle_proof".to_owned()
             ));
-        let load_store_checker =
-            RcCell::new(memory_load_store_gadget::<FieldT<RamT>,RamT::PB, HashT<RamT>>::new(
-                pb.clone(),
-                addr_size,
-                ls_addr.clone(),
-                ls_prev_val_digest.borrow().clone(),
-                cur_root_digest.borrow().clone(),
-                load_merkle_proof.borrow().clone(),
-                ls_next_val_digest.borrow().clone(),
-                next_root_digest.borrow().clone(),
-                store_merkle_proof.borrow().clone(),
-                is_not_halt_case.clone().into(),
-                "load_store_checker".to_owned(),
-            ));
+        let load_store_checker = RcCell::new(memory_load_store_gadget::<
+            FieldT<RamT>,
+            RamT::PB,
+            HashT<RamT>,
+        >::new(
+            pb.clone(),
+            addr_size,
+            ls_addr.clone(),
+            ls_prev_val_digest.borrow().clone(),
+            cur_root_digest.borrow().clone(),
+            load_merkle_proof.borrow().clone(),
+            ls_next_val_digest.borrow().clone(),
+            next_root_digest.borrow().clone(),
+            store_merkle_proof.borrow().clone(),
+            is_not_halt_case.clone().into(),
+            "load_store_checker".to_owned(),
+        ));
         /*
           If do_halt = 1: (final case)
           that cur.has_accepted = 1
@@ -982,11 +992,11 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
             },
         )
     }
- pub fn get_final_case_msg(
+    pub fn get_final_case_msg(
         ap: &ram_architecture_params<RamT>,
         primary_input: &ram_boot_trace,
         time_bound: usize,
-    ) -> RcCell<r1cs_pcd_message<FieldT<RamT>,ram_pcd_message<RamT>>> {
+    ) -> RcCell<r1cs_pcd_message<FieldT<RamT>, ram_pcd_message<RamT>>> {
         enter_block(
             "Call to ram_compliance_predicate_handler::get_final_case_msg",
             false,
@@ -1036,7 +1046,10 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
 impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
     pub fn generate_r1cs_constraints(&self) {
         print_indent();
-        print!("* Message size: {}\n", self.t.next.borrow().t.all_vars.len());
+        print!(
+            "* Message size: {}\n",
+            self.t.next.borrow().t.all_vars.len()
+        );
         print_indent();
         print!("* Address size: {}\n", self.t.addr_size);
         print_indent();
@@ -1104,17 +1117,20 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         PROFILE_CONSTRAINTST(&self.pb, "copy root_initial");
         {
             self.t
-                .copy_root_initial.borrow()
+                .copy_root_initial
+                .borrow()
                 .generate_r1cs_constraints(false, false);
         }
 
         PROFILE_CONSTRAINTST(&self.pb, "copy pc_addr_initial and cpu_state_initial");
         {
             self.t
-                .copy_pc_addr_initial.borrow()
+                .copy_pc_addr_initial
+                .borrow()
                 .generate_r1cs_constraints(false, false);
             self.t
-                .copy_cpu_state_initial.borrow()
+                .copy_cpu_state_initial
+                .borrow()
                 .generate_r1cs_constraints(false, false);
         }
 
@@ -1123,7 +1139,10 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
           that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
           that cur.root = cur.root_initial
         */
-        self.t.pack_cur_timestamp.borrow().generate_r1cs_constraints(false);
+        self.t
+            .pack_cur_timestamp
+            .borrow()
+            .generate_r1cs_constraints(false);
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t.is_base_case.clone().into(),
@@ -1134,10 +1153,14 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         );
         PROFILE_CONSTRAINTST(&self.pb, "copy cur_cpu_state and prev_pc_addr");
         {
-            self.t.initialize_cur_cpu_state
-                .borrow().generate_r1cs_constraints(false, false);
-            self.t.initialize_prev_pc_addr
-                .borrow().generate_r1cs_constraints(false, false);
+            self.t
+                .initialize_cur_cpu_state
+                .borrow()
+                .generate_r1cs_constraints(false, false);
+            self.t
+                .initialize_prev_pc_addr
+                .borrow()
+                .generate_r1cs_constraints(false, false);
         }
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
@@ -1149,7 +1172,10 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         );
         PROFILE_CONSTRAINTST(&self.pb, "initialize root");
         {
-            self.t.initialize_root.borrow().generate_r1cs_constraints(false, false);
+            self.t
+                .initialize_root
+                .borrow()
+                .generate_r1cs_constraints(false, false);
         }
 
         /*
@@ -1163,23 +1189,36 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 FieldT::<RamT>::from(1).into(),
-                linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(FieldT::<RamT>::from(1))
-                    - self.t.do_halt.clone(),
+                linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(
+                    FieldT::<RamT>::from(1),
+                ) - self.t.do_halt.clone(),
                 self.t.is_not_halt_case.clone().into(),
             ),
             "is_not_halt_case".to_owned(),
         );
         PROFILE_CONSTRAINTST(&self.pb, "instruction fetch");
         {
-            self.t.instruction_fetch_merkle_proof
-                .borrow().generate_r1cs_constraints();
-            self.t.instruction_fetch.borrow().generate_r1cs_constraints();
+            self.t
+                .instruction_fetch_merkle_proof
+                .borrow()
+                .generate_r1cs_constraints();
+            self.t
+                .instruction_fetch
+                .borrow()
+                .generate_r1cs_constraints();
         }
-        self.t.pack_next_timestamp.borrow().generate_r1cs_constraints(false);
+        self.t
+            .pack_next_timestamp
+            .borrow()
+            .generate_r1cs_constraints(false);
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t.is_not_halt_case.clone().into(),
-                (self.t.packed_cur_timestamp.clone() + linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(FieldT::<RamT>::from(1))) - self.t.packed_next_timestamp.clone(),
+                (self.t.packed_cur_timestamp.clone()
+                    + linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(
+                        FieldT::<RamT>::from(1),
+                    ))
+                    - self.t.packed_next_timestamp.clone(),
                 FieldT::<RamT>::from(0).into(),
             ),
             "increment_timestamp".to_owned(),
@@ -1191,16 +1230,26 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         PROFILE_CONSTRAINTST(&self.pb, "load/store checker");
         {
             // See comment in merkle_tree_check_update_gadget::generate_r1cs_witness() for why we don't need to call store_merkle_proof.generate_r1cs_constraints()
-            self.t.load_merkle_proof.borrow().generate_r1cs_constraints();
-            self.t.load_store_checker.borrow().generate_r1cs_constraints();
+            self.t
+                .load_merkle_proof
+                .borrow()
+                .generate_r1cs_constraints();
+            self.t
+                .load_store_checker
+                .borrow()
+                .generate_r1cs_constraints();
         }
 
         PROFILE_CONSTRAINTST(&self.pb, "copy temp_next_pc_addr and temp_next_cpu_state");
         {
-            self.t.copy_temp_next_pc_addr
-                .borrow().generate_r1cs_constraints(true, false);
-            self.t.copy_temp_next_cpu_state
-                .borrow().generate_r1cs_constraints(true, false);
+            self.t
+                .copy_temp_next_pc_addr
+                .borrow()
+                .generate_r1cs_constraints(true, false);
+            self.t
+                .copy_temp_next_cpu_state
+                .borrow()
+                .generate_r1cs_constraints(true, false);
         }
 
         /*
@@ -1212,8 +1261,9 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t.do_halt.clone().into(),
-                linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(FieldT::<RamT>::from(1))
-                    - self.t.cur.borrow().t.t.has_accepted.clone(),
+                linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(
+                    FieldT::<RamT>::from(1),
+                ) - self.t.cur.borrow().t.t.has_accepted.clone(),
                 FieldT::<RamT>::from(0).into(),
             ),
             "final_case_must_be_accepting".to_owned(),
@@ -1221,21 +1271,31 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
 
         PROFILE_CONSTRAINTST(&self.pb, "clear next root");
         {
-            self.t.clear_next_root.borrow().generate_r1cs_constraints(false, false);
+            self.t
+                .clear_next_root
+                .borrow()
+                .generate_r1cs_constraints(false, false);
         }
 
         PROFILE_CONSTRAINTST(&self.pb, "clear next_pc_addr and next_cpu_state");
         {
-            self.t.clear_next_pc_addr
-                .borrow().generate_r1cs_constraints(false, false);
-            self.t.clear_next_cpu_state
-                .borrow().generate_r1cs_constraints(false, false);
+            self.t
+                .clear_next_pc_addr
+                .borrow()
+                .generate_r1cs_constraints(false, false);
+            self.t
+                .clear_next_cpu_state
+                .borrow()
+                .generate_r1cs_constraints(false, false);
         }
 
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t.do_halt.clone().into(),
-                self.t.packed_cur_timestamp.clone() - linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(self.t.packed_next_timestamp.clone()),
+                self.t.packed_cur_timestamp.clone()
+                    - linear_combination::<FieldT<RamT>, pb_variable, pb_linear_combination>::from(
+                        self.t.packed_next_timestamp.clone(),
+                    ),
                 FieldT::<RamT>::from(0).into(),
             ),
             "equal_ts_on_halt".to_owned(),
@@ -1258,7 +1318,14 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         local_data_value: &RcCell<r1cs_pcd_local_data<FieldT<RamT>, RamT::LD>>,
     ) {
         let ram_local_data_value = local_data_value.clone();
-        assert!(ram_local_data_value.borrow().t.mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>().num_addresses == 1usize << self.t.addr_size); // check value_size and num_addresses too
+        assert!(
+            ram_local_data_value
+                .borrow()
+                .t
+                .mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
+                .num_addresses
+                == 1usize << self.t.addr_size
+        ); // check value_size and num_addresses too
 
         self.generate_r1cs_witness_base(incoming_message_values, local_data_value);
         self.t.cur.borrow().generate_r1cs_witness_from_packed();
@@ -1281,38 +1348,67 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         */
         self.t.copy_root_initial.borrow().generate_r1cs_witness();
         for i in 0..self.t.next.borrow().t.t.root_initial.len() {
-            self.pb.borrow().val(&self.t.cur.borrow().t.t.root_initial[i]).print();
-            self.pb.borrow().val(&self.t.next.borrow().t.t.root_initial[i]).print();
+            self.pb
+                .borrow()
+                .val(&self.t.cur.borrow().t.t.root_initial[i])
+                .print();
+            self.pb
+                .borrow()
+                .val(&self.t.next.borrow().t.t.root_initial[i])
+                .print();
             assert!(
-                self.pb.borrow().val(&self.t.cur.borrow().t.t.root_initial[i])
-                    == self.pb.borrow().val(&self.t.next.borrow().t.t.root_initial[i])
+                self.pb
+                    .borrow()
+                    .val(&self.t.cur.borrow().t.t.root_initial[i])
+                    == self
+                        .pb
+                        .borrow()
+                        .val(&self.t.next.borrow().t.t.root_initial[i])
             );
         }
 
         self.t.copy_pc_addr_initial.borrow().generate_r1cs_witness();
-        self.t.copy_cpu_state_initial.borrow().generate_r1cs_witness();
+        self.t
+            .copy_cpu_state_initial
+            .borrow()
+            .generate_r1cs_witness();
 
         /*
           If is_base_case = 1: (base case)
           that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
           that cur.root = cur.root_initial
         */
-        let base_case = (0==incoming_message_values[0].borrow().types);
+        let base_case = (0 == incoming_message_values[0].borrow().types);
         *self.pb.borrow_mut().val_ref(&self.t.is_base_case) = if base_case {
             FieldT::<RamT>::one()
         } else {
             FieldT::<RamT>::zero()
         };
 
-        self.t.initialize_cur_cpu_state.borrow().generate_r1cs_witness();
-        self.t.initialize_prev_pc_addr.borrow().generate_r1cs_witness();
+        self.t
+            .initialize_cur_cpu_state
+            .borrow()
+            .generate_r1cs_witness();
+        self.t
+            .initialize_prev_pc_addr
+            .borrow()
+            .generate_r1cs_witness();
 
         if base_case {
             *self.pb.borrow_mut().val_ref(&self.t.packed_cur_timestamp) = FieldT::<RamT>::zero();
-            *self.pb.borrow_mut().val_ref(&self.t.cur.borrow().t.t.has_accepted) = FieldT::<RamT>::zero();
-            self.t.pack_cur_timestamp.borrow().generate_r1cs_witness_from_packed();
+            *self
+                .pb
+                .borrow_mut()
+                .val_ref(&self.t.cur.borrow().t.t.has_accepted) = FieldT::<RamT>::zero();
+            self.t
+                .pack_cur_timestamp
+                .borrow()
+                .generate_r1cs_witness_from_packed();
         } else {
-            self.t.pack_cur_timestamp.borrow().generate_r1cs_witness_from_bits();
+            self.t
+                .pack_cur_timestamp
+                .borrow()
+                .generate_r1cs_witness_from_bits();
         }
 
         self.t.initialize_root.borrow().generate_r1cs_witness();
@@ -1324,65 +1420,109 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
           that CPU accepted on (cur, temp)
           that load-then-store was correctly handled
         */
-        *self.pb.borrow_mut().val_ref(&self.t.do_halt) = if ram_local_data_value.borrow().t.is_halt_case() {
-            FieldT::<RamT>::one()
-        } else {
-            FieldT::<RamT>::zero()
-        };
+        *self.pb.borrow_mut().val_ref(&self.t.do_halt) =
+            if ram_local_data_value.borrow().t.is_halt_case() {
+                FieldT::<RamT>::one()
+            } else {
+                FieldT::<RamT>::zero()
+            };
         *self.pb.borrow_mut().val_ref(&self.t.is_not_halt_case) =
             FieldT::<RamT>::one() - self.pb.borrow().val(&self.t.do_halt);
 
         // that instruction fetch was correctly executed
-        let int_pc_addr =
-            convert_bit_vector_to_field_element::<FieldT<RamT>>(&self.t.cur.borrow().t.t.pc_addr.get_bits(&self.pb.borrow().clone().into_p()))
-                .as_ulong();
-        let int_pc_val = ram_local_data_value.borrow().t.mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>().get_value(int_pc_addr);
+        let int_pc_addr = convert_bit_vector_to_field_element::<FieldT<RamT>>(
+            &self
+                .t
+                .cur
+                .borrow()
+                .t
+                .t
+                .pc_addr
+                .get_bits(&self.pb.borrow().clone().into_p()),
+        )
+        .as_ulong();
+        let int_pc_val = ram_local_data_value
+            .borrow()
+            .t
+            .mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
+            .get_value(int_pc_addr);
         // #ifdef DEBUG
         print!(
             "pc_addr (in units) = {}, pc_val = {} (0x{:08x})\n",
             int_pc_addr, int_pc_val, int_pc_val
         );
         //#endif
-        let mut pc_val_bv = int_list_to_bits(&[ int_pc_val] , self.t.value_size);
+        let mut pc_val_bv = int_list_to_bits(&[int_pc_val], self.t.value_size);
         pc_val_bv.reverse();
 
-        self.t.prev_pc_val.fill_with_bits(&self.pb.borrow().clone().into_p(), &pc_val_bv);
-        let pc_path = ram_local_data_value.borrow().t.mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>().get_path(int_pc_addr);
-        self.t.instruction_fetch_merkle_proof
-            .borrow().generate_r1cs_witness(int_pc_addr, pc_path);
+        self.t
+            .prev_pc_val
+            .fill_with_bits(&self.pb.borrow().clone().into_p(), &pc_val_bv);
+        let pc_path = ram_local_data_value
+            .borrow()
+            .t
+            .mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
+            .get_path(int_pc_addr);
+        self.t
+            .instruction_fetch_merkle_proof
+            .borrow()
+            .generate_r1cs_witness(int_pc_addr, pc_path);
         self.t.instruction_fetch.borrow().generate_r1cs_witness();
 
         // next.timestamp = cur.timestamp + 1 (or cur.timestamp if do_halt)
         *self.pb.borrow_mut().val_ref(&self.t.packed_next_timestamp) =
             self.pb.borrow().val(&self.t.packed_cur_timestamp)
                 + self.pb.borrow().val(&self.t.is_not_halt_case);
-        self.t.pack_next_timestamp.borrow().generate_r1cs_witness_from_packed();
+        self.t
+            .pack_next_timestamp
+            .borrow()
+            .generate_r1cs_witness_from_packed();
 
         // that CPU accepted on (cur, temp)
         // Step 1: Get address and old witnesses for delegated memory.
         self.t.cpu_checker.borrow().generate_r1cs_witness_address();
-        let int_ls_addr = self.t.ls_addr.get_field_element_from_bits(&self.pb.borrow().clone().into_p()).as_ulong();
-        let int_ls_prev_val = ram_local_data_value.borrow().t.mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>().get_value(int_ls_addr) as usize;
-        let prev_path = ram_local_data_value.borrow().t.mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>().get_path(int_ls_addr);
-        self.t.ls_prev_val
+        let int_ls_addr = self
+            .t
+            .ls_addr
+            .get_field_element_from_bits(&self.pb.borrow().clone().into_p())
+            .as_ulong();
+        let int_ls_prev_val = ram_local_data_value
+            .borrow()
+            .t
+            .mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
+            .get_value(int_ls_addr) as usize;
+        let prev_path = ram_local_data_value
+            .borrow()
+            .t
+            .mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
+            .get_path(int_ls_addr);
+        self.t
+            .ls_prev_val
             .fill_with_bits_of_ulong(&self.pb.borrow().clone().into_p(), int_ls_prev_val as u64);
         assert!(
-            self.t.ls_prev_val.get_field_element_from_bits(&self.pb.borrow().clone().into_p())
-                == FieldT::<RamT>::from(int_ls_prev_val)//, true
+            self.t
+                .ls_prev_val
+                .get_field_element_from_bits(&self.pb.borrow().clone().into_p())
+                == FieldT::<RamT>::from(int_ls_prev_val) //, true
         );
         // Step 2: Execute CPU checker and delegated memory
-        self.t.cpu_checker
-            .borrow().generate_r1cs_witness_other(&ram_local_data_value.borrow().t.aux());
+        self.t
+            .cpu_checker
+            .borrow()
+            .generate_r1cs_witness_other(&ram_local_data_value.borrow().t.aux());
         // #ifdef DEBUG
         print!("Debugging information from transition function:\n");
         self.t.cpu_checker.borrow().dump();
         //#endif
         let int_ls_next_val = self
-            .t.ls_next_val
+            .t
+            .ls_next_val
             .get_field_element_from_bits(&self.pb.borrow().clone().into_p())
             .as_ulong();
         ram_local_data_value
-            .borrow().t.mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
+            .borrow()
+            .t
+            .mem::<delegated_ra_memorys<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>>()
             .set_value(int_ls_addr, int_ls_next_val);
         // #ifdef DEBUG
         print!(
@@ -1391,8 +1531,10 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         );
         //#endif
         // Step 4: Use both to satisfy load_store_checker
-        self.t.load_merkle_proof
-            .borrow().generate_r1cs_witness(int_ls_addr, prev_path);
+        self.t
+            .load_merkle_proof
+            .borrow()
+            .generate_r1cs_witness(int_ls_addr, prev_path);
         self.t.load_store_checker.borrow().generate_r1cs_witness();
 
         /*
@@ -1407,8 +1549,14 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         // auxiliary variables are filled in correctly according to values
         // actually set by the other witness map.
         if self.pb.borrow().val(&self.t.do_halt).is_zero() {
-            self.t.copy_temp_next_pc_addr.borrow().generate_r1cs_witness();
-            self.t.copy_temp_next_cpu_state.borrow().generate_r1cs_witness();
+            self.t
+                .copy_temp_next_pc_addr
+                .borrow()
+                .generate_r1cs_witness();
+            self.t
+                .copy_temp_next_cpu_state
+                .borrow()
+                .generate_r1cs_witness();
 
             self.t.clear_next_root.borrow().generate_r1cs_witness();
             self.t.clear_next_pc_addr.borrow().generate_r1cs_witness();
@@ -1418,13 +1566,22 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             self.t.clear_next_pc_addr.borrow().generate_r1cs_witness();
             self.t.clear_next_cpu_state.borrow().generate_r1cs_witness();
 
-            self.t.copy_temp_next_pc_addr.borrow().generate_r1cs_witness();
-            self.t.copy_temp_next_cpu_state.borrow().generate_r1cs_witness();
+            self.t
+                .copy_temp_next_pc_addr
+                .borrow()
+                .generate_r1cs_witness();
+            self.t
+                .copy_temp_next_cpu_state
+                .borrow()
+                .generate_r1cs_witness();
         }
 
         // #ifdef DEBUG
         print!("next.has_accepted: ");
-        self.pb.borrow().val(&self.t.next.borrow().t.t.has_accepted).print();
+        self.pb
+            .borrow()
+            .val(&self.t.next.borrow().t.t.has_accepted)
+            .print();
         //#endif
 
         self.t.next.borrow().generate_r1cs_witness_from_bits();
@@ -1478,6 +1635,4 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         );
         result
     }
-
-   
 }

@@ -1,14 +1,15 @@
 // Declaration of public-parameter selector for the RAM zkSNARK.
 
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::protoboard::protoboard;
 use crate::relations::ram_computations::rams::ram_params::ram_params_type;
 use crate::relations::ram_computations::rams::ram_params::{
     ram_architecture_params, ram_boot_trace, ram_input_tape,
 };
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::{ram_pcd_local_data,ram_pcd_message};
- use crate::gadgetlib1::protoboard::protoboard;
 use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPptConfig;
-
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::{
+    ram_pcd_local_data, ram_pcd_message,
+};
 
 /**
  * The interfaces of the RAM zkSNARK are templatized via the parameter
@@ -48,9 +49,20 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPpt
 /*
  * Below are various template aliases (used for convenience).
  */
-pub trait RamConfig: ppTConfig<FieldT=<Self::machine_pp as ram_params_type>::base_field_type> {
-    type PCD_pp: PcdPptConfig<curve_A_pp=Self::machine_pp,FieldT=<Self as ppTConfig>::FieldT,LD=ram_pcd_local_data<Self::machine_pp>,M=ram_pcd_message<Self::machine_pp>>;
-    type machine_pp: ram_params_type<CPH=<Self::PCD_pp as PcdPptConfig>::curve_A_pp,M=ram_pcd_message<Self::machine_pp>,LD=ram_pcd_local_data<Self::machine_pp>>;
+pub trait RamConfig:
+    ppTConfig<FieldT = <Self::machine_pp as ram_params_type>::base_field_type>
+{
+    type PCD_pp: PcdPptConfig<
+            curve_A_pp = Self::machine_pp,
+            FieldT = <Self as ppTConfig>::FieldT,
+            LD = ram_pcd_local_data<Self::machine_pp>,
+            M = ram_pcd_message<Self::machine_pp>,
+        >;
+    type machine_pp: ram_params_type<
+            CPH = <Self::PCD_pp as PcdPptConfig>::curve_A_pp,
+            M = ram_pcd_message<Self::machine_pp>,
+            LD = ram_pcd_local_data<Self::machine_pp>,
+        >;
 }
 pub type ram_zksnark_PCD_pp<RamT> = <RamT as RamConfig>::PCD_pp;
 

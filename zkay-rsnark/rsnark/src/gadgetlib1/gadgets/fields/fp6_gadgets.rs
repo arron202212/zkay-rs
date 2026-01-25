@@ -14,7 +14,7 @@ use crate::gadgetlib1::gadgets::fields::fp3_gadgets::{
 use crate::gadgetlib1::pb_variable::{
     pb_linear_combination, pb_linear_combination_array, pb_variable,
 };
-use crate::gadgetlib1::protoboard::{PBConfig,ProtoboardConfig, protoboard};
+use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint;
 use crate::relations::variable::{linear_combination, variable};

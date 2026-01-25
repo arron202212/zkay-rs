@@ -92,7 +92,7 @@ pub type bacs_auxiliary_input<FieldT> = bacs_variable_assignment<FieldT>;
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct bacs_circuit<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
