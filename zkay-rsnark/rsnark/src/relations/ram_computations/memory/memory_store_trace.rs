@@ -1,18 +1,8 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for a memory store trace.
 
-Declaration of interfaces for a memory store trace.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef MEMORY_STORE_TRACE_HPP_
-// #define MEMORY_STORE_TRACE_HPP_
 use super::memory_interface::{memory_base, memory_contents, memory_interface};
-
 use std::collections::HashMap;
+use std::ops::{Index, IndexMut};
 /**
  * A pair consisting of an address and a value.
  * It represents a memory store.
@@ -24,32 +14,14 @@ pub type address_and_value = (usize, usize);
  */
 #[derive(Default)]
 pub struct memory_store_trace {
-    //
     entries: HashMap<usize, address_and_value>,
-    //
     //     memory_store_trace();
     //     address_and_value get_trace_entry(timestamp:usize,) const;
     //     HashMap<usize, address_and_value> get_all_trace_entries() const;
     //     pub fn  set_trace_entry(timestamp:usize, av:&address_and_value);
-
     //     memory_contents as_memory_contents() const;
 }
 
-//#endif // MEMORY_STORE_TRACE_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a memory store trace.
-
-See memory_store_trace.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// use crate::relations::ram_computations::memory::memory_store_trace;
-use std::ops::{Index, IndexMut};
 impl Index<usize> for memory_store_trace {
     type Output = address_and_value;
 

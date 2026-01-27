@@ -297,6 +297,8 @@ pub struct comparison_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub less: variable<FieldT, pb_variable>,
     pub less_or_eq: variable<FieldT, pb_variable>,
 }
+
+pub type comparison_gadgets<FieldT, PB> = gadget<FieldT, PB, comparison_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> comparison_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,

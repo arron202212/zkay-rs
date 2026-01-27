@@ -161,6 +161,16 @@ impl<FieldT: FieldTConfig, PB: PBConfig> IndexMut<usize> for pb_variable_array<F
     }
 }
 
+impl<FieldT: FieldTConfig, PB: PBConfig> From<Vec<variable<FieldT, pb_variable>>>
+    for pb_variable_array<FieldT, PB>
+{
+    fn from(contents: Vec<variable<FieldT, pb_variable>>) -> Self {
+        Self {
+            contents,
+            _pb: PhantomData,
+        }
+    }
+}
 impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
     pub fn len(&self) -> usize {
         self.contents.len()
@@ -267,6 +277,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
         }
 
         result
+    }
+
+    pub fn extend(&mut self, rhs: &Self) {
+        self.contents.extend(rhs.contents.clone());
     }
 }
 

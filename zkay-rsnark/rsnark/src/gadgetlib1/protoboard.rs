@@ -43,10 +43,18 @@ pub trait ProtoboardConfig: Default + Clone + Sized {
         annotation: String,
     );
     fn num_constraints(&self) -> usize;
+    fn set_input_sizes(&mut self, primary_input_size: usize);
+
+    fn primary_input(&self) -> r1cs_primary_input<Self::FieldT>;
+
+    fn auxiliary_input(&self) -> r1cs_auxiliary_input<Self::FieldT>;
     fn into_p(self) -> RcCell<protoboard<Self::FieldT, Self::PB>> {
         RcCell::new(Default::default())
     }
     fn new_with_ap<APT: ArchitectureParamsTypeConfig>(ap: APT) -> Self;
+    fn ap<APT: ArchitectureParamsTypeConfig>(&self) -> APT {
+        Default::default()
+    }
 }
 
 #[derive(Clone)]
@@ -208,25 +216,23 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
     pub fn num_inputs(&self) -> usize {
         self.constraint_system.num_inputs()
     }
-
-    pub fn set_input_sizes(&mut self, primary_input_size: usize) {
+}
+impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, T> {
+    type FieldT = FieldT;
+    type PB = T;
+    fn set_input_sizes(&mut self, primary_input_size: usize) {
         assert!(self.constraint_system.primary_input_size <= self.num_variables());
         self.constraint_system.primary_input_size = primary_input_size;
         self.constraint_system.auxiliary_input_size = self.num_variables() - primary_input_size;
     }
 
-    pub fn primary_input(&self) -> r1cs_primary_input<FieldT> {
+    fn primary_input(&self) -> r1cs_primary_input<FieldT> {
         self.values[..self.num_inputs()].to_vec()
     }
 
-    pub fn auxiliary_input(&self) -> r1cs_auxiliary_input<FieldT> {
+    fn auxiliary_input(&self) -> r1cs_auxiliary_input<FieldT> {
         self.values[self.num_inputs()..].to_vec()
     }
-}
-impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, T> {
-    type FieldT = FieldT;
-    type PB = T;
-
     fn lc_val_ref(
         &mut self,
         lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,

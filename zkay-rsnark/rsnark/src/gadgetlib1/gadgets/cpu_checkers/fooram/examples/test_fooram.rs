@@ -15,7 +15,6 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;
 
 
 pub trait  default_fooram_zksnark_pp {
-// 
     type PCD_pp=default_r1cs_ppzkpcd_pp;
     type FieldT= PCD_pp::scalar_field_A;
     type machine_pp=ram_fooram<FieldT>;
@@ -24,7 +23,7 @@ pub trait  default_fooram_zksnark_pp {
 }
 
 pub trait  default_fooram_ppzksnark_pp {
-// 
+
     type snark_pp=default_r1cs_ppzksnark_pp;
     type FieldT=ffec::Fr<default_r1cs_ppzksnark_pp>;
     type machine_pp=ram_fooram<FieldT>;

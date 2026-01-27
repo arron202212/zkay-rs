@@ -154,6 +154,8 @@ pub trait ram_params_type: ppTConfig<FieldT = Self::base_field_type> {
     type gadget_base_type;
     type cpu_checker_type: CpuCheckConfig<FieldT = Self::base_field_type, PB = <Self as ppTConfig>::PB>;
     type architecture_params_type: ArchitectureParamsTypeConfig;
+    type MLV: Default + Clone;
+    type DV: Default + Clone;
 }
 pub type ram_base_field<RamT> = <RamT as ram_params_type>::base_field_type;
 
