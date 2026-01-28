@@ -25,12 +25,23 @@
 // use libsnark/zk_proof_systems/ppzksnark/tbcs_ppzksnark/tbcs_ppzksnark_params;
 // use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark;
 
- use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
-use crate::zk_proof_systems::ppzksnark::tbcs_ppzksnark::tbcs_ppzksnark_params::{tbcs_ppzksnark_auxiliary_input,tbcs_ppzksnark_circuit,tbcs_ppzksnark_primary_input};
-use crate::reductions::tbcs_to_uscs::tbcs_to_uscs::{tbcs_to_uscs_instance_map,tbcs_to_uscs_witness_map};
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::reductions::tbcs_to_uscs::tbcs_to_uscs::{
+    tbcs_to_uscs_instance_map, tbcs_to_uscs_witness_map,
+};
+use crate::zk_proof_systems::ppzksnark::tbcs_ppzksnark::tbcs_ppzksnark_params::{
+    tbcs_ppzksnark_auxiliary_input, tbcs_ppzksnark_circuit, tbcs_ppzksnark_primary_input,
+};
+use crate::zk_proof_systems::ppzksnark::uscs_ppzksnark::uscs_ppzksnark::{
+    uscs_ppzksnark_generator, uscs_ppzksnark_online_verifier_strong_IC,
+    uscs_ppzksnark_online_verifier_weak_IC, uscs_ppzksnark_processed_verification_key,
+    uscs_ppzksnark_proof, uscs_ppzksnark_prover, uscs_ppzksnark_proving_key,
+    uscs_ppzksnark_verification_key, uscs_ppzksnark_verifier_process_vk,
+};
+use ff_curves::Fr;
+use ffec::common::profiling::{enter_block, leave_block};
 use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
- use ff_curves::Fr;
-use ffec::common::profiling::{enter_block,leave_block};
 
 /******************************** Proving key ********************************/
 
@@ -43,7 +54,7 @@ use ffec::common::profiling::{enter_block,leave_block};
 /**
  * A proving key for the TBCS ppzkSNARK.
  */
-#[derive(Default,Clone)]
+#[derive(Default, Clone)]
 pub struct tbcs_ppzksnark_proving_key<ppT: ppTConfig> {
     // type FieldT=Fr<ppT>;
     circuit: tbcs_ppzksnark_circuit,
@@ -118,7 +129,7 @@ pub type tbcs_ppzksnark_processed_verification_key<ppT> =
 /**
  * A key pair for the TBCS ppzkSNARK, which consists of a proving key and a verification key.
  */
-#[derive(Default,Clone)]
+#[derive(Default, Clone)]
 pub struct tbcs_ppzksnark_keypair<ppT: ppTConfig> {
     pk: tbcs_ppzksnark_proving_key<ppT>,
     vk: tbcs_ppzksnark_verification_key<ppT>,
@@ -262,13 +273,14 @@ pub fn tbcs_ppzksnark_generator<ppT: ppTConfig>(
     circuit: &tbcs_ppzksnark_circuit,
 ) -> tbcs_ppzksnark_keypair<ppT> {
     enter_block("Call to tbcs_ppzksnark_generator", false);
-    let uscs_cs = tbcs_to_uscs_instance_map::<FieldT<ppT>>(circuit);
-    let uscs_keypair = uscs_ppzksnark_generator::<ppT>(uscs_cs);
+    let uscs_cs =
+        tbcs_to_uscs_instance_map::<FieldT<ppT>, pb_variable, pb_linear_combination>(circuit);
+    let uscs_keypair = uscs_ppzksnark_generator::<ppT>(&uscs_cs);
     leave_block("Call to tbcs_ppzksnark_generator", false);
 
     tbcs_ppzksnark_keypair::<ppT>::new(
-        tbcs_ppzksnark_proving_key::<ppT>(circuit, uscs_keypair.pk),
-        uscs_keypair.vk,
+        tbcs_ppzksnark_proving_key::<ppT>::new(circuit.clone(), uscs_keypair.pk.clone()),
+        uscs_keypair.vk.clone(),
     )
 }
 
@@ -281,10 +293,10 @@ pub fn tbcs_ppzksnark_prover<ppT: ppTConfig>(
 
     enter_block("Call to tbcs_ppzksnark_prover", false);
     let uscs_va =
-        tbcs_to_uscs_witness_map::<FieldT<ppT>>(pk.circuit, primary_input, auxiliary_input);
+        tbcs_to_uscs_witness_map::<FieldT<ppT>>(&pk.circuit, primary_input, auxiliary_input);
     let uscs_pi = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
-    let uscs_ai = &uscs_va[primary_input.len()..]; // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
-    let uscs_proof = uscs_ppzksnark_prover::<ppT>(pk.uscs_pk, uscs_pi, uscs_ai);
+    let uscs_ai = uscs_va[primary_input.len()..].to_vec(); // TODO: faster to just change bacs_to_r1cs_witness_map into two :(
+    let uscs_proof = uscs_ppzksnark_prover::<ppT>(&pk.uscs_pk, &uscs_pi, &uscs_ai);
     leave_block("Call to tbcs_ppzksnark_prover", false);
 
     uscs_proof
@@ -309,7 +321,7 @@ pub fn tbcs_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     enter_block("Call to tbcs_ppzksnark_verifier_weak_IC", false);
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
     let pvk = tbcs_ppzksnark_verifier_process_vk::<ppT>(vk);
-    let bit = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(pvk, uscs_input, proof);
+    let bit = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &uscs_input, proof);
     leave_block("Call to tbcs_ppzksnark_verifier_weak_IC", false);
 
     bit
@@ -324,7 +336,7 @@ pub fn tbcs_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     enter_block("Call to tbcs_ppzksnark_verifier_strong_IC", false);
     let pvk = tbcs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
-    let bit = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(pvk, uscs_input, proof);
+    let bit = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &uscs_input, proof);
     leave_block("Call to tbcs_ppzksnark_verifier_strong_IC", false);
 
     bit
@@ -338,7 +350,7 @@ pub fn tbcs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     // type FieldT=Fr<ppT>;
     enter_block("Call to tbcs_ppzksnark_online_verifier_weak_IC", false);
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
-    let bit = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(pvk, uscs_input, proof);
+    let bit = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &uscs_input, proof);
     leave_block("Call to tbcs_ppzksnark_online_verifier_weak_IC", false);
 
     bit
@@ -352,7 +364,7 @@ pub fn tbcs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     // type FieldT=Fr<ppT>;
     enter_block("Call to tbcs_ppzksnark_online_verifier_strong_IC", false);
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
-    let bit = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(pvk, uscs_input, proof);
+    let bit = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &uscs_input, proof);
     leave_block("Call to tbcs_ppzksnark_online_verifier_strong_IC", false);
 
     bit

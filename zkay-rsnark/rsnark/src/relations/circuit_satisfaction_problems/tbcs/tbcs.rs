@@ -127,7 +127,7 @@ pub type tbcs_auxiliary_input = tbcs_variable_assignment;
  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
  * Thus, the 0-th variable is not included in num_variables.
  */
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct tbcs_circuit {
     pub primary_input_size: usize,
     pub auxiliary_input_size: usize,

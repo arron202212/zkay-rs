@@ -70,12 +70,12 @@ use std::ops::Mul;
  */
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_proving_key<ppT: ppTConfig> {
-    V_g1_query: G1_vector<ppT>,
-    alpha_V_g1_query: G1_vector<ppT>,
-    H_g1_query: G1_vector<ppT>,
-    V_g2_query: G2_vector<ppT>,
+    pub V_g1_query: G1_vector<ppT>,
+    pub alpha_V_g1_query: G1_vector<ppT>,
+    pub H_g1_query: G1_vector<ppT>,
+    pub V_g2_query: G2_vector<ppT>,
 
-    constraint_system: uscs_ppzksnark_constraint_system<ppT>,
+    pub constraint_system: uscs_ppzksnark_constraint_system<ppT>,
 }
 impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
     // uscs_ppzksnark_proving_key() {};
@@ -150,11 +150,11 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
 
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_verification_key<ppT: ppTConfig> {
-    tilde_g2: G2<ppT>,
-    alpha_tilde_g2: G2<ppT>,
-    Z_g2: G2<ppT>,
+    pub tilde_g2: G2<ppT>,
+    pub alpha_tilde_g2: G2<ppT>,
+    pub Z_g2: G2<ppT>,
 
-    encoded_IC_query: accumulation_vector<G1<ppT>>,
+    pub encoded_IC_query: accumulation_vector<G1<ppT>>,
 }
 impl<ppT: ppTConfig> uscs_ppzksnark_verification_key<ppT> {
     // uscs_ppzksnark_verification_key() = default;
@@ -233,14 +233,14 @@ impl<ppT: ppTConfig> uscs_ppzksnark_verification_key<ppT> {
  */
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_processed_verification_key<ppT: ppTConfig> {
-    pp_G1_one_precomp: G1_precomp<ppT>,
-    pp_G2_one_precomp: G2_precomp<ppT>,
-    vk_tilde_g2_precomp: G2_precomp<ppT>,
-    vk_alpha_tilde_g2_precomp: G2_precomp<ppT>,
-    vk_Z_g2_precomp: G2_precomp<ppT>,
-    pairing_of_g1_and_g2: GT<ppT>,
+    pub pp_G1_one_precomp: G1_precomp<ppT>,
+    pub pp_G2_one_precomp: G2_precomp<ppT>,
+    pub vk_tilde_g2_precomp: G2_precomp<ppT>,
+    pub vk_alpha_tilde_g2_precomp: G2_precomp<ppT>,
+    pub vk_Z_g2_precomp: G2_precomp<ppT>,
+    pub pairing_of_g1_and_g2: GT<ppT>,
 
-    encoded_IC_query: accumulation_vector<G1<ppT>>,
+    pub encoded_IC_query: accumulation_vector<G1<ppT>>,
     // bool operator==(other:&uscs_ppzksnark_processed_verification_key) const;
     // friend std::ostream& operator<< <ppT>(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk);
@@ -253,8 +253,8 @@ pub struct uscs_ppzksnark_processed_verification_key<ppT: ppTConfig> {
  */
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_keypair<ppT: ppTConfig> {
-    pk: uscs_ppzksnark_proving_key<ppT>,
-    vk: uscs_ppzksnark_verification_key<ppT>,
+    pub pk: uscs_ppzksnark_proving_key<ppT>,
+    pub vk: uscs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: ppTConfig> uscs_ppzksnark_keypair<ppT> {
     // uscs_ppzksnark_keypair() {};
@@ -285,10 +285,10 @@ impl<ppT: ppTConfig> uscs_ppzksnark_keypair<ppT> {
  */
 #[derive(Clone)]
 pub struct uscs_ppzksnark_proof<ppT: ppTConfig> {
-    V_g1: G1<ppT>,
-    alpha_V_g1: G1<ppT>,
-    H_g1: G1<ppT>,
-    V_g2: G2<ppT>,
+    pub V_g1: G1<ppT>,
+    pub alpha_V_g1: G1<ppT>,
+    pub H_g1: G1<ppT>,
+    pub V_g2: G2<ppT>,
 }
 impl<ppT: ppTConfig> Default for uscs_ppzksnark_proof<ppT> {
     fn default() -> Self {
