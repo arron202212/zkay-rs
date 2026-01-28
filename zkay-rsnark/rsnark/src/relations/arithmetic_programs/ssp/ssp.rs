@@ -35,13 +35,13 @@ use std::collections::BTreeMap;
  */
 
 pub struct ssp_instance<FieldT: FieldTConfig> {
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    domain: RcCell<EvaluationDomainType<FieldT>>,
+    pub domain: RcCell<EvaluationDomainType<FieldT>>,
 
-    V_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+    pub V_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
 
 /**
@@ -56,18 +56,18 @@ pub struct ssp_instance<FieldT: FieldTConfig> {
  */
 
 pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    domain: RcCell<EvaluationDomainType<FieldT>>,
+    pub domain: RcCell<EvaluationDomainType<FieldT>>,
 
-    t: FieldT,
+    pub t: FieldT,
 
-    Ht: Vec<FieldT>,
-    Vt: Vec<FieldT>,
+    pub Ht: Vec<FieldT>,
+    pub Vt: Vec<FieldT>,
 
-    Zt: FieldT,
+    pub Zt: FieldT,
 }
 
 /**
@@ -75,37 +75,20 @@ pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
  */
 
 pub struct ssp_witness<FieldT> {
-    num_variables: usize,
-    degree: usize,
-    num_inputs: usize,
+    pub num_variables: usize,
+    pub degree: usize,
+    pub num_inputs: usize,
 
-    d: FieldT,
+    pub d: FieldT,
 
-    coefficients_for_Vs: Vec<FieldT>,
-    coefficients_for_H: Vec<FieldT>,
+    pub coefficients_for_Vs: Vec<FieldT>,
+    pub coefficients_for_H: Vec<FieldT>,
 }
 
-// use crate::relations::arithmetic_programs::ssp::ssp;
-
-//#endif // SSP_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a SSP ("Square Span Program").
-
-See ssp.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef SSP_TCC_
-// #define SSP_TCC_
-use ffec::algebra::scalar_multiplication::multiexp;
-// use ffec::scalar_multiplication::multiexp::inner_product;
-use ffec::common::profiling;
-use ffec::common::utils;
+// use ffec::algebra::scalar_multiplication::multiexp;
+// // use ffec::scalar_multiplication::multiexp::inner_product;
+// use ffec::common::profiling;
+// use ffec::common::utils;
 // use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 
 impl<FieldT: FieldTConfig> ssp_instance<FieldT> {
@@ -356,5 +339,3 @@ impl<FieldT: FieldTConfig> ssp_witness<FieldT> {
         return self.num_inputs;
     }
 }
-
-//#endif // SSP_TCC_

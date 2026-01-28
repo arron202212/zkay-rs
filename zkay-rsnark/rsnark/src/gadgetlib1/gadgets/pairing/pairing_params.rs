@@ -154,7 +154,7 @@ pub trait ppTConfig:
     + Mul<Self::FieldT, Output = Self>
     + for<'a> std::ops::BitXor<&'a ffec::field_utils::bigint::bigint<M>, Output = Self>
     + PublicParamsType
-    + PublicParams<Fqk = Self::FieldT, Fr = Self::FieldT>
+    + PublicParams<Fqk = Self::FieldT, GT = Self::FieldT, Fr = Self::FieldT>
     + FieldTConfig
 {
     type P: pairing_selector<
@@ -167,6 +167,7 @@ pub trait ppTConfig:
     type FieldT: FieldTConfig
         + Mul<<Self as PublicParams>::G1, Output = <Self as PublicParams>::G1>
         + Mul<<Self as PublicParams>::G2, Output = <Self as PublicParams>::G2>
+        + Mul<<Self as PublicParams>::GT, Output = <Self as PublicParams>::GT>
         + AsMut<[u64]>;
     type PB: PBConfig;
     type SV: SubVariableConfig;
