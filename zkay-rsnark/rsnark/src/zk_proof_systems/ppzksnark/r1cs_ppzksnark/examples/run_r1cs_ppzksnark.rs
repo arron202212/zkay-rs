@@ -46,7 +46,7 @@ pub trait IsTrue {}
 impl IsTrue for Assert<true> {}
 
 pub trait TestAffineVerifier {
-    fn test_affine_verifier<ppT: ppTConfig>(
+    fn test_affine_verifier<ppT: PublicParams>(
         vk: &r1cs_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_ppzksnark_primary_input<ppT>,
         proof: &r1cs_ppzksnark_proof<ppT>,
@@ -57,7 +57,7 @@ pub struct has_affine_pairing_holder<const FLAG: bool>;
 
 impl TestAffineVerifier for has_affine_pairing_holder<true> {
     // std::enable_if<ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<ppT: ppTConfig>(
+    fn test_affine_verifier<ppT: PublicParams>(
         vk: &r1cs_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_ppzksnark_primary_input<ppT>,
         proof: &r1cs_ppzksnark_proof<ppT>,
@@ -70,7 +70,7 @@ impl TestAffineVerifier for has_affine_pairing_holder<true> {
 }
 impl TestAffineVerifier for has_affine_pairing_holder<false> {
     // std::enable_if<!ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<ppT: ppTConfig>(
+    fn test_affine_verifier<ppT: PublicParams>(
         vk: &r1cs_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_ppzksnark_primary_input<ppT>,
         proof: &r1cs_ppzksnark_proof<ppT>,
@@ -95,58 +95,43 @@ impl TestAffineVerifier for has_affine_pairing_holder<false> {
  *     a primary input for CS, and a proof.
  */
 
-pub fn run_r1cs_ppzksnark<ppT: ppTConfig>(
+pub fn run_r1cs_ppzksnark<ppT: PublicParams>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool
 where
-    knowledge_commitment<
-        <ppT as ff_curves::PublicParams>::G2,
-        <ppT as ff_curves::PublicParams>::G1,
-    >: Mul<
-            <ppT as ppTConfig>::FieldT,
-            Output = knowledge_commitment<
-                <ppT as ff_curves::PublicParams>::G2,
-                <ppT as ff_curves::PublicParams>::G1,
-            >,
-        >,
-    knowledge_commitment<
-        <ppT as ff_curves::PublicParams>::G1,
-        <ppT as ff_curves::PublicParams>::G1,
-    >: Mul<
-            <ppT as ppTConfig>::FieldT,
-            Output = knowledge_commitment<
-                <ppT as ff_curves::PublicParams>::G1,
-                <ppT as ff_curves::PublicParams>::G1,
-            >,
-        >, // where
-           //     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
-           //     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-           //         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-           //     <ppT as ff_curves::PublicParams>::Fr:
-           //         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-           //     <ppT as ff_curves::PublicParams>::Fr: Mul<
-           //             knowledge_commitment<ppT>,
-           //             Output = knowledge_commitment<
-           //                 <ppT as ff_curves::PublicParams>::G2,
-           //                 <ppT as ff_curves::PublicParams>::G1,
-           //             >,
-           //         >,
-           //     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-           //         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-           //     <ppT as ff_curves::PublicParams>::Fr: Mul<
-           //             knowledge_commitment<
-           //                 <ppT as ff_curves::PublicParams>::G1,
-           //                 <ppT as ff_curves::PublicParams>::G1,
-           //             >,
-           //             Output = knowledge_commitment<
-           //                 <ppT as ff_curves::PublicParams>::G1,
-           //                 <ppT as ff_curves::PublicParams>::G1,
-           //             >,
-           //         >,
-           //     <ppT as ff_curves::PublicParams>::Fr:
-           //         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-           //     [(); { ppT::has_affine_pairing } as usize]:,
+    knowledge_commitment<G2<ppT>, G1<ppT>>:
+        Mul<Fr<ppT>, Output = knowledge_commitment<G2<ppT>, G1<ppT>>>,
+    knowledge_commitment<G1<ppT>, G1<ppT>>:
+        Mul<Fr<ppT>, Output = knowledge_commitment<G1<ppT>, G1<ppT>>>,
+    // where
+    //     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+    //     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
+    //         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
+    //     <ppT as ff_curves::PublicParams>::Fr:
+    //         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
+    //     <ppT as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<ppT>,
+    //             Output = knowledge_commitment<
+    //                 <ppT as ff_curves::PublicParams>::G2,
+    //                 <ppT as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
+    //         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
+    //     <ppT as ff_curves::PublicParams>::Fr: Mul<
+    //             knowledge_commitment<
+    //                 <ppT as ff_curves::PublicParams>::G1,
+    //                 <ppT as ff_curves::PublicParams>::G1,
+    //             >,
+    //             Output = knowledge_commitment<
+    //                 <ppT as ff_curves::PublicParams>::G1,
+    //                 <ppT as ff_curves::PublicParams>::G1,
+    //             >,
+    //         >,
+    //     <ppT as ff_curves::PublicParams>::Fr:
+    //         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
+    //     [(); { ppT::has_affine_pairing } as usize]:,
 {
     enter_block("Call to run_r1cs_ppzksnark", false);
 

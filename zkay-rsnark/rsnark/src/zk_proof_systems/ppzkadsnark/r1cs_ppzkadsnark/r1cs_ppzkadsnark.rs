@@ -198,21 +198,21 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_data<PP> {
  */
 #[derive(Default, Clone)]
 pub struct r1cs_ppzkadsnark_proving_key<PP: ppzkadsnarkConfig> {
-    pub A_query: KnowledgeCommitmentVector<snark_pp<PP>>,
-    pub B_query: KnowledgeCommitmentVector2<snark_pp<PP>>,
-    pub C_query: KnowledgeCommitmentVector<snark_pp<PP>>,
+    pub A_query: knowledge_commitment_vector<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
+    pub B_query: knowledge_commitment_vector<G2<snark_pp<PP>>, G1<snark_pp<PP>>>,
+    pub C_query: knowledge_commitment_vector<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
     pub H_query: G1_vector<snark_pp<PP>>, // t powers
     pub K_query: G1_vector<snark_pp<PP>>,
     pub rA_i_Z_g1: G1<snark_pp<PP>>, // Now come the additional elements for ad
     pub constraint_system: r1cs_ppzkadsnark_constraint_system<PP>,
 }
-pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
-pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
-pub type FieldT<PP> = <<PP as ppTConfig>::KC as KCConfig>::FieldT;
-pub type KnowledgeCommitmentVector<PP> = knowledge_commitment_vector<T1<PP>, T1<PP>>;
-pub type KnowledgeCommitmentVector2<PP> = knowledge_commitment_vector<T2<PP>, T1<PP>>;
-pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
-pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
+// pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
+// pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
+// pub type FieldT<PP> = <<PP as ppTConfig>::KC as KCConfig>::FieldT;
+// pub type KnowledgeCommitmentVector<PP> = knowledge_commitment_vector<T1<PP>, T1<PP>>;
+// pub type KnowledgeCommitmentVector2<PP> = knowledge_commitment_vector<T2<PP>, T1<PP>>;
+// pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
+// pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
 
 // r1cs_ppzkadsnark_proving_key() {};
 // r1cs_ppzkadsnark_proving_key<PP>& operator=(other:&r1cs_ppzkadsnark_proving_key<PP>) = default;
@@ -221,9 +221,9 @@ pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
 
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proving_key<PP> {
     pub fn new(
-        A_query: KnowledgeCommitmentVector<snark_pp<PP>>,
-        B_query: KnowledgeCommitmentVector2<snark_pp<PP>>,
-        C_query: KnowledgeCommitmentVector<snark_pp<PP>>,
+        A_query: knowledge_commitment_vector<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
+        B_query: knowledge_commitment_vector<G2<snark_pp<PP>>, G1<snark_pp<PP>>>,
+        C_query: knowledge_commitment_vector<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
         H_query: G1_vector<snark_pp<PP>>,
         K_query: G1_vector<snark_pp<PP>>,
         rA_i_Z_g1: G1<snark_pp<PP>>,
@@ -428,12 +428,12 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_keypair<PP> {
  */
 #[derive(Default, Clone)]
 pub struct r1cs_ppzkadsnark_proof<PP: ppzkadsnarkConfig> {
-    pub g_A: KnowledgeCommitment<snark_pp<PP>>,
-    pub g_B: KnowledgeCommitment2<snark_pp<PP>>,
-    pub g_C: KnowledgeCommitment<snark_pp<PP>>,
+    pub g_A: knowledge_commitment<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
+    pub g_B: knowledge_commitment<G2<snark_pp<PP>>, G1<snark_pp<PP>>>,
+    pub g_C: knowledge_commitment<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
     pub g_H: G1<snark_pp<PP>>,
     pub g_K: G1<snark_pp<PP>>,
-    pub g_Aau: KnowledgeCommitment<snark_pp<PP>>,
+    pub g_Aau: knowledge_commitment<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
     pub muA: G1<snark_pp<PP>>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proof<PP> {
@@ -469,12 +469,12 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proof<PP> {
         }
     }
     pub fn new(
-        g_A: KnowledgeCommitment<snark_pp<PP>>,
-        g_B: KnowledgeCommitment2<snark_pp<PP>>,
-        g_C: KnowledgeCommitment<snark_pp<PP>>,
+        g_A: knowledge_commitment<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
+        g_B: knowledge_commitment<G2<snark_pp<PP>>, G1<snark_pp<PP>>>,
+        g_C: knowledge_commitment<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
         g_H: G1<snark_pp<PP>>,
         g_K: G1<snark_pp<PP>>,
-        g_Aau: KnowledgeCommitment<snark_pp<PP>>,
+        g_Aau: knowledge_commitment<G1<snark_pp<PP>>, G1<snark_pp<PP>>>,
         muA: G1<snark_pp<PP>>,
     ) -> Self {
         Self {

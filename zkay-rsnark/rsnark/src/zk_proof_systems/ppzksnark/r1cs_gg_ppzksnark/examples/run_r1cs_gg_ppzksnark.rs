@@ -1,9 +1,8 @@
 // Declaration of functionality that runs the R1CS GG-ppzkSNARK for
 // a given R1CS example.
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
-
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark::{
     r1cs_gg_ppzksnark_affine_verifier_weak_IC, r1cs_gg_ppzksnark_generator,
     r1cs_gg_ppzksnark_online_verifier_strong_IC, r1cs_gg_ppzksnark_processed_verification_key,
@@ -13,6 +12,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark::{
 };
 use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_params::r1cs_gg_ppzksnark_primary_input;
 use ff_curves::Fr;
+use ff_curves::PublicParams;
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_indent};
 use ffec::common::serialization::reserialize;
@@ -20,7 +20,7 @@ use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
 
 pub trait TestAffineVerifier {
-    fn test_affine_verifier<ppT: ppTConfig>(
+    fn test_affine_verifier<ppT: PublicParams>(
         vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
         proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -30,7 +30,7 @@ pub trait TestAffineVerifier {
 pub struct TestAffineVerifiers<const HAS_AFFINE_PAIRING: bool>;
 impl TestAffineVerifier for TestAffineVerifiers<true> {
     // std::enable_if<ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<ppT: ppTConfig>(
+    fn test_affine_verifier<ppT: PublicParams>(
         vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
         proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -43,7 +43,7 @@ impl TestAffineVerifier for TestAffineVerifiers<true> {
 }
 impl TestAffineVerifier for TestAffineVerifiers<false> {
     // std::enable_if<!ppT::has_affine_pairing, pub fn >::type
-    fn test_affine_verifier<ppT: ppTConfig>(
+    fn test_affine_verifier<ppT: PublicParams>(
         vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
         primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
         proof: &r1cs_gg_ppzksnark_proof<ppT>,
@@ -68,7 +68,7 @@ impl TestAffineVerifier for TestAffineVerifiers<false> {
  *     a primary input for CS, and a proof.
  */
 
-pub fn run_r1cs_gg_ppzksnark<ppT: ppTConfig>(
+pub fn run_r1cs_gg_ppzksnark<ppT: PublicParams>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool

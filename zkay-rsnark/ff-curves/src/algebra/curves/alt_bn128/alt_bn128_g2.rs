@@ -1,5 +1,6 @@
 // use crate::algebra::curves::curve_utils;
 use crate::FpmConfig;
+use crate::Fq2mConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
     alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr,
 };
@@ -34,10 +35,13 @@ impl From<BigUint> for alt_bn128_G2 {
 //         &self.0
 //     }
 // }
-
 impl PpConfig for alt_bn128_G2 {
     type TT = bigint<1>;
     // type Fr=Self;
+}
+impl Fq2mConfig for alt_bn128_G2 {
+    // type TT = bigint<1>;
+    type Fr=Self;
 }
 
 impl Add<i32> for alt_bn128_G2 {
@@ -156,9 +160,9 @@ pub struct alt_bn128_G2 {
     // static let h_bitcount= 256;
     // static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
     // static bigint<h_limbs> h;
-    X: alt_bn128_Fq2,
-    Y: alt_bn128_Fq2,
-    Z: alt_bn128_Fq2,
+   pub X: alt_bn128_Fq2,
+   pub Y: alt_bn128_Fq2,
+   pub Z: alt_bn128_Fq2,
     // using Jacobian coordinates
     // alt_bn128_G2();
     //

@@ -1,15 +1,4 @@
-// /** @file
-//  *****************************************************************************
-
 //  This file defines the default PCD cycle.
-
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef R1CS_PPZKPCD_PP_HPP_
-// // #define R1CS_PPZKPCD_PP_HPP_
 
 // /*********************** Define default PCD cycle ***************************/
 // use ff_curves::algebra::curves::mnt::mnt4::mnt4_pp;
@@ -26,17 +15,6 @@
 //     static pub fn  init_public_params();
 // };
 
-//#endif // R1CS_PPZKPCD_PP_HPP_
-// /** @file
-//  *****************************************************************************
-
-//  This file provides the initialization methods for the default PCD cycle.
-
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
 // use crate::common::default_types::r1cs_ppzkpcd_pp;
 
 // pub fn init_public_params()

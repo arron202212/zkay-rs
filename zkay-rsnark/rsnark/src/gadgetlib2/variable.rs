@@ -849,13 +849,13 @@ impl From<usize> for FElem {
         }
     }
 }
-impl From<Fp> for FElem {
-    fn from(rhs: Fp) -> Self {
-        Self {
-            elem_: RcCell::new(ElemType::Elem(R1P_Elem::from(rhs))),
-        }
-    }
-}
+// impl From<Fp> for FElem {
+//     fn from(rhs: Fp) -> Self {
+//         Self {
+//             elem_: RcCell::new(ElemType::Elem(R1P_Elem::from(rhs))),
+//         }
+//     }
+// }
 impl From<R1P_Elem> for FElem {
     fn from(rhs: R1P_Elem) -> Self {
         Self {
@@ -1075,7 +1075,7 @@ impl AddAssign<&ElemType> for R1P_Elem {
         if other.fieldType() == FieldType::R1P {
             self.elem_ += &other.try_as_elem_ref().unwrap().elem_;
         } else if other.fieldType() == FieldType::AGNOSTIC {
-            self.elem_ += other.try_as_elem_ref().unwrap().asLong();
+            self.elem_ += Fp::from(other.try_as_elem_ref().unwrap().asLong());
         } else {
             panic!("Attempted to add incompatible pub type to R1P_Elem.");
         }
@@ -1088,7 +1088,7 @@ impl SubAssign<&ElemType> for R1P_Elem {
         if other.fieldType() == FieldType::R1P {
             self.elem_ -= &other.try_as_elem_ref().unwrap().elem_;
         } else if other.fieldType() == FieldType::AGNOSTIC {
-            self.elem_ -= other.try_as_const_ref().unwrap().asLong();
+            self.elem_ -= Fp::from(other.try_as_const_ref().unwrap().asLong());
         } else {
             panic!("Attempted to add incompatible pub type to R1P_Elem.");
         }
@@ -1102,7 +1102,7 @@ impl MulAssign<&ElemType> for R1P_Elem {
         if other.fieldType() == FieldType::R1P {
             self.elem_ *= &other.try_as_elem_ref().unwrap().elem_;
         } else if other.fieldType() == FieldType::AGNOSTIC {
-            self.elem_ *= other.try_as_const_ref().unwrap().asLong();
+            self.elem_ *= Fp::from(other.try_as_const_ref().unwrap().asLong());
         } else {
             panic!("Attempted to add incompatible pub type to R1P_Elem.");
         }
@@ -1174,8 +1174,8 @@ impl From<FConst> for R1P_Elem {
         }
     }
 }
-impl From<Fp> for R1P_Elem {
-    fn from(rhs: Fp) -> Self {
+impl R1P_Elem {
+    pub fn new(rhs: Fp) -> Self {
         Self { elem_: rhs }
     }
 }
@@ -1193,7 +1193,7 @@ impl PartialEq<u64> for R1P_Elem {
 }
 impl FElemInterface for R1P_Elem {
     fn inverse(&self) -> Self {
-        R1P_Elem::from(self.elem_.inverse())
+        R1P_Elem::new(self.elem_.inverse())
     }
 
     fn asLong(&self) -> i64 {
@@ -1208,7 +1208,7 @@ impl FElemInterface for R1P_Elem {
     }
 
     fn getBit(&self, i: u32) -> i32 {
-        self.elem_.as_bigint().test_bit(i) as _
+        self.elem_.as_bigint().test_bit(i as usize) as _
     }
     fn power(&self, exponent: u64) -> Self {
         let mut res = self.clone();

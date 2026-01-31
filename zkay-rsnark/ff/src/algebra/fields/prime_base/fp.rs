@@ -62,7 +62,7 @@ pub const fn const_new_fp_model<const N: usize, T: Fp_modelConfig<N>>() -> Fp_mo
     }
 }
 #[derive(Educe)]
-#[educe(Default, Clone, Debug, Hash, Copy, Eq)] // PartialEq,
+#[educe(Default, Clone, Debug, Hash, Copy,PartialOrd, Ord, Eq)] // PartialEq,
 pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
     pub mont_repr: bigint<N>,
     pub t: PhantomData<T>,
@@ -244,6 +244,25 @@ impl<const N: usize, T: Fp_modelConfig<N>> From<i64> for Fp_model<N, T> {
         }
     }
 }
+
+
+impl<const N: usize, T: Fp_modelConfig<N>> From<u64> for Fp_model<N, T> {
+    fn from(b: u64) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>::new(b),
+            t: PhantomData,
+        }
+    }
+}
+impl<const N: usize, T: Fp_modelConfig<N>> From<&str> for Fp_model<N, T> {
+    fn from(b: &str) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>::new_with_str(b).unwrap(),
+            t: PhantomData,
+        }
+    }
+}
+
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     pub const fn const_new(b: BigInt<N>) -> Self {
         Fp_model::<N, T> {

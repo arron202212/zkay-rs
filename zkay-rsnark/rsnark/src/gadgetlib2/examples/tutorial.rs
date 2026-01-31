@@ -9,7 +9,7 @@ use crate::gadgetlib2::gadget::{
 use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 // use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
 use crate::gadgetlib2::constraint::PrintOptions;
-use crate::gadgetlib2::pp::{FrConfig, initPublicParamsFromDefaultPp};
+use crate::gadgetlib2::pp::initPublicParamsFromDefaultPp;
 use crate::gadgetlib2::protoboard::Protoboard;
 use crate::gadgetlib2::variable::{
     DualWord, FElem, FieldType, FlagVariable, FlagVariableArray, LinearCombination,
@@ -46,10 +46,9 @@ pub fn test_ProtoboardUsage<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
-    Fr: FrConfig,
 >() {
     // Initialize prime field parameters. This is always needed for R1P.
-    initPublicParamsFromDefaultPp::<Fr>();
+    initPublicParamsFromDefaultPp();
     // The protoboard is the 'memory manager' which holds all constraints (when creating the
     // verifying circuit) and variable assignments (when creating the proof witness). We specify
     // the type as R1P, this can be augmented in the future to allow for BOOLEAN or GF2_EXTENSION
@@ -65,12 +64,12 @@ pub fn test_ProtoboardUsage<
         input[0].clone().into(),
         LinearCombination::from(5) + &input[2],
         output.clone().into(),
-        "Constraint 1: input[0] * (5 + input[2]) == output".to_owned(),
+        "Constraint 1: input[0] * (5 + input[2]) == output",
     );
     // The second form addUnaryConstraint(LinearCombination) means (LinearCombination == 0).
     pb.as_ref().unwrap().borrow_mut().addUnaryConstraint(
         input[1].clone() - &output,
-        "Constraint 2: input[1] - output == 0".to_owned(),
+        "Constraint 2: input[1] - output == 0",
     );
     // Notice this could also have been written:
     // pb.addRank1Constraint(1, input[1] - input[2], 0, "");
@@ -245,10 +244,9 @@ pub fn test_NAND_Gadget<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
-    Fr: FrConfig,
 >() {
     // initialize the field
-    initPublicParamsFromDefaultPp::<Fr>();
+    initPublicParamsFromDefaultPp();
     // create a protoboard for a system of rank 1 constraints over a prime field.
     let mut pb = Protoboard::create(FieldType::R1P, None);
     // create 5 variables inputs[0]...inputs[4]. The string "inputs" is used for debug messages
@@ -426,9 +424,8 @@ pub fn TEST_HashDifficultyEnforcer_Gadget<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
-    Fr: FrConfig,
 >() {
-    initPublicParamsFromDefaultPp::<Fr>();
+    initPublicParamsFromDefaultPp();
     let mut pb = Protoboard::create(FieldType::R1P, None);
     let mut hashValue = MultiPackedWord::new(64, &FieldType::R1P, "hashValue");
     let difficulty = 10;
@@ -630,9 +627,8 @@ pub fn TEST_R1P_VerifyTransactionAmounts_Gadget<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
-    Fr: FrConfig,
 >() {
-    initPublicParamsFromDefaultPp::<Fr>();
+    initPublicParamsFromDefaultPp();
     let mut pb = Protoboard::create(FieldType::R1P, None);
     let inputAmounts =
         VariableArray::<VariableArrayBase>::new(2, "inputAmounts".to_owned(), VariableArrayBase);
@@ -679,11 +675,10 @@ pub fn TEST_Integration<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
-    Fr: FrConfig,
 >() {
-    initPublicParamsFromDefaultPp::<Fr>();
+    initPublicParamsFromDefaultPp();
     // Create an example constraint system and translate to libsnark format
-    let example = gen_r1cs_example_from_gadgetlib2_protoboard::<FieldT, SV, SLC>(100);
+    let example = gen_r1cs_example_from_gadgetlib2_protoboard::<SV, SLC>(100);
     let mut test_serialization = false;
     // Run ppzksnark. Jump into function for breakdown
     // let mut bit = run_r1cs_ppzksnark::<FieldT>(example, test_serialization);

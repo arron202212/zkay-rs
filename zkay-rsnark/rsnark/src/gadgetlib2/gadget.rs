@@ -881,7 +881,7 @@ impl<T: Default + Clone> Gadget<T> {
             .as_ref()
             .unwrap()
             .borrow_mut()
-            .addUnaryConstraint(a, name.to_owned());
+            .addUnaryConstraint(a, name);
     }
 
     pub fn addRank1Constraint(
@@ -895,7 +895,7 @@ impl<T: Default + Clone> Gadget<T> {
             .as_ref()
             .unwrap()
             .borrow_mut()
-            .addRank1Constraint(a, b, c, name.to_owned());
+            .addRank1Constraint(a, b, c, name);
     }
 
     pub fn enforceBooleanity(&self, var: &Variable) {

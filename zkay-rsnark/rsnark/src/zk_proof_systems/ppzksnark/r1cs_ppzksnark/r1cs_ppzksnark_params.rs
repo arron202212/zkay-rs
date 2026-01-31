@@ -13,8 +13,8 @@ use ff_curves::Fr;
  */
 
 pub type r1cs_ppzksnark_constraint_system<ppT> =
-    r1cs_constraint_system<<ppT as ppTConfig>::FieldT, pb_variable, pb_linear_combination>;
+    r1cs_constraint_system<Fr<ppT>, pb_variable, pb_linear_combination>;
 
-pub type r1cs_ppzksnark_primary_input<ppT> = r1cs_primary_input<<ppT as ppTConfig>::FieldT>;
+pub type r1cs_ppzksnark_primary_input<ppT> = r1cs_primary_input<Fr<ppT>>;
 
-pub type r1cs_ppzksnark_auxiliary_input<ppT> = r1cs_auxiliary_input<<ppT as ppTConfig>::FieldT>;
+pub type r1cs_ppzksnark_auxiliary_input<ppT> = r1cs_auxiliary_input<Fr<ppT>>;

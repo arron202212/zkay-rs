@@ -1,6 +1,6 @@
 use ffec::common::default_types::ec_pp;
 
-use super::super::pp::{default_ec_pp, initPublicParamsFromDefaultPp};
+use super::super::pp::initPublicParamsFromDefaultPp;
 use crate::gadgetlib2::adapters::{GLA, GadgetLibAdapter};
 use crate::gadgetlib2::gadget::{GadgetConfig, InnerProduct_Gadget};
 use crate::gadgetlib2::integration::{
@@ -13,11 +13,12 @@ use crate::relations::constraint_satisfaction_problems::r1cs::{
     r1cs::{r1cs_auxiliary_input, r1cs_primary_input},
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
+use ff_curves::{Fr, default_ec_pp};
 use ffec::FieldTConfig;
+type FieldT = Fr<default_ec_pp>;
 
 /* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
 pub fn gen_r1cs_example_from_gadgetlib2_protoboard<
-    FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -25,7 +26,7 @@ pub fn gen_r1cs_example_from_gadgetlib2_protoboard<
 ) -> r1cs_example<FieldT, SV, SLC> {
     // type FieldT=ffec::Fr<ffec::default_ec_pp> ;
 
-    initPublicParamsFromDefaultPp::<default_ec_pp>();
+    initPublicParamsFromDefaultPp();
     // necessary in case a protoboard was built before,  libsnark assumes variable indices always
     // begin with 0 so we must reset the index before creating constraints which will be used by
     // libsnark
@@ -47,11 +48,10 @@ pub fn gen_r1cs_example_from_gadgetlib2_protoboard<
     }
     g.borrow().generateWitness();
     // translate constraint system to libsnark format.
-    let cs =
-        get_constraint_system_from_gadgetlib2::<FieldT, SV, SLC>(&pb.as_ref().unwrap().borrow());
+    let cs = get_constraint_system_from_gadgetlib2::<SV, SLC>(&pb.as_ref().unwrap().borrow());
     // translate full variable assignment to libsnark format
     let full_assignment =
-        get_variable_assignment_from_gadgetlib2::<FieldT, SV, SLC>(&pb.as_ref().unwrap().borrow());
+        get_variable_assignment_from_gadgetlib2::<SV, SLC>(&pb.as_ref().unwrap().borrow());
     // extract primary and auxiliary input
     let primary_input = full_assignment[..cs.num_inputs()].to_vec();
     let auxiliary_input = full_assignment[cs.num_inputs()..].to_vec();

@@ -61,12 +61,34 @@ use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::field_utils::BigInteger;
 use ffec::field_utils::bigint::bigint;
 use std::ops::Mul;
-pub trait FpmConfig {
+pub trait FpmConfig:Default+Clone {
     type Fr: FieldTConfig;
+    fn c0(&self) -> Self::Fr {
+        Default::default()
+    }
+    fn c1(&self) -> Self::Fr {
+        Default::default()
+    }
+fn X(&self) -> Self::Fr {
+        Default::default()
+    }
+    fn Y(&self) -> Self::Fr {
+        Default::default()
+    }
+    fn twist() -> Self::Fr {
+        Default::default()
+    }
+}
+
+pub trait Fq2mConfig:Default+Clone {
+    type Fr: FpmConfig;
     fn X(&self) -> Self::Fr {
         Default::default()
     }
     fn Y(&self) -> Self::Fr {
+        Default::default()
+    }
+    fn Z(&self) -> Self::Fr {
         Default::default()
     }
     fn twist() -> Self::Fr {
@@ -100,7 +122,7 @@ pub trait affine_ate_G_precomp_typeConfig {
 pub trait PublicParamsType: Default + Clone {
     type Fp_type: FieldTConfig;
     type G1_type: PpConfig + FpmConfig<Fr = Self::Fp_type>;
-    type G2_type: PpConfig + FpmConfig<Fr = Self::Fp_type>;
+    type G2_type: PpConfig + Fq2mConfig;
     type G1_precomp_type: std::fmt::Display + Default + Clone + PartialEq;
     type G2_precomp_type: std::fmt::Display + Default + Clone + PartialEq;
     type affine_ate_G1_precomp_type: affine_ate_G_precomp_typeConfig;

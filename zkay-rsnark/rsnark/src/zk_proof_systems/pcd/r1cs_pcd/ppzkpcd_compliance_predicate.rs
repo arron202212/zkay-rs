@@ -1,11 +1,11 @@
 // Template aliasing for prettifying R1CS PCD interfaces.
 use crate::gadgetlib1::gadgets::pairing::pairing_params::{pairing_selector, ppTConfig};
-use crate::gadgetlib2::pp::Fr;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_variable_assignment;
 use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_predicate::{
     LocalDataConfig, MessageConfig, r1cs_pcd_compliance_predicate, r1cs_pcd_local_data,
     r1cs_pcd_message,
 };
+use ff_curves::Fr;
 use ff_curves::PublicParams;
 use ffec::FieldTConfig;
 /* template aliasing for R1CS (multi-predicate) ppzkPCD: */

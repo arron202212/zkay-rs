@@ -103,13 +103,13 @@ const indentation: usize = 0;
 // i64 start_time, last_time;
 // i64 start_cpu_time, last_cpu_time;
 
-// pub fn  start_profiling()
-// {
-//     print!("Reset time counters for profiling\n");
+pub fn  start_profiling()
+{
+    print!("Reset time counters for profiling\n");
 
 //     last_time = start_time = get_nsec_time();
 //     last_cpu_time = start_cpu_time = get_nsec_cpu_time();
-// }
+}
 
 // BTreeMap<String, usize> invocation_counts;
 // BTreeMap<String, i64> enter_times;

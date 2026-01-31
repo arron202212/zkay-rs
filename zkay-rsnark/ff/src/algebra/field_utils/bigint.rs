@@ -46,7 +46,7 @@ use zeroize::Zeroize;
 // //  */
 pub const GMP_NUMB_BITS: usize = 64;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialOrd, Ord,PartialEq, Eq, Hash, Zeroize)]
 pub struct bigint<const N: usize>(pub BigInt<N>);
 // // impl<const N:usize> bigint<N>{
 //     // n: N:usize =,

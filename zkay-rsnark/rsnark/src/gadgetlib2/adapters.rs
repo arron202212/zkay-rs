@@ -171,20 +171,20 @@ impl ConvertConfig<&FElem, Fp_elem_t> for GLA {
     }
 }
 
-impl<FieldT: FieldTConfig> ConvertConfig<&FElem, FieldT> for GLA {
-    fn convert(fElem: &FElem) -> FieldT {
-        // using gadgetlib2::R1P_Elem;
-        // fElem.promoteToFieldType(&FieldType::R1P); // convert fElem from FConst to R1P_Elem
-        // fElem
-        //     .elem_
-        //     .borrow()
-        //     .try_as_elem_ref()
-        //     .unwrap()
-        //     .elem_
-        //     .clone()
-        FieldT::default()
-    }
-}
+// impl<FieldT: FieldTConfig> ConvertConfig<&FElem, FieldT> for GLA {
+//     fn convert(fElem: &FElem) -> FieldT {
+//         // using gadgetlib2::R1P_Elem;
+//         // fElem.promoteToFieldType(&FieldType::R1P); // convert fElem from FConst to R1P_Elem
+//         // fElem
+//         //     .elem_
+//         //     .borrow()
+//         //     .try_as_elem_ref()
+//         //     .unwrap()
+//         //     .elem_
+//         //     .clone()
+//         FieldT::default()
+//     }
+// }
 
 // impl PartialEq <&linear_term_t> for linear_combination_t {
 //     #[inline]

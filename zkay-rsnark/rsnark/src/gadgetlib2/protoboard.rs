@@ -212,10 +212,10 @@ impl Protoboard {
         a: LinearCombination,
         b: LinearCombination,
         c: LinearCombination,
-        name: String,
+        name: &str,
     ) {
         self.constraintSystem_
-            .addConstraint1(Rank1Constraint::new(a, b, c, name));
+            .addConstraint1(Rank1Constraint::new(a, b, c, name.to_owned()));
     }
 
     pub fn addGeneralConstraint(&mut self, a: Polynomial, b: Polynomial, name: String) {
@@ -223,7 +223,7 @@ impl Protoboard {
             .addConstraint(PolynomialConstraint::new(a, b, name));
     }
 
-    pub fn addUnaryConstraint(&mut self, a: LinearCombination, name: String) {
+    pub fn addUnaryConstraint(&mut self, a: LinearCombination, name: &str) {
         self.addRank1Constraint(a, 1.into(), 0.into(), name);
     }
 
@@ -241,7 +241,7 @@ impl Protoboard {
             var.clone().into(),
             var.clone() - 1,
             0.into(),
-            format!("enforceBooleanity({})", var.name()),
+            &format!("enforceBooleanity({})", var.name()),
         );
     }
 

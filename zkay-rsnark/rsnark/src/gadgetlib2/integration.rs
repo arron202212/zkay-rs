@@ -1,5 +1,5 @@
 // use ffec::common::default_types::ec_pp;
-use super::pp::{Fr, default_ec_pp};
+use ff_curves::{Fr, default_ec_pp};
 // use crate::gadgetlib2::protoboard;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_constraint, r1cs_constraint_system, r1cs_variable_assignment,
@@ -13,27 +13,29 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable,
 };
 use ffec::FieldTConfig;
-// type FieldT = Fr<default_ec_pp>;
+type FieldT = Fr<default_ec_pp>;
 // type GLA = GadgetLibAdapter;
 pub fn convert_gadgetlib2_linear_combination<
-    FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
     lc: &linear_combination_t,
-) -> linear_combination<FieldT, SV, SLC> {
-    let mut result = lc.1.clone().into_lc::<FieldT, SV, SLC>() * variable::<FieldT, SV>::from(0);
+) -> linear_combination<FieldT, SV, SLC>
+where
+    linear_combination<FieldT, SV, SLC>: From<FieldT>,
+{
+    let mut result =
+        linear_combination::<FieldT, SV, SLC>::from(lc.1.clone()) * variable::<FieldT, SV>::from(0);
     for lt in &lc.0 {
         result = result
-            + lt.1.clone().into_lc::<FieldT, SV, SLC>()
+            + linear_combination::<FieldT, SV, SLC>::from(lt.1.clone())
                 * variable::<FieldT, SV>::from(lt.0 as usize + 1);
     }
 
-    return result;
+    result
 }
 
 pub fn get_constraint_system_from_gadgetlib2<
-    FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -78,11 +80,10 @@ pub fn get_constraint_system_from_gadgetlib2<
     let num_variables = GLA::getNextFreeIndex();
     result.primary_input_size = pb.numInputs();
     result.auxiliary_input_size = num_variables - pb.numInputs();
-    return result;
+    result
 }
 
 pub fn get_variable_assignment_from_gadgetlib2<
-    FieldT: FieldTConfig,
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 >(
@@ -103,5 +104,5 @@ pub fn get_variable_assignment_from_gadgetlib2<
         result[GLA::getVariableIndex(iter.0)] = GLA::convert(iter.1);
     }
 
-    return result;
+    result
 }

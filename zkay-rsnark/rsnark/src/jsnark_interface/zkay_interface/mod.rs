@@ -1,2 +1,1 @@
-
- pub mod run_snark ;
+pub mod run_snark;
