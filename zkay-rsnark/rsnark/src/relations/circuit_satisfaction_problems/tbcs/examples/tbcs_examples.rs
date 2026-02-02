@@ -21,9 +21,9 @@ use num_enum::FromPrimitive;
  */
 #[derive(Default)]
 pub struct tbcs_example {
-    circuit: tbcs_circuit,
-    primary_input: tbcs_primary_input,
-    auxiliary_input: tbcs_auxiliary_input,
+    pub circuit: tbcs_circuit,
+    pub primary_input: tbcs_primary_input,
+    pub auxiliary_input: tbcs_auxiliary_input,
 }
 impl tbcs_example {
     // tbcs_example() = default;

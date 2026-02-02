@@ -1,23 +1,23 @@
-/** @file
- *****************************************************************************
+//  Declaration of functionality that runs the USCS ppzkSNARK for
+//  a given USCS example.
 
- Declaration of functionality that runs the USCS ppzkSNARK for
- a given USCS example.
+// use ff_curves::algebra::curves::public_params;
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef RUN_USCS_PPZKSNARK_HPP_
-// #define RUN_USCS_PPZKSNARK_HPP_
-
-use ff_curves::algebra::curves::public_params;
-
-use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
-
-
+// use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
+use crate::relations::constraint_satisfaction_problems::uscs::examples::uscs_examples::uscs_example;
+use crate::zk_proof_systems::ppzksnark::uscs_ppzksnark::uscs_ppzksnark::{
+    uscs_ppzksnark_generator, uscs_ppzksnark_online_verifier_strong_IC,
+    uscs_ppzksnark_processed_verification_key, uscs_ppzksnark_proof, uscs_ppzksnark_prover,
+    uscs_ppzksnark_proving_key, uscs_ppzksnark_verification_key,
+    uscs_ppzksnark_verifier_process_vk, uscs_ppzksnark_verifier_strong_IC,
+};
+use ff_curves::Fr;
+use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::serialization::reserialize;
+use std::ops::Mul;
 
 /**
  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
@@ -27,38 +27,12 @@ use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_exampl
  * (This takes additional time.)
  */
 
-bool run_uscs_ppzksnark(example:&uscs_example<ffec::Fr<ppT> >,
-                        test_serialization:bool);
+// bool run_uscs_ppzksnark(example:&uscs_example<Fr<ppT> >,
+//                         test_serialization:bool);
 
+// use common::profiling;
 
-
-use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
-
-//#endif // RUN_USCS_PPZKSNARK_HPP_
-/** @file
- *****************************************************************************
-
- Implementation of functionality that runs the USCS ppzkSNARK for
- a given USCS example.
-
- See run_uscs_ppzksnark.hpp .
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-//#ifndef RUN_USCS_PPZKSNARK_TCC_
-// #define RUN_USCS_PPZKSNARK_TCC_
-
-use  <sstream>
-
-use ffec::common::profiling;
-
-use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark;
-
-
+// use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark;
 
 /**
  * The code below provides an example of all stages of running a USCS ppzkSNARK.
@@ -73,52 +47,63 @@ use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark;
  *     a primary input for CS, and a proof.
  */
 
-bool run_uscs_ppzksnark(example:&uscs_example<ffec::Fr<ppT> >,
-                        test_serialization:bool)
-{
-    ffec::enter_block("Call to run_uscs_ppzksnark");
+fn run_uscs_ppzksnark<ppT: ppTConfig>(
+    example: &uscs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
+    test_serialization: bool,
+) -> bool {
+    enter_block("Call to run_uscs_ppzksnark", false);
 
-    ffec::print_header("USCS ppzkSNARK Generator");
-    uscs_ppzksnark_keypair<ppT> keypair = uscs_ppzksnark_generator<ppT>(example.constraint_system);
-    print!("\n"); ffec::print_indent(); ffec::print_mem("after generator");
+    println!("USCS ppzkSNARK Generator");
+    let mut keypair = uscs_ppzksnark_generator::<ppT>(&example.constraint_system);
+    print!("\n");
+    print_indent();
+    println!("after generator");
 
-    ffec::print_header("Preprocess verification key");
-    uscs_ppzksnark_processed_verification_key<ppT> pvk = uscs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
+    println!("Preprocess verification key");
+    let mut pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
-    if test_serialization
-    {
-        ffec::enter_block("Test serialization of keys");
-        keypair.pk = ffec::reserialize<uscs_ppzksnark_proving_key<ppT> >(keypair.pk);
-        keypair.vk = ffec::reserialize<uscs_ppzksnark_verification_key<ppT> >(keypair.vk);
-        pvk = ffec::reserialize<uscs_ppzksnark_processed_verification_key<ppT> >(pvk);
-        ffec::leave_block("Test serialization of keys");
+    if test_serialization {
+        enter_block("Test serialization of keys", false);
+        keypair.pk = reserialize::<uscs_ppzksnark_proving_key<ppT>>(&keypair.pk);
+        keypair.vk = reserialize::<uscs_ppzksnark_verification_key<ppT>>(&keypair.vk);
+        pvk = reserialize::<uscs_ppzksnark_processed_verification_key<ppT>>(&pvk);
+        leave_block("Test serialization of keys", false);
     }
 
-    ffec::print_header("USCS ppzkSNARK Prover");
-    uscs_ppzksnark_proof<ppT> proof = uscs_ppzksnark_prover<ppT>(keypair.pk, example.primary_input, example.auxiliary_input);
-    print!("\n"); ffec::print_indent(); ffec::print_mem("after prover");
+    println!("USCS ppzkSNARK Prover");
+    let mut proof = uscs_ppzksnark_prover::<ppT>(
+        &keypair.pk,
+        &example.primary_input,
+        &example.auxiliary_input,
+    );
+    print!("\n");
+    print_indent();
+    println!("after prover");
 
-    if test_serialization
-    {
-        ffec::enter_block("Test serialization of proof");
-        proof = ffec::reserialize<uscs_ppzksnark_proof<ppT> >(proof);
-        ffec::leave_block("Test serialization of proof");
+    if test_serialization {
+        enter_block("Test serialization of proof", false);
+        proof = reserialize::<uscs_ppzksnark_proof<ppT>>(&proof);
+        leave_block("Test serialization of proof", false);
     }
 
-    ffec::print_header("USCS ppzkSNARK Verifier");
-    bool ans = uscs_ppzksnark_verifier_strong_IC<ppT>(keypair.vk, example.primary_input, proof);
-    print!("\n"); ffec::print_indent(); ffec::print_mem("after verifier");
-    print!("* The verification result is: {}\n", if ans {"PASS"} else{"FAIL"});
+    println!("USCS ppzkSNARK Verifier");
+    let ans = uscs_ppzksnark_verifier_strong_IC::<ppT>(&keypair.vk, &example.primary_input, &proof);
+    print!("\n");
+    print_indent();
+    println!("after verifier");
+    print!(
+        "* The verification result is: {}\n",
+        if ans { "PASS" } else { "FAIL" }
+    );
 
-    ffec::print_header("USCS ppzkSNARK Online Verifier");
-    bool ans2 = uscs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, example.primary_input, proof);
+    println!("USCS ppzkSNARK Online Verifier");
+    let ans2 =
+        uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &example.primary_input, &proof);
     assert!(ans == ans2);
 
-    ffec::leave_block("Call to run_uscs_ppzksnark");
+    leave_block("Call to run_uscs_ppzksnark", false);
 
-    return ans;
+    ans
 }
-
-
 
 //#endif // RUN_USCS_PPZKSNARK_TCC_

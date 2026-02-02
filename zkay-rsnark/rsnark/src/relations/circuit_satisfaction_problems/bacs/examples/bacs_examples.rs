@@ -27,9 +27,9 @@ pub struct bacs_example<
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,
 > {
-    circuit: bacs_circuit<FieldT, SV, SLC>,
-    primary_input: bacs_primary_input<FieldT>,
-    auxiliary_input: bacs_auxiliary_input<FieldT>,
+    pub circuit: bacs_circuit<FieldT, SV, SLC>,
+    pub primary_input: bacs_primary_input<FieldT>,
+    pub auxiliary_input: bacs_auxiliary_input<FieldT>,
 }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     bacs_example<FieldT, SV, SLC>

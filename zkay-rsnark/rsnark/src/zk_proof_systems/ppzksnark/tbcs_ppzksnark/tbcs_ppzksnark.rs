@@ -57,8 +57,8 @@ use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
 #[derive(Default, Clone)]
 pub struct tbcs_ppzksnark_proving_key<ppT: ppTConfig> {
     // type FieldT=Fr<ppT>;
-    circuit: tbcs_ppzksnark_circuit,
-    uscs_pk: uscs_ppzksnark_proving_key<ppT>,
+    pub circuit: tbcs_ppzksnark_circuit,
+    pub uscs_pk: uscs_ppzksnark_proving_key<ppT>,
 }
 impl<ppT: ppTConfig> tbcs_ppzksnark_proving_key<ppT> {
     // tbcs_ppzksnark_proving_key() {};
@@ -131,8 +131,8 @@ pub type tbcs_ppzksnark_processed_verification_key<ppT> =
  */
 #[derive(Default, Clone)]
 pub struct tbcs_ppzksnark_keypair<ppT: ppTConfig> {
-    pk: tbcs_ppzksnark_proving_key<ppT>,
-    vk: tbcs_ppzksnark_verification_key<ppT>,
+    pub pk: tbcs_ppzksnark_proving_key<ppT>,
+    pub vk: tbcs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: ppTConfig> tbcs_ppzksnark_keypair<ppT> {
     // tbcs_ppzksnark_keypair() {};
