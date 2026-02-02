@@ -397,8 +397,8 @@ pub fn leave_block(msg: &str, indent: bool) {
 // //#endif
 // }
 
-// pub fn  print_compilation_info()
-// {
+pub fn  print_compilation_info()
+{
 // // #ifdef __GNUC__
 //     print!("g++ version: {}\n", __VERSION__);
 //     print!("Compiled on {} {}\n", __DATE__, __TIME__);
@@ -428,6 +428,6 @@ pub fn leave_block(msg: &str, indent: bool) {
 // #else
 //     print!("_GLIBCXX_DEBUG: no\n");
 // //#endif
-// }
+}
 
-// } // namespace ffec
+

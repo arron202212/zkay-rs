@@ -47,7 +47,7 @@ use std::ops::Mul;
  *     a primary input for C, and a proof.
  */
 
-fn run_bacs_ppzksnark<ppT: ppTConfig>(
+pub fn run_bacs_ppzksnark<ppT: ppTConfig>(
     example: &bacs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool

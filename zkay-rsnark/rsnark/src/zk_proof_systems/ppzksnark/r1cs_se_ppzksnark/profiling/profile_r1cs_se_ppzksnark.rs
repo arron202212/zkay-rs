@@ -1,72 +1,71 @@
-/** @file
- *****************************************************************************
- Profiling program that exercises the SEppzkSNARK (first generator, then prover,
- then verifier) on a synthetic R1CS instance.
+//  Profiling program that exercises the SEppzkSNARK (first generator, then prover,
+//  then verifier) on a synthetic R1CS instance.
 
- The command
+//  The command
 
-     $ libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/profiling/profile_r1cs_se_ppzksnark 1000 10 Fr
+//      $ libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/profiling/profile_r1cs_se_ppzksnark 1000 10 Fr
 
- exercises the SEppzkSNARK (first generator, then prover, then verifier) on an R1CS instance with 1000 equations and an input consisting of 10 field elements.
+//  exercises the SEppzkSNARK (first generator, then prover, then verifier) on an R1CS instance with 1000 equations and an input consisting of 10 field elements.
 
- (If you get the error `zmInit ERR:can't protect`, see the discussion [above](#elliptic-curve-choices).)
+//  (If you get the error `zmInit ERR:can't protect`, see the discussion [above](#elliptic-curve-choices).)
 
- The command
+//  The command
 
-     $ libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/profiling/profile_r1cs_se_ppzksnark 1000 10 bytes
+//      $ libsnark/zk_proof_systems/ppzksnark/r1cs_se_ppzksnark/profiling/profile_r1cs_se_ppzksnark 1000 10 bytes
 
- does the same but now the input consists of 10 bytes.
+//  does the same but now the input consists of 10 bytes.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use  <cassert>
-use  <cstdio>
+// use common::profiling;
+// use common::utils;
 
-use ffec::common::profiling;
-use ffec::common::utils;
-
-use crate::common::default_types::r1cs_se_ppzksnark_pp;
-use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
-use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples::run_r1cs_se_ppzksnark;
-
-
-
-int main(int argc, const char * argv[])
-{
+// use crate::common::default_types::r1cs_se_ppzksnark_pp;
+// use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
+// use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples::run_r1cs_se_ppzksnark;
+use crate::common::default_types::r1cs_se_ppzksnark_pp::default_r1cs_se_ppzksnark_pp;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::generate_r1cs_example_with_field_input;
+use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::examples::run_r1cs_se_ppzksnark::run_r1cs_se_ppzksnark;
+use ff_curves::Fr;
+use ff_curves::PublicParams;
+use ff_curves::default_ec_pp;
+use ffec::FieldTConfig;
+use ffec::common::profiling::{enter_block, leave_block, print_compilation_info, start_profiling};
+use ffec::div_ceil;
+trait default_r1cs_se_ppzksnark_ppConfig: ppTConfig {}
+fn main<default_r1cs_se_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i32 {
     default_r1cs_se_ppzksnark_pp::init_public_params();
-    ffec::start_profiling();
+    start_profiling();
 
-    if argc == 2 && strcmp(argv[1], "-v") == 0
-    {
-        ffec::print_compilation_info();
+    if argc == 2 && argv[1] == "-v" {
+        print_compilation_info();
         return 0;
     }
 
-    if argc != 3 && argc != 4
-    {
+    if argc != 3 && argc != 4 {
         print!("usage: {} num_constraints input_size [Fr|bytes]\n", argv[0]);
         return 1;
     }
-    let num_constraints= atoi(argv[1]);
-    int input_size = atoi(argv[2]);
-    if argc == 4
-    {
-        assert!(strcmp(argv[3], "Fr") == 0 || strcmp(argv[3], "bytes") == 0);
-        if strcmp(argv[3], "bytes") == 0
-        {
-            input_size = ffec::div_ceil(8 * input_size, ffec::Fr<ffec::default_ec_pp>::capacity());
+    let num_constraints = argv[1].parse::<usize>().unwrap();
+    let mut input_size = argv[2].parse::<usize>().unwrap();
+    if argc == 4 {
+        assert!(argv[3] == "Fr" || argv[3] == "bytes");
+        if argv[3] == "bytes" {
+            input_size = div_ceil(8 * input_size, Fr::<default_ec_pp>::capacity()).unwrap();
         }
     }
 
-    ffec::enter_block("Generate R1CS example");
-    r1cs_example<ffec::Fr<default_r1cs_se_ppzksnark_pp> > example = generate_r1cs_example_with_field_input<ffec::Fr<default_r1cs_se_ppzksnark_pp> >(num_constraints, input_size);
-    ffec::leave_block("Generate R1CS example");
+    enter_block("Generate R1CS example", false);
+    let example = generate_r1cs_example_with_field_input::<
+        Fr<default_r1cs_se_ppzksnark_pp>,
+        pb_variable,
+        pb_linear_combination,
+    >(num_constraints, input_size);
+    leave_block("Generate R1CS example", false);
 
-    ffec::print_header("(enter) Profile R1CS SEppzkSNARK");
+    println!("(enter) Profile R1CS SEppzkSNARK");
     let mut test_serialization = true;
-    run_r1cs_se_ppzksnark<default_r1cs_se_ppzksnark_pp>(example, test_serialization);
-    ffec::print_header("(leave) Profile R1CS SEppzkSNARK");
+    run_r1cs_se_ppzksnark::<default_r1cs_se_ppzksnark_pp>(&example, test_serialization);
+    println!("(leave) Profile R1CS SEppzkSNARK");
+    0
 }

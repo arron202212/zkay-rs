@@ -45,7 +45,7 @@ use std::ops::Mul;
  *     a primary input for C, and a proof.
  */
 
-fn run_tbcs_ppzksnark<ppT: ppTConfig>(example: &tbcs_example, test_serialization: bool) -> bool
+pub fn run_tbcs_ppzksnark<ppT: ppTConfig>(example: &tbcs_example, test_serialization: bool) -> bool
 where
     knowledge_commitment<
         <ppT as ff_curves::PublicParams>::G1,

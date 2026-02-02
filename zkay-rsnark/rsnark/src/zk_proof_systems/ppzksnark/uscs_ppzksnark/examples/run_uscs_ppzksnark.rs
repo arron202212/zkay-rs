@@ -47,7 +47,7 @@ use std::ops::Mul;
  *     a primary input for CS, and a proof.
  */
 
-fn run_uscs_ppzksnark<ppT: ppTConfig>(
+pub fn run_uscs_ppzksnark<ppT: ppTConfig>(
     example: &uscs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool {
