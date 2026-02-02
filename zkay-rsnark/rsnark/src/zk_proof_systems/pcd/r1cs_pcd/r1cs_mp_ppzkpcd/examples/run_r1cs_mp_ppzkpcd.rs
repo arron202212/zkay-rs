@@ -21,6 +21,13 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd_par
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
+use ff_curves::Fr;
+use ffec::common::profiling::{enter_block, leave_block};
+use ffec::common::serialization::reserialize;
+use rccell::RcCell;
+use std::collections::BTreeSet;
+use std::ops::Mul;
+
 /**
  * Runs the multi-predicate ppzkPCD (generator, prover, and verifier) for the
  * "tally compliance predicate", of a given wordsize, arity, and depth.
@@ -37,15 +44,6 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
 //                                        test_serialization:bool,
 //                                        test_multi_type:bool,
 //                                        test_same_type_optimization:bool);
-
-// use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::examples::tally_cp;
-// use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd;
-use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block};
-use ffec::common::serialization::reserialize;
-use rccell::RcCell;
-use std::collections::BTreeSet;
-use std::ops::Mul;
 
 type FieldT<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
 
@@ -314,5 +312,5 @@ where
 
     leave_block("Call to run_r1cs_mp_ppzkpcd_tally_example", false);
 
-    return all_accept;
+    all_accept
 }
