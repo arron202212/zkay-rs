@@ -44,3 +44,4 @@ rand_pcg={workspace = true}
 rand_core={workspace = true}
 rip_shuffle={workspace = true}
 bytebuffer={workspace=true}
+clap = { workspace = true }

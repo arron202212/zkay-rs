@@ -250,6 +250,14 @@ pub type ram_ppzksnark_proof<ram_ppzksnark_ppT> =
 
 //     return out;
 // }
+use std::fmt;
+impl<ram_ppzksnark_ppT: RamPptConfig> fmt::Display
+    for ram_ppzksnark_proving_key<ram_ppzksnark_ppT>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 
 //
 // std::istream& operator>>(std::istream &in, ram_ppzksnark_proving_key<ram_ppzksnark_ppT> &pk)
@@ -329,7 +337,13 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksna
 
 //     return out;
 // }
-
+impl<ram_ppzksnark_ppT: RamPptConfig> fmt::Display
+    for ram_ppzksnark_verification_key<ram_ppzksnark_ppT>
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 //
 // std::istream& operator>>(std::istream &in, ram_ppzksnark_verification_key<ram_ppzksnark_ppT> &vk)
 // {

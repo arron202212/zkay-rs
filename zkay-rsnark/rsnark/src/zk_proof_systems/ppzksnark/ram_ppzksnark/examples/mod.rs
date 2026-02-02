@@ -1,4 +1,3 @@
-
 pub mod demo_ram_ppzksnark;
 pub mod demo_ram_ppzksnark_generator;
 pub mod demo_ram_ppzksnark_prover;

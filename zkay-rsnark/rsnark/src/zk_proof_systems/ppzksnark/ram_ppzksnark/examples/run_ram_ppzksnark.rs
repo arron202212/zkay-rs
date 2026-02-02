@@ -1,18 +1,23 @@
-/** @file
-*****************************************************************************
+// Declaration of functionality that runs the RAM ppzkSNARK for
+// a given RAM example.
 
-Declaration of functionality that runs the RAM ppzkSNARK for
-a given RAM example.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RUN_RAM_PPZKSNARK_HPP_
-// #define RUN_RAM_PPZKSNARK_HPP_
-use crate::relations::ram_computations::rams::examples::ram_examples;
-use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
+// use crate::relations::ram_computations::rams::examples::ram_examples;
+// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
+use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
+use crate::relations::ram_computations::rams::examples::ram_examples::ram_example;
+use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
+use crate::relations::ram_computations::rams::ram_params::ram_params_type;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark::{
+    ram_ppzksnark_generator, ram_ppzksnark_proof, ram_ppzksnark_prover, ram_ppzksnark_proving_key,
+    ram_ppzksnark_verification_key, ram_ppzksnark_verifier,
+};
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::RamPptConfig;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::ram_ppzksnark_machine_pp;
+use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::RamConfig;
+use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::serialization::reserialize;
+use ffec::log2;
+use std::ops::Mul;
 
 /**
  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
@@ -24,29 +29,10 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
 //
 // bool run_ram_ppzksnark(example:&ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >,
 //                        test_serialization:bool);
-use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
 
-//#endif // RUN_RAM_PPZKSNARK_HPP_
-/** @file
-*****************************************************************************
+// use common::profiling;
 
-Implementation of functionality that runs the RAM ppzkSNARK for
-a given RAM example.
-
-See run_ram_ppzksnark.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RUN_RAM_PPZKSNARK_TCC_
-// #define RUN_RAM_PPZKSNARK_TCC_
-
-// use  <sstream>
-use ffec::common::profiling;
-
-use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
+// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 
 /**
  * The code below provides an example of all stages of running a RAM ppzkSNARK.
@@ -61,11 +47,33 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
  *     a boot trace, and a proof.
  */
 //
-pub fn run_ram_ppzksnark<ram_ppzksnark_ppT>(
+pub fn run_ram_ppzksnark<ram_ppzksnark_ppT: RamPptConfig>(
     example: &ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>>,
     test_serialization: bool,
-) -> bool {
-    ffec::enter_block("Call to run_ram_ppzksnark");
+) -> bool
+where
+    knowledge_commitment<
+        <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G2,
+        <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<ram_ppzksnark_ppT as RamPptConfig>::machine_pp as ram_params_type>::base_field_type,
+            Output = knowledge_commitment<
+                <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G2,
+                <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+        <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<ram_ppzksnark_ppT as RamPptConfig>::machine_pp as ram_params_type>::base_field_type,
+            Output = knowledge_commitment<
+                <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+                <<ram_ppzksnark_ppT as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+{
+    enter_block("Call to run_ram_ppzksnark", false);
 
     print!("This run uses an example with the following parameters:\n");
     example.ap.print();
@@ -75,57 +83,54 @@ pub fn run_ram_ppzksnark<ram_ppzksnark_ppT>(
     );
     print!("* Time bound (T): {}\n", example.time_bound);
     print!(
-        "Hence, ffec::log2(L+2*T) equals {}\n",
-        ffec::log2(example.boot_trace_size_bound + 2 * example.time_bound)
+        "Hence, log2(L+2*T) equals {}\n",
+        log2(example.boot_trace_size_bound + 2 * example.time_bound)
     );
 
-    ffec::print_header("RAM ppzkSNARK Generator");
-    let keypair = ram_ppzksnark_generator::<ram_ppzksnark_ppT>(
-        example.ap,
+    println!("RAM ppzkSNARK Generator");
+    let mut keypair = ram_ppzksnark_generator::<ram_ppzksnark_ppT>(
+        &example.ap,
         example.boot_trace_size_bound,
         example.time_bound,
     );
     print!("\n");
-    ffec::print_indent();
-    ffec::print_mem("after generator");
+    print_indent();
+    println!("after generator");
 
     if test_serialization {
-        ffec::enter_block("Test serialization of keys");
-        keypair.pk = ffec::reserialize::<ram_ppzksnark_proving_key<ram_ppzksnark_ppT>>(keypair.pk);
-        keypair.vk =
-            ffec::reserialize::<ram_ppzksnark_verification_key<ram_ppzksnark_ppT>>(keypair.vk);
-        ffec::leave_block("Test serialization of keys");
+        enter_block("Test serialization of keys", false);
+        keypair.pk = reserialize::<ram_ppzksnark_proving_key<ram_ppzksnark_ppT>>(&keypair.pk);
+        keypair.vk = reserialize::<ram_ppzksnark_verification_key<ram_ppzksnark_ppT>>(&keypair.vk);
+        leave_block("Test serialization of keys", false);
     }
 
-    ffec::print_header("RAM ppzkSNARK Prover");
-    let proof = ram_ppzksnark_prover::<ram_ppzksnark_ppT>(
-        keypair.pk,
-        example.boot_trace,
-        example.auxiliary_input,
+    println!("RAM ppzkSNARK Prover");
+    let mut proof = ram_ppzksnark_prover::<ram_ppzksnark_ppT>(
+        &keypair.pk,
+        &example.boot_trace,
+        &example.auxiliary_input,
     );
     print!("\n");
-    ffec::print_indent();
-    ffec::print_mem("after prover");
+    print_indent();
+    println!("after prover");
 
     if test_serialization {
-        ffec::enter_block("Test serialization of proof");
-        proof = ffec::reserialize::<ram_ppzksnark_proof<ram_ppzksnark_ppT>>(proof);
-        ffec::leave_block("Test serialization of proof");
+        enter_block("Test serialization of proof", false);
+        proof = reserialize::<ram_ppzksnark_proof<ram_ppzksnark_ppT>>(&proof);
+        leave_block("Test serialization of proof", false);
     }
 
-    ffec::print_header("RAM ppzkSNARK Verifier");
-    let ans = ram_ppzksnark_verifier::<ram_ppzksnark_ppT>(keypair.vk, example.boot_trace, proof);
+    println!("RAM ppzkSNARK Verifier");
+    let ans = ram_ppzksnark_verifier::<ram_ppzksnark_ppT>(&keypair.vk, &example.boot_trace, &proof);
     print!("\n");
-    ffec::print_indent();
-    ffec::print_mem("after verifier");
+    print_indent();
+    println!("after verifier");
     print!(
         "* The verification result is: {}\n",
         if ans { "PASS" } else { "FAIL" }
     );
 
-    ffec::leave_block("Call to run_ram_ppzksnark");
+    leave_block("Call to run_ram_ppzksnark", false);
 
-    return ans;
+    ans
 }
-
-//#endif // RUN_RAM_PPZKSNARK_TCC_

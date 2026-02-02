@@ -1,33 +1,25 @@
+// Declaration of interfaces for a RAM example, as well as functions to sample
+// RAM examples with prescribed parameters (according to some distribution).
+
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a RAM example, as well as functions to sample
-RAM examples with prescribed parameters (according to some distribution).
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RAM_EXAMPLES_HPP_
-// #define RAM_EXAMPLES_HPP_
 use crate::relations::ram_computations::rams::ram_params::{
     ram_architecture_params, ram_boot_trace, ram_input_tape, ram_params_type,
 };
+use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_instruction;
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     generate_tinyram_prelude, random_tinyram_instruction, tinyram_opcode, tinyram_program,
 };
+// use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_instruction;
+
 use ffec::common::profiling::{enter_block, leave_block};
 #[derive(Default)]
 pub struct ram_example<RamT: ram_params_type> {
-    ap: ram_architecture_params<RamT>,
-    boot_trace_size_bound: usize,
-    time_bound: usize,
-    boot_trace: ram_boot_trace,
-    auxiliary_input: ram_input_tape,
+    pub ap: ram_architecture_params<RamT>,
+    pub boot_trace_size_bound: usize,
+    pub time_bound: usize,
+    pub boot_trace: ram_boot_trace,
+    pub auxiliary_input: ram_input_tape,
 }
-
 // /**
 //  * For now: only specialized to TinyRAM
 //  */
@@ -39,26 +31,6 @@ pub struct ram_example<RamT: ram_params_type> {
 //  */
 //
 // ram_example<RamT> gen_ram_example_complex(ap:&ram_architecture_params<RamT>, boot_trace_size_bound:usize, time_bound:usize, satisfiable:bool=true);
-
-// use crate::relations::ram_computations::rams::examples::ram_examples;
-
-//#endif // RAM_EXAMPLES_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a RAM example, as well as functions to sample
-RAM examples with prescribed parameters (according to some distribution).
-
-See ram_examples.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RAM_EXAMPLES_TCC_
-// #define RAM_EXAMPLES_TCC_
-use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_instruction;
 
 pub fn gen_ram_example_simple<RamT: ram_params_type>(
     ap: ram_architecture_params<RamT>,

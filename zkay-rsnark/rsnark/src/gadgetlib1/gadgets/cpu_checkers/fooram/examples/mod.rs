@@ -1,1 +1,1 @@
-pub mod   test_fooram;
+pub mod test_fooram;

@@ -41,6 +41,9 @@ pub trait ProgramConfig<IC: InstructionConfig> {
   length.
 */
 pub trait ArchitectureParamsTypeConfig: Default + Clone {
+    fn froms(w: usize) -> Self {
+        Default::default()
+    }
     fn w(&self) -> usize {
         0
     }

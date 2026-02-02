@@ -359,6 +359,7 @@ pub struct inner_product_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub B: pb_linear_combination_array<FieldT, PB>,
     pub result: variable<FieldT, pb_variable>,
 }
+pub type inner_product_gadgets<FieldT, PB> = gadget<FieldT, PB, inner_product_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> inner_product_gadget<FieldT, PB> {
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,

@@ -1,2 +1,1 @@
-
- pub mod demo_arithmetization;
+pub mod demo_arithmetization;
