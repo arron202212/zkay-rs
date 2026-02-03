@@ -1,19 +1,5 @@
-/** @file
-*****************************************************************************
+// Declaration of auxiliary functions for TinyRAM.
 
-Declaration of auxiliary functions for TinyRAM.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef TINYRAM_AUX_HPP_
-// #define TINYRAM_AUX_HPP_
-
-// use  <cassert>
-// use  <iostream>
-// use  <map>
 use crate::relations::ram_computations::rams::ram_params::{
     ArchitectureParamsTypeConfig, InstructionConfig, ProgramConfig,
 };
@@ -238,23 +224,7 @@ impl tinyram_program {
 
 // tinyram_input_tape load_tape(std::istream &tape);
 
-//#endif // TINYRAM_AUX_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of auxiliary functions for TinyRAM.
-
-See tinyram_aux.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// use  <cassert>
-// use  <fstream>
-// use  <string>
-use ffec::common::profiling;
+// use ffec::common::profiling;
 // use ffec::common::utils;
 
 // use crate::relations::ram_computations::rams::tinyram::tinyram_aux;

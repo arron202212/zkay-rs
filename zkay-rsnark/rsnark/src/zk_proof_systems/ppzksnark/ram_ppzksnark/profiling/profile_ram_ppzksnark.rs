@@ -1,57 +1,88 @@
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-// use  <algorithm>
-// use  <cstring>
-// use  <fstream>
-// use  <iostream>
-// use  <sstream>
-// use  <string>
-use ffec::common::profiling;
+// use common::profiling;
 
-use crate::common::default_types::ram_ppzksnark_pp;
-use crate::relations::ram_computations::rams::examples::ram_examples;
-use crate::relations::ram_computations::rams::tinyram::tinyram_params;
-use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
+// use crate::common::default_types::ram_ppzksnark_pp;
+// use crate::relations::ram_computations::rams::examples::ram_examples;
+// use crate::relations::ram_computations::rams::tinyram::tinyram_params;
+// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
+use crate::common::default_types::ram_ppzksnark_pp::default_ram_ppzksnark_pp;
+use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
+use crate::relations::ram_computations::rams::examples::ram_examples::gen_ram_example_complex;
+use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
+use crate::relations::ram_computations::rams::ram_params::ram_params_type;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark::run_ram_ppzksnark;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::RamPptConfig;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::ram_ppzksnark_architecture_params;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::ram_ppzksnark_machine_pp;
+use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::ram_ppzksnark_snark_pp;
+use ff_curves::Fr;
+use ff_curves::PublicParams;
+use ffec::common::profiling::{
+    enter_block, last_times, leave_block, print_compilation_info, start_profiling,
+};
+use std::ops::Mul;
 
-// int main(int argc, const char * argv[])
-// {
-//     ram_ppzksnark_snark_pp<default_ram_ppzksnark_pp>::init_public_params();
-//     ffec::start_profiling();
+type machine_ppT<default_ram_ppzksnark_pp> = ram_ppzksnark_machine_pp<default_ram_ppzksnark_pp>;
 
-//     if argc == 2 && strcmp(argv[1], "-v") == 0
-//     {
-//         ffec::print_compilation_info();
-//         return 0;
-//     }
+fn main<default_ram_ppzksnark_pp:RamPptConfig>(argc: i32, argv: &[&str]) -> i32 where
+    knowledge_commitment<
+        <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G2,
+        <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<default_ram_ppzksnark_pp as RamPptConfig>::machine_pp as ram_params_type>::base_field_type,
+            Output = knowledge_commitment<
+                <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G2,
+                <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+    knowledge_commitment<
+        <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+        <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+    >: Mul<
+            <<default_ram_ppzksnark_pp as RamPptConfig>::machine_pp as ram_params_type>::base_field_type,
+            Output = knowledge_commitment<
+                <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+                <<default_ram_ppzksnark_pp as RamPptConfig>::snark_pp as ff_curves::PublicParams>::G1,
+            >,
+        >,
+{
+    ram_ppzksnark_snark_pp::<default_ram_ppzksnark_pp>::init_public_params();
+    start_profiling();
 
-//     if argc != 6
-//     {
-//         print!("usage: {} word_size reg_count program_size input_size time_bound\n", argv[0]);
-//         return 1;
-//     }
+    if argc == 2 && argv[1] == "-v" {
+        print_compilation_info();
+        return 0;
+    }
 
-//     let w = atoi(argv[1]),
-//                  k = atoi(argv[2]),
-//                  program_size = atoi(argv[3]),
-//                  input_size = atoi(argv[4]),
-//                  time_bound = atoi(argv[5]);
+    if argc != 6 {
+        print!(
+            "usage: {} word_size reg_count program_size input_size time_bound\n",
+            argv[0]
+        );
+        return 1;
+    }
 
-//     type machine_ppT=ram_ppzksnark_machine_pp<default_ram_ppzksnark_pp>;
+    let w = argv[1].parse::<usize>().unwrap();
+    let k = argv[2].parse::<usize>().unwrap();
+    let program_size = argv[3].parse::<usize>().unwrap();
+    let input_size = argv[4].parse::<usize>().unwrap();
+    let time_bound = argv[5].parse::<usize>().unwrap();
 
-//     const ram_ppzksnark_architecture_params<default_ram_ppzksnark_pp> ap(w, k);
+    let ap = ram_ppzksnark_architecture_params::<default_ram_ppzksnark_pp>::fromss(w, k);
 
-//     ffec::enter_block("Generate RAM example");
-//     let boot_trace_size_bound = program_size + input_size;
-//     let mut satisfiable = true;
-//     ram_example<machine_ppT> example = gen_ram_example_complex<machine_ppT>(ap, boot_trace_size_bound, time_bound, satisfiable);
-//     ffec::leave_block("Generate RAM example");
+    enter_block("Generate RAM example", false);
+    let boot_trace_size_bound = program_size + input_size;
+    let mut satisfiable = true;
+    let example = gen_ram_example_complex::<machine_ppT<default_ram_ppzksnark_pp>>(
+        ap,
+        boot_trace_size_bound,
+        time_bound,
+        satisfiable,
+    );
+    leave_block("Generate RAM example", false);
 
-//     ffec::print_header("(enter) Profile RAM ppzkSNARK");
-//     let mut test_serialization = true;
-//     run_ram_ppzksnark<default_ram_ppzksnark_pp>(example, test_serialization);
-//     ffec::print_header("(leave) Profile RAM ppzkSNARK");
-// }
+    println!("(enter) Profile RAM ppzkSNARK");
+    let mut test_serialization = true;
+    run_ram_ppzksnark::<default_ram_ppzksnark_pp>(&example, test_serialization);
+    println!("(leave) Profile RAM ppzkSNARK");
+    0
+}

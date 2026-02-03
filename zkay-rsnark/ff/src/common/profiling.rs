@@ -6,7 +6,6 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-//  *****************************************************************************
 //  Declaration of functions for profiling code blocks.
 
 //  Reports time, operation counts, memory usage, and others.
@@ -78,27 +77,28 @@ const indentation: usize = 0;
 
 // using std::usize;
 
-// i64 get_nsec_time()
-// {
-//     auto timepoint = std::chrono::high_resolution_clock::now();
-//     return std::chrono::duration_cast<std::chrono::nanoseconds>(timepoint.time_since_epoch()).count();
-// }
+ pub fn get_nsec_time()->i64
+{
+    // auto timepoint = std::chrono::high_resolution_clock::now();
+    // return std::chrono::duration_cast<std::chrono::nanoseconds>(timepoint.time_since_epoch()).count();
+0
+}
 
 // /* Return total CPU time consumsed by all threads of the process, in nanoseconds. */
-// i64 get_nsec_cpu_time()
-// {
+pub fn  get_nsec_cpu_time()->i64
+{
 // #if _MSC_VER
-// 	return 0;
+	return 0;
 // #else
-//     ::timespec ts;
-//     if  ::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) != 0  {
-//         throw ::std::runtime_error("clock_gettime(CLOCK_PROCESS_CPUTIME_ID) failed");
-//     }
-//         // If we expected this to work, don't silently ignore failures, because that would hide the problem and incur an unnecessarily system-call overhead. So if we ever observe this exception, we should probably add a suitable // #ifdef .
-//         //TODO: clock_gettime(CLOCK_PROCESS_CPUTIME_ID) is not supported by native Windows. What about Cygwin? Should we // #ifdef on CLOCK_PROCESS_CPUTIME_ID or on __linux__?
-//     return ts.tv_sec * 1000000000LL + ts.tv_nsec;
-// //#endif
-// }
+    // ::timespec ts;
+    // if  ::clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) != 0  {
+    //     throw ::std::runtime_error("clock_gettime(CLOCK_PROCESS_CPUTIME_ID) failed");
+    // }
+        // If we expected this to work, don't silently ignore failures, because that would hide the problem and incur an unnecessarily system-call overhead. So if we ever observe this exception, we should probably add a suitable // #ifdef .
+        //TODO: clock_gettime(CLOCK_PROCESS_CPUTIME_ID) is not supported by native Windows. What about Cygwin? Should we // #ifdef on CLOCK_PROCESS_CPUTIME_ID or on __linux__?
+    // return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+//#endif
+}
 
 // i64 start_time, last_time;
 // i64 start_cpu_time, last_cpu_time;
@@ -110,7 +110,8 @@ pub fn  start_profiling()
 //     last_time = start_time = get_nsec_time();
 //     last_cpu_time = start_cpu_time = get_nsec_cpu_time();
 }
-
+const invocation_counts:&[(&str,usize)]=&[];
+const op_data_points:&[(&str,&str)]=&[];
 // BTreeMap<String, usize> invocation_counts;
 // BTreeMap<String, i64> enter_times;
 // BTreeMap<String, i64> last_times;
@@ -143,108 +144,110 @@ pub fn  start_profiling()
 
 // bool inhibit_profiling_info = false;
 // bool inhibit_profiling_counters = false;
+pub fn last_times(_:&str)->f64{
+0.0
+}
+pub fn  clear_profiling_counters()
+{
+    // invocation_counts.clear();
+    // last_times.clear();
+    // last_cpu_times.clear();
+    // cumulative_times.clear();
+}
 
-// pub fn  clear_profiling_counters()
-// {
-//     invocation_counts.clear();
-//     last_times.clear();
-//     last_cpu_times.clear();
-//     cumulative_times.clear();
-// }
+pub fn  print_cumulative_time_entry(key:&str,factor:i64)
+{
+    // let total_ms= (cumulative_times.at(key) * 1e-6);
+    // let cnt = invocation_counts.at(key);
+    // let avg_ms= total_ms / cnt;
+    // print!("   %-45s: %12.5fms = %lld * %0.5fms ({} invocations, %0.5fms = %lld * %0.5fms per invocation)\n", key, total_ms, factor, total_ms/ (double) factor, cnt, avg_ms, factor, avg_ms/ (double) factor);
+}
 
-// pub fn  print_cumulative_time_entry(key:&String, const i64 factor)
-// {
-//     let total_ms= (cumulative_times.at(key) * 1e-6);
-//     let cnt = invocation_counts.at(key);
-//     let avg_ms= total_ms / cnt;
-//     print!("   %-45s: %12.5fms = %lld * %0.5fms ({} invocations, %0.5fms = %lld * %0.5fms per invocation)\n", key, total_ms, factor, total_ms/ (double) factor, cnt, avg_ms, factor, avg_ms/ (double) factor);
-// }
+pub fn  print_cumulative_times( factor:i64)
+{
+    print!("Dumping times:\n");
+    // for kv in &cumulative_times
+    // {
+    //     print_cumulative_time_entry(kv.first, factor);
+    // }
+}
+ 
+pub fn  print_cumulative_op_counts(only_fq:bool)
+{
+// #ifdef PROFILE_OP_COUNTS
+    print!("Dumping operation counts:\n");
+    for msg in invocation_counts
+    {
+        // print!("  %-45s: ", msg.first);
+        let mut  first = true;
+        for data_point in op_data_points
+        {
+            // if only_fq && data_point.first.compare(0, 2, "Fq") != 0
+            // {
+            //     continue;
+            // }
 
-// pub fn  print_cumulative_times(const i64 factor)
-// {
-//     print!("Dumping times:\n");
-//     for kv in &cumulative_times
-//     {
-//         print_cumulative_time_entry(kv.first, factor);
-//     }
-// }
-
-// pub fn  print_cumulative_op_counts(only_fq:bool)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     print!("Dumping operation counts:\n");
-//     for msg in &invocation_counts
-//     {
-//         print!("  %-45s: ", msg.first);
-//         bool first = true;
-//         for data_point in &op_data_points
-//         {
-//             if only_fq && data_point.first.compare(0, 2, "Fq") != 0
-//             {
-//                 continue;
-//             }
-
-//             if !first
-//             {
-//                 print!(", ");
-//             }
-//             print!("%-5s = %7.0f (%3zu)",
-//                    data_point.first,
-//                    1. * cumulative_op_counts[std::make_pair(msg.first, data_point.first)] / msg.second,
-//                    msg.second);
-//             first = false;
-//         }
-//         print!("\n");
-//     }
+            if !first
+            {
+                print!(", ");
+            }
+            // print!("%-5s = %7.0f (%3zu)",
+            //        data_point.first,
+            //        1. * cumulative_op_counts[std::make_pair(msg.first, data_point.first)] / msg.second,
+            //        msg.second);
+            first = false;
+        }
+        print!("\n");
+    }
 // #else
 //     UNUSED(only_fq);
-// //#endif
-// }
+//#endif
+}
 
-// pub fn  print_op_profiling(msg:&String)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     print!("\n");
-//     print_indent();
+pub fn  print_op_profiling(msg:&str)
+{
+// #ifdef PROFILE_OP_COUNTS
+    print!("\n");
+    print_indent();
 
-//     print!("(opcounts) = (");
-//     bool first = true;
-//     for p in &op_data_points
-//     {
-//         if !first
-//         {
-//             print!(", ");
-//         }
+    print!("(opcounts) = (");
+    let mut  first = true;
+    for p in op_data_points
+    {
+        if !first
+        {
+            print!(", ");
+        }
 
-//         print!("{}=%lld", p.first, *(p.second)-op_counts[std::make_pair(msg, p.first)]);
-//         first = false;
-//     }
-//     print!(")");
+        // print!("{}=%lld", p.first, *(p.second)-op_counts[(msg, p.first)]);
+        first = false;
+    }
+    print!(")");
 // #else
 //     UNUSED(msg);
-// //#endif
-// }
+//#endif
+}
 
-// static pub fn  print_times_from_last_and_start(i64     now, i64     last,
-//                                             i64 cpu_now, i64 cpu_last)
-// {
-//     i64 time_from_start = now - start_time;
-//     i64 time_from_last = now - last;
+ pub fn  print_times_from_last_and_start(     now:i64,      last:i64,
+                                             cpu_now:i64,  cpu_last:i64)
+{
+    // i64 time_from_start = now - start_time;
+    // i64 time_from_last = now - last;
 
-//     i64 cpu_time_from_start = cpu_now - start_cpu_time;
-//     i64 cpu_time_from_last = cpu_now - cpu_last;
+    // i64 cpu_time_from_start = cpu_now - start_cpu_time;
+    // i64 cpu_time_from_last = cpu_now - cpu_last;
 
-//     if time_from_last != 0 {
-//         double parallelism_from_last = 1.0 * (double) cpu_time_from_last / (double) time_from_last;
-//         print!("[%0.4fs x%0.2f]", (double) time_from_last * 1e-9, parallelism_from_last);
-//     } else {
-//         print!("[             ]");
-//     }
-//     if time_from_start != 0 {
-//         double parallelism_from_start = 1.0 * (double) cpu_time_from_start / (double) time_from_start;
-//         print!("\t(%0.4fs x%0.2f from start)", (double) time_from_start * 1e-9, parallelism_from_start);
-//     }
-// }
+    // if time_from_last != 0 {
+    //     double parallelism_from_last = 1.0 * (double) cpu_time_from_last / (double) time_from_last;
+    //     print!("[%0.4fs x%0.2f]", (double) time_from_last * 1e-9, parallelism_from_last);
+    // } else {
+    //     print!("[             ]");
+    // }
+    // if time_from_start != 0 {
+    //     double parallelism_from_start = 1.0 * (double) cpu_time_from_start / (double) time_from_start;
+    //     print!("\t(%0.4fs x%0.2f from start)", (double) time_from_start * 1e-9, parallelism_from_start);
+    // }
+}
 
 pub fn print_time(msg: &str) {
     //     if inhibit_profiling_info
@@ -267,17 +270,17 @@ pub fn print_time(msg: &str) {
     //     last_cpu_time = cpu_now;
 }
 
-// pub fn  print_header(const char *msg)
-// {
-//     print!("\n================================================================================\n");
-//     print!("{}\n", msg);
-//     print!("================================================================================\n\n");
-// }
+pub fn  print_header(msg:&str)
+{
+    print!("\n================================================================================\n");
+    print!("{}\n", msg);
+    print!("================================================================================\n\n");
+}
 
-// pub fn  print_separator()
-// {
-//     print!("\n================================================================================\n\n");
-// }
+pub fn  print_separator()
+{
+    print!("\n================================================================================\n\n");
+}
 
 pub fn print_indent() {
     for i in 0..indentation {
@@ -285,13 +288,13 @@ pub fn print_indent() {
     }
 }
 
-// pub fn  op_profiling_enter(msg:&String)
-// {
-//     for p in &op_data_points
-//     {
-//         op_counts[std::make_pair(msg, p.first)] = *(p.second);
-//     }
-// }
+pub fn  op_profiling_enter(msg:&str)
+{
+    // for p in &op_data_points
+    // {
+    //     op_counts[std::make_pair(msg, p.first)] = *(p.second);
+    // }
+}
 
 pub fn enter_block(msg: &str, indent: bool) {
     //     if inhibit_profiling_counters
@@ -378,8 +381,8 @@ pub fn leave_block(msg: &str, indent: bool) {
     //     }
 }
 
-// pub fn  print_mem(s:&String)
-// {
+pub fn  print_mem(s:&str)
+{
 // //#ifndef NO_PROCPS
 //     struct proc_t usage;
 //     look_up_our_self(&usage);
@@ -395,7 +398,7 @@ pub fn leave_block(msg: &str, indent: bool) {
 //     UNUSED(s);
 //     print!("* Memory profiling not supported in NO_PROCPS mode\n");
 // //#endif
-// }
+}
 
 pub fn  print_compilation_info()
 {

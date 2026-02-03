@@ -44,6 +44,9 @@ pub trait ArchitectureParamsTypeConfig: Default + Clone {
     fn froms(w: usize) -> Self {
         Default::default()
     }
+    fn fromss(w: usize, k: usize) -> Self {
+        Default::default()
+    }
     fn w(&self) -> usize {
         0
     }
