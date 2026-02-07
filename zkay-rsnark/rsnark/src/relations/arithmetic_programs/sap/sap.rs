@@ -227,7 +227,7 @@ impl<FieldT: FieldTConfig> sap_instance<FieldT> {
         return self.num_inputs;
     }
 
-    pub fn is_satisfied(&self, witness: sap_witness<FieldT>) -> bool {
+    pub fn is_satisfied(&self, witness: &sap_witness<FieldT>) -> bool {
         let mut t = FieldT::random_element();
 
         let mut At = vec![FieldT::zero(); self.num_variables() + 1];
@@ -268,7 +268,7 @@ impl<FieldT: FieldTConfig> sap_instance<FieldT> {
             Ht,
             Zt,
         );
-        return eval_sap_inst.is_satisfied(witness);
+        return eval_sap_inst.is_satisfied(&witness);
     }
 }
 
@@ -333,7 +333,7 @@ impl<FieldT: FieldTConfig> sap_instance_evaluation<FieldT> {
         return self.num_inputs;
     }
 
-    pub fn is_satisfied(&self, witness: sap_witness<FieldT>) -> bool {
+    pub fn is_satisfied(&self, witness: &sap_witness<FieldT>) -> bool {
         if self.num_variables() != witness.num_variables() {
             return false;
         }
