@@ -251,9 +251,12 @@ impl<FpkT: ppTConfig> exponentiation_gadgets<FpkT> {
     }
 }
 
-pub fn test_exponentiation_gadget<FpkT: ppTConfig>(power: &bigint<M>, annotation: &String) {
+pub fn test_exponentiation_gadget<FpkT: ppTConfig, const MM: usize>(
+    power: &bigint<MM>,
+    annotation: &str,
+) {
     // type FieldT = FpkT::my_Fp;
-
+    let power = bigint::<M>::default(); //MYTODO  M 
     let mut pb = RcCell::new(protoboard::<FpkT::FieldT, FpkT::PB>::default());
     let mut x = Fpk_variableT::<FpkT>::new(pb.clone(), "x".to_owned());
     let mut x_to_power = Fpk_variableT::<FpkT>::new(pb.clone(), "x_to_power".to_owned());

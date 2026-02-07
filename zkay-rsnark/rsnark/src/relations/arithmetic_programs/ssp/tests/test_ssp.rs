@@ -1,104 +1,117 @@
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use  <algorithm>
-use  <cassert>
-use  <cstdio>
-use  <cstring>
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::reductions::uscs_to_ssp::uscs_to_ssp::{
+    uscs_to_ssp_instance_map, uscs_to_ssp_instance_map_with_evaluation, uscs_to_ssp_witness_map,
+};
+use crate::relations::constraint_satisfaction_problems::uscs::examples::uscs_examples::{
+    generate_uscs_example_with_binary_input, generate_uscs_example_with_field_input,
+};
+use ff_curves::Fr;
+use ffec::FieldTConfig;
+use ffec::PpConfig;
+use ffec::common::profiling::{
+    enter_block, leave_block, print_header, print_indent, start_profiling,
+};
+use std::marker::PhantomData;
 
+pub fn test_ssp<FieldT: FieldTConfig>(
+    num_constraints: usize,
+    num_inputs: usize,
+    binary_input: bool,
+) {
+    enter_block("Call to test_ssp", false);
 
-use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
-use ffec::algebra::field_utils::field_utils;
-use ffec::common::profiling;
-use ffec::common::utils;
+    print_indent();
+    print!("* Number of constraints: {}\n", num_constraints);
+    print_indent();
+    print!("* Number of inputs: {}\n", num_inputs);
+    print_indent();
+    print!(
+        "* Input type: {}\n",
+        if binary_input { "binary" } else { "field" }
+    );
 
-use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
-use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
+    enter_block("Generate constraint system and assignment", false);
+    let example = if binary_input {
+        generate_uscs_example_with_binary_input::<FieldT, pb_variable, pb_linear_combination>(
+            num_constraints,
+            num_inputs,
+        )
+    } else {
+        generate_uscs_example_with_field_input::<FieldT, pb_variable, pb_linear_combination>(
+            num_constraints,
+            num_inputs,
+        )
+    };
+    leave_block("Generate constraint system and assignment", false);
 
+    enter_block("Check satisfiability of constraint system", false);
+    assert!(
+        example
+            .constraint_system
+            .is_satisfied(&example.primary_input, &example.auxiliary_input)
+    );
+    leave_block("Check satisfiability of constraint system", false);
 
+    let t = FieldT::random_element();
+    let d = FieldT::random_element();
 
+    enter_block("Compute SSP instance 1", false);
+    let ssp_inst_1 = uscs_to_ssp_instance_map(&example.constraint_system);
+    leave_block("Compute SSP instance 1", false);
 
-pub fn  test_ssp(num_constraints:usize, num_inputs:usize, binary_input:bool)
-{
-    ffec::enter_block("Call to test_ssp");
+    enter_block("Compute SSP instance 2", false);
+    let ssp_inst_2 = uscs_to_ssp_instance_map_with_evaluation(&example.constraint_system, &t);
+    leave_block("Compute SSP instance 2", false);
 
-    ffec::print_indent(); print!("* Number of constraints: {}\n", num_constraints);
-    ffec::print_indent(); print!("* Number of inputs: {}\n", num_inputs);
-    ffec::print_indent(); print!("* Input type: {}\n",if  binary_input  {"binary" }else {"field"});
+    enter_block("Compute SSP witness", false);
+    let ssp_wit = uscs_to_ssp_witness_map(
+        &example.constraint_system,
+        &example.primary_input,
+        &example.auxiliary_input,
+        &d,
+    );
+    leave_block("Compute SSP witness", false);
 
-    ffec::enter_block("Generate constraint system and assignment");
-    uscs_example<FieldT> example;
-    if binary_input
-    {
-        example = generate_uscs_example_with_binary_input<FieldT>(num_constraints, num_inputs);
-    }
-    else
-    {
-        example = generate_uscs_example_with_field_input<FieldT>(num_constraints, num_inputs);
-    }
-    ffec::leave_block("Generate constraint system and assignment");
+    enter_block("Check satisfiability of SSP instance 1", false);
+    assert!(ssp_inst_1.is_satisfied(&ssp_wit));
+    leave_block("Check satisfiability of SSP instance 1", false);
 
-    ffec::enter_block("Check satisfiability of constraint system");
-    assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
-    ffec::leave_block("Check satisfiability of constraint system");
+    enter_block("Check satisfiability of SSP instance 2", false);
+    assert!(ssp_inst_2.is_satisfied(&ssp_wit));
+    leave_block("Check satisfiability of SSP instance 2", false);
 
-    let t= FieldT::random_element(),
-                 d = FieldT::random_element();
-
-    ffec::enter_block("Compute SSP instance 1");
-    ssp_instance<FieldT> ssp_inst_1 = uscs_to_ssp_instance_map(example.constraint_system);
-    ffec::leave_block("Compute SSP instance 1");
-
-    ffec::enter_block("Compute SSP instance 2");
-    ssp_instance_evaluation<FieldT> ssp_inst_2 = uscs_to_ssp_instance_map_with_evaluation(example.constraint_system, t);
-    ffec::leave_block("Compute SSP instance 2");
-
-    ffec::enter_block("Compute SSP witness");
-    ssp_witness<FieldT> ssp_wit = uscs_to_ssp_witness_map(example.constraint_system, example.primary_input, example.auxiliary_input, d);
-    ffec::leave_block("Compute SSP witness");
-
-    ffec::enter_block("Check satisfiability of SSP instance 1");
-    assert!(ssp_inst_1.is_satisfied(ssp_wit));
-    ffec::leave_block("Check satisfiability of SSP instance 1");
-
-    ffec::enter_block("Check satisfiability of SSP instance 2");
-    assert!(ssp_inst_2.is_satisfied(ssp_wit));
-    ffec::leave_block("Check satisfiability of SSP instance 2");
-
-    ffec::leave_block("Call to test_ssp");
+    leave_block("Call to test_ssp", false);
 }
 
-int main()
-{
-    ffec::start_profiling();
+fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
+    start_profiling();
 
-    ffec::mnt6_pp::init_public_params();
+    mnt6_pp::init_public_params();
 
     let num_inputs = 10;
 
-    let basic_domain_size = 1u64<<ffec::mnt6_Fr::s;
-    let step_domain_size = (1u64<<10) + (1u64<<8);
-    let extended_domain_size = 1u64<<(ffec::mnt6_Fr::s+1);
-    let extended_domain_size_special = extended_domain_size-1;
+    let basic_domain_size = 1usize << mnt6_Fr::s;
+    let step_domain_size = (1usize << 10) + (1usize << 8);
+    let extended_domain_size = 1usize << (mnt6_Fr::s + 1);
+    let extended_domain_size_special = extended_domain_size - 1;
 
-    ffec::enter_block("Test SSP for binary inputs");
+    enter_block("Test SSP for binary inputs", false);
 
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(basic_domain_size, num_inputs, true);
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(step_domain_size, num_inputs, true);
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size, num_inputs, true);
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size_special, num_inputs, true);
+    test_ssp::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, true);
+    test_ssp::<Fr<mnt6_pp>>(step_domain_size, num_inputs, true);
+    test_ssp::<Fr<mnt6_pp>>(extended_domain_size, num_inputs, true);
+    test_ssp::<Fr<mnt6_pp>>(extended_domain_size_special, num_inputs, true);
 
-    ffec::leave_block("Test SSP for binary inputs");
+    leave_block("Test SSP for binary inputs", false);
 
-    ffec::enter_block("Test SSP for field inputs");
+    enter_block("Test SSP for field inputs", false);
 
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(basic_domain_size, num_inputs, false);
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(step_domain_size, num_inputs, false);
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size, num_inputs, false);
-    test_ssp<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size_special, num_inputs, false);
+    test_ssp::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, false);
+    test_ssp::<Fr<mnt6_pp>>(step_domain_size, num_inputs, false);
+    test_ssp::<Fr<mnt6_pp>>(extended_domain_size, num_inputs, false);
+    test_ssp::<Fr<mnt6_pp>>(extended_domain_size_special, num_inputs, false);
 
-    ffec::leave_block("Test SSP for field inputs");
+    leave_block("Test SSP for field inputs", false);
+    0
 }

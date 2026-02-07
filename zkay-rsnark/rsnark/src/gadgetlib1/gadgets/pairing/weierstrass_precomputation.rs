@@ -335,7 +335,7 @@ impl<ppT: ppTConfig> precompute_G1_gadgets<ppT> {
 }
 
 pub fn test_G1_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<Fpk_variableT<ppT>>>(
-    annotation: &String,
+    annotation: &str,
 )
 // where
 // <ppT as ff_curves::PublicParams>::G1:
@@ -990,7 +990,7 @@ impl<ppT: ppTConfig> precompute_G2_gadgets<ppT> {
     }
 }
 pub fn test_G2_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<FieldT<ppT>>>(
-    annotation: &String,
+    annotation: &str,
 )
 // where
 // <ppT as ff_curves::PublicParams>::G2:

@@ -39,66 +39,114 @@ pub trait VariableTConfig:
 {
     type FieldT: FieldTConfig;
     type PB: PBConfig;
-    type FpkT;
+    type FpkT: Default;
     type Fqe_variable;
-    fn Frobenius_map(&self, power: usize) -> Self;
-    fn X(&self) -> Self::FieldT;
-    fn Y(&self) -> Self::FieldT;
-    fn old_RX(&self) -> Self::FieldT;
-    fn old_RY(&self) -> Self::FieldT;
-    fn gamma(&self) -> Self::FieldT;
-    fn gamma_X(&self) -> Self::FieldT;
-    fn all_vars(&self) -> pb_linear_combination_array<Self::FieldT, Self::PB>;
-    fn size_in_bits() -> usize;
-    fn num_variables() -> usize;
-    fn get_element(&self) -> Self::FpkT;
-    fn to_field(&self) -> Self::FieldT;
-    fn mul_by_X(&self) -> Self;
-    fn evaluate(&self);
-    fn new(pb: RcCell<protoboard<Self::FieldT, Self::PB>>, annotation_prefix: String) -> Self;
+    fn Frobenius_map(&self, power: usize) -> Self {
+        Default::default()
+    }
+    fn X(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn Y(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn old_RX(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn old_RY(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn gamma(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn gamma_X(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn all_vars(&self) -> pb_linear_combination_array<Self::FieldT, Self::PB> {
+        Default::default()
+    }
+    fn size_in_bits() -> usize {
+        0
+    }
+    fn num_variables() -> usize {
+        0
+    }
+    fn get_element(&self) -> Self::FpkT {
+        Default::default()
+    }
+    fn to_field(&self) -> Self::FieldT {
+        Default::default()
+    }
+    fn mul_by_X(&self) -> Self {
+        Default::default()
+    }
+    fn evaluate(&self) {}
+    fn new(pb: RcCell<protoboard<Self::FieldT, Self::PB>>, annotation_prefix: String) -> Self {
+        Default::default()
+    }
     fn new2<FieldTT>(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         f: FieldTT,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn new22(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         c0: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         c1: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn newv(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         c0: RcCell<Self>,
         c1: RcCell<Self>,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn newe(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         c0: RcCell<Self::Fqe_variable>,
         c1: RcCell<Self::Fqe_variable>,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn newvv(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         c0: Self::FieldT,
         c1: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn new3(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         c0: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         c1: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         c2: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> Self;
-    fn is_constant(&self) -> bool;
-    fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness<FieldTT>(&self, f: &FieldTT);
-    fn generate_r1cs_equals_const_constraints(&self, t: &Self::FieldT);
-    fn c0(&self) -> Self;
-    fn c1(&self) -> Self;
-    fn c2(&self) -> Self;
+    ) -> Self {
+        Default::default()
+    }
+    fn is_constant(&self) -> bool {
+        false
+    }
+    fn generate_r1cs_constraints(&self) {}
+    fn generate_r1cs_witness<FieldTT>(&self, f: &FieldTT) {}
+    fn generate_r1cs_equals_const_constraints(&self, t: &Self::FieldT) {}
+    fn c0(&self) -> Self {
+        Default::default()
+    }
+    fn c1(&self) -> Self {
+        Default::default()
+    }
+    fn c2(&self) -> Self {
+        Default::default()
+    }
 }
 pub trait MulTConfig: Default + Clone + Mul<Self::FieldT, Output = Self> {
     type FieldT: FieldTConfig;
@@ -110,23 +158,29 @@ pub trait MulTConfig: Default + Clone + Mul<Self::FieldT, Output = Self> {
         v2: Self::Fpk_variableT,
         v3: Self::Fpk_variableT,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn new2(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         v: Self::Fpk_variableT,
         v2: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         v3: Self::Fpk_variableT,
         annotation_prefix: String,
-    ) -> Self;
+    ) -> Self {
+        Default::default()
+    }
     fn new3(
         pb: RcCell<protoboard<Self::FieldT, Self::PB>>,
         c0: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         c1: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         c2: linear_combination<Self::FieldT, pb_variable, pb_linear_combination>,
         annotation_prefix: String,
-    ) -> Self;
-    fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness(&self);
+    ) -> Self {
+        Default::default()
+    }
+    fn generate_r1cs_constraints(&self) {}
+    fn generate_r1cs_witness(&self) {}
 }
 pub trait SqrTConfig: Default + Clone {
     type FieldT: FieldTConfig;
@@ -137,9 +191,11 @@ pub trait SqrTConfig: Default + Clone {
         s: RcCell<Self::Fpk_variableT>,
         s2: Self::Fpk_variableT,
         annotation_prefix: String,
-    ) -> Self;
-    fn generate_r1cs_constraints(&self);
-    fn generate_r1cs_witness(&self);
+    ) -> Self {
+        Default::default()
+    }
+    fn generate_r1cs_constraints(&self) {}
+    fn generate_r1cs_witness(&self) {}
 }
 pub const M: usize = 4;
 
@@ -157,6 +213,7 @@ pub trait ppTConfig:
     + PublicParams<Fqk = Self::FieldT, GT = Self::FieldT, Fr = Self::FieldT>
     + FieldTConfig
 {
+    const s: usize = 0;
     type P: pairing_selector<
             FieldT = Self::FieldT,
             PB = Self::PB,

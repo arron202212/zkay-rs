@@ -57,33 +57,33 @@ type FieldT<ppT> = Fr<ppT>;
 #[derive(Clone, Default)]
 pub struct mnt4_final_exp_gadget<ppT: ppTConfig> {
     //gadget<Fr<ppT> >
-    el: Fqk_variable<ppT>,
-    one: RcCell<Fqk_variable<ppT>>,
-    el_inv: RcCell<Fqk_variable<ppT>>,
-    el_q_3: RcCell<Fqk_variable<ppT>>,
-    el_q_3_minus_1: RcCell<Fqk_variable<ppT>>,
-    alpha: RcCell<Fqk_variable<ppT>>,
-    beta: RcCell<Fqk_variable<ppT>>,
-    beta_q: RcCell<Fqk_variable<ppT>>,
-    el_inv_q_3: RcCell<Fqk_variable<ppT>>,
-    el_inv_q_3_minus_1: RcCell<Fqk_variable<ppT>>,
-    inv_alpha: RcCell<Fqk_variable<ppT>>,
-    inv_beta: RcCell<Fqk_variable<ppT>>,
-    w1: RcCell<Fqk_variable<ppT>>,
-    w0: RcCell<Fqk_variable<ppT>>,
-    result: RcCell<Fqk_variable<ppT>>,
+    pub el: Fqk_variable<ppT>,
+    pub one: RcCell<Fqk_variable<ppT>>,
+    pub el_inv: RcCell<Fqk_variable<ppT>>,
+    pub el_q_3: RcCell<Fqk_variable<ppT>>,
+    pub el_q_3_minus_1: RcCell<Fqk_variable<ppT>>,
+    pub alpha: RcCell<Fqk_variable<ppT>>,
+    pub beta: RcCell<Fqk_variable<ppT>>,
+    pub beta_q: RcCell<Fqk_variable<ppT>>,
+    pub el_inv_q_3: RcCell<Fqk_variable<ppT>>,
+    pub el_inv_q_3_minus_1: RcCell<Fqk_variable<ppT>>,
+    pub inv_alpha: RcCell<Fqk_variable<ppT>>,
+    pub inv_beta: RcCell<Fqk_variable<ppT>>,
+    pub w1: RcCell<Fqk_variable<ppT>>,
+    pub w0: RcCell<Fqk_variable<ppT>>,
+    pub result: RcCell<Fqk_variable<ppT>>,
 
-    compute_el_inv: RcCell<Fqk_mul_gadget<ppT>>,
-    compute_el_q_3_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
-    compute_beta: RcCell<Fqk_mul_gadget<ppT>>,
-    compute_el_inv_q_3_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
-    compute_inv_beta: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_el_inv: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_el_q_3_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_beta: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_el_inv_q_3_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_inv_beta: RcCell<Fqk_mul_gadget<ppT>>,
 
-    compute_w1: RcCell<exponentiation_gadgets<ppT>>,
-    compute_w0: RcCell<exponentiation_gadgets<ppT>>,
-    compute_result: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_w1: RcCell<exponentiation_gadgets<ppT>>,
+    pub compute_w0: RcCell<exponentiation_gadgets<ppT>>,
+    pub compute_result: RcCell<Fqk_mul_gadget<ppT>>,
 
-    result_is_one: variable<ppT::FieldT, pb_variable>,
+    pub result_is_one: variable<ppT::FieldT, pb_variable>,
 }
 
 /**
@@ -94,27 +94,27 @@ pub struct mnt6_final_exp_gadget<ppT: ppTConfig> {
     //gadget<Fr<ppT> >
 
     // type FieldT=Fr<ppT>;
-    el: Fqk_variable<ppT>,
-    one: RcCell<Fqk_variable<ppT>>,
-    el_inv: RcCell<Fqk_variable<ppT>>,
-    el_q_2: RcCell<Fqk_variable<ppT>>,
-    el_q_2_minus_1: RcCell<Fqk_variable<ppT>>,
-    el_q_3_minus_q: RcCell<Fqk_variable<ppT>>,
-    el_inv_q_2: RcCell<Fqk_variable<ppT>>,
-    el_inv_q_2_minus_1: RcCell<Fqk_variable<ppT>>,
-    w1: RcCell<Fqk_variable<ppT>>,
-    w0: RcCell<Fqk_variable<ppT>>,
-    result: RcCell<Fqk_variable<ppT>>,
+    pub el: Fqk_variable<ppT>,
+    pub one: RcCell<Fqk_variable<ppT>>,
+    pub el_inv: RcCell<Fqk_variable<ppT>>,
+    pub el_q_2: RcCell<Fqk_variable<ppT>>,
+    pub el_q_2_minus_1: RcCell<Fqk_variable<ppT>>,
+    pub el_q_3_minus_q: RcCell<Fqk_variable<ppT>>,
+    pub el_inv_q_2: RcCell<Fqk_variable<ppT>>,
+    pub el_inv_q_2_minus_1: RcCell<Fqk_variable<ppT>>,
+    pub w1: RcCell<Fqk_variable<ppT>>,
+    pub w0: RcCell<Fqk_variable<ppT>>,
+    pub result: RcCell<Fqk_variable<ppT>>,
 
-    compute_el_inv: RcCell<Fqk_mul_gadget<ppT>>,
-    compute_el_q_2_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
-    compute_el_inv_q_2_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_el_inv: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_el_q_2_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_el_inv_q_2_minus_1: RcCell<Fqk_mul_gadget<ppT>>,
 
-    compute_w1: RcCell<exponentiation_gadgets<ppT>>,
-    compute_w0: RcCell<exponentiation_gadgets<ppT>>,
-    compute_result: RcCell<Fqk_mul_gadget<ppT>>,
+    pub compute_w1: RcCell<exponentiation_gadgets<ppT>>,
+    pub compute_w0: RcCell<exponentiation_gadgets<ppT>>,
+    pub compute_result: RcCell<Fqk_mul_gadget<ppT>>,
 
-    result_is_one: variable<ppT::FieldT, pb_variable>,
+    pub result_is_one: variable<ppT::FieldT, pb_variable>,
 }
 
 pub type mnt4_final_exp_gadgets<ppT> =

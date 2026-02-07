@@ -1,33 +1,32 @@
-/** @file
- *****************************************************************************
- Unit tests for gadgetlib1 - main() for running all tests
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  Unit tests for gadgetlib1 - main() for running all tests
 
-use  <gtest/gtest.h>
+// use  <gtest/gtest.h>
 
-use crate::gadgetlib1::examples::simple_example;
-use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
+// use crate::gadgetlib1::examples::simple_example;
+// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark;
+use crate::gadgetlib1::examples::simple_example::gen_r1cs_example_from_protoboard;
+use crate::gadgetlib1::protoboard::PBConfig;
+use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark::run_r1cs_ppzksnark;
+use ff_curves::Fr;
+use ff_curves::PublicParams;
+use ff_curves::default_ec_pp;
 
-namespace {
-
-TEST(gadgetLib1,Integration) {
-    type FieldT=ffec::Fr<ffec::default_ec_pp>;
+//  {
+// (gadgetLib1,Integration)
+type FieldT = Fr<default_ec_pp>;
+fn test<PB: PBConfig>() {
     // Create an example constraint system and translate to libsnark format
-    ffec::default_ec_pp::init_public_params();
-    let example= crate::gen_r1cs_example_from_protoboard<FieldT>(100);
+    default_ec_pp::init_public_params();
+    let example = gen_r1cs_example_from_protoboard::<FieldT, PB>(100);
     let mut test_serialization = false;
     // Run ppzksnark. Jump into function for breakdown
-    let mut bit = crate::run_r1cs_ppzksnark<ffec::default_ec_pp>(example, test_serialization);
-    EXPECT_TRUE(bit);
-};
-
+    let mut bit = run_r1cs_ppzksnark::<default_ec_pp>(&example, test_serialization);
+    assert!(bit);
 }
 
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+fn main<PB: PBConfig>(argc: i32, argv: &[&str]) -> i32 {
+    // ::testing::InitGoogleTest(&argc, argv);
+    // return RUN_ALL_TESTS();
+    test::<PB>();
+    0
 }

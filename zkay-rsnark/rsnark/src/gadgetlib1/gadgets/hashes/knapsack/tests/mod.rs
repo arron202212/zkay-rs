@@ -1,1 +1,1 @@
-pub mod   test_knapsack_gadget;
+pub mod test_knapsack_gadget;

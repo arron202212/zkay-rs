@@ -1,8 +1,8 @@
-pub mod examples;
-//  pub mod tests ;
 pub mod adapters;
 pub mod constraint;
+pub mod examples;
 pub mod gadget;
+pub mod tests;
 // pub mod gadgetMacros;
 pub mod infrastructure;
 pub mod integration;

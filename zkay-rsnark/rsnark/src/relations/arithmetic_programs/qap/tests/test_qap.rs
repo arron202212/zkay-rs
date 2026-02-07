@@ -1,22 +1,13 @@
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use  <algorithm>
-use  <cassert>
-use  <cstdio>
-use  <cstring>
 
 
-use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
-use ffec::algebra::field_utils::field_utils;
-use ffec::common::profiling;
-use ffec::common::utils;
 
-use crate::reductions::r1cs_to_qap::r1cs_to_qap;
-use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
+// use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
+// use algebra::field_utils::field_utils;
+// use common::profiling;
+// use common::utils;
+
+// use crate::reductions::r1cs_to_qap::r1cs_to_qap;
+// use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
 
 
 
@@ -30,87 +21,88 @@ pub fn  test_qap(qap_degree:usize, num_inputs:usize, binary_input:bool)
       So we need that qap_degree >= num_inputs + 1.
     */
     assert!(num_inputs + 1 <= qap_degree);
-    ffec::enter_block("Call to test_qap");
+    enter_block("Call to test_qap",false);
 
     let num_constraints = qap_degree - num_inputs - 1;
 
-    ffec::print_indent(); print!("* QAP degree: {}\n", qap_degree);
-    ffec::print_indent(); print!("* Number of inputs: {}\n", num_inputs);
-    ffec::print_indent(); print!("* Number of R1CS constraints: {}\n", num_constraints);
-    ffec::print_indent(); print!("* Input type: {}\n", if binary_input  {"binary" }else {"field"});
+    print_indent(); print!("* QAP degree: {}\n", qap_degree);
+    print_indent(); print!("* Number of inputs: {}\n", num_inputs);
+    print_indent(); print!("* Number of R1CS constraints: {}\n", num_constraints);
+    print_indent(); print!("* Input type: {}\n", if binary_input  {"binary" }else {"field"});
 
-    ffec::enter_block("Generate constraint system and assignment");
-    r1cs_example<FieldT> example;
+    enter_block("Generate constraint system and assignment",false);
+    let  example=
     if binary_input
     {
-        example = generate_r1cs_example_with_binary_input<FieldT>(num_constraints, num_inputs);
+         generate_r1cs_example_with_binary_input::<FieldT>(num_constraints, num_inputs)
     }
     else
     {
-        example = generate_r1cs_example_with_field_input<FieldT>(num_constraints, num_inputs);
-    }
-    ffec::leave_block("Generate constraint system and assignment");
+         generate_r1cs_example_with_field_input::<FieldT>(num_constraints, num_inputs)
+    };
+    leave_block("Generate constraint system and assignment",false);
 
-    ffec::enter_block("Check satisfiability of constraint system");
+    enter_block("Check satisfiability of constraint system",false);
     assert!(example.constraint_system.is_satisfied(example.primary_input, example.auxiliary_input));
-    ffec::leave_block("Check satisfiability of constraint system");
+    leave_block("Check satisfiability of constraint system",false);
 
     let t= FieldT::random_element(),
     d1 = FieldT::random_element(),
     d2 = FieldT::random_element(),
     d3 = FieldT::random_element();
 
-    ffec::enter_block("Compute QAP instance 1");
-    qap_instance<FieldT> qap_inst_1 = r1cs_to_qap_instance_map(example.constraint_system);
-    ffec::leave_block("Compute QAP instance 1");
+    enter_block("Compute QAP instance 1",false);
+    let qap_inst_1 = r1cs_to_qap_instance_map(example.constraint_system);
+    leave_block("Compute QAP instance 1",false);
 
-    ffec::enter_block("Compute QAP instance 2");
-    qap_instance_evaluation<FieldT> qap_inst_2 = r1cs_to_qap_instance_map_with_evaluation(example.constraint_system, t);
-    ffec::leave_block("Compute QAP instance 2");
+    enter_block("Compute QAP instance 2",false);
+    let qap_inst_2 = r1cs_to_qap_instance_map_with_evaluation(example.constraint_system, t);
+    leave_block("Compute QAP instance 2",false);
 
-    ffec::enter_block("Compute QAP witness");
-    qap_witness<FieldT> qap_wit = r1cs_to_qap_witness_map(example.constraint_system, example.primary_input, example.auxiliary_input, d1, d2, d3);
-    ffec::leave_block("Compute QAP witness");
+    enter_block("Compute QAP witness",false);
+    let  qap_wit = r1cs_to_qap_witness_map(example.constraint_system, example.primary_input, example.auxiliary_input, d1, d2, d3);
+    leave_block("Compute QAP witness",false);
 
-    ffec::enter_block("Check satisfiability of QAP instance 1");
+    enter_block("Check satisfiability of QAP instance 1",false);
     assert!(qap_inst_1.is_satisfied(qap_wit));
-    ffec::leave_block("Check satisfiability of QAP instance 1");
+    leave_block("Check satisfiability of QAP instance 1",false);
 
-    ffec::enter_block("Check satisfiability of QAP instance 2");
+    enter_block("Check satisfiability of QAP instance 2",false);
     assert!(qap_inst_2.is_satisfied(qap_wit));
-    ffec::leave_block("Check satisfiability of QAP instance 2");
+    leave_block("Check satisfiability of QAP instance 2",false);
 
-    ffec::leave_block("Call to test_qap");
+    leave_block("Call to test_qap",false);
 }
 
-int main()
+fn  main()->i32
 {
-    ffec::start_profiling();
+    start_profiling();
 
-    ffec::mnt6_pp::init_public_params();
+    mnt6_pp::init_public_params();
 
     let num_inputs = 10;
 
-    let basic_domain_size = 1u64<<ffec::mnt6_Fr::s;
+    let basic_domain_size = 1u64<<mnt6_Fr::s;
     let step_domain_size = (1u64<<10) + (1u64<<8);
-    let extended_domain_size = 1u64<<(ffec::mnt6_Fr::s+1);
+    let extended_domain_size = 1u64<<(mnt6_Fr::s+1);
     let extended_domain_size_special = extended_domain_size-1;
 
-    ffec::enter_block("Test QAP with binary input");
+    enter_block("Test QAP with binary input",false);
 
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(basic_domain_size, num_inputs, true);
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(step_domain_size, num_inputs, true);
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size, num_inputs, true);
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size_special, num_inputs, true);
+    test_qap::<Fr<mnt6_pp> >(basic_domain_size, num_inputs, true);
+    test_qap::<Fr<mnt6_pp> >(step_domain_size, num_inputs, true);
+    test_qap::<Fr<mnt6_pp> >(extended_domain_size, num_inputs, true);
+    test_qap::<Fr<mnt6_pp> >(extended_domain_size_special, num_inputs, true);
 
-    ffec::leave_block("Test QAP with binary input");
+    leave_block("Test QAP with binary input",false);
 
-    ffec::enter_block("Test QAP with field input");
+    enter_block("Test QAP with field input",false);
 
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(basic_domain_size, num_inputs, false);
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(step_domain_size, num_inputs, false);
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size, num_inputs, false);
-    test_qap<ffec::Fr<ffec::mnt6_pp> >(extended_domain_size_special, num_inputs, false);
+    test_qap::<Fr<mnt6_pp> >(basic_domain_size, num_inputs, false);
+    test_qap::<Fr<mnt6_pp> >(step_domain_size, num_inputs, false);
+    test_qap::<Fr<mnt6_pp> >(extended_domain_size, num_inputs, false);
+    test_qap::<Fr<mnt6_pp> >(extended_domain_size_special, num_inputs, false);
 
-    ffec::leave_block("Test QAP with field input");
+    leave_block("Test QAP with field input",false);
+0
 }

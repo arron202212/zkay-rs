@@ -1,1 +1,1 @@
-pub mod   gadgetlib1_test;
+pub mod gadgetlib1_test;

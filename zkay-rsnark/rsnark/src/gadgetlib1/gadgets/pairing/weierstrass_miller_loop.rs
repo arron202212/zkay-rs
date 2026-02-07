@@ -665,7 +665,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadgets<ppT> {
     }
 }
 
-pub fn test_mnt_miller_loop<ppT: ppTConfig>(annotation: &String)
+pub fn test_mnt_miller_loop<ppT: ppTConfig>(annotation: &str)
 // where
 // <ppT as ff_curves::PublicParams>::G1:
 //     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
@@ -1036,7 +1036,7 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadgets<ppT> {
     }
 }
 
-pub fn test_mnt_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &String)
+pub fn test_mnt_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &str)
 // where
 // <ppT as ff_curves::PublicParams>::G1:
 //     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
@@ -1504,7 +1504,7 @@ impl<ppT: ppTConfig> mnt_e_times_e_over_e_miller_loop_gadgets<ppT> {
         }
     }
 }
-pub fn test_mnt_e_times_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &String)
+pub fn test_mnt_e_times_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &str)
 where
     <ppT as ff_curves::PublicParams>::G1:
         Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,

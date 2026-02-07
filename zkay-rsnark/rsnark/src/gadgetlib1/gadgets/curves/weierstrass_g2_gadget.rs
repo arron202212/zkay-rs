@@ -209,7 +209,7 @@ impl<ppT: ppTConfig> G2_checker_gadgets<ppT> {
     }
 }
 
-pub fn test_G2_checker_gadget<ppT: ppTConfig>(annotation: String) {
+pub fn test_G2_checker_gadget<ppT: ppTConfig>(annotation: &str) {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut g = G2_variable::<ppT>::new(pb.clone(), "g".to_owned());
     let mut g_check = G2_checker_gadget::<ppT>::new(pb.clone(), g.clone(), "g_check".to_owned());

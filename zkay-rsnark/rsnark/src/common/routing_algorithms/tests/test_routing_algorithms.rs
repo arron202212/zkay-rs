@@ -1,70 +1,69 @@
-/** @file
- *****************************************************************************
+//  Functions to test the algorithms that route on Benes and AS-Waksman networks.
 
- Functions to test the algorithms that route on Benes and AS-Waksman networks.
-
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-
-use  <cassert>
-
-use ffec::common::profiling;
-
-use crate::common::routing_algorithms::as_waksman_routing_algorithm;
-use crate::common::routing_algorithms::benes_routing_algorithm;
-
-
+use crate::common::data_structures::integer_permutation::integer_permutation;
+use crate::common::routing_algorithms::as_waksman_routing_algorithm::{
+    get_as_waksman_routing, valid_as_waksman_routing,
+};
+use crate::common::routing_algorithms::benes_routing_algorithm::{
+    get_benes_routing, valid_benes_routing,
+};
+use ff_curves::PublicParams;
+use ffec::common::profiling::{
+    enter_block, leave_block, print_header, print_indent, start_profiling,
+};
+use ffec::log2;
 
 /**
- * Test Benes network routing for all permutations on 2^ffec::log2(N) elements.
+ * Test Benes network routing for all permutations on 2^log2(N) elements.
  */
-pub fn  test_benes(N:usize)
-{
-    integer_permutation permutation(1u64 << ffec::log2(N));
+pub fn test_benes(N: usize) {
+    let mut permutation = integer_permutation::new(1usize << log2(N));
 
-    do {
-        let routing= get_benes_routing(permutation);
-        assert!(valid_benes_routing(permutation, routing));
-    } while (permutation.next_permutation());
+    loop {
+        let routing = get_benes_routing(&permutation);
+        assert!(valid_benes_routing(&permutation, &routing));
+        if !permutation.next_permutation() {
+            break;
+        }
+    }
 }
 
 /**
  * Test AS-Waksman network routing for all permutations on N elements.
  */
-pub fn  test_as_waksman(N:usize)
-{
-    integer_permutation permutation(N);
+pub fn test_as_waksman(N: usize) {
+    let mut permutation = integer_permutation::new(N);
 
-    do {
-        let routing= get_as_waksman_routing(permutation);
-        assert!(valid_as_waksman_routing(permutation, routing));
-    } while (permutation.next_permutation());
+    loop {
+        let routing = get_as_waksman_routing(&permutation);
+        assert!(valid_as_waksman_routing(&permutation, &routing));
+        if !permutation.next_permutation() {
+            break;
+        }
+    }
 }
 
-pub fn main()->i32
-{
-    ffec::start_profiling();
+pub fn main() -> i32 {
+    start_profiling();
 
-    ffec::enter_block("Test routing algorithms");
+    enter_block("Test routing algorithms", false);
 
-    ffec::enter_block("Test Benes network routing algorithm");
-    usize bn_size = 8;
-    ffec::print_indent(); print!("* for all permutations on {} elements\n", bn_size);
+    enter_block("Test Benes network routing algorithm", false);
+    let bn_size = 8;
+    print_indent();
+    print!("* for all permutations on {} elements\n", bn_size);
     test_benes(bn_size);
-    ffec::leave_block("Test Benes network routing algorithm");
+    leave_block("Test Benes network routing algorithm", false);
 
-
-    ffec::enter_block("Test AS-Waksman network routing algorithm");
-    usize asw_max_size = 9;
-    for i in 2..=asw_max_size
-    {
-        ffec::print_indent(); print!("* for all permutations on {} elements\n", i);
+    enter_block("Test AS-Waksman network routing algorithm", false);
+    let asw_max_size = 9;
+    for i in 2..=asw_max_size {
+        print_indent();
+        print!("* for all permutations on {} elements\n", i);
         test_as_waksman(i);
     }
-    ffec::leave_block("Test AS-Waksman network routing algorithm");
+    leave_block("Test AS-Waksman network routing algorithm", false);
 
-    ffec::leave_block("Test routing algorithms");
+    leave_block("Test routing algorithms", false);
+    0
 }

@@ -1,43 +1,37 @@
-/** @file
- *****************************************************************************
- Test program that exercises the ppzkSNARK (first generator, then
- prover, then verifier) on a synthetic USCS instance.
+//  Test program that exercises the ppzkSNARK (first generator, then
+//  prover, then verifier) on a synthetic USCS instance.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use  <cassert>
-use  <cstdio>
+use crate::common::default_types::uscs_ppzksnark_pp::default_uscs_ppzksnark_pp;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::relations::circuit_satisfaction_problems::tbcs::examples::tbcs_examples::generate_tbcs_example;
+use crate::relations::constraint_satisfaction_problems::uscs::examples::uscs_examples::generate_uscs_example_with_binary_input;
+use crate::zk_proof_systems::ppzksnark::uscs_ppzksnark::examples::run_uscs_ppzksnark::run_uscs_ppzksnark;
+use ff_curves::{Fr, PublicParams};
+use ffec::common::profiling::{
+    enter_block, leave_block, print_header, print_indent, start_profiling,
+};
+use std::marker::PhantomData;
 
-use ffec::common::profiling;
-use ffec::common::utils;
-
-use crate::common::default_types::uscs_ppzksnark_pp;
-use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
-use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
-
-
-
-
-pub fn  test_uscs_ppzksnark(usize num_constraints,
-                         usize input_size)
-{
-    ffec::print_header("(enter) Test USCS ppzkSNARK");
+pub fn test_uscs_ppzksnark<ppT: ppTConfig>(num_constraints: usize, input_size: usize) {
+    print_header("(enter) Test USCS ppzkSNARK");
 
     let mut test_serialization = true;
-    uscs_example<ffec::Fr<ppT> > example = generate_uscs_example_with_binary_input<ffec::Fr<ppT> >(num_constraints, input_size);
-    let mut bit = run_uscs_ppzksnark<ppT>(example, test_serialization);
+    let example = generate_uscs_example_with_binary_input::<
+        Fr<ppT>,
+        pb_variable,
+        pb_linear_combination,
+    >(num_constraints, input_size);
+    let mut bit = run_uscs_ppzksnark::<ppT>(&example, test_serialization);
     assert!(bit);
 
-    ffec::print_header("(leave) Test USCS ppzkSNARK");
+    print_header("(leave) Test USCS ppzkSNARK");
 }
 
-int main()
-{
+fn main<default_uscs_ppzksnark_pp: ppTConfig>() -> i32 {
     default_uscs_ppzksnark_pp::init_public_params();
-    ffec::start_profiling();
+    start_profiling();
 
-    test_uscs_ppzksnark<default_uscs_ppzksnark_pp>(1000, 100);
+    test_uscs_ppzksnark::<default_uscs_ppzksnark_pp>(1000, 100);
+    0
 }

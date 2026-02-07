@@ -1,43 +1,39 @@
-/** @file
- *****************************************************************************
- Test program that exercises the ppzkSNARK (first generator, then
- prover, then verifier) on a synthetic R1CS instance.
+//  Test program that exercises the ppzkSNARK (first generator, then
+//  prover, then verifier) on a synthetic R1CS instance.
 
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-use  <cassert>
-use  <cstdio>
+use crate::common::default_types::r1cs_gg_ppzksnark_pp::default_r1cs_gg_ppzksnark_pp;
+use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
+use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
+use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
+use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::generate_r1cs_example_with_binary_input;
+use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark::run_r1cs_gg_ppzksnark;
+use ff_curves::Fr;
+use ff_curves::PublicParams;
+use ffec::common::profiling::{
+    enter_block, leave_block, print_header, print_indent, start_profiling,
+};
+use std::marker::PhantomData;
+use std::ops::Mul;
 
-use ffec::common::profiling;
-use ffec::common::utils;
-
-use crate::common::default_types::r1cs_gg_ppzksnark_pp;
-use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples;
-use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark;
-
-
-
-
-pub fn  test_r1cs_gg_ppzksnark(usize num_constraints,
-                         usize input_size)
-{
-    ffec::print_header("(enter) Test R1CS GG-ppzkSNARK");
+pub fn test_r1cs_gg_ppzksnark<ppT: ppTConfig>(num_constraints: usize, input_size: usize) {
+    print_header("(enter) Test R1CS GG-ppzkSNARK");
 
     let mut test_serialization = true;
-    r1cs_example<ffec::Fr<ppT> > example = generate_r1cs_example_with_binary_input<ffec::Fr<ppT> >(num_constraints, input_size);
-    let mut bit = run_r1cs_gg_ppzksnark<ppT>(example, test_serialization);
+    let example = generate_r1cs_example_with_binary_input::<
+        Fr<ppT>,
+        pb_variable,
+        pb_linear_combination,
+    >(num_constraints, input_size);
+    let mut bit = run_r1cs_gg_ppzksnark::<ppT>(&example, test_serialization);
     assert!(bit);
 
-    ffec::print_header("(leave) Test R1CS GG-ppzkSNARK");
+    print_header("(leave) Test R1CS GG-ppzkSNARK");
 }
 
-int main()
-{
+fn main<default_r1cs_gg_ppzksnark_pp: ppTConfig>() -> i32 {
     default_r1cs_gg_ppzksnark_pp::init_public_params();
-    ffec::start_profiling();
+    start_profiling();
 
-    test_r1cs_gg_ppzksnark<default_r1cs_gg_ppzksnark_pp>(1000, 100);
+    test_r1cs_gg_ppzksnark::<default_r1cs_gg_ppzksnark_pp>(1000, 100);
+    0
 }
