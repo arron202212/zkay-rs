@@ -1,20 +1,4 @@
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for extended GCD routines.
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef XGCD_HPP_
-// #define XGCD_HPP_
-
-//#include <vector>
-
-//namespace libfqfft {
+// Declaration of interfaces for extended GCD routines.
 
 /**
  * Perform the standard Extended Euclidean Division algorithm.
@@ -23,38 +7,12 @@ Declaration of interfaces for extended GCD routines.
  */
 //
 // pub fn  _polynomial_xgcd(a:&Vec<FieldT>, b:&Vec<FieldT>, g:&Vec<FieldT>, u:&Vec<FieldT>, v:&Vec<FieldT>);
-
-//} // libfqfft
-
-// use crate::polynomial_arithmetic::xgcd.tcc;
-
-//#endif // XGCD_HPP_
-
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for extended GCD routines.
-
-See xgcd.hpp .
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef XGCD_TCC_
-// #define XGCD_TCC_
-
-//#include <algorithm>
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations;
 use crate::polynomial_arithmetic::basic_operations::{
     _is_zero, _polynomial_division, _polynomial_multiplication, _polynomial_subtraction,
 };
 
-//namespace libfqfft {
-
-//
 pub fn _polynomial_xgcd<
     FieldT: num_traits::Zero
         + std::ops::Neg<Output = FieldT>
@@ -122,7 +80,3 @@ pub fn _polynomial_xgcd<
     *u = U;
     *v = V1;
 }
-
-//} // libfqfft
-
-//#endif // XGCD_TCC_

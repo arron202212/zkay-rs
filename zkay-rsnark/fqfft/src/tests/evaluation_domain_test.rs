@@ -1,238 +1,241 @@
+use crate::evaluation_domain::domains::arithmetic_sequence_domain::arithmetic_sequence_domain;
+use crate::evaluation_domain::domains::basic_radix2_domain::basic_radix2_domain;
+use crate::evaluation_domain::domains::extended_radix2_domain::extended_radix2_domain;
+use crate::evaluation_domain::domains::geometric_sequence_domain::geometric_sequence_domain;
+use crate::evaluation_domain::domains::step_radix2_domain::step_radix2_domain;
+use crate::evaluation_domain::evaluation_domain::EvaluationDomainConfig;
+use crate::evaluation_domain::evaluation_domain::EvaluationDomainType;
+use crate::polynomial_arithmetic::naive_evaluate::evaluate_lagrange_polynomial;
+use crate::polynomial_arithmetic::naive_evaluate::evaluate_polynomial;
+use ffec::common::double::Double;
+use rccell::RcCell;
+use crate::dbl_vec;
+
+
+
 /**
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+ * Note: Templatized type referenced with TypeParam (instead of canonical FieldT)
+// https://github.com/google/googletest/blob/main/docs/advanced.md#type-parameterized-tests
+ */
+#[cfg(test)]
+mod test {
+    use super::*;
+    pub struct EvaluationDomainTest {
+        // <T>
+        //::testing::Test
 
-//#include <memory>
-//#include <vector>
-
-//#include <gtest/gtest.h>
-use crate::algebra::curves::mnt::mnt4::mnt4_pp;
-//#include <stdint.h>
-
-use crate::evaluation_domain::domains::arithmetic_sequence_domain;
-use crate::evaluation_domain::domains::basic_radix2_domain;
-use crate::evaluation_domain::domains::extended_radix2_domain;
-use crate::evaluation_domain::domains::geometric_sequence_domain;
-use crate::evaluation_domain::domains::step_radix2_domain;
-use crate::polynomial_arithmetic::naive_evaluate;
-use crate::tools::exceptions;
-
-//namespace libfqfft {
-
-  /**
-   * Note: Templatized type referenced with TypeParam (instead of canonical FieldT)
-   * https://github.com/google/googletest/blob/master/googletest/docs/AdvancedGuide.md#typed-tests
-   */
-  template <T>
-  pub struct EvaluationDomainTest {//::testing::Test
-    
-      virtual pub fn  SetUp() {
-        mnt4_pp::init_public_params();
-      }
-  };
-
-  type FieldT=::testing::Types<Fr<mnt4_pp>, Double>; /* List Extend Here */
-  TYPED_TEST_CASE(EvaluationDomainTest, FieldT);
-
-  TYPED_TEST(EvaluationDomainTest, FFT) {
-
-    let m = 4;
-    Vec<TypeParam> f = { 2, 5, 3, 8 };
-
-    RcCell<evaluation_domain<TypeParam> > domain;
-    for key in 0..5
-    {
-      try
-      {
-        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
-
-        Vec<TypeParam> a(f);
-        domain->FFT(a);
-
-        Vec<TypeParam> idx(m);
-        for i in 0..m
-        {
-          idx[i] = domain->get_domain_element(i);
-        }
-
-        for i in 0..m
-        {
-          TypeParam e = evaluate_polynomial(m, f, idx[i]);
-          EXPECT_TRUE(e == a[i]);
-        }
-      }
-      catch(DomainSizeException &e)
-      {
-        print!("{} - skipping\n", e.what());
-      }
-      catch(InvalidSizeException &e)
-      {
-        print!("{} - skipping\n", e.what());
-      }
+        //    pub fn  SetUp() {
+        //     // mnt4_pp::init_public_params();
+        //   }
     }
-  }
 
-  TYPED_TEST(EvaluationDomainTest, InverseFFTofFFT) {
+    //   type FieldT=::testing::Types<Fr<mnt4_pp>, Double>; /* List Extend Here */
+    //   TYPED_TEST_CASE(EvaluationDomainTest, FieldT);
+    type TypeParam = Double;
+    #[test]
+    pub fn FFT() {
+        let m = 4;
+        let f = dbl_vec![2, 5, 3, 8];
 
-    let m = 4;
-    Vec<TypeParam> f = { 2, 5, 3, 8 };
+        let mut domain = RcCell::new(EvaluationDomainType::<TypeParam>::default());
+        for key in 0..5 {
+            if key == 0 {
+                domain = RcCell::new(basic_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 1 {
+                domain = RcCell::new(extended_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 2 {
+                domain = RcCell::new(step_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 3 {
+                domain = RcCell::new(
+                    geometric_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            } else if key == 4 {
+                domain = RcCell::new(
+                    arithmetic_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            }
 
-    RcCell<evaluation_domain<TypeParam> > domain;
-    for key in 0..5
-    {
-      try
-      {
-        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
+            let mut a = f.clone();
+            domain.borrow_mut().FFT(&mut a);
 
-        Vec<TypeParam> a(f);
-        domain->FFT(a);
-        domain->iFFT(a);
+            let mut idx = vec![TypeParam::zero(); m];
+            for i in 0..m {
+                idx[i] = domain.borrow_mut().get_domain_element(i);
+            }
 
-        for i in 0..m
-        {
-          EXPECT_TRUE(f[i] == a[i]);
+            for i in 0..m {
+                let e = evaluate_polynomial(m, &f, &idx[i]).unwrap();
+                assert_eq!(e, a[i]);
+            }
+            //   }
+            //   catch(DomainSizeException &e)
+            //   {
+            //     print!("{} - skipping\n", e.what());
+            //   }
+            //   catch(InvalidSizeException &e)
+            //   {
+            //     print!("{} - skipping\n", e.what());
+            //   }
         }
-      }
-      catch(e:&DomainSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
-      catch(e:&InvalidSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
     }
-  }
 
-  TYPED_TEST(EvaluationDomainTest, InverseCosetFFTofCosetFFT) {
+    #[test]
+    pub fn InverseFFTofFFT() {
+        let m = 4;
+        let f = dbl_vec![2, 5, 3, 8];
 
-    let m = 4;
-    Vec<TypeParam> f = { 2, 5, 3, 8 };
+        let mut domain = RcCell::new(EvaluationDomainType::<TypeParam>::default());
+        for key in 0..5 {
+            if key == 0 {
+                domain = RcCell::new(basic_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 1 {
+                domain = RcCell::new(extended_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 2 {
+                domain = RcCell::new(step_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 3 {
+                domain = RcCell::new(
+                    geometric_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            } else if key == 4 {
+                domain = RcCell::new(
+                    arithmetic_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            }
 
-    TypeParam coset = TypeParam::multiplicative_generator;
+            let mut a = f.clone();
+            domain.borrow_mut().FFT(&mut a);
+            domain.borrow_mut().iFFT(&mut a);
 
-    RcCell<evaluation_domain<TypeParam> > domain;
-    for key in 0..3
-    {
-      try
-      {
-        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
-
-        Vec<TypeParam> a(f);
-        domain->cosetFFT(a, coset);
-        domain->icosetFFT(a, coset);
-
-        for i in 0..m
-        {
-          EXPECT_TRUE(f[i] == a[i]);
+            for i in 0..m {
+                assert_eq!(f[i], a[i]);
+            }
         }
-      }
-      catch(e:&DomainSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
-      catch(e:&InvalidSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
     }
-  }
 
-  TYPED_TEST(EvaluationDomainTest, LagrangeCoefficients) {
+    #[test]
+    pub fn InverseCosetFFTofCosetFFT() {
+        let m = 4;
+        let f = dbl_vec![2, 5, 3, 8];
 
-    let m = 8;
-    TypeParam t = TypeParam(10);
+        let coset = TypeParam::multiplicative_generator();
 
-    RcCell<evaluation_domain<TypeParam> > domain;
-    for key in 0..5
-    {
+        let mut domain = RcCell::new(EvaluationDomainType::<TypeParam>::default());
+        for key in 0..3 {
+            if key == 0 {
+                domain = RcCell::new(basic_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 1 {
+                domain = RcCell::new(extended_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 2 {
+                domain = RcCell::new(step_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 3 {
+                domain = RcCell::new(
+                    geometric_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            } else if key == 4 {
+                domain = RcCell::new(
+                    arithmetic_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            }
 
-      try
-      {
-        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
+            let mut a = f.clone();
+            domain.borrow_mut().cosetFFT(&mut a, &coset);
+            domain.borrow_mut().icosetFFT(&mut a, &coset);
 
-        Vec<TypeParam> a;
-        a = domain->evaluate_all_lagrange_polynomials(t);
-
-        Vec<TypeParam> d(m);
-        for i in 0..m
-        {
-          d[i] = domain->get_domain_element(i);
+            for i in 0..m {
+                assert_eq!(f[i], a[i]);
+            }
         }
-
-        for i in 0..m
-        {
-          TypeParam e = evaluate_lagrange_polynomial(m, d, t, i);
-          print!("%ld == %ld\n", e.as_ulong(), a[i].as_ulong());
-          EXPECT_TRUE(e == a[i]);
-        }
-      }
-      catch(e:&DomainSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
-      catch(e:&InvalidSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
     }
-  }
 
-  TYPED_TEST(EvaluationDomainTest, ComputeZ) {
+    #[test]
+    pub fn LagrangeCoefficients() {
+        let m = 8;
+        let t = TypeParam::from(10);
 
-    let m = 8;
-    TypeParam t = TypeParam(10);
+        let mut domain = RcCell::new(EvaluationDomainType::<TypeParam>::default());
+        for key in 0..5 {
+            if key == 0 {
+                domain = RcCell::new(basic_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 1 {
+                domain = RcCell::new(extended_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 2 {
+                domain = RcCell::new(step_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 3 {
+                domain = RcCell::new(
+                    geometric_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            } else if key == 4 {
+                domain = RcCell::new(
+                    arithmetic_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            }
 
-    RcCell<evaluation_domain<TypeParam> > domain;
-    for key in 0..5
-    {
-      try
-      {
-        if key == 0) domain=RcCell::new(basic_radix2_domain::<TypeParam>::new(m);
-        else if key == 1) domain=RcCell::new(extended_radix2_domain::<TypeParam>::new(m);
-        else if key == 2) domain=RcCell::new(step_radix2_domain::<TypeParam>::new(m);
-        else if key == 3) domain=RcCell::new(geometric_sequence_domain::<TypeParam>::new(m);
-        else if key == 4) domain=RcCell::new(arithmetic_sequence_domain::<TypeParam>::new(m);
+            let a = domain.borrow_mut().evaluate_all_lagrange_polynomials(&t);
 
-        TypeParam a;
-        a = domain->compute_vanishing_polynomial(t);
+            let mut d = vec![TypeParam::zero(); m];
+            for i in 0..m {
+                d[i] = domain.borrow_mut().get_domain_element(i);
+            }
 
-        TypeParam Z = TypeParam::one();
-        for i in 0..m
-        {
-          Z *= (t - domain->get_domain_element(i));
+            for i in 0..m {
+                let e: TypeParam = evaluate_lagrange_polynomial(m, &d, &t, i).unwrap().into();
+                print!("{} == {}\n", e.as_ulong(), a[i].as_ulong());
+                assert_eq!(e, a[i]);
+            }
         }
-
-        EXPECT_TRUE(Z == a);
-      }
-      catch(e:&DomainSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
-      catch(e:&InvalidSizeException)
-      {
-        print!("{} - skipping\n", e.what());
-      }
     }
-  }
 
-//} // libfqfft
+    #[test]
+    pub fn ComputeZ() {
+        let m = 8;
+        let t = TypeParam::from(10);
+
+        let mut domain = RcCell::new(EvaluationDomainType::<TypeParam>::default());
+        for key in 0..5 {
+            if key == 0 {
+                domain = RcCell::new(basic_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 1 {
+                domain = RcCell::new(extended_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 2 {
+                domain = RcCell::new(step_radix2_domain::<TypeParam>::new(m).unwrap().into());
+            } else if key == 3 {
+                domain = RcCell::new(
+                    geometric_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            } else if key == 4 {
+                domain = RcCell::new(
+                    arithmetic_sequence_domain::<TypeParam>::new(m)
+                        .unwrap()
+                        .into(),
+                );
+            }
+
+            let a = domain.borrow_mut().compute_vanishing_polynomial(&t);
+
+            let mut Z = TypeParam::one();
+            for i in 0..m {
+                Z *= (t.clone() - domain.borrow_mut().get_domain_element(i));
+            }
+
+            assert_eq!(Z, a);
+        }
+    }
+}

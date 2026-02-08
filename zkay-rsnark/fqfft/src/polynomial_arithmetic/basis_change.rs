@@ -1,19 +1,4 @@
-// /** @file
-//  *****************************************************************************
-
 //  Declaration of interfaces for basis change routines.
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef BASIS_CHANGE_HPP_
-// #define BASIS_CHANGE_HPP_
-
-//#include <vector>
-
-//namespace libfqfft {
 
 // /**
 //  * Compute the Subproduct Tree of degree 2^M and store it in Tree T.
@@ -61,34 +46,10 @@
 //                                          geometric_triangular_sequence:&Vec<FieldT>,
 //                                         n:usize);
 
-// //} // libfqfft
-
-// use crate::polynomial_arithmetic::basis_change.tcc;
-
-//#endif // BASIS_CHANGE_HPP_
-
-// /** @file
-//  *****************************************************************************
-
-//  Implementation of interfaces for basis change routines.
-
-//  See basis_change.hpp .
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef BASIS_CHANGE_TCC_
-// #define BASIS_CHANGE_TCC_
-
-//#include <algorithm>
-
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations::*;
 use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
 use ffec::common::utils::log2;
-//namespace libfqfft {
 
 //
 pub fn compute_subproduct_tree<
@@ -344,7 +305,3 @@ pub fn newton_to_monomial_basis_geometric<
         a[i] = w[i].clone() * z[i].clone();
     }
 }
-
-//} // libfqfft
-
-//#endif // BASIS_CHANGE_TCC_

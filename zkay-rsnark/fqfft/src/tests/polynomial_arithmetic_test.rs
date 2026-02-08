@@ -1,257 +1,237 @@
-/**
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+use crate::polynomial_arithmetic::basic_operations::{
+    _polynomial_addition, _polynomial_division, _polynomial_multiplication,
+    _polynomial_multiplication_on_kronecker, _polynomial_subtraction,
+};
+use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
+use ffec::common::double::Double;
+use crate::dbl_vec;
 
-//#include <vector>
 
-//#include <gtest/gtest.h>
-//#include <stdint.h>
 
-use crate::polynomial_arithmetic::basic_operations;
-use crate::polynomial_arithmetic::xgcd;
+#[cfg(test)]
+mod test {
+    use super::*;
+    //   template <T>
+    pub struct PolynomialArithmeticTest; //::testing::Test};
+    //   type FieldT=::testing::Types<Double>; /* List Extend Here */
+    //   TYPED_TEST_CASE(PolynomialArithmeticTest, FieldT);
+    type TypeParam = Double;
+    #[test]
+    pub fn PolynomialAdditionSame() {
+        let a = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let b = dbl_vec![9, 3, 11, 14, 7, 1, 5, 8];
+        let mut c = vec![TypeParam::zero()];
 
-//namespace libfqfft {
+        _polynomial_addition(&mut c, &a, &b);
 
-  template <T>
-  pub struct PolynomialArithmeticTest {//::testing::Test};
-  type FieldT=::testing::Types<Double>; /* List Extend Here */
-  TYPED_TEST_CASE(PolynomialArithmeticTest, FieldT);
+        let c_ans = dbl_vec![10, 6, 15, 39, 13, 8, 12, 10];
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialAdditionSame) {
-
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> b = { 9, 3, 11, 14, 7, 1, 5, 8 };
-    Vec<TypeParam> c(1, TypeParam::zero());
-
-    _polynomial_addition(c, a, b);
-
-    Vec<TypeParam> c_ans = { 10, 6, 15, 39, 13, 8, 12, 10 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialAdditionBiggerA) {
+    #[test]
+    pub fn PolynomialAdditionBiggerA() {
+        let a = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let b = dbl_vec![9, 3, 11, 14, 7];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> b = { 9, 3, 11, 14, 7 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_addition(&mut c, &a, &b);
 
-    _polynomial_addition(c, a, b);
+        let c_ans = dbl_vec![10, 6, 15, 39, 13, 7, 7, 2];
 
-    Vec<TypeParam> c_ans = { 10, 6, 15, 39, 13, 7, 7, 2 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialAdditionBiggerB) {
+    #[test]
+    pub fn PolynomialAdditionBiggerB() {
+        let a = dbl_vec![1, 3, 4, 25, 6];
+        let b = dbl_vec![9, 3, 11, 14, 7, 1, 5, 8];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6 };
-    Vec<TypeParam> b = { 9, 3, 11, 14, 7, 1, 5, 8 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_addition(&mut c, &a, &b);
 
-    _polynomial_addition(c, a, b);
+        let c_ans = dbl_vec![10, 6, 15, 39, 13, 1, 5, 8];
 
-    Vec<TypeParam> c_ans = { 10, 6, 15, 39, 13, 1, 5, 8 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialAdditionZeroA) {
+    #[test]
+    pub fn PolynomialAdditionZeroA() {
+        let a = dbl_vec![0, 0, 0];
+        let b = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 0, 0, 0 };
-    Vec<TypeParam> b = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_addition(&mut c, &a, &b);
 
-    _polynomial_addition(c, a, b);
+        let c_ans = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
 
-    Vec<TypeParam> c_ans = { 1, 3, 4, 25, 6, 7, 7, 2 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialAdditionZeroB) {
+    #[test]
+    pub fn PolynomialAdditionZeroB() {
+        let a = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let b = dbl_vec![0, 0, 0];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> b = { 0, 0, 0 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_addition(&mut c, &a, &b);
 
-    _polynomial_addition(c, a, b);
+        let c_ans = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
 
-    Vec<TypeParam> c_ans = { 1, 3, 4, 25, 6, 7, 7, 2 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialSubtractionSame) {
+    #[test]
+    pub fn PolynomialSubtractionSame() {
+        let a = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let b = dbl_vec![9, 3, 11, 14, 7, 1, 5, 8];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> b = { 9, 3, 11, 14, 7, 1, 5, 8 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_subtraction(&mut c, &a, &b);
 
-    _polynomial_subtraction(c, a, b);
+        let c_ans = dbl_vec![-8, 0, -7, 11, -1, 6, 2, -6];
 
-    Vec<TypeParam> c_ans = { -8, 0, -7, 11, -1, 6, 2, -6 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialSubtractionBiggerA) {
+    #[test]
+    pub fn PolynomialSubtractionBiggerA() {
+        let a = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let b = dbl_vec![9, 3, 11, 14, 7];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> b = { 9, 3, 11, 14, 7 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_subtraction(&mut c, &a, &b);
 
-    _polynomial_subtraction(c, a, b);
+        let c_ans = dbl_vec![-8, 0, -7, 11, -1, 7, 7, 2];
 
-    Vec<TypeParam> c_ans = { -8, 0, -7, 11, -1, 7, 7, 2 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialSubtractionBiggerB) {
+    #[test]
+    pub fn PolynomialSubtractionBiggerB() {
+        let a = dbl_vec![1, 3, 4, 25, 6];
+        let b = dbl_vec![9, 3, 11, 14, 7, 1, 5, 8];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6 };
-    Vec<TypeParam> b = { 9, 3, 11, 14, 7, 1, 5, 8 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_subtraction(&mut c, &a, &b);
 
-    _polynomial_subtraction(c, a, b);
+        let c_ans = dbl_vec![-8, 0, -7, 11, -1, -1, -5, -8];
 
-    Vec<TypeParam> c_ans = { -8, 0, -7, 11, -1, -1, -5, -8 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialSubtractionZeroA) {
+    #[test]
+    pub fn PolynomialSubtractionZeroA() {
+        let a = dbl_vec![0, 0, 0];
+        let b = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 0, 0, 0 };
-    Vec<TypeParam> b = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_subtraction(&mut c, &a, &b);
 
-    _polynomial_subtraction(c, a, b);
+        let c_ans = dbl_vec![-1, -3, -4, -25, -6, -7, -7, -2];
 
-    Vec<TypeParam> c_ans = { -1, -3, -4, -25, -6, -7, -7, -2 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialSubtractionZeroB) {
+    #[test]
+    pub fn PolynomialSubtractionZeroB() {
+        let a = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
+        let b = dbl_vec![0, 0, 0];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 1, 3, 4, 25, 6, 7, 7, 2 };
-    Vec<TypeParam> b = { 0, 0, 0 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_subtraction(&mut c, &a, &b);
 
-    _polynomial_subtraction(c, a, b);
+        let c_ans = dbl_vec![1, 3, 4, 25, 6, 7, 7, 2];
 
-    Vec<TypeParam> c_ans = { 1, 3, 4, 25, 6, 7, 7, 2 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialMultiplicationBasic) {
+    #[test]
+    pub fn PolynomialMultiplicationBasic() {
+        let a = dbl_vec![5, 0, 0, 13, 0, 1];
+        let b = dbl_vec![13, 0, 1];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 5, 0, 0, 13, 0, 1 };
-    Vec<TypeParam> b = { 13, 0, 1 };
-    Vec<TypeParam> c(1, TypeParam::zero());
-    
-    _polynomial_multiplication(c, a, b);
+        _polynomial_multiplication(&mut c, &a, &b);
 
-    Vec<TypeParam> c_ans = { 65, 0, 5, 169, 0, 26, 0, 1 };
+        let c_ans = dbl_vec![65, 0, 5, 169, 0, 26, 0, 1];
 
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialMultiplicationZero) {
+    #[test]
+    pub fn PolynomialMultiplicationZero() {
+        let a = dbl_vec![5, 0, 0, 13, 0, 1];
+        let b = dbl_vec![0];
+        let mut c = vec![TypeParam::zero()];
 
-    Vec<TypeParam> a = { 5, 0, 0, 13, 0, 1 };
-    Vec<TypeParam> b = { 0 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+        _polynomial_multiplication(&mut c, &a, &b);
 
-    _polynomial_multiplication(c, a, b);
+        let c_ans = dbl_vec![0];
 
-    Vec<TypeParam> c_ans = { 0 };
-
-    for i in 0..c.len()
-    {
-      EXPECT_TRUE(c_ans[i] == c[i]);
+        for i in 0..c.len() {
+            assert_eq!((c_ans[i]), c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(PolynomialArithmeticTest, PolynomialDivision) {
+    #[test]
+    pub fn PolynomialDivision() {
+        let a = dbl_vec![5, 0, 0, 13, 0, 1];
+        let b = dbl_vec![13, 0, 1];
 
-    Vec<TypeParam> a = { 5, 0, 0, 13, 0, 1 };
-    Vec<TypeParam> b = { 13, 0, 1 };
+        let mut Q = vec![TypeParam::zero()];
+        let mut R = vec![TypeParam::zero()];
 
-    Vec<TypeParam> Q(1, TypeParam::zero());
-    Vec<TypeParam> R(1, TypeParam::zero());
+        _polynomial_division(&mut Q, &mut R, &a, &b);
 
-    _polynomial_division(Q, R, a, b);
+        let Q_ans = dbl_vec![0, 0, 0, 1];
+        let R_ans = dbl_vec![5];
 
-    Vec<TypeParam> Q_ans = { 0, 0, 0, 1 };
-    Vec<TypeParam> R_ans = { 5 };
-
-    for i in 0..Q.len()
-    {
-      EXPECT_TRUE(Q_ans[i] == Q[i]);
+        for i in 0..Q.len() {
+            assert_eq!((Q_ans[i]), Q[i]);
+        }
+        for i in 0..R.len() {
+            assert_eq!((R_ans[i]), R[i]);
+        }
     }
-    for i in 0..R.len()
-    {
-      EXPECT_TRUE(R_ans[i] == R[i]);
+
+    #[test]
+    pub fn ExtendedGCD() {
+        let a = dbl_vec![0, 0, 0, 0, 1];
+        let b = dbl_vec![1, -6, 11, -6];
+
+        let mut pg = vec![TypeParam::zero()];
+        let mut pu = vec![TypeParam::zero()];
+        let mut pv = vec![TypeParam::zero()];
+
+        _polynomial_xgcd(&a, &b, &mut pg, &mut pu, &mut pv);
+
+        let pv_ans = dbl_vec![1, 6, 25, 90];
+
+        for i in 0..pv.len() {
+            assert_eq!((pv_ans[i]), pv[i]);
+        }
     }
-  }
-
-  TYPED_TEST(PolynomialArithmeticTest, ExtendedGCD) {
-
-    Vec<TypeParam> a = { 0, 0, 0, 0, 1 };
-    Vec<TypeParam> b = { 1, -6, 11, -6 };
-
-    Vec<TypeParam> pg(1, TypeParam::zero());
-    Vec<TypeParam> pu(1, TypeParam::zero());
-    Vec<TypeParam> pv(1, TypeParam::zero());
-
-    _polynomial_xgcd(a, b, pg, pu, pv);
-
-    Vec<TypeParam> pv_ans = { 1, 6, 25, 90 };
-
-    for i in 0..pv.len()
-    {
-      EXPECT_TRUE(pv_ans[i] == pv[i]);
-    }
-  }
-
-//} // libfqfft
+}

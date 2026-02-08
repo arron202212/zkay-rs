@@ -1,24 +1,4 @@
-/** @file
-*****************************************************************************
-
-Declaration of serialization routines and constants.
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef SERIALIZATION_HPP_
-// #define SERIALIZATION_HPP_
-
-//#include <istream>
-//#include <map>
-//#include <ostream>
-//#include <set>
-//#include <vector>
-
-//namespace libfqfft {
+// Declaration of serialization routines and constants.
 
 /*
  * @todo
@@ -107,32 +87,6 @@ const OUTPUT_SEPARATOR:&str= " ";
 
 //
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
-
-// //} // libfqfft
-
-// // #include "common/serialization.tcc"
-// use crate::tools::serialization.tcc;
-
-//#endif // SERIALIZATION_HPP_
-// /** @file
-//  *****************************************************************************
-
-//  Implementation of serialization routines.
-
-//  See serialization.hpp .
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef SERIALIZATION_TCC_
-// #define SERIALIZATION_TCC_
-
-//#include <cassert>
-//#include <sstream>
-
-//namespace libfqfft {
 
 // inline pub fn  consume_newline(std::istream &in)
 // {
@@ -311,5 +265,3 @@ const OUTPUT_SEPARATOR:&str= " ";
 // }
 
 // }
-
-//#endif // SERIALIZATION_TCC_

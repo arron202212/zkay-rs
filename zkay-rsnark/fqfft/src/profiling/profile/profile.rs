@@ -1,28 +1,4 @@
-// /** @file
-//  *****************************************************************************
-
 //  Implementation of functions for profiler.
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// // //#ifndef PROFILE_OP_COUNTS
-// // #error PROFILE_OP_COUNTS must be defined to build this profiler.
-// // //#endif
-
-// // //#include <cstdint>
-// // //#include <cstdio>
-// // //#include <cstdlib>
-// // //#include <cstring>
-// // //#include <ctime>
-// // //#include <fstream>
-// // //#include <iostream>
-// // //#include <sstream>
-// // //#include <vector>
-// // //#include <sys/resource.h>
-// // //#include <unistd.h>
 
 // // use ff_curves::algebra::curves::edwards::edwards_pp;
 // use ffec::common::double;
@@ -33,8 +9,6 @@
 // use crate::evaluation_domain::domains::extended_radix2_domain;
 // use crate::evaluation_domain::domains::geometric_sequence_domain;
 // use crate::evaluation_domain::domains::step_radix2_domain;
-
-// // using namespace libfqfft;
 
 // /* https://stackoverflow.com/questions/26237419/faster-than-rand */
 // 5149:  seed :u32=,

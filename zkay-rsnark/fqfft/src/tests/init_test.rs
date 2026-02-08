@@ -1,17 +1,19 @@
-/**
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+// int main(int argc, char **argv) {
+// 	::testing::InitGoogleTest(&argc, argv);
+// 	return RUN_ALL_TESTS();
+// }
+use ffec::common::double::Double;
 
-#include "gtest/gtest.h"
-
-//namespace libfqfft {
-
-int main(int argc, char **argv) {
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+#[macro_export]
+macro_rules! dbl_vec {
+    () => { Vec::<Double>::new() };
+    ( $( $x:expr ),* ) => {
+      {
+          let mut temp_vec = Vec::<Double>::new();
+          $(
+              temp_vec.push( Double::from( $x ) );
+          )*
+          temp_vec
+      }
+  };
 }
-
-//} // libfqfft

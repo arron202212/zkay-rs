@@ -1,27 +1,4 @@
-// /** @file
-//  *****************************************************************************
-
 //  Implementation of functions for profiling menu.
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#include <cmath>
-//#include <ctime>
-//#include <fstream>
-//#include <iostream>
-//#include <sstream>
-//#include <vector>
-
-//#include <dirent.h>
-//#include <stdint.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <sys/resource.h>
-//#include <unistd.h>
 
 // /* Level 2: Profile */
 // pub fn  profile()

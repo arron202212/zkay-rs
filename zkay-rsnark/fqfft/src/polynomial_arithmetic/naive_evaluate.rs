@@ -1,20 +1,6 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for naive evaluation routines.
 
-Declaration of interfaces for naive evaluation routines.
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef NAIVE_EVALUATE_HPP_
-// #define NAIVE_EVALUATE_HPP_
-
-//#include <vector>
 use crate::tools::exceptions;
-
-//namespace libfqfft {
 
 /**
  * Naive evaluation of a *single* polynomial, used for testing purposes.
@@ -41,31 +27,6 @@ use crate::tools::exceptions;
 //
 // FieldT evaluate_lagrange_polynomial(m:usize, domain:&Vec<FieldT>, t:&FieldT, idx:usize);
 
-//} // libfqfft
-
-// use crate::polynomial_arithmetic::naive_evaluate.tcc;
-
-//#endif // NAIVE_EVALUATE_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for naive evaluation routines.
-
-See naive_evaluate.hpp .
-
-*****************************************************************************
-* @author     This file is part of libfqfft, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef NAIVE_EVALUATE_TCC_
-// #define NAIVE_EVALUATE_TCC_
-
-//#include <algorithm>
-
-//namespace libfqfft {
-
 //
 pub fn evaluate_polynomial<FieldT: num_traits::Zero + num_traits::One + Clone>(
     m: usize,
@@ -84,7 +45,7 @@ pub fn evaluate_polynomial<FieldT: num_traits::Zero + num_traits::One + Clone>(
         result = (result * t.clone()) + coeff[i].clone();
     }
 
-    return Ok(result);
+    Ok(result)
 }
 
 //
@@ -119,9 +80,5 @@ pub fn evaluate_lagrange_polynomial<
         denom *= domain[idx].clone() - domain[k].clone();
     }
 
-    return Ok(num); //* denom.inverse();
+    Ok(num) //* denom.inverse();
 }
-
-//} // libfqfft
-
-//#endif // NAIVE_EVALUATE_TCC_

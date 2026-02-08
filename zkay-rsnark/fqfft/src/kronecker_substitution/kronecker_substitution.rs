@@ -1,19 +1,4 @@
-// /** @file
-//  *****************************************************************************
-
 //  Declaration of interfaces for Kronecker substitution.
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef KRONECKER_SUBSTITUTION_HPP_
-// #define KRONECKER_SUBSTITUTION_HPP_
-
-//#include <vector>
-
-//namespace libfqfft {
 
 use crate::polynomial_arithmetic::basic_operations::_condense;
 use ffec::algebra::field_utils::bigint::GMP_NUMB_BITS;
@@ -26,38 +11,10 @@ use ffec::algebra::field_utils::bigint::GMP_NUMB_BITS;
  */
 //
 // pub fn  kronecker_substitution(v3:&Vec<FieldT>,  v1:&Vec<FieldT>,  v2:&Vec<FieldT>);
-
-//} // libfqfft
-
-// use crate::kronecker_substitution::kronecker_substitution.tcc;
-
-//#endif // KRONECKER_SUBSTITUTION_HPP_
-// /** @file
-//  *****************************************************************************
-
-//  Implementation of interfaces for Kronecker substitution.
-
-//  See kronecker_substitution.hpp .
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-
-//#ifndef KRONECKER_SUBSTITUTION_TCC_
-// #define KRONECKER_SUBSTITUTION_TCC_
-
-//#include <algorithm>
-//#include <cmath>
-
-//#include <gmp.h>
 use ffec::common::utils;
 use ffec::common::utils::div_ceil;
 const GMP_NAIL_BITS: usize = 0;
 const GMP_LIMB_BITS: usize = GMP_NAIL_BITS + GMP_NUMB_BITS;
-
-//namespace libfqfft {
 
 //
 pub fn kronecker_substitution<
@@ -223,7 +180,3 @@ pub fn kronecker_substitution<
 
     _condense(v3);
 }
-
-//} // libfqfft
-
-//#endif // KRONECKER_SUBSTITUTION_TCC_

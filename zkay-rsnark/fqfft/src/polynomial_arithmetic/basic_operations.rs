@@ -1,19 +1,4 @@
-// /** @file
-//  *****************************************************************************
-
 //  Declaration of interfaces for basic polynomial operation routines.
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef BASIC_OPERATIONS_HPP_
-// // #define BASIC_OPERATIONS_HPP_
-
-// //#include <vector>
-
-// //namespace libfqfft {
 
 // /**
 //  * Returns true if polynomial A is a zero polynomial.
@@ -83,30 +68,6 @@
 //
 // pub fn  _polynomial_division(q:&Vec<FieldT>, r:&Vec<FieldT>, a:&Vec<FieldT>,  b:&Vec<FieldT>);
 
-// //} // libfqfft
-
-// use crate::polynomial_arithmetic::basic_operations.tcc;
-
-//#endif // BASIC_OPERATIONS_HPP_
-
-// /** @file
-//  *****************************************************************************
-
-//  Implementation of interfaces for basic polynomial operation routines.
-
-//  See basic_operations.hpp .
-
-//  *****************************************************************************
-//  * @author     This file is part of libfqfft, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef BASIC_OPERATIONS_TCC_
-// #define BASIC_OPERATIONS_TCC_
-
-//#include <algorithm>
-//#include <functional>
-
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::kronecker_substitution::kronecker_substitution;
 use crate::polynomial_arithmetic::basic_operations::kronecker_substitution::kronecker_substitution;
@@ -118,8 +79,6 @@ use ffec::common::utils::log2;
 // #ifdef MULTICORE
 //#include <omp.h>
 //#endif
-
-//namespace libfqfft {
 
 //
 pub fn _is_zero<FieldT: num_traits::Zero + std::cmp::PartialEq>(a: &Vec<FieldT>) -> bool {
@@ -394,7 +353,3 @@ pub fn _polynomial_division<
     }
     _condense(q);
 }
-
-//} // libfqfft
-
-//#endif // BASIC_OPERATIONS_TCC_

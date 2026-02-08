@@ -1,56 +1,52 @@
-/**
- *****************************************************************************
- * @author     This file is part of libfqfft, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
- 
-//#include <vector>
+use crate::polynomial_arithmetic::basic_operations::{
+    _polynomial_addition, _polynomial_division, _polynomial_multiplication,
+    _polynomial_multiplication_on_kronecker, _polynomial_subtraction,
+};
+use ffec::common::double::Double;
+use crate::dbl_vec;
 
-//#include <gtest/gtest.h>
-//#include <stdint.h>
 
-use crate::polynomial_arithmetic::basic_operations;
 
-//namespace libfqfft {
 
-  template <T>
-  pub struct KroneckerSubstitutionTest {//::testing::Test};
-  type FieldT=::testing::Types<Double>; /* List Extend Here */
-  TYPED_TEST_CASE(KroneckerSubstitutionTest, FieldT);
+#[cfg(test)]
+mod test {
+    use super::*;
 
-  TYPED_TEST(KroneckerSubstitutionTest, StandardPolynomialMultiplication) {
+    //   template <T>
+    pub struct KroneckerSubstitutionTest; //::testing::Test};
+    //   type FieldT=::testing::Types<Double>; /* List Extend Here */
+    //   TYPED_TEST_CASE(KroneckerSubstitutionTest, FieldT);
+    type TypeParam = Double;
 
-    Vec<TypeParam> a = { 1, 2, 3, 1 };
-    Vec<TypeParam> b = { 1, 2, 1, 1 };
-    Vec<TypeParam> c(1, TypeParam::zero());
+    #[test]
+    pub fn StandardPolynomialMultiplication() {
+        let a = dbl_vec![1, 2, 3, 1];
+        let b = dbl_vec![1, 2, 1, 1];
+        let mut c = vec![TypeParam::zero()];
 
-    _polynomial_multiplication_on_kronecker(c, a, b);
+        _polynomial_multiplication_on_kronecker(&mut c, &a, &b);
 
-    Vec<TypeParam> c_answer(1, TypeParam::zero());
-    _polynomial_multiplication(c_answer, a, b);
+        let mut c_answer = vec![TypeParam::zero()];
+        _polynomial_multiplication(&mut c_answer, &a, &b);
 
-    for i in 0..c_answer.len()
-    {
-      EXPECT_TRUE(c_answer[i] == c[i]);
+        for i in 0..c_answer.len() {
+            assert!(c_answer[i] == c[i]);
+        }
     }
-  }
 
-  TYPED_TEST(KroneckerSubstitutionTest, SquaredPolynomialMultiplication) {
-    
-    Vec<TypeParam> a = { 1, 2, 3, 1 };
-    Vec<TypeParam> b = a;
-    Vec<TypeParam> c(1, TypeParam::zero());
+    #[test]
+    pub fn SquaredPolynomialMultiplication() {
+        let a = dbl_vec![1, 2, 3, 1];
+        let b = a.clone();
+        let mut c = vec![TypeParam::zero()];
 
-    _polynomial_multiplication_on_kronecker(c, a, b);
-    
-    Vec<TypeParam> c_answer(1, TypeParam::zero());
-    _polynomial_multiplication(c_answer, a, b);
+        _polynomial_multiplication_on_kronecker(&mut c, &a, &b);
 
-    for i in 0..c_answer.len()
-    {
-      EXPECT_TRUE(c_answer[i] == c[i]);
+        let mut c_answer = vec![TypeParam::zero()];
+        _polynomial_multiplication(&mut c_answer, &a, &b);
+
+        for i in 0..c_answer.len() {
+            assert!(c_answer[i] == c[i]);
+        }
     }
-  }
-
-//} // libfqfft
+}
