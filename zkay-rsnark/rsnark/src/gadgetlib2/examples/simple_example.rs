@@ -36,7 +36,7 @@ pub fn gen_r1cs_example_from_gadgetlib2_protoboard<
     let mut pb = Protoboard::create(FieldType::R1P, None);
     let A = VariableArray::<VariableArrayBase>::new(size, "A".to_owned(), VariableArrayBase);
     let B = VariableArray::<VariableArrayBase>::new(size, "B".to_owned(), VariableArrayBase);
-    let result = Variable::new("result");
+    let result = Variable::from("result");
     let mut g = InnerProduct_Gadget::create(pb.clone(), A.clone().into(), B.clone().into(), result);
     // create constraints. This part is done by generator.
     g.borrow().generateConstraints();

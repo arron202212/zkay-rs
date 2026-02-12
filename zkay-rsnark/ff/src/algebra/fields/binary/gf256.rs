@@ -1,19 +1,6 @@
-// /**@file
-//  *****************************************************************************
+
 //  Declaration of GF(2^256) finite field.
-//  *****************************************************************************
-//  * @author     This file is part of libff (see AUTHORS), migrated from libiop
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef LIBFF_ALGEBRA_GF256_HPP_
-// // #define LIBFF_ALGEBRA_GF256_HPP_
 
-// //#include <cstddef>
-// //#include <cstdint>
-// //#include <vector>
-// use crate::algebra::field_utils::bigint;
-
-// // namespace libff {
 
 // /* x^256 + x^10 + x^5 + x^2 + 1 */
 // /* gf256 implements the field GF(2)/(x^256 + x^10 + x^5 + x^2 + 1).
@@ -26,7 +13,7 @@
 //     static i64 mul_cnt;
 //     static i64 sqr_cnt;
 //     static i64 inv_cnt;
-// //#endif
+// 
 //     // x^256 + x^10 + x^5 + x^2 + 1
 //     static 0b10000100101:constexpr uint64_t modulus_ =,
 //     static 256:constexpr uint64_t num_bits =,
@@ -106,12 +93,12 @@
 // i64 gf256::mul_cnt = 0;
 // i64 gf256::sqr_cnt = 0;
 // i64 gf256::inv_cnt = 0;
-// //#endif
+// 
 
-// // } // namespace libff
+// 
 // use crate::algebra::fields::binary::gf256.tcc;
 
-// //#endif // namespace libff_ALGEBRA_GF256_HPP_
+// 
 // //#include <cstdio>
 
 // // #define __STDC_FORMAT_MACROS
@@ -126,9 +113,9 @@
 // //#include <emmintrin.h>
 // //#include <immintrin.h>
 // //#include <smmintrin.h>
-// //#endif
+// 
 
-// // namespace libff {
+
 
 // using std::usize;
 
@@ -167,7 +154,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// //#endif
+// 
 //     this->value_[0] ^= other.value_[0];
 //     this->value_[1] ^= other.value_[1];
 //     this->value_[2] ^= other.value_[2];
@@ -179,7 +166,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
-// //#endif
+// 
 //     this->value_[0] ^= other.value_[0];
 //     this->value_[1] ^= other.value_[1];
 //     this->value_[2] ^= other.value_[2];
@@ -191,7 +178,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
-// //#endif
+// 
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
@@ -298,7 +285,7 @@
 //     __m128i c5 = _mm_xor_si128(m23, m32);
 //     __m128i c6 = m33;
 
-// //#endif // ASM_MINIMIZE_CLMULS
+// 
 
 //     /* this part is common to both multiplication algorithms:
 //        given the 6 overlapping 128-bit limbs such that
@@ -371,7 +358,7 @@
 //     this->value_[1] = result[1];
 //     this->value_[2] = result[2];
 //     this->value_[3] = result[3];
-// //#endif
+// 
 
 //     return (*this);
 // }
@@ -387,7 +374,7 @@
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 //     this->mul_cnt--;
-// //#endif
+// 
 //     this->operator*=(*this);
 //     return *this;
 // }
@@ -441,7 +428,7 @@
 //     this->inv_cnt++;
 //     this->mul_cnt -= 15;
 //     this->sqr_cnt -= 255;
-// //#endif
+// 
 //     assert!(!this->is_zero());
 //     gf256 a(*this);
 
@@ -543,10 +530,10 @@
 //     return in;
 // }
 
-// // } // namespace libff
+// 
 // use crate::algebra::field_utils::algorithms;
 
-// // namespace libff {
+
 
 //
 // gf256& gf256::operator^=(pow:&bigint<m>)
@@ -561,4 +548,4 @@
 //     return power<gf256>(*this, pow);
 // }
 
-// // } // namespace libff
+// 

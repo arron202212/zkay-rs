@@ -1,11 +1,7 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BN128_PP_HPP_
+
+
+
 // #define BN128_PP_HPP_
 use crate::algebra::curves::bn128::bn128_g1;
 use crate::algebra::curves::bn128::bn128_g2;
@@ -14,7 +10,7 @@ use crate::algebra::curves::bn128::bn128_init;
 use crate::algebra::curves::bn128::bn128_pairing;
 use crate::algebra::curves::public_params;
 
-// namespace libff {
+
 
 // pub struct bn128_pp {
 
@@ -47,19 +43,15 @@ use crate::algebra::curves::public_params;
 //                                     Q:&bn128_G2);
 // };
 
-// // } // namespace libff
-// //#endif // BN128_PP_HPP_
-// /** @file
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+// 
+// 
+
+
 
 // use crate::algebra::curves::bn128::bn128_pp;
 // use crate::common::profiling;
 
-// // namespace libff {
+
 
 // pub fn init_public_params()
 // {
@@ -123,7 +115,7 @@ use crate::algebra::curves::public_params;
 //     return result;
 // }
 
-// // } // namespace libff
+// 
 
 
 

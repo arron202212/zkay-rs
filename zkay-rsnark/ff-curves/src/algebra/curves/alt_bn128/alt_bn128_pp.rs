@@ -18,7 +18,7 @@ use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
 };
 use crate::algebra::curves::public_params;
 
-// namespace libff {
+
 
 // impl<EC_ppT:PublicParamsType> PublicParams<EC_ppT> for alt_bn128_pp{
 
@@ -40,7 +40,7 @@ use crate::algebra::curves::public_params;
 //                                           Q:&alt_bn128_G2);
 // }
 
-// } // namespace libff
+
 
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
 

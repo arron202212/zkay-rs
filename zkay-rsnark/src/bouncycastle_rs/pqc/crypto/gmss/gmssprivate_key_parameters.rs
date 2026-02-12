@@ -525,7 +525,6 @@ public class GMSSPrivateKeyParameters
                 // last step of nextNextAuthRoot calculation
                 this.updateNextNextAuthRoot(layer);
 
-                // ******************************************************** /
 
                 // NOW: advance to next tree on layer 'layer'
 

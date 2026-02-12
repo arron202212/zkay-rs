@@ -13,7 +13,6 @@ use ffec::common::profiling::print_indent;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils::FMT;
 use std::collections::BTreeMap;
-/************************* R1CS constraint ***********************************/
 
 /**
  * A R1CS constraint is a formal expression of the form
@@ -47,8 +46,6 @@ pub struct r1cs_constraint<
 
 // };
 
-/************************* R1CS variable assignment **************************/
-
 /**
  * A R1CS variable assignment is a vector of <FieldT> elements that represents
  * a candidate solution to a R1CS constraint system (see below).
@@ -61,8 +58,6 @@ pub type r1cs_primary_input<FieldT> = Vec<FieldT>;
 pub type r1cs_auxiliary_input<FieldT> = Vec<FieldT>;
 
 pub type r1cs_variable_assignment<FieldT> = Vec<FieldT>; /* note the changed name! (TODO: remove this comment after primary_input transition is complete) */
-
-/************************* R1CS constraint system ****************************/
 
 /**
  * A system of R1CS constraints looks like
@@ -94,7 +89,6 @@ pub struct r1cs_constraint_system<
     // #ifdef DEBUG
     pub constraint_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-    //#endif
 }
 
 //     bool is_valid() const;
@@ -123,31 +117,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-// use crate::relations::constraint_satisfaction_problems/r1cs/r1cs;
-
-//#endif // R1CS_HPP_
-
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for:
-- a R1CS constraint,
-- a R1CS variable assignment, and
-- a R1CS constraint system.
-
-See r1cs.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef R1CS_TCC_
-// #define R1CS_TCC_
-
-// use  <algorithm>
-// use  <cassert>
-// use  <set>
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
 use ffec::common::utils;
@@ -321,7 +290,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
                     &full_variable_assignment,
                     &self.variable_annotations,
                 );
-                //#endif // DEBUG
+
                 return false;
             }
         }
@@ -336,7 +305,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     pub fn add_constraint2(&mut self, c: r1cs_constraint<FieldT, SV, SLC>, annotation: String) {
         // #ifdef DEBUG
         // constraint_annotations[constraints.len()] = annotation;
-        //#endif
+
         self.constraints.push(c);
     }
 
@@ -418,11 +387,8 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
                 );
             }
         }
-        //#endif
     }
 }
-
-//#endif // R1CS_TCC_
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> PartialEq
     for r1cs_constraint_system<FieldT, SV, SLC>

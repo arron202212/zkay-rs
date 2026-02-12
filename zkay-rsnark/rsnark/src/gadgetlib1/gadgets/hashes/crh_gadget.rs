@@ -1,10 +1,3 @@
-/**
- *****************************************************************************
- * @author     This file is part of libsnark, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#ifndef CRH_GADGET_HPP_
 // #define CRH_GADGET_HPP_
 use crate::gadgetlib1::gadgets::hashes::knapsack::knapsack_gadget::{
     knapsack_CRH_with_bit_out_gadget, knapsack_CRH_with_bit_out_gadgets,

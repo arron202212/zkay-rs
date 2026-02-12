@@ -4,18 +4,13 @@ use super::variable_operators::*;
 use crate::gadgetlib2::protoboard::Protoboard;
 use enum_dispatch::enum_dispatch;
 use rccell::RcCell;
+use std::collections::HashMap;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::{AddAssign, MulAssign, Neg, SubAssign};
 use std::ops::{Index, IndexMut};
-// pub struct GadgetLibAdapter;
 
 // // Forward declarations
-// pub struct Protoboard;
-// pub struct FElemInterface;
-// pub struct FElem;
-// pub struct FConst;
-// pub struct Variable;
-// pub struct VariableArray;
+
 #[derive(Default, Clone, Debug, PartialEq, Eq, Ord, PartialOrd)]
 pub enum FieldType {
     R1P,
@@ -88,13 +83,6 @@ pub type VarIndex_t = u64;
 // Naming Conventions:
 //FieldType::R1P == Rank 1 Prime characteristic
 
-// /*************************************************************************************************/
-// /*************************************************************************************************/
-// /*******************                                                            ******************/
-// /*******************                   pub struct FElemInterface                     ******************/
-// /*******************                                                            ******************/
-// /*************************************************************************************************/
-// /*************************************************************************************************/
 //    An interface pub struct for field elements.
 //    Currently 2 classes will derive from this interface:
 //    R1P_Elem - Elements of a field of prime characteristic
@@ -139,9 +127,7 @@ pub trait FElemInterface: Default + Clone {
     // fn  ~FElemInterface(){};
 }
 
-/***********************************/
 /***   END OF CLASS DEFINITION   ***/
-/***********************************/
 
 // inline bool operator==(first:u64, second:&FElemInterface) {return second ==first:,}
 // inline bool operator!=(const first:u64, second:&FElemInterface) {return !(first == second);}
@@ -149,14 +135,6 @@ pub trait FElemInterface: Default + Clone {
 // inline bool operator!=(first:FElemInterface&, second:&FElemInterface) {
 //     return !(first == second);
 // }
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                      pub struct FElem                           ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 /// A wrapper pub struct for field elements. Can hold any derived pub type of FieldElementInterface
 
@@ -204,7 +182,7 @@ impl PartialEq<i32> for FElem {
 //     }
 
 //     friend pub struct GadgetLibAdapter;
-// }; // pub struct FElem
+// };
 
 // inline bool operator!=(first:&FElem, second:&FElem) {return !(first == second);}
 
@@ -215,17 +193,6 @@ impl PartialEq<i32> for FElem {
 // inline bool operator!=(first:&FElem, const second:u64) {return !(first == second);}
 // inline bool operator!=(const first:u64, second:&FElem) {return !(first == second);}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                      pub struct FConst                          ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 /**
     A field agnostic constant. All fields have constants 1 and 0 and this pub struct allows us to hold
     an element agnostically while the context field is not known. For example, when given the
@@ -263,19 +230,8 @@ pub struct FConst {
 //     fn  FElemInterface& power(exponent:u64);
 
 //     friend pub struct FElem; // allow constructor call
-// }; // pub struct FConst
+// };
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                     pub struct R1P_Elem                         ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 /**
    Holds elements of a prime characteristic field. Currently implemented using the gmp (Linux) and
    mpir (Windows) libraries.
@@ -310,20 +266,6 @@ pub struct R1P_Elem {
 //     friend pub struct GadgetLibAdapter;
 // };
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                    pub struct Variable                          ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
-pub type VariableSet = BTreeSet<Variable>; //VariableStrictOrder
-pub type multiset = BTreeMap<Variable, i32>; //use std::collections::BTreeMap;
-
 // /**
 //     @brief A formal variable, field agnostic.
 
@@ -343,7 +285,6 @@ pub struct Variable {
     // nextFreeIndex_: VarIndex_t, //static///< Monotonically-increasing counter to allocate disinct indices.
     // #ifdef DEBUG
     pub name_: String,
-    //#endif
 }
 //    /**
 //     * @brief allocates the variable
@@ -371,25 +312,13 @@ impl PartialEq for Variable {
 //     FElem eval(assignment:&VariableAssignment) const;
 
 //     /// A set of Variables should be declared as follows:    pub fn set s1;
-
+pub type VariableSet = BTreeSet<Variable>;
+pub type VariableMultiSet = BTreeMap<Variable, i32>;
 //     // jSNARK-edit: A simple getter for the Variable index
 //     int getIndex() index_:{ return,}
 
 //     friend pub struct GadgetLibAdapter;
-// }; // pub struct Variable
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-use std::collections::HashMap;
-// pub type VariableAssignment =HashMap<Variable, FElem> ;
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 pub struct VariableArray                        ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
+// };
 
 pub type VariableArrayContents = Vec<Variable>;
 pub trait SubVariableArrayConfig: Default + Clone + Ord {
@@ -416,19 +345,8 @@ pub struct VariableArray<T: SubVariableArrayConfig> {
     //     using VariableArrayContents::size;
 
     //     String name() const;
-} // pub struct VariableArray
+}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 Custom Variable classes                    ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 #[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct VariableArrayBase;
 impl SubVariableArrayConfig for VariableArrayBase {}
@@ -506,7 +424,7 @@ pub struct UnpackedWord;
 // : public VariableArray
 // UnpackedWord()->Self VariableArray() {}
 // UnpackedWord(numBits:usize, name:&String)->Self VariableArray(numBits, name) {}
-// } // pub struct UnpackedWord
+// }
 
 pub type UnpackedWordArray = Vec<VariableArray<UnpackedWord>>;
 
@@ -524,7 +442,7 @@ pub struct MultiPackedWord {
 //     MultiPackedWord(numBits:usize, fieldType:&FieldType, name:&String);
 //     pub fn  resize(numBits:usize);
 //     String name() const {return pub fn name();}
-// }; // pub struct MultiPackedWord
+// };
 
 pub type MultiPackedWordArray = Vec<VariableArray<MultiPackedWord>>;
 
@@ -543,7 +461,7 @@ pub struct DualWord {
     //     FlagVariable bit(i:usize) sugar:{return unpacked_[i];} //syntactic, same as unpacked()[i]
     //     usize numBits() const { return unpacked_.len(); }
     //     pub fn  resize(newSize:usize);
-} // pub struct DualWord
+}
 
 #[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct DualWordArray {
@@ -563,15 +481,8 @@ pub struct DualWordArray {
     //     pub fn  push(dualWord:&DualWorddualWord);
     //     DualWord at(i:usize) const;
     //     size:usize() const;
-} // pub struct DualWordArray
+}
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                     pub struct LinearTerm                       ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 #[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct LinearTerm {
     pub variable_: Variable,
@@ -597,19 +508,8 @@ pub struct LinearTerm {
 
     //     friend pub struct Monomial;
     //     friend pub struct GadgetLibAdapter;
-} // pub struct LinearTerm
+}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                  pub struct LinearCombination                   ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 //  pub type size_type=Vec<LinearTerm>::size_type;
 #[derive(Clone, Eq, PartialEq)]
 pub struct LinearCombination {
@@ -632,11 +532,7 @@ pub struct LinearCombination {
 
     //     friend pub struct Polynomial;
     //     friend pub struct GadgetLibAdapter;
-} // pub struct LinearCombination
-
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
+}
 
 // inline LinearCombination operator-(lc:&LinearCombination){return LinearCombination(0) -= lc;}
 
@@ -644,13 +540,6 @@ pub struct LinearCombination {
 // //TODO : change this to member function
 // LinearCombination negate(lc:&LinearCombination);
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                       pub struct Monomial                       ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 #[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct Monomial {
     pub coeff_: FElem,
@@ -672,19 +561,8 @@ pub struct Monomial {
     //     String asString() const;
     //     Monomial operator-() const;
     //     Monomial& operator*=(other:&Monomial);
-} // pub struct Monomial
+}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                      pub struct Polynomial                      ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Polynomial {
     pub monomials_: Vec<Monomial>,
@@ -708,11 +586,9 @@ pub struct Polynomial {
 //     Polynomial& operator*=(other:&Polynomial);
 //     Polynomial& operator-=(other:&Polynomial);
 //     Polynomial& operator+=(other:&LinearTerm) {return self += Polynomial(Monomial(other));}
-// }; // pub struct Polynomial
+// };
 
-/***********************************/
 /***   END OF CLASS DEFINITION   ***/
-/***********************************/
 
 // inline Polynomial operator-(src:&Polynomial) {return Polynomial(FElem(0)) -= src;}
 
@@ -732,14 +608,6 @@ pub struct Polynomial {
 // Optimization: In the future we may want to port most of the member functions  from this file to
 // the .hpp files in order to allow for compiler inlining. As inlining has tradeoffs this should be
 // profiled before doing so.
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                      pub struct FElem                           ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 // FElem& pub fn operator=(other:&FElem) {
 // 	if fieldType() == other.fieldType() || fieldType() ==FieldType::AGNOSTIC {
@@ -849,13 +717,13 @@ impl From<usize> for FElem {
         }
     }
 }
-// impl From<Fp> for FElem {
-//     fn from(rhs: Fp) -> Self {
-//         Self {
-//             elem_: RcCell::new(ElemType::Elem(R1P_Elem::from(rhs))),
-//         }
-//     }
-// }
+impl FElem {
+    pub fn froms(rhs: Fp) -> Self {
+        Self {
+            elem_: RcCell::new(ElemType::Elem(R1P_Elem::froms(rhs))),
+        }
+    }
+}
 impl From<R1P_Elem> for FElem {
     fn from(rhs: R1P_Elem) -> Self {
         Self {
@@ -946,17 +814,6 @@ impl FElem {
     }
 }
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                      pub struct FConst                          ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 impl AddAssign<&ElemType> for FConst {
     #[inline]
     fn add_assign(&mut self, other: &ElemType) {
@@ -1054,17 +911,7 @@ impl FElemInterface for FConst {
         res
     }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                     pub struct R1P_Elem                         ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 impl AddAssign<u64> for R1P_Elem {
     #[inline]
     fn add_assign(&mut self, other: u64) {}
@@ -1175,7 +1022,7 @@ impl From<FConst> for R1P_Elem {
     }
 }
 impl R1P_Elem {
-    pub fn new(rhs: Fp) -> Self {
+    pub fn froms(rhs: Fp) -> Self {
         Self { elem_: rhs }
     }
 }
@@ -1193,7 +1040,7 @@ impl PartialEq<u64> for R1P_Elem {
 }
 impl FElemInterface for R1P_Elem {
     fn inverse(&self) -> Self {
-        R1P_Elem::new(self.elem_.inverse())
+        R1P_Elem::froms(self.elem_.inverse())
     }
 
     fn asLong(&self) -> i64 {
@@ -1216,21 +1063,11 @@ impl FElemInterface for R1P_Elem {
         res
     }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                    pub struct Variable                          ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 use std::sync::atomic::{self, AtomicUsize, Ordering};
 pub static nextFreeIndex_: AtomicUsize = AtomicUsize::new(0); //VarIndex_t
-impl Variable {
-    pub fn new(name: &str) -> Self {
+impl From<&str> for Variable {
+    fn from(name: &str) -> Self {
         let index_ = nextFreeIndex_.load(Ordering::Relaxed) as u64;
         nextFreeIndex_.fetch_add(1, Ordering::Relaxed);
         assert!(
@@ -1243,7 +1080,8 @@ impl Variable {
             name_: name.to_owned(),
         }
     }
-
+}
+impl Variable {
     pub fn name(&self) -> String {
         self.name_.clone()
     }
@@ -1275,17 +1113,6 @@ impl PartialOrd for Variable {
         Some(self.index_.cmp(&other.index_))
     }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 pub struct VariableArray                        ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 impl<T: SubVariableArrayConfig> From<String> for VariableArray<T> {
     fn from(rhs: String) -> Self {
@@ -1342,7 +1169,7 @@ impl<T: SubVariableArrayConfig> VariableArray<T> {
         // : VariableArrayContents()
         let mut contents = VariableArrayContents::default();
         for i in 0..size {
-            contents.push(Variable::new(&format!("{}[{}]", name, i)));
+            contents.push(Variable::from(format!("{}[{}]", name, i).as_str()));
         }
         Self {
             contents,
@@ -1380,26 +1207,17 @@ impl<T: SubVariableArrayConfig> VariableArrayConfig for VariableArray<T> {
         self.contents.resize(sz, Variable::default());
     }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
+
 impl SubVariableArrayConfig for UnpackedWord {}
 impl UnpackedWord {
-    pub fn new(numBits: usize, name: &str) -> VariableArray<Self> {
-        VariableArray::<Self>::new(numBits, name.to_owned(), Self)
+    pub fn new(numBits: usize, name: String) -> VariableArray<Self> {
+        VariableArray::<Self>::new(numBits, name, Self)
     }
     pub fn into_va(self) -> VariableArray<Self> {
         VariableArray::<Self>::new(0, String::new(), self)
     }
 }
 
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 Custom Variable classes                    ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 impl From<FieldType> for VariableArray<MultiPackedWord> {
     fn from(rhs: FieldType) -> Self {
         Self {
@@ -1421,9 +1239,9 @@ impl SubVariableArrayConfig for MultiPackedWord {
 }
 
 impl MultiPackedWord {
-    pub fn new(numBits: usize, fieldType: &FieldType, name: &str) -> VariableArray<Self> {
+    pub fn new(numBits: usize, fieldType: FieldType, name: String) -> VariableArray<Self> {
         // VariableArray(), numBits_(numBits), fieldType_(fieldType)
-        let packedSize = Self::getMultipackedSize(fieldType);
+        let packedSize = Self::getMultipackedSize(&fieldType);
         VariableArray::<Self>::new(
             packedSize,
             name.to_owned(),
@@ -1458,10 +1276,10 @@ impl From<FieldType> for DualWord {
     }
 }
 impl DualWord {
-    pub fn new(numBits: usize, fieldType: &FieldType, name: &String) -> Self {
+    pub fn new(numBits: usize, fieldType: FieldType, name: String) -> Self {
         Self {
-            multipacked_: MultiPackedWord::new(numBits, fieldType, &(name.to_owned() + "_p")),
-            unpacked_: UnpackedWord::new(numBits, &(name.to_owned() + "_u")),
+            multipacked_: MultiPackedWord::new(numBits, fieldType, name.clone() + "_p"),
+            unpacked_: UnpackedWord::new(numBits, name + "_u"),
         }
     }
 
@@ -1572,13 +1390,6 @@ impl DualWordArray {
         return self.numElements_;
     }
 }
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                    pub struct LinearTerm                        ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 //     LinearTerm operator-() const {return LinearTerm(variable_, -coeff_);}
 
@@ -1667,17 +1478,6 @@ impl LinearTerm {
         FElem::from(self.coeff_.clone()) * &self.variable_.eval(assignment)
     }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                  pub struct LinearCombination                   ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 impl AddAssign<&Self> for LinearCombination {
     #[inline]
@@ -1965,9 +1765,8 @@ impl LinearCombination {
         return retSet;
     }
 }
-/***********************************/
+
 /***   END OF CLASS DEFINITION   ***/
-/***********************************/
 
 pub fn sum(inputs: &VariableArrayType) -> LinearCombination {
     let mut retval = LinearCombination::default();
@@ -1980,13 +1779,6 @@ pub fn sum(inputs: &VariableArrayType) -> LinearCombination {
 pub fn negate(lc: &LinearCombination) -> LinearCombination {
     LinearCombination::from(1) - lc
 }
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                        pub struct Monomial                      ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 impl From<Variable> for Monomial {
     fn from(rhs: Variable) -> Self {
@@ -2093,17 +1885,6 @@ impl MulAssign<&Self> for Monomial {
     }
 }
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                      pub struct Polynomial                      ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 impl Default for Polynomial {
     fn default() -> Self {
         Self {
@@ -2237,9 +2018,9 @@ impl Polynomial {
 // 	}
 // 	return self;
 // }
-/***********************************/
+
 /***   END OF CLASS DEFINITION   ***/
-/***********************************/
+
 impl Neg for Polynomial {
     type Output = Self;
 

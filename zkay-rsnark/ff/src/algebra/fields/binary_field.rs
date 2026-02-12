@@ -1,24 +1,17 @@
-/** @file
- *****************************************************************************
- Declaration of common API for all finite fields in the binary/ directory.
 
- Currently NOT used by the fields in this library. This pub struct is not actually
- the parent pub struct of any field. All APIs are enforced through tests instead.
+//  Declaration of common API for all finite fields in the binary/ directory.
 
- The reason for this is to ensure high performance of all fields. This class
- exists as documentation for common API between fields.
+//  Currently NOT used by the fields in this library. This pub struct is not actually
+//  the parent pub struct of any field. All APIs are enforced through tests instead.
 
- Includes fields F_{2^n} for some selected values of n. All of the binary
- entension fields must implement all functions declared in this class.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+//  The reason for this is to ensure high performance of all fields. This class
+//  exists as documentation for common API between fields.
+
+//  Includes fields F_{2^n} for some selected values of n. All of the binary
+//  entension fields must implement all functions declared in this class.
+
 use crate::algebra::field_utils::bigint;
-//#include <vector>
 
-// namespace libff {
 
 
 
@@ -50,7 +43,7 @@ pub trait BinaryField<T>:Fields<T>{
     //  i64 mul_cnt;
     //  i64 sqr_cnt;
     //  i64 inv_cnt;
-//#endif
+
 
     //  T& operator+=(other:&T) = 0;
     //  T& operator-=(other:&T) = 0;
@@ -109,4 +102,4 @@ pub trait BinaryField<T>:Fields<T>{
     // friend std::istream& operator>>(std::istream &in, T &p);
 }
 
-// } // namespace libff
+

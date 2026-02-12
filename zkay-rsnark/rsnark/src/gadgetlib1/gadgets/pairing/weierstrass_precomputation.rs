@@ -51,7 +51,6 @@ fn mnt4_twist<ppT: ppTConfig>() -> ppT {
 fn mnt6_twist<ppT: ppTConfig>() -> ppT {
     ppT::zero()
 }
-/**************************** G1 Precomputation ******************************/
 
 type FieldT<ppT> = Fr<ppT>;
 type FqeT<ppT> = Fqe<other_curve<ppT>>;
@@ -77,8 +76,6 @@ pub struct precompute_G1_gadget<ppT: ppTConfig> {
     // type FqkT=Fqk<other_curve::<ppT> >;
     pub precomp: G1_precomputations<ppT>, // must be a reference.
 }
-
-/**************************** G2 Precomputation ******************************/
 
 /**
  * Not a gadget. It only holds values.

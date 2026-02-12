@@ -1,19 +1,6 @@
-// /**@file
-//  *****************************************************************************
+
 //  Declaration of GF(2^64) finite field.
-//  *****************************************************************************
-//  * @author     This file is part of libff (see AUTHORS), migrated from libiop
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef LIBFF_ALGEBRA_GF64_HPP_
-// // #define LIBFF_ALGEBRA_GF64_HPP_
 
-// //#include <cstddef>
-// //#include <cstdint>
-// //#include <vector>
-// use crate::algebra::field_utils::bigint;
-
-// // namespace libff {
 
 // /* gf64 implements the field GF(2)/[x^64 + x^4 + x^3 + x + 1].
 //    Elements are represented internally with a single uint64 */
@@ -25,7 +12,7 @@
 // //     static i64 mul_cnt;
 // //     static i64 sqr_cnt;
 // //     static i64 inv_cnt;
-// // //#endif
+// // 
 // //     // x^64 + x^4 + x^3 + x + 1. The assembly code assumes that no term other
 // //     // than x^64 is greater than x^31, to enable faster multiplication.
 // //     static 0b11011:constexpr uint64_t modulus_ =,
@@ -101,12 +88,12 @@
 // // i64 gf64::mul_cnt = 0;
 // // i64 gf64::sqr_cnt = 0;
 // // i64 gf64::inv_cnt = 0;
-// //#endif
+// 
 
-// // } // namespace libff
+// 
 // // use crate::algebra::fields::binary::gf64.tcc;
 
-// //#endif // namespace libff_ALGEBRA_GF64_HPP_
+// 
 
 // //#include <cstdio>
 
@@ -122,9 +109,9 @@
 // //#include <emmintrin.h>
 // //#include <immintrin.h>
 // //#include <smmintrin.h>
-// //#endif
+// 
 
-// // namespace libff {
+
 
 // // using std::usize;
 
@@ -154,7 +141,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// //#endif
+// 
 //     this->value_ ^= other.value_;
 //     return (*this);
 // }
@@ -163,7 +150,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
-// //#endif
+// 
 //     this->value_ ^= other.value_;
 //     return (*this);
 // }
@@ -173,7 +160,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
-// //#endif
+// 
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
@@ -216,7 +203,7 @@
 //     this->value_ = result;
 
 //     return (*this);
-// //#endif
+// 
 // }
 
 // gf64& gf64::operator^=(const u64 pow)
@@ -230,7 +217,7 @@
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 //     this->mul_cnt--;
-// //#endif
+// 
 //     this->operator*=(*this);
 //     return *this;
 // }
@@ -296,7 +283,7 @@
 //     this->inv_cnt++;
 //     this->mul_cnt -= 15;
 //     this->sqr_cnt -= 58;
-// //#endif
+// 
 //     assert!(!this->is_zero());
 //     // comments on the right side are of the form operation_number : exponent at the set variable
 //     gf64 t0 = *this;        //    1 : 1
@@ -411,11 +398,11 @@
 //     return in;
 // }
 
-// // } // namespace libff
+// 
 
 // use crate::algebra::field_utils::algorithms;
 
-// // namespace libff {
+
 
 //
 // gf64& gf64::operator^=(pow:&bigint<m>)
@@ -430,4 +417,4 @@
 //     return power<gf64>(*this, pow);
 // }
 
-// // } // namespace libff
+// 

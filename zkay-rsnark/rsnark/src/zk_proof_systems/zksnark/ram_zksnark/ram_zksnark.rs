@@ -63,7 +63,6 @@ use ffec::common::profiling::{enter_block, leave_block};
 use ffec::log2;
 use rccell::RcCell;
 use std::ops::Mul;
-/******************************** Proving key ********************************/
 
 /**
  * A proving key for the RAM zkSNARK.
@@ -83,8 +82,6 @@ impl<RamPpt: RamConfig> ram_zksnark_proving_key<RamPpt> {
     }
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the RAM zkSNARK.
  */
@@ -102,8 +99,6 @@ impl<RamPpt: RamConfig> ram_zksnark_verification_key<RamPpt> {
     }
 }
 
-/********************************** Key pair *********************************/
-
 /**
  * A key pair for the RAM zkSNARK, which consists of a proving key and a verification key.
  */
@@ -120,8 +115,6 @@ impl<RamPpt: RamConfig> ram_zksnark_keypair<RamPpt> {
         Self { pk, vk }
     }
 }
-
-/*********************************** Proof ***********************************/
 
 /**
  * A proof for the RAM zkSNARK.
@@ -142,8 +135,6 @@ impl<RamPpt: RamConfig> ram_zksnark_proof<RamPpt> {
         r1cs_sp_ppzkpcd_proof::<pcdT<RamPpt>>::size_in_bits()
     }
 }
-
-/***************************** Main algorithms *******************************/
 
 // /**
 //  * A generator algorithm for the RAM zkSNARK.
@@ -410,14 +401,13 @@ where
         // #ifdef DEBUG
         print!("Current state:\n");
         msg.borrow().print();
-        //#endif
 
         msg = cp_handler.get_outgoing_message();
 
         // #ifdef DEBUG
         print!("Next state:\n");
         msg.borrow().print();
-        //#endif
+
         leave_block("Execute witness map", false);
 
         cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT<RamPpt>>(

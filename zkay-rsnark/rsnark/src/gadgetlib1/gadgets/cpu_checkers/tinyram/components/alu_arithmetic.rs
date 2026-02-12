@@ -1232,14 +1232,14 @@ pub fn brute_force_arithmetic_gadget<
                         from_twos_complement(res, w),
                         res_f
                     );
-                    //#endif
+
                     g.generate_r1cs_witness();
                     // #ifdef DEBUG
                     print!("result: ");
                     pb.borrow().val(&result).print();
                     print!("flag: ");
                     pb.borrow().val(&result_flag).print();
-                    //#endif
+
                     assert!(pb.borrow().is_satisfied());
                     assert!(pb.borrow().val(&result) == FieldT::from(res));
                     assert!(

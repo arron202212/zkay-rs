@@ -321,7 +321,7 @@ pub fn main<
         bn128_pp,
         PB,
     >();
-    //#endif
+
     edwards_pp::init_public_params();
     test_knapsack_CRH_with_bit_out_gadgetTester::<edwards_ppS>::test_knapsack_CRH_with_bit_out_gadget::<edwards_pp,PB>();
     mnt4_pp::init_public_params();

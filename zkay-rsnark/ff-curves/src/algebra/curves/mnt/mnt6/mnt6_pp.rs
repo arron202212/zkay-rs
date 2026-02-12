@@ -1,14 +1,9 @@
-// /** @file
-//  *****************************************************************************
+
 
 //  Declaration of interfaces for public parameters of MNT6.
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef MNT6_PP_HPP_
+
+// 
 // // #define MNT6_PP_HPP_
 
 // use crate::algebra::curves::mnt::mnt6::mnt6_g1;
@@ -17,7 +12,7 @@
 // use crate::algebra::curves::mnt::mnt6::mnt6_pairing;
 // use crate::algebra::curves::public_params;
 
-// // namespace libff {
+
 
 // pub struct mnt6_pp {
 //
@@ -69,24 +64,19 @@
 //                                            Q:&mnt6_G2);
 // };
 
-// // } // namespace libff
+// 
 
-// //#endif // MNT6_PP_HPP_
-// /** @file
-//  *****************************************************************************
+// 
+
 
 //  Implementation of interfaces for public parameters of MNT6.
 
 //  See mnt6_pp.hpp .
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+
 // use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
-// // namespace libff {
+
 
 // pub fn init_public_params()
 // {
@@ -175,4 +165,4 @@
 //     return mnt6_affine_reduced_pairing(P, Q);
 // }
 
-// // } // namespace libff
+// 

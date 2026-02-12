@@ -63,7 +63,6 @@ fn SHA512_rng<FieldT: FieldTConfig>(i: usize) -> FieldT {
     FieldT::zero()
 }
 
-/************************** Choice of dimension ******************************/
 // pub static knapsack_coefficients: ARcCell<Vec<FieldT>> = arc_cell_new!(Vec::new());
 trait knapsack_coefficientsConfig<FieldT: FieldTConfig> {
     fn knapsack_coefficients() -> ARcCell<Vec<FieldT>> {
@@ -79,7 +78,6 @@ impl<FieldT: FieldTConfig> knapsack_dimension<FieldT> {
     pub const dimension: usize = 1;
 }
 
-/*********************** Knapsack with field output **************************/
 #[derive(Clone, Default)]
 pub struct knapsack_CRH_with_field_out_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<FieldT>
@@ -89,7 +87,6 @@ pub struct knapsack_CRH_with_field_out_gadget<FieldT: FieldTConfig, PB: PBConfig
     output: pb_linear_combination_array<FieldT, PB>,
 }
 
-/********************** Knapsack with binary output **************************/
 type hash_value_type = bit_vector;
 type merkle_authentication_path_type = merkle_authentication_path;
 

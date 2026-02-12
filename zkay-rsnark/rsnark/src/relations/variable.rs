@@ -26,8 +26,6 @@ pub type integer_coeff_t = i64;
 //
 // pub structlinear_combination;
 
-/********************************* Variable **********************************/
-
 pub trait SubVariableConfig: Default + Clone + std::cmp::PartialEq {}
 #[derive(Clone, Default, PartialEq)]
 pub struct DefaultVariable;
@@ -115,8 +113,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig> Mul<FieldT> for variable<Field
 //
 // linear_combination<FieldT,T> operator-(field_coeff:&FieldT &var:variable<FieldT,T>);
 
-/****************************** Linear term **********************************/
-
 /**
  * A linear term represents a formal expression of the form "coeff * x_{index}".
  */
@@ -158,8 +154,6 @@ pub struct linear_term<FieldT: FieldTConfig, SV: SubVariableConfig> {
 
 //
 // linear_combination<FieldT,T> operator-(field_coeff:&FieldT &lt:linear_term<FieldT>);
-
-/***************************** Linear combination ****************************/
 
 /**
  * A linear combination represents a formal expression of the form "sum_i coeff_i * x_{index_i}".
@@ -252,28 +246,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 
 // use crate::relations::variable;
 
-//#endif // VARIABLE_HPP_
-
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for:
-- a variable (i.e., x_i),
-- a linear term (i.e., a_i * x_i), and
-- a linear combination (i.e., sum_i a_i * x_i).
-
-See variabe.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef VARIABLE_TCC_
-// #define VARIABLE_TCC_
-
-// use  <algorithm>
-// use  <cassert>
 use ffec::algebra::field_utils::bigint::bigint;
 
 //
@@ -914,8 +886,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         }
     }
 }
-
-//#endif // VARIABLE_TCC
 
 //
 // linear_combination<FieldT,T> linear_combination<FieldT,T>::operator*(&field_coeff:FieldT) const

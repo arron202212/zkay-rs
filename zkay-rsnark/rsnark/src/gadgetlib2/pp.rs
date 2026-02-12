@@ -12,7 +12,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::ops::{Add, AddAssign, BitXorAssign, Mul, MulAssign, Neg, SubAssign};
 
-// /*******************                        R1P World                           ******************/
+//
 /* curve-specific public parameters */
 // #[derive(Debug, Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 // pub struct default_ec_pp;

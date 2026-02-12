@@ -1,103 +1,135 @@
 //  Unit tests for gadgetlib2
 
-// use  <gtest/gtest.h>
-
-// use crate::gadgetlib2::adapters;
-// use crate::gadgetlib2::pp;
+use crate::gadgetlib2::adapters::{ConvertConfig, GLA, GadgetLibAdapter, variable_index_t};
+use crate::gadgetlib2::constraint::{ConstraintSystem, Rank1Constraint};
+use crate::gadgetlib2::gadget::{
+    ConditionalFlag_Gadget, EqualsConst_Gadget, LogicImplication_Gadget,
+};
+use crate::gadgetlib2::pp::{Fp, initPublicParamsFromDefaultPp};
+use crate::gadgetlib2::protoboard::Protoboard;
+use crate::gadgetlib2::variable::{
+    FieldType, LinearCombination, Variable, VariableArray, VariableArrayBase, VariableArrayConfig,
+    VariableAssignment,
+};
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn LinearTerm() {
+    fn test_LinearTerm() {
         initPublicParamsFromDefaultPp();
-        let adapter = GLA::default(); //GadgetLibAdapter
-        adapter.resetVariableIndex();
+        // let adapter = GLA; //GadgetLibAdapter
+        GLA::resetVariableIndex();
         let x = Variable::from("x");
-        let lt = 5 * x;
-        let new_lt = adapter.convert(lt);
-        assert_eq!(new_lt.first, 0usize);
-        assert_eq!(new_lt.second, Fp::from(5));
+        let lt = x * 5;
+        let new_lt = GLA::convert(&lt);
+        assert_eq!(new_lt.0, 0u64);
+        assert_eq!(new_lt.1, Fp::from(5));
     }
 
     #[test]
-    fn LinearCombination() {
+    fn test_LinearCombination() {
         initPublicParamsFromDefaultPp();
-        let adapter = GLA::default(); //GadgetLibAdapter
+        let adapter = GLA; //GadgetLibAdapter
         let x = Variable::from("x");
         let y = Variable::from("y");
-        let lc = 5 * x + 3 * y + 42;
-        let new_lc = adapter.convert(lc);
-        assert_eq!(new_lc.second, Fp::from(42));
-        assert_eq!(new_lc.first.len(), 2usize);
-        assert_eq!(new_lc.first[0], adapter.convert(5 * x));
-        assert_eq!(new_lc.first[1], adapter.convert(3 * y));
+        let lc = x.clone() * 5 + &(y.clone() * 3) + 42;
+        let new_lc = GLA::convert(&lc);
+        assert_eq!(new_lc.1, Fp::from(42));
+        assert_eq!(new_lc.0.len(), 2usize);
+        assert_eq!(new_lc.0[0], GLA::convert(&(x * 5)));
+        assert_eq!(new_lc.0[1], GLA::convert(&(y * 3)));
     }
 
     #[test]
-    fn Constraint() {
+    fn test_Constraint() {
         // using ::std::get;
         initPublicParamsFromDefaultPp();
-        let adapter = GLA::default(); //GadgetLibAdapter
+        let adapter = GLA; //GadgetLibAdapter
         let x = Variable::from("x");
         let y = Variable::from("y");
-        let constraint = Rank1Constraint::new(x + y, 5 * x, 0, "(x + y) * (5 * x) == 0");
-        let new_constraint = adapter.convert(constraint);
-        assert_eq!(new_constraint.0, adapter.convert(x + y));
-        assert_eq!(new_constraint.1, adapter.convert(5 * x + 0));
-        assert_eq!(new_constraint.2, adapter.convert(LinearCombination(0)));
+        let constraint = Rank1Constraint::new(
+            x.clone() + &y,
+            (x.clone() * 5).into(),
+            0.into(),
+            "(x + y) * (5 * x) == 0".to_owned(),
+        );
+        let new_constraint = GLA::convert(&constraint);
+        assert_eq!(new_constraint.0, GLA::convert(&(x.clone() + &y)));
+        assert_eq!(new_constraint.1, GLA::convert(&(x.clone() * 5 + 0)));
+        assert_eq!(new_constraint.2, GLA::convert(&LinearCombination::from(0)));
     }
 
     #[test]
-    fn ConstraintSystem() {
+    fn test_constraint_system() {
         initPublicParamsFromDefaultPp();
-        let adapter = GLA::default(); //GadgetLibAdapter
+        let adapter = GLA; //GadgetLibAdapter
         let x = Variable::from("x");
         let y = Variable::from("y");
-        let constraint0 = Rank1Constraint::new(x + y, 5 * x, 0, "(x + y) * (5*x) == 0");
-        let constraint1 = Rank1Constraint::new(x, y, 3, "x * y == 3");
+        let constraint0 = Rank1Constraint::new(
+            x.clone() + &y,
+            (x.clone() * 5).into(),
+            0.into(),
+            "(x + y) * (5*x) == 0".to_owned(),
+        );
+        let constraint1 = Rank1Constraint::new(
+            x.clone().into(),
+            y.clone().into(),
+            3.into(),
+            "x * y == 3".to_owned(),
+        );
         let mut system = ConstraintSystem::default();
-        system.addConstraint(constraint0);
-        system.addConstraint(constraint1);
-        let new_constraint_sys = adapter.convert(system);
+        system.addConstraint1(constraint0.clone());
+        system.addConstraint1(constraint1.clone());
+        let new_constraint_sys = GLA::convert(&system);
         assert_eq!(new_constraint_sys.len(), 2usize);
-        assert_eq!(new_constraint_sys.at(0), adapter.convert(constraint0));
-        assert_eq!(new_constraint_sys.at(1), adapter.convert(constraint1));
+        assert_eq!(new_constraint_sys[0], GLA::convert(&constraint0));
+        assert_eq!(new_constraint_sys[1], GLA::convert(&constraint1));
     }
 
     #[test]
-    fn VariableAssignment() {
+    fn test_VariableAssignment() {
         initPublicParamsFromDefaultPp();
-        let adapter = GLA::default(); //GadgetLibAdapter
-        adapter.resetVariableIndex();
-        let varArray = VariableArray::new(10, "x");
+        let adapter = GLA; //GadgetLibAdapter
+        GLA::resetVariableIndex;
+        let varArray = VariableArray::new(10, "x".to_owned(), VariableArrayBase);
         let mut assignment = VariableAssignment::default();
         for i in 0..varArray.len() {
-            assignment[varArray[i]] = i;
+            assignment.insert(varArray[i].clone(), i.into());
         }
-        let new_assignment = adapter.convert(assignment);
+        let new_assignment = GLA::convert(&assignment);
         assert_eq!(assignment.len(), new_assignment.len());
         for i in 0..new_assignment.len() {
-            let var = i as GadgetLibAdapter::variable_index_t;
-            assert_eq!(new_assignment.at(var), Fp::from(i));
+            let var = i as variable_index_t;
+            assert_eq!(new_assignment[&var], Fp::from(i));
         }
     }
 
     #[test]
-    fn Protoboard() {
+    fn test_Protoboard() {
         initPublicParamsFromDefaultPp();
-        let adapter = GLA::default(); //GadgetLibAdapter
-        adapter.resetVariableIndex();
+        let adapter = GLA; //GadgetLibAdapter
+        GLA::resetVariableIndex;
         let x = Variable::from("x");
         let y = Variable::from("y");
-        let pb = Protoboard::create(R1P);
-        pb.addRank1Constraint(x + y, 5 * x, 0, "(x + y) * (5*x) == 0");
-        pb.addRank1Constraint(x, y, 3, "x * y == 3");
-        pb.val(x) = 1;
-        pb.val(y) = 2;
-        let new_pb = adapter.convert(*pb);
-        assert_eq!(new_pb.first, adapter.convert(pb.constraintSystem()));
-        assert_eq!(new_pb.second, adapter.convert(pb.assignment()));
+        let pb = Protoboard::create(FieldType::R1P, None).unwrap();
+        pb.borrow_mut().addRank1Constraint(
+            x.clone() + &y,
+            (x.clone() * 5).into(),
+            0.into(),
+            "(x + y) * (5*x) == 0",
+        );
+        pb.borrow_mut().addRank1Constraint(
+            x.clone().into(),
+            y.clone().into(),
+            3.into(),
+            "x * y == 3",
+        );
+        *pb.borrow_mut().val(&x) = 1.into();
+        *pb.borrow_mut().val(&y) = 2.into();
+        let new_pb = GLA::convert(&*pb.borrow());
+        assert_eq!(new_pb.0, GLA::convert(pb.borrow().constraintSystem()));
+        assert_eq!(new_pb.1, GLA::convert(pb.borrow().assignment()));
     }
 }

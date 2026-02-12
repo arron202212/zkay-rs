@@ -1451,7 +1451,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             "pc_addr (in units) = {}, pc_val = {} (0x{:08x})\n",
             int_pc_addr, int_pc_val, int_pc_val
         );
-        //#endif
+
         let mut pc_val_bv = int_list_to_bits(&[int_pc_val], self.t.value_size);
         pc_val_bv.reverse();
 
@@ -1513,7 +1513,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         // #ifdef DEBUG
         print!("Debugging information from transition function:\n");
         self.t.cpu_checker.borrow().dump();
-        //#endif
+
         let int_ls_next_val = self
             .t
             .ls_next_val
@@ -1529,7 +1529,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             "Memory location {} changed from {} (0x{:08x}) to {} (0x{:08x})\n",
             int_ls_addr, int_ls_prev_val, int_ls_prev_val, int_ls_next_val, int_ls_next_val
         );
-        //#endif
+
         // Step 4: Use both to satisfy load_store_checker
         self.t
             .load_merkle_proof
@@ -1582,7 +1582,6 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             .borrow()
             .val(&self.t.next.borrow().t.t.has_accepted)
             .print();
-        //#endif
 
         self.t.next.borrow().generate_r1cs_witness_from_bits();
     }

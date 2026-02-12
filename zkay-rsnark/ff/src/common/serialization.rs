@@ -6,15 +6,10 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-/** @file
-*****************************************************************************
-Declaration of serialization routines and constants.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef SERIALIZATION_HPP_
+
+// Declaration of serialization routines and constants.
+
+
 // #define SERIALIZATION_HPP_
 
 //#include <istream>
@@ -23,7 +18,7 @@ Declaration of serialization routines and constants.
 //#include <set>
 //#include <vector>
 
-// namespace libff {
+
 
 /*
  * @todo
@@ -107,32 +102,16 @@ pub const OUTPUT_SEPARATOR:&str= " ";
 //
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
-// } // namespace libff
 
-// use crate::common::serialization.tcc;
 
-//#endif // SERIALIZATION_HPP_
 
-/** @file
-*****************************************************************************
-Implementation of serialization routines.
 
-See serialization.hpp .
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef SERIALIZATION_TCC_
-// #define SERIALIZATION_TCC_
 
-//#include <cassert>
-//#include <sstream>
 use crate::common::utils;
 use std::io::BufRead;
 use std::io::BufWriter;
 use std::io::Write;
-// namespace libff {
+
 
 // using std::usize;
 
@@ -150,7 +129,7 @@ pub fn consume_OUTPUT_NEWLINE(ins: &impl BufRead) {
     // #else
     // let mut c;
     // in.read(&c, 1);
-    //#endif
+    
 }
 
 #[inline]
@@ -161,7 +140,7 @@ pub fn consume_OUTPUT_SEPARATOR(ins: &impl BufRead) {
     // #else
     // char c;
     // ins.read(&c, 1);
-    //#endif
+    
 }
 
 #[inline]
@@ -214,7 +193,7 @@ pub fn reserialize<T: Clone>(obj: &T) -> T {
 
 // }
 
-//#endif // SERIALIZATION_TCC_
+
 
 //
 // std::ostream& operator<<(std::ostream& out, v:&Vec<T>)

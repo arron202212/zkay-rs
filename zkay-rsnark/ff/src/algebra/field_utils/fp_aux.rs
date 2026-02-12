@@ -1,18 +1,9 @@
-// /** @file
-//  *****************************************************************************
+
 //  Assembly code snippets for F[p] finite field arithmetic, used by fp.tcc .
 //  Specific to x86-64, and used only if USE_ASM is defined.
 //  On other architectures or without USE_ASM, fp.tcc uses a portable
 //  C++ implementation instead.
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef FP_AUX_TCC_
-// #define FP_AUX_TCC_
 
-// namespace libff {
 
 // #define STR_HELPER(x) #x
 // #define STR(x) STR_HELPER(x)
@@ -382,5 +373,5 @@
 //          : [modprime] "r" (inv_), [res] "r" (res_), [mod] "r" (mod_) \
 //          : "%rax", "%rdx", "cc", "memory")
 
-// } // namespace libff
-//#endif // FP_AUX_TCC_
+
+

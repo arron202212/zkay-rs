@@ -107,7 +107,7 @@ impl<T: PpConfig> sparse_vector<T> {
         //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
         // #else
         let mut chunks = 1;
-        // //#endif
+        //
 
         let mut accumulated_value = T::zero();
         let mut resulting_vector = sparse_vector::<T>::default();
@@ -135,7 +135,7 @@ impl<T: PpConfig> sparse_vector<T> {
 
                     // // #ifdef DEBUG
                     //                 ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
-                    // //#endif
+                    //
                     accumulated_value = accumulated_value
                         + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
                             &self.values[first_pos as usize..last_pos as usize + 1],
@@ -165,7 +165,7 @@ impl<T: PpConfig> sparse_vector<T> {
         if in_block {
             // // #ifdef DEBUG
             //         ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
-            // //#endif
+            //
             accumulated_value = accumulated_value
                 + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
                     &self.values[first_pos as usize..last_pos as usize + 1],

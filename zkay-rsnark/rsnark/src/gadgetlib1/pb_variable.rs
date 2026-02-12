@@ -193,7 +193,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
     ) {
         // #ifdef DEBUG
         assert!(!annotation_prefix.borrow().is_empty());
-        //#endif
+
         self.contents
             .resize(n, variable::<FieldT, pb_variable>::default());
 
@@ -533,5 +533,3 @@ pub fn pb_coeff_sum<FieldT: FieldTConfig, PB: PBConfig>(
 
     return linear_combination::<FieldT, pb_variable, pb_linear_combination>::new(all_terms);
 }
-
-//#endif // PB_VARIABLE_TCC

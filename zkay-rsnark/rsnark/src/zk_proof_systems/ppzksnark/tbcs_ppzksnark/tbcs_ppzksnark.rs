@@ -43,8 +43,6 @@ use ff_curves::Fr;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
 
-/******************************** Proving key ********************************/
-
 // pub struct tbcs_ppzksnark_proving_key;
 
 // std::ostream& operator<<(std::ostream &out, pk:&tbcs_ppzksnark_proving_key<ppT>);
@@ -103,15 +101,11 @@ impl<ppT: ppTConfig> tbcs_ppzksnark_proving_key<ppT> {
     // friend std::istream& operator>> <ppT>(std::istream &in, tbcs_ppzksnark_proving_key<ppT> &pk);
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the TBCS ppzkSNARK.
  */
 
 pub type tbcs_ppzksnark_verification_key<ppT> = uscs_ppzksnark_verification_key<ppT>;
-
-/************************ Processed verification key *************************/
 
 /**
  * A processed verification key for the TBCS ppzkSNARK.
@@ -123,8 +117,6 @@ pub type tbcs_ppzksnark_verification_key<ppT> = uscs_ppzksnark_verification_key<
 
 pub type tbcs_ppzksnark_processed_verification_key<ppT> =
     uscs_ppzksnark_processed_verification_key<ppT>;
-
-/********************************** Key pair *********************************/
 
 /**
  * A key pair for the TBCS ppzkSNARK, which consists of a proving key and a verification key.
@@ -151,15 +143,11 @@ impl<ppT: ppTConfig> tbcs_ppzksnark_keypair<ppT> {
     // {}
 }
 
-/*********************************** Proof ***********************************/
-
 /**
  * A proof for the TBCS ppzkSNARK.
  */
 
 pub type tbcs_ppzksnark_proof<ppT> = uscs_ppzksnark_proof<ppT>;
-
-/***************************** Main algorithms *******************************/
 
 /**
  * A generator algorithm for the TBCS ppzkSNARK.

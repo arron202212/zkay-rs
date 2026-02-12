@@ -1,18 +1,14 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef EDWARDS_G1_HPP_
+
+
+
 // #define EDWARDS_G1_HPP_
 //#include <vector>
 
 use crate::algebra::curves::curve_utils;
 use crate::algebra::curves::edwards::edwards_init;
 
-// namespace libff {
+
 
 
 
@@ -21,7 +17,7 @@ pub struct  edwards_G1 {
 // #ifdef PROFILE_OP_COUNTS
 add_cnt:     i64,
 dbl_cnt:     i64,
-//#endif
+
 wnaf_window_table:     Vec<std::usize>,
 fixed_base_exp_window_table:     Vec<std::usize>,
 G1_zero:     edwards_G1,
@@ -63,25 +59,21 @@ impl edwards_G1 {
 // std::ostream& operator<<(std::ostream& out, v:&Vec<edwards_G1>);
 // std::istream& operator>>(std::istream& in, Vec<edwards_G1> &v);
 
-// } // namespace libff
-//#endif // EDWARDS_G1_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 // use crate::algebra::curves::edwards::edwards_g1;
 
-// namespace libff {
+
 
 // using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
 // i64 edwards_G1::add_cnt = 0;
 // i64 edwards_G1::dbl_cnt = 0;
-//#endif
+
 
 // Vec<usize> edwards_G1::wnaf_window_table;
 // Vec<usize> edwards_G1::fixed_base_exp_window_table;
@@ -162,7 +154,7 @@ pub fn to_special()
 
 // #ifdef DEBUG
     // const edwards_G1 copy(self.clone());
-//#endif
+
 
     let  Z_inv = self.Z.inverse();
     self.X = self.X * Z_inv;
@@ -171,7 +163,7 @@ pub fn to_special()
 
 // #ifdef DEBUG
     // assert!((self.clone()) == copy);
-//#endif
+
 }
 
 pub fn is_special()->bool
@@ -190,7 +182,7 @@ pub fn add(other:&edwards_G1)->edwards_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     self.add_cnt+=1;
-//#endif
+
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-add-2007-bl
 
@@ -212,7 +204,7 @@ pub fn mixed_add(other:&edwards_G1)->edwards_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     self.add_cnt+=1;
-//#endif
+
     // handle special cases having to do with O
     if self.is_zero()
     {
@@ -226,7 +218,7 @@ pub fn mixed_add(other:&edwards_G1)->edwards_G1
 
 // #ifdef DEBUG
     assert!(other.is_special());
-//#endif
+
 
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-madd-2007-lb
@@ -249,7 +241,7 @@ pub fn dbl()->edwards_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     self.dbl_cnt+=1;
-//#endif
+
     if self.is_zero()
     {
         return (self.clone());
@@ -329,7 +321,7 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
     }
 }
 }
-// } // namespace libff
+
 
 
 // pub fn operator==(other:&edwards_G1)->bool
@@ -371,7 +363,7 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
 // #else
 //     /* storing LSB of Y */
 //     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
-// //#endif
+// 
 
 //     return out;
 // }
@@ -438,7 +430,7 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
 //     {
 //         tY = -tY;
 //     }
-// //#endif
+// 
 
 //     // using inverted coordinates
 //     g.X = tY;
@@ -447,7 +439,7 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G1> &vec)
 
 // // #ifdef USE_MIXED_ADDITION
 //     g.to_special();
-// //#endif
+// 
 
 //     return in;
 // }

@@ -25,7 +25,6 @@ use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 use std::ops::Mul;
 
-//#ifndef MINDEPS
 // // namespace po = boost::program_options;
 
 fn process_demo_command_line(
@@ -131,7 +130,7 @@ fn main<default_tinyram_ppzksnark_pp:default_tinyram_ppzksnark_ppConfig+RamPptCo
     )) {
         return Ok(1);
     }
-    //#endif
+
     start_profiling();
 
     print!("================================================================================\n");

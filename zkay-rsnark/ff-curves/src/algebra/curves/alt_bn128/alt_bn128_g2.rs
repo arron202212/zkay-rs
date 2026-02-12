@@ -149,7 +149,7 @@ pub struct alt_bn128_G2 {
     // #ifdef PROFILE_OP_COUNTS
     // static i64 add_cnt;
     // static i64 dbl_cnt;
-    //#endif
+    
     // static Vec<std::usize> wnaf_window_table;
     // static Vec<std::usize> fixed_base_exp_window_table;
     // static alt_bn128_G2 G2_zero;
@@ -222,7 +222,7 @@ pub struct alt_bn128_G2 {
 // // #ifdef PROFILE_OP_COUNTS
 // i64 alt_bn128_G2::add_cnt = 0;
 // i64 alt_bn128_G2::dbl_cnt = 0;
-// //#endif
+// 
 pub trait alt_bn128_G2Config: Send + Sync + Sized + 'static {
     const wnaf_window_table: &'static [usize];
     const fixed_base_exp_window_table: &'static [usize];
@@ -354,7 +354,7 @@ impl alt_bn128_G2 {
     pub fn mixed_add(&self, other: &alt_bn128_G2) -> Self {
         // #ifdef DEBUG
         assert!(other.is_special());
-        //#endif
+        
 
         // handle special cases having to do with O
         if self.is_zero() {
@@ -395,7 +395,7 @@ impl alt_bn128_G2 {
 
         // #ifdef PROFILE_OP_COUNTS
         // self.add_cnt++;
-        //#endif
+        
 
         let H = U2 - (self.X); // H = U2-X1
         let HH = H.squared(); // HH = H^2
@@ -416,7 +416,7 @@ impl alt_bn128_G2 {
     pub fn dbl(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.dbl_cnt++;
-        //#endif
+        
         // handle point at infinity
         if self.is_zero() {
             return self.clone();
@@ -601,7 +601,7 @@ impl FpmConfig for alt_bn128_G2 {
 
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// //#endif
+// 
 
 //     // rest of add case
 //     alt_bn128_Fq2 H = U2 - U1;                            // H = U2-U1
@@ -638,7 +638,7 @@ impl FpmConfig for alt_bn128_G2 {
 // #else
 //     /* storing LSB of Y */
 //     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
-// //#endif
+// 
 
 //     return out;
 // }
@@ -674,7 +674,7 @@ impl FpmConfig for alt_bn128_G2 {
 //             tY = -tY;
 //         }
 //     }
-// //#endif
+// 
 //     // using projective coordinates
 //     if is_zero == 0
 //     {

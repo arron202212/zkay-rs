@@ -10,7 +10,7 @@
 
 //  Reports time, operation counts, memory usage, and others.
 
-// //#ifndef PROFILING_HPP_
+// 
 // // #define PROFILING_HPP_
 
 // //#include <cstddef>
@@ -18,7 +18,7 @@
 // //#include <string>
 // //#include <vector>
 
-// // namespace libff {
+
 
 // pub fn  start_profiling();
 // i64 get_nsec_time();
@@ -46,9 +46,9 @@
 // pub fn  print_mem(s:&String = "");
 // pub fn  print_compilation_info();
 
-// // } // namespace libff
+// 
 
-// //#endif // PROFILING_HPP_
+// 
 
 //  Implementation of functions for profiling code blocks.
 
@@ -66,9 +66,9 @@
 // use crate::common::profiling;
 // use crate::common::utils;
 
-// //#ifndef NO_PROCPS
+// 
 // //#include <proc/readproc.h>
-// //#endif
+// 
 const indentation: usize = 0;
 
 // pub struct Profiling;
@@ -97,7 +97,7 @@ pub fn  get_nsec_cpu_time()->i64
         // If we expected this to work, don't silently ignore failures, because that would hide the problem and incur an unnecessarily system-call overhead. So if we ever observe this exception, we should probably add a suitable // #ifdef .
         //TODO: clock_gettime(CLOCK_PROCESS_CPUTIME_ID) is not supported by native Windows. What about Cygwin? Should we // #ifdef on CLOCK_PROCESS_CPUTIME_ID or on __linux__?
     // return ts.tv_sec * 1000000000LL + ts.tv_nsec;
-//#endif
+
 }
 
 // i64 start_time, last_time;
@@ -139,7 +139,7 @@ const op_data_points:&[(&str,&str)]=&[];
 //     std::make_pair("G1dbl", &G1<default_ec_pp>::dbl_cnt),
 //     std::make_pair("G2add", &G2<default_ec_pp>::add_cnt),
 //     std::make_pair("G2dbl", &G2<default_ec_pp>::dbl_cnt)
-// //#endif
+// 
 // };
 
 // bool inhibit_profiling_info = false;
@@ -201,7 +201,7 @@ pub fn  print_cumulative_op_counts(only_fq:bool)
     }
 // #else
 //     UNUSED(only_fq);
-//#endif
+
 }
 
 pub fn  print_op_profiling(msg:&str)
@@ -225,7 +225,7 @@ pub fn  print_op_profiling(msg:&str)
     print!(")");
 // #else
 //     UNUSED(msg);
-//#endif
+
 }
 
  pub fn  print_times_from_last_and_start(     now:i64,      last:i64,
@@ -262,7 +262,7 @@ pub fn print_time(msg: &str) {
     //     print_times_from_last_and_start(now, last_time, cpu_now, last_cpu_time);
     // // #ifdef PROFILE_OP_COUNTS
     //     print_op_profiling(msg);
-    // //#endif
+    // 
     //     print!("\n");
 
     //     fflush(stdout);
@@ -315,7 +315,7 @@ pub fn enter_block(msg: &str, indent: bool) {
 
     // // #ifdef MULTICORE
     // #pragma omp critical
-    // //#endif
+    // 
     //     {
     //         op_profiling_enter(msg);
 
@@ -337,9 +337,9 @@ pub fn leave_block(msg: &str, indent: bool) {
     //         return;
     //     }
 
-    // //#ifndef MULTICORE
+    // 
     //     assert!(*(--block_names.end()) == msg);
-    // //#endif
+    // 
     //     block_names.pop_back();
 
     //     ++invocation_counts[msg];
@@ -356,7 +356,7 @@ pub fn leave_block(msg: &str, indent: bool) {
     //     {
     //         cumulative_op_counts[std::make_pair(msg, p.first)] += *(p.second)-op_counts[std::make_pair(msg, p.first)];
     //     }
-    // //#endif
+    // 
 
     //     if inhibit_profiling_info
     //     {
@@ -365,7 +365,7 @@ pub fn leave_block(msg: &str, indent: bool) {
 
     // // #ifdef MULTICORE
     // #pragma omp critical
-    // //#endif
+    // 
     //     {
     //         if indent
     //         {
@@ -383,7 +383,7 @@ pub fn leave_block(msg: &str, indent: bool) {
 
 pub fn  print_mem(s:&str)
 {
-// //#ifndef NO_PROCPS
+// 
 //     struct proc_t usage;
 //     look_up_our_self(&usage);
 //     if s.empty()
@@ -397,7 +397,7 @@ pub fn  print_mem(s:&str)
 // #else
 //     UNUSED(s);
 //     print!("* Memory profiling not supported in NO_PROCPS mode\n");
-// //#endif
+// 
 }
 
 pub fn  print_compilation_info()
@@ -405,32 +405,32 @@ pub fn  print_compilation_info()
 // // #ifdef __GNUC__
 //     print!("g++ version: {}\n", __VERSION__);
 //     print!("Compiled on {} {}\n", __DATE__, __TIME__);
-// //#endif
+// 
 // // #ifdef STATIC
 //     print!("STATIC: yes\n");
 // #else
 //     print!("STATIC: no\n");
-// //#endif
+// 
 // // #ifdef MULTICORE
 //     print!("MULTICORE: yes\n");
 // #else
 //     print!("MULTICORE: no\n");
-// //#endif
+// 
 // // #ifdef DEBUG
 //     print!("DEBUG: yes\n");
 // #else
 //     print!("DEBUG: no\n");
-// //#endif
+// 
 // // #ifdef PROFILE_OP_COUNTS
 //     print!("PROFILE_OP_COUNTS: yes\n");
 // #else
 //     print!("PROFILE_OP_COUNTS: no\n");
-// //#endif
+// 
 // // #ifdef _GLIBCXX_DEBUG
 //     print!("_GLIBCXX_DEBUG: yes\n");
 // #else
 //     print!("_GLIBCXX_DEBUG: no\n");
-// //#endif
+// 
 }
 
 

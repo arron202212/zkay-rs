@@ -101,7 +101,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
 
         // #ifdef MULTICORE
         //#pragma omp parallel for
-        //#endif
+        
         for i in 0..self.m {
             // a[i] *= T[i].inverse();
         }
@@ -140,7 +140,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
 
         // #ifdef MULTICORE
         //#pragma omp parallel for
-        //#endif
+        
         for i in 0..self.m {
             // a[i] *= self.t.geometric_triangular_sequence[i].inverse();
         }
@@ -272,7 +272,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
 
         // #ifdef MULTICORE
         //#pragma omp parallel for
-        //#endif
+        
         for i in 0..self.m + 1 {
             H[i] += (x[i].clone() * coeff.clone());
         }

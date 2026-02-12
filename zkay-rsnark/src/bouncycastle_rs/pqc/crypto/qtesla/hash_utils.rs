@@ -9,9 +9,8 @@ class HashUtils
     static final int SECURE_HASH_ALGORITHM_KECCAK_128_RATE = 168;
     static final int SECURE_HASH_ALGORITHM_KECCAK_256_RATE = 136;
 
-    /***************************************************************************************************************************************************************
+    
      * Description:	The Secure-Hash-Algorithm-3 Extendable-Output Function That Generally Supports 128 Bits of Security Strength, If the Output is Sufficiently Long
-     ***************************************************************************************************************************************************************/
     static void secureHashAlgorithmKECCAK128(byte[] output, int outputOffset, int outputLength, byte[] input, int inputOffset, int inputLength)
     {
         SHAKEDigest dig = new SHAKEDigest(128);
@@ -20,7 +19,7 @@ class HashUtils
         dig.doFinal(output, outputOffset, outputLength);
     }
 
-    /***************************************************************************************************************************************************************
+    
      * Description:	The Secure-Hash-Algorithm-3 Extendable-Output Function That Generally Supports 256 Bits of Security Strength, If the Output is Sufficiently Long
      ***************************************************************************************************************************************************************/
     static void secureHashAlgorithmKECCAK256(byte[] output, int outputOffset, int outputLength, byte[] input, int inputOffset, int inputLength)

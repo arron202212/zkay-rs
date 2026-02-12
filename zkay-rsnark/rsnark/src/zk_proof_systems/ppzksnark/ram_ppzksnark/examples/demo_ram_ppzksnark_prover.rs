@@ -22,7 +22,6 @@ use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 use std::ops::Mul;
 
-//#ifndef MINDEPS
 // namespace po = boost::program_options;
 
 fn process_prover_command_line(
@@ -64,7 +63,7 @@ fn process_prover_command_line(
     *proof_fn = matches.get_one::<String>("proof").unwrap().clone();
     true
 }
-//#endif
+
 
 fn main<default_tinyram_ppzksnark_pp:default_tinyram_ppzksnark_ppConfig+RamPptConfig>(argc: i32, argv: &[&str]) -> io::Result<i32> where
     knowledge_commitment<
@@ -114,7 +113,7 @@ fn main<default_tinyram_ppzksnark_pp:default_tinyram_ppzksnark_ppConfig+RamPptCo
     )) {
         return Ok(1);
     }
-    //#endif
+
     start_profiling();
 
     /* load everything */

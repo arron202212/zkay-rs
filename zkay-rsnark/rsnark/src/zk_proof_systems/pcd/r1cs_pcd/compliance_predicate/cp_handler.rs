@@ -21,8 +21,6 @@ use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 
-/***************************** Message variable ******************************/
-
 /**
  * A variable to represent an r1cs_pcd_message.
  */
@@ -34,7 +32,6 @@ pub struct r1cs_pcd_message_variable<T: MessageVariableConfig> {
     pub all_vars: pb_variable_array<T::FieldT, T::PB>,
     pub t: T,
 }
-/*************************** Local data variable *****************************/
 
 /**
  * A variable to represent an r1cs_pcd_local_data.
@@ -47,8 +44,6 @@ pub struct r1cs_pcd_local_data_variable<T: LocalDataVariableConfig> {
     pub all_vars: pb_variable_array<T::FieldT, T::PB>,
     pub t: T,
 }
-
-/*********************** Compliance predicate handler ************************/
 
 /**
  * A base pub struct for creating compliance predicates.

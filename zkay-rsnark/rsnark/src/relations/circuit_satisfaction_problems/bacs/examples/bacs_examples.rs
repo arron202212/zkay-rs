@@ -1,21 +1,11 @@
+// Declaration of interfaces for a BACS example, as well as functions to sample
+// BACS examples with prescribed parameters (according to some distribution).
+
 use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
     bacs_auxiliary_input, bacs_circuit, bacs_gate, bacs_primary_input, bacs_variable_assignment,
 };
 use crate::relations::variable::SubLinearCombinationConfig;
 use crate::relations::variable::SubVariableConfig;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a BACS example, as well as functions to sample
-BACS examples with prescribed parameters (according to some distribution).
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BACS_EXAMPLES_HPP_
-// #define BACS_EXAMPLES_HPP_
 use crate::relations::variable::{linear_combination, variable};
 use ffec::FieldTConfig;
 /**
@@ -61,32 +51,12 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
  * - selecting random linear combinations for left and right wires, consisting of 1, 2, 3 or 4 terms each, with random coefficients,
  * - if the gate is an output gate, then adding a random non-output wire to either left or right linear combination, with appropriate coefficient, so that the linear combination evaluates to 0.
  */
-
 // bacs_example<FieldT> generate_bacs_example(primary_input_size:usize,
 //                                            auxiliary_input_size:usize,
 //                                            num_gates:usize,
 //                                            num_outputs:usize);
 
 // use crate::relations::circuit_satisfaction_problems/bacs/examples/bacs_examples;
-
-//#endif // BACS_EXAMPLES_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of functions to sample BACS examples with prescribed parameters
-(according to some distribution).
-
-See bacs_examples.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BACS_EXAMPLES_TCC_
-// #define BACS_EXAMPLES_TCC_
-
-// use  <cassert>
 use ffec::common::utils;
 
 pub fn random_linear_combination<
@@ -182,5 +152,3 @@ pub fn generate_bacs_example<
 
     return example;
 }
-
-//#endif // BACS_EXAMPLES_TCC

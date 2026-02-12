@@ -1,11 +1,7 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef EDWARDS_PP_HPP_
+
+
+
 // #define EDWARDS_PP_HPP_
 use crate::algebra::curves::edwards::edwards_g1;
 use crate::algebra::curves::edwards::edwards_g2;
@@ -13,7 +9,6 @@ use crate::algebra::curves::edwards::edwards_init;
 use crate::algebra::curves::edwards::edwards_pairing;
 use crate::algebra::curves::public_params;
 
-// namespace libff {
 
 // pub struct edwards_pp {
 
@@ -46,18 +41,14 @@ use crate::algebra::curves::public_params;
 //                                        Q:&edwards_G2);
 // };
 
-// // } // namespace libff
-// //#endif // EDWARDS_PP_HPP_
-// /** @file
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+// 
+// 
+
+
 
 // use crate::algebra::curves::edwards::edwards_pp;
 
-// // namespace libff {
+
 
 // pub fn init_public_params()
 // {
@@ -105,7 +96,7 @@ use crate::algebra::curves::public_params;
 //     return edwards_reduced_pairing(P, Q);
 // }
 
-// // } // namespace libff
+// 
 
 
 

@@ -105,5 +105,3 @@ pub fn run_uscs_ppzksnark<ppT: ppTConfig>(
 
     ans
 }
-
-//#endif // RUN_USCS_PPZKSNARK_TCC_

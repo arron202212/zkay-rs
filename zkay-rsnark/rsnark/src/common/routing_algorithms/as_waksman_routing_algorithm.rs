@@ -1,46 +1,32 @@
+// Declaration of interfaces for functionality for routing on an arbitrary-size (AS) Waksman network.
+
+// AS-Waksman networks were introduced in \[BD02]. An AS-Waksman network for
+// N packets is recursively defined as follows: place a column of floor(N/2) switches on
+// the left, and a column of floor(N/2) switches on the right; then place two AS-Waksman
+// sub-networks, for floor(N/2) and ceil(N/2) packets respectively, in the middle.
+
+// Note that unlike for Beneš networks where each switch handles routing
+// of one packet to one of its two possible destinations, AS-Waksman
+// network employs switches with two input ports and two output ports
+// and operate either in "straight" or "cross mode".
+
+// Routing is performed in a way that is similar to routing on Benes networks:
+// one first computes the switch settings for the left and right columns,
+// and then one recursively computes routings for the top and bottom sub-networks.
+// More precisely, as in \[BD02], we treat the problem of determining the switch
+// settings of the left and right columns as a 2-coloring problem on a certain
+// bipartite graph. The coloring is found by performing a depth-first search on
+// the graph and alternating the color at every step. For performance reasons
+// the graph in our implementation is implicitly represented.
+
+// References:
+
+// \[BD02]:
+// "On arbitrary size {W}aksman networks and their vulnerability",
+// Bruno Beauquier, Eric Darrot,
+// Parallel Processing Letters 2002
+
 use ffec::common::utils::log2;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for functionality for routing on an arbitrary-size (AS) Waksman network.
-
-AS-Waksman networks were introduced in \[BD02]. An AS-Waksman network for
-N packets is recursively defined as follows: place a column of floor(N/2) switches on
-the left, and a column of floor(N/2) switches on the right; then place two AS-Waksman
-sub-networks, for floor(N/2) and ceil(N/2) packets respectively, in the middle.
-
-Note that unlike for Beneš networks where each switch handles routing
-of one packet to one of its two possible destinations, AS-Waksman
-network employs switches with two input ports and two output ports
-and operate either in "straight" or "cross mode".
-
-Routing is performed in a way that is similar to routing on Benes networks:
-one first computes the switch settings for the left and right columns,
-and then one recursively computes routings for the top and bottom sub-networks.
-More precisely, as in \[BD02], we treat the problem of determining the switch
-settings of the left and right columns as a 2-coloring problem on a certain
-bipartite graph. The coloring is found by performing a depth-first search on
-the graph and alternating the color at every step. For performance reasons
-the graph in our implementation is implicitly represented.
-
-References:
-
-\[BD02]:
-"On arbitrary size {W}aksman networks and their vulnerability",
-Bruno Beauquier, Eric Darrot,
-Parallel Processing Letters 2002
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef AS_WAKSMAN_ROUTING_ALGORITHM_HPP_
-// #define AS_WAKSMAN_ROUTING_ALGORITHM_HPP_
-
-// use  <cstddef>
-// use  <map>
-//
 use std::collections::BTreeMap;
 
 use crate::common::data_structures::integer_permutation::integer_permutation;
@@ -124,24 +110,6 @@ pub type as_waksman_routing = Vec<Vec<bool>>;
 //  * Check if a routing "implements" the given permutation.
 //  */
 // bool valid_as_waksman_routing(permutation:&integer_permutation, routing:&as_waksman_routing);
-
-//#endif // AS_WAKSMAN_ROUTING_ALGORITHM_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for functionality for routing on an arbitrary-size (AS) Waksman network.
-
-See as_waksman_routing_algorithm.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-// use  <cassert>
-
-// use crate::common::routing_algorithms::as_waksman_routing_algorithm;
 
 /**
  * Return the height of the AS-Waksman network's top sub-network.
@@ -450,7 +418,6 @@ pub fn as_waksman_route_inner(
     assert!(permutation.size() == subnetwork_size);
     assert!(permutation.is_valid());
     assert!(&permutation.inverse() == permutation_inv);
-    //#endif
 
     if right - left + 1 > subnetwork_width {
         /**

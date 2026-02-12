@@ -1,6 +1,6 @@
 //  This file defines the default PCD cycle.
 
-// /*********************** Define default PCD cycle ***************************/
+// / Define default PCD cycle /
 // use ff_curves::algebra::curves::mnt::mnt4::mnt4_pp;
 // use ff_curves::algebra::curves::mnt::mnt6::mnt6_pp;
 

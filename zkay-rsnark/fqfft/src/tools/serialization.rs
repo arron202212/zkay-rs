@@ -46,7 +46,7 @@
 // #else
 // #define OUTPUT_NEWLINE "\n"
 // #define OUTPUT_SEPARATOR " "
-//#endif
+
 cfg_if::cfg_if! {
  if #[cfg(feature="BINARY_OUTPUT")]
 {const OUTPUT_NEWLINE:&str= "";
@@ -101,7 +101,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // #else
 //     char c;
 //     in.read(&c, 1);
-// //#endif
+// 
 // }
 
 // inline pub fn  consume_OUTPUT_SEPARATOR(std::istream &in)
@@ -111,7 +111,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // #else
 //     char c;
 //     in.read(&c, 1);
-// //#endif
+// 
 // }
 
 // inline pub fn  output_bool(std::ostream &out, b:bool)

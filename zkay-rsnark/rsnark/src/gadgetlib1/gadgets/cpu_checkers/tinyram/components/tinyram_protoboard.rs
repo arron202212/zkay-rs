@@ -1,15 +1,5 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for a protoboard for TinyRAM.
 
-Declaration of interfaces for a protoboard for TinyRAM.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef TINYRAM_PROTOBOARD_HPP_
-// #define TINYRAM_PROTOBOARD_HPP_
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::tinyram_packing_gadget;

@@ -1,15 +1,5 @@
-/** @file
-*****************************************************************************
+// Temporary import serialization operators from libff in libsnark namespace;
 
-Temporary import serialization operators from libff in libsnark namespace;
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef LIBSNARK_SERIALIZATION_HPP_
-// #define LIBSNARK_SERIALIZATION_HPP_
 use ffec::common::serialization;
 
 //     using ffec::consume_newline;
@@ -24,5 +14,3 @@ use ffec::common::serialization;
 //     using ffec::operator<<;
 //     using ffec::operator>>;
 // }
-
-//#endif // LIBSNARK_SERIALIZATION_HPP_

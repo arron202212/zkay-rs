@@ -72,7 +72,7 @@ pub struct Fp4_model<const N: usize, T: Fp4_modelConfig<N>> {
     // static i64 mul_cnt;
     // static i64 sqr_cnt;
     // static i64 inv_cnt;
-    //#endif
+    
 
     // static bigint<4*n> euler; // (modulus^4-1)/2
     // static std::usize s; // modulus^4 = 2^s * t + 1
@@ -205,7 +205,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Fp4_model<N, T> {
     pub fn mul_by_023(&self, other: &Self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.mul_cnt++;
-        //#endif
+        
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
         assert!(other.c0.c1.is_zero());
 
@@ -221,7 +221,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Fp4_model<N, T> {
     pub fn squared(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        //#endif
+        
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex) */
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
@@ -240,7 +240,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Fp4_model<N, T> {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
-        //#endif
+        
         /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
         let (a, b) = (self.c0, self.c1);
         let t1 = b.squared();
@@ -431,7 +431,7 @@ impl<const N: usize, const M: usize, T: Fp4_modelConfig<N>> BitXorAssign<&bigint
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// //#endif
+// 
 //     Self::new(self.c0 + other.c0,
 //                                 self.c1 + other.c1);
 // }
@@ -450,7 +450,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp4_mode
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.sub_cnt++;
-// //#endif
+// 
 //     Self::new(self.c0 - other.c0,
 //                                 self.c1 - other.c1);
 // }
@@ -469,7 +469,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Sub for Fp4_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     Self::new(lhs*rhs.c0,
 //                                 lhs*rhs.c1);
 // }
@@ -479,7 +479,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Sub for Fp4_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
-// //#endif
+// 
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
 //     B:&my_Fp2 = other.c1, &A = other.c0,
 //         &b = self.c1, &a = self.c0;
@@ -496,7 +496,7 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Sub for Fp4_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     Self::new(lhs*rhs.c0,
 //                                 lhs*rhs.c1);
 // }

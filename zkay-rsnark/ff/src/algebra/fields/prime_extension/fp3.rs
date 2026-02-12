@@ -75,7 +75,7 @@ pub struct Fp3_model<const N: usize, T: Fp3_modelConfig<N>> {
     // static i64 mul_cnt;
     // static i64 sqr_cnt;
     // static i64 inv_cnt;
-    //#endif
+    
 
     // static bigint<3*n> euler; // (modulus^3-1)/2
     // static std::usize s;       // modulus^3 = 2^s * t + 1
@@ -202,7 +202,7 @@ impl<const N: usize, T: Fp3_modelConfig<N>> Fp3_model<N, T> {
     pub fn squared(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        //#endif
+        
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
 
         let (a, b, c) = (self.c0, self.c1, self.c2);
@@ -229,7 +229,7 @@ impl<const N: usize, T: Fp3_modelConfig<N>> Fp3_model<N, T> {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
-        //#endif
+        
         let (a, b, c) = (self.c0, self.c1, self.c2);
 
         /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17 */
@@ -388,7 +388,7 @@ impl<const N: usize, const M: usize, T: Fp3_modelConfig<N>> BitXorAssign<&bigint
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// //#endif
+// 
 //     return Fp3_model<n,modulus>(self.c0 + other.c0,
 //                                 self.c1 + other.c1,
 //                                 self.c2 + other.c2);
@@ -408,7 +408,7 @@ impl<const N: usize, T: Fp3_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp3_mode
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.sub_cnt++;
-// //#endif
+// 
 //     return Fp3_model<n,modulus>(self.c0 - other.c0,
 //                                 self.c1 - other.c1,
 //                                 self.c2 - other.c2);
@@ -428,7 +428,7 @@ impl<const N: usize, T: Fp3_modelConfig<N>> Sub for Fp3_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     return Fp3_model<n,modulus>(lhs*rhs.c0,
 //                                 lhs*rhs.c1,
 //                                 lhs*rhs.c2);
@@ -450,7 +450,7 @@ impl<const N: usize, T: Fp3_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
-// //#endif
+// 
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba) */
 //     const my_Fp<N,T::Fp3_modelConfig>
 //         &A = other.c0, &B = other.c1, &C = other.c2,

@@ -250,7 +250,7 @@ pub fn monomial_to_newton_basis_geometric<
 
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+    
     for i in 0..n {
         a[i] = w[i].clone() * z[i].clone();
     }
@@ -300,7 +300,7 @@ pub fn newton_to_monomial_basis_geometric<
 
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+    
     for i in 0..n {
         a[i] = w[i].clone() * z[i].clone();
     }

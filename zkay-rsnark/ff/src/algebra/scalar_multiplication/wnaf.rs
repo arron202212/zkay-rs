@@ -34,7 +34,7 @@ use std::ops::Mul;
 //
 // T opt_window_wnaf_exp(base:&T, scalar:&bigint<N>, const std::usize scalar_bits);
 
-// } // namespace libff
+
 
 // pub trait Config {
 //     fn wnaf_window_table() -> Vec<usize>;

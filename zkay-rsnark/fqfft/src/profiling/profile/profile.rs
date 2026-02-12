@@ -190,7 +190,7 @@
 // // #else
 //     edwards_pp::init_public_params();
 //     profile::<Fr::<edwards_pp> >(domain_sizes, profiling_type, path, types, num_threads, key);
-// //#endif
+// 
 //   }
 
 //   return 0;

@@ -1,11 +1,7 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BN128_G2_HPP_
+
+
+
 // #define BN128_G2_HPP_
 //#include <iostream>
 //#include <vector>
@@ -15,7 +11,7 @@
 use crate::algebra::curves::bn128::bn128_init;
 use crate::algebra::curves::curve_utils;
 
-// namespace libff {
+
 
 pub struct bn128_G2;
 std::ostream& operator<<(std::ostream &, const bn128_G2&);
@@ -28,7 +24,7 @@ pub struct bn128_G2 {
 // #ifdef PROFILE_OP_COUNTS
     static i64 add_cnt;
     static i64 dbl_cnt;
-//#endif
+
     static Vec<std::usize> wnaf_window_table;
     static Vec<std::usize> fixed_base_exp_window_table;
     static bn128_G2 G2_zero;
@@ -98,26 +94,22 @@ bn128_G2 operator*(lhs:&Fp_model<m, modulus_p>, rhs:&bn128_G2)
     return scalar_mul<bn128_G2, m>(rhs, lhs.as_bigint());
 }
 
-// } // namespace libff
-//#endif // BN128_G2_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::bn128::bn128_g2;
 use crate::algebra::curves::bn128::bn_utils;
 
-// namespace libff {
+
 
 using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
 i64 bn128_G2::add_cnt = 0;
 i64 bn128_G2::dbl_cnt = 0;
-//#endif
+
 
 Vec<usize> bn128_G2::wnaf_window_table;
 Vec<usize> bn128_G2::fixed_base_exp_window_table;
@@ -143,7 +135,7 @@ bn::Fp2 bn128_G2::sqrt(el:&bn::Fp2)
     }
 
     assert!(check == bn::Fp2(bn::Fp(1), bn::Fp(0)));
-//#endif
+
 
     // compute square root with Tonelli--Shanks
     // (does not terminate if not a square!)
@@ -327,7 +319,7 @@ pub fn add(other:&bn128_G2)->bn128_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
 
     bn::Fp2 this_coord[3], other_coord[3], result_coord[3];
     this->fill_coord(this_coord);
@@ -355,7 +347,7 @@ pub fn mixed_add(other:&bn128_G2)->bn128_G2
 
 // #ifdef DEBUG
     assert!(other.is_special());
-//#endif
+
 
     // check for doubling case
 
@@ -388,7 +380,7 @@ pub fn mixed_add(other:&bn128_G2)->bn128_G2
 
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
 
     bn128_G2 result;
     bn::Fp2 H, HH, I, J, r, V, tmp;
@@ -429,7 +421,7 @@ pub fn dbl()->bn128_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-//#endif
+
 
     bn::Fp2 this_coord[3], result_coord[3];
     this->fill_coord(this_coord);
@@ -496,7 +488,7 @@ std::ostream& operator<<(std::ostream &out, g:&bn128_G2)
 
 // #ifdef NO_PT_COMPRESSION
     /* no point compression case */
-//#ifndef BINARY_OUTPUT
+
     out << gcopy.X.a_ << OUTPUT_SEPARATOR << gcopy.X.b_ << OUTPUT_SEPARATOR;
     out << gcopy.Y.a_ << OUTPUT_SEPARATOR << gcopy.Y.b_;
 #else
@@ -504,18 +496,18 @@ std::ostream& operator<<(std::ostream &out, g:&bn128_G2)
     out.write((char*) &gcopy.X.b_, sizeof(gcopy.X.b_));
     out.write((char*) &gcopy.Y.a_, sizeof(gcopy.Y.a_));
     out.write((char*) &gcopy.Y.b_, sizeof(gcopy.Y.b_));
-//#endif
+
 
 #else
     /* point compression case */
-//#ifndef BINARY_OUTPUT
+
     out << gcopy.X.a_ << OUTPUT_SEPARATOR << gcopy.X.b_;
 #else
     out.write((char*) &gcopy.X.a_, sizeof(gcopy.X.a_));
     out.write((char*) &gcopy.X.b_, sizeof(gcopy.X.b_));
-//#endif
+
     out << OUTPUT_SEPARATOR << if (((unsigned char*)&gcopy.Y.a_)[0] & 1) != 0 {'1'} else{'0'};
-//#endif
+
 
     return out;
 }
@@ -529,7 +521,7 @@ std::istream& operator>>(std::istream &in, bn128_G2 &g)
 
 // #ifdef NO_PT_COMPRESSION
     /* no point compression case */
-//#ifndef BINARY_OUTPUT
+
     in >> g.X.a_;
     consume_OUTPUT_SEPARATOR(in);
     in >> g.X.b_;
@@ -542,19 +534,19 @@ std::istream& operator>>(std::istream &in, bn128_G2 &g)
     in.read((char*) &g.X.b_, sizeof(g.X.b_));
     in.read((char*) &g.Y.a_, sizeof(g.Y.a_));
     in.read((char*) &g.Y.b_, sizeof(g.Y.b_));
-//#endif
+
 
 #else
     /* point compression case */
     bn::Fp2 tX;
-//#ifndef BINARY_OUTPUT
+
     in >> tX.a_;
     consume_OUTPUT_SEPARATOR(in);
     in >> tX.b_;
 #else
     in.read((char*)&tX.a_, sizeof(tX.a_));
     in.read((char*)&tX.b_, sizeof(tX.b_));
-//#endif
+
     consume_OUTPUT_SEPARATOR(in);
     unsigned char Y_lsb;
     in.read((char*)&Y_lsb, 1);
@@ -575,7 +567,7 @@ std::istream& operator>>(std::istream &in, bn128_G2 &g)
             bn::Fp2::neg(g.Y, g.Y);
         }
     }
-//#endif
+
 
     /* finalize */
     if is_zero == 0
@@ -615,4 +607,4 @@ pub fn batch_to_special_all_non_zeros(Vec<bn128_G2> &vec)
     }
 }
 
-// } // namespace libff
+

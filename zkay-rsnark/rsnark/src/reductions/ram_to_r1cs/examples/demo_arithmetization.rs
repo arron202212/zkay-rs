@@ -130,7 +130,7 @@ fn main<default_tinyram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig>(
     )) {
         return 1;
     }
-    //#endif
+
     start_profiling();
 
     print!("================================================================================\n");

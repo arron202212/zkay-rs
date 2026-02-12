@@ -563,5 +563,3 @@ impl<FieldT: FieldTConfig>
         self.pb.borrow().val(&self.t.t.packed_next_state).print();
     }
 }
-
-//#endif // FOORAM_CPU_CHECKER_TCC

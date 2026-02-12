@@ -66,8 +66,6 @@ use ffec::scalar_multiplication::multiexp::{
     multi_exp_method, multi_exp_with_mixed_addition,
 };
 
-/******************************** Public authentication parameters ********************************/
-
 /**
  * Public authentication parameters for the R1CS ppzkADSNARK
  */
@@ -88,8 +86,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_pub_auth_prms<PP> {
     // friend std::ostream& operator<< <PP>(std::ostream &out, pap:&r1cs_ppzkadsnark_pub_auth_prms<PP>);
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_pub_auth_prms<PP> &pap);
 }
-
-/******************************** Secret authentication key ********************************/
 
 /**
  * Secret authentication key for the R1CS ppzkADSNARK
@@ -118,8 +114,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_sec_auth_key<PP> {
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_sec_auth_key<PP> &key);
 }
 
-/******************************** Public authentication key ********************************/
-
 /**
  * Public authentication key for the R1CS ppzkADSNARK
  */
@@ -142,8 +136,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_pub_auth_key<PP> {
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_pub_auth_key<PP> &key);
 }
 
-/******************************** Authentication key material ********************************/
-
 #[derive(Default, Clone)]
 pub struct r1cs_ppzkadsnark_auth_keys<PP: ppzkadsnarkConfig> {
     pub pap: r1cs_ppzkadsnark_pub_auth_prms<PP>,
@@ -161,8 +153,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_keys<PP> {
         Self { pap, pak, sak }
     }
 }
-
-/******************************** Authenticated data ********************************/
 
 /**
  * Authenticated data for the R1CS ppzkADSNARK
@@ -190,8 +180,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_data<PP> {
     // friend std::ostream& operator<< <PP>(std::ostream &out, key:&r1cs_ppzkadsnark_auth_data<PP>);
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_auth_data<PP> &key);
 }
-
-/******************************** Proving key ********************************/
 
 /**
  * A proving key for the R1CS ppzkADSNARK.
@@ -291,8 +279,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proving_key<PP> {
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_proving_key<PP> &pk);
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the R1CS ppzkADSNARK.
  */
@@ -364,8 +350,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_verification_key<PP> {
     // static r1cs_ppzkadsnark_verification_key<PP> dummy_verification_key(input_size:usize);
 }
 
-/************************ Processed verification key *************************/
-
 /**
  * A processed verification key for the R1CS ppzkADSNARK.
  *
@@ -394,8 +378,6 @@ pub struct r1cs_ppzkadsnark_processed_verification_key<PP: ppzkadsnarkConfig> {
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_processed_verification_key<PP> &pvk);
 }
 
-/********************************** Key pair *********************************/
-
 /**
  * A key pair for the R1CS ppzkADSNARK, which consists of a proving key and a verification key.
  */
@@ -416,8 +398,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_keypair<PP> {
 
     // r1cs_ppzkadsnark_keypair(r1cs_ppzkadsnark_keypair<PP> &&other) = default;
 }
-
-/*********************************** Proof ***********************************/
 
 /**
  * A proof for the R1CS ppzkADSNARK.
@@ -529,14 +509,12 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proof<PP> {
     // friend std::istream& operator>> <PP>(std::istream &in, r1cs_ppzkadsnark_proof<PP> &proof);
 }
 
-/***************************** Main algorithms *******************************/
 // use ffec::algebra::scalar_multiplication::multiexp;
 // use ffec::common::profiling;
 // use ffec::common::utils;
 
 // #ifdef MULTICORE
 // use  <omp.h>
-//#endif
 
 // use crate::knowledge_commitment::kc_multiexp;
 // use crate::reductions::r1cs_to_qap::r1cs_to_qap;
@@ -1183,7 +1161,6 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     //     chunks:usize = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks: usize = 1;
-    //#endif
 
     enter_block("Generating G1 multiexp table", false);
     let g1_table = get_window_table(
@@ -1267,7 +1244,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     );
     // #ifdef USE_MIXED_ADDITION
     // batch_to_special<G1<snark_pp<PP>> >(H_query);
-    //#endif
+
     leave_block("Compute the H-query", false);
 
     enter_block("Compute the K-query", false);
@@ -1279,7 +1256,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     );
     // #ifdef USE_MIXED_ADDITION
     // batch_to_special<G1<snark_pp<PP>> >(K_query);
-    //#endif
+
     leave_block("Compute the K-query", false);
 
     leave_block("Generate knowledge commitments", false);
@@ -1406,7 +1383,6 @@ where
         pk.constraint_system
             .is_satisfied(primary_input, auxiliary_input)
     );
-    //#endif
 
     let mut d1 = Fr::<snark_pp<PP>>::random_element();
     let mut d2 = Fr::<snark_pp<PP>>::random_element();
@@ -1433,7 +1409,6 @@ where
     let mut qap_inst: qap_instance_evaluation<_> =
         r1cs_to_qap_instance_map_with_evaluation(&pk.constraint_system, &t);
     assert!(qap_inst.is_satisfied(&qap_wit));
-    //#endif
 
     let mut g_A =
         /* pk.A_query[0] + */ pk.A_query[qap_wit.num_variables()+1].clone()*d1;
@@ -1459,13 +1434,11 @@ where
     assert_eq!(pk.C_query.domain_size(), qap_wit.num_variables() + 2);
     assert_eq!(pk.H_query.len(), qap_wit.degree() + 1);
     assert_eq!(pk.K_query.len(), qap_wit.num_variables() + 4);
-    //#endif
 
     // #ifdef MULTICORE
     // let  chunks = omp_get_max_threads(); // to override, set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    //#endif
 
     enter_block("Compute the proof", false);
 

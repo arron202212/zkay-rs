@@ -1,14 +1,9 @@
-// // /** @file
-// //  *****************************************************************************
+
 
 // //  Declaration of interfaces for public parameters of MNT4.
 
-// //  *****************************************************************************
-// //  * @author     This file is part of libff, developed by SCIPR Lab
-// //  *             and contributors (see AUTHORS).
-// //  * @copyright  MIT license (see LICENSE file)
-// //  *****************************************************************************/
-// // //#ifndef MNT4_PP_HPP_
+
+// // 
 // // // #define MNT4_PP_HPP_
 
 // // use crate::algebra::curves::mnt::mnt4::mnt4_g1;

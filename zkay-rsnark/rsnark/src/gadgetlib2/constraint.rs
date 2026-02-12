@@ -33,16 +33,10 @@ pub trait ConstraintConfig {
     fn getUsedVariables(&self) -> VariableSet;
     fn asPolynomial(&self) -> Polynomial;
 }
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                    pub struct Constraint                        ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
-/// An abstract pub struct for a field agnostic constraint. The derived classes will be field specific.
-pub struct Constraint<T> {
+/// An abstract struct for a field agnostic constraint. The derived classes will be field specific.
+#[derive(Default, Clone)]
+pub struct Constraint<T: Default + Clone> {
     // explicit Constraint(const ::String& name); // casting disallowed by 'explicit'
     // ::String name() const; ///< @returns name of the constraint as a String
     // /**
@@ -62,21 +56,11 @@ pub struct Constraint<T> {
     pub name_: String,
     pub t: T,
     // #   endif
-} // pub struct Constraint
+}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 pub struct Rank1Constraint                       ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 /// A rank-1 prime characteristic constraint. The constraint is defined by <a,x> * <b,x> = <c,x>
 /// where x is an assignment of field elements to the variables.
+#[derive(Default, Clone)]
 pub struct Rank1Constraint {
     //Constraint
     pub a_: LinearCombination,
@@ -98,20 +82,9 @@ pub struct Rank1Constraint {
                                // virtual const:VariableSet getUsedVariables(), /**< @returns a list of all variables
                                //                                                                   used in the constraint */
                                // virtual Polynomial asPolynomial() c_:{return a_ * b_ -,}
-} // pub struct Rank1Constraint
+}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 pub struct PolynomialConstraint                 ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
-
+#[derive(Default, Clone)]
 pub struct PolynomialConstraint {
     //Constraint
     pub a_: Polynomial,
@@ -127,19 +100,8 @@ pub struct PolynomialConstraint {
 // ::String annotation() const;
 // virtual const:VariableSet getUsedVariables(), /**< @returns a list of all variables
 //                                                                     used in the constraint */
-// } // pub struct PolynomialConstraint
+// }
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                   pub struct ConstraintSystem                   ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 pub type ConstraintPtr = RcCell<ConstraintType>;
 #[derive(Default, Clone)]
 pub struct ConstraintSystem {
@@ -178,28 +140,16 @@ impl ConstraintSystem {
     pub fn getConstraint(&self, idx: usize) -> &ConstraintPtr {
         &self.constraintsPtrs_[idx]
     }
-    // friend pub struct GadgetLibAdapter;
-} // pub struct ConstraintSystem
+}
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                    pub struct Constraint                        ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
-impl<T> Constraint<T> {
+impl<T: Default + Clone> Constraint<T> {
     // #ifdef DEBUG
     pub fn new(name: String, t: T) -> Self {
         Self { name_: name, t }
     }
     // #else
     // pub fn new(name:&String) { //ffec::UNUSED(name); }
-    // //#endif
+    //
 
     // pub fn name(&self) -> &String {
     //     // #   ifdef DEBUG
@@ -209,17 +159,6 @@ impl<T> Constraint<T> {
     //     // #   endif
     // }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 pub struct Rank1Constraint                       ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
 impl Rank1Constraint {
     pub fn new(
@@ -309,17 +248,6 @@ impl ConstraintConfig for Constraint<Rank1Constraint> {
     }
 }
 
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
-
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                 pub struct PolynomialConstraint                 ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 impl PolynomialConstraint {
     pub fn new(a: Polynomial, b: Polynomial, name: String) -> Constraint<Self> {
         Constraint::<Self>::new(name, Self { a_: a, b_: b })
@@ -372,9 +300,7 @@ impl ConstraintConfig for Constraint<PolynomialConstraint> {
         self.t.a_.clone() - &self.t.b_
     }
 }
-/***********************************/
-/***   END OF CLASS DEFINITION   ***/
-/***********************************/
+
 impl ConstraintSystem {
     pub fn addConstraint1(&mut self, c: Constraint<Rank1Constraint>) {
         self.constraintsPtrs_

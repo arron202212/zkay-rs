@@ -12,8 +12,6 @@ use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{FieldTConfig, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use std::ops::{Add, Mul, Sub};
 
-/********************** Knowledge commitment *********************************/
-
 /**
  * A knowledge commitment is a pair (g,h) where g is in T and h in T2,
  * and T and T2 are groups (written additively).
@@ -75,8 +73,6 @@ pub struct knowledge_commitment<T: PpConfig, T2: PpConfig> {
 
 //
 // std::istream& operator>>(std::istream& in, knowledge_commitment<T1,T2> &kc);
-
-/******************** Knowledge commitment vector ****************************/
 
 /**
  * A knowledge commitment vector is a sparse vector of knowledge commitments.

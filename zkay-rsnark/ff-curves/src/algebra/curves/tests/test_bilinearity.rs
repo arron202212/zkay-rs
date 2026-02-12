@@ -1,9 +1,5 @@
-/**
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
 //#include <gtest/gtest.h>
 
 use crate::algebra::curves::edwards::edwards_pp;
@@ -11,13 +7,13 @@ use crate::common::profiling;
 // #ifdef CURVE_BN128
 use crate::algebra::curves::bn128::bn128_pp;
 use crate::algebra::curves::bn128::bn128_pp;
-//#endif
+
 use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 use crate::algebra::curves::bls12_381/bls12_381_pp;
 use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 use crate::algebra::curves::mnt::mnt6::mnt6_pp;
 
-using namespace libff;
+
 
 pub struct CurveBilinearityTest{//::testing::Test
 
@@ -31,7 +27,7 @@ pub struct CurveBilinearityTest{//::testing::Test
         bls12_381_pp::init_public_params();
 // #ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled
         bn128_pp::init_public_params();
-//#endif
+
     }
 };
 
@@ -136,7 +132,7 @@ TEST_F(CurveBilinearityTest, PairingTest)
     pairing_test<bls12_381_pp>();
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     pairing_test<bn128_pp>();
-//#endif
+
 }
 
 TEST_F(CurveBilinearityTest, DoubleMillerLoopTest)
@@ -148,7 +144,7 @@ TEST_F(CurveBilinearityTest, DoubleMillerLoopTest)
     double_miller_loop_test<bls12_381_pp>();
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     double_miller_loop_test<bn128_pp>();
-//#endif
+
 }
 
 TEST_F(CurveBilinearityTest, AffinePairingTest)

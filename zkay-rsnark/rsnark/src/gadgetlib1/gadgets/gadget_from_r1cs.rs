@@ -39,7 +39,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget_from_r1cs<FieldT, PB> {
                 "gadget_from_r1cs: translating a block of variables with length {}\n",
                 va.len()
             );
-            //#endif
+
             for v in va.iter() {
                 cs_to_vars.insert(cs_var_idx, v.index);
 
@@ -54,7 +54,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget_from_r1cs<FieldT, PB> {
 
                     pb.borrow_mut().augment_variable_annotation(&v, annotation);
                 }
-                //#endif
+
                 cs_var_idx += 1;
             }
         }
@@ -68,7 +68,6 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget_from_r1cs<FieldT, PB> {
             "gadget_from_r1cs: cs.num_variables(): {}\n",
             cs.num_variables()
         );
-        //#endif
 
         assert!(cs_var_idx - 1 == cs.num_variables());
         gadget::<FieldT, PB, Self>::new(
@@ -126,7 +125,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, gadget_from_r1cs<Fie
             if let Some(it) = self.t.cs.constraint_annotations.get(&i) {
                 annotation = format!("{} {}", self.annotation_prefix, it);
             }
-            //#endif
+
             self.pb
                 .borrow_mut()
                 .add_r1cs_constraint(translated_constr, annotation);
@@ -160,5 +159,3 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, gadget_from_r1cs<Fie
         }
     }
 }
-
-//#endif // GADGET_FROM_R1CS_TCC_

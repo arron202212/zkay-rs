@@ -1,16 +1,12 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BLS12_381_INIT_HPP_
+
+
+
 // #define BLS12_381_INIT_HPP_
 use crate::algebra::curves::public_params;
 use crate::algebra::curves::bls12_381/bls12_381_fields;
 
-// namespace libff {
+
 
 // parameters for the curve E/Fq : y^2 = x^3 + b
 extern bls12_381_Fq bls12_381_coeff_b;
@@ -34,13 +30,13 @@ pub fn  init_bls12_381_params();
 pub struct bls12_381_G1;
 pub struct bls12_381_G2;
 
-// } // namespace libff
-//#endif // BLS12_381_INIT_HPP_
+
+
 use crate::algebra::curves::bls12_381/bls12_381_g1;
 use crate::algebra::curves::bls12_381/bls12_381_g2;
 use crate::algebra::curves::bls12_381/bls12_381_init;
 
-// namespace libff {
+
 
 bls12_381_Fq bls12_381_coeff_b;
 bls12_381_Fq2 bls12_381_twist;
@@ -219,4 +215,4 @@ pub fn  init_bls12_381_params()
     bls12_381_final_exponent_is_z_neg = true;
 }
 
-// } // namespace libff
+

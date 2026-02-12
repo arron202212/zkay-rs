@@ -1,18 +1,14 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BLS12_381_G1_HPP_
+
+
+
 // #define BLS12_381_G1_HPP_
 //#include <vector>
 
 use crate::algebra::curves::bls12_381/bls12_381_init;
 use crate::algebra::curves::curve_utils;
 
-// namespace libff {
+
 
 pub struct bls12_381_G1;
 std::ostream& operator<<(std::ostream &, const bls12_381_G1&);
@@ -23,7 +19,7 @@ pub struct bls12_381_G1 {
 // #ifdef PROFILE_OP_COUNTS
     static i64 add_cnt;
     static i64 dbl_cnt;
-//#endif
+
     static Vec<std::usize> wnaf_window_table;
     static Vec<std::usize> fixed_base_exp_window_table;
     static bls12_381_G1 G1_zero;
@@ -94,18 +90,18 @@ bls12_381_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&bls12_381_G1)
 std::ostream& operator<<(std::ostream& out, v:&Vec<bls12_381_G1>);
 std::istream& operator>>(std::istream& in, Vec<bls12_381_G1> &v);
 
-// } // namespace libff
-//#endif // BLS12_381_G1_HPP_
+
+
 use crate::algebra::curves::bls12_381/bls12_381_g1;
 
-// namespace libff {
+
 
 using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
 i64 bls12_381_G1::add_cnt = 0;
 i64 bls12_381_G1::dbl_cnt = 0;
-//#endif
+
 
 Vec<usize> bls12_381_G1::wnaf_window_table;
 Vec<usize> bls12_381_G1::fixed_base_exp_window_table;
@@ -304,7 +300,7 @@ pub fn mixed_add(other:&bls12_381_G1)->bls12_381_G1
 {
 // #ifdef DEBUG
     assert!(other.is_special());
-//#endif
+
 
     // handle special cases having to do with O
     if this->is_zero()
@@ -349,7 +345,7 @@ pub fn mixed_add(other:&bls12_381_G1)->bls12_381_G1
 
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
 
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-madd-2007-bl
@@ -373,7 +369,7 @@ pub fn dbl()->bls12_381_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-//#endif
+
     // handle point at infinity
     if this->is_zero()
     {
@@ -457,7 +453,7 @@ std::ostream& operator<<(std::ostream &out, g:&bls12_381_G1)
 #else
     /* storing LSB of Y */
     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
-//#endif
+
 
     return out;
 }
@@ -493,7 +489,7 @@ std::istream& operator>>(std::istream &in, bls12_381_G1 &g)
             tY = -tY;
         }
     }
-//#endif
+
     // using Jacobian coordinates
     if is_zero == 0
     {
@@ -565,4 +561,4 @@ pub fn batch_to_special_all_non_zeros(Vec<bls12_381_G1> &vec)
     }
 }
 
-// } // namespace libff
+

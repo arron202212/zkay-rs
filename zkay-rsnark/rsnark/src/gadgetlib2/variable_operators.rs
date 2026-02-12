@@ -5,17 +5,8 @@
 
 use super::variable::{FElem, LinearCombination, LinearTerm, Monomial, Polynomial, Variable};
 use std::ops::{Add, Mul, Neg, Sub};
-/*************************************************************************************************/
-/*************************************************************************************************/
-/*******************                                                            ******************/
-/*******************                    lots o' operators                       ******************/
-/*******************                                                            ******************/
-/*************************************************************************************************/
-/*************************************************************************************************/
 
-/***********************************/
 /***         operator+           ***/
-/***********************************/
 
 // // Polynomial
 // inline Polynomial        operator+(first:Polynomial&,        second:&Polynomial)        {auto retval = first; return retval += second;}
@@ -384,9 +375,9 @@ impl Add<i32> for Polynomial {
     }
 }
 
-// /***********************************/
+//
 // /***           operator-         ***/
-// /***********************************/
+//
 // inline LinearTerm        operator-(src:&Variable) {return LinearTerm(src, -1);}
 impl Neg for Variable {
     type Output = LinearTerm;
@@ -747,9 +738,9 @@ impl Sub<i32> for Polynomial {
     }
 }
 
-// /***********************************/
+//
 // /***         operator*           ***/
-// /***********************************/
+//
 // // Polynomial
 // inline Polynomial        operator*(first:Polynomial&,        second:&Polynomial)        {auto retval = first; return retval *= second;}
 impl Mul<&Polynomial> for Polynomial {
@@ -1123,6 +1114,6 @@ impl Mul<i32> for Polynomial {
     }
 }
 
-// /***********************************/
+//
 // /***      END OF OPERATORS       ***/
-// /***********************************/
+//

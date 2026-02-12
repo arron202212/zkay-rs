@@ -115,7 +115,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> Default for protoboard<FieldT, T> {
         constraint_system
             .variable_annotations
             .insert(0, "ONE".to_owned());
-        //#endif
 
         // to account for constant 1 term
 
@@ -143,7 +142,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
         constraint_system
             .variable_annotations
             .insert(0, "ONE".to_owned());
-        //#endif
 
         // to account for constant 1 term
 
@@ -166,7 +164,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
             .insert(self.next_free_var, annotation);
         // #else
         // //ffec::UNUSED(annotation);
-        //#endif
+
         self.constraint_system.auxiliary_input_size += 1;
         self.values.push(FieldT::zero());
         self.next_free_var += 1;
@@ -193,7 +191,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
                 postfix
             },
         );
-        //#endif
     }
 
     pub fn is_satisfied(&self) -> bool {
@@ -210,7 +207,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
             ); //%-40s
             self.values[i].as_bigint::<N>().print_hex();
         }
-        //#endif
     }
 
     pub fn num_inputs(&self) -> usize {
@@ -269,7 +265,6 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
         constraint_system
             .variable_annotations
             .insert(0, "ONE".to_owned());
-        //#endif
 
         // to account for constant 1 term
 
@@ -327,7 +322,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> ProtoboardConfig for protoboard<FieldT, 
             .insert(self.constraint_system.constraints.len(), annotation);
         // #else
         //     //ffec::UNUSED(annotation);
-        //#endif
+
         self.constraint_system.constraints.push(constr);
     }
     fn num_constraints(&self) -> usize {

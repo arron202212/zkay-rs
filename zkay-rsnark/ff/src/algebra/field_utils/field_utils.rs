@@ -126,29 +126,6 @@ enum field_type {
 //
 // pub fn  batch_invert(Vec<FieldT> &vec);
 
-// } // namespace libff
-// use ffec::algebra::field_utils::/field_utils.tcc;
-
-//#endif // FIELD_UTILS_HPP_
-
-/** @file
-*****************************************************************************
-Implementation of misc. math and serialization utility functions
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef FIELD_UTILS_TCC_
-// #define FIELD_UTILS_TCC_
-
-//#include <complex>
-//#include <stdexcept>
-
-// namespace libff {
-
-// using std::usize;
 
 // trait FTConfig {
 //     const NUM_LIMBS: usize;

@@ -1,18 +1,8 @@
+// Declaration of interfaces for the TinyRAM ALU control-flow gadgets.
+
+// These gadget check the correct execution of control-flow TinyRAM instructions.
+
 use crate::gadgetlib1::gadget::gadget;
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for the TinyRAM ALU control-flow gadgets.
-
-These gadget check the correct execution of control-flow TinyRAM instructions.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef ALU_CONTROL_FLOW_HPP_
-// #define ALU_CONTROL_FLOW_HPP_
 use crate::gadgetlib1::gadgets::basic_gadgets;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::SubTinyRamGadgetConfig;
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::ArithmeticGadgetConfig;

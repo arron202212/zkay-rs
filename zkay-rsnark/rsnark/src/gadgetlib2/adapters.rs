@@ -151,10 +151,10 @@ impl ConvertConfig<&VariableAssignment, assignment_t> for GLA {
 impl ConvertConfig<&Protoboard, protoboard_t> for GLA {
     fn convert(pb: &Protoboard) -> protoboard_t {
         //GADGETLIB_ASSERT(pb.numVars()==getNextFreeIndex(), "Some Variables were created and not used, or, more than one protoboard was used.");
-        return (
+        (
             Self::convert(pb.constraintSystem()),
             Self::convert(pb.assignment()),
-        );
+        )
     }
 }
 impl ConvertConfig<&FElem, Fp_elem_t> for GLA {

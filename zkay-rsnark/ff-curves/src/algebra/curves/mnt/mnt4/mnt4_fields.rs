@@ -1,15 +1,10 @@
-/** @file
- *****************************************************************************
+
 
  Declaration of interfaces for initializing MNT4.
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef MNT4_FIELDS_HPP_
+
+
 // #define MNT4_FIELDS_HPP_
 use ffec::algebra::field_utils::bigint::bigint;
 use crate::algebra::curves::mnt::mnt46_common::*;
@@ -17,7 +12,7 @@ use ffec::algebra::fields::prime_base::fp::Fp_model;
 use ffec::algebra::fields::prime_extension::fp2;
 use ffec::algebra::fields::prime_extension::fp4;
 
-// namespace libff {
+
 
 // #define mnt4_modulus_r mnt46_modulus_A
 // #define mnt4_modulus_q mnt46_modulus_B
@@ -39,25 +34,20 @@ pub type mnt4_Fq=Fp_model<mnt4_q_limbs, mnt4_modulus_q>;
 
 // pub fn  init_mnt4_fields();
 
-// } // namespace libff
 
-//#endif // MNT4_FIELDS_HPP_
-/** @file
- *****************************************************************************
+
+
+
 
  Implementation of interfaces for initializing MNT4.
 
  See mnt4_init.hpp .
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
 
 use crate::algebra::curves::mnt::mnt4::mnt4_fields;
 type mp_limb_t=u64;
-// namespace libff {
+
 use std::mem;
 pub fn  init_mnt4_fields()
 {
@@ -148,4 +138,4 @@ pub fn  init_mnt4_fields()
     mnt4_Fq4::Frobenius_coeffs_c1[3] = mnt4_Fq("468238122923807824137727898100575114475823797181717920390930116882062371863914936316755773");
 }
 
-// } // namespace libff
+

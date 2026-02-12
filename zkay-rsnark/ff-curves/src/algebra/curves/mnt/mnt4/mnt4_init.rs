@@ -1,20 +1,15 @@
-// /** @file
-//  *****************************************************************************
+
 
 //  Declaration of interfaces for initializing MNT4.
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef MNT4_INIT_HPP_
+
+// 
 // // #define MNT4_INIT_HPP_
 
 // use crate::algebra::curves::public_params;
 // use crate::algebra::curves::mnt::mnt4::mnt4_fields;
 
-// // namespace libff {
+
 
 // // parameters for twisted short Weierstrass curve E'/Fq2 : y^2 = x^3 + (a * twist^2) * x + (b * twist^3)
 // extern mnt4_Fq2 mnt4_twist;
@@ -40,26 +35,21 @@
 // pub struct mnt4_G1;
 // pub struct mnt4_G2;
 
-// // } // namespace libff
+// 
 
-// //#endif // MNT4_INIT_HPP_
-// /** @file
-//  *****************************************************************************
+// 
+
 
 //  Implementation of interfaces for initializing MNT4.
 
 //  See mnt4_init.hpp .
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+
 // use crate::algebra::curves::mnt::mnt4::mnt4_g1;
 // use crate::algebra::curves::mnt::mnt4::mnt4_g2;
 // use crate::algebra::curves::mnt::mnt4::mnt4_init;
 
-// // namespace libff {
+
 
 // mnt4_Fq2 mnt4_twist;
 // mnt4_Fq2 mnt4_twist_coeff_a;

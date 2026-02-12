@@ -74,7 +74,6 @@ use ffec::{FieldTConfig, PpConfig, bit_vector};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::collections::{BTreeMap, HashMap};
 use std::ops::{Add, Mul};
-/******************************** Proving key ********************************/
 
 /**
  * A proving key for the R1CS (multi-predicate) ppzkPCD.
@@ -122,8 +121,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_proving_key<PCD_ppT> {
     }
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the R1CS (multi-predicate) ppzkPCD.
  */
@@ -150,8 +147,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_verification_key<PCD_ppT> {
         }
     }
 }
-
-/************************* Processed verification key **************************/
 
 /**
  * A processed verification key for the R1CS (multi-predicate) ppzkPCD.
@@ -184,8 +179,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> 
     }
 }
 
-/********************************** Key pair *********************************/
-
 /**
  * A key pair for the R1CS (multi-predicate) ppzkPC, which consists of a proving key and a verification key.
  */
@@ -202,8 +195,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
         Self { pk, vk }
     }
 }
-
-/*********************************** Proof ***********************************/
 
 /**
  * A proof for the R1CS (multi-predicate) ppzkPCD.
@@ -224,8 +215,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_proof<PCD_ppT> {
         }
     }
 }
-
-/***************************** Main algorithms *******************************/
 
 // /**
 //  * A generator algorithm for the R1CS (multi-predicate) ppzkPCD.
@@ -715,7 +704,7 @@ where
 
     // #ifdef DEBUG
     print!("Compliance predicate name: {}\n", compliance_predicate_name);
-    //#endif
+
     let mut it = pk
         .compliance_predicate_name_to_idx
         .get(&compliance_predicate_name);
@@ -725,7 +714,6 @@ where
     // #ifdef DEBUG
     print!("Outgoing message:\n");
     primary_input.outgoing_message.borrow().print();
-    //#endif
 
     enter_block("Prove compliance step", false);
     assert!(compliance_predicate_idx < pk.compliance_predicates.len());
@@ -771,7 +759,6 @@ where
         } else {
             print!("message {} is base case\n", i);
         }
-        //#endif
     }
 
     /* pad with dummy vks/membership proofs */
@@ -816,7 +803,6 @@ where
         &compliance_step_proof,
     );
     assert!(compliance_step_ok);
-    //#endif
 
     enter_block("Prove translation step", false);
     let mut mp_translation_step_pcd_circuit =
@@ -847,7 +833,6 @@ where
         &translation_step_proof,
     );
     assert!(translation_step_ok);
-    //#endif
 
     print_indent();
     println!("in prover");

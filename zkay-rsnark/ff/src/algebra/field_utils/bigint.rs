@@ -243,7 +243,7 @@ impl<const N: usize> fmt::Display for bigint<N> {
 //     out << t;
 
 //     mpz_clear(t);
-// //#endif
+// 
 //     return out;
 // }
 
@@ -273,6 +273,6 @@ impl<const N: usize> fmt::Display for bigint<N> {
 //     }
 
 //     delete[] s_copy;
-// //#endif
+// 
 //     return in;
 // }

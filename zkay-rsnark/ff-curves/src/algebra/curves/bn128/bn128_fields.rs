@@ -1,16 +1,12 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BN128_FIELDS_HPP_
+
+
+
 // #define BN128_FIELDS_HPP_
 #include "depends/ate-pairing/include/bn.h"
 use ffec::algebra::fields::prime_base::fp;
 
-// namespace libff {
+
 
 let bn128_r_bitcount= 254;
 let bn128_q_bitcount= 254;
@@ -26,18 +22,14 @@ type bn128_Fq=Fp_model<bn128_q_limbs, bn128_modulus_q>;
 
 pub fn  init_bn128_fields();
 
-// } // namespace libff
-//#endif // BN128_FIELDS_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::bn128::bn128_fields;
 
-// namespace libff {
+
 
 bigint<bn128_r_limbs> bn128_modulus_r;
 bigint<bn128_q_limbs> bn128_modulus_q;
@@ -102,4 +94,4 @@ pub fn  init_bn128_fields()
     bn128_Fq::nqr_to_t = bn128_Fq("21888242871839275222246405745257275088696311157297823662689037894645226208582");
 }
 
-// } // namespace libff
+

@@ -1,17 +1,13 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef EDWARDS_FIELDS_HPP_
+
+
+
 // #define EDWARDS_FIELDS_HPP_
 use ffec::algebra::fields::prime_base::fp;
 use ffec::algebra::fields::prime_extension::fp3;
 use ffec::algebra::fields::prime_extension::fp6_2over3;
 
-// namespace libff {
+
 
 181:edwards_r_bitcount:mp_size_t =,
 183:edwards_q_bitcount:mp_size_t =,
@@ -30,18 +26,14 @@ type edwards_GT=edwards_Fq6;
 
 // pub fn  init_edwards_fields();
 
-// } // namespace libff
-//#endif // EDWARDS_FIELDS_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 // use crate::algebra::curves::edwards::edwards_fields;
 
-// namespace libff {
+
 
 // bigint<edwards_r_limbs> edwards_modulus_r;
 // bigint<edwards_q_limbs> edwards_modulus_q;
@@ -142,4 +134,4 @@ pub fn  init_edwards_fields()
     // edwards_Fq6::my_Fp2::non_residue = edwards_Fq3::non_residue;
 }
 
-// } // namespace libff
+

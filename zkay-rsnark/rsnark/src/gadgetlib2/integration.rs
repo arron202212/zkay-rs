@@ -57,13 +57,13 @@ pub fn get_constraint_system_from_gadgetlib2<
     //   {
     // #pragma omp single nowait
     //     {
-    //#endif
+
     for i in 0..num_constraints {
         let constr = &converted_pb.0[i];
         // #ifdef MULTICORE
         // #pragma omp task default(none) shared(result, constr, i)
         //         {
-        //#endif
+
         result.constraints[i].a = convert_gadgetlib2_linear_combination(&constr.0);
         result.constraints[i].b = convert_gadgetlib2_linear_combination(&constr.1);
         result.constraints[i].c = convert_gadgetlib2_linear_combination(&constr.2);
@@ -73,7 +73,6 @@ pub fn get_constraint_system_from_gadgetlib2<
     //     }
     // #pragma omp taskwait
     //   }
-    //#endif
 
     //The number of variables is the highest index created.
     //TODO: If there are multiple protoboards, or variables not assigned to a protoboard, then getNextFreeIndex() is *not* the number of variables! See also in get_variable_assignment_from_gadgetlib2.

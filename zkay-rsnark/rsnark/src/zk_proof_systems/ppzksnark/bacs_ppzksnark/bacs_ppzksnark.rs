@@ -49,8 +49,6 @@ use ff_curves::Fr;
 use ffec::common::profiling::{enter_block, leave_block};
 use std::ops::Mul;
 
-/******************************** Proving key ********************************/
-
 // pub struct bacs_ppzksnark_proving_key;
 
 // std::ostream& operator<<(std::ostream &out, pk:&bacs_ppzksnark_proving_key<ppT>);
@@ -111,15 +109,11 @@ impl<ppT: ppTConfig> bacs_ppzksnark_proving_key<ppT> {
     // friend std::istream& operator>> <ppT>(std::istream &in, bacs_ppzksnark_proving_key<ppT> &pk);
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the BACS ppzkSNARK.
  */
 
 pub type bacs_ppzksnark_verification_key<ppT> = r1cs_ppzksnark_verification_key<ppT>;
-
-/************************ Processed verification key *************************/
 
 /**
  * A processed verification key for the BACS ppzkSNARK.
@@ -131,8 +125,6 @@ pub type bacs_ppzksnark_verification_key<ppT> = r1cs_ppzksnark_verification_key<
 
 pub type bacs_ppzksnark_processed_verification_key<ppT> =
     r1cs_ppzksnark_processed_verification_key<ppT>;
-
-/********************************** Key pair *********************************/
 
 /**
  * A key pair for the BACS ppzkSNARK, which consists of a proving key and a verification key.
@@ -159,15 +151,11 @@ impl<ppT: ppTConfig> bacs_ppzksnark_keypair<ppT> {
     // {}
 }
 
-/*********************************** Proof ***********************************/
-
 /**
  * A proof for the BACS ppzkSNARK.
  */
 
 pub type bacs_ppzksnark_proof<ppT> = r1cs_ppzksnark_proof<ppT>;
-
-/***************************** Main algorithms *******************************/
 
 /**
  * A generator algorithm for the BACS ppzkSNARK.

@@ -1,15 +1,5 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for functions to sample examples of memory contents.
 
-Declaration of interfaces for functions to sample examples of memory contents.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef MEMORY_CONTENTS_EXAMPLES_HPP_
-// #define MEMORY_CONTENTS_EXAMPLES_HPP_
 use crate::relations::ram_computations::memory::memory_interface::memory_contents;
 use std::collections::BTreeSet;
 // /**
@@ -29,26 +19,6 @@ use std::collections::BTreeSet;
 // memory_contents random_memory_contents(num_addresses:usize,
 //                                        value_size:usize,
 //                                        num_filled:usize);
-
-//#endif // MEMORY_CONTENTS_EXAMPLES_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for functions to sample examples of memory contents.
-
-See memory_contents_examples.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-// use  <cstdlib>
-// use  <map>
-// use  <set>
-
-// use crate::relations::ram_computations::memory::examples::memory_contents_examples;
 
 pub fn block_memory_contents(
     num_addresses: usize,

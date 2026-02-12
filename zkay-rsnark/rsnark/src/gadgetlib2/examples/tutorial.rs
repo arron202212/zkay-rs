@@ -57,7 +57,7 @@ pub fn test_ProtoboardUsage<
     // We now create 3 input variables and one output
     let mut input =
         VariableArray::<VariableArrayBase>::new(3, "input".to_owned(), VariableArrayBase);
-    let mut output = Variable::new("output");
+    let mut output = Variable::from("output");
     // We can now add some constraints. The string is for debugging purposes and can be a textual
     // description of the constraint
     pb.as_ref().unwrap().borrow_mut().addRank1Constraint(
@@ -169,7 +169,7 @@ impl NAND_Gadget {
                 andGadget_: RcCell::new(GadgetType::default()),
                 inputs_: inputs.into(),
                 output_: output.into(),
-                andResult_: FlagVariable::new("andResult"),
+                andResult_: FlagVariable::from("andResult"),
             },
         )
     }
@@ -251,7 +251,7 @@ pub fn test_NAND_Gadget<
     let mut pb = Protoboard::create(FieldType::R1P, None);
     // create 5 variables inputs[0]...inputs[4]. The string "inputs" is used for debug messages
     let mut inputs = FlagVariableArray::new(5, "inputs".to_owned(), VariableArrayBase);
-    let mut output = FlagVariable::new("output");
+    let mut output = FlagVariable::from("output");
     let nandGadget = NAND_Gadget::create(pb.clone(), inputs.clone(), output.clone());
     // now we can generate a constraint system (or circuit)
     nandGadget.borrow().generateConstraints();
@@ -357,7 +357,10 @@ impl HashDifficultyEnforcer_Gadget {
             Self {
                 hashSizeInBits_: 64,
                 difficultyBits_: difficultyBits,
-                hashValue_: DualWord::new2(hashValue, UnpackedWord::new(64, "hashValue_u")),
+                hashValue_: DualWord::new2(
+                    hashValue,
+                    UnpackedWord::new(64, "hashValue_u".to_owned()),
+                ),
                 hashValueUnpacker_: RcCell::new(GadgetType::default()),
             },
         )
@@ -427,7 +430,7 @@ pub fn TEST_HashDifficultyEnforcer_Gadget<
 >() {
     initPublicParamsFromDefaultPp();
     let mut pb = Protoboard::create(FieldType::R1P, None);
-    let mut hashValue = MultiPackedWord::new(64, &FieldType::R1P, "hashValue");
+    let mut hashValue = MultiPackedWord::new(64, FieldType::R1P, "hashValue".to_owned());
     let difficulty = 10;
     let mut difficultyEnforcer =
         HashDifficultyEnforcer_Gadget::create(pb.clone(), hashValue.clone(), difficulty);
@@ -634,7 +637,7 @@ pub fn TEST_R1P_VerifyTransactionAmounts_Gadget<
         VariableArray::<VariableArrayBase>::new(2, "inputAmounts".to_owned(), VariableArrayBase);
     let outputAmounts =
         VariableArray::<VariableArrayBase>::new(3, "outputAmounts".to_owned(), VariableArrayBase);
-    let minersFee = Variable::new("minersFee");
+    let minersFee = Variable::from("minersFee");
     let mut verifyTx = VerifyTransactionAmounts_Gadget::create(
         pb.clone(),
         inputAmounts.clone().into(),

@@ -442,8 +442,6 @@ impl<Fp2T: Fp2TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
     }
 }
 
-//#endif // FP2_GADGETS_TCC_
-
 // pub fn operator*(coeff:&FieldT) ->Fp2_variable<Fp2T,PB >
 // {
 //     linear_combination<FieldT,pb_variable,pb_linear_combination> new_c0, new_c1;

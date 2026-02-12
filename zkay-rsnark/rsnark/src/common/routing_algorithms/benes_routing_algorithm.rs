@@ -72,19 +72,11 @@ pub type benes_routing = Vec<bit_vector>;
 //  */
 // bool valid_benes_routing(permutation:&integer_permutation, routing:&benes_routing);
 
-// //#endif // BENES_ROUTING_ALGORITHM_HPP_
-// /** @file
-//  *****************************************************************************
+//
 
 //  Implementation of interfaces for functionality for routing on a Benes network.
 
 //  See benes_routing_algorithm.hpp .
-
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
 
 // use  <cassert>
 
@@ -257,7 +249,6 @@ pub fn route_benes_inner(
     assert!(permutation.size() == subnetwork_size);
     assert!(permutation.is_valid());
     assert!(&permutation.inverse() == permutation_inv);
-    //#endif
 
     if column_idx_start == column_idx_end {
         /* nothing to route */

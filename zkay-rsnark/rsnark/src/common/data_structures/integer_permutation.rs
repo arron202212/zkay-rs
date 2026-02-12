@@ -1,18 +1,5 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for a permutation of the integers in {self.min_element,...,self.max_element}.
 
-Declaration of interfaces for a permutation of the integers in {self.min_element,...,self.max_element}.
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef INTEGER_PERMUTATION_HPP_
-// #define INTEGER_PERMUTATION_HPP_
-
-// use  <cstddef>
-//
 use std::collections::HashSet;
 #[derive(PartialEq)]
 pub struct integer_permutation {
@@ -45,25 +32,6 @@ pub struct integer_permutation {
 
     // pub fn  random_shuffle();
 }
-
-//#endif // INTEGER_PERMUTATION_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a permutation of the integers in {self.min_element,...,self.max_element}.
-
-See integer_permutation.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-// use  <algorithm>
-// use  <cassert>
-// use  <numeric>
-// use  <unordered_set>
 
 // use crate::common::data_structures::integer_permutation;
 
@@ -128,7 +96,6 @@ impl integer_permutation {
 
         // #ifdef DEBUG
         // assert!(result.is_valid());
-        //#endif
 
         return result;
     }
@@ -148,7 +115,6 @@ impl integer_permutation {
             .insert(0, self.contents[slice_min_element - self.min_element]);
         // #ifdef DEBUG
         // assert!(result.is_valid());
-        //#endif
 
         return result;
     }

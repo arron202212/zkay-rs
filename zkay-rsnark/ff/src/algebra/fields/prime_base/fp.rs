@@ -76,7 +76,7 @@ pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
 //      i64 mul_cnt;
 //      i64 sqr_cnt;
 //      i64 inv_cnt;
-// //#endif
+// 
 //      std::usize num_bits;
 //      bigint<N> euler; // (modulus-1)/2
 //      std::usize s; // modulus = 2^s * t + 1
@@ -289,11 +289,11 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
             // self.mont_repr.data[0] = x;//(mp_limb_t)
         } else {
             // let  borrow = mpn_sub_1(self.mont_repr.data, modulus.data, n, (mp_limb_t)-x);
-            //#ifndef NDEBUG
+            
             //             assert!(borrow == 0);
             // #else
             //             UNUSED(borrow);
-            //#endif
+            
         }
 
         // Self::mul_reduce(T::Rsquared);

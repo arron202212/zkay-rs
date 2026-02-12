@@ -1,25 +1,10 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for:
+// - a USCS constraint,
+// - a USCS variable assignment, and
+// - a USCS constraint system.
 
-Declaration of interfaces for:
-- a USCS constraint,
-- a USCS variable assignment, and
-- a USCS constraint system.
+// Above, USCS stands for "Unitary-Square Constraint System".
 
-Above, USCS stands for "Unitary-Square Constraint System".
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef USCS_HPP_
-// #define USCS_HPP_
-
-// use  <cstdlib>
-// use  <iostream>
-// use  <map>
-// use  <string>
 use crate::relations::variable;
 use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
@@ -27,7 +12,6 @@ use crate::relations::variable::{
 use ffec::FieldTConfig;
 use std::collections::BTreeMap;
 use std::fmt;
-/************************* USCS constraint ***********************************/
 
 /**
  * A USCS constraint is a formal expression of the form
@@ -41,8 +25,6 @@ use std::fmt;
 
 pub type uscs_constraint<FieldT, SV, SLC> = linear_combination<FieldT, SV, SLC>;
 
-/************************* USCS variable assignment **************************/
-
 /**
  * A USCS variable assignment is a vector of <FieldT> elements that represents
  * a candidate solution to a USCS constraint system (see below).
@@ -53,8 +35,6 @@ pub type uscs_primary_input<FieldT> = Vec<FieldT>;
 pub type uscs_auxiliary_input<FieldT> = Vec<FieldT>;
 
 pub type uscs_variable_assignment<FieldT> = Vec<FieldT>;
-
-/************************* USCS constraint system ****************************/
 
 // pub struct uscs_constraint_system;
 
@@ -93,7 +73,7 @@ pub struct uscs_constraint_system<
     // // #ifdef DEBUG
     pub constraint_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-    // //#endif
+    //
 
     //     bool is_valid() const;
     //     bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
@@ -112,28 +92,6 @@ pub struct uscs_constraint_system<
 
 // use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
-//#endif // USCS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for:
-- a USCS constraint,
-- a USCS variable assignment, and
-- a USCS constraint system.
-
-See uscs.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef USCS_TCC_
-// #define USCS_TCC_
-
-// use  <algorithm>
-// use  <cassert>
-// use  <set>
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
 use ffec::common::utils;
@@ -202,7 +160,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
                     &full_variable_assignment,
                     &self.variable_annotations,
                 );
-                //#endif // DEBUG
+
                 return false;
             }
         }
@@ -220,7 +178,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             .insert(self.constraints.len(), annotation.to_owned());
         // #else
         //ffec::UNUSED(annotation);
-        //#endif
+
         self.constraints.push(c);
     }
 
@@ -244,11 +202,8 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
                 );
             }
         }
-        //#endif
     }
 }
-
-//#endif // USCS_TCC_
 
 pub fn dump_uscs_constraint<
     FieldT: FieldTConfig,

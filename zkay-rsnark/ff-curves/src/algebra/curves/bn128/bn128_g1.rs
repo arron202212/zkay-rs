@@ -1,11 +1,7 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BN128_G1_HPP_
+
+
+
 // #define BN128_G1_HPP_
 //#include <vector>
 
@@ -14,7 +10,7 @@
 use crate::algebra::curves::bn128::bn128_init;
 use crate::algebra::curves::curve_utils;
 
-// namespace libff {
+
 
 pub struct bn128_G1;
 std::ostream& operator<<(std::ostream &, const bn128_G1&);
@@ -27,7 +23,7 @@ pub struct bn128_G1 {
 // #ifdef PROFILE_OP_COUNTS
     static i64 add_cnt;
     static i64 dbl_cnt;
-//#endif
+
     static Vec<std::usize> wnaf_window_table;
     static Vec<std::usize> fixed_base_exp_window_table;
     static bn128_G1 G1_zero;
@@ -101,26 +97,22 @@ std::ostream& operator<<(std::ostream& out, v:&Vec<bn128_G1>);
 std::istream& operator>>(std::istream& in, Vec<bn128_G1> &v);
 
 
-// } // namespace libff
-//#endif // BN128_G1_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::bn128::bn128_g1;
 use crate::algebra::curves::bn128::bn_utils;
 
-// namespace libff {
+
 
 using std::usize;
 
 // #ifdef PROFILE_OP_COUNTS
 i64 bn128_G1::add_cnt = 0;
 i64 bn128_G1::dbl_cnt = 0;
-//#endif
+
 
 Vec<usize> bn128_G1::wnaf_window_table;
 Vec<usize> bn128_G1::fixed_base_exp_window_table;
@@ -146,7 +138,7 @@ bn::Fp bn128_G1::sqrt(el:&bn::Fp)
     }
 
     assert!(check == bn::Fp(1));
-//#endif
+
 
     // compute square root with Tonelli--Shanks
     // (does not terminate if not a square!)
@@ -330,7 +322,7 @@ pub fn add(other:&bn128_G1)->bn128_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
 
     bn::Fp this_coord[3], other_coord[3], result_coord[3];
     this->fill_coord(this_coord);
@@ -358,7 +350,7 @@ pub fn mixed_add(other:&bn128_G1)->bn128_G1
 
 // #ifdef DEBUG
     assert!(other.is_special());
-//#endif
+
 
     // check for doubling case
 
@@ -391,7 +383,7 @@ pub fn mixed_add(other:&bn128_G1)->bn128_G1
 
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
 
     bn128_G1 result;
     bn::Fp H, HH, I, J, r, V, tmp;
@@ -432,7 +424,7 @@ pub fn dbl()->bn128_G1
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-//#endif
+
 
     bn::Fp this_coord[3], result_coord[3];
     this->fill_coord(this_coord);
@@ -472,22 +464,22 @@ std::ostream& operator<<(std::ostream &out, g:&bn128_G1)
 
 // #ifdef NO_PT_COMPRESSION
     /* no point compression case */
-//#ifndef BINARY_OUTPUT
+
     out << gcopy.X << OUTPUT_SEPARATOR << gcopy.Y;
 #else
     out.write((char*) &gcopy.X, sizeof(gcopy.X));
     out.write((char*) &gcopy.Y, sizeof(gcopy.Y));
-//#endif
+
 
 #else
     /* point compression case */
-//#ifndef BINARY_OUTPUT
+
     out << gcopy.X;
 #else
     out.write((char*) &gcopy.X, sizeof(gcopy.X));
-//#endif
+
     out << OUTPUT_SEPARATOR << if (((unsigned char*)&gcopy.Y)[0] & 1) != 0 {'1'} else{'0'};
-//#endif
+
 
     return out;
 }
@@ -529,23 +521,23 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
 
 // #ifdef NO_PT_COMPRESSION
     /* no point compression case */
-//#ifndef BINARY_OUTPUT
+
     in >> g.X;
     consume_OUTPUT_SEPARATOR(in);
     in >> g.Y;
 #else
     in.read((char*) &g.X, sizeof(g.X));
     in.read((char*) &g.Y, sizeof(g.Y));
-//#endif
+
 
 #else
     /* point compression case */
     bn::Fp tX;
-//#ifndef BINARY_OUTPUT
+
     in >> tX;
 #else
     in.read((char*)&tX, sizeof(tX));
-//#endif
+
     consume_OUTPUT_SEPARATOR(in);
     unsigned char Y_lsb;
     in.read((char*)&Y_lsb, 1);
@@ -566,7 +558,7 @@ std::istream& operator>>(std::istream &in, bn128_G1 &g)
             bn::Fp::neg(g.Y, g.Y);
         }
     }
-//#endif
+
 
     /* finalize */
     if is_zero == 0
@@ -635,4 +627,4 @@ pub fn batch_to_special_all_non_zeros(Vec<bn128_G1> &vec)
     }
 }
 
-// } // namespace libff
+

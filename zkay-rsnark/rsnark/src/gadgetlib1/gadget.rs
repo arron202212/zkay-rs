@@ -12,7 +12,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Clone + Default> gadget<FieldT, PB, 
     pub fn new(pb: RcCell<protoboard<FieldT, PB>>, annotation_prefix: String, t: T) -> Self {
         // #ifdef DEBUG
         // assert!(annotation_prefix != "");
-        //#endif
+
         Self {
             pb,
             annotation_prefix,

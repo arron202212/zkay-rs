@@ -20,7 +20,6 @@ use ffec::PpConfig;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
-/********************************* Message ***********************************/
 
 /**
  * A message for R1CS PCD.
@@ -39,8 +38,6 @@ pub trait MessageConfig: Default + Clone {
     type FieldT: FieldTConfig;
     fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
 }
-
-/******************************* Local data **********************************/
 
 /**
  * A local data for R1CS PCD.
@@ -76,11 +73,7 @@ impl<FieldT: FieldTConfig, T: LocalDataConfig> LocalDataConfig for r1cs_pcd_loca
     }
 }
 
-/******************************** Witness ************************************/
-
 pub type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
-
-/*************************** Compliance predicate ****************************/
 
 /**
  * A compliance predicate for R1CS PCD.
@@ -246,7 +239,6 @@ impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
             self.witness_length,
             self.constraint_system.num_variables()
         );
-        //#endif
 
         (type_not_zero
             && incoming_message_payload_lengths_well_specified

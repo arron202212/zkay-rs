@@ -21,7 +21,6 @@ use ff_curves::PublicParams;
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 
-//#ifndef MINDEPS
 // namespace po = boost::program_options;
 
 pub fn process_generator_command_line(
@@ -94,7 +93,7 @@ fn main<default_ram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig + RamPptCon
     )) {
         return Ok(1);
     }
-    //#endif
+
     start_profiling();
 
     /* load everything */

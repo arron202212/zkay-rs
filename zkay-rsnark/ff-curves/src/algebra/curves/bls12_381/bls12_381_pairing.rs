@@ -1,17 +1,13 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BLS12_381_PAIRING_HPP_
+
+
+
 // #define BLS12_381_PAIRING_HPP_
 //#include <vector>
 
 use crate::algebra::curves::bls12_381/bls12_381_init;
 
-// namespace libff {
+
 
 /* final exponentiation */
 
@@ -89,14 +85,10 @@ bls12_381_GT bls12_381_reduced_pairing(P:&bls12_381_G1,
 bls12_381_GT bls12_381_affine_reduced_pairing(P:&bls12_381_G1,
                                     Q:&bls12_381_G2);
 
-// } // namespace libff
-//#endif // BLS12_381_PAIRING_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 //#include <cassert>
 
@@ -106,7 +98,7 @@ use crate::algebra::curves::bls12_381/bls12_381_init;
 use crate::algebra::curves::bls12_381/bls12_381_pairing;
 use crate::common::profiling;
 
-// namespace libff {
+
 
 using std::usize;
 
@@ -564,4 +556,4 @@ bls12_381_GT bls12_381_reduced_pairing(P:&bls12_381_G1,
 {
     return bls12_381_ate_reduced_pairing(P, Q);
 }
-// } // namespace libff
+

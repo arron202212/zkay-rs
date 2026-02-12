@@ -1,18 +1,14 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BLS12_381_FIELDS_HPP_
+
+
+
 // #define BLS12_381_FIELDS_HPP_
 use ffec::algebra::fields::prime_base::fp;
 use ffec::algebra::fields::prime_extension::fp2;
 use ffec::algebra::fields::prime_extension::fp6_3over2;
 use ffec::algebra::fields::prime_extension::fp12_2over3over2;
 
-// namespace libff {
+
 
 let bls12_381_r_bitcount= 255;
 let bls12_381_q_bitcount= 381;
@@ -32,18 +28,14 @@ type bls12_381_GT=bls12_381_Fq12;
 
 pub fn  init_bls12_381_fields();
 
-// } // namespace libff
-//#endif // BLS12_381_FIELDS_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::bls12_381/bls12_381_fields;
 
-// namespace libff {
+
 
 bigint<bls12_381_r_limbs> bls12_381_modulus_r;
 bigint<bls12_381_q_limbs> bls12_381_modulus_q;
@@ -186,4 +178,4 @@ pub fn  init_bls12_381_fields()
     bls12_381_Fq12::Frobenius_coeffs_c1[11] = bls12_381_Fq2(bls12_381_Fq("877076961050607968509681729531255177986764537961432449499635504522207616027455086505066378536590128544573588734230"),bls12_381_Fq("3125332594171059424908108096204648978570118281977575435832422631601824034463382777937621250592425535493320683825557"));
 }
 
-// } // namespace libff
+

@@ -140,7 +140,7 @@ impl Double {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // ++inv_cnt;
-        //#endif
+        
 
          Self::from(Complex::<f64>::new(1.0, 0.0) / self.val.clone())
     }
@@ -219,7 +219,7 @@ impl Zero for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++add_cnt;
-// //#endif
+// 
 
 //     return Self::new(val + other.val);
 // }
@@ -245,7 +245,7 @@ impl Add<i32> for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++sub_cnt;
-// //#endif
+// 
 
 //     return Self::new(val - other.val);
 // }
@@ -271,7 +271,7 @@ impl Sub<i32> for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++mul_cnt;
-// //#endif
+// 
 
 //     return Self::new(val * other.val);
 // }
@@ -321,7 +321,7 @@ impl Neg for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++add_cnt;
-// //#endif
+// 
 
 //     this->val = Complex::<f64>::new(val + other.val);
 //     return *this;
@@ -334,7 +334,7 @@ impl<O: Borrow<Self>> AddAssign<O>  for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++sub_cnt;
-// //#endif
+// 
 
 //     this->val = Complex::<f64>::new(val - other.val);
 //     return *this;
@@ -347,7 +347,7 @@ impl<O: Borrow<Self>> SubAssign<O> for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++mul_cnt;
-// //#endif
+// 
 
 //     this->val *= Complex::<f64>::new(other.val);
 //     return *this;

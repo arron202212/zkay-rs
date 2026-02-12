@@ -1,22 +1,17 @@
-/** @file
- *****************************************************************************
+
 
  Declaration of interfaces for pairing operations on MNT6.
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef MNT6_PAIRING_HPP_
+
+
 // #define MNT6_PAIRING_HPP_
 
 //#include <vector>
 
 use crate::algebra::curves::mnt::mnt6::mnt6_init;
 
-// namespace libff {
+
 
 /* final exponentiation */
 
@@ -143,21 +138,16 @@ mnt6_GT mnt6_reduced_pairing(P:&mnt6_G1,
 mnt6_GT mnt6_affine_reduced_pairing(P:&mnt6_G1,
                                     Q:&mnt6_G2);
 
-// } // namespace libff
 
-//#endif // MNT6_PAIRING_HPP_
-/** @file
- *****************************************************************************
+
+
+
 
  Implementation of interfaces for pairing operations on MNT6.
 
  See mnt6_pairing.hpp .
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
 
 //#include <cassert>
 
@@ -168,7 +158,7 @@ use crate::algebra::curves::mnt::mnt6::mnt6_pairing;
 use ffec::algebra::scalar_multiplication::wnaf;
 use crate::common::profiling;
 
-// namespace libff {
+
 
 using std::usize;
 
@@ -588,7 +578,7 @@ pub fn  doubling_step_for_flipped_miller_loop(extended_mnt6_G2_projective &curre
 
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 pub fn  mixed_addition_step_for_flipped_miller_loop(base_X:mnt6_Fq3, base_Y:mnt6_Fq3, base_Y_squared:mnt6_Fq3,
@@ -616,7 +606,7 @@ pub fn  mixed_addition_step_for_flipped_miller_loop(base_X:mnt6_Fq3, base_Y:mnt6
     ac.c_RZ = current.Z;
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 mnt6_ate_G1_precomp mnt6_ate_precompute_G1(P:&mnt6_G1)
@@ -900,4 +890,4 @@ mnt6_GT mnt6_affine_reduced_pairing(P:&mnt6_G1,
     return result;
 }
 
-// } // namespace libff
+

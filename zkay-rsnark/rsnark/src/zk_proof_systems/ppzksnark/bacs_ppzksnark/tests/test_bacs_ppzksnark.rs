@@ -54,7 +54,7 @@ pub fn test_bacs_ppzksnark<ppT: ppTConfig>(
     );
     // #ifdef DEBUG
     example.circuit.print();
-    //#endif
+
     let mut bit = run_bacs_ppzksnark::<ppT>(&example, test_serialization);
     assert!(bit);
 

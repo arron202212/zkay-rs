@@ -63,7 +63,6 @@ use ff_curves::algebra::curves::public_params::{PublicParams, PublicParamsType};
 use ff_curves::{G1_vector, G2_precomp};
 const N: usize = 4;
 use std::ops::{Add, Mul};
-/******************************** Proving key ********************************/
 
 // pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
 // pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
@@ -171,8 +170,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proving_key<ppT> {
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_proving_key<ppT> &pk);
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the R1CS GG-ppzkSNARK.
  */
@@ -240,8 +237,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_verification_key<ppT> {
     // static r1cs_gg_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:usize);
 }
 
-/************************ Processed verification key *************************/
-
 /**
  * A processed verification key for the R1CS GG-ppzkSNARK.
  *
@@ -260,8 +255,6 @@ pub struct r1cs_gg_ppzksnark_processed_verification_key<ppT: PublicParams> {
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_gg_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_processed_verification_key<ppT> &pvk);
 }
-
-/********************************** Key pair *********************************/
 
 /**
  * A key pair for the R1CS GG-ppzkSNARK, which consists of a proving key and a verification key.
@@ -294,8 +287,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_keypair<ppT> {
 
     // r1cs_gg_ppzksnark_keypair(r1cs_gg_ppzksnark_keypair<ppT> &&other) = default;
 }
-
-/*********************************** Proof ***********************************/
 
 /**
  * A proof for the R1CS GG-ppzkSNARK.
@@ -358,8 +349,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proof<ppT> {
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &proof:r1cs_gg_ppzksnark_proof<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_proof<ppT> &proof);
 }
-
-/***************************** Main algorithms *******************************/
 
 /**
  * A generator algorithm for the R1CS GG-ppzkSNARK.
@@ -474,7 +463,7 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    // //#endif
+    //
 
     enter_block("Generating G1 MSM window table", false);
     let g1_generator = G1::<ppT>::random_element();
@@ -510,7 +499,7 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     let A_query = batch_exp::<G1<ppT>, Fr<ppT>>(g1_scalar_size, g1_window_size, &g1_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
-    // //#endif
+    //
     leave_block("Compute the A-query", false);
 
     enter_block("Compute the B-query", false);
@@ -539,14 +528,14 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     );
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(H_query);
-    // //#endif
+    //
     leave_block("Compute the H-query", false);
 
     enter_block("Compute the L-query", false);
     let mut L_query = batch_exp::<G1<ppT>, Fr<ppT>>(g1_scalar_size, g1_window_size, &g1_table, &Lt);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(L_query);
-    // //#endif
+    //
     leave_block("Compute the L-query", false);
     leave_block("Generate queries", false);
 
@@ -628,7 +617,7 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
 
     // // #ifdef DEBUG
     //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
-    // //#endif
+    //
 
     enter_block("Compute the polynomial H", false);
     let qap_wit = r1cs_to_qap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
@@ -651,7 +640,7 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     //     let t =Fr::<ppT>::random_element();
     //     qap_instance_evaluation<Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
     //     assert!(qap_inst.is_satisfied(qap_wit));
-    // //#endif
+    //
 
     /* Choose two random field elements for prover zero-knowledge. */
     let r = Fr::<ppT>::random_element();
@@ -663,13 +652,13 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     //     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+1);
     //     assert!(pk.H_query.len() == qap_wit.degree() - 1);
     //     assert!(pk.L_query.len() == qap_wit.num_variables() - qap_wit.num_inputs());
-    // //#endif
+    //
 
     // // #ifdef MULTICORE
     //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    // //#endif
+    //
 
     enter_block("Compute the proof", false);
 
@@ -910,8 +899,6 @@ pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     leave_block("Call to r1cs_gg_ppzksnark_online_verifier_strong_IC", false);
     result
 }
-
-/****************************** Miscellaneous ********************************/
 
 /**
  * For debugging purposes (of r1cs_gg_ppzksnark_r1cs_gg_ppzksnark_verifier_gadget):

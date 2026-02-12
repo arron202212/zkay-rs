@@ -46,9 +46,9 @@ use std::{
 // use  <unistd.h>
 // use  <stdio.h>
 
-// //#ifndef NO_PROCPS
+//
 // use  <proc/readproc.h>
-// //#endif
+//
 
 //
 // using namespace gadgetlib2;
@@ -367,7 +367,7 @@ impl CircuitReader {
                     self.wireValues[outWires[0] as usize] = sum;
                 } else if opcode == SPLIT_OPCODE {
                     let size = outWires.len();
-                    let inVal = FElem::from(R1P_Elem::new(inValues[0].clone()));
+                    let inVal = FElem::from(R1P_Elem::froms(inValues[0].clone()));
                     for i in 0..size {
                         self.wireValues[outWires[i] as usize] =
                             inVal.getBits(i as u32, &FieldType::R1P).into();
@@ -390,27 +390,27 @@ impl CircuitReader {
     pub fn constructCircuit(&mut self, arithFilepath: &str) {
         println!("Translating Constraints ... ");
 
-        // //#ifndef NO_PROCPS
+        //
         // struct proc_t usage1, usage2;
         // look_up_our_self(&usage1);
-        //     //#endif
+        //
 
         let (mut currentVariableIdx, mut currentLinearCombinationIdx) = (0, 0);
         for i in 0..self.numInputs as usize {
-            self.variables.push(RcCell::new(Variable::new("input")));
+            self.variables.push(RcCell::new(Variable::from("input")));
             self.variableMap
                 .insert(self.inputWireIds[i], currentVariableIdx);
             currentVariableIdx += 1;
         }
         for i in 0..self.numOutputs as usize {
-            self.variables.push(RcCell::new(Variable::new("output")));
+            self.variables.push(RcCell::new(Variable::from("output")));
             self.variableMap
                 .insert(self.outputWireIds[i], currentVariableIdx);
             currentVariableIdx += 1;
         }
         for i in 0..self.numNizkInputs as usize {
             self.variables
-                .push(RcCell::new(Variable::new("nizk input")));
+                .push(RcCell::new(Variable::from("nizk input")));
             self.variableMap
                 .insert(self.nizkWireIds[i], currentVariableIdx);
             currentVariableIdx += 1;
@@ -511,11 +511,11 @@ impl CircuitReader {
 
         println!("\tConstraint translation done\n");
 
-        // //#ifndef NO_PROCPS
+        //
         // look_up_our_self(&usage2);
         // u64 diff = usage2.vsize - usage1.vsize;
         // println!("\tMemory usage for constraint translation: %lu MB\n", diff >> 20);
-        //     //#endif
+        //
     }
 
     pub fn mapValuesToProtoboard(&self) {
@@ -527,12 +527,12 @@ impl CircuitReader {
                 .unwrap()
                 .borrow_mut()
                 .val(&self.variables[v as usize].borrow()) =
-                R1P_Elem::new(self.wireValues[wireId as usize].clone()).into();
+                R1P_Elem::froms(self.wireValues[wireId as usize].clone()).into();
             if let Some(&z) = self.zeropMap.get(&wireId) {
                 let l = self.zeroPwires[zeropGateIndex].clone();
                 zeropGateIndex += 1;
                 if self.pb.as_ref().unwrap().borrow().val_lc(&l.borrow())
-                    == FElem::from(R1P_Elem::new(FieldT::zero()))
+                    == FElem::from(R1P_Elem::froms(FieldT::zero()))
                 {
                     *self
                         .pb
@@ -540,7 +540,7 @@ impl CircuitReader {
                         .unwrap()
                         .borrow_mut()
                         .val(&self.variables[z as usize].borrow()) =
-                        R1P_Elem::new(FieldT::zero()).into();
+                        R1P_Elem::froms(FieldT::zero()).into();
                 } else {
                     *self
                         .pb
@@ -628,7 +628,7 @@ impl CircuitReader {
                 "Mul ..",
             );
         } else {
-            self.variables.push(RcCell::new(Variable::new("mul out")));
+            self.variables.push(RcCell::new(Variable::from("mul out")));
             self.variableMap
                 .insert(outputWireId, self.currentVariableIdx);
             self.pb.as_ref().unwrap().borrow_mut().addRank1Constraint(
@@ -670,7 +670,7 @@ impl CircuitReader {
                 "XOR ..",
             );
         } else {
-            self.variables.push(RcCell::new(Variable::new("xor out")));
+            self.variables.push(RcCell::new(Variable::from("xor out")));
             self.variableMap
                 .insert(outputWireId, self.currentVariableIdx);
             self.pb.as_ref().unwrap().borrow_mut().addRank1Constraint(
@@ -709,7 +709,7 @@ impl CircuitReader {
                 "OR ..",
             );
         } else {
-            self.variables.push(RcCell::new(Variable::new("or out")));
+            self.variables.push(RcCell::new(Variable::from("or out")));
             self.variableMap
                 .insert(outputWireId, self.currentVariableIdx);
             self.pb.as_ref().unwrap().borrow_mut().addRank1Constraint(
@@ -769,7 +769,7 @@ impl CircuitReader {
             if let Some(&v) = self.variableMap.get(&bitWireId) {
                 vptr = self.variables[v as usize].clone();
             } else {
-                self.variables.push(RcCell::new(Variable::new("bit out")));
+                self.variables.push(RcCell::new(Variable::from("bit out")));
                 self.variableMap.insert(bitWireId, self.currentVariableIdx);
                 vptr = self.variables[self.currentVariableIdx as usize].clone();
                 self.currentVariableIdx += 1;
@@ -782,7 +782,7 @@ impl CircuitReader {
             *sum.borrow_mut() = sum.borrow().clone()
                 + &LinearTerm::new(
                     vptr.borrow().clone(),
-                    FElem::from(R1P_Elem::new(two_i.clone())),
+                    FElem::from(R1P_Elem::froms(two_i.clone())),
                 );
             two_i += &two_i.clone();
         }
@@ -811,13 +811,15 @@ impl CircuitReader {
         if let Some(&v) = self.variableMap.get(&outputWireId) {
             vptr = self.variables[v as usize].clone();
         } else {
-            self.variables.push(RcCell::new(Variable::new("zerop out")));
+            self.variables
+                .push(RcCell::new(Variable::from("zerop out")));
             self.variableMap
                 .insert(outputWireId, self.currentVariableIdx);
             vptr = self.variables[self.currentVariableIdx as usize].clone();
             self.currentVariableIdx += 1;
         }
-        self.variables.push(RcCell::new(Variable::new("zerop aux")));
+        self.variables
+            .push(RcCell::new(Variable::from("zerop aux")));
         self.pb.as_ref().unwrap().borrow_mut().addRank1Constraint(
             l.borrow().clone(),
             -vptr.borrow().clone() + 1,
@@ -864,7 +866,8 @@ impl CircuitReader {
             let mut l = lcp();
             self.find(bitWireId, &mut l, false);
             two_i += two_i;
-            *sum.borrow_mut() += &(l.borrow().clone() * &FElem::from(R1P_Elem::new(two_i.clone())));
+            *sum.borrow_mut() +=
+                &(l.borrow().clone() * &FElem::from(R1P_Elem::froms(two_i.clone())));
         }
         self.wireLinearCombinations[outputWireId as usize] = sum;
     }
@@ -919,7 +922,7 @@ impl CircuitReader {
         self.find(inWireId, &mut l, true);
         self.wireLinearCombinations[outputWireId as usize] = l;
         *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *=
-            &FElem::from(R1P_Elem::new(readFieldElementFromHex(constStr)));
+            &FElem::from(R1P_Elem::froms(readFieldElementFromHex(constStr)));
     }
 
     pub fn handleMulNegConst(&mut self, types: &str, inputStr: &str, outputStr: &str) {
@@ -946,8 +949,8 @@ impl CircuitReader {
 
         self.wireLinearCombinations[outputWireId as usize] = l;
         *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *=
-            &FElem::from(R1P_Elem::new(readFieldElementFromHex(constStr)));
+            &FElem::from(R1P_Elem::froms(readFieldElementFromHex(constStr)));
         *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *=
-            &FElem::from(R1P_Elem::new(FieldT::from(-1))); //TODO: make shared FieldT constants
+            &FElem::from(R1P_Elem::froms(FieldT::from(-1))); //TODO: make shared FieldT constants
     }
 }

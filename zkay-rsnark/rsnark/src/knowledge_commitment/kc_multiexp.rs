@@ -84,7 +84,7 @@ pub fn kc_multi_exp_with_mixed_addition<
             // #else
             // acc.g = acc.g + value_it->g;
             // acc.h = acc.h + value_it->h;
-            //#endif
+
             num_add += 1;
         } else {
             p.push(scalar.clone());
@@ -215,7 +215,7 @@ pub fn kc_batch_exp<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
 
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+
     for i in 0..num_chunks {
         tmp[i] = kc_batch_exp_internal::<T, T2, FieldT>(
             scalar_size,
@@ -236,7 +236,6 @@ pub fn kc_batch_exp<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
         );
         // #ifdef USE_MIXED_ADDITION
         batch_to_special::<knowledge_commitment<T, T2>>(&mut tmp[i].values.clone());
-        //#endif
     }
 
     if num_chunks == 1 {

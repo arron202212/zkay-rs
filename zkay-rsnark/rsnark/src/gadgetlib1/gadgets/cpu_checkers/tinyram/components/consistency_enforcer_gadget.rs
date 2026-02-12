@@ -1,4 +1,5 @@
 // Declaration of interfaces for the TinyRAM consistency enforcer gadget.
+
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::{
     inner_product_gadget, loose_multiplexing_gadget, packing_gadget,
@@ -77,24 +78,6 @@ pub struct consistency_enforcer_gadget<FieldT: FieldTConfig> {
 //     pub fn  generate_r1cs_witness();
 // };
 
-// use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::consistency_enforcer_gadget;
-
-//#endif // CONSISTENCY_ENFORCER_GADGET_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for the TinyRAM consistency enforcer gadget.
-
-See consistency_enforcer_gadget.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-
-//#ifndef CONSISTENCY_ENFORCER_GADGET_TCC_
-// #define CONSISTENCY_ENFORCER_GADGET_TCC_
 impl<FieldT: FieldTConfig> SubTinyRamGadgetConfig for consistency_enforcer_gadget<FieldT> {}
 
 pub type consistency_enforcer_gadgets<FieldT> = gadget<

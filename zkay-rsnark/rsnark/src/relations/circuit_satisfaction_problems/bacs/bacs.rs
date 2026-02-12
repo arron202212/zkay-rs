@@ -1,36 +1,23 @@
+// Declaration of interfaces for:
+// - a BACS variable assignment,
+// - a BACS gate,
+// - a BACS primary input,
+// - a BACS auxiliary input,
+// - a BACS circuit.
+
+// Above, BACS stands for "Bilinear Arithmetic Circuit Satisfiability".
+
 use crate::relations::variable::SubLinearCombinationConfig;
 use crate::relations::variable::SubVariableConfig;
 use crate::relations::variable::{linear_combination, variable};
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for:
-- a BACS variable assignment,
-- a BACS gate,
-- a BACS primary input,
-- a BACS auxiliary input,
-- a BACS circuit.
-
-Above, BACS stands for "Bilinear Arithmetic Circuit Satisfiability".
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BACS_HPP_
-// #define BACS_HPP_
 use ffec::FieldTConfig;
 use std::collections::BTreeMap;
-/*********************** BACS variable assignment ****************************/
 
 /**
  * A BACS variable assignment is a vector of field elements.
  */
 
 pub type bacs_variable_assignment<FieldT> = Vec<FieldT>;
-
-/**************************** BACS gate **************************************/
 
 // pub struct bacs_gate;
 
@@ -60,8 +47,6 @@ pub struct bacs_gate<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinear
     // friend std::istream& operator>> <FieldT>(std::istream &in, bacs_gate<FieldT> &g);
 }
 
-/****************************** BACS inputs **********************************/
-
 /**
  * A BACS primary input is a BACS variable assignment.
  */
@@ -73,8 +58,6 @@ pub type bacs_primary_input<FieldT> = bacs_variable_assignment<FieldT>;
  */
 
 pub type bacs_auxiliary_input<FieldT> = bacs_variable_assignment<FieldT>;
-
-/************************** BACS circuit *************************************/
 
 // pub struct bacs_circuit;
 
@@ -114,8 +97,6 @@ pub struct bacs_circuit<
     // #ifdef DEBUG
     pub gate_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-    //#endif
-
     // bool is_valid();
     // bool is_satisfied(primary_input:&bacs_primary_input<FieldT>,
     //                   auxiliary_input:&bacs_auxiliary_input<FieldT>);
@@ -139,28 +120,6 @@ pub struct bacs_circuit<
 
 // use crate::relations::circuit_satisfaction_problems::bacs::bacs;
 
-//#endif // BACS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for:
-- a BACS variable assignment,
-- a BACS gate,
-- a BACS primary input,
-- a BACS auxiliary input,
-- a BACS circuit.
-
-See bacs.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef BACS_TCC_
-// #define BACS_TCC_
-
-// use  <algorithm>
 use ffec::common::profiling::print_indent;
 use ffec::common::utils;
 //  use crate::relations::circuit_satisfaction_problems::bacs::bacs::bacs_circuit;
@@ -354,7 +313,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         self.gates.push(g.clone());
         // #ifdef DEBUG
         self.gate_annotations.insert(g.output.index, annotation);
-        //#endif
     }
 
     // bool bacs_circuit<FieldT,SV,SLC>::operator==(other:&bacs_circuit<FieldT,SV,SLC>)
@@ -397,13 +355,12 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             if let Some(v) = self.gate_annotations.get(&i) {
                 annotation = v;
             }
-            //#endif
+
             print!("Gate {} ({}):\n", i, annotation);
             // #ifdef DEBUG
             self.gates[i].print(&self.variable_annotations);
             // #else
             // self.gates[i].print();
-            //#endif
         }
     }
 
@@ -418,5 +375,3 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         print!("* Depth: {}\n", self.depth());
     }
 }
-
-//#endif // BACS_TCC_

@@ -1,15 +1,10 @@
-/** @file
- *****************************************************************************
+
 
  Declaration of interfaces for initializing MNT6.
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef MNT6_FIELDS_HPP_
+
+
 // #define MNT6_FIELDS_HPP_
 
 use crate::algebra::curves::mnt::mnt46_common;
@@ -18,7 +13,7 @@ use ffec::algebra::fields::prime_base::fp;
 use ffec::algebra::fields::prime_extension::fp3;
 use ffec::algebra::fields::prime_extension::fp6_2over3;
 
-// namespace libff {
+
 
 // #define mnt6_modulus_r mnt46_modulus_B
 // #define mnt6_modulus_q mnt46_modulus_A
@@ -40,25 +35,20 @@ type mnt6_GT=mnt6_Fq6;
 
 pub fn  init_mnt6_fields();
 
-// } // namespace libff
 
-//#endif // MNT6_FIELDS_HPP_
-/** @file
- *****************************************************************************
+
+
+
 
  Implementation of interfaces for initializing MNT6.
 
  See mnt6_init.hpp .
 
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
 
 use crate::algebra::curves::mnt::mnt6::mnt6_fields;
 
-// namespace libff {
+
 
 pub fn  init_mnt6_fields()
 {
@@ -156,4 +146,4 @@ pub fn  init_mnt6_fields()
     mnt6_Fq6::my_Fp2::non_residue = mnt6_Fq3::non_residue;
 }
 
-// } // namespace libff
+

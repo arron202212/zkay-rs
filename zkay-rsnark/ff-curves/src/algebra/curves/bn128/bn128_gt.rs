@@ -1,11 +1,7 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BN128_GT_HPP_
+
+
+
 // #define BN128_GT_HPP_
 //#include <iostream>
 
@@ -14,7 +10,7 @@
 use ffec::algebra::field_utils::field_utils;
 use ffec::algebra::fields::prime_base::fp;
 
-// namespace libff {
+
 
 pub struct bn128_GT;
 std::ostream& operator<<(std::ostream &, const bn128_GT&);
@@ -53,18 +49,14 @@ bn128_GT operator^(rhs:&bn128_GT, lhs:&Fp_model<m,modulus_p>)
     return power<bn128_GT, m>(rhs, lhs.as_bigint());
 }
 
-// } // namespace libff
-//#endif // BN128_GT_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::bn128::bn128_gt;
 
-// namespace libff {
+
 
 bn128_GT bn128_GT::GT_one;
 pub fn new()
@@ -103,25 +95,25 @@ bn128_GT bn128_GT::one()
 
 std::ostream& operator<<(std::ostream &out, g:&bn128_GT)
 {
-//#ifndef BINARY_OUTPUT
+
     out << g.elem.a_ << OUTPUT_SEPARATOR << g.elem.b_;
 #else
     out.write((char*) &g.elem.a_, sizeof(g.elem.a_));
     out.write((char*) &g.elem.b_, sizeof(g.elem.b_));
-//#endif
+
     return out;
 }
 
 std::istream& operator>>(std::istream &in, bn128_GT &g)
 {
-//#ifndef BINARY_OUTPUT
+
     in >> g.elem.a_;
     consume_OUTPUT_SEPARATOR(in);
     in >> g.elem.b_;
 #else
     in.read((char*) &g.elem.a_, sizeof(g.elem.a_));
     in.read((char*) &g.elem.b_, sizeof(g.elem.b_));
-//#endif
+
     return in;
 }
-// } // namespace libff
+

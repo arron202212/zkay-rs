@@ -216,5 +216,3 @@ pub fn gen_ram_example_complex<RamT: ram_params_type>(
     leave_block("Call to gen_ram_example_complex", false);
     return result;
 }
-
-//#endif // RAM_EXAMPLES_TCC_

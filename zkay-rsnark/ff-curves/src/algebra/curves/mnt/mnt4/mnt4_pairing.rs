@@ -1,22 +1,17 @@
-// /** @file
-//  *****************************************************************************
+
 
 //  Declaration of interfaces for pairing operations on MNT4.
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
 
-// //#ifndef MNT4_PAIRING_HPP_
+
+// 
 // // #define MNT4_PAIRING_HPP_
 
 // //#include <vector>
 
 // use crate::algebra::curves::mnt::mnt4::mnt4_init;
 
-// // namespace libff {
+
 
 // /* final exponentiation */
 
@@ -143,21 +138,16 @@
 // mnt4_GT mnt4_affine_reduced_pairing(P:&mnt4_G1,
 //                                     Q:&mnt4_G2);
 
-// // } // namespace libff
+// 
 
-// //#endif // MNT4_PAIRING_HPP_
-// /** @file
-//  *****************************************************************************
+// 
+
 
 //  Implementation of interfaces for pairing operations on MNT4.
 
 //  See mnt4_pairing.hpp .
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+
 
 // //#include <cassert>
 
@@ -168,7 +158,7 @@
 // use ffec::algebra::scalar_multiplication::wnaf;
 // use crate::common::profiling;
 
-// // namespace libff {
+
 
 // using std::usize;
 
@@ -582,7 +572,7 @@
 
 // // #ifdef DEBUG
 //     current.test_invariant();
-// //#endif
+// 
 // }
 
 // pub fn  mixed_addition_step_for_flipped_miller_loop(base_X:mnt4_Fq2, base_Y:mnt4_Fq2, base_Y_squared:mnt4_Fq2,
@@ -610,7 +600,7 @@
 //     ac.c_RZ = current.Z;
 // // #ifdef DEBUG
 //     current.test_invariant();
-// //#endif
+// 
 // }
 
 // mnt4_ate_G1_precomp mnt4_ate_precompute_G1(P:&mnt4_G1)
@@ -888,4 +878,4 @@
 //     return result;
 // }
 
-// // } // namespace libff
+// 

@@ -1,15 +1,6 @@
-// /** @file
-//  *****************************************************************************
-
 //  Declaration of interfaces for a R1CS example, as well as functions to sample
 //  R1CS examples with prescribed parameters (according to some distribution).
 
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-//#ifndef R1CS_EXAMPLES_HPP_
 // #define R1CS_EXAMPLES_HPP_
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
@@ -86,25 +77,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 //                                                              num_inputs:usize);
 
 // use crate::relations::constraint_satisfaction_problems/r1cs/examples/r1cs_examples;
-
-//#endif // R1CS_EXAMPLES_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of functions to sample R1CS examples with prescribed parameters
-(according to some distribution).
-
-See r1cs_examples.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef R1CS_EXAMPLES_TCC_
-// #define R1CS_EXAMPLES_TCC_
-
-// use  <cassert>
 use ffec::common::utils;
 
 use rand::Rng;
@@ -269,5 +241,3 @@ pub fn generate_r1cs_example_with_binary_input<
 
     return r1cs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }
-
-//#endif // R1CS_EXAMPLES_TCC

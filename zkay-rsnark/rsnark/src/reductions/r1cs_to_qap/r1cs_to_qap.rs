@@ -1,3 +1,25 @@
+// Declaration of interfaces for a R1CS-to-QAP reduction, that is, constructing
+// a QAP ("Quadratic Arithmetic Program") from a R1CS ("Rank-1 Constraint System").
+
+// QAPs are defined in \[GGPR13], and constructed for R1CS also in \[GGPR13].
+
+// The implementation of the reduction follows, extends, and optimizes
+// the efficient approach described in Appendix E of \[BCGTV13].
+
+// References:
+
+// \[BCGTV13]
+// "SNARKs for C: Verifying Program Executions Succinctly and in Zero Knowledge",
+// Eli Ben-Sasson, Alessandro Chiesa, Daniel Genkin, Eran Tromer, Madars Virza,
+// CRYPTO 2013,
+// <http://eprint.iacr.org/2013/507>
+
+// \[GGPR13]:
+// "Quadratic span programs and succinct NIZKs without PCPs",
+// Rosario Gennaro, Craig Gentry, Bryan Parno, Mariana Raykova,
+// EUROCRYPT 2013,
+// <http://eprint.iacr.org/2012/215>
+
 use crate::relations::arithmetic_programs::qap::qap::{
     qap_instance, qap_instance_evaluation, qap_witness,
 };
@@ -47,56 +69,6 @@ use fqfft::evaluation_domain::{
 //                                             &d3:FieldT);
 
 // use crate::reductions::r1cs_to_qap::r1cs_to_qap;
-
-// //#endif // R1CS_TO_QAP_HPP_
-
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a R1CS-to-QAP reduction.
-
-See r1cs_to_qap.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef R1CS_TO_QAP_TCC_
-// // #define R1CS_TO_QAP_TCC_
-
-/** @file
-*****************************************************************************
-
-Declaration of interfaces for a R1CS-to-QAP reduction, that is, constructing
-a QAP ("Quadratic Arithmetic Program") from a R1CS ("Rank-1 Constraint System").
-
-QAPs are defined in \[GGPR13], and constructed for R1CS also in \[GGPR13].
-
-The implementation of the reduction follows, extends, and optimizes
-the efficient approach described in Appendix E of \[BCGTV13].
-
-References:
-
-\[BCGTV13]
-"SNARKs for C: Verifying Program Executions Succinctly and in Zero Knowledge",
-Eli Ben-Sasson, Alessandro Chiesa, Daniel Genkin, Eran Tromer, Madars Virza,
-CRYPTO 2013,
-<http://eprint.iacr.org/2013/507>
-
-\[GGPR13]:
-"Quadratic span programs and succinct NIZKs without PCPs",
-Rosario Gennaro, Craig Gentry, Bryan Parno, Mariana Raykova,
-EUROCRYPT 2013,
-<http://eprint.iacr.org/2012/215>
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef R1CS_TO_QAP_HPP_
-// // #define R1CS_TO_QAP_HPP_
 use std::collections::HashMap;
 
 /**
@@ -349,7 +321,7 @@ pub fn r1cs_to_qap_witness_map<
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     /* add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z */
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = d2.clone() * aA[i].clone() + d1.clone() * aB[i].clone();
@@ -376,7 +348,7 @@ pub fn r1cs_to_qap_witness_map<
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aB[i].clone();
     }
@@ -401,7 +373,7 @@ pub fn r1cs_to_qap_witness_map<
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
@@ -421,7 +393,7 @@ pub fn r1cs_to_qap_witness_map<
     enter_block("Compute sum of H and ZK-patch", false);
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
@@ -441,4 +413,4 @@ pub fn r1cs_to_qap_witness_map<
     );
 }
 
-// //#endif // R1CS_TO_QAP_TCC_
+//

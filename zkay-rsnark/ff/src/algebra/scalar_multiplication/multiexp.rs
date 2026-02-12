@@ -230,7 +230,7 @@ impl<B: AsRef<[u64]>> PartialOrd for ordered_exponent<B> {
 //             // return res;
 //         // }
 //         // else
-// // //#endif
+// // 
 //         {
 //             return (mpn_cmp(this->r.0.0, other.r.0.0, n) < 0);
 //         }
@@ -396,7 +396,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
         //             // print!("Skipping the following pair ({} bit number vs {} bit):\n", abits, bbits);
         //             // a.r.print();
         //             // b.r.print();
-        // // //#endif
+        // // 
         //             a.r.clear();
         //         }
         //         else
@@ -496,7 +496,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
                     // buckets[id] = buckets[id].mixed_add(bases[i]);
                     // #else
                     // buckets[id] = buckets[id] + bases[i];
-                    // //#endif
+                    // 
                 } else {
                     buckets[id] = bases[i].clone();
                     bucket_nonzero[id] = true;
@@ -505,7 +505,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
 
             // // #ifdef USE_MIXED_ADDITION
             // batch_to_special(buckets);
-            // //#endif
+            // 
 
             let mut running_sum = T::zero();
             let mut running_sum_nonzero = false;
@@ -517,7 +517,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
                         // running_sum = running_sum.mixed_add(buckets[i]);
                         // #else
                         // running_sum = running_sum + buckets[i];
-                        // //#endif
+                        // 
                     } else {
                         running_sum = buckets[i].clone();
                         running_sum_nonzero = true;
@@ -559,7 +559,7 @@ pub fn multi_exp<T: PpConfig, FieldT: FieldTConfig, const Method: multi_exp_meth
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    // 
     for i in 0..chunks {
         partial[i] =
             MultiExpInner::<{ multi_exp_method::multi_exp_method_BDLO12 }>::multi_exp_inner::<
@@ -594,11 +594,11 @@ pub fn multi_exp_with_mixed_addition<
     scalar: &[FieldT],
     chunks: usize,
 ) -> T {
-    // //#ifndef NDEBUG
+    // 
     // assert!(std::distance(vec_start, vec_end) == std::distance(scalar_start, scalar_end));
     // #else
     // UNUSED(vec_end);
-    // //#endif
+    // 
     enter_block("Process scalar vector", false);
     // auto value_it = vec_start;
     // auto scalar_it = scalar_start;
@@ -623,7 +623,7 @@ pub fn multi_exp_with_mixed_addition<
             // acc = acc.mixed_add(*value_it);
             // #else
             // acc = acc + (*value_it);
-            // //#endif
+            // 
             num_add += 1;
         } else {
             p.push(s.clone());
@@ -668,7 +668,7 @@ pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
         // return 14;
         // #else
         // return 17;
-        // //#endif
+        // 
     }
     let mut window = 1;
     for i in (0..T::fixed_base_exp_window_table().len()).rev() {
@@ -677,7 +677,7 @@ pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
         // {
         // print!("%ld {} {}\n", i, num_scalars, T::fixed_base_exp_window_table[i]);
         // }
-        // //#endif
+        // 
         if T::fixed_base_exp_window_table()[i] != 0
             && num_scalars >= T::fixed_base_exp_window_table()[i]
         {
@@ -696,7 +696,7 @@ pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
 
     // // #ifdef LOWMEM
     // window = std::min((usize)14, window);
-    // //#endif
+    // 
     window
 }
 
@@ -712,7 +712,7 @@ pub fn get_window_table<T: PpConfig>(scalar_size: usize, window: usize, g: T) ->
     // {
     // print_indent(); print!("* scalar_size={}; window={}; in_window={}; outerc={}\n", scalar_size, window, in_window, outerc);
     // }
-    // //#endif
+    // 
 
     let mut powers_of_g = vec![vec![T::zero(); in_window]; outerc];
 
@@ -777,7 +777,7 @@ pub fn batch_exp<T: PpConfig, FieldT: FieldTConfig>(
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    // 
     for i in 0..v.len() {
         res[i] = windowed_exp::<T, FieldT>(scalar_size, window, table, &v[i]);
 
@@ -808,7 +808,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: FieldTConfig>(
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    // 
     for i in 0..v.len() {
         res[i] = windowed_exp::<T, FieldT>(scalar_size, window, table, &(v[i].clone() * coeff));
 

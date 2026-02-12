@@ -236,7 +236,7 @@ pub fn uscs_to_ssp_witness_map<
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+
     /* add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) */
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = FieldT::from(2i64) * d.clone() * aA[i].clone();
@@ -256,7 +256,7 @@ pub fn uscs_to_ssp_witness_map<
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].squared() - FieldT::one();
     }
@@ -276,7 +276,7 @@ pub fn uscs_to_ssp_witness_map<
     enter_block("Compute sum of H and ZK-patch", false);
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }

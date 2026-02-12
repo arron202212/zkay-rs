@@ -80,7 +80,7 @@ pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
     //     static i64 mul_cnt;
     //     static i64 sqr_cnt;
     //     static i64 inv_cnt;
-    // //#endif
+    // 
 
     //     static bigint<6*n> euler; // (modulus^6-1)/2
     //     static std::usize s; // modulus^6 = 2^s * t + 1
@@ -215,7 +215,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
     pub fn squared(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        //#endif
+        
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
         let (a, b, c) = (self.c0, self.c1, self.c2);
         let s0 = a.squared();
@@ -241,7 +241,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
-        //#endif
+        
         /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17 */
         let (a, b, c) = (self.c0, self.c1, self.c2);
         let t0 = a.squared();
@@ -334,7 +334,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> PartialEq for Fp6_3over2_model<N, T>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// //#endif
+// 
 //     Self::new(self.c0 + other.c0,
 //                                        self.c1 + other.c1,
 //                                        self.c2 + other.c2);
@@ -355,7 +355,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp6_3ove
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.sub_cnt++;
-// //#endif
+// 
 //     Self::new(self.c0 - other.c0,
 //                                        self.c1 - other.c1,
 //                                        self.c2 - other.c2);
@@ -376,7 +376,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Sub for Fp6_3over2_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     Self::new(lhs*rhs.c0,
 //                                        lhs*rhs.c1,
 //                                        lhs*rhs.c2);
@@ -396,7 +396,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     Self::new(lhs*rhs.c0,
 //                                        lhs*rhs.c1,
 //                                        lhs*rhs.c2);
@@ -416,7 +416,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp2_model<N, T::Fp2_modelConfig
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
-// //#endif
+// 
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba) */
 //     A:&my_Fp2<N,T::Fp2_modelConfig> = other.c0, &B = other.c1, &C = other.c2,
 //                  &a = self.c0, &b = self.c1, &c = self.c2;

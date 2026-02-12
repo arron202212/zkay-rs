@@ -57,8 +57,6 @@ use ffec::scalar_multiplication::multiexp::{
 use ffec::{One, PpConfig, Zero};
 use std::ops::Mul;
 
-/******************************** Proving key ********************************/
-
 // pub struct uscs_ppzksnark_proving_key;
 
 // std::ostream& operator<<(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>);
@@ -135,8 +133,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
     // friend std::ostream& operator<< <ppT>(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk);
 }
-
-/******************************* Verification key ****************************/
 
 // pub struct uscs_ppzksnark_verification_key;
 
@@ -216,8 +212,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_verification_key<ppT> {
     }
 }
 
-/************************ Processed verification key *************************/
-
 // pub struct uscs_ppzksnark_processed_verification_key;
 
 // std::ostream& operator<<(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>);
@@ -246,8 +240,6 @@ pub struct uscs_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk);
 }
 
-/********************************** Key pair *********************************/
-
 /**
  * A key pair for the USCS ppzkSNARK, which consists of a proving key and a verification key.
  */
@@ -267,8 +259,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_keypair<ppT> {
 
     // uscs_ppzksnark_keypair(uscs_ppzksnark_keypair<ppT> &&other) = default;
 }
-
-/*********************************** Proof ***********************************/
 
 // pub struct uscs_ppzksnark_proof;
 
@@ -344,8 +334,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proof<ppT> {
     // friend std::ostream& operator<< <ppT>(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
 }
-
-/***************************** Main algorithms *******************************/
 
 /**
  * A generator algorithm for the USCS ppzkSNARK.
@@ -434,7 +422,6 @@ These are the four cases that arise from the following two choices:
 
 // #ifdef MULTICORE
 // use  <omp.h>
-//#endif
 
 // use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
 // use crate::relations::arithmetic_programs::ssp::ssp;
@@ -664,7 +651,7 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     );
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut V_g1_query);
-    //#endif
+
     leave_block("Compute the query for V_g1", false);
 
     enter_block("Compute the query for alpha_V_g1", false);
@@ -677,21 +664,21 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     );
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut alpha_V_g1_query);
-    //#endif
+
     leave_block("Compute the query for alpha_V_g1", false);
 
     enter_block("Compute the query for H_g1", false);
     let mut H_g1_query = batch_exp(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut H_g1_query);
-    //#endif
+
     leave_block("Compute the query for H_g1", false);
 
     enter_block("Compute the query for V_g2", false);
     let mut V_g2_query = batch_exp(Fr::<ppT>::size_in_bits(), g2_window, &g2_table, &Vt_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G2<ppT>>(&mut V_g2_query);
-    //#endif
+
     leave_block("Compute the query for V_g2", false);
 
     leave_block("Generate proof components", false);
@@ -772,7 +759,6 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     let t = Fr::<ppT>::random_element();
     let ssp_inst = uscs_to_ssp_instance_map_with_evaluation(&pk.constraint_system, &t);
     assert!(ssp_inst.is_satisfied(&ssp_wit));
-    //#endif
 
     let mut V_g1 = ssp_wit.d.clone() * pk.V_g1_query[pk.V_g1_query.len() - 1].clone();
     let mut alpha_V_g1 =
@@ -785,7 +771,6 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     // override:usize chunks = omp_get_max_threads(); // to, set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    //#endif
 
     // MAYBE LATER: do queries 1,2,4 at once for slightly better speed
 

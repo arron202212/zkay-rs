@@ -72,8 +72,6 @@ use ffec::{One, Zero};
 use rccell::RcCell;
 use std::ops::Mul;
 
-/**************************** Compliance step ********************************/
-
 /**
  * A compliance-step PCD circuit.
  *
@@ -124,8 +122,6 @@ pub struct sp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub verifiers: Vec<r1cs_ppzksnark_verifier_gadgets<ppT>>,
 }
 
-/*************************** Translation step ********************************/
-
 /**
  * A translation-step PCD circuit.
  *
@@ -144,8 +140,6 @@ pub struct sp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub proof: RcCell<r1cs_ppzksnark_proof_variables<ppT>>,
     pub online_verifier: RcCell<r1cs_ppzksnark_online_verifier_gadgets<ppT>>,
 }
-
-/****************************** Input maps ***********************************/
 
 // /**
 //  * Obtain the primary input for a compliance-step PCD circuit.
@@ -719,7 +713,6 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
         // #ifdef DEBUG
         self.generate_r1cs_constraints(); // force generating constraints
         assert!(self.pb.borrow().is_satisfied());
-        //#endif
     }
 
     pub fn field_logsize() -> usize {
@@ -881,7 +874,6 @@ impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
         }
 
         assert!(self.pb.borrow().is_satisfied());
-        //#endif
     }
 
     pub fn get_primary_input(&self) -> r1cs_primary_input<ppT::FieldT> {

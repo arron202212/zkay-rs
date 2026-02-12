@@ -2,20 +2,11 @@
 
 use ffec::common::utils;
 
-//#ifndef  __infrastructure_HPP
-// #define  __infrastructure_HPP
-
-//#ifndef _MSC_VER // emulate the MSVC-specific sprintf_s using the standard snprintf
 // #define sprintf_s snprintf //TODO: sprintf_s!=snprintf (http://blog.verg.es/2008/09/sprintfs-is-not-snprintf.html)
-//#endif
 
 // #ifdef _DEBUG // MSVC Debug build
 // #define DEBUG // gcc Debug flag
-//#endif
 
-/********************************************************/
-/**************** Class Writing Helpers *****************/
-/********************************************************/
 // A macro to disallow any non-defined constructors
 // This should be used in the declarations for a class
 // #define DISALLOW_CONSTRUCTION(TypeName) \
@@ -27,10 +18,6 @@ use ffec::common::utils;
 //   TypeName(const TypeName&);               \
 //   pub fn  operator=(const TypeName&)
 
-/********************************************************/
-/*************** Debug String Formatting ****************/
-/********************************************************/
-
 // namespace gadgetlib2 {
 // someday, if/when MSVC supports C++0x variadic templates, change FMT in release version to the
 // following in order to increase efficiency:
@@ -40,9 +27,6 @@ use ffec::common::utils;
 /** Safely converts 64-bit types to 32-bit, or from unsigned to signed */
 // long safeConvert(const int64_t num);
 
-/********************************************************/
-/******************* Error Handling *********************/
-/********************************************************/
 // declare a function as never returning, to quiet down "control reaches end of non-pub fn  function" warnings
 // #if defined(_MSC_VER) // VisualC++
 // // #define __noreturn _declspec(noreturn)
@@ -50,7 +34,6 @@ use ffec::common::utils;
 // // #define __noreturn __attribute__((noreturn))
 // #else
 // #define __noreturn
-//#endif
 
 /**
  * The ErrorHandling pub struct containimplements the functionality of displaying the content of error
@@ -71,10 +54,6 @@ pub struct ErrorHandling;
 
 // TODO change GADGETLIB_ASSERT to not run in debug
 // #define GADGETLIB_ASSERT(predicate, msg) if(!(bool(predicate))) GADGETLIB_FATAL(msg);
-
-/********************************************************/
-/****************** Basic Math **************************/
-/********************************************************/
 
 // double Log2(double n);
 
@@ -107,28 +86,16 @@ pub fn POW2(exponent: i32) -> i64 {
 // using //ffec::UNUSED;
 // } // namespace gadgetlib2
 
-//#endif   // __infrastructure_HPP
-/** @file
-*****************************************************************************
-Common functionality needed by many components.
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
+// Common functionality needed by many components.
 
 // // #ifdef __linux__
 // use  <unistd.h>
-// //#endif
+//
 // // #ifdef __GLIBC__
 // use  <execinfo.h> // backtraces
-// //#endif
+//
 
 // namespace gadgetlib2 {
-
-/********************************************************/
-/*************** Debug String Formatting ****************/
-/********************************************************/
 
 // #ifdef DEBUG
 const MAX_FMT: usize = 256;
@@ -140,7 +107,7 @@ const MAX_FMT: usize = 256;
 //     MAX_FMT:int strChk =  vsnprintf_s(buf,, MAX_FMT, format, args);
 // #else
 //     MAX_FMT:int strChk =  vsnprintf(buf,, format, args);
-// //#endif
+//
 //     va_end(args);
 //     GADGETLIB_ASSERT(strChk >= 0 && strChk < MAX_FMT, "String length larger than buffer. Shorten"
 //                                         " string or increase buffer size defined in \"MAX_FMT\".");
@@ -148,17 +115,13 @@ const MAX_FMT: usize = 256;
 // }
 // #else // not DEBUG
 // ::String GADGETLIB2_FMT(format:char*, ...) {//ffec::UNUSED(format); return "";}
-// //#endif
+//
 
 /** Safely converts 64-bit types to 32-bit. */
 pub fn safeConvert(num: i64) -> i64 {
     assert!(num <= i64::MAX && num >= i64::MIN);
     num
 }
-
-/*****************************************************************************/
-/***********************  Error Handling *************************************/
-/*****************************************************************************/
 
 /*
     TODO add dumping of environment variables and run command to a log file and add log file path
@@ -197,12 +160,9 @@ impl ErrorHandling {
         // #else
         //     //TODO make this available for non-glibc platforms (e.g. musl libc on Linux and Windows)
         //     std::cerr << "  (stack trace not available on this platform)" << std::endl;
-        // //#endif // __GNUC__
+        //
     }
 }
-/*****************************************************************************/
-/****************************  Basic Math  ***********************************/
-/*****************************************************************************/
 
 pub fn Log2(n: f64) -> f64 {
     n.ln() / 2.0f64.ln()

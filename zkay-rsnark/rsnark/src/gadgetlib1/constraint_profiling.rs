@@ -32,19 +32,6 @@ pub fn PROFILE_CONSTRAINTS<FieldT: FieldTConfig, PB: PBConfig>(
 
 // usize PRINT_CONSTRAINT_PROFILING(); // returns # of top level constraints
 
-//#endif // CONSTRAINT_PROFILING_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for profiling constraints.
-
-See constraint_profiling.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
 use ffec::common::profiling;
 
 // use crate::gadgetlib1::constraint_profiling;
@@ -77,5 +64,3 @@ pub fn PRINT_CONSTRAINT_PROFILING() -> usize {
 
     return accounted;
 }
-
-// }

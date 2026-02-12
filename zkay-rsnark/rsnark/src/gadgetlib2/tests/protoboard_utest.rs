@@ -1,58 +1,100 @@
 //  Unit tests for gadgetlib2 protoboard
 
-// use crate::gadgetlib2::pp;
-// use crate::gadgetlib2::protoboard;
+use crate::gadgetlib2::constraint::PrintOptions;
+use crate::gadgetlib2::pp::{Fp, initPublicParamsFromDefaultPp};
+use crate::gadgetlib2::protoboard::Protoboard;
+use crate::gadgetlib2::variable::{
+    DualWord, FElem, FieldType, MultiPackedWord, UnpackedWord, Variable, VariableArray, VariableSet,
+};
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn R1P_enforceBooleanity() {
+    fn test_R1P_enforceBooleanity() {
         initPublicParamsFromDefaultPp();
-        let pb = Protoboard::create(R1P);
+        let pb = Protoboard::create(FieldType::R1P, None).unwrap();
         let x = Variable::default();
-        pb.enforceBooleanity(x);
-        pb.val(x) = 0;
-        assert!(pb.isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
-        pb.val(x) = 1;
-        assert!(pb.isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED));
-        pb.val(x) = Fp(2);
-        assert!(!pb.isSatisfied());
+        pb.borrow_mut().enforceBooleanity(&x);
+        *pb.borrow_mut().val(&x) = 0.into();
+        assert!(
+            pb.borrow()
+                .isSatisfied(&PrintOptions::DBG_PRINT_IF_NOT_SATISFIED)
+        );
+        *pb.borrow_mut().val(&x) = 1.into();
+        assert!(
+            pb.borrow()
+                .isSatisfied(&PrintOptions::DBG_PRINT_IF_NOT_SATISFIED)
+        );
+        *pb.borrow_mut().val(&x) = FElem::froms(Fp::from(2));
+        assert!(!pb.borrow().isSatisfied(&&PrintOptions::NO_DBG_PRINT));
     }
 
     #[test]
-    fn Protoboard_unpackedWordAssignmentEqualsValue_R1P() {
+    fn test_Protoboard_unpackedWordAssignmentEqualsValue_R1P() {
         initPublicParamsFromDefaultPp();
-        let pb = Protoboard::create(R1P);
-        let unpacked = UnpackedWord::new(8, "unpacked");
-        pb.setValuesAsBitArray(unpacked, 42);
-        assert!(pb.unpackedWordAssignmentEqualsValue(unpacked, 42));
-        assert!(!pb.unpackedWordAssignmentEqualsValue(unpacked, 43));
-        assert!(!pb.unpackedWordAssignmentEqualsValue(unpacked, 1024 + 42));
+        let pb = Protoboard::create(FieldType::R1P, None).unwrap();
+        let unpacked = UnpackedWord::new(8, "unpacked".to_owned());
+        pb.borrow_mut().setValuesAsBitArray(&unpacked, 42);
+        assert!(pb.borrow_mut().unpackedWordAssignmentEqualsValue(
+            &unpacked,
+            42,
+            &PrintOptions::NO_DBG_PRINT
+        ));
+        assert!(!pb.borrow_mut().unpackedWordAssignmentEqualsValue(
+            &unpacked,
+            43,
+            &PrintOptions::NO_DBG_PRINT
+        ));
+        assert!(!pb.borrow_mut().unpackedWordAssignmentEqualsValue(
+            &unpacked,
+            1024 + 42,
+            &PrintOptions::NO_DBG_PRINT
+        ));
     }
 
     #[test]
-    fn Protoboard_multipackedWordAssignmentEqualsValue_R1P() {
+    fn test_Protoboard_multipackedWordAssignmentEqualsValue_R1P() {
         initPublicParamsFromDefaultPp();
-        let pb = Protoboard::create(R1P);
-        let multipacked = MultiPackedWord::new(8, R1P, "multipacked");
-        pb.val(multipacked[0]) = 42;
-        assert!(pb.multipackedWordAssignmentEqualsValue(multipacked, 42));
-        assert!(!pb.multipackedWordAssignmentEqualsValue(multipacked, 43));
-        let multipackedAgnostic = MultiPackedWord::from(AGNOSTIC);
+        let pb = Protoboard::create(FieldType::R1P, None).unwrap();
+        let multipacked = MultiPackedWord::new(8, FieldType::R1P, "multipacked".to_owned());
+        *pb.borrow_mut().val(&multipacked[0]) = 42.into();
+        assert!(pb.borrow_mut().multipackedWordAssignmentEqualsValue(
+            &multipacked,
+            42,
+            &PrintOptions::NO_DBG_PRINT
+        ));
+        assert!(!pb.borrow_mut().multipackedWordAssignmentEqualsValue(
+            &multipacked,
+            43,
+            &PrintOptions::NO_DBG_PRINT
+        ));
+        let multipackedAgnostic = VariableArray::<MultiPackedWord>::from(FieldType::AGNOSTIC);
         // ASSERT_THROW(pb.multipackedWordAssignmentEqualsValue(multipackedAgnostic, 43),
         //              ::std::runtime_error);
     }
 
     #[test]
-    fn Protoboard_dualWordAssignmentEqualsValue_R1P() {
+    fn test_Protoboard_dualWordAssignmentEqualsValue_R1P() {
         initPublicParamsFromDefaultPp();
-        let pb = Protoboard::create(R1P);
-        let dualword = DualWord::new(8, R1P, "dualword");
-        pb.setDualWordValue(dualword, 42);
-        assert!(pb.dualWordAssignmentEqualsValue(dualword, 42));
-        assert!(!pb.dualWordAssignmentEqualsValue(dualword, 43));
-        assert!(!pb.dualWordAssignmentEqualsValue(dualword, 42 + 1024));
+        let pb = Protoboard::create(FieldType::R1P, None).unwrap();
+        let dualword = DualWord::new(8, FieldType::R1P, "dualword".to_owned());
+        pb.borrow_mut().setDualWordValue(&dualword, 42);
+        assert!(pb.borrow_mut().dualWordAssignmentEqualsValue(
+            &dualword,
+            42,
+            &PrintOptions::NO_DBG_PRINT
+        ));
+        assert!(!pb.borrow_mut().dualWordAssignmentEqualsValue(
+            &dualword,
+            43,
+            &PrintOptions::NO_DBG_PRINT
+        ));
+        assert!(!pb.borrow_mut().dualWordAssignmentEqualsValue(
+            &dualword,
+            42 + 1024,
+            &PrintOptions::NO_DBG_PRINT
+        ));
     }
 }

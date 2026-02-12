@@ -71,7 +71,7 @@ use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark_par
 
 //
 
-// /******************************** Proving key ********************************/
+//
 /**
  * A proving key for the R1CS SEppzkSNARK.
  */
@@ -167,8 +167,6 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_proving_key<ppT> {
     }
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the R1CS SEppzkSNARK.
  */
@@ -237,8 +235,6 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
     }
 }
 
-/************************ Processed verification key *************************/
-
 /**
  * A processed verification key for the R1CS SEppzkSNARK.
  *
@@ -257,8 +253,6 @@ pub struct r1cs_se_ppzksnark_processed_verification_key<ppT: PublicParams> {
 
     pub query: G1_vector<ppT>,
 }
-
-/********************************** Key pair *********************************/
 
 /**
  * A key pair for the R1CS SEppzkSNARK, which consists of a proving key and a verification key.
@@ -290,8 +284,6 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_keypair<ppT> {
 
     // r1cs_se_ppzksnark_keypair(r1cs_se_ppzksnark_keypair<ppT> &&other) = default;
 }
-
-/*********************************** Proof ***********************************/
 
 /**
  * A proof for the R1CS SEppzkSNARK.
@@ -340,8 +332,6 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_proof<ppT> {
     }
 }
 
-/***************************** Main algorithms *******************************/
-
 /**
  * A generator algorithm for the R1CS SEppzkSNARK.
  *
@@ -374,7 +364,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
 
     // // #ifdef DEBUG
     //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
-    // //#endif
+    //
 
     let (d1, d2) = (ppT::Fr::random_element(), ppT::Fr::random_element());
 
@@ -392,7 +382,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     //     ppT::Fr::random_element(:Fr<ppT> t =);
     //     sap_instance_evaluation<Fr<ppT> > sap_inst = r1cs_to_sap_instance_map_with_evaluation(pk.constraint_system, t);
     //     assert!(sap_inst.is_satisfied(sap_wit));
-    // //#endif
+    //
 
     // // #ifdef DEBUG
     //     assert!(pk.A_query.len() == sap_wit.num_variables() + 1);
@@ -400,13 +390,13 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     //     assert!(pk.C_query_1.len() == sap_wit.num_variables() - sap_wit.num_inputs());
     //     assert!(pk.C_query_2.len() == sap_wit.num_variables() + 1);
     //     assert!(pk.G_gamma2_Z_t.len() >= sap_wit.degree() - 1);
-    // //#endif
+    //
 
     // // #ifdef MULTICORE
     //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    // //#endif
+    //
 
     let r = ppT::Fr::random_element();
 
@@ -592,7 +582,7 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    // //#endif
+    //
 
     enter_block("Check first test", false);
     /**
@@ -683,7 +673,7 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
 
 // // #ifdef MULTICORE
 // use  <omp.h>
-// //#endif
+//
 
 // use crate::knowledge_commitment::kc_multiexp;
 // use crate::reductions::r1cs_to_sap::r1cs_to_sap;
@@ -1052,7 +1042,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
-    // //#endif
+    //
     leave_block("Compute the A-query", false);
 
     enter_block("Compute the B-query", false);
@@ -1060,7 +1050,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         batch_exp::<G2<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G2<ppT> >(B_query);
-    // //#endif
+    //
     leave_block("Compute the B-query", false);
 
     enter_block("Compute the G_gamma-query", false);
@@ -1083,7 +1073,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(G_gamma2_Z_t);
-    // //#endif
+    //
     leave_block("Compute the G_gamma-query", false);
 
     enter_block("Compute the C_1-query", false);
@@ -1099,7 +1089,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_1);
-    // //#endif
+    //
     leave_block("Compute the C_1-query", false);
 
     enter_block("Compute the C_2-query", false);
@@ -1114,7 +1104,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_2);
-    // //#endif
+    //
     leave_block("Compute the C_2-query", false);
 
     leave_block("Generate R1CS proving key", false);

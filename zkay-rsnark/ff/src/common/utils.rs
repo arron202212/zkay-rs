@@ -49,7 +49,7 @@ pub type bit_vector = Vec<bool>;
 // #define FMT FORMAT
 // #else
 // #define FMT(...) (UNUSED(__VA_ARGS__), "")
-//#endif
+
 pub fn FMT(s: &str, c: &str) {}
 // pub fn  serialize_bit_vector(out:&String,v:& const bit_vector);
 // pub fn  deserialize_bit_vector(in:&mut String,v:& bit_vector);

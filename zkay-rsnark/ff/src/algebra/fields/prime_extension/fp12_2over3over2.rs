@@ -81,7 +81,7 @@ pub struct Fp12_2over3over2_model<const N: usize, T: Fp12_modelConfig<N>> {
     //     static i64 mul_cnt;
     //     static i64 sqr_cnt;
     //     static i64 inv_cnt;
-    // //#endif
+    // 
 
     //     static bigint<12*n> euler; // (modulus^12-1)/2
     //     static std::usize s; // modulus^12 = 2^s * t + 1
@@ -225,7 +225,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>> Fp12_2over3over2_model<N, T> {
     pub fn squared_karatsuba(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        //#endif
+        
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
         let (a, b) = (self.c0, self.c1);
         let asq = a.squared();
@@ -240,7 +240,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>> Fp12_2over3over2_model<N, T> {
     pub fn squared_complex(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        //#endif
+        
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
@@ -254,7 +254,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>> Fp12_2over3over2_model<N, T> {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
-        //#endif
+        
         /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
         let (a, b) = (self.c0, self.c1);
         let t0 = a.squared();
@@ -569,7 +569,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>> PartialEq for Fp12_2over3over2_mode
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// //#endif
+// 
 //     return Fp12_2over3over2_model<n,modulus>(self.c0 + other.c0,
 //                                              self.c1 + other.c1);
 // }
@@ -590,7 +590,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>, O: Borrow<Self>> Add<O>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.sub_cnt++;
-// //#endif
+// 
 //     return Fp12_2over3over2_model<n,modulus>(self.c0 - other.c0,
 //                                              self.c1 - other.c1);
 // }
@@ -608,7 +608,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>> Sub for Fp12_2over3over2_model<N, T
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     return Fp12_2over3over2_model<n,modulus>(lhs*rhs.c0,
 //                                              lhs*rhs.c1);
 // }
@@ -628,7 +628,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>, O: Borrow<Self>> Mul<O>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     return Fp12_2over3over2_model<n,modulus>(lhs*rhs.c0,
 //                                              lhs*rhs.c1);
 // }
@@ -638,7 +638,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>, O: Borrow<Self>> Mul<O>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// //#endif
+// 
 //     return Fp12_2over3over2_model<n,modulus>(lhs*rhs.c0,
 //                                              lhs*rhs.c1);
 // }
@@ -648,7 +648,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>, O: Borrow<Self>> Mul<O>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
-// //#endif
+// 
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
 //     A:&my_Fp6<N,T::Fp6_modelConfig> = other.c0, &B = other.c1,
 //         &a = self.c0, &b = self.c1;
@@ -877,8 +877,8 @@ impl<const N: usize, T: Fp12_modelConfig<N>> Zero for Fp12_2over3over2_model<N, 
 //     return in;
 // }
 
-// // } // namespace libff
-// //#endif // FP12_2OVER3OVER2_TCC_
+// 
+// 
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
 use crate::algebra::fields::{
     cyclotomic::CyclotomicMultSubgroup,

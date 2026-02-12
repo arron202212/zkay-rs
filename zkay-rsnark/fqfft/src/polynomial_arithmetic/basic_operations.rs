@@ -78,7 +78,7 @@ use ffec::common::utils::get_power_of_two;
 use ffec::common::utils::log2;
 // #ifdef MULTICORE
 //#include <omp.h>
-//#endif
+
 
 //
 pub fn _is_zero<FieldT: num_traits::Zero + std::cmp::PartialEq>(a: &Vec<FieldT>) -> bool {
@@ -236,7 +236,7 @@ pub fn _polynomial_multiplication_on_fft<
     // #else
     //     _basic_serial_radix2_FFT(u, omega);
     //     _basic_serial_radix2_FFT(v, omega);
-    //#endif
+    
 
     // std::transform(u.begin(), u.end(), v.begin(), c.begin(), std::multiplies<FieldT>());
     u.iter().zip(v).enumerate().for_each(|(i, (x, y))| {
@@ -247,7 +247,7 @@ pub fn _polynomial_multiplication_on_fft<
     //     _basic_parallel_radix2_FFT(c, omega.inverse());
     // #else
     //     _basic_serial_radix2_FFT(c, omega.inverse());
-    //#endif
+    
 
     //  let mut  sconst = FieldT::from(n).inverse();
     // std::transform(c.begin(), c.end(), c.begin(), std::bind(std::multiplies<FieldT>(), sconst, std::placeholders::_1));

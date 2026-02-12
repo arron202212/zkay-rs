@@ -331,7 +331,6 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
             print!("{} ", self.pb.borrow().val(&self.t.packed_W[j]).as_ulong());
         }
         print!("\n");
-        //#endif
 
         for i in 0..64 {
             self.t.round_functions[i].generate_r1cs_witness();
@@ -372,7 +371,6 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadgets<Fie
             );
         }
         print!("\n");
-        //#endif
     }
 }
 

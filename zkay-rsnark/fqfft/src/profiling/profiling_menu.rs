@@ -115,7 +115,7 @@
 //         print!("Profiling with Double\n");
 // // #else
 //         print!("Profiling with Fr<edwards_pp>\n");
-// //#endif
+// 
 //         for threads in 0..4
 //         {
 //           for key in 0..4 /* Change key to 5 for arithmetic domain */

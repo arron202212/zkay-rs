@@ -1,16 +1,12 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef EDWARDS_INIT_HPP_
+
+
+
 // #define EDWARDS_INIT_HPP_
 use crate::algebra::curves::public_params;
 use crate::algebra::curves::edwards::edwards_fields;
 
-// namespace libff {
+
 
 // parameters for Edwards curve E_{1,d}(F_q)
 extern edwards_Fq edwards_coeff_a;
@@ -39,20 +35,16 @@ pub fn  init_edwards_params();
 pub struct edwards_G1;
 pub struct edwards_G2;
 
-// } // namespace libff
-//#endif // EDWARDS_INIT_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::edwards::edwards_g1;
 use crate::algebra::curves::edwards::edwards_g2;
 use crate::algebra::curves::edwards::edwards_init;
 
-// namespace libff {
+
 
 edwards_Fq edwards_coeff_a;
 edwards_Fq edwards_coeff_d;
@@ -224,4 +216,4 @@ pub fn  init_edwards_params()
     edwards_final_exponent_last_chunk_w1 = bigint<edwards_q_limbs>("4");
 
 }
-// } // namespace libff
+

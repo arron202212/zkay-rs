@@ -1,16 +1,6 @@
-/** @file
-*****************************************************************************
+// Declaration of interfaces for a TBCS example, as well as functions to sample
+// TBCS examples with prescribed parameters (according to some distribution).
 
-Declaration of interfaces for a TBCS example, as well as functions to sample
-TBCS examples with prescribed parameters (according to some distribution).
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef TBCS_EXAMPLES_HPP_
-// #define TBCS_EXAMPLES_HPP_
 use crate::relations::circuit_satisfaction_problems::tbcs::tbcs::{
     num_tbcs_gate_types, tbcs_auxiliary_input, tbcs_circuit, tbcs_gate, tbcs_gate_type,
     tbcs_primary_input, tbcs_variable_assignment,
@@ -56,22 +46,6 @@ impl tbcs_example {
 //                                    auxiliary_input_size:usize,
 //                                    num_gates:usize,
 //                                    num_outputs:usize);
-
-//#endif // TBCS_EXAMPLES_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of functions to sample TBCS examples with prescribed parameters
-(according to some distribution).
-
-See tbcs_examples.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// use  <cassert>
 use ffec::common::utils;
 
 // use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;

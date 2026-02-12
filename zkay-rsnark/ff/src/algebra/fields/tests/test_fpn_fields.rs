@@ -1,22 +1,17 @@
-/**
- *****************************************************************************
- Tests for all F_p^n fields, especially functions that are not part of the
- standard field API and therefore not tested in test_all_fields.cpp. Unlike
- that test, this one is run for all fields defined in curves/, so it also
- makes sure the hardcoded parameters there are correct. Note that it only
- tests the fields in the curves, not the curves themselves.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
-//#include <gtest/gtest.h>
+
+//  Tests for all F_p^n fields, especially functions that are not part of the
+//  standard field API and therefore not tested in test_all_fields.cpp. Unlike
+//  that test, this one is run for all fields defined in curves/, so it also
+//  makes sure the hardcoded parameters there are correct. Note that it only
+//  tests the fields in the curves, not the curves themselves.
+
+
 
 use crate::algebra::curves::alt_bn128::alt_bn128_pp;
 use crate::algebra::curves::bls12_381/bls12_381_pp;
 // #ifdef CURVE_BN128
 use crate::algebra::curves::bn128::bn128_pp;
-//#endif
+
 use crate::algebra::curves::edwards::edwards_pp;
 use crate::algebra::curves::mnt::mnt4::mnt4_pp;
 use crate::algebra::curves::mnt::mnt6::mnt6_pp;
@@ -36,7 +31,7 @@ pub struct FpnFieldsTest{//::testing::Test
         init_bls12_381_fields();
 // #ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled.
         init_bn128_fields();
-//#endif
+
     }
 };
 
@@ -262,7 +257,7 @@ TEST_F(FpnFieldsTest, GeneralTest)
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled.
     test_field<Fr<bn128_pp> >();
     test_field<Fq<bn128_pp> >();
-//#endif
+
 }
 
 TEST_F(FpnFieldsTest, SquareTest)

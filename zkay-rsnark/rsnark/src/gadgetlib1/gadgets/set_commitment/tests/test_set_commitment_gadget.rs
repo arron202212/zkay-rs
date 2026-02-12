@@ -32,7 +32,6 @@ pub fn main<
     // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     bn128_pp::init_public_params();
     test_all_set_commitment_gadgets::<bn128_pp, PB>();
-    //#endif
 
     edwards_pp::init_public_params();
     test_all_set_commitment_gadgets::<edwards_pp, PB>();

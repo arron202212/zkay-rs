@@ -1,37 +1,9 @@
-/** @file
-*****************************************************************************
-Declaration of functions for generating randomness.
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RNG_HPP_
-// #define RNG_HPP_
 
-//#include <cstdint>
+// Declaration of functions for generating randomness.
 
-// namespace libff {
 
 // FieldT SHA512_rng(const uint64_t idx);
 
-// } // namespace libff
-
-// use crate::common::rng.tcc;
-
-//#endif // RNG_HPP_
-/** @file
-*****************************************************************************
-Implementation of functions for generating randomness.
-
-See rng.hpp .
-*****************************************************************************
-* @author     This file is part of libff, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef RNG_TCC_
-// #define RNG_TCC_
 
 //#include <gmp.h>
 //#include <openssl/sha.h>
@@ -40,7 +12,7 @@ use crate::algebra::field_utils::bigint::bigint;
 use crate::common::rng;
 use crate::common::utils::is_little_endian;
 
-// // namespace libff {
+
 // struct A{
 // data:[u8;10]}
 // // using std::usize;
@@ -108,6 +80,6 @@ use crate::common::utils::is_little_endian;
 //     return FieldT::from(rval);
 // }
 
-// } // namespace libff
 
-//#endif // RNG_TCC_
+
+

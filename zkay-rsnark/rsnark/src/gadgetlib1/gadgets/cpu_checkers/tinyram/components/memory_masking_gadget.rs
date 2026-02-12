@@ -1,4 +1,5 @@
 // Declaration of interfaces for the TinyRAM memory masking gadget.
+
 use crate::gadgetlib1::gadget::gadget;
 use crate::gadgetlib1::gadgets::basic_gadgets::{dual_variable_gadget, inner_product_gadget};
 use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::ArithmeticGadgetConfig;
@@ -95,22 +96,7 @@ pub struct memory_masking_gadget<FieldT: FieldTConfig> {
 
 // use crate::gadgetlib1::gadgets::cpu_checkers::tinyram::components::memory_masking_gadget;
 
-//#endif // MEMORY_MASKING_GADGET_HPP_
 // use crate::gadgetlib1::gadget::gadget;
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for the TinyRAM memory masking gadget.
-
-See memory_masking_gadget.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef MEMORY_MASKING_GADGET_TCC_
-// #define MEMORY_MASKING_GADGET_TCC_
 
 pub type memory_masking_gadgets<FieldT> = gadget<
     FieldT,

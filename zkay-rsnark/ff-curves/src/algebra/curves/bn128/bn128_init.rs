@@ -1,18 +1,14 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef BN128_INIT_HPP_
+
+
+
 // #define BN128_INIT_HPP_
 #include "depends/ate-pairing/include/bn.h"
 
 use crate::algebra::curves::public_params;
 use crate::algebra::curves::bn128::bn128_fields;
 
-// namespace libff {
+
 
 extern bn::Fp bn128_coeff_b;
 extern std::usize bn128_Fq_s;
@@ -31,21 +27,17 @@ pub struct bn128_G2;
 pub struct bn128_GT;
 type bn128_Fq12=bn128_GT;
 
-// } // namespace libff
-//#endif // BN128_INIT_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::bn128::bn128_g1;
 use crate::algebra::curves::bn128::bn128_g2;
 use crate::algebra::curves::bn128::bn128_gt;
 use crate::algebra::curves::bn128::bn128_init;
 
-// namespace libff {
+
 
 bn::Fp bn128_coeff_b;
 usize bn128_Fq_s;
@@ -210,4 +202,4 @@ pub fn  init_bn128_params()
 
     bn128_GT::GT_one.elem = bn::Fp12(1);
 }
-// } // namespace libff
+

@@ -57,8 +57,6 @@ use ff_curves::Fr;
 use ffec::common::profiling::{enter_block, leave_block};
 use std::collections::BTreeSet;
 
-/******************************** Proving key ********************************/
-
 //
 // pub struct ram_ppzksnark_proving_key;
 
@@ -105,8 +103,6 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_proving_key<ram_ppzksnark_pp
     // friend std::ostream& operator<< <ram_ppzksnark_ppT>(std::ostream &out, pk:&ram_ppzksnark_proving_key<ram_ppzksnark_ppT>);
     // friend std::istream& operator>> <ram_ppzksnark_ppT>(std::istream &in, ram_ppzksnark_proving_key<ram_ppzksnark_ppT> &pk);
 }
-
-/******************************* Verification key ****************************/
 
 // std::ostream& operator<<(std::ostream &out, vk:&ram_ppzksnark_verification_key<ram_ppzksnark_ppT>);
 
@@ -155,8 +151,6 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksna
     // friend std::istream& operator>> <ram_ppzksnark_ppT>(std::istream &in, ram_ppzksnark_verification_key<ram_ppzksnark_ppT> &vk);
 }
 
-/********************************** Key pair *********************************/
-
 /**
  * A key pair for the RAM ppzkSNARK, which consists of a proving key and a verification key.
  */
@@ -178,16 +172,12 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_keypair<ram_ppzksnark_ppT> {
     }
 }
 
-/*********************************** Proof ***********************************/
-
 /**
  * A proof for the RAM ppzkSNARK.
  */
 //
 pub type ram_ppzksnark_proof<ram_ppzksnark_ppT> =
     r1cs_ppzksnark_proof<ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>>;
-
-/***************************** Main algorithms *******************************/
 
 /**
  * A generator algorithm for the RAM ppzkSNARK.
@@ -442,7 +432,7 @@ where
     // #if DEBUG
     universal_r1cs.print_execution_trace();
     universal_r1cs.print_memory_trace();
-    //#endif
+
     let proof = r1cs_ppzksnark_prover::<snark_ppT<ram_ppzksnark_ppT>>(
         &pk.r1cs_pk,
         &r1cs_primary_input,

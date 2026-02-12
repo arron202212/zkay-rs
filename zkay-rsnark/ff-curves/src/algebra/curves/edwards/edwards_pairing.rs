@@ -1,17 +1,13 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef EDWARDS_PAIRING_HPP_
+
+
+
 // #define EDWARDS_PAIRING_HPP_
 //#include <vector>
 
 use crate::algebra::curves::edwards::edwards_init;
 
-// namespace libff {
+
 
 /* final exponentiation */
 
@@ -119,14 +115,10 @@ edwards_Fq6 edwards_pairing(P:edwards_G1&,
 edwards_GT edwards_reduced_pairing(P:&edwards_G1,
                                    Q:&edwards_G2);
 
-// } // namespace libff
-//#endif // EDWARDS_PAIRING_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 //#include <cassert>
 
@@ -136,7 +128,7 @@ use crate::algebra::curves::edwards::edwards_init;
 use crate::algebra::curves::edwards::edwards_pairing;
 use crate::common::profiling;
 
-// namespace libff {
+
 
 using std::usize;
 
@@ -405,7 +397,7 @@ pub fn  doubling_step_for_miller_loop(extended_edwards_G1_projective &current,
 
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 pub fn  full_addition_step_for_miller_loop(base:&extended_edwards_G1_projective,
@@ -435,7 +427,7 @@ pub fn  full_addition_step_for_miller_loop(base:&extended_edwards_G1_projective,
 
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 pub fn  mixed_addition_step_for_miller_loop(base:&extended_edwards_G1_projective,
@@ -465,7 +457,7 @@ pub fn  mixed_addition_step_for_miller_loop(base:&extended_edwards_G1_projective
 
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 edwards_tate_G1_precomp edwards_tate_precompute_G1(P:&edwards_G1)
@@ -627,7 +619,7 @@ pub fn  doubling_step_for_flipped_miller_loop(extended_edwards_G2_projective &cu
     current.T = F*(B-H);          // T3 = F*(B-H)
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 pub fn  full_addition_step_for_flipped_miller_loop(base:&extended_edwards_G2_projective,
@@ -660,7 +652,7 @@ pub fn  full_addition_step_for_flipped_miller_loop(base:&extended_edwards_G2_pro
 
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 pub fn  mixed_addition_step_for_flipped_miller_loop(base:&extended_edwards_G2_projective,
@@ -692,7 +684,7 @@ pub fn  mixed_addition_step_for_flipped_miller_loop(base:&extended_edwards_G2_pr
 
 // #ifdef DEBUG
     current.test_invariant();
-//#endif
+
 }
 
 edwards_ate_G1_precomp edwards_ate_precompute_G1(P:&edwards_G1)
@@ -898,4 +890,4 @@ edwards_GT edwards_reduced_pairing(P:&edwards_G1,
 {
     return edwards_ate_reduced_pairing(P, Q);
 }
-// } // namespace libff
+

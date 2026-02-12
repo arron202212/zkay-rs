@@ -59,8 +59,6 @@ use ffec::{FieldTConfig, PpConfig, bit_vector};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
 
-/******************************** Proving key ********************************/
-
 /**
  * A proving key for the R1CS (single-predicate) ppzkPCD.
  */
@@ -94,8 +92,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_proving_key<PCD_ppT> {
     }
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the R1CS (single-predicate) ppzkPCD.
  */
@@ -121,8 +117,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
         self.compliance_step_r1cs_vk.size_in_bits() + self.translation_step_r1cs_vk.size_in_bits()
     }
 }
-
-/************************ Processed verification key *************************/
 
 /**
  * A processed verification key for the R1CS (single-predicate) ppzkPCD.
@@ -159,8 +153,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> 
     }
 }
 
-/********************************* Key pair **********************************/
-
 /**
  * A key pair for the R1CS (single-predicate) ppzkPC, which consists of a proving key and a verification key.
  */
@@ -195,8 +187,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_keypair<PCD_ppT> {
     }
 }
 
-/*********************************** Proof ***********************************/
-
 /**
  * A proof for the R1CS (single-predicate) ppzkPCD.
  */
@@ -204,7 +194,7 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_keypair<PCD_ppT> {
 pub type r1cs_sp_ppzkpcd_proof<PCD_ppT> =
     r1cs_ppzksnark_proof<<PCD_ppT as PcdPptConfig>::curve_B_pp>;
 
-// /***************************** Main algorithms *******************************/
+//
 // /**
 //  * A generator algorithm for the R1CS (single-predicate) ppzkPCD.
 //  *
@@ -618,7 +608,6 @@ where
     // #ifdef DEBUG
     print!("Outgoing message:\n");
     primary_input.outgoing_message.borrow().print();
-    //#endif
 
     enter_block("Prove compliance step", false);
     let mut compliance_step_pcd_circuit =
@@ -651,7 +640,6 @@ where
         &compliance_step_proof,
     );
     assert!(compliance_step_ok);
-    //#endif
 
     enter_block("Prove translation step", false);
     let translation_step_pcd_circuit =
@@ -680,7 +668,6 @@ where
         &translation_step_proof,
     );
     assert!(translation_step_ok);
-    //#endif
 
     print_indent();
     println!("in prover");

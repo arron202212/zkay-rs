@@ -67,7 +67,6 @@ pub fn dump_constraints<FieldT: FieldTConfig, PB: PBConfig>(pb: RcCell<protoboar
     for s in &pb.borrow().constraint_system.constraint_annotations {
         print!("constraint: {}\n", s.1);
     }
-    //#endif
 }
 struct test_verifierTester<ppT_A: ppTConfig, ppT_B: ppTConfig, T>(PhantomData<(ppT_A, ppT_B, T)>);
 trait test_verifierConfig<

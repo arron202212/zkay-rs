@@ -1,9 +1,5 @@
-/**
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
 //#include <gtest/gtest.h>
 
 use crate::algebra::curves::edwards::edwards_pp;
@@ -13,7 +9,7 @@ use crate::common::profiling;
 use crate::common::utils;
 // #ifdef CURVE_BN128
 use crate::algebra::curves::bn128::bn128_pp;
-//#endif
+
 //#include <sstream>
 
 use crate::algebra::curves::alt_bn128::alt_bn128_pp;
@@ -34,7 +30,7 @@ pub struct CurveGroupsTest{//::testing::Test
         bls12_381_pp::init_public_params();
 // #ifdef CURVE_BN128 // BN128 has fancy dependencies so it may be disabled
         bn128_pp::init_public_params();
-//#endif
+
     }
 };
 
@@ -177,7 +173,7 @@ TEST_F(CurveGroupsTest, GroupTest)
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     test_group<G1<bn128_pp> >();
     test_group<G2<bn128_pp> >();
-//#endif
+
 }
 
 TEST_F(CurveGroupsTest, OutputTest)
@@ -200,7 +196,7 @@ TEST_F(CurveGroupsTest, OutputTest)
 // #ifdef CURVE_BN128       // BN128 has fancy dependencies so it may be disabled
     test_output<G1<bn128_pp> >();
     test_output<G2<bn128_pp> >();
-//#endif
+
 }
 
 TEST_F(CurveGroupsTest, MulByQTest)

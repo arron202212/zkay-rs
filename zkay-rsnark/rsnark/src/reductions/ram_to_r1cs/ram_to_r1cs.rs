@@ -101,7 +101,7 @@ impl<RamT: ram_params_type> ram_to_r1cs<RamT> {
         );
         let primary_input_from_witness_map = self.main_protoboard.borrow().primary_input();
         assert!(primary_input_from_input_map == primary_input_from_witness_map);
-        //#endif
+
         leave_block("Call to witness_map of ram_to_r1cs", false);
         self.main_protoboard.borrow().auxiliary_input()
     }

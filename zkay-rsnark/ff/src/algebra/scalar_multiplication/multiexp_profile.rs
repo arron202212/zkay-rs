@@ -1,13 +1,8 @@
-/**
- *****************************************************************************
+
  Implementation of interfaces for multi-exponentiation routines.
 
  See multiexp.hpp .
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
 //#include <cstdio>
 //#include <vector>
 

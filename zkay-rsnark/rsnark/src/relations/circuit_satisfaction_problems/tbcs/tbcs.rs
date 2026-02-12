@@ -1,32 +1,20 @@
+// Declaration of interfaces for:
+// - a TBCS gate,
+// - a TBCS variable assignment, and
+// - a TBCS circuit.
+
+// Above, TBCS stands for "Two-input Boolean Circuit Satisfiability".
+
 use crate::relations::variable;
 use ffec::FieldTConfig;
-/** @file
-*****************************************************************************
 
-Declaration of interfaces for:
-- a TBCS gate,
-- a TBCS variable assignment, and
-- a TBCS circuit.
-
-Above, TBCS stands for "Two-input Boolean Circuit Satisfiability".
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef TBCS_HPP_
-// #define TBCS_HPP_
 use ffec::common::profiling::print_indent;
 use std::collections::BTreeMap;
-/*********************** BACS variable assignment ****************************/
 
 /**
  * A TBCS variable assignment is a vector of bools.
  */
 pub type tbcs_variable_assignment = Vec<bool>;
-
-/**************************** TBCS gate **************************************/
 
 pub type tbcs_wire_t = usize;
 
@@ -103,8 +91,6 @@ pub struct tbcs_gate {
     // friend std::istream& operator>>(std::istream &in, tbcs_gate &g);
 }
 
-/****************************** TBCS inputs **********************************/
-
 /**
  * A TBCS primary input is a TBCS variable assignment.
  */
@@ -114,8 +100,6 @@ pub type tbcs_primary_input = tbcs_variable_assignment;
  * A TBCS auxiliary input is a TBCS variable assignment.
  */
 pub type tbcs_auxiliary_input = tbcs_variable_assignment;
-
-/************************** TBCS circuit *************************************/
 
 /**
  * A TBCS circuit is a boolean circuit in which every gate has 2 inputs.
@@ -145,8 +129,6 @@ pub struct tbcs_circuit {
     // #ifdef DEBUG
     pub gate_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-    //#endif
-
     // bool is_valid();
     // bool is_satisfied(primary_input:&tbcs_primary_input,
     //                   auxiliary_input:&tbcs_auxiliary_input);
@@ -168,23 +150,6 @@ pub struct tbcs_circuit {
     // friend std::istream& operator>>(std::istream &in, tbcs_circuit &circuit);
 }
 
-//#endif // TBCS_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for:
-- a TBCS gate,
-- a TBCS variable assignment, and
-- a TBCS constraint system.
-
-See tbcs.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// use  <algorithm>
 use ffec::common::utils;
 
 use crate::relations::circuit_satisfaction_problems::tbcs::tbcs;
@@ -426,7 +391,6 @@ impl tbcs_circuit {
         self.gate_annotations.insert(g.output.clone(), annotation);
         // #else
         //UNUSED(annotation);
-        //#endif
     }
 
     // bool tbcs_circuit::operator==(other:&tbcs_circuit)
@@ -469,13 +433,12 @@ impl tbcs_circuit {
             if let Some(it) = self.gate_annotations.get(&i) {
                 annotation = it;
             }
-            //#endif
+
             print!("Gate {} ({}):\n", i, annotation);
             // #ifdef DEBUG
             self.gates[i].print(&self.variable_annotations);
             // #else
             // self.gates[i].print();
-            //#endif
         }
     }
 

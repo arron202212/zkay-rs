@@ -20,7 +20,7 @@ use clap::{ArgAction, Command, arg, command, value_parser};
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 
-// //#ifndef MINDEPS
+//
 // namespace po = boost::program_options;
 
 fn process_verifier_command_line(
@@ -66,7 +66,6 @@ fn process_verifier_command_line(
 
     true
 }
-//#endif
 
 fn main<default_tinyram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig + RamPptConfig>(
     argc: i32,
@@ -98,7 +97,7 @@ fn main<default_tinyram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig + RamPp
     ) {
         return Ok(1);
     }
-    //#endif
+
     start_profiling();
 
     let mut vk = ram_ppzksnark_verification_key::<default_tinyram_ppzksnark_pp>::default();

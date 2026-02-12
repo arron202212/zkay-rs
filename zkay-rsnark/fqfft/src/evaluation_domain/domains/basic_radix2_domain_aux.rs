@@ -41,7 +41,7 @@ use std::ops::MulAssign;
 // #define _basic_radix2_FFT _basic_parallel_radix2_FFT
 // #else
 // #define _basic_radix2_FFT _basic_serial_radix2_FFT
-//#endif
+
 
 //  FieldT: num_traits::One
 //         + Clone
@@ -145,7 +145,7 @@ pub fn _basic_parallel_radix2_FFT_inner<FieldT: FieldTConfig>(
     let omega_clone: FieldT = omega.clone();
     // #ifdef MULTICORE
     // //#pragma omp parallel for
-    //#endif
+    
     for j in 0..num_cpus {
         let omega_j = omega_clone.clone() ^ (j);
         let omega_step = omega_clone.clone() ^ (j << (log_m - log_cpus));
@@ -166,14 +166,14 @@ pub fn _basic_parallel_radix2_FFT_inner<FieldT: FieldTConfig>(
 
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+    
     for j in 0..num_cpus {
         _basic_serial_radix2_FFT(&mut tmp[j], &omega_num_cpus);
     }
 
     // #ifdef MULTICORE
     //#pragma omp parallel for
-    //#endif
+    
     for i in 0..num_cpus {
         for j in 0..1usize << (log_m - log_cpus) {
             // now: i = idx >> (log_m - log_cpus) and j = idx % (1u32 << (log_m - log_cpus)), for idx = ((i<<(log_m-log_cpus))+j) % (1u32 << log_m)
@@ -196,7 +196,7 @@ pub fn _basic_parallel_radix2_FFT<FieldT: FieldTConfig>(a: &mut Vec<FieldT>, ome
     //     let num_cpus = omp_get_max_threads();
     // #else
     const num_cpus: usize = 1;
-    //#endif
+    
     let log_cpus = if num_cpus & (num_cpus - 1) == 0 {
         log2(num_cpus)
     } else {
@@ -209,7 +209,7 @@ pub fn _basic_parallel_radix2_FFT<FieldT: FieldTConfig>(a: &mut Vec<FieldT>, ome
         "* Invoking parallel FFT on 2^{} CPUs (omp_get_max_threads = {})\n",
         log_cpus, num_cpus
     );
-    //#endif
+    
 
     if log_cpus == 0 {
         _basic_serial_radix2_FFT(a, omega);

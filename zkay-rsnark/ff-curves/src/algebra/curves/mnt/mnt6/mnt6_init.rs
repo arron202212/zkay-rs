@@ -1,20 +1,15 @@
-// /** @file
-//  *****************************************************************************
+
 
 //  Declaration of interfaces for initializing MNT6.
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef MNT6_INIT_HPP_
+
+// 
 // // #define MNT6_INIT_HPP_
 
 // use crate::algebra::curves::public_params;
 // use crate::algebra::curves::mnt::mnt6::mnt6_fields;
 
-// // namespace libff {
+
 
 // type mnt6_Fr=Fp_model<mnt6_r_limbs, mnt6_modulus_r>;
 // type mnt6_Fq=Fp_model<mnt6_q_limbs, mnt6_modulus_q>;
@@ -48,26 +43,21 @@
 // // pub struct mnt6_G1;
 // // pub struct mnt6_G2;
 
-// // } // namespace libff
+// 
 
-// //#endif // MNT6_INIT_HPP_
-// /** @file
-//  *****************************************************************************
+// 
+
 
 //  Implementation of interfaces for initializing MNT6.
 
 //  See mnt6_init.hpp .
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+
 // use crate::algebra::curves::mnt::mnt6::mnt6_g1;
 // use crate::algebra::curves::mnt::mnt6::mnt6_g2;
 // use crate::algebra::curves::mnt::mnt6::mnt6_init;
 
-// // namespace libff {
+
 
 // // mnt6_Fq3 mnt6_twist;
 // // mnt6_Fq3 mnt6_twist_coeff_a;
@@ -253,4 +243,4 @@
 //     // mnt6_final_exponent_last_chunk_w1 = bigint<mnt6_q_limbs>("1");
 // }
 
-// // } // namespace libff
+// 

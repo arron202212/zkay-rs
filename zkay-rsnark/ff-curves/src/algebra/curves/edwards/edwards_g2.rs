@@ -1,11 +1,7 @@
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
 
-//#ifndef EDWARDS_G2_HPP_
+
+
+
 // #define EDWARDS_G2_HPP_
 //#include <iostream>
 //#include <vector>
@@ -13,7 +9,7 @@
 use crate::algebra::curves::curve_utils;
 use crate::algebra::curves::edwards::edwards_init;
 
-// namespace libff {
+
 
 
 pub struct edwards_G2 {
@@ -21,7 +17,7 @@ pub struct edwards_G2 {
 // #ifdef PROFILE_OP_COUNTS
     static i64 add_cnt;
     static i64 dbl_cnt;
-//#endif
+
     static Vec<std::usize> wnaf_window_table;
     static Vec<std::usize> fixed_base_exp_window_table;
 
@@ -92,23 +88,19 @@ edwards_G2 operator*(lhs:&Fp_model<m, modulus_p>, rhs:&edwards_G2)
    return scalar_mul<edwards_G2, m>(rhs, lhs.as_bigint());
 }
 
-// } // namespace libff
-//#endif // EDWARDS_G2_HPP_
-/** @file
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+
+
+
 
 use crate::algebra::curves::edwards::edwards_g2;
 
-// namespace libff {
+
 
 // #ifdef PROFILE_OP_COUNTS
 i64 edwards_G2::add_cnt = 0;
 i64 edwards_G2::dbl_cnt = 0;
-//#endif
+
 
 Vec<usize> edwards_G2::wnaf_window_table;
 Vec<usize> edwards_G2::fixed_base_exp_window_table;
@@ -212,7 +204,7 @@ pub fn to_special()
 
 // #ifdef DEBUG
     const edwards_G2 copy(*this);
-//#endif
+
 
     edwards_Fq3 Z_inv = this->Z.inverse();
     this->X = this->X * Z_inv;
@@ -221,7 +213,7 @@ pub fn to_special()
 
 // #ifdef DEBUG
     assert!((*this) == copy);
-//#endif
+
 }
 
 pub fn is_special()->bool
@@ -299,7 +291,7 @@ pub fn add(other:&edwards_G2)->edwards_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-twisted-inverted.html#addition-add-2008-bbjlp
 
@@ -321,7 +313,7 @@ pub fn mixed_add(other:&edwards_G2)->edwards_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->add_cnt++;
-//#endif
+
     // handle special cases having to do with O
     if this->is_zero()
     {
@@ -335,7 +327,7 @@ pub fn mixed_add(other:&edwards_G2)->edwards_G2
 
 // #ifdef DEBUG
     assert!(other.is_special());
-//#endif
+
 
     // NOTE: does not handle O and pts of order 2,4
     // http://www.hyperelliptic.org/EFD/g1p/auto-edwards-inverted.html#addition-madd-2007-lb
@@ -358,7 +350,7 @@ pub fn dbl()->edwards_G2
 {
 // #ifdef PROFILE_OP_COUNTS
     this->dbl_cnt++;
-//#endif
+
     if this->is_zero()
     {
         return (*this);
@@ -435,7 +427,7 @@ std::ostream& operator<<(std::ostream &out, g:&edwards_G2)
 #else
     /* storing LSB of Y */
     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
-//#endif
+
     return out;
 }
 
@@ -469,7 +461,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
     {
         tY = -tY;
     }
-//#endif
+
 
     // using inverted coordinates
     g.X = tY;
@@ -478,7 +470,7 @@ std::istream& operator>>(std::istream &in, edwards_G2 &g)
 
 // #ifdef USE_MIXED_ADDITION
     g.to_special();
-//#endif
+
 
     return in;
 }
@@ -504,4 +496,4 @@ pub fn batch_to_special_all_non_zeros(Vec<edwards_G2> &vec)
     }
 }
 
-// } // namespace libff
+

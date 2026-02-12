@@ -14,7 +14,7 @@ use num_traits::One;
 //     // const  nqr:Fp4_model<n, modulus>; // a quadratic nonresidue in Fp4
 //     // static Fp4_model<n, modulus> nqr_to_t; // nqr^t
 // }
-// // namespace libff {
+
 
 // /** Repeated squaring. */
 //
@@ -42,11 +42,11 @@ use num_traits::One;
 //
 // FieldT tonelli_shanks_sqrt<(value:&FieldT);
 
-// } // namespace libff
+
 
 // use crate::common::utils;
 
-// namespace libff {
+
 pub struct Powers;
 // using std::usize;
 pub trait PowerConfig<T = Self> {
@@ -174,7 +174,7 @@ pub fn tonelli_shanks_sqrt<FieldT: Clone>(value: &FieldT) -> FieldT {
     //     //     check = check.squared();
     //     // }
     //     // assert!(check == one);
-    // //#endif
+    // 
 
     //     // compute square root with Tonelli--Shanks
     //     // (does not terminate if not a square!)

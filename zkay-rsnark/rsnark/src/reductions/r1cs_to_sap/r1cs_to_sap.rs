@@ -1,3 +1,26 @@
+// Declaration of interfaces for a R1CS-to-SAP reduction, that is, constructing
+// a SAP ("Square Arithmetic Program") from a R1CS ("Rank-1 Constraint System").
+
+// SAPs are defined and constructed from R1CS in \[GM17].
+
+// The implementation of the reduction follows, extends, and optimizes
+// the efficient approach described in Appendix E of \[BCGTV13].
+
+// References:
+
+// \[BCGTV13]
+// "SNARKs for C: Verifying Program Executions Succinctly and in Zero Knowledge",
+// Eli Ben-Sasson, Alessandro Chiesa, Daniel Genkin, Eran Tromer, Madars Virza,
+// CRYPTO 2013,
+// <http://eprint.iacr.org/2013/507>
+
+// \[GM17]:
+// "Snarky Signatures: Minimal Signatures of Knowledge from
+//  Simulation-Extractable SNARKs",
+// Jens Groth and Mary Maller,
+// IACR-CRYPTO-2017,
+// <https://eprint.iacr.org/2017/540>
+
 use crate::relations::arithmetic_programs::qap::qap::{
     qap_instance, qap_instance_evaluation, qap_witness,
 };
@@ -23,39 +46,7 @@ use fqfft::evaluation_domain::{
     get_evaluation_domain::get_evaluation_domain,
 };
 use rccell::RcCell;
-/** @file
-*****************************************************************************
 
-Declaration of interfaces for a R1CS-to-SAP reduction, that is, constructing
-a SAP ("Square Arithmetic Program") from a R1CS ("Rank-1 Constraint System").
-
-SAPs are defined and constructed from R1CS in \[GM17].
-
-The implementation of the reduction follows, extends, and optimizes
-the efficient approach described in Appendix E of \[BCGTV13].
-
-References:
-
-\[BCGTV13]
-"SNARKs for C: Verifying Program Executions Succinctly and in Zero Knowledge",
-Eli Ben-Sasson, Alessandro Chiesa, Daniel Genkin, Eran Tromer, Madars Virza,
-CRYPTO 2013,
-<http://eprint.iacr.org/2013/507>
-
-\[GM17]:
-"Snarky Signatures: Minimal Signatures of Knowledge from
- Simulation-Extractable SNARKs",
-Jens Groth and Mary Maller,
-IACR-CRYPTO-2017,
-<https://eprint.iacr.org/2017/540>
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef R1CS_TO_SAP_HPP_
-// // #define R1CS_TO_SAP_HPP_
 use std::collections::HashMap;
 /**
  * Helper function to find evaluation domain that will be used by the reduction
@@ -90,22 +81,6 @@ use std::collections::HashMap;
 //                                             &d2:FieldT);
 
 // use crate::reductions::r1cs_to_sap::r1cs_to_sap;
-
-// //#endif // R1CS_TO_SAP_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for a R1CS-to-SAP reduction.
-
-See r1cs_to_qap.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-// //#ifndef R1CS_TO_SAP_TCC_
-// // #define R1CS_TO_SAP_TCC_
 
 /**
  * Helper function to multiply a field element by 4 efficiently
@@ -494,7 +469,7 @@ pub fn r1cs_to_sap_witness_map<
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     /* add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z */
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = (d1.clone() * aA[i].clone()) + (d1.clone() * aA[i].clone());
@@ -515,7 +490,7 @@ pub fn r1cs_to_sap_witness_map<
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aA[i].clone();
     }
@@ -557,7 +532,7 @@ pub fn r1cs_to_sap_witness_map<
 
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
@@ -577,7 +552,7 @@ pub fn r1cs_to_sap_witness_map<
     enter_block("Compute sum of H and ZK-patch", false);
     // // #ifdef MULTICORE
     // //#pragma omp parallel for
-    // //#endif
+    //
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
@@ -596,4 +571,4 @@ pub fn r1cs_to_sap_witness_map<
     );
 }
 
-// //#endif // R1CS_TO_SAP_TCC_
+//

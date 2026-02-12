@@ -837,7 +837,7 @@ pub fn test_disjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
         // #ifdef DEBUG
         print!("positive test for {}\n", w);
-        //#endif
+
         assert!(
             pb.borrow().val(&output)
                 == if w != 0 {
@@ -850,7 +850,7 @@ pub fn test_disjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
         // #ifdef DEBUG
         print!("negative test for {}\n", w);
-        //#endif
+
         *pb.borrow_mut().val_ref(&output) = (if w != 0 {
             FieldT::zero()
         } else {
@@ -951,7 +951,7 @@ pub fn test_conjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
         // #ifdef DEBUG
         print!("positive test for {}\n", w);
-        //#endif
+
         assert!(
             pb.borrow().val(&output)
                 == if w == (1usize << n) - 1 {
@@ -964,7 +964,7 @@ pub fn test_conjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
         // #ifdef DEBUG
         print!("negative test for {}\n", w);
-        //#endif
+
         *pb.borrow_mut().val_ref(&output) = if w == (1usize << n) - 1 {
             FieldT::zero()
         } else {
@@ -1079,7 +1079,7 @@ pub fn test_comparison_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
             // #ifdef DEBUG
             print!("positive test for {} < {}\n", a, b);
-            //#endif
+
             assert!(pb.borrow().val(&less) == if a < b { FieldT::one() } else { FieldT::zero() });
             assert!(
                 *pb.borrow_mut().val_ref(&less_or_eq)
@@ -1182,13 +1182,13 @@ pub fn test_inner_product_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
             g.generate_r1cs_witness();
             // #ifdef DEBUG
             print!("positive test for ({}, {})\n", i, j);
-            //#endif
+
             assert!(pb.borrow().val(&result) == FieldT::from(correct as i64));
             assert!(pb.borrow().is_satisfied());
 
             // #ifdef DEBUG
             print!("negative test for ({}, {})\n", i, j);
-            //#endif
+
             *pb.borrow_mut().val_ref(&result) = FieldT::from(100 * n + 19);
             assert!(!pb.borrow().is_satisfied());
         }

@@ -100,21 +100,6 @@ pub struct tinyram_cpu_checker<FieldT: FieldTConfig> {
 
 // use crate::gadgetlib1::gadgets::cpu_checkers/tinyram/tinyram_cpu_checker;
 
-//#endif // TINYRAM_CPU_CHECKER_HPP_
-/** @file
-*****************************************************************************
-
-Implementation of interfaces for the TinyRAM CPU checker gadget.
-
-See tinyram_cpu_checker.hpp .
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef TINYRAM_CPU_CHECKER_TCC_
-// #define TINYRAM_CPU_CHECKER_TCC_
 use ffec::algebra::field_utils::field_utils;
 pub type tinyram_cpu_checkers<FieldT> = gadget<
     FieldT,

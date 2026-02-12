@@ -67,7 +67,6 @@ use ffec::{One, PpConfig, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
-/******************************** Proving key ********************************/
 
 /**
  * A proving key for the R1CS ppzkSNARK.
@@ -167,8 +166,6 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proving_key<ppT>
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzksnark_proving_key<ppT> &pk);
 }
 
-/******************************* Verification key ****************************/
-
 /**
  * A verification key for the R1CS ppzkSNARK.
  */
@@ -245,8 +242,6 @@ impl<ppT: PublicParams> r1cs_ppzksnark_verification_key<ppT>
     // static r1cs_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:usize);
 }
 
-/************************ Processed verification key *************************/
-
 /**
  * A processed verification key for the R1CS ppzkSNARK.
  *
@@ -273,8 +268,6 @@ pub struct r1cs_ppzksnark_processed_verification_key<ppT: PublicParams>
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_ppzksnark_processed_verification_key<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzksnark_processed_verification_key<ppT> &pvk);
 }
-
-/********************************** Key pair *********************************/
 
 /**
  * A key pair for the R1CS ppzkSNARK, which consists of a proving key and a verification key.
@@ -324,8 +317,6 @@ impl<ppT: PublicParams> r1cs_ppzksnark_keypair<ppT>
 // pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
 // pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
 // pub type AccumulationVector<PP> = accumulation_vector<T1<PP>>;
-
-/*********************************** Proof ***********************************/
 
 /**
  * A proof for the R1CS ppzkSNARK.
@@ -411,8 +402,6 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proof<ppT> {
     // friend std::ostream& operator<< <ppT>(std::ostream &out, &proof:r1cs_ppzksnark_proof<ppT>);
     // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_ppzksnark_proof<ppT> &proof);
 }
-
-/***************************** Main algorithms *******************************/
 
 /**
  * A generator algorithm for the R1CS ppzkSNARK.
@@ -547,7 +536,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     //     let  chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    // //#endif
+    //
 
     enter_block("Generating G1 multiexp table", false);
     let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, G1::<ppT>::one());
@@ -607,7 +596,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
         batch_exp::<G1<ppT>, Fr<ppT>>(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(H_query);
-    // //#endif
+    //
     leave_block("Compute the H-query", false);
 
     enter_block("Compute the K-query", false);
@@ -615,7 +604,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
         batch_exp::<G1<ppT>, Fr<ppT>>(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Kt);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(K_query);
-    // //#endif
+    //
     leave_block("Compute the K-query", false);
 
     leave_block("Generate knowledge commitments", false);
@@ -739,7 +728,7 @@ where
 
     // // #ifdef DEBUG
     //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
-    // //#endif
+    //
     let (d1, d2, d3) = (
         Fr::<ppT>::random_element(),
         Fr::<ppT>::random_element(),
@@ -761,7 +750,7 @@ where
     //     Fr::<ppT>::random_element(:Fr<ppT> t =);
     //     qap_instance_evaluation<Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
     //     assert!(qap_inst.is_satisfied(qap_wit));
-    // //#endif
+    //
 
     let mut g_A = pk.A_query[0].clone()
         + pk.A_query[qap_wit.num_variables() + 1].clone() * qap_wit.d1.clone();
@@ -786,13 +775,13 @@ where
     //     assert!(pk.C_query.domain_size() == qap_wit.num_variables()+2);
     //     assert!(pk.H_query.len() == qap_wit.degree()+1);
     //     assert!(pk.K_query.len() == qap_wit.num_variables()+4);
-    // //#endif
+    //
 
     // // #ifdef MULTICORE
     //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
     // #else
     let chunks = 1;
-    // //#endif
+    //
 
     enter_block("Compute the proof", false);
 
@@ -1124,8 +1113,6 @@ pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     result
 }
 
-/****************************** Miscellaneous ********************************/
-
 /**
  * For debugging purposes (of r1cs_ppzksnark_r1cs_ppzksnark_verifier_gadget):
  *
@@ -1266,7 +1253,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
 
 // // #ifdef MULTICORE
 // use  <omp.h>
-// //#endif
+//
 
 // use crate::knowledge_commitment::kc_multiexp;
 // use crate::reductions::r1cs_to_qap::r1cs_to_qap;

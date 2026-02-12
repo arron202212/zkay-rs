@@ -1,14 +1,9 @@
-// /** @file
-//  *****************************************************************************
+
 
 //  Declaration of interfaces for the MNT4 G2 group.
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-// //#ifndef MNT4_G2_HPP_
+
+// 
 // // #define MNT4_G2_HPP_
 
 // //#include <vector>
@@ -16,7 +11,7 @@
 // use crate::algebra::curves::curve_utils;
 // use crate::algebra::curves::mnt::mnt4::mnt4_init;
 
-// // namespace libff {
+
 
 // // pub struct mnt4_G2;
 // // std::ostream& operator<<(std::ostream &, const mnt4_G2&);
@@ -27,7 +22,7 @@
 // // // #ifdef PROFILE_OP_COUNTS
 // //     static i64 add_cnt;
 // //     static i64 dbl_cnt;
-// // //#endif
+// // 
 // //     static Vec<std::usize> wnaf_window_table;
 // //     static Vec<std::usize> fixed_base_exp_window_table;
 // //     static mnt4_G2 G2_zero;
@@ -94,31 +89,26 @@
 // //     static pub fn  batch_to_special_all_non_zeros(Vec<mnt4_G2> &vec);
 // // };
 
-// // } // namespace libff
+// 
 
-// //#endif // MNT4_G2_HPP_
-// /** @file
-//  *****************************************************************************
+// 
+
 
 //  Implementation of interfaces for the MNT4 G2 group.
 
 //  See mnt4_g2.hpp .
 
-//  *****************************************************************************
-//  * @author     This file is part of libff, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
+
 // use crate::algebra::curves::mnt::mnt4::mnt4_g2;
 
-// // namespace libff {
+
 
 // // using std::usize;
 
 // // // #ifdef PROFILE_OP_COUNTS
 // // i64 mnt4_G2::add_cnt = 0;
 // // i64 mnt4_G2::dbl_cnt = 0;
-// // //#endif
+// // 
 
 // // Vec<usize> mnt4_G2::wnaf_window_table;
 // // Vec<usize> mnt4_G2::fixed_base_exp_window_table;
@@ -242,7 +232,7 @@
 
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// //#endif
+// 
 //     // NOTE: does not handle O and pts of order 2,4
 //     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
 
@@ -267,7 +257,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// //#endif
+// 
 //     // NOTE: does not handle O and pts of order 2,4
 //     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
 //     //assert!(other.Z == mnt4_Fq2::one());
@@ -284,7 +274,7 @@
 
 // // #ifdef DEBUG
 //     assert!(other.is_special());
-// //#endif
+// 
 
 //     X1Z2:&mnt4_Fq2 = (this->X);                   // X1Z2 = X1*Z2 (but other is special and not zero)
 //     let X2Z1= (this->Z) * (other.X);       // X2Z1 = X2*Z1
@@ -317,7 +307,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->dbl_cnt++;
-// //#endif
+// 
 //     if this->is_zero()
 //     {
 //         return (*this);
@@ -414,7 +404,7 @@
 // }
 // }
 
-// // } // namespace libff
+// 
 
 // //
 // // mnt4_G2 operator*(lhs:&bigint<m>, rhs:&mnt4_G2)
@@ -439,7 +429,7 @@
 // // #else
 // //     /* storing LSB of Y */
 // //     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
-// // //#endif
+// // 
 
 // //     return out;
 // // }
@@ -475,7 +465,7 @@
 // //             tY = -tY;
 // //         }
 // //     }
-// // //#endif
+// // 
 // //     // using projective coordinates
 // //     if is_zero == 0
 // //     {

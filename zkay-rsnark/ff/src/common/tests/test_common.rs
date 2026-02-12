@@ -1,11 +1,6 @@
-/**
- *****************************************************************************
+
  Some tests for the functions in this directory.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
 
 //#include <cstdint>
 //#include <gtest/gtest.h>

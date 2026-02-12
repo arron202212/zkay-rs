@@ -1,22 +1,14 @@
+// Declaration of interfaces for a USCS example, as well as functions to sample
+// USCS examples with prescribed parameters (according to some distribution).
+
 use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
     uscs_auxiliary_input, uscs_constraint, uscs_constraint_system, uscs_primary_input,
     uscs_variable_assignment,
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
-/** @file
-
-Declaration of interfaces for a USCS example, as well as functions to sample
-USCS examples with prescribed parameters (according to some distribution).
-
-*****************************************************************************
-* @author     This file is part of libsnark, developed by SCIPR Lab
-*             and contributors (see AUTHORS).
-* @copyright  MIT license (see LICENSE file)
-*****************************************************************************/
-//#ifndef USCS_EXAMPLES_HPP_
-// #define USCS_EXAMPLES_HPP_
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block};
+
 /**
  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
  */
@@ -71,22 +63,14 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 
 // // use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
 
-// //#endif // USCS_EXAMPLES_HPP_
-// /** @file
-//  *****************************************************************************
+//
 
 //  Implementation of functions to sample USCS examples with prescribed parameters
 //  (according to some distribution).
 
 //  See uscs_examples.hpp .
 
-//  *****************************************************************************
-//  * @author     This file is part of libsnark, developed by SCIPR Lab
-//  *             and contributors (see AUTHORS).
-//  * @copyright  MIT license (see LICENSE file)
-//  *****************************************************************************/
-
-// //#ifndef USCS_EXAMPLES_TCC_
+//
 // // #define USCS_EXAMPLES_TCC_
 
 // use  <cassert>
@@ -229,5 +213,3 @@ pub fn generate_uscs_example_with_binary_input<
 
     return uscs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }
-
-//#endif // USCS_EXAMPLES_TCC

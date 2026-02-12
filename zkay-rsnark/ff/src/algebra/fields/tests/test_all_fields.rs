@@ -1,15 +1,10 @@
-/**
- *****************************************************************************
- Some tests that should apply to all finite fields in this directory. Mainly
- API tests that enforce classes to have certain functions. Includes tests for
- just F_p, tests for F_p^n, tests for binary fields, and tests for all finite
- fields. The API tests should be comprehensive and test ALL public functions
- and members.
- *****************************************************************************
- * @author     This file is part of libff, developed by SCIPR Lab
- *             and contributors (see AUTHORS).
- * @copyright  MIT license (see LICENSE file)
- *****************************************************************************/
+
+//  Some tests that should apply to all finite fields in this directory. Mainly
+//  API tests that enforce classes to have certain functions. Includes tests for
+//  just F_p, tests for F_p^n, tests for binary fields, and tests for all finite
+//  fields. The API tests should be comprehensive and test ALL public functions
+//  and members.
+
 
 use crate::algebra::curves::alt_bn128::alt_bn128_fields;
 use crate::algebra::curves::mnt::mnt4::mnt4_fields;
@@ -65,7 +60,7 @@ pub fn  test_field()
     let zero= FieldT::zero();
     let two= one + one;
 
-    /******************* Test standard field axioms and properties. *******************/
+    // Test standard field axioms and properties. 
 
     FieldT x = FieldT::random_element();
     FieldT y = FieldT::random_element();
@@ -89,7 +84,7 @@ pub fn  test_field()
     EXPECT_EQ(x * zero, zero);
     EXPECT_EQ(x * (-y), -(x * y));
 
-    /*********************** Test +, -, *, zero(), and one(). ***********************/
+    //  Test +, -, *, zero(), and one(). 
 
     x.randomize();
     y = x + x;
@@ -137,7 +132,7 @@ pub fn  test_field()
     x.square();
     EXPECT_EQ(x, y * y);
 
-    /******************** Test squared(), inverse(), sqrt(), and ^. ********************/
+    // Test squared(), inverse(), sqrt(), and ^. 
 
     x.randomize();
     FieldT x2 = x * x;
@@ -181,7 +176,7 @@ pub fn  test_field()
     EXPECT_EQ(x.inverse()^pow1, (x^pow1).inverse());
     EXPECT_EQ((x^pow1) * (x.inverse()^pow2), x^diff);
 
-    /******************** Test +=, -=, *=, square(), inverse(), ^=. ********************/
+    // Test +=, -=, *=, square(), inverse(), ^=. 
 
     x.randomize();
     y.randomize();
@@ -214,7 +209,7 @@ pub fn  test_field()
     x ^= pow1;
     EXPECT_EQ(x, z);
 
-    /*************** Test is_zero(), print(), clear(), <</>> and to/from_words(). ***************/
+    // Test is_zero(), print(), clear(), <</>> and to/from_words(). 
 
     EXPECT_TRUE(zero.is_zero());
     EXPECT_FALSE(one.is_zero());
@@ -250,7 +245,7 @@ pub fn  test_field()
     EXPECT_TRUE(y.from_words(zero_words));
     EXPECT_TRUE(y.is_zero());
 
-    /****************** Test extension_degree() and ceil/floor_size_in_bits(). ******************/
+    // Test extension_degree() and ceil/floor_size_in_bits(). 
 
     EXPECT_GE(FieldT::extension_degree(), 1);
     EXPECT_GE(FieldT::floor_size_in_bits(), 1);
@@ -398,7 +393,7 @@ TEST_F(AllFieldsTest, AllFieldsOpCountTest)
     test_op_profiling<gf192>();
     test_op_profiling<gf256>();
 }
-//#endif
+
 
 TEST_F(AllFieldsTest, FpnFieldsApiTest)
 {

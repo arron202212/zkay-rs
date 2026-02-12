@@ -1,4 +1,4 @@
-// //  *****************************************************************************
+
 // //  Macros for quick construction of interface and factory classes for non field
 // //  agnostic gadgets.
 
